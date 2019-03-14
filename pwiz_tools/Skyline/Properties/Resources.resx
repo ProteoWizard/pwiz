@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -213,6 +213,9 @@
   </data>
   <data name="ToolInstaller_GetToolInfo_Error__It_does_not_contain_the_required__0__in_the__1__directory_" xml:space="preserve">
     <value>Error: It does not contain the required {0} in the {1} directory.</value>
+  </data>
+  <data name="WizardMoleculeIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\WizardMoleculeIcon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="WizardPeptideIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\StartPage\WizardPeptideIcon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -4956,7 +4959,7 @@ If you prefer you can choose to report anonymously.</value>
     <comment>Rank for transition node</comment>
   </data>
   <data name="SkylineWindow_ModifyPeptide_Modify_Small_Molecule" xml:space="preserve">
-    <value>Modify Small Molecule</value>
+    <value>Modify Molecule</value>
   </data>
   <data name="CopyPasteTest_DoTest_Could_not_read_the_pasted_transition_list___Transition_list_must_be_in_separated_columns_and_cannot_contain_blank_lines_" xml:space="preserve">
     <value>Could not read the pasted transition list.  Transition list must be in separated columns and cannot contain blank lines.</value>
@@ -5299,13 +5302,13 @@ If you prefer you can choose to report anonymously.</value>
     <value>Failed to load background proteome {0}.</value>
   </data>
   <data name="Peptide_ThrowIfNotSmallMolecule_Direct_editing_of_this_value_is_only_supported_for_small_molecules_" xml:space="preserve">
-    <value>Direct editing of this value is only supported for small molecules.</value>
+    <value>Direct editing of this value is only supported for non-proteomic molecules.</value>
   </data>
   <data name="SkylineWindow_ImportMassList_Finishing_up_import" xml:space="preserve">
     <value>Finishing up import</value>
   </data>
   <data name="PanoramaHelper_ValidateFolder_" xml:space="preserve">
-    <value>An unknown error occurred trying to verify access to Panorma folder {0} on the server {1}.
+    <value>An unknown error occurred trying to verify access to Panorama folder {0} on the server {1}.
 {2}</value>
   </data>
   <data name="DoconvolutionMethod_NONE_None" xml:space="preserve">
@@ -5435,7 +5438,7 @@ If you prefer you can choose to report anonymously.</value>
     <value>FWB Time</value>
   </data>
   <data name="SkylineWindow_AddSmallMolecule_Add_small_molecule_precursor__0_" xml:space="preserve">
-    <value>Add small molecule precursor {0}</value>
+    <value>Add molecule precursor {0}</value>
   </data>
   <data name="TransitionFullScan_ValidateRes_The_mz_value_at_which_the_resolving_power_is_calibrated_is_required_for__0__" xml:space="preserve">
     <value>The m/z value at which the resolving power is calibrated is required for {0}.</value>
@@ -6198,7 +6201,7 @@ If you prefer you can choose to report anonymously.</value>
     <value>The sequence '{0}' is not a valid modified peptide sequence.</value>
   </data>
   <data name="SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List" xml:space="preserve">
-    <value>Small Molecule Transition List</value>
+    <value>Molecule Transition List</value>
   </data>
   <data name="StartPage_getBoxPanels_" xml:space="preserve">
     <value>Get hands-on experience starting with a broad set of SRM measurements, importing instrument data, and refining the document. Start with an unrefined document requiring over 2000 transitions and 39 injections to measure unscheduled on a Thermo TSQ. Learn how to import all 39 injections into a single replicate. Use a hydrophobicity to retention time regression and ms/ms spectral library peak intensity correlation to improve confidence in measured peaks. Use the Skyline refinement dialog to remove all but the best transitions for the highest confidence peaks. Step through the scheduling process to reduce the document to a transition list that can be measured in a single injection. Import and view multiple replicates of the single-injection method.</value>
@@ -6374,8 +6377,8 @@ If you prefer you can choose to report anonymously.</value>
   <data name="RelativeRTExtension_LOCALIZED_VALUES_Overlapping" xml:space="preserve">
     <value>Overlapping</value>
   </data>
-  <data name="PasteDlg_GetMoleculePeptideGroup_Molecule_Group__0_" xml:space="preserve">
-    <value>Molecule Group {0}</value>
+  <data name="PasteDlg_GetMoleculePeptideGroup_Molecule_List__0_" xml:space="preserve">
+    <value>Molecule List {0}</value>
   </data>
   <data name="SkylineWindow_removeDuplicatePeptidesMenuItem_Click_Remove_duplicate_peptides" xml:space="preserve">
     <value>Remove duplicate peptides</value>
@@ -8211,7 +8214,7 @@ Please contact the Panorama server administrator to upgrade the server.</value>
     <value>An error occurred attempting to create the proteome file {0}.</value>
   </data>
   <data name="StartPage_SmallMolecule_Description" xml:space="preserve">
-    <value>Learn how to target non-proteomic small molecule ions with Skyline. You will import a small molecule transition list used in a metabolomics experiment and import 14 runs from a Waters Xevo TQS. Start learning how to apply the power of the Skyline interface for small molecule experiments.</value>
+    <value>Learn how to target non-proteomic ions with Skyline. You will import a molecule transition list used in a metabolomics experiment and import 14 runs from a Waters Xevo TQS. Start learning how to apply the power of the Skyline interface for non-proteomic experiments.</value>
   </data>
   <data name="CommandLine_ImportToolsFromZip_Error__the_file_specified_with_the___tool_add_zip_command_is_not_a__zip_file__Please_specify_a_valid__zip_file_" xml:space="preserve">
     <value>Error: the file specified with the --tool-add-zip command is not a .zip file. Please specify a valid .zip file.</value>
@@ -8425,7 +8428,7 @@ Please contact the Panorama server administrator to upgrade the server.</value>
     <value>Single</value>
   </data>
   <data name="SkylineWindow_AddSmallMolecule_Add_small_molecule__0_" xml:space="preserve">
-    <value>Add small molecule {0}</value>
+    <value>Add molecule {0}</value>
   </data>
   <data name="ComparePeakPickingDlg_ComparePeakPickingDlg_Fraction_of_Manual_ID_s" xml:space="preserve">
     <value>Fraction of Manual ID's</value>
@@ -8838,13 +8841,13 @@ Go to the Peptide Settings Prediction tab to fix.</value>
     <value>..\Resources\warning.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List" xml:space="preserve">
-    <value>Insert Small Molecule Transition List</value>
+    <value>Insert Molecule Transition List</value>
   </data>
   <data name="InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0___column_1____2_" xml:space="preserve">
     <value>Error on line {0}, column{1}: {2}</value>
   </data>
   <data name="SmallMoleculeTransitionListReader_SmallMoleculeTransitionListReader_" xml:space="preserve">
-    <value>Error reading small molecule column headers, did not recognize:
+    <value>Error reading molecule column headers, did not recognize:
 {0}
 Supported values include:
 {1}</value>
@@ -9034,12 +9037,19 @@ Charge states are inferred from the presence of these adduct components:{1}</val
   <data name="PasteDlg_btnTransitionListHelp_Click_" xml:space="preserve">
     <value>The easiest way to use this window is to copy from Excel (or any text editor if the data is CSV formatted) and paste into the grid.
     
-Note that you can adjust column order in Skyline by dragging the column headers left or right.  For small molecules, you can also select which columns to enable with the "Columns..." button.
+Note that you can adjust column order in Skyline by dragging the column headers left or right.
 
-Most peptide transition lists can be imported with the "File|Import|Transition List..." menu item or even pasted directly into the Targets window. You can also do this with small molecule transition lists if they use these names for column headers: </value>
+Most peptide transition lists can be imported with the "File|Import|Transition List..." menu item or even pasted directly into the Targets window.</value>
+  </data>
+  <data name="PasteDlg_btnTransitionListHelp_Click_SmallMol_" xml:space="preserve">
+    <value>The easiest way to use this window is to copy from Excel (or any text editor if the data is CSV formatted) and paste into the grid.
+    
+Note that you can adjust column order in Skyline by dragging the column headers left or right.  For molecules, you can also select which columns to enable with the "Columns..." button.
+
+Most peptide transition lists can be imported with the "File|Import|Transition List..." menu item or even pasted directly into the Targets window. You can also do this with molecule transition lists if they use these names for column headers: </value>
   </data>
   <data name="PasteDlg_btnTransitionListHelp_Click_2_" xml:space="preserve">
-    <value>Notes on small molecule ion formulas:
+    <value>Notes on molecule ion formulas:
 
 If your transition list format combines formulas and adducts in a single column (e.g. "C8H10N4O2[M+Na]") then use the "Ion Formula" columns, and disregard the "Adduct" columns.  If your transition list puts the neutral formula and adduct in seperate columns, then use the "Ion Formula" columns for neutral formulas, and the "Adduct" columns for adducts.</value>
   </data>
@@ -9619,7 +9629,7 @@ If your transition list format combines formulas and adducts in a single column 
     <value>Chemi&amp;cal formula:</value>
   </data>
   <data name="TransitionFilter_SmallMoleculePrecursorAdducts_Small_molecule_precursor_adducts" xml:space="preserve">
-    <value>Small molecule precursor adducts</value>
+    <value>Molecule precursor adducts</value>
   </data>
   <data name="CustomMolecule_Validate_Custom_molecules_must_specify_a_formula_or_valid_monoisotopic_and_average_masses_" xml:space="preserve">
     <value>Custom molecules must specify a formula or valid monoisotopic and average masses.</value>
@@ -9640,19 +9650,19 @@ If your transition list format combines formulas and adducts in a single column 
     <value>{0} is not a valid CAS registry number.</value>
   </data>
   <data name="SkylineWindow_AddSmallMolecule_Add_Small_Molecule_and_Precursor" xml:space="preserve">
-    <value>Add Small Molecule and Precursor</value>
+    <value>Add Molecule and Precursor</value>
   </data>
   <data name="RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules" xml:space="preserve">
-    <value>Converted To Small Molecules</value>
+    <value>Converted To Molecules</value>
   </data>
   <data name="SmallMoleculeLibraryAttributes_Validate_A_small_molecule_is_defined_by_a_chemical_formula_and_at_least_one_of_Name__InChiKey__or_other_keys__HMDB_etc_" xml:space="preserve">
-    <value>A small molecule is defined by a chemical formula and at least one of Name, InChiKey, or other keys (HMDB etc)</value>
+    <value>A molecule is defined by a chemical formula and at least one of Name, InChiKey, or other keys (HMDB etc)</value>
   </data>
   <data name="ValidatingIonMobilityPeptide_ValidateAdduct_A_valid_adduct_description__e_g____M_H____must_be_provided_" xml:space="preserve">
     <value>A valid adduct description (e.g. "[M+H]") must be provided.</value>
   </data>
   <data name="TransitionSettingsUI_OkDialog_Small_molecule_ion_types_must_contain_a_comma_separated_list_of_ion_types__Valid_types_are__f___for_fragment__and_or__p___for_precursor_" xml:space="preserve">
-    <value>Small molecule ion types must contain a comma separated list of ion types. Valid types are "f" (for fragment) and/or "p" (for precursor)</value>
+    <value>Molecule ion types must contain a comma separated list of ion types. Valid types are "f" (for fragment) and/or "p" (for precursor)</value>
   </data>
   <data name="ViewLibraryDlg_UpdateStatusArea_Molecules__0__through__1__of__2__total_" xml:space="preserve">
     <value>Molecules {0} through {1} of {2} total.</value>
@@ -9921,8 +9931,8 @@ Recognized isotopes include: {2}</value>
   <data name="PeptideGroupTreeNode_ChildUndoHeading__0__molecules" xml:space="preserve">
     <value>{0} molecules</value>
   </data>
-  <data name="PeptideGroupTreeNode_Heading_Molecule_Group" xml:space="preserve">
-    <value>Molecule Group</value>
+  <data name="PeptideGroupTreeNode_Heading_Molecule_List" xml:space="preserve">
+    <value>Molecule List</value>
   </data>
   <data name="PeptideTreeNode_Heading_Title_Molecule" xml:space="preserve">
     <value>Molecule</value>
@@ -10054,6 +10064,62 @@ Recognized isotopes include: {2}</value>
   <data name="AlignmentForm_UpdateGraph_Time_from_Regression" xml:space="preserve">
     <value>Time from Regression</value>
   </data>
+  <data name="PeptideToMoleculeText_Peptide" xml:space="preserve">
+    <value>Peptide</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "choose a peptide" to read "choose a molecule" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Molecule" xml:space="preserve">
+    <value>Molecule</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "choose a peptide" to read "choose a molecule" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Peptides" xml:space="preserve">
+    <value>Peptides</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "2 peptides" to read "2 molecules" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Molecules" xml:space="preserve">
+    <value>Molecules</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "2 peptides" to read "2 molecules" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Protein" xml:space="preserve">
+    <value>Protein</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "choose a protein" to read "choose a molecule list" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Molecule_List" xml:space="preserve">
+    <value>Molecule List</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "choose a protein" to read "choose a molecule list" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Proteins" xml:space="preserve">
+    <value>Proteins</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "2 proteins" to read "2 molecule lists" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Molecule_Lists" xml:space="preserve">
+    <value>Molecule Lists</value>
+    <comment>&gt;Used in PeptideToMoleculeText.Translate to update strings like  "2 proteins" to read "2 molecule lists" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Modified_Sequence" xml:space="preserve">
+    <value>Modified Sequence</value>
+    <comment>&gt;Used in PeptideToMoleculeText.Translate to update strings like "select a modifed sequence" to read "select a molecule" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Modified_Peptide_Sequence" xml:space="preserve">
+    <value>Modified Peptide Sequence</value>
+    <comment>&gt;Used in PeptideToMoleculeText.Translate to update strings like "select a modifed peptide sequence" to read "select a molecule" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Peptide_Sequence" xml:space="preserve">
+    <value>Peptide Sequence</value>
+    <comment>&gt;Used in PeptideToMoleculeText.Translate to update strings like "select a peptide sequence" to read "select a molecule" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Peptide_List" xml:space="preserve">
+    <value>Peptide List</value>
+    <comment>&gt;Used in PeptideToMoleculeText.Translate to update strings like "select a peptide list" to read "select a molecule list" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Ion_charges" xml:space="preserve">
+    <value>Ion charges</value>
+    <comment>&gt;Used in PeptideToMoleculeText.Translate to update strings like "Ion charges" to read "Ion adducts" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Ion_adducts" xml:space="preserve">
+    <value>Ion adducts</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "Ion charges" to read "Ion adducts" when non-peptide documents are in use</comment>
+  </data>
   <data name="ListDesigner_OkDialog_There_is_already_a_list_named___0___" xml:space="preserve">
     <value>There is already a list named '{0}'.</value>
   </data>
@@ -10172,16 +10238,22 @@ Recognized isotopes include: {2}</value>
     <value>Advanced Topics</value>
   </data>
   <data name="StartPage_SmallMoleculeMethodDevCEOpt_Description" xml:space="preserve">
-    <value>Learn how how to create a Skyline document that targets stable isotope labeled small molecules from a literature citation, specified as only precursor m/z, product ion m/z, and collision energy values. Perform retention time scheduling and collision energy optimization for small molecules by importing a multi-replicate data set from a Waters Xevo TQ-S using initial CE values from a Sciex triple quad. Learn how many existing Skyline features created initially for targeted proteomics use can now be applied to small molecule data.</value>
+    <value>Learn how how to create a Skyline document that targets stable isotope labeled molecules from a literature citation, specified as only precursor m/z, product ion m/z, and collision energy values. Perform retention time scheduling and collision energy optimization for molecules by importing a multi-replicate data set from a Waters Xevo TQ-S using initial CE values from a Sciex triple quad. Learn how many existing Skyline features created initially for targeted proteomics use can now be applied to non-proteomic molecule data.</value>
   </data>
   <data name="StartPage_SmallMoleculeQuantification_Description" xml:space="preserve">
-    <value>Learn how to create a Skyline document that targets small molecules specified as precursor ion chemical formulas and adducts, and product ion m/z values. Import a multi-replicate data set collected using LC-MS/MS on a triple quadulpole, and see how many existing Skyline features created initially for targeted proteomics use can now be applied to small molecule data.</value>
+    <value>Learn how to create a Skyline document that targets molecules specified as precursor ion chemical formulas and adducts, and product ion m/z values. Import a multi-replicate data set collected using LC-MS/MS on a triple quadulpole, and see how many existing Skyline features created initially for targeted proteomics use can now be applied to non-proteomic molecule data.</value>
   </data>
   <data name="StartPage_HiResMetabolomics_Description" xml:space="preserve">
-    <value>Learn how to create a Skyline document that targets small molecules specified as precursor ion chemical formulas and adducts. Import a multi-replicate data set collected on a Q Exactive Orbitrap mass spectrometer for a set of plasma samples, and see how many existing Skyline features created initially for targeted proteomics use can be applied to small molecule data. </value>
+    <value>Learn how to create a Skyline document that targets molecules specified as precursor ion chemical formulas and adducts. Import a multi-replicate data set collected on a Q Exactive Orbitrap mass spectrometer for a set of plasma samples, and see how many existing Skyline features created initially for targeted proteomics use can be applied to non-proteomic molecule data. </value>
   </data>
   <data name="LinearInLogSpace_Label_Linear_in_Log_Space" xml:space="preserve">
     <value>Linear in Log Space</value>
+  </data>
+  <data name="MoleculeUI" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\MoleculeUI.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ProteinUI" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ProteinUI.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="FullScanAcquisitionMethod_DDA_DDA" xml:space="preserve">
     <value>DDA</value>
@@ -10341,6 +10413,48 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0___" xml:space="preserve">
     <value>Unable to resolve molecule from '{0}'.</value>
   </data>
+  <data name="ModeUIAwareFormHelper_OnLoad_New__Use_this_button_to_configure_Skyline_s_user_interface_specifically_for_proteomics_or_small_molecule_use_" xml:space="preserve">
+    <value>New! Use this button to configure Skyline's user interface specifically for proteomics or generalized molecule use.</value>
+  </data>
+  <data name="UIModeProteomic" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\UIModeProteomic.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="UIModeSmallMolecules" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\UIModeSmallMolecules.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="UIModeMixed" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\UIModeMixed.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_SetModeUIToolStripButtons_Proteomics_interface" xml:space="preserve">
+    <value>Proteomics interface</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_SetModeUIToolStripButtons_Small_Molecules_interface" xml:space="preserve">
+    <value>Molecule interface</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_SetModeUIToolStripButtons_Mixed_interface" xml:space="preserve">
+    <value>Mixed interface</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_proteomics_interface_because_the_current_document_contains_small_molecules_data_" xml:space="preserve">
+    <value>Cannot switch to proteomics interface because the current document contains non-proteomic molecule data.</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_molecule_interface_because_the_current_document_contains_proteomics_data_" xml:space="preserve">
+    <value>Cannot switch to molecule interface because the current document contains proteomics data.</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_EnableNeededButtonsForModeUI___Would_you_like_to_create_a_new_empty_document_" xml:space="preserve">
+    <value>  Would you like to create a new empty document?</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Would_you_like_to_create_a_new_document_" xml:space="preserve">
+    <value>Would you like to create a new document?</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_SetModeUIToolStripButtons_Only_show_menus_and_controls_appropriate_to_proteomics_analysis" xml:space="preserve">
+    <value>Only show menus and controls appropriate to proteomics analysis</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_SetModeUIToolStripButtons_Only_show_menus_and_controls_appropriate_to_small_molecule_analysis" xml:space="preserve">
+    <value>Only show menus and controls appropriate to non-proteomic molecule analysis</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_SetModeUIToolStripButtons_Show_all_menus_and_controls" xml:space="preserve">
+    <value>Show all menus and controls</value>
+  </data>
   <data name="ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_" xml:space="preserve">
     <value>The value '{0}' is not valid for the argument {1}. Use one of {2}</value>
   </data>
@@ -10367,6 +10481,10 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="CommandArgs_ErrorArgsExclusiveText_Error__The_arguments__0__and__1__options_cannot_be_used_together_" xml:space="preserve">
     <value>Error: The arguments {0} and {1} options cannot be used together.</value>
+  </data>
+  <data name="TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0____could_be_any_of__1_" xml:space="preserve">
+    <value>Unable to resolve molecule from "{0}": could be any of {1}</value>
+    <comment>{0} is search text, {1} is a list of molecule names that the search text could refer to</comment>
   </data>
   <data name="CommandLine_ImportAnnotations_Error__Failed_while_reading_annotations_" xml:space="preserve">
     <value>Error: Failed while reading annotations.</value>

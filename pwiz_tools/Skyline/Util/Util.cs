@@ -1369,7 +1369,7 @@ namespace pwiz.Skyline.Util
     /// <summary>
     /// A set of generic, static helper functions.
     /// </summary>
-    public static class Helpers
+    public static partial class Helpers
     {
         /// <summary>
         /// Swaps two reference values in memory, making each contain

@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <data name="btnEditStaticMods.ToolTip" xml:space="preserve">
     <value />
   </data>
@@ -411,6 +414,12 @@ in peak area ratios calculated for other types.</value>
   </data>
   <data name="label8.Text" xml:space="preserve">
     <value>&amp;Structural modifications:</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
+    <value>modeUIHandler</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
@@ -2734,7 +2743,7 @@ Library or Filter - picks peptides that match either a library spectrum or the f
     <value>3, 181</value>
   </data>
   <data name="listStandardTypes.Size" type="System.Drawing.Size, System.Drawing">
-    <value>177, 19</value>
+    <value>177, 57</value>
   </data>
   <data name="&gt;&gt;tabControl1.Name" xml:space="preserve">
     <value>tabControl1</value>
@@ -3025,6 +3034,109 @@ W = 2T/R</value>
   <data name="&gt;&gt;comboPeakScoringModel.Name" xml:space="preserve">
     <value>comboPeakScoringModel</value>
   </data>
+
+  <data name="listBoxSmallMolInternalStandardTypes.Location" type="System.Drawing.Point, System.Drawing">
+    <value>28, 39</value>
+  </data>
+  <data name="listBoxSmallMolInternalStandardTypes.Size" type="System.Drawing.Size, System.Drawing">
+    <value>177, 154</value>
+  </data>
+  <data name="listBoxSmallMolInternalStandardTypes.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;listBoxSmallMolInternalStandardTypes.Name" xml:space="preserve">
+    <value>listBoxSmallMolInternalStandardTypes</value>
+  </data>
+  <data name="&gt;&gt;listBoxSmallMolInternalStandardTypes.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;listBoxSmallMolInternalStandardTypes.Parent" xml:space="preserve">
+    <value>tabLabels</value>
+  </data>
+  <data name="&gt;&gt;listBoxSmallMolInternalStandardTypes.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="buttonEditListSmallMolInternalStandardTypes.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="buttonEditListSmallMolInternalStandardTypes.Location" type="System.Drawing.Point, System.Drawing">
+    <value>211, 39</value>
+  </data>
+  <data name="buttonEditListSmallMolInternalStandardTypes.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="buttonEditListSmallMolInternalStandardTypes.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="buttonEditListSmallMolInternalStandardTypes.Text" xml:space="preserve">
+    <value>&amp;Edit list...</value>
+  </data>
+  <data name="&gt;&gt;buttonEditListSmallMolInternalStandardTypes.Name" xml:space="preserve">
+    <value>buttonEditListSmallMolInternalStandardTypes</value>
+  </data>
+  <data name="&gt;&gt;buttonEditListSmallMolInternalStandardTypes.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;buttonEditListSmallMolInternalStandardTypes.Parent" xml:space="preserve">
+    <value>tabLabels</value>
+  </data>
+  <data name="&gt;&gt;buttonEditListSmallMolInternalStandardTypes.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="labelSmallMolInternalStandardTypes.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelSmallMolInternalStandardTypes.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelSmallMolInternalStandardTypes.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 23</value>
+  </data>
+  <data name="labelSmallMolInternalStandardTypes.Size" type="System.Drawing.Size, System.Drawing">
+    <value>117, 13</value>
+  </data>
+  <data name="labelSmallMolInternalStandardTypes.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="labelSmallMolInternalStandardTypes.Text" xml:space="preserve">
+    <value>&amp;Internal standard types:</value>
+  </data>
+  <data name="&gt;&gt;labelSmallMolInternalStandardTypes.Name" xml:space="preserve">
+    <value>labelSmallMolInternalStandardTypes</value>
+  </data>
+  <data name="&gt;&gt;labelSmallMolInternalStandardTypes.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelSmallMolInternalStandardTypes.Parent" xml:space="preserve">
+    <value>tabLabels</value>
+  </data>
+  <data name="&gt;&gt;labelSmallMolInternalStandardTypes.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="tabLabels.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabLabels.Size" type="System.Drawing.Size, System.Drawing">
+    <value>363, 460</value>
+  </data>
+  <data name="tabLabels.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="tabLabels.Text" xml:space="preserve">
+    <value>Labels</value>
+  </data>
+  <data name="&gt;&gt;tabLabels.Name" xml:space="preserve">
+    <value>tabLabels</value>
+  </data>
+  <data name="&gt;&gt;tabLabels.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabLabels.Parent" xml:space="preserve">
+    <value>tabControl1</value>
+  </data>
+  <data name="&gt;&gt;tabLabels.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
@@ -3037,4 +3149,6 @@ W = 2T/R</value>
   <metadata name="contextMenuCalculator.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>387, 17</value>
   </metadata>
+
+
 </root>

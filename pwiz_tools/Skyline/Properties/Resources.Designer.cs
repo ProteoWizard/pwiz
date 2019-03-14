@@ -17001,6 +17001,112 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to   Would you like to create a new empty document?.
+        /// </summary>
+        public static string ModeUIAwareFormHelper_EnableNeededButtonsForModeUI___Would_you_like_to_create_a_new_empty_document_ {
+            get {
+                return ResourceManager.GetString("ModeUIAwareFormHelper_EnableNeededButtonsForModeUI___Would_you_like_to_create_a_n" +
+                        "ew_empty_document_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot switch to molecule interface because the current document contains proteomics data..
+        /// </summary>
+        public static string ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_molecule_interface_because_the_current_document_contains_proteomics_data_ {
+            get {
+                return ResourceManager.GetString("ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_molecule_inte" +
+                        "rface_because_the_current_document_contains_proteomics_data_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot switch to proteomics interface because the current document contains non-proteomic molecule data..
+        /// </summary>
+        public static string ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_proteomics_interface_because_the_current_document_contains_small_molecules_data_ {
+            get {
+                return ResourceManager.GetString("ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_proteomics_in" +
+                        "terface_because_the_current_document_contains_small_molecules_data_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Would you like to create a new document?.
+        /// </summary>
+        public static string ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Would_you_like_to_create_a_new_document_ {
+            get {
+                return ResourceManager.GetString("ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Would_you_like_to_create_a_new" +
+                        "_document_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to New! Use this button to configure Skyline&apos;s user interface specifically for proteomics or generalized molecule use..
+        /// </summary>
+        public static string ModeUIAwareFormHelper_OnLoad_New__Use_this_button_to_configure_Skyline_s_user_interface_specifically_for_proteomics_or_small_molecule_use_ {
+            get {
+                return ResourceManager.GetString("ModeUIAwareFormHelper_OnLoad_New__Use_this_button_to_configure_Skyline_s_user_int" +
+                        "erface_specifically_for_proteomics_or_small_molecule_use_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mixed interface.
+        /// </summary>
+        public static string ModeUIAwareFormHelper_SetModeUIToolStripButtons_Mixed_interface {
+            get {
+                return ResourceManager.GetString("ModeUIAwareFormHelper_SetModeUIToolStripButtons_Mixed_interface", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Only show menus and controls appropriate to proteomics analysis.
+        /// </summary>
+        public static string ModeUIAwareFormHelper_SetModeUIToolStripButtons_Only_show_menus_and_controls_appropriate_to_proteomics_analysis {
+            get {
+                return ResourceManager.GetString("ModeUIAwareFormHelper_SetModeUIToolStripButtons_Only_show_menus_and_controls_appr" +
+                        "opriate_to_proteomics_analysis", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Only show menus and controls appropriate to non-proteomic molecule analysis.
+        /// </summary>
+        public static string ModeUIAwareFormHelper_SetModeUIToolStripButtons_Only_show_menus_and_controls_appropriate_to_small_molecule_analysis {
+            get {
+                return ResourceManager.GetString("ModeUIAwareFormHelper_SetModeUIToolStripButtons_Only_show_menus_and_controls_appr" +
+                        "opriate_to_small_molecule_analysis", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Proteomics interface.
+        /// </summary>
+        public static string ModeUIAwareFormHelper_SetModeUIToolStripButtons_Proteomics_interface {
+            get {
+                return ResourceManager.GetString("ModeUIAwareFormHelper_SetModeUIToolStripButtons_Proteomics_interface", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show all menus and controls.
+        /// </summary>
+        public static string ModeUIAwareFormHelper_SetModeUIToolStripButtons_Show_all_menus_and_controls {
+            get {
+                return ResourceManager.GetString("ModeUIAwareFormHelper_SetModeUIToolStripButtons_Show_all_menus_and_controls", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule interface.
+        /// </summary>
+        public static string ModeUIAwareFormHelper_SetModeUIToolStripButtons_Small_Molecules_interface {
+            get {
+                return ResourceManager.GetString("ModeUIAwareFormHelper_SetModeUIToolStripButtons_Small_Molecules_interface", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unrecognized modification placement for Unimod id {0} in modified peptide sequence {1} (amino acid {2}, {3})..
         /// </summary>
         public static string ModificationMatcher_ThrowUnimodException_Unrecognized_modification_placement_for_Unimod_id__0__in_modified_peptide_sequence__1___amino_acid__2____3___ {
@@ -17075,6 +17181,16 @@ namespace pwiz.Skyline.Properties {
         public static System.Drawing.Bitmap MoleculeStandard {
             get {
                 object obj = ResourceManager.GetObject("MoleculeStandard", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap MoleculeUI {
+            get {
+                object obj = ResourceManager.GetObject("MoleculeUI", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -18390,7 +18506,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An unknown error occurred trying to verify access to Panorma folder {0} on the server {1}.
+        ///   Looks up a localized string similar to An unknown error occurred trying to verify access to Panorama folder {0} on the server {1}.
         ///{2}.
         /// </summary>
         public static string PanoramaHelper_ValidateFolder_ {
@@ -18626,9 +18742,9 @@ namespace pwiz.Skyline.Properties {
         /// <summary>
         ///   Looks up a localized string similar to The easiest way to use this window is to copy from Excel (or any text editor if the data is CSV formatted) and paste into the grid.
         ///    
-        ///Note that you can adjust column order in Skyline by dragging the column headers left or right.  For small molecules, you can also select which columns to enable with the &quot;Columns...&quot; button.
+        ///Note that you can adjust column order in Skyline by dragging the column headers left or right.
         ///
-        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with small  [rest of string was truncated]&quot;;.
+        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window..
         /// </summary>
         public static string PasteDlg_btnTransitionListHelp_Click_ {
             get {
@@ -18637,13 +18753,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Notes on small molecule ion formulas:
+        ///   Looks up a localized string similar to Notes on molecule ion formulas:
         ///
         ///If your transition list format combines formulas and adducts in a single column (e.g. &quot;C8H10N4O2[M+Na]&quot;) then use the &quot;Ion Formula&quot; columns, and disregard the &quot;Adduct&quot; columns.  If your transition list puts the neutral formula and adduct in seperate columns, then use the &quot;Ion Formula&quot; columns for neutral formulas, and the &quot;Adduct&quot; columns for adducts..
         /// </summary>
         public static string PasteDlg_btnTransitionListHelp_Click_2_ {
             get {
                 return ResourceManager.GetString("PasteDlg_btnTransitionListHelp_Click_2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The easiest way to use this window is to copy from Excel (or any text editor if the data is CSV formatted) and paste into the grid.
+        ///    
+        ///Note that you can adjust column order in Skyline by dragging the column headers left or right.  For molecules, you can also select which columns to enable with the &quot;Columns...&quot; button.
+        ///
+        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with molecule tra [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string PasteDlg_btnTransitionListHelp_Click_SmallMol_ {
+            get {
+                return ResourceManager.GetString("PasteDlg_btnTransitionListHelp_Click_SmallMol_", resourceCulture);
             }
         }
         
@@ -18720,11 +18849,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Molecule Group {0}.
+        ///   Looks up a localized string similar to Molecule List {0}.
         /// </summary>
-        public static string PasteDlg_GetMoleculePeptideGroup_Molecule_Group__0_ {
+        public static string PasteDlg_GetMoleculePeptideGroup_Molecule_List__0_ {
             get {
-                return ResourceManager.GetString("PasteDlg_GetMoleculePeptideGroup_Molecule_Group__0_", resourceCulture);
+                return ResourceManager.GetString("PasteDlg_GetMoleculePeptideGroup_Molecule_List__0_", resourceCulture);
             }
         }
         
@@ -19622,7 +19751,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Direct editing of this value is only supported for small molecules..
+        ///   Looks up a localized string similar to Direct editing of this value is only supported for non-proteomic molecules..
         /// </summary>
         public static string Peptide_ThrowIfNotSmallMolecule_Direct_editing_of_this_value_is_only_supported_for_small_molecules_ {
             get {
@@ -20109,11 +20238,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Molecule Group.
+        ///   Looks up a localized string similar to Molecule List.
         /// </summary>
-        public static string PeptideGroupTreeNode_Heading_Molecule_Group {
+        public static string PeptideGroupTreeNode_Heading_Molecule_List {
             get {
-                return ResourceManager.GetString("PeptideGroupTreeNode_Heading_Molecule_Group", resourceCulture);
+                return ResourceManager.GetString("PeptideGroupTreeNode_Heading_Molecule_List", resourceCulture);
             }
         }
         
@@ -20600,6 +20729,132 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ion adducts.
+        /// </summary>
+        public static string PeptideToMoleculeText_Ion_adducts {
+            get {
+                return ResourceManager.GetString("PeptideToMoleculeText_Ion_adducts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion charges.
+        /// </summary>
+        public static string PeptideToMoleculeText_Ion_charges {
+            get {
+                return ResourceManager.GetString("PeptideToMoleculeText_Ion_charges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Modified Peptide Sequence.
+        /// </summary>
+        public static string PeptideToMoleculeText_Modified_Peptide_Sequence {
+            get {
+                return ResourceManager.GetString("PeptideToMoleculeText_Modified_Peptide_Sequence", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Modified Sequence.
+        /// </summary>
+        public static string PeptideToMoleculeText_Modified_Sequence {
+            get {
+                return ResourceManager.GetString("PeptideToMoleculeText_Modified_Sequence", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule.
+        /// </summary>
+        public static string PeptideToMoleculeText_Molecule {
+            get {
+                return ResourceManager.GetString("PeptideToMoleculeText_Molecule", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule List.
+        /// </summary>
+        public static string PeptideToMoleculeText_Molecule_List {
+            get {
+                return ResourceManager.GetString("PeptideToMoleculeText_Molecule_List", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule Lists.
+        /// </summary>
+        public static string PeptideToMoleculeText_Molecule_Lists {
+            get {
+                return ResourceManager.GetString("PeptideToMoleculeText_Molecule_Lists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecules.
+        /// </summary>
+        public static string PeptideToMoleculeText_Molecules {
+            get {
+                return ResourceManager.GetString("PeptideToMoleculeText_Molecules", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptide.
+        /// </summary>
+        public static string PeptideToMoleculeText_Peptide {
+            get {
+                return ResourceManager.GetString("PeptideToMoleculeText_Peptide", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptide List.
+        /// </summary>
+        public static string PeptideToMoleculeText_Peptide_List {
+            get {
+                return ResourceManager.GetString("PeptideToMoleculeText_Peptide_List", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptide Sequence.
+        /// </summary>
+        public static string PeptideToMoleculeText_Peptide_Sequence {
+            get {
+                return ResourceManager.GetString("PeptideToMoleculeText_Peptide_Sequence", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptides.
+        /// </summary>
+        public static string PeptideToMoleculeText_Peptides {
+            get {
+                return ResourceManager.GetString("PeptideToMoleculeText_Peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein.
+        /// </summary>
+        public static string PeptideToMoleculeText_Protein {
+            get {
+                return ResourceManager.GetString("PeptideToMoleculeText_Protein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Proteins.
+        /// </summary>
+        public static string PeptideToMoleculeText_Proteins {
+            get {
+                return ResourceManager.GetString("PeptideToMoleculeText_Proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} Precursors.
         /// </summary>
         public static string PeptideTreeNode_ChildHeading__0__ {
@@ -20949,6 +21204,16 @@ namespace pwiz.Skyline.Properties {
         public static string ProteinMetadataManager_LookupProteinMetadata_resolving_protein_details {
             get {
                 return ResourceManager.GetString("ProteinMetadataManager_LookupProteinMetadata_resolving_protein_details", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap ProteinUI {
+            get {
+                object obj = ResourceManager.GetObject("ProteinUI", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -21614,7 +21879,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Converted To Small Molecules.
+        ///   Looks up a localized string similar to Converted To Molecules.
         /// </summary>
         public static string RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules {
             get {
@@ -23975,7 +24240,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Small Molecule Transition List.
+        ///   Looks up a localized string similar to Molecule Transition List.
         /// </summary>
         public static string SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List {
             get {
@@ -24103,7 +24368,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Add small molecule {0}.
+        ///   Looks up a localized string similar to Add molecule {0}.
         /// </summary>
         public static string SkylineWindow_AddSmallMolecule_Add_small_molecule__0_ {
             get {
@@ -24112,7 +24377,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Add Small Molecule and Precursor.
+        ///   Looks up a localized string similar to Add Molecule and Precursor.
         /// </summary>
         public static string SkylineWindow_AddSmallMolecule_Add_Small_Molecule_and_Precursor {
             get {
@@ -24121,7 +24386,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Add small molecule precursor {0}.
+        ///   Looks up a localized string similar to Add molecule precursor {0}.
         /// </summary>
         public static string SkylineWindow_AddSmallMolecule_Add_small_molecule_precursor__0_ {
             get {
@@ -25371,7 +25636,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Modify Small Molecule.
+        ///   Looks up a localized string similar to Modify Molecule.
         /// </summary>
         public static string SkylineWindow_ModifyPeptide_Modify_Small_Molecule {
             get {
@@ -26539,7 +26804,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A small molecule is defined by a chemical formula and at least one of Name, InChiKey, or other keys (HMDB etc).
+        ///   Looks up a localized string similar to A molecule is defined by a chemical formula and at least one of Name, InChiKey, or other keys (HMDB etc).
         /// </summary>
         public static string SmallMoleculeLibraryAttributes_Validate_A_small_molecule_is_defined_by_a_chemical_formula_and_at_least_one_of_Name__InChiKey__or_other_keys__HMDB_etc_ {
             get {
@@ -26729,7 +26994,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error reading small molecule column headers, did not recognize:
+        ///   Looks up a localized string similar to Error reading molecule column headers, did not recognize:
         ///{0}
         ///Supported values include:
         ///{1}.
@@ -27639,7 +27904,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Learn how to create a Skyline document that targets small molecules specified as precursor ion chemical formulas and adducts. Import a multi-replicate data set collected on a Q Exactive Orbitrap mass spectrometer for a set of plasma samples, and see how many existing Skyline features created initially for targeted proteomics use can be applied to small molecule data. .
+        ///   Looks up a localized string similar to Learn how to create a Skyline document that targets molecules specified as precursor ion chemical formulas and adducts. Import a multi-replicate data set collected on a Q Exactive Orbitrap mass spectrometer for a set of plasma samples, and see how many existing Skyline features created initially for targeted proteomics use can be applied to non-proteomic molecule data. .
         /// </summary>
         public static string StartPage_HiResMetabolomics_Description {
             get {
@@ -27779,7 +28044,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Learn how to target non-proteomic small molecule ions with Skyline. You will import a small molecule transition list used in a metabolomics experiment and import 14 runs from a Waters Xevo TQS. Start learning how to apply the power of the Skyline interface for small molecule experiments..
+        ///   Looks up a localized string similar to Learn how to target non-proteomic ions with Skyline. You will import a molecule transition list used in a metabolomics experiment and import 14 runs from a Waters Xevo TQS. Start learning how to apply the power of the Skyline interface for non-proteomic experiments..
         /// </summary>
         public static string StartPage_SmallMolecule_Description {
             get {
@@ -27788,7 +28053,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Learn how how to create a Skyline document that targets stable isotope labeled small molecules from a literature citation, specified as only precursor m/z, product ion m/z, and collision energy values. Perform retention time scheduling and collision energy optimization for small molecules by importing a multi-replicate data set from a Waters Xevo TQ-S using initial CE values from a Sciex triple quad. Learn how many existing Skyline features created initially for targeted proteomics use can now be applied to [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to Learn how how to create a Skyline document that targets stable isotope labeled molecules from a literature citation, specified as only precursor m/z, product ion m/z, and collision energy values. Perform retention time scheduling and collision energy optimization for molecules by importing a multi-replicate data set from a Waters Xevo TQ-S using initial CE values from a Sciex triple quad. Learn how many existing Skyline features created initially for targeted proteomics use can now be applied to non-proteom [rest of string was truncated]&quot;;.
         /// </summary>
         public static string StartPage_SmallMoleculeMethodDevCEOpt_Description {
             get {
@@ -27797,7 +28062,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Learn how to create a Skyline document that targets small molecules specified as precursor ion chemical formulas and adducts, and product ion m/z values. Import a multi-replicate data set collected using LC-MS/MS on a triple quadulpole, and see how many existing Skyline features created initially for targeted proteomics use can now be applied to small molecule data..
+        ///   Looks up a localized string similar to Learn how to create a Skyline document that targets molecules specified as precursor ion chemical formulas and adducts, and product ion m/z values. Import a multi-replicate data set collected using LC-MS/MS on a triple quadulpole, and see how many existing Skyline features created initially for targeted proteomics use can now be applied to non-proteomic molecule data..
         /// </summary>
         public static string StartPage_SmallMoleculeQuantification_Description {
             get {
@@ -28031,6 +28296,16 @@ namespace pwiz.Skyline.Properties {
         public static string TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0___ {
             get {
                 return ResourceManager.GetString("TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to resolve molecule from &quot;{0}&quot;: could be any of {1}.
+        /// </summary>
+        public static string TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0____could_be_any_of__1_ {
+            get {
+                return ResourceManager.GetString("TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0____could_be_a" +
+                        "ny_of__1_", resourceCulture);
             }
         }
         
@@ -28682,7 +28957,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Insert Small Molecule Transition List.
+        ///   Looks up a localized string similar to Insert Molecule Transition List.
         /// </summary>
         public static string ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List {
             get {
@@ -29263,7 +29538,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Small molecule precursor adducts.
+        ///   Looks up a localized string similar to Molecule precursor adducts.
         /// </summary>
         public static string TransitionFilter_SmallMoleculePrecursorAdducts_Small_molecule_precursor_adducts {
             get {
@@ -30003,7 +30278,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Small molecule ion types must contain a comma separated list of ion types. Valid types are &quot;f&quot; (for fragment) and/or &quot;p&quot; (for precursor).
+        ///   Looks up a localized string similar to Molecule ion types must contain a comma separated list of ion types. Valid types are &quot;f&quot; (for fragment) and/or &quot;p&quot; (for precursor).
         /// </summary>
         public static string TransitionSettingsUI_OkDialog_Small_molecule_ion_types_must_contain_a_comma_separated_list_of_ion_types__Valid_types_are__f___for_fragment__and_or__p___for_precursor_ {
             get {
@@ -30274,6 +30549,36 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("TypedExplicitModifications_AddModMasses_Static_mod_masses_may_not_be_added_to_lig" +
                         "ht_type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap UIModeMixed {
+            get {
+                object obj = ResourceManager.GetObject("UIModeMixed", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap UIModeProteomic {
+            get {
+                object obj = ResourceManager.GetObject("UIModeProteomic", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap UIModeSmallMolecules {
+            get {
+                object obj = ResourceManager.GetObject("UIModeSmallMolecules", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -31639,6 +31944,16 @@ namespace pwiz.Skyline.Properties {
         public static System.Drawing.Bitmap WizardImportTransition {
             get {
                 object obj = ResourceManager.GetObject("WizardImportTransition", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap WizardMoleculeIcon {
+            get {
+                object obj = ResourceManager.GetObject("WizardMoleculeIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

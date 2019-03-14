@@ -141,6 +141,9 @@ namespace pwiz.Skyline
                 RunUIAction);
             undoRedoButtons.AttachEventHandlers();
 
+            // Setup to manage and interact with mode selector buttons in UI
+            GetModeUIHelper().SetModeUIToolStripButtons(modeUIToolBarDropDownButton, modeUIButtonClick);
+
             _backgroundLoaders = new List<BackgroundLoader>();
 
             _graphSpectrumSettings = new GraphSpectrumSettings(UpdateSpectrumGraph);
@@ -244,6 +247,15 @@ namespace pwiz.Skyline
             }
             NewDocument();
             chorusRequestToolStripMenuItem.Visible = Settings.Default.EnableChorus;
+
+            // Set UI mode to user default (proteomic/molecule/mixed)
+            SrmDocument.DOCUMENT_TYPE defaultModeUI;
+            if (!Enum.TryParse(Settings.Default.UIMode, out defaultModeUI))
+            {
+                defaultModeUI = SrmDocument.DOCUMENT_TYPE.proteomic;
+            }
+            SetUIMode(defaultModeUI);
+
         }
 
         public AllChromatogramsGraph ImportingResultsWindow { get; private set; }
@@ -321,6 +333,11 @@ namespace pwiz.Skyline
         void IDocumentContainer.Unlisten(EventHandler<DocumentChangedEventArgs> listener)
         {
             DocumentChangedEvent -= listener;
+        }
+
+        public SrmDocument.DOCUMENT_TYPE ModeUI
+        {
+            get { return GetModeUIHelper().ModeUI; }
         }
 
         void IDocumentUIContainer.ListenUI(EventHandler<DocumentChangedEventArgs> listener)
@@ -538,6 +555,20 @@ namespace pwiz.Skyline
             UpdateNodeCountStatus();
 
             integrateAllMenuItem.Checked = settingsNew.TransitionSettings.Integration.IsIntegrateAll;
+
+            // Update UI mode if we have introduced any new node types not handled by current ui mode
+            var changeModeUI = GetModeUIHelper().ModeUI != _documentUI.DocumentType
+                               && (GetModeUIHelper().ModeUI != SrmDocument.DOCUMENT_TYPE.mixed || IsOpeningFile) // If opening file, just override UI mode
+                               && _documentUI.DocumentType != SrmDocument.DOCUMENT_TYPE.none; // Don't change UI mode if new doc is empty
+
+            if (changeModeUI)
+            {
+                SetUIMode(_documentUI.DocumentType);
+            }
+            else if (documentPrevious == null)
+            {
+                SetUIMode(GetModeUIHelper().ModeUI);
+            }
         }
 
         public void ShowAutoTrainResults(object sender, DocumentChangedEventArgs e)
@@ -2944,8 +2975,8 @@ namespace pwiz.Skyline
             Settings.Default.ShowPeptides = true;
             ShowSequenceTreeForm(true, true);
 
-            FormUtil.OpenForms.OfType<FoldChangeBarGraph>().ForEach(b => b.QueueUpdateGraph());
-            FormUtil.OpenForms.OfType<FoldChangeVolcanoPlot>().ForEach(v => v.QueueUpdateGraph());
+            CollectionUtil.ForEach(FormUtil.OpenForms.OfType<FoldChangeBarGraph>(), b => b.QueueUpdateGraph());
+            CollectionUtil.ForEach(FormUtil.OpenForms.OfType<FoldChangeVolcanoPlot>(), v => v.QueueUpdateGraph());
         }
 
         private void showTargetsByNameToolStripMenuItem_Click(object sender, EventArgs e)
@@ -4158,7 +4189,9 @@ namespace pwiz.Skyline
                     var backgroundProteome = settings.PeptideSettings.BackgroundProteome;
                     FastaSequence fastaSequence = null;
                     Target peptideSequence = null;
-                    if (!backgroundProteome.IsNone)
+                    var proteomic = ModeUI != SrmDocument.DOCUMENT_TYPE.small_molecules; // FUTURE(bspratt) be smarter for small mol re predictive typing etc
+
+                    if (proteomic && !backgroundProteome.IsNone)
                     {
                         int ichPeptideSeparator = labelText.IndexOf(FastaSequence.PEPTIDE_SEQUENCE_SEPARATOR,
                                                                     StringComparison.Ordinal);
@@ -4226,7 +4259,7 @@ namespace pwiz.Skyline
                     else
                     {
                         modifyMessage = string.Format(Resources.SkylineWindow_sequenceTree_AfterNodeEdit_Add__0__,labelText);
-                        isExSequence = FastaSequence.IsExSequence(labelText) &&
+                        isExSequence = proteomic && FastaSequence.IsExSequence(labelText) &&
                                             FastaSequence.StripModifications(labelText).Length >= 
                                             settings.PeptideSettings.Filter.MinPeptideLength;
                         if (isExSequence)
@@ -4736,8 +4769,10 @@ namespace pwiz.Skyline
 
         #region Status bar
 
-        private void UpdateNodeCountStatus()
+        private void UpdateNodeCountStatus(bool forceUpdate = false)
         {
+            if (DocumentUI == null)
+                return;
             var selectedPath = SelectedPath;
             int[] positions;
             if (selectedPath != null &&
@@ -4754,14 +4789,14 @@ namespace pwiz.Skyline
                     positions[i] = -1;
             }
 
-            bool isProtOnly = DocumentUI.DocumentType == SrmDocument.DOCUMENT_TYPE.proteomic;
-            UpdateStatusCounter(statusSequences, positions, SrmDocument.Level.MoleculeGroups, isProtOnly ? @"prot" : @"list");
-            UpdateStatusCounter(statusPeptides, positions, SrmDocument.Level.Molecules, isProtOnly ? @"pep" : @"mol");
-            UpdateStatusCounter(statusPrecursors, positions, SrmDocument.Level.TransitionGroups, @"prec");
-            UpdateStatusCounter(statusIons, positions, SrmDocument.Level.Transitions, @"tran");
+            var isProtOnly = GetModeUIHelper().ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic;
+            UpdateStatusCounter(statusSequences, positions, SrmDocument.Level.MoleculeGroups, isProtOnly ? @"prot" : @"list", forceUpdate);
+            UpdateStatusCounter(statusPeptides, positions, SrmDocument.Level.Molecules, isProtOnly ? @"pep" : @"mol", forceUpdate);
+            UpdateStatusCounter(statusPrecursors, positions, SrmDocument.Level.TransitionGroups, @"prec", forceUpdate);
+            UpdateStatusCounter(statusIons, positions, SrmDocument.Level.Transitions, @"tran", forceUpdate);
         }
 
-        private void UpdateStatusCounter(ToolStripItem label, int[] positions, SrmDocument.Level level, string text)
+        private void UpdateStatusCounter(ToolStripItem label, int[] positions, SrmDocument.Level level, string text, bool forceUpdate)
         {
             int l = (int)level;
             int count = DocumentUI.GetCount(l);
@@ -4781,7 +4816,7 @@ namespace pwiz.Skyline
                 tag = string.Format(@"{0:#,0}", pos) + @"/" + string.Format(@"{0:#,0}", count);
             }
 
-            if (!Equals(label.Tag, tag))
+            if (forceUpdate || !Equals(label.Tag, tag))
             {
                 label.Text = TextUtil.SpaceSeparate(tag, text);
                 label.Tag = tag;
@@ -5315,43 +5350,6 @@ namespace pwiz.Skyline
             listForm.Show(dockPanel, rectFloat);
         }
 
-        private string _originalProteinsText;
-        private string _originalPeptidesText;
-
-        private void expandAllMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            _originalProteinsText = _originalProteinsText ?? expandProteinsMenuItem.Text;
-            _originalPeptidesText = _originalPeptidesText ?? expandPeptidesMenuItem.Text;
-
-            if (DocumentUI.DocumentType == SrmDocument.DOCUMENT_TYPE.proteomic)
-            {
-                expandProteinsMenuItem.Text = _originalProteinsText;
-                expandPeptidesMenuItem.Text = _originalPeptidesText;
-            }
-            else
-            {
-                expandProteinsMenuItem.Text = Resources.SkylineWindow_expandAllMenuItem_DropDownOpening__Lists;
-                expandPeptidesMenuItem.Text = Resources.SkylineWindow_expandAllMenuItem_DropDownOpening__Molecules;
-            }
-        }
-
-        private void collapseAllToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            _originalProteinsText = _originalProteinsText ?? expandProteinsMenuItem.Text;
-            _originalPeptidesText = _originalPeptidesText ?? expandPeptidesMenuItem.Text;
-
-            if (DocumentUI.DocumentType == SrmDocument.DOCUMENT_TYPE.proteomic)
-            {
-                collapseProteinsMenuItem.Text = _originalProteinsText;
-                collapsePeptidesMenuItem.Text = _originalPeptidesText;
-            }
-            else
-            {
-                collapseProteinsMenuItem.Text = Resources.SkylineWindow_expandAllMenuItem_DropDownOpening__Lists;
-                collapsePeptidesMenuItem.Text = Resources.SkylineWindow_expandAllMenuItem_DropDownOpening__Molecules;
-            }
-        }
-
         public void SelectElement(ElementRef elementRef)
         {
             var document = Document;
@@ -5399,6 +5397,55 @@ namespace pwiz.Skyline
                 NavigateToBookmark(bookmark);
             }
         }
+
+        /// <summary>
+        /// Handler for the buttons that allow user to switch between proteomic, small mol, or mixed UI display.
+        /// Between the two buttons there are three states A/B/Both - we enforce that at least one is always checked.
+        /// </summary>
+        private void modeUIButtonClick(object sender, EventArgs e)
+        {
+            SetUIMode(GetModeUIHelper().ModeUI);
+        }
+
+        public void SetUIMode(SrmDocument.DOCUMENT_TYPE mode)
+        {
+            GetModeUIHelper().ModeUI = mode== SrmDocument.DOCUMENT_TYPE.none ? SrmDocument.DOCUMENT_TYPE.proteomic : mode;
+            GetModeUIHelper().AttemptChangeModeUI(mode);
+
+
+            // Update any visible graphs
+            UpdateGraphPanes();
+            UpdateNodeCountStatus(true); // Force update even if node counts are unchanged
+
+            // Update menu items for current UI mode
+            menuMain.SuspendLayout();
+            GetModeUIHelper().AdjustMenusForModeUI(menuMain.Items);
+            menuMain.Refresh();
+            menuMain.Invalidate();
+            menuMain.ResumeLayout();
+        }
+
+
+
+        #region Testing Support
+        //
+        // For exercising UI mode selector buttons in tests
+        //
+
+        public void ModeUIButtonClick(SrmDocument.DOCUMENT_TYPE mode)
+        {
+            GetModeUIHelper().ModeUIButtonClick(mode);
+        }
+
+        public bool IsProteomicOrMixedUI
+        {
+            get { return GetModeUIHelper().GetUIToolBarButtonState() != SrmDocument.DOCUMENT_TYPE.small_molecules; }
+        }
+        public bool IsSmallMoleculeOrMixedUI
+        {
+            get { return GetModeUIHelper().GetUIToolBarButtonState() != SrmDocument.DOCUMENT_TYPE.proteomic; }
+        }
+        #endregion
     }
 }
 

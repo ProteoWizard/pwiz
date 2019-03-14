@@ -674,6 +674,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return false;
             }
 
+            // FUTURE(bspratt): deal with small mol iontypes etc if we extend this to non=peptide searches
+
             TransitionFilter filter = TransitionSettings.Filter;
             if (FullScanSettingsControl.PrecursorChargesTextBox.Visible)
             {
