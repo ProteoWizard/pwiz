@@ -41,6 +41,9 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            // Need to be in mixed UI mode to see both options for paste dialog
+            RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.mixed));
+
             RunDlg<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg, pasteDlg =>
             {
                 pasteDlg.IsMolecule = true;

@@ -293,6 +293,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ExportMethodDialogTest.cs" />
     <Compile Include="LabelPeakPickingTest.cs" />
+    <Compile Include="TargetResolverTest.cs" />
     <Compile Include="ToolServiceTest.cs" />
     <Compile Include="ToolStoreDlgTest.cs" />
     <Compile Include="ToolUpdatesTest.cs" />
@@ -301,6 +302,7 @@
     <Compile Include="AssayLibraryImportTest.cs" />
     <Compile Include="PeakBoundaryCompareTest.cs" />
     <Compile Include="SwathIsolationListsTest.cs" />
+    <Compile Include="UIModeTest.cs" />
     <Compile Include="UniquePeptidesDialogTest.cs" />
     <Compile Include="UniquePeptidesSettingsTest.cs" />
     <Compile Include="RunToRunRegressionTest.cs" />
@@ -452,9 +454,11 @@
     <None Include="SynchronizeSummaryZoomingTest.zip" />
     <None Include="SynchSiblingsSmallMoleculesTest.zip" />
     <None Include="SynchSiblingsTest.zip" />
+    <None Include="TargetResolverTest.zip" />
     <None Include="ToolServiceTest.zip" />
     <None Include="ToolStoreDlgTest.zip" />
     <None Include="ToolUpdatesTest.zip" />
+    <None Include="UIModeTest.zip" />
     <None Include="UniquePeptidesDialogTest.zip" />
     <None Include="UpdateGlobalStandardTest.zip" />
   </ItemGroup>

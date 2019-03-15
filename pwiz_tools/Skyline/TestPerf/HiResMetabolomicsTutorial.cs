@@ -28,6 +28,7 @@ using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -46,11 +47,16 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
     [TestClass]
     public class HiResMetabolomicsTutorialTest : AbstractFunctionalTest
     {
+        protected override bool ShowStartPage
+        {
+            get { return true; }  // So we can point out the UI mode control
+        }
+
         [TestMethod]
         public void TestHiResMetabolomicsTutorial()
         {
             // Set true to look at tutorial screenshots.
-           // IsPauseForScreenShots = true;
+            // IsPauseForScreenShots = true;
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/HiResMetabolomics.pdf";
             ForceMzml = true; // Prefer mzML as being the more efficient download
@@ -80,6 +86,15 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
 
         protected override void DoTest()
         {
+            // Setting the UI mode, p 2  
+            var startPage = WaitForOpenForm<StartPage>();
+            RunUI(() => startPage.ModeUIButtonClick(SrmDocument.DOCUMENT_TYPE.proteomic));
+            PauseForScreenShot<StartPage>("Start Window proteomic", 2);
+            RunUI(() => startPage.ModeUIButtonClick(SrmDocument.DOCUMENT_TYPE.small_molecules));
+            PauseForScreenShot<StartPage>("Start Window small molecule", 3);
+            RunUI(() => startPage.DoAction(skylineWindow => true));
+            WaitForOpenForm<SkylineWindow>();
+
             // Inserting a Transition List, p. 2
             {
                 var doc = SkylineWindow.Document;
@@ -87,17 +102,9 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                 for (var retry = 0; retry < 2; retry++)
                 {
                     var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+                    
                     RunUI(() =>
                     {
-                        pasteDlg.IsMolecule = false;  // Default peptide view
-                        pasteDlg.Size = new Size(800, 275);
-                    });
-                    if (retry == 0)
-                        PauseForScreenShot<PasteDlg>("Paste Dialog in peptide mode", 2);
-
-                    RunUI(() =>
-                    {
-                        pasteDlg.IsMolecule = true;
                         pasteDlg.SetSmallMoleculeColumns(null);  // Default columns
                     });
                     if (retry == 0)

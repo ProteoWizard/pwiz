@@ -55,7 +55,7 @@ namespace BuildThermoMethod
                     "   -f               Fusion method [default]\n" +
                     "   -e               Endura method\n" +
                     "   -q               Quantiva method\n" +
-					"   -a               Altis method\n" +
+                    "   -a               Altis method\n" +
                     "   -o <output file> New method is written to the specified output file\n" +
                     "   -s               Transition list is read from stdin.\n" +
                     "                    e.g. cat TranList.csv | BuildThermoMethod -s -o new.ext temp.ext\n" +

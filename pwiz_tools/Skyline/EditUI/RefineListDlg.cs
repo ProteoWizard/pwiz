@@ -32,7 +32,8 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class RefineListDlg : FormEx, IAuditLogModifier<RefineListDlg.RefineListSettings>
+    public partial class RefineListDlg : ModeUIInvariantFormEx,  // This dialog is inherently proteomic, never wants the "peptide"->"molecule" translation
+                  IAuditLogModifier<RefineListDlg.RefineListSettings>
     {
         private readonly SrmDocument _document;
 

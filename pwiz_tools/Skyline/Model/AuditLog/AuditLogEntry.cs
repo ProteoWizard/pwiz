@@ -193,13 +193,13 @@ namespace pwiz.Skyline.Model.AuditLog
             writer.WriteEndDocument();
         }
 
-        public static bool ReadFromFile(string fileName, out string documentHash, out AuditLogList result)
+        public static bool ReadFromFile(string fileName, out string loggedSkylineDocumentHash, out AuditLogList result)
         {
             try
             {
                 using (var reader = new XmlTextReader(fileName))
                 {
-                    return ReadFromXmlTextReader(reader, out documentHash, out result);
+                    return ReadFromXmlTextReader(reader, out loggedSkylineDocumentHash, out result);
                 }
             }
             catch(Exception ex)
@@ -214,14 +214,14 @@ namespace pwiz.Skyline.Model.AuditLog
                     alert.ShowParentlessDialog();
                 }
 
-                documentHash = null;
+                loggedSkylineDocumentHash = null;
                 result = null;
 
                 return false;
             }
         }
 
-        public static bool ReadFromXmlTextReader(XmlTextReader reader, out string documentHash, out AuditLogList result)
+        public static bool ReadFromXmlTextReader(XmlTextReader reader, out string loggedSkylineDocumentHash, out AuditLogList result)
         {
             reader.ReadToFollowing(DOCUMENT_ROOT);
             DocumentFormat? docFormat = null;
@@ -234,7 +234,27 @@ namespace pwiz.Skyline.Model.AuditLog
 
             reader.ReadStartElement();
 
-            documentHash = reader.ReadElementString(EL.document_hash.ToString());
+            loggedSkylineDocumentHash = reader.ReadElementString(EL.document_hash.ToString());
+            if (docFormat == null && !string.IsNullOrEmpty(loggedSkylineDocumentHash))
+            {
+                // If the docFormat is null, this is an old audit log and the document hash was formatted using byte.ToString(@"X2") instead of Base64
+                try
+                {
+                    var bytes = new List<byte>();
+                    var s = loggedSkylineDocumentHash;
+                    foreach (var bbHex in Enumerable.Range(0, loggedSkylineDocumentHash.Length / 2)
+                        .Select(i => s.Substring(i * 2, 2)))
+                    {
+                        bytes.Add(Convert.ToByte(bbHex, 16));
+                    }
+                    loggedSkylineDocumentHash = Convert.ToBase64String(bytes.ToArray());
+                }
+                // ReSharper disable once EmptyGeneralCatchClause
+                catch
+                {
+                }
+            }
+
             string rootHash = null;
             if (reader.IsStartElement(EL.root_hash.ToString()))
                 rootHash = reader.ReadElementString(EL.root_hash.ToString());
@@ -269,7 +289,7 @@ namespace pwiz.Skyline.Model.AuditLog
     {
         public DocumentNodeCounts(SrmDocument doc)
         {
-            IsPeptideOnly = doc.DocumentType == SrmDocument.DOCUMENT_TYPE.proteomic;
+            IsPeptideOnly = doc.IsEmptyOrHasPeptides; // Treat empty as proteomic per tradition
             MoleculeGroupCount = doc.GetCount((int) SrmDocument.Level.MoleculeGroups);
             MoleculeCount = doc.GetCount((int)SrmDocument.Level.Molecules);
             PrecursorCount = doc.GetCount((int)SrmDocument.Level.TransitionGroups);

@@ -61,7 +61,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             {
                 if (DocNode.IsNonProteomic)
                 {
-                    return Resources.PeptideGroupTreeNode_Heading_Molecule_Group;
+                    return Resources.PeptideGroupTreeNode_Heading_Molecule_List;
                 }
                 return Model.Id is FastaSequence
                     ? Resources.PeptideGroupTreeNode_Heading_Protein

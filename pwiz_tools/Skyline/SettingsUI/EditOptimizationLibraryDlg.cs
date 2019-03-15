@@ -364,14 +364,14 @@ namespace pwiz.Skyline.SettingsUI
                 string seqModified = optimization.Target.ToSerializableString();
                 if (_gridViewLibraryDriver.ValidateSequence(seqModified) != null)
                 {
-                    MessageDlg.Show(this, string.Format(Resources.EditOptimizationLibraryDlg_ValidateOptimizationList_The_value__0__is_not_a_valid_modified_peptide_sequence_,
+                    MessageDlg.Show(this, ModeUIAwareStringFormat(Resources.EditOptimizationLibraryDlg_ValidateOptimizationList_The_value__0__is_not_a_valid_modified_peptide_sequence_,
                                                         seqModified));
                     return false;
                 }
 
                 if (keySet.Contains(optimization.Key))
                 {
-                    MessageDlg.Show(this, string.Format(Resources.EditOptimizationLibraryDlg_ValidateOptimizationList_The_optimization_with_sequence__0___charge__1___fragment_ion__2__and_product_charge__3__appears_in_the__4__table_more_than_once_,
+                    MessageDlg.Show(this, ModeUIAwareStringFormat(Resources.EditOptimizationLibraryDlg_ValidateOptimizationList_The_optimization_with_sequence__0___charge__1___fragment_ion__2__and_product_charge__3__appears_in_the__4__table_more_than_once_,
                                                         seqModified, optimization.Adduct, optimization.FragmentIon, optimization.ProductAdduct, tableName));
                     return false;
                 }
@@ -678,14 +678,14 @@ namespace pwiz.Skyline.SettingsUI
                 string seq = columns[0] as string;
                 string prod = prodVisible ? columns[1] as string : null;
                 string val = columns.Last() as string;
-                string message; // TODO(bspratt) make this message UIMode aware
+                string message; 
                 if (string.IsNullOrWhiteSpace(seq))
                 {
-                    message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_Missing_peptide_sequence_on_line__0_, lineNumber);
+                    message = _form.ModeUIAwareStringFormat(Resources.PeptideGridViewDriver_ValidateRow_Missing_peptide_sequence_on_line__0_, lineNumber);
                 }
                 else if (ValidateSequence(seq) != null)
                 {
-                    message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1_, seq, lineNumber);
+                    message = _form.ModeUIAwareStringFormat(Resources.PeptideGridViewDriver_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1_, seq, lineNumber);
                 }
                 else if (prodVisible && string.IsNullOrWhiteSpace(prod))
                 {
@@ -819,7 +819,7 @@ namespace pwiz.Skyline.SettingsUI
                         return null;
                     }
 
-                    return string.Format(Resources.EditOptimizationLibraryDlg_ValidateOptimizationList_The_value__0__is_not_a_valid_modified_peptide_sequence_, sequenceText); // TODO(bspratt) make this UI mode aware when that's ready
+                    return _form.ModeUIAwareStringFormat(Resources.EditOptimizationLibraryDlg_ValidateOptimizationList_The_value__0__is_not_a_valid_modified_peptide_sequence_, sequenceText);
                 }
                 return null;
             }

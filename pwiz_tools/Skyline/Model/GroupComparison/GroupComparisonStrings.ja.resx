@@ -299,8 +299,8 @@
   <data name="CreateMatchExpression_PopulateComboBoxes_Molecula_Formula" xml:space="preserve">
     <value>分子式</value>
   </data>
-  <data name="CreateMatchExpression_PopulateComboBoxes_Molecule_Group_Name" xml:space="preserve">
-    <value>分子グループ名</value>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Molecule_List_Name" xml:space="preserve">
+    <value>分子リスト名</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Size" xml:space="preserve">
     <value>サイズ</value>

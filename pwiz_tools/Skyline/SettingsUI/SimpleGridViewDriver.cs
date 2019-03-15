@@ -43,6 +43,18 @@ namespace pwiz.Skyline.SettingsUI
 
         protected Control MessageParent { get { return FormEx.GetParentForm(GridView); } }
 
+        /// <summary>
+        /// Handles "peptide" -> "molecule" translation as required by current UI mode
+        /// </summary>
+        protected Helpers.ModeUIAwareFormHelper ModeUIHelper
+        {
+            get
+            {
+                var formex = MessageParent as FormEx;
+                return formex?.GetModeUIHelper() ?? Helpers.ModeUIAwareFormHelper.DEFAULT;
+            }
+        }
+
         public SortableBindingList<TItem> Items { get; private set; }
 
         private void gridView_KeyDown(object sender, KeyEventArgs e)

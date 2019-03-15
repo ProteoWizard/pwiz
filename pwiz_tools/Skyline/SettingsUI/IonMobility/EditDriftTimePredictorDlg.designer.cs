@@ -45,7 +45,7 @@
             this.textResolvingPower = new System.Windows.Forms.TextBox();
             this.textName = new System.Windows.Forms.TextBox();
             this.gridMeasuredDriftTimes = new pwiz.Common.Controls.CommonDataGridView();
-            this.MeasuredDriftTimeSequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.MeasuredDriftTimeSequence = new pwiz.Skyline.Controls.TargetColumn();
             this.MeasuredDriftTimeCharge = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.MeasuredIonMobility = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.MeasuredDriftTimeCCSsqA = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -397,7 +397,7 @@
         private System.Windows.Forms.Label labelWidthDtMaxUnits;
         private System.Windows.Forms.ComboBox comboBoxIonMobilityUnits;
         private System.Windows.Forms.Label labelIonMobilityUnits;
-        private System.Windows.Forms.DataGridViewTextBoxColumn MeasuredDriftTimeSequence;
+        private pwiz.Skyline.Controls.TargetColumn MeasuredDriftTimeSequence;
         private System.Windows.Forms.DataGridViewTextBoxColumn MeasuredDriftTimeCharge;
         private System.Windows.Forms.DataGridViewTextBoxColumn MeasuredIonMobility;
         private System.Windows.Forms.DataGridViewTextBoxColumn MeasuredDriftTimeCCSsqA;

@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -52,7 +53,7 @@ namespace pwiz.Skyline.SettingsUI
                                                      AnnotationDef.AnnotationTarget.transition_result,
                                                  })
             {
-                checkedListBoxAppliesTo.Items.Add(new AnnotationTargetItem(annotationTarget));
+                checkedListBoxAppliesTo.Items.Add(new AnnotationTargetItem(annotationTarget, GetModeUIHelper().ModeUI));
             }
             comboType.Items.AddRange(ListPropertyType.ListPropertyTypes().ToArray());
             comboType.SelectedIndex = 0;
@@ -198,15 +199,17 @@ namespace pwiz.Skyline.SettingsUI
 
         internal class AnnotationTargetItem
         {
-            public AnnotationTargetItem(AnnotationDef.AnnotationTarget annotationTarget)
+            public AnnotationTargetItem(AnnotationDef.AnnotationTarget annotationTarget, SrmDocument.DOCUMENT_TYPE modeUI)
             {
                 AnnotationTarget = annotationTarget;
+                ModeUI = modeUI;
             }
 
             public AnnotationDef.AnnotationTarget AnnotationTarget { get; private set; }
+            public SrmDocument.DOCUMENT_TYPE ModeUI { get; private set; }
             public override string ToString()
             {
-                return AnnotationDef.AnnotationTargetPluralName(AnnotationTarget);
+                return Helpers.PeptideToMoleculeTextMapper.Translate(AnnotationDef.AnnotationTargetPluralName(AnnotationTarget), ModeUI);
             }
         }
     }
