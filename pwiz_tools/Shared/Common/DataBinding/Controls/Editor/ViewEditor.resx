@@ -400,6 +400,18 @@
   <data name="toolButtonFind.Text" xml:space="preserve">
     <value>Find Column</value>
   </data>
+  <data name="showHiddenFieldsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="showHiddenFieldsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Show Hidden Fields</value>
+  </data>
+  <data name="showSourceTabMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="showSourceTabMenuItem.Text" xml:space="preserve">
+    <value>Show Source Tab</value>
+  </data>
   <data name="toolButtonShowAdvanced.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
@@ -419,13 +431,10 @@
     <value>Magenta</value>
   </data>
   <data name="toolButtonShowAdvanced.Size" type="System.Drawing.Size, System.Drawing">
-    <value>96, 22</value>
+    <value>73, 22</value>
   </data>
   <data name="toolButtonShowAdvanced.Text" xml:space="preserve">
-    <value>Show Advanced</value>
-  </data>
-  <data name="toolButtonShowAdvanced.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
+    <value>Advanced</value>
   </data>
   <data name="helpToolStripButton.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -626,7 +635,19 @@
     <value>toolButtonShowAdvanced</value>
   </data>
   <data name="&gt;&gt;toolButtonShowAdvanced.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Windows.Forms.ToolStripDropDownButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;showHiddenFieldsToolStripMenuItem.Name" xml:space="preserve">
+    <value>showHiddenFieldsToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;showHiddenFieldsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;showSourceTabMenuItem.Name" xml:space="preserve">
+    <value>showSourceTabMenuItem</value>
+  </data>
+  <data name="&gt;&gt;showSourceTabMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;helpToolStripButton.Name" xml:space="preserve">
     <value>helpToolStripButton</value>

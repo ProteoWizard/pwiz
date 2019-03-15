@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
@@ -30,7 +31,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 {
     [AnnotationTarget(AnnotationDef.AnnotationTarget.protein)]
     [ProteomicDisplayName(nameof(Protein))]
-    [InvariantDisplayName("Molecule", ExceptInUiMode = UiModes.PROTEOMIC)]
+    [InvariantDisplayName("Molecule List", ExceptInUiMode = UiModes.PROTEOMIC)]
     public class Protein : SkylineDocNode<PeptideGroupDocNode>
     {
         private readonly CachedValue<Peptide[]> _peptides;
@@ -54,6 +55,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [HideWhen(AncestorsOfAnyOfTheseTypes = new []{typeof(SkylineDocument), typeof(FoldChangeBindingSource.FoldChangeRow)})]
+        [Obsolete]
         public IDictionary<ResultKey, ResultFile> Results
         {
             get { return _results.Value; }
@@ -94,15 +96,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public string Name
         {
             get { return DocNode.Name; }
-            set { ChangeDocNode(EditDescription.SetColumn(@"ProteinName", value),
+            set { ChangeDocNode(EditColumnDescription(nameof(Name), value),
                 docNode=>docNode.ChangeName(value)); } // the user can overide this label
         }
-        [InvariantDisplayName("ProteinDescription", InUiMode = UiModes.PROTEOMIC)]
+        [InvariantDisplayName("ProteinDescription")]
         [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public string Description
         {
             get { return DocNode.Description; }
-            set { ChangeDocNode(EditDescription.SetColumn(@"ProteinDescription", value),
+            set { ChangeDocNode(EditColumnDescription(nameof(Description), value),
                 docNode => docNode.ChangeDescription(value));
             } // the user can ovveride this label
         }
@@ -159,7 +161,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     return;
                 }
-                ChangeDocNode(EditDescription.SetColumn(nameof(AutoSelectPeptides), value), docNode=>
+                ChangeDocNode(EditColumnDescription(nameof(AutoSelectPeptides), value), docNode=>
                 {
                     docNode = (PeptideGroupDocNode) docNode.ChangeAutoManageChildren(value);
                     if (docNode.AutoManageChildren)
@@ -173,12 +175,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
         [ProteomicDisplayName("ProteinNote")]
-        [InvariantDisplayName("MoleculeListNode")]
+        [InvariantDisplayName("MoleculeListNote")]
         [Importable]
         public string Note
         {
             get { return DocNode.Note; }
-            set { ChangeDocNode(EditDescription.SetColumn(@"ProteinNote", value),
+            set { ChangeDocNode(EditColumnDescription(nameof(Note), value),
                 docNode => (PeptideGroupDocNode) docNode.ChangeAnnotations(docNode.Annotations.ChangeNote(value)));
             }
         }

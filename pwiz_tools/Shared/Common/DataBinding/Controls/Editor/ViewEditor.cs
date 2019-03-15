@@ -36,6 +36,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
     {
         private bool _inChangeView;
         private bool _showHiddenFields;
+
         // ReSharper disable PrivateFieldCanBeConvertedToLocalVariable
         private readonly ChooseColumnsTab _chooseColumnsTab;
         private readonly FilterTab _filterTab;
@@ -81,11 +82,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             foreach (var tab in _editorWidgets)
             {
                 tab.SetViewEditor(this);
-            }
-            toolButtonShowAdvanced.Checked = ShowHiddenFields;
-            if (!ShowHiddenFields)
-            {
-                tabControl1.TabPages.Remove(tabPageSource);
             }
             AddTooltipHandler(_chooseColumnsTab.AvailableFieldsTree);
             AddTooltipHandler(_filterTab.AvailableFieldsTree);
@@ -205,8 +201,25 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                     return;
                 }
                 _showHiddenFields = value;
-                toolButtonShowAdvanced.Checked = ShowHiddenFields;
-                if (ShowHiddenFields)
+                showHiddenFieldsToolStripMenuItem.Checked = ShowHiddenFields;
+                ViewChange?.Invoke(this, new EventArgs());
+            }
+        }
+
+        public bool ShowSourceTab
+        {
+            get
+            {
+                return tabPageSource.Parent == tabControl1;
+            }
+            set
+            {
+                if (ShowSourceTab == value)
+                {
+                    return;
+                }
+
+                if (value)
                 {
                     if (tabPageSource.Parent == null)
                     {
@@ -220,22 +233,9 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                         tabControl1.TabPages.Remove(tabPageSource);
                     }
                 }
-                if (null != ViewChange)
-                {
-                    ViewChange(this, new EventArgs());
-                }
-            }
-        }
 
-        public bool ShowSourceTab
-        {
-            get
-            {
-                return tabPageSource.Visible;
-            }
-            set
-            {
-                tabPageSource.Visible = value;
+                showSourceTabMenuItem.Checked = ShowSourceTab;
+                ViewChange?.Invoke(this, new EventArgs());
             }
         }
 
@@ -334,11 +334,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 _inChangeView = false;
             }
-        }
-
-        private void toolButtonShowAdvanced_Click(object sender, EventArgs e)
-        {
-            ShowHiddenFields = !ShowHiddenFields;
         }
 
         public void AddViewEditorWidget(ViewEditorWidget viewEditorWidget)
@@ -484,6 +479,16 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                     toolTip1.Show(args.Node.ToolTipText, treeView);
                 }
             };
+        }
+
+        private void showHiddenFieldsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowHiddenFields = !ShowHiddenFields;
+        }
+
+        private void showSourceTabMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowSourceTab = !ShowSourceTab;
         }
     }
 }

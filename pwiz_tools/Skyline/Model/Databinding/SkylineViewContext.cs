@@ -670,9 +670,12 @@ namespace pwiz.Skyline.Model.Databinding
 
         public static IEnumerable<RowSourceInfo> GetDocumentGridRowSources(SkylineDataSchema dataSchema)
         {
-            yield return MakeRowSource<Protein>(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Proteins,
+            bool proteomic = dataSchema.UiMode == UiModes.PROTEOMIC;
+            yield return MakeRowSource<Protein>(dataSchema, 
+                proteomic ? Resources.SkylineViewContext_GetDocumentGridRowSources_Proteins : "Molecule Lists",
                 () => new Proteins(dataSchema));
-            yield return MakeRowSource<Entities.Peptide>(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides,
+            yield return MakeRowSource<Entities.Peptide>(dataSchema, 
+                proteomic ? Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides : "Molecules",
                 () => new Peptides(dataSchema, new[] {IdentityPath.ROOT}));
             yield return MakeRowSource<Precursor>(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors, 
                 () => new Precursors(dataSchema, new[] { IdentityPath.ROOT }));

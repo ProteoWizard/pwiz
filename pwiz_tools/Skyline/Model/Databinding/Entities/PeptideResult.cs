@@ -121,7 +121,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return ChromInfo.ExcludeFromCalibration; }
             set
             {
-                ChangeChromInfo(EditDescription.SetColumn(@"ExcludeFromCalibration", value),
+                ChangeChromInfo(EditColumnDescription(nameof(ExcludeFromCalibration), value),
                     chromInfo => chromInfo.ChangeExcludeFromCalibration(value));
             }
         }

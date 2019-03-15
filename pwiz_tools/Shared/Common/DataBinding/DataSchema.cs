@@ -21,6 +21,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using pwiz.Common.DataBinding.Attributes;
 
@@ -265,7 +266,7 @@ namespace pwiz.Common.DataBinding
                 }
                 if (columnDescriptor.PropertyType != null)
                 {
-                    return columnDescriptor.PropertyType.Name;
+                    return GetInvariantDisplayName(columnDescriptor.PropertyType);
                 }
             } 
             return columnDescriptor.Name;
@@ -298,6 +299,29 @@ namespace pwiz.Common.DataBinding
             return new ColumnCaption(FormatChildDisplayName(columnDescriptor.Parent, GetBaseDisplayName(columnDescriptor)));
         }
 
+        public virtual string GetInvariantDisplayName(Type type)
+        {
+            var invariantDisplayName = FilterAttributes(type.GetCustomAttributes<InvariantDisplayNameAttribute>())
+                .FirstOrDefault();
+            if (invariantDisplayName != null)
+            {
+                return invariantDisplayName.InvariantDisplayName;
+            }
+
+            return type.Name;
+        }
+
+        public virtual IColumnCaption GetColumnCaption(Type type, string propertyName)
+        {
+            var columnDescriptor = ColumnDescriptor.RootColumn(this, type).ResolveChild(propertyName);
+            if (columnDescriptor == null)
+            {
+                return new ColumnCaption(propertyName);
+            }
+
+            return GetColumnCaption(columnDescriptor);
+        }
+
         public string GetColumnCaption(ColumnCaption columnCaption, ColumnCaptionType columnCaptionType)
         {
             if (columnCaptionType == ColumnCaptionType.invariant)
@@ -307,7 +331,7 @@ namespace pwiz.Common.DataBinding
             return DataSchemaLocalizer.LookupColumnCaption(columnCaption);
         }
 
-        public virtual bool IsAdvanced(ColumnDescriptor columnDescriptor)
+        public virtual bool IsHidden(ColumnDescriptor columnDescriptor)
         {
             if (IsObsolete(columnDescriptor))
             {
@@ -320,13 +344,13 @@ namespace pwiz.Common.DataBinding
             }
 
             var hideWhens = columnDescriptor.GetAttributes().OfType<HideWhenAttribute>().ToArray();
-            var advancedIfAncestor =
+            var hideIfAncestor =
                 new HashSet<Type>(hideWhens.SelectMany(attr => attr.AncestorsOfAnyOfTheseTypes).Where(type => null != type));
-            if (advancedIfAncestor.Count > 0)
+            if (hideIfAncestor.Count > 0)
             {
                 for (ColumnDescriptor ancestor = columnDescriptor.Parent; ancestor != null; ancestor = ancestor.Parent)
                 {
-                    if (advancedIfAncestor.Any(type => type.IsAssignableFrom(ancestor.PropertyType)))
+                    if (hideIfAncestor.Any(type => type.IsAssignableFrom(ancestor.PropertyType)))
                     {
                         return true;
                     }
@@ -423,7 +447,7 @@ namespace pwiz.Common.DataBinding
             return depth;
         }
 
-        public IEnumerable<Attribute> FilterAttributes(IEnumerable<Attribute> attributes)
+        public IEnumerable<T> FilterAttributes<T>(IEnumerable<T> attributes) where T : Attribute
         {
             return attributes.Where(AttributeApplies).OrderByDescending(GetAttributeClassDepth);
         }

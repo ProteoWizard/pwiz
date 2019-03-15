@@ -170,8 +170,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return ChromInfo.Annotations.Note; } 
             set
             {
-                ChangeChromInfo(
-                    EditDescription.SetColumn(@"PrecursorReplicateNote", value),
+                ChangeChromInfo(EditColumnDescription(nameof(Note), value),
                     chromInfo=>chromInfo.ChangeAnnotations(chromInfo.Annotations.ChangeNote(value)));
             }
         }

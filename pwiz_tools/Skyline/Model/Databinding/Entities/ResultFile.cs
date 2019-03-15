@@ -81,9 +81,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     }
                 }
 
-                Replicate.ChangeChromatogramSet(EditDescription.SetColumn(@"ExplicitGlobalStandardArea",
-                    value), 
-                Replicate.ChromatogramSet.ChangeMSDataFileInfos(newFileInfos));
+                Replicate.ChangeChromatogramSet(
+                    EditColumnDescription(nameof(ExplicitGlobalStandardArea), value), 
+                    Replicate.ChromatogramSet.ChangeMSDataFileInfos(newFileInfos));
             }
         }
 

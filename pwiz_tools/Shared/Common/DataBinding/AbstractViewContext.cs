@@ -602,7 +602,7 @@ namespace pwiz.Common.DataBinding
                 {
                     continue;
                 }
-                if (column.DataSchema.IsAdvanced(column))
+                if (column.DataSchema.IsHidden(column))
                 {
                     continue;
                 }

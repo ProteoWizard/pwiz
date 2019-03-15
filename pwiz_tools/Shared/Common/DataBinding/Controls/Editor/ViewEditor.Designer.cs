@@ -43,7 +43,9 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.toolButtonRedo = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolButtonFind = new System.Windows.Forms.ToolStripButton();
-            this.toolButtonShowAdvanced = new System.Windows.Forms.ToolStripButton();
+            this.toolButtonShowAdvanced = new System.Windows.Forms.ToolStripDropDownButton();
+            this.showHiddenFieldsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showSourceTabMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripButton = new System.Windows.Forms.ToolStripButton();
             this.panel1 = new System.Windows.Forms.Panel();
             this.btnPreview = new System.Windows.Forms.Button();
@@ -150,9 +152,23 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             // toolButtonShowAdvanced
             // 
             this.toolButtonShowAdvanced.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.toolButtonShowAdvanced.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.showHiddenFieldsToolStripMenuItem,
+            this.showSourceTabMenuItem});
             resources.ApplyResources(this.toolButtonShowAdvanced, "toolButtonShowAdvanced");
             this.toolButtonShowAdvanced.Name = "toolButtonShowAdvanced";
-            this.toolButtonShowAdvanced.Click += new System.EventHandler(this.toolButtonShowAdvanced_Click);
+            // 
+            // showHiddenFieldsToolStripMenuItem
+            // 
+            this.showHiddenFieldsToolStripMenuItem.Name = "showHiddenFieldsToolStripMenuItem";
+            resources.ApplyResources(this.showHiddenFieldsToolStripMenuItem, "showHiddenFieldsToolStripMenuItem");
+            this.showHiddenFieldsToolStripMenuItem.Click += new System.EventHandler(this.showHiddenFieldsToolStripMenuItem_Click);
+            // 
+            // showSourceTabMenuItem
+            // 
+            this.showSourceTabMenuItem.Name = "showSourceTabMenuItem";
+            resources.ApplyResources(this.showSourceTabMenuItem, "showSourceTabMenuItem");
+            this.showSourceTabMenuItem.Click += new System.EventHandler(this.showSourceTabMenuItem_Click);
             // 
             // helpToolStripButton
             // 
@@ -238,7 +254,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         private System.Windows.Forms.ToolStripButton toolButtonUndo;
         private System.Windows.Forms.ToolStripButton toolButtonRedo;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
-        private System.Windows.Forms.ToolStripButton toolButtonShowAdvanced;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Panel panelViewEditor;
         private System.Windows.Forms.Panel panelButtons;
@@ -246,5 +261,8 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         private System.Windows.Forms.ToolStripButton toolButtonFind;
         private System.Windows.Forms.ToolStripButton helpToolStripButton;
         private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.ToolStripDropDownButton toolButtonShowAdvanced;
+        private System.Windows.Forms.ToolStripMenuItem showHiddenFieldsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem showSourceTabMenuItem;
     }
 }

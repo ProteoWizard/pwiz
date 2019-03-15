@@ -197,7 +197,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return DocNode.ExplicitQuantitative; }
             set
             {
-                ChangeDocNode(EditDescription.SetColumn(@"Quantitative", value),
+                ChangeDocNode(EditColumnDescription(nameof(Quantitative), value),
                     docNode=>docNode.ChangeQuantitative(value));
             }
         }
@@ -206,7 +206,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public string Note
         {
             get { return DocNode.Note; }
-            set { ChangeDocNode(EditDescription.SetColumn(@"TransitionNote", value),
+            set { ChangeDocNode(EditColumnDescription(nameof(Note), value),
                 docNode=>(TransitionDocNode) docNode.ChangeAnnotations(docNode.Annotations.ChangeNote(value)));}
         }
         [Format(NullValue = TextUtil.EXCEL_NA)]

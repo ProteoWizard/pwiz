@@ -91,7 +91,7 @@ namespace pwiz.Common.DataBinding
         {
             get
             {
-                return DataSchema.IsAdvanced(this);
+                return DataSchema.IsHidden(this);
             }
         }
         public virtual void SetValue(RowItem rowItem, PivotKey pivotKey, object value)

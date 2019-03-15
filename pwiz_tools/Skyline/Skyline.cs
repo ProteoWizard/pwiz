@@ -5409,7 +5409,7 @@ namespace pwiz.Skyline
 
         public void SetUIMode(SrmDocument.DOCUMENT_TYPE mode)
         {
-            GetModeUIHelper().ModeUI = mode== SrmDocument.DOCUMENT_TYPE.none ? SrmDocument.DOCUMENT_TYPE.proteomic : mode;
+            GetModeUIHelper().ModeUI = mode == SrmDocument.DOCUMENT_TYPE.none ? SrmDocument.DOCUMENT_TYPE.proteomic : mode;
             GetModeUIHelper().AttemptChangeModeUI(mode);
 
             UpdateDocumentUI();
