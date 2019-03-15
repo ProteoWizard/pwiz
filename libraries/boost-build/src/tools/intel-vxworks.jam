@@ -42,7 +42,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 
 # Initializes the intel-vxworks toolset
 #   version in mandatory
-#   name (default icc) is used to invoke the specified intel complier
+#   name (default icc) is used to invoke the specified intel compiler
 #   compile and link options allow you to specify addition command line options for each version
 rule init ( version ? :  command * : options * )
 {

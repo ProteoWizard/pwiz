@@ -9,9 +9,11 @@ import feature ;
 
 feature.feature warnings
     :
-    on         # Enable default/"reasonable" warning level for the tool.
-    all        # Enable all possible warnings issued by the tool.
-    off        # Disable all warnings issued by the tool.
+    on          # Enable default/"reasonable" warning level for the tool.
+    all         # Enable all possible warnings issued by the tool.
+    extra       # Enable extra, possibly conflicting, warnings issued by the tool.
+    pedantic    # Enable likely inconsequential, and conflicting, warnings.
+    off         # Disable all warnings issued by the tool.
     : incidental propagated ;
 
 feature.feature warnings-as-errors

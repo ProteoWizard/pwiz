@@ -14,6 +14,7 @@ feature.feature instruction-set
         pentium3m pentium-m pentium4 pentium4m prescott nocona core2 corei7 corei7-avx core-avx-i
         conroe conroe-xe conroe-l allendale merom merom-xe kentsfield kentsfield-xe penryn wolfdale
         yorksfield nehalem sandy-bridge ivy-bridge haswell broadwell skylake skylake-avx512 cannonlake
+        icelake
         k6 k6-2 k6-3 athlon athlon-tbird athlon-4 athlon-xp athlon-mp k8 opteron athlon64 athlon-fx
         k8-sse3 opteron-sse3 athlon64-sse3 amdfam10 barcelona bdver1 bdver2 bdver3 bdver4 btver1
         btver2 znver1 winchip-c6 winchip2 c3 c3-2 atom

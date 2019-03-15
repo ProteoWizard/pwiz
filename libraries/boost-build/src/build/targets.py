@@ -473,7 +473,7 @@ class ProjectTarget (AbstractTarget):
         that should be build only by explicit request."""
 
         # Record the name of the target, not instance, since this
-        # rule is called before main target instaces are created.
+        # rule is called before main target instances are created.
         assert is_iterable_typed(target_names, basestring)
         self.explicit_targets_.update(target_names)
 
@@ -804,7 +804,7 @@ class MainTarget (AbstractTarget):
 
 class FileReference (AbstractTarget):
     """ Abstract target which refers to a source file.
-        This is artificial creature; it's usefull so that sources to
+        This is artificial creature; it's useful so that sources to
         a target can be represented as list of abstract target instances.
     """
     def __init__ (self, manager, file, project):
@@ -1083,7 +1083,7 @@ class BasicTarget (AbstractTarget):
 
     def __common_properties2(self, build_request, requirements):
         # This guarantees that default properties are present
-        # in result, unless they are overrided by some requirement.
+        # in result, unless they are overridden by some requirement.
         # TODO: There is possibility that we've added <foo>bar, which is composite
         # and expands to <foo2>bar2, but default value of <foo2> is not bar2,
         # in which case it's not clear what to do.
@@ -1371,8 +1371,8 @@ class BasicTarget (AbstractTarget):
 
     def construct (self, name, source_targets, properties):
         """ Constructs the virtual targets for this abstract targets and
-            the dependecy graph. Returns a tuple consisting of the properties and the list of virtual targets.
-            Should be overrided in derived classes.
+            the dependency graph. Returns a tuple consisting of the properties and the list of virtual targets.
+            Should be overridden in derived classes.
         """
         raise BaseException ("method should be defined in derived classes")
 

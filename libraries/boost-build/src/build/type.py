@@ -90,7 +90,7 @@ def register (type, suffixes = [], base_type = None):
 
     if len (suffixes) > 0:
         # Generated targets of 'type' will use the first of 'suffixes'
-        # (this may be overriden)
+        # (this may be overridden)
         set_generated_target_suffix (type, [], suffixes [0])
 
         # Specify mapping from suffixes to type
