@@ -104,13 +104,10 @@ JAMROOT ?= project-root.jam "[Jj]amroot" "[Jj]amroot." "[Jj]amroot.jam" ;
 rule load-parent ( location )
 {
     local found = [ path.glob-in-parents $(location) : $(JAMROOT) $(JAMFILE) ] ;
-    if ! $(found)
+    if $(found)
     {
-        import errors ;
-        errors.error Could not find parent "for" project at '$(location)' :
-            Did not find Jamfile.jam or Jamroot.jam "in" any parent directory. ;
+        return [ load $(found[1]:D) ] ;
     }
-    return [ load $(found[1]:D) ] ;
 }
 
 
@@ -266,6 +263,51 @@ rule find-jamfile (
 }
 
 
+# Default patterns to search for auto-include of package manager build declarations.
+#
+PACKAGE_MANAGER_BUILD_INFO(CONAN) = "conanbuildinfo.jam" ;
+
+# Default to using the package manager build info in this priority order:
+# 1. Configuration, user, project, etc.
+# 2. Command line argument "--use-package-manager=<name>".
+# 3. Environment variable "PACKAGE_MANAGER_BUILD_INFO".
+# 4. Conan, others.
+#
+local .use-package-manager = [ MATCH "^--use-package-manager=(.*)$" : [ modules.peek : ARGV ] ] ;
+PACKAGE_MANAGER_BUILD_INFO ?= $(PACKAGE_MANAGER_BUILD_INFO($(.use-package-manager:U))) ;
+PACKAGE_MANAGER_BUILD_INFO ?= [ modules.peek : PACKAGE_MANAGER_BUILD_INFO ] ;
+PACKAGE_MANAGER_BUILD_INFO ?= $(PACKAGE_MANAGER_BUILD_INFO(CONAN)) ;
+
+
+# Load the configured package manager build information file.
+#
+rule load-package-manager-build-info ( )
+{
+    # This first variable is the one from the configuration (user, project, etc).
+    local package-manager-build-info = [ modules.peek [ CALLER_MODULE ] : PACKAGE_MANAGER_BUILD_INFO ] ;
+    # And this is the rest as it takes it from the settings in the "project" module.
+    # I.e. the variable assignments above.
+    package-manager-build-info ?= $(PACKAGE_MANAGER_BUILD_INFO) ;
+    if $(package-manager-build-info)
+    {
+        local pm = [ path.glob $(dir) : $(package-manager-build-info) ] ;
+        pm = $(pm[1]) ;
+        local cm = [ CALLER_MODULE ] ;
+        local pm-tag = "$(cm)<$(pm:B)>" ;
+        if $(pm) && ! ( $(pm-tag) in $(.package-manager-build-info) )
+        {
+            .package-manager-build-info += $(pm-tag) ;
+            # We found a matching builf info to load, but we have to be careful
+            # as the loading can affect the current project since it can define
+            # sub-projects. Hence we save and restore the current project.
+            local saved-project = $(.current-project) ;
+            modules.load $(cm) : $(pm) ;
+            .current-project = $(saved-project) ;
+        }
+    }
+}
+
+
 # Load a Jamfile at the given directory. Returns nothing. Will attempt to load
 # the file as indicated by the JAMFILE patterns. Effect of calling this rule
 # twice with the same 'dir' is undefined.
@@ -304,6 +346,11 @@ local rule load-jamfile ( dir : jamfile-module : synthesize ? )
         # Initialize the Jamfile module before loading.
         initialize $(jamfile-module) : [ path.parent $(jamfile-to-load) ] :
             $(jamfile-to-load:BS) ;
+
+        # Auto-load package manager(s) build information.
+        IMPORT project : load-package-manager-build-info
+            : $(jamfile-module) : project.load-package-manager-build-info ;
+        modules.call-in $(jamfile-module) : project.load-package-manager-build-info ;
 
         if ! $(jamfile-module) in $(.jamfile-modules)
         {
@@ -457,25 +504,30 @@ rule initialize (
     {
         parent-module = user-config ;
     }
-    else if $(location) && ! [ MATCH ^($(JAMROOT))$ : $(basename) ]
-    {
-        # We search for parent/jamroot only if this is a jamfile project, i.e.
-        # if is not a standalone or a jamroot project.
-        parent-module = [ load-parent $(location) ] ;
-    }
     else if $(location)
     {
-        # We have a jamroot project. Inherit from user-config (or project-config
-        # if it exists).
-        if $(project-config.attributes)
+        if ! [ MATCH ^($(JAMROOT))$ : $(basename) ]
         {
-            parent-module = project-config ;
+            # We search for parent/jamroot only if this is a jamfile project, i.e.
+            # if is not a standalone or a jamroot project.
+            parent-module = [ load-parent $(location) ] ;
         }
-        else
+        if ! $(parent-module)
         {
-            parent-module = user-config ;
+            # We have a jamroot project, or a jamfile project
+            # without a parent that becomes a jamroot. Inherit from
+            # user-config (or project-config
+            # if it exists).
+            if $(project-config.attributes)
+            {
+                parent-module = project-config ;
+            }
+            else
+            {
+                parent-module = user-config ;
+            }
+            jamroot = true ;
         }
-        jamroot = true ;
     }
 
     # TODO: need to consider if standalone projects can do anything but define
@@ -1283,5 +1335,23 @@ module project-rules
         }
         import option ;
         option.set $(name) : $(value) ;
+    }
+
+    # This allows one to manually import a package manager build information file.
+    # The argument can be either a symbolic name of a supported package manager or
+    # the a glob pattern to load a b2 jam file.
+    #
+    rule use-packages ( name-or-glob-pattern ? )
+    {
+        local m = [ CALLER_MODULE ] ;
+        local glob-pattern = $(name-or-glob-pattern) ;
+        local glob-for-name = [ modules.peek project : PACKAGE_MANAGER_BUILD_INFO($(name-or-glob-pattern:U)) ] ;
+        if $(glob-for-name)
+        {
+            glob-pattern = $(glob-for-name) ;
+        }
+        modules.call-in $(m) : constant PACKAGE_MANAGER_BUILD_INFO : $(glob-pattern) ;
+        IMPORT project : load-package-manager-build-info : $(m) : project.load-package-manager-build-info ;
+        modules.call-in $(m) : project.load-package-manager-build-info ;
     }
 }

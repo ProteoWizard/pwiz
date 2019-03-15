@@ -45,7 +45,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
                        
 # Initializes the clang-darwin toolset
 #   version in optional
-#   name (default clang++) is used to invoke the specified clang complier
+#   name (default clang++) is used to invoke the specified clang compiler
 #   compile and link options allow you to specify addition command line options for each version
 rule init ( version ? :  command * : options * )
 {
@@ -56,8 +56,8 @@ rule init ( version ? :  command * : options * )
     local command-string = $(command:J=" ") ;
     if $(command)
     {    
-        version ?= [ MATCH "^([0-9.]+)"
-            : [ SHELL "$(command-string) -dumpversion" ] ] ;
+        version ?= [ MATCH "version ([0-9]+[.][0-9]+)"
+            : [ SHELL "$(command-string) --version" ] ] ;
     }
 
     local condition = [ common.check-init-parameters clang
@@ -86,7 +86,7 @@ toolset.flags clang-darwin.compile.mm OPTIONS <mmflags> ;
 # For clang, 'on' and 'full' are identical
 toolset.flags clang-darwin.compile OPTIONS <inlining>full : -Wno-inline ;
 
-# SJW 12/2017: Support for <flags> is widely inconsistant.
+# SJW 12/2017: Support for <flags> is widely inconsistent.
 # shouldn't this be handled by the common gcc?
 toolset.flags clang-darwin.compile OPTIONS <flags> ;
 

@@ -11,6 +11,193 @@
 # (See accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
 
+#| tag::doc[]
+
+[[bbv2.reference.tools.compiler.msvc]]
+= Microsoft Visual C++
+
+The `msvc` module supports the
+http://msdn.microsoft.com/visualc/[Microsoft Visual C++] command-line
+tools on Microsoft Windows. The supported products and versions of
+command line tools are listed below:
+
+* Visual Studio 2017—14.1
+* Visual Studio 2015—14.0
+* Visual Studio 2013—12.0
+* Visual Studio 2012—11.0
+* Visual Studio 2010—10.0
+* Visual Studio 2008—9.0
+* Visual Studio 2005—8.0
+* Visual Studio .NET 2003—7.1
+* Visual Studio .NET—7.0
+* Visual Studio 6.0, Service Pack 5--6.5
+
+The user would then call the boost build executable with the toolset set
+equal to `msvc-[version number]` for example to build with Visual Studio
+2017 one could run:
+
+----
+.\b2 toolset=msvc-14.1 target
+----
+
+The `msvc` module is initialized using the following syntax:
+
+----
+using msvc : [version] : [c++-compile-command] : [compiler options] ;
+----
+
+This statement may be repeated several times, if you want to configure
+several versions of the compiler.
+
+If the version is not explicitly specified, the most recent version
+found in the registry will be used instead. If the special value `all`
+is passed as the version, all versions found in the registry will be
+configured. If a version is specified, but the command is not, the
+compiler binary will be searched in standard installation paths for that
+version, followed by PATH.
+
+The compiler command should be specified using forward slashes, and
+quoted.
+
+The following options can be provided, using
+_`<option-name>option-value syntax`_:
+
+`cflags`::
+Specifies additional compiler flags that will be used when compiling C
+sources.
+
+`cxxflags`::
+Specifies additional compiler flags that will be used when compiling C++
+sources.
+
+`compileflags`::
+Specifies additional compiler flags that will be used when compiling both C
+and C++ sources.
+
+`linkflags`::
+Specifies additional command line options that will be passed to the linker.
+
+`assembler`::
+The command that compiles assembler sources. If not specified, `ml`
+will be used. The command will be invoked after the setup script was
+executed and adjusted the PATH variable.
+
+`compiler`::
+The command that compiles C and C++ sources. If not specified, `cl`
+will be used. The command will be invoked after the setup script was
+executed and adjusted the PATH variable.
+
+`compiler-filter`::
+Command through which to pipe the output of running the compiler. For
+ example to pass the output to STLfilt.
+
+`idl-compiler`::
+The command that compiles Microsoft COM interface definition files. If
+not specified, `midl` will be used. The command will be invoked after
+the setup script was executed and adjusted the PATH variable.
+
+`linker`::
+The command that links executables and dynamic libraries. If not
+specified, `link` will be used. The command will be invoked after the
+setup script was executed and adjusted the PATH variable.
+
+`mc-compiler`::
+The command that compiles Microsoft message catalog files. If not
+specified, `mc` will be used. The command will be invoked after the
+setup script was executed and adjusted the PATH variable.
+
+`resource-compiler`::
+The command that compiles resource files. If not specified, `rc` will
+be used. The command will be invoked after the setup script was
+executed and adjusted the PATH variable.
+
+`setup`::
+The filename of the global environment setup script to run before
+invoking any of the tools defined in this toolset. Will not be used in
+case a target platform specific script has been explicitly specified
+for the current target platform. Used setup script will be passed the
+target platform identifier (x86, x86_amd64, x86_ia64, amd64 or ia64)
+as a parameter. If not specified a default script is chosen based on
+the used compiler binary, e.g. `vcvars32.bat` or `vsvars32.bat`.
+
+`setup-amd64`; `setup-i386`; `setup-ia64`::
+The filename of the target platform specific environment setup script
+to run before invoking any of the tools defined in this toolset. If
+not specified the global environment setup script is used.
+
+[[bbv2.reference.tools.compiler.msvc.64]]
+== 64-bit support
+
+Starting with version 8.0, Microsoft Visual Studio can generate binaries
+for 64-bit processor, both 64-bit flavours of x86 (codenamed
+AMD64/EM64T), and Itanium (codenamed IA64). In addition, compilers that
+are itself run in 64-bit mode, for better performance, are provided. The
+complete list of compiler configurations are as follows (we abbreviate
+AMD64/EM64T to just AMD64):
+
+* 32-bit x86 host, 32-bit x86 target
+* 32-bit x86 host, 64-bit AMD64 target
+* 32-bit x86 host, 64-bit IA64 target
+* 64-bit AMD64 host, 64-bit AMD64 target
+* 64-bit IA64 host, 64-bit IA64 target
+
+The 32-bit host compilers can be always used, even on 64-bit Windows. On
+the contrary, 64-bit host compilers require both 64-bit host processor
+and 64-bit Windows, but can be faster. By default, only 32-bit host,
+32-bit target compiler is installed, and additional compilers need to be
+installed explicitly.
+
+To use 64-bit compilation you should:
+
+1. Configure you compiler as usual. If you provide a path to the
+compiler explicitly, provide the path to the 32-bit compiler. If you try
+to specify the path to any of 64-bit compilers, configuration will not
+work.
+2. When compiling, use `address-model=64`, to generate AMD64 code.
+3. To generate IA64 code, use `architecture=ia64`
+
+The (AMD64 host, AMD64 target) compiler will be used automatically when
+you are generating AMD64 code and are running 64-bit Windows on AMD64.
+The (IA64 host, IA64 target) compiler will never be used, since nobody
+has an IA64 machine to test.
+
+It is believed that AMD64 and EM64T targets are essentially compatible.
+The compiler options `/favor:AMD64` and `/favor:EM64T`, which are
+accepted only by AMD64 targeting compilers, cause the generated code to
+be tuned to a specific flavor of 64-bit x86. Boost.Build will make use
+of those options depending on the value of the`instruction-set` feature.
+
+[[bbv2.reference.tools.compiler.msvc.winrt]]
+== Windows Runtime support
+
+Starting with version 11.0, Microsoft Visual Studio can produce binaries
+for Windows Store and Phone in addition to traditional Win32 desktop. To
+specify which Windows API set to target, use the `windows-api` feature.
+Available options are `desktop`, `store`, or `phone`. If not specified,
+`desktop` will be used.
+
+When using `store` or `phone` the specified toolset determines what
+Windows version is targeted. The following options are available:
+
+* Windows 8.0: toolset=msvc-11.0 windows-api=store
+* Windows 8.1: toolset=msvc-12.0 windows-api=store
+* Windows Phone 8.0: toolset=msvc-11.0 windows-api=phone
+* Windows Phone 8.1: toolset=msvc-12.0 windows-api=phone
+
+For example use the following to build for Windows Store 8.1 with the
+ARM architecture:
+
+----
+.\b2 toolset=msvc-12.0 windows-api=store architecture=arm
+----
+
+Note that when targeting Windows Phone 8.1, version 12.0 didn't include
+the vcvars phone setup scripts. They can be separately downloaded from
+http://blogs.msdn.com/b/vcblog/archive/2014/07/18/using-boost-libraries-in-windows-store-and-phone-applications.aspx[here].
+
+|# # end::doc[]
+
+
 ################################################################################
 #
 # MSVC Boost Build toolset module.
@@ -1153,6 +1340,11 @@ local rule set-setup-command ( targets * : properties * )
     if ! [ on $(targets) return $(.SETUP) ]
     {
         local setup-script = [ on $(targets) return $(.SETUP-SCRIPT) ] ;
+        # If no setup script was given, then we don't need to do anything.
+        if ! $(setup-script)
+        {
+            return ;
+        }
         local setup-options = [ on $(targets) return $(.SETUP-OPTIONS) ] ;
         local key = .setup-command-$(setup-script:E=)-$(setup-options:E=) ;
         if ! $($(key))
@@ -1531,7 +1723,7 @@ local rule configure-really ( version ? : options * )
             local cpu-assembler = $(assembler) ;
             cpu-assembler ?= $(default-assembler-$(c)) ;
 
-            for api in desktop store phone
+            for local api in desktop store phone
             {
                 local setup-script = $(setup-$(c)) ;
                 if $(api) = phone
@@ -2075,7 +2267,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
                      conroe conroe-xe conroe-l allendale merom
                      merom-xe kentsfield kentsfield-xe penryn wolfdale
                      yorksfield nehalem sandy-bridge ivy-bridge haswell
-                     broadwell skylake skylake-avx512 cannonlake ;
+                     broadwell skylake skylake-avx512 cannonlake icelake ;
 .cpu-type-amd64    = k8 opteron athlon64 athlon-fx k8-sse3 opteron-sse3
                      athlon64-sse3 amdfam10 barcelona bdver1 bdver2 bdver3
                      bdver4 btver1 btver2 znver1 ;

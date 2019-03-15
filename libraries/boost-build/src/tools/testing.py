@@ -57,7 +57,7 @@ import sys
 def init():
     pass
 
-# Feature controling the command used to lanch test programs.
+# Feature controlling the command used to lanch test programs.
 feature.feature("testing.launcher", [], ["free", "optional"])
 
 feature.feature("test-info", [], ["free", "incidental"])
