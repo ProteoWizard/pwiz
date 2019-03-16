@@ -404,7 +404,10 @@ namespace pwiz.Skyline.Model
         /// Quick access to document type proteomic/small_molecules/mixed, based on the assumption that 
         /// TransitionGroups are purely proteomic or small molecule, but the document is not.
         /// 
-        /// Empty documents report as proteomic.
+        /// Empty documents report as none.
+        ///
+        /// These enum names are used on persisted settings for UI mode, so don't rename them as
+        /// it will confuse existing installations.
         /// 
         /// </summary>
         public enum DOCUMENT_TYPE
