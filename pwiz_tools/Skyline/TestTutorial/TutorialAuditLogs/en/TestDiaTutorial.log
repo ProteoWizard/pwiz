@@ -3,7 +3,7 @@ Summary   : Settings > Transition Settings changed
 All Info  :
 Transition Settings changed
 Settings > Transition Settings -- Filter > Ion types changed from "y" to "y, p"
-Settings > Transition Settings -- Filter > Small molecule Ion types changed from "f" to "f, p"
+Settings > Transition Settings -- Filter > Molecule Ion types changed from "f" to "f, p"
 Settings > Transition Settings -- Filter > Use DIA precursor window for exlucison changed from False to True
 Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "DIA"
 Settings > Transition Settings -- Full-Scan > Isolation scheme changed from Missing to "500 to 900 by 20"
@@ -53,3 +53,4 @@ All Info  :
 Transition Settings -- Library changed
 Settings > Transition Settings -- Library > Pick changed from "None" to "From filtered product ions"
 Settings > Transition Settings -- Library > If a library spectrum is available, pick its most intense ions changed from False to True
+

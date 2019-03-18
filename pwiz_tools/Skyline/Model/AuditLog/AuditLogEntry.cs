@@ -77,7 +77,7 @@ namespace pwiz.Skyline.Model.AuditLog
             using (var sha1 = new SHA1CryptoServiceProvider())
             {
                 var blockHash = new BlockHash(sha1);
-                AuditLogEntries.Enumerate().ForEach(e => blockHash.ProcessBytes(e.Hash.ActualHash));
+                AuditLogEntries.Enumerate().ForEach(e => blockHash.ProcessBytes(Encoding.UTF8.GetBytes(e.Hash.ActualHash.HashString)));
                 blockHash.FinalizeHashBytes();
                 return blockHash.HashBytes;
             }
@@ -111,11 +111,10 @@ namespace pwiz.Skyline.Model.AuditLog
                 entries.Add(reader.DeserializeElement<AuditLogEntry>());
             }
 
-            entries.Reverse();
             AuditLogEntry result = AuditLogEntry.ROOT;
-            foreach (var entry in entries)
+            for (var i = entries.Count; i-- > 0;)
             {
-                result = entry.ChangeParent(result);
+                result = entries[i].ChangeParent(result);
             }
             return result;
         }
@@ -143,10 +142,10 @@ namespace pwiz.Skyline.Model.AuditLog
 
             foreach (var entry in AuditLogEntries.Enumerate())
             {
-                Assume.IsTrue(entry.TimeStamp <= time && entry.LogIndex > logIndex,
+                Assume.IsTrue(entry.TimeStampUTC <= time && entry.LogIndex > logIndex,
                     AuditLogStrings.AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing);
 
-                time = entry.TimeStamp;
+                time = entry.TimeStampUTC;
                 logIndex = entry.LogIndex;
             }
         }
@@ -194,51 +193,13 @@ namespace pwiz.Skyline.Model.AuditLog
             writer.WriteEndDocument();
         }
 
-        public static bool ReadFromFile(string fileName, out string documentHash, out AuditLogList result)
+        public static bool ReadFromFile(string fileName, out string loggedSkylineDocumentHash, out AuditLogList result)
         {
             try
             {
                 using (var reader = new XmlTextReader(fileName))
                 {
-                    reader.ReadToFollowing(DOCUMENT_ROOT);
-                    DocumentFormat? docFormat = null;
-                    if (reader.HasAttributes)
-                    {
-                        var docFormatString = reader.GetAttribute(ATTR.format_version);
-                        if (double.TryParse(docFormatString, out var format))
-                            docFormat = new DocumentFormat(format);
-                    }
-
-                    reader.ReadStartElement();
-
-                    documentHash = reader.ReadElementString(EL.document_hash.ToString());
-                    string rootHash = null;
-                    if (reader.IsStartElement(EL.root_hash.ToString()))
-                        rootHash = reader.ReadElementString(EL.root_hash.ToString());
-
-                    result = reader.DeserializeElement<AuditLogList>();
-                    result.FormatVersion = docFormat;
-                    result.RootHash = new AuditLogHash()
-                            .ChangeActualHash(result.CalculateRootHash())
-                            .ChangeSkylHash(Hash.FromBase64(rootHash));
-                    
-                    // If the docFormat is null, this is an old audit log and there won't be any entry hashes.
-                    // We can't just always ignore non-existent hashes, otherwise people could just delete the hash elements
-                    // and get Skyline to successfully load the audit log
-                    if (docFormat != null && !result.RootHash.HashesEqual())
-                    {
-                        var modifiedEntries =
-                            result.AuditLogEntries.Enumerate().Where(entry => !entry.Hash.HashesEqual());
-                        var dlg = new AlertDlg(AuditLogStrings.AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified +
-                                               string.Join(Environment.NewLine,
-                                                   modifiedEntries.Select(entry => entry.UndoRedo.ToString())),
-                            MessageBoxButtons.OK);
-                        dlg.ShowParentlessDialog();
-                    }
-
-
-                    reader.ReadEndElement();
-                    return true;
+                    return ReadFromXmlTextReader(reader, out loggedSkylineDocumentHash, out result);
                 }
             }
             catch(Exception ex)
@@ -253,11 +214,74 @@ namespace pwiz.Skyline.Model.AuditLog
                     alert.ShowParentlessDialog();
                 }
 
-                documentHash = null;
+                loggedSkylineDocumentHash = null;
                 result = null;
 
                 return false;
             }
+        }
+
+        public static bool ReadFromXmlTextReader(XmlTextReader reader, out string loggedSkylineDocumentHash, out AuditLogList result)
+        {
+            reader.ReadToFollowing(DOCUMENT_ROOT);
+            DocumentFormat? docFormat = null;
+            if (reader.HasAttributes)
+            {
+                var docFormatString = reader.GetAttribute(ATTR.format_version);
+                if (double.TryParse(docFormatString, out var format))
+                    docFormat = new DocumentFormat(format);
+            }
+
+            reader.ReadStartElement();
+
+            loggedSkylineDocumentHash = reader.ReadElementString(EL.document_hash.ToString());
+            if (docFormat == null && !string.IsNullOrEmpty(loggedSkylineDocumentHash))
+            {
+                // If the docFormat is null, this is an old audit log and the document hash was formatted using byte.ToString(@"X2") instead of Base64
+                try
+                {
+                    var bytes = new List<byte>();
+                    var s = loggedSkylineDocumentHash;
+                    foreach (var bbHex in Enumerable.Range(0, loggedSkylineDocumentHash.Length / 2)
+                        .Select(i => s.Substring(i * 2, 2)))
+                    {
+                        bytes.Add(Convert.ToByte(bbHex, 16));
+                    }
+                    loggedSkylineDocumentHash = Convert.ToBase64String(bytes.ToArray());
+                }
+                // ReSharper disable once EmptyGeneralCatchClause
+                catch
+                {
+                }
+            }
+
+            string rootHash = null;
+            if (reader.IsStartElement(EL.root_hash.ToString()))
+                rootHash = reader.ReadElementString(EL.root_hash.ToString());
+
+            result = reader.DeserializeElement<AuditLogList>();
+            result.FormatVersion = docFormat;
+            result.RootHash = new AuditLogHash()
+                .ChangeActualHash(result.CalculateRootHash())
+                .ChangeSkylHash(Hash.FromBase64(rootHash));
+
+            // If the docFormat is null, this is an old audit log and there won't be any entry hashes.
+            // We can't just always ignore non-existent hashes, otherwise people could just delete the hash elements
+            // and get Skyline to successfully load the audit log
+            if (docFormat != null && !result.RootHash.SkylAndActualHashesEqual())
+            {
+                var modifiedEntries =
+                    result.AuditLogEntries.Enumerate().Where(entry => !entry.Hash.SkylAndActualHashesEqual());
+                var dlg = new AlertDlg(AuditLogStrings.AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified +
+                                       string.Join(Environment.NewLine,
+                                           modifiedEntries.Select(entry => entry.UndoRedo.ToString())),
+                    MessageBoxButtons.OK);
+                dlg.ShowParentlessDialog();
+            }
+
+
+            reader.ReadEndElement();
+            return true;
         }
     }
 
@@ -265,7 +289,7 @@ namespace pwiz.Skyline.Model.AuditLog
     {
         public DocumentNodeCounts(SrmDocument doc)
         {
-            IsPeptideOnly = doc.DocumentType == SrmDocument.DOCUMENT_TYPE.proteomic;
+            IsPeptideOnly = doc.IsEmptyOrHasPeptides; // Treat empty as proteomic per tradition
             MoleculeGroupCount = doc.GetCount((int) SrmDocument.Level.MoleculeGroups);
             MoleculeCount = doc.GetCount((int)SrmDocument.Level.Molecules);
             PrecursorCount = doc.GetCount((int)SrmDocument.Level.TransitionGroups);
@@ -343,7 +367,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public void Add(params MessageInfo[] allInfoMessages)
         {
-            Add(docPair => AuditLogEntry.CreateEmptyEntry(docPair.OldDoc).ChangeAllInfo(allInfoMessages));
+            Add(docPair => AuditLogEntry.CreateEmptyEntry().ChangeAllInfo(allInfoMessages));
         }
 
         public void Add(AuditLogEntryCreator entryCreator)
@@ -420,6 +444,14 @@ namespace pwiz.Skyline.Model.AuditLog
         private Action<AuditLogEntry> _undoAction;
         private static int _logIndexCounter;
 
+        public static string _user = WindowsIdentity.GetCurrent().Name; // This won't change during app's run, so cache it
+
+        public static string _skylineVersion = // This won't change during app's run, so cache it
+            (string.IsNullOrEmpty(Install.Version)
+               ? string.Format(@"Developer build, document format {0}",DocumentFormat.CURRENT) // CONSIDER: can we be more informative?
+               : Install.Version)
+               + (Install.Is64Bit ? @" (64-Bit)" : string.Empty);
+
         public static AuditLogEntry ROOT = new AuditLogEntry { Count = 0, LogIndex = int.MaxValue };
 
         public bool IsRoot
@@ -427,17 +459,19 @@ namespace pwiz.Skyline.Model.AuditLog
             get { return ReferenceEquals(this, ROOT); }
         }
 
-        private AuditLogEntry(SrmDocument document, DateTime timeStamp, string reason,
+        private AuditLogEntry(DateTime timeStampUTC, string reason,
             string extraInfo = null) : this()
         {
             LogIndex = Interlocked.Increment(ref _logIndexCounter);
 
-            SkylineVersion = Install.Version;
-            if (Install.Is64Bit)
-                SkylineVersion += @" (64-Bit)";
+            SkylineVersion = _skylineVersion;
 
-            FormatVersion = document.FormatVersion;
-            TimeStamp = timeStamp;
+           // User = _user;
+
+            Assume.IsTrue(timeStampUTC.Kind == DateTimeKind.Utc); // We only deal in UTC
+            TimeStampUTC = timeStampUTC;
+            TimeZoneOffset = TimeZoneInfo.Local.GetUtcOffset(TimeStampUTC); // UTC offset e.g. -8 for Seattle whn not on DST
+            
             ExtraInfo = extraInfo;
 
             using (var identity = WindowsIdentity.GetCurrent())
@@ -454,9 +488,9 @@ namespace pwiz.Skyline.Model.AuditLog
         // The number of nodes in this linked list, including this node itself
         public int Count { get; private set; }
 
-        public string SkylineVersion { get; private set; }
-        public DocumentFormat FormatVersion { get; private set; }
-        public DateTime TimeStamp { get; private set; }
+        public string SkylineVersion { get; private set; } // Skyline version at the time of original event creation
+        public DateTime TimeStampUTC { get; private set; } // UTC time of creation
+        public TimeSpan TimeZoneOffset { get; private set; } // UTC offset at time of creation e.g. -8 for Seattle when not on DST, -7 when DST  
         public string User { get; private set; }
         public string Reason { get; private set; }
         public string ExtraInfo { get; private set; }
@@ -484,10 +518,9 @@ namespace pwiz.Skyline.Model.AuditLog
             get
             {
                 if (_hash == null)
-                    return _hash = new AuditLogHash(this);
+                    return _hash = new AuditLogHash(this, null);
                 if (_hash.ActualHash == null)
-                    return _hash = new AuditLogHash(this)
-                        .ChangeSkylHash(_hash.SkylHash);
+                    return _hash = new AuditLogHash(this, _hash.SkylHash);
                 return _hash;
             }
             private set { _hash = value; }
@@ -558,12 +591,14 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public AuditLogEntry ChangeParent(AuditLogEntry parent)
         {
-            return ChangeProp(ImClone(this), im =>
-            {
-                im.Parent = parent;
-                im.Count = parent.Count + 1;
-            });
+            // We don't use ChangeProp here because these changing these values won't alter the hash,
+            // so we don't need to call Validate() which just clears the hash on the chance that it might change
+            var result = ImClone(this);
+            result.Parent = parent;
+            result.Count = parent.Count + 1;
+            return result;
         }
+
         public AuditLogEntry ChangeReason(string reason)
         {
             return ChangeProp(ImClone(this), im => im.Reason = reason);
@@ -652,7 +687,7 @@ namespace pwiz.Skyline.Model.AuditLog
             replace = countEntry != null && countEntry.CountEntryType == MessageType.log_unlogged_changes;
             if (!replace)
             {
-                countEntry = CreateSimpleEntry(doc, MessageType.log_unlogged_changes, 0)
+                countEntry = CreateSimpleEntry(MessageType.log_unlogged_changes, 0)
                     // This entry needs a non-undoredo all info message to work properly
                     .ChangeAllInfo(ImmutableList.Singleton(new MessageInfo(MessageType.log_unlogged_changes, 0)));
                 countEntry.CountEntryType = MessageType.log_unlogged_changes;
@@ -675,7 +710,7 @@ namespace pwiz.Skyline.Model.AuditLog
             var changeFromDefaultSettings = SettingsLogFunction(docPair);
             var initialNodeCounts = doc.Children.Count > 0 ? new DocumentNodeCounts(doc).EntryCreator.Create(docPair) : null;
 
-            var entry = CreateSimpleEntry(doc, MessageType.start_log_existing_doc)
+            var entry = CreateSimpleEntry(MessageType.start_log_existing_doc)
                 .Merge(initialNodeCounts).Merge(changeFromDefaultSettings);
 
             if (changeFromDefaultSettings != null || initialNodeCounts != null)
@@ -684,9 +719,9 @@ namespace pwiz.Skyline.Model.AuditLog
             return null;
         }
 
-        public static AuditLogEntry GetUndocumentedChangeEntry(SrmDocument doc)
+        public static AuditLogEntry CreateUndocumentedChangeEntry()
         {
-            return CreateSimpleEntry(doc, MessageType.undocumented_change);
+            return CreateSimpleEntry(MessageType.undocumented_change);
         }
 
         /// <summary>
@@ -710,7 +745,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 allInfoCount += e._allInfoNoUndoRedo.Count();
             }
 
-            var entry = CreateEmptyEntry(doc);
+            var entry = CreateEmptyEntry();
             entry.CountEntryType = MessageType.log_cleared;
 
             var msgInfoUndoRedo = GetLogClearedInfo(undoRedoCount);
@@ -724,35 +759,51 @@ namespace pwiz.Skyline.Model.AuditLog
         /// Creates an empty entry that can be useful when making entries
         /// that will get merged into another entry
         /// </summary>
-        public static AuditLogEntry CreateEmptyEntry(SrmDocument document)
+        public static AuditLogEntry CreateEmptyEntry()
         {
-            return new AuditLogEntry(document, DateTime.Now, string.Empty);
+            return new AuditLogEntry(DateTime.UtcNow, string.Empty);
         }
 
         /// <summary>
         /// Creates a simple entry only containing one message in each category with the given type and names
         /// extra info
         /// </summary>
-        public static AuditLogEntry CreateSimpleEntry(SrmDocument document, MessageType type, params object[] args)
+        public static AuditLogEntry CreateSimpleEntry(MessageType type, params object[] args)
         {
-            return CreateSingleMessageEntry(document, new MessageInfo(type, args));
+            return CreateSingleMessageEntry(new MessageInfo(type, args));
+        }
+
+        /// <summary>
+        /// Creates a simple entry only containing one message in each category with the given type and names
+        /// extra info
+        /// </summary>
+        public static AuditLogEntry CreateTestOnlyEntry(DateTime timestampUTC, params object[] args)
+        {
+            var info = new MessageInfo(MessageType.test_only, args);
+            var result = new AuditLogEntry(timestampUTC, string.Empty)
+            {
+                UndoRedo = info.ToMessage(LogLevel.undo_redo),
+                Summary = info.ToMessage(LogLevel.summary),
+                AllInfo = new LogMessage[0]
+            };
+
+            return result;
         }
 
         /// <summary>
         /// Creates an entry that depends on whether there are 1 or multiple elements
         /// in a collection.
         /// </summary>
-        /// <param name="document">Document change was made to</param>
         /// <param name="singular">Message to show if there's 1 element in the collection. Only element gets passed as argument to the message</param>
         /// <param name="plural">Message to show if there are multiple elements. The count gets passed to the message</param>
         /// <param name="items">Items to consider</param>
         /// <param name="singularArgsFunc">Converts the element to MessageArgs that get passed to the singular message</param>
         /// <param name="pluralArgs">Args to be passed to plural. If null, count is passed as single arg</param>
-        public static AuditLogEntry CreateCountChangeEntry<T>(SrmDocument document, MessageType singular,
+        public static AuditLogEntry CreateCountChangeEntry<T>(MessageType singular,
             MessageType plural, ICollection<T> items, Func<T, MessageArgs> singularArgsFunc, MessageArgs pluralArgs)
         {
             var singularArgs = items.Count == 1 ? singularArgsFunc(items.FirstOrDefault()) : null;
-            return CreateCountChangeEntry(document, singular, plural, items.Count, singularArgs,
+            return CreateCountChangeEntry(singular, plural, items.Count, singularArgs,
                 pluralArgs);
         }
 
@@ -760,55 +811,55 @@ namespace pwiz.Skyline.Model.AuditLog
         /// Creates an entry that depends on whether there are 1 or multiple elements
         /// in a collection.
         /// </summary>
-        /// <param name="document">Document change was made to</param>
         /// <param name="singular">Message to show if there's 1 element in the collection. Only element gets passed as argument to the message</param>
         /// <param name="plural">Message to show if there are multiple elements. The count gets passed to the message</param>
         /// <param name="items">Items to consider</param>
         /// <param name="count">Number of elements in IEnumerable. If null, all items are enumerated</param>
         /// <param name="singularArgsFunc">Converts the element to MessageArgs that get passed to the singular message</param>
         /// <param name="pluralArgs">Args to be passed to plural. If null, count is passed as single arg</param>
-        public static AuditLogEntry CreateCountChangeEntry<T>(SrmDocument document, MessageType singular,
-            MessageType plural, IEnumerable<T> items, int? count, Func<T, MessageArgs> singularArgsFunc, MessageArgs pluralArgs)
+        public static AuditLogEntry CreateCountChangeEntry<T>(MessageType singular,
+            MessageType plural, IEnumerable<T> items, int? count, Func<T, MessageArgs> singularArgsFunc,
+            MessageArgs pluralArgs)
         {
             if (!count.HasValue)
             {
                 var collection = items as ICollection<T> ?? items.ToArray();
-                return CreateCountChangeEntry(document, singular, plural, collection, singularArgsFunc, pluralArgs);
+                return CreateCountChangeEntry(singular, plural, collection, singularArgsFunc, pluralArgs);
             }
 
             var singularArgs = count.Value == 1 ? singularArgsFunc(items.FirstOrDefault()) : null;
-            return CreateCountChangeEntry(document, singular, plural, count.Value, singularArgs, pluralArgs);
+            return CreateCountChangeEntry(singular, plural, count.Value, singularArgs, pluralArgs);
         }
 
         // Overload for common case
-        public static AuditLogEntry CreateCountChangeEntry(SrmDocument document, MessageType singular,
+        public static AuditLogEntry CreateCountChangeEntry(MessageType singular,
             MessageType plural, ICollection<string> items)
         {
-            return CreateCountChangeEntry(document, singular, plural, items, MessageArgs.DefaultSingular, null);
+            return CreateCountChangeEntry(singular, plural, items, MessageArgs.DefaultSingular, null);
         }
 
         // Overload for common case
-        public static AuditLogEntry CreateCountChangeEntry(SrmDocument document, MessageType singular,
+        public static AuditLogEntry CreateCountChangeEntry(MessageType singular,
             MessageType plural, IEnumerable<string> items, int? count)
         {
             if (!count.HasValue)
             {
                 var collection = items as ICollection<string> ?? items.ToArray();
-                return CreateCountChangeEntry(document, singular, plural, collection, MessageArgs.DefaultSingular, null);
+                return CreateCountChangeEntry(singular, plural, collection, MessageArgs.DefaultSingular, null);
             }
 
-            return CreateCountChangeEntry(document, singular, plural, items, count, MessageArgs.DefaultSingular, null);
+            return CreateCountChangeEntry(singular, plural, items, count, MessageArgs.DefaultSingular, null);
         }
 
-        private static AuditLogEntry CreateCountChangeEntry(SrmDocument document, MessageType singular,
+        private static AuditLogEntry CreateCountChangeEntry(MessageType singular,
             MessageType plural, int count, MessageArgs singularArgs, MessageArgs pluralArgs)
         {
             switch (count)
             {
                 case 1:
-                    return CreateSimpleEntry(document, singular, singularArgs.Args);
+                    return CreateSimpleEntry(singular, singularArgs.Args);
                 default:
-                    return CreateSimpleEntry(document, plural,
+                    return CreateSimpleEntry(plural,
                         pluralArgs != null ? pluralArgs.Args : MessageArgs.Create(count).Args);
             }
         }
@@ -817,10 +868,9 @@ namespace pwiz.Skyline.Model.AuditLog
         /// Creates a simple entry only containing one message in each category with the given type and names and
         /// extra info
         /// </summary>
-        public static AuditLogEntry CreateSingleMessageEntry(SrmDocument document,
-            MessageInfo info, string extraInfo = null)
+        public static AuditLogEntry CreateSingleMessageEntry(MessageInfo info, string extraInfo = null)
         {
-            var result = new AuditLogEntry(document, DateTime.Now, string.Empty, extraInfo)
+            var result = new AuditLogEntry(DateTime.UtcNow, string.Empty, extraInfo)
             {
                 UndoRedo = info.ToMessage(LogLevel.undo_redo),
                 Summary = info.ToMessage(LogLevel.summary),
@@ -845,16 +895,15 @@ namespace pwiz.Skyline.Model.AuditLog
         /// <summary>
         /// Creates a log entry representing the changes in the diff tree
         /// </summary>
-        /// <param name="document">Document changes were made to</param>
         /// <param name="tree">Tree that should be logged</param>
         /// <param name="extraInfo">Text that should be displayed when clicking the magnifying glass in the audit log form</param>
         /// <returns></returns>
-        public static AuditLogEntry CreateSettingsChangeEntry(SrmDocument document, DiffTree tree, string extraInfo = null)
+        public static AuditLogEntry CreateSettingsChangeEntry(DiffTree tree, string extraInfo = null)
         {
             if (tree?.Root == null)
                 return null;
 
-            var result = new AuditLogEntry(document, tree.TimeStamp, string.Empty, extraInfo);
+            var result = new AuditLogEntry(tree.TimeStamp, string.Empty, extraInfo);
 
             var nodeNamePair = tree.Root.FindFirstMultiChildParent(tree, PropertyName.ROOT, true, false);
             // Remove "Settings" from property name if possible
@@ -905,12 +954,12 @@ namespace pwiz.Skyline.Model.AuditLog
                     ignoreTransitions
                         ? (Func<DiffNode, bool>) (node => !IsTransitionDiff(node.Property.PropertyType))
                         : null),
-                DateTime.Now);
+                DateTime.UtcNow);
 
             if (diffTree.Root != null)
             {
                 var message = new MessageInfo(action, actionParameters);
-                var entry = CreateSettingsChangeEntry(documentPair.OldDoc, diffTree)
+                var entry = CreateSettingsChangeEntry(diffTree)
                     .ChangeUndoRedo(message);
                 return entry;
             }
@@ -928,7 +977,7 @@ namespace pwiz.Skyline.Model.AuditLog
         /// </summary>
         public static AuditLogEntry CreateLogEnabledDisabledEntry(SrmDocument document)
         {
-            var result = new AuditLogEntry(document, DateTime.Now, string.Empty);
+            var result = new AuditLogEntry(DateTime.UtcNow, string.Empty);
 
             var type = document.Settings.DataSettings.AuditLogging ? MessageType.log_enabled : MessageType.log_disabled;
 
@@ -939,18 +988,16 @@ namespace pwiz.Skyline.Model.AuditLog
             return result;
         }
 
-        public static AuditLogEntry CreateExceptionEntry(SrmDocument doc, LogException ex)
+        public static AuditLogEntry CreateExceptionEntry(LogException ex)
         {
             // ReSharper disable PossibleNullReferenceException
             if (ex.OldUndoRedoMessage == null)
             {
-                return CreateSingleMessageEntry(doc,
-                    new MessageInfo(MessageType.log_error, ex.InnerException.GetType().Name), ex.InnerException.StackTrace);
+                return CreateSingleMessageEntry(new MessageInfo(MessageType.log_error, ex.InnerException.GetType().Name), ex.InnerException.StackTrace);
             }
             else
             {
-                var entry = CreateSingleMessageEntry(doc,
-                    new MessageInfo(MessageType.empty_single_arg, ex.OldUndoRedoMessage), ex.InnerException.StackTrace);
+                var entry = CreateSingleMessageEntry(new MessageInfo(MessageType.empty_single_arg, ex.OldUndoRedoMessage), ex.InnerException.StackTrace);
                 return entry.AppendAllInfo(ImmutableList.Singleton(new MessageInfo(MessageType.log_error_old_msg,
                     ex.InnerException.GetType().Name, ex.OldUndoRedoMessage)));
             }
@@ -1071,7 +1118,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 documentPair.OldDoc, documentPair.NewDoc, documentPair.OldDoc, documentPair.NewDoc);
 
             var tree = DiffTree.FromEnumerator(Reflector<SrmSettings>.EnumerateDiffNodes(objInfo, property, false));
-            return tree.Root != null ? CreateSettingsChangeEntry(documentPair.OldDoc, tree) : null;
+            return tree.Root != null ? CreateSettingsChangeEntry(tree) : null;
         }
 
         public static PropertyName GetNodeName(SrmDocument doc, DocNode docNode)
@@ -1122,6 +1169,7 @@ namespace pwiz.Skyline.Model.AuditLog
         private enum ATTR
         {
             format_version,
+            skyline_version,
             time_stamp,
             user,
             count_type,
@@ -1147,8 +1195,8 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteAttribute(ATTR.format_version, FormatVersion.AsDouble());
-            writer.WriteAttribute(ATTR.time_stamp, TimeStamp.ToUniversalTime().ToString(CultureInfo.InvariantCulture));
+            writer.WriteAttribute(ATTR.skyline_version, SkylineVersion);
+            writer.WriteAttribute(ATTR.time_stamp, FormatSerializationString(TimeStampUTC, TimeZoneOffset)); // e.g 2008-10-01T17:04:32-8 or  2008-10-01T17:04:32+2 or  2008-10-01T17:04:32Z);
             writer.WriteAttribute(ATTR.user, User);
 
             if (CountEntryType.HasValue)
@@ -1178,9 +1226,10 @@ namespace pwiz.Skyline.Model.AuditLog
         public void ReadXml(XmlReader reader)
         {
             LogIndex = Interlocked.Increment(ref _logIndexCounter);
-            FormatVersion = new DocumentFormat(reader.GetDoubleAttribute(ATTR.format_version));
-            var time = DateTime.Parse(reader.GetAttribute(ATTR.time_stamp), CultureInfo.InvariantCulture);
-            TimeStamp = DateTime.SpecifyKind(time, DateTimeKind.Utc).ToLocalTime();
+            var skylineVersion = reader.GetAttribute(ATTR.skyline_version); // If this is null, it's a sign that this is an older 4.2 log without hashes
+            SkylineVersion = skylineVersion ?? reader.GetAttribute(ATTR.format_version) ?? string.Empty; // Skyline version at time of original event creation (4.2 wrote format_version here, which amounted to the same thing)
+            TimeStampUTC = ParseSerializedTimeStamp(reader.GetAttribute(ATTR.time_stamp), out var timeZoneOffset);
+            TimeZoneOffset = timeZoneOffset;
             User = reader.GetAttribute(ATTR.user);
 
             var countType = reader.GetAttribute(ATTR.count_type);
@@ -1223,9 +1272,15 @@ namespace pwiz.Skyline.Model.AuditLog
                 ? reader.ReadElementString(EL.hash.ToString())
                 : null;
 
-            Hash = new AuditLogHash(this).ChangeSkylHash(AuditLog.Hash.FromBase64(hash));
+            Hash = new AuditLogHash(this, hash == null? null : AuditLog.Hash.FromBase64(hash));
 
-            if (!Hash.HashesEqual())
+            if (hash == null && reader.GetAttribute(ATTR.format_version) != null)
+            {
+                // This was an older format that didn't save hashes, set it now
+                Hash = Hash.ChangeSkylHash(Hash.ActualHash);
+            }
+
+            if (!Hash.SkylAndActualHashesEqual())
             {
                 // Reset all english strings so that they get recalculated when
                 // accessed the next time
@@ -1237,6 +1292,55 @@ namespace pwiz.Skyline.Model.AuditLog
 
             reader.ReadEndElement();
         }
+
+
+        //
+        // Read and write ISO / XML xsd:dateTime standard timestamps
+        //
+        public static string FormatSerializationString(DateTime timeUTC, TimeSpan timezoneOffset)
+        {
+            var localTime = timeUTC + timezoneOffset;
+            var tzShift = timezoneOffset.TotalHours; // Decimal hours eg 8.5 or -0.5 etc
+            return localTime.ToString(@"s", DateTimeFormatInfo.InvariantInfo) +
+                   (tzShift == 0
+                       ? @"Z"
+                       : (tzShift < 0 ? @"-" : @"+") + timezoneOffset.ToString(@"hh\:mm"));
+        }
+
+        public static DateTime ParseSerializedTimeStamp(string timeStampSerializationString, out TimeSpan timezoneoffset)
+        {
+            var timezoneIndicatorPosition = timeStampSerializationString.LastIndexOfAny(new[] { 'Z', '+', '-' }); // Look for timezone info 2008-10-01T17:04:32-8 or  2008-10-01T17:04:32+2 or  2008-10-01T17:04:32Z 
+            DateTime result;
+            if (timezoneIndicatorPosition < 0)
+            {
+                // Pre-4.21 we logged bare UTC with no timezone info
+                result = DateTime.Parse(timeStampSerializationString, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal).ToUniversalTime();
+                timezoneoffset = TimeSpan.Zero;
+            }
+            else
+            {
+                // But now we log local time with UTC offset
+                result = DateTime.Parse(timeStampSerializationString.Substring(0, timezoneIndicatorPosition), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal).ToUniversalTime();
+                if (timeStampSerializationString[timezoneIndicatorPosition] == 'Z') // Z means GMT, no offset
+                {
+                    timezoneoffset = TimeSpan.Zero;
+                }
+                else
+                {
+                    var offset = timeStampSerializationString.Substring(timezoneIndicatorPosition + 1);
+                    // Want to parse timespan as something like hh:mm:ss but we save hh or maybe hh:mm
+                    timezoneoffset = TimeSpan.Parse(@"00:" + offset + (offset.Contains(':') ? @":00" : @":00:00")); 
+                    if (timeStampSerializationString[timezoneIndicatorPosition] == '-')
+                    {
+                        timezoneoffset = -timezoneoffset;
+                    }
+                    result -= timezoneoffset; // We log local time, shift it to UTC using logged tzOffset e.g. Seattle offset is -8, so add 8 to get to GMT
+                }
+            }
+
+            return result;
+        }
+
         #endregion
 
         public byte[] GetAuditLogHash()
@@ -1247,17 +1351,32 @@ namespace pwiz.Skyline.Model.AuditLog
             using (var sha1 = new SHA1CryptoServiceProvider())
             {
                 var enc = Encoding.UTF8;
-                var blockHash = new BlockHash(sha1);
-                blockHash.ProcessBytes(enc.GetBytes(User));
+                var encodedBytes = new List<byte[]>(7+_allInfoNoUndoRedo.Count());
+                encodedBytes.Add(enc.GetBytes(User));
                 if (!string.IsNullOrEmpty(EnExtraInfo))
-                    blockHash.ProcessBytes(enc.GetBytes(EnExtraInfo));
+                    encodedBytes.Add(enc.GetBytes(EnExtraInfo));
+                encodedBytes.Add(UndoRedo.GetBytesForHash(enc, CultureInfo.InvariantCulture));
+                encodedBytes.Add(Summary.GetBytesForHash(enc, CultureInfo.InvariantCulture));
+                _allInfoNoUndoRedo.ForEach(l => encodedBytes.Add(l.GetBytesForHash(enc, CultureInfo.InvariantCulture)));
+                encodedBytes.Add(enc.GetBytes(SkylineVersion));
+                encodedBytes.Add(GetTimeStampBytesForHash());
+                encodedBytes.Add(enc.GetBytes(TimeZoneOffset.TotalHours.ToString(CultureInfo.InvariantCulture)));
 
-                blockHash.ProcessBytes(UndoRedo.GetBytesForHash(enc, CultureInfo.InvariantCulture));
-                blockHash.ProcessBytes(Summary.GetBytesForHash(enc, CultureInfo.InvariantCulture));
-                _allInfoNoUndoRedo.ForEach(l => blockHash.ProcessBytes(l.GetBytesForHash(enc, CultureInfo.InvariantCulture)));
-                blockHash.ProcessBytes(enc.GetBytes(TimeStamp.ToUniversalTime().ToString(@"G"))); //MM/DD/YYYY HH:MM:SS
+                // Avoid heap thrash performance issue by carefully allocating hash buffer size
+                var blockHash = new BlockHash(sha1, encodedBytes.Sum(b => b.Length)); 
+                encodedBytes.ForEach(b => blockHash.ProcessBytes(b));
+
                 return blockHash.FinalizeHashBytes();
             }
+        }
+
+        // For hash creation
+        private byte[] GetTimeStampBytesForHash()
+        {
+            var bytes = BitConverter.GetBytes(TimeStampUTC.ToFileTime() / TimeSpan.TicksPerSecond); // We only serialize to hour:min:sec precision, lose the ticks so we can roundtrip
+            if (!BitConverter.IsLittleEndian)
+                return bytes.Reverse().ToArray(); // For crossplatform stability
+            return bytes;
         }
 
         public void Validate()
@@ -1269,15 +1388,16 @@ namespace pwiz.Skyline.Model.AuditLog
     }
 
 
-    public class AuditLogHash : Immutable
+    public class AuditLogHash : Immutable, IEquatable<AuditLogHash>
     {
         public AuditLogHash()
         {
         }
 
-        public AuditLogHash(AuditLogEntry entry)
+        public AuditLogHash(AuditLogEntry entry, Hash skylHash)
         {
             ActualHash = entry.GetAuditLogHash();
+            SkylHash = skylHash;
         }
 
         public Hash ActualHash { get; private set; }
@@ -1293,7 +1413,7 @@ namespace pwiz.Skyline.Model.AuditLog
             return ChangeProp(ImClone(this), im => im.SkylHash = hash);
         }
 
-        public bool HashesEqual()
+        public bool SkylAndActualHashesEqual()
         {
             if (string.IsNullOrEmpty(ActualHash?.HashString) && string.IsNullOrEmpty(SkylHash?.HashString))
                 return true;
@@ -1303,24 +1423,28 @@ namespace pwiz.Skyline.Model.AuditLog
 
             return ActualHash.Equals(SkylHash);
         }
+
+        public bool Equals(AuditLogHash other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(ActualHash, other.ActualHash) && Equals(SkylHash, other.SkylHash);
+        }
+
     }
 
     public class Hash : IEquatable<Hash>
     {
         public Hash(byte[] hash)
         {
-            HashBytes = hash;
             HashString = BlockHash.SafeToBase64(hash);
         }
+
+        public string HashString { get; } // Base64 representation of hashed input bytes
 
         public static implicit operator Hash(byte[] bytes)
         {
             return new Hash(bytes);
-        }
-
-        public static implicit operator byte[] (Hash hash)
-        {
-            return hash.HashBytes;
         }
 
         public static Hash FromBase64(string base64)
@@ -1329,19 +1453,42 @@ namespace pwiz.Skyline.Model.AuditLog
         }
 
 
-        public bool Equals(Hash other)
-        {
-            return HashString == other.HashString;
-        }
 
         public override string ToString()
         {
             return HashString;
         }
 
-        public byte[] HashBytes { get; }
+        // IEquatable members
+        public bool Equals(Hash other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return string.Equals(HashString, other.HashString);
+        }
 
-        public string HashString { get; }
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((Hash) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return (HashString != null ? HashString.GetHashCode() : 0);
+        }
+
+        public static bool operator ==(Hash left, Hash right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(Hash left, Hash right)
+        {
+            return !Equals(left, right);
+        }
     }
 
 
@@ -1371,16 +1518,16 @@ namespace pwiz.Skyline.Model.AuditLog
             get { return new AuditLogEntryCreator(ImClone(this).CreateEntry); }
         }
 
-        protected virtual AuditLogEntry CreateBaseEntry(SrmDocumentPair docPair)
+        protected virtual AuditLogEntry CreateBaseEntry()
         {
             return MessageInfo.Type == MessageType.none
-                ? AuditLogEntry.CreateEmptyEntry(docPair.OldDoc).ChangeAllInfo(new LogMessage[0])
-                : AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc, MessageInfo);
+                ? AuditLogEntry.CreateEmptyEntry().ChangeAllInfo(new LogMessage[0])
+                : AuditLogEntry.CreateSingleMessageEntry(MessageInfo);
         }
 
         protected virtual AuditLogEntry CreateEntry(SrmDocumentPair docPair)
         {
-            var baseEntry = CreateBaseEntry(docPair);
+            var baseEntry = CreateBaseEntry();
             var rootProp = RootProperty.Create(typeof(T));
 
             var objectInfo = new ObjectInfo<object>()
@@ -1388,13 +1535,13 @@ namespace pwiz.Skyline.Model.AuditLog
                     .ChangeRootObjectPair(docPair.ToObjectType());
 
             var diffTree =
-                DiffTree.FromEnumerator(Reflector<T>.EnumerateDiffNodes(docPair.ToObjectType(), rootProp, (T)this), DateTime.Now);
+                DiffTree.FromEnumerator(Reflector<T>.EnumerateDiffNodes(docPair.ToObjectType(), rootProp, (T)this), DateTime.UtcNow);
             if (diffTree.Root == null)
                 return baseEntry;
 
             var settingsString = Reflector<T>.ToString(objectInfo.RootObjectPair, diffTree.Root,
                 ToStringState.DEFAULT.ChangeFormatWhitespace(true));
-            var entry = AuditLogEntry.CreateSettingsChangeEntry(docPair.OldDoc, diffTree, settingsString);
+            var entry = AuditLogEntry.CreateSettingsChangeEntry(diffTree, settingsString);
             return baseEntry.Merge(entry);
         }
     }

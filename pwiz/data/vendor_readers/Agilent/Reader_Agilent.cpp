@@ -31,7 +31,10 @@ PWIZ_API_DECL std::string pwiz::msdata::Reader_Agilent::identify(const std::stri
 {
     if (bfs::is_directory(filename))
     {
-        if (bfs::exists(bfs::path(filename) / "AcqData"))
+        auto filepath = bfs::path(filename) / "AcqData";
+        if (bfs::exists(filepath) &&
+            (bfs::exists(filepath / "mspeak.bin") ||
+             bfs::exists(filepath / "msprofile.bin")))
             return getType();
     }
     else if (bal::icontains(filename, ".d/AcqData/mspeak.bin") ||

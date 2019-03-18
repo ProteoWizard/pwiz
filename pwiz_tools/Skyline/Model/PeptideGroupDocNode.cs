@@ -95,6 +95,11 @@ namespace pwiz.Skyline.Model
         [TrackChildren(ignoreName: true)]
         public ProteinMetadata ProteinMetadata { get { return _proteinMetadata.Merge(new ProteinMetadata(PeptideGroup.Name, PeptideGroup.Description)); } } // prefer our name and description over peptidegroup
 
+        public bool NeedsSearch
+        {
+            get { return _proteinMetadata.NeedsSearch(); }
+        }
+
         /// <summary>
         /// returns our actual metadata, not merged with that of the ID object
         /// </summary>

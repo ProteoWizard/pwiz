@@ -6374,8 +6374,8 @@
   <data name="RelativeRTExtension_LOCALIZED_VALUES_Overlapping" xml:space="preserve">
     <value>重複</value>
   </data>
-  <data name="PasteDlg_GetMoleculePeptideGroup_Molecule_Group__0_" xml:space="preserve">
-    <value>分子グループ{0}</value>
+  <data name="PasteDlg_GetMoleculePeptideGroup_Molecule_List__0_" xml:space="preserve">
+    <value>分子リスト{0}</value>
   </data>
   <data name="SkylineWindow_removeDuplicatePeptidesMenuItem_Click_Remove_duplicate_peptides" xml:space="preserve">
     <value>重複ペプチドを削除</value>
@@ -9034,6 +9034,13 @@
   <data name="PasteDlg_btnTransitionListHelp_Click_" xml:space="preserve">
     <value>このウィンドウの一番簡単な使用方法は、Excel（またはデータがCSV形式の場合テキストエディタ）からコピーしグリッドに貼り付けることです。
  
+ Skylineでの列の順序は、コラムヘッダーを左右にドラッグすることで調整できます。
+ 
+ ほとんどのペプチドトランジションリストは、「ファイル|インポート|トランジションリスト...」メニューアイテムでインポートできるか、[ターゲット]ウィンドウに直接貼り付けることさえできます。</value>
+  </data>
+  <data name="PasteDlg_btnTransitionListHelp_Click_SmallMol_" xml:space="preserve">
+    <value>このウィンドウの一番簡単な使用方法は、Excel（またはデータがCSV形式の場合テキストエディタ）からコピーしグリッドに貼り付けることです。
+ 
  Skylineでの列の順序は、コラムヘッダーを左右にドラッグすることで調整できます。  小分子の場合、 また[列...]ボタンでどの列を有効にするか選択できます。
  
  ほとんどのペプチドトランジションリストは、「ファイル|インポート|トランジションリスト...」メニューアイテムでインポートできるか、[ターゲット]ウィンドウに直接貼り付けることさえできます。 またこれは、列のヘッダーにこれらの名前を使用する場合、小分子トランジションリストでも行うことができます：</value>
@@ -9904,6 +9911,46 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_OtherIDs" xml:space="preserve">
     <value>OtherIDs</value>
   </data>
+  <data name="PeptideToMoleculeText_Peptide" xml:space="preserve">
+    <value>ペプチド</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "choose a peptide" to read "choose a molecule" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Molecule" xml:space="preserve">
+    <value>分子</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "choose a peptide" to read "choose a molecule" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Peptides" xml:space="preserve">
+    <value>ペプチド</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "2 peptides" to read "2 molecules" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Molecules" xml:space="preserve">
+    <value>分子</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "2 peptides" to read "2 molecules" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Protein" xml:space="preserve">
+    <value>タンパク質</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "choose a protein" to read "choose a molecule list" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Molecule_List" xml:space="preserve">
+    <value>分子リスト</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "choose a protein" to read "choose a molecule list" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Proteins" xml:space="preserve">
+    <value>タンパク質</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "2 proteins" to read "2 molecule lists" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Molecule_Lists" xml:space="preserve">
+    <value>分子リスト</value>
+    <comment>&gt;Used in PeptideToMoleculeText.Translate to update strings like  "2 proteins" to read "2 molecule lists" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Modified_Sequence" xml:space="preserve">
+    <value>修飾シークエンス</value>
+    <comment>&gt;Used in PeptideToMoleculeText.Translate to update strings like "select a modifed sequence" to read "select a molecule" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Peptide_List" xml:space="preserve">
+    <value>ペプチドのリスト</value>
+    <comment>&gt;Used in PeptideToMoleculeText.Translate to update strings like "select a peptide list" to read "select a molecule list" when non-peptide documents are in use</comment>
+  </data>
   <data name="ToolOptionsUI_btnResetSettings_Click_Are_you_sure_you_want_to_clear_all_saved_settings__This_will_immediately_return__0__to_its_original_configuration_and_cannot_be_undone_" xml:space="preserve">
     <value>本当に保存されたすべての設定をクリアしてもよろしいですか？これで直ちに{0}が元の設定に戻り、それを元に戻すことはできません。</value>
   </data>
@@ -10162,5 +10209,8 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="CommandArgs_PanoramaArgsComplete_" xml:space="preserve">
     <value>ドキュメントをPanoramaにアップロードするため必要な以下の引数に値を指定してください：
 {0}</value>
+  </data>
+  <data name="PeptideToMoleculeText_Peptide_Sequence" xml:space="preserve">
+    <value>ペプチドシークエンス</value>
   </data>
 </root>

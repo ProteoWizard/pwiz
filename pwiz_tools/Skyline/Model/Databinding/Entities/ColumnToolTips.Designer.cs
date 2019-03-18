@@ -621,15 +621,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Document format version at the time the change was made.
-        /// </summary>
-        public static string DocumentFormat {
-            get {
-                return ResourceManager.GetString("DocumentFormat", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Ion mobility drift time (in milliseconds) for fragment ions, which typically move faster due to more energetic collisions. (For backward compatibility only: IonMobilityFragment and IonMobilityUnits are the preferred terms.).
         /// </summary>
         public static string DriftTimeFragment {
@@ -1672,7 +1663,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A general name that may be assigned to a small molecule in its neutral, unlabeled form..
+        ///   Looks up a localized string similar to A general name that may be assigned to a molecule in its neutral, unlabeled form..
         /// </summary>
         public static string MoleculeName {
             get {
@@ -2911,6 +2902,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Time at which this change was made, expressed in your current local time zone.
+        /// </summary>
+        public static string Time {
+            get {
+                return ResourceManager.GetString("Time", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The retention times of the chromatogram..
         /// </summary>
         public static string Times {
@@ -2920,7 +2920,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Time at which this change was made.
+        ///   Looks up a localized string similar to Time at which this change was made, expressed as the local time of change and offset to UTC time.
         /// </summary>
         public static string TimeStamp {
             get {
@@ -3177,6 +3177,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string UserSetTotal {
             get {
                 return ResourceManager.GetString("UserSetTotal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time at which this change was made, expressed in universal time (GMT).
+        /// </summary>
+        public static string UTCTime {
+            get {
+                return ResourceManager.GetString("UTCTime", resourceCulture);
             }
         }
         

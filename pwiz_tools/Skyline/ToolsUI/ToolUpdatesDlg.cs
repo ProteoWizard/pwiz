@@ -31,7 +31,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.ToolsUI
 {
-    public partial class ToolUpdatesDlg : FormEx
+    public partial class ToolUpdatesDlg : ModeUIInvariantFormEx // Neither proteomic nor small mol, never wants the "peptide"=>"molecule" translation
     {
         private readonly SkylineWindow _parent;
         private readonly IDictionary<ToolUpdateInfo, ICollection<ToolDescription>> _tools;
