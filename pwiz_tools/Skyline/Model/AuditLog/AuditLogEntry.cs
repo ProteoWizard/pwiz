@@ -660,7 +660,11 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public AuditLogEntry ChangeExtraInfo(string extraInfo)
         {
-            return ChangeProp(ImClone(this), im => im.ExtraInfo = extraInfo);
+            return ChangeProp(ImClone(this), im =>
+            {
+                im._enExtraInfo = null;
+                im.ExtraInfo = extraInfo;
+            });
         }
 
         #endregion
