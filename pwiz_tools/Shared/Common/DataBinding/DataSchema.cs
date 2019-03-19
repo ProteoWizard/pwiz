@@ -321,9 +321,9 @@ namespace pwiz.Common.DataBinding
             return type.Name;
         }
 
-        public virtual IColumnCaption GetColumnCaption(UiMode uiMode, Type type, string propertyName)
+        public virtual IColumnCaption GetColumnCaption(string uiMode, Type type, string propertyName)
         {
-            var columnDescriptor = ColumnDescriptor.RootColumn(this, type, uiMode.Name).ResolveChild(propertyName);
+            var columnDescriptor = ColumnDescriptor.RootColumn(this, type, uiMode).ResolveChild(propertyName);
             if (columnDescriptor == null)
             {
                 return new ColumnCaption(propertyName);
@@ -393,11 +393,6 @@ namespace pwiz.Common.DataBinding
         public DataSchemaLocalizer GetDataSchemaLocalizer(ColumnCaptionType captionType)
         {
             return captionType == ColumnCaptionType.invariant ? DataSchemaLocalizer.INVARIANT : DataSchemaLocalizer;
-        }
-
-        public virtual UiMode UiModeFromName(string uiMode)
-        {
-            return UiMode.EMPTY;
         }
 
         public virtual String GetColumnDescription(ColumnDescriptor columnDescriptor)

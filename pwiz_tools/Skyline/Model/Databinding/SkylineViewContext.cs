@@ -857,9 +857,9 @@ namespace pwiz.Skyline.Model.Databinding
             DeleteNodesAction.DeleteSkylineDocNodes(SkylineDataSchema.SkylineWindow, dataGridView, docNodes);
         }
 
-        public override IList<UiMode> AvailableUiModes
+        public override IEnumerable<IUiModeInfo> AvailableUiModes
         {
-            get { return UiModes.AllModes; }
+            get { return UiModes.ListModes(); }
         }
     }
 }

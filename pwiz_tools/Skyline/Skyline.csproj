@@ -474,7 +474,7 @@
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiSession.cs" />
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiUrl.cs" />
     <Compile Include="Model\TargetResolver.cs" />
-    <Compile Include="Model\UiModes.cs" />
+    <Compile Include="Util\UiModes.cs" />
     <Compile Include="SettingsUI\IonMobility\UseSpectralLibraryIonMobilityValuesControl.cs">
       <SubType>UserControl</SubType>
     </Compile>

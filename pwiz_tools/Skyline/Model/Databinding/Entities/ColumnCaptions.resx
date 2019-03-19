@@ -633,11 +633,17 @@
   <data name="MoleculeFormula">
     <value>Molecule Formula</value>
   </data>
+  <data name="MoleculeList">
+    <value>Molecule List</value>
+  </data>
   <data name="MoleculeListName">
     <value>Molecule List Name</value>
   </data>
   <data name="MoleculeListNote">
     <value>Molecule List Note</value>
+  </data>
+  <data name="MoleculeList">
+    <value>Molecule List</value>
   </data>
   <data name="MoleculeLists">
     <value>Molecule Lists</value>

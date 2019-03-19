@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.ElementLocators;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {

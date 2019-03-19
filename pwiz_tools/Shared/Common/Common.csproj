@@ -142,7 +142,7 @@
     <Compile Include="DataBinding\Attributes\FormatAttribute.cs" />
     <Compile Include="DataBinding\Attributes\OneToManyAttribute.cs" />
     <Compile Include="DataBinding\Attributes\UiModeAttribute.cs" />
-    <Compile Include="DataBinding\Attributes\VisibleAttribute.cs" />
+    <Compile Include="DataBinding\Attributes\HiddenAttribute.cs" />
     <Compile Include="DataBinding\ChainedPropertyDescriptor.cs" />
     <Compile Include="DataBinding\CollectionInfo.cs" />
     <Compile Include="DataBinding\ColumnFormats.cs" />
@@ -278,7 +278,7 @@
     <Compile Include="DataBinding\Internal\Pivoter.cs" />
     <Compile Include="DataBinding\Internal\QueryRequestor.cs" />
     <Compile Include="DataBinding\Internal\QueryResults.cs" />
-    <Compile Include="DataBinding\UiMode.cs" />
+    <Compile Include="DataBinding\IUiModeInfo.cs" />
     <Compile Include="DataBinding\Layout\RowFilter.cs" />
     <Compile Include="DataBinding\Internal\RowSourceWrapper.cs" />
     <Compile Include="DataBinding\IRowSource.cs" />
@@ -507,6 +507,7 @@
     <None Include="Resources\up-pro32.bmp" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Resources\UnknownUiMode.png" />
     <EmbeddedResource Include="DataBinding\Documentation\DocumentationGenerator.css" />
     <Content Include="Resources\agg_mean.bmp" />
     <Content Include="Resources\agg_median.bmp" />

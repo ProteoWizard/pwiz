@@ -32,7 +32,7 @@ namespace pwiz.Common.DataBinding
     {
         public static ColumnDescriptor RootColumn(DataSchema dataSchema, Type propertyType, string uiMode)
         {
-            return new Root(dataSchema, propertyType, uiMode);
+            return new Root(dataSchema, propertyType, dataSchema.NormalizeUiMode(uiMode));
         }
 
         public static ColumnDescriptor RootColumn(DataSchema dataSchema, Type propertyType)

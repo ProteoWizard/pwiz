@@ -681,9 +681,9 @@ namespace pwiz.Common.DataBinding
             dropDownItems.Clear();
         }
 
-        public virtual IList<UiMode> AvailableUiModes
+        public virtual IEnumerable<IUiModeInfo> AvailableUiModes
         {
-            get { return ImmutableList.Singleton(UiMode.EMPTY); }
+            get { yield break; }
         }
 
         // Default implementation of ViewsChanged which never fires.

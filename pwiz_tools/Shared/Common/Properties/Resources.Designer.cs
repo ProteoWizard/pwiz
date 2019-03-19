@@ -1249,6 +1249,16 @@ namespace pwiz.Common.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap UnknownUiMode {
+            get {
+                object obj = ResourceManager.GetObject("UnknownUiMode", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap up_pro32 {
             get {
                 object obj = ResourceManager.GetObject("up_pro32", resourceCulture);

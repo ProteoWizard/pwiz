@@ -64,24 +64,22 @@ namespace pwiz.Skyline.Model.Databinding
             _elementRefCache = CachedValue.Create(this, () => new ElementRefs(Document));
         }
 
-        public UiMode DecideUiMode()
-        {
-            if (SkylineWindow != null)
-            {
-                return UiModes.FromDocumentType(SkylineWindow.ModeUI);
-            }
-
-            if (_documentContainer.Document.DocumentType == Program.ModeUI)
-            {
-                return UiModes.FromDocumentType(_documentContainer.Document.DocumentType);
-            }
-
-            return UiModes.Mixed;
-        }
-
         public override string DefaultUiMode
         {
-            get { return DecideUiMode().Name; }
+            get
+            {
+                if (SkylineWindow != null)
+                {
+                    return UiModes.FromDocumentType(SkylineWindow.ModeUI);
+                }
+
+                if (_documentContainer.Document.DocumentType == Program.ModeUI)
+                {
+                    return UiModes.FromDocumentType(_documentContainer.Document.DocumentType);
+                }
+
+                return UiModes.MIXED;
+            }
         }
 
         protected override bool IsScalar(Type type)

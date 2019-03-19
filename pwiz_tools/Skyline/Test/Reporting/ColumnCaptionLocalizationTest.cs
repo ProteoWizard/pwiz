@@ -34,6 +34,7 @@ using pwiz.Skyline.Model.AuditLog.Databinding;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest.Reporting
@@ -72,13 +73,10 @@ namespace pwiz.SkylineTest.Reporting
                 foreach (var columnDescriptor in
                     EnumerateAllColumnDescriptors(skylineDataSchema, STARTING_TYPES))
                 {
-                    foreach (var uiMode in UiModes.AllModes)
+                    var invariantCaption = skylineDataSchema.GetColumnCaption(columnDescriptor) as ColumnCaption;
+                    if (invariantCaption != null && !skylineDataSchema.DataSchemaLocalizer.HasEntry(invariantCaption))
                     {
-                        var invariantCaption = skylineDataSchema.GetColumnCaption(columnDescriptor) as ColumnCaption;
-                        if (invariantCaption != null && !skylineDataSchema.DataSchemaLocalizer.HasEntry(invariantCaption))
-                        {
-                            missingCaptions.Add(invariantCaption);
-                        }
+                        missingCaptions.Add(invariantCaption);
                     }
                 }
             }
@@ -249,7 +247,7 @@ namespace pwiz.SkylineTest.Reporting
                     continue;
                 }
 
-                foreach (var uiMode in UiModes.AllModes)
+                foreach (var uiMode in UiModes.ListModes())
                 {
                     var rootColumn = ColumnDescriptor.RootColumn(dataSchema, type, uiMode.Name);
                     foreach (var child in GetChildColumns(rootColumn))

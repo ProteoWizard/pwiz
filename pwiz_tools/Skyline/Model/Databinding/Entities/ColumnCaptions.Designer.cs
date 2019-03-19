@@ -1627,6 +1627,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Molecule List.
+        /// </summary>
+        public static string MoleculeList {
+            get {
+                return ResourceManager.GetString("MoleculeList", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Molecule List Locator.
         /// </summary>
         public static string MoleculeListLocator {

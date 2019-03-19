@@ -26,12 +26,13 @@ using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
     [AnnotationTarget(AnnotationDef.AnnotationTarget.protein)]
     [ProteomicDisplayName(nameof(Protein))]
-    [InvariantDisplayName("Molecule List", ExceptInUiMode = UiModes.PROTEOMIC)]
+    [InvariantDisplayName("MoleculeList", ExceptInUiMode = UiModes.PROTEOMIC)]
     public class Protein : SkylineDocNode<PeptideGroupDocNode>
     {
         private readonly CachedValue<Peptide[]> _peptides;

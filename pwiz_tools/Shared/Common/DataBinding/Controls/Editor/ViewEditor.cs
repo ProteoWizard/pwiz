@@ -485,25 +485,31 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         public void UpdateUiModesDropdown()
         {
-            var uiModes = ViewContext.AvailableUiModes;
-            uiModeDropdown.Visible = uiModes.Count > 1;
+            var uiModes = ViewContext.AvailableUiModes.ToArray();
+            uiModeDropdown.Visible = uiModes.Length > 1;
             uiModeDropdown.DropDownItems.Clear();
+            uiModeDropdown.Image = Resources.UnknownUiMode;
+            uiModeDropdown.ToolTipText = ViewInfo.ParentColumn.UiMode;
+            uiModeDropdown.ImageTransparentColor = Color.Empty;
             foreach (var uiMode in uiModes)
             {
                 var button = MakeUiModeButton(uiMode);
-                if (uiMode.Name == ViewSpec.UiMode)
+                if (uiMode.Name == ViewInfo.ParentColumn.UiMode)
                 {
                     button.Checked = true;
+                    uiModeDropdown.ToolTipText = uiMode.Label;
+                    uiModeDropdown.Image = uiMode.Image;
+                    uiModeDropdown.ImageTransparentColor = uiMode.TransparentColor;
                 }
 
                 uiModeDropdown.DropDownItems.Add(button);
             }
         }
 
-        private ToolStripButton MakeUiModeButton(UiMode uiMode)
+        private ToolStripButton MakeUiModeButton(IUiModeInfo uiMode)
         {
             var button = new ToolStripButton(uiMode.Label, uiMode.Image);
-            button.ImageTransparentColor = Color.White;
+            button.ImageTransparentColor = uiMode.TransparentColor;
             button.Click += (sender, args) =>
             {
                 var parentColumn = ColumnDescriptor.RootColumn(ViewInfo.ParentColumn.DataSchema,
