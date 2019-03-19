@@ -2499,14 +2499,24 @@ namespace pwiz.Skyline.Model
 
     public class SrmDocumentPair : ObjectPair<SrmDocument>
     {
-        protected SrmDocumentPair(SrmDocument oldDoc, SrmDocument newDoc)
+        protected SrmDocumentPair(SrmDocument oldDoc, SrmDocument newDoc, SrmDocument.DOCUMENT_TYPE defaultDocumentTypeForAuditLog)
             : base(oldDoc, newDoc)
         {
+            DocumentTypeForAuditLogging = 
+                  oldDoc != null && oldDoc.DocumentType != SrmDocument.DOCUMENT_TYPE.none ? oldDoc.DocumentType
+                : newDoc != null && newDoc.DocumentType != SrmDocument.DOCUMENT_TYPE.none ? newDoc.DocumentType
+                : defaultDocumentTypeForAuditLog;
         }
 
         public new static SrmDocumentPair Create(SrmDocument oldDoc, SrmDocument newDoc)
         {
-            return new SrmDocumentPair(oldDoc, newDoc);
+            return new SrmDocumentPair(oldDoc, newDoc, SrmDocument.DOCUMENT_TYPE.none);
+        }
+
+        public static SrmDocumentPair Create(SrmDocument oldDoc, SrmDocument newDoc, 
+            SrmDocument.DOCUMENT_TYPE defaultDocumentTypeForLogging)
+        {
+            return new SrmDocumentPair(oldDoc, newDoc, defaultDocumentTypeForLogging);
         }
 
         public ObjectPair<object> ToObjectType()
@@ -2516,6 +2526,10 @@ namespace pwiz.Skyline.Model
 
         public SrmDocument OldDoc { get { return OldObject; } }
         public SrmDocument NewDoc { get { return NewObject; } }
+
+        // Used for "peptide"->"molecule" translation cue in human readable logs
+        public SrmDocument.DOCUMENT_TYPE DocumentTypeForAuditLogging { get; private set; } 
+
     }
 
     public class Targets
