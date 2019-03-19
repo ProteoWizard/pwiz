@@ -43,6 +43,11 @@ namespace pwiz.MSGraph
                 Point = point;
                 Tag = tag;
             }
+
+            public override string ToString() // For ease of debugging
+            {
+                return string.Format(@"{0} tag={1}", Point, Tag);
+            }
         }
 
         /// <summary>

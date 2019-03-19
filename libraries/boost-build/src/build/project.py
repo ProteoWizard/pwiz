@@ -156,7 +156,7 @@ class ProjectRegistry:
             #
             # While "build-project" and "use-project" can potentially refer
             # to child projects from parent projects, we do not immediately
-            # load child projects when seing those attributes. Instead,
+            # load child projects when seeing those attributes. Instead,
             # we record the minimal information that will be used only later.
 
             self.load_used_projects(mname)
@@ -639,7 +639,7 @@ Please consult the documentation at 'http://boost.org/boost-build2'."""
     def add_rule(self, name, callable_):
         """Makes rule 'name' available to all subsequently loaded Jamfiles.
 
-        Calling that rule wil relay to 'callable'."""
+        Calling that rule will relay to 'callable'."""
         assert isinstance(name, basestring)
         assert callable(callable_)
         self.project_rules_.add_rule(name, callable_)
@@ -703,7 +703,7 @@ Please consult the documentation at 'http://boost.org/boost-build2'."""
         pkgutil.walk_packages() will find any python package
         provided a directory contains an __init__.py. This has the
         added benefit of allowing libraries to be installed and
-        automatically avaiable within the contrib directory.
+        automatically available within the contrib directory.
 
         *Note*: pkgutil.walk_packages() will import any subpackage
         in order to access its __path__variable. Meaning:
@@ -724,7 +724,7 @@ Please consult the documentation at 'http://boost.org/boost-build2'."""
         self.__python_module_cache = cache
 
     def load_module(self, name, extra_path=None):
-        """Load a Python module that should be useable from Jamfiles.
+        """Load a Python module that should be usable from Jamfiles.
 
         There are generally two types of modules Jamfiles might want to
         use:

@@ -150,7 +150,7 @@ rule init ( version ? : command * : options * : requirement * )
     # - GCC on Darwin with -pedantic, suppress unsupported long long warning
     flags darwin.compile OPTIONS $(condition)/<warnings>all : -Wno-long-long ;
 
-    # - GCC on El Capitan (10.11) does not suport -finline-functions
+    # - GCC on El Capitan (10.11) does not support -finline-functions
     if "10.11.0" <= $(.host-osx-version)
     {
         flags darwin.compile OPTIONS $(condition)/<inlining>full : -Wno-inline ;

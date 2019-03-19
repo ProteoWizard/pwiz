@@ -6,7 +6,7 @@
  */
 
 /*
- * filesys.c - OS independant file system manipulation support
+ * filesys.c - OS independent file system manipulation support
  *
  * External routines:
  *  file_build1()        - construct a path string based on PATHNAME information
@@ -19,7 +19,7 @@
  *  file_remove_atexit() - schedule a path to be removed on program exit
  *  file_time()          - get a file timestamp
  *
- * External routines - utilites for OS specific module implementations:
+ * External routines - utilities for OS specific module implementations:
  *  file_query_posix_()  - query information about a path using POSIX stat()
  *
  * Internal routines:

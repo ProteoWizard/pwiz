@@ -53,9 +53,10 @@ namespace pwiz.SkylineTest
             datetime = AuditLogEntry.ParseSerializedTimeStamp("2018-12-31T23:02:03-04", out tzoffset);
             Assume.AreEqual(datetime, AuditLogEntry.ParseSerializedTimeStamp("2019-01-01T03:02:03Z", out tzoffset));
 
-            // Test backward compatibility - this file with 4.2 log should load without any problems77
-            Assume.IsTrue(AuditLogList.ReadFromXmlTextReader(new XmlTextReader(new StringReader(Test42FormatSkyl)), out var _, out var old));
+            // Test backward compatibility - this file with 4.2 log should load without any problems
+            Assume.IsTrue(AuditLogList.ReadFromXmlTextReader(new XmlTextReader(new StringReader(Test42FormatSkyl)), out var loggedSkylineDocumentHash, out var old));
             Assume.AreEqual("tgnQ8fDiKLMIS236kpdJIXNR+fw=", old.RootHash.ActualHash.HashString);
+            Assume.AreEqual("AjigWTmQeAO94/jAlwubVMp4FRg=", loggedSkylineDocumentHash); // Note that this is a base64 representation of the 4.2 hex representation "<document_hash>0238A05939907803BDE3F8C0970B9B54CA781518</document_hash>
 
             var then = DateTime.Parse("2019-03-08 00:02:03Z", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal).ToUniversalTime(); // Just before DST
             const int entryCount = 20000; // Enough to ensure stack overflow in case of some design error per Nick
@@ -110,7 +111,7 @@ namespace pwiz.SkylineTest
         private static string Test42FormatSkyl =
         "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
         "<audit_log_root>\n" +
-         "<document_hash>0238A05939907803BDE3F8C0970B9B54CA781518</document_hash>\n" +
+         "<document_hash>0238A05939907803BDE3F8C0970B9B54CA781518</document_hash>\n" + // Note that this is not how we serialize hashes any more, we use base64 instead of byte.ToString("@"X2")
          "<audit_log>\n" +
           "<audit_log_entry format_version=\"4.21\" time_stamp=\"03/07/2019 19:09:05\" user=\"bspratt-UW2\\bspratt\">\n" +
            "<extra_info>foo</extra_info>\n" +

@@ -99,7 +99,7 @@ class VirtualTargetRegistry:
 
         self.recent_targets_ = []
 
-        # All targets ever registed
+        # All targets ever registered
         self.all_targets_ = []
 
         self.next_id_ = 0
@@ -107,7 +107,7 @@ class VirtualTargetRegistry:
     def register (self, target):
         """ Registers a new virtual target. Checks if there's already registered target, with the same
             name, type, project and subvariant properties, and also with the same sources
-            and equal action. If such target is found it is retured and 'target' is not registered.
+            and equal action. If such target is found it is returned and 'target' is not registered.
             Otherwise, 'target' is registered and returned.
         """
         assert isinstance(target, VirtualTarget)
@@ -445,7 +445,7 @@ class AbstractFileTarget (VirtualTarget):
 
     def creating_subvariant (self, s = None):
         """ Gets or sets the subvariant which created this target. Subvariant
-        is set when target is brought into existance, and is never changed
+        is set when target is brought into existence, and is never changed
         after that. In particual, if target is shared by subvariant, only
         the first is stored.
         s:  If specified, specified the value to set,
@@ -595,7 +595,7 @@ class AbstractFileTarget (VirtualTarget):
                 # are several virtual targets that refer to the same name.
                 # One case when this is unavoidable is when file name is
                 # main.cpp and two targets have types CPP (for compiling)
-                # and MOCCABLE_CPP (for convertion to H via Qt tools).
+                # and MOCCABLE_CPP (for conversion to H via Qt tools).
                 self.virtual_targets().register_actual_name(name, self)
 
             for i in self.dependencies_:

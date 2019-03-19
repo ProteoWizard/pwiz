@@ -21,7 +21,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
-    public partial class PasteTypeDlg : FormEx
+    public partial class PasteTypeDlg : ModeUIInvariantFormEx  // This dialog is inherently proteomic, never needs to be adapted for small mol or mixed UI mode
     {
         public PasteTypeDlg()
         {

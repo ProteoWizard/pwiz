@@ -74,7 +74,7 @@ def get(scanner_class, properties):
     scanner_name = str(scanner_class)
 
     if not registered(scanner_name):
-        raise BaseException ("attempt to get unregisted scanner: %s" % scanner_name)
+        raise BaseException ("attempt to get unregistered scanner: %s" % scanner_name)
 
     relevant_properties = __scanners[scanner_name]
     r = property.select(relevant_properties, properties)
@@ -95,14 +95,14 @@ class Scanner:
     def pattern (self):
         """ Returns a pattern to use for scanning.
         """
-        raise BaseException ("method must be overriden")
+        raise BaseException ("method must be overridden")
 
     def process (self, target, matches, binding):
         """ Establish necessary relationship between targets,
-            given actual target beeing scanned, and a list of
+            given actual target being scanned, and a list of
             pattern matches in that file.
         """
-        raise BaseException ("method must be overriden")
+        raise BaseException ("method must be overridden")
 
 
 # Common scanner class, which can be used when there's only one

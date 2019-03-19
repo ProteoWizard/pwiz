@@ -71,7 +71,7 @@ def reset ():
     # not including any rules in that module.
     __flags = {}
 
-    # A cache for varaible settings. The key is generated from the rule name and the properties.
+    # A cache for variable settings. The key is generated from the rule name and the properties.
     __stv = {}
 
 reset ()
@@ -114,7 +114,7 @@ def flags(rule_or_module, variable_name, condition, values = []):
                           are allowed. If left empty, the flag will
                           always used.
 
-                          Propery sets may use value-less properties
+                          Property sets may use value-less properties
                           ('<a>'  vs. '<a>value') to match absent
                           properties. This allows to separately match
 

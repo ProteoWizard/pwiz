@@ -47,6 +47,8 @@ namespace pwiz.Skyline.Controls.Startup
             this.openFilePanel = new System.Windows.Forms.Panel();
             this.openFileIcon = new System.Windows.Forms.PictureBox();
             this.openFileLabel = new System.Windows.Forms.Label();
+            this.tooStripModeUI = new System.Windows.Forms.ToolStrip();
+            this.toolStripButtonModeUI = new System.Windows.Forms.ToolStripDropDownButton();
             this.tabControlMain.SuspendLayout();
             this.wizardTabPage.SuspendLayout();
             this.tutorialsTabPage.SuspendLayout();
@@ -54,6 +56,7 @@ namespace pwiz.Skyline.Controls.Startup
             this.leftBottomPanel.SuspendLayout();
             this.openFilePanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.openFileIcon)).BeginInit();
+            this.tooStripModeUI.SuspendLayout();
             this.SuspendLayout();
             // 
             // tabControlMain
@@ -167,6 +170,19 @@ namespace pwiz.Skyline.Controls.Startup
             this.openFileLabel.MouseEnter += new System.EventHandler(this.openFile_MouseHover);
             this.openFileLabel.MouseLeave += new System.EventHandler(this.openFile_MouseLeave);
             // 
+            // tooStripModeUI
+            // 
+            resources.ApplyResources(this.tooStripModeUI, "tooStripModeUI");
+            this.tooStripModeUI.Items.Add(this.toolStripButtonModeUI);
+            this.tooStripModeUI.Name = "tooStripModeUI";
+            // 
+            // toolStripButtonModeUI
+            // 
+            this.toolStripButtonModeUI.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonModeUI.Image = global::pwiz.Skyline.Properties.Resources.UIModeProteomic;
+            resources.ApplyResources(this.toolStripButtonModeUI, "toolStripButtonModeUI");
+            this.toolStripButtonModeUI.Name = "toolStripButtonModeUI";
+            // 
             // StartPage
             // 
             resources.ApplyResources(this, "$this");
@@ -174,6 +190,7 @@ namespace pwiz.Skyline.Controls.Startup
             this.BackColor = System.Drawing.Color.White;
             this.Controls.Add(this.tabControlMain);
             this.Controls.Add(this.leftPanel);
+            this.Controls.Add(this.tooStripModeUI);
             this.Icon = global::pwiz.Skyline.Properties.Resources.Skyline;
             this.Name = "StartPage";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.StartPage_FormClosing);
@@ -189,7 +206,10 @@ namespace pwiz.Skyline.Controls.Startup
             this.openFilePanel.ResumeLayout(false);
             this.openFilePanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.openFileIcon)).EndInit();
+            this.tooStripModeUI.ResumeLayout(false);
+            this.tooStripModeUI.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -210,5 +230,7 @@ namespace pwiz.Skyline.Controls.Startup
         private System.Windows.Forms.TabPage tutorialsTabPage;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanelTutorials;
         private System.Windows.Forms.ToolTip toolTip;
+        private System.Windows.Forms.ToolStrip tooStripModeUI;
+        private System.Windows.Forms.ToolStripDropDownButton toolStripButtonModeUI;
     }
 }

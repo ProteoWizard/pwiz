@@ -691,7 +691,7 @@ namespace pwiz.Skyline.Model.Lib
                             var otherKeys = iOtherKeys >= 0 && !reader.IsDBNull(iOtherKeys) ? reader.GetString(iOtherKeys) : null;
                             smallMoleculeLibraryAttributes = SmallMoleculeLibraryAttributes.Create(moleculeName, chemicalFormula, inChiKey, otherKeys);
                             // Construct a custom molecule so we can be sure we're using the same keys
-                            var mol = new CustomMolecule(smallMoleculeLibraryAttributes);
+                            var mol = CustomMolecule.FromSmallMoleculeLibraryAttributes(smallMoleculeLibraryAttributes);
                             sequence = mol.PrimaryEquivalenceKey;
                         }
 
