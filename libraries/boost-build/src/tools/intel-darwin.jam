@@ -43,7 +43,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
                        
 # Initializes the intel-darwin toolset
 #   version in mandatory
-#   name (default icc) is used to invoke the specified intel complier
+#   name (default icc) is used to invoke the specified intel compiler
 #   compile and link options allow you to specify addition command line options for each version
 rule init ( version ? :  command * : options * )
 {
@@ -139,7 +139,7 @@ flags intel-darwin.compile OPTIONS <optimization>space : -O1 ; # no specific spa
                      conroe conroe-xe conroe-l allendale merom
                      merom-xe kentsfield kentsfield-xe penryn wolfdale
                      yorksfield nehalem sandy-bridge ivy-bridge haswell
-                     broadwell skylake skylake-avx512 cannonlake ;
+                     broadwell skylake skylake-avx512 cannonlake icelake ;
 .cpu-type-amd64    = k8 opteron athlon64 athlon-fx k8-sse3 opteron-sse3
                      athlon64-sse3 amdfam10 barcelona bdver1 bdver2 bdver3
                      bdver4 btver1 btver2 znver1 ;

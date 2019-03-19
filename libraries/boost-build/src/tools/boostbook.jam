@@ -19,7 +19,7 @@
 #   * pdf: Generates pdf documentation.
 #   * ps: Generates postscript output.
 #   * docbook: Generates docbook XML.
-#   * fo: Generates XSL formating objects.
+#   * fo: Generates XSL formatting objects.
 #   * tests: Extracts test cases from the boostbook XML.
 #
 # <format> is an implicit feature, so for example, typing pdf on the command
@@ -438,8 +438,8 @@ rule docbook-dtd-dir
 rule dtdxml-to-boostbook ( target : source : properties * )
 {
     lock-config ;
-    xsltproc.xslt $(target) : $(source)
-        "$(.boostbook-xsl-dir)/dtd/dtd2boostbook.xsl" : $(properties) ;
+    local stylesheet = [ path.native $(.boostbook-xsl-dir)/dtd/dtd2boostbook.xsl ] ;
+    xsltproc.xslt $(target) : $(source) $(stylesheet) : $(properties) ;
 }
 
 

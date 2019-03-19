@@ -26786,6 +26786,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Average mass.
+        /// </summary>
+        public static string SmallMoleculeLibraryAttributes_KeyValuePairs_Average_mass {
+            get {
+                return ResourceManager.GetString("SmallMoleculeLibraryAttributes_KeyValuePairs_Average_mass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Formula.
         /// </summary>
         public static string SmallMoleculeLibraryAttributes_KeyValuePairs_Formula {
@@ -26800,6 +26809,15 @@ namespace pwiz.Skyline.Properties {
         public static string SmallMoleculeLibraryAttributes_KeyValuePairs_InChIKey {
             get {
                 return ResourceManager.GetString("SmallMoleculeLibraryAttributes_KeyValuePairs_InChIKey", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Monoisotopic mass.
+        /// </summary>
+        public static string SmallMoleculeLibraryAttributes_KeyValuePairs_Monoisotopic_mass {
+            get {
+                return ResourceManager.GetString("SmallMoleculeLibraryAttributes_KeyValuePairs_Monoisotopic_mass", resourceCulture);
             }
         }
         

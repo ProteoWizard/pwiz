@@ -37,7 +37,7 @@ typedef struct file_info_t
 typedef struct file_item FILEITEM;
 struct file_item
 {
-    file_info_t * value;  /* expected to be equvalent with &FILEITEM */
+    file_info_t * value;  /* expected to be equivalent with &FILEITEM */
     FILEITEM * next;
 };
 

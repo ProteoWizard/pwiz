@@ -13,7 +13,7 @@
  *  yylex() - parse the next token, returning its type.
  *  yymode() - adjust lexicon of scanner.
  *  yyparse() - declaration for yacc parser.
- *  yyanyerrors() - indicate if any parsing errors occured.
+ *  yyanyerrors() - indicate if any parsing errors occurred.
  *
  * The yymode() function is for the parser to adjust the lexicon of the scanner.
  * Aside from normal keyword scanning, there is a mode to handle action strings

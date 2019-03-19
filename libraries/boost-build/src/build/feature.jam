@@ -220,7 +220,7 @@ rule valid ( names + )
 }
 
 
-# Returns the attibutes of the given feature.
+# Returns the attributes of the given feature.
 #
 rule attributes ( feature )
 {
@@ -662,7 +662,7 @@ rule subfeature (
     local f = [ utility.ungrist $(feature) ] ;
     feature $(f)-$(subfeature-name) : $(subvalues) : $(attributes) subfeature ;
 
-    # Features and subfeatures are always relevent as a group
+    # Features and subfeatures are always relevant as a group
     .feature-dependencies.$(f) += $(f)-$(subfeature-name) ;
     .feature-dependencies.$(f)-$(subfeature-name) += $(f) ;
 
@@ -1092,7 +1092,7 @@ rule add-defaults ( properties * )
         }
     }
 
-    local worklist = $(properties) ;
+    local worklist = $(properties) $(more) ;
     local expanded-from-composite ;
     local to-expand = $(more) ;
     while $(worklist)
@@ -1329,6 +1329,13 @@ rule __test__ ( )
         <stdlib>native <dummy>dummy1 <fu-subfu2>q <toolset-gcc:version>2.95.2 ]
         : add-defaults <runtime-link>static <define>foobar <optimization>on
           <fu>fu1 ;
+
+    feature f0 : f0-0 f0-1 ;
+    feature f1 : f1-0 f1-1 ;
+
+    assert.true valid <f0> ;
+    assert.true valid <f1> ;
+    assert.true valid <f0> <f1> ;
 
     set-default <runtime-link> : static ;
     assert.result <runtime-link>static : defaults <runtime-link> ;

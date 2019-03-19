@@ -3638,6 +3638,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public override void ReadXml(XmlReader reader)
         {
+            var name = reader.Name;
             // Read start tag attributes
             base.ReadXml(reader);
             WindowWidthCalculator = new IonMobilityWindowWidthCalculator(reader);
@@ -3672,8 +3673,10 @@ namespace pwiz.Skyline.Model.DocSettings
             if (dict.Any())
                 MeasuredMobilityIons = dict;
 
-            reader.Read();             // Consume end tag
-
+            if (reader.Name.Equals(name)) // Make sure we haven't stepped off the end
+            {
+                reader.Read();             // Consume end tag
+            }
             Validate();
         }
 
