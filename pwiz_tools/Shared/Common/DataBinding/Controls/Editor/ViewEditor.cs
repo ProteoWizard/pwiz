@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
@@ -152,6 +153,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             _selectedPaths = undoEntry.Value;
             toolButtonUndo.Enabled = _undoIndex > 1;
             toolButtonRedo.Enabled = _undoIndex < _undoStack.Count;
+            UpdateUiModesDropdown();
             if (ViewChange != null)
             {
                 ViewChange(this, new EventArgs());
@@ -479,6 +481,37 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                     toolTip1.Show(args.Node.ToolTipText, treeView);
                 }
             };
+        }
+
+        public void UpdateUiModesDropdown()
+        {
+            var uiModes = ViewContext.AvailableUiModes;
+            uiModeDropdown.Visible = uiModes.Count > 1;
+            uiModeDropdown.DropDownItems.Clear();
+            foreach (var uiMode in uiModes)
+            {
+                var button = MakeUiModeButton(uiMode);
+                if (uiMode.Name == ViewSpec.UiMode)
+                {
+                    button.Checked = true;
+                }
+
+                uiModeDropdown.DropDownItems.Add(button);
+            }
+        }
+
+        private ToolStripButton MakeUiModeButton(UiMode uiMode)
+        {
+            var button = new ToolStripButton(uiMode.Label, uiMode.Image);
+            button.ImageTransparentColor = Color.White;
+            button.Click += (sender, args) =>
+            {
+                var parentColumn = ColumnDescriptor.RootColumn(ViewInfo.ParentColumn.DataSchema,
+                    ViewInfo.ParentColumn.PropertyType, uiMode.Name);
+                SetViewInfo(new ViewInfo(parentColumn, ViewInfo.ViewSpec.SetUiMode(uiMode.Name)),
+                    new PropertyPath[0]);
+            };
+            return button;
         }
 
         private void showHiddenFieldsToolStripMenuItem_Click(object sender, EventArgs e)

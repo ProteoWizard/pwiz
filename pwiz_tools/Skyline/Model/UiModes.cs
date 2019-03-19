@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model
 {
@@ -16,17 +14,28 @@ namespace pwiz.Skyline.Model
         public static readonly IEnumerable<string> ALL =
             ImmutableList.ValueOf(new[] {PROTEOMIC, SMALL_MOLECULES, MIXED});
 
-        public static string FromDocumentType(SrmDocument.DOCUMENT_TYPE documentType)
+        public static UiMode FromDocumentType(SrmDocument.DOCUMENT_TYPE documentType)
         {
             switch (documentType)
             {
                 case SrmDocument.DOCUMENT_TYPE.proteomic:
-                    return PROTEOMIC;
+                    return Proteomic;
                 case SrmDocument.DOCUMENT_TYPE.small_molecules:
-                    return SMALL_MOLECULES;
+                    return SmallMolecule;
                 default:
-                    return MIXED;
+                    return Mixed;
             }
         }
+
+        public static readonly UiMode Proteomic = new UiMode(PROTEOMIC, Resources.UIModeProteomic,
+            () => Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Proteomics_interface);
+
+        public static readonly UiMode SmallMolecule = new UiMode(SMALL_MOLECULES, Resources.UIModeSmallMolecules,
+            () => Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Small_Molecules_interface);
+
+        public static readonly UiMode Mixed = new UiMode(MIXED, Resources.UIModeMixed,
+            () => Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Mixed_interface);
+
+        public static readonly ImmutableList<UiMode> AllModes = ImmutableList.ValueOf(new []{Proteomic, SmallMolecule, Mixed});
     }
 }

@@ -191,7 +191,7 @@ namespace pwiz.Common.DataBinding.Documentation
 
         public string GetTypeName(Type type)
         {
-            return new ColumnCaption(DataSchema.GetInvariantDisplayName(type))
+            return new ColumnCaption(DataSchema.GetInvariantDisplayName(RootColumn.UiMode, type))
                 .GetCaption(DataSchema.DataSchemaLocalizer);
         }
 

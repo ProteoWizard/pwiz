@@ -681,6 +681,11 @@ namespace pwiz.Common.DataBinding
             dropDownItems.Clear();
         }
 
+        public virtual IList<UiMode> AvailableUiModes
+        {
+            get { return ImmutableList.Singleton(UiMode.EMPTY); }
+        }
+
         // Default implementation of ViewsChanged which never fires.
         // SkylineViewContext overrides and uses this event 
 #pragma warning disable 67

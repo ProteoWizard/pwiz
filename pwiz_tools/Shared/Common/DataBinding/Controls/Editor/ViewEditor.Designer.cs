@@ -52,6 +52,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.panelViewEditor = new System.Windows.Forms.Panel();
             this.panelButtons = new System.Windows.Forms.Panel();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.uiModeDropdown = new System.Windows.Forms.ToolStripDropDownButton();
             this.tabControl1.SuspendLayout();
             this.toolStrip.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -119,7 +120,8 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.toolStripSeparator1,
             this.toolButtonFind,
             this.toolButtonShowAdvanced,
-            this.helpToolStripButton});
+            this.helpToolStripButton,
+            this.uiModeDropdown});
             resources.ApplyResources(this.toolStrip, "toolStrip");
             this.toolStrip.Name = "toolStrip";
             // 
@@ -212,6 +214,13 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.toolTip1.InitialDelay = 500;
             this.toolTip1.ReshowDelay = 100;
             // 
+            // uiModeDropdown
+            // 
+            this.uiModeDropdown.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.uiModeDropdown.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.uiModeDropdown, "uiModeDropdown");
+            this.uiModeDropdown.Name = "uiModeDropdown";
+            // 
             // ViewEditor
             // 
             this.AcceptButton = this.btnOK;
@@ -264,5 +273,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         private System.Windows.Forms.ToolStripDropDownButton toolButtonShowAdvanced;
         private System.Windows.Forms.ToolStripMenuItem showHiddenFieldsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showSourceTabMenuItem;
+        private System.Windows.Forms.ToolStripDropDownButton uiModeDropdown;
     }
 }

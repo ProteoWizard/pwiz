@@ -72,10 +72,13 @@ namespace pwiz.SkylineTest.Reporting
                 foreach (var columnDescriptor in
                     EnumerateAllColumnDescriptors(skylineDataSchema, STARTING_TYPES))
                 {
-                    var invariantCaption = skylineDataSchema.GetColumnCaption(columnDescriptor) as ColumnCaption;
-                    if (invariantCaption != null && !skylineDataSchema.DataSchemaLocalizer.HasEntry(invariantCaption))
+                    foreach (var uiMode in UiModes.AllModes)
                     {
-                        missingCaptions.Add(invariantCaption);
+                        var invariantCaption = skylineDataSchema.GetColumnCaption(columnDescriptor) as ColumnCaption;
+                        if (invariantCaption != null && !skylineDataSchema.DataSchemaLocalizer.HasEntry(invariantCaption))
+                        {
+                            missingCaptions.Add(invariantCaption);
+                        }
                     }
                 }
             }
@@ -182,7 +185,6 @@ namespace pwiz.SkylineTest.Reporting
             }
             foreach (var dataSchema in EnumerateDataSchemas())
             {
-
                 foreach (var columnDescriptor in EnumerateAllColumnDescriptors(dataSchema, STARTING_TYPES))
                 {
                     var invariantCaption = dataSchema.GetColumnCaption(columnDescriptor);
@@ -228,14 +230,10 @@ namespace pwiz.SkylineTest.Reporting
 
         public IEnumerable<SkylineDataSchema> EnumerateDataSchemas()
         {
-            foreach (var uiMode in UiModes.ALL)
-            {
-                var documentContainer = new MemoryDocumentContainer();
-                Assert.IsTrue(documentContainer.SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), documentContainer.Document));
-                var dataSchema = new SkylineDataSchema(documentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer(), uiMode);
-                Assert.AreEqual(uiMode, dataSchema.UiMode);
-                yield return dataSchema;
-            }
+            var documentContainer = new MemoryDocumentContainer();
+            Assert.IsTrue(documentContainer.SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), documentContainer.Document));
+            var dataSchema = new SkylineDataSchema(documentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            yield return dataSchema;
         }
 
         public IEnumerable<ColumnDescriptor> EnumerateAllColumnDescriptors(DataSchema dataSchema,
@@ -250,19 +248,23 @@ namespace pwiz.SkylineTest.Reporting
                 {
                     continue;
                 }
-                var rootColumn = ColumnDescriptor.RootColumn(dataSchema, type);
-                foreach (var child in GetChildColumns(rootColumn))
+
+                foreach (var uiMode in UiModes.AllModes)
                 {
-                    typeQueue.Enqueue(child.PropertyType);
-                    yield return child;
-                    foreach (var grandChild in GetChildColumns(child))
+                    var rootColumn = ColumnDescriptor.RootColumn(dataSchema, type, uiMode.Name);
+                    foreach (var child in GetChildColumns(rootColumn))
                     {
-                        yield return grandChild;
-                        if (grandChild.GetAttributes().OfType<ChildDisplayNameAttribute>().Any()
-                            && child.GetAttributes().OfType<ChildDisplayNameAttribute>().Any())
+                        typeQueue.Enqueue(child.PropertyType);
+                        yield return child;
+                        foreach (var grandChild in GetChildColumns(child))
                         {
-                            Assert.Fail("Two levels of child display names found on property {0} of type {1}", 
-                                grandChild.PropertyPath, rootColumn.PropertyType);
+                            yield return grandChild;
+                            if (grandChild.GetAttributes().OfType<ChildDisplayNameAttribute>().Any()
+                                && child.GetAttributes().OfType<ChildDisplayNameAttribute>().Any())
+                            {
+                                Assert.Fail("Two levels of child display names found on property {0} of type {1}",
+                                    grandChild.PropertyPath, rootColumn.PropertyType);
+                            }
                         }
                     }
                 }

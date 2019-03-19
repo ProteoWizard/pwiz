@@ -339,6 +339,13 @@ namespace pwiz.Common.DataBinding
             return SetRowSource(type.FullName);
         }
 
+        public string UiMode { get; private set; }
+
+        public ViewSpec SetUiMode(string uiMode)
+        {
+            return ChangeProp(ImClone(this), im => im.UiMode = uiMode ?? string.Empty);
+        }
+
 
         [Track]
         public ImmutableList<ColumnSpec> Columns { get; private set; }
@@ -378,7 +385,8 @@ namespace pwiz.Common.DataBinding
                 {
                     Name = reader.GetAttribute("name"),
                     RowSource = reader.GetAttribute("rowsource"),
-                    SublistName = reader.GetAttribute("sublist")
+                    SublistName = reader.GetAttribute("sublist"),
+                    UiMode = reader.GetAttribute("uimode") ?? string.Empty
                 };
             var columns = new List<ColumnSpec>();
             var filters = new List<FilterSpec>();
@@ -426,6 +434,11 @@ namespace pwiz.Common.DataBinding
             if (SublistName != null)
             {
                 writer.WriteAttributeString("sublist", SublistName);
+            }
+
+            if (!string.IsNullOrEmpty(UiMode))
+            {
+                writer.WriteAttributeString("uimode", UiMode);
             }
             foreach (var column in Columns)
             {

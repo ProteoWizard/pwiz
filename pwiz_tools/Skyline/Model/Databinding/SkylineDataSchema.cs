@@ -62,24 +62,10 @@ namespace pwiz.Skyline.Model.Databinding
             _replicates = CachedValue.Create(this, CreateReplicateList);
             _resultFiles = CachedValue.Create(this, CreateResultFileList);
             _elementRefCache = CachedValue.Create(this, () => new ElementRefs(Document));
-            UiMode = DecideUiMode();
         }
 
-        public SkylineDataSchema(IDocumentContainer documentContainer, DataSchemaLocalizer dataSchemaLocalizer, 
-            string uiMode) : this(documentContainer, dataSchemaLocalizer)
+        public UiMode DecideUiMode()
         {
-            UiMode = uiMode;
-        }
-
-        private string DecideUiMode()
-        {
-            if (ReferenceEquals(DataSchemaLocalizer.INVARIANT, DataSchemaLocalizer))
-            {
-                // For backwards compatibility with external tools, columns always
-                // have the names they had in proteomic mode
-                return UiModes.PROTEOMIC;
-            }
-
             if (SkylineWindow != null)
             {
                 return UiModes.FromDocumentType(SkylineWindow.ModeUI);
@@ -90,7 +76,12 @@ namespace pwiz.Skyline.Model.Databinding
                 return UiModes.FromDocumentType(_documentContainer.Document.DocumentType);
             }
 
-            return UiModes.MIXED;
+            return UiModes.Mixed;
+        }
+
+        public override string DefaultUiMode
+        {
+            get { return DecideUiMode().Name; }
         }
 
         protected override bool IsScalar(Type type)
@@ -236,10 +227,6 @@ namespace pwiz.Skyline.Model.Databinding
             using (QueryLock.CancelAndGetWriteLock())
             {
                 _document = _documentContainer.Document;
-                if (SkylineWindow != null)
-                {
-                    UiMode = UiModes.FromDocumentType(SkylineWindow.ModeUI);
-                }
                 IList<IDocumentChangeListener> listeners;
                 lock (_documentChangedEventHandlers)
                 {
@@ -521,7 +508,7 @@ namespace pwiz.Skyline.Model.Databinding
             }
             return listLookupPropertyDescriptor;
         }
-        
+
         public static SkylineDataSchema MemoryDataSchema(SrmDocument document, DataSchemaLocalizer localizer)
         {
             var documentContainer = new MemoryDocumentContainer();

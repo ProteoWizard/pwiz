@@ -150,7 +150,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 return _showHiddenFields;
             }
-            private set
+            set
             {
                 if (ShowHiddenFields == value)
                 {
@@ -463,7 +463,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         public void SelectColumn(PropertyPath idPath)
         {
             var node = FindTreeNode(idPath, true);
-            if (node == null && !ShowHiddenFields)
+            if (node == null && !ShowHiddenFields && ViewEditor != null)
             {
                 var column = FindColumnDescriptor(RootColumn, idPath);
                 if (column != null)

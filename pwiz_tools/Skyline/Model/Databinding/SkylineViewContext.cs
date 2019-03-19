@@ -670,7 +670,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         public static IEnumerable<RowSourceInfo> GetDocumentGridRowSources(SkylineDataSchema dataSchema)
         {
-            bool proteomic = dataSchema.UiMode == UiModes.PROTEOMIC;
+            bool proteomic = dataSchema.DefaultUiMode == UiModes.PROTEOMIC;
             yield return MakeRowSource<Protein>(dataSchema, 
                 proteomic ? Resources.SkylineViewContext_GetDocumentGridRowSources_Proteins : "Molecule Lists",
                 () => new Proteins(dataSchema));
@@ -849,6 +849,11 @@ namespace pwiz.Skyline.Model.Databinding
         protected void DeleteSkylineDocNodes(BoundDataGridView dataGridView, IEnumerable<SkylineDocNode> docNodes)
         {
             DeleteNodesAction.DeleteSkylineDocNodes(SkylineDataSchema.SkylineWindow, dataGridView, docNodes);
+        }
+
+        public override IList<UiMode> AvailableUiModes
+        {
+            get { return UiModes.AllModes; }
         }
     }
 }

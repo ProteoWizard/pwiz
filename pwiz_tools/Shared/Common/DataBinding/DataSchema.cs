@@ -72,6 +72,11 @@ namespace pwiz.Common.DataBinding
             return ListProperties(new HashSet<string>(), type);
         }
 
+        public virtual string DefaultUiMode
+        {
+            get { return string.Empty; }
+        }
+
         protected virtual IEnumerable<PropertyDescriptor> ListProperties(HashSet<string> propertyNames, Type type)
         {
             if (IsScalar(type))
@@ -266,7 +271,7 @@ namespace pwiz.Common.DataBinding
                 }
                 if (columnDescriptor.PropertyType != null)
                 {
-                    return GetInvariantDisplayName(columnDescriptor.PropertyType);
+                    return GetInvariantDisplayName(columnDescriptor.UiMode, columnDescriptor.PropertyType);
                 }
             } 
             return columnDescriptor.Name;
@@ -299,9 +304,9 @@ namespace pwiz.Common.DataBinding
             return new ColumnCaption(FormatChildDisplayName(columnDescriptor.Parent, GetBaseDisplayName(columnDescriptor)));
         }
 
-        public virtual string GetInvariantDisplayName(Type type)
+        public virtual string GetInvariantDisplayName(string uiMode, Type type)
         {
-            var invariantDisplayName = FilterAttributes(type.GetCustomAttributes<InvariantDisplayNameAttribute>())
+            var invariantDisplayName = FilterAttributes(uiMode, type.GetCustomAttributes<InvariantDisplayNameAttribute>())
                 .FirstOrDefault();
             if (invariantDisplayName != null)
             {
@@ -311,9 +316,9 @@ namespace pwiz.Common.DataBinding
             return type.Name;
         }
 
-        public virtual IColumnCaption GetColumnCaption(Type type, string propertyName)
+        public virtual IColumnCaption GetColumnCaption(UiMode uiMode, Type type, string propertyName)
         {
-            var columnDescriptor = ColumnDescriptor.RootColumn(this, type).ResolveChild(propertyName);
+            var columnDescriptor = ColumnDescriptor.RootColumn(this, type, uiMode.Name).ResolveChild(propertyName);
             if (columnDescriptor == null)
             {
                 return new ColumnCaption(propertyName);
@@ -337,7 +342,7 @@ namespace pwiz.Common.DataBinding
             {
                 return true;
             }
-            var hiddenAttribute = columnDescriptor.GetAttributes().OfType<HiddenAttribute>().Where(AttributeApplies).FirstOrDefault();
+            var hiddenAttribute = FilterAttributes(columnDescriptor.UiMode, columnDescriptor.GetAttributes()).OfType<HiddenAttribute>().FirstOrDefault();
             if (hiddenAttribute != null)
             {
                 return true;
@@ -368,6 +373,7 @@ namespace pwiz.Common.DataBinding
             }
             return false;
         }
+
         public virtual bool IsObsolete(ColumnDescriptor columnDescriptor)
         {
             return columnDescriptor.GetAttributes().OfType<ObsoleteAttribute>().Any();
@@ -384,7 +390,10 @@ namespace pwiz.Common.DataBinding
             return captionType == ColumnCaptionType.invariant ? DataSchemaLocalizer.INVARIANT : DataSchemaLocalizer;
         }
 
-        public string UiMode { get; protected set; }
+        public virtual UiMode UiModeFromName(string uiMode)
+        {
+            return UiMode.EMPTY;
+        }
 
         public virtual String GetColumnDescription(ColumnDescriptor columnDescriptor)
         {
@@ -420,12 +429,12 @@ namespace pwiz.Common.DataBinding
             return (FormatAttribute) originalPropertyDescriptor.Attributes[typeof(FormatAttribute)];
         }
 
-        public bool AttributeApplies(Attribute attribute)
+        public bool AttributeApplies(string uiMode, Attribute attribute)
         {
             var inUiModesAttribute = attribute as InUiModesAttribute;
             if (inUiModesAttribute != null)
             {
-                if (!inUiModesAttribute.AppliesInUiMode(UiMode))
+                if (!inUiModesAttribute.AppliesInUiMode(uiMode))
                 {
                     return false;
                 }
@@ -447,9 +456,9 @@ namespace pwiz.Common.DataBinding
             return depth;
         }
 
-        public IEnumerable<T> FilterAttributes<T>(IEnumerable<T> attributes) where T : Attribute
+        public IEnumerable<T> FilterAttributes<T>(string uiMode, IEnumerable<T> attributes) where T : Attribute
         {
-            return attributes.Where(AttributeApplies).OrderByDescending(GetAttributeClassDepth);
+            return attributes.Where(attr=>AttributeApplies(uiMode, attr)).OrderByDescending(GetAttributeClassDepth);
         }
     }
 }
