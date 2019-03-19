@@ -187,7 +187,7 @@ static void update_dependants( TARGET * t )
 
             if ( DEBUG_FATE )
             {
-                out_printf( "fate change  %s from %s to %s (as dependant of %s)\n",
+                out_printf( "fate change  %s from %s to %s (as dependent of %s)\n",
                         object_str( p->name ), target_fate[ (int) fate0 ], target_fate[ (int) p->fate ], object_str( t->name ) );
             }
 
@@ -726,7 +726,7 @@ void make0
      * Step 6: A little harmless tabulating for tracing purposes.
      */
 
-    /* Do not count or report interal includes nodes. */
+    /* Do not count or report internal includes nodes. */
     if ( t->flags & T_FLAG_INTERNAL )
         return;
 

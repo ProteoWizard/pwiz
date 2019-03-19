@@ -437,7 +437,7 @@ def validate_value_string (f, value_string):
 """ Extends the given subfeature with the subvalues.  If the optional
     value-string is provided, the subvalues are only valid for the given
     value of the feature. Thus, you could say that
-    <target-platform>mingw is specifc to <toolset>gcc-2.95.2 as follows:
+    <target-platform>mingw is specific to <toolset>gcc-2.95.2 as follows:
 
           extend-subfeature toolset gcc-2.95.2 : target-platform : mingw ;
 

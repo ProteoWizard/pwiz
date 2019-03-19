@@ -92,7 +92,7 @@ void profile_exit( profile_frame * frame )
          */
         if ( frame->info->stack_count == 1 )
             frame->info->cumulative += t;
-        /* Net time does not depend on presense of the same rule in call stack.
+        /* Net time does not depend on presence of the same rule in call stack.
          */
         frame->info->net += t - frame->subrules;
 

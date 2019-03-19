@@ -893,7 +893,7 @@ rule resolve-reference ( target-reference : project )
     if $(split[3])
     {
         sproperties = [ property.make [ feature.split $(split[3]) ] ] ;
-        sproperties = [ feature.expand-composites $(sproperties) ] ;
+        sproperties = [ feature.expand $(sproperties) ] ;
     }
 
     # Find the target.
@@ -1577,7 +1577,7 @@ class basic-target : abstract-target
 
     # Constructs virtual targets for this abstract target and the dependency
     # graph. Returns a usage-requirements property-set and a list of virtual
-    # targets. Should be overriden in derived classes.
+    # targets. Should be overridden in derived classes.
     #
     rule construct ( name : source-targets * : properties * )
     {
