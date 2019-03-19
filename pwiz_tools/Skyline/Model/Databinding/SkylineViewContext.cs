@@ -672,10 +672,10 @@ namespace pwiz.Skyline.Model.Databinding
         {
             bool proteomic = dataSchema.DefaultUiMode == UiModes.PROTEOMIC;
             yield return MakeRowSource<Protein>(dataSchema, 
-                proteomic ? Resources.SkylineViewContext_GetDocumentGridRowSources_Proteins : "Molecule Lists",
+                proteomic ? Resources.SkylineViewContext_GetDocumentGridRowSources_Proteins : Resources.SkylineViewContext_GetDocumentGridRowSources_Molecule_Lists,
                 () => new Proteins(dataSchema));
             yield return MakeRowSource<Entities.Peptide>(dataSchema, 
-                proteomic ? Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides : "Molecules",
+                proteomic ? Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides : Resources.SkylineViewContext_GetDocumentGridRowSources_Molecules,
                 () => new Peptides(dataSchema, new[] {IdentityPath.ROOT}));
             yield return MakeRowSource<Precursor>(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors, 
                 () => new Precursors(dataSchema, new[] { IdentityPath.ROOT }));
@@ -719,14 +719,14 @@ namespace pwiz.Skyline.Model.Databinding
             return column;
         }
 
-        private static readonly IDictionary<string, int> _imageIndexes = new Dictionary<string, int>
+        private static readonly IDictionary<string, Tuple<int, int>> _imageIndexes = new Dictionary<string, Tuple<int, int>>
         {
             // ReSharper disable RedundantNameQualifier
-            {typeof (Entities.Protein).FullName, 1},
-            {typeof (Entities.Peptide).FullName, 2},
-            {typeof (Entities.Precursor).FullName, 3},
-            {typeof (Entities.Transition).FullName, 4},
-            {typeof (Entities.Replicate).FullName, 5}
+            {typeof (Entities.Protein).FullName, Tuple.Create(1, 6)},
+            {typeof (Entities.Peptide).FullName, Tuple.Create(2, 7)},
+            {typeof (Entities.Precursor).FullName, Tuple.Create(3, 3)},
+            {typeof (Entities.Transition).FullName, Tuple.Create(4, 4)},
+            {typeof (Entities.Replicate).FullName, Tuple.Create(5, 5)}
             // ReSharper restore RedundantNameQualifier
         };
 
@@ -740,15 +740,21 @@ namespace pwiz.Skyline.Model.Databinding
                 Resources.TransitionGroup,
                 Resources.Fragment,
                 Resources.Replicate,
+                Resources.MoleculeList,
+                Resources.Molecule,
             };
         }
 
         public override int GetImageIndex(ViewSpec viewSpec)
         {
-            int imageIndex;
+            Tuple<int, int> imageIndex;
             if (_imageIndexes.TryGetValue(viewSpec.RowSource, out imageIndex))
             {
-                return imageIndex;
+                if (DataSchema.NormalizeUiMode(viewSpec.UiMode) == UiModes.PROTEOMIC)
+                {
+                    return imageIndex.Item1;
+                }
+                return imageIndex.Item2;
             }
             return -1;
         }

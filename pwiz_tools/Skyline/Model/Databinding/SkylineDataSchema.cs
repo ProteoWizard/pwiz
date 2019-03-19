@@ -515,5 +515,15 @@ namespace pwiz.Skyline.Model.Databinding
             documentContainer.SetDocument(document, documentContainer.Document);
             return new SkylineDataSchema(documentContainer, localizer);
         }
+
+        public override string NormalizeUiMode(string uiMode)
+        {
+            if (string.IsNullOrEmpty(uiMode))
+            {
+                return UiModes.PROTEOMIC;
+            }
+
+            return uiMode;
+        }
     }
 }

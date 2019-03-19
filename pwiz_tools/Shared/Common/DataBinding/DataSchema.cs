@@ -77,6 +77,11 @@ namespace pwiz.Common.DataBinding
             get { return string.Empty; }
         }
 
+        public virtual string NormalizeUiMode(string uiMode)
+        {
+            return uiMode;
+        }
+
         protected virtual IEnumerable<PropertyDescriptor> ListProperties(HashSet<string> propertyNames, Type type)
         {
             if (IsScalar(type))
