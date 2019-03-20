@@ -714,7 +714,7 @@ namespace pwiz.Skyline.Model
 
         public Target(SmallMoleculeLibraryAttributes molecule) 
         {
-            Molecule = new CustomMolecule(molecule);
+            Molecule = CustomMolecule.FromSmallMoleculeLibraryAttributes(molecule);
         }
 
         public string Sequence { get; private set; }

@@ -427,7 +427,7 @@ def validate_property_sets (sets):
 
 def evaluate_conditionals_in_context (properties, context):
     """ Removes all conditional properties which conditions are not met
-        For those with met conditions, removes the condition. Properies
+        For those with met conditions, removes the condition. Properties
         in conditions are looked up in 'context'
     """
     if __debug__:

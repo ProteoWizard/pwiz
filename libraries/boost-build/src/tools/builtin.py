@@ -593,7 +593,7 @@ class CCompilingGenerator (generators.Generator):
         The only thing it does is changing the type used to represent
         'action' in the constructed dependency graph to 'CompileAction'.
         That class in turn adds additional include paths to handle a case
-        when a source file includes headers which are generated themselfs.
+        when a source file includes headers which are generated themselves.
     """
     def __init__ (self, id, composing, source_types, target_types_and_names, requirements):
         # TODO: (PF) What to do with optional_properties? It seemed that, in the bjam version, the arguments are wrong.
@@ -695,7 +695,7 @@ class LinkingGenerator (generators.Generator):
 
         # Just pass all features in property_set, it's theorically possible
         # that we'll propagate <xdll-path> features explicitly specified by
-        # the user, but then the user's to blaim for using internal feature.
+        # the user, but then the user's to blame for using internal feature.
         values = prop_set.get('<xdll-path>')
         extra += replace_grist(values, '<xdll-path>')
 

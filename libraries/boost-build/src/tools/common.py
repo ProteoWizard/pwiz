@@ -350,7 +350,7 @@ def get_invocation_command(toolset, tool, user_provided_command = [],
 def get_absolute_tool_path(command):
     """
         Given an invocation command,
-        return the absolute path to the command. This works even if commnad
+        return the absolute path to the command. This works even if command
         has not path element and is present in PATH.
     """
     assert isinstance(command, basestring)
@@ -425,7 +425,7 @@ def check_tool_aux(command):
 def check_tool(command):
     """ Checks that a tool can be invoked by 'command'.
         If command is not an absolute path, checks if it can be found in 'path'.
-        If comand is absolute path, check that it exists. Returns 'command'
+        If command is absolute path, check that it exists. Returns 'command'
         if ok and empty string otherwise.
     """
     assert is_iterable_typed(command, basestring)
@@ -441,6 +441,7 @@ def handle_options(tool, condition, command, options):
         - OPTIOns for compile to the value of <compileflags> in options
         - OPTIONS for compile.c to the value of <cflags> in options
         - OPTIONS for compile.c++ to the value of <cxxflags> in options
+        - OPTIONS for compile.asm to the value of <asmflags> in options
         - OPTIONS for compile.fortran to the value of <fflags> in options
         - OPTIONs for link to the value of <linkflags> in options
     """
@@ -454,6 +455,7 @@ def handle_options(tool, condition, command, options):
     toolset.flags(tool + '.compile', 'OPTIONS', condition, feature.get_values('<compileflags>', options))
     toolset.flags(tool + '.compile.c', 'OPTIONS', condition, feature.get_values('<cflags>', options))
     toolset.flags(tool + '.compile.c++', 'OPTIONS', condition, feature.get_values('<cxxflags>', options))
+    toolset.flags(tool + '.compile.asm', 'OPTIONS', condition, feature.get_values('<asmflags>', options))
     toolset.flags(tool + '.compile.fortran', 'OPTIONS', condition, feature.get_values('<fflags>', options))
     toolset.flags(tool + '.link', 'OPTIONS', condition, feature.get_values('<linkflags>', options))
 

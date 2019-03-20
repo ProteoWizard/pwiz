@@ -31,13 +31,20 @@ error_exit ()
     echo "###     ./build.sh gcc"
     echo "###"
     echo "### Toolsets supported by this script are:"
-    echo "###     acc, como, darwin, gcc, intel-darwin, intel-linux, kcc, kylix,"
-    echo "###     mipspro, pathscale, pgi, qcc, sun, sunpro, tru64cxx, vacpp"
+    echo "###     acc, clang, como, darwin, gcc, intel-darwin, intel-linux,"
+    echo "###     kcc, kylix, mipspro, pathscale, pgi, qcc, sun, sunpro,"
+    echo "###     tru64cxx, vacpp"
     echo "###"
     echo "### A special toolset; cc, is available which is used as a fallback"
     echo "### when a more specific toolset is not found and the cc command is"
     echo "### detected. The 'cc' toolset will use the CC, CFLAGS, and LIBS"
     echo "### environment variables, if present."
+    echo "###"
+    echo "### Similarly, the cross-cc toolset is available for cross-compiling"
+    echo "### by using the BUILD_CC, BUILD_CFLAGS, and BUILD_LDFLAGS environment"
+    echo "### variables to compile binaries that will be executed on the build"
+    echo "### system. This allows CC etc. to be set for cross-compilers to be"
+    echo "### propagated to subprocesses."
     echo "###"
     exit 1
 }
@@ -79,6 +86,7 @@ Guess_Toolset ()
     elif test_uname AIX && test_path xlc; then BOOST_JAM_TOOLSET=vacpp    
     elif test_uname FreeBSD && test_path freebsd-version && test_path clang; then BOOST_JAM_TOOLSET=clang
     elif test_path gcc ; then BOOST_JAM_TOOLSET=gcc
+    elif test_path clang ; then BOOST_JAM_TOOLSET=clang
     elif test_path icc ; then BOOST_JAM_TOOLSET=intel-linux
     elif test -r /opt/intel/cc/9.0/bin/iccvars.sh ; then
         BOOST_JAM_TOOLSET=intel-linux
@@ -264,6 +272,15 @@ case $BOOST_JAM_TOOLSET in
     BOOST_JAM_OPT_JAM="$BOOST_JAM_OPT_JAM $CFLAGS $LIBS"
     BOOST_JAM_OPT_MKJAMBASE="$BOOST_JAM_OPT_MKJAMBASE $CFLAGS $LIBS"
     BOOST_JAM_OPT_YYACC="$BOOST_JAM_OPT_YYACC $CFLAGS $LIBS"
+    ;;
+
+    cross-cc)
+    if test -z "$BUILD_CC" ; then BUILD_CC=cc ; fi
+    BOOST_JAM_CC=$BUILD_CC
+    BOOST_JAM_OPT_JAM="$BOOST_JAM_OPT_JAM $BUILD_CFLAGS $BUILD_LDFLAGS"
+    BOOST_JAM_OPT_MKJAMBASE="$BOOST_JAM_OPT_MKJAMBASE $BUILD_CFLAGS $BUILD_LDFLAGS"
+    BOOST_JAM_OPT_YYACC="$BOOST_JAM_OPT_YYACC $BUILD_CFLAGS $BUILD_LDFLAGS"
+    BOOST_JAM_TOOLSET=cc
     ;;
 
     qcc)

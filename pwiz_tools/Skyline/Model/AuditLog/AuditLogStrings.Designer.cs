@@ -187,7 +187,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Added small molecule {0}.
+        ///   Looks up a localized string similar to Added molecule {0}.
         /// </summary>
         public static string added_small_molecule {
             get {
@@ -196,7 +196,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Added small molecule precursor {0}.
+        ///   Looks up a localized string similar to Added molecule precursor {0}.
         /// </summary>
         public static string added_small_molecule_precursor {
             get {
@@ -205,7 +205,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Added small molecule transition {0}.
+        ///   Looks up a localized string similar to Added molecule transition {0}.
         /// </summary>
         public static string added_small_molecule_transition {
             get {
@@ -1079,7 +1079,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Pasted {0} small molecule transition.
+        ///   Looks up a localized string similar to Pasted {0} molecule transition.
         /// </summary>
         public static string pasted_single_small_molecule_transition {
             get {
@@ -1088,7 +1088,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Pasted {0} small molecule transitions.
+        ///   Looks up a localized string similar to Pasted {0} molecule transitions.
         /// </summary>
         public static string pasted_small_molecule_transition_list {
             get {

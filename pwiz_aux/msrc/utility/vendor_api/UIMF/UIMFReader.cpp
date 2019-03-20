@@ -33,6 +33,7 @@
 
 #pragma managed
 #include "pwiz/utility/misc/cpp_cli_utilities.hpp"
+#include <msclr/auto_gcroot.h>
 using namespace pwiz::util;
 
 
@@ -64,7 +65,7 @@ class UIMFReaderImpl : public UIMFReader
     virtual double getRetentionTime(int frame) const;
 
     private:
-    gcroot<UIMFLibrary::DataReader^> reader_;
+    msclr::auto_gcroot<UIMFLibrary::DataReader^> reader_;
     vector<IndexEntry> index_;
     set<FrameType> frameTypes_;
     size_t frameCount_;
@@ -103,7 +104,7 @@ UIMFReaderImpl::UIMFReaderImpl(const std::string& path)
 
         // populate the index before intializing the reader
         {
-            sqlite3pp::database db(path);
+            sqlite3pp::database db(path, sqlite3pp::full_mutex, sqlite3pp::read_only);
             sqlite3pp::query indexQuery(db, "SELECT fs.FrameNum, ScanNum, FrameType FROM Frame_Scans fs, Frame_Parameters fp WHERE fs.FrameNum=fp.FrameNum");
             for (sqlite3pp::query::iterator itr = indexQuery.begin(); itr != indexQuery.end(); ++itr)
             {
@@ -116,7 +117,7 @@ UIMFReaderImpl::UIMFReaderImpl(const std::string& path)
             }
         }
 
-        reader_ = gcnew UIMFLibrary::DataReader(filepath);
+        reader_ = gcnew UIMFLibrary::DataReader(filepath, false);
         frameCount_ = (size_t) reader_->GetGlobalParams()->NumFrames;
     }
     CATCH_AND_FORWARD
@@ -142,7 +143,7 @@ blt::local_date_time UIMFReaderImpl::getAcquisitionTime() const
 {
     try
     {
-        System::DateTime acquisitionTime = System::DateTime::ParseExact(reader_->GetGlobalParams()->GetValue(UIMFLibrary::GlobalParamKeyType::DateStarted), "M/d/yyyy h:mm:ss tt", System::Globalization::DateTimeFormatInfo::InvariantInfo);
+        System::DateTime acquisitionTime = System::DateTime::ParseExact(reader_->GetGlobalParams()->GetValue(UIMFLibrary::GlobalParamKeyType::DateStarted)->ToString(), "M/d/yyyy h:mm:ss tt", System::Globalization::DateTimeFormatInfo::InvariantInfo);
 
         // these are Boost.DateTime restrictions
         if (acquisitionTime.Year > 10000)

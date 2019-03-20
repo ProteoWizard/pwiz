@@ -488,7 +488,7 @@ void exec_wait()
 
             /* If nothing else causes our select() call to exit, force it after
              * however long it takes for the next one of our child processes to
-             * crossed its alloted processing time so we can terminate it.
+             * crossed its allotted processing time so we can terminate it.
              */
             tv.tv_sec = select_timeout;
             tv.tv_usec = 0;
@@ -499,11 +499,17 @@ void exec_wait()
         {
             /* disable child termination signals while in select */
             int ret;
+            int timeout;
             sigset_t sigmask;
             sigemptyset(&sigmask);
             sigaddset(&sigmask, SIGCHLD);
             sigprocmask(SIG_BLOCK, &sigmask, NULL);
-            while ( ( ret = poll( wait_fds, WAIT_FDS_SIZE, select_timeout * 1000 ) ) == -1 )
+
+            /* If no timeout is specified, pass -1 (which means no timeout,
+             * wait indefinitely) to poll, to prevent busy-looping.
+             */
+            timeout = select_timeout? select_timeout * 1000 : -1;
+            while ( ( ret = poll( wait_fds, WAIT_FDS_SIZE, timeout ) ) == -1 )
                 if ( errno != EINTR )
                     break;
             /* restore original signal mask by unblocking sigchld */

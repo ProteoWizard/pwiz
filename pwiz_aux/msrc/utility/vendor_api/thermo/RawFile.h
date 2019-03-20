@@ -62,11 +62,12 @@ enum PWIZ_API_DECL ControllerType
 #ifdef _WIN64
     Controller_UV,
     Controller_PDA,
-    Controller_Other
+    Controller_Other,
 #else
     Controller_PDA,
-    Controller_UV
+    Controller_UV,
 #endif
+    Controller_Count
 };
 
 

@@ -9,10 +9,10 @@ from b2.util import bjam_signature
 
 
 def transform (list, pattern, indices = [1]):
-    """ Matches all elements of 'list' agains the 'pattern'
+    """ Matches all elements of 'list' against the 'pattern'
         and returns a list of the elements indicated by indices of
-        all successfull matches. If 'indices' is omitted returns
-        a list of first paranthethised groups of all successfull
+        all successful matches. If 'indices' is omitted returns
+        a list of first paranthethised groups of all successful
         matches.
     """
     result = []

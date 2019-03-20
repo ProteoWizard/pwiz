@@ -1179,9 +1179,6 @@
   <data name="AllInfoMessage">
     <value>更改的详细描述</value>
   </data>
-  <data name="DocumentFormat" xml:space="preserve">
-    <value>更改时的文档格式版本</value>
-  </data>
   <data name="User">
     <value>进行更改的用户</value>
   </data>
