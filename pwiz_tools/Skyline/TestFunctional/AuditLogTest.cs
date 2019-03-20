@@ -69,6 +69,12 @@ namespace pwiz.SkylineTestFunctional
                 VerifyStringLocalization(
                     local,
                     "{0:SrmSettings_PeptideSettings}{2:TabSeparator}{0:PeptideSettings_Libraries}{2:PropertySeparator}{0:PeptideLibraries_LibrarySpecs}", modeUI);
+
+                // Verify that certain log entries are ui mode invariate
+                var entry = AuditLogEntry.CreateSingleMessageEntry(
+                    new MessageInfo(MessageType.added_new_peptide_group_from_background_proteome,
+                        modeUI, "foo"), "bar");
+                Assume.AreEqual("Added peptide group foo from background proteome in the Targets window", entry.AllInfo.First().EnExpanded);
             }
 
             // Non existent resource name
