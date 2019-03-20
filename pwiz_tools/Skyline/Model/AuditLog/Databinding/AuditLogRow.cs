@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Attributes;
@@ -75,7 +74,10 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
         [InvariantDisplayName("AuditLogRowId")]
         public AuditLogRowId Id { get; private set; }
 
-        public string TimeStamp { get { return _entry.TimeStamp.ToString(CultureInfo.CurrentCulture); } }
+        public AuditLogRowTime Time
+        {
+            get { return new AuditLogRowTime(_entry.TimeStampUTC, _entry.TimeZoneOffset); }
+        }
 
         public class AuditLogRowText
         {
@@ -143,7 +145,6 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
         }
 
         public string SkylineVersion { get { return _entry.SkylineVersion; } }
-        public double DocumentFormat { get { return _entry.FormatVersion.AsDouble(); } }
         public string User { get { return _entry.User; } }
 
         [OneToMany(ForeignKey = @"AuditLogRow")]

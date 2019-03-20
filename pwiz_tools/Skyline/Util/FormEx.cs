@@ -30,7 +30,8 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Util
 {
-    public class FormEx : Form, IFormView
+    public class FormEx : Form, IFormView, 
+                     Helpers.IModeUIAwareForm // Can translate "peptide"=>"molecule" etc if desired
     {
         public static bool ShowFormNames { get; set; }
 
@@ -38,6 +39,40 @@ namespace pwiz.Skyline.Util
 
         private const int TIMEOUT_SECONDS = 10;
         private static readonly List<FormEx> _undisposedForms = new List<FormEx>();
+        private Helpers.ModeUIAwareFormHelper _modeUIHelper;
+        public Helpers.ModeUIExtender modeUIHandler; // Allows UI mode management in Designer
+        private Container _components; // For IExtender use
+
+
+        public FormEx()
+        {
+            InitializeComponent(); // Required for Windows Form Designer support
+        }
+
+        #region Windows Form Designer generated code
+
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
+        /// </summary>
+        private void InitializeComponent()
+        {
+            this._components = new System.ComponentModel.Container();
+            this.modeUIHandler = new Helpers.ModeUIExtender(_components);
+            this._modeUIHelper = new Helpers.ModeUIAwareFormHelper(modeUIHandler);
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
+        }
+        #endregion
+
+        public Helpers.ModeUIAwareFormHelper GetModeUIHelper() // Method instead of property so it doesn't show up in Designer
+        {
+            return _modeUIHelper; 
+        }
+
+        public string ModeUIAwareStringFormat(string format, params object[] args)
+        {
+            return _modeUIHelper.Format(format, args);
+        }
 
         private bool IsCreatingHandle()
         {
@@ -126,6 +161,9 @@ namespace pwiz.Skyline.Util
                     _undisposedForms.Add(this);
                 }
             }
+
+            // Potentially replace "peptide" with "molecule" etc in all controls on open, or possibly disable non-proteomic components etc
+            GetModeUIHelper().OnLoad(this);
 
             if (ShowFormNames)
             {
@@ -265,5 +303,6 @@ namespace pwiz.Skyline.Util
         }
 
         public virtual string DetailedMessage { get { return null; } }
+
     }
 }

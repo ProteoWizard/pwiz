@@ -48,6 +48,17 @@ generators.register-c-compiler pgi.compile.c++ : CPP : OBJ : <toolset>pgi ;
 generators.register-fortran-compiler pgi.compile.fortran : FORTRAN : OBJ : <toolset>pgi ;
 
 # Declare flags and actions for compilation
+flags pgi.compile.c++ OPTIONS <cxxstd>98 : -std=c++03 ;
+flags pgi.compile.c++ OPTIONS <cxxstd>03 : -std=c++03 ;
+flags pgi.compile.c++ OPTIONS <cxxstd>0x : -std=c++11 ;
+flags pgi.compile.c++ OPTIONS <cxxstd>11 : -std=c++11 ;
+flags pgi.compile.c++ OPTIONS <cxxstd>1y : -std=c++14 ;
+flags pgi.compile.c++ OPTIONS <cxxstd>14 : -std=c++14 ;
+flags pgi.compile.c++ OPTIONS <cxxstd>1z : -std=c++17 ;
+flags pgi.compile.c++ OPTIONS <cxxstd>17 : -std=c++17 ;
+flags pgi.compile.c++ OPTIONS <cxxstd>2a : -std=c++17 ;
+flags pgi.compile.c++ OPTIONS <cxxstd>latest : -std=c++17 ;
+
 flags pgi.compile OPTIONS <link>shared : -fpic ;
 flags pgi.compile OPTIONS <debug-symbols>on : -gopt ;
 flags pgi.compile OPTIONS <optimization>off : -O0 ;
@@ -56,6 +67,7 @@ flags pgi.compile OPTIONS <optimization>space : -fast ;
 
 flags pgi.compile OPTIONS <warnings>off : -Minform=severe ;
 flags pgi.compile OPTIONS <warnings>on : -Minform=warn ;
+flags pgi.compile OPTIONS <warnings>all : -Minform=warn ;
 flags pgi.compile OPTIONS <warnings-as-errors>on : -Werror ;
 
 flags pgi.compile.c++ OPTIONS <rtti>off : --no_rtti ;

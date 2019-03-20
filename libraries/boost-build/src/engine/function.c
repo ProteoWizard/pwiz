@@ -1114,7 +1114,7 @@ static LIST * apply_subscript_and_modifiers( STACK * s, int n )
 
 
 /*
- * expand() - expands a list of concatenated strings and variable refereces
+ * expand() - expands a list of concatenated strings and variable references
  *
  * Takes a list of expansion items - each representing one element to be
  * concatenated and each containing a list of its values. Returns a list of all

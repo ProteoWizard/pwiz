@@ -384,7 +384,7 @@ namespace pwiz.Skyline.Model.AuditLog
         public DiffTree(DiffNode root, DateTime? timeStamp = null)
         {
             Root = root;
-            TimeStamp = timeStamp ?? DateTime.Now;
+            TimeStamp = timeStamp ?? DateTime.UtcNow;
         }
 
         public static DiffTree FromEnumerator(IEnumerator<DiffNode> treeEnumerator, DateTime? timeStamp = null)
@@ -393,7 +393,7 @@ namespace pwiz.Skyline.Model.AuditLog
             while (treeEnumerator.MoveNext())
                 current = treeEnumerator.Current;
 
-            return new DiffTree(current, timeStamp ?? DateTime.Now);
+            return new DiffTree(current, timeStamp ?? DateTime.UtcNow);
         }
 
         public DiffNode Root { get; private set; }

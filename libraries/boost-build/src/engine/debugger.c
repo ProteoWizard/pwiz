@@ -193,18 +193,36 @@ static void debug_lol_read( FILE * in, LOL * lol )
     }
 }
 
+static void debug_format_rulename ( string * out, FRAME * frame )
+{
+    const char * pos = strchr( frame->rulename, '.' );
+    if ( frame->module->class_module && pos )
+    {
+        string_copy( out, object_str( frame->module->name ) );
+        string_push_back( out, '.' );
+        string_append( out, pos + 1 );
+    }
+    else
+    {
+        string_copy( out, frame->rulename );
+    }
+}
+
 static void debug_frame_write( FILE * out, FRAME * frame )
 {
+    string rulename_buffer [ 1 ];
     OBJECT * fullname = constant_builtin;
     OBJECT * file = frame->file;
     if ( file == NULL ) file = constant_builtin;
     else fullname = make_absolute_path( frame->file );
+    debug_format_rulename( rulename_buffer, frame );
     debug_object_write( out, file );
     debug_int_write( out, frame->line );
     debug_object_write( out, fullname );
     debug_lol_write( out, frame->args );
-    debug_string_write( out, frame->rulename );
+    debug_string_write( out, rulename_buffer->value );
     object_free( fullname );
+    string_free( rulename_buffer );
 }
 
 /*
@@ -860,10 +878,11 @@ static const char * debug_format_message( const char * format, va_list vargs )
         result = vsnprintf( buf, sz, format, args );
         #endif
         va_end( args );
+        if ( 0 <= result && result < sz )
+	    return buf;
+        free( buf );
         if ( result < 0 )
             return 0;
-        if ( result < sz ) return buf;
-        free( buf );
         sz = result + 1;
     }
 }
@@ -978,7 +997,7 @@ static void debug_parent_on_end_stepping( void )
 /* Waits for events from the child. */
 static void debug_parent_wait( int print_message )
 {
-    char ch = fgetc( command_child );
+    int ch = fgetc( command_child );
     if ( ch == DEBUG_MSG_BREAKPOINT )
     {
         debug_parent_on_breakpoint();
@@ -1119,12 +1138,12 @@ static void debug_start_child( int argc, const char * * argv )
     assert( debug_state == DEBUG_NO_CHILD );
     if ( ! CreatePipe( &pipe1[ 0 ], &pipe1[ 1 ], &sa, 0 ) )
     {
-        printf("internal error\n");
+        printf("internal error: CreatePipe:1: 0x$08x\n", GetLastError());
         return;
     }
     if ( ! CreatePipe( &pipe2[ 0 ], &pipe2[ 1 ], &sa, 0 ) )
     {
-        printf("internal error\n");
+        printf("internal error: CreatePipe:2: 0x$08x\n", GetLastError());
         CloseHandle( pipe1[ 0 ] );
         CloseHandle( pipe1[ 1 ] );
         return;
@@ -1204,8 +1223,19 @@ static void debug_start_child( int argc, const char * * argv )
     int pid;
     int i;
     assert( debug_state == DEBUG_NO_CHILD );
-    pipe(pipe1);
-    pipe(pipe2);
+    if (pipe(pipe1) == -1)
+    {
+        printf("internal error: pipe:1: %s\n", strerror(errno));
+        return;
+    }
+    if (pipe(pipe2) == -1)
+    {
+        close( pipe1[ 0 ] );
+        close( pipe1[ 1 ] );
+        printf("internal error: pipe:2: %s\n", strerror(errno));
+        return;
+    }
+
     pid = fork();
     if ( pid == -1 )
     {
@@ -1213,7 +1243,9 @@ static void debug_start_child( int argc, const char * * argv )
         close( pipe1[ 0 ] );
         close( pipe1[ 1 ] );
         close( pipe2[ 0 ] );
-        close( pipe1[ 1 ] );
+        close( pipe2[ 1 ] );
+        printf("internal error: fork: %s\n", strerror(errno));
+        return;
     }
     else if ( pid == 0 )
     {
@@ -1535,6 +1567,8 @@ static void debug_parent_print( int argc, const char * * argv )
         debug_mi_format_token();
         printf( "^done\n(gdb) \n" );
     }
+
+    list_free( result );
 }
 
 static void debug_parent_backtrace( int argc, const char * * argv )

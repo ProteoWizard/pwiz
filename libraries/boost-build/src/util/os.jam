@@ -98,7 +98,7 @@ if $(.name) = NT
 .executable-suffix-VMS = .exe ;
 
 # VxWorks uses the default LD_LIBRARY_PATH, but we need an alternate
-# name on the cross build host to propigate to the target system
+# name on the cross build host to propagate to the target system
 .shared-library-path-variable-VXWORKS = VSB_LD_LIBRARY_PATH ;
 
 # Default constants

@@ -614,7 +614,7 @@ modified on disk</value>
     <value>An atomic chemical formula for the neutral, unlabeled molecule to be measured in a mass spectrometer.</value>
   </data>
   <data name="MoleculeName">
-    <value>A general name that may be assigned to a small molecule in its neutral, unlabeled form.</value>
+    <value>A general name that may be assigned to a molecule in its neutral, unlabeled form.</value>
   </data>
   <data name="MonoisotopicMasses">
     <value>The modified sequence where modifications are referred to by their monoisotopic masses, e.g. "C[+57.021464]".</value>
@@ -1183,8 +1183,14 @@ higher than the other extent.</value>
   <data name="SMILES" xml:space="preserve">
     <value>Standardized molecular identifier</value>
   </data>
+  <data name="Time">
+    <value>Time at which this change was made, expressed in your current local time zone</value>
+  </data>
+  <data name="UTCTime">
+    <value>Time at which this change was made, expressed in universal time (GMT)</value>
+  </data>
   <data name="TimeStamp">
-    <value>Time at which this change was made</value>
+    <value>Time at which this change was made, expressed as the local time of change and offset to UTC time</value>
   </data>
   <data name="UndoRedoMessage">
     <value>Description of the change</value>
@@ -1194,9 +1200,6 @@ higher than the other extent.</value>
   </data>
   <data name="AllInfoMessage">
     <value>Detailed description of the change</value>
-  </data>
-  <data name="DocumentFormat" xml:space="preserve">
-    <value>Document format version at the time the change was made</value>
   </data>
   <data name="User">
     <value>User who made the change</value>

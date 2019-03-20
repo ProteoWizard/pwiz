@@ -157,7 +157,7 @@
     <value>0</value>
   </data>
   <data name="labelModifications.Text" xml:space="preserve">
-    <value>The imported search results apear to contain the modifications listed below. Please select the ones you wish to add to the document:</value>
+    <value>The imported search results appear to contain the modifications listed below. Please select the ones you wish to add to the document:</value>
   </data>
   <data name="&gt;&gt;labelModifications.Name" xml:space="preserve">
     <value>labelModifications</value>

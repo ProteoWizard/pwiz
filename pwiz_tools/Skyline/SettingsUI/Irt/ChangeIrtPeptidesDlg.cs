@@ -94,17 +94,17 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 string message;
                 if (invalidLines.Count == 1)
                 {
-                    message = string.Format(Resources.ChangeIrtPeptidesDlg_OkDialog_The_sequence__0__is_not_currently_in_the_database,
+                    message = ModeUIAwareStringFormat(Resources.ChangeIrtPeptidesDlg_OkDialog_The_sequence__0__is_not_currently_in_the_database,
                                             invalidLines[0]);
                     MessageBox.Show(this, message, Program.Name);
                 }
                 else
                 {
-                    message = TextUtil.LineSeparate(Resources.ChangeIrtPeptidesDlg_OkDialog_The_following_sequences_are_not_currently_in_the_database,
+                    message = TextUtil.LineSeparate(GetModeUIHelper().Translate(Resources.ChangeIrtPeptidesDlg_OkDialog_The_following_sequences_are_not_currently_in_the_database),
                                                     string.Empty,
                                                     TextUtil.LineSeparate(invalidLines),
                                                     string.Empty,
-                                                    Resources.ChangeIrtPeptidesDlg_OkDialog_Standard_peptides_must_exist_in_the_database);
+                                                    GetModeUIHelper().Translate(Resources.ChangeIrtPeptidesDlg_OkDialog_Standard_peptides_must_exist_in_the_database));
                     MessageBox.Show(this, message, Program.Name);
                 }
                 return;

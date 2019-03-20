@@ -624,7 +624,7 @@ namespace pwiz.Skyline.Util.Extensions
             }
             for (int i = 0; i < fields.Length; ++i)
             {
-                FieldNames.Add(fields[i]);
+                FieldNames.Add(fields[i].Trim());
                 FieldDict[fields[i]] = i;
                 // Check to see if the given column name is actually a synonym for the internal canonical (no spaces, serialized) name
                 if (headerSynonyms != null)

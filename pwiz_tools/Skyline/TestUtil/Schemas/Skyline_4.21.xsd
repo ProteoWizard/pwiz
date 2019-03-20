@@ -1341,6 +1341,7 @@
       <xs:enumeration value="none"/>
       <xs:enumeration value="Targeted"/>
       <xs:enumeration value="DIA"/>
+      <xs:enumeration value="DDA"/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="retention_time_filtering_type">
