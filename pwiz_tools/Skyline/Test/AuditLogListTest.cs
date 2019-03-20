@@ -97,7 +97,7 @@ namespace pwiz.SkylineTest
                 Assert.AreEqual(entries[i].TimeZoneOffset, roundtripEntries[i].TimeZoneOffset);
                 Assert.AreEqual(entries[i].SkylineVersion, roundtripEntries[i].SkylineVersion);
                 Assert.AreEqual(entries[i].User, roundtripEntries[i].User);
-                Assert.AreEqual(entries[i].DocumentType, roundtripEntries[i].DocumentType);
+                Assert.AreEqual(entries[i].DocumentType == SrmDocument.DOCUMENT_TYPE.proteomic ? SrmDocument.DOCUMENT_TYPE.none : entries[i].DocumentType, roundtripEntries[i].DocumentType);
                 Assert.AreEqual(entries[i].Hash.ActualHash, roundtripEntries[i].Hash.ActualHash);
                 // No Skyl hash until sserialized, so can't compare here
             }

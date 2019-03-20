@@ -741,7 +741,7 @@ namespace pwiz.Skyline
                 AuditLogEntry entry;
                 try
                 {
-                    resultEntry = entry = logFunc?.Invoke(SrmDocumentPair.Create(docOriginal, docNew));
+                    resultEntry = entry = logFunc?.Invoke(SrmDocumentPair.Create(docOriginal, docNew, GetModeUIHelper().ModeUI));
                 }
                 catch (Exception ex)
                 {

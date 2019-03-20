@@ -1256,8 +1256,8 @@ namespace pwiz.Skyline.Model.AuditLog
             TimeZoneOffset = timeZoneOffset;
             User = reader.GetAttribute(ATTR.user);
 
-            var mode = reader.GetAttribute(ATTR.mode) ?? DocumentTypeSerializationValues[SrmDocument.DOCUMENT_TYPE.proteomic];
-            DocumentType = DocumentTypeSerializationValues.FirstOrDefault(x => x.Value == mode).Key;
+            var mode = reader.GetAttribute(ATTR.mode);
+            DocumentType = string.IsNullOrEmpty(mode) ? SrmDocument.DOCUMENT_TYPE.none : DocumentTypeSerializationValues.FirstOrDefault(x => Equals(x.Value, mode)).Key;
 
             var countType = reader.GetAttribute(ATTR.count_type);
             if (countType == null)
@@ -1273,20 +1273,20 @@ namespace pwiz.Skyline.Model.AuditLog
             EL allInfoEnum;
             if (reader.IsStartElement(EL.undo_redo))
             {
-                UndoRedo = reader.DeserializeElement<LogMessage>(EL.undo_redo).ChangeLevel(LogLevel.undo_redo);
-                Summary = reader.DeserializeElement<LogMessage>(EL.summary).ChangeLevel(LogLevel.summary);
+                UndoRedo = reader.DeserializeElement<LogMessage>(EL.undo_redo).ChangeLevel(LogLevel.undo_redo).ChangeDocumentType(DocumentType);
+                Summary = reader.DeserializeElement<LogMessage>(EL.summary).ChangeLevel(LogLevel.summary).ChangeDocumentType(DocumentType);
                 allInfoEnum = EL.all_info;
             }
             else // Backward compatibility
             {
-                UndoRedo = reader.DeserializeElement<LogMessage>(EL.message).ChangeLevel(LogLevel.undo_redo);
-                Summary = reader.DeserializeElement<LogMessage>(EL.message).ChangeLevel(LogLevel.summary);
+                UndoRedo = reader.DeserializeElement<LogMessage>(EL.message).ChangeLevel(LogLevel.undo_redo).ChangeDocumentType(DocumentType);
+                Summary = reader.DeserializeElement<LogMessage>(EL.message).ChangeLevel(LogLevel.summary).ChangeDocumentType(DocumentType);
                 allInfoEnum = EL.message;
             }
 
             var list = new List<LogMessage>();
             while (reader.IsStartElement(allInfoEnum))
-                list.Add(reader.DeserializeElement<LogMessage>(allInfoEnum).ChangeLevel(LogLevel.all_info));
+                list.Add(reader.DeserializeElement<LogMessage>(allInfoEnum).ChangeLevel(LogLevel.all_info).ChangeDocumentType(DocumentType));
 
             AllInfo = list;
 

@@ -59,6 +59,18 @@ namespace pwiz.SkylineTestFunctional
                 PropertyNames.Settings + AuditLogStrings.PropertySeparator + PropertyNames.SrmSettings_TransitionSettings,
                 "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}");
 
+            // UI mode awareness
+            foreach (SrmDocument.DOCUMENT_TYPE modeUI in Enum.GetValues(typeof(SrmDocument.DOCUMENT_TYPE)))
+            {
+                var local = PropertyNames.SrmSettings_PeptideSettings + AuditLogStrings.TabSeparator +
+                            PropertyNames.PeptideSettings_Libraries + AuditLogStrings.PropertySeparator +
+                            PropertyNames.PeptideLibraries_LibrarySpecs;
+                local = Helpers.PeptideToMoleculeTextMapper.Translate(local, modeUI);
+                VerifyStringLocalization(
+                    local,
+                    "{0:SrmSettings_PeptideSettings}{2:TabSeparator}{0:PeptideSettings_Libraries}{2:PropertySeparator}{0:PeptideLibraries_LibrarySpecs}", modeUI);
+            }
+
             // Non existent resource name
             VerifyStringLocalization("{0:SEttings}", "{0:SEttings}");
 
@@ -74,9 +86,9 @@ namespace pwiz.SkylineTestFunctional
                 Assert.Fail("The following properties are unlocalized:\n" + string.Join("\n", unlocalized));
         }
 
-        private void VerifyStringLocalization(string expected, string unlocalized)
+        private void VerifyStringLocalization(string expected, string unlocalized, SrmDocument.DOCUMENT_TYPE modeUI = SrmDocument.DOCUMENT_TYPE.none)
         {
-            Assert.AreEqual(expected, LogMessage.ParseLogString(unlocalized, LogLevel.all_info, SrmDocument.DOCUMENT_TYPE.none));
+            Assert.AreEqual(expected, LogMessage.ParseLogString(unlocalized, LogLevel.all_info, modeUI));
         }
 
         private class EnumNameSuggestionPair

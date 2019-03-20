@@ -190,7 +190,7 @@ namespace pwiz.Skyline.Model.AuditLog
         public MessageInfo(MessageType type, SrmDocument.DOCUMENT_TYPE docType, params object[] names)
         {
             Type = type;
-            DocumentType = ModeUIInvariantMessageTypes.Contains(type) ? SrmDocument.DOCUMENT_TYPE.none : docType;
+            DocumentType = ModeUIInvariantMessageTypes.Contains(type) ? SrmDocument.DOCUMENT_TYPE.none : docType; // Ignore doc type if message should never be given peptide->molecule treatment
             Names = ImmutableList.ValueOf(names.Select(obj => (obj == null ? string.Empty : obj.ToString())));
         }
 
@@ -200,7 +200,7 @@ namespace pwiz.Skyline.Model.AuditLog
         }
 
         public MessageType Type { get; private set; }
-        public SrmDocument.DOCUMENT_TYPE DocumentType { get; private set; } //Determines whether human readable form gets the "peptide"->"molecule" translation treatment
+        public SrmDocument.DOCUMENT_TYPE DocumentType { get; private set; } // Determines whether human readable form gets the "peptide"->"molecule" translation treatment - not part of hash
         public IList<string> Names { get; private set; }
 
         public XmlSchema GetSchema()
@@ -238,48 +238,28 @@ namespace pwiz.Skyline.Model.AuditLog
         MessageType.upgraded_background_proteome,
         };
 
-        private const string TAG_MOLECULES = @"(m)";
-        private const string TAG_MIXED = @"(x)";
-
         public static MessageInfo ReadXml(XmlReader reader)
         {
-            var documentType = SrmDocument.DOCUMENT_TYPE.none;
             var typeStr = reader.ReadElementString();
-            if (typeStr.EndsWith(TAG_MOLECULES))
-            {
-                documentType = SrmDocument.DOCUMENT_TYPE.small_molecules;
-                typeStr = typeStr.Split('(')[0];
-            }
-            else if (typeStr.EndsWith(TAG_MIXED))
-            {
-                documentType = SrmDocument.DOCUMENT_TYPE.mixed;
-                typeStr = typeStr.Split('(')[0];
-            }
             var type = (MessageType)Enum.Parse(typeof(MessageType), typeStr);
             var names = new List<object>();
             while (reader.IsStartElement(EL.name))
                 names.Add(reader.ReadElementString());
 
-            return new MessageInfo(type, documentType, names.ToArray());
+            return new MessageInfo(type, SrmDocument.DOCUMENT_TYPE.none, names.ToArray()); // Caller needs to go back in and set document type along with level
         }
 
         public void WriteXml(XmlWriter writer)
         {
             var type = Type.ToString();
-            if (!ModeUIInvariantMessageTypes.Contains(Type))
-            {
-                if (DocumentType == SrmDocument.DOCUMENT_TYPE.small_molecules)
-                {
-                    type += TAG_MOLECULES;
-                }
-                else if (DocumentType == SrmDocument.DOCUMENT_TYPE.mixed)
-                {
-                    type += TAG_MIXED;
-                }
-            }
             writer.WriteElementString(EL.type, type);
             foreach (var name in Names)
                 writer.WriteElementString(EL.name, name);
+        }
+
+        public MessageInfo ChangeDocumentType(SrmDocument.DOCUMENT_TYPE documentType)
+        {
+            return Equals(DocumentType, documentType) ? this : ChangeProp(ImClone(this), im => im.DocumentType = documentType);
         }
 
         protected bool Equals(MessageInfo other)
@@ -377,22 +357,27 @@ namespace pwiz.Skyline.Model.AuditLog
             return new DirectoryInfo(s).Name;
         }
 
-        private static string ParseColumnCaption(string s, CultureInfo cultureInfo, SrmDocument.DOCUMENT_TYPE docType)
+        private static string ParseColumnCaption(string s, CultureInfo cultureUI, SrmDocument.DOCUMENT_TYPE docType)
         {
-            var val =  new DataSchemaLocalizer(cultureInfo, cultureInfo, ColumnCaptions.ResourceManager)
+            var val =  new DataSchemaLocalizer(CultureInfo.CurrentCulture, cultureUI, ColumnCaptions.ResourceManager)
                 .LookupColumnCaption(new ColumnCaption(s));
-            return Helpers.PeptideToMoleculeTextMapper.Translate(val, docType);
+            return Helpers.PeptideToMoleculeTextMapper.Translate(val, docType); // Perform "peptide"->"molecule" translation as needed
         }
 
-        private static string ParseEnum(string s, CultureInfo cultureInfo, SrmDocument.DOCUMENT_TYPE docType)
+        private static string ParseEnum(string s, CultureInfo cultureUI, SrmDocument.DOCUMENT_TYPE docType)
         {
-            var val = EnumNames.ResourceManager.GetString(s, cultureInfo);
-            return Helpers.PeptideToMoleculeTextMapper.Translate(val, docType);
+            var val = EnumNames.ResourceManager.GetString(s, cultureUI);
+            return Helpers.PeptideToMoleculeTextMapper.Translate(val, docType); // Perform "peptide"->"molecule" translation as needed
         }
 
         public LogMessage ChangeLevel(LogLevel level)
         {
             return ChangeProp(ImClone(this), im => im.Level = level);
+        }
+
+        public LogMessage ChangeDocumentType(SrmDocument.DOCUMENT_TYPE documentType)
+        {
+            return Equals(documentType, DocumentType) ? this : ChangeProp(ImClone(this), im => im.MessageInfo = im.MessageInfo.ChangeDocumentType(documentType));
         }
 
         public LogMessage ChangeReason(string reason)
@@ -414,13 +399,13 @@ namespace pwiz.Skyline.Model.AuditLog
             return encoding.GetBytes(EnExpanded + (Reason ?? string.Empty));
         }
 
-        public string ToString(CultureInfo cultureInfo)
+        public string ToString(CultureInfo cultureUI)
         {
-            var names = Names.Select(s => (object)ParseLogString(s, Level, cultureInfo, DocumentType)).ToArray();
+            var names = Names.Select(s => (object)ParseLogString(s, Level, cultureUI, DocumentType)).ToArray();
 
             // If the string could not be found, list the names in brackets and separated by commas
             // TODO: consider throwing exception instead
-            var format = AuditLogStrings.ResourceManager.GetString(Type.ToString(), cultureInfo);
+            var format = AuditLogStrings.ResourceManager.GetString(Type.ToString(), cultureUI);
             format = Helpers.PeptideToMoleculeTextMapper.Translate(format, DocumentType); // Give it the "peptide" -> "molecule" treatment if document type requires it
 
             return string.IsNullOrEmpty(format)
@@ -430,7 +415,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public override string ToString()
         {
-            return ToString(CultureInfo.CurrentCulture);
+            return ToString(CultureInfo.CurrentUICulture);
         }
 
         public static string RoundDecimal<T>(T? d, int decimalPlaces = 1) where T : struct, IFormattable
@@ -447,35 +432,35 @@ namespace pwiz.Skyline.Model.AuditLog
         }
 
         // bools, ints and doubles are localized
-        private static string ParsePrimitive(string s, CultureInfo cultureInfo, SrmDocument.DOCUMENT_TYPE docType)
+        private static string ParsePrimitive(string s, CultureInfo cultureUI, SrmDocument.DOCUMENT_TYPE docType)
         {
             var result = s;
 
             if (bool.TryParse(s, out bool b))
                 return AuditLogStrings.ResourceManager.GetString(
-                    b ? @"LogMessage_LocalizeValue_True" : @"LogMessage_LocalizeValue_False", cultureInfo); // Don't quote
+                    b ? @"LogMessage_LocalizeValue_True" : @"LogMessage_LocalizeValue_False", cultureUI); // Don't quote
             else if (int.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out int i))
-                result = i.ToString(cultureInfo);
+                result = i.ToString(cultureUI);
             else if (double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out double d))
-                result = d.ToString(cultureInfo);
+                result = d.ToString(cultureUI);
 
             return Quote(result);
         }
 
-        private static string ParsePropertyName(string s, CultureInfo cultureInfo, SrmDocument.DOCUMENT_TYPE docType)
+        private static string ParsePropertyName(string s, CultureInfo cultureUI, SrmDocument.DOCUMENT_TYPE docType)
         {
-            var result = PropertyNames.ResourceManager.GetString(s, cultureInfo);
+            var result = PropertyNames.ResourceManager.GetString(s, cultureUI);
             return Helpers.PeptideToMoleculeTextMapper.Translate(result, docType);
         }
 
-        private static string ParsePropertyElementName(string s, CultureInfo cultureInfo, SrmDocument.DOCUMENT_TYPE docType)
+        private static string ParsePropertyElementName(string s, CultureInfo cultureUI, SrmDocument.DOCUMENT_TYPE docType)
         {
-            var result = PropertyElementNames.ResourceManager.GetString(s, cultureInfo);
+            var result = PropertyElementNames.ResourceManager.GetString(s, cultureUI);
             return Helpers.PeptideToMoleculeTextMapper.Translate(result, docType);
         }
-        private static string ParseAuditLogString(string s, CultureInfo cultureInfo, SrmDocument.DOCUMENT_TYPE docType)
+        private static string ParseAuditLogString(string s, CultureInfo cultureUI, SrmDocument.DOCUMENT_TYPE docType)
         {
-            var result = AuditLogStrings.ResourceManager.GetString(s, cultureInfo);
+            var result = AuditLogStrings.ResourceManager.GetString(s, cultureUI);
             return Helpers.PeptideToMoleculeTextMapper.Translate(result, docType);
         }
 
@@ -532,11 +517,11 @@ namespace pwiz.Skyline.Model.AuditLog
                 }
             }
 
-            public string Parse(string s, LogLevel logLevel, CultureInfo cultureInfo, SrmDocument.DOCUMENT_TYPE docType)
+            public string Parse(string s, LogLevel logLevel, CultureInfo cultureUI, SrmDocument.DOCUMENT_TYPE docType)
             {
                 if (ParseIndex >= 0 && ParseIndex < PARSE_FUNCTIONS.Length)
                 {
-                    var parsed = PARSE_FUNCTIONS[ParseIndex](ParseInput, logLevel, cultureInfo, docType);
+                    var parsed = PARSE_FUNCTIONS[ParseIndex](ParseInput, logLevel, cultureUI, docType);
                     if (parsed != null)
                         return parsed;
                 }
@@ -561,10 +546,10 @@ namespace pwiz.Skyline.Model.AuditLog
         /// </summary>
         /// <param name="str">string to localize</param>
         /// <param name="logLevel">Log level used when parsing log level dependent values such as Paths</param>
-        /// <param name="cultureInfo">CultureInfo to be used when looking up resources and parsing numbers</param>
+        /// <param name="cultureUI">CultureInfo to be used when looking up resources and parsing numbers</param>
         /// <param name="docType">may need to swap "peptide" for "molecule" depending on UI mode at time of event</param>
         /// <returns>localized string</returns>
-        public static string ParseLogString(string str, LogLevel logLevel, CultureInfo cultureInfo, SrmDocument.DOCUMENT_TYPE docType)
+        public static string ParseLogString(string str, LogLevel logLevel, CultureInfo cultureUI, SrmDocument.DOCUMENT_TYPE docType)
         {
             var result = new StringBuilder();
 
@@ -577,7 +562,7 @@ namespace pwiz.Skyline.Model.AuditLog
             // Append text before first token
             result.Append(str.Substring(0, token.StartIndex));
 
-            result.Append(token.Parse(str, logLevel, cultureInfo, docType));
+            result.Append(token.Parse(str, logLevel, cultureUI, docType));
 
             while (tokens.Count > 0)
             {
@@ -588,7 +573,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 var start = prevToken.StartIndex + prevToken.Length;
                 result.Append(str.Substring(start, token.StartIndex - start));
 
-                result.Append(token.Parse(str, logLevel, cultureInfo, docType));
+                result.Append(token.Parse(str, logLevel, cultureUI, docType));
                 
             }
 
@@ -599,7 +584,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public static string ParseLogString(string str, LogLevel logLevel, SrmDocument.DOCUMENT_TYPE docType)
         {
-            return ParseLogString(str, logLevel, CultureInfo.CurrentCulture, docType);
+            return ParseLogString(str, logLevel, CultureInfo.CurrentUICulture, docType);
         }
 
         protected bool Equals(LogMessage other)

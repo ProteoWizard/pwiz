@@ -2508,11 +2508,6 @@ namespace pwiz.Skyline.Model
                 : defaultDocumentTypeForAuditLog;
         }
 
-        public new static SrmDocumentPair Create(SrmDocument oldDoc, SrmDocument newDoc)
-        {
-            return new SrmDocumentPair(oldDoc, newDoc, SrmDocument.DOCUMENT_TYPE.none);
-        }
-
         public static SrmDocumentPair Create(SrmDocument oldDoc, SrmDocument newDoc, 
             SrmDocument.DOCUMENT_TYPE defaultDocumentTypeForLogging)
         {
