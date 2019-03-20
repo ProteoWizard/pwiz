@@ -31,7 +31,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Alerts
 {
-    public partial class PeptidesPerProteinDlg : FormEx
+    public partial class PeptidesPerProteinDlg : ModeUIInvariantFormEx  // This dialog is inherently proteomic, never needs to be adapted for small mol or mixed UI mode
     {
         public bool KeepAll
         {

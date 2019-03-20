@@ -37,6 +37,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         public ChangeIrtPeptidesDlg(IList<DbIrtPeptide> irtPeptides)
         {
+            TargetResolver = new TargetResolver(irtPeptides.Select(p=>p.Target));
             _dictSequenceToPeptide = new Dictionary<Target, DbIrtPeptide>();
             foreach (var peptide in irtPeptides)
             {
@@ -49,6 +50,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
             Peptides = irtPeptides.Where(peptide => peptide.Standard).ToArray();
         }
 
+        public TargetResolver TargetResolver { get; private set; }
+
         public IList<DbIrtPeptide> Peptides
         {
             get { return _standardPeptides; }
@@ -56,8 +59,14 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 _standardPeptides = value;
                 textPeptides.Text = string.Join(Environment.NewLine,
-                    _standardPeptides.Select(peptide => peptide.ModifiedTarget.Sequence).ToArray());
+                    _standardPeptides.Select(peptide => TargetResolver.FormatTarget(peptide.ModifiedTarget)).ToArray());
             }
+        }
+
+        public string PeptidesText
+        {
+            get { return textPeptides.Text; }
+            set { textPeptides.Text = value; }
         }
 
         public void OkDialog()
@@ -73,8 +82,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 // Skip blank lines
                 if (string.IsNullOrEmpty(line))
                     continue;
-                DbIrtPeptide peptide;
-                if (!_dictSequenceToPeptide.TryGetValue(new Target(line), out peptide))  // CONSIDER(bspratt) - small molecule equivalent?
+                DbIrtPeptide peptide = null;
+                var target = TargetResolver.ResolveTarget(line);
+                if (target == null || !_dictSequenceToPeptide.TryGetValue(target, out peptide))  // CONSIDER(bspratt) - small molecule equivalent?
                     invalidLines.Add(line);
                 standardPeptides.Add(peptide);
             }
@@ -84,17 +94,17 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 string message;
                 if (invalidLines.Count == 1)
                 {
-                    message = string.Format(Resources.ChangeIrtPeptidesDlg_OkDialog_The_sequence__0__is_not_currently_in_the_database,
+                    message = ModeUIAwareStringFormat(Resources.ChangeIrtPeptidesDlg_OkDialog_The_sequence__0__is_not_currently_in_the_database,
                                             invalidLines[0]);
                     MessageBox.Show(this, message, Program.Name);
                 }
                 else
                 {
-                    message = TextUtil.LineSeparate(Resources.ChangeIrtPeptidesDlg_OkDialog_The_following_sequences_are_not_currently_in_the_database,
+                    message = TextUtil.LineSeparate(GetModeUIHelper().Translate(Resources.ChangeIrtPeptidesDlg_OkDialog_The_following_sequences_are_not_currently_in_the_database),
                                                     string.Empty,
                                                     TextUtil.LineSeparate(invalidLines),
                                                     string.Empty,
-                                                    Resources.ChangeIrtPeptidesDlg_OkDialog_Standard_peptides_must_exist_in_the_database);
+                                                    GetModeUIHelper().Translate(Resources.ChangeIrtPeptidesDlg_OkDialog_Standard_peptides_must_exist_in_the_database));
                     MessageBox.Show(this, message, Program.Name);
                 }
                 return;

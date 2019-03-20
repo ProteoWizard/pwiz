@@ -46,7 +46,7 @@ namespace pwiz.SkylineTestData
     /// Summary description for CommandLineTest
     /// </summary>
     [TestClass]
-    public class CommandLineTest : AbstractUnitTest
+    public class CommandLineTest : AbstractUnitTestEx
     {
         protected override void Initialize()
         {
@@ -385,20 +385,20 @@ namespace pwiz.SkylineTestData
                 expectedPeptides, DecoyGeneration.REVERSE_SEQUENCE));
 
             output = RunCommand("--in=" + docPath,
-                                       "--decoys-add=" + CommandArgs.ARG_DECOYS_ADD_VALUE_REVERSE);
+                                       "--decoys-add=" + CommandArgs.ARG_VALUE_DECOYS_ADD_REVERSE);
             AssertEx.Contains(output, string.Format(Resources.CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method,
                 expectedPeptides, DecoyGeneration.REVERSE_SEQUENCE));
 
             output = RunCommand("--in=" + docPath,
-                                       "--decoys-add=" + CommandArgs.ARG_DECOYS_ADD_VALUE_SHUFFLE);
+                                       "--decoys-add=" + CommandArgs.ARG_VALUE_DECOYS_ADD_SHUFFLE);
             AssertEx.Contains(output, string.Format(Resources.CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method,
                 expectedPeptides, DecoyGeneration.SHUFFLE_SEQUENCE));
 
             const string badDecoyMethod = "shift";
             output = RunCommand("--in=" + docPath,
                                        "--decoys-add=" + badDecoyMethod);
-            AssertEx.Contains(output, string.Format(Resources.CommandArgs_ParseArgsInternal_Error__Invalid_value___0___for__1___use___2___or___3___, badDecoyMethod,
-                CommandArgs.ArgText(CommandArgs.ARG_DECOYS_ADD), CommandArgs.ARG_DECOYS_ADD_VALUE_REVERSE, CommandArgs.ARG_DECOYS_ADD_VALUE_SHUFFLE));
+            var arg = CommandArgs.ARG_DECOYS_ADD;
+            AssertEx.Contains(output, new CommandArgs.ValueInvalidException(arg, badDecoyMethod, arg.Values).Message);
 
             output = RunCommand("--in=" + outPath,
                                        "--decoys-add");
@@ -409,7 +409,7 @@ namespace pwiz.SkylineTestData
                                        "--decoys-add",
                                        "--decoys-add-count=" + tooManyPeptides);
             AssertEx.Contains(output, string.Format(Resources.CommandLine_AddDecoys_Error_The_number_of_peptides,
-                    tooManyPeptides, 7, CommandArgs.ArgText(CommandArgs.ARG_DECOYS_ADD), CommandArgs.ARG_DECOYS_ADD_VALUE_SHUFFLE));
+                    tooManyPeptides, 7, CommandArgs.ARG_DECOYS_ADD.ArgumentText, CommandArgs.ARG_VALUE_DECOYS_ADD_SHUFFLE));
 
             const int expectFewerPeptides = 4;
             output = RunCommand("--in=" + docPath,
@@ -669,15 +669,23 @@ namespace pwiz.SkylineTestData
             string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
             string failurePath = testFilesDir.GetTestPath("Failure_test.csv");
 
-            string output = RunCommand("--in=" + docPath,
-                                "--exp-translist-instrument=" + ExportInstrumentType.WATERS,
-                                "--exp-file=" + failurePath,
-                                "--exp-strategy=single",
-                                "--exp-method-type=triggered",
-                                "--exp-primary-count=x");
+            var args = new[]
+            {
+                "--in=" + docPath,
+                "--exp-translist-instrument=" + ExportInstrumentType.WATERS,
+                "--exp-file=" + failurePath,
+                "--exp-strategy=single",
+                "--exp-method-type=triggered",
+                "--exp-primary-count=x"
+            };
+            string output = RunCommand(args);
+
+            AssertEx.Contains(output, new CommandArgs.ValueInvalidIntException(CommandArgs.ARG_EXP_PRIMARY_COUNT, "x").Message);
+            args[args.Length - 1] = "--exp-primary-count=1";
+            output = RunCommand(args);
 
             //check for warning and error
-            Assert.AreEqual(2, CountInstances(Resources.CommandLineTest_ConsoleAddFastaTest_Warning, output));  // exp-primary-count and CE not Waters
+            Assert.AreEqual(1, CountInstances(Resources.CommandLineTest_ConsoleAddFastaTest_Warning, output));  // exp-primary-count and CE not Waters
             CheckRunCommandOutputContains(Resources.CommandLineTest_ConsoleAddFastaTest_Error, output);    // Waters
             Assert.AreEqual(2, CountInstances(ExportInstrumentType.WATERS, output));
 
@@ -910,29 +918,63 @@ namespace pwiz.SkylineTestData
 
 
             //Check a bunch of warnings
-            output = RunCommand("--in=" + docPath,
-                                "--import-file=" + rawPath,
-                                "--import-replicate-name=Single",
-                                "--report-format=BOGUS",
-                                "--exp-translist-instrument=BOGUS",
-                                "--exp-method-instrument=BOGUS",
-                                "--exp-strategy=BOGUS",
-                                "--exp-max-trans=BOGUS",
-                                "--exp-optimizing=BOGUS",
-                                "--exp-method-type=BOGUS",
-                                "--exp-polarity=BOGUS",
-                                "--exp-dwell-time=1000000000", //bogus
-                                "--exp-dwell-time=BOGUS",
-                                "--exp-run-length=1000000000",
-                                "--exp-run-length=BOGUS",
-                                "--exp-translist-instrument=" + ExportInstrumentType.WATERS,
-                                "--exp-method-instrument=" + ExportInstrumentType.THERMO_LTQ);
+            var args = new[]
+            {
+                "--in=" + docPath,
+                "--import-file=" + rawPath,
+                "--import-replicate-name=Single",
+                "--report-format=tsv",  // placeholder for replacement below
+                "--exp-translist-instrument=" + ExportInstrumentType.WATERS,
+                "--exp-method-instrument=" + ExportInstrumentType.THERMO_LTQ
+            };
+            output = RunCommand(args);
                                 //1 Error for using the above 2 parameters simultaneously
 
             Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsolePathCoverage_successfully_));
 
-            Assert.AreEqual(11, CountInstances(Resources.CommandLineTest_ConsoleAddFastaTest_Warning, output));
-            Assert.AreEqual(2, CountErrors(output));
+            Assert.AreEqual(1, CountErrors(output));
+
+            //Test value lists for failing values
+            const string bogusValue = "BOGUS";
+            CommandArgs.Argument[] valueListArgs = 
+            {
+                CommandArgs.ARG_REPORT_FORMAT,
+                CommandArgs.ARG_EXP_TRANSITION_LIST_INSTRUMENT,
+                CommandArgs.ARG_EXP_METHOD_INSTRUMENT,
+                CommandArgs.ARG_EXP_STRATEGY,
+                CommandArgs.ARG_EXP_METHOD_TYPE,
+                CommandArgs.ARG_EXP_OPTIMIZING,
+                CommandArgs.ARG_EXP_POLARITY,
+            };
+            foreach (var valueListArg in valueListArgs)
+            {
+                args[3] = valueListArg.ArgumentText + "=" + bogusValue;
+                output = RunCommand(args);
+                AssertEx.Contains(output, new CommandArgs.ValueInvalidException(valueListArg, bogusValue, valueListArg.Values).Message);
+            }
+
+            CommandArgs.Argument[] valueIntArguments =
+            {
+                CommandArgs.ARG_EXP_MAX_TRANS,
+                CommandArgs.ARG_EXP_DWELL_TIME,
+                CommandArgs.ARG_EXP_RUN_LENGTH
+            };
+            foreach (var valueIntArg in valueIntArguments)
+            {
+                args[3] = valueIntArg.ArgumentText + "=" + bogusValue;
+                output = RunCommand(args);
+                AssertEx.Contains(output, new CommandArgs.ValueInvalidIntException(valueIntArg, bogusValue).Message);
+            }
+            const int bigValue = 100000000;
+            args[3] = "--exp-dwell-time=" + bigValue;
+            output = RunCommand(args);
+            AssertEx.Contains(output, new CommandArgs.ValueOutOfRangeIntException(CommandArgs.ARG_EXP_DWELL_TIME, bigValue.ToString(),
+                AbstractMassListExporter.DWELL_TIME_MIN, AbstractMassListExporter.DWELL_TIME_MAX).Message);
+            args[3] = "--exp-run-length=" + bigValue;
+            output = RunCommand(args);
+            AssertEx.Contains(output, new CommandArgs.ValueOutOfRangeIntException(CommandArgs.ARG_EXP_RUN_LENGTH, bigValue.ToString(),
+                AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX).Message);
+
 
             //This test uses a broken Skyline file to test the InvalidDataException catch
             var brokenFile = commandFilesDir.GetTestPath("Broken_file.sky");
@@ -1018,14 +1060,6 @@ namespace pwiz.SkylineTestData
             }
         }
 
-        private static string RunCommand(params string[] inputArgs)
-        {
-            var consoleBuffer = new StringBuilder();
-            var consoleOutput = new CommandStatusWriter(new StringWriter(consoleBuffer));
-            CommandLineRunner.RunCommand(inputArgs, consoleOutput);
-            return consoleBuffer.ToString();
-        }
-
         // TODO: Test the case where the imported replicate has the wrong path without Lorenzo's data
         //[TestMethod]
         public void TestLorenzo()
@@ -1056,45 +1090,16 @@ namespace pwiz.SkylineTestData
         public void CountInstancesTest()
         {
             string s = "hello,hello,hello";
-            Assert.AreEqual(3,CountInstances("hello",s));
+            Assert.AreEqual(3, CountInstances("hello", s));
 
             s += "hi";
-            Assert.AreEqual(3,CountInstances("hello",s));
+            Assert.AreEqual(3, CountInstances("hello", s));
 
-            Assert.AreEqual(0,CountInstances("",""));
+            Assert.AreEqual(0, CountInstances("", ""));
 
-            Assert.AreEqual(0,CountInstances("hi","howdy"));
+            Assert.AreEqual(0, CountInstances("hi", "howdy"));
         }
 
-        public static int CountInstances(string search, string searchSpace)
-        {
-            if (searchSpace.Length == 0)
-            {
-                return 0;
-            }
-
-            int count = 0;
-            int lastIndex = searchSpace.IndexOf(search, StringComparison.Ordinal);
-            for (; !Equals(-1, lastIndex) && lastIndex + search.Length <= searchSpace.Length; count++)
-            {
-                lastIndex = searchSpace.IndexOf(search, StringComparison.Ordinal);
-                searchSpace = searchSpace.Substring(lastIndex + 1);
-                lastIndex = searchSpace.IndexOf(search, StringComparison.Ordinal);
-            }
-
-            return count;
-        }
-
-        public static int CountErrors(string searchSpace, bool allowUnlocalized = false)
-        {
-            const string enError = "Error";
-            string localError = Resources.CommandLineTest_ConsoleAddFastaTest_Error;
-            int count = CountInstances(localError, searchSpace);
-            if (allowUnlocalized && !Equals(localError, enError))
-                   count += CountInstances(enError, searchSpace);
-            return count;
-        }
-        
         [TestMethod]
         public void ConsoleBadRawFileImportTest()
         {
@@ -1292,7 +1297,7 @@ namespace pwiz.SkylineTestData
                                  "--import-replicate-name=Unscheduled01",
                                  "--import-all=" + testFilesDir.FullPath,
                                  "--out=" + outPath1);
-            Assert.IsTrue(msg.Contains(Resources.CommandArgs_ParseArgsInternal_Error____import_file_and___import_all_options_cannot_be_used_simultaneously_), msg);
+            Assert.IsTrue(msg.Contains(CommandArgs.ErrorArgsExclusiveText(CommandArgs.ARG_IMPORT_FILE, CommandArgs.ARG_IMPORT_ALL)), msg);
             // output file should not exist
             Assert.IsFalse(File.Exists(outPath1));
 
@@ -1320,7 +1325,7 @@ namespace pwiz.SkylineTestData
                                  "--import-file=" + rawPath.FilePath,
                                  "--import-naming-pattern=prefix_(.*)",
                                  "--out=" + outPath1);
-            Assert.IsTrue(msg.Contains(Resources.CommandArgs_ParseArgsInternal_Error____import_naming_pattern_cannot_be_used_with_the___import_file_option_), msg);
+            Assert.IsTrue(msg.Contains(CommandArgs.ErrorArgsExclusiveText(CommandArgs.ARG_IMPORT_NAMING_PATTERN, CommandArgs.ARG_IMPORT_FILE)), msg);
             // output file should not exist
             Assert.IsFalse(File.Exists(outPath1));
 
@@ -2033,6 +2038,38 @@ namespace pwiz.SkylineTestData
 
             // Test case [a,,c] = "a "" c" - empty string
             Assert.AreEqual("a \"\" c", CommandLine.JoinArgs(new [] {"a", string.Empty, "c"}));
+        }
+
+        [TestMethod]
+        public void CommandLineUsageTest()
+        {
+            CheckUsageOutput(RunCommand("--help"));
+            CheckUsageOutput(RunCommand(string.Empty));
+        }
+
+        private static void CheckUsageOutput(string output)
+        {
+            foreach (CommandArgs.ArgumentGroup group in CommandArgs.UsageBlocks.Where(b => b is CommandArgs.ArgumentGroup))
+            {
+                if (group.IncludeInUsage)
+                {
+                    AssertEx.Contains(output, group.Title);
+                    foreach (var arg in group.Args.Where(a => !a.InternalUse))
+                        AssertEx.Contains(output, arg.ArgumentText);
+                }
+            }
+        }
+
+        [TestMethod]
+        public void CommandLineUsageDescriptionsTest()
+        {
+            // All arguments that will appear in the usage text must have a description
+            foreach (var arg in CommandArgs.UsageArguments)
+            {
+                Assert.IsFalse(string.IsNullOrEmpty(arg.Description),
+                    string.Format("The argument {0} is missing a description. Add a non-empty string with the name {1} to CommandArgUsage.resx",
+                        arg.ArgumentText, "_" + arg.Name.Replace('-', '_')));
+            }
         }
 
         [TestMethod]

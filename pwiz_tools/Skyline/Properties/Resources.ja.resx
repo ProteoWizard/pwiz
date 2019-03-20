@@ -1338,9 +1338,6 @@
   <data name="FileEx_SafeDelete_Directory_could_not_be_found___0_" xml:space="preserve">
     <value>ディレクトリを見つけることができませんでした：{0}</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Warning__The_primary_transition_count__0__is_invalid__it_must_be_a_number_between__1__and__2__" xml:space="preserve">
-    <value>警告： プライマリトランジション数{0}が無効です。{1}と{2}の間の数値でなければなりません。</value>
-  </data>
   <data name="ChromGraphItem_Title_Step__0_" xml:space="preserve">
     <value>ステップ{0}</value>
   </data>
@@ -1706,9 +1703,6 @@
   </data>
   <data name="LibraryGridViewDriver_DoPaste_The_peptide__0__is_already_present_in_the__1__table__and_may_not_be_pasted_into_the__2__table" xml:space="preserve">
     <value>ペプチド{0}は既に{1}表にあり、{2}表には貼り付けられません。</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal_Error__The_value___0___for__1__must_be_an_integer_" xml:space="preserve">
-    <value>エラー： {1}に対する値'{0}'は、整数でなければなりません。</value>
   </data>
   <data name="PasteDlg_ReadPrecursorOrProductColumns_Invalid_m_z_value__0_" xml:space="preserve">
     <value>無効なm/z値{0}</value>
@@ -2433,9 +2427,6 @@
   </data>
   <data name="MinimizeResultsDlg_Minimize_All_results_must_be_completely_imported_before_any_can_be_minimized" xml:space="preserve">
     <value>結果を最小化するには、すべての結果のインポートが完了していなければなりません。</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal_Warning__The_report_format__0__is_invalid__It_must_be_either__CSV__or__TSV__" xml:space="preserve">
-    <value>警告： レポート形式{0}が無効です。「CSV」または「TSV」でなければなりません。</value>
   </data>
   <data name="SkylineViewContext_GetDocumentGridRowSources_Replicates" xml:space="preserve">
     <value>繰り返し測定</value>
@@ -3942,9 +3933,6 @@
   <data name="IonTypeExtension_LOCALIZED_VALUES_custom" xml:space="preserve">
     <value>カスタム</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Warning__Invalid_optimization_parameter___0____Use__ce____dp___or__none____Defaulting_to_none_" xml:space="preserve">
-    <value>警告： 無効な最適化パラメータ ({0})。「ce」、「dp」、「なし」を使用。 なしにデフォルト中。</value>
-  </data>
   <data name="EditRTDlg_OkDialog__0__must_be_greater_than_0" xml:space="preserve">
     <value>{0}は0より大きくなければなりません。</value>
   </data>
@@ -4197,9 +4185,6 @@
   </data>
   <data name="FastaImporter_ToFasta_Last_column_does_not_contain_a_valid_protein_sequence" xml:space="preserve">
     <value>最後の列には有効なタンパク質シークエンスが含まれていません</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal_Error____import_file_and___import_all_options_cannot_be_used_simultaneously_" xml:space="preserve">
-    <value>エラー：--import-fileと--import-allオプションを同時に使用することはできません。</value>
   </data>
   <data name="SkylineWindow_ChangeSettings_Change_settings" xml:space="preserve">
     <value>設定を変更</value>
@@ -5419,9 +5404,6 @@
   <data name="PathChooserDlg_OkDialog_You_must_select_an_empty_directory_for_the_tutorial_files_" xml:space="preserve">
     <value>チュートリアルファイルに対し空のディレクトリを選択しなければなりません。</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Warning__The_cutoff_score__0__is_invalid__It_must_be_a_value_between_0_and_1_" xml:space="preserve">
-    <value>警告： カットオフスコア{0}が無効です。0と1の間の値でなければなりません。</value>
-  </data>
   <data name="EditIonMobilityLibraryDlg_OpenDatabase_The_file__0__does_not_exist__Click_the_Create_button_to_create_a_new_ion_mobility_library_or_click_the_Open_button_to_find_the_missing_file_" xml:space="preserve">
     <value>ファイル{0}は存在しません。作成ボタンをクリックして新しいイオン移動度ライブラリを作成するか、開くボタンをクリックして欠損しているファイルを検索します。</value>
   </data>
@@ -5617,9 +5599,6 @@
   </data>
   <data name="PeakBoundaryCompareTest_DoTest_Must_select_a_model_for_comparison_" xml:space="preserve">
     <value>比較用モデルを選択しなければなりません。</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal_Warning__The_run_length__0__is_invalid__It_must_be_a_number_between__1__and__2__" xml:space="preserve">
-    <value>警告： 実行長さ{0}は無効です。{1}と{2}の間の数値でなければなりません。</value>
   </data>
   <data name="BuildLibraryDlg_ValidateBuilder_The_library_identifier__0__is_not_valid_Identifiers_start_with_a_letter_number_or_underscore_and_contain_only_letters_numbers_underscores_and_dashes" xml:space="preserve">
     <value>ライブラリ識別子{0}が有効ではありません。識別子は英数字またはアンダースコアから始まり、英数字、アンダースコア、ダッシュのみを含みます。</value>
@@ -6395,14 +6374,11 @@
   <data name="RelativeRTExtension_LOCALIZED_VALUES_Overlapping" xml:space="preserve">
     <value>重複</value>
   </data>
-  <data name="PasteDlg_GetMoleculePeptideGroup_Molecule_Group__0_" xml:space="preserve">
-    <value>分子グループ{0}</value>
+  <data name="PasteDlg_GetMoleculePeptideGroup_Molecule_List__0_" xml:space="preserve">
+    <value>分子リスト{0}</value>
   </data>
   <data name="SkylineWindow_removeDuplicatePeptidesMenuItem_Click_Remove_duplicate_peptides" xml:space="preserve">
     <value>重複ペプチドを削除</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal_Error____import_naming_pattern_cannot_be_used_with_the___import_file_option_" xml:space="preserve">
-    <value>エラー：--import-naming-patternをimport-fileオプションとともに使用することはできません。</value>
   </data>
   <data name="AllChromatogramsGraph_Finish_Close" xml:space="preserve">
     <value>閉じる</value>
@@ -6711,9 +6687,6 @@
   </data>
   <data name="AlertDlg_GetDefaultButtonText__Retry" xml:space="preserve">
     <value>再試行(&amp;R)</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal_Error__Date__0__cannot_be_parsed_" xml:space="preserve">
-    <value>エラー： 日付{0}には構文解析を行うことができません。</value>
   </data>
   <data name="FileIterator_Init_Cannot_save_to__0__" xml:space="preserve">
     <value>{0}に保存できません。</value>
@@ -7296,9 +7269,6 @@
   </data>
   <data name="BioMassCalc_SynchMasses_Fixing_isotope_abundance_masses_requires_a_monoisotopic_mass_calculator" xml:space="preserve">
     <value>同位体存在質量の確定には、モノアイソトピック質量カルキュレータが必要です</value>
-  </data>
-  <data name="CommandArgs_ParseDouble_Error__The_argument__0__requires_a_decimal_number_value_" xml:space="preserve">
-    <value>エラー： 引数{0}には小数点値が必要です。</value>
   </data>
   <data name="VendorIssueHelper_ConvertBrukerToMzml_Failure_attempting_to_convert__0__to_mzML_using_CompassXport_" xml:space="preserve">
     <value>CompassXportを使用した{0}のmzMLへの変換に失敗しました。</value>
@@ -7931,9 +7901,6 @@
   <data name="StartPage_getBoxPanels_Absolute_Quantification" xml:space="preserve">
     <value>絶対的定量化</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Defaulting_to__0__" xml:space="preserve">
-    <value>{0}にデフォルト中。</value>
-  </data>
   <data name="TestSkylineProcessRunner_RunProcess_The_operation_was_canceled_by_the_user_" xml:space="preserve">
     <value>ユーザーによって操作がキャンセルされました。</value>
   </data>
@@ -7954,9 +7921,6 @@
   </data>
   <data name="ConfigureToolsDlg_OverwriteOrInParallel_Overwrite" xml:space="preserve">
     <value>上書き</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal_Warning__The_dwell_time__0__is_invalid__it_must_be_a_number_between__1__and__2__" xml:space="preserve">
-    <value>警告： ドウェル時間{0}が無効です。{1}と{2}の間の数値でなければなりません。</value>
   </data>
   <data name="RInstaller_InstallPackages_The_package__0__failed_to_install_" xml:space="preserve">
     <value>パッケージ{0}のインストールに失敗しました：</value>
@@ -8324,9 +8288,6 @@
   </data>
   <data name="EditIrtCalcDlg_ValidatePeptideList_The_peptide__0__appears_in_the__1__table_more_than_once" xml:space="preserve">
     <value>{1}表でぺプチド{0}が1回以上繰り返されています。</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal_Defaulting_to_CSV_" xml:space="preserve">
-    <value>CSVにデフォルト中。</value>
   </data>
   <data name="MQuestIntensityCalc_MQuestIntensityCalc_Intensity" xml:space="preserve">
     <value>強度</value>
@@ -9009,9 +8970,6 @@
   <data name="CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method" xml:space="preserve">
     <value>「{1}」メソッドを使用して{0}個のデコイペプチドを追加しました</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Error__Invalid_value___0___for__1___use___2___or___3___" xml:space="preserve">
-    <value>エラー：{1}の値「{0}」が無効です。「{2}」か「{3}」を使用してください。</value>
-  </data>
   <data name="PeptideSettingsUI_ShowBuildLibraryDlg_Finishing_up_building_library" xml:space="preserve">
     <value>ライブラリ構築の終了中</value>
   </data>
@@ -9074,6 +9032,13 @@
     <value>トランジションリストのヘルプ</value>
   </data>
   <data name="PasteDlg_btnTransitionListHelp_Click_" xml:space="preserve">
+    <value>このウィンドウの一番簡単な使用方法は、Excel（またはデータがCSV形式の場合テキストエディタ）からコピーしグリッドに貼り付けることです。
+ 
+ Skylineでの列の順序は、コラムヘッダーを左右にドラッグすることで調整できます。
+ 
+ ほとんどのペプチドトランジションリストは、「ファイル|インポート|トランジションリスト...」メニューアイテムでインポートできるか、[ターゲット]ウィンドウに直接貼り付けることさえできます。</value>
+  </data>
+  <data name="PasteDlg_btnTransitionListHelp_Click_SmallMol_" xml:space="preserve">
     <value>このウィンドウの一番簡単な使用方法は、Excel（またはデータがCSV形式の場合テキストエディタ）からコピーしグリッドに貼り付けることです。
  
  Skylineでの列の順序は、コラムヘッダーを左右にドラッグすることで調整できます。  小分子の場合、 また[列...]ボタンでどの列を有効にするか選択できます。
@@ -9363,12 +9328,6 @@
   </data>
   <data name="LibraryGridViewDriver_AddToLibrary_Do_you_want_to_recalibrate_the_iRT_standard_values_relative_to_the_peptides_being_added_" xml:space="preserve">
     <value>追加されているペプチドに対してiRT標準値を再校正しますか？</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal___import_cache_file_can_only_be_specified_once" xml:space="preserve">
-    <value>--import-cache-fileは一度しか指定できません</value>
-  </data>
-  <data name="CommandArgs_GetFullPath_Failed_attempting_to_get_full_path_for__0_" xml:space="preserve">
-    <value>{0}のフルパスの取得に失敗しました</value>
   </data>
   <data name="MProphetPeakScoringModel_Train_Training_scoring_model__iteration__0__of__1__" xml:space="preserve">
     <value>スコアモデルのトレーニング（反復{0}/{1}）</value>
@@ -9952,6 +9911,46 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_OtherIDs" xml:space="preserve">
     <value>OtherIDs</value>
   </data>
+  <data name="PeptideToMoleculeText_Peptide" xml:space="preserve">
+    <value>ペプチド</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "choose a peptide" to read "choose a molecule" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Molecule" xml:space="preserve">
+    <value>分子</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "choose a peptide" to read "choose a molecule" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Peptides" xml:space="preserve">
+    <value>ペプチド</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "2 peptides" to read "2 molecules" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Molecules" xml:space="preserve">
+    <value>分子</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "2 peptides" to read "2 molecules" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Protein" xml:space="preserve">
+    <value>タンパク質</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "choose a protein" to read "choose a molecule list" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Molecule_List" xml:space="preserve">
+    <value>分子リスト</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "choose a protein" to read "choose a molecule list" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Proteins" xml:space="preserve">
+    <value>タンパク質</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "2 proteins" to read "2 molecule lists" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Molecule_Lists" xml:space="preserve">
+    <value>分子リスト</value>
+    <comment>&gt;Used in PeptideToMoleculeText.Translate to update strings like  "2 proteins" to read "2 molecule lists" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Modified_Sequence" xml:space="preserve">
+    <value>修飾シークエンス</value>
+    <comment>&gt;Used in PeptideToMoleculeText.Translate to update strings like "select a modifed sequence" to read "select a molecule" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Peptide_List" xml:space="preserve">
+    <value>ペプチドのリスト</value>
+    <comment>&gt;Used in PeptideToMoleculeText.Translate to update strings like "select a peptide list" to read "select a molecule list" when non-peptide documents are in use</comment>
+  </data>
   <data name="ToolOptionsUI_btnResetSettings_Click_Are_you_sure_you_want_to_clear_all_saved_settings__This_will_immediately_return__0__to_its_original_configuration_and_cannot_be_undone_" xml:space="preserve">
     <value>本当に保存されたすべての設定をクリアしてもよろしいですか？これで直ちに{0}が元の設定に戻り、それを元に戻すことはできません。</value>
   </data>
@@ -10011,9 +10010,6 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   </data>
   <data name="SkylineWindow_ImportAnnotations_Import_Annotations" xml:space="preserve">
     <value>注釈をインポート</value>
-  </data>
-  <data name="CommandLine_ImportAnnotations_Failed_while_reading_annotations_" xml:space="preserve">
-    <value>注釈を読み取る際に失敗しました。</value>
   </data>
   <data name="Columns_Columns_Unrecognized_column___0__" xml:space="preserve">
     <value>列「{0}」が認識できません</value>
@@ -10213,5 +10209,8 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="CommandArgs_PanoramaArgsComplete_" xml:space="preserve">
     <value>ドキュメントをPanoramaにアップロードするため必要な以下の引数に値を指定してください：
 {0}</value>
+  </data>
+  <data name="PeptideToMoleculeText_Peptide_Sequence" xml:space="preserve">
+    <value>ペプチドシークエンス</value>
   </data>
 </root>

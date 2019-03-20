@@ -201,7 +201,7 @@ rule try-build ( targets * : ps : what : retry ? )
     }       
     else if ! UPDATE_NOW in [ RULENAMES ]
     {
-        # Cannot determine. Assume existance.
+        # Cannot determine. Assume existence.
     }
     else
     {
@@ -276,6 +276,10 @@ rule try-find-build ( ps : what : * )
         local x = [ PAD "    - $(what)" : $(.width) ] ;
         for local i in $(args)
         {
+            if ! $($(i)[1])
+            {
+                break ;
+            }
             local jam-targets ;
             for local t in $($(i)[2-])
             {
@@ -291,6 +295,7 @@ rule try-find-build ( ps : what : * )
         }
         if ! $(result)
         {
+            log-check-result "$(x) : none" ;
             result = none ;
         }
     }

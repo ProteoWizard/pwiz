@@ -67,6 +67,7 @@ namespace pwiz.Skyline
         
         // Parameters for testing.
         public static bool StressTest { get; set; }                 // Set true when doing stress testing (i.e. TestRunner).
+        public static bool UnitTest { get; set; }                   // Set to true by AbstractUnitTest and AbstractFunctionalTest
         public static bool FunctionalTest { get; set; }             // Set to true by AbstractFunctionalTest
         public static bool SkylineOffscreen { get; set; }           // Set true to move Skyline windows offscreen.
         public static bool DemoMode { get; set; }                   // Set to true in demo mode (main window is full screen and pauses at screenshots)
@@ -134,8 +135,6 @@ namespace pwiz.Skyline
                     {
                         AttachConsole(-1);
                         textWriter = Console.Out;
-                        Console.WriteLine();
-                        Console.WriteLine();
                     }
                     var writer = new CommandStatusWriter(textWriter);
                     if (args[0].Equals(@"--ui", StringComparison.InvariantCultureIgnoreCase))
@@ -562,6 +561,28 @@ namespace pwiz.Skyline
         public static StartPage StartWindow { get; private set; }
         public static SrmDocument ActiveDocument { get { return MainWindow != null ? MainWindow.Document : null; } }
         public static SrmDocument ActiveDocumentUI { get { return MainWindow != null ? MainWindow.DocumentUI : null; } }
+        
+        /// <summary>
+        /// Gets the current UI mode (proteomic / small molecule / mixed) as a function of  <see cref="Settings"/>
+        /// and the contents of the current document
+        /// </summary>
+        public static SrmDocument.DOCUMENT_TYPE ModeUI
+        {
+            get
+            {
+                SrmDocument.DOCUMENT_TYPE mode;
+                if (ActiveDocument != null)
+                {
+                    mode = MainWindow.GetModeUIHelper().ModeUI; // Document contents help determine UI mode
+                }
+                else if (!Enum.TryParse(Settings.Default.UIMode, out mode))
+                {
+                    mode = SrmDocument.DOCUMENT_TYPE.proteomic; // No saved setting, default to tradition
+                }
+
+                return mode;
+            }
+        }
 
         /// <summary>
         /// Shortcut to the application name stored in <see cref="Settings"/>

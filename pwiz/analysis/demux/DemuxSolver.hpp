@@ -44,7 +44,7 @@ namespace analysis {
         /// @param[in] signal Response matrix describing the signal of each transition in each multiplexed spectrum.
         /// @param[out] solution Matrix describing the independent spectrum of each isolation window. These are the demultiplexed spectra.
         ///
-        virtual void Solve(const MatrixPtr& masks, const MatrixPtr& signal, MatrixPtr& solution) = 0;
+        virtual void Solve(const MatrixPtr& masks, const MatrixPtr& signal, MatrixPtr& solution) const = 0;
 
         virtual ~DemuxSolver(){}
     };
@@ -59,10 +59,11 @@ namespace analysis {
         /// Constructor for non-negative least squares solver
         /// @param[in] numIters The maximum number of iterations allowed for convergence
         /// @param[in] eps Epsilon value for convergence criterion of NNLS solver
-         NNLSSolver(int numIters = 50, double eps = 1e-10) : numIters_(numIters), eps_(eps) {}
+         NNLSSolver(int numIters = 50, double eps = 1e-10) : numIters_(numIters), eps_(eps)
+         {}
         
         /// Implementation of DemuxSolver interface
-        void Solve(const MatrixPtr& masks, const MatrixPtr& signal, MatrixPtr& solution) override;
+        void Solve(const MatrixPtr& masks, const MatrixPtr& signal, MatrixPtr& solution) const override;
 
     private:
      
@@ -70,7 +71,6 @@ namespace analysis {
          
         double eps_; ///< tolerance for convergence
     };
-
 } // namespace analysis 
 } // namespace pwiz
 #endif // _DEMUXSOLVER_HPP

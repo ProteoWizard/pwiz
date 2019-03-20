@@ -59,16 +59,25 @@ namespace SkylineNightly
 
         private static string GetPostUrl(string path)
         {
-            return LABKEY_PROTOCOL + "://" + LABKEY_SERVER_ROOT + "/" + LABKEY_MODULE + "/" + path + "/" +
-                   LABKEY_ACTION + ".view";
+            return GetUrl(path, LABKEY_MODULE, LABKEY_ACTION);
         }
+
+        private static string GetUrl(string path, string controller, string action)
+        {
+            return LABKEY_PROTOCOL + "://" + LABKEY_SERVER_ROOT + "/" + controller + "/" + path + "/" +
+                   action + ".view";
+        }
+
         private static string LABKEY_URL = GetPostUrl("home/development/Nightly%20x64");
         private static string LABKEY_PERF_URL = GetPostUrl("home/development/Performance%20Tests");
         private static string LABKEY_STRESS_URL = GetPostUrl("home/development/NightlyStress");
         private static string LABKEY_RELEASE_URL = GetPostUrl("home/development/Release%20Branch");
         private static string LABKEY_RELEASE_PERF_URL = GetPostUrl("home/development/Release%20Branch%20Performance%20Tests");
         private static string LABKEY_INTEGRATION_URL = GetPostUrl("home/development/Integration");
-        
+        private static string LABKEY_HOME_URL = GetUrl("home", "project", "begin");
+
+        private static string LABKEY_CSRF = @"X-LABKEY-CSRF";
+
         private const string GIT_MASTER_URL = "https://github.com/ProteoWizard/pwiz";
         private const string GIT_BRANCHES_URL = GIT_MASTER_URL + "/tree/";
 
@@ -830,7 +839,9 @@ namespace SkylineNightly
                 wr.Method = "POST"; 
                 wr.KeepAlive = true;
                 wr.Credentials = CredentialCache.DefaultCredentials;
-                
+
+                SetCSRFToken(wr);
+
                 var rs = wr.GetRequestStream();
 
                 rs.Write(boundarybytes, 0, boundarybytes.Length);
@@ -1014,6 +1025,37 @@ namespace SkylineNightly
             catch (Exception x)
             {
                 Log("Could not create diagnostic screenshot: got exception \"" + x.Message + "\"");
+            }
+        }
+
+        private void SetCSRFToken(HttpWebRequest postReq)
+        {
+            var url = LABKEY_HOME_URL;
+
+            var sessionCookies = new CookieContainer();
+            try
+            {
+                var request = (HttpWebRequest)WebRequest.Create(url);
+                request.Method = @"GET";
+                request.CookieContainer = sessionCookies;
+                using (var response = (HttpWebResponse)request.GetResponse())
+                {
+                    postReq.CookieContainer = sessionCookies;
+                    var csrf = response.Cookies[LABKEY_CSRF];
+                    if (csrf != null)
+                    {
+                        // The server set a cookie called X-LABKEY-CSRF, get its value and add a header to the POST request
+                        postReq.Headers.Add(LABKEY_CSRF, csrf.Value);
+                    }
+                    else
+                    {
+                        Log(@"CSRF token not found.");
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Log($@"Error establishing a session and getting a CSRF token: {e}");
             }
         }
     }

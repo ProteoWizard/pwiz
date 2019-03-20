@@ -1087,9 +1087,6 @@ Double Blank（ダブルブランク）</value>
   <data name="AllInfoMessage">
     <value>変更の詳しい説明</value>
   </data>
-  <data name="DocumentFormat" xml:space="preserve">
-    <value>この変更が行われたドキュメント形式バージョン</value>
-  </data>
   <data name="User">
     <value>変更を行ったユーザー</value>
   </data>

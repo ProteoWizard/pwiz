@@ -55,10 +55,21 @@ namespace pwiz.SkylineTestFunctional
             SetCellValue(listDesigner.ListPropertiesGrid, 3, 1, ListPropertyType.GetAnnotationTypeName(AnnotationDef.AnnotationType.true_false));
             RunUI(() =>
             {
+                listDesigner.ListPropertiesGrid.CurrentCell = listDesigner.ListPropertiesGrid.Rows[0].Cells[0]; listDesigner.IdProperty = "Name";
                 listDesigner.IdProperty = "Name";
             });
             OkDialog(listDesigner, listDesigner.OkDialog);
             OkDialog(documentSettingsDlg, documentSettingsDlg.OkDialog);
+
+            var listDef = SkylineWindow.Document.Settings.DataSettings.Lists[0].ListDef;
+            CollectionAssert.AreEqual(
+                new[]
+                {
+                    AnnotationDef.AnnotationType.text, AnnotationDef.AnnotationType.text,
+                    AnnotationDef.AnnotationType.number, AnnotationDef.AnnotationType.true_false
+                },
+                listDef.Properties.Select(p => p.Type).ToArray());
+
             RunUI(()=>SkylineWindow.ShowList("Planets"));
             var listGridForm = FindOpenForm<ListGridForm>();
             WaitForConditionUI(() => listGridForm.IsComplete);

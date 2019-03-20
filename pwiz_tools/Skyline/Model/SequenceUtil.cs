@@ -754,7 +754,7 @@ namespace pwiz.Skyline.Model
                 else
                 {
                     var massdiff2 = strMassDiff.TrimStart('+', '-');
-                    normalizedSeq.Append(string.Format(CultureInfo.InvariantCulture, @"[{0}{1}]", massDiff > 0 ? @"+" : string.Empty, massdiff2));
+                    normalizedSeq.Append(string.Format(CultureInfo.InvariantCulture, @"[{0}{1}]", massDiff > 0 ? @"+" : @"-", massdiff2));
                 }
                 ichLast = ichCloseBracket + 1;
             }
@@ -1300,7 +1300,7 @@ namespace pwiz.Skyline.Model
 
             // ReSharper disable CharImplicitlyConvertedToNumeric
             // Handle values for non-amino acids
-            // Wikipedia says Aspartic acid or Asparagine
+            // Wikipedia says Aspartic acid or Asparagine, this seems to be average of Cytosine and Cyanoalanine
             _aminoMasses['b'] = _aminoMasses['B'] =
                 (_massCalc.CalculateMassFromFormula(@"C4H5NO3") + _massCalc.CalculateMassFromFormula(@"C4H6N2O2")) / 2;
             _aminoMasses['j'] = _aminoMasses['J'] = 0.0;
@@ -1371,11 +1371,8 @@ namespace pwiz.Skyline.Model
             Tuple.Create(LabelAtoms.Cl37, BioMassCalc.Cl, BioMassCalc.Cl37),
             Tuple.Create(LabelAtoms.Br81, BioMassCalc.Br, BioMassCalc.Br81),
             Tuple.Create(LabelAtoms.P32, BioMassCalc.P, BioMassCalc.P32),
-            Tuple.Create(LabelAtoms.S33, BioMassCalc.S, BioMassCalc.S33),
             Tuple.Create(LabelAtoms.S34, BioMassCalc.S, BioMassCalc.S34),
-            Tuple.Create(LabelAtoms.H3, BioMassCalc.H, BioMassCalc.H3),
-            Tuple.Create(LabelAtoms.H2, BioMassCalc.D, BioMassCalc.H2),
-            Tuple.Create(LabelAtoms.H3, BioMassCalc.T, BioMassCalc.H3)
+            Tuple.Create(LabelAtoms.H2, BioMassCalc.D, BioMassCalc.H2), // Accept "D" for Deuterium
         });
         public static string GetHeavyFormula(string formula, LabelAtoms labelAtoms)
         {

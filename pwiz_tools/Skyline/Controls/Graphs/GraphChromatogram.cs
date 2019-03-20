@@ -1055,7 +1055,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             message = Resources.GraphChromatogram_UpdateUI_No_TIC_chromatogram_found;
                             break;
                     }
-                    SetGraphItem(new UnavailableChromGraphItem(message));
+                    SetGraphItem(new UnavailableChromGraphItem(Helpers.PeptideToMoleculeTextMapper.Translate(message, DocumentUI.DocumentType)));
                 }
             }
             else 
@@ -1320,26 +1320,29 @@ namespace pwiz.Skyline.Controls.Graphs
             for (int i = 0; i < numTrans; i++)
             {
                 var nodeTran = displayTrans[i];
+                if (IsQuantitative(nodeTran))
+                {
+
+                    // Store library intensities for dot-product
+                    if (expectedIntensities != null)
+                    {
+                        if (isFullScanMs)
+                            expectedIntensities[i] = nodeTran.HasDistInfo ? nodeTran.IsotopeDistInfo.Proportion : 0;
+                        else
+                            expectedIntensities[i] = nodeTran.HasLibInfo ? nodeTran.LibInfo.Intensity : 0;
+                    }
+                }
+
+                var info = arrayChromInfo[i];
+                    if (info == null)
+                        continue;
+
+                // Apply any active transform
+                info.Transform(transform);
                 if (!IsQuantitative(nodeTran))
                 {
                     continue;
                 }
-
-                // Store library intensities for dot-product
-                if (expectedIntensities != null)
-                {
-                    if (isFullScanMs)
-                        expectedIntensities[i] = nodeTran.HasDistInfo ? nodeTran.IsotopeDistInfo.Proportion : 0;
-                    else
-                        expectedIntensities[i] = nodeTran.HasLibInfo ? nodeTran.LibInfo.Intensity : 0;
-                }
-
-                var info = arrayChromInfo[i];
-                if (info == null)
-                    continue;
-
-                // Apply any active transform
-                info.Transform(transform);
 
                 for (int j = 0; j < numPeaks; j++)
                 {
@@ -2187,8 +2190,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                 Target lookupSequence,
                                                 ExplicitMods lookupMods)
         {
-            // FUTURE: Fix this when we can predict retention time for small molecules
-            if (lookupSequence == null || !lookupSequence.IsProteomic)
+            if (lookupSequence == null)
             {
                 return;
             }

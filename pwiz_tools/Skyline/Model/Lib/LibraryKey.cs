@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Model.Lib
             switch (proto.KeyType)
             {
                 case LibraryKeyProto.Types.KeyType.Peptide:
-                    return new PeptideLibraryKey(proto.ModifiedSequence, proto.Charge);
+                    return new PeptideLibraryKey(proto.ModifiedSequence, proto.Charge).ValueFromCache(valueCache);
                 case LibraryKeyProto.Types.KeyType.PrecursorMz:
                     return new PrecursorLibraryKey(proto);
                 case LibraryKeyProto.Types.KeyType.SmallMolecule:
@@ -325,7 +325,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override Target Target
         {
-            get { return new Target(new CustomMolecule(SmallMoleculeLibraryAttributes)); }
+            get { return new Target(CustomMolecule.FromSmallMoleculeLibraryAttributes(SmallMoleculeLibraryAttributes)); }
         }
 
         protected internal override LibraryKeyProto ToLibraryKeyProto()
@@ -335,7 +335,7 @@ namespace pwiz.Skyline.Model.Lib
                 KeyType = LibraryKeyProto.Types.KeyType.SmallMolecule,
                 Adduct = Adduct.AdductFormula ?? string.Empty,
                 MoleculeName = SmallMoleculeLibraryAttributes.MoleculeName ?? string.Empty,
-                ChemicalFormula = SmallMoleculeLibraryAttributes.ChemicalFormula ?? string.Empty,
+                ChemicalFormula = SmallMoleculeLibraryAttributes.ChemicalFormulaOrMassesString ?? string.Empty,
                 InChiKey = SmallMoleculeLibraryAttributes.InChiKey ?? string.Empty,
                 OtherKeys = SmallMoleculeLibraryAttributes.OtherKeys ?? string.Empty
             };
@@ -377,13 +377,13 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             if (null == smallMoleculeLibraryAttributes.MoleculeName ||
-                null == smallMoleculeLibraryAttributes.ChemicalFormula ||
+                null == smallMoleculeLibraryAttributes.ChemicalFormulaOrMassesString ||
                 null == smallMoleculeLibraryAttributes.InChiKey || 
                 null == smallMoleculeLibraryAttributes.OtherKeys)
             {
                 smallMoleculeLibraryAttributes = SmallMoleculeLibraryAttributes.Create(
                     smallMoleculeLibraryAttributes.MoleculeName ?? string.Empty,
-                    smallMoleculeLibraryAttributes.ChemicalFormula ?? string.Empty,
+                    smallMoleculeLibraryAttributes.ChemicalFormulaOrMassesString ?? string.Empty,
                     smallMoleculeLibraryAttributes.InChiKey ?? string.Empty,
                     smallMoleculeLibraryAttributes.OtherKeys ?? string.Empty);
             }
@@ -393,7 +393,7 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     smallMoleculeLibraryAttributes = valueCache.CacheValue(SmallMoleculeLibraryAttributes.Create(
                         valueCache.CacheValue(smallMoleculeLibraryAttributes.MoleculeName),
-                        valueCache.CacheValue(smallMoleculeLibraryAttributes.ChemicalFormula),
+                        valueCache.CacheValue(smallMoleculeLibraryAttributes.ChemicalFormulaOrMassesString),
                         valueCache.CacheValue(smallMoleculeLibraryAttributes.InChiKey),
                         valueCache.CacheValue(smallMoleculeLibraryAttributes.OtherKeys)
                     ));

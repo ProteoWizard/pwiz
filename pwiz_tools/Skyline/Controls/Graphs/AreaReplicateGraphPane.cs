@@ -163,7 +163,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             if (selectedTreeNode == null || document.FindNode(selectedTreeNode.Path) == null)
             {
-                Title.Text = Resources.AreaReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_peak_area_graph;
+                Title.Text = Helpers.PeptideToMoleculeTextMapper.Translate(Resources.AreaReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_peak_area_graph, document.DocumentType);
                 EmptyGraph(document);
                 return;
             }
@@ -225,7 +225,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else if (!(selectedTreeNode is TransitionGroupTreeNode || selectedTreeNode is PeptideGroupTreeNode))
             {
-                Title.Text = Resources.AreaReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_peak_area_graph;
+                Title.Text = Helpers.PeptideToMoleculeTextMapper.Translate(Resources.AreaReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_peak_area_graph, document.DocumentType);
                 EmptyGraph(document);
                 CanShowPeakAreaLegend = false;
                 CanShowDotProduct = false;

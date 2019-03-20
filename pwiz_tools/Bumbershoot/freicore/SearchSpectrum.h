@@ -261,15 +261,15 @@ namespace freicore
             mzid.analysisCollection.spectrumIdentification[0]->inputSpectra.push_back(spectraData);
 
             // set source file format (required for a semantically valid mzIdentML file)
-            msdata::ReaderPtr readers(new msdata::FullReaderList);
-            CVID sourceFileFormat = msdata::identifyFileFormat(readers, sourceFilepath);
-            if (sourceFileFormat != CVID_Unknown)
-                spectraData->fileFormat.cvid = sourceFileFormat;
+            msdata::FullReaderList readerList;
+            auto readerPtr = readerList.identifyAsReader(sourceFilepath);
+            if (readerPtr)
+                spectraData->fileFormat.cvid = readerPtr->getCvType();
             else if (outputFormat == IdentDataFile::Format_MzIdentML)
                 throw runtime_error("[SearchSpectraList::write] unable to determine source file format of \"" + sourceFilepath + "\"");
 
             {
-                msdata::MSDataFile msd(sourceFilepath, readers.get());
+                msdata::MSDataFile msd(sourceFilepath, &readerList);
                 spectraData->spectrumIDFormat.cvid = msdata::id::getDefaultNativeIDFormat(msd);
             }
 

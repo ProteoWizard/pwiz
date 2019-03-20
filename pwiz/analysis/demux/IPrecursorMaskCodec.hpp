@@ -21,70 +21,10 @@
 #define _IPRECURSORMASKCODEC_HPP
 
 #include "DemuxTypes.hpp"
-#include <boost/format.hpp>    
+#include "DemuxHelpers.hpp"
 
 namespace pwiz{
 namespace analysis{
-
-    inline double precursor_upper_offset(const msdata::Precursor& p)
-    {
-        auto upperOffsetParam = p.isolationWindow.cvParam(cv::MS_isolation_window_upper_offset);
-        if (upperOffsetParam.value.empty())
-            throw std::runtime_error("precursor_upper_offset() No isolation window upper offset m/z specified");
-        double upperOffset = upperOffsetParam.valueAs<double>();
-        if (upperOffset <= 0.0)
-            throw std::runtime_error("precursor_upper_offset() Positive values expected for isolation window m/z offsets");
-        return upperOffset;
-    }
-
-    inline double precursor_lower_offset(const msdata::Precursor& p)
-    {
-        auto lowerOffsetParam = p.isolationWindow.cvParam(cv::MS_isolation_window_lower_offset);
-        if (lowerOffsetParam.value.empty())
-            throw std::runtime_error("precursor_lower_offset() No isolation window lower offset m/z specified");
-        double lowerOffset = lowerOffsetParam.valueAs<double>();
-        if (lowerOffset <= 0.0)
-            throw std::runtime_error("precursor_lower_offset() Positive values expected for isolation window m/z offsets");
-        return lowerOffset;
-    }
-
-    inline double precursor_target(const msdata::Precursor& p)
-    {
-        auto targetParam = p.isolationWindow.cvParam(cv::MS_isolation_window_target_m_z);
-        if (targetParam.value.empty())
-            throw std::runtime_error("precursor_target() No isolation window target m/z specified");
-        return targetParam.valueAs<double>();
-    }
-
-    inline double precursor_mz_low(const msdata::Precursor& p)
-    {
-        return precursor_target(p) - precursor_lower_offset(p);
-    }
-
-    inline double precursor_mz_high(const msdata::Precursor& p)
-    {
-        return precursor_target(p) + precursor_upper_offset(p);
-    }
-
-    inline double precursor_iso_center(const msdata::Precursor& p)
-    {
-        double target = precursor_target(p);
-        double mzLow = target - precursor_lower_offset(p);
-        double mzHigh = target + precursor_upper_offset(p);
-        return (mzLow + mzHigh) / 2.0;
-    }
-
-    inline double precursor_iso_width(const msdata::Precursor& p)
-    {
-        return precursor_lower_offset(p) + precursor_upper_offset(p);
-    }
-
-    inline std::string prec_to_string(const msdata::Precursor& p)
-    {
-        return str(boost::format("%.2f") % precursor_iso_center(p));
-    }
-
-    inline bool stringToFloatCompare(std::string i, std::string j){ return stof(i) < stof(j); }
 
     // TODO Rework the MZHash system to be strongly typed. Implicit conversion of uint to float and vice-versa is possible.
     typedef uint64_t MZHash;
@@ -241,16 +181,8 @@ namespace analysis{
         /// Returns the number of windows required to demultiplex
         virtual size_t GetDemuxBlockSize() const = 0;
 
-        /// Returns a descriptor of the processing done by this PrecursorMaskCodec.
-        /// WARNING: It is important that this gives a string containing "Demultiplexing" in order for SpectrumWorkerThreads.cpp to handle demultiplexing properly.
-        /// @return The processing method performed by this PrecursorMaskCodec
-        virtual msdata::ProcessingMethod GetProcessingMethod() const = 0;
-
         virtual ~IPrecursorMaskCodec() {}
     };
-
-    
-
 } // namespace analysis
 } // namespace pwiz
 

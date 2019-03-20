@@ -693,30 +693,44 @@ namespace SkylineTester
         public void AddLines(string[] lines)
         {
             IgnorePaint++;
-            foreach (var line in lines)
+            var matchIndices = new int[lines.Length];
+            for (var i = 0; i < lines.Length; i++)
             {
-                ColorMatch match = null;
-                foreach (var colorMatch in _colorMatchList)
+                matchIndices[i] = -1;
+                for (var j = 0; j < _colorMatchList.Count; j++)
                 {
-                    if (line.StartsWith(colorMatch.LineStart))
+                    var colorMatch = _colorMatchList[j];
+                    if (lines[i].StartsWith(colorMatch.LineStart))
                     {
-                        match = colorMatch;
+                        matchIndices[i] = j;
                         break;
                     }
                 }
-
-                var addLine = line + Environment.NewLine;
-                RunUI(() =>
-                {
-                    AppendText(addLine);
-                    if (match != null)
-                    {
-                        Select(Text.Length - addLine.Length, addLine.Length);
-                        SelectionColor = match.LineColor;
-                        Select(Text.Length - 1, 0);
-                    }
-                });
             }
+
+            // Append and change color of all lines in the same RunUI.
+            // Also don't color lines individual lines, instead search for continuous
+            // sequences of lines of the same color
+            RunUI(() =>
+            {
+                for (var i = 0; i < lines.Length; )
+                {
+                    var prev = i;
+                    var addLines = new StringBuilder();
+                    var item = matchIndices[i];
+                    while (i < lines.Length && item == matchIndices[i])
+                        addLines.AppendLine(lines[i++]);
+                    var lineCount = i - prev;
+                    var addLine = addLines.ToString();
+                    AppendText(addLine);
+                    if (item < 0)
+                        continue;
+
+                    Select(Text.Length - addLine.Length + lineCount, addLine.Length);
+                    SelectionColor = _colorMatchList[item].LineColor;
+                    Select(Text.Length - 1, 0);
+                }
+            });
             IgnorePaint--;
         }
 

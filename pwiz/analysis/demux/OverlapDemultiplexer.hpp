@@ -22,6 +22,7 @@
 
 #include "IDemultiplexer.hpp"
 #include "DemuxHelpers.hpp"
+#include "pwiz/utility/chemistry/MZTolerance.hpp"
 
 namespace pwiz {
 namespace analysis {
@@ -35,10 +36,9 @@ namespace analysis {
         struct Params
         {
             Params() :
-            
             massError(10.0, pwiz::chemistry::MZTolerance::PPM),
             applyWeighting(true),
-            variableFill(false)
+            interpolateRetentionTime(true)
             {}
             
             /// Mass error for extracting MS/MS peaks
@@ -48,8 +48,8 @@ namespace analysis {
             /// than the outer ones
             bool applyWeighting;
             
-            /// Set to true if fill times are allowed to vary for each scan window
-            bool variableFill;
+            /// Set to true to interpolate all scans in the demux block to the same retention time
+            bool interpolateRetentionTime;
         };
         /// Constructs an OverlapDemultiplexer with optional user-specified parameters
         /// @param p Options to use in demultiplexing (see Params for available options)
@@ -64,7 +64,7 @@ namespace analysis {
         void BuildDeconvBlock(size_t index,
             const std::vector<size_t>& muxIndices,
             DemuxTypes::MatrixPtr& masks,
-            DemuxTypes::MatrixPtr& signal) override;
+            DemuxTypes::MatrixPtr& signal) const override;
         void GetMatrixBlockIndices(size_t indexToDemux, std::vector<size_t>& muxIndices, double demuxBlockExtra) const override;
         const std::vector<size_t>& SpectrumIndices() const override;
         ///@}
@@ -111,7 +111,7 @@ namespace analysis {
         Params params_;
         
         /// A cache of the indices provided by SpectrumIndices()
-        std::vector<size_t> spectrumIndices_;
+        mutable std::vector<size_t> spectrumIndices_;
     };
 } // namespace analysis
 } // namespace pwiz

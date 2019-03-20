@@ -142,7 +142,9 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public static DiffNodeEnumerator EnumerateDiffNodes(ObjectPair<object> rootPair, Property rootProperty, T obj, Func<DiffNode, bool> nodeSelector = null)
         {
-            var objInfo = new ObjectInfo<object>(null, obj, null, null, rootPair.OldObject, rootPair.NewObject);
+            var objInfo = new ObjectInfo<object>()
+                .ChangeNewObject(obj)
+                .ChangeRootObjectPair(rootPair);
             return new DiffNodeEnumerator(EnumerateDiffNodes(objInfo, rootProperty, true));
         }
 
@@ -304,13 +306,6 @@ namespace pwiz.Skyline.Model.AuditLog
 
         private static bool Matches(Property property, ObjectInfo<object> objectInfo)
         {
-            if (objectInfo.ObjectPair.ReferenceEquals())
-                return true;
-
-            if (ReferenceEquals(objectInfo.OldObject, null) || ReferenceEquals(objectInfo.NewObject, null))
-                return false;
-
-
             var objectPair = objectInfo.ObjectPair;
 
             if (objectPair.ReferenceEquals())

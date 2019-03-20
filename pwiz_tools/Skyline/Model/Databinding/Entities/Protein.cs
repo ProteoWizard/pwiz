@@ -77,6 +77,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return dict;
         }
 
+        public bool IsNonProteomic()
+        {
+            return Peptides.All(p => p.IsSmallMolecule());
+        }
+
         protected override PeptideGroupDocNode CreateEmptyNode()
         {
             return new PeptideGroupDocNode(new PeptideGroup(), null, null, new PeptideDocNode[0]);
@@ -132,6 +137,30 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public string Sequence 
         {
             get { return DocNode.PeptideGroup.Sequence; }
+        }
+
+        [Importable]
+        public bool AutoSelectPeptides
+        {
+            get { return DocNode.AutoManageChildren; }
+            set
+            {
+                if (value == AutoSelectPeptides)
+                {
+                    return;
+                }
+                ChangeDocNode(EditDescription.SetColumn(nameof(AutoSelectPeptides), value), docNode=>
+                {
+                    docNode = (PeptideGroupDocNode) docNode.ChangeAutoManageChildren(value);
+                    if (docNode.AutoManageChildren)
+                    {
+                        var srmSettingsDiff = new SrmSettingsDiff(true, false, false, false, false, false);
+                        docNode = docNode.ChangeSettings(SrmDocument.Settings, srmSettingsDiff);
+                    }
+
+                    return docNode;
+                });
+            }
         }
         [InvariantDisplayName("ProteinNote")]
         [Importable]

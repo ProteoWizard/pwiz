@@ -510,6 +510,9 @@ namespace pwiz.Skyline.Model.DocSettings
             // Change the name, and remove results information which is document specific
             SrmSettings settingsSavable = (SrmSettings) ChangeName(saveName);
             settingsSavable = settingsSavable.ChangePeptideLibraries(lib => lib.ChangeDocumentLibrary(false));
+            var dataSettings = settingsSavable.DataSettings;
+            dataSettings = dataSettings.ChangeListDefs(dataSettings.Lists.Select(list => list.DeleteAllRows()));
+            settingsSavable = settingsSavable.ChangeDataSettings(dataSettings);
             settingsSavable.MeasuredResults = null;
             return settingsSavable;
         }
@@ -2506,7 +2509,9 @@ namespace pwiz.Skyline.Model.DocSettings
                                  // if a library is in use.
                                  (newLib.HasLibraries && DiffTransitions) ||
                                  // If using MS1 isotopes, an enrichment change can change transition masses
-                                 (newTran.FullScan.PrecursorIsotopes != FullScanPrecursorIsotopes.None && enrichmentsChanged)
+                                 (newTran.FullScan.PrecursorIsotopes != FullScanPrecursorIsotopes.None && enrichmentsChanged) ||
+                                  !Equals(newTran.FullScan.PrecursorRes, oldTran.FullScan.PrecursorRes) ||
+                                  !Equals(newTran.FullScan.PrecursorResMz, oldTran.FullScan.PrecursorResMz)
                                  ;
 
             // If the results changed, then update the results information which has changed

@@ -51,7 +51,9 @@ namespace pwiz.Skyline.Model.Databinding.RowActions
             {
                 yield return Peptides;
                 yield return Precursors;
-                yield return Transitions;
+                // Don't include "Remove Transitions" since removing a single transition's peak from a single replicate
+                // invalidates comparing total areas between replicates.
+                // yield return Transitions;
             }
         }
 
@@ -102,7 +104,7 @@ namespace pwiz.Skyline.Model.Databinding.RowActions
                         });
                         return resultDocument;
                     },
-                    docPair => AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
+                    docPair => AuditLogEntry.CreateSingleMessageEntry(
                         new MessageInfo(MessageType.removed_peaks, selectedPeaks.Length, lookup.Length)));
             }
         }

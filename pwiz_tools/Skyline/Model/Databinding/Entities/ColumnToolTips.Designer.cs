@@ -182,6 +182,33 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to If true, then Skyline will automatically add or remove peptides based on the Peptide Settings Filter..
+        /// </summary>
+        public static string AutoSelectPeptides {
+            get {
+                return ResourceManager.GetString("AutoSelectPeptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If true, then Skyline will automatically add or remove precursors based on the Transition Settings Filter, spectral library, etc..
+        /// </summary>
+        public static string AutoSelectPrecursors {
+            get {
+                return ResourceManager.GetString("AutoSelectPrecursors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If true, then Skyline will automatically add or remove transitions from the precursor depending on the Transition Settings Filter, spectral library, etc..
+        /// </summary>
+        public static string AutoSelectTransitions {
+            get {
+                return ResourceManager.GetString("AutoSelectTransitions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Average Mass Error PPM.
         /// </summary>
         public static string AverageMassErrorPPM {
@@ -590,15 +617,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string DetectionZScore {
             get {
                 return ResourceManager.GetString("DetectionZScore", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Document format version at the time the change was made.
-        /// </summary>
-        public static string DocumentFormat {
-            get {
-                return ResourceManager.GetString("DocumentFormat", resourceCulture);
             }
         }
         
@@ -1645,7 +1663,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A general name that may be assigned to a small molecule in its neutral, unlabeled form..
+        ///   Looks up a localized string similar to A general name that may be assigned to a molecule in its neutral, unlabeled form..
         /// </summary>
         public static string MoleculeName {
             get {
@@ -2884,6 +2902,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Time at which this change was made, expressed in your current local time zone.
+        /// </summary>
+        public static string Time {
+            get {
+                return ResourceManager.GetString("Time", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The retention times of the chromatogram..
         /// </summary>
         public static string Times {
@@ -2893,7 +2920,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Time at which this change was made.
+        ///   Looks up a localized string similar to Time at which this change was made, expressed as the local time of change and offset to UTC time.
         /// </summary>
         public static string TimeStamp {
             get {
@@ -3150,6 +3177,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string UserSetTotal {
             get {
                 return ResourceManager.GetString("UserSetTotal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time at which this change was made, expressed in universal time (GMT).
+        /// </summary>
+        public static string UTCTime {
+            get {
+                return ResourceManager.GetString("UTCTime", resourceCulture);
             }
         }
         

@@ -30,22 +30,39 @@ namespace pwiz.Skyline.Controls.Startup
         public string Description { get { return labelDescription.Text; } set { labelDescription.Text = value; } }
         public Image Icon { get { return iconPictureBox.Image; } set { iconPictureBox.Image = value; } }
         public Action EventAction { get; set; }
-        
+        public bool IsProteomicOnly { get; set; } // If true, don't show in small molecule mode
+
         public ActionBoxControl()
         {
             InitializeComponent();
         }
 
+        private void labelCaption_MouseEnter(object sender, EventArgs e)
+        {
+            ControlMouseEnter(sender, e);
+            if (!string.IsNullOrEmpty(Description))
+            {
+                iconPictureBox.Visible = false;
+                labelDescription.Visible = true;
+            }
+        }
+
+        private void labelCaption_MouseLeave(object sender, EventArgs e)
+        {
+            OnMouseLeave(e);
+            if (!string.IsNullOrEmpty(Description))
+            {
+                iconPictureBox.Visible = true;
+                labelDescription.Visible = false;
+            }
+        }
 
         private void ControlMouseEnter(object sender, EventArgs e)
         {
             Cursor = Cursors.Hand;
             if (!string.IsNullOrEmpty(Description))
-            {
+            {               
                 BackColor = LIGHT_HOVER_COLOR;
-                iconPictureBox.Visible = false;
-                labelDescription.Visible = true;
-                labelDescription.BackColor = BackColor;
             }
         }
 
@@ -54,8 +71,6 @@ namespace pwiz.Skyline.Controls.Startup
             if (!string.IsNullOrEmpty(Description))
             {
                 BackColor = Color.Transparent;
-                iconPictureBox.Visible = true;
-                labelDescription.Visible = false;
             }
         }
 

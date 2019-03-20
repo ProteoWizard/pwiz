@@ -22,6 +22,7 @@
 
 #include <vector>
 #include "pwiz/data/msdata/MSData.hpp"
+#include "pwiz/utility/chemistry/MZTolerance.hpp"
 #include <boost/smart_ptr/shared_array.hpp>
 #include "DemuxSolver.hpp"
 #include "DemuxHelpers.hpp"

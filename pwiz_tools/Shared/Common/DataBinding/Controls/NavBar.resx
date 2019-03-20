@@ -137,10 +137,10 @@
     <value>Magenta</value>
   </data>
   <data name="navBarButtonViews.Size" type="System.Drawing.Size, System.Drawing">
-    <value>50, 22</value>
+    <value>60, 22</value>
   </data>
   <data name="navBarButtonViews.Text" xml:space="preserve">
-    <value>Views</value>
+    <value>Reports</value>
   </data>
   <data name="bindingNavigatorMoveFirstItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>

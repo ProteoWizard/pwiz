@@ -137,6 +137,11 @@ namespace pwiz.Skyline.Model
         SrmDocument DocumentUI { get; }
 
         /// <summary>
+        /// Get the current UI mode (proteomics vs molecules vs mixed).
+        /// </summary>
+        SrmDocument.DOCUMENT_TYPE ModeUI { get; }
+
+        /// <summary>
         /// Adds an event handler to the container's document UI changed event. The
         /// event handler must be thread safe, as it may be called on any thread.
         /// </summary>
@@ -272,7 +277,7 @@ namespace pwiz.Skyline.Model
             FormatVersion = FORMAT_VERSION;
             Settings = settings;
             AuditLog = new AuditLogList();
-            SetDocumentType(); // Note proteomic vs small molecule vs mixed (as we're empty, will be set to proteomic)
+            SetDocumentType(); // Note proteomics vs  molecule vs mixed (as we're empty, will be set to none)
         }
 
         private SrmDocument(SrmDocument doc, SrmSettings settings, Action<SrmDocument> changeProps = null)
@@ -315,9 +320,13 @@ namespace pwiz.Skyline.Model
             {
                 DocumentType = DOCUMENT_TYPE.small_molecules;
             }
-            else
+            else if (hasPeptides)
             {
                 DocumentType = DOCUMENT_TYPE.proteomic;
+            }
+            else
+            {
+                DocumentType = DOCUMENT_TYPE.none;
             }
             Settings = UpdateHasHeavyModifications(Settings);
         }
@@ -395,16 +404,23 @@ namespace pwiz.Skyline.Model
         /// Quick access to document type proteomic/small_molecules/mixed, based on the assumption that 
         /// TransitionGroups are purely proteomic or small molecule, but the document is not.
         /// 
-        /// Empty documents report as proteomic.
+        /// Empty documents report as none.
+        ///
+        /// These enum names are used on persisted settings for UI mode, so don't rename them as
+        /// it will confuse existing installations.
         /// 
         /// </summary>
         public enum DOCUMENT_TYPE
         {
-            proteomic, // The default for empty documents
+            proteomic,  
             small_molecules,
-            mixed
+            mixed,
+            none // empty documents return this
         };
         public DOCUMENT_TYPE DocumentType { get; private set; }
+        public bool IsEmptyOrHasPeptides { get { return DocumentType != DOCUMENT_TYPE.small_molecules; } }
+        public bool HasPeptides { get { return DocumentType == DOCUMENT_TYPE.proteomic || DocumentType == DOCUMENT_TYPE.mixed; } }
+        public bool HasSmallMolecules { get { return DocumentType == DOCUMENT_TYPE.small_molecules || DocumentType == DOCUMENT_TYPE.mixed; } }
 
         /// <summary>
         /// Return all <see cref="PeptideGroupDocNode"/>s of any kind
@@ -754,7 +770,11 @@ namespace pwiz.Skyline.Model
             }
 
             // Note document contents type: proteomic, small molecule, or mixed (empty reports as proteomic)
-            docClone.SetDocumentType();
+            if (!DeferSettingsChanges)
+            {
+                docClone.SetDocumentType();
+            }
+            
             // If this document has associated results, update the results
             // for any peptides that have changed.
             if (!Settings.HasResults || DeferSettingsChanges)
@@ -1080,7 +1100,7 @@ namespace pwiz.Skyline.Model
         {
             bool hasHeavyModifications = settings.PeptideSettings.Modifications.GetHeavyModifications()
                 .Any(mods => mods.Modifications.Count > 0);
-            if (!hasHeavyModifications && DocumentType != DOCUMENT_TYPE.proteomic)
+            if (!hasHeavyModifications && HasSmallMolecules)
             {
                 foreach (var molecule in Molecules)
                 {
@@ -2047,21 +2067,25 @@ namespace pwiz.Skyline.Model
             AuditLog = AuditLog ?? new AuditLogList();
         }
 
-        public SrmDocument ReadAuditLog(string documentPath, string expectedHash, Func<SrmDocument, AuditLogEntry> getDefaultEntry)
+        public SrmDocument ReadAuditLog(string documentPath, string expectedSkylineDocumentHash, Func<AuditLogEntry> getDefaultEntry)
         {
             var auditLog = new AuditLogList();
             var auditLogPath = GetAuditLogPath(documentPath);
             if (File.Exists(auditLogPath))
             {
-                auditLog = AuditLogList.ReadFromFile(auditLogPath, out var actualHash);
-                if (expectedHash != actualHash)
+                if (AuditLogList.ReadFromFile(auditLogPath, out var loggedSkylineDocumentHash, out var auditLogList))
                 {
-                    var entry = getDefaultEntry(this) ?? AuditLogEntry.GetUndocumentedChangeEntry(this);
-                    auditLog = new AuditLogList(entry.ChangeParent(auditLog.AuditLogEntries));
+                    auditLog = auditLogList;
+
+                    if (expectedSkylineDocumentHash != loggedSkylineDocumentHash)
+                    {
+                        var entry = getDefaultEntry() ?? AuditLogEntry.CreateUndocumentedChangeEntry();
+                        auditLog = new AuditLogList(entry.ChangeParent(auditLog.AuditLogEntries));
+                    }
                 }
             }
 
-            return ChangeDocumentHash(expectedHash).ChangeAuditLog(auditLog);
+            return ChangeDocumentHash(expectedSkylineDocumentHash).ChangeAuditLog(auditLog);
         }
 
         public void WriteXml(XmlWriter writer)

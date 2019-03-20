@@ -93,7 +93,7 @@
     <software id="MassLynx" version="4.1">
       <cvParam cvRef="MS" accession="MS:1000534" name="MassLynx" value=""/>
     </software>
-    <software id="pwiz_Reader_Waters" version="3.0.18298">
+    <software id="pwiz_Reader_Waters" version="3.0.19037">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -109,7 +109,7 @@
       </processingMethod>
     </dataProcessing>
   </dataProcessingList>
-  <run id="SONAR_Short" defaultInstrumentConfigurationRef="IC" startTimeStamp="2018-05-17T00:00:59Z" defaultSourceFileRef="_FUNC001.DAT">
+  <run id="SONAR_Short" defaultInstrumentConfigurationRef="IC" startTimeStamp="2018-05-17T08:00:59Z" defaultSourceFileRef="_FUNC001.DAT">
     <spectrumList count="600" defaultDataProcessingRef="pwiz_Reader_Waters_conversion">
       <spectrum index="0" id="function=3 process=0 scan=1" defaultArrayLength="22">
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>

@@ -1,4 +1,6 @@
-﻿namespace pwiz.Skyline.SettingsUI
+﻿using pwiz.Skyline.Util;
+
+namespace pwiz.Skyline.SettingsUI
 {
     partial class EditPeakScoringModelDlg
     {

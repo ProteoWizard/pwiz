@@ -337,7 +337,7 @@ static void make1a( state * const pState )
      * anything from happening until we can notify all dependencies that they
      * are needed. This 1 is then accounted for when we enter MAKE1B ourselves,
      * below. Without this if a dependency gets built before we finish
-     * processing all of our other dependencies our build might be triggerred
+     * processing all of our other dependencies our build might be triggered
      * prematurely.
      */
     t->asynccnt = 1;
@@ -1177,8 +1177,6 @@ static CMD * make1cmds( TARGET * t )
             int start = 0;
             int chunk = length;
             int cmd_count = 0;
-            LIST * cmd_targets = L0;
-            LIST * cmd_shell = L0;
             TARGETS * semaphores = NULL;
             TARGETS * targets_iter;
             int unique_targets;
@@ -1192,10 +1190,8 @@ static CMD * make1cmds( TARGET * t )
                 int accept_command = 0;
 
                 /* Build cmd: cmd_new() takes ownership of its lists. */
-                if ( list_empty( cmd_targets ) ) cmd_targets = list_copy( nt );
-                if ( list_empty( cmd_shell ) ) cmd_shell = list_copy( shell );
-                cmd = cmd_new( rule, cmd_targets, list_sublist( ns, start,
-                    chunk ), cmd_shell );
+                cmd = cmd_new( rule, list_copy( nt ), list_sublist( ns, start,
+                    chunk ), list_copy( shell ) );
 
                 cmd_check_result = exec_check( cmd->buf, &cmd->shell,
                     &cmd_error_length, &cmd_error_max_length );
@@ -1256,19 +1252,9 @@ static CMD * make1cmds( TARGET * t )
                     {
                         a0->action->first_cmd = cmd;
                     }
-
-                    /* Mark lists we need recreated for the next command since
-                     * they got consumed by the cmd object.
-                     */
-                    cmd_targets = L0;
-                    cmd_shell = L0;
                 }
                 else
                 {
-                    /* We can reuse targets & shell lists for the next command
-                     * if we do not let them die with this cmd object.
-                     */
-                    cmd_release_targets_and_shell( cmd );
                     cmd_free( cmd );
                 }
 

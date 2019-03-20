@@ -37,7 +37,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI
 {
-    public sealed partial class ExportMethodDlg : FormEx, IMultipleViewProvider
+    public sealed partial class ExportMethodDlg : CreateHandleDebugBase, IMultipleViewProvider
     {
         public static string TRANS_PER_SAMPLE_INJ_TXT { get { return Resources.ExportMethodDlg_TRANS_PER_SAMPLE_INJ_TXT; } }
         public static string CONCUR_TRANS_TXT { get { return Resources.ExportMethodDlg_CONCUR_TRANS_TXT; } }
@@ -156,6 +156,8 @@ namespace pwiz.Skyline.FileUI
 
             DwellTime = Settings.Default.ExportMethodDwellTime;
             RunLength = Settings.Default.ExportMethodRunLength;
+
+            Helpers.PeptideToMoleculeTextMapper.TranslateForm(this, document.DocumentType); // Use terminology like "Molecule List" instead of "Protein" if appropriate to document
 
             // For documents with mixed polarity, offer to emit two different lists or just one polarity
             var isMixedPolarity = document.IsMixedPolarity();

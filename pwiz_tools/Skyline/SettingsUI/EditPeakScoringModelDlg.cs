@@ -28,6 +28,7 @@ using ZedGraph;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
@@ -520,10 +521,17 @@ namespace pwiz.Skyline.SettingsUI
                                                     Resources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_Composite_Score__Normalized_;
             graphPaneQ.Title.Text = hasUnknownScores ?
                                                     Resources.EditPeakScoringModelDlg_UpdateModelGraph_Trained_model_is_not_applicable_to_current_dataset_ :
-                                                    Resources.EditPeakScoringModelDlg_UpdateQValueGraph_Q_values_of_target_peptides;
+                                                    GetModeUIHelper().Translate(Resources.EditPeakScoringModelDlg_UpdateQValueGraph_Q_values_of_target_peptides);
             graphPaneP.Title.Text = hasUnknownScores ?
                                                     Resources.EditPeakScoringModelDlg_UpdateModelGraph_Trained_model_is_not_applicable_to_current_dataset_ :
-                                                    Resources.EditPeakScoringModelDlg_UpdateModelGraph_P_values_of_target_peptides;
+                                                    GetModeUIHelper().Translate(Resources.EditPeakScoringModelDlg_UpdateModelGraph_P_values_of_target_peptides);
+
+            if (GetModeUIHelper().ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules)
+            {
+                decoyCheckBox.Checked = decoyCheckBox.Enabled = false; // No decoys for small molecules
+                secondBestCheckBox.Checked = true; // Must have at least one of these two checked
+                secondBestCheckBox.Enabled = false;
+            }
 
             // Add bar graphs.
             if (decoyCheckBox.Checked)

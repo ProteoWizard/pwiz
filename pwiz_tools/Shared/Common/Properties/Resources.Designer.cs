@@ -19,7 +19,7 @@ namespace pwiz.Common.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -380,7 +380,7 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to There is already a view named &apos;{0}&apos;..
+        ///   Looks up a localized string similar to There is already a report named &apos;{0}&apos;..
         /// </summary>
         internal static string ChooseViewsControl_listView1_AfterLabelEdit_There_is_already_a_view_named___0___ {
             get {
@@ -489,7 +489,7 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Do you want to overwrite the existing view named &apos;{0}&apos;.
+        ///   Looks up a localized string similar to Do you want to overwrite the existing report named &apos;{0}&apos;.
         /// </summary>
         internal static string CustomizeViewForm_ValidateViewName_Do_you_want_to_overwrite_the_existing_view_named___0__ {
             get {
@@ -499,7 +499,7 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to There is already a built in view named &apos;{0}&apos;..
+        ///   Looks up a localized string similar to There is already a built in report named &apos;{0}&apos;..
         /// </summary>
         internal static string CustomizeViewForm_ValidateViewName_There_is_already_a_built_in_view_named___0___ {
             get {
@@ -508,7 +508,7 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to View name cannot be blank..
+        ///   Looks up a localized string similar to Report name cannot be blank..
         /// </summary>
         internal static string CustomizeViewForm_ValidateViewName_View_name_cannot_be_blank_ {
             get {
@@ -757,7 +757,7 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Are you sure you want to delete the view &apos;{0}&apos;?.
+        ///   Looks up a localized string similar to Are you sure you want to delete the report &apos;{0}&apos;?.
         /// </summary>
         internal static string ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_the_view___0___ {
             get {
@@ -766,7 +766,7 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Are you sure you want to delete these {0} views?.
+        ///   Looks up a localized string similar to Are you sure you want to delete these {0} reports?.
         /// </summary>
         internal static string ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_these__0__views_ {
             get {
@@ -833,7 +833,7 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Customize View....
+        ///   Looks up a localized string similar to Customize Report....
         /// </summary>
         internal static string NavBar_NavBarButtonViewsOnDropDownOpening_Customize_View {
             get {
@@ -842,7 +842,7 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Edit View....
+        ///   Looks up a localized string similar to Edit Report....
         /// </summary>
         internal static string NavBar_NavBarButtonViewsOnDropDownOpening_Edit_View___ {
             get {
@@ -851,7 +851,7 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Manage Views....
+        ///   Looks up a localized string similar to Manage Reports....
         /// </summary>
         internal static string NavBar_NavBarButtonViewsOnDropDownOpening_Manage_Views___ {
             get {
@@ -1257,7 +1257,7 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to There is already a view named &apos;{0}&apos;..
+        ///   Looks up a localized string similar to There is already a report named &apos;{0}&apos;..
         /// </summary>
         internal static string ViewEditor_ValidateViewName_There_is_already_a_view_named___0___ {
             get {
@@ -1266,7 +1266,7 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Built In Views.
+        ///   Looks up a localized string similar to Built In Reports.
         /// </summary>
         internal static string ViewGroup_BUILT_IN_Built_In_Views {
             get {

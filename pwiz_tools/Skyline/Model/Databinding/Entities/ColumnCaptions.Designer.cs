@@ -178,6 +178,33 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Auto Select Peptides.
+        /// </summary>
+        public static string AutoSelectPeptides {
+            get {
+                return ResourceManager.GetString("AutoSelectPeptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Auto Select Precursors.
+        /// </summary>
+        public static string AutoSelectPrecursors {
+            get {
+                return ResourceManager.GetString("AutoSelectPrecursors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Auto Select Transitions.
+        /// </summary>
+        public static string AutoSelectTransitions {
+            get {
+                return ResourceManager.GetString("AutoSelectTransitions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Average Mass Error PPM.
         /// </summary>
         public static string AverageMassErrorPPM {
@@ -570,15 +597,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string DetectionZScore {
             get {
                 return ResourceManager.GetString("DetectionZScore", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Document Format Version.
-        /// </summary>
-        public static string DocumentFormat {
-            get {
-                return ResourceManager.GetString("DocumentFormat", resourceCulture);
             }
         }
         
@@ -2788,6 +2806,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Time.
+        /// </summary>
+        public static string Time {
+            get {
+                return ResourceManager.GetString("Time", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Times.
         /// </summary>
         public static string Times {
@@ -3045,6 +3072,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string UserSetTotal {
             get {
                 return ResourceManager.GetString("UserSetTotal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to UTC Time.
+        /// </summary>
+        public static string UTCTime {
+            get {
+                return ResourceManager.GetString("UTCTime", resourceCulture);
             }
         }
         

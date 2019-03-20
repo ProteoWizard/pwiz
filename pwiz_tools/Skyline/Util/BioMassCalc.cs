@@ -242,6 +242,7 @@ namespace pwiz.Skyline.Util
         public const string T = "T";    // Tritium - IUPAC standard
         public const string C = "C";    // Carbon
         public const string C13 = "C'"; // Carbon13
+        public const string C14 = "C\""; // Carbon14 (radioisotope, trace natural abundance)
         public const string N = "N";    // Nitrogen
         public const string N15 = "N'"; // Nitrogen15
         public const string O = "O";    // Oxygen
@@ -284,7 +285,7 @@ namespace pwiz.Skyline.Util
 // ReSharper restore InconsistentNaming
 
         /// <summary>
-        /// A dictionary mapping heavy isotope symbols to their correspoding
+        /// A dictionary mapping heavy isotope symbols to their corresponding
         /// indices within the mass distributions of <see cref="IsotopeAbundances.Default"/>,
         /// and default atom percent enrichment for <see cref="IsotopeEnrichmentItem"/>.
         /// This dictionary contains entries for Skyline-style isotope symbols (e.g. H' for Deuterium)
@@ -295,6 +296,7 @@ namespace pwiz.Skyline.Util
                 {
                     { H2, new KeyValuePair<double, double>(2.014101779, 0.98) },
                     { C13, new KeyValuePair<double, double>(13.0033548378, 0.995) },
+                    { C14, new KeyValuePair<double, double>(14.003241988, 0.99) }, // N.B. No idea if 0.99 is a realistic value
                     { N15, new KeyValuePair<double, double>(15.0001088984, 0.995) },
                     { O17, new KeyValuePair<double, double>(16.9991315, 0.99) },
                     { O18, new KeyValuePair<double, double>(17.9991604, 0.99) },
@@ -429,6 +431,7 @@ namespace pwiz.Skyline.Util
             AddMass(N15, 15.0001088984); //NIST, Unimod=15.00010897
             AddMass(C, 12.01085); //MacCoss average
             AddMass(C13, 13.0033548378); //NIST, Unimod=13.00335483
+            AddMass(C14, 14.003241988); //NIST
             AddMass(S, 32.065); //Unimod
             AddMass(P, 30.973761); //Unimod
             AddMass(P32, 31.973907274); // Wikipedia and http://periodictable.com/Isotopes/015.32/index3.p.full.html using Wolfram
