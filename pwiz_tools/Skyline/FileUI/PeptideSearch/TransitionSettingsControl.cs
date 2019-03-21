@@ -183,7 +183,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             string message;
             if (proteomic)
             {
-                message = "{0} must contain a comma separated list of integers describing charge states between {1} and {2}.";
+                message = Resources.TransitionSettingsControl_ValidateAdductListTextBox__0__must_contain_a_comma_separated_list_of_integers_describing_charge_states_between__1__and__2__;
             }
             else
             {
