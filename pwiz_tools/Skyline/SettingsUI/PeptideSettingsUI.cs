@@ -487,9 +487,9 @@ namespace pwiz.Skyline.SettingsUI
                     PeptideModifications.MIN_MAX_NEUTRAL_LOSSES, PeptideModifications.MAX_MAX_NEUTRAL_LOSSES, out maxNeutralLosses))
                 return null;
 
-            var standardTypes = labelStandardType.Visible
-               ? _driverLabelType.InternalStandardTypes
-               : _driverSmallMolInternalStandardTypes.InternalStandardTypes;
+            var standardTypes = SmallMoleculeLabelsTabEnabled
+                ? _driverSmallMolInternalStandardTypes.InternalStandardTypes
+                : _driverLabelType.InternalStandardTypes;
             PeptideModifications modifications = new PeptideModifications(
                 _driverStaticMod.Chosen, maxVariableMods, maxNeutralLosses,
                 _driverLabelType.GetHeavyModifications(), standardTypes);
