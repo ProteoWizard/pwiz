@@ -614,18 +614,8 @@ namespace pwiz.Skyline.Model.Results
             return chromInfo;
         }
 
-        /// <summary>
-        /// Because creating a copy shows up in a profiler, and this is currently only used
-        /// during calculation of this object, a copy flag was added to allow modified
-        /// immutability with direct setting allowed during extended creation time.
-        /// </summary>
-        public TransitionChromInfo ChangeRatios(bool copy, IList<float?> prop)
+        public TransitionChromInfo ChangeRatios(IList<float?> prop)
         {
-            if (!copy)
-            {
-                Ratios = prop;
-                return this;
-            }
             return ChangeProp(ImClone(this), im => im.Ratios = prop);
         }
 

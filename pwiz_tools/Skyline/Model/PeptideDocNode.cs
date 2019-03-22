@@ -1465,7 +1465,7 @@ namespace pwiz.Skyline.Model
                         // first as a shortcut
                         var infoNew = info;
                         if (!ReferenceEquals(ratios, info.Ratios) && !ArrayUtil.EqualsDeep(ratios, info.Ratios))
-                            infoNew = infoNew.ChangeRatios(false, ratios);
+                            infoNew = infoNew.ChangeRatios(ratios);
                         if (isMatching && calc.IsSetMatching && !info.IsUserSetMatched)
                             infoNew = infoNew.ChangeUserSet(UserSet.MATCHED);
                         if (!ReferenceEquals(info, infoNew) && listInfoNew == null)
