@@ -195,8 +195,9 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public LogMessage ToMessage(LogLevel logLevel)
         {
-            return new LogMessage(logLevel, Type, string.Empty, false, Names.Select(s => (object) s).ToArray());
+            return new LogMessage(logLevel, Type, false, Names.Select(s => (object) s).ToArray());
         }
+
 
         public MessageType Type { get; private set; }
         public IList<string> Names { get; private set; }
@@ -282,24 +283,22 @@ namespace pwiz.Skyline.Model.AuditLog
             (s,l,c) => ParseEnum(s, c)
         };
 
-        public LogMessage(LogLevel level, MessageInfo info, string reason, bool expanded)
+        public LogMessage(LogLevel level, MessageInfo info, bool expanded)
         {
             Level = level;
             MessageInfo = info;
-            Reason = reason;
             Expanded = expanded;
         }
 
-        public LogMessage(LogLevel level, MessageType type, string reason, bool expanded, params object[] names) :
-            this(level, new MessageInfo(type, names), reason, expanded)
+        public LogMessage(LogLevel level, MessageType type, bool expanded, params object[] names) :
+            this(level, new MessageInfo(type, names), expanded)
         {
         }
 
-        public MessageInfo MessageInfo { get; private set; }
+        public MessageInfo MessageInfo { get; protected set; }
         public IList<string> Names { get { return MessageInfo.Names; } }
         public MessageType Type { get { return MessageInfo.Type; } }
         public LogLevel Level { get; private set; }
-        public string Reason { get; private set; }
         public bool Expanded { get; private set; }
 
         private string _enExpanded;
@@ -309,7 +308,7 @@ namespace pwiz.Skyline.Model.AuditLog
             {
                 return _enExpanded ?? (_enExpanded = ToString(CultureInfo.InvariantCulture));
             }
-            private set { _enExpanded = value; }
+            protected set { _enExpanded = value; }
         }
 
         public LogMessage ResetEnExpanded()
@@ -341,11 +340,6 @@ namespace pwiz.Skyline.Model.AuditLog
             return ChangeProp(ImClone(this), im => im.Level = level);
         }
 
-        public LogMessage ChangeReason(string reason)
-        {
-            return ChangeProp(ImClone(this), im => im.Reason = reason);
-        }
-
         public static string Quote(string s)
         {
             if (s == null)
@@ -355,9 +349,9 @@ namespace pwiz.Skyline.Model.AuditLog
             return q + s + q;
         }
 
-        public byte[] GetBytesForHash(Encoding encoding, CultureInfo ci)
+        public virtual byte[] GetBytesForHash(Encoding encoding, CultureInfo ci)
         {
-            return encoding.GetBytes(EnExpanded + (Reason ?? string.Empty));
+            return encoding.GetBytes(EnExpanded);
         }
 
         public string ToString(CultureInfo cultureInfo)
@@ -526,7 +520,7 @@ namespace pwiz.Skyline.Model.AuditLog
         protected bool Equals(LogMessage other)
         {
             return Equals(MessageInfo, other.MessageInfo) && Level == other.Level &&
-                   string.Equals(Reason, other.Reason) && Expanded == other.Expanded;
+                   Expanded == other.Expanded;
         }
 
         public override bool Equals(object obj)
@@ -543,14 +537,13 @@ namespace pwiz.Skyline.Model.AuditLog
             {
                 var hashCode = (MessageInfo != null ? MessageInfo.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (int) Level;
-                hashCode = (hashCode * 397) ^ (Reason != null ? Reason.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ Expanded.GetHashCode();
                 return hashCode;
             }
         }
 
         #region Implementation of IXmlSerializable
-        private LogMessage()
+        protected LogMessage()
         {
         }
 
@@ -559,9 +552,8 @@ namespace pwiz.Skyline.Model.AuditLog
             return null;
         }
 
-        private enum EL
+        protected enum EL
         {
-            reason,
             en_expanded
         }
 
@@ -570,24 +562,114 @@ namespace pwiz.Skyline.Model.AuditLog
             return reader.Deserialize(new LogMessage());
         }
 
-        public void WriteXml(XmlWriter writer)
+        public virtual void WriteXml(XmlWriter writer)
         {
             MessageInfo.WriteXml(writer);
-
-            if(!string.IsNullOrEmpty(Reason))
-                writer.WriteElementString(EL.reason, Reason);
 
             // Write text, even if it does not contain expansion tokens
             writer.WriteElementString(EL.en_expanded, EnExpanded);
         }
 
-        public void ReadXml(XmlReader reader)
+        public virtual void ReadXml(XmlReader reader)
         {
             reader.ReadStartElement();
 
             MessageInfo = MessageInfo.ReadXml(reader);
 
-            Reason = reader.IsStartElement(EL.reason)
+            EnExpanded = reader.IsStartElement(EL.en_expanded)
+                ? reader.ReadElementString()
+                : null;
+
+            reader.ReadEndElement();
+        }
+        #endregion
+    }
+
+    public class DetailLogMessage : LogMessage
+    {
+        public static DetailLogMessage FromLogMessage(LogMessage logMessage)
+        {
+            return new DetailLogMessage(logMessage.Level, logMessage.MessageInfo, string.Empty, logMessage.Expanded);
+        }
+
+        public DetailLogMessage(LogLevel level, MessageInfo info, string reason, bool expanded) : base(level, info, expanded)
+        {
+            Reason = reason;
+        }
+
+        public DetailLogMessage(LogLevel level, MessageType type, string reason, bool expanded, params object[] names) : base(level, type, expanded, names)
+        {
+            Reason = reason;
+        }
+
+        public string Reason { get; private set; }
+
+        public DetailLogMessage ChangeReason(string reason)
+        {
+            return ChangeProp(ImClone(this), im => im.Reason = reason);
+        }
+
+        public override byte[] GetBytesForHash(Encoding encoding, CultureInfo ci)
+        {
+            return base.GetBytesForHash(encoding, ci).Concat(encoding.GetBytes(Reason)).ToArray();
+        }
+
+        protected bool Equals(DetailLogMessage other)
+        {
+            return base.Equals(other) && Reason == other.Reason;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((DetailLogMessage)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (base.GetHashCode() * 397) ^ (Reason != null ? Reason.GetHashCode() : 0);
+            }
+        }
+
+        #region Implementation of IXmlSerializable
+
+        private enum EL2
+        {
+            reason
+        }
+
+        private DetailLogMessage()
+        {
+
+        }
+
+        public new static DetailLogMessage Deserialize(XmlReader reader)
+        {
+            return reader.Deserialize(new DetailLogMessage());
+        }
+
+        public override void WriteXml(XmlWriter writer)
+        {
+            MessageInfo.WriteXml(writer);
+
+            if (!string.IsNullOrEmpty(Reason))
+                writer.WriteElementString(EL2.reason, Reason);
+
+            // Write text, even if it does not contain expansion tokens
+            writer.WriteElementString(EL.en_expanded, EnExpanded);
+        }
+
+        public override void ReadXml(XmlReader reader)
+        {
+            reader.ReadStartElement();
+
+            MessageInfo = MessageInfo.ReadXml(reader);
+
+            Reason = reader.IsStartElement(EL2.reason)
                 ? reader.ReadElementString()
                 : string.Empty;
 
