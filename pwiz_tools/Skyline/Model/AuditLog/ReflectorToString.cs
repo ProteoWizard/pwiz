@@ -150,7 +150,9 @@ namespace pwiz.Skyline.Model.AuditLog
             var result = @"{0}";
             string format;
 
-            if (!property.IgnoreName && auditLogObj.IsName)
+            // If the parent has ignore name set to true but it's a list, we still want to show
+            // the name for the elements
+            if ((!property.IgnoreName || parentNode is CollectionPropertyDiffNode)  && auditLogObj.IsName)
             {
                 var name = LogMessage.Quote(auditLogObj.AuditLogText);
                 var indent = state.FormatWhitespace && (node.Property.IgnoreName || parentNode is CollectionPropertyDiffNode);
