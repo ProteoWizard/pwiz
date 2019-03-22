@@ -618,7 +618,7 @@ namespace pwiz.Skyline.EditUI
 
             public override MessageInfo MessageInfo
             {
-                get { return new MessageInfo(_excludedCount == 1 ? MessageType.excluded_peptide : MessageType.excluded_peptides, _excludedCount); }
+                get { return new MessageInfo(_excludedCount == 1 ? MessageType.excluded_peptide : MessageType.excluded_peptides, SrmDocument.DOCUMENT_TYPE.proteomic, _excludedCount); }
             }
 
             public UniquePeptideSettings(UniquePeptidesDlg dlg)
