@@ -49,11 +49,11 @@ namespace pwiz.Skyline.Alerts
 
         public class EmptyProteinsSettings : AuditLogOperationSettings<EmptyProteinsSettings>
         {
-            public EmptyProteinsSettings(bool keepEmptyProteins, int emptyProteins, EmptyProteinsDlg dlg)
+            public EmptyProteinsSettings(bool keepEmptyProteins, int emptyProteins, SrmDocument.DOCUMENT_TYPE docType)
             {
                 KeepEmptyProteins = keepEmptyProteins;
                 EmptyProteins = emptyProteins;
-                DocType = dlg.GetModeUIHelper().ModeUI;
+                DocType = docType;
             }
 
             public override MessageInfo MessageInfo
@@ -101,7 +101,7 @@ namespace pwiz.Skyline.Alerts
 
         public EmptyProteinsSettings FormSettings
         {
-            get { return new EmptyProteinsSettings(IsKeepEmptyProteins, EmptyProteins, this); }
+            get { return new EmptyProteinsSettings(IsKeepEmptyProteins, EmptyProteins, GetModeUIHelper().ModeUI); }
         }
     }
 }

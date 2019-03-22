@@ -1493,12 +1493,12 @@ namespace pwiz.Skyline
             }, docPair =>
             {
                 var allInfo = new List<MessageInfo>();
-                AddMessageInfo(allInfo, MessageType.removed_unrecognized_peptide, docPair.NewDoc.DocumentType, peakBoundaryImporter.UnrecognizedPeptides);
-                AddMessageInfo(allInfo, MessageType.removed_unrecognized_file, docPair.NewDoc.DocumentType,
+                AddMessageInfo(allInfo, MessageType.removed_unrecognized_peptide, docPair.OldDocumentType, peakBoundaryImporter.UnrecognizedPeptides);
+                AddMessageInfo(allInfo, MessageType.removed_unrecognized_file, docPair.OldDocumentType,
                     peakBoundaryImporter.UnrecognizedFiles.Select(AuditLogPath.Create));
-                AddMessageInfo(allInfo, MessageType.removed_unrecognized_charge_state, docPair.NewDoc.DocumentType, peakBoundaryImporter.UnrecognizedChargeStates);
+                AddMessageInfo(allInfo, MessageType.removed_unrecognized_charge_state, docPair.OldDocumentType, peakBoundaryImporter.UnrecognizedChargeStates);
 
-                return AuditLogEntry.CreateSimpleEntry(MessageType.imported_peak_boundaries, docPair.NewDoc.DocumentType,
+                return AuditLogEntry.CreateSimpleEntry(MessageType.imported_peak_boundaries, docPair.OldDocumentType,
                         Path.GetFileName(fileName))
                     .AppendAllInfo(allInfo);
             });
@@ -1657,14 +1657,14 @@ namespace pwiz.Skyline
                 string extraInfo = null;
                 if (importInfo.File)
                 {
-                    info = new MessageInfo(MessageType.imported_fasta, docPair.NewDoc.DocumentType, importInfo.Text);
+                    info = new MessageInfo(MessageType.imported_fasta, docPair.NewDocumentType, importInfo.Text);
                 }
                 else
                 {
                     info = new MessageInfo(peptideList
                         ? MessageType.imported_peptide_list
                         : MessageType.imported_fasta_paste, 
-                        docPair.NewDoc.DocumentType);
+                        docPair.NewDocumentType);
                     extraInfo = importInfo.Text;
                 }
 
@@ -1743,7 +1743,7 @@ namespace pwiz.Skyline
             }, docPair => AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(
                 transitionCount == 1
                     ? MessageType.pasted_single_small_molecule_transition
-                    : MessageType.pasted_small_molecule_transition_list, docPair.NewDoc.DocumentType, transitionCount), csvText));
+                    : MessageType.pasted_small_molecule_transition_list, docPair.NewDocumentType, transitionCount), csvText));
 
             if (modifyingDocumentException != null)
             {
@@ -1980,7 +1980,7 @@ namespace pwiz.Skyline
                     extraInfo = inputs.InputText;
                 }
 
-                return AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(msgType, docPair.NewDoc.DocumentType, args), extraInfo).Merge(docPair, entryCreators);
+                return AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(msgType, docPair.NewDocumentType, args), extraInfo).Merge(docPair, entryCreators);
             });
 
             if (selectPath != null)
@@ -2301,12 +2301,12 @@ namespace pwiz.Skyline
             }, docPair =>
             {
                 var entry = AuditLogEntry.CreateCountChangeEntry(MessageType.imported_doc,
-                    MessageType.imported_docs, docPair.NewDoc.DocumentType, filePaths.Select(AuditLogPath.Create), filePaths.Length,
+                    MessageType.imported_docs, docPair.NewDocumentType, filePaths.Select(AuditLogPath.Create), filePaths.Length,
                     MessageArgs.DefaultSingular, null);
 
                 if (filePaths.Length > 1)
                     entry.AppendAllInfo(filePaths.Select(file =>
-                        new MessageInfo(MessageType.imported_doc, docPair.NewDoc.DocumentType, AuditLogPath.Create(file))));
+                        new MessageInfo(MessageType.imported_doc, docPair.NewDocumentType, AuditLogPath.Create(file))));
 
                 return entry.Merge(docPair, entryCreatorList, false);
             });
@@ -3112,7 +3112,7 @@ namespace pwiz.Skyline
                                     .SkylineDataSchema_VerifyDocumentCurrent_The_document_was_modified_in_the_middle_of_the_operation_);
                             }
                             return newDocument;
-                        }, docPair => AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(MessageType.imported_annotations, docPair.NewDoc.DocumentType, filename)));
+                        }, docPair => AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(MessageType.imported_annotations, docPair.NewDocumentType, filename)));
                     }
                 }
             }

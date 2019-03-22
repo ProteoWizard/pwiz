@@ -144,22 +144,22 @@ namespace pwiz.Skyline.FileUI
 
                 if (_removedAllLibraryRuns)
                 {
-                    entry = entry.AppendAllInfo(new[] { new MessageInfo(MessageType.removed_all_libraries, docPair.OldDoc.DocumentType) });
+                    entry = entry.AppendAllInfo(new[] { new MessageInfo(MessageType.removed_all_libraries, docPair.OldDocumentType) });
                 }
                 else
                 {
                     entry = entry.AppendAllInfo(RemovedLibraryRuns.Select(run =>
-                        new MessageInfo(MessageType.removed_library_run, docPair.OldDoc.DocumentType, run)).ToList());
+                        new MessageInfo(MessageType.removed_library_run, docPair.OldDocumentType, run)).ToList());
                 }
 
                 if (_removedAllReplicates)
                 {
-                    entry = entry.AppendAllInfo(new[] { new MessageInfo(MessageType.removed_all_replicates, docPair.OldDoc.DocumentType) });
+                    entry = entry.AppendAllInfo(new[] { new MessageInfo(MessageType.removed_all_replicates, docPair.OldDocumentType) });
                 }
                 else
                 {
                     entry = entry.AppendAllInfo(RemovedReplicates.Select(repl =>
-                        new MessageInfo(MessageType.removed_replicate, docPair.OldDoc.DocumentType, repl)).ToList());
+                        new MessageInfo(MessageType.removed_replicate, docPair.OldDocumentType, repl)).ToList());
                 }
 
                 return entry;

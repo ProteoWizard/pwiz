@@ -965,8 +965,8 @@ namespace pwiz.Skyline.Model.AuditLog
                 documentPair.OldDoc, documentPair.NewDoc, documentPair.OldDoc, documentPair.NewDoc);
 
             var docType = documentPair.NewDoc.DocumentType == SrmDocument.DOCUMENT_TYPE.none
-                ? documentPair.DocumentTypeForAuditLogging
-                : documentPair.NewDoc.DocumentType;
+                ? documentPair.OldDocumentType
+                : documentPair.NewDocumentType;
 
             var diffTree = DiffTree.FromEnumerator(
                 Reflector<Targets>.EnumerateDiffNodes(objInfo, property, docType, false,
@@ -1105,7 +1105,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 return newDoc.ChangeAuditLog(ROOT);
             else if (!oldLogging && newLogging)
             {
-                var startEntry = GetAuditLoggingStartExistingDocEntry(newDoc, docPair.DocumentTypeForAuditLogging);
+                var startEntry = GetAuditLoggingStartExistingDocEntry(newDoc, docPair.OldDocumentType);
                 if (startEntry != null && entry != null)
                     startEntry = startEntry.ChangeParent(entry);
                 entry = startEntry ?? entry;
@@ -1136,8 +1136,8 @@ namespace pwiz.Skyline.Model.AuditLog
             var objInfo = new ObjectInfo<object>(documentPair.OldDoc.Settings, documentPair.NewDoc.Settings,
                 documentPair.OldDoc, documentPair.NewDoc, documentPair.OldDoc, documentPair.NewDoc);
 
-            var tree = DiffTree.FromEnumerator(Reflector<SrmSettings>.EnumerateDiffNodes(objInfo, property, documentPair.DocumentTypeForAuditLogging, false));
-            return tree.Root != null ? CreateSettingsChangeEntry(tree, documentPair.DocumentTypeForAuditLogging) : null;
+            var tree = DiffTree.FromEnumerator(Reflector<SrmSettings>.EnumerateDiffNodes(objInfo, property, documentPair.OldDocumentType, false));
+            return tree.Root != null ? CreateSettingsChangeEntry(tree, documentPair.OldDocumentType) : null;
         }
 
         public static PropertyName GetNodeName(SrmDocument doc, DocNode docNode)
@@ -1564,13 +1564,13 @@ namespace pwiz.Skyline.Model.AuditLog
                     .ChangeRootObjectPair(docPair.ToObjectType());
 
             var diffTree =
-                DiffTree.FromEnumerator(Reflector<T>.EnumerateDiffNodes(docPair.ToObjectType(), rootProp, docPair.DocumentTypeForAuditLogging, (T)this), DateTime.UtcNow);
+                DiffTree.FromEnumerator(Reflector<T>.EnumerateDiffNodes(docPair.ToObjectType(), rootProp, docPair.OldDocumentType, (T)this), DateTime.UtcNow);
             if (diffTree.Root == null)
                 return baseEntry;
 
-            var settingsString = Reflector<T>.ToString(objectInfo.RootObjectPair, docPair.DocumentTypeForAuditLogging, diffTree.Root,
+            var settingsString = Reflector<T>.ToString(objectInfo.RootObjectPair, docPair.OldDocumentType, diffTree.Root,
                 ToStringState.DEFAULT.ChangeFormatWhitespace(true));
-            var entry = AuditLogEntry.CreateSettingsChangeEntry(diffTree, docPair.DocumentTypeForAuditLogging, settingsString);
+            var entry = AuditLogEntry.CreateSettingsChangeEntry(diffTree, docPair.OldDocumentType, settingsString);
             return baseEntry.Merge(entry);
         }
     }
