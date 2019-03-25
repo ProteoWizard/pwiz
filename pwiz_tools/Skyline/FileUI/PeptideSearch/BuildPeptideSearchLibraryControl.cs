@@ -66,14 +66,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public class BuildPeptideSearchLibrarySettings : AuditLogOperationSettings<BuildPeptideSearchLibrarySettings>
         {
+            private SrmDocument.DOCUMENT_TYPE _docType;
+
             public static BuildPeptideSearchLibrarySettings DEFAULT = new BuildPeptideSearchLibrarySettings(0.0, new List<string>(), null, false,
-                false, ImportPeptideSearchDlg.Workflow.dda);
+                false, ImportPeptideSearchDlg.Workflow.dda, SrmDocument.DOCUMENT_TYPE.proteomic);
 
             public override MessageInfo MessageInfo
             {
                 get
                 {
-                    return new MessageInfo(MessageType.added_spectral_library,
+                    return new MessageInfo(MessageType.added_spectral_library, _docType,
                         Settings.Default.SpectralLibraryList.First().Name);
                 }
             }
@@ -81,11 +83,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             public BuildPeptideSearchLibrarySettings(BuildPeptideSearchLibraryControl control) : this(control.CutOffScore,
                 control.SearchFilenames, control.IrtStandards, control.IncludeAmbiguousMatches,
-                control.FilterForDocumentPeptides, control.WorkflowType)
+                control.FilterForDocumentPeptides, control.WorkflowType, control.DocumentContainer.Document.DocumentType)
             {
             }
 
-            public BuildPeptideSearchLibrarySettings(double cutoffScore, IList<string> searchFileNames, IrtStandard standard, bool includeAmbiguousMatches, bool filterForDocumentPeptides, ImportPeptideSearchDlg.Workflow workFlow)
+            public BuildPeptideSearchLibrarySettings(double cutoffScore, IList<string> searchFileNames, IrtStandard standard, bool includeAmbiguousMatches, bool filterForDocumentPeptides, ImportPeptideSearchDlg.Workflow workFlow,
+                SrmDocument.DOCUMENT_TYPE docType)
             {
                 CutoffScore = cutoffScore;
                 SearchFileNames = searchFileNames == null
@@ -95,6 +98,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 IncludeAmbiguousMatches = includeAmbiguousMatches;
                 FilterForDocumentPeptides = filterForDocumentPeptides;
                 WorkFlow = workFlow;
+                _docType = SrmDocument.DOCUMENT_TYPE.none;
             }
 
             [Track(ignoreDefaultParent: true)]
