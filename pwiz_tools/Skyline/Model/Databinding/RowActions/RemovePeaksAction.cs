@@ -105,7 +105,7 @@ namespace pwiz.Skyline.Model.Databinding.RowActions
                         return resultDocument;
                     },
                     docPair => AuditLogEntry.CreateSingleMessageEntry(
-                        new MessageInfo(MessageType.removed_peaks, selectedPeaks.Length, lookup.Length)));
+                        new MessageInfo(MessageType.removed_peaks, docPair.NewDocumentType, selectedPeaks.Length, lookup.Length)));
             }
         }
 

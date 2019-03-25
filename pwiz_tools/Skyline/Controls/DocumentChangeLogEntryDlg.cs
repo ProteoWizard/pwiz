@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Util;
 
@@ -18,7 +19,7 @@ namespace pwiz.Skyline.Controls
         {
             Entry = string.IsNullOrEmpty(logMessageTextBox.Text)
                 ? AuditLogEntry.CreateUndocumentedChangeEntry()
-                : AuditLogEntry.CreateSimpleEntry(MessageType.modified_outside_of_skyline, logMessageTextBox.Text);
+                : AuditLogEntry.CreateSimpleEntry(MessageType.modified_outside_of_skyline, SrmDocument.DOCUMENT_TYPE.none, logMessageTextBox.Text);
             DialogResult = DialogResult.OK;
         }
 
