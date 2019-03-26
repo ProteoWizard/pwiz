@@ -253,7 +253,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             set
             {
-                var values = DocNode.ExplicitValues.ChangeCollisionEnergy(value);
+                var values = DocNode.ExplicitValues.ChangeCollisionEnergy(value); // N.B. this changes the explict CE value only for transitions without their own explict CE values
                 ChangeDocNode(EditDescription.SetColumn(@"ExplicitCollisionEnergy", value),
                     docNode=>docNode.ChangeExplicitValues(values));
             }
@@ -269,8 +269,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             set
             {
-                ChangeDocNode(EditDescription.SetColumn(@"ExplicitSLens", value),
-                    docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeSLens(value)));
+                ChangeDocNode(EditDescription.SetColumn(@"ExplicitSLens", value),  // N.B. this changes the explict value only for transitions without their own explict value
+                    docNode =>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeSLens(value)));
             }
         }
 
@@ -284,8 +284,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             set
             {
-                ChangeDocNode(EditDescription.SetColumn(@"ExplicitConeVoltage", value),
-                    docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeConeVoltage(value)));
+                ChangeDocNode(EditDescription.SetColumn(@"ExplicitConeVoltage", value),  // N.B. this changes the explict value only for transitions without their own explict value
+                    docNode =>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeConeVoltage(value)));
             }
         }
 
@@ -299,7 +299,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             set
             {
-                ChangeDocNode(EditDescription.SetColumn(@"ExplicitDeclusteringPotential", value),
+                ChangeDocNode(EditDescription.SetColumn(@"ExplicitDeclusteringPotential", value), // N.B. this changes the explict value only for transitions without their own explict value
                     docNode => docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeDeclusteringPotential(value)));
             }
         }

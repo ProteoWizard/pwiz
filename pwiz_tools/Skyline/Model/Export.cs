@@ -839,6 +839,14 @@ namespace pwiz.Skyline.Model
             get { return ExportInstrumentType.THERMO; }
         }
 
+        protected static double GetSLens(TransitionGroupDocNode nodeTranGroup, TransitionDocNode nodeTran)
+        {
+            return (nodeTran != null
+                     ? nodeTran.GetExplicitSLens(nodeTranGroup) // Get transition-level value if any, fall back to precursor level value
+                     : nodeTranGroup.ExplicitValues.SLens)
+                    ?? DEFAULT_SLENS;
+        }
+
         protected override void WriteTransition(TextWriter writer,
                                                 int fileNumber,
                                                 PeptideGroupDocNode nodePepGroup,
@@ -894,7 +902,7 @@ namespace pwiz.Skyline.Model
 
                 if (UseSlens)
                 {
-                    writer.Write(nodeTranGroup.ExplicitValues.SLens ?? DEFAULT_SLENS);
+                    writer.Write(GetSLens(nodeTranGroup, nodeTran));
                     writer.Write(FieldSeparator);
                 }
 
@@ -1138,7 +1146,7 @@ namespace pwiz.Skyline.Model
             if (UseSlens)
             {
                 writer.Write(FieldSeparator);
-                writer.Write((nodeTranGroup.ExplicitValues.SLens ?? DEFAULT_SLENS).ToString(CultureInfo));
+                writer.Write(GetSLens(nodeTranGroup, nodeTran).ToString(CultureInfo));
             }
             if (WriteFaimsCv)
             {
@@ -3090,7 +3098,7 @@ namespace pwiz.Skyline.Model
             var polarity = (nodeTranGroup.PrecursorCharge > 0) ? @"Positive" : @"Negative";
             if (UseSlens)
             {
-                var slens = (nodeTranGroup.ExplicitValues.SLens ?? DEFAULT_SLENS).ToString(CultureInfo);  
+                var slens = GetSLens(nodeTranGroup, nodeTran).ToString(CultureInfo);  
                 Write(writer, precursorMz, string.Empty, string.Empty, z, polarity, start, end, collisionEnergy, slens, comment);
             }
             else
@@ -3099,6 +3107,7 @@ namespace pwiz.Skyline.Model
             }
         }
     }
+
 
     public class ThermoFusionMassListExporter : ThermoMassListExporter
     {
@@ -3190,7 +3199,7 @@ namespace pwiz.Skyline.Model
             }
             if (UseSlens)
             {
-                var slens = (nodeTranGroup.ExplicitValues.SLens ?? DEFAULT_SLENS).ToString(CultureInfo);
+                var slens = GetSLens(nodeTranGroup, nodeTran).ToString(CultureInfo);
                 writeColumns.Add(slens);
             }
             Write(writer, writeColumns.ToArray());
@@ -3329,7 +3338,7 @@ namespace pwiz.Skyline.Model
             // Waters only excepts integers for CE and CV
             writer.Write((int)Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step)));
             writer.Write(FieldSeparator);
-            writer.Write((int)Math.Round(nodeTranGroup.ExplicitValues.ConeVoltage ?? ConeVoltage));
+            writer.Write((int)Math.Round(nodeTran.GetExplicitConeVoltage(nodeTranGroup) ?? ConeVoltage));
             writer.Write(FieldSeparator);
 
             // Extra information not used by instrument
@@ -3501,7 +3510,7 @@ namespace pwiz.Skyline.Model
                 writer.Write(FieldSeparator);
             }
             // CV
-            writer.Write(nodeTranGroup.ExplicitValues.ConeVoltage ?? ConeVoltage);
+            writer.Write(nodeTran != null ? nodeTran.GetExplicitConeVoltage(nodeTranGroup) ?? ConeVoltage : ConeVoltage);
             writer.Write(FieldSeparator);
             // EDCMass
             var edcMass = ExportEdcMass && transitions.Any()

@@ -50,7 +50,8 @@ namespace pwiz.SkylineTestFunctional
         const double testRT = 234.56;
         const double testRTWindow = 4.56;
 
-        public static readonly ExplicitTransitionGroupValues TESTVALUES = new ExplicitTransitionGroupValues(1.23, 2.34, -.345, eIonMobilityUnits.drift_time_msec, 345.6, 4.56, 5.67, 6.78, 7.89); // Using this helps catch untested functionality as we add members
+
+        public static readonly ExplicitTransitionGroupValues TESTVALUES = ExplicitTransitionGroupValues.Create(2.34, eIonMobilityUnits.drift_time_msec, 345.6, 4.56, ExplicitTransitionValues.Create(1.23, -.345, 5.67, 6.78, 7.89)); // Using this helps catch untested functionality as we add members
 
         protected override void DoTest()
         {
@@ -256,13 +257,13 @@ namespace pwiz.SkylineTestFunctional
             {
                 // Test the "set" part of "Issue 371: Small molecules: need to be able to import and/or set CE, RT and DT for individual precursors and products"
                 editMoleculeDlgA.IonMobility = TESTVALUES.IonMobility.Value;
-                editMoleculeDlgA.IonMobilityHighEnergyOffset = TESTVALUES.IonMobilityHighEnergyOffset.Value;
+                editMoleculeDlgA.IonMobilityHighEnergyOffset = TESTVALUES.ExplicitTransitionValueDefaults.IonMobilityHighEnergyOffset.Value;
                 editMoleculeDlgA.IonMobilityUnits = TESTVALUES.IonMobilityUnits;
                 editMoleculeDlgA.CollisionalCrossSectionSqA = TESTVALUES.CollisionalCrossSectionSqA.Value;
-                editMoleculeDlgA.CollisionEnergy = TESTVALUES.CollisionEnergy.Value;
-                editMoleculeDlgA.SLens = TESTVALUES.SLens.Value;
-                editMoleculeDlgA.ConeVoltage = TESTVALUES.ConeVoltage;
-                editMoleculeDlgA.DeclusteringPotential = TESTVALUES.DeclusteringPotential;
+                editMoleculeDlgA.CollisionEnergy = TESTVALUES.ExplicitTransitionValueDefaults.CollisionEnergy.Value;
+                editMoleculeDlgA.SLens = TESTVALUES.ExplicitTransitionValueDefaults.SLens.Value;
+                editMoleculeDlgA.ConeVoltage = TESTVALUES.ExplicitTransitionValueDefaults.ConeVoltage;
+                editMoleculeDlgA.DeclusteringPotential = TESTVALUES.ExplicitTransitionValueDefaults.DeclusteringPotential;
                 editMoleculeDlgA.CompensationVoltage = TESTVALUES.CompensationVoltage;
             });
             OkDialog(editMoleculeDlgA, editMoleculeDlgA.OkDialog);
@@ -364,9 +365,9 @@ namespace pwiz.SkylineTestFunctional
             double windowDT;
             double driftTimeMax = 1000.0;
             var centerDriftTime = newdoc.Settings.GetIonMobility(
-                                       newdoc.Molecules.First(), newdoc.MoleculeTransitionGroups.First(), null, null, driftTimeMax, out windowDT);
+                                       newdoc.Molecules.First(), newdoc.MoleculeTransitionGroups.First(), newdoc.MoleculeTransitions.First(), null, null, driftTimeMax, out windowDT);
             Assert.AreEqual(TESTVALUES.IonMobility.Value, centerDriftTime.IonMobility.Mobility.Value, .0001);
-            Assert.AreEqual(TESTVALUES.IonMobility.Value + TESTVALUES.IonMobilityHighEnergyOffset.Value, centerDriftTime.GetHighEnergyDriftTimeMsec() ?? 0, .0001);
+            Assert.AreEqual(TESTVALUES.IonMobility.Value + TESTVALUES.ExplicitTransitionValueDefaults.IonMobilityHighEnergyOffset.Value, centerDriftTime.GetHighEnergyDriftTimeMsec() ?? 0, .0001);
             Assert.AreEqual(0, windowDT, .0001);
 
             // Verify that tree selection doesn't change just because we changed an ID object

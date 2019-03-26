@@ -889,6 +889,51 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Collision energy.
+        /// </summary>
+        public static string ExplicitTransitionValues_CollisionEnergy {
+            get {
+                return ResourceManager.GetString("ExplicitTransitionValues_CollisionEnergy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cone voltage.
+        /// </summary>
+        public static string ExplicitTransitionValues_ConeVoltage {
+            get {
+                return ResourceManager.GetString("ExplicitTransitionValues_ConeVoltage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Declustering potential.
+        /// </summary>
+        public static string ExplicitTransitionValues_DeclusteringPotential {
+            get {
+                return ResourceManager.GetString("ExplicitTransitionValues_DeclusteringPotential", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to High energy ion mobility offset.
+        /// </summary>
+        public static string ExplicitTransitionValues_IonMobilityHighEnergyOffset {
+            get {
+                return ResourceManager.GetString("ExplicitTransitionValues_IonMobilityHighEnergyOffset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to S-Lens.
+        /// </summary>
+        public static string ExplicitTransitionValues_SLens {
+            get {
+                return ResourceManager.GetString("ExplicitTransitionValues_SLens", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Filter Peptides.
         /// </summary>
         public static string FilterMatchedPeptidesSettings {

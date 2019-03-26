@@ -574,7 +574,7 @@
     <value>9, 277</value>
   </data>
   <data name="comboBoxIonMobilityUnits.Size" type="System.Drawing.Size, System.Drawing">
-    <value>121, 21</value>
+    <value>150, 21</value>
   </data>
   <data name="comboBoxIonMobilityUnits.TabIndex" type="System.Int32, mscorlib">
     <value>21</value>

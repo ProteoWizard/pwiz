@@ -781,7 +781,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colDP.Index].Value = explicitDP);
                 WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
                                         SkylineWindow.Document.MoleculeTransitionGroups.First()
-                                            .ExplicitValues.DeclusteringPotential.Equals(explicitDP)));
+                                            .ExplicitValues.ExplicitTransitionValueDefaults.DeclusteringPotential.Equals(explicitDP)));
                 RunUI(() => documentGrid.Close());
                 outTransitionsFinalWithOptLib2 = outTransitionsFinalWithOptLib2.Replace(".csv", "_explicit.csv");
                 expectedTransitionsFinalWithOptLib2 = expectedTransitionsFinalWithOptLib2.Replace(".csv", "_explicit.csv");

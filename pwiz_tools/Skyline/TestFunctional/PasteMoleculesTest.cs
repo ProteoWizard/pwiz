@@ -288,16 +288,16 @@ namespace pwiz.SkylineTestFunctional
                 var transitionGroup = testTransitionGroups[0];
                 var precursor = docTest.Molecules.First();
                 var product = transitionGroup.Transitions.First();
-                Assert.AreEqual(precursorCE, transitionGroup.ExplicitValues.CollisionEnergy);
+                Assert.AreEqual(precursorCE, transitionGroup.ExplicitValues.ExplicitTransitionValueDefaults.CollisionEnergy);
                 Assert.AreEqual(expectedIM, transitionGroup.ExplicitValues.IonMobility);
                 Assert.AreEqual(expectedTypeIM, transitionGroup.ExplicitValues.IonMobilityUnits);
                 Assert.AreEqual(precursorCCS, transitionGroup.ExplicitValues.CollisionalCrossSectionSqA);
-                Assert.AreEqual(slens, transitionGroup.ExplicitValues.SLens);
-                Assert.AreEqual(coneVoltage, transitionGroup.ExplicitValues.ConeVoltage);
+                Assert.AreEqual(slens, product.GetExplicitSLens(transitionGroup));
+                Assert.AreEqual(coneVoltage, product.GetExplicitConeVoltage(transitionGroup));
                 Assert.AreEqual(expectedCV, transitionGroup.ExplicitValues.CompensationVoltage);
-                Assert.AreEqual(declusteringPotential, transitionGroup.ExplicitValues.DeclusteringPotential);
+                Assert.AreEqual(declusteringPotential, product.GetExplicitDeclusteringPotential(transitionGroup));
                 Assert.AreEqual(note, product.Annotations.Note);
-                Assert.AreEqual(highEnergyDtOffset, transitionGroup.ExplicitValues.IonMobilityHighEnergyOffset.Value, 1E-7);
+                Assert.AreEqual(highEnergyDtOffset, product.GetExplicitIonMobilityHighEnergyOffset(transitionGroup).Value, 1E-7);
                 Assert.AreEqual(precursorRT, precursor.ExplicitRetentionTime.RetentionTime);
                 Assert.AreEqual(precursorRTWindow, precursor.ExplicitRetentionTime.RetentionTimeWindow);
                 Assert.IsTrue(ReferenceEquals(transitionGroup.TransitionGroup, product.Transition.Group));
@@ -707,13 +707,13 @@ namespace pwiz.SkylineTestFunctional
                 var colCE = FindDocumentGridColumn(documentGrid, "ExplicitCollisionEnergy");
                 RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colCE.Index].Value = explicitCE);
                 WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
-                  SkylineWindow.Document.MoleculeTransitionGroups.First().ExplicitValues.CollisionEnergy.Equals(explicitCE)));
+                  SkylineWindow.Document.MoleculeTransitions.First().GetExplicitCollisionEnergy(SkylineWindow.Document.MoleculeTransitionGroups.First()).Equals(explicitCE)));
 
                 const double explicitDP = 12.345;
                 var colDP = FindDocumentGridColumn(documentGrid, "ExplicitDeclusteringPotential");
                 RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colDP.Index].Value = explicitDP);
                 WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
-                  SkylineWindow.Document.MoleculeTransitionGroups.First().ExplicitValues.DeclusteringPotential.Equals(explicitDP)));
+                  SkylineWindow.Document.MoleculeTransitions.First().GetExplicitDeclusteringPotential(SkylineWindow.Document.MoleculeTransitionGroups.First()).Equals(explicitDP)));
 
                 const double explicitCV = 13.45;
                 var colCV = FindDocumentGridColumn(documentGrid, "ExplicitCompensationVoltage");
@@ -731,7 +731,7 @@ namespace pwiz.SkylineTestFunctional
                 var colDTOffset = FindDocumentGridColumn(documentGrid, "ExplicitIonMobilityHighEnergyOffset");
                 RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colDTOffset.Index].Value = explicitDTOffset);
                 WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
-                  SkylineWindow.Document.MoleculeTransitionGroups.First().ExplicitValues.IonMobilityHighEnergyOffset.Equals(explicitDTOffset)));
+                  SkylineWindow.Document.MoleculeTransitions.First().GetExplicitIonMobilityHighEnergyOffset(SkylineWindow.Document.MoleculeTransitionGroups.First()).Equals(explicitDTOffset)));
 
                 const double explicitCCS = 345.6;
                 var colCCS = FindDocumentGridColumn(documentGrid, "ExplicitCollisionalCrossSection");

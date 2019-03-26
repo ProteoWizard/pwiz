@@ -47,6 +47,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly PeptideSettingsUI.LabelTypeComboDriver _driverLabelType;
         private readonly SkylineWindow _parent;
         private readonly UsageMode _usageMode;
+        private readonly ExplicitTransitionGroupValues _originalExplicitTransitionGroupValues;
 
         public enum UsageMode
         {
@@ -88,12 +89,15 @@ namespace pwiz.Skyline.SettingsUI
             _resultAdduct = Adduct.EMPTY;
             _resultCustomMolecule = molecule;
             _usageMode = usageMode;
+            _originalExplicitTransitionGroupValues = explicitAttributes;
 
             var enableFormulaEditing = usageMode == UsageMode.moleculeNew || usageMode == UsageMode.moleculeEdit ||
                                        usageMode == UsageMode.fragment;
             var enableAdductEditing = usageMode == UsageMode.moleculeNew || usageMode == UsageMode.precursor ||
                                       usageMode == UsageMode.fragment;
             var suggestOnlyAdductsWithMass = usageMode != UsageMode.fragment;
+            var needExplicitTransitionValues = usageMode != UsageMode.moleculeEdit;
+            var needExplicitTransitionGroupValues = usageMode == UsageMode.moleculeNew || usageMode == UsageMode.precursor;
 
             InitializeComponent();
 
@@ -108,28 +112,36 @@ namespace pwiz.Skyline.SettingsUI
             foreach (eIonMobilityUnits t in Enum.GetValues(typeof(eIonMobilityUnits)))
                 comboBoxIonMobilityUnits.Items.Add(IonMobilityFilter.IonMobilityUnitsL10NString(t));
 
-            if (explicitAttributes == null)
+
+            if (!needExplicitTransitionValues)
             {
-                ResultExplicitTransitionGroupValues = null;
                 labelCollisionEnergy.Visible = false;
                 textCollisionEnergy.Visible = false;
                 labelSLens.Visible = false;
                 textSLens.Visible = false;
-                labelCompensationVoltage.Visible = false;
-                textCompensationVoltage.Visible = false;
-                labelCCS.Visible = false;
-                textBoxCCS.Visible = false;
                 labelConeVoltage.Visible = false;
                 textConeVoltage.Visible = false;
                 labelIonMobilityHighEnergyOffset.Visible = false;
                 textIonMobilityHighEnergyOffset.Visible = false;
+                labelDeclusteringPotential.Visible = false;
+                textDeclusteringPotential.Visible = false;
+            }
+
+            if (!needExplicitTransitionGroupValues)
+            {
+                labelCompensationVoltage.Visible = false;
+                textCompensationVoltage.Visible = false;
+                labelCCS.Visible = false;
+                textBoxCCS.Visible = false;
                 labelIonMobility.Visible = false;
                 textIonMobility.Visible = false;
                 labelIonMobilityUnits.Visible = false;
                 comboBoxIonMobilityUnits.Visible = false;
-                labelDeclusteringPotential.Visible = false;
-                textDeclusteringPotential.Visible = false;
-                if (needOptionalValuesBox)
+            }
+
+            if (needOptionalValuesBox)
+            {
+                if (!needExplicitTransitionGroupValues && !needExplicitTransitionValues)
                 {
                     // We blanked out everything but the retention time
                     var vmargin = labelRetentionTime.Location.Y;
@@ -137,11 +149,19 @@ namespace pwiz.Skyline.SettingsUI
                     heightDelta = groupBoxOptionalValues.Height - newHeight;
                     groupBoxOptionalValues.Height = newHeight;
                 }
+                else if (!needExplicitTransitionGroupValues)
+                {
+                    // We need to shift transition-level items up to where retention time was
+                    var vmargin = labelRetentionTime.Location.Y;
+                    var newHeight = textCompensationVoltage.Location.Y - textCollisionEnergy.Height + vmargin;
+                    labelIonMobilityHighEnergyOffset.Location = labelCompensationVoltage.Location;
+                    textIonMobilityHighEnergyOffset.Location = textCompensationVoltage.Location;
+                    heightDelta = groupBoxOptionalValues.Height - newHeight;
+                    groupBoxOptionalValues.Height = newHeight;
+                }
             }
-            else
-            {
-                ResultExplicitTransitionGroupValues = new ExplicitTransitionGroupValues(explicitAttributes);
-            }
+
+            ResultExplicitTransitionGroupValues = new ExplicitTransitionGroupValues(explicitAttributes);
 
             string labelAverage = !defaultCharge.IsEmpty
                 ? Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg_A_verage_m_z_
@@ -323,21 +343,26 @@ namespace pwiz.Skyline.SettingsUI
             public class ExplicitValues
             {
                 public ExplicitValues(EditCustomMoleculeDlg dlg) : this(dlg.ResultRetentionTimeInfo,
-                    dlg.ResultExplicitTransitionGroupValues)
+                    dlg.ResultExplicitTransitionGroupValues, dlg.ResultExplicitTransitionValues)
                 {
                 }
+                
 
                 public ExplicitValues(ExplicitRetentionTimeInfo resultRetentionTimeInfo,
-                    ExplicitTransitionGroupValues resultExplicitTransitionGroupValues)
+                    ExplicitTransitionGroupValues resultExplicitTransitionGroupValues,
+                    ExplicitTransitionValues resultExplicitTransitionValues)
                 {
                     ResultRetentionTimeInfo = resultRetentionTimeInfo;
                     ResultExplicitTransitionGroupValues = resultExplicitTransitionGroupValues;
+                    ResultExplicitTransitionValues = resultExplicitTransitionValues;
                 }
 
                 [TrackChildren(ignoreName:true)]
                 public ExplicitRetentionTimeInfo ResultRetentionTimeInfo { get; private set; }
                 [TrackChildren(ignoreName: true)]
                 public ExplicitTransitionGroupValues ResultExplicitTransitionGroupValues { get; private set; }
+                [TrackChildren(ignoreName: true)]
+                public ExplicitTransitionValues ResultExplicitTransitionValues { get; private set; }
             }
         }
 
@@ -362,24 +387,35 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                return new ExplicitTransitionGroupValues(CollisionEnergy, IonMobility, IonMobilityHighEnergyOffset,
+                return ExplicitTransitionGroupValues.Create(IonMobility, 
                     IonMobilityUnits,
                     CollisionalCrossSectionSqA,
-                    SLens, ConeVoltage, DeclusteringPotential, CompensationVoltage);
+                    CompensationVoltage, ResultExplicitTransitionValues);
             }
             set
             {
                 // Use constructor to handle value == null
                 var resultExplicitTransitionGroupValues = new ExplicitTransitionGroupValues(value);
-                CollisionEnergy = resultExplicitTransitionGroupValues.CollisionEnergy;
                 IonMobility = resultExplicitTransitionGroupValues.IonMobility;
-                IonMobilityHighEnergyOffset = resultExplicitTransitionGroupValues.IonMobilityHighEnergyOffset;
                 IonMobilityUnits = resultExplicitTransitionGroupValues.IonMobilityUnits;
                 CollisionalCrossSectionSqA = resultExplicitTransitionGroupValues.CollisionalCrossSectionSqA;
-                SLens = resultExplicitTransitionGroupValues.SLens;
-                ConeVoltage = resultExplicitTransitionGroupValues.ConeVoltage;
-                DeclusteringPotential = resultExplicitTransitionGroupValues.DeclusteringPotential;
                 CompensationVoltage = resultExplicitTransitionGroupValues.CompensationVoltage;
+                CollisionEnergy = resultExplicitTransitionGroupValues.ExplicitTransitionValueDefaults.CollisionEnergy;
+                IonMobilityHighEnergyOffset = resultExplicitTransitionGroupValues.ExplicitTransitionValueDefaults.IonMobilityHighEnergyOffset;
+                SLens = resultExplicitTransitionGroupValues.ExplicitTransitionValueDefaults.SLens;
+                ConeVoltage = resultExplicitTransitionGroupValues.ExplicitTransitionValueDefaults.ConeVoltage;
+                DeclusteringPotential = resultExplicitTransitionGroupValues.ExplicitTransitionValueDefaults.DeclusteringPotential;
+            }
+        }
+
+        public ExplicitTransitionValues ResultExplicitTransitionValues
+        {
+            get
+            {
+                var explicitTransitionValues = ExplicitTransitionValues.Create(CollisionEnergy, IonMobilityHighEnergyOffset, SLens, ConeVoltage, DeclusteringPotential);
+                return _usageMode == UsageMode.fragment
+                     ? _originalExplicitTransitionGroupValues.ExplicitTransitionValueDefaults.Diff(explicitTransitionValues) // Only report deviations from precursor values
+                     : explicitTransitionValues;
             }
         }
 

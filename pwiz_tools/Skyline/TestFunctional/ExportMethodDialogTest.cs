@@ -781,7 +781,7 @@ namespace pwiz.SkylineTestFunctional
                             var pepPath = new IdentityPath(pepGroupPath, nodePep.Id);
                             foreach (var nodeTransitionGroup in nodePep.TransitionGroups)
                             {
-                                if (!nodeTransitionGroup.ExplicitValues.CollisionEnergy.HasValue)
+                                if (!nodeTransitionGroup.ExplicitValues.ExplicitTransitionValueDefaults.CollisionEnergy.HasValue)
                                 {
                                     var tgPath = new IdentityPath(pepPath, nodeTransitionGroup.Id);
                                     // Add to expected transition count, limiting to account for CE <= 0
