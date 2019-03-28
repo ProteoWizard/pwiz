@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Model
             : this(
                 (other == null) ? null : other.CollisionEnergy,
                 (other == null) ? null : other.IonMobility,
-                (other == null) ? null : other.IonMobility,
+                (other == null) ? null : other.IonMobilityHighEnergyOffset,
                 (other == null) ? eIonMobilityUnits.none : other.IonMobilityUnits,
                 (other == null) ? null : other.CollisionalCrossSectionSqA,
                 (other == null) ? null : other.SLens,

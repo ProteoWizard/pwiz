@@ -385,14 +385,14 @@ namespace pwiz.Skyline.Model.Databinding
                         return null;
                 }
 
-                var entry = AuditLogEntry.CreateCountChangeEntry(singular, plural,
+                var entry = AuditLogEntry.CreateCountChangeEntry(singular, plural, docPair.NewDocumentType,
                     _batchEditDescriptions,
                     descr => MessageArgs.Create(descr.ColumnCaption.GetCaption(DataSchemaLocalizer)),
                     null).ChangeExtraInfo(batchModifyInfo.ExtraInfo + Environment.NewLine);
 
                 entry = entry.Merge(batchModifyInfo.EntryCreator.Create(docPair));
 
-                return entry.AppendAllInfo(_batchEditDescriptions.Select(descr => new MessageInfo(detailType,
+                return entry.AppendAllInfo(_batchEditDescriptions.Select(descr => new MessageInfo(detailType, docPair.NewDocumentType,
                     getArgsFunc(descr))).ToList());
             };
         }
@@ -421,7 +421,7 @@ namespace pwiz.Skyline.Model.Databinding
                 if (SkylineWindow != null)
                 {
                     SkylineWindow.ModifyDocument(editDescription.GetUndoText(DataSchemaLocalizer), action,
-                        logFunc ?? (docPair => AuditLogEntry.CreateSimpleEntry(MessageType.set_to_in_document_grid,
+                        logFunc ?? (docPair => AuditLogEntry.CreateSimpleEntry(MessageType.set_to_in_document_grid, docPair.NewDocumentType,
                             editDescription.AuditLogParseString, editDescription.ElementRefName, CellValueToString(editDescription.Value))));
                 }
                 else

@@ -159,7 +159,7 @@ All Info  :
 建立谱图库 > 阈值 是 "0.99"
 建立谱图库 > 搜索文件 : 包含 "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml"
 建立谱图库 > 搜索文件 : 包含 "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"
-建立谱图库 > iRT 标准肽段 是 无
+建立谱图库 > iRT 标准分子 是 无
 建立谱图库 > 包含不明确匹配项 是 假
 建立谱图库 > 文档肽筛选器 是 真
 建立谱图库 > 工作流程 是 "PRM（并行反应离子监测）"
@@ -174,15 +174,15 @@ iRT 标准肽段 = 无,
 文档肽筛选器 = 真,
 工作流程 = "PRM（并行反应离子监测）"
 
-Undo Redo : 已导入肽段搜索
-Summary   : 已导入肽段搜索
+Undo Redo : 已导入分子搜索
+Summary   : 已导入分子搜索
 All Info  :
-已导入肽段搜索
-导入肽段搜索 > 提取色谱图 > 查找到结果文件 : 包含 "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.mzML"
-导入肽段搜索 > 提取色谱图 > 查找到结果文件 : 包含 "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.mzML"
-导入肽段搜索 > 提取色谱图 > 要同步导入的文件 是 "许多个"
-导入肽段搜索 > 提取色谱图 > 已删除前缀 是 "klc_20100329v_Protea_Peptide_Curve_"
-导入肽段搜索 > 提取色谱图 > 已删除后缀 是 "_uL_tech1"
+已导入分子搜索
+导入分子搜索 > 提取色谱图 > 查找到结果文件 : 包含 "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.mzML"
+导入分子搜索 > 提取色谱图 > 查找到结果文件 : 包含 "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.mzML"
+导入分子搜索 > 提取色谱图 > 要同步导入的文件 是 "许多个"
+导入分子搜索 > 提取色谱图 > 已删除前缀 是 "klc_20100329v_Protea_Peptide_Curve_"
+导入分子搜索 > 提取色谱图 > 已删除后缀 是 "_uL_tech1"
 Extra Info: 提取色谱图 = 
 {
     查找到结果文件 = 
