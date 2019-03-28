@@ -9913,6 +9913,12 @@ Recognized isotopes include: {2}</value>
   <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_Formula" xml:space="preserve">
     <value>Formula</value>
   </data>
+  <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_Monoisotopic_mass" xml:space="preserve">
+    <value>Monoisotopic mass</value>
+  </data>
+  <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_Average_mass" xml:space="preserve">
+    <value>Average mass</value>
+  </data>
   <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_InChIKey" xml:space="preserve">
     <value>InChIKey</value>
   </data>

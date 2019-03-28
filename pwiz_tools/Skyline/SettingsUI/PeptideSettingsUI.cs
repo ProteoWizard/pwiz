@@ -488,7 +488,9 @@ namespace pwiz.Skyline.SettingsUI
                     PeptideModifications.MIN_MAX_NEUTRAL_LOSSES, PeptideModifications.MAX_MAX_NEUTRAL_LOSSES, out maxNeutralLosses))
                 return null;
 
-            var standardTypes = _driverLabelType.InternalStandardTypes;
+            var standardTypes = SmallMoleculeLabelsTabEnabled
+                ? _driverSmallMolInternalStandardTypes.InternalStandardTypes
+                : _driverLabelType.InternalStandardTypes;
             PeptideModifications modifications = new PeptideModifications(
                 _driverStaticMod.Chosen, maxVariableMods, maxNeutralLosses,
                 _driverLabelType.GetHeavyModifications(), standardTypes);
@@ -1532,19 +1534,6 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return comboLodMethod.SelectedItem as LodCalculation; }
             set { comboLodMethod.SelectedItem = value; }
-        }
-
-        public void SetStandardTypeChecked(TABS whichTab, int index, bool isChecked)
-        {
-            if (whichTab == TABS.Labels)
-            {
-                listBoxSmallMolInternalStandardTypes.SetItemChecked(index, isChecked);
-            }
-            else
-            {
-                listStandardTypes.SetItemChecked(index, isChecked);
-            }
-            Assume.AreEqual(listBoxSmallMolInternalStandardTypes.CheckedIndices, listStandardTypes.CheckedIndices);
         }
 
         #endregion

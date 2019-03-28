@@ -628,7 +628,7 @@ namespace pwiz.Skyline
             // If nothing changed, don't create a new audit log entry, just like SkylineWindow.ModifyDocument
             if (ReferenceEquals(_doc, docOriginal))
                 return;
-            var docPair = SrmDocumentPair.Create(docOriginal, _doc);
+            var docPair = SrmDocumentPair.Create(docOriginal, _doc, SrmDocument.DOCUMENT_TYPE.none);
             var logEntry = logFunc?.Invoke(docPair);
             if (logEntry != null)
                 _doc = AuditLogEntry.UpdateDocument(logEntry, docPair);

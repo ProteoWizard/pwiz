@@ -467,6 +467,15 @@ namespace pwiz.Skyline.Util
             AddMass(Mn, 54.938045);
             AddMass(Mg, 24.305);
             AddMass(Si, 28.085); // Per Wikipedia
+            // Add all other elements
+            foreach (var entry in IsotopeAbundances.Default)
+            {
+                if (_atomicMasses.ContainsKey(entry.Key))
+                {
+                    continue;
+                }
+                AddMass(entry.Key, entry.Value.AverageMass);
+			}
 
             // Add entries for isotope synonyms like D (H') and T (H")
             foreach (var kvp in DICT_HEAVYSYMBOL_NICKNAMES) 

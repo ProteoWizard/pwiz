@@ -404,7 +404,10 @@ namespace pwiz.Skyline.Model
         /// Quick access to document type proteomic/small_molecules/mixed, based on the assumption that 
         /// TransitionGroups are purely proteomic or small molecule, but the document is not.
         /// 
-        /// Empty documents report as proteomic.
+        /// Empty documents report as none.
+        ///
+        /// These enum names are used on persisted settings for UI mode, so don't rename them as
+        /// it will confuse existing installations.
         /// 
         /// </summary>
         public enum DOCUMENT_TYPE
@@ -2499,14 +2502,21 @@ namespace pwiz.Skyline.Model
 
     public class SrmDocumentPair : ObjectPair<SrmDocument>
     {
-        protected SrmDocumentPair(SrmDocument oldDoc, SrmDocument newDoc)
+        protected SrmDocumentPair(SrmDocument oldDoc, SrmDocument newDoc, SrmDocument.DOCUMENT_TYPE defaultDocumentTypeForAuditLog)
             : base(oldDoc, newDoc)
         {
+            NewDocumentType = newDoc != null && newDoc.DocumentType != SrmDocument.DOCUMENT_TYPE.none 
+                ? newDoc.DocumentType
+                : defaultDocumentTypeForAuditLog;
+            OldDocumentType = oldDoc != null && oldDoc.DocumentType != SrmDocument.DOCUMENT_TYPE.none 
+                ? oldDoc.DocumentType
+                : NewDocumentType;
         }
 
-        public new static SrmDocumentPair Create(SrmDocument oldDoc, SrmDocument newDoc)
+        public static SrmDocumentPair Create(SrmDocument oldDoc, SrmDocument newDoc, 
+            SrmDocument.DOCUMENT_TYPE defaultDocumentTypeForLogging)
         {
-            return new SrmDocumentPair(oldDoc, newDoc);
+            return new SrmDocumentPair(oldDoc, newDoc, defaultDocumentTypeForLogging);
         }
 
         public ObjectPair<object> ToObjectType()
@@ -2516,6 +2526,11 @@ namespace pwiz.Skyline.Model
 
         public SrmDocument OldDoc { get { return OldObject; } }
         public SrmDocument NewDoc { get { return NewObject; } }
+
+        // Used for "peptide"->"molecule" translation cue in human readable logs
+        public SrmDocument.DOCUMENT_TYPE OldDocumentType { get; private set; } // Useful when something in document is being removed, which might cause a change from mixed to proteomic but you want to log event as "molecule" rather than "peptide"
+        public SrmDocument.DOCUMENT_TYPE NewDocumentType { get; private set; } // Useful when something is being added, which might cause a change from proteomic to mixed so you want to log event as "molecule" rather than "peptide"
+
     }
 
     public class Targets
