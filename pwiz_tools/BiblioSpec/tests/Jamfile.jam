@@ -264,9 +264,9 @@ blib-test-build mse-mobility : -o -P@0.068999 : output/mse-mobility.blib : mse-m
 
 # Check backward compatibilty with previous notions of ion mobility
 blib-test-build mse-mobility-v12 : -o : output/mse-mobility-from-v12.blib : mse-mobility-from-v12.check mse-mobility.skip-lines : inputs/mse-mobility-v12.blib ;
-blib-test-build mse-mobility-v13 : -o : output/mse-mobility-from-v13.blib : mse-mobility.check mse-mobility.skip-lines : inputs/mse-mobility-v13.blib ;
-blib-test-build mse-mobility-v14 : -o : output/mse-mobility-from-v14.blib : mse-mobility.check mse-mobility.skip-lines : inputs/mse-mobility-v14.blib ;
-blib-test-build mse-mobility-v15 : -o : output/mse-mobility-from-v15.blib : mse-mobility.check mse-mobility.skip-lines : inputs/mse-mobility-v15.blib ;
+blib-test-build mse-mobility-v13 : -o : output/mse-mobility-from-v13.blib : mse-mobility-no-silac.check mse-mobility.skip-lines : inputs/mse-mobility-v13.blib ;
+blib-test-build mse-mobility-v14 : -o : output/mse-mobility-from-v14.blib : mse-mobility-no-silac.check mse-mobility.skip-lines : inputs/mse-mobility-v14.blib ;
+blib-test-build mse-mobility-v15 : -o : output/mse-mobility-from-v15.blib : mse-mobility-no-silac.check mse-mobility.skip-lines : inputs/mse-mobility-v15.blib ;
 
 # Test building with Mascot .dat files, contingent on Mascot support (FIXME: these tests are broken on Linux)
 
