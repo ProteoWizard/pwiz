@@ -2255,7 +2255,8 @@ PWIZ_API_DECL
 void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList, const MSData& msd,
            const BinaryDataEncoder::Config& config,
            vector<boost::iostreams::stream_offset>* spectrumPositions,
-           const IterationListenerRegistry* iterationListenerRegistry)
+           const IterationListenerRegistry* iterationListenerRegistry,
+           bool useWorkerThreads)
 {
     XMLWriter::Attributes attributes;
     attributes.add("count", spectrumList.size());
@@ -2265,7 +2266,8 @@ void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList, const 
                                         spectrumList.dataProcessingPtr()->id));
 
     writer.startElement("spectrumList", attributes); // required by schema, even if empty
-    SpectrumWorkerThreads spectrumWorkers(spectrumList);
+
+    SpectrumWorkerThreads spectrumWorkers(spectrumList, useWorkerThreads);
 
     for (size_t i=0; i<spectrumList.size(); i++)
     {
@@ -2458,7 +2460,8 @@ void write(minimxml::XMLWriter& writer, const Run& run, const MSData& msd,
            const BinaryDataEncoder::Config& config,
            vector<boost::iostreams::stream_offset>* spectrumPositions,
            vector<boost::iostreams::stream_offset>* chromatogramPositions,
-           const pwiz::util::IterationListenerRegistry* iterationListenerRegistry)
+           const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
+           bool useWorkerThreads)
 {
     XMLWriter::Attributes attributes;
     attributes.add("id", encode_xml_id_copy(run.id));
@@ -2488,7 +2491,7 @@ void write(minimxml::XMLWriter& writer, const Run& run, const MSData& msd,
     bool hasChromatogramList = run.chromatogramListPtr.get() && run.chromatogramListPtr->size() > 0;
 
     if (hasSpectrumList)
-        write(writer, *run.spectrumListPtr, msd, config, spectrumPositions, iterationListenerRegistry);
+        write(writer, *run.spectrumListPtr, msd, config, spectrumPositions, iterationListenerRegistry, useWorkerThreads);
 
     if (hasChromatogramList)
         write(writer, *run.chromatogramListPtr, config, chromatogramPositions, iterationListenerRegistry);
@@ -2598,7 +2601,8 @@ void write(minimxml::XMLWriter& writer, const MSData& msd,
            const BinaryDataEncoder::Config& config,
            vector<boost::iostreams::stream_offset>* spectrumPositions,
            vector<boost::iostreams::stream_offset>* chromatogramPositions,
-           const pwiz::util::IterationListenerRegistry* iterationListenerRegistry)
+           const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
+           bool useWorkerThreads)
 {
     XMLWriter::Attributes attributes;
     attributes.add("xmlns", "http://psi.hupo.org/ms/mzml");
@@ -2641,7 +2645,7 @@ void write(minimxml::XMLWriter& writer, const MSData& msd,
 
     writeList(writer, msd.allDataProcessingPtrs(), "dataProcessingList");
 
-    write(writer, msd.run, msd, config, spectrumPositions, chromatogramPositions, iterationListenerRegistry);
+    write(writer, msd.run, msd, config, spectrumPositions, chromatogramPositions, iterationListenerRegistry, useWorkerThreads);
 
     writer.endElement();
 }

@@ -63,6 +63,8 @@ struct Config : public Reader::Config
     bool merge;
     IntegerSet runIndexSet;
     bool stripLocationFromSourceFiles;
+    bool stripVersionFromSoftware;
+    bool singleThreaded;
 
     Config()
         : outputPath("."), verbose(false), merge(false)
@@ -72,6 +74,8 @@ struct Config : public Reader::Config
         combineIonMobilitySpectra = false;
         unknownInstrumentIsError = true;
         stripLocationFromSourceFiles = false;
+        stripVersionFromSoftware = false;
+        singleThreaded = false;
     }
 
     string outputFilename(const string& inputFilename, const MSData& inputMSData) const;
@@ -338,6 +342,12 @@ Config parseCommandLine(int argc, char** argv)
         ("stripLocationFromSourceFiles",
             po::value<bool>(&config.stripLocationFromSourceFiles)->zero_tokens(),
             ": if true, sourceFile elements will be stripped of location information, so the same file converted from different locations will produce the same mzML")
+        ("stripVersionFromSoftware",
+            po::value<bool>(&config.stripVersionFromSoftware)->zero_tokens(),
+            ": if true, software elements will be stripped of version information, so the same file converted with different versions will produce the same mzML")
+        ("singleThreaded",
+            po::value<bool>(&config.singleThreaded)->zero_tokens(),
+            ": if true, reading and writing spectra will be done on a single thread")
         ("help",
             po::value<bool>(&detailedHelp)->zero_tokens(),
             ": show this message, with extra detail on filter options")
@@ -637,6 +647,8 @@ Config parseCommandLine(int argc, char** argv)
     if (zlib)
         config.writeConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
 
+    config.writeConfig.useWorkerThreads = !config.singleThreaded;
+
     if ((ms_numpress_slof>=0) && ms_numpress_pic)
         throw user_error("[msconvert] Incompatible compression flags 'numpressPic' and 'numpressSlof'.");
 
@@ -697,6 +709,13 @@ void stripSourceFileLocation(MSData& msd)
 {
     for (const auto& sourceFilePtr : msd.fileDescription.sourceFilePtrs)
         sourceFilePtr->location = "file:///";
+}
+
+
+void stripSoftwareVersion(MSData& msd)
+{
+    for (const auto& softwarePtr : msd.softwarePtrs)
+        softwarePtr->version = "";
 }
 
 
@@ -802,6 +821,9 @@ int mergeFiles(const vector<string>& filenames, const Config& config, const Read
         if (config.stripLocationFromSourceFiles)
             stripSourceFileLocation(msd);
 
+        if (config.stripVersionFromSoftware)
+            stripSoftwareVersion(msd);
+
         if (config.outputPath == "-")
             MSDataFile::write(msd, cout, config.writeConfig);
         else
@@ -875,6 +897,9 @@ void processFile(const string& filename, const Config& config, const ReaderList&
             if (config.stripLocationFromSourceFiles)
                 stripSourceFileLocation(msd);
 
+            if (config.stripVersionFromSoftware)
+                stripSoftwareVersion(msd);
+
             if (config.outputPath == "-")
                 MSDataFile::write(msd, cout, config.writeConfig, pILR);
             else
@@ -903,7 +928,7 @@ int go(const Config& config)
 {
     *os_ << config;
 
-    if (!bfs::exists(config.outputPath))
+    if (config.outputPath != "-" && !bfs::exists(config.outputPath))
         boost::filesystem::create_directories(config.outputPath);
 
     FullReaderList readers;

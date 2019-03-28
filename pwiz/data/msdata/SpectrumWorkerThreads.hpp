@@ -35,7 +35,7 @@ class SpectrumWorkerThreads
 {
     public:
 
-    SpectrumWorkerThreads(const SpectrumList& sl);
+    SpectrumWorkerThreads(const SpectrumList& sl, bool useWorkerThreads);
     ~SpectrumWorkerThreads();
     SpectrumPtr processBatch(size_t index, bool getBinaryData = true);
 
