@@ -1187,6 +1187,9 @@
   <data name="TransitionGroupDocNode_ExplicitValues" xml:space="preserve">
     <value>Explicit values</value>
   </data>
+  <data name="TransitionDocNode_ExplicitValues" xml:space="preserve">
+    <value>Explicit values</value>
+  </data>
   <data name="TransitionGroupDocNode_LabelType" xml:space="preserve">
     <value>Isotope label type</value>
   </data>

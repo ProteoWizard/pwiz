@@ -249,13 +249,13 @@ namespace pwiz.Skyline.Model.Serialization
             public bool Quantitative { get; private set; }
             public ExplicitTransitionValues ExplicitValues { get; private set; }
 
-        public void ReadXml(XmlReader reader, DocumentFormat formatVersion, out double? declaredMz)
+        public void ReadXml(XmlReader reader, DocumentFormat formatVersion, out double? declaredMz, ExplicitTransitionValues pre422ExplicitTransitionValues)
             {
-                ReadXmlAttributes(reader, formatVersion);
+                ReadXmlAttributes(reader, formatVersion, pre422ExplicitTransitionValues);
                 ReadXmlElements(reader, out declaredMz);
             }
 
-            public void ReadXmlAttributes(XmlReader reader, DocumentFormat formatVersion)
+            public void ReadXmlAttributes(XmlReader reader, DocumentFormat formatVersion, ExplicitTransitionValues pre422ExplicitTransitionValues)
             {
                 // Accept uppercase and lowercase for backward compatibility with v0.1
                 IonType = reader.GetEnumAttribute(ATTR.fragment_type, IonType.y, XmlUtil.EnumCase.lower);
@@ -277,7 +277,7 @@ namespace pwiz.Skyline.Model.Serialization
                     IonType = IonType.custom;
                 }
 
-                ExplicitValues = ReadExplicitTransitionValuesAttributes(reader, formatVersion);
+                ExplicitValues = pre422ExplicitTransitionValues ?? ReadExplicitTransitionValuesAttributes(reader, formatVersion);
             }
 
             public void ReadXmlElements(XmlReader reader, out double? declaredProductMz)
@@ -785,24 +785,28 @@ namespace pwiz.Skyline.Model.Serialization
         /// <summary>
         /// Deserialize any explictly set CE, DT, etc information from precursor attributes
         /// </summary>
-        private static ExplicitTransitionGroupValues ReadExplicitTransitionGroupValuesAttributes(XmlReader reader, DocumentFormat formatVersion)
+        private static ExplicitTransitionGroupValues ReadExplicitTransitionGroupValuesAttributes(XmlReader reader, DocumentFormat formatVersion, out ExplicitTransitionValues pre422ExplicitValues)
         {
+            double? importedCompensationVoltage = reader.GetNullableDoubleAttribute(ATTR.explicit_compensation_voltage); // Found in older formats, obsolete as of 4.22. Now a combination of ion mobility and ion mobility units values.
             double? importedDriftTimeMsec = reader.GetNullableDoubleAttribute(ATTR.explicit_drift_time_msec);
             var importedIonMobilityUnits = eIonMobilityUnits.none;
             if (importedDriftTimeMsec.HasValue)
             {
                 importedIonMobilityUnits = eIonMobilityUnits.drift_time_msec;
             }
+            else if (importedCompensationVoltage.HasValue)
+            {
+                importedIonMobilityUnits = eIonMobilityUnits.compensation_V;
+            }
             else
             {
                 var attr = reader.GetAttribute(ATTR.explicit_ion_mobility_units);
                 importedIonMobilityUnits = SmallMoleculeTransitionListReader.IonMobilityUnitsFromAttributeValue(attr);
             }
-            double? importedIonMobility = importedDriftTimeMsec ?? reader.GetNullableDoubleAttribute(ATTR.explicit_ion_mobility);
+            double? importedIonMobility = importedDriftTimeMsec ?? importedCompensationVoltage ?? reader.GetNullableDoubleAttribute(ATTR.explicit_ion_mobility);
             double? importedCCS = reader.GetNullableDoubleAttribute(ATTR.explicit_ccs_sqa);
-            double? importedCompensationVoltage = reader.GetNullableDoubleAttribute(ATTR.explicit_compensation_voltage);
-            var explicitTransitionValues = ReadExplicitTransitionValuesAttributes(reader, formatVersion);
-            return ExplicitTransitionGroupValues.Create(importedIonMobility,importedIonMobilityUnits, importedCCS, importedCompensationVoltage, explicitTransitionValues);
+            pre422ExplicitValues = formatVersion >= DocumentFormat.VERSION_4_22 ? null : ReadExplicitTransitionValuesAttributes(reader, formatVersion); // Formerly (pre-4.22) these per-transition values were serialized at peptide level
+            return ExplicitTransitionGroupValues.Create(importedIonMobility,importedIonMobilityUnits, importedCCS);
         }
 
         /// <summary>
@@ -1063,7 +1067,7 @@ namespace pwiz.Skyline.Model.Serialization
             var typedMods = ReadLabelType(reader, IsotopeLabelType.light);
 
             int? decoyMassShift = reader.GetNullableIntAttribute(ATTR.decoy_mass_shift);
-            var explicitTransitionGroupValues = ReadExplicitTransitionGroupValuesAttributes(reader, FormatVersion);
+            var explicitTransitionGroupValues = ReadExplicitTransitionGroupValuesAttributes(reader, FormatVersion, out var pre422ExplicitValues);
             if (peptide.IsCustomMolecule)
             {
                 var ionFormula = reader.GetAttribute(ATTR.ion_formula);
@@ -1126,7 +1130,7 @@ namespace pwiz.Skyline.Model.Serialization
                                                   results,
                                                   children,
                                                   autoManageChildren);
-                children = ReadTransitionListXml(reader, nodeGroup, mods);
+                children = ReadTransitionListXml(reader, nodeGroup, mods, pre422ExplicitValues);
 
                 reader.ReadEndElement();
 
@@ -1179,7 +1183,7 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 // Read a transition tag.
                 double? declaredProductMz;
-                info.ReadXml(reader, FormatVersion, out declaredProductMz);
+                info.ReadXml(reader, FormatVersion, out declaredProductMz, null);
 
                 // If the transition is not in the current group
                 if (curGroup == null || curGroup.PrecursorAdduct != info.PrecursorAdduct)
@@ -1235,9 +1239,10 @@ namespace pwiz.Skyline.Model.Serialization
         /// <param name="reader">The reader positioned at the first element</param>
         /// <param name="nodeGroup">A previously read parent <see cref="Identity"/></param>
         /// <param name="mods">Explicit modifications for the peptide</param>
+        /// <param name="pre422ExplicitTransitionValues">Explicit transition values that may have been serialzied at precursor level in older formats</param>
         /// <returns>A new array of <see cref="TransitionDocNode"/></returns>
         private TransitionDocNode[] ReadTransitionListXml(XmlReader reader, 
-            TransitionGroupDocNode nodeGroup, ExplicitMods mods)
+            TransitionGroupDocNode nodeGroup, ExplicitMods mods, ExplicitTransitionValues pre422ExplicitTransitionValues)
         {
             var group = nodeGroup.TransitionGroup;
             var isotopeDist = nodeGroup.IsotopeDist;
@@ -1250,13 +1255,13 @@ namespace pwiz.Skyline.Model.Serialization
                 transitionData.MergeFrom(data);
                 foreach (var transitionProto in transitionData.Transitions)
                 {
-                    list.Add(TransitionDocNode.FromTransitionProto(_stringPool, Settings, group, mods, isotopeDist, transitionProto));
+                    list.Add(TransitionDocNode.FromTransitionProto(_stringPool, Settings, group, mods, isotopeDist, pre422ExplicitTransitionValues, transitionProto));
                 }
             }
             else
             {
                 while (reader.IsStartElement(EL.transition))
-                    list.Add(ReadTransitionXml(reader, group, mods, isotopeDist));
+                    list.Add(ReadTransitionXml(reader, group, mods, isotopeDist, pre422ExplicitTransitionValues));
             }
             return list.ToArray();
         }
@@ -1269,14 +1274,15 @@ namespace pwiz.Skyline.Model.Serialization
         /// <param name="group">A previously read parent <see cref="Identity"/></param>
         /// <param name="mods">Explicit mods for the peptide</param>
         /// <param name="isotopeDist">Isotope peak distribution to use for assigning M+N m/z values</param>
+        /// <param name="pre422ExplicitTransitionValues">Items that may have been saved at precursor level in older formats</param>
         /// <returns>A new <see cref="TransitionDocNode"/></returns>
         private TransitionDocNode ReadTransitionXml(XmlReader reader, TransitionGroup group,
-            ExplicitMods mods, IsotopeDistInfo isotopeDist)
+            ExplicitMods mods, IsotopeDistInfo isotopeDist, ExplicitTransitionValues pre422ExplicitTransitionValues)
         {
             TransitionInfo info = new TransitionInfo(this);
 
             // Read all the XML attributes before the reader advances through the elements
-            info.ReadXmlAttributes(reader, FormatVersion);
+            info.ReadXmlAttributes(reader, FormatVersion, pre422ExplicitTransitionValues);
             var isPrecursor = Transition.IsPrecursor(info.IonType);
             var isCustom = Transition.IsCustom(info.IonType, group);
             CustomMolecule customMolecule = null;

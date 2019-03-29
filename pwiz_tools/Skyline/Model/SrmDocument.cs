@@ -2198,9 +2198,10 @@ namespace pwiz.Skyline.Model
         public static double GetCollisionEnergy(SrmSettings settings, PeptideDocNode nodePep,
             TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, CollisionEnergyRegression regression, int step)
         {
-            var ce = nodeTran == null
-                ? nodeGroup.ExplicitValues.ExplicitTransitionValueDefaults.CollisionEnergy
-                : nodeTran.GetExplicitCollisionEnergy(nodeGroup);
+            var ce = nodeTran==null // If we're only given a precursor, use the explicit CE of its children if they all agree
+                ? (nodeGroup.Children.Any() && nodeGroup.Children.All( node => ((TransitionDocNode)node).ExplicitValues.CollisionEnergy == ((TransitionDocNode)nodeGroup.Children.First()).ExplicitValues.CollisionEnergy) 
+                    ? ((TransitionDocNode)nodeGroup.Children.First()).ExplicitValues.CollisionEnergy : null)
+                : nodeTran.ExplicitValues.CollisionEnergy;
             if (regression != null)
             {
                 if (!ce.HasValue)
@@ -2250,8 +2251,8 @@ namespace pwiz.Skyline.Model
         public static double GetDeclusteringPotential(SrmSettings settings, PeptideDocNode nodePep,
             TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, DeclusteringPotentialRegression regression, int step)
         {
-            if (nodeTran.GetExplicitDeclusteringPotential(nodeGroup).HasValue)
-                return nodeTran.GetExplicitDeclusteringPotential(nodeGroup).Value; // Explicitly set, overrides calculation
+            if (ExplicitTransitionValues.Get(nodeTran).DeclusteringPotential.HasValue)
+                return nodeTran.ExplicitValues.DeclusteringPotential.Value; // Explicitly set, overrides calculation
             if (regression == null)
                 return 0;
             double mz = settings.GetRegressionMz(nodePep, nodeGroup);

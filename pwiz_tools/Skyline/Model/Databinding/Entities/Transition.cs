@@ -203,15 +203,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Importable]
         public double? ExplicitCollisionEnergy
         {
-            get
-            {
-                return DocNode.GetExplicitCollisionEnergy(Precursor.DocNode); // Obtain from precursor if none at this level
-            }
+            get { return DocNode.ExplicitValues.CollisionEnergy; }
             set
             {
-                var values = DocNode.ChangeExplicitCollisionEnergy(value);
                 ChangeDocNode(EditDescription.SetColumn(@"ExplicitCollisionEnergy", value),
-                    docNode => docNode.ChangeExplicitValues(values));
+                    docNode => DocNode.ChangeExplicitCollisionEnergy(value));
             }
         }
 
@@ -219,14 +215,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Importable]
         public double? ExplicitSLens
         {
-            get
-            {
-                return DocNode.GetExplicitSLens(Precursor.DocNode); // Obtain from precursor if none at this level
-            }
+            get { return DocNode.ExplicitValues.SLens; }
             set
             {
                 ChangeDocNode(EditDescription.SetColumn(@"ExplicitSLens", value),
-                    docNode => docNode.ChangeExplicitValues(docNode.ChangeExplicitSLens(value)));
+                    docNode => docNode.ChangeExplicitSLens(value));
             }
         }
 
@@ -234,14 +227,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Importable]
         public double? ExplicitConeVoltage
         {
-            get
-            {
-                return DocNode.GetExplicitConeVoltage(Precursor.DocNode); // Obtain from precursor if none at this level;
-            }
+            get { return DocNode.ExplicitValues.ConeVoltage; }
             set
             {
                 ChangeDocNode(EditDescription.SetColumn(@"ExplicitConeVoltage", value),
-                    docNode => docNode.ChangeExplicitValues(docNode.ChangeExplicitConeVoltage(value)));
+                    docNode => docNode.ChangeExplicitConeVoltage(value));
             }
         }
 
@@ -249,28 +239,22 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Importable]
         public double? ExplicitDeclusteringPotential
         {
-            get
-            {
-                return DocNode.GetExplicitDeclusteringPotential(Precursor.DocNode); // Obtain from precursor if none at this level
-            }
+            get { return DocNode.ExplicitValues.DeclusteringPotential; }
             set
             {
                 ChangeDocNode(EditDescription.SetColumn(@"ExplicitDeclusteringPotential", value),
-                    docNode => docNode.ChangeExplicitValues(docNode.ChangeExplicitDeclusteringPotential(value)));
+                    docNode => docNode.ChangeExplicitDeclusteringPotential(value));
             }
         }
 
         [Importable]
         public double? ExplicitIonMobilityHighEnergyOffset
         {
-            get
-            {
-                return DocNode.GetExplicitIonMobilityHighEnergyOffset(Precursor.DocNode); // Obtain from precursor if none at this level
-            }
+            get { return DocNode.ExplicitValues.IonMobilityHighEnergyOffset; }
             set
             {
                 ChangeDocNode(EditDescription.SetColumn(@"ExplicitIonMobilityHighEnergyOffset", value),
-                    docNode => docNode.ChangeExplicitValues(docNode.ChangeExplicitIonMobilityHighEnergyOffset(value)));
+                    docNode => docNode.ChangeExplicitIonMobilityHighEnergyOffset(value));
             }
         }
 

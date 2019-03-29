@@ -789,7 +789,7 @@ namespace pwiz.Skyline.Model
                                                   TransitionDocNode nodeTran,
                                                   int step)
         {
-            double? explicitDP = nodeTran.GetExplicitDeclusteringPotential(nodeGroup);
+            double? explicitDP = ExplicitTransitionValues.Get(nodeTran).DeclusteringPotential;
             if (explicitDP.HasValue)
             {
                 return step == 0 ? explicitDP.Value : 0;  // No optimizing of explicit values

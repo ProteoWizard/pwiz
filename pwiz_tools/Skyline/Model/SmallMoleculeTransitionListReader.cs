@@ -863,54 +863,6 @@ namespace pwiz.Skyline.Model
                     }
                     isotopeLabelType = typedMods.LabelType;
                 }
-                if (row.GetCellAsDouble(INDEX_COLLISION_ENERGY, out dtmp))
-                    collisionEnergy = dtmp;
-                else if (!String.IsNullOrEmpty(row.GetCell(INDEX_COLLISION_ENERGY)))
-                {
-                    ShowTransitionError(new PasteError
-                    {
-                        Column = INDEX_COLLISION_ENERGY,
-                        Line = row.Index,
-                        Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_collision_energy_value__0_, row.GetCell(INDEX_COLLISION_ENERGY))
-                    });
-                    return null;
-                }
-                if (row.GetCellAsDouble(INDEX_SLENS, out dtmp))
-                    slens = dtmp;
-                else if (!String.IsNullOrEmpty(row.GetCell(INDEX_SLENS)))
-                {
-                    ShowTransitionError(new PasteError
-                    {
-                        Column = INDEX_SLENS,
-                        Line = row.Index,
-                        Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_S_Lens_value__0_,row.GetCell(INDEX_SLENS))
-                    });
-                    return null;
-                }
-                if (row.GetCellAsDouble(INDEX_CONE_VOLTAGE, out dtmp))
-                    coneVoltage = dtmp;
-                else if (!String.IsNullOrEmpty(row.GetCell(INDEX_CONE_VOLTAGE)))
-                {
-                    ShowTransitionError(new PasteError
-                    {
-                        Column = INDEX_CONE_VOLTAGE,
-                        Line = row.Index,
-                        Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_cone_voltage_value__0_, row.GetCell(INDEX_CONE_VOLTAGE))
-                    });
-                    return null;
-                }
-                if (row.GetCellAsDouble(INDEX_DECLUSTERING_POTENTIAL, out dtmp))
-                    declusteringPotential = dtmp;
-                else if (!String.IsNullOrEmpty(row.GetCell(INDEX_DECLUSTERING_POTENTIAL)))
-                {
-                    ShowTransitionError(new PasteError
-                    {
-                        Column = INDEX_DECLUSTERING_POTENTIAL,
-                        Line = row.Index,
-                        Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_declustering_potential__0_, row.GetCell(INDEX_DECLUSTERING_POTENTIAL))
-                    });
-                    return null;
-                }
                 if (row.GetCellAsDouble(INDEX_COMPENSATION_VOLTAGE, out dtmp))
                     compensationVoltage = dtmp;
                 else if (!String.IsNullOrEmpty(row.GetCell(INDEX_COMPENSATION_VOLTAGE)))
@@ -960,6 +912,57 @@ namespace pwiz.Skyline.Model
                     return null;
                 }
             }
+
+            if (row.GetCellAsDouble(INDEX_COLLISION_ENERGY, out dtmp))
+                collisionEnergy = dtmp;
+            else if (!String.IsNullOrEmpty(row.GetCell(INDEX_COLLISION_ENERGY)))
+            {
+                ShowTransitionError(new PasteError
+                {
+                    Column = INDEX_COLLISION_ENERGY,
+                    Line = row.Index,
+                    Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_collision_energy_value__0_, row.GetCell(INDEX_COLLISION_ENERGY))
+                });
+                return null;
+            }
+            if (row.GetCellAsDouble(INDEX_SLENS, out dtmp))
+                slens = dtmp;
+            else if (!String.IsNullOrEmpty(row.GetCell(INDEX_SLENS)))
+            {
+                ShowTransitionError(new PasteError
+                {
+                    Column = INDEX_SLENS,
+                    Line = row.Index,
+                    Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_S_Lens_value__0_, row.GetCell(INDEX_SLENS))
+                });
+                return null;
+            }
+            if (row.GetCellAsDouble(INDEX_CONE_VOLTAGE, out dtmp))
+                coneVoltage = dtmp;
+            else if (!String.IsNullOrEmpty(row.GetCell(INDEX_CONE_VOLTAGE)))
+            {
+                ShowTransitionError(new PasteError
+                {
+                    Column = INDEX_CONE_VOLTAGE,
+                    Line = row.Index,
+                    Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_cone_voltage_value__0_, row.GetCell(INDEX_CONE_VOLTAGE))
+                });
+                return null;
+            }
+            if (row.GetCellAsDouble(INDEX_DECLUSTERING_POTENTIAL, out dtmp))
+                declusteringPotential = dtmp;
+            else if (!String.IsNullOrEmpty(row.GetCell(INDEX_DECLUSTERING_POTENTIAL)))
+            {
+                ShowTransitionError(new PasteError
+                {
+                    Column = INDEX_DECLUSTERING_POTENTIAL,
+                    Line = row.Index,
+                    Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_declustering_potential__0_, row.GetCell(INDEX_DECLUSTERING_POTENTIAL))
+                });
+                return null;
+            }
+
+
             double? ionMobility = null;
             var ionMobilityUnits = eIonMobilityUnits.none;
 
@@ -1180,7 +1183,12 @@ namespace pwiz.Skyline.Model
                     ? new ExplicitRetentionTimeInfo(retentionTime.Value, retentionTimeWindow)
                     : null;
                 var explicitTransitionValues = ExplicitTransitionValues.Create(collisionEnergy,ionMobilityHighEnergyOffset, slens, coneVoltage, declusteringPotential);
-                var explicitTransitionGroupValues = ExplicitTransitionGroupValues.Create(ionMobility, ionMobilityUnits, ccsPrecursor, compensationVoltage, explicitTransitionValues);
+                if (compensationVoltage.HasValue)
+                {
+                    ionMobility = compensationVoltage;
+                    ionMobilityUnits = eIonMobilityUnits.compensation_V;
+                }
+                var explicitTransitionGroupValues = ExplicitTransitionGroupValues.Create(ionMobility, ionMobilityUnits, ccsPrecursor);
                 var massOk = true;
                 var massTooLow = false;
                 string massErrMsg = null;

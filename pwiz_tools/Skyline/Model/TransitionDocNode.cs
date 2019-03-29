@@ -36,8 +36,6 @@ namespace pwiz.Skyline.Model
 {
     public class TransitionDocNode : DocNode
     {
-        private ExplicitTransitionValues _explicitValues; // Access these only with knowledge of parent transition
-
         public TransitionDocNode(Transition id,
                                  TransitionLosses losses,
                                  TypedMass massH,
@@ -67,7 +65,7 @@ namespace pwiz.Skyline.Model
             LibInfo = transitionQuantInfo.LibInfo;
             Results = results;
             ExplicitQuantitative = transitionQuantInfo.Quantititative;
-            _explicitValues = explicitTransitionValues ?? ExplicitTransitionValues.EMPTY;
+            ExplicitValues = explicitTransitionValues ?? ExplicitTransitionValues.EMPTY;
         }
 
         public override AnnotationDef.AnnotationTarget AnnotationTarget { get { return AnnotationDef.AnnotationTarget.transition; } }
@@ -76,6 +74,9 @@ namespace pwiz.Skyline.Model
 
         [TrackChildren(ignoreName:true, defaultValues:typeof(DefaultValuesNull))]
         public CustomIon CustomIon { get { return Transition.CustomIon; } }
+
+        [TrackChildren]
+        public ExplicitTransitionValues ExplicitValues { get; private set; }
 
         public TransitionLossKey Key(TransitionGroupDocNode parent)
         {
@@ -109,54 +110,30 @@ namespace pwiz.Skyline.Model
 
         public bool ExplicitQuantitative { get; private set; }
 
-        public ExplicitTransitionValues BareExplicitValues { get { return _explicitValues; } } // For serialization etc - use GetExplicit*(TransitionGroupDocNode nodeGroup) to read values with proper context
-
-        public double? GetExplicitSLens(TransitionGroupDocNode nodeGroup)
+        public TransitionDocNode ChangeExplicitSLens(double? value)
         {
-            return _explicitValues.SLens ?? nodeGroup.ExplicitValues.SLens;
-        }
-        public ExplicitTransitionValues ChangeExplicitSLens(double? value)
-        {
-            return _explicitValues.ChangeSLens(value);
+            return ChangeExplicitValues(ExplicitValues.ChangeSLens(value));
         }
 
-        public double? GetExplicitCollisionEnergy(TransitionGroupDocNode nodeGroup)
+        public TransitionDocNode ChangeExplicitCollisionEnergy(double? value)
         {
-            return _explicitValues.CollisionEnergy ?? nodeGroup.ExplicitValues.CollisionEnergy;
-        }
-        public ExplicitTransitionValues ChangeExplicitCollisionEnergy(double? value)
-        {
-            return _explicitValues.ChangeCollisionEnergy(value);
+            return ChangeExplicitValues(ExplicitValues.ChangeCollisionEnergy(value));
         }
 
-        public double? GetExplicitConeVoltage(TransitionGroupDocNode nodeGroup)
+        public TransitionDocNode ChangeExplicitConeVoltage(double? value)
         {
-            return _explicitValues.ConeVoltage ?? nodeGroup.ExplicitValues.ConeVoltage;
-        }
-        public ExplicitTransitionValues ChangeExplicitConeVoltage(double? value)
-        {
-            return _explicitValues.ChangeConeVoltage(value);
+            return ChangeExplicitValues(ExplicitValues.ChangeConeVoltage(value));
         }
 
-        public double? GetExplicitDeclusteringPotential(TransitionGroupDocNode nodeGroup)
+        public TransitionDocNode ChangeExplicitDeclusteringPotential(double? value)
         {
-            return _explicitValues.DeclusteringPotential ?? nodeGroup.ExplicitValues.DeclusteringPotential;
-        }
-        public ExplicitTransitionValues ChangeExplicitDeclusteringPotential(double? value)
-        {
-            return _explicitValues.ChangeDeclusteringPotential(value);
+            return ChangeExplicitValues(ExplicitValues.ChangeDeclusteringPotential(value));
         }
 
-
-        public double? GetExplicitIonMobilityHighEnergyOffset(TransitionGroupDocNode nodeGroup)
+        public TransitionDocNode ChangeExplicitIonMobilityHighEnergyOffset(double? value)
         {
-            return _explicitValues.IonMobilityHighEnergyOffset ?? nodeGroup.ExplicitValues.IonMobilityHighEnergyOffset;
+            return ChangeExplicitValues(ExplicitValues.ChangeIonMobilityHighEnergyOffset(value));
         }
-        public ExplicitTransitionValues ChangeExplicitIonMobilityHighEnergyOffset(double? value)
-        {
-            return _explicitValues.ChangeIonMobilityHighEnergyOffset(value);
-        }
-
 
         public bool IsQuantitative(SrmSettings settings)
         {
@@ -436,7 +413,7 @@ namespace pwiz.Skyline.Model
                                          Losses,
                                          TypedMass.ZERO_MONO_MASSH, 
                                          QuantInfo,
-                                         _explicitValues,
+                                         ExplicitValues,
                                          null) {Mz = Mz, MzMassType = MzMassType};
         }
 
@@ -546,13 +523,13 @@ namespace pwiz.Skyline.Model
                 transitionProto.Results.Peaks.AddRange(GetTransitionPeakProtos(settings.MeasuredResults));
             }
 
-            if (!Equals(_explicitValues, ExplicitTransitionValues.EMPTY))
+            if (!Equals(ExplicitValues, ExplicitTransitionValues.EMPTY))
             {
-                transitionProto.ExplicitCollisionEnergy = DataValues.ToOptional(_explicitValues.CollisionEnergy);
-                transitionProto.ExplicitConeVoltage = DataValues.ToOptional(_explicitValues.ConeVoltage);
-                transitionProto.ExplicitDeclusteringPotential = DataValues.ToOptional(_explicitValues.DeclusteringPotential);
-                transitionProto.ExplicitIonMobilityHighEnergyOffset = DataValues.ToOptional(_explicitValues.IonMobilityHighEnergyOffset);
-                transitionProto.ExplicitSLens = DataValues.ToOptional(_explicitValues.SLens);
+                transitionProto.ExplicitCollisionEnergy = DataValues.ToOptional(ExplicitValues.CollisionEnergy);
+                transitionProto.ExplicitConeVoltage = DataValues.ToOptional(ExplicitValues.ConeVoltage);
+                transitionProto.ExplicitDeclusteringPotential = DataValues.ToOptional(ExplicitValues.DeclusteringPotential);
+                transitionProto.ExplicitIonMobilityHighEnergyOffset = DataValues.ToOptional(ExplicitValues.IonMobilityHighEnergyOffset);
+                transitionProto.ExplicitSLens = DataValues.ToOptional(ExplicitValues.SLens);
             }
 
             return transitionProto;
@@ -581,7 +558,7 @@ namespace pwiz.Skyline.Model
         }
 
         public static TransitionDocNode FromTransitionProto(StringPool stringPool, SrmSettings settings,
-            TransitionGroup group, ExplicitMods mods, IsotopeDistInfo isotopeDist,
+            TransitionGroup group, ExplicitMods mods, IsotopeDistInfo isotopeDist, ExplicitTransitionValues pre422ExplicitTransitionValues,
             SkylineDocumentProto.Types.Transition transitionProto)
         {
             IonType ionType = DataValues.FromIonType(transitionProto.FragmentType);
@@ -656,7 +633,7 @@ namespace pwiz.Skyline.Model
             }
             var annotations = Annotations.FromProtoAnnotations(stringPool, transitionProto.Annotations);
             var results = TransitionChromInfo.FromProtoTransitionResults(stringPool, settings, transitionProto.Results);
-            var explicitTransitionValues = ExplicitTransitionValues.Create(
+            var explicitTransitionValues = pre422ExplicitTransitionValues ?? ExplicitTransitionValues.Create(
                 DataValues.FromOptional(transitionProto.ExplicitCollisionEnergy),
                 DataValues.FromOptional(transitionProto.ExplicitIonMobilityHighEnergyOffset),
                 DataValues.FromOptional(transitionProto.ExplicitSLens),
@@ -732,7 +709,7 @@ namespace pwiz.Skyline.Model
 
         public TransitionDocNode ChangeExplicitValues(ExplicitTransitionValues prop)
         {
-            return ChangeProp(ImClone(this), im => im._explicitValues = prop);
+            return ChangeProp(ImClone(this), im => im.ExplicitValues = prop);
         }
 
         public TransitionDocNode ChangeQuantitative(bool prop)

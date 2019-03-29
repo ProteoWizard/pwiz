@@ -187,12 +187,10 @@ namespace pwiz.Skyline.Model.Serialization
         /// </summary>
         private void WriteExplicitTransitionGroupValuesAttributes(XmlWriter writer, ExplicitTransitionGroupValues importedAttributes)
         {
-            WriteExplicitTransitionValuesAttributes(writer, importedAttributes.ExplicitTransitionValueDefaults);
             writer.WriteAttributeNullable(ATTR.explicit_ion_mobility, importedAttributes.IonMobility);
             if (importedAttributes.IonMobility.HasValue)
                 writer.WriteAttribute(ATTR.explicit_ion_mobility_units, importedAttributes.IonMobilityUnits.ToString());
             writer.WriteAttributeNullable(ATTR.explicit_ccs_sqa, importedAttributes.CollisionalCrossSectionSqA);
-            writer.WriteAttributeNullable(ATTR.explicit_compensation_voltage, importedAttributes.CompensationVoltage);
         }
 
         /// <summary>
@@ -568,7 +566,7 @@ namespace pwiz.Skyline.Model.Serialization
             Transition transition = nodeTransition.Transition;
             writer.WriteAttribute(ATTR.fragment_type, transition.IonType);
             writer.WriteAttribute(ATTR.quantitative, nodeTransition.ExplicitQuantitative, true);
-            WriteExplicitTransitionValuesAttributes(writer, nodeTransition.BareExplicitValues);
+            WriteExplicitTransitionValuesAttributes(writer, nodeTransition.ExplicitValues);
             if (transition.IsCustom())
             {
                 if (!(transition.CustomIon is SettingsCustomIon))
@@ -654,8 +652,8 @@ namespace pwiz.Skyline.Model.Serialization
                     SrmDocument.GetDeclusteringPotential);
             }
 
-            if (nodeTransition.GetExplicitCollisionEnergy(nodeGroup).HasValue)
-                ce = nodeTransition.GetExplicitCollisionEnergy(nodeGroup); // Explicitly imported, overrides any calculation
+            if (nodeTransition.ExplicitValues.CollisionEnergy.HasValue)
+                ce = nodeTransition.ExplicitValues.CollisionEnergy; // Explicitly imported, overrides any calculation
 
             if (ce.HasValue)
             {

@@ -1337,7 +1337,7 @@ namespace pwiz.Skyline.Model
                 var decoyTransition = new Transition(decoyGroup, transition.IonType, transition.CleavageOffset,
                                                      transition.MassIndex, transition.Adduct, productMassShift, transition.CustomIon);
                 decoyNodeTranList.Add(new TransitionDocNode(decoyTransition, nodeTran.Losses, nodeTran.MzMassType.IsAverage() ? TypedMass.ZERO_AVERAGE_MASSH : TypedMass.ZERO_MONO_MASSH, 
-                                                            nodeTran.QuantInfo, nodeTran.BareExplicitValues));
+                                                            nodeTran.QuantInfo, nodeTran.ExplicitValues));
             }
             return decoyNodeTranList.ToArray();
         }

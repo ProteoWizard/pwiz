@@ -244,63 +244,54 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
-        [Importable]
+        [Obsolete("Use Transition.ExplicitCollisionEnergy instead")]
         public double? ExplicitCollisionEnergy
         {
             get
             {
-                return DocNode.ExplicitValues.CollisionEnergy;
-            }
-            set
-            {
-                var values = DocNode.ExplicitValues.ChangeCollisionEnergy(value); // N.B. this changes the explict CE value only for transitions without their own explict CE values
-                ChangeDocNode(EditDescription.SetColumn(@"ExplicitCollisionEnergy", value),
-                    docNode=>docNode.ChangeExplicitValues(values));
+                // If all transitions have the same value, show that
+                return Transitions.Any() && Transitions.All(t => Equals(t.ExplicitCollisionEnergy, Transitions.First().ExplicitCollisionEnergy))
+                    ? Transitions.First().ExplicitCollisionEnergy
+                    : null;
             }
         }
 
         [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
-        [Importable]
+        [Obsolete("Use Transition.SLens instead")]
         public double? ExplicitSLens
         {
             get
             {
-                return DocNode.ExplicitValues.SLens;
-            }
-            set
-            {
-                ChangeDocNode(EditDescription.SetColumn(@"ExplicitSLens", value),  // N.B. this changes the explict value only for transitions without their own explict value
-                    docNode =>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeSLens(value)));
+                // If all transitions have the same value, show that
+                return Transitions.Any() && Transitions.All(t => Equals(t.ExplicitSLens, Transitions.First().ExplicitSLens))
+                    ? Transitions.First().ExplicitSLens
+                    : null;
             }
         }
 
         [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
-        [Importable]
+        [Obsolete("Use Transition.ExplicitConeVolrage instead")]
         public double? ExplicitConeVoltage
         {
             get
             {
-                return DocNode.ExplicitValues.ConeVoltage;
-            }
-            set
-            {
-                ChangeDocNode(EditDescription.SetColumn(@"ExplicitConeVoltage", value),  // N.B. this changes the explict value only for transitions without their own explict value
-                    docNode =>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeConeVoltage(value)));
+                // If all transitions have the same value, show that
+                return Transitions.Any() && Transitions.All(t => Equals(t.ExplicitConeVoltage, Transitions.First().ExplicitConeVoltage))
+                    ? Transitions.First().ExplicitConeVoltage
+                    : null;
             }
         }
 
         [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
-        [Importable]
+        [Obsolete("Use Transition.ExplicitDeclusteringPotential instead")]
         public double? ExplicitDeclusteringPotential
         {
             get
             {
-                return DocNode.ExplicitValues.DeclusteringPotential;
-            }
-            set
-            {
-                ChangeDocNode(EditDescription.SetColumn(@"ExplicitDeclusteringPotential", value), // N.B. this changes the explict value only for transitions without their own explict value
-                    docNode => docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeDeclusteringPotential(value)));
+                // If all transitions have the same value, show that
+                return Transitions.Any() && Transitions.All(t => Equals(t.ExplicitDeclusteringPotential, Transitions.First().ExplicitDeclusteringPotential))
+                    ? Transitions.First().ExplicitDeclusteringPotential
+                    : null;
             }
         }
 
@@ -315,7 +306,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             set
             {
                 ChangeDocNode(EditDescription.SetColumn(@"ExplicitCompensationVoltage", value),
-                    docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeCompensationVoltage(value)));
+                    docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobility(value, eIonMobilityUnits.compensation_V)));
             }
         }
 
@@ -333,17 +324,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        [Obsolete("use IonMobilityHighEnergyOffset instead")] 
+        [Obsolete("use Transition.IonMobilityHighEnergyOffset instead")] 
         public double? ExplicitDriftTimeHighEnergyOffsetMsec  // Backward compatibility, the more general "ExplicitIonMobility" is preferred
         {
             get
             {
-                return DocNode.ExplicitValues.IonMobilityUnits == eIonMobilityUnits.drift_time_msec ? DocNode.ExplicitValues.IonMobilityHighEnergyOffset : null;
-            }
-            set
-            {
-                ChangeDocNode(EditDescription.SetColumn(@"ExplicitDriftTimeHighEnergyOffsetMsec", value),
-                    docNode => docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobilityHighEnergyOffset(value)));
+                return DocNode.ExplicitValues.IonMobilityUnits == eIonMobilityUnits.drift_time_msec ? ExplicitIonMobilityHighEnergyOffset : null;
             }
         }
 
@@ -377,17 +363,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        [Importable]
+        [Obsolete("Use Transition.IonMobilityHighEnergyOffset instead")]
         public double? ExplicitIonMobilityHighEnergyOffset
         {
             get
             {
-                return DocNode.ExplicitValues.IonMobilityHighEnergyOffset;
-            }
-            set
-            {
-                ChangeDocNode(EditDescription.SetColumn(@"ExplicitIonMobilityHighEnergyOffset", value),
-                    docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobilityHighEnergyOffset(value)));
+                // If all transitions have the same value, show that
+                return Transitions.Any() && Transitions.All(t => Equals(t.ExplicitIonMobilityHighEnergyOffset, Transitions.First().ExplicitIonMobilityHighEnergyOffset))
+                    ? Transitions.First().ExplicitIonMobilityHighEnergyOffset
+                    : null;
             }
         }
 

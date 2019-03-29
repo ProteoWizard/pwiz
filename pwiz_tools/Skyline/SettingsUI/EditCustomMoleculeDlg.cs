@@ -47,7 +47,6 @@ namespace pwiz.Skyline.SettingsUI
         private readonly PeptideSettingsUI.LabelTypeComboDriver _driverLabelType;
         private readonly SkylineWindow _parent;
         private readonly UsageMode _usageMode;
-        private readonly ExplicitTransitionGroupValues _originalExplicitTransitionGroupValues;
 
         public enum UsageMode
         {
@@ -62,7 +61,7 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public EditCustomMoleculeDlg(SkylineWindow parent, string title,
             SrmSettings settings, CustomMolecule molecule, ExplicitRetentionTimeInfo explicitRetentionTime) :
-            this(parent, UsageMode.moleculeEdit, title, null, null, 0, 0, null, molecule, Adduct.EMPTY, null,
+            this(parent, UsageMode.moleculeEdit, title, null, null, 0, 0, null, molecule, Adduct.EMPTY, null, null,
                 explicitRetentionTime, null)
         {
         }
@@ -74,7 +73,8 @@ namespace pwiz.Skyline.SettingsUI
         public EditCustomMoleculeDlg(SkylineWindow parent, UsageMode usageMode, string title, Identity initialId,
             IEnumerable<Identity> existingIds, int minCharge, int maxCharge,
             SrmSettings settings, CustomMolecule molecule, Adduct defaultCharge,
-            ExplicitTransitionGroupValues explicitAttributes,
+            ExplicitTransitionGroupValues explicitTransitionGroupAttributes,
+            ExplicitTransitionValues explicitTransitionAttributes,
             ExplicitRetentionTimeInfo explicitRetentionTime,
             IsotopeLabelType defaultIsotopeLabelType)
         {
@@ -89,14 +89,13 @@ namespace pwiz.Skyline.SettingsUI
             _resultAdduct = Adduct.EMPTY;
             _resultCustomMolecule = molecule;
             _usageMode = usageMode;
-            _originalExplicitTransitionGroupValues = explicitAttributes;
 
             var enableFormulaEditing = usageMode == UsageMode.moleculeNew || usageMode == UsageMode.moleculeEdit ||
                                        usageMode == UsageMode.fragment;
             var enableAdductEditing = usageMode == UsageMode.moleculeNew || usageMode == UsageMode.precursor ||
                                       usageMode == UsageMode.fragment;
             var suggestOnlyAdductsWithMass = usageMode != UsageMode.fragment;
-            var needExplicitTransitionValues = usageMode != UsageMode.moleculeEdit;
+            var needExplicitTransitionValues = usageMode == UsageMode.fragment;
             var needExplicitTransitionGroupValues = usageMode == UsageMode.moleculeNew || usageMode == UsageMode.precursor;
 
             InitializeComponent();
@@ -105,13 +104,7 @@ namespace pwiz.Skyline.SettingsUI
             textName.Enabled = usageMode == UsageMode.moleculeNew || usageMode == UsageMode.moleculeEdit ||
                                usageMode == UsageMode.fragment; // Can user edit name?
 
-            var needOptionalValuesBox = explicitRetentionTime != null || explicitAttributes != null;
-            var heightDelta = 0;
-
-            // Initialise the ion mobility units dropdown with L10N values
-            foreach (eIonMobilityUnits t in Enum.GetValues(typeof(eIonMobilityUnits)))
-                comboBoxIonMobilityUnits.Items.Add(IonMobilityFilter.IonMobilityUnitsL10NString(t));
-
+            var needOptionalValuesBox = explicitRetentionTime != null || explicitTransitionGroupAttributes != null || explicitTransitionAttributes != null;
 
             if (!needExplicitTransitionValues)
             {
@@ -129,8 +122,6 @@ namespace pwiz.Skyline.SettingsUI
 
             if (!needExplicitTransitionGroupValues)
             {
-                labelCompensationVoltage.Visible = false;
-                textCompensationVoltage.Visible = false;
                 labelCCS.Visible = false;
                 textBoxCCS.Visible = false;
                 labelIonMobility.Visible = false;
@@ -139,29 +130,56 @@ namespace pwiz.Skyline.SettingsUI
                 comboBoxIonMobilityUnits.Visible = false;
             }
 
+            var heightDelta = 0;
+
+            // Initialise the ion mobility units dropdown with L10N values
+            foreach (eIonMobilityUnits t in Enum.GetValues(typeof(eIonMobilityUnits)))
+                comboBoxIonMobilityUnits.Items.Add(IonMobilityFilter.IonMobilityUnitsL10NString(t));
+
             if (needOptionalValuesBox)
             {
+                var newHeight = groupBoxOptionalValues.Height;
+                var movers = new List<Control>();
+                int offset = 0;
                 if (!needExplicitTransitionGroupValues && !needExplicitTransitionValues)
                 {
                     // We blanked out everything but the retention time
-                    var vmargin = labelRetentionTime.Location.Y;
-                    var newHeight = textRetentionTime.Location.Y + textRetentionTime.Height + vmargin;
-                    heightDelta = groupBoxOptionalValues.Height - newHeight;
-                    groupBoxOptionalValues.Height = newHeight;
+                    newHeight = labelCollisionEnergy.Location.Y;
                 }
                 else if (!needExplicitTransitionGroupValues)
                 {
                     // We need to shift transition-level items up to where retention time was
-                    var vmargin = labelRetentionTime.Location.Y;
-                    var newHeight = textCompensationVoltage.Location.Y - textCollisionEnergy.Height + vmargin;
-                    labelIonMobilityHighEnergyOffset.Location = labelCompensationVoltage.Location;
-                    textIonMobilityHighEnergyOffset.Location = textCompensationVoltage.Location;
-                    heightDelta = groupBoxOptionalValues.Height - newHeight;
-                    groupBoxOptionalValues.Height = newHeight;
+                    movers.AddRange(new Control[]{
+                        textCollisionEnergy, labelCollisionEnergy, textDeclusteringPotential, labelDeclusteringPotential, textSLens,
+                        labelSLens, textConeVoltage, labelConeVoltage, textIonMobilityHighEnergyOffset, labelIonMobilityHighEnergyOffset
+                    });
+                    labelIonMobilityHighEnergyOffset.Location = labelIonMobility.Location;
+                    textIonMobilityHighEnergyOffset.Location = textIonMobility.Location;
+                    offset = labelCollisionEnergy.Location.Y - labelRetentionTime.Location.Y;
+                    newHeight = textBoxCCS.Location.Y;
                 }
+                else if (!needExplicitTransitionValues)
+                {
+                    // We need to shift precursor-level items up to where retention time was
+                    movers.AddRange(new Control[]{textBoxCCS, labelCCS, textIonMobility,
+                        labelIonMobility, comboBoxIonMobilityUnits, labelIonMobilityUnits
+                    });
+                    offset = labelIonMobility.Location.Y - (explicitRetentionTime == null ? labelRetentionTime.Location.Y : labelCollisionEnergy.Location.Y);
+                    newHeight = explicitRetentionTime == null ? textSLens.Location.Y : textIonMobility.Location.Y;
+                }
+
+                foreach (var mover in movers)
+                {
+                    mover.Anchor = AnchorStyles.Left | AnchorStyles.Top;
+                    mover.Location = new Point(mover.Location.X, mover.Location.Y - offset);
+                }
+
+                heightDelta = groupBoxOptionalValues.Height - newHeight;
+                groupBoxOptionalValues.Height = newHeight;
             }
 
-            ResultExplicitTransitionGroupValues = new ExplicitTransitionGroupValues(explicitAttributes);
+            ResultExplicitTransitionGroupValues = new ExplicitTransitionGroupValues(explicitTransitionGroupAttributes);
+            ResultExplicitTransitionValues = new ExplicitTransitionValues(explicitTransitionAttributes);
 
             string labelAverage = !defaultCharge.IsEmpty
                 ? Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg_A_verage_m_z_
@@ -264,12 +282,6 @@ namespace pwiz.Skyline.SettingsUI
                 labelRetentionTimeWindow.Visible = false;
                 textRetentionTime.Visible = false;
                 textRetentionTimeWindow.Visible = false;
-                if (needOptionalValuesBox)
-                {
-                    var rtHeight = labelCollisionEnergy.Location.Y - labelRetentionTimeWindow.Location.Y;
-                    groupBoxOptionalValues.Height -= rtHeight;
-                    heightDelta += rtHeight;
-                }
             }
             else
             {
@@ -387,10 +399,10 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                return ExplicitTransitionGroupValues.Create(IonMobility, 
+                var val = ExplicitTransitionGroupValues.Create(IonMobility, 
                     IonMobilityUnits,
-                    CollisionalCrossSectionSqA,
-                    CompensationVoltage, ResultExplicitTransitionValues);
+                    CollisionalCrossSectionSqA);
+                return val;
             }
             set
             {
@@ -399,12 +411,6 @@ namespace pwiz.Skyline.SettingsUI
                 IonMobility = resultExplicitTransitionGroupValues.IonMobility;
                 IonMobilityUnits = resultExplicitTransitionGroupValues.IonMobilityUnits;
                 CollisionalCrossSectionSqA = resultExplicitTransitionGroupValues.CollisionalCrossSectionSqA;
-                CompensationVoltage = resultExplicitTransitionGroupValues.CompensationVoltage;
-                CollisionEnergy = resultExplicitTransitionGroupValues.ExplicitTransitionValueDefaults.CollisionEnergy;
-                IonMobilityHighEnergyOffset = resultExplicitTransitionGroupValues.ExplicitTransitionValueDefaults.IonMobilityHighEnergyOffset;
-                SLens = resultExplicitTransitionGroupValues.ExplicitTransitionValueDefaults.SLens;
-                ConeVoltage = resultExplicitTransitionGroupValues.ExplicitTransitionValueDefaults.ConeVoltage;
-                DeclusteringPotential = resultExplicitTransitionGroupValues.ExplicitTransitionValueDefaults.DeclusteringPotential;
             }
         }
 
@@ -412,10 +418,17 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                var explicitTransitionValues = ExplicitTransitionValues.Create(CollisionEnergy, IonMobilityHighEnergyOffset, SLens, ConeVoltage, DeclusteringPotential);
-                return _usageMode == UsageMode.fragment
-                     ? _originalExplicitTransitionGroupValues.ExplicitTransitionValueDefaults.Diff(explicitTransitionValues) // Only report deviations from precursor values
-                     : explicitTransitionValues;
+                return ExplicitTransitionValues.Create(CollisionEnergy, IonMobilityHighEnergyOffset, SLens, ConeVoltage, DeclusteringPotential);
+            }
+            set
+            {
+                // Use constructor to handle value == null
+                var resultExplicitTransitionValues = new ExplicitTransitionValues(value);
+                CollisionEnergy = resultExplicitTransitionValues.CollisionEnergy;
+                IonMobilityHighEnergyOffset = resultExplicitTransitionValues.IonMobilityHighEnergyOffset;
+                SLens = resultExplicitTransitionValues.SLens;
+                ConeVoltage = resultExplicitTransitionValues.ConeVoltage;
+                DeclusteringPotential = resultExplicitTransitionValues.DeclusteringPotential;
             }
         }
 
@@ -486,31 +499,41 @@ namespace pwiz.Skyline.SettingsUI
         public double? CollisionEnergy
         {
             get { return NullForEmpty(textCollisionEnergy.Text); }
-            set { textCollisionEnergy.Text = EmptyForNullOrNonPositive(value); }
+            set
+            {
+                Assume.IsTrue(_usageMode == UsageMode.fragment || value == null); // Make sure tests are testing the proper UI
+                textCollisionEnergy.Text = EmptyForNullOrNonPositive(value);
+            }
         }
 
         public double? DeclusteringPotential
         {
             get { return NullForEmpty(textDeclusteringPotential.Text); }
-            set { textDeclusteringPotential.Text = EmptyForNullOrNonPositive(value); }
-        }
-
-        public double? CompensationVoltage
-        {
-            get { return NullForEmpty(textCompensationVoltage.Text); }
-            set { textCompensationVoltage.Text = EmptyForNullOrNonPositive(value); }
+            set
+            {
+                Assume.IsTrue(_usageMode == UsageMode.fragment || value == null); // Make sure tests are testing the proper UI
+                textDeclusteringPotential.Text = EmptyForNullOrNonPositive(value);
+            }
         }
 
         public double? SLens
         {
             get { return NullForEmpty(textSLens.Text); }
-            set { textSLens.Text = EmptyForNullOrNonPositive(value); }
+            set
+            {
+                Assume.IsTrue(_usageMode == UsageMode.fragment || value == null); // Make sure tests are testing the proper UI
+                textSLens.Text = EmptyForNullOrNonPositive(value);
+            }
         }
 
         public double? ConeVoltage
         {
             get { return NullForEmpty(textConeVoltage.Text); }
-            set { textConeVoltage.Text = EmptyForNullOrNonPositive(value); }
+            set
+            {
+                Assume.IsTrue(_usageMode == UsageMode.fragment || value == null); // Make sure tests are testing the proper UI
+                textConeVoltage.Text = EmptyForNullOrNonPositive(value);
+            }
         }
 
         public double? RetentionTime
@@ -546,6 +569,7 @@ namespace pwiz.Skyline.SettingsUI
             get { return NullForEmpty(textIonMobilityHighEnergyOffset.Text); }
             set
             {
+                Assume.IsTrue(_usageMode == UsageMode.fragment || value == null); // Make sure tests are testing the proper UI
                 textIonMobilityHighEnergyOffset.Text = value == null
                     ? string.Empty
                     : value.Value.ToString(LocalizationHelper.CurrentCulture);

@@ -33,15 +33,12 @@ namespace pwiz.Skyline.Model
 
         public static ExplicitTransitionGroupValues Create(double? explicitIonMobility,
             eIonMobilityUnits explicitIonMobilityUnits,
-            double? explicitCollisionalCrossSectionSqA,
-            double? explicitCompensationVoltage,
-            ExplicitTransitionValues explicitTransitionValueDefaults)
+            double? explicitCollisionalCrossSectionSqA)
         {
-            if (explicitIonMobility.HasValue || explicitCollisionalCrossSectionSqA.HasValue || explicitCompensationVoltage.HasValue || 
-                (explicitTransitionValueDefaults != null && !explicitTransitionValueDefaults.Equals(ExplicitTransitionValues.EMPTY)))
+            if (explicitIonMobility.HasValue || explicitCollisionalCrossSectionSqA.HasValue)
             {
                 return new ExplicitTransitionGroupValues(explicitIonMobility, explicitIonMobilityUnits,
-                    explicitCollisionalCrossSectionSqA, explicitCompensationVoltage, explicitTransitionValueDefaults);
+                    explicitCollisionalCrossSectionSqA);
             }
 
             return EMPTY;
@@ -49,77 +46,29 @@ namespace pwiz.Skyline.Model
 
         private ExplicitTransitionGroupValues(double? explicitIonMobility,
             eIonMobilityUnits explicitIonMobilityUnits,
-            double? explicitCollisionalCrossSectionSqA,
-            double? explicitCompensationVoltage,
-            ExplicitTransitionValues explicitTransitionValueDefaults) 
+            double? explicitCollisionalCrossSectionSqA) 
         {
             IonMobility = explicitIonMobility;
             IonMobilityUnits = explicitIonMobilityUnits;
             CollisionalCrossSectionSqA = explicitCollisionalCrossSectionSqA;
-            CompensationVoltage = explicitCompensationVoltage;
-            ExplicitTransitionValueDefaults = explicitTransitionValueDefaults;
         }
 
         public ExplicitTransitionGroupValues(ExplicitTransitionGroupValues other)
             : this(
                 (other == null) ? null : other.IonMobility,
                 (other == null) ? eIonMobilityUnits.none : other.IonMobilityUnits,
-                (other == null) ? null : other.CollisionalCrossSectionSqA,
-                (other == null) ? null : other.CompensationVoltage,
-                (other == null) ? ExplicitTransitionValues.EMPTY : other.ExplicitTransitionValueDefaults)
+                (other == null) ? null : other.CollisionalCrossSectionSqA)
         {
         }
 
-        public ExplicitTransitionGroupValues Merge(ExplicitTransitionValues other)
-        {
-            return ChangeExplicitTransitionValueDefaults(other.Merge(ExplicitTransitionValueDefaults));
-        }
-
-        public ExplicitTransitionValues ExplicitTransitionValueDefaults { get; private set; }
-
-        [Track]
-        public double? CollisionEnergy => ExplicitTransitionValueDefaults.CollisionEnergy; // For import formats with explicit values for CE
-        [Track]
-        public double? DeclusteringPotential => ExplicitTransitionValueDefaults.DeclusteringPotential; // For import formats with explicit values for DP
-        [Track]
-        public double? SLens => ExplicitTransitionValueDefaults.SLens; // For Thermo
-        [Track]
-        public double? ConeVoltage => ExplicitTransitionValueDefaults.ConeVoltage; // For Waters
-        [Track]
-        public double? CompensationVoltage // For import formats with explicit values for CV, which is actually an ion mobility value
-        {
-            get
-            {
-                return IonMobilityUnits == eIonMobilityUnits.compensation_V ? IonMobility : null;
-            }
-            private set
-            {
-                if (!value.HasValue && IonMobilityUnits != eIonMobilityUnits.compensation_V)
-                {
-                    return; // This changes nothing
-                }
-                IonMobility = value;
-                IonMobilityUnits = value.HasValue ? eIonMobilityUnits.compensation_V : eIonMobilityUnits.none;
-            }
-        } 
         [Track]
         public double? CollisionalCrossSectionSqA { get; private set; } // For import formats with explicit values for CCS
         [Track]
         public double? IonMobility { get; private set; } // For import formats with explicit values for DT
         [Track]
-        public double? IonMobilityHighEnergyOffset => ExplicitTransitionValueDefaults.IonMobilityHighEnergyOffset; // For import formats with explicit values for DT
-        [Track]
         public eIonMobilityUnits IonMobilityUnits { get; private set; } // For import formats with explicit values for DT
 
-        public ExplicitTransitionGroupValues ChangeCollisionEnergy(double? ce)
-        {
-            return ChangeProp(ImClone(this), (im, v) => im.ExplicitTransitionValueDefaults = im.ExplicitTransitionValueDefaults.ChangeCollisionEnergy(v), ce);
-        }
-
-        public ExplicitTransitionGroupValues ChangeIonMobilityHighEnergyOffset(double? dtOffset)
-        {
-            return ChangeProp(ImClone(this), (im, v) => im.ExplicitTransitionValueDefaults = im.ExplicitTransitionValueDefaults.ChangeIonMobilityHighEnergyOffset(v), dtOffset);
-        }
+        public double? CompensationVoltage { get { return Equals(IonMobilityUnits, eIonMobilityUnits.compensation_V) ? IonMobility : null; } } // For backward compatibility, back when we didn't have general ion mobility
 
         public ExplicitTransitionGroupValues ChangeIonMobility(double? imNew, eIonMobilityUnits unitsNew)
         {
@@ -132,38 +81,11 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), (im, v) => im.CollisionalCrossSectionSqA = v, ccs);
         }
 
-        public ExplicitTransitionGroupValues ChangeSLens(double? slens)
-        {
-            return ChangeProp(ImClone(this), (im, v) => im.ExplicitTransitionValueDefaults = im.ExplicitTransitionValueDefaults.ChangeSLens(v), slens);
-        }
-
-        public ExplicitTransitionGroupValues ChangeConeVoltage(double? coneVoltage)
-        {
-            return ChangeProp(ImClone(this), (im, v) => im.ExplicitTransitionValueDefaults = im.ExplicitTransitionValueDefaults.ChangeConeVoltage(v), coneVoltage);
-        }
-
-        public ExplicitTransitionGroupValues ChangeDeclusteringPotential(double? dp)
-        {
-            return ChangeProp(ImClone(this), (im, v) => im.ExplicitTransitionValueDefaults = im.ExplicitTransitionValueDefaults.ChangeDeclusteringPotential(v), dp);
-        }
-
-        public ExplicitTransitionGroupValues ChangeCompensationVoltage(double? cv)
-        {
-            return ChangeProp(ImClone(this), (im, v) => im.CompensationVoltage = v, cv);
-        }
-
-        public ExplicitTransitionGroupValues ChangeExplicitTransitionValueDefaults(ExplicitTransitionValues ev)
-        {
-            return ChangeProp(ImClone(this), (im, v) => im.ExplicitTransitionValueDefaults = v, ev);
-        }
-
         protected bool Equals(ExplicitTransitionGroupValues other)
         {
             return Equals(IonMobility, other.IonMobility) &&
                    Equals(IonMobilityUnits, other.IonMobilityUnits) &&
-                   Equals(CollisionalCrossSectionSqA, other.CollisionalCrossSectionSqA) &&
-                   CompensationVoltage.Equals(other.CompensationVoltage) &&
-                   ExplicitTransitionValueDefaults.Equals(other.ExplicitTransitionValueDefaults);
+                   Equals(CollisionalCrossSectionSqA, other.CollisionalCrossSectionSqA);
         }
 
         public override bool Equals(object obj)
@@ -181,8 +103,6 @@ namespace pwiz.Skyline.Model
                 int hashCode = IonMobility.GetHashCode();
                 hashCode = (hashCode * 397) ^ IonMobilityUnits.GetHashCode();
                 hashCode = (hashCode * 397) ^ CollisionalCrossSectionSqA.GetHashCode();
-                hashCode = (hashCode * 397) ^ CompensationVoltage.GetHashCode();
-                hashCode = (hashCode * 397) ^ ExplicitTransitionValueDefaults.GetHashCode();
                 return hashCode;
             }
         }

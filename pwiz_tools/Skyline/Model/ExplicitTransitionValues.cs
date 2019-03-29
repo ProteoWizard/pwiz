@@ -31,6 +31,8 @@ namespace pwiz.Skyline.Model
 
         public static readonly ExplicitTransitionValues EMPTY = new ExplicitTransitionValues(null);
 
+        public static ExplicitTransitionValues Get(TransitionDocNode node) {return node == null ? EMPTY : node.ExplicitValues; } // Convenience function
+
         public static ExplicitTransitionValues Create(double? explicitCollisionEnergy,
             double? explicitIonMobilityHighEnergyOffset,
             double? explicitSLens,

@@ -3256,6 +3256,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Explicit values.
+        /// </summary>
+        public static string TransitionDocNode_ExplicitValues {
+            get {
+                return ResourceManager.GetString("TransitionDocNode_ExplicitValues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Auto-select all matching transitions.
         /// </summary>
         public static string TransitionFilter_AutoSelect {
