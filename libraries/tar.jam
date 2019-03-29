@@ -312,11 +312,11 @@ rule quote-string ( string )
 
 rule extract ( tar-filepath : include-patterns * : tar-requirements * : tar-usage-requirements * : options * )
 {
-    check-last-file-only = [ feature.get-values <check-last-file-only> : $(options) ] ;
-    ignore-incremental = [ feature.get-values <ignore-incremental> : $(options) ] ;
+    local check-last-file-only = [ feature.get-values <check-last-file-only> : $(options) ] ;
+    local ignore-incremental = [ feature.get-values <ignore-incremental> : $(options) ] ;
 
     # CONSIDER: take "tar-extra-args" as option instead of explicitly supporting certain args?
-    keep-old-files = [ feature.get-values <keep-old-files> : $(options) ] ;
+    local keep-old-files = [ feature.get-values <keep-old-files> : $(options) ] ;
 
     if $(ignore-incremental) || ! --incremental in [ modules.peek : ARGV ] || --force-extract in [ modules.peek : ARGV ]
     {
@@ -441,6 +441,7 @@ rule extract-really ( tar-filepath : include-patterns * : tar-requirements * : t
         local all-files-exist = true ;
 
         if $(keep-old-files) { keep-old-files = "-k" ; }
+        else { keep-old-files = "" ; }
 
         if $(check-last-file-only)
         {
