@@ -63,7 +63,11 @@ SpectrumList_Filter::Impl::Impl(SpectrumListPtr _original, const Predicate& pred
     // iterate through the spectra, using predicate to build the sub-list
     for (size_t i=0, end=original->size(); i<end; i++)
     {
-        if (ilr) ilr->broadcastUpdateMessage(IterationListener::UpdateMessage(i, original->size(), "filtering spectra (by " + predicate.describe() + ")"));
+        if (ilr)
+        {
+            if (IterationListener::Status_Cancel == ilr->broadcastUpdateMessage(IterationListener::UpdateMessage(i, original->size(), "filtering spectra (by " + predicate.describe() + ")")))
+                break;
+        }
 
         if (predicate.done()) break;
 

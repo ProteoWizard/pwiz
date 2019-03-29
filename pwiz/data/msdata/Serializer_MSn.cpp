@@ -57,7 +57,8 @@ class Serializer_MSn::Impl
         Impl(MSn_Type filetype) : _filetype(filetype) {}
         
         void write(ostream& os, const MSData& msd, 
-                   const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const;
+                   const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
+                   bool useWorkerThreads = true) const;
         
         void read(shared_ptr<istream> is, MSData& msd) const;
 
@@ -419,7 +420,8 @@ namespace
 
 
 void Serializer_MSn::Impl::write(ostream& os, const MSData& msd,
-    const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const
+    const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
+    bool useWorkerThreads) const
 {
     // Write the header
     if ((MSn_Type_BMS1 == _filetype) ||
@@ -438,7 +440,7 @@ void Serializer_MSn::Impl::write(ostream& os, const MSData& msd,
     // Go through the spectrum list and write each spectrum
     bool ms1File = MSn_Type_MS1 == _filetype || MSn_Type_BMS1 == _filetype || MSn_Type_CMS1 == _filetype;
     SpectrumList& sl = *msd.run.spectrumListPtr;
-    SpectrumWorkerThreads spectrumWorkers(sl);
+    SpectrumWorkerThreads spectrumWorkers(sl, useWorkerThreads);
     for (size_t i=0, end=sl.size(); i < end; ++i)
     {
         //SpectrumPtr s = sl.spectrum(i, true);
@@ -514,7 +516,8 @@ PWIZ_API_DECL Serializer_MSn::Serializer_MSn(MSn_Type filetype)
 {}
 
 PWIZ_API_DECL void Serializer_MSn::write(ostream& os, const MSData& msd,
-    const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const
+    const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
+    bool useWorkerThreads) const
   
 {
     return impl_->write(os, msd, iterationListenerRegistry);

@@ -54,7 +54,8 @@ class Serializer_mzXML::Impl
     {}
 
     void write(ostream& os, const MSData& msd,
-               const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const;
+               const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
+               bool useWorkerThreads) const;
 
     void read(shared_ptr<istream> is, MSData& msd) const;
 
@@ -688,13 +689,14 @@ IndexEntry write_scan(XMLWriter& xmlWriter,
 void write_scans(XMLWriter& xmlWriter, const MSData& msd, 
                  const Serializer_mzXML::Config& config, vector<IndexEntry>& index,
                  const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
-                 map<InstrumentConfigurationPtr, int>& instrumentIndexByPtr)
+                 map<InstrumentConfigurationPtr, int>& instrumentIndexByPtr,
+                 bool useWorkerThreads)
 {
     SpectrumListPtr sl = msd.run.spectrumListPtr;
     if (!sl.get()) return;
 
     CVID defaultNativeIdFormat = id::getDefaultNativeIDFormat(msd);
-    SpectrumWorkerThreads spectrumWorkers(*sl);
+    SpectrumWorkerThreads spectrumWorkers(*sl, useWorkerThreads);
 
     for (size_t i=0; i<sl->size(); i++)
     {
@@ -756,7 +758,8 @@ void write_index(XMLWriter& xmlWriter, const vector<IndexEntry>& index)
 
 
 void Serializer_mzXML::Impl::write(ostream& os, const MSData& msd,
-    const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const
+    const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
+    bool useWorkerThreads) const
 {
     SHA1OutputObserver sha1OutputObserver;
     XMLWriter::Config config;
@@ -775,7 +778,7 @@ void Serializer_mzXML::Impl::write(ostream& os, const MSData& msd,
     write_msInstruments(xmlWriter, msd, cvTranslator_, instrumentIndexByPtr);
     write_dataProcessing(xmlWriter, msd, cvTranslator_);
     vector<IndexEntry> index;
-    write_scans(xmlWriter, msd, config_, index, iterationListenerRegistry, instrumentIndexByPtr);
+    write_scans(xmlWriter, msd, config_, index, iterationListenerRegistry, instrumentIndexByPtr, useWorkerThreads);
     xmlWriter.endElement(); // msRun 
 
     stream_offset indexOffset = xmlWriter.positionNext();
@@ -1378,9 +1381,10 @@ PWIZ_API_DECL Serializer_mzXML::Serializer_mzXML(const Config& config)
 
 
 PWIZ_API_DECL void Serializer_mzXML::write(ostream& os, const MSData& msd,
-   const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const
+    const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
+    bool useWorkerThreads) const
 {
-    return impl_->write(os, msd, iterationListenerRegistry);
+    return impl_->write(os, msd, iterationListenerRegistry, useWorkerThreads);
 }
 
 
