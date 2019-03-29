@@ -626,7 +626,7 @@ void WatersMseReader::parseModString(LineEntry& entry,
             }
         }
         // find the position in the sequence
-        size_t openBrace = i->find('(');
+        size_t openBrace = i->rfind('(');
         int position = atoi(i->c_str() + openBrace + 1);
         
         // check that there was a valid position
