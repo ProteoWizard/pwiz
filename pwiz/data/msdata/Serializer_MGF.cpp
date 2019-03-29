@@ -46,7 +46,8 @@ class Serializer_MGF::Impl
     {}
 
     void write(ostream& os, const MSData& msd,
-               const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const;
+               const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
+               bool useWorkerThreads) const;
 
     void read(shared_ptr<istream> is, MSData& msd) const;
 };
@@ -62,7 +63,8 @@ struct nosci10_policy : boost::spirit::karma::real_policies<T>
 
 
 void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
-    const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const
+    const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
+    bool useWorkerThreads) const
 {
     bool titleIsThermoDTA = false;
     if (msd.fileDescription.sourceFilePtrs.size() >= 1)
@@ -72,7 +74,7 @@ void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
 
     os << std::setprecision(10); // 1234.567890
     SpectrumList& sl = *msd.run.spectrumListPtr;
-    SpectrumWorkerThreads spectrumWorkers(sl);
+    SpectrumWorkerThreads spectrumWorkers(sl, useWorkerThreads);
     for (size_t i=0, end=sl.size(); i < end; ++i)
     {
         //SpectrumPtr s = sl.spectrum(i, true);
@@ -197,10 +199,11 @@ PWIZ_API_DECL Serializer_MGF::Serializer_MGF()
 
 
 PWIZ_API_DECL void Serializer_MGF::write(ostream& os, const MSData& msd,
-    const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const
+    const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
+    bool useWorkerThreads) const
   
 {
-    return impl_->write(os, msd, iterationListenerRegistry);
+    return impl_->write(os, msd, iterationListenerRegistry, useWorkerThreads);
 }
 
 

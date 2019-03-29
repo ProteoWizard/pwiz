@@ -42,7 +42,7 @@ class SpectrumWorkerThreads::Impl
 {
     public:
 
-    Impl(const SpectrumList& sl)
+    Impl(const SpectrumList& sl, bool useWorkerThreads)
         : sl_(sl)
         , numThreads_(boost::thread::hardware_concurrency())
         , maxProcessedTaskCount_(numThreads_ * 4)
@@ -76,9 +76,9 @@ class SpectrumWorkerThreads::Impl
             }
         }
 
-        useThreads_ = !(isBruker || (isDemultiplexed)); // Bruker library is not thread-friendly
+        useThreads_ = useWorkerThreads && !(isBruker || (isDemultiplexed)); // Bruker library is not thread-friendly
         //useThreads_ = !(isBruker); // Bruker library is not thread-friendly
-
+        cout << "useThreads: " << useThreads_ << endl;
         if (sl.size() > 0 && useThreads_)
         {
             // create one task per spectrum
@@ -282,7 +282,7 @@ class SpectrumWorkerThreads::Impl
 };
 
 
-SpectrumWorkerThreads::SpectrumWorkerThreads(const SpectrumList& sl) : impl_(new Impl(sl)) {}
+SpectrumWorkerThreads::SpectrumWorkerThreads(const SpectrumList& sl, bool useWorkerThreads) : impl_(new Impl(sl, useWorkerThreads)) {}
 
 SpectrumWorkerThreads::~SpectrumWorkerThreads() {}
 
