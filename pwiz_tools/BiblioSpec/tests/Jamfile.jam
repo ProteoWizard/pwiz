@@ -49,7 +49,7 @@ rule test-data
     {
         .extract-once = true ;
         import tar ;
-        tar.extract $(TEST_DATA_PATH).tar.bz2 : : : : check-last-file-only ;
+        tar.extract $(TEST_DATA_PATH).tar.bz2 : : : : <check-last-file-only>true <keep-old-files>true ;
     }
 
     local result ;
