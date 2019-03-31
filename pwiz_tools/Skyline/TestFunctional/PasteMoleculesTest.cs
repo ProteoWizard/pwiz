@@ -703,11 +703,11 @@ namespace pwiz.SkylineTestFunctional
                     "Proteins!*.Peptides!*.SMILES",
                     "Proteins!*.Peptides!*.CAS"});
 
-                const double explicitCE = 123.45;
+                const double explicitCE2= 123.45;
                 var colCE = FindDocumentGridColumn(documentGrid, "ExplicitCollisionEnergy");
-                RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colCE.Index].Value = explicitCE);
+                RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colCE.Index].Value = explicitCE2);
                 WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
-                  SkylineWindow.Document.MoleculeTransitions.First().ExplicitValues.CollisionEnergy.Equals(explicitCE)));
+                  SkylineWindow.Document.MoleculeTransitions.First().ExplicitValues.CollisionEnergy.Equals(explicitCE2)));
 
                 const double explicitDP = 12.345;
                 var colDP = FindDocumentGridColumn(documentGrid, "ExplicitDeclusteringPotential");
