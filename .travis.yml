@@ -41,15 +41,15 @@ matrix:
     # works on Trusty
     - os: linux
       dist: xenial
-      compiler: clang++-5.0
+      compiler: clang++-7
       addons:
         apt:
           sources:
-            - llvm-toolchain-trusty-5.0
+            - llvm-toolchain-trusty-7
           packages:
-            - clang-5.0
+            - clang-7
       env:
-        - MATRIX_EVAL="TOOLSET=toolset=clang-5.0"
+        - MATRIX_EVAL="TOOLSET=toolset=clang-7"
 
     - os: osx
       osx_image: xcode8.3
