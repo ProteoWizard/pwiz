@@ -16,7 +16,7 @@ matrix:
           packages:
             - g++-8
       env:
-        - MATRIX_EVAL="TOOLSET=toolset=gcc-8.1.0-5"
+        - MATRIX_EVAL="TOOLSET=toolset=gcc-8.1"
 
     #
     # Clang
