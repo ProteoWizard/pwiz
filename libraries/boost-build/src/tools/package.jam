@@ -34,25 +34,163 @@ import "class" : new ;
 import option ;
 import project ;
 import feature ;
+import path ;
 import property ;
 import stage ;
 import targets ;
 import modules ;
+import os ;
 
 feature.feature install-default-prefix : : free incidental ;
+
+class package-paths
+{
+    import feature ;
+    import modules ;
+    import option ;
+    import os ;
+    import path ;
+    rule __init__ ( default-prefix )
+    {
+        local explicit-options = [ MATCH --(prefix|bindir|libdir|includedir|datarootdir)=.*
+          : [ modules.peek : ARGV ] ] ;
+        self.has-$(explicit-options) = true ;
+        if prefix in $(explicit-options)
+        {
+            # If --prefix is explicitly specified on the command line,
+            # then we need wipe away any settings of libdir/includir that
+            # is specified via options in config files.
+            option.set bindir : ;
+            option.set libdir : ;
+            option.set includedir : ;
+            option.set datarootdir : ;
+        }
+
+        handle-path prefix : $(default-prefix) ;
+        handle-path libdir : $(self.prefix)/lib ;
+        handle-path bindir : $(self.prefix)/bin ;
+        handle-path includedir : $(self.prefix)/include ;
+        handle-path datarootdir : $(self.prefix)/share ;
+    }
+
+    local rule handle-path ( option : default-value )
+    {
+        local opt = [ option.get $(option) ] ;
+        if $(opt)
+        {
+            opt = [ path.root [ path.make $(opt) ] [ path.pwd ] ] ;
+        }
+        else
+        {
+            opt = $(default-value) ;
+        }
+        self.$(option) = $(opt) ;
+    }
+
+    rule prefix ( )
+    {
+        return $(self.prefix) ;
+    }
+
+    rule libdir ( )
+    {
+        return $(self.libdir) ;
+    }
+
+    rule bindir ( )
+    {
+        return $(self.bindir) ;
+    }
+
+    rule includedir ( )
+    {
+        return $(self.includedir) ;
+    }
+
+    rule datarootdir ( )
+    {
+        return $(self.datarootdir) ;
+    }
+
+    rule get ( option )
+    {
+        if ! $(self.$(option))
+        {
+            local info = [ modules.peek package : .options.$(option) ] ;
+            local default-value = $(info[1]) ;
+            local relative-to = $(info[2]) ;
+            if $(self.has-$(relative-to))
+            {
+                option.set $(option) ;
+                self.has-$(option) = true ;
+            }
+            if [ MATCH --$(option)=(.*) : [ modules.peek : ARGV ] ]
+            {
+                self.has-$(option) = true ;
+            }
+            local adjusted-default =
+                [ path.join [ get $(relative-to) ] $(default-value) ] ;
+            handle-path $(option) : $(adjusted-default) ;
+        }
+        return $(self.$(option)) ;
+    }
+}
+
+# Registers an additional path option.  The option name
+# can then be used with a package-paths object.
+#
+# default-path is the default path that will be used if
+# the option is not set explicitly.  It will be interpreted
+# relative to another option.  This allows options to be
+# defined hierarchically with --prefix as the root.
+#
+# relative-to should be the name of another option.  It defaults
+# to prefix.
+#
+# Example::
+#
+#   package.add-path-option cmakedir : cmake : libdir ;
+#   cmakedir = [ $(mypaths).get cmakedir ] ; # defaults to /usr/local/lib/cmake
+#
+rule add-path-option ( name : default-path : relative-to ? )
+{
+    local value = $(default-path) $(relative-to:E=prefix) ;
+    if $(.options.$(name)) && $(.options.$(name)) != $(value)
+    {
+        import errors ;
+        errors.error Duplicate definition of $(name) ;
+    }
+    .options.$(name) = $(value) ;
+}
+
+
+# Returns a package-paths object that can be used
+# to find the various install paths.  If requirements
+# contains <install-default-prefix> then that will be used
+# as the default prefix, otherwise a platform specific
+# default prefix will be used.  All other properties
+# in requirements are ignored.
+#
+rule paths ( package-name : requirements * )
+{
+    local default-prefix = [ feature.get-values <install-default-prefix> : $(requirements) ] ;
+    # Or some likely defaults if neither is given.
+    if ! $(default-prefix)
+    {
+        if [ os.name ] = NT { default-prefix = C:\\$(package-name) ; }
+        else { default-prefix = /usr/local ; }
+    }
+    default-prefix = [ path.make $(default-prefix) ] ;
+    if ! $(.package-paths.$(default-prefix))
+    {
+        .package-paths.$(default-prefix) = [ new package-paths $(default-prefix) ] ;
+    }
+    return $(.package-paths.$(default-prefix)) ;
+}
 
 rule install ( name package-name ? : requirements * : binaries * : libraries * : headers * )
 {
     package-name ?= $(name) ;
-    if [ MATCH --prefix=(.*) : [ modules.peek : ARGV ] ]
-    {
-        # If --prefix is explicitly specified on the command line,
-        # then we need wipe away any settings of libdir/includir that
-        # is specified via options in config files.
-        option.set bindir : ;
-        option.set libdir : ;
-        option.set includedir : ;
-    }
             
     # If <install-source-root> is not specified, all headers are installed to
     # prefix/include, no matter what their relative path is. Sometimes that is
@@ -71,19 +209,16 @@ rule install ( name package-name ? : requirements * : binaries * : libraries * :
 
     # First, figure out all locations. Use the default if no prefix option
     # given.
-    local prefix = [ get-prefix $(package-name) : $(requirements) ] ;
-
-    # Architecture dependent files.
-    local exec-locate = [ option.get exec-prefix : $(prefix) ] ;
+    local paths = [ paths $(package-name) : $(requirements) ] ;
 
     # Binaries.
-    local bin-locate = [ option.get bindir : $(prefix)/bin ] ;
+    local bin-locate = [ $(paths).bindir ] ;
 
     # Object code libraries.
-    local lib-locate = [ option.get libdir : $(prefix)/lib ] ;
+    local lib-locate = [ $(paths).libdir ] ;
 
     # Source header files.
-    local include-locate = [ option.get includedir : $(prefix)/include ] ;
+    local include-locate = [ $(paths).includedir ] ;
 
     stage.install $(name)-bin : $(binaries) : $(requirements)
         <location>$(bin-locate) ;
@@ -124,21 +259,15 @@ rule install ( name package-name ? : requirements * : binaries * : libraries * :
 rule install-data ( target-name : package-name : data * : requirements * )
 {
     package-name ?= target-name ;
-    if [ MATCH --prefix=(.*) : [ modules.peek : ARGV ] ]
-    {
-        # If --prefix is explicitly specified on the command line,
-        # then we need wipe away any settings of datarootdir
-        option.set datarootdir : ;
-    }   
-    
-    local prefix = [ get-prefix $(package-name) : $(requirements) ] ;
-    local datadir = [ option.get datarootdir : $(prefix)/share ] ;
+
+    local paths = [ paths $(package-name) : $(requirements) ] ;
+    local datadir = [ $(paths).datarootdir ] ;
 
     stage.install $(target-name) 
         : $(data)
         : $(requirements) <location>$(datadir)/$(package-name)
         ;
-    
+
     local c = [ project.current ] ;
     local project-module = [ $(c).project-module ] ;
     module $(project-module)
@@ -146,20 +275,3 @@ rule install-data ( target-name : package-name : data * : requirements * )
         explicit $(1) ;
     }
 }
-
-local rule get-prefix ( package-name : requirements * )
-{
-    local prefix = [ option.get prefix : [ property.select
-        <install-default-prefix> : $(requirements) ] ] ;
-    prefix = $(prefix:G=) ;
-    requirements = [ property.change $(requirements) : <install-default-prefix>
-        ] ;
-    # Or some likely defaults if neither is given.
-    if ! $(prefix)
-    {
-        if [ modules.peek : NT ] { prefix = C:\\$(package-name) ; }
-        else if [ modules.peek : UNIX ] { prefix = /usr/local ; }        
-    }
-    return $(prefix) ;
-}           
-

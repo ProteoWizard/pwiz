@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="ModeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <metadata name="contextMenuTreeNode.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 56</value>
   </metadata>
@@ -170,7 +173,7 @@
     <value>193, 26</value>
   </data>
   <data name="addMoleculeContextMenuItem.Text" xml:space="preserve">
-    <value>Add Small Molecule...</value>
+    <value>Add Molecule...</value>
   </data>
   <data name="addSmallMoleculePrecursorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 26</value>
@@ -1592,6 +1595,18 @@
   </data>
   <data name="redoToolBarButton.Text" xml:space="preserve">
     <value>Redo</value>
+  </data>
+  <data name="toolStripSeparatorSelectUI.Size" type="System.Drawing.Size, System.Drawing">
+    <value>6, 25</value>
+  </data>
+  <data name="modeUIToolBarDropDownButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>White</value>
+  </data>
+  <data name="modeUIToolBarDropDownButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>46, 26</value>
+  </data>
+  <data name="modeUIToolBarDropDownButton.Text" xml:space="preserve">
+    <value>User interface selection</value>
   </data>
   <data name="mainToolStrip.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 24</value>
@@ -3443,6 +3458,12 @@ first occurrence of any peptide.</value>
   <data name="$this.Text" xml:space="preserve">
     <value>Skyline</value>
   </data>
+  <data name="&gt;&gt;ModeUIHandler.Name" xml:space="preserve">
+    <value>ModeUIHandler</value>
+  </data>
+  <data name="&gt;&gt;ModeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
   <data name="&gt;&gt;cutContextMenuItem.Name" xml:space="preserve">
     <value>cutContextMenuItem</value>
   </data>
@@ -4816,6 +4837,18 @@ first occurrence of any peptide.</value>
   </data>
   <data name="&gt;&gt;redoToolBarButton.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSplitButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparatorSelectUI.Name" xml:space="preserve">
+    <value>toolStripSeparatorSelectUI</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparatorSelectUI.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;modeUIToolBarDropDownButton.Name" xml:space="preserve">
+    <value>modeUIToolBarDropDownButton</value>
+  </data>
+  <data name="&gt;&gt;modeUIToolBarDropDownButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripDropDownButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;fileToolStripMenuItem.Name" xml:space="preserve">
     <value>fileToolStripMenuItem</value>

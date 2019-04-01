@@ -657,7 +657,7 @@ class generator
         # type.
         if ! $(self.source-types)
         {
-            # Anything is acceptible
+            # Anything is acceptable
             return [ property-set.empty ] $(sources) ;
         }
         else
@@ -1264,7 +1264,7 @@ rule find-viable-generators ( target-type : property-set )
 
     # Generators which override 'all'.
     local all-overrides ;
-    # Generators which are overriden.
+    # Generators which are overridden.
     local overriden-ids ;
     for local g in $(viable-generators)
     {

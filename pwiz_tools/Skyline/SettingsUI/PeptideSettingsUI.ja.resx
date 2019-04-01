@@ -2719,7 +2719,7 @@ W = (W0 + M*(Wmax-W0)/imMax)
     <value>3, 181</value>
   </data>
   <data name="listStandardTypes.Size" type="System.Drawing.Size, System.Drawing">
-    <value>177, 19</value>
+    <value>177, 57</value>
   </data>
   <data name="&gt;&gt;tabControl1.Name" xml:space="preserve">
     <value>tabControl1</value>

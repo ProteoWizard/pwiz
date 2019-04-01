@@ -264,6 +264,11 @@ namespace pwiz.Skyline.Model.Results
             public double Mz { get; private set; }
             public int Rank { get; private set; }
             public float Proportion { get; private set; }
+
+            public override string ToString() // For ease in debugging
+            {
+                return String.Format(@"mz {0} rank {1} proportion {2}", Mz, Rank, Proportion);
+            }
         }
     }
 

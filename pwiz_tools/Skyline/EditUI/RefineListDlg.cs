@@ -32,7 +32,8 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class RefineListDlg : FormEx, IAuditLogModifier<RefineListDlg.RefineListSettings>
+    public partial class RefineListDlg : ModeUIInvariantFormEx,  // This dialog is inherently proteomic, never wants the "peptide"->"molecule" translation
+                  IAuditLogModifier<RefineListDlg.RefineListSettings>
     {
         private readonly SrmDocument _document;
 
@@ -76,7 +77,7 @@ namespace pwiz.Skyline.EditUI
             protected override AuditLogEntry CreateEntry(SrmDocumentPair docPair)
             {
                 var entry = AuditLogEntry.CreateCountChangeEntry(MessageType.accepted_peptide,
-                        MessageType.accept_peptides, AcceptedPeptides)
+                        MessageType.accept_peptides, docPair.NewDocumentType, AcceptedPeptides)
                     .ChangeAllInfo(new LogMessage[0]);
 
                 // TODO: if this happens more often, consider adding something like "reverse merge"

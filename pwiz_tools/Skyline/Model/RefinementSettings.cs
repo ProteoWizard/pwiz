@@ -65,7 +65,7 @@ namespace pwiz.Skyline.Model
 
         public override MessageInfo MessageInfo
         {
-            get { return new MessageInfo(MessageType.refined_targets); }
+            get { return new MessageInfo(MessageType.refined_targets, SrmDocument.DOCUMENT_TYPE.none); }
         }
 
         public struct PeptideCharge

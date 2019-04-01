@@ -5,6 +5,9 @@ REM ~ Distributed under the Boost Software License, Version 1.0.
 REM ~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 if "_%1_" == "_yacc_" goto Guess_Yacc
+if "_%1_" == "_test_path_" (
+    shift
+    goto Test_Path)
 goto Guess
 
 
@@ -15,7 +18,7 @@ goto :eof
 
 :Test_Path
 REM Tests for the given executable file presence in the directories in the PATH
-REM environment variable. Additionaly sets FOUND_PATH to the path of the
+REM environment variable. Additionally sets FOUND_PATH to the path of the
 REM found file.
 call :Clear_Error
 setlocal
@@ -26,7 +29,7 @@ goto :eof
 
 
 :Guess
-REM Check the variable first. This can be set manually by the user (by running the tools commmand prompt).
+REM Check the variable first. This can be set manually by the user (by running the tools command prompt).
 call :Clear_Error
 call vswhere_usability_wrapper.cmd
 if NOT "_%VS150COMNTOOLS%_" == "__" (

@@ -619,7 +619,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Import a simple transition list with Q1, Q3 and peptide sequence.  Also supports small molecule transition lists in CSV format with suitable headers..
+        ///   Looks up a localized string similar to Import a simple transition list with Q1, Q3 and peptide sequence.  Also supports molecule transition lists in CSV format with suitable headers..
         /// </summary>
         internal static string _import_transition_list {
             get {

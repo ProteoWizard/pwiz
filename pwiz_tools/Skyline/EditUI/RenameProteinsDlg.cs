@@ -34,7 +34,8 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class RenameProteinsDlg : FormEx, IAuditLogModifier<RenameProteinsDlg.RenameProteinsSettings>
+    public partial class RenameProteinsDlg : ModeUIInvariantFormEx,  // This dialog is inherently proteomic, never wants the "peptide"->"molecule" translation
+                    IAuditLogModifier<RenameProteinsDlg.RenameProteinsSettings>
     {
         private readonly SrmDocument _document;
         private readonly GridViewDriver _gridViewDriver;
@@ -73,7 +74,7 @@ namespace pwiz.Skyline.EditUI
                 var baseEntry = base.CreateEntry(docPair);
 
                 var entry = AuditLogEntry.CreateCountChangeEntry(MessageType.renamed_single_protein,
-                    MessageType.renamed_proteins, RenamedProteins,
+                    MessageType.renamed_proteins, docPair.NewDocumentType, RenamedProteins,
                     rename => MessageArgs.Create(rename.CurrentName, rename.NewName), null);
 
                 return entry.Merge(baseEntry, false);

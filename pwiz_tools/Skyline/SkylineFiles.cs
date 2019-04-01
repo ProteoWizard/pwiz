@@ -157,7 +157,7 @@ namespace pwiz.Skyline
 
             if (document.Settings.DataSettings.AuditLogging)
             {
-                var entry = AuditLogEntry.GetAuditLoggingStartExistingDocEntry(document);
+                var entry = AuditLogEntry.GetAuditLoggingStartExistingDocEntry(document, GetModeUIHelper().ModeUI);
                 document = entry?.AppendEntryToDocument(document) ?? document;
             }
 
@@ -296,15 +296,15 @@ namespace pwiz.Skyline
                 {
                     longWaitDlg.PerformWork(parentWindow ?? this, 500, progressMonitor =>
                     {
-                        string hash;
+                        string skylineDocumentHash;
                         using (var reader = new HashingStreamReaderWithProgress(path, progressMonitor))
                         {
                             XmlSerializer ser = new XmlSerializer(typeof (SrmDocument));
                             document = (SrmDocument) ser.Deserialize(reader);
-                            hash = reader.Stream.Done();
+                            skylineDocumentHash = reader.Stream.Done();
                         }
 
-                        document = document.ReadAuditLog(path, hash, AskForLogEntry);
+                        document = document.ReadAuditLog(path, skylineDocumentHash, AskForLogEntry);
                     });
 
                     if (longWaitDlg.IsCanceled)
@@ -371,6 +371,15 @@ namespace pwiz.Skyline
             if (SequenceTree != null && SequenceTree.Nodes.Count > 0 && !SequenceTree.RestoredFromPersistentString)
                 SequenceTree.SelectedNode = SequenceTree.Nodes[0];
 
+            // Once user has opened an existing document, stop reminding them to set a default UI mode
+            if (string.IsNullOrEmpty(Settings.Default.UIMode))
+            {
+                var mode = document.DocumentType == SrmDocument.DOCUMENT_TYPE.none
+                    ? SrmDocument.DOCUMENT_TYPE.proteomic
+                    : document.DocumentType;
+                Settings.Default.UIMode = mode.ToString();
+            }
+            
             return true;
         }
 
@@ -1448,9 +1457,9 @@ namespace pwiz.Skyline
             }         
         }
 
-        private static void AddMessageInfo<T>(IList<MessageInfo> messageInfos, MessageType type, IEnumerable<T> items)
+        private static void AddMessageInfo<T>(IList<MessageInfo> messageInfos, MessageType type, SrmDocument.DOCUMENT_TYPE docType, IEnumerable<T> items)
         {
-            messageInfos.AddRange(items.Select(item => new MessageInfo(type, item)));
+            messageInfos.AddRange(items.Select(item => new MessageInfo(type, docType, item)));
         }
 
         private void ImportPeakBoundaries(string fileName, long lineCount, string description)
@@ -1484,12 +1493,12 @@ namespace pwiz.Skyline
             }, docPair =>
             {
                 var allInfo = new List<MessageInfo>();
-                AddMessageInfo(allInfo, MessageType.removed_unrecognized_peptide, peakBoundaryImporter.UnrecognizedPeptides);
-                AddMessageInfo(allInfo, MessageType.removed_unrecognized_file,
+                AddMessageInfo(allInfo, MessageType.removed_unrecognized_peptide, docPair.OldDocumentType, peakBoundaryImporter.UnrecognizedPeptides);
+                AddMessageInfo(allInfo, MessageType.removed_unrecognized_file, docPair.OldDocumentType,
                     peakBoundaryImporter.UnrecognizedFiles.Select(AuditLogPath.Create));
-                AddMessageInfo(allInfo, MessageType.removed_unrecognized_charge_state, peakBoundaryImporter.UnrecognizedChargeStates);
+                AddMessageInfo(allInfo, MessageType.removed_unrecognized_charge_state, docPair.OldDocumentType, peakBoundaryImporter.UnrecognizedChargeStates);
 
-                return AuditLogEntry.CreateSimpleEntry(MessageType.imported_peak_boundaries,
+                return AuditLogEntry.CreateSimpleEntry(MessageType.imported_peak_boundaries, docPair.OldDocumentType,
                         Path.GetFileName(fileName))
                     .AppendAllInfo(allInfo);
             });
@@ -1648,13 +1657,14 @@ namespace pwiz.Skyline
                 string extraInfo = null;
                 if (importInfo.File)
                 {
-                    info = new MessageInfo(MessageType.imported_fasta, importInfo.Text);
+                    info = new MessageInfo(MessageType.imported_fasta, docPair.NewDocumentType, importInfo.Text);
                 }
                 else
                 {
                     info = new MessageInfo(peptideList
                         ? MessageType.imported_peptide_list
-                        : MessageType.imported_fasta_paste);
+                        : MessageType.imported_fasta_paste, 
+                        docPair.NewDocumentType);
                     extraInfo = importInfo.Text;
                 }
 
@@ -1733,7 +1743,7 @@ namespace pwiz.Skyline
             }, docPair => AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(
                 transitionCount == 1
                     ? MessageType.pasted_single_small_molecule_transition
-                    : MessageType.pasted_small_molecule_transition_list, transitionCount), csvText));
+                    : MessageType.pasted_small_molecule_transition_list, docPair.NewDocumentType, transitionCount), csvText));
 
             if (modifyingDocumentException != null)
             {
@@ -1911,7 +1921,7 @@ namespace pwiz.Skyline
                     importIntensities = addLibraryResult == DialogResult.Yes;
 
                     if(importIntensities)
-                        entryCreators.Add(new MessageInfo(MessageType.imported_spectral_library_intensities));
+                        entryCreators.Add(new MessageInfo(MessageType.imported_spectral_library_intensities, docNew.DocumentType));
 
                 }
                 if (importIntensities && !ImportMassListIntensities(ref docNew, librarySpectra, assayLibrary, out docLibrarySpec, out docLibrary, out indexOldLibrary))
@@ -1970,7 +1980,7 @@ namespace pwiz.Skyline
                     extraInfo = inputs.InputText;
                 }
 
-                return AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(msgType, args), extraInfo).Merge(docPair, entryCreators);
+                return AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(msgType, docPair.NewDocumentType, args), extraInfo).Merge(docPair, entryCreators);
             });
 
             if (selectPath != null)
@@ -2291,12 +2301,12 @@ namespace pwiz.Skyline
             }, docPair =>
             {
                 var entry = AuditLogEntry.CreateCountChangeEntry(MessageType.imported_doc,
-                    MessageType.imported_docs, filePaths.Select(AuditLogPath.Create), filePaths.Length,
+                    MessageType.imported_docs, docPair.NewDocumentType, filePaths.Select(AuditLogPath.Create), filePaths.Length,
                     MessageArgs.DefaultSingular, null);
 
                 if (filePaths.Length > 1)
                     entry.AppendAllInfo(filePaths.Select(file =>
-                        new MessageInfo(MessageType.imported_doc, AuditLogPath.Create(file))));
+                        new MessageInfo(MessageType.imported_doc, docPair.NewDocumentType, AuditLogPath.Create(file))));
 
                 return entry.Merge(docPair, entryCreatorList, false);
             });
@@ -3102,7 +3112,7 @@ namespace pwiz.Skyline
                                     .SkylineDataSchema_VerifyDocumentCurrent_The_document_was_modified_in_the_middle_of_the_operation_);
                             }
                             return newDocument;
-                        }, docPair => AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(MessageType.imported_annotations, filename)));
+                        }, docPair => AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(MessageType.imported_annotations, docPair.NewDocumentType, filename)));
                     }
                 }
             }

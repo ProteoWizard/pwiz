@@ -766,56 +766,36 @@ static void read_pipe
 {
     DWORD bytesInBuffer = 0;
     DWORD bytesAvailable = 0;
+    int i;
 
-    do
+    for (;;)
     {
         /* check if we have any data to read */
-        if ( !PeekNamedPipe( in, ioBuffer, IO_BUFFER_SIZE, &bytesInBuffer,
-            &bytesAvailable, NULL ) )
-            bytesAvailable = 0;
+        if ( !PeekNamedPipe( in, NULL, IO_BUFFER_SIZE, NULL,
+            &bytesAvailable, NULL ) || bytesAvailable == 0 )
+            return;
 
-        /* read in the available data */
-        if ( bytesAvailable > 0 )
+        /* we only read in the available bytes, to avoid blocking */
+        if ( !ReadFile( in, ioBuffer, bytesAvailable <= IO_BUFFER_SIZE ?
+            bytesAvailable : IO_BUFFER_SIZE, &bytesInBuffer, NULL ) || bytesInBuffer == 0 )
+            return;
+
+        /* Clean up some illegal chars. */
+        for ( i = 0; i < bytesInBuffer; ++i )
         {
-            /* we only read in the available bytes, to avoid blocking */
-            if ( ReadFile( in, ioBuffer, bytesAvailable <= IO_BUFFER_SIZE ?
-                bytesAvailable : IO_BUFFER_SIZE, &bytesInBuffer, NULL ) )
-            {
-                if ( bytesInBuffer > 0 )
-                {
-                    /* Clean up some illegal chars. */
-                    int i;
-                    for ( i = 0; i < bytesInBuffer; ++i )
-                    {
-                        if ( ( (unsigned char)ioBuffer[ i ] < 1 ) )
-                            ioBuffer[ i ] = '?';
-                    }
-                    /* Null, terminate. */
-                    ioBuffer[ bytesInBuffer ] = '\0';
-                    /* Append to the output. */
-                    string_append( out, ioBuffer );
-                    /* Copy it to our output if appropriate */
-                    if ( forwarding_mode == FORWARD_PIPE_STDOUT )
-                        out_data( ioBuffer );
-                    else if ( forwarding_mode == FORWARD_PIPE_STDERR )
-                        err_data( ioBuffer );
-                    /* Subtract what we read in. */
-                    bytesAvailable -= bytesInBuffer;
-                }
-                else
-                {
-                    /* Likely read a error, bail out. */
-                    bytesAvailable = 0;
-                }
-            }
-            else
-            {
-                /* Definitely read a error, bail out. */
-                bytesAvailable = 0;
-            }
+            if ( ( (unsigned char)ioBuffer[ i ] < 1 ) )
+                ioBuffer[ i ] = '?';
         }
+        /* Null, terminate. */
+        ioBuffer[ bytesInBuffer ] = '\0';
+        /* Append to the output. */
+        string_append( out, ioBuffer );
+        /* Copy it to our output if appropriate */
+        if ( forwarding_mode == FORWARD_PIPE_STDOUT )
+            out_data( ioBuffer );
+        else if ( forwarding_mode == FORWARD_PIPE_STDERR )
+            err_data( ioBuffer );
     }
-    while ( bytesAvailable > 0 );
 }
 
 #define EARLY_OUTPUT( cmd ) \

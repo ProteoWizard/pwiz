@@ -129,7 +129,7 @@ rule flags (
                      # "<toolset>gcc-3.2" are allowed. If left empty, the flag
                      # will be used unconditionally.
                      #
-                     # Propery sets may use value-less properties ('<a>'  vs.
+                     # Property sets may use value-less properties ('<a>'  vs.
                      # '<a>value') to match absent properties. This allows to
                      # separately match:
                      #

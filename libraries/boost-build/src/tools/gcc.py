@@ -69,9 +69,9 @@ generators.override('gcc.searched-lib-generator', 'searched-lib-generator')
 #     libxxx.dll.a import library
 #
 # Note: user can always override by using the <tag>@rule
-#       This settings have been choosen, so that mingw
+#       This settings have been chosen, so that mingw
 #       is in line with msvc naming conventions. For
-#       cygwin the cygwin naming convention has been choosen.
+#       cygwin the cygwin naming convention has been chosen.
 
 # Make the "o" suffix used for gcc toolset on all
 # platforms
@@ -157,7 +157,7 @@ def init(version = None, command = None, options = None):
     if command:
         # On multilib 64-bit boxes, there are both 32-bit and 64-bit libraries
         # and all must be added to LD_LIBRARY_PATH. The linker will pick the
-        # right onces. Note that we don't provide a clean way to build 32-bit
+        # right ones. Note that we don't provide a clean way to build 32-bit
         # binary with 64-bit compiler, but user can always pass -m32 manually.
         lib_path = [os.path.join(root, 'bin'),
                     os.path.join(root, 'lib'),

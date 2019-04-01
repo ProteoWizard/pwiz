@@ -56,7 +56,7 @@ string keyValueProcessTimes(const boost::chrono::process_cpu_clock_times& times)
 }
 
 
-void enumerateSpectra(const string& filename, DetailLevel detailLevel, const vector<string>& filters, const Reader::Config& config, bool reverseIteration)
+void enumerateSpectra(const string& filename, DetailLevel detailLevel, const vector<string>& filters, const Reader::Config& config, bool reverseIteration, bool useWorkerThreads)
 {
     auto start = boost::chrono::process_cpu_clock::now();
 
@@ -79,15 +79,14 @@ void enumerateSpectra(const string& filename, DetailLevel detailLevel, const vec
 
     start = boost::chrono::process_cpu_clock::now();
 
-    SpectrumWorkerThreads multithreadedSpectrumList(sl);
+    SpectrumWorkerThreads multithreadedSpectrumList(sl, useWorkerThreads);
 
     size_t totalArrayLength = 0;
     if (reverseIteration)
     {
         for (size_t size = sl.size(), i = size; i > 0; --i)
         {
-            //SpectrumPtr s = multithreadedSpectrumList.processBatch(i-1, detailLevel);
-            SpectrumPtr s = sl.spectrum(i-1, detailLevel);
+            SpectrumPtr s = multithreadedSpectrumList.processBatch(i-1, detailLevel);
 
             if (i == size)
             {
@@ -102,8 +101,7 @@ void enumerateSpectra(const string& filename, DetailLevel detailLevel, const vec
     else
         for (size_t i=0, size=sl.size(); i != size; ++i)
         {
-            //SpectrumPtr s = multithreadedSpectrumList.processBatch(i, detailLevel);
-            SpectrumPtr s = sl.spectrum(i, detailLevel);
+            SpectrumPtr s = multithreadedSpectrumList.processBatch(i, detailLevel);
 
             if (i == 0)
             {
@@ -276,13 +274,13 @@ enum BenchmarkMode
 };
 
 
-void benchmark(const char* filename, BenchmarkMode benchmarkMode, DetailLevel detailLevel, const vector<string>& filters, const Reader::Config& config, bool reverseIteration)
+void benchmark(const char* filename, BenchmarkMode benchmarkMode, DetailLevel detailLevel, const vector<string>& filters, const Reader::Config& config, bool reverseIteration, bool useWorkerThreads)
 {
     switch (benchmarkMode)
     {
         default:
         case BenchmarkMode_Spectra:
-            enumerateSpectra(filename, detailLevel, filters, config, reverseIteration);
+            enumerateSpectra(filename, detailLevel, filters, config, reverseIteration, useWorkerThreads);
             break;
         case BenchmarkMode_Chromatograms:
             enumerateChromatograms(filename, (detailLevel == DetailLevel_FullData), reverseIteration);
@@ -310,6 +308,7 @@ int main(int argc, char* argv[])
                  << "  --acceptZeroLengthSpectra (skip expensive checking for empty spectra when opening a file)\n"
                  << "  --ignoreZeroIntensityPoints (read profile data exactly as the vendor provides, even if there are no flanking zero points)\n"
                  << "  --loop (repeat the run indefinitely)\n"
+                 << "  --singleThreaded (do not use multiple threads to read spectra)\n"
                  << "  --reverse (iterate backwards)\n\n"
                  << "https://github.com/ProteoWizard\n"
                  << "support@proteowizard.org\n";
@@ -349,6 +348,7 @@ int main(int argc, char* argv[])
         Reader::Config readerConfig;
         bool reverseIteration = false;
         bool loop = false;
+        bool useWorkerThreads = true;
 
         vector<string> filters;
         for (int i = 4; i < argc; i += 2)
@@ -373,6 +373,11 @@ int main(int argc, char* argv[])
                 loop = true;
                 --i;
             }
+            else if (argv[i] == string("--singleThreaded"))
+            {
+                useWorkerThreads = false;
+                --i;
+            }
             else if (argv[i] == string("--reverse"))
             {
                 reverseIteration = true;
@@ -383,7 +388,7 @@ int main(int argc, char* argv[])
 
         do
         {
-            benchmark(filename, benchmarkMode, detailLevel, filters, readerConfig, reverseIteration);
+            benchmark(filename, benchmarkMode, detailLevel, filters, readerConfig, reverseIteration, useWorkerThreads);
 
 #ifdef _WIN32
             PROCESS_MEMORY_COUNTERS_EX pmc;

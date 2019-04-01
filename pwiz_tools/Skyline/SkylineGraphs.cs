@@ -253,7 +253,7 @@ namespace pwiz.Skyline
                     // Only turn off old ion types, if new settings are not MS1-only full-scan
                     var fullScan = settingsNew.TransitionSettings.FullScan;
                     var enablePeptides = DocumentUI.DocumentType != SrmDocument.DOCUMENT_TYPE.small_molecules;
-                    var enableSmallMolecules = DocumentUI.DocumentType != SrmDocument.DOCUMENT_TYPE.proteomic;
+                    var enableSmallMolecules = DocumentUI.HasSmallMolecules;
                     if (!fullScan.IsEnabled || fullScan.IsEnabledMsMs)
                     {
                         CheckIonTypes(filterOld.PeptideIonTypes, false, enablePeptides);
@@ -274,6 +274,7 @@ namespace pwiz.Skyline
                     // Then enable based on settings and document contents
                     switch (DocumentUI.DocumentType)
                     {
+                        case SrmDocument.DOCUMENT_TYPE.none:
                         case SrmDocument.DOCUMENT_TYPE.proteomic:
                             CheckIonCharges(filterNew.PeptideProductCharges, true);
                             break;
@@ -951,7 +952,7 @@ namespace pwiz.Skyline
                xMenuItem.Visible = yMenuItem.Visible = zMenuItem.Visible = 
                   DocumentUI.DocumentType != SrmDocument.DOCUMENT_TYPE.small_molecules;
 
-            fragmentsMenuItem.Visible = DocumentUI.DocumentType != SrmDocument.DOCUMENT_TYPE.proteomic;
+            fragmentsMenuItem.Visible = DocumentUI.HasSmallMolecules;
         }
 
         private void charge1MenuItem_Click(object sender, EventArgs e)
@@ -2083,7 +2084,7 @@ namespace pwiz.Skyline
                     var msg = subsequent ? MessageType.applied_peak_subsequent : MessageType.applied_peak_all;
 
                     ModifyDocument(Resources.SkylineWindow_PickPeakInChromatograms_Apply_picked_peak, document => doc,
-                        docPair => AuditLogEntry.CreateSimpleEntry(msg, path.ToString()));
+                        docPair => AuditLogEntry.CreateSimpleEntry(msg, docPair.NewDocumentType, path.ToString()));
                 }
             }
         }
@@ -2150,7 +2151,7 @@ namespace pwiz.Skyline
                         var peptideGroup = ((PeptideGroupTreeNode) nodePepTree.SrmParent).DocNode;
                         var name = PropertyName.ROOT.SubProperty(peptideGroup.AuditLogText)
                             .SubProperty(nodePepTree.DocNode.AuditLogText);
-                        return AuditLogEntry.CreateSimpleEntry(MessageType.removed_all_peaks_from, name,
+                        return AuditLogEntry.CreateSimpleEntry(MessageType.removed_all_peaks_from, docPair.OldDocumentType, name,
                             docPair.OldDoc.MeasuredResults.Chromatograms[SelectedResultsIndex].Name);
                     });
             }
@@ -2175,7 +2176,7 @@ namespace pwiz.Skyline
                     if (nodeTran != null)
                         name = name.SubProperty(nodeTran.AuditLogText);
 
-                    return AuditLogEntry.CreateSimpleEntry(msg, name,
+                    return AuditLogEntry.CreateSimpleEntry(msg, docPair.OldDocumentType, name,
                         docPair.OldDoc.MeasuredResults.Chromatograms[SelectedResultsIndex].Name);
                 });
         }
@@ -2625,7 +2626,7 @@ namespace pwiz.Skyline
                     {
                         var name = GetPropertyName(docPair.OldDoc, e.GroupPath, e.TransitionId);
 
-                        return AuditLogEntry.CreateSimpleEntry(MessageType.picked_peak, name, e.NameSet,
+                        return AuditLogEntry.CreateSimpleEntry(MessageType.picked_peak, docPair.OldDocumentType, name, e.NameSet,
                             e.RetentionTime.MeasuredTime.ToString(@"#.0", CultureInfo.CurrentCulture));
                     });
             }
@@ -2767,13 +2768,13 @@ namespace pwiz.Skyline
                             if (names.All(name => Equals(name, firstName)))
                             {
                                 return AuditLogEntry
-                                    .CreateSimpleEntry(MessageType.changed_peak_bounds_of, firstName)
+                                    .CreateSimpleEntry(MessageType.changed_peak_bounds_of, docPair.OldDocumentType, firstName)
                                     .ChangeAllInfo(messages);
                             }
                             else // TODO: is this even possible?+
                             {
                                 return AuditLogEntry
-                                    .CreateSimpleEntry(MessageType.changed_peak_bounds)
+                                    .CreateSimpleEntry(MessageType.changed_peak_bounds, docPair.OldDocumentType)
                                     .ChangeAllInfo(messages);
                             }
                         }
@@ -2834,6 +2835,7 @@ namespace pwiz.Skyline
             {
                 result.Add(new MessageInfo(
                     singleTransitionDisplay ? MessageType.changed_peak_start : MessageType.changed_peak_start_all,
+                    Document.DocumentType,
                     name, args.NameSet, LogMessage.RoundDecimal(startTime, 2),
                     LogMessage.RoundDecimal(args.StartTime.MeasuredTime, 2)));
             }
@@ -2841,7 +2843,7 @@ namespace pwiz.Skyline
             if (args.ChangeType == PeakBoundsChangeType.end || args.ChangeType == PeakBoundsChangeType.both)
             {
                 result.Add(new MessageInfo(
-                    singleTransitionDisplay ? MessageType.changed_peak_end : MessageType.changed_peak_end_all, name,
+                    singleTransitionDisplay ? MessageType.changed_peak_end : MessageType.changed_peak_end_all, Document.DocumentType, name,
                     args.NameSet, LogMessage.RoundDecimal(endTime, 2),
                     LogMessage.RoundDecimal(args.EndTime.MeasuredTime, 2)));
             }
@@ -3899,7 +3901,7 @@ namespace pwiz.Skyline
             ModifyDocument(Resources.SkylineWindow_RemoveRTOutliers_Remove_retention_time_outliers,
                 doc => (SrmDocument) doc.RemoveAll(outlierIds),
                 docPair => AuditLogEntry.CreateCountChangeEntry(MessageType.removed_rt_outlier,
-                    MessageType.removed_rt_outliers, RTGraphController.Outliers, outlier =>  MessageArgs.Create(AuditLogEntry.GetNodeName(docPair.OldDoc, outlier)), null));
+                    MessageType.removed_rt_outliers, docPair.OldDocumentType, RTGraphController.Outliers, outlier =>  MessageArgs.Create(AuditLogEntry.GetNodeName(docPair.OldDoc, outlier)), null));
         }
 
         private void removeRTContextMenuItem_Click(object sender, EventArgs e)
@@ -4644,7 +4646,7 @@ namespace pwiz.Skyline
                     nodeCount = setRemove.Count;
                 }
                 return (SrmDocument)doc.RemoveAll(setRemove, (int) SrmDocument.Level.TransitionGroups, (int) SrmDocument.Level.Molecules);
-            }, docPair => AuditLogEntry.CreateSimpleEntry(nodeCount == 1 ? MessageType.removed_peptide_above_cutoff : MessageType.removed_peptides_above_cutoff,
+            }, docPair => AuditLogEntry.CreateSimpleEntry(nodeCount == 1 ? MessageType.removed_peptide_above_cutoff : MessageType.removed_peptides_above_cutoff, docPair.OldDocumentType,
                 nodeCount, Settings.Default.AreaCVCVCutoff * AreaGraphController.GetAreaCVFactorToPercentage()));
         }
 
