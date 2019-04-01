@@ -8,14 +8,15 @@ matrix:
 
     # works on Precise and Trusty
     - os: linux
+      dist: xenial
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - g++-7
+            - g++-8
       env:
-        - MATRIX_EVAL="TOOLSET=toolset=gcc-7"
+        - MATRIX_EVAL="TOOLSET=toolset=gcc-8.1.0"
 
     #
     # Clang
@@ -23,6 +24,7 @@ matrix:
 
     # works on Precise and Trusty
     - os: linux
+      dist: xenial
       addons:
         apt:
           sources:
@@ -35,6 +37,7 @@ matrix:
 
     # works on Trusty
     - os: linux
+      dist: xenial
       addons:
         apt:
           sources:
