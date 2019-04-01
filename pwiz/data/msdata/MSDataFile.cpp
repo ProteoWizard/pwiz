@@ -160,7 +160,7 @@ void writeStream(ostream& os, const MSData& msd, const MSDataFile::WriteConfig& 
             serializerConfig.binaryDataEncoderConfig = config.binaryDataEncoderConfig;
             serializerConfig.indexed = config.indexed;
             Serializer_mzML serializer(serializerConfig);
-            serializer.write(os, msd, iterationListenerRegistry);
+            serializer.write(os, msd, iterationListenerRegistry, config.useWorkerThreads);
             break;
         }
         case MSDataFile::Format_mzXML:
@@ -169,37 +169,37 @@ void writeStream(ostream& os, const MSData& msd, const MSDataFile::WriteConfig& 
             serializerConfig.binaryDataEncoderConfig = config.binaryDataEncoderConfig;
             serializerConfig.indexed = config.indexed;
             Serializer_mzXML serializer(serializerConfig);
-            serializer.write(os, msd, iterationListenerRegistry);
+            serializer.write(os, msd, iterationListenerRegistry, config.useWorkerThreads);
             break;
         }
         case MSDataFile::Format_MGF:
         {
             Serializer_MGF serializer;
-            serializer.write(os, msd, iterationListenerRegistry);
+            serializer.write(os, msd, iterationListenerRegistry, config.useWorkerThreads);
             break;
         }
         case MSDataFile::Format_MS1:
         {
             Serializer_MSn serializer(MSn_Type_MS1);
-            serializer.write(os, msd, iterationListenerRegistry);
+            serializer.write(os, msd, iterationListenerRegistry, config.useWorkerThreads);
             break;
         }
         case MSDataFile::Format_CMS1:
         {
             Serializer_MSn serializer(MSn_Type_CMS1);
-            serializer.write(os, msd, iterationListenerRegistry);
+            serializer.write(os, msd, iterationListenerRegistry, config.useWorkerThreads);
             break;
         }
         case MSDataFile::Format_MS2:
         {
             Serializer_MSn serializer(MSn_Type_MS2);
-            serializer.write(os, msd, iterationListenerRegistry);
+            serializer.write(os, msd, iterationListenerRegistry, config.useWorkerThreads);
             break;
         }
         case MSDataFile::Format_CMS2:
         {
             Serializer_MSn serializer(MSn_Type_CMS2);
-            serializer.write(os, msd, iterationListenerRegistry);
+            serializer.write(os, msd, iterationListenerRegistry, config.useWorkerThreads);
             break;
         }
         case MSDataFile::Format_MZ5:
@@ -227,7 +227,7 @@ void MSDataFile::write(const MSData& msd,
             throw runtime_error("[MSDataFile::write()] library was not built with mz5 support.");
 #else
             Serializer_mz5 serializer(config);
-            serializer.write(filename, msd, iterationListenerRegistry);
+            serializer.write(filename, msd, iterationListenerRegistry, config.useWorkerThreads);
 #endif
             break;
         }

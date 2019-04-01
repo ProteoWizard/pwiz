@@ -22,9 +22,10 @@ namespace pwiz.Skyline.Model.AuditLog
 {
     public class AuditLogObject : IAuditLogObject
     {
-        public AuditLogObject(object obj)
+        public AuditLogObject(object obj, SrmDocument.DOCUMENT_TYPE docType)
         {
             Object = obj;
+            DocType = docType;
         }
 
         public string AuditLogText
@@ -35,7 +36,7 @@ namespace pwiz.Skyline.Model.AuditLog
                     return LogMessage.MISSING;
 
                 return AuditLogToStringHelper.ToString(Object, obj =>
-                       Reflector.ToString(Object.GetType(), null, obj, null)); // This will always return some non-null string representation
+                       Reflector.ToString(Object.GetType(), null, DocType, obj, null)); // This will always return some non-null string representation
             }
         }
 
@@ -43,6 +44,8 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             get { return false; }
         }
+
+        public SrmDocument.DOCUMENT_TYPE DocType { get; private set; }
 
         public object Object { get; private set; }
 
@@ -61,7 +64,7 @@ namespace pwiz.Skyline.Model.AuditLog
             var auditLogObj = obj as IAuditLogObject;
             usesReflection = auditLogObj == null && !Reflector.HasToString(obj) &&
                              !AuditLogToStringHelper.IsKnownType(obj);
-            return auditLogObj ?? new AuditLogObject(obj);
+            return auditLogObj ?? new AuditLogObject(obj, SrmDocument.DOCUMENT_TYPE.none);
         }
     }
 

@@ -53,7 +53,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
 
                 if (AuditLogRow.Entry.InsertUndoRedoIntoAllInfo && _detailIndex == 0)
                 {
-                    extraText = LogMessage.ParseLogString(AuditLogRow.Entry.ExtraInfo, LogLevel.all_info);
+                    extraText = LogMessage.ParseLogString(AuditLogRow.Entry.ExtraInfo, LogLevel.all_info, AuditLogRow.Entry.DocumentType);
                     undoAction = AuditLogRow.Entry.UndoAction;
                 }
 

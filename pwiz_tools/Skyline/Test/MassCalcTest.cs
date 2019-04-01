@@ -197,6 +197,11 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(155.11, sequenceMassCalc.GetPrecursorMass("K"), .1);
             Assert.AreEqual("C'6H14N'2O2", sequenceMassCalc.GetMolecularFormula("K"));
 
+            var labelLaK = new StaticMod("labelLaK", "K", null, "La");
+            sequenceMassCalc.AddStaticModifications(new[] { labelLaK });
+            Assert.AreEqual(294.033, sequenceMassCalc.GetPrecursorMass("K"), .1);
+            Assert.AreEqual("C'6H14LaN'2O2", sequenceMassCalc.GetMolecularFormula("K"));
+            
             // Check our ability to handle strangely constructed chemical formulas
             Assert.AreEqual(Molecule.Parse("C12H9S2P0").ToString(), Molecule.Parse("C12H9S2").ToString()); // P0 is weird
             Assert.AreEqual(Molecule.Parse("C12H9S2P1").ToString(), Molecule.Parse("C12H9S2P").ToString()); // P1 is weird

@@ -51,7 +51,8 @@ class Serializer_mzML::Impl
     {}
 
     void write(ostream& os, const MSData& msd,
-               const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const;
+               const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
+               bool useWorkerThreads) const;
 
     void read(shared_ptr<istream> is, MSData& msd) const;
 
@@ -128,7 +129,8 @@ void writeChromatogramIndex(XMLWriter& xmlWriter,
 
 
 void Serializer_mzML::Impl::write(ostream& os, const MSData& msd,
-    const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const
+    const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
+    bool useWorkerThreads) const
 {
     // instantiate XMLWriter
 
@@ -159,7 +161,7 @@ void Serializer_mzML::Impl::write(ostream& os, const MSData& msd,
     vector<stream_offset> chromatogramPositions;
     BinaryDataEncoder::Config bdeConfig = config_.binaryDataEncoderConfig;
     bdeConfig.byteOrder = BinaryDataEncoder::ByteOrder_LittleEndian; // mzML always little endian
-    IO::write(xmlWriter, msd, bdeConfig, &spectrumPositions, &chromatogramPositions, iterationListenerRegistry);
+    IO::write(xmlWriter, msd, bdeConfig, &spectrumPositions, &chromatogramPositions, iterationListenerRegistry, useWorkerThreads);
 
     // <indexedmzML> end
 
@@ -238,10 +240,11 @@ PWIZ_API_DECL Serializer_mzML::Serializer_mzML(const Config& config)
 
 
 PWIZ_API_DECL void Serializer_mzML::write(ostream& os, const MSData& msd,
-    const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const
+    const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
+    bool useWorkerThreads) const
   
 {
-    return impl_->write(os, msd, iterationListenerRegistry);
+    return impl_->write(os, msd, iterationListenerRegistry, useWorkerThreads);
 }
 
 
