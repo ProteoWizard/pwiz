@@ -9,6 +9,7 @@ matrix:
     # works on Precise and Trusty
     - os: linux
       dist: xenial
+      compiler: g++-8
       addons:
         apt:
           sources:
@@ -26,6 +27,7 @@ matrix:
     # works on Precise and Trusty
     - os: linux
       dist: xenial
+      compiler: clang++-3.6
       addons:
         apt:
           sources:
@@ -39,6 +41,7 @@ matrix:
     # works on Trusty
     - os: linux
       dist: xenial
+      compiler: clang++-5.0
       addons:
         apt:
           sources:
