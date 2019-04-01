@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Util
     /// A list of objects which formats itself as a comma separated list, and passes
     /// the formatting parameters to the list elements.
     /// </summary>
-    public class FormattableList<T> : IFormattable where T : IFormattable
+    public class FormattableList<T> : IFormattable
     {
         private IList<T> _list;
         public FormattableList(IList<T> list)
@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Util
             {
                 return string.Empty;
             }
-            return SeparateValues(TextUtil.CsvSeparator,
+            return SeparateValues(TextUtil.GetCsvSeparator(formatProvider),
                 _list.Select(item => ValueToString(item, format, formatProvider)));
         }
 
@@ -74,11 +74,17 @@ namespace pwiz.Skyline.Util
             
         }
 
-        public static string ValueToString(IFormattable formattableValue, string format, IFormatProvider formatProvider)
+        public static string ValueToString(object value, string format, IFormatProvider formatProvider)
         {
-            if (formattableValue == null)
+            if (value == null)
             {
                 return string.Empty;
+            }
+
+            var formattableValue = value as IFormattable;
+            if (formattableValue == null)
+            {
+                return value.ToString();
             }
             return formattableValue.ToString(format, formatProvider);
         }

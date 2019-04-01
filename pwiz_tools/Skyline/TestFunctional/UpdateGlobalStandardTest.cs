@@ -76,6 +76,11 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreNotEqual(0, CalculateGlobalStandardArea(SkylineWindow.Document, fileId));
             }
             VerifyCalculatedAreas();
+            RunUI(SkylineWindow.Undo);
+            VerifyCalculatedAreas();
+            RunUI(SkylineWindow.Redo);
+            VerifyCalculatedAreas();
+
 
             // Choose different peaks for the global standard peptide, and make sure that everyone's are gets
             // updated appropriately.
@@ -175,6 +180,10 @@ namespace pwiz.SkylineTestFunctional
                 ClipboardEx.SetText(strStandardTypes);
                 documentGrid.DataGridView.SendPaste();
             });
+            VerifyCalculatedAreas();
+            RunUI(SkylineWindow.Undo);
+            VerifyCalculatedAreas();
+            RunUI(SkylineWindow.Redo);
             VerifyCalculatedAreas();
 
             WaitForConditionUI(() => documentGrid.IsComplete);

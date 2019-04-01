@@ -404,6 +404,9 @@ between the peak integration boundaries.</value>
   <data name="InterpolatedNumberOfPoints">
     <value>The number of points in the interpolated chromatogram.</value>
   </data>
+  <data name="InterpolatedSpectrumIds">
+    <value>Identifiers of the spectra that contributed to the points in the interpolated chromatogram.</value>
+  </data>
   <data name="InterpolatedTimes">
     <value>The retention times in the interpolated chromatogram.</value>
   </data>
@@ -905,6 +908,9 @@ measured.</value>
   <data name="RawNumberOfPoints">
     <value>The number of points in the raw (uninterpolated) chromatogram.</value>
   </data>
+  <data name="RawSpectrumIds">
+    <value>Identifiers of the spectra that contributed to the points in the raw (uninterpolated) chromatogram.</value>
+  </data>
   <data name="RawTimes">
     <value>The retention times in the raw (uninterpolated) chromatogram.</value>
   </data>
@@ -995,6 +1001,9 @@ file, or the file name again for other file types.</value>
   </data>
   <data name="Slope">
     <value>Coefficient of the linear term in the fitted curve or line.</value>
+  </data>
+  <data name="SpectrumIds">
+    <value>Identifiers of the spectra that contributed to the chromatogram.</value>
   </data>
   <data name="StandardError">
     <value>The standard error of the estimated value in the linear fit.</value>
