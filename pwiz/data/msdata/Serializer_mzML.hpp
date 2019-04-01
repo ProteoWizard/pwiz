@@ -59,7 +59,8 @@ class PWIZ_API_DECL Serializer_mzML
     /// write MSData object to ostream as mzML;
     /// iterationListenerRegistry may be used to receive progress updates
     void write(std::ostream& os, const MSData& msd,
-               const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0) const;
+               const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0,
+               bool useWorkerThreads = true) const;
 
     /// read in MSData object from an mzML istream 
     /// note: istream may be managed by MSData's SpectrumList, to allow for 
