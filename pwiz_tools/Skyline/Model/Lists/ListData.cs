@@ -53,8 +53,14 @@ namespace pwiz.Skyline.Model.Lists
         public string ListName { get { return ListDef.Name; } }
         [TrackChildren(ignoreName: true)]
         public ListDef ListDef { get; private set; }
-        // [TrackChildren] TODO(nicksh): Audit logging should be row-based
         public ImmutableList<ColumnData> Columns { get; private set; }
+
+        [TrackChildren]
+        public IList<Annotations> Rows
+        {
+            get { return ReadOnlyList.Create(RowCount, GetRowAnnotations); }
+        }
+
         string IKeyContainer<string>.GetKey()
         {
             return ListName;
@@ -452,6 +458,22 @@ namespace pwiz.Skyline.Model.Lists
         public bool IsName
         {
             get { return true; }
+        }
+
+        public Annotations GetRowAnnotations(int rowIndex)
+        {
+            if (rowIndex < 0 || rowIndex >= RowCount)
+            {
+                throw new IndexOutOfRangeException();
+            }
+
+            var result = Annotations.EMPTY;
+            for (int i = 0; i < Columns.Count; i++)
+            {
+                result = result.ChangeAnnotation(ListDef.Properties[i], Columns[i].GetValue(rowIndex));
+            }
+
+            return result;
         }
     }
 }
