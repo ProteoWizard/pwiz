@@ -23,6 +23,7 @@ using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Properties;
@@ -85,7 +86,7 @@ namespace pwiz.Skyline.Model.Lists
                 listItemId = newItemId;
                 return doc.ChangeSettings(
                     doc.Settings.ChangeDataSettings(doc.Settings.DataSettings.ReplaceList(listData)));
-            });
+            }, AuditLogEntry.SettingsLogFunction);
             if (!listItemId.HasValue)
             {
                 return null;
@@ -169,7 +170,7 @@ namespace pwiz.Skyline.Model.Lists
                     return doc.ChangeSettings(
                         doc.Settings.ChangeDataSettings(doc.Settings.DataSettings.ReplaceList(listData)));
 
-                });
+                }, AuditLogEntry.SettingsLogFunction);
         }
 
         public override bool DeleteEnabled
