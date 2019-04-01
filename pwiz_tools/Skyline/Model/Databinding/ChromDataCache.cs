@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Databinding
