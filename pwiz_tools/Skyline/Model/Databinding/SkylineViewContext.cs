@@ -859,7 +859,16 @@ namespace pwiz.Skyline.Model.Databinding
 
         public override IEnumerable<IUiModeInfo> AvailableUiModes
         {
-            get { return UiModes.ListModes(); }
+            get
+            {
+                var skylineWindow = SkylineDataSchema.SkylineWindow;
+                if (skylineWindow == null)
+                {
+                    return UiModes.AllModes;
+                }
+
+                return UiModes.AvailableModes(SkylineDataSchema.SkylineWindow.ModeUI);
+            }
         }
     }
 }

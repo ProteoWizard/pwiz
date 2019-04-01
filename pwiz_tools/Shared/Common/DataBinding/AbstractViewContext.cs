@@ -155,7 +155,7 @@ namespace pwiz.Common.DataBinding
             return new ViewInfo(DataSchema, rowSourceInfo.RowType, viewSpec).ChangeViewGroup(viewGroup);
         }
 
-        public ViewInfo GetViewInfo(ViewName? viewName)
+        public virtual ViewInfo GetViewInfo(ViewName? viewName)
         {
             if (!viewName.HasValue)
             {
@@ -594,7 +594,7 @@ namespace pwiz.Common.DataBinding
 
         protected static ViewSpec GetDefaultViewSpec(ColumnDescriptor parentColumn)
         {
-            var viewSpec = new ViewSpec().SetName(DefaultViewName).SetRowType(parentColumn.PropertyType);
+            var viewSpec = new ViewSpec().SetName(DefaultViewName).SetRowType(parentColumn.PropertyType).SetUiMode(parentColumn.UiMode);
             var columns = new List<ColumnSpec>();
             foreach (var column in parentColumn.GetChildColumns())
             {

@@ -247,7 +247,7 @@ namespace pwiz.SkylineTest.Reporting
                     continue;
                 }
 
-                foreach (var uiMode in UiModes.ListModes())
+                foreach (var uiMode in UiModes.AllModes)
                 {
                     var rootColumn = ColumnDescriptor.RootColumn(dataSchema, type, uiMode.Name);
                     foreach (var child in GetChildColumns(rootColumn))

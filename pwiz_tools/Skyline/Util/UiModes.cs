@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model;
@@ -52,14 +53,32 @@ namespace pwiz.Skyline.Util
             }
         }
 
-        public static IEnumerable<IUiModeInfo> ListModes()
+        public static IEnumerable<IUiModeInfo> AllModes
         {
-            yield return new UiModeInfo(PROTEOMIC, () => Resources.UIModeProteomic,
-                () => Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Proteomics_interface);
-            yield return new UiModeInfo(SMALL_MOLECULES, () => Resources.UIModeSmallMolecules,
-                () => Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Small_Molecules_interface);
-            yield return new UiModeInfo(MIXED, () => Resources.UIModeMixed,
-                () => Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Mixed_interface);
+            get
+            {
+                yield return new UiModeInfo(PROTEOMIC, () => Resources.UIModeProteomic,
+                    () => Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Proteomics_interface);
+                yield return new UiModeInfo(SMALL_MOLECULES, () => Resources.UIModeSmallMolecules,
+                    () => Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Small_Molecules_interface);
+                yield return new UiModeInfo(MIXED, () => Resources.UIModeMixed,
+                    () => Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Mixed_interface);
+            }
+        }
+
+        public static IEnumerable<IUiModeInfo> AvailableModes(SrmDocument.DOCUMENT_TYPE documentType)
+        {
+            if (documentType == SrmDocument.DOCUMENT_TYPE.proteomic)
+            {
+                return AllModes.Where(mode => mode.Name != SMALL_MOLECULES);
+            }
+
+            if (documentType == SrmDocument.DOCUMENT_TYPE.small_molecules)
+            {
+                return AllModes.Where(mode => mode.Name != PROTEOMIC);
+            }
+
+            return AllModes;
         }
 
         private class UiModeInfo : IUiModeInfo

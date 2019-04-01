@@ -321,6 +321,7 @@ namespace pwiz.Common.DataBinding
         {
             Columns = ImmutableList.Empty<ColumnSpec>();
             Filters = ImmutableList.Empty<FilterSpec>();
+            UiMode = string.Empty;
         }
         public string Name { get; private set; }
         public ViewSpec SetName(string value)
@@ -463,7 +464,8 @@ namespace pwiz.Common.DataBinding
                    && Equals(other.RowSource, RowSource)
                    && Columns.SequenceEqual(other.Columns)
                    && Filters.SequenceEqual(other.Filters)
-                   && SublistId.Equals(other.SublistId);
+                   && SublistId.Equals(other.SublistId)
+                   && UiMode.Equals(other.UiMode);
         }
 
         public override bool Equals(object obj)
@@ -483,6 +485,7 @@ namespace pwiz.Common.DataBinding
                 result = (result*397) ^ CollectionUtil.GetHashCodeDeep(Columns);
                 result = (result*397) ^ CollectionUtil.GetHashCodeDeep(Filters);
                 result = (result*397) ^ SublistId.GetHashCode();
+                result = (result*397) ^ UiMode.GetHashCode();
                 return result;
             }
         }
