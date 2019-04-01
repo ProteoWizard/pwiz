@@ -122,7 +122,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
 
         [DataGridViewColumnType(typeof(AuditLogColumn))]
         [Format(Width = 512)]
-        public AuditLogRowText UndoRedoMessa
+        public AuditLogRowText UndoRedoMessage
         {
             get
             {

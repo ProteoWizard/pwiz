@@ -17,11 +17,14 @@
  * limitations under the License.
  */
 
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -73,8 +76,14 @@ namespace pwiz.SkylineTestUtil
             var indent = "";
             for (var i = 0; i < indentLvl; ++i)
                 indent += "    ";
-
-            var result = string.Format(indent + "new LogMessage(LogLevel.{0}, MessageType.{1}, string.Empty, {2},\r\n", msg.Level, msg.Type, msg.Expanded ? "true" : "false");
+            
+            var detail = msg as DetailLogMessage;
+            string reason = detail == null
+                ? string.Empty
+                : (string.IsNullOrEmpty(detail.Reason) ? "string.Empty, " : detail.Reason.Quote() + ",");
+            var result = string.Format(indent + "new {0}(LogLevel.{1}, MessageType.{2}, SrmDocument.DOCUMENT_TYPE.{3}, {4}{5},\r\n",
+                detail == null ? "LogMessage" : "DetailLogMessage",
+                msg.Level, msg.Type, msg.DocumentType.ToString(), reason, msg.Expanded ? "true" : "false");
             foreach (var name in msg.Names)
             {
                 var n = name.Replace("\"", "\\\"");
