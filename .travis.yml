@@ -74,7 +74,7 @@ matrix:
 before_install:
     - eval "${MATRIX_EVAL}"
 
-script: ./quickbuild.sh --abbreviate-paths -j2 pwiz $TOOLSET
+script: ./quickbuild.sh --abbreviate-paths -j2 pwiz
 
 notifications:
   webhooks:
