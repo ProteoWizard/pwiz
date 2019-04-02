@@ -8,14 +8,17 @@ matrix:
 
     # works on Precise and Trusty
     - os: linux
+      dist: xenial
+      compiler: g++-8
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - g++-7
+            - g++-8
       env:
-        - MATRIX_EVAL="TOOLSET=toolset=gcc-7"
+        - TOOLSET=gcc
+        - MATRIX_EVAL="TOOLSET=toolset=gcc-8"
 
     #
     # Clang
@@ -23,6 +26,8 @@ matrix:
 
     # works on Precise and Trusty
     - os: linux
+      dist: xenial
+      compiler: clang++-3.6
       addons:
         apt:
           sources:
@@ -35,14 +40,16 @@ matrix:
 
     # works on Trusty
     - os: linux
+      dist: xenial
+      compiler: clang++-7
       addons:
         apt:
           sources:
-            - llvm-toolchain-trusty-5.0
+            - llvm-toolchain-trusty-7
           packages:
-            - clang-5.0
+            - clang-7
       env:
-        - MATRIX_EVAL="TOOLSET=toolset=clang-5.0"
+        - MATRIX_EVAL="TOOLSET=toolset=clang-7"
 
     - os: osx
       osx_image: xcode8.3
@@ -67,7 +74,7 @@ matrix:
 before_install:
     - eval "${MATRIX_EVAL}"
 
-script: ./quickbuild.sh --abbreviate-paths -j2 pwiz $TOOLSET
+script: ./quickbuild.sh --abbreviate-paths -j2 pwiz
 
 notifications:
   webhooks:
