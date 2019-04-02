@@ -534,7 +534,9 @@ void BlibMaker::updateTables(){
         }
     }
 
-    sql_stmt("ALTER TABLE SpectrumSourceFiles ADD COLUMN idFileName TEXT");
+    if (!tableColumnExists("main", "SpectrumSourceFiles", "idFileName")) {
+        sql_stmt("ALTER TABLE SpectrumSourceFiles ADD COLUMN idFileName TEXT");
+    }
 
     // update fileID and scoreType to be unknown in all existing spec
     boost::log::aux::snprintf(zSql, ZSQLBUFLEN, "UPDATE RefSpectra SET fileID = '%d' "
