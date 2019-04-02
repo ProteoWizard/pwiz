@@ -159,17 +159,18 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(BioMassCalc.CalculateIonMz(transition.GetMass(MassType.Monoisotopic), precursorAdduct), doc.MoleculeTransitions.ElementAt(0).Mz, 1E-5);
             Assert.AreEqual(BioMassCalc.CalculateIonMz(transition2.GetMass(MassType.Monoisotopic), fragmentAdduct), doc.MoleculeTransitions.ElementAt(1).Mz, 1E-5);
             Assert.IsTrue(doc.Molecules.ElementAt(0).Peptide.IsCustomMolecule);
-            Assert.AreEqual(4.704984, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CollisionEnergy);
+            var nodeGroup = doc.MoleculeTransitionGroups.ElementAt(0);
+            Assert.AreEqual(4.704984, doc.MoleculeTransitions.ElementAt(0).ExplicitValues.CollisionEnergy);
             double expectedIonMobility = 2.34;
             double? expectedCV = imTypeIsDriftTime ? (double?) null : expectedIonMobility;
             Assert.AreEqual(expectedCV, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CompensationVoltage);
-            Assert.AreEqual(4.9, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.DeclusteringPotential);
+            Assert.AreEqual(4.9, doc.MoleculeTransitions.ElementAt(0).ExplicitValues.DeclusteringPotential);
             Assert.AreEqual(3.45, doc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTime);
             Assert.AreEqual(4.56, doc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTimeWindow);
-            Assert.AreEqual(98, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.SLens);
-            Assert.AreEqual(99, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.ConeVoltage);
+            Assert.AreEqual(98, doc.MoleculeTransitions.ElementAt(0).ExplicitValues.SLens);
+            Assert.AreEqual(99, doc.MoleculeTransitions.ElementAt(0).ExplicitValues.ConeVoltage);
             Assert.AreEqual(expectedIonMobility, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.IonMobility);
-            Assert.AreEqual(-0.12, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.IonMobilityHighEnergyOffset.Value, 1E-12);
+            Assert.AreEqual(-0.12, doc.MoleculeTransitions.ElementAt(0).ExplicitValues.IonMobilityHighEnergyOffset.Value, 1E-12);
             if (doc.FormatVersion.CompareTo(DocumentFormat.VERSION_3_61) >= 0)
                 Assert.AreEqual(345.6, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CollisionalCrossSectionSqA.Value, 1E-12);
             Assert.IsTrue(doc.MoleculeTransitions.ElementAt(0).Transition.IsCustom());

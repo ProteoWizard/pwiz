@@ -75,7 +75,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         protected override TransitionDocNode CreateEmptyNode()
         {
-            return new TransitionDocNode(new Model.Transition(new TransitionGroup(new Model.Peptide(null, @"X", null, null, 0), Adduct.SINGLY_PROTONATED, IsotopeLabelType.light), 0), Annotations.EMPTY, null, TypedMass.ZERO_MONO_MASSH, TransitionDocNode.TransitionQuantInfo.DEFAULT, null);
+            return new TransitionDocNode(new Model.Transition(new TransitionGroup(new Model.Peptide(null, @"X", null, null, 0), Adduct.SINGLY_PROTONATED, IsotopeLabelType.light), 0), Annotations.EMPTY, null, TypedMass.ZERO_MONO_MASSH, TransitionDocNode.TransitionQuantInfo.DEFAULT, ExplicitTransitionValues.EMPTY, null);
         }
 
         [InvariantDisplayName("TransitionResultsSummary")]
@@ -201,6 +201,66 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     docNode=>docNode.ChangeQuantitative(value));
             }
         }
+
+        [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
+        [Importable]
+        public double? ExplicitCollisionEnergy
+        {
+            get { return DocNode.ExplicitValues.CollisionEnergy; }
+            set
+            {
+                ChangeDocNode(EditDescription.SetColumn(@"ExplicitCollisionEnergy", value),
+                    docNode => DocNode.ChangeExplicitCollisionEnergy(value));
+            }
+        }
+
+        [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
+        [Importable]
+        public double? ExplicitSLens
+        {
+            get { return DocNode.ExplicitValues.SLens; }
+            set
+            {
+                ChangeDocNode(EditDescription.SetColumn(@"ExplicitSLens", value),
+                    docNode => docNode.ChangeExplicitSLens(value));
+            }
+        }
+
+        [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
+        [Importable]
+        public double? ExplicitConeVoltage
+        {
+            get { return DocNode.ExplicitValues.ConeVoltage; }
+            set
+            {
+                ChangeDocNode(EditDescription.SetColumn(@"ExplicitConeVoltage", value),
+                    docNode => docNode.ChangeExplicitConeVoltage(value));
+            }
+        }
+
+        [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
+        [Importable]
+        public double? ExplicitDeclusteringPotential
+        {
+            get { return DocNode.ExplicitValues.DeclusteringPotential; }
+            set
+            {
+                ChangeDocNode(EditDescription.SetColumn(@"ExplicitDeclusteringPotential", value),
+                    docNode => docNode.ChangeExplicitDeclusteringPotential(value));
+            }
+        }
+
+        [Importable]
+        public double? ExplicitIonMobilityHighEnergyOffset
+        {
+            get { return DocNode.ExplicitValues.IonMobilityHighEnergyOffset; }
+            set
+            {
+                ChangeDocNode(EditDescription.SetColumn(@"ExplicitIonMobilityHighEnergyOffset", value),
+                    docNode => docNode.ChangeExplicitIonMobilityHighEnergyOffset(value));
+            }
+        }
+
         [InvariantDisplayName("TransitionNote")]
         [Importable]
         public string Note

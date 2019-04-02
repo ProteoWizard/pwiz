@@ -24258,7 +24258,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Molecule Transition List.
+        ///   Looks up a localized string similar to Small Molecule Transition List.
         /// </summary>
         public static string SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List {
             get {

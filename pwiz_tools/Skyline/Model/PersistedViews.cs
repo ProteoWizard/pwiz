@@ -315,7 +315,7 @@ namespace pwiz.Skyline.Model
     <column name='Precursor.Mz' />
     <column name='Precursor.Charge' />
     <column name='Precursor.CollisionEnergy' />
-    <column name='Precursor.ExplicitCollisionEnergy' />
+    <column name='ExplicitCollisionEnergy' />
     <column name='Precursor.Peptide.ExplicitRetentionTime' />
     <column name='Precursor.Peptide.ExplicitRetentionTimeWindow' />
     <column name='ProductMz' />
@@ -348,7 +348,7 @@ namespace pwiz.Skyline.Model
     <column name='Precursor.Mz' />
     <column name='Precursor.Charge' />
     <column name='Precursor.CollisionEnergy' />
-    <column name='Precursor.ExplicitCollisionEnergy' />
+    <column name='ExplicitCollisionEnergy' />
     <column name='Precursor.Peptide.ExplicitRetentionTime' />
     <column name='Precursor.Peptide.ExplicitRetentionTimeWindow' />
     <column name='ProductMz' />

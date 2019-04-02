@@ -217,6 +217,11 @@ namespace pwiz.Common.DataBinding
                 return result;
             }
         }
+
+        public override string ToString() // For debugging convenience
+        {
+            return Name;
+        }
     }
     public class FilterSpec
     {
@@ -494,5 +499,11 @@ namespace pwiz.Common.DataBinding
         {
             return CaseInsensitiveComparer.Default.Compare(Name, other.Name);
         }
+
+        public override string ToString() // For debugging convenience
+        {
+            return Name;
+        }
+
     }
 }

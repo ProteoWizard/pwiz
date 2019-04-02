@@ -128,7 +128,7 @@ namespace pwiz.Skyline.Util
                 // Check for implied positive ion mode - we see "MH", "MH+", "MNH4+" etc in the wild
                 // Also watch for for label-only like  "[M2Cl37]"
                 var posNext = input.IndexOf('M') + 1;
-                if (posNext > 0)
+                if (posNext > 0 && posNext < input.Length)
                 {
                     if (input[posNext] != '+' && input[posNext] != '-') 
                     {
