@@ -34,7 +34,6 @@
 #include <string>
 #include <vector>
 
-using namespace std;
 
 struct refData{ 
   string file;

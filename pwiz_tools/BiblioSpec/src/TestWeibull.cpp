@@ -34,7 +34,6 @@
 #include "CommandLine.h"
 #include "WeibullPvalue.h"
 
-using namespace std;
 namespace ops = boost::program_options;
 
 void ParseCommandLine(const int argc,
@@ -42,6 +41,8 @@ void ParseCommandLine(const int argc,
                       ops::variables_map& options_table);
 
 int main(int argc, char** argv){
+
+  BiblioSpec::enable_utf8_path_operations();
 
   // delcare storage for options values
   ops::variables_map options_table;

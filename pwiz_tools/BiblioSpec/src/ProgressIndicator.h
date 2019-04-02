@@ -21,11 +21,13 @@
 
 #pragma once
 
-#include <time.h>
+#include <ctime>
 #include <iostream>
 #include <algorithm>
+#include "pwiz/utility/misc/Stream.hpp"
+using std::max;
+using std::min;
 
-using namespace std;
 
 namespace BiblioSpec {
 

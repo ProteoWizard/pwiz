@@ -46,11 +46,11 @@
 #include "original-Spectrum.h"
 #include "original-RefSpectrum.h"
 #include "original-Modifications.h"
+#include "CommandLine.h"
 #include "zlib.h"
 #include <iomanip>
 #include <map>
 
-using namespace std;
 
 void sql_stmt(sqlite3* db, const char* stmt);
 string getPeptideModSeq(string pepSeq, string modString, map<int,double>& specMods);
@@ -58,6 +58,8 @@ void add2Table(RefSpectrum* tmpSpec, sqlite3* db);
 
 int main(int argc, char* argv[])
 {
+    BiblioSpec::enable_utf8_path_operations();
+
 // TODO: add option for redundant/not redundant
     if(argc < 3) {
         cerr << "Usage: LibToSqlite3 <old version lib> <new lib name>" <<endl;

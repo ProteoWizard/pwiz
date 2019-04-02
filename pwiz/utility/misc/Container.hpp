@@ -30,6 +30,7 @@
 #include <set>
 #include <deque>
 #include <stack>
+#include <queue>
 #include <algorithm>
 #include <numeric>
 #include <utility>
@@ -43,6 +44,7 @@ using std::set;
 using std::multiset;
 using std::deque;
 using std::stack;
+using std::queue;
 using std::pair;
 using std::make_pair;
 

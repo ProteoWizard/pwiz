@@ -38,8 +38,6 @@
 #include "PwizReader.h"
 #include "AminoAcidMasses.h"
 
-using namespace std;
-
 namespace BiblioSpec {
 
 const static double H2O_MASS = 18.01056469252;

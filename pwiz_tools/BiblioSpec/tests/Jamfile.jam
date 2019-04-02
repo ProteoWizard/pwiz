@@ -90,8 +90,8 @@ alias BlibFilter : ../src//BlibFilter ;
 alias BlibToMs2 : ../src//BlibToMs2 ;
 alias BlibSearch : ../src//BlibSearch ;
 
-exe CompareLibraryContents : CompareLibraryContents.cpp : <include>../src <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3 <library>/ext/boost//filesystem <library>/ext/boost//nowide ;
-exe CompareTextFiles : CompareTextFiles.cpp : <include>../src <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3 <library>/ext/boost//filesystem <library>/ext/boost//nowide ;
+exe CompareLibraryContents : CompareLibraryContents.cpp ../src/CommandLine.cpp ../src/Verbosity.cpp : <include>../src <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3 <library>/ext/boost//program_options <library>/ext/boost//filesystem <library>/ext/boost//nowide ;
+exe CompareTextFiles : CompareTextFiles.cpp ../src/CommandLine.cpp ../src/Verbosity.cpp : <include>../src <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3 <library>/ext/boost//program_options <library>/ext/boost//filesystem <library>/ext/boost//nowide ;
 
 local build-tests ;
 local filter-tests ;
@@ -239,6 +239,7 @@ blib-test-build maxquant3 : -o -E -p@$(TEST_DATA_PATH)/test-mq3-mqpar.xml -x@$(T
 # Test maxquant text file reading spectra from mzML
 #blib-test-build maxquant-rpal-mzml : -o -p@$(TEST_DATA_PATH)/rpal-orbi-mqpar.xml : output/maxquant-rpal-mzml.blib : maxquant-rpal-mzml.check zbuild.skip-lines : inputs/rpal-orbi-mq-msms.txt ;
 blib-test-build maxquant-yeast-wiff : -o -p@$(TEST_DATA_PATH)/yeast-wiff-mqpar.xml : output/maxquant-yeast-wiff.blib : maxquant-yeast-wiff.check zbuild.skip-lines : inputs/yeast-wiff-msms.txt ;
+blib-test-build maxquant-yeast-wiff-i18n : -o -p@$(TEST_DATA_PATH)/yeast-wiff-试验-mqpar.xml : output/maxquant-yeast-wiff-i18n.blib : maxquant-yeast-wiff-i18n.check zbuild.skip-lines : inputs/yeast-wiff-试验-msms.txt ;
 
 # Test mzid format from scaffold
 blib-test-build scaffold : -o : output/scaffold.blib : scaffold.check : inputs/scaffold.mzid ;

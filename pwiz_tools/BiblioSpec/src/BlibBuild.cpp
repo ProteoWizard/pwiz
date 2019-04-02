@@ -30,10 +30,10 @@
 #define _MATRIX_USE_STATIC_LIB
 #endif
 
+#include "CommandLine.h"
 #include "BlibBuilder.h"
 #include "AllBuildParsers.h"
 
-using namespace std;
 using namespace BiblioSpec;
 
 static void WriteErrorLines(string s)
@@ -56,6 +56,8 @@ int main(int argc, char* argv[])
     //    _crtBreakAlloc = 624219;
 #endif
 #endif
+
+    enable_utf8_path_operations();
 
     // Are we anticipating an error message?
     string expectedError="";

@@ -33,6 +33,13 @@
 #include "BlibException.h"
 #include "boost/filesystem/operations.hpp"
 #include "boost/filesystem/fstream.hpp"
+#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Stream.hpp"
+#include "pwiz/utility/misc/Container.hpp"
+
+using std::numeric_limits;
+using std::min;
+using std::max;
 
 #if defined(_MSC_VER)
 #include <direct.h>
@@ -49,8 +56,6 @@ inline bool isinf(T value)
 #define isinf(x) std::isinf((x))
 #endif
 
-
-using namespace std;
 
 namespace BiblioSpec {
 

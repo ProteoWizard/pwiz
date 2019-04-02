@@ -24,7 +24,7 @@
  * libraries to modified .ms2 format.
  */
 
-
+#include "pwiz/utility/misc/Std.hpp"
 #include "Verbosity.h"
 #include "boost/program_options.hpp"
 #include "CommandLine.h"
@@ -32,7 +32,6 @@
 #include "BlibUtils.h"
 #include "Ms2Writer.h"
 
-using namespace std;
 namespace ops = boost::program_options;
 using namespace BiblioSpec;
 
@@ -43,6 +42,7 @@ void ParseCommandline(const int argc,
 
 int main(int argc, char* argv[])
 {
+    enable_utf8_path_operations();
 
     // declare storage for options values
     ops::variables_map options_table;

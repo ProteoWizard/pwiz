@@ -33,8 +33,6 @@
 #include "zlib.h"
 #include "contrib/minizip/unzip.h"
 
-using namespace std;
-using namespace boost;
 
 namespace BiblioSpec
 {
@@ -72,7 +70,7 @@ namespace BiblioSpec
             bool ambiguous;
 
             ProcessedMsfSpectrum():
-                psm(NULL), qvalue(numeric_limits<double>::max()), altScore(-numeric_limits<double>::max()), ambiguous(false) {
+                psm(NULL), qvalue(std::numeric_limits<double>::max()), altScore(-std::numeric_limits<double>::max()), ambiguous(false) {
             };
 
             ProcessedMsfSpectrum(PSM* psmPtr, double qvalueScore, double alt):

@@ -20,6 +20,7 @@
 //
 
 #include "Compare.h"
+#include "CommandLine.h"
 #include "pwiz/utility/misc/unit.hpp"
 #include <stdlib.h>
 
@@ -114,6 +115,8 @@ int test (const vector<string>& args)
 
 int main(int argc, char* argv[])
 {
+    BiblioSpec::enable_utf8_path_operations();
+
     try
     {
         return test(vector<string>(argv, argv + argc));

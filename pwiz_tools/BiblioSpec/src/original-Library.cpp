@@ -22,8 +22,7 @@
 //class definition of Library
 
 #include "original-Library.h"
-
-using namespace std;
+#include "pwiz/utility/misc/Std.hpp"
 
 library_header::library_header() {
     numSpec = 0;

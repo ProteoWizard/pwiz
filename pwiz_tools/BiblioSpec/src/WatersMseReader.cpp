@@ -36,7 +36,6 @@
 using namespace pwiz::vendor_api::Waters;
 #endif
 
-using namespace std;
 
 namespace BiblioSpec {
 

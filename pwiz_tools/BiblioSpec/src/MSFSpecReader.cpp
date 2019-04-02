@@ -21,7 +21,6 @@
 
 #include "MSFSpecReader.h"
 
-using namespace std;
 
 namespace BiblioSpec {
 

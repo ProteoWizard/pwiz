@@ -212,7 +212,7 @@ namespace BiblioSpec
             curPSM_->smallMolMetadata.moleculeName = lexical_cast<string>(sqlite3_column_text(statement, 6));
             curPSM_->smallMolMetadata.inchiKey = lexical_cast<string>(sqlite3_column_text(statement, 7));
             string cas = lexical_cast<string>(sqlite3_column_text(statement, 8));
-            replace_all(cas, " ", ""); // Example had random spaces in the CAS string
+            bal::replace_all(cas, " ", ""); // Example had random spaces in the CAS string
             if (!cas.empty())
             {
                 curPSM_->smallMolMetadata.otherKeys = "cas:" + cas;

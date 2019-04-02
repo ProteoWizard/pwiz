@@ -46,7 +46,6 @@
 #include "PwizReader.h"
 #include "SpecFileReader.h"
 
-using namespace std;
 namespace ops = boost::program_options;
 using namespace BiblioSpec;
 

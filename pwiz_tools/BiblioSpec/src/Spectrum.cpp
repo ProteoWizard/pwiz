@@ -25,9 +25,8 @@
 #include <cstdlib>
 #include <ctime>
 #include "Spectrum.h"
+#include "pwiz/utility/misc/Std.hpp"
 
-
-using namespace std;
 
 namespace BiblioSpec {
 

@@ -32,7 +32,6 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/join.hpp>
 
-using namespace std;
 
 namespace BiblioSpec {
 

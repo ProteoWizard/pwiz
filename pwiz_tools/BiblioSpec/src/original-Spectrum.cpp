@@ -27,8 +27,6 @@
 #include "original-Spectrum.h"
 
 
-using namespace std;
-
 spectrum::spectrum() {
     scanNumber = 0;
     type = SPEC_UNDEF;
