@@ -216,7 +216,7 @@ namespace pwiz.Skyline.Model.AuditLog
         }
 
         // This is the set of messages that never want the "peptide"->"molecule" treatment even when the document isn't purely proteomic
-        private static HashSet<MessageType> ModeUIInvariantMessageTypes = new HashSet<MessageType>()
+        public static HashSet<MessageType> ModeUIInvariantMessageTypes = new HashSet<MessageType>()
         {
         MessageType.accept_peptides,
         MessageType.accepted_peptide,
@@ -265,7 +265,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
         protected bool Equals(MessageInfo other)
         {
-            return Type == other.Type && ArrayUtil.EqualsDeep(Names, other.Names);
+            return Type == other.Type && DocumentType == other.DocumentType && Equals(Names, other.Names);
         }
 
         public override bool Equals(object obj)
@@ -280,7 +280,10 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             unchecked
             {
-                return ((int) Type * 397) ^ (Names != null ? Names.GetHashCode() : 0);
+                var hashCode = (int) Type;
+                hashCode = (hashCode * 397) ^ (int) DocumentType;
+                hashCode = (hashCode * 397) ^ (Names != null ? Names.GetHashCode() : 0);
+                return hashCode;
             }
         }
     }

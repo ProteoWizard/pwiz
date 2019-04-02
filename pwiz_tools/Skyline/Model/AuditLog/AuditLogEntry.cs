@@ -561,7 +561,9 @@ namespace pwiz.Skyline.Model.AuditLog
             {
                 return !InsertUndoRedoIntoAllInfo
                     ? _allInfo
-                    : (_allInfo.Count == 1 ? _allInfo : _allInfoNoUndoRedo);
+                    : (_allInfo.Count == 1
+                        ? new[] {(DetailLogMessage) _allInfo[0].ChangeLevel(LogLevel.all_info)}
+                        : _allInfoNoUndoRedo);
             }
         }
 

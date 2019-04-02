@@ -407,7 +407,7 @@ IPI:IPI00187596.1|SWISS-PROT:P23978|ENSEMBL:ENSRNOP00000009705|REFSEQ:NP_077347	
                 new[]
                 {
                     new DetailLogMessage(LogLevel.undo_redo, MessageType.imported_fasta_paste, SrmDocument.DOCUMENT_TYPE.none, string.Empty, false),
-                    new DetailLogMessage(LogLevel.undo_redo, MessageType.kept_empty_proteins, SrmDocument.DOCUMENT_TYPE.proteomic, string.Empty, false,
+                    new DetailLogMessage(LogLevel.all_info, MessageType.kept_empty_proteins, SrmDocument.DOCUMENT_TYPE.proteomic, string.Empty, false,
                         "3"),
                 }, @">IPI:IPI00187591.3|SWISS-PROT:Q4V8C5-1|ENSEMBL:ENSRNOP00000023455
 MDALEEESFALSFSSASDAEFDAVVGCLEDIIMDAEFQLLQRSFMDKYYQEFEDTEENKLTYTPIFNEYISLVEKYIEEQLLERIPGFNMAAFTTTLQHHKDEVAGDIFDMLLTFTDFLAFKEMFLDYRAEKEGRGLDLSSGLVVTSLCKSSSTPASQNNLRH

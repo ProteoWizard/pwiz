@@ -17,12 +17,11 @@
  * limitations under the License.
  */
 
-using System.Globalization;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.AuditLog;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Util.Extensions;
 
@@ -40,8 +39,59 @@ namespace pwiz.SkylineTestUtil
                 ExtraInfo = extraInfo;
             }
 
+            private SrmDocument.DOCUMENT_TYPE GetNewDocType(SrmDocument.DOCUMENT_TYPE expected, SrmDocument.DOCUMENT_TYPE actual)
+            {
+                SrmDocument.DOCUMENT_TYPE setTo;
+                if (expected == SrmDocument.DOCUMENT_TYPE.none &&
+                    actual == SrmDocument.DOCUMENT_TYPE.proteomic)
+                    setTo = SrmDocument.DOCUMENT_TYPE.none;
+                else if (expected == SrmDocument.DOCUMENT_TYPE.proteomic &&
+                         actual == SrmDocument.DOCUMENT_TYPE.none)
+                    setTo = SrmDocument.DOCUMENT_TYPE.proteomic;
+                else
+                    return actual;
+                return setTo;
+            }
+
+            // Adjust entry so that comparisons against the expected document type
+            // don't fail if we expect 'none' and have 'proteomic' or vice versa
+            // We do this in this rather complicated way since we don't want to add any special
+            // to the equality members of LogMessage.
+            private AuditLogEntry AdjustDocumentType(AuditLogEntry entry)
+            {
+                if (ExpectedUndoRedo.DocumentType != entry.UndoRedo.DocumentType)
+                    entry = entry.ChangeUndoRedo(
+                        entry.UndoRedo.MessageInfo.ChangeDocumentType(GetNewDocType(ExpectedUndoRedo.DocumentType,
+                            entry.UndoRedo.DocumentType)));
+
+                if (ExpectedSummary.DocumentType != entry.Summary.DocumentType)
+                    entry = entry.ChangeSummary(
+                        entry.Summary.MessageInfo.ChangeDocumentType(GetNewDocType(ExpectedSummary.DocumentType,
+                            entry.Summary.DocumentType)));
+
+
+                // We take care of the case where the length doesn't match later
+                if (ExpectedAllInfo.Length == entry.AllInfo.Count)
+                {
+                    int index = entry.InsertUndoRedoIntoAllInfo ? 1 : 0;
+                    var actual = entry.AllInfo.Skip(index).ToArray();
+                    for (var i = index; i < ExpectedAllInfo.Length; ++i)
+                    {
+                        if (ExpectedAllInfo[i].DocumentType != actual[i - index].DocumentType)
+                        {
+                            actual[i - index] = (DetailLogMessage) actual[i - index].ChangeDocumentType(GetNewDocType(ExpectedAllInfo[i].DocumentType,
+                                actual[i - index].DocumentType));
+                        }
+                    }
+                    entry = entry.ChangeAllInfo(actual);
+                }
+
+                return entry;
+            }
+
             public void AssertEquals(AuditLogEntry entry)
             {
+                entry = AdjustDocumentType(entry);
                 Assert.AreEqual(ExpectedUndoRedo, entry.UndoRedo);
                 Assert.AreEqual(ExpectedSummary, entry.Summary);
 
