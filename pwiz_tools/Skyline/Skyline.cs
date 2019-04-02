@@ -2118,6 +2118,7 @@ namespace pwiz.Skyline
                     nodeTransGroup.TransitionGroup.PrecursorAdduct,
                     nodeTransGroup.ExplicitValues,
                     null,
+                    null,
                     nodeTransGroup.TransitionGroup.LabelType))
             {
                 dlg.SetResult(nodeTransGroup.CustomMolecule, nodeTransGroup.PrecursorAdduct); // Set initial value change check
@@ -2237,7 +2238,10 @@ namespace pwiz.Skyline
                     Transition.MAX_PRODUCT_CHARGE,
                     Document.Settings,
                     nodeTran.Transition.CustomIon,
-                    nodeTran.Transition.Adduct, null, null, null))
+                    nodeTran.Transition.Adduct,
+                    null,
+                    nodeTran.ExplicitValues,
+                    null, null))
                 {
                     dlg.SetResult(nodeTran.Transition.CustomIon, nodeTran.Transition.Adduct);
                     if (dlg.ShowDialog(this) == DialogResult.OK)
@@ -2251,16 +2255,26 @@ namespace pwiz.Skyline
                                         doc.Settings.TransitionSettings.Prediction.FragmentMassType);
                                 var transition = new Transition(nodeTran.Transition.Group, dlg.Adduct, null,
                                     dlg.ResultCustomMolecule);
-                                var newNode = new TransitionDocNode(transition,
-                                        nodeTran.Annotations,
-                                        nodeTran.Losses,
-                                        mass,
-                                        TransitionDocNode.TransitionQuantInfo.DEFAULT, 
-                                        null);
-                                // Note we can't just Replace the node, as it has a new Id that's not in the doc.
-                                // But neither do we want the tree selection to change, so note this as a replacement.
-                                var newDoc = doc.Insert(nodeTranTree.Path, newNode.ChangeReplacedId(nodeTran.Id));
-                                return (SrmDocument)newDoc.RemoveChild(nodeTranTree.Path.Parent, nodeTran);
+                                var noTransitionChange = transition.Equals(nodeTran.Transition);
+                                var newDocNode = new TransitionDocNode(noTransitionChange ? nodeTran.Transition : transition,
+                                    nodeTran.Annotations,
+                                    nodeTran.Losses,
+                                    mass,
+                                    nodeTran.QuantInfo,
+                                    dlg.ResultExplicitTransitionValues,
+                                    null);
+                                if (noTransitionChange)
+                                {
+                                    // If we are not changing anything in the transition ID, we can be more gentle in replacement
+                                    return (SrmDocument) doc.ReplaceChild(nodeTranTree.Path.Parent, newDocNode);
+                                }
+                                else
+                                {
+                                    // Note we can't just Replace the node, as it has a new Id that's not in the doc.
+                                    // But neither do we want the tree selection to change, so note this as a replacement.
+                                    var newDoc = doc.Insert(nodeTranTree.Path, newDocNode.ChangeReplacedId(nodeTran.Id));
+                                    return (SrmDocument)newDoc.RemoveChild(nodeTranTree.Path.Parent, nodeTran);
+                                }
                             }, docPair => AuditLogEntry.DiffDocNodes(MessageType.modified, docPair,
                                 AuditLogEntry.GetNodeName(docPair.OldDoc, nodeTran)));
                     }
@@ -3107,7 +3121,10 @@ namespace pwiz.Skyline
                     Resources.SkylineWindow_AddMolecule_Add_Transition, null, existingIons,
                     Transition.MIN_PRODUCT_CHARGE,
                     Transition.MAX_PRODUCT_CHARGE,
-                    Document.Settings, nodeGroup.CustomMolecule, nodeGroup.Transitions.Any() ? nodeGroup.Transitions.Last().Transition.Adduct : Adduct.SINGLY_PROTONATED, null, null, null))
+                    Document.Settings, nodeGroup.CustomMolecule, nodeGroup.Transitions.Any() ? nodeGroup.Transitions.Last().Transition.Adduct : Adduct.SINGLY_PROTONATED,
+                    null,
+                    nodeGroup.Transitions.Any() ? nodeGroup.Transitions.Last().ExplicitValues : ExplicitTransitionValues.EMPTY,
+                    null, null))
                 {
                     if (dlg.ShowDialog(this) == DialogResult.OK)
                     {
@@ -3119,7 +3136,9 @@ namespace pwiz.Skyline
                             var transition = new Transition(transitionGroup, dlg.Adduct, null, dlg.ResultCustomMolecule);
                             var massType = doc.Settings.TransitionSettings.Prediction.FragmentMassType;
                             var mass = transition.CustomIon.GetMass(massType);
-                            var nodeTran = new TransitionDocNode(transition, null, mass, TransitionDocNode.TransitionQuantInfo.DEFAULT);
+                            var nodeTran = new TransitionDocNode(transition, null, mass, TransitionDocNode.TransitionQuantInfo.DEFAULT,
+                            dlg.ResultExplicitTransitionValues); 
+
                             return (SrmDocument)doc.Add(groupPath, nodeTran);
                         }, docPair => AuditLogEntry.DiffDocNodes(MessageType.added_small_molecule_transition, docPair, dlg.ResultCustomMolecule.DisplayName));
                     }
@@ -3141,6 +3160,7 @@ namespace pwiz.Skyline
                     nodePep.Peptide.CustomMolecule,
                     notFirst ? nodePep.TransitionGroups.First().TransitionGroup.PrecursorAdduct : Adduct.SINGLY_PROTONATED,
                     notFirst ? nodePep.TransitionGroups.First().ExplicitValues : ExplicitTransitionGroupValues.EMPTY,
+                    null,
                     null,
                     notFirst ? nodePep.TransitionGroups.First().TransitionGroup.LabelType : IsotopeLabelType.light))
                 {
@@ -3177,7 +3197,7 @@ namespace pwiz.Skyline
                     EditCustomMoleculeDlg.UsageMode.moleculeNew,
                     Resources.SkylineWindow_AddSmallMolecule_Add_Small_Molecule_and_Precursor, null, null,
                     TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, Document.Settings, null, Adduct.NonProteomicProtonatedFromCharge(1), 
-                    ExplicitTransitionGroupValues.EMPTY, ExplicitRetentionTimeInfo.EMPTY, IsotopeLabelType.light))
+                    ExplicitTransitionGroupValues.EMPTY, ExplicitTransitionValues.EMPTY, ExplicitRetentionTimeInfo.EMPTY, IsotopeLabelType.light))
                 {
                     if (dlg.ShowDialog(this) == DialogResult.OK)
                     {
