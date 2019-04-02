@@ -60,7 +60,8 @@ class PWIZ_API_DECL Serializer_mz5
      * @param iterationListenerRegistry progress listener
      */
     void write(const std::string& filename, const MSData& msd,
-               const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0) const;
+               const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0,
+               bool useWorkerThreads = true) const;
 
     /// This method is not supported by mz5 since mz5 can not write to ostreams.
     void write(std::ostream& os, const MSData& msd,

@@ -1708,6 +1708,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Rows.
+        /// </summary>
+        public static string ListData_Rows {
+            get {
+                return ResourceManager.GetString("ListData_Rows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Display property.
         /// </summary>
         public static string ListDef_DisplayProperty {
