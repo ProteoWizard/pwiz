@@ -109,6 +109,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var docEmpty = NewDocument();
 
+            TestPerTransitionValues();
             TestToolServiceAccess();
             TestLabelsNoFormulas();
             TestPrecursorTransitions();
@@ -1168,6 +1169,34 @@ namespace pwiz.SkylineTestFunctional
             Assume.IsTrue(precursors[1].PrecursorAdduct.HasIsotopeLabels);
             var transitions = pastedDoc.MoleculeTransitions.ToArray();
             Assume.AreEqual(2, transitions.Count(t => t.IsMs1));
+            NewDocument();
+        }
+
+        private void TestPerTransitionValues()
+        {
+            // Test our handling of fragments with unique explicit values
+            var docOrig = NewDocument();
+            const string precursorsTransitionList =
+                "Molecule List Name,Molecule,Label Type,Precursor m/z,Precursor Charge,Product m/z,Product Charge,Explicit Collision Energy,Explicit Retention Time\n" +
+                "ThompsonIS,Apain,light,452,1,384,1,20,1\n" +
+                "ThompsonIS,Apain,light,452,1,188,1,25,1\n" +
+                "ThompsonIS,Apain,heavy,455,1,387,1,20,1\n" +
+                "ThompsonIS,Apain,heavy,455,1,191,1,25,1\n";
+            SetClipboardText(precursorsTransitionList);
+
+            // Paste directly into targets area
+            RunUI(() => SkylineWindow.Paste());
+
+            var pastedDoc = WaitForDocumentChange(docOrig);
+            Assume.AreEqual(1, pastedDoc.MoleculeGroupCount);
+            Assume.AreEqual(1, pastedDoc.MoleculeCount);
+            var precursors = pastedDoc.MoleculeTransitionGroups.ToArray();
+            Assume.IsTrue(!precursors[0].PrecursorAdduct.HasIsotopeLabels);
+            Assume.IsTrue(precursors[1].PrecursorAdduct.HasIsotopeLabels);
+            var transitions = pastedDoc.MoleculeTransitions.ToArray();
+            Assume.AreEqual(2, transitions.Count(t => t.ExplicitValues.CollisionEnergy == 20));
+            Assume.AreEqual(2, transitions.Count(t => t.ExplicitValues.CollisionEnergy == 25));
+            TestTransitionListOutput(pastedDoc, "per_trans.csv", "per_trans_expected.csv", ExportFileType.List);
             NewDocument();
         }
 
