@@ -553,6 +553,7 @@ namespace pwiz.Skyline.Model
             public IsotopeLabelType IsotopeLabelType { get; private set; }
             public ExplicitRetentionTimeInfo ExplicitRetentionTime { get; private set; }
             public ExplicitTransitionGroupValues ExplicitTransitionGroupValues { get; private set; }
+            public ExplicitTransitionValues ExplicitTransitionValues { get; private set; }
             public MoleculeAccessionNumbers MoleculeAccessionNumbers { get; private set; } // InChiKey, CAS etc
 
             public ParsedIonInfo(string name, string formula, Adduct adduct, 
@@ -562,6 +563,7 @@ namespace pwiz.Skyline.Model
                 IsotopeLabelType isotopeLabelType,
                 ExplicitRetentionTimeInfo explicitRetentionTime,
                 ExplicitTransitionGroupValues explicitTransitionGroupValues,
+                ExplicitTransitionValues explicitTransitionValues,
                 string note,
                 MoleculeAccessionNumbers accessionNumbers) : base(formula)
             {
@@ -573,6 +575,7 @@ namespace pwiz.Skyline.Model
                 IsotopeLabelType = isotopeLabelType;
                 ExplicitRetentionTime = explicitRetentionTime;
                 ExplicitTransitionGroupValues = explicitTransitionGroupValues;
+                ExplicitTransitionValues = explicitTransitionValues;
                 Note = note;
                 MoleculeAccessionNumbers = accessionNumbers;
             }
@@ -860,54 +863,6 @@ namespace pwiz.Skyline.Model
                     }
                     isotopeLabelType = typedMods.LabelType;
                 }
-                if (row.GetCellAsDouble(INDEX_COLLISION_ENERGY, out dtmp))
-                    collisionEnergy = dtmp;
-                else if (!String.IsNullOrEmpty(row.GetCell(INDEX_COLLISION_ENERGY)))
-                {
-                    ShowTransitionError(new PasteError
-                    {
-                        Column = INDEX_COLLISION_ENERGY,
-                        Line = row.Index,
-                        Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_collision_energy_value__0_, row.GetCell(INDEX_COLLISION_ENERGY))
-                    });
-                    return null;
-                }
-                if (row.GetCellAsDouble(INDEX_SLENS, out dtmp))
-                    slens = dtmp;
-                else if (!String.IsNullOrEmpty(row.GetCell(INDEX_SLENS)))
-                {
-                    ShowTransitionError(new PasteError
-                    {
-                        Column = INDEX_SLENS,
-                        Line = row.Index,
-                        Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_S_Lens_value__0_,row.GetCell(INDEX_SLENS))
-                    });
-                    return null;
-                }
-                if (row.GetCellAsDouble(INDEX_CONE_VOLTAGE, out dtmp))
-                    coneVoltage = dtmp;
-                else if (!String.IsNullOrEmpty(row.GetCell(INDEX_CONE_VOLTAGE)))
-                {
-                    ShowTransitionError(new PasteError
-                    {
-                        Column = INDEX_CONE_VOLTAGE,
-                        Line = row.Index,
-                        Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_cone_voltage_value__0_, row.GetCell(INDEX_CONE_VOLTAGE))
-                    });
-                    return null;
-                }
-                if (row.GetCellAsDouble(INDEX_DECLUSTERING_POTENTIAL, out dtmp))
-                    declusteringPotential = dtmp;
-                else if (!String.IsNullOrEmpty(row.GetCell(INDEX_DECLUSTERING_POTENTIAL)))
-                {
-                    ShowTransitionError(new PasteError
-                    {
-                        Column = INDEX_DECLUSTERING_POTENTIAL,
-                        Line = row.Index,
-                        Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_declustering_potential__0_, row.GetCell(INDEX_DECLUSTERING_POTENTIAL))
-                    });
-                    return null;
-                }
                 if (row.GetCellAsDouble(INDEX_COMPENSATION_VOLTAGE, out dtmp))
                     compensationVoltage = dtmp;
                 else if (!String.IsNullOrEmpty(row.GetCell(INDEX_COMPENSATION_VOLTAGE)))
@@ -957,6 +912,57 @@ namespace pwiz.Skyline.Model
                     return null;
                 }
             }
+
+            if (row.GetCellAsDouble(INDEX_COLLISION_ENERGY, out dtmp))
+                collisionEnergy = dtmp;
+            else if (!String.IsNullOrEmpty(row.GetCell(INDEX_COLLISION_ENERGY)))
+            {
+                ShowTransitionError(new PasteError
+                {
+                    Column = INDEX_COLLISION_ENERGY,
+                    Line = row.Index,
+                    Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_collision_energy_value__0_, row.GetCell(INDEX_COLLISION_ENERGY))
+                });
+                return null;
+            }
+            if (row.GetCellAsDouble(INDEX_SLENS, out dtmp))
+                slens = dtmp;
+            else if (!String.IsNullOrEmpty(row.GetCell(INDEX_SLENS)))
+            {
+                ShowTransitionError(new PasteError
+                {
+                    Column = INDEX_SLENS,
+                    Line = row.Index,
+                    Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_S_Lens_value__0_, row.GetCell(INDEX_SLENS))
+                });
+                return null;
+            }
+            if (row.GetCellAsDouble(INDEX_CONE_VOLTAGE, out dtmp))
+                coneVoltage = dtmp;
+            else if (!String.IsNullOrEmpty(row.GetCell(INDEX_CONE_VOLTAGE)))
+            {
+                ShowTransitionError(new PasteError
+                {
+                    Column = INDEX_CONE_VOLTAGE,
+                    Line = row.Index,
+                    Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_cone_voltage_value__0_, row.GetCell(INDEX_CONE_VOLTAGE))
+                });
+                return null;
+            }
+            if (row.GetCellAsDouble(INDEX_DECLUSTERING_POTENTIAL, out dtmp))
+                declusteringPotential = dtmp;
+            else if (!String.IsNullOrEmpty(row.GetCell(INDEX_DECLUSTERING_POTENTIAL)))
+            {
+                ShowTransitionError(new PasteError
+                {
+                    Column = INDEX_DECLUSTERING_POTENTIAL,
+                    Line = row.Index,
+                    Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_declustering_potential__0_, row.GetCell(INDEX_DECLUSTERING_POTENTIAL))
+                });
+                return null;
+            }
+
+
             double? ionMobility = null;
             var ionMobilityUnits = eIonMobilityUnits.none;
 
@@ -1176,8 +1182,13 @@ namespace pwiz.Skyline.Model
                 var retentionTimeInfo = retentionTime.HasValue
                     ? new ExplicitRetentionTimeInfo(retentionTime.Value, retentionTimeWindow)
                     : null;
-                var explicitTransitionGroupValues = new ExplicitTransitionGroupValues(collisionEnergy, ionMobility, ionMobilityHighEnergyOffset, ionMobilityUnits, ccsPrecursor, slens,
-                    coneVoltage, declusteringPotential, compensationVoltage);
+                var explicitTransitionValues = ExplicitTransitionValues.Create(collisionEnergy,ionMobilityHighEnergyOffset, slens, coneVoltage, declusteringPotential);
+                if (compensationVoltage.HasValue)
+                {
+                    ionMobility = compensationVoltage;
+                    ionMobilityUnits = eIonMobilityUnits.compensation_V;
+                }
+                var explicitTransitionGroupValues = ExplicitTransitionGroupValues.Create(ionMobility, ionMobilityUnits, ccsPrecursor);
                 var massOk = true;
                 var massTooLow = false;
                 string massErrMsg = null;
@@ -1232,7 +1243,7 @@ namespace pwiz.Skyline.Model
                                 if (charge.HasValue)
                                 {
                                     row.UpdateCell(indexCharge, charge.Value);
-                                    return new ParsedIonInfo(name, formula, adduct, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, note, moleculeID);
+                                    return new ParsedIonInfo(name, formula, adduct, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, explicitTransitionValues, note, moleculeID);
                                 }
                                 else if (mzCalc.HasValue)
                                 {
@@ -1265,7 +1276,7 @@ namespace pwiz.Skyline.Model
                                      !(massTooLow = (monoMass < CustomMolecule.MIN_MASS || averageMmass < CustomMolecule.MIN_MASS));
                             row.UpdateCell(indexMz, mz);
                             if (massOk)
-                                return new ParsedIonInfo(name, formula, adduct, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, note, moleculeID);
+                                return new ParsedIonInfo(name, formula, adduct, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, explicitTransitionValues, note, moleculeID);
                         }
                     }
                     catch (InvalidDataException x)
@@ -1290,7 +1301,7 @@ namespace pwiz.Skyline.Model
                              !(massTooLow = (monoMass < CustomMolecule.MIN_MASS || averageMmass < CustomMolecule.MIN_MASS));
                     errColumn = indexMz;
                     if (massOk)
-                        return new ParsedIonInfo(name, formula, adduct, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, note, moleculeID);
+                        return new ParsedIonInfo(name, formula, adduct, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, explicitTransitionValues, note, moleculeID);
                 }
                 if (massTooLow)
                 {
@@ -1535,7 +1546,7 @@ namespace pwiz.Skyline.Model
                 // ReSharper restore LocalizableElement
                 annotations = new Annotations(note, document.Annotations.ListAnnotations(), 0);
             }
-            return new TransitionDocNode(transition, annotations, null, mass, TransitionDocNode.TransitionQuantInfo.DEFAULT, null);
+            return new TransitionDocNode(transition, annotations, null, mass, TransitionDocNode.TransitionQuantInfo.DEFAULT, ion.ExplicitTransitionValues, null);
         }
     }
 

@@ -153,7 +153,7 @@ namespace pwiz.Skyline.Model
                     : nodeTran.GetMoleculeMass();
 
                 var nodeTranNew = new TransitionDocNode(tranNew, nodeTran.Annotations, nodeTran.Losses,
-                    moleculeMass, nodeTran.QuantInfo, nodeTran.Results);
+                    moleculeMass, nodeTran.QuantInfo, nodeTran.ExplicitValues, nodeTran.Results);
                 children.Add(nodeTranNew);
             }
             return new TransitionGroupDocNode(groupNew, Annotations, settings, null, LibInfo, ExplicitValues, Results, children.ToArray(), AutoManageChildren);
@@ -885,6 +885,7 @@ namespace pwiz.Skyline.Model
                         {
                             var tran = nodeTranResult.Transition;
                             var annotations = nodeTranResult.Annotations;
+                            var explictValues = nodeTranResult.ExplicitValues;
                             var losses = nodeTranResult.Losses;
                             var massH = settingsNew.GetFragmentMass(TransitionGroup, mods, tran, isotopeDist);
                             var quantInfo = TransitionDocNode.TransitionQuantInfo
@@ -894,7 +895,7 @@ namespace pwiz.Skyline.Model
                                 dotProductChange = true;
                             var results = nodeTranResult.Results;
                             nodeTranResult = new TransitionDocNode(tran, annotations, losses,
-                                massH, quantInfo, results);
+                                massH, quantInfo, explictValues, results);
 
                             Helpers.AssignIfEquals(ref nodeTranResult, (TransitionDocNode) existing);
                         }
@@ -972,6 +973,7 @@ namespace pwiz.Skyline.Model
                         if (losses != null && massType != losses.MassType)
                             losses = losses.ChangeMassType(massType);
                         var annotations = nodeTransition.Annotations;   // Don't lose annotations
+                        var explicitValues = nodeTransition.ExplicitValues;
                         var results = nodeTransition.Results;           // Results changes happen later
                         // Discard isotope transitions which are no longer valid
                         if (!TransitionDocNode.IsValidIsotopeTransition(tran, isotopeDist))
@@ -986,7 +988,7 @@ namespace pwiz.Skyline.Model
                         if (libInfo != null && quantInfo.LibInfo == null && (IsDecoy || !settingsNew.PeptideSettings.Libraries.IsLoaded))
                             quantInfo = quantInfo.ChangeLibInfo(nodeTransition.LibInfo);
                         var nodeNew = new TransitionDocNode(tran, annotations, losses,
-                            massH, quantInfo, results);
+                            massH, quantInfo, explicitValues, results);
 
                         Helpers.AssignIfEquals(ref nodeNew, nodeTransition);
                         if (settingsNew.TransitionSettings.Instrument.IsMeasurable(nodeNew.Mz, precursorMz))
@@ -2747,7 +2749,7 @@ namespace pwiz.Skyline.Model
                                             tranMatch.CustomIon);
                 var losses = nodeTran.Losses;
                 // m/z, isotope distribution and library info calculated later
-                var nodeTranNew = new TransitionDocNode(tran, losses, TypedMass.ZERO_MONO_MASSH, TransitionDocNode.TransitionQuantInfo.DEFAULT);
+                var nodeTranNew = new TransitionDocNode(tran, losses, TypedMass.ZERO_MONO_MASSH, TransitionDocNode.TransitionQuantInfo.DEFAULT, nodeTran.ExplicitValues);
                 // keep existing nodes, if we have them
                 var nodeTranExist = nodeResult.Transitions.FirstOrDefault(n => Equals(n.Key(this), nodeTranNew.Key(this)));
                 childrenNew.Add(nodeTranExist ?? nodeTranNew);
