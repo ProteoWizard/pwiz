@@ -1385,4 +1385,7 @@
   <data name="DataSettings_AuditLogging" xml:space="preserve">
     <value>Audit logging</value>
   </data>
+  <data name="ListData_Rows" xml:space="preserve">
+    <value>Rows</value>
+  </data>
 </root>
