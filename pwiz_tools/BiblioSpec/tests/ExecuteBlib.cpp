@@ -166,7 +166,9 @@ int executeBlib(const vector<string>& argv)
     cerr << "Testing output with: " << fullCompareCommand << endl;
     
     returnValue = system(fullCompareCommand.c_str());
-    cerr << "Compare returned " << returnValue << endl;
+
+    if (returnValue != 0)
+        throw runtime_error("Compare returned " + lexical_cast<string>(returnValue));
 
     return returnValue;
 }
