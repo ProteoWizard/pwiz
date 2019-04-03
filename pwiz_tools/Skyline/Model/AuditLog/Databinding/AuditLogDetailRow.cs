@@ -85,7 +85,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
 
                 var index = _detailIndex;
                 // Don't manually insert the special undo redo row, it gets inserted by the AuditLogEntry
-                var list = (IEnumerable<LogMessage>)entry.AllInfo;
+                var list = (IEnumerable<DetailLogMessage>)entry.AllInfo;
                 if (entry.InsertUndoRedoIntoAllInfo)
                 {
                     list = list.Skip(1);

@@ -440,7 +440,7 @@ namespace pwiz.Skyline.Model.AuditLog
     {
         public const string XML_ROOT = "audit_log_entry";
 
-        private ImmutableList<LogMessage> _allInfo;
+        private ImmutableList<DetailLogMessage> _allInfo;
         private Action<AuditLogEntry> _undoAction;
         private static int _logIndexCounter;
 
@@ -555,28 +555,30 @@ namespace pwiz.Skyline.Model.AuditLog
             }
         }
 
-        private IEnumerable<LogMessage> _mergeAllInfo
+        private IEnumerable<DetailLogMessage> _mergeAllInfo
         {
             get
             {
                 return !InsertUndoRedoIntoAllInfo
                     ? _allInfo
-                    : (_allInfo.Count == 1 ? _allInfo : _allInfoNoUndoRedo);
+                    : (_allInfo.Count == 1
+                        ? new[] {(DetailLogMessage) _allInfo[0].ChangeLevel(LogLevel.all_info)}
+                        : _allInfoNoUndoRedo);
             }
         }
 
-        private IEnumerable<LogMessage> _allInfoNoUndoRedo
+        private IEnumerable<DetailLogMessage> _allInfoNoUndoRedo
         {
             get { return InsertUndoRedoIntoAllInfo ? _allInfo.Skip(1) : _allInfo; }
         }
 
-        public IList<LogMessage> AllInfo
+        public IList<DetailLogMessage> AllInfo
         {
             get { return _allInfo; }
             private set
             {
                 _allInfo = ImmutableList.ValueOf(InsertUndoRedoIntoAllInfo
-                    ? ImmutableList.Singleton(UndoRedo).Concat(value)
+                    ? ImmutableList.Singleton(DetailLogMessage.FromLogMessage(UndoRedo)).Concat(value)
                     : value);
             }
         }
@@ -639,15 +641,16 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public AuditLogEntry ChangeAllInfo(IList<MessageInfo> allInfo)
         {
-            return ChangeAllInfo(allInfo.Select(info => info.ToMessage(LogLevel.all_info)).ToList());
+            return ChangeAllInfo(allInfo
+                .Select(info => DetailLogMessage.FromLogMessage(info.ToMessage(LogLevel.all_info))).ToList());
         }
 
-        public AuditLogEntry ChangeAllInfo(IList<LogMessage> allInfo)
+        public AuditLogEntry ChangeAllInfo(IList<DetailLogMessage> allInfo)
         {
             return ChangeProp(ImClone(this), im => im.AllInfo = allInfo);
         }
 
-        public AuditLogEntry AppendAllInfo(IEnumerable<LogMessage> allInfo)
+        public AuditLogEntry AppendAllInfo(IEnumerable<DetailLogMessage> allInfo)
         {
             return ChangeProp(ImClone(this), im => im.AllInfo = _allInfoNoUndoRedo.Concat(allInfo).ToList());
         }
@@ -656,12 +659,13 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             return ChangeProp(ImClone(this),
                 im => im.AllInfo = _allInfoNoUndoRedo
-                    .Concat(allInfo.Select(msgInfo => msgInfo.ToMessage(LogLevel.all_info))).ToList());
+                    .Concat(allInfo.Select(msgInfo =>
+                        DetailLogMessage.FromLogMessage(msgInfo.ToMessage(LogLevel.all_info)))).ToList());
         }
 
         public AuditLogEntry ClearAllInfo()
         {
-            return ChangeAllInfo(new LogMessage[0]);
+            return ChangeAllInfo(new DetailLogMessage[0]);
         }
 
         public AuditLogEntry ChangeUndoAction(Action<AuditLogEntry> undoAction)
@@ -796,7 +800,7 @@ namespace pwiz.Skyline.Model.AuditLog
             {
                 UndoRedo = info.ToMessage(LogLevel.undo_redo),
                 Summary = info.ToMessage(LogLevel.summary),
-                AllInfo = new LogMessage[0]
+                AllInfo = new DetailLogMessage[0]
             };
 
             return result;
@@ -888,7 +892,7 @@ namespace pwiz.Skyline.Model.AuditLog
             {
                 UndoRedo = info.ToMessage(LogLevel.undo_redo),
                 Summary = info.ToMessage(LogLevel.summary),
-                AllInfo = new LogMessage[0]//new[] { info.ToMessage(LogLevel.all_info) }
+                AllInfo = new DetailLogMessage[0]//new[] { info.ToMessage(LogLevel.all_info) }
             };
 
             return result;
@@ -939,7 +943,7 @@ namespace pwiz.Skyline.Model.AuditLog
             result.Summary = tree.Root.FindFirstMultiChildParent(tree, PropertyName.ROOT, false, false)
                 .ToMessage(LogLevel.summary);
             result.AllInfo = tree.Root.FindAllLeafNodes(tree, PropertyName.ROOT, true)
-                .Select(n => n.ToMessage(LogLevel.all_info)).ToArray();
+                .Select(n => DetailLogMessage.FromLogMessage(n.ToMessage(LogLevel.all_info))).ToArray();
             
             return result;
         }
@@ -1000,9 +1004,9 @@ namespace pwiz.Skyline.Model.AuditLog
 
             var type = document.Settings.DataSettings.AuditLogging ? MessageType.log_enabled : MessageType.log_disabled;
             var docType = document.DocumentType;
-            result.UndoRedo = new LogMessage(LogLevel.undo_redo, type, docType, string.Empty, false);
-            result.Summary = new LogMessage(LogLevel.summary, type, docType, string.Empty, false);
-            result.AllInfo = new List<LogMessage> { new LogMessage(LogLevel.all_info, type, docType, string.Empty, false) };
+            result.UndoRedo = new LogMessage(LogLevel.undo_redo, type, docType, false);
+            result.Summary = new LogMessage(LogLevel.summary, type, docType, false);
+            result.AllInfo = new List<DetailLogMessage> { new DetailLogMessage(LogLevel.all_info, type, docType, string.Empty, false) };
 
             return result;
         }
@@ -1284,9 +1288,9 @@ namespace pwiz.Skyline.Model.AuditLog
                 allInfoEnum = EL.message;
             }
 
-            var list = new List<LogMessage>();
+            var list = new List<DetailLogMessage>();
             while (reader.IsStartElement(allInfoEnum))
-                list.Add(reader.DeserializeElement<LogMessage>(allInfoEnum).ChangeLevel(LogLevel.all_info).ChangeDocumentType(DocumentType));
+                list.Add((DetailLogMessage) reader.DeserializeElement<DetailLogMessage>(allInfoEnum).ChangeLevel(LogLevel.all_info).ChangeDocumentType(DocumentType));
 
             AllInfo = list;
 
@@ -1314,7 +1318,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 EnExtraInfo = null;
                 UndoRedo = UndoRedo.ResetEnExpanded();
                 Summary = Summary.ResetEnExpanded();
-                AllInfo = _allInfoNoUndoRedo.Select(l => l.ResetEnExpanded()).ToList();
+                AllInfo = _allInfoNoUndoRedo.Select(l => (DetailLogMessage) l.ResetEnExpanded()).ToList();
             }
 
             reader.ReadEndElement();
@@ -1386,6 +1390,8 @@ namespace pwiz.Skyline.Model.AuditLog
                     encodedBytes.Add(enc.GetBytes(EnExtraInfo));
                 encodedBytes.Add(UndoRedo.GetBytesForHash(enc, CultureInfo.InvariantCulture));
                 encodedBytes.Add(Summary.GetBytesForHash(enc, CultureInfo.InvariantCulture));
+                if (!string.IsNullOrEmpty(Reason))
+                    encodedBytes.Add(enc.GetBytes(Reason));
                 _allInfoNoUndoRedo.ForEach(l => encodedBytes.Add(l.GetBytesForHash(enc, CultureInfo.InvariantCulture)));
                 encodedBytes.Add(enc.GetBytes(SkylineVersion));
                 encodedBytes.Add(GetTimeStampBytesForHash());
@@ -1550,7 +1556,7 @@ namespace pwiz.Skyline.Model.AuditLog
         protected virtual AuditLogEntry CreateBaseEntry()
         {
             return MessageInfo.Type == MessageType.none
-                ? AuditLogEntry.CreateEmptyEntry().ChangeAllInfo(new LogMessage[0])
+                ? AuditLogEntry.CreateEmptyEntry().ChangeAllInfo(new DetailLogMessage[0])
                 : AuditLogEntry.CreateSingleMessageEntry(MessageInfo);
         }
 
