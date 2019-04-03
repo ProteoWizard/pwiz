@@ -331,6 +331,30 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 exception = x;
+                // Was that even a Skyline file?
+                if (File.Exists(path))
+                {
+                    try
+                    {
+                        // We have no idea what kind of file this might be, so even reading the first "line" might take a long time. Read a chunk instead.
+                        var probeFile = File.OpenRead(path);
+                        var CHUNKSIZE = 500; // Should be more than adequate to check for "?xml version="1.0" encoding="utf-8"?>< srm_settings format_version = "4.12" software_version = "Skyline (64-bit) " >"
+                        var probeBuf = new byte[CHUNKSIZE];
+                        probeFile.Read(probeBuf, 0, CHUNKSIZE);
+                        probeBuf[CHUNKSIZE - 1] = 0;
+                        var probeString = System.Text.Encoding.UTF8.GetString(probeBuf);
+                        if (!probeString.Contains(@"<srm_settings"))
+                        {
+                            exception = new Exception(string.Format(
+                                Resources.SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filename_extension_and_contain_XML_data_,
+                                path, SrmDocument.EXT, SrmDocumentSharing.EXT_SKY_ZIP));
+                        }
+                    }
+                    catch
+                    {
+                        // Ignored
+                    }
+                }
             }
 
             if (exception == null)

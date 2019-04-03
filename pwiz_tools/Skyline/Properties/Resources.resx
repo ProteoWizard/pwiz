@@ -10513,4 +10513,7 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="CommandLine_LogDocumentDelta_Added___0_" xml:space="preserve">
     <value>Added: {0}</value>
   </data>
+  <data name="SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filename_extension_and_contain_XML_data_" xml:space="preserve">
+    <value>The file you are trying to open ("{0}") does not appear to be a Skyline document. Skyline documents normally have a "{1}" or "{2}" filename extension and contain XML data.</value>
+  </data>
 </root>
