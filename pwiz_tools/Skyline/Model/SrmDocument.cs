@@ -1241,12 +1241,12 @@ namespace pwiz.Skyline.Model
                     var probeBuf = new byte[CHUNKSIZE];
                     probeFile.Read(probeBuf, 0, CHUNKSIZE);
                     probeBuf[CHUNKSIZE - 1] = 0;
-                    var probeString = System.Text.Encoding.UTF8.GetString(probeBuf);
+                    var probeString = Encoding.UTF8.GetString(probeBuf);
                     if (!probeString.Contains(@"<srm_settings"))
                     {
                         explained = string.Format(
                             Resources.SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filename_extension_and_are_in_XML_format_,
-                            path, SrmDocument.EXT, SrmDocumentSharing.EXT_SKY_ZIP);
+                            path, EXT, SrmDocumentSharing.EXT_SKY_ZIP);
                     }
                 }
                 catch (Exception e)
@@ -1269,11 +1269,11 @@ namespace pwiz.Skyline.Model
         /// <returns>Input path with extension changed to .sky, if such a file exists and appears to be a Skyline file</returns>
         public static string FindSiblingSkylineFile(string path)
         {
-            var index = path.LastIndexOf(SrmDocument.EXT, StringComparison.Ordinal);
-            if (index > 0 && index == path.Length - (SrmDocument.EXT.Length + 1))
+            var index = path.LastIndexOf(EXT, StringComparison.Ordinal);
+            if (index > 0 && index == path.Length - (EXT.Length + 1))
             {
                 // Looks like user picked a .skyd or .skyl etc
-                var likelyPath = path.Substring(0, index + SrmDocument.EXT.Length);
+                var likelyPath = path.Substring(0, index + EXT.Length);
                 if (File.Exists(likelyPath) && IsSkylineFile(likelyPath, out _))
                 {
                     return likelyPath;
