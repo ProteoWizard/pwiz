@@ -649,6 +649,7 @@
                 <xs:attribute name="name" type="xs:string" />
                 <xs:attribute name="rowsource" type="xs:string"/>
                 <xs:attribute name="sublist" type="xs:string" />
+                <xs:attribute name="uimode" type="xs:string" />
               </xs:complexType>
             </xs:element>
             <xs:element name="layouts">
