@@ -1227,7 +1227,9 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(exportMethodDlg, () => exportMethodDlg.OkDialog(csvPath));
 
             // Check for expected output.
-            var csvOut = File.ReadAllText(csvPath);
+            var csvOut = File.ReadAllText(csvPath).
+                Replace("_","."). // Watch out for alternate fragment format in culture "fr"
+                Replace(Resources.CustomIon_DisplayName_Ion, "Ion"); // Watch out for L10N of display name
             var csvExpected = File.ReadAllText(csvExpectedPath);
             AssertEx.FieldsEqual(csvExpected, csvOut, 0.0000011);
         }
