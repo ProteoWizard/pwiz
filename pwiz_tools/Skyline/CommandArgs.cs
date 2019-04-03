@@ -642,7 +642,7 @@ namespace pwiz.Skyline
         // Adding reports does not require a document
         public static readonly Argument ARG_REPORT_NAME = new Argument(@"report-name", NAME_VALUE,
             (c, p) => c.ReportName = p.Value);
-        public static readonly Argument ARG_REPORT_ADD = new Argument(@"report-add", NAME_VALUE,
+        public static readonly Argument ARG_REPORT_ADD = new Argument(@"report-add", () => GetPathToFile(ReportSpecList.EXT_REPORTS),
             (c, p) =>
             {
                 c.ImportingSkyr = true;
