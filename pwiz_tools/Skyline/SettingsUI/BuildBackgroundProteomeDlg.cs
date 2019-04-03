@@ -107,6 +107,14 @@ namespace pwiz.Skyline.SettingsUI
             }
             Settings.Default.ProteomeDbDirectory = Path.GetDirectoryName(fileName);
 
+            if (IsFastaFile(fileName))
+            {
+                string fastFileName = fileName;
+                fileName = Path.ChangeExtension(fileName, ProteomeDb.EXT_PROTDB);
+                CreateDb(fileName);
+                AddFastaFile(fastFileName);
+            }
+
             textPath.Text = fileName;
             if (textName.Text.Length == 0)
             {
@@ -134,7 +142,43 @@ namespace pwiz.Skyline.SettingsUI
                 fileName = saveFileDialog.FileName;
             }
 
-            CreateDb(fileName);
+            if (!IsFastaFile(fileName))
+                CreateDb(fileName);
+            else
+            {
+                string fastFileName = fileName;
+                fileName = Path.ChangeExtension(fileName, ProteomeDb.EXT_PROTDB);
+                CreateDb(fileName);
+                AddFastaFile(fastFileName);
+            }
+        }
+
+        private bool IsFastaFile(string fileName)
+        {
+            try
+            {
+                if (!File.Exists(fileName))
+                    return false;
+
+                // Check for 5 lines starting with > or letters in a file expected to be a ProtDB
+                int linesRead = 0;
+                foreach (var line in File.ReadLines(fileName))
+                {
+                    if (line.Length == 0)
+                        continue;
+                    char startChar = line[0];
+                    if (startChar != '>' && !char.IsLetter(startChar))
+                        return false;
+                    if (++linesRead >= 5)
+                        return true;
+                }
+
+                return false;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         public void CreateDb(string fileName)

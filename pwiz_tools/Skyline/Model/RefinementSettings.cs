@@ -65,7 +65,7 @@ namespace pwiz.Skyline.Model
 
         public override MessageInfo MessageInfo
         {
-            get { return new MessageInfo(MessageType.refined_targets); }
+            get { return new MessageInfo(MessageType.refined_targets, SrmDocument.DOCUMENT_TYPE.none); }
         }
 
         public struct PeptideCharge
@@ -985,7 +985,7 @@ namespace pwiz.Skyline.Model
                                 var newTransition = new Transition(newTransitionGroup, ionType,
                                     null, transition.Transition.MassIndex, transitionAdduct, null, transitionCustomMolecule);
                                 var newTransitionDocNode = new TransitionDocNode(newTransition, transition.Annotations.Merge(note),
-                                    null, mass, transition.QuantInfo.ChangeLibInfo(transitionLibInfo),
+                                    null, mass, transition.QuantInfo.ChangeLibInfo(transitionLibInfo), ExplicitTransitionValues.EMPTY, 
                                     transition.Results);
                                 var mzShift = transition.Transition.IonType == IonType.precursor ?
                                     mzShiftPrecursor :
@@ -1337,7 +1337,7 @@ namespace pwiz.Skyline.Model
                 var decoyTransition = new Transition(decoyGroup, transition.IonType, transition.CleavageOffset,
                                                      transition.MassIndex, transition.Adduct, productMassShift, transition.CustomIon);
                 decoyNodeTranList.Add(new TransitionDocNode(decoyTransition, nodeTran.Losses, nodeTran.MzMassType.IsAverage() ? TypedMass.ZERO_AVERAGE_MASSH : TypedMass.ZERO_MONO_MASSH, 
-                                                            nodeTran.QuantInfo));
+                                                            nodeTran.QuantInfo, nodeTran.ExplicitValues));
             }
             return decoyNodeTranList.ToArray();
         }

@@ -6201,7 +6201,7 @@ If you prefer you can choose to report anonymously.</value>
     <value>The sequence '{0}' is not a valid modified peptide sequence.</value>
   </data>
   <data name="SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List" xml:space="preserve">
-    <value>Molecule Transition List</value>
+    <value>Small Molecule Transition List</value>
   </data>
   <data name="StartPage_getBoxPanels_" xml:space="preserve">
     <value>Get hands-on experience starting with a broad set of SRM measurements, importing instrument data, and refining the document. Start with an unrefined document requiring over 2000 transitions and 39 injections to measure unscheduled on a Thermo TSQ. Learn how to import all 39 injections into a single replicate. Use a hydrophobicity to retention time regression and ms/ms spectral library peak intensity correlation to improve confidence in measured peaks. Use the Skyline refinement dialog to remove all but the best transitions for the highest confidence peaks. Step through the scheduling process to reduce the document to a transition list that can be measured in a single injection. Import and view multiple replicates of the single-injection method.</value>

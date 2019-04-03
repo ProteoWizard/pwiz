@@ -127,7 +127,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             get
             {
                 return new AuditLogRowText(_entry.UndoRedo.ToString(),
-                    LogMessage.ParseLogString(_entry.ExtraInfo, LogLevel.all_info), _entry.UndoAction,
+                    LogMessage.ParseLogString(_entry.ExtraInfo, LogLevel.all_info, _entry.DocumentType), _entry.UndoAction,
                     IsMultipleUndo);
             }
         }
@@ -139,7 +139,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             get
             {
                 return new AuditLogRowText(_entry.Summary.ToString(),
-                    LogMessage.ParseLogString(_entry.ExtraInfo, LogLevel.all_info), _entry.UndoAction,
+                    LogMessage.ParseLogString(_entry.ExtraInfo, LogLevel.all_info, _entry.DocumentType), _entry.UndoAction,
                     IsMultipleUndo);
             }
         }

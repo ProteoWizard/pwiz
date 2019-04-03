@@ -77,8 +77,8 @@ namespace pwiz.Skyline.EditUI
             protected override AuditLogEntry CreateEntry(SrmDocumentPair docPair)
             {
                 var entry = AuditLogEntry.CreateCountChangeEntry(MessageType.accepted_peptide,
-                        MessageType.accept_peptides, AcceptedPeptides)
-                    .ChangeAllInfo(new LogMessage[0]);
+                        MessageType.accept_peptides, docPair.NewDocumentType, AcceptedPeptides)
+                    .ChangeAllInfo(new DetailLogMessage[0]);
 
                 // TODO: if this happens more often, consider adding something like "reverse merge"
                 entry = entry.Merge(base.CreateEntry(docPair));
