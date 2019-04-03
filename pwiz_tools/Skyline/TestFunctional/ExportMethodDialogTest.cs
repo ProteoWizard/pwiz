@@ -781,17 +781,25 @@ namespace pwiz.SkylineTestFunctional
                             var pepPath = new IdentityPath(pepGroupPath, nodePep.Id);
                             foreach (var nodeTransitionGroup in nodePep.TransitionGroups)
                             {
-                                if (!nodeTransitionGroup.ExplicitValues.CollisionEnergy.HasValue)
+                                var tgPath = new IdentityPath(pepPath, nodeTransitionGroup.Id);
+                                foreach (var nodeTransition in nodeTransitionGroup.Transitions)
                                 {
-                                    var tgPath = new IdentityPath(pepPath, nodeTransitionGroup.Id);
-                                    // Add to expected transition count, limiting to account for CE <= 0
-                                    expectedTrans += nodeTransitionGroup.TransitionCount * (Math.Min(ce-1, 5) + 6);
-                                    document = (SrmDocument)document.ReplaceChild(tgPath.Parent,
-                                        nodeTransitionGroup.ChangeExplicitValues(nodeTransitionGroup.ExplicitValues.ChangeCollisionEnergy(ce++)));
-                                    changing = true;
-                                    break;
+                                    if (!nodeTransition.ExplicitValues.CollisionEnergy.HasValue)
+                                    {
+                                        var tranPath = new IdentityPath(tgPath, nodeTransition.Id);
+                                        document = (SrmDocument)document.ReplaceChild(tranPath.Parent,
+                                            nodeTransition.ChangeExplicitValues(nodeTransition.ExplicitValues.ChangeCollisionEnergy(ce++)));
+                                        changing = true;
+                                        // Add to expected transition count, limiting to account for CE <= 0 while CE space is explored
+                                        expectedTrans += Math.Min(ce - 2, 5) + 6;
+                                        break;
+                                    }
                                 }
+                                if (changing)
+                                    break;
                             }
+                            if (changing)
+                                break;
                         }
                         if (changing)
                             break;
