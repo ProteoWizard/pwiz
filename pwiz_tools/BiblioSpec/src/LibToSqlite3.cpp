@@ -27,13 +27,10 @@
  */
 
 
+#include "pwiz/utility/misc/Std.hpp"
 #include <string.h>
 #include <sqlite3.h>
 #include <algorithm>
-#include <string>
-#include <iostream>
-#include <sstream>
-#include <vector>
 #include <cstdio>
 #include <cstdlib>
 /*

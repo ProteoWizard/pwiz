@@ -21,7 +21,7 @@
 
 //Class definition for Spectrum
 
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstdlib>
 #include <ctime>
 #include "original-Spectrum.h"

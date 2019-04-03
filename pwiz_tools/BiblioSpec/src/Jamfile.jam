@@ -271,6 +271,7 @@ lib blib_v_1
 exe LibToSqlite3
   : # sources
     LibToSqlite3.cpp
+    blib
     $(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3
   : # requirements
     <link>static

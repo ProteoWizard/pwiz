@@ -21,8 +21,8 @@
 
 //definition of Ms2file class
 
-#include "original-Ms2file.h"
 #include "pwiz/utility/misc/Std.hpp"
+#include "original-Ms2file.h"
 
 //Consructor
 Ms2file::Ms2file() {

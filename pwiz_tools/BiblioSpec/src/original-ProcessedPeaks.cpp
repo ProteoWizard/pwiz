@@ -22,6 +22,7 @@
 //Class that contains peaks from a spectrum that have been processed
 // a glorified struct
 
+#include "pwiz/utility/misc/Std.hpp"
 #include "original-ProcessedPeaks.h"
 
 ProcessedPeaks::ProcessedPeaks() {

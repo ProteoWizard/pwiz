@@ -33,7 +33,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
-
+using std::binary_function;
 
 struct refData{ 
   string file;
