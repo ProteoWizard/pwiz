@@ -197,6 +197,7 @@ int BlibBuilder::parseCommandArgs(int argc, char* argv[])
             {
                 string infileName;
                 getline(*stdinStream, infileName);
+                bal::trim(infileName);
                 if (infileName.empty())
                 {
                     break;
