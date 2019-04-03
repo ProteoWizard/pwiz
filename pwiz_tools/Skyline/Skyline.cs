@@ -679,7 +679,7 @@ namespace pwiz.Skyline
 
             // Create an empty entry so that tests that rely on there being an undo-redo record don't break
             ModifyDocument(description, null, act, null, null,
-                docPair => AuditLogEntry.CreateSimpleEntry(MessageType.test_only, description ?? string.Empty));
+                docPair => AuditLogEntry.CreateSimpleEntry(MessageType.test_only, docPair.NewDocumentType, description ?? string.Empty));
         }
 
         public void ModifyDocument(string description, Func<SrmDocument, SrmDocument> act, Func<SrmDocumentPair, AuditLogEntry> logFunc)
@@ -741,7 +741,7 @@ namespace pwiz.Skyline
                 AuditLogEntry entry;
                 try
                 {
-                    resultEntry = entry = logFunc?.Invoke(SrmDocumentPair.Create(docOriginal, docNew));
+                    resultEntry = entry = logFunc?.Invoke(SrmDocumentPair.Create(docOriginal, docNew, GetModeUIHelper().ModeUI));
                 }
                 catch (Exception ex)
                 {
@@ -756,7 +756,7 @@ namespace pwiz.Skyline
                 }
 
                 if (entry == null || entry.UndoRedo.MessageInfo.Type != MessageType.test_only)
-                    docNew = AuditLogEntry.UpdateDocument(entry, SrmDocumentPair.Create(docOriginal, docNew));
+                    docNew = AuditLogEntry.UpdateDocument(entry, SrmDocumentPair.Create(docOriginal, docNew, GetModeUIHelper().ModeUI));
 
                 // And mark the document as changed by the user.
                 docNew = docNew.IncrementUserRevisionIndex();
@@ -1715,7 +1715,7 @@ namespace pwiz.Skyline
         public static AuditLogEntry CreateDeleteNodesEntry(SrmDocumentPair docPair, IEnumerable<string> items, int? count)
         {
             var entry = AuditLogEntry.CreateCountChangeEntry(MessageType.deleted_target,
-                MessageType.deleted_targets, items, count);
+                MessageType.deleted_targets, docPair.OldDocumentType, items, count);
 
             if (count > 1)
                 entry = entry.Merge(AuditLogEntry.DiffDocNodes(MessageType.none, docPair), false);
@@ -2118,6 +2118,7 @@ namespace pwiz.Skyline
                     nodeTransGroup.TransitionGroup.PrecursorAdduct,
                     nodeTransGroup.ExplicitValues,
                     null,
+                    null,
                     nodeTransGroup.TransitionGroup.LabelType))
             {
                 dlg.SetResult(nodeTransGroup.CustomMolecule, nodeTransGroup.PrecursorAdduct); // Set initial value change check
@@ -2237,7 +2238,10 @@ namespace pwiz.Skyline
                     Transition.MAX_PRODUCT_CHARGE,
                     Document.Settings,
                     nodeTran.Transition.CustomIon,
-                    nodeTran.Transition.Adduct, null, null, null))
+                    nodeTran.Transition.Adduct,
+                    null,
+                    nodeTran.ExplicitValues,
+                    null, null))
                 {
                     dlg.SetResult(nodeTran.Transition.CustomIon, nodeTran.Transition.Adduct);
                     if (dlg.ShowDialog(this) == DialogResult.OK)
@@ -2251,16 +2255,26 @@ namespace pwiz.Skyline
                                         doc.Settings.TransitionSettings.Prediction.FragmentMassType);
                                 var transition = new Transition(nodeTran.Transition.Group, dlg.Adduct, null,
                                     dlg.ResultCustomMolecule);
-                                var newNode = new TransitionDocNode(transition,
-                                        nodeTran.Annotations,
-                                        nodeTran.Losses,
-                                        mass,
-                                        TransitionDocNode.TransitionQuantInfo.DEFAULT, 
-                                        null);
-                                // Note we can't just Replace the node, as it has a new Id that's not in the doc.
-                                // But neither do we want the tree selection to change, so note this as a replacement.
-                                var newDoc = doc.Insert(nodeTranTree.Path, newNode.ChangeReplacedId(nodeTran.Id));
-                                return (SrmDocument)newDoc.RemoveChild(nodeTranTree.Path.Parent, nodeTran);
+                                var noTransitionChange = transition.Equals(nodeTran.Transition);
+                                var newDocNode = new TransitionDocNode(noTransitionChange ? nodeTran.Transition : transition,
+                                    nodeTran.Annotations,
+                                    nodeTran.Losses,
+                                    mass,
+                                    nodeTran.QuantInfo,
+                                    dlg.ResultExplicitTransitionValues,
+                                    null);
+                                if (noTransitionChange)
+                                {
+                                    // If we are not changing anything in the transition ID, we can be more gentle in replacement
+                                    return (SrmDocument) doc.ReplaceChild(nodeTranTree.Path.Parent, newDocNode);
+                                }
+                                else
+                                {
+                                    // Note we can't just Replace the node, as it has a new Id that's not in the doc.
+                                    // But neither do we want the tree selection to change, so note this as a replacement.
+                                    var newDoc = doc.Insert(nodeTranTree.Path, newDocNode.ChangeReplacedId(nodeTran.Id));
+                                    return (SrmDocument)newDoc.RemoveChild(nodeTranTree.Path.Parent, nodeTran);
+                                }
                             }, docPair => AuditLogEntry.DiffDocNodes(MessageType.modified, docPair,
                                 AuditLogEntry.GetNodeName(docPair.OldDoc, nodeTran)));
                     }
@@ -2517,7 +2531,7 @@ namespace pwiz.Skyline
             var property = RootProperty.Create(typeof(Targets));
             var objInfo = new ObjectInfo<object>(docPair.OldDoc.Targets, docPair.NewDoc.Targets,
                 docPair.OldDoc, docPair.NewDoc, docPair.OldDoc, docPair.NewDoc);
-            var enumerator = Reflector<Targets>.EnumerateDiffNodes(objInfo, property, false);
+            var enumerator = Reflector<Targets>.EnumerateDiffNodes(objInfo, property, docPair.OldDocumentType, false);
 
             var count = 0;
             while (enumerator.MoveNext())
@@ -2535,7 +2549,7 @@ namespace pwiz.Skyline
         private AuditLogEntry CreateRemoveNodesEntry(SrmDocumentPair docPair, MessageType singular, MessageType plural)
         {
             var count = CountNodeDiff(docPair);
-            return AuditLogEntry.CreateSimpleEntry(count == 1 ? singular : plural, count);
+            return AuditLogEntry.CreateSimpleEntry(count == 1 ? singular : plural, docPair.NewDocumentType, count);
         }
 
         private void removeEmptyProteinsMenuItem_Click(object sender, EventArgs e)
@@ -2655,7 +2669,7 @@ namespace pwiz.Skyline
         {
             var refinementSettings = new RefinementSettings { RemoveMissingResults = true };
             ModifyDocument(Resources.SkylineWindow_RemoveMissingResults_Remove_missing_results, refinementSettings.Refine,
-                docPair => AuditLogEntry.CreateSimpleEntry(MessageType.removed_missing_results));
+                docPair => AuditLogEntry.CreateSimpleEntry(MessageType.removed_missing_results, docPair.NewDocumentType));
         }
 
         private void generateDecoysMenuItem_Click(object sender, EventArgs e)
@@ -2691,6 +2705,7 @@ namespace pwiz.Skyline
                             var plural = refinementSettings.NumberOfDecoys > 1;
                             return AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(
                                 plural ? MessageType.added_peptide_decoys : MessageType.added_peptide_decoy,
+                                DocumentUI.DocumentType,
                                 refinementSettings.NumberOfDecoys, refinementSettings.DecoysMethod));
                         });
 
@@ -3037,7 +3052,7 @@ namespace pwiz.Skyline
                 listProteins.Sort(comparison);
                 listDecoy.Sort(comparison);
                 return (SrmDocument)doc.ChangeChildrenChecked(listIrt.Concat(listProteins).Concat(listDecoy).ToArray());
-            }, docPair => AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(type)));
+            }, docPair => AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(type, docPair.NewDocumentType)));
         }
 
         public void sortProteinsByNameToolStripMenuItem_Click(object sender, EventArgs e)
@@ -3106,7 +3121,10 @@ namespace pwiz.Skyline
                     Resources.SkylineWindow_AddMolecule_Add_Transition, null, existingIons,
                     Transition.MIN_PRODUCT_CHARGE,
                     Transition.MAX_PRODUCT_CHARGE,
-                    Document.Settings, nodeGroup.CustomMolecule, nodeGroup.Transitions.Any() ? nodeGroup.Transitions.Last().Transition.Adduct : Adduct.SINGLY_PROTONATED, null, null, null))
+                    Document.Settings, nodeGroup.CustomMolecule, nodeGroup.Transitions.Any() ? nodeGroup.Transitions.Last().Transition.Adduct : Adduct.SINGLY_PROTONATED,
+                    null,
+                    nodeGroup.Transitions.Any() ? nodeGroup.Transitions.Last().ExplicitValues : ExplicitTransitionValues.EMPTY,
+                    null, null))
                 {
                     if (dlg.ShowDialog(this) == DialogResult.OK)
                     {
@@ -3118,7 +3136,9 @@ namespace pwiz.Skyline
                             var transition = new Transition(transitionGroup, dlg.Adduct, null, dlg.ResultCustomMolecule);
                             var massType = doc.Settings.TransitionSettings.Prediction.FragmentMassType;
                             var mass = transition.CustomIon.GetMass(massType);
-                            var nodeTran = new TransitionDocNode(transition, null, mass, TransitionDocNode.TransitionQuantInfo.DEFAULT);
+                            var nodeTran = new TransitionDocNode(transition, null, mass, TransitionDocNode.TransitionQuantInfo.DEFAULT,
+                            dlg.ResultExplicitTransitionValues); 
+
                             return (SrmDocument)doc.Add(groupPath, nodeTran);
                         }, docPair => AuditLogEntry.DiffDocNodes(MessageType.added_small_molecule_transition, docPair, dlg.ResultCustomMolecule.DisplayName));
                     }
@@ -3140,6 +3160,7 @@ namespace pwiz.Skyline
                     nodePep.Peptide.CustomMolecule,
                     notFirst ? nodePep.TransitionGroups.First().TransitionGroup.PrecursorAdduct : Adduct.SINGLY_PROTONATED,
                     notFirst ? nodePep.TransitionGroups.First().ExplicitValues : ExplicitTransitionGroupValues.EMPTY,
+                    null,
                     null,
                     notFirst ? nodePep.TransitionGroups.First().TransitionGroup.LabelType : IsotopeLabelType.light))
                 {
@@ -3176,7 +3197,7 @@ namespace pwiz.Skyline
                     EditCustomMoleculeDlg.UsageMode.moleculeNew,
                     Resources.SkylineWindow_AddSmallMolecule_Add_Small_Molecule_and_Precursor, null, null,
                     TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, Document.Settings, null, Adduct.NonProteomicProtonatedFromCharge(1), 
-                    ExplicitTransitionGroupValues.EMPTY, ExplicitRetentionTimeInfo.EMPTY, IsotopeLabelType.light))
+                    ExplicitTransitionGroupValues.EMPTY, ExplicitTransitionValues.EMPTY, ExplicitRetentionTimeInfo.EMPTY, IsotopeLabelType.light))
                 {
                     if (dlg.ShowDialog(this) == DialogResult.OK)
                     {
@@ -4343,7 +4364,7 @@ namespace pwiz.Skyline
 
                             var entry = AuditLogEntry.DiffDocNodes(MessageType.none, docPair, true);
 
-                            return AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(type, peptideGroupName), labelText).Merge(entry);
+                            return AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(type, docPair.NewDocumentType, peptideGroupName), labelText).Merge(entry);
                         });
                     }
                     else
@@ -4370,7 +4391,7 @@ namespace pwiz.Skyline
 
                             var entry = AuditLogEntry.DiffDocNodes(MessageType.none, docPair, true);
 
-                            return AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(type, peptideGroupName), labelText).Merge(entry);
+                            return AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(type, docPair.NewDocumentType, peptideGroupName), labelText).Merge(entry);
                         });
                     }
                 }
@@ -4387,7 +4408,7 @@ namespace pwiz.Skyline
                         string.Format(Resources.SkylineWindow_sequenceTree_AfterNodeEdit_Edit_name__0__, e.Label),
                         doc => (SrmDocument)
                             doc.ReplaceChild(nodeTree.DocNode.ChangeName(e.Label)),
-                        docPair => AuditLogEntry.CreateSimpleEntry(MessageType.renamed_node,
+                        docPair => AuditLogEntry.CreateSimpleEntry(MessageType.renamed_node, docPair.NewDocumentType,
                             nodeTree.Text, e.Label));
                 }
             }
@@ -4495,11 +4516,11 @@ namespace pwiz.Skyline
                     var chosen = e.PickedList.Chosen.ToArray();
                     var nodeName = AuditLogEntry.GetNodeName(docPair.OldDoc, node.Model);
                     var entry = AuditLogEntry.CreateCountChangeEntry(MessageType.picked_child,
-                        MessageType.picked_children, chosen,
+                        MessageType.picked_children, docPair.NewDocumentType, chosen,
                         n => MessageArgs.Create(n.AuditLogText, nodeName),
                         MessageArgs.Create(chosen.Length, nodeName));
 
-                    return entry.AppendAllInfo(chosen.Select(n => new MessageInfo(MessageType.picked_child,
+                    return entry.AppendAllInfo(chosen.Select(n => new MessageInfo(MessageType.picked_child, docPair.NewDocumentType,
                         n.AuditLogText, nodeName)).ToList());
                 });
         }
@@ -4623,7 +4644,7 @@ namespace pwiz.Skyline
                                                     return doc;
                                                 }, docPair =>
             {
-                var entry = AuditLogEntry.CreateCountChangeEntry(MessageType.drag_and_dropped_node, MessageType.drag_and_dropped_nodes,
+                var entry = AuditLogEntry.CreateCountChangeEntry(MessageType.drag_and_dropped_node, MessageType.drag_and_dropped_nodes, docPair.NewDocumentType,
                     nodeSources.Select(node =>
                         AuditLogEntry.GetNodeName(docPair.OldDoc, node.Model).ToString()), nodeSources.Count,
                     str => MessageArgs.Create(str, pepGroup.Name),
@@ -4632,6 +4653,7 @@ namespace pwiz.Skyline
                 if (nodeSources.Count > 1)
                 {
                     entry = entry.ChangeAllInfo(nodeSources.Select(node => new MessageInfo(MessageType.drag_and_dropped_node,
+                        docPair.NewDocumentType,
                         AuditLogEntry.GetNodeName(docPair.OldDoc, node.Model), pepGroup.Name)).ToList());
                 }
 

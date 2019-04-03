@@ -679,7 +679,7 @@ namespace pwiz.Skyline.FileUI
             protected override AuditLogEntry CreateEntry(SrmDocumentPair docPair)
             {
                 var entry = AuditLogEntry.CreateCountChangeEntry(MessageType.imported_result,
-                    MessageType.imported_results, FileNames, MessageArgs.DefaultSingular, null);
+                    MessageType.imported_results, docPair.NewDocumentType, FileNames, MessageArgs.DefaultSingular, null);
 
                 return entry.Merge(base.CreateEntry(docPair), false);
             }

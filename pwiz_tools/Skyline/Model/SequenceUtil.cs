@@ -843,12 +843,13 @@ namespace pwiz.Skyline.Model
             var result = md;
             var charge = adduct.AdductCharge;
             // Note we use the traditional peptide-oriented calculation when adduct is protonated and not an n-mer, mostly for stability in tests
-            var mol = (adduct.IsProtonated && adduct.GetMassMultiplier() == 1) ? molecule.Elements : adduct.ApplyToMolecule(molecule.Elements);
+            var protonated = adduct.IsProtonated && (adduct.GetMassMultiplier() == 1);
+            var mol = protonated ? molecule.Elements : adduct.ApplyToMolecule(molecule.Elements);
             foreach (var element in mol)
             {
                 result = result.Add(md.Add(abundances[element.Key]).Multiply(element.Value));
             }
-            return result.OffsetAndDivide(unexplainedMass + charge * (adduct.IsProtonated ? BioMassCalc.MassProton : -BioMassCalc.MassElectron), charge);
+            return result.OffsetAndDivide(unexplainedMass + charge * (protonated ? BioMassCalc.MassProton : -BioMassCalc.MassElectron), charge);
         }
 
         private MoleculeUnsorted GetFormula(string seq, ExplicitSequenceMods mods, out double unexplainedMass)

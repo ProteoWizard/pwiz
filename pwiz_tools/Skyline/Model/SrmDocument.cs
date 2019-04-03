@@ -1553,11 +1553,11 @@ namespace pwiz.Skyline.Model
             }
 
             var tranPrecursorNode = new TransitionDocNode(tranPrecursor, note, null,
-                pep.CustomMolecule.GetMass(Settings.TransitionSettings.Prediction.FragmentMassType), new TransitionDocNode.TransitionQuantInfo(isotopeDistInfo, null, true), null);
+                pep.CustomMolecule.GetMass(Settings.TransitionSettings.Prediction.FragmentMassType), new TransitionDocNode.TransitionQuantInfo(isotopeDistInfo, null, true), ExplicitTransitionValues.EMPTY, null);
             var tranFragmentNode = new TransitionDocNode(tranFragment, note, null,
-                tranFragment.CustomIon.GetMass(Settings.TransitionSettings.Prediction.FragmentMassType), TransitionDocNode.TransitionQuantInfo.DEFAULT, null);
+                tranFragment.CustomIon.GetMass(Settings.TransitionSettings.Prediction.FragmentMassType), TransitionDocNode.TransitionQuantInfo.DEFAULT, ExplicitTransitionValues.EMPTY, null);
             var tranFragmentNode2 = new TransitionDocNode(tranFragment2, note, null,
-                tranFragment2.CustomIon.GetMass(Settings.TransitionSettings.Prediction.FragmentMassType), TransitionDocNode.TransitionQuantInfo.DEFAULT, null);
+                tranFragment2.CustomIon.GetMass(Settings.TransitionSettings.Prediction.FragmentMassType), TransitionDocNode.TransitionQuantInfo.DEFAULT, ExplicitTransitionValues.EMPTY, null);
             var tranGroupNode = new TransitionGroupDocNode(tranGroup, note, Settings, null, null, ExplicitTransitionGroupValues.EMPTY, null,
                 hasPrecursorTransitions ? new[] { tranPrecursorNode, tranFragmentNode, tranFragmentNode2 } : new[] { tranFragmentNode, tranFragmentNode2 }, 
                 autoManageChildren);
@@ -2189,16 +2189,19 @@ namespace pwiz.Skyline.Model
                 results.Validate(settings);
         }
 
-        public double GetCollisionEnergy(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, int step)
+        public double GetCollisionEnergy(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, int step)
         {
-            return GetCollisionEnergy(Settings, nodePep, nodeGroup,
+            return GetCollisionEnergy(Settings, nodePep, nodeGroup, nodeTran,
                                       Settings.TransitionSettings.Prediction.CollisionEnergy, step);
         }
 
         public static double GetCollisionEnergy(SrmSettings settings, PeptideDocNode nodePep,
-            TransitionGroupDocNode nodeGroup, CollisionEnergyRegression regression, int step)
+            TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, CollisionEnergyRegression regression, int step)
         {
-            var ce = nodeGroup.ExplicitValues.CollisionEnergy;
+            var ce = nodeTran==null // If we're only given a precursor, use the explicit CE of its children if they all agree
+                ? (nodeGroup.Children.Any() && nodeGroup.Children.All( node => ((TransitionDocNode)node).ExplicitValues.CollisionEnergy == ((TransitionDocNode)nodeGroup.Children.First()).ExplicitValues.CollisionEnergy) 
+                    ? ((TransitionDocNode)nodeGroup.Children.First()).ExplicitValues.CollisionEnergy : null)
+                : nodeTran.ExplicitValues.CollisionEnergy;
             if (regression != null)
             {
                 if (!ce.HasValue)
@@ -2239,15 +2242,17 @@ namespace pwiz.Skyline.Model
         }
 
         public double GetDeclusteringPotential(PeptideDocNode nodePep,
-            TransitionGroupDocNode nodeGroup, int step)
+            TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, int step)
         {
-            return GetDeclusteringPotential(Settings, nodePep, nodeGroup,
+            return GetDeclusteringPotential(Settings, nodePep, nodeGroup, nodeTran,
                                             Settings.TransitionSettings.Prediction.DeclusteringPotential, step);
         }
 
         public static double GetDeclusteringPotential(SrmSettings settings, PeptideDocNode nodePep,
-            TransitionGroupDocNode nodeGroup, DeclusteringPotentialRegression regression, int step)
+            TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, DeclusteringPotentialRegression regression, int step)
         {
+            if (ExplicitTransitionValues.Get(nodeTran).DeclusteringPotential.HasValue)
+                return nodeTran.ExplicitValues.DeclusteringPotential.Value; // Explicitly set, overrides calculation
             if (regression == null)
                 return 0;
             double mz = settings.GetRegressionMz(nodePep, nodeGroup);
@@ -2256,8 +2261,6 @@ namespace pwiz.Skyline.Model
 
         public double GetOptimizedDeclusteringPotential(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTransition)
         {
-            if (nodeGroup.ExplicitValues.DeclusteringPotential.HasValue)
-                return nodeGroup.ExplicitValues.DeclusteringPotential.Value;   // Use the explicitly imported value
             var prediction = Settings.TransitionSettings.Prediction;
             var methodType = prediction.OptimizedMethodType;
             var regression = prediction.DeclusteringPotential;
@@ -2380,22 +2383,22 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public double GetCompensationVoltage(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, int step, CompensationVoltageParameters.Tuning tuneLevel)
+        public double GetCompensationVoltage(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, int step, CompensationVoltageParameters.Tuning tuneLevel)
         {
             var cov = Settings.TransitionSettings.Prediction.CompensationVoltage;
             switch (tuneLevel)
             {
                 case CompensationVoltageParameters.Tuning.fine:
-                    return GetCompensationVoltageFine(Settings, nodePep, nodeGroup, cov, step);   
+                    return GetCompensationVoltageFine(Settings, nodePep, nodeGroup, nodeTran, cov, step);   
                 case CompensationVoltageParameters.Tuning.medium:
-                    return GetCompensationVoltageMedium(Settings, nodePep, nodeGroup, cov, step);
+                    return GetCompensationVoltageMedium(Settings, nodePep, nodeGroup, nodeTran, cov, step);
                 default:
-                    return GetCompensationVoltageRough(Settings, nodePep, nodeGroup, cov, step);
+                    return GetCompensationVoltageRough(Settings, nodePep, nodeGroup, nodeTran, cov, step);
             }
         }
 
         private static double GetCompensationVoltageRough(SrmSettings settings, PeptideDocNode nodePep,
-            TransitionGroupDocNode nodeGroup, CompensationVoltageParameters regression, int step)
+            TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, CompensationVoltageParameters regression, int step)
         {
             if (regression == null)
                 return 0;
@@ -2404,7 +2407,7 @@ namespace pwiz.Skyline.Model
         }
 
         private static double GetCompensationVoltageMedium(SrmSettings settings, PeptideDocNode nodePep,
-            TransitionGroupDocNode nodeGroup, CompensationVoltageParameters regression, int step)
+            TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, CompensationVoltageParameters regression, int step)
         {
             if (regression == null)
                 return 0;
@@ -2415,7 +2418,7 @@ namespace pwiz.Skyline.Model
         }
 
         public static double GetCompensationVoltageFine(SrmSettings settings, PeptideDocNode nodePep,
-            TransitionGroupDocNode nodeGroup, CompensationVoltageParameters regression, int step)
+            TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, CompensationVoltageParameters regression, int step)
         {
             if (regression == null)
                 return 0;
@@ -2502,14 +2505,21 @@ namespace pwiz.Skyline.Model
 
     public class SrmDocumentPair : ObjectPair<SrmDocument>
     {
-        protected SrmDocumentPair(SrmDocument oldDoc, SrmDocument newDoc)
+        protected SrmDocumentPair(SrmDocument oldDoc, SrmDocument newDoc, SrmDocument.DOCUMENT_TYPE defaultDocumentTypeForAuditLog)
             : base(oldDoc, newDoc)
         {
+            NewDocumentType = newDoc != null && newDoc.DocumentType != SrmDocument.DOCUMENT_TYPE.none 
+                ? newDoc.DocumentType
+                : defaultDocumentTypeForAuditLog;
+            OldDocumentType = oldDoc != null && oldDoc.DocumentType != SrmDocument.DOCUMENT_TYPE.none 
+                ? oldDoc.DocumentType
+                : NewDocumentType;
         }
 
-        public new static SrmDocumentPair Create(SrmDocument oldDoc, SrmDocument newDoc)
+        public static SrmDocumentPair Create(SrmDocument oldDoc, SrmDocument newDoc, 
+            SrmDocument.DOCUMENT_TYPE defaultDocumentTypeForLogging)
         {
-            return new SrmDocumentPair(oldDoc, newDoc);
+            return new SrmDocumentPair(oldDoc, newDoc, defaultDocumentTypeForLogging);
         }
 
         public ObjectPair<object> ToObjectType()
@@ -2519,6 +2529,11 @@ namespace pwiz.Skyline.Model
 
         public SrmDocument OldDoc { get { return OldObject; } }
         public SrmDocument NewDoc { get { return NewObject; } }
+
+        // Used for "peptide"->"molecule" translation cue in human readable logs
+        public SrmDocument.DOCUMENT_TYPE OldDocumentType { get; private set; } // Useful when something in document is being removed, which might cause a change from mixed to proteomic but you want to log event as "molecule" rather than "peptide"
+        public SrmDocument.DOCUMENT_TYPE NewDocumentType { get; private set; } // Useful when something is being added, which might cause a change from proteomic to mixed so you want to log event as "molecule" rather than "peptide"
+
     }
 
     public class Targets

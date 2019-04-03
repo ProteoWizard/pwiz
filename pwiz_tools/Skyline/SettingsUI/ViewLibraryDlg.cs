@@ -416,7 +416,7 @@ namespace pwiz.Skyline.SettingsUI
                         doc.Settings.UpdateDefaultModifications(false);
                         return doc;
                     }, docPair => AuditLogEntry.SettingsLogFunction(docPair)
-                        .ChangeUndoRedo(new MessageInfo(MessageType.matched_modifications_of_library,
+                        .ChangeUndoRedo(new MessageInfo(MessageType.matched_modifications_of_library, docPair.NewDocumentType,
                             _selectedLibName)));
                 }
                 return true;
@@ -1415,7 +1415,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private static AuditLogEntry CreateAddPeptideEntry(SrmDocumentPair docPair, MessageType type, AuditLogEntryCreatorList entryCreatorList, params object[] args)
         {
-            return AuditLogEntry.CreateSimpleEntry(type, args).Merge(docPair, entryCreatorList);
+            return AuditLogEntry.CreateSimpleEntry(type, docPair.NewDocumentType, args).Merge(docPair, entryCreatorList);
         }
 
         private bool EnsureBackgroundProteome(SrmDocument document, ViewLibraryPepMatching pepMatcher, bool ensureDigested, AuditLogEntryCreatorList entryCreators)
@@ -1493,7 +1493,7 @@ namespace pwiz.Skyline.SettingsUI
                         }
                     });
                     if (finished && entryCreators != null)
-                        entryCreators.Add(docPair => AuditLogEntry.CreateSimpleEntry(MessageType.upgraded_background_proteome, backgroundProteome.Name));
+                        entryCreators.Add(docPair => AuditLogEntry.CreateSimpleEntry(MessageType.upgraded_background_proteome, docPair.NewDocumentType, backgroundProteome.Name));
                     return finished;
                 } 
             }
@@ -1530,7 +1530,7 @@ namespace pwiz.Skyline.SettingsUI
                     var copy = newDoc;
                     if (addToDoc)
                         Program.MainWindow.ModifyDocument(Resources.ViewLibraryDlg_CheckLibraryInSettings_Add_Library, oldDoc => copy,
-                            docPair => AuditLogEntry.CreateSimpleEntry(MessageType.added_spectral_library, _selectedLibName));
+                            docPair => AuditLogEntry.CreateSimpleEntry(MessageType.added_spectral_library, docPair.NewDocumentType, _selectedLibName));
                 }
 
             }

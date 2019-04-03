@@ -213,28 +213,32 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     ImportResultsControl.ImportSettings,
                     MatchModificationsControl.ModificationSettings,
                     skippedTransitionPage ? null : TransitionSettingsControl.FilterAndLibrariesSettings, FullScanSettingsControl.FullScan,
-                    ImportFastaControl.ImportSettings);
+                    ImportFastaControl.ImportSettings,
+                    GetModeUIHelper().ModeUI);
             }
         }
 
         public class ImportPeptideSearchSettings : AuditLogOperationSettings<ImportPeptideSearchSettings>, IAuditLogComparable
         {
+            private SrmDocument.DOCUMENT_TYPE _docType;
             public override MessageInfo MessageInfo
             {
-                get { return new MessageInfo(MessageType.imported_peptide_search); }
+                get { return new MessageInfo(MessageType.imported_peptide_search, _docType); }
             }
 
             public ImportPeptideSearchSettings(
                 ImportResultsSettings importResultsSettings,
                 MatchModificationsControl.MatchModificationsSettings modificationsSettings,
                 TransitionSettingsControl.TransitionFilterAndLibrariesSettings filterAndLibSettings,
-                TransitionFullScan fullScanSettings, ImportFastaControl.ImportFastaSettings importFastaSettings)
+                TransitionFullScan fullScanSettings, ImportFastaControl.ImportFastaSettings importFastaSettings,
+                SrmDocument.DOCUMENT_TYPE docType)
             {
                 ImportResultsSettings = importResultsSettings;
                 ModificationsSettings = modificationsSettings;
                 FilterAndLibrariesSettings = filterAndLibSettings;
                 FullScanSettings = fullScanSettings;
                 ImportFastaSettings = importFastaSettings;
+                _docType = docType;
             }
 
             // Extract Chromatograms
@@ -268,7 +272,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     MatchModificationsControl.MatchModificationsSettings.DEFAULT,
                     TransitionSettingsControl.TransitionFilterAndLibrariesSettings.GetDefault(doc.Settings.TransitionSettings),
                     doc.Settings.TransitionSettings.FullScan,
-                    ImportFastaControl.ImportFastaSettings.GetDefault(doc.Settings.PeptideSettings));
+                    ImportFastaControl.ImportFastaSettings.GetDefault(doc.Settings.PeptideSettings),
+                    SrmDocument.DOCUMENT_TYPE.proteomic);
             }
         }
 

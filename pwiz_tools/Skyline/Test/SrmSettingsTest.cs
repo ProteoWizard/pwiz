@@ -566,7 +566,7 @@ namespace pwiz.SkylineTest
             // Bad terminus
             AssertEx.DeserializeError<StaticMod>("<static_modification name=\"Mod\" terminus=\"X\" formula=\"C23N\" />");
             // Bad formula
-            AssertEx.DeserializeError<StaticMod, ArgumentException>("<static_modification name=\"Mod\" aminoacid=\"K\" formula=\"C23NHe2\" />");
+            AssertEx.DeserializeError<StaticMod, ArgumentException>("<static_modification name=\"Mod\" aminoacid=\"K\" formula=\"C23NHx2\" />");
             // Terminal label without amino acid
             AssertEx.DeserializeError<StaticMod>("<static_modification name=\"15N\" terminus=\"C\" label_13C=\"true\"/>");
             // Formula and labeled atoms
@@ -830,7 +830,7 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Reporter formula\"" +
                 " formula=\"\" charges=\"1\"/>");
             AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Reporter formula\"" +
-                " formula=\"He3\" charges=\"1\"/>");
+                " formula=\"Hx3\" charges=\"1\"/>");
             // Reporter with formulas producing out of range masses
             AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Reporter formula\"" +
                 " formula=\"H2\" charges=\"1\"/>");

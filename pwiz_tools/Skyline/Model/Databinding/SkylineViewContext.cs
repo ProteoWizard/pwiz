@@ -484,7 +484,6 @@ namespace pwiz.Skyline.Model.Databinding
                     }
                     if (!docHasCustomIons)
                     {
-                        columnsToRemove.Add(PropertyPath.Root.Property("ExplicitCollisionEnergy"));
                         columnsToRemove.Add(PropertyPath.Root.Property("IonName"));
                         columnsToRemove.Add(PropertyPath.Root.Property("IonFormula"));
                         columnsToRemove.Add(PropertyPath.Root.Property("NeutralFormula"));
@@ -501,21 +500,23 @@ namespace pwiz.Skyline.Model.Databinding
                     columnsToRemove.Add(PropertyPath.Root.Property("IsDecoy"));
                     columnsToRemove.Add(PropertyPath.Root.Property("DecoyMzShift"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDriftTimeMsec"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDriftTimeHighEnergyOffsetMsec"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitCollisionalCrossSection"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitIonMobility"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitIonMobilityHighEnergyOffset"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitIonMobilityUnits"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitCompensationVoltage"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDeclusteringPotential"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitSLens"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitConeVoltage"));
                     columnsToRemove.Add(PropertyPath.Root.Property("PrecursorConcentration"));
                     columnsToRemove.Add(PropertyPath.Root.Property(nameof(Precursor.AutoSelectTransitions)));
                     addRoot = true;
                 }
                 else if (columnDescriptor.PropertyType == typeof(Entities.Transition))
                 {
+                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitCollisionEnergy"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDriftTimeHighEnergyOffsetMsec"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitIonMobilityHighEnergyOffset"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitCompensationVoltage"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDeclusteringPotential"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitSLens"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitConeVoltage"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ResultSummary"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ProductNeutralMass"));
                     columnsToRemove.Add(PropertyPath.Root.Property("FragmentIonType"));

@@ -24,6 +24,7 @@ using System.Threading;
 using System.Xml;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -64,7 +65,8 @@ namespace pwiz.SkylineTest
             AuditLogEntry headEntry = null;
             for (var index = 0; index++ < entryCount;)
             {
-                var entry = AuditLogEntry.CreateTestOnlyEntry(then, string.Empty);
+                var documentType = (SrmDocument.DOCUMENT_TYPE)(index % ((int)SrmDocument.DOCUMENT_TYPE.none + 1));
+                var entry = AuditLogEntry.CreateTestOnlyEntry(then, documentType, string.Empty);
                 then += timestep;
                 if (headEntry == null)
                 {
@@ -95,6 +97,7 @@ namespace pwiz.SkylineTest
                 Assert.AreEqual(entries[i].TimeZoneOffset, roundtripEntries[i].TimeZoneOffset);
                 Assert.AreEqual(entries[i].SkylineVersion, roundtripEntries[i].SkylineVersion);
                 Assert.AreEqual(entries[i].User, roundtripEntries[i].User);
+                Assert.AreEqual(entries[i].DocumentType == SrmDocument.DOCUMENT_TYPE.proteomic ? SrmDocument.DOCUMENT_TYPE.none : entries[i].DocumentType, roundtripEntries[i].DocumentType);
                 Assert.AreEqual(entries[i].Hash.ActualHash, roundtripEntries[i].Hash.ActualHash);
                 // No Skyl hash until sserialized, so can't compare here
             }

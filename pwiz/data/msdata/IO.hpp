@@ -197,7 +197,8 @@ PWIZ_API_DECL
 void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList, const MSData& msd,
            const BinaryDataEncoder::Config& config = BinaryDataEncoder::Config(),
            std::vector<boost::iostreams::stream_offset>* spectrumPositions = 0,
-           const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0);
+           const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0,
+           bool useWorkerThreads = true);
 PWIZ_API_DECL void read(std::istream& is, SpectrumListSimple& spectrumListSimple);
 
 
@@ -217,7 +218,8 @@ void write(minimxml::XMLWriter& writer, const Run& run, const MSData& msd,
            const BinaryDataEncoder::Config& config = BinaryDataEncoder::Config(),
            std::vector<boost::iostreams::stream_offset>* spectrumPositions = 0,
            std::vector<boost::iostreams::stream_offset>* chromatogramPositions = 0,
-           const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0);
+           const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0,
+           bool useWorkerThreads = true);
 PWIZ_API_DECL
 void read(std::istream& is, Run& run,
           SpectrumListFlag spectrumListFlag = IgnoreSpectrumList);
@@ -228,7 +230,8 @@ void write(minimxml::XMLWriter& writer, const MSData& msd,
            const BinaryDataEncoder::Config& config = BinaryDataEncoder::Config(),
            std::vector<boost::iostreams::stream_offset>* spectrumPositions = 0,
            std::vector<boost::iostreams::stream_offset>* chromatogramPositions = 0,
-           const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0);
+           const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0,
+           bool useWorkerThreads = true);
 PWIZ_API_DECL
 void read(std::istream& is, MSData& msd,
           SpectrumListFlag spectrumListFlag = IgnoreSpectrumList);
