@@ -285,6 +285,23 @@ namespace pwiz.Skyline
             Exception exception = null;
             SrmDocument document = null;
 
+            // A fairly common support question is "why won't this Skyline file open?" when they are actually
+            // trying to open a .skyd file or somesuch.  Probably an artifact of Windows hiding file extensions.
+            // Try to work around it by finding a plausible matching .sky file when asked to open a .sky? file.
+            if (!path.EndsWith(SrmDocument.EXT))
+            {
+                var index = path.LastIndexOf(SrmDocument.EXT, StringComparison.Ordinal);
+                if (index > 0 && index == path.Length - (SrmDocument.EXT.Length + 1))
+                {
+                    // Looks like user picked a .skyd or .skyr or .skyl etc
+                    var likelyPath = path.Substring(0, index + SrmDocument.EXT.Length);
+                    if (File.Exists(likelyPath))
+                    {
+                        path = likelyPath;
+                    }
+                }
+            }
+
             try
             {
                 using (var longWaitDlg = new LongWaitDlg(this)
