@@ -89,6 +89,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [HideWhen(AncestorsOfAnyOfTheseTypes = new []{typeof(Protein),typeof(FoldChangeBindingSource.FoldChangeRow)})]
+        [InvariantDisplayName("MoleculeList", ExceptInUiMode = UiModes.PROTEOMIC)]
         public Protein Protein
         {
             get { return new Protein(DataSchema, IdentityPath.Parent); }

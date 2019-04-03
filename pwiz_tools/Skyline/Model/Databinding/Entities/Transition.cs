@@ -141,6 +141,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return DocNode.Transition.IonType; }
         }
         [Format(NullValue = TextUtil.EXCEL_NA)]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public int? FragmentIonOrdinal
         {
             get
@@ -161,6 +162,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
         [Format(NullValue = TextUtil.EXCEL_NA)]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public double? LossNeutralMass
         {
             get
@@ -170,6 +172,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return DocNode.LostMass;
             }
         }
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public string Losses
         {
             get
@@ -179,6 +182,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     : (DocNode.HasLoss ? string.Join(@", ", DocNode.Losses.ToStrings()) : string.Empty);
             }
         }
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public string LossFormulas
         {
             get

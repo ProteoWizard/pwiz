@@ -47,6 +47,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         [HideWhen(AncestorOfType = typeof(Peptide))]
         [Hidden]
+        [InvariantDisplayName("Molecule", ExceptInUiMode = UiModes.PROTEOMIC)]
         public Peptide Peptide { get { return SkylineDocNode as Peptide; } }
 
         [Browsable(false)]
