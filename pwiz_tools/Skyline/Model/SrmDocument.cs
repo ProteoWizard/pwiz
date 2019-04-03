@@ -1222,6 +1222,68 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        /// <summary>
+        /// Inspect a file to see if it's Skyline XML data or not
+        /// </summary>
+        /// <param name="path">file to inspect</param>
+        /// <param name="explained">explanation of problem with file if it's not a Skyline document</param>
+        /// <returns>true iff file exists and has XML header that appears to be the start of Skyline document.</returns>
+        public static bool IsSkylineFile(string path, out string explained)
+        {
+            explained = string.Empty;
+            if (File.Exists(path))
+            {
+                try
+                {
+                    // We have no idea what kind of file this might be, so even reading the first "line" might take a long time. Read a chunk instead.
+                    var probeFile = File.OpenRead(path);
+                    var CHUNKSIZE = 500; // Should be more than adequate to check for "?xml version="1.0" encoding="utf-8"?>< srm_settings format_version = "4.12" software_version = "Skyline (64-bit) " >"
+                    var probeBuf = new byte[CHUNKSIZE];
+                    probeFile.Read(probeBuf, 0, CHUNKSIZE);
+                    probeBuf[CHUNKSIZE - 1] = 0;
+                    var probeString = System.Text.Encoding.UTF8.GetString(probeBuf);
+                    if (!probeString.Contains(@"<srm_settings"))
+                    {
+                        explained = string.Format(
+                            Resources.SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filename_extension_and_are_in_XML_format_,
+                            path, SrmDocument.EXT, SrmDocumentSharing.EXT_SKY_ZIP);
+                    }
+                }
+                catch (Exception e)
+                {
+                    explained = e.Message;
+                }
+            }
+            else
+            {
+                explained = Resources.ToolDescription_RunTool_File_not_found_; // "File not found"
+            }
+
+            return string.IsNullOrEmpty(explained);
+        }
+
+        /// <summary>
+        /// Tries to find a .sky file for a .skyd or .skyl etc file
+        /// </summary>
+        /// <param name="path">Path to file which may have a sibling .sky file</param>
+        /// <returns>Input path with extension changed to .sky, if such a file exists and appears to be a Skyline file</returns>
+        public static string FindSiblingSkylineFile(string path)
+        {
+            var index = path.LastIndexOf(SrmDocument.EXT, StringComparison.Ordinal);
+            if (index > 0 && index == path.Length - (SrmDocument.EXT.Length + 1))
+            {
+                // Looks like user picked a .skyd or .skyl etc
+                var likelyPath = path.Substring(0, index + SrmDocument.EXT.Length);
+                if (File.Exists(likelyPath) && IsSkylineFile(likelyPath, out _))
+                {
+                    return likelyPath;
+                }
+            }
+
+            return path;
+        }
+
+
         private SrmDocument MergeMatchingPeptidesUserInfo(IList<PeptideGroupDocNode> peptideGroupsNew)
         {
             var setMerge = new HashSet<PeptideModKey>();

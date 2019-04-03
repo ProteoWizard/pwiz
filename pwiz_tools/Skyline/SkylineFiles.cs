@@ -204,68 +204,7 @@ namespace pwiz.Skyline
             }
         }
 
-        /// <summary>
-        /// Inspect a file to see if it's Skyline XML data or not
-        /// </summary>
-        /// <param name="path">file to inspect</param>
-        /// <param name="explained">explanation of problem with file if it's not a Skyline document</param>
-        /// <returns>true iff file exists and has XML header that appears to be the start of Skyline document.</returns>
-        public bool IsSkylineFile(string path, out string explained)
-        {
-            explained = string.Empty;
-            if (File.Exists(path))
-            {
-                try
-                {
-                    // We have no idea what kind of file this might be, so even reading the first "line" might take a long time. Read a chunk instead.
-                    var probeFile = File.OpenRead(path);
-                    var CHUNKSIZE = 500; // Should be more than adequate to check for "?xml version="1.0" encoding="utf-8"?>< srm_settings format_version = "4.12" software_version = "Skyline (64-bit) " >"
-                    var probeBuf = new byte[CHUNKSIZE];
-                    probeFile.Read(probeBuf, 0, CHUNKSIZE);
-                    probeBuf[CHUNKSIZE - 1] = 0;
-                    var probeString = System.Text.Encoding.UTF8.GetString(probeBuf);
-                    if (!probeString.Contains(@"<srm_settings"))
-                    {
-                        explained = string.Format(
-                            Resources.SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filename_extension_and_are_in_XML_format_,
-                            path, SrmDocument.EXT, SrmDocumentSharing.EXT_SKY_ZIP);
-                    }
-                }
-                catch (Exception e)
-                {
-                    explained = e.Message;
-                }
-            }
-            else
-            {
-                explained = Resources.ToolDescription_RunTool_File_not_found_; // "File not found"
-            }
-
-            return string.IsNullOrEmpty(explained);
-        }
-
-        /// <summary>
-        /// Tries to find a .sky file for a .skyr or .skyl etc file
-        /// </summary>
-        /// <param name="path">Path to file which may have a sibling .sky file</param>
-        /// <returns>Input path with extension changed to .sky, if such a file exists and appears to be a Skyline file</returns>
-        public string FindSiblingSkylineFile(string path)
-        {
-            var index = path.LastIndexOf(SrmDocument.EXT, StringComparison.Ordinal);
-            if (index > 0 && index == path.Length - (SrmDocument.EXT.Length + 1))
-            {
-                // Looks like user picked a .skyd or .skyr or .skyl etc
-                var likelyPath = path.Substring(0, index + SrmDocument.EXT.Length);
-                if (File.Exists(likelyPath) && IsSkylineFile(likelyPath, out _))
-                {
-                    return likelyPath;
-                }
-            }
-
-            return path;
-        }
-
-public bool OpenSharedFile(string zipPath, FormEx parentWindow = null)
+        public bool OpenSharedFile(string zipPath, FormEx parentWindow = null)
         {
             try
             {
@@ -349,9 +288,9 @@ public bool OpenSharedFile(string zipPath, FormEx parentWindow = null)
             // A fairly common support question is "why won't this Skyline file open?" when they are actually
             // trying to open a .skyd file or somesuch.  Probably an artifact of Windows hiding file extensions.
             // Try to work around it by finding a plausible matching .sky file when asked to open a .sky? file.
-            if (!path.EndsWith(SrmDocument.EXT))
+            if (!path.EndsWith(SrmDocument.EXT) && !SrmDocument.IsSkylineFile(path, out _)) // Tolerate rename, eg foo.ski
             {
-                path = FindSiblingSkylineFile(path);
+                path = SrmDocument.FindSiblingSkylineFile(path);
             }
 
             try
@@ -384,9 +323,9 @@ public bool OpenSharedFile(string zipPath, FormEx parentWindow = null)
             {
                 exception = x;
                 // Was that even a Skyline file?
-                if (!IsSkylineFile(path, out var explained))
+                if (!SrmDocument.IsSkylineFile(path, out var explained))
                 {
-                    exception = new Exception(explained);
+                    exception = new Exception(explained); // Offer a more helpful explanation than that from the failed XML parser
                 }
             }
 
