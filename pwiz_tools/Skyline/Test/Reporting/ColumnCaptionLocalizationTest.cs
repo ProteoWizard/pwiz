@@ -89,41 +89,6 @@ namespace pwiz.SkylineTest.Reporting
             Assert.Fail("Missing localized column captions {0}", message);
         }
 
-//        [TestMethod]
-//        public void TestResxAlphabetical()
-//        {
-//            string lastName = null;
-//            var doc = GetEnglishResourceXmlDocument(typeof(ColumnCaptions));
-//            foreach (XmlElement el in doc.GetElementsByTagName("data"))
-//            {
-//                string name = el.GetAttribute("name");
-//                if (lastName != null)
-//                {
-//                    int compare = StringComparer.OrdinalIgnoreCase.Compare(name, lastName);
-//                    Assert.IsTrue(compare > 0, "{0} is out of order compared to {1}", name, lastName);
-//                }
-//
-//                lastName = name;
-//            }
-//        }
-//
-//        private XmlDocument GetEnglishResourceXmlDocument(Type resourceType)
-//        {
-//            var filename = resourceType.Name + ".resources";
-//            using (var stream = resourceType.Assembly.GetManifestResourceStream(resourceType, filename))
-//            {
-//                Assert.IsNotNull(stream);
-//                var firstBytes = new byte[1000];
-//                stream.Read(firstBytes, 0, firstBytes.Length);
-//
-//                string str = new StreamReader(stream).ReadToEnd();
-//                Assert.IsNotNull(str);
-//                var xmlDocument = new XmlDocument();
-//                xmlDocument.Load(stream);
-//                return xmlDocument;
-//            }
-//        }
-
         /// <summary>
         /// Tests that all columns that can be displayed in Skyline Live Reports have an entry in "ColumnToolTips.resx".
         /// If you add a Property to any of the entities that get displayed in Skyline Live Reports, you probably have
