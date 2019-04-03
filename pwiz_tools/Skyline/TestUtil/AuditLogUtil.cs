@@ -21,7 +21,9 @@ using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.AuditLog;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -37,8 +39,59 @@ namespace pwiz.SkylineTestUtil
                 ExtraInfo = extraInfo;
             }
 
+            private SrmDocument.DOCUMENT_TYPE GetNewDocType(SrmDocument.DOCUMENT_TYPE expected, SrmDocument.DOCUMENT_TYPE actual)
+            {
+                SrmDocument.DOCUMENT_TYPE setTo;
+                if (expected == SrmDocument.DOCUMENT_TYPE.none &&
+                    actual == SrmDocument.DOCUMENT_TYPE.proteomic)
+                    setTo = SrmDocument.DOCUMENT_TYPE.none;
+                else if (expected == SrmDocument.DOCUMENT_TYPE.proteomic &&
+                         actual == SrmDocument.DOCUMENT_TYPE.none)
+                    setTo = SrmDocument.DOCUMENT_TYPE.proteomic;
+                else
+                    return actual;
+                return setTo;
+            }
+
+            // Adjust entry so that comparisons against the expected document type
+            // don't fail if we expect 'none' and have 'proteomic' or vice versa
+            // We do this in this rather complicated way since we don't want to add any special
+            // to the equality members of LogMessage.
+            private AuditLogEntry AdjustDocumentType(AuditLogEntry entry)
+            {
+                if (ExpectedUndoRedo.DocumentType != entry.UndoRedo.DocumentType)
+                    entry = entry.ChangeUndoRedo(
+                        entry.UndoRedo.MessageInfo.ChangeDocumentType(GetNewDocType(ExpectedUndoRedo.DocumentType,
+                            entry.UndoRedo.DocumentType)));
+
+                if (ExpectedSummary.DocumentType != entry.Summary.DocumentType)
+                    entry = entry.ChangeSummary(
+                        entry.Summary.MessageInfo.ChangeDocumentType(GetNewDocType(ExpectedSummary.DocumentType,
+                            entry.Summary.DocumentType)));
+
+
+                // We take care of the case where the length doesn't match later
+                if (ExpectedAllInfo.Length == entry.AllInfo.Count)
+                {
+                    int index = entry.InsertUndoRedoIntoAllInfo ? 1 : 0;
+                    var actual = entry.AllInfo.Skip(index).ToArray();
+                    for (var i = index; i < ExpectedAllInfo.Length; ++i)
+                    {
+                        if (ExpectedAllInfo[i].DocumentType != actual[i - index].DocumentType)
+                        {
+                            actual[i - index] = (DetailLogMessage) actual[i - index].ChangeDocumentType(GetNewDocType(ExpectedAllInfo[i].DocumentType,
+                                actual[i - index].DocumentType));
+                        }
+                    }
+                    entry = entry.ChangeAllInfo(actual);
+                }
+
+                return entry;
+            }
+
             public void AssertEquals(AuditLogEntry entry)
             {
+                entry = AdjustDocumentType(entry);
                 Assert.AreEqual(ExpectedUndoRedo, entry.UndoRedo);
                 Assert.AreEqual(ExpectedSummary, entry.Summary);
 
@@ -73,8 +126,14 @@ namespace pwiz.SkylineTestUtil
             var indent = "";
             for (var i = 0; i < indentLvl; ++i)
                 indent += "    ";
-
-            var result = string.Format(indent + "new LogMessage(LogLevel.{0}, MessageType.{1}, string.Empty, {2},\r\n", msg.Level, msg.Type, msg.Expanded ? "true" : "false");
+            
+            var detail = msg as DetailLogMessage;
+            string reason = detail == null
+                ? string.Empty
+                : (string.IsNullOrEmpty(detail.Reason) ? "string.Empty, " : detail.Reason.Quote() + ",");
+            var result = string.Format(indent + "new {0}(LogLevel.{1}, MessageType.{2}, SrmDocument.DOCUMENT_TYPE.{3}, {4}{5},\r\n",
+                detail == null ? "LogMessage" : "DetailLogMessage",
+                msg.Level, msg.Type, msg.DocumentType.ToString(), reason, msg.Expanded ? "true" : "false");
             foreach (var name in msg.Names)
             {
                 var n = name.Replace("\"", "\\\"");
