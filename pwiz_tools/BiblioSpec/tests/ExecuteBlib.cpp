@@ -155,10 +155,10 @@ int executeBlib(const vector<string>& argv)
 
     if (expectedErrorMsg != "")
     {
-        cerr << "Blic command returned " << returnValue << endl;
-        return returnValue != 0; // Expecting a failure
+        cerr << "Blib command returned " << returnValue << endl;
+        return returnValue == 0; // Expecting a failure
     }
-    else
+    else if (returnValue != 0)
         throw runtime_error("Blib command returned " + lexical_cast<string>(returnValue));
 
     string fullCompareCommand = compareCmd + outputs + references + skiplines;
