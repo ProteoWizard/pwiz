@@ -244,7 +244,28 @@ namespace pwiz.Skyline
             return string.IsNullOrEmpty(explained);
         }
 
-        public bool OpenSharedFile(string zipPath, FormEx parentWindow = null)
+        /// <summary>
+        /// Tries to find a .sky file for a .skyr or .skyl etc file
+        /// </summary>
+        /// <param name="path">Path to file which may have a sibling .sky file</param>
+        /// <returns>Input path with extension changed to .sky, if such a file exists and appears to be a Skyline file</returns>
+        public string FindSiblingSkylineFile(string path)
+        {
+            var index = path.LastIndexOf(SrmDocument.EXT, StringComparison.Ordinal);
+            if (index > 0 && index == path.Length - (SrmDocument.EXT.Length + 1))
+            {
+                // Looks like user picked a .skyd or .skyr or .skyl etc
+                var likelyPath = path.Substring(0, index + SrmDocument.EXT.Length);
+                if (File.Exists(likelyPath) && IsSkylineFile(likelyPath, out _))
+                {
+                    return likelyPath;
+                }
+            }
+
+            return path;
+        }
+
+public bool OpenSharedFile(string zipPath, FormEx parentWindow = null)
         {
             try
             {
@@ -330,16 +351,7 @@ namespace pwiz.Skyline
             // Try to work around it by finding a plausible matching .sky file when asked to open a .sky? file.
             if (!path.EndsWith(SrmDocument.EXT))
             {
-                var index = path.LastIndexOf(SrmDocument.EXT, StringComparison.Ordinal);
-                if (index > 0 && index == path.Length - (SrmDocument.EXT.Length + 1))
-                {
-                    // Looks like user picked a .skyd or .skyr or .skyl etc
-                    var likelyPath = path.Substring(0, index + SrmDocument.EXT.Length);
-                    if (File.Exists(likelyPath))
-                    {
-                        path = likelyPath;
-                    }
-                }
+                path = FindSiblingSkylineFile(path);
             }
 
             try
