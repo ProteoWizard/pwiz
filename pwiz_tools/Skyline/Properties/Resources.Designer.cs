@@ -25700,13 +25700,13 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The file you are trying to open (&quot;{0}&quot;) does not appear to be a Skyline document. Skyline documents normally have a &quot;{1}&quot; or &quot;{2}&quot; filename extension and contain XML data..
+        ///   Looks up a localized string similar to The file you are trying to open (&quot;{0}&quot;) does not appear to be a Skyline document. Skyline documents normally have a &quot;{1}&quot; or &quot;{2}&quot; filename extension and are in XML format..
         /// </summary>
-        public static string SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filename_extension_and_contain_XML_data_ {
+        public static string SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filename_extension_and_are_in_XML_format_ {
             get {
                 return ResourceManager.GetString("SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to" +
                         "_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filenam" +
-                        "e_extension_and_contain_XML_data_", resourceCulture);
+                        "e_extension_and_are_in_XML_format_", resourceCulture);
             }
         }
         
