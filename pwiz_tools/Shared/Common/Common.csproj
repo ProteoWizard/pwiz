@@ -146,7 +146,6 @@
     <Compile Include="DataBinding\ChainedPropertyDescriptor.cs" />
     <Compile Include="DataBinding\CollectionInfo.cs" />
     <Compile Include="DataBinding\ColumnFormats.cs" />
-    <Compile Include="DataBinding\CommonUiModes.cs" />
     <Compile Include="DataBinding\Controls\ColumnListEditor.cs">
       <SubType>UserControl</SubType>
     </Compile>
