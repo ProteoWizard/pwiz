@@ -43,16 +43,14 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.toolButtonRedo = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolButtonFind = new System.Windows.Forms.ToolStripButton();
-            this.toolButtonShowAdvanced = new System.Windows.Forms.ToolStripDropDownButton();
-            this.showHiddenFieldsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.showSourceTabMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolButtonShowHiddenColumns = new System.Windows.Forms.ToolStripButton();
             this.helpToolStripButton = new System.Windows.Forms.ToolStripButton();
+            this.uiModeDropdown = new System.Windows.Forms.ToolStripDropDownButton();
             this.panel1 = new System.Windows.Forms.Panel();
             this.btnPreview = new System.Windows.Forms.Button();
             this.panelViewEditor = new System.Windows.Forms.Panel();
             this.panelButtons = new System.Windows.Forms.Panel();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.uiModeDropdown = new System.Windows.Forms.ToolStripDropDownButton();
             this.tabControl1.SuspendLayout();
             this.toolStrip.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -119,7 +117,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.toolButtonRedo,
             this.toolStripSeparator1,
             this.toolButtonFind,
-            this.toolButtonShowAdvanced,
+            this.toolButtonShowHiddenColumns,
             this.helpToolStripButton,
             this.uiModeDropdown});
             resources.ApplyResources(this.toolStrip, "toolStrip");
@@ -151,26 +149,12 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.toolButtonFind.Name = "toolButtonFind";
             this.toolButtonFind.Click += new System.EventHandler(this.toolButtonFind_Click);
             // 
-            // toolButtonShowAdvanced
+            // toolButtonShowHiddenColumns
             // 
-            this.toolButtonShowAdvanced.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.toolButtonShowAdvanced.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.showHiddenFieldsToolStripMenuItem,
-            this.showSourceTabMenuItem});
-            resources.ApplyResources(this.toolButtonShowAdvanced, "toolButtonShowAdvanced");
-            this.toolButtonShowAdvanced.Name = "toolButtonShowAdvanced";
-            // 
-            // showHiddenFieldsToolStripMenuItem
-            // 
-            this.showHiddenFieldsToolStripMenuItem.Name = "showHiddenFieldsToolStripMenuItem";
-            resources.ApplyResources(this.showHiddenFieldsToolStripMenuItem, "showHiddenFieldsToolStripMenuItem");
-            this.showHiddenFieldsToolStripMenuItem.Click += new System.EventHandler(this.showHiddenFieldsToolStripMenuItem_Click);
-            // 
-            // showSourceTabMenuItem
-            // 
-            this.showSourceTabMenuItem.Name = "showSourceTabMenuItem";
-            resources.ApplyResources(this.showSourceTabMenuItem, "showSourceTabMenuItem");
-            this.showSourceTabMenuItem.Click += new System.EventHandler(this.showSourceTabMenuItem_Click);
+            this.toolButtonShowHiddenColumns.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.toolButtonShowHiddenColumns, "toolButtonShowHiddenColumns");
+            this.toolButtonShowHiddenColumns.Name = "toolButtonShowHiddenColumns";
+            this.toolButtonShowHiddenColumns.Click += new System.EventHandler(this.showHiddenFieldsToolStripMenuItem_Click);
             // 
             // helpToolStripButton
             // 
@@ -178,6 +162,13 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             resources.ApplyResources(this.helpToolStripButton, "helpToolStripButton");
             this.helpToolStripButton.Name = "helpToolStripButton";
             this.helpToolStripButton.Click += new System.EventHandler(this.helpToolStripButton_Click);
+            // 
+            // uiModeDropdown
+            // 
+            this.uiModeDropdown.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.uiModeDropdown.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.uiModeDropdown, "uiModeDropdown");
+            this.uiModeDropdown.Name = "uiModeDropdown";
             // 
             // panel1
             // 
@@ -213,13 +204,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.toolTip1.AutoPopDelay = 32767;
             this.toolTip1.InitialDelay = 500;
             this.toolTip1.ReshowDelay = 100;
-            // 
-            // uiModeDropdown
-            // 
-            this.uiModeDropdown.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.uiModeDropdown.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            resources.ApplyResources(this.uiModeDropdown, "uiModeDropdown");
-            this.uiModeDropdown.Name = "uiModeDropdown";
             // 
             // ViewEditor
             // 
@@ -270,9 +254,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         private System.Windows.Forms.ToolStripButton toolButtonFind;
         private System.Windows.Forms.ToolStripButton helpToolStripButton;
         private System.Windows.Forms.ToolTip toolTip1;
-        private System.Windows.Forms.ToolStripDropDownButton toolButtonShowAdvanced;
-        private System.Windows.Forms.ToolStripMenuItem showHiddenFieldsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem showSourceTabMenuItem;
         private System.Windows.Forms.ToolStripDropDownButton uiModeDropdown;
+        private System.Windows.Forms.ToolStripButton toolButtonShowHiddenColumns;
     }
 }

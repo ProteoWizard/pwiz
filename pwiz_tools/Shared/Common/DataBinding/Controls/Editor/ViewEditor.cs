@@ -203,7 +203,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                     return;
                 }
                 _showHiddenFields = value;
-                showHiddenFieldsToolStripMenuItem.Checked = ShowHiddenFields;
+                toolButtonShowHiddenColumns.Checked = ShowHiddenFields;
                 ViewChange?.Invoke(this, new EventArgs());
             }
         }
@@ -236,7 +236,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                     }
                 }
 
-                showSourceTabMenuItem.Checked = ShowSourceTab;
                 ViewChange?.Invoke(this, new EventArgs());
             }
         }
