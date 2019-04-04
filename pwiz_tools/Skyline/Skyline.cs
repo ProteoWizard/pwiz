@@ -4038,7 +4038,10 @@ namespace pwiz.Skyline
             var dataSchema = new SkylineDataSchema(this,
                 SkylineDataSchema.GetLocalizedSchemaLocalizer());
             var documentationGenerator = new DocumentationGenerator(
-                ColumnDescriptor.RootColumn(dataSchema, typeof(SkylineDocument)));
+                ColumnDescriptor.RootColumn(dataSchema, typeof(SkylineDocument)))
+            {
+                IncludeHidden = false
+            };
             DocumentationViewer documentationViewer = new DocumentationViewer(true);
             documentationViewer.DocumentationHtml = documentationGenerator.GetDocumentationHtmlPage();
             documentationViewer.Show(this);

@@ -464,7 +464,10 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         public void ShowColumnDocumentation(bool showInTaskbar)
         {
-            var documentationGenerator = new DocumentationGenerator(ChooseColumnsTab.ViewInfo.ParentColumn);
+            var documentationGenerator = new DocumentationGenerator(ChooseColumnsTab.ViewInfo.ParentColumn)
+            {
+                IncludeHidden = ShowHiddenFields
+            };
             DocumentationViewer documentationViewer = new DocumentationViewer(showInTaskbar);
             documentationViewer.DocumentationHtml = documentationGenerator.GetDocumentationHtmlPage();
             documentationViewer.Show(this);

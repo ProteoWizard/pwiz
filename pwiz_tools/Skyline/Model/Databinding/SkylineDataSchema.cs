@@ -68,17 +68,25 @@ namespace pwiz.Skyline.Model.Databinding
         {
             get
             {
+                return UiModes.FromDocumentType(ModeUI);
+            }
+        }
+
+        public SrmDocument.DOCUMENT_TYPE ModeUI
+        {
+            get
+            {
                 if (SkylineWindow != null)
                 {
-                    return UiModes.FromDocumentType(SkylineWindow.ModeUI);
+                    return SkylineWindow.ModeUI;
                 }
 
                 if (_documentContainer.Document.DocumentType == Program.ModeUI)
                 {
-                    return UiModes.FromDocumentType(_documentContainer.Document.DocumentType);
+                    return _documentContainer.Document.DocumentType;
                 }
 
-                return UiModes.MIXED;
+                return SrmDocument.DOCUMENT_TYPE.mixed;
             }
         }
 
@@ -296,6 +304,24 @@ namespace pwiz.Skyline.Model.Databinding
             }
             var columnCaption = GetColumnCaption(columnDescriptor);
             return ColumnToolTips.ResourceManager.GetString(columnCaption.GetCaption(DataSchemaLocalizer.INVARIANT));
+        }
+
+        public override IColumnCaption GetInvariantDisplayName(string uiMode, Type type)
+        {
+            if (typeof(ListItem).IsAssignableFrom(type))
+            {
+                return ColumnCaption.UnlocalizableCaption(ListItemTypes.INSTANCE.GetListName(type));
+            }
+            return base.GetInvariantDisplayName(uiMode, type);
+        }
+
+        public override string GetTypeDescription(string uiMode, Type type)
+        {
+            if (typeof(ListItem).IsAssignableFrom(type))
+            {
+                return string.Format(Resources.SkylineDataSchema_GetTypeDescription_Item_in_list___0__, ListItemTypes.INSTANCE.GetListName(type));
+            }
+            return base.GetTypeDescription(uiMode, type);
         }
 
         public ImmutableSortedList<ResultKey, Replicate> ReplicateList { get { return _replicates.Value; } }

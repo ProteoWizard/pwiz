@@ -75,9 +75,21 @@ namespace pwiz.Common.DataBinding.Documentation
                 if (!IsNestedColumn(columnDescriptor))
                 {
                     processedTypes.Add(rowType);
-                    if (null == DataSchema.GetCollectionInfo(rowType) && !IsScalar(rowType))
+                    var collectionInfo = DataSchema.GetCollectionInfo(rowType);
+                    if (collectionInfo != null)
                     {
-                        stringWriter.WriteLine("<div class=\"RowType\" id=\"" + rowType.FullName + "\">" + HtmlEncode(GetTypeName(rowType)) + "</div>");
+                        columnQueue.Enqueue(ColumnDescriptor.RootColumn(rootColumn.DataSchema, collectionInfo.ElementType, rootColumn.UiMode));
+                    }
+                    else if (!IsScalar(rowType))
+                    {
+                        stringWriter.WriteLine("<div id=\"" + HtmlEncode(rowType.FullName) + "\"><span class=\"RowType\">" +
+                                               HtmlEncode(GetTypeName(rowType)) + "</span>");
+                        string description = GetTypeDescription(rowType);
+                        if (!string.IsNullOrEmpty(description))
+                        {
+                            stringWriter.WriteLine("<span class=\"Description\">" + HtmlEncode(description) + "</span>");
+                        }
+                        stringWriter.WriteLine("</div>");
                         stringWriter.WriteLine(GetDocumentation(columnDescriptor));
                     }
                 }
@@ -191,8 +203,12 @@ namespace pwiz.Common.DataBinding.Documentation
 
         public string GetTypeName(Type type)
         {
-            return new ColumnCaption(DataSchema.GetInvariantDisplayName(RootColumn.UiMode, type))
-                .GetCaption(DataSchema.DataSchemaLocalizer);
+            return DataSchema.GetInvariantDisplayName(RootColumn.UiMode, type).GetCaption(DataSchema.DataSchemaLocalizer);
+        }
+
+        public string GetTypeDescription(Type type)
+        {
+            return DataSchema.GetTypeDescription(RootColumn.UiMode, type);
         }
 
         private bool IsScalar(Type type)

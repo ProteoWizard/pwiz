@@ -442,9 +442,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             if (nodeCount == 1)
             {
-                return string.Format(Resources.Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_peptide___0___, this);
+                return string.Format(DataSchema.ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic
+                    ? Resources.Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_peptide___0___
+                    : "Are you sure you want to delete the molecule '{0}'?", this);
             }
-            return string.Format(Resources.Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__peptides_, nodeCount);
+            return string.Format(
+                DataSchema.ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic
+                ? Resources.Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__peptides_
+                : "Are you sure you want to delete these {0} molecules?", nodeCount);
         }
 
         // Small molecule IDs (in PREFERRED_ACCESSION_TYPE_ORDER) - keep these at end
