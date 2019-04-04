@@ -108,7 +108,7 @@ namespace pwiz.Skyline.Model.Databinding
                 else
                 {
                     converter = converter ?? new ReportSpecConverter(GetSkylineDataSchema(document, DataSchemaLocalizer.INVARIANT));
-                    yield return converter.Convert(reportOrViewSpec.ReportSpec).GetViewSpec();
+                    yield return converter.Convert(reportOrViewSpec.ReportSpec).GetViewSpec().SetUiMode(String.Empty);
                 }
             }
         }
