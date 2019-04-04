@@ -325,7 +325,7 @@ namespace pwiz.Skyline
                 // Was that even a Skyline file?
                 if (!SrmDocument.IsSkylineFile(path, out var explained))
                 {
-                    exception = new Exception(explained); // Offer a more helpful explanation than that from the failed XML parser
+                    exception = new IOException(explained); // Offer a more helpful explanation than that from the failed XML parser
                 }
             }
 
