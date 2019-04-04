@@ -139,7 +139,7 @@ namespace pwiz.Skyline.FileUI
 
                 if (RenamedReplicates.Count != 0)
                 {
-                    entry = entry.AppendAllInfo(RenamedReplicates.Select(r => r.ToMessage(LogLevel.all_info)));
+                    entry = entry.AppendAllInfo(RenamedReplicates.Select(r => DetailLogMessage.FromLogMessage(r.ToMessage(LogLevel.all_info))));
                 }
 
                 if (_removedAllLibraryRuns)

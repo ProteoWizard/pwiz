@@ -241,7 +241,7 @@ namespace pwiz.Skyline.Model.AuditLog
             if (Expanded && level == LogLevel.all_info)
             {
                 return new LogMessage(level, MessageType.is_, DocType,
-                    string.Empty, Expanded, name.ToString(), stringPair.NewObject);
+                     Expanded, name.ToString(), stringPair.NewObject);
             }
 
             // If the string representations are the same, we don't want to show either of them
@@ -251,17 +251,17 @@ namespace pwiz.Skyline.Model.AuditLog
                 // case it gets set to "Missing"
                 if (oldIsName || newIsName || (level == LogLevel.all_info && !Expanded))
                 {
-                    return new LogMessage(level, MessageType.changed_from_to, DocType, string.Empty, Expanded,
+                    return new LogMessage(level, MessageType.changed_from_to, DocType, Expanded,
                         name.ToString(), stringPair.OldObject, stringPair.NewObject);
                 }
                 else if (stringPair.NewObject != null)
                 {
-                    return new LogMessage(level, MessageType.changed_to, DocType, string.Empty, Expanded,
+                    return new LogMessage(level, MessageType.changed_to, DocType, Expanded,
                         name.ToString(), stringPair.NewObject);
                 }
             }
 
-            return new LogMessage(level, MessageType.changed, DocType, string.Empty, Expanded,
+            return new LogMessage(level, MessageType.changed, DocType, Expanded,
                 name.ToString());
         }
     }
@@ -290,7 +290,7 @@ namespace pwiz.Skyline.Model.AuditLog
             if (!RemovedAll)
                 return base.ToMessage(name, level, allowReflection);
 
-            return new LogMessage(level, MessageType.removed_all, DocType, string.Empty, Expanded,
+            return new LogMessage(level, MessageType.removed_all, DocType, Expanded,
                 name.ToString());
         }
 
@@ -347,7 +347,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
             return new LogMessage(level,
                 Removed ? MessageType.removed_from : Expanded ? MessageType.contains : MessageType.added_to, DocType,
-                string.Empty, Expanded, name.ToString(), value);
+                Expanded, name.ToString(), value);
         }
     }
 
