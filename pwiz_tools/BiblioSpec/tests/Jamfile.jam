@@ -280,6 +280,7 @@ blib-test-build mascot_tims : -o : output/mascot_tims.blib : mascot_tims.check :
 
 blib-test-build openswath : -o : output/openswath.blib : openswath.check openswath.skip-lines : inputs/openswath_test.tsv ;
 blib-test-build openswath-osw : -o : output/openswath-osw.blib : openswath-osw.check openswath.skip-lines : inputs/test.osw ;
+blib-test-build openswath-invalid-tsv : -o -e@~Only_OpenSWATH~ : output/openswath-invalid-tsv.blib : openswath-invalid-tsv.check zbuild.skip-lines : inputs/ssl-small-mol.tsv ;
 
 # we expect this one to fail, with the error message 'ERROR: Failure reading TIMS ion mobility value ":0.78079097398941"', so args are "-e 0.78079097398941"
 blib-test-build mascot_tims_bad : -e@0.78079097398941 -o : output/mascot_tims_bad.blib : mascot_tims_bad.check : inputs/mascot_tims_bad.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
