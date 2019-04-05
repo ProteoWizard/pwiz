@@ -680,7 +680,7 @@ namespace pwiz.Skyline.Model.DocSettings
             private set
             {
                 ValidateCharges(Resources.TransitionFilter_PrecursorCharges_Precursor_charges, value,
-                    TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
+                    TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, true);
                 _peptidePrecursorCharges = MakeChargeCollection(value);
             }
         }
@@ -691,7 +691,7 @@ namespace pwiz.Skyline.Model.DocSettings
             private set
             {
                 ValidateCharges(Resources.TransitionFilter_ProductCharges_Product_ion_charges, value,
-                    Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE);
+                    Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE, true);
                 _peptideProductCharges = MakeChargeCollection(value);
             }
         }
@@ -702,7 +702,7 @@ namespace pwiz.Skyline.Model.DocSettings
             private set
             {
                 ValidateCharges(Resources.TransitionFilter_SmallMoleculePrecursorAdducts_Small_molecule_precursor_adducts, value,
-                    TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
+                    TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, false);
                 _smallMoleculePrecursorAdducts = MakeChargeCollection(value);
             }
         }
@@ -937,20 +937,25 @@ namespace pwiz.Skyline.Model.DocSettings
             small_molecule_fragment_types,
         }
 
-        public static void ValidateCharges(string label, ICollection<Adduct> adducts, int min, int max)
+        public static void ValidateCharges(string label, ICollection<Adduct> adducts, int min, int max, bool proteomic)
         {
             if (adducts == null || adducts.Count == 0)
                 throw new InvalidDataException(string.Format(Resources.TransitionFilter_ValidateCharges__0__cannot_be_empty, label));
             var seen = new HashSet<Adduct>();
             foreach (var adduct in adducts)
             {
-                var charge = adduct.AdductCharge;
                 if (seen.Contains(adduct))
                     throw new InvalidDataException(string.Format(Resources.TransitionFilter_ValidateCharges_Precursor_charges_specified_charge__0__more_than_once, adduct));
-                if (min > Math.Abs(charge) || Math.Abs(charge) > max)
+                if (!IsChargeInRange(adduct, min, max, proteomic))
                     throw new InvalidDataException(string.Format(Resources.TransitionFilter_ValidateCharges_Invalid_charge__1__found__0__must_be_between__2__and__3__, label, adduct, min, max));
                 seen.Add(adduct);
             }            
+        }
+
+        public static bool IsChargeInRange(Adduct adduct, int minCharge, int maxCharge, bool proteomic)
+        {
+            int chargeCompare = proteomic ? adduct.AdductCharge : Math.Abs(adduct.AdductCharge);
+            return minCharge <= chargeCompare && chargeCompare <= maxCharge;
         }
 
         public void Validate()
@@ -987,8 +992,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public void ReadXml(XmlReader reader)
         {
             // Read start tag attributes
-            PeptidePrecursorCharges = ArrayUtil.Parse(reader.GetAttribute(ATTR.precursor_charges), Adduct.FromStringAssumeProtonated, TextUtil.SEPARATOR_CSV, new Adduct[0]);
-            PeptideProductCharges = ArrayUtil.Parse(reader.GetAttribute(ATTR.product_charges), Adduct.FromStringAssumeProtonated, TextUtil.SEPARATOR_CSV, new Adduct[0]);
+            PeptidePrecursorCharges = RemoveNegativeAdducts(ArrayUtil.Parse(reader.GetAttribute(ATTR.precursor_charges), Adduct.FromStringAssumeProtonated, TextUtil.SEPARATOR_CSV, new Adduct[0])).ToList();
+            PeptideProductCharges = RemoveNegativeAdducts(ArrayUtil.Parse(reader.GetAttribute(ATTR.product_charges), Adduct.FromStringAssumeProtonated, TextUtil.SEPARATOR_CSV, new Adduct[0])).ToList();
             PeptideIonTypes = ParseTypes(reader.GetAttribute(ATTR.fragment_types), new[] { IonType.y });
             SmallMoleculePrecursorAdducts = ArrayUtil.Parse(reader.GetAttribute(ATTR.precursor_adducts), Adduct.FromStringAssumeChargeOnly, TextUtil.SEPARATOR_CSV, Transition.DEFAULT_MOLECULE_CHARGES);
             SmallMoleculeFragmentAdducts = ArrayUtil.Parse(reader.GetAttribute(ATTR.product_adducts), Adduct.FromStringAssumeChargeOnly, TextUtil.SEPARATOR_CSV, Transition.DEFAULT_MOLECULE_FRAGMENT_CHARGES);
@@ -1097,6 +1102,31 @@ namespace pwiz.Skyline.Model.DocSettings
                 return IonType.custom;
             }
             throw new ArgumentException();
+        }
+
+        /// <summary>
+        /// Removes the adducts whose charge is less than 0.
+        /// There was a time when Skyline erroneously allowed negative charges for peptides,
+        /// so we remove those invalid values when deserializing the TransitionFilter
+        /// </summary>
+        private IEnumerable<Adduct> RemoveNegativeAdducts(IEnumerable<Adduct> adducts)
+        {
+            bool anyUnfiltered = false;
+            bool anyReturned = false;
+            foreach (var adduct in adducts)
+            {
+                anyUnfiltered = true;
+                if (adduct.AdductCharge >= 0)
+                {
+                    anyReturned = true;
+                    yield return adduct;
+                }
+            }
+            // Make sure we have at least one adduct if we had one before
+            if (anyUnfiltered && !anyReturned)
+            {
+                yield return Adduct.FromChargeProtonated(1);
+            }
         }
 
         #endregion

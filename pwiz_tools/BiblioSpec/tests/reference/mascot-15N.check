@@ -914,8 +914,8 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 69	IEPELDGSAQVTSHDASTNGLINFIK	930.11261	3	I[+1.0]E[+1.0]P[+1.0]E[+1.0]L[+1.0]D[+1.0]G[+1.0]S[+1.0]A[+1.0]Q[+2.0]V[+1.0]T[+1.0]S[+1.0]H[+3.0]D[+1.0]A[+1.0]S[+1.0]T[+1.0]N[+2.0]G[+1.0]L[+1.0]I[+1.0]N[+2.0]F[+1.0]I[+1.0]K[+2.0]	-	-	1	97	0.0	0.0	0.0	0	39.706	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	1142	0.00757533781115581	5
 70	KIEPELDGSAQVTSHDASTNGLINFIK	973.472732	3	K[+2.0]I[+1.0]E[+1.0]P[+1.0]E[+1.0]L[+1.0]D[+1.0]G[+1.0]S[+1.0]A[+1.0]Q[+2.0]V[+1.0]T[+1.0]S[+1.0]H[+3.0]D[+1.0]A[+1.0]S[+1.0]T[+1.0]N[+2.0]G[+1.0]L[+1.0]I[+1.0]N[+2.0]F[+1.0]I[+1.0]K[+2.0]	-	-	1	242	0.0	0.0	0.0	0	36.594	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	1145	4.11838747407986e-05	5
 71	VDHQTGPIVWGEPGTNGQHAFYQLIHQGTK	840.39888	4	V[+1.0]D[+1.0]H[+3.0]Q[+2.0]T[+1.0]G[+1.0]P[+1.0]I[+1.0]V[+1.0]W[+2.0]G[+1.0]E[+1.0]P[+1.0]G[+1.0]T[+1.0]N[+2.0]G[+1.0]Q[+2.0]H[+3.0]A[+1.0]F[+1.0]Y[+1.0]Q[+2.0]L[+1.0]I[+1.0]H[+3.0]Q[+2.0]G[+1.0]T[+1.0]K[+2.0]	-	-	1	243	0.0	0.0	0.0	0	37.453	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	1155	0.0284108419621966	5
-id	fileName	cutoffScore
-1	090924_0004_D584_B1_LD_ANL.wiff	-1.0
+id	fileName	idFileName	cutoffScore
+1	090924_0004_D584_B1_LD_ANL.wiff	/BiblioSpec/tests/inputs/F027752.dat	-1.0
 id	scoreType	probabilityType
 0	UNKNOWN	NOT_A_PROBABILITY_VALUE
 1	PERCOLATOR QVALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT
