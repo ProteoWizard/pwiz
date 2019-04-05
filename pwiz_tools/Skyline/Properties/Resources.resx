@@ -10546,4 +10546,10 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="SkylineDataSchema_GetTypeDescription_Item_in_list___0__" xml:space="preserve">
     <value>Item in list '{0}'</value>
   </data>
+  <data name="Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_molecule___0___" xml:space="preserve">
+    <value>Are you sure you want to delete the molecule '{0}'?</value>
+  </data>
+  <data name="Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__molecules_" xml:space="preserve">
+    <value>Are you sure you want to delete these {0} molecules?</value>
+  </data>
 </root>
