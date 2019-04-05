@@ -3612,9 +3612,6 @@
   <data name="NextGenStandardSignalNoiseCalc_Name_Standard_signal_to_noise" xml:space="preserve">
     <value>標準信号対ノイズ比</value>
   </data>
-  <data name="NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatograms_from__0__full_scan_settings_must_be_enabled_" xml:space="preserve">
-    <value>{0}からクロマトグラムを抽出するには、フルスキャン設定を有効にする必要があります。</value>
-  </data>
   <data name="SkylineWindow_ModifyPeptide_Modify__0__" xml:space="preserve">
     <value>{0}を修飾</value>
   </data>

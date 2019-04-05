@@ -3612,9 +3612,6 @@
   <data name="NextGenStandardSignalNoiseCalc_Name_Standard_signal_to_noise" xml:space="preserve">
     <value>标准信号噪声</value>
   </data>
-  <data name="NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatograms_from__0__full_scan_settings_must_be_enabled_" xml:space="preserve">
-    <value>如要从{0}提取色谱图，那么全扫描设置必须被启用。</value>
-  </data>
   <data name="SkylineWindow_ModifyPeptide_Modify__0__" xml:space="preserve">
     <value>修饰{0}</value>
   </data>
