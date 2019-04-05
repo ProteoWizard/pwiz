@@ -67,6 +67,13 @@ rule test-data
 
 .os = [ modules.peek : OS ] ; # NT, LINUX, MACOSX
 
+# set UTF-8 codepage on Windows
+if NT = $(.os)
+{
+    ECHO "[pwiz_tools/BiblioSpec] Changing code page to UTF-8 (65001)" ;
+    SHELL "chcp 65001" ;
+}
+
 rule mascot-installed ( properties * )
 {
     local result ;
