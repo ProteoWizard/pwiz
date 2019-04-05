@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public bool IsotopologResponseCurve { get; set; }
 
-        public int? IsotopologReplicateIndex { get; set; }
+        public int? SingleBatchReplicateIndex { get; set; }
 
         public IDictionary<IdentityPath, PeptideQuantifier.Quantity> GetTransitionQuantities(CalibrationPoint calibrationPoint)
         {
@@ -137,9 +137,16 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 return new int[0];
             }
-            if (IsotopologReplicateIndex.HasValue)
+            if (SingleBatchReplicateIndex.HasValue)
             {
-                return new[] {IsotopologReplicateIndex.Value};
+                var chromatogramSet = SrmSettings.MeasuredResults.Chromatograms[SingleBatchReplicateIndex.Value];
+                if (string.IsNullOrEmpty(chromatogramSet.BatchName))
+                {
+                    return new[] { SingleBatchReplicateIndex.Value };
+                }
+
+                return Enumerable.Range(0, SrmSettings.MeasuredResults.Chromatograms.Count)
+                    .Where(i => SrmSettings.MeasuredResults.Chromatograms[i].BatchName == chromatogramSet.BatchName);
             }
             return Enumerable.Range(0, SrmSettings.MeasuredResults.Chromatograms.Count);
         }
@@ -623,6 +630,25 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 return null;
             }
             return SrmSettings.MeasuredResults.Chromatograms[replicateIndex];
+        }
+
+        public bool IsEnableSingleBatch
+        {
+            get
+            {
+                if (IsotopologResponseCurve)
+                {
+                    return true;
+                }
+
+                return AnyBatchNames(SrmSettings);
+            }
+        }
+
+        public static bool AnyBatchNames(SrmSettings srmSettings)
+        {
+            return srmSettings.HasResults &&
+                srmSettings.MeasuredResults.Chromatograms.Any(c => !string.IsNullOrEmpty(c.BatchName));
         }
     }
 

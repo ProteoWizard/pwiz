@@ -39,10 +39,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     {
         private readonly CachedValue<PeptideChromInfo> _chromInfo;
         private readonly CachedValue<QuantificationResult> _quantificationResult;
+        private readonly CachedValue<CalibrationCurveFitter> _calibrationCurveFitter;
         public PeptideResult(Peptide peptide, ResultFile file) : base(peptide, file)
         {
             _chromInfo = CachedValue.Create(DataSchema, () => ResultFile.FindChromInfo(peptide.DocNode.Results));
             _quantificationResult = CachedValue.Create(DataSchema, GetQuantification);
+            _calibrationCurveFitter = CachedValue.Create(DataSchema, GetCalibrationCurveFitter);
         }
 
         [HideWhen(AncestorOfType = typeof(Peptide))]
@@ -145,10 +147,22 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        public QuantificationResult GetQuantification()
+        private QuantificationResult GetQuantification()
         {
-            CalibrationCurveFitter curveFitter = Peptide.GetCalibrationCurveFitter();
-            return curveFitter.GetQuantificationResult(ResultFile.Replicate.ReplicateIndex);
+            return _calibrationCurveFitter.Value.GetQuantificationResult(ResultFile.Replicate.ReplicateIndex);
+        }
+
+        private CalibrationCurveFitter GetCalibrationCurveFitter()
+        {
+            if (string.IsNullOrEmpty(ResultFile.Replicate.BatchName) && !Peptide.DocNode.HasPrecursorConcentrations)
+            {
+                return Peptide.GetCalibrationCurveFitter();
+            }
+
+            var calibrationCurveFitter =
+                new CalibrationCurveFitter(Peptide.GetPeptideQuantifier(), SrmDocument.Settings);
+            calibrationCurveFitter.SingleBatchReplicateIndex = ResultFile.Replicate.ReplicateIndex;
+            return calibrationCurveFitter;
         }
 
         public override ElementRef GetElementRef()
@@ -162,14 +176,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                if (!Peptide.DocNode.HasPrecursorConcentrations)
-                {
-                    return new LinkValue<CalibrationCurve>(null, (sender, args) => { });
-                }
-                var curveFitter = new CalibrationCurveFitter(Peptide.GetPeptideQuantifier(), SrmDocument.Settings)
-                {
-                    IsotopologReplicateIndex = ResultFile.Replicate.ReplicateIndex
-                };
+                var curveFitter = GetCalibrationCurveFitter();
                 return new LinkValue<CalibrationCurve>(curveFitter.GetCalibrationCurve(), (sender, args) =>
                 {
                     if (null == DataSchema.SkylineWindow)
@@ -179,12 +186,27 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     DataSchema.SkylineWindow.SelectedResultsIndex = ResultFile.Replicate.ReplicateIndex;
                     DataSchema.SkylineWindow.SelectedPath = Peptide.IdentityPath;
                     var calibrationForm = DataSchema.SkylineWindow.ShowCalibrationForm();
-                    if (calibrationForm != null && !Settings.Default.CalibrationCurveOptions.SingleReplicate)
+                    if (calibrationForm != null && !Settings.Default.CalibrationCurveOptions.SingleBatch)
                     {
-                        Settings.Default.CalibrationCurveOptions.SingleReplicate = true;
-                        calibrationForm.UpdateUI(false);
+                        if (!string.IsNullOrEmpty(ResultFile.Replicate.BatchName) ||
+                            Peptide.DocNode.HasPrecursorConcentrations)
+                        {
+                            Settings.Default.CalibrationCurveOptions.SingleBatch = true;
+                            calibrationForm.UpdateUI(false);
+                        }
                     }
                 });
+            }
+        }
+
+        [ChildDisplayName("Batch{0}")]
+        public FiguresOfMerit BatchFiguresOfMerit
+        {
+            get
+            {
+                CalibrationCurveFitter calibrationCurveFitter = GetCalibrationCurveFitter();
+                var calibrationCurve = calibrationCurveFitter.GetCalibrationCurve();
+                return calibrationCurveFitter.GetFiguresOfMerit(calibrationCurve);
             }
         }
 

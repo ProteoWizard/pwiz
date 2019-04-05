@@ -152,11 +152,12 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             PeptideQuantifier peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(document, peptideGroup,
                 peptide);
             CalibrationCurveFitter curveFitter = new CalibrationCurveFitter(peptideQuantifier, document.Settings);
-            Text = TabText = TextUtil.SpaceSeparate(_originalFormTitle + ':', peptideQuantifier.PeptideDocNode.ModifiedSequenceDisplay);
-            if (curveFitter.IsotopologResponseCurve && Settings.Default.CalibrationCurveOptions.SingleReplicate)
+            if (curveFitter.IsEnableSingleBatch && Settings.Default.CalibrationCurveOptions.SingleBatch)
             {
-                curveFitter.IsotopologReplicateIndex = _skylineWindow.SelectedResultsIndex;
+                curveFitter.SingleBatchReplicateIndex = _skylineWindow.SelectedResultsIndex;
             }
+
+            Text = TabText = GetFormTitle(curveFitter);
             if (peptideQuantifier.QuantificationSettings.RegressionFit == RegressionFit.NONE)
             {
                 if (!(peptideQuantifier.NormalizationMethod is NormalizationMethod.RatioToLabel))
@@ -451,6 +452,33 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             }
         }
 
+        private string GetFormTitle(CalibrationCurveFitter curveFitter)
+        {
+            string title = TextUtil.SpaceSeparate(_originalFormTitle + ':', curveFitter.PeptideQuantifier.PeptideDocNode.ModifiedSequenceDisplay);
+            if (curveFitter.SingleBatchReplicateIndex.HasValue)
+            {
+                var chromatogramSet = _skylineWindow.Document.Settings.MeasuredResults.Chromatograms[
+                    curveFitter.SingleBatchReplicateIndex.Value];
+                if (string.IsNullOrEmpty(chromatogramSet.BatchName))
+                {
+                    title = TextUtil.SpaceSeparate(title, string.Format("(Replicate: {0})", chromatogramSet.Name));
+                }
+                else
+                {
+                    title = TextUtil.SpaceSeparate(title, string.Format("(Batch: {0})", chromatogramSet.BatchName));
+                }
+            }
+            else
+            {
+                if (_skylineWindow.Document.Settings.MeasuredResults.Chromatograms.Select(c => c.BatchName).Distinct()
+                        .Count() > 1)
+                {
+                    title = TextUtil.SpaceSeparate(title, "(All Replicates)");
+                }
+            }
+            return title;
+        }
+
         private bool TryGetSelectedPeptide(out PeptideGroupDocNode peptideGroup, out PeptideDocNode peptide)
         {
             peptide = null;
@@ -555,15 +583,15 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         private void zedGraphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
             var calibrationCurveOptions = Settings.Default.CalibrationCurveOptions;
-            singleReplicateContextMenuItem.Checked = calibrationCurveOptions.SingleReplicate;
+            singleBatchContextMenuItem.Checked = calibrationCurveOptions.SingleBatch;
             if (IsEnableIsotopologResponseCurve())
             {
-                singleReplicateContextMenuItem.Visible = true;
+                singleBatchContextMenuItem.Visible = true;
                 showSampleTypesContextMenuItem.Visible = false;
             }
             else
             {
-                singleReplicateContextMenuItem.Visible = false;
+                singleBatchContextMenuItem.Visible = CalibrationCurveFitter.AnyBatchNames(_skylineWindow.Document.Settings);
                 showSampleTypesContextMenuItem.Visible = true;
             }
             var replicateIndexFromPoint = ReplicateIndexFromPoint(mousePt);
@@ -596,7 +624,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 menuStrip.Items.Insert(index++, logXContextMenuItem);
                 menuStrip.Items.Insert(index++, logYAxisContextMenuItem);
                 menuStrip.Items.Insert(index++, showSampleTypesContextMenuItem);
-                menuStrip.Items.Insert(index++, singleReplicateContextMenuItem);
+                menuStrip.Items.Insert(index++, singleBatchContextMenuItem);
                 menuStrip.Items.Insert(index++, showLegendContextMenuItem);
                 menuStrip.Items.Insert(index++, showSelectionContextMenuItem);
                 menuStrip.Items.Insert(index++, showFiguresOfMeritContextMenuItem);
@@ -791,10 +819,10 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 peptideDocNode.ChangeExcludeFromCalibration(resultsIndex, !wasExcluded));
         }
 
-        private void singleReplicateContextMenuItem_Click(object sender, EventArgs e)
+        private void singleBatchContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.CalibrationCurveOptions.SingleReplicate =
-                !Settings.Default.CalibrationCurveOptions.SingleReplicate;
+            Settings.Default.CalibrationCurveOptions.SingleBatch =
+                !Settings.Default.CalibrationCurveOptions.SingleBatch;
             UpdateUI(false);
         }
     }

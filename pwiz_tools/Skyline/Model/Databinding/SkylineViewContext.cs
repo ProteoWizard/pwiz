@@ -551,6 +551,7 @@ namespace pwiz.Skyline.Model.Databinding
                 {
                     columnsToRemove.Add(PropertyPath.Root.Property("Name"));
                     columnsToRemove.Add(PropertyPath.Root.Property("SampleDilutionFactor"));
+                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Replicate.BatchName)));
                     addRoot = true;
                 }
                 viewSpec = viewSpec.SetSublistId(GetReplicateSublist(columnDescriptor.PropertyType));
