@@ -145,8 +145,12 @@ int executeBlib(const vector<string>& argv)
     string fullCommand;
     if (bal::contains(command, "BlibToMs2"))
         fullCommand = command + options + "-f " + outputs + libName;
-    else if(bal::contains(command, "BlibSearch"))
-        fullCommand = command + options + "-R " + outputs + inputs + libName;
+    else if (bal::contains(command, "BlibSearch"))
+    {
+        string outputsTweaked = outputs;
+        bal::replace_all(outputsTweaked, ".decoy.report", ".report"); // when testing decoy.report output, use original report name
+        fullCommand = command + options + "-R " + outputsTweaked + inputs + libName;
+    }
     else
         fullCommand = command + options + inputs + libName + outputs;
     cerr << "Running " << fullCommand << endl;

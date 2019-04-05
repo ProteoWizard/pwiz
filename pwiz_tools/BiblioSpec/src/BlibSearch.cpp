@@ -100,8 +100,9 @@ int main(int argc, char* argv[])
     reportFileName = tmpReport;
     targetReport.open(reportFileName.c_str());
     if( options_table["decoys-per-target"].as<int>() > 0 ){
-        BiblioSpec::replaceExtension(reportFileName,"decoy.report"); 
-        decoyReport.open(reportFileName.c_str());
+        string decoyReportName = finalReport;
+        BiblioSpec::replaceExtension(decoyReportName,"decoy.report");
+        decoyReport.open(decoyReportName.c_str());
     }
 
     // Initialize a .psm file (sqlite db), if requested

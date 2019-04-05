@@ -351,7 +351,7 @@ blib-test-to-ms2 lms2 : : output/demo.lms2 : demo.lms2 lms2-skip-lines : output/
 # Test BlibSearch
 
 blib-test-search search-demo : --preserve-order : inputs/demo.report : demo.report demo.skip-lines : inputs/demo.ms2 output/demo.blib : <dependency>sqt-ms2 ;
-blib-test-search search-decoy : --preserve-order --decoys-per-target@1 : inputs/demo.decoy.report : demo.decoy.report demo.skip-lines : inputs/demo.ms2 output/demo.blib : <dependency>sqt-ms2 ;
+blib-test-search search-decoy : --preserve-order --decoys-per-target@1 : inputs/demo.decoy.report : demo.decoy.report demo.skip-lines : inputs/demo.ms2 output/demo.blib : <dependency>sqt-ms2 <dependency>search-demo ;
 blib-test-search search-mzsorted : : inputs/mzsorted.report : mzsorted.report mzsorted.skip-lines : inputs/mzsorted.ms2 output/demo.blib : <dependency>sqt-ms2 ;
 blib-test-search search-binning : --bin-size@1.1 --bin-offset@0.2 : inputs/binning.report : binning.report demo.skip-lines : inputs/binning.ms2 output/demo.blib : <dependency>sqt-ms2 ;
 
