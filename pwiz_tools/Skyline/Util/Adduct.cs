@@ -217,7 +217,7 @@ namespace pwiz.Skyline.Util
             new Regex(
                 @"\[?(?<multM>\d*)M(?<label>(\(.*\)|[^\+\-]*))?(?<adduct>[\+\-][^\]]*)(\](?<declaredChargeCount>\d*)(?<declaredChargeSign>[+-]*)?)?$",
                 RegexOptions.ExplicitCapture | RegexOptions.Singleline | RegexOptions.CultureInvariant);
-        private static readonly Regex ADDUCT_INNER_REGEX = new Regex(@"(?<oper>\+|\-)(?<multM>\d+)?(?<ion>[^-+]*)",
+        private static readonly Regex ADDUCT_INNER_REGEX = new Regex(@"(?<oper>\+|\-)(?<multM>\d+)?\(?(?<ion>[^-+\)]*)\)?",
             RegexOptions.ExplicitCapture | RegexOptions.Singleline | RegexOptions.CultureInvariant);
         private static readonly Regex ADDUCT_ION_REGEX = new Regex(@"(?<multM>\d+)?(?<ion>[A-Z][a-z]?['\""]?)",
             RegexOptions.ExplicitCapture | RegexOptions.Singleline | RegexOptions.CultureInvariant);

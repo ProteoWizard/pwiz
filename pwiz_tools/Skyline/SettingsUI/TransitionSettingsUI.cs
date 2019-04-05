@@ -353,7 +353,7 @@ namespace pwiz.Skyline.SettingsUI
             Adduct[] peptidePrecursorCharges;
             int min = TransitionGroup.MIN_PRECURSOR_CHARGE;
             int max = TransitionGroup.MAX_PRECURSOR_CHARGE;
-            if (!TransitionSettingsControl.ValidateAdductListTextBox(helper, tabControl1, (int)TABS.Filter, textPeptidePrecursorCharges, true,
+            if (!TransitionSettingsControl.ValidateAdductListTextBox(helper, textPeptidePrecursorCharges, true,
                     min, max, out peptidePrecursorCharges))
                 return;
             peptidePrecursorCharges = peptidePrecursorCharges.Distinct().ToArray();
@@ -361,7 +361,7 @@ namespace pwiz.Skyline.SettingsUI
             Adduct[] peptideProductCharges;
             min = Transition.MIN_PRODUCT_CHARGE;
             max = Transition.MAX_PRODUCT_CHARGE;
-            if (!TransitionSettingsControl.ValidateAdductListTextBox(helper, tabControl1, (int)TABS.Filter, textPeptideIonCharges, true,
+            if (!TransitionSettingsControl.ValidateAdductListTextBox(helper, textPeptideIonCharges, true,
                     min, max, out peptideProductCharges))
                 return;
             peptideProductCharges = peptideProductCharges.Distinct().ToArray();
@@ -369,7 +369,7 @@ namespace pwiz.Skyline.SettingsUI
             Adduct[] smallMoleculeProductCharges;
             min = Transition.MIN_PRODUCT_CHARGE;
             max = Transition.MAX_PRODUCT_CHARGE;
-            if (!TransitionSettingsControl.ValidateAdductListTextBox(helper, tabControl1, (int)TABS.Filter, textSmallMoleculeFragmentAdducts, false,
+            if (!TransitionSettingsControl.ValidateAdductListTextBox(helper, textSmallMoleculeFragmentAdducts, false,
                 min, max, out smallMoleculeProductCharges))
                 return;
             smallMoleculeProductCharges = smallMoleculeProductCharges.Distinct().ToArray();
@@ -377,21 +377,21 @@ namespace pwiz.Skyline.SettingsUI
             IonType[] peptideIonTypes = TransitionFilter.ParseTypes(textPeptideIonTypes.Text, new IonType[0]);
             if (peptideIonTypes.Length == 0)
             {
-                helper.ShowTextBoxError(tabControl1, (int) TABS.Filter, textPeptideIonTypes,
+                helper.ShowTextBoxError(textPeptideIonTypes,
                                         Resources.TransitionSettingsUI_OkDialog_Ion_types_must_contain_a_comma_separated_list_of_ion_types_a_b_c_x_y_z_and_p_for_precursor);
                 return;
             }
             peptideIonTypes = peptideIonTypes.Distinct().ToArray();
 
             Adduct[] smallMoleculePrecursorAdducts;
-            if (!TransitionSettingsControl.ValidateAdductListTextBox(helper, tabControl1, (int)TABS.Filter, textSmallMoleculePrecursorAdducts, false,
+            if (!TransitionSettingsControl.ValidateAdductListTextBox(helper, textSmallMoleculePrecursorAdducts, false,
                     min, max, out smallMoleculePrecursorAdducts))
                 return;
             smallMoleculePrecursorAdducts = smallMoleculePrecursorAdducts.Distinct().ToArray();
             IonType[] smallMoleculeIonTypes = TransitionFilter.ParseSmallMoleculeTypes(textSmallMoleculeIonTypes.Text, new IonType[0]);
             if (smallMoleculeIonTypes.Length == 0)
             {
-                helper.ShowTextBoxError(tabControl1, (int)TABS.Filter, textSmallMoleculeIonTypes,
+                helper.ShowTextBoxError(textSmallMoleculeIonTypes,
                     Resources.TransitionSettingsUI_OkDialog_Small_molecule_ion_types_must_contain_a_comma_separated_list_of_ion_types__Valid_types_are__f___for_fragment__and_or__p___for_precursor_);
                 return;
             }
@@ -401,7 +401,7 @@ namespace pwiz.Skyline.SettingsUI
             if (!string.IsNullOrEmpty(textExclusionWindow.Text) &&
                 !Equals(textExclusionWindow.Text, exclusionWindow.ToString(LocalizationHelper.CurrentCulture)))
             {
-                if (!helper.ValidateDecimalTextBox(tabControl1, (int)TABS.Filter, textExclusionWindow,
+                if (!helper.ValidateDecimalTextBox(textExclusionWindow,
                         TransitionFilter.MIN_EXCLUSION_WINDOW, TransitionFilter.MAX_EXCLUSION_WINDOW, out exclusionWindow))
                 {
                     return;
@@ -418,6 +418,7 @@ namespace pwiz.Skyline.SettingsUI
                 smallMoleculePrecursorAdducts, smallMoleculeProductCharges,smallMoleculeIonTypes,
                                               fragmentRangeFirst, fragmentRangeLast, measuredIons,
                                               exclusionWindow, exclusionUseDIAWindow, autoSelect);
+            
             Helpers.AssignIfEquals(ref filter, Filter);
 
             // Validate and store library settings
@@ -436,7 +437,7 @@ namespace pwiz.Skyline.SettingsUI
 
             double minTol = TransitionLibraries.MIN_MATCH_TOLERANCE;
             double maxTol = TransitionLibraries.MAX_MATCH_TOLERANCE;
-            if (!helper.ValidateDecimalTextBox(tabControl1, (int) TABS.Library, textTolerance,
+            if (!helper.ValidateDecimalTextBox(textTolerance,
                     minTol, maxTol, out ionMatchTolerance))
                 return;
 
@@ -449,9 +450,9 @@ namespace pwiz.Skyline.SettingsUI
                 max = TransitionLibraries.MAX_ION_COUNT;
                 if (string.IsNullOrEmpty(textMinIonCount.Text))
                     minIonCount = 0;
-                else if (!helper.ValidateNumberTextBox(tabControl1, (int) TABS.Library, textMinIonCount, 0, max, out minIonCount))
+                else if (!helper.ValidateNumberTextBox(textMinIonCount, 0, max, out minIonCount))
                     return;
-                if (!helper.ValidateNumberTextBox(tabControl1, (int) TABS.Library, textIonCount,
+                if (!helper.ValidateNumberTextBox(textIonCount,
                         min, max, out ionCount))
                     return;
                 if (minIonCount > ionCount)
@@ -472,18 +473,18 @@ namespace pwiz.Skyline.SettingsUI
             int minMz;
             min = TransitionInstrument.MIN_MEASUREABLE_MZ;
             max = TransitionInstrument.MAX_MEASURABLE_MZ - TransitionInstrument.MIN_MZ_RANGE;
-            if (!helper.ValidateNumberTextBox(tabControl1, (int) TABS.Instrument, textMinMz, min, max, out minMz))
+            if (!helper.ValidateNumberTextBox(textMinMz, min, max, out minMz))
                 return;
             int maxMz;
             min = minMz + TransitionInstrument.MIN_MZ_RANGE;
             max = TransitionInstrument.MAX_MEASURABLE_MZ;
-            if (!helper.ValidateNumberTextBox(tabControl1, (int) TABS.Instrument, textMaxMz, min, max, out maxMz))
+            if (!helper.ValidateNumberTextBox(textMaxMz, min, max, out maxMz))
                 return;
             bool isDynamicMin = cbDynamicMinimum.Checked;
             double mzMatchTolerance;
             minTol = TransitionInstrument.MIN_MZ_MATCH_TOLERANCE;
             maxTol = TransitionInstrument.MAX_MZ_MATCH_TOLERANCE;
-            if (!helper.ValidateDecimalTextBox(tabControl1, (int) TABS.Instrument, textMzMatchTolerance,
+            if (!helper.ValidateDecimalTextBox(textMzMatchTolerance,
                     minTol, maxTol, out mzMatchTolerance))
                 return;
             int? maxTrans = null;
@@ -492,7 +493,7 @@ namespace pwiz.Skyline.SettingsUI
                 int maxTransTemp;
                 min = TransitionInstrument.MIN_TRANSITION_MAX;
                 max = TransitionInstrument.MAX_TRANSITION_MAX;
-                if (!helper.ValidateNumberTextBox(tabControl1, (int) TABS.Instrument, textMaxTrans,
+                if (!helper.ValidateNumberTextBox(textMaxTrans,
                         min, max, out maxTransTemp))
                     return;
                 maxTrans = maxTransTemp;
@@ -503,8 +504,7 @@ namespace pwiz.Skyline.SettingsUI
                 int maxInclusionsTemp;
                 min = TransitionInstrument.MIN_INCLUSION_MAX;
                 max = TransitionInstrument.MAX_INCLUSION_MAX;
-                if (!helper.ValidateNumberTextBox(tabControl1, (int) TABS.Instrument, textMaxInclusions,
-                        min, max, out maxInclusionsTemp))
+                if (!helper.ValidateNumberTextBox(textMaxInclusions, min, max, out maxInclusionsTemp))
                     return;
                 maxInclusions = maxInclusionsTemp;
             }
@@ -514,22 +514,20 @@ namespace pwiz.Skyline.SettingsUI
             if (!string.IsNullOrEmpty(textMinTime.Text))
             {
                 int minTimeTemp;
-                if (!helper.ValidateNumberTextBox(tabControl1, (int)TABS.Instrument, textMinTime,
-                        min, max, out minTimeTemp))
+                if (!helper.ValidateNumberTextBox(textMinTime, min, max, out minTimeTemp))
                     return;
                 minTime = minTimeTemp;
             }
             if (!string.IsNullOrEmpty(textMaxTime.Text))
             {
                 int maxTimeTemp;
-                if (!helper.ValidateNumberTextBox(tabControl1, (int)TABS.Instrument, textMaxTime,
-                        min, max, out maxTimeTemp))
+                if (!helper.ValidateNumberTextBox(textMaxTime, min, max, out maxTimeTemp))
                     return;
                 maxTime = maxTimeTemp;
             }
             if (minTime.HasValue && maxTime.HasValue && maxTime.Value - minTime.Value < TransitionInstrument.MIN_TIME_RANGE)
             {
-                helper.ShowTextBoxError(tabControl1, (int) TABS.Instrument, textMaxTime,
+                helper.ShowTextBoxError(textMaxTime,
                                         string.Format(Resources.TransitionSettingsUI_OkDialog_The_allowable_retention_time_range__0__to__1__must_be_at_least__2__minutes_apart,
                                                       minTime, maxTime, TransitionInstrument.MIN_TIME_RANGE));
                 return;
@@ -602,7 +600,7 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             TransitionFullScan fullScan;
-            if (!FullScanSettingsControl.ValidateFullScanSettings(helper, out fullScan, tabControl1, (int)TABS.FullScan))
+            if (!FullScanSettingsControl.ValidateFullScanSettings(helper, out fullScan))
                 return;
 
             Helpers.AssignIfEquals(ref fullScan, FullScan);

@@ -100,7 +100,7 @@ public:
                   const char* msg = NULL) const;
 
     int getFileId(const std::string& file, double cutoffScore);
-    int addFile(const std::string& file, double cutoffScore);
+    int addFile(const std::string& file, double cutoffScore, const std::string& idFile);
     void insertPeaks(int spectraID, int levelCompress, int peaksCount, 
                      double* pM, float* pI);
     void beginTransaction();

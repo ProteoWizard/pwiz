@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -3611,9 +3611,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="NextGenStandardSignalNoiseCalc_Name_Standard_signal_to_noise" xml:space="preserve">
     <value>Standard signal to noise</value>
-  </data>
-  <data name="NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatograms_from__0__full_scan_settings_must_be_enabled_" xml:space="preserve">
-    <value>To extract chromatograms from {0} full-scan settings must be enabled.</value>
   </data>
   <data name="SkylineWindow_ModifyPeptide_Modify__0__" xml:space="preserve">
     <value>Modify {0}</value>
@@ -10512,5 +10509,15 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="CommandLine_LogDocumentDelta_Added___0_" xml:space="preserve">
     <value>Added: {0}</value>
+  </data>
+  <data name="TransitionSettingsControl_ValidateAdductListTextBox__0__must_contain_a_comma_separated_list_of_integers_describing_charge_states_between__1__and__2__" xml:space="preserve">
+    <value>{0} must contain a comma separated list of integers describing charge states between {1} and {2}.</value>
+  </data>
+  <data name="SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filename_extension_and_are_in_XML_format_" xml:space="preserve">
+    <value>The file you are trying to open ("{0}") does not appear to be a Skyline document. Skyline documents normally have a "{1}" or "{2}" filename extension and are in XML format.</value>
+  </data>
+  <data name="NoFullScanFilteringException_NoFullScanFilteringException_The_file__0__does_not_contain_SRM_MRM_chromatograms__To_extract_chromatograms_from_its_spectra__go_to_Settings___Transition_Settings___Full_Scan_and_choose_options_appropriate_to_the_acquisition_method_used_" xml:space="preserve">
+    <value>The file {0} does not contain SRM/MRM chromatograms. To extract chromatograms from its spectra, go to Settings &gt; Transition Settings &gt; Full-Scan and choose options appropriate to the acquisition method used.</value>
+    <comment>replaces NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatograms_from__0__full_scan_settings_must_be_enabled_</comment>
   </data>
 </root>

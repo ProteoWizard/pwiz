@@ -204,7 +204,7 @@ namespace pwiz.Skyline.Model.DocSettings
         private void Validate()
         {
             TransitionFilter.ValidateCharges(Resources.TransitionFilter_ProductCharges_Product_ion_charges, new[] { Adduct },
-                Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE);
+                Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE, false);
 
             if (IsFragment)
             {

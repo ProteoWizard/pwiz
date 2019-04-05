@@ -140,13 +140,13 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             if (!TryGetSelectedPeptide(out peptideGroup,out peptide))
             {
                 zedGraphControl.GraphPane.Title.Text =
-                    QuantificationStrings
-                        .CalibrationForm_DisplayCalibrationCurve_Select_a_peptide_to_see_its_calibration_curve;
+                    ModeUIAwareStringFormat(QuantificationStrings
+                        .CalibrationForm_DisplayCalibrationCurve_Select_a_peptide_to_see_its_calibration_curve);
                 return;
             }
             if (-1 == document.Children.IndexOf(peptideGroup))
             {
-                zedGraphControl.GraphPane.Title.Text = QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_The_selected_peptide_is_no_longer_part_of_the_Skyline_document_;
+                zedGraphControl.GraphPane.Title.Text = ModeUIAwareStringFormat(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_The_selected_peptide_is_no_longer_part_of_the_Skyline_document_);
                 return;
             }
             PeptideQuantifier peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(document, peptideGroup,
@@ -163,14 +163,14 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 if (!(peptideQuantifier.NormalizationMethod is NormalizationMethod.RatioToLabel))
                 {
                     zedGraphControl.GraphPane.Title.Text =
-                        QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_Use_the_Quantification_tab_on_the_Peptide_Settings_dialog_to_control_the_conversion_of_peak_areas_to_concentrations_;
+                        ModeUIAwareStringFormat(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_Use_the_Quantification_tab_on_the_Peptide_Settings_dialog_to_control_the_conversion_of_peak_areas_to_concentrations_);
                 }
                 else
                 {
                     if (!peptide.InternalStandardConcentration.HasValue)
                     {
                         zedGraphControl.GraphPane.Title.Text =
-                            string.Format(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_To_convert_peak_area_ratios_to_concentrations__specify_the_internal_standard_concentration_for__0__, peptide);
+                            ModeUIAwareStringFormat(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_To_convert_peak_area_ratios_to_concentrations__specify_the_internal_standard_concentration_for__0__, peptide);
                     }
                     else
                     {
