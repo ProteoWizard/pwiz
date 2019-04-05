@@ -33,3 +33,9 @@ td {
     padding-left: 8px;
     border: 1px solid #bbb;
 }
+.Hidden {
+    font-style: italic; 
+}
+.Obsolete {
+    text-decoration: line-through;
+}

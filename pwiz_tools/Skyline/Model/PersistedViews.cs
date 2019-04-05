@@ -112,7 +112,7 @@ namespace pwiz.Skyline.Model
         }
 
         public int RevisionIndex { get; private set; }
-        public int RevisionIndexCurrent { get { return 8; } }
+        public int RevisionIndexCurrent { get { return 9; } }
         public override void ReadXml(XmlReader reader)
         {
             RevisionIndex = reader.GetIntAttribute(Attr.revision);
@@ -160,6 +160,11 @@ namespace pwiz.Skyline.Model
             if (revisionIndex >= 8)
             {
                 reportStrings.Add(REPORTS_V8);
+            }
+
+            if (revisionIndex >= 9)
+            {
+                reportStrings.Add(REPORTS_V9);
             }
             var list = new List<KeyValuePair<ViewGroupId, ViewSpec>>();
             var xmlSerializer = new XmlSerializer(typeof(ViewSpecList));
@@ -310,7 +315,7 @@ namespace pwiz.Skyline.Model
     <column name='Precursor.Mz' />
     <column name='Precursor.Charge' />
     <column name='Precursor.CollisionEnergy' />
-    <column name='Precursor.ExplicitCollisionEnergy' />
+    <column name='ExplicitCollisionEnergy' />
     <column name='Precursor.Peptide.ExplicitRetentionTime' />
     <column name='Precursor.Peptide.ExplicitRetentionTimeWindow' />
     <column name='ProductMz' />
@@ -343,7 +348,7 @@ namespace pwiz.Skyline.Model
     <column name='Precursor.Mz' />
     <column name='Precursor.Charge' />
     <column name='Precursor.CollisionEnergy' />
-    <column name='Precursor.ExplicitCollisionEnergy' />
+    <column name='ExplicitCollisionEnergy' />
     <column name='Precursor.Peptide.ExplicitRetentionTime' />
     <column name='Precursor.Peptide.ExplicitRetentionTimeWindow' />
     <column name='ProductMz' />
@@ -442,6 +447,63 @@ namespace pwiz.Skyline.Model
   </view>
 </views>
 ";
+        private const string REPORTS_V9 = @"<views>
+  <view name='Mixed Transition List' rowsource='pwiz.Skyline.Model.Databinding.Entities.Transition' sublist='Results!*' uimode='mixed'>
+    <column name='Precursor.Peptide.Protein.Name' />
+    <column name='Precursor.Peptide.ModifiedSequence' />
+    <column name='Precursor.Peptide.MoleculeName' />
+    <column name='Precursor.Peptide.MoleculeFormula' />
+    <column name='Precursor.IonFormula' />
+    <column name='Precursor.NeutralFormula' />
+    <column name='Precursor.Adduct' />
+    <column name='Precursor.Mz' />
+    <column name='Precursor.Charge' />
+    <column name='Precursor.CollisionEnergy' />
+    <column name='ExplicitCollisionEnergy' />
+    <column name='Precursor.Peptide.ExplicitRetentionTime' />
+    <column name='Precursor.Peptide.ExplicitRetentionTimeWindow' />
+    <column name='ProductMz' />
+    <column name='ProductCharge' />
+    <column name='FragmentIon' />
+    <column name='ProductIonFormula' />
+    <column name='ProductNeutralFormula' />
+    <column name='ProductAdduct' />
+    <column name='FragmentIonType' />
+    <column name='FragmentIonOrdinal' />
+    <column name='CleavageAa' />
+    <column name='LossNeutralMass' />
+    <column name='Losses' />
+    <column name='LibraryRank' />
+    <column name='LibraryIntensity' />
+    <column name='IsotopeDistIndex' />
+    <column name='IsotopeDistRank' />
+    <column name='IsotopeDistProportion' />
+    <column name='FullScanFilterWidth' />
+    <column name='IsDecoy' />
+    <column name='ProductDecoyMzShift' />
+  </view>
+  <view name='Small Molecule Transition List' rowsource='pwiz.Skyline.Model.Databinding.Entities.Transition' sublist='Results!*' uimode='small_molecules'>
+    <column name='Precursor.Peptide.Protein.Name' />
+    <column name='Precursor.Peptide.MoleculeName' />
+    <column name='Precursor.Peptide.MoleculeFormula' />
+    <column name='Precursor.IonFormula' />
+    <column name='Precursor.NeutralFormula' />
+    <column name='Precursor.Adduct' />
+    <column name='Precursor.Mz' />
+    <column name='Precursor.Charge' />
+    <column name='Precursor.CollisionEnergy' />
+    <column name='ExplicitCollisionEnergy' />
+    <column name='Precursor.Peptide.ExplicitRetentionTime' />
+    <column name='Precursor.Peptide.ExplicitRetentionTimeWindow' />
+    <column name='ProductMz' />
+    <column name='ProductCharge' />
+    <column name='ProductIonFormula' />
+    <column name='ProductNeutralFormula' />
+    <column name='ProductAdduct' />
+  </view>
+</views>
+";
+
         // ReSharper restore LocalizableElement
 
         #region XML Serialization

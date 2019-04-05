@@ -27,7 +27,7 @@ namespace pwiz.Common.DataBinding.Attributes
     /// <see cref="System.ComponentModel.DisplayNameAttribute"/> attribute.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
-    public class ChildDisplayNameAttribute : Attribute
+    public class ChildDisplayNameAttribute : InUiModesAttribute
     {
         public ChildDisplayNameAttribute(string format)
         {

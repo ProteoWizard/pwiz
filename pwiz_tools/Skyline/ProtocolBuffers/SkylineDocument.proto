@@ -97,6 +97,11 @@ message SkylineDocumentProto {
 		OptionalString adduct = 29;
 		OptionalString molecule_id = 30;
 		bool not_quantitative = 31;
+		OptionalDouble explicitCollisionEnergy = 32;
+		OptionalDouble explicitIonMobilityHighEnergyOffset = 33;
+		OptionalDouble explicitSLens = 34;
+		OptionalDouble explicitConeVoltage = 35;
+		OptionalDouble explicitDeclusteringPotential = 36;
 	}
 
 	message OptionalFloat {

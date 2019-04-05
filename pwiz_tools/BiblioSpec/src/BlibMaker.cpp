@@ -388,7 +388,8 @@ void BlibMaker::createTable(const char* tableName, vector<string> &commands, boo
         commands.push_back(
             "CREATE TABLE SpectrumSourceFiles ( -- information about the file or files from which this spectral library was derived\n"
                "id INTEGER PRIMARY KEY autoincrement not null,\n"
-               "fileName VARCHAR(512), -- source file, typically some kind of search tool output\n"
+               "fileName VARCHAR(512), -- source spectrum file; same as idFilename if embedded spectra were used, otherwise the path to the external spectrum file (mzML/mzXML)\n"
+               "idFileName VARCHAR(512), -- identification file, typically some kind of search tool output\n"
                "cutoffScore REAL -- filter threshold used when converting the source file to a BiblioSpec library. See RefSpectra scoreType field for information about the type of cutoff.\n"
                ")");
 
@@ -532,6 +533,11 @@ void BlibMaker::updateTables(){
             sql_stmt(zSql);
         }
     }
+
+    if (!tableColumnExists("main", "SpectrumSourceFiles", "idFileName")) {
+        sql_stmt("ALTER TABLE SpectrumSourceFiles ADD COLUMN idFileName TEXT");
+    }
+
     // update fileID and scoreType to be unknown in all existing spec
     boost::log::aux::snprintf(zSql, ZSQLBUFLEN, "UPDATE RefSpectra SET fileID = '%d' "
             "WHERE fileID IS NULL", unknown_file_id );
@@ -631,7 +637,8 @@ void BlibMaker::transferSpectrumFiles(const char* schemaTmp){ //i.e. db name
     }
 
     string cutoffSelect = tableColumnExists(schemaTmp, "SpectrumSourceFiles", "cutoffScore") ? "cutoffScore" : "-1";
-    boost::log::aux::snprintf(zSql, ZSQLBUFLEN, "SELECT id, fileName, %s FROM %s.SpectrumSourceFiles", cutoffSelect.c_str(), schemaTmp);
+    string idFileSelect = tableColumnExists(schemaTmp, "SpectrumSourceFiles", "idFileName") ? "idFileName" : "fileName";
+    boost::log::aux::snprintf(zSql, ZSQLBUFLEN, "SELECT id, fileName, %s, %s FROM %s.SpectrumSourceFiles", idFileSelect.c_str(), cutoffSelect.c_str(), schemaTmp);
     smart_stmt pStmt;
     int rc = sqlite3_prepare(db, zSql, -1, &pStmt, 0);
     check_rc(rc, zSql, "Failed selecting file names from tmp db.");
@@ -639,7 +646,8 @@ void BlibMaker::transferSpectrumFiles(const char* schemaTmp){ //i.e. db name
     while( rc == SQLITE_ROW ){
         // if fileName doesn't exist in main db...
         string fileName(reinterpret_cast<const char*>(sqlite3_column_text(pStmt, 1)));
-        double cutoff = sqlite3_column_double(pStmt, 2);
+        string idFileName(reinterpret_cast<const char*>(sqlite3_column_text(pStmt, 2)));
+        double cutoff = sqlite3_column_double(pStmt, 3);
 
         int existingFileId = getFileId(fileName, cutoff);
         if (existingFileId >= 0) {
@@ -648,7 +656,7 @@ void BlibMaker::transferSpectrumFiles(const char* schemaTmp){ //i.e. db name
             continue;
         }
 
-        int newFileId = addFile(fileName, cutoff);
+        int newFileId = addFile(fileName, cutoff, idFileName);
 
         // map old id (looked up) to new (current row number)
         oldToNewFileID_[sqlite3_column_int(pStmt, 0)] = newFileId;
@@ -994,20 +1002,22 @@ int BlibMaker::getFileId(const string& file, double cutoffScore) {
     return -1;
 }
 
-int BlibMaker::addFile(const string& file, double cutoffScore) {
+int BlibMaker::addFile(const string& specFile, double cutoffScore, const string& idFile) {
     string sql_statement;
     if (tableColumnExists("main", "SpectrumSourceFiles", "cutoffScore")) {
-        sql_statement = "INSERT INTO SpectrumSourceFiles(fileName, cutoffScore) VALUES('";
-        sql_statement += SqliteRoutine::ESCAPE_APOSTROPHES(file);
+        sql_statement = "INSERT INTO SpectrumSourceFiles(fileName, idFileName, cutoffScore) VALUES('";
+        sql_statement += SqliteRoutine::ESCAPE_APOSTROPHES(specFile);
+        sql_statement += "', '" + SqliteRoutine::ESCAPE_APOSTROPHES(idFile);
         sql_statement += "', " + boost::lexical_cast<string>(cutoffScore) + ")";
     } else {
-        sql_statement = "INSERT INTO SpectrumSourceFiles(filename) VALUES('";
-        sql_statement += SqliteRoutine::ESCAPE_APOSTROPHES(file);
+        sql_statement = "INSERT INTO SpectrumSourceFiles(filename, idFileName) VALUES('";
+        sql_statement += SqliteRoutine::ESCAPE_APOSTROPHES(specFile);
+        sql_statement += "', '" + SqliteRoutine::ESCAPE_APOSTROPHES(idFile);
         sql_statement += "')";
     }
     sql_stmt(sql_statement.c_str());
     int newFileId = sqlite3_last_insert_rowid(getDb());
-    fileIdCache_[file] = make_pair(newFileId, cutoffScore);
+    fileIdCache_[specFile] = make_pair(newFileId, cutoffScore);
     return newFileId;
 }
 

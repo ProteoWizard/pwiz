@@ -19,6 +19,8 @@
 
 using System;
 using System.ComponentModel;
+using pwiz.Common.DataBinding;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators;
@@ -65,6 +67,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         protected void ModifyDocument(EditDescription editDescription, Func<SrmDocument, SrmDocument> action, Func<SrmDocumentPair, AuditLogEntry> logFunc = null)
         {
             DataSchema.ModifyDocument(editDescription, action, logFunc);
+        }
+
+        protected EditDescription EditColumnDescription(string propertyName, object value)
+        {
+            var columnCaption = DataSchema.GetColumnCaption(DataSchema.DefaultUiMode, GetType(), propertyName);
+            string auditLogParseString = AuditLogParseHelper.GetParseString(ParseStringType.column_caption, 
+                columnCaption.GetCaption(DataSchemaLocalizer.INVARIANT));
+            return new EditDescription(columnCaption, auditLogParseString, GetElementRef(), value);
         }
     }
 }

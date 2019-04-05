@@ -894,11 +894,11 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             private static double GetCollisionEnergy(SrmSettings settings, PeptideDocNode nodePep,
-            TransitionGroupDocNode nodeGroup, CollisionEnergyRegression regression, int step)
+            TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, CollisionEnergyRegression regression, int step)
             {
                 var charge = nodeGroup.TransitionGroup.PrecursorAdduct;
                 double mz = settings.GetRegressionMz(nodePep, nodeGroup);
-                return regression.GetCollisionEnergy(charge, mz) + regression.StepSize * step;
+                return regression.GetCollisionEnergy(charge, mz) + regression.StepSize * step; // Note this ignores any explicitly set value in nodeTran or nodeGroup
             }
 
             public void AddResults()

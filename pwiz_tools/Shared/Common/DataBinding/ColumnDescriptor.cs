@@ -30,9 +30,14 @@ namespace pwiz.Common.DataBinding
     /// <seealso cref="DataBinding.PropertyPath"/>
     public abstract class ColumnDescriptor
     {
+        public static ColumnDescriptor RootColumn(DataSchema dataSchema, Type propertyType, string uiMode)
+        {
+            return new Root(dataSchema, propertyType, dataSchema.NormalizeUiMode(uiMode));
+        }
+
         public static ColumnDescriptor RootColumn(DataSchema dataSchema, Type propertyType)
         {
-            return new Root(dataSchema, propertyType);
+            return RootColumn(dataSchema, propertyType, dataSchema.DefaultUiMode);
         }
 
         protected ColumnDescriptor(DataSchema dataSchema)
@@ -52,6 +57,12 @@ namespace pwiz.Common.DataBinding
         public virtual ICollectionInfo CollectionInfo { get { return null; } }
         public virtual PropertyDescriptor ReflectedPropertyDescriptor { get { return null; } }
         public String Description { get { return DataSchema.GetColumnDescription(this); } }
+
+        public virtual string UiMode
+        {
+            get { return Parent?.UiMode ?? string.Empty; }
+        }
+
         public abstract Type PropertyType { get;  }
         public Type WrappedPropertyType
         {
@@ -91,7 +102,7 @@ namespace pwiz.Common.DataBinding
         {
             get
             {
-                return DataSchema.IsAdvanced(this);
+                return DataSchema.IsHidden(this);
             }
         }
         public virtual void SetValue(RowItem rowItem, PivotKey pivotKey, object value)
@@ -190,10 +201,12 @@ namespace pwiz.Common.DataBinding
         private class Root : ColumnDescriptor
         {
             private readonly Type _propertyType;
-            public Root(DataSchema dataSchema, Type propertyType) : base(dataSchema)
+            private string _uiMode;
+            public Root(DataSchema dataSchema, Type propertyType, string uiMode) : base(dataSchema)
             {
                 PropertyPath = PropertyPath.Root;
                 _propertyType = propertyType;
+                _uiMode = uiMode;
             }
 
             public override Type PropertyType
@@ -213,10 +226,15 @@ namespace pwiz.Common.DataBinding
                 return rowItem.Value;
             }
 
+            public override string UiMode
+            {
+                get { return _uiMode; }
+            }
+
 // ReSharper disable once MemberCanBePrivate.Local
             protected bool Equals(Root other)
             {
-                return base.Equals(other) && _propertyType == other._propertyType;
+                return base.Equals(other) && _propertyType == other._propertyType && _uiMode == other._uiMode;
             }
 
             public override bool Equals(object obj)
@@ -231,7 +249,10 @@ namespace pwiz.Common.DataBinding
             {
                 unchecked
                 {
-                    return (base.GetHashCode()*397) ^ _propertyType.GetHashCode();
+                    int result = base.GetHashCode();
+                    result = (result * 397) ^ _propertyType.GetHashCode();
+                    result = (result * 397) ^ (_uiMode == null ? 0 : _uiMode.GetHashCode());
+                    return result;
                 }
             }
         }
@@ -283,7 +304,7 @@ namespace pwiz.Common.DataBinding
 
             public override IEnumerable<Attribute> GetAttributes()
             {
-                return _propertyDescriptor.Attributes.Cast<Attribute>().Concat(base.GetAttributes());
+                return DataSchema.FilterAttributes(UiMode, _propertyDescriptor.Attributes.Cast<Attribute>()).Concat(base.GetAttributes());
             }
 
 // ReSharper disable once MemberCanBePrivate.Local
