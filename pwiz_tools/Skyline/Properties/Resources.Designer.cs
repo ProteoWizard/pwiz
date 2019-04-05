@@ -30196,6 +30196,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} must contain a comma separated list of integers describing charge states between {1} and {2}..
+        /// </summary>
+        public static string TransitionSettingsControl_ValidateAdductListTextBox__0__must_contain_a_comma_separated_list_of_integers_describing_charge_states_between__1__and__2__ {
+            get {
+                return ResourceManager.GetString("TransitionSettingsControl_ValidateAdductListTextBox__0__must_contain_a_comma_sepa" +
+                        "rated_list_of_integers_describing_charge_states_between__1__and__2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Min % of base pea&amp;k:.
         /// </summary>
         public static string TransitionSettingsUI_comboPrecursorIsotopes_SelectedIndexChanged_Min_percent_of_base_peak {
