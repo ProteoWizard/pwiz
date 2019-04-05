@@ -606,7 +606,7 @@ namespace pwiz.SkylineTestTutorial
             var importProgress = ShowDialog<AllChromatogramsGraph>(importResultsDlg3.OkDialog);
             WaitForDocumentChangeLoaded(docCalibrate1);
             WaitForConditionUI(() => importProgress.Finished);
-            string expectedErrorFormat = Resources.NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatograms_from__0__full_scan_settings_must_be_enabled_;
+            string expectedErrorFormat = Resources.NoFullScanFilteringException_NoFullScanFilteringException_The_file__0__does_not_contain_SRM_MRM_chromatograms__To_extract_chromatograms_from_its_spectra__go_to_Settings___Transition_Settings___Full_Scan_and_choose_options_appropriate_to_the_acquisition_method_used_;
             if (!TryWaitForConditionUI(() => !string.IsNullOrEmpty(importProgress.Error)))
             {
                 RunUI(() =>
