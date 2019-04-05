@@ -41,7 +41,6 @@
             this.labelConeVoltage = new System.Windows.Forms.Label();
             this.textConeVoltage = new System.Windows.Forms.TextBox();
             this.textDeclusteringPotential = new System.Windows.Forms.TextBox();
-            this.textCompensationVoltage = new System.Windows.Forms.TextBox();
             this.textCharge = new System.Windows.Forms.TextBox();
             this.textName = new System.Windows.Forms.TextBox();
             this.textBoxCCS = new System.Windows.Forms.TextBox();
@@ -49,7 +48,6 @@
             this.btnCancel = new System.Windows.Forms.Button();
             this.groupBoxOptionalValues = new System.Windows.Forms.GroupBox();
             this.labelCCS = new System.Windows.Forms.Label();
-            this.labelCompensationVoltage = new System.Windows.Forms.Label();
             this.labelDeclusteringPotential = new System.Windows.Forms.Label();
             this.labelIonMobility = new System.Windows.Forms.Label();
             this.labelIonMobilityHighEnergyOffset = new System.Windows.Forms.Label();
@@ -131,12 +129,6 @@
             this.textDeclusteringPotential.Name = "textDeclusteringPotential";
             this.toolTip1.SetToolTip(this.textDeclusteringPotential, resources.GetString("textDeclusteringPotential.ToolTip"));
             // 
-            // textCompensationVoltage
-            // 
-            resources.ApplyResources(this.textCompensationVoltage, "textCompensationVoltage");
-            this.textCompensationVoltage.Name = "textCompensationVoltage";
-            this.toolTip1.SetToolTip(this.textCompensationVoltage, resources.GetString("textCompensationVoltage.ToolTip"));
-            // 
             // textCharge
             // 
             resources.ApplyResources(this.textCharge, "textCharge");
@@ -176,8 +168,6 @@
             this.groupBoxOptionalValues.Controls.Add(this.labelIonMobilityUnits);
             this.groupBoxOptionalValues.Controls.Add(this.labelCCS);
             this.groupBoxOptionalValues.Controls.Add(this.textBoxCCS);
-            this.groupBoxOptionalValues.Controls.Add(this.labelCompensationVoltage);
-            this.groupBoxOptionalValues.Controls.Add(this.textCompensationVoltage);
             this.groupBoxOptionalValues.Controls.Add(this.labelDeclusteringPotential);
             this.groupBoxOptionalValues.Controls.Add(this.textDeclusteringPotential);
             this.groupBoxOptionalValues.Controls.Add(this.textIonMobility);
@@ -202,11 +192,6 @@
             // 
             resources.ApplyResources(this.labelCCS, "labelCCS");
             this.labelCCS.Name = "labelCCS";
-            // 
-            // labelCompensationVoltage
-            // 
-            resources.ApplyResources(this.labelCompensationVoltage, "labelCompensationVoltage");
-            this.labelCompensationVoltage.Name = "labelCompensationVoltage";
             // 
             // labelDeclusteringPotential
             // 
@@ -325,8 +310,6 @@
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.Label labelIsotopeLabelType;
         private System.Windows.Forms.ComboBox comboIsotopeLabelType;
-        private System.Windows.Forms.Label labelCompensationVoltage;
-        private System.Windows.Forms.TextBox textCompensationVoltage;
         private System.Windows.Forms.Label labelDeclusteringPotential;
         private System.Windows.Forms.TextBox textDeclusteringPotential;
         private System.Windows.Forms.Label labelCCS;
