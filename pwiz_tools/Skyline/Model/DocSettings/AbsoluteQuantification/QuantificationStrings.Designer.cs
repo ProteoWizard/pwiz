@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class QuantificationStrings {
@@ -346,6 +346,33 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
             get {
                 return ResourceManager.GetString("CalibrationForm_DisplayCalibrationCurve_Use_the_Quantification_tab_on_the_Peptide" +
                         "_Settings_dialog_to_control_the_conversion_of_peak_areas_to_concentrations_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (All Replicates).
+        /// </summary>
+        public static string CalibrationForm_GetFormTitle__All_Replicates_ {
+            get {
+                return ResourceManager.GetString("CalibrationForm_GetFormTitle__All_Replicates_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (Batch: {0}).
+        /// </summary>
+        public static string CalibrationForm_GetFormTitle__Batch___0__ {
+            get {
+                return ResourceManager.GetString("CalibrationForm_GetFormTitle__Batch___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (Replicate: {0}).
+        /// </summary>
+        public static string CalibrationForm_GetFormTitle__Replicate___0__ {
+            get {
+                return ResourceManager.GetString("CalibrationForm_GetFormTitle__Replicate___0__", resourceCulture);
             }
         }
         
