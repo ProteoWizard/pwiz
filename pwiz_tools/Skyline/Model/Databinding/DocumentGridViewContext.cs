@@ -164,7 +164,7 @@ namespace pwiz.Skyline.Model.Databinding
             }
             foreach (var action in RemovePeaksAction.All)
             {
-                var menuItem = action.CreateMenuItem(BoundDataGridView);
+                var menuItem = action.CreateMenuItem(SkylineDataSchema.ModeUI, BoundDataGridView);
                 if (menuItem != null)
                 {
                     dropDownItems.Add(menuItem);
@@ -174,7 +174,7 @@ namespace pwiz.Skyline.Model.Databinding
             dropDownItems.Add(new ToolStripSeparator());
             foreach (var action in DeleteNodesAction.All)
             {
-                var menuItem = action.CreateMenuItem(BoundDataGridView);
+                var menuItem = action.CreateMenuItem(SkylineDataSchema.ModeUI, BoundDataGridView);
                 if (menuItem != null)
                 {
                     dropDownItems.Add(menuItem);

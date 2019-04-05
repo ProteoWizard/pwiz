@@ -7717,6 +7717,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Delete Molecules....
+        /// </summary>
+        public static string DeletePeptides_GetMenuItemText_Delete_Molecules___ {
+            get {
+                return ResourceManager.GetString("DeletePeptides_GetMenuItemText_Delete_Molecules___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Delete Peptides....
         /// </summary>
         public static string DeletePeptides_MenuItemText_Delete_Peptides___ {
@@ -7731,6 +7740,15 @@ namespace pwiz.Skyline.Properties {
         public static string DeletePrecursors_MenuItemText_Delete_Precursors___ {
             get {
                 return ResourceManager.GetString("DeletePrecursors_MenuItemText_Delete_Precursors___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete Molecule Lists....
+        /// </summary>
+        public static string DeleteProteins_MenuItemText_Delete_Molecule_Lists___ {
+            get {
+                return ResourceManager.GetString("DeleteProteins_MenuItemText_Delete_Molecule_Lists___", resourceCulture);
             }
         }
         
@@ -19721,11 +19739,31 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete the molecule &apos;{0}&apos;?.
+        /// </summary>
+        public static string Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_molecule___0___ {
+            get {
+                return ResourceManager.GetString("Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_molecule___0___" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to delete the peptide &apos;{0}&apos;?.
         /// </summary>
         public static string Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_peptide___0___ {
             get {
                 return ResourceManager.GetString("Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_peptide___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete these {0} molecules?.
+        /// </summary>
+        public static string Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__molecules_ {
+            get {
+                return ResourceManager.GetString("Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__molecules" +
+                        "_", resourceCulture);
             }
         }
         
@@ -21169,11 +21207,31 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete the molecule list &apos;{0}&apos;?.
+        /// </summary>
+        public static string Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_molecule_list___0___ {
+            get {
+                return ResourceManager.GetString("Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_molecule_list__" +
+                        "_0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to delete the protein &apos;{0}&apos;?.
         /// </summary>
         public static string Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_protein___0___ {
             get {
                 return ResourceManager.GetString("Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_protein___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete these {0} molecule lists?.
+        /// </summary>
+        public static string Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__molecule_lists_ {
+            get {
+                return ResourceManager.GetString("Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__molecule_" +
+                        "lists_", resourceCulture);
             }
         }
         
@@ -22105,12 +22163,32 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to remove these {0} peaks from {1} molecules?.
+        /// </summary>
+        public static string RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__molecules_ {
+            get {
+                return ResourceManager.GetString("RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__" +
+                        "peaks_from__1__molecules_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to remove these {0} peaks from {1} peptides?.
         /// </summary>
         public static string RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__peptides_ {
             get {
                 return ResourceManager.GetString("RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__" +
                         "peaks_from__1__peptides_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to remove these {0} peaks from one molecule?.
+        /// </summary>
+        public static string RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_molecule_ {
+            get {
+                return ResourceManager.GetString("RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__" +
+                        "peaks_from_one_molecule_", resourceCulture);
             }
         }
         
@@ -22125,12 +22203,31 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to remove this molecule peak?.
+        /// </summary>
+        public static string RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_molecule_peak_ {
+            get {
+                return ResourceManager.GetString("RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_molec" +
+                        "ule_peak_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to remove this peptide peak?.
         /// </summary>
         public static string RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_peptide_peak_ {
             get {
                 return ResourceManager.GetString("RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_pepti" +
                         "de_peak_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove Molecule Peaks....
+        /// </summary>
+        public static string RemovePeptides_MenuItemText_Remove_Molecule_Peaks___ {
+            get {
+                return ResourceManager.GetString("RemovePeptides_MenuItemText_Remove_Molecule_Peaks___", resourceCulture);
             }
         }
         
@@ -23949,6 +24046,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Item in list &apos;{0}&apos;.
+        /// </summary>
+        public static string SkylineDataSchema_GetTypeDescription_Item_in_list___0__ {
+            get {
+                return ResourceManager.GetString("SkylineDataSchema_GetTypeDescription_Item_in_list___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The document was modified in the middle of the operation..
         /// </summary>
         public static string SkylineDataSchema_VerifyDocumentCurrent_The_document_was_modified_in_the_middle_of_the_operation_ {
@@ -24172,6 +24278,24 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineViewContext_DeleteDocNodes_Delete_items {
             get {
                 return ResourceManager.GetString("SkylineViewContext_DeleteDocNodes_Delete_items", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule Lists.
+        /// </summary>
+        public static string SkylineViewContext_GetDocumentGridRowSources_Molecule_Lists {
+            get {
+                return ResourceManager.GetString("SkylineViewContext_GetDocumentGridRowSources_Molecule_Lists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecules.
+        /// </summary>
+        public static string SkylineViewContext_GetDocumentGridRowSources_Molecules {
+            get {
+                return ResourceManager.GetString("SkylineViewContext_GetDocumentGridRowSources_Molecules", resourceCulture);
             }
         }
         

@@ -10377,6 +10377,9 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="RemovePeptides_MenuItemText_Remove_Peptide_Peaks___" xml:space="preserve">
     <value>Remove Peptide Peaks...</value>
   </data>
+  <data name="RemovePeptides_MenuItemText_Remove_Molecule_Peaks___" xml:space="preserve">
+    <value>Remove Molecule Peaks...</value>
+  </data>
   <data name="RemoveTransitions_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_transition_peak_" xml:space="preserve">
     <value>Are you sure you want to remove this transition peak?</value>
   </data>
@@ -10401,6 +10404,9 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="DeletePeptides_MenuItemText_Delete_Peptides___" xml:space="preserve">
     <value>Delete Peptides...</value>
   </data>
+  <data name="DeletePeptides_GetMenuItemText_Delete_Molecules___" xml:space="preserve">
+    <value>Delete Molecules...</value>
+  </data>
   <data name="DeletePrecursors_MenuItemText_Delete_Precursors___" xml:space="preserve">
     <value>Delete Precursors...</value>
   </data>
@@ -10412,6 +10418,9 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="DeleteProteins_MenuItemText_Delete_Proteins___" xml:space="preserve">
     <value>Delete Proteins...</value>
+  </data>
+  <data name="DeleteProteins_MenuItemText_Delete_Molecule_Lists___" xml:space="preserve">
+    <value>Delete Molecule Lists...</value>
   </data>
   <data name="TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0___" xml:space="preserve">
     <value>Unable to resolve molecule from '{0}'.</value>
@@ -10509,6 +10518,36 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="CommandLine_LogDocumentDelta_Added___0_" xml:space="preserve">
     <value>Added: {0}</value>
+  </data>
+  <data name="SkylineViewContext_GetDocumentGridRowSources_Molecule_Lists" xml:space="preserve">
+    <value>Molecule Lists</value>
+  </data>
+  <data name="SkylineViewContext_GetDocumentGridRowSources_Molecules" xml:space="preserve">
+    <value>Molecules</value>
+  </data>
+  <data name="Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_molecule_list___0___" xml:space="preserve">
+    <value>Are you sure you want to delete the molecule list '{0}'?</value>
+  </data>
+  <data name="Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__molecule_lists_" xml:space="preserve">
+    <value>Are you sure you want to delete these {0} molecule lists?</value>
+  </data>
+  <data name="RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_molecule_peak_" xml:space="preserve">
+    <value>Are you sure you want to remove this molecule peak?</value>
+  </data>
+  <data name="RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_molecule_" xml:space="preserve">
+    <value>Are you sure you want to remove these {0} peaks from one molecule?</value>
+  </data>
+  <data name="RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__molecules_" xml:space="preserve">
+    <value>Are you sure you want to remove these {0} peaks from {1} molecules?</value>
+  </data>
+  <data name="SkylineDataSchema_GetTypeDescription_Item_in_list___0__" xml:space="preserve">
+    <value>Item in list '{0}'</value>
+  </data>
+  <data name="Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_molecule___0___" xml:space="preserve">
+    <value>Are you sure you want to delete the molecule '{0}'?</value>
+  </data>
+  <data name="Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__molecules_" xml:space="preserve">
+    <value>Are you sure you want to delete these {0} molecules?</value>
   </data>
   <data name="TransitionSettingsControl_ValidateAdductListTextBox__0__must_contain_a_comma_separated_list_of_integers_describing_charge_states_between__1__and__2__" xml:space="preserve">
     <value>{0} must contain a comma separated list of integers describing charge states between {1} and {2}.</value>

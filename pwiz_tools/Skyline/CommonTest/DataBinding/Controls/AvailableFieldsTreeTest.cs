@@ -37,7 +37,7 @@ namespace CommonTest.DataBinding.Controls
             var tree = new AvailableFieldsTree
             {
                 RootColumn = ColumnDescriptor.RootColumn(new DataSchema(), typeof (Peptide)),
-                ShowAdvancedFields = true
+                ShowHiddenFields = true
             };
             var idAminoAcidMoleculeElement = PropertyPath.Parse("AminoAcidsList!*.Molecule!*.Key");
             Assert.IsNull(tree.FindTreeNode(idAminoAcidMoleculeElement, false));

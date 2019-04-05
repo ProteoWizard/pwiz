@@ -50,9 +50,9 @@ namespace pwiz.Skyline.Model.Databinding.RowActions
 
         public abstract IEnumerable<SkylineDocNode> GetSelectedNodes(BoundDataGridView dataGridView);
 
-        public override ToolStripMenuItem CreateMenuItem(BoundDataGridView dataGridView)
+        public override ToolStripMenuItem CreateMenuItem(SrmDocument.DOCUMENT_TYPE docType, BoundDataGridView dataGridView)
         {
-            var menuItem = new ToolStripMenuItem(MenuItemText, null, (sender, args) => DeleteNodes(dataGridView));
+            var menuItem = new ToolStripMenuItem(GetMenuItemText(docType), null, (sender, args) => DeleteNodes(dataGridView));
             if (!GetSelectedNodes(dataGridView).Any())
             {
                 menuItem.Enabled = false;
@@ -68,9 +68,9 @@ namespace pwiz.Skyline.Model.Databinding.RowActions
 
         class DeleteTransitions : DeleteNodesAction
         {
-            public override string MenuItemText
+            public override string GetMenuItemText(SrmDocument.DOCUMENT_TYPE docType)
             {
-                get { return Resources.DeleteTransitions_MenuItemText_Delete_Transitions___; }
+                return Resources.DeleteTransitions_MenuItemText_Delete_Transitions___;
             }
             public override IEnumerable<SkylineDocNode> GetSelectedNodes(BoundDataGridView dataGridView)
             {
@@ -87,9 +87,9 @@ namespace pwiz.Skyline.Model.Databinding.RowActions
 
         class DeletePrecursors : DeleteNodesAction
         {
-            public override string MenuItemText
+            public override string GetMenuItemText(SrmDocument.DOCUMENT_TYPE docType)
             {
-                get { return Resources.DeletePrecursors_MenuItemText_Delete_Precursors___; }
+                return Resources.DeletePrecursors_MenuItemText_Delete_Precursors___;
             }
             public override IEnumerable<SkylineDocNode> GetSelectedNodes(BoundDataGridView dataGridView)
             {
@@ -111,9 +111,11 @@ namespace pwiz.Skyline.Model.Databinding.RowActions
 
         class DeletePeptides : DeleteNodesAction
         {
-            public override string MenuItemText
+            public override string GetMenuItemText(SrmDocument.DOCUMENT_TYPE docType)
             {
-                get { return Resources.DeletePeptides_MenuItemText_Delete_Peptides___; }
+                return docType == SrmDocument.DOCUMENT_TYPE.proteomic
+                    ? Resources.DeletePeptides_MenuItemText_Delete_Peptides___
+                    : Resources.DeletePeptides_GetMenuItemText_Delete_Molecules___;
             }
             public override IEnumerable<SkylineDocNode> GetSelectedNodes(BoundDataGridView dataGridView)
             {
@@ -134,9 +136,11 @@ namespace pwiz.Skyline.Model.Databinding.RowActions
         }
         class DeleteProteins : DeleteNodesAction
         {
-            public override string MenuItemText
+            public override string GetMenuItemText(SrmDocument.DOCUMENT_TYPE docType)
             {
-                get { return Resources.DeleteProteins_MenuItemText_Delete_Proteins___; }
+                return docType == SrmDocument.DOCUMENT_TYPE.proteomic
+                    ? Resources.DeleteProteins_MenuItemText_Delete_Proteins___
+                    : Resources.DeleteProteins_MenuItemText_Delete_Molecule_Lists___;
             }
 
             public override IEnumerable<SkylineDocNode> GetSelectedNodes(BoundDataGridView dataGridView)
