@@ -38,7 +38,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         protected override void OnViewChange()
         {
             base.OnViewChange();
-            availableFieldsTreeFilter.ShowAdvancedFields = ViewEditor.ShowHiddenFields;
+            availableFieldsTreeFilter.ViewEditor = ViewEditor;
             availableFieldsTreeFilter.RootColumn = ViewInfo.ParentColumn;
             if (dataGridViewFilter.Rows.Count != ViewInfo.Filters.Count)
             {

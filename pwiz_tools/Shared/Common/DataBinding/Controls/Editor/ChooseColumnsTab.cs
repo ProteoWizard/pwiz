@@ -38,12 +38,18 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         {
             base.OnViewChange();
             _inLabelEdit = false;
+            availableFieldsTreeColumns.ViewEditor = ViewEditor;
             availableFieldsTreeColumns.RootColumn = ViewInfo.ParentColumn;
-            availableFieldsTreeColumns.ShowAdvancedFields = ViewEditor.ShowHiddenFields;
             availableFieldsTreeColumns.SublistId = ViewInfo.SublistId;
             availableFieldsTreeColumns.CheckedColumns = ListColumnsInView();
+            IList<DisplayColumn> gridColumns =
+                ImmutableList.ValueOf(ViewEditor.ViewInfo.DisplayColumns.Where(col => !col.ColumnSpec.Hidden));
+            if (gridColumns.Count != VisibleColumns.Count)
+            {
+                gridColumns = VisibleColumns;
+            }
             ListViewHelper.ReplaceItems(listViewColumns,
-                VisibleColumns.Select(MakeListViewColumnItem).ToArray());
+                gridColumns.Select(MakeListViewColumnItem).ToArray());
             if (null != SelectedPaths)
             {
                 var selectedIndexes = VisibleColumns
@@ -99,17 +105,17 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         {
             return VisibleColumns.Select(dc => dc.PropertyPath);
         }
-        private ListViewItem MakeListViewColumnItem(DisplayColumn displayColumn)
+        private ListViewItem MakeListViewColumnItem(DisplayColumn gridColumn)
         {
-            string listItemText = displayColumn.GetColumnCaption(null, ColumnCaptionType.localized);
+            string listItemText = gridColumn.GetColumnCaption(null, ColumnCaptionType.localized);
             
             var listViewItem = new ListViewItem {Text = listItemText };
-            Debug.Assert(!displayColumn.ColumnSpec.Hidden);
-            if (!string.IsNullOrEmpty(displayColumn.ColumnSpec.Caption))
+            Debug.Assert(!gridColumn.ColumnSpec.Hidden);
+            if (!string.IsNullOrEmpty(gridColumn.ColumnSpec.Caption))
             {
                 listViewItem.Font = new Font(listViewItem.Font, FontStyle.Bold | listViewItem.Font.Style);
-                DataSchema dataSchema = displayColumn.DataSchema;
-                var columnCaption = dataSchema.GetColumnCaption(displayColumn.ColumnDescriptor);
+                DataSchema dataSchema = gridColumn.DataSchema;
+                var columnCaption = dataSchema.GetColumnCaption(gridColumn.ColumnDescriptor);
                 listViewItem.ToolTipText = columnCaption.GetCaption(dataSchema.DataSchemaLocalizer);
             }
             return listViewItem;

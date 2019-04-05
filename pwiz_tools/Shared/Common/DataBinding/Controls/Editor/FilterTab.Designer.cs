@@ -73,8 +73,6 @@
             this.availableFieldsTreeFilter.DrawMode = System.Windows.Forms.TreeViewDrawMode.OwnerDrawText;
             this.availableFieldsTreeFilter.HideSelection = false;
             this.availableFieldsTreeFilter.Name = "availableFieldsTreeFilter";
-            this.availableFieldsTreeFilter.RootColumn = null;
-            this.availableFieldsTreeFilter.ShowAdvancedFields = false;
             this.availableFieldsTreeFilter.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.AvailableFieldsTreeFilterOnAfterSelect);
             this.availableFieldsTreeFilter.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.AvailableFieldsTreeFilterOnNodeMouseDoubleClick);
             // 

@@ -4045,7 +4045,10 @@ namespace pwiz.Skyline
             var dataSchema = new SkylineDataSchema(this,
                 SkylineDataSchema.GetLocalizedSchemaLocalizer());
             var documentationGenerator = new DocumentationGenerator(
-                ColumnDescriptor.RootColumn(dataSchema, typeof(SkylineDocument)));
+                ColumnDescriptor.RootColumn(dataSchema, typeof(SkylineDocument)))
+            {
+                IncludeHidden = false
+            };
             DocumentationViewer documentationViewer = new DocumentationViewer(true);
             documentationViewer.DocumentationHtml = documentationGenerator.GetDocumentationHtmlPage();
             documentationViewer.Show(this);
@@ -5438,10 +5441,10 @@ namespace pwiz.Skyline
 
         public void SetUIMode(SrmDocument.DOCUMENT_TYPE mode)
         {
-            GetModeUIHelper().ModeUI = mode== SrmDocument.DOCUMENT_TYPE.none ? SrmDocument.DOCUMENT_TYPE.proteomic : mode;
+            GetModeUIHelper().ModeUI = mode == SrmDocument.DOCUMENT_TYPE.none ? SrmDocument.DOCUMENT_TYPE.proteomic : mode;
             GetModeUIHelper().AttemptChangeModeUI(mode);
 
-
+            UpdateDocumentUI();
             // Update any visible graphs
             UpdateGraphPanes();
             UpdateNodeCountStatus(true); // Force update even if node counts are unchanged

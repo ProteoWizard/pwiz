@@ -155,7 +155,7 @@ namespace pwiz.Common.DataBinding
             return new ViewInfo(DataSchema, rowSourceInfo.RowType, viewSpec).ChangeViewGroup(viewGroup);
         }
 
-        public ViewInfo GetViewInfo(ViewName? viewName)
+        public virtual ViewInfo GetViewInfo(ViewName? viewName)
         {
             if (!viewName.HasValue)
             {
@@ -594,7 +594,7 @@ namespace pwiz.Common.DataBinding
 
         protected static ViewSpec GetDefaultViewSpec(ColumnDescriptor parentColumn)
         {
-            var viewSpec = new ViewSpec().SetName(DefaultViewName).SetRowType(parentColumn.PropertyType);
+            var viewSpec = new ViewSpec().SetName(DefaultViewName).SetRowType(parentColumn.PropertyType).SetUiMode(parentColumn.UiMode);
             var columns = new List<ColumnSpec>();
             foreach (var column in parentColumn.GetChildColumns())
             {
@@ -602,7 +602,7 @@ namespace pwiz.Common.DataBinding
                 {
                     continue;
                 }
-                if (column.DataSchema.IsAdvanced(column))
+                if (column.DataSchema.IsHidden(column))
                 {
                     continue;
                 }
@@ -679,6 +679,11 @@ namespace pwiz.Common.DataBinding
         public virtual void RowActionsDropDownOpening(ToolStripItemCollection dropDownItems)
         {
             dropDownItems.Clear();
+        }
+
+        public virtual IEnumerable<IUiModeInfo> AvailableUiModes
+        {
+            get { yield break; }
         }
 
         // Default implementation of ViewsChanged which never fires.
