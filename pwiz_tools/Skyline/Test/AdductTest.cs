@@ -258,8 +258,8 @@ namespace pwiz.SkylineTest
             TestAdductOperators();
 
             var coverage = new HashSet<string>();
-
-
+            TestPentaneAdduct("[M+2NH4]", "C5H20N2", 2, coverage); // multiple of a group
+            TestPentaneAdduct("[M+2(NH4)]", "C5H20N2", 2, coverage); // multiple of a group in parenthesis
             TestPentaneAdduct("[M+2H]", "C5H14", 2, coverage);
             TestPentaneAdduct("[M2C13+2H]", "C3C'2H14", 2, coverage); // Labeled
             TestPentaneAdduct("[2M2C13+2H]", "C6C'4H26", 2, coverage); // Labeled dimer

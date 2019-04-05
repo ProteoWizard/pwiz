@@ -8,8 +8,8 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 3	YILDGKDNNDIAEK	804.902685536563	2	YILDGKDNNDIAEK	-	-	1	826	0.0	0.0	0.0	0	40.0056416666667	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	3	0.0	1
 4	LSNNTACVFTGK	656.824987782656	2	LSNNTAC[+57.0]VFTGK	-	-	1	783	0.0	0.0	0.0	0	40.0210366666667	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	6	0.0	1
 5	NQLGGVPGDVASR	635.835058583438	2	NQLGGVPGDVASR	-	-	1	812	0.0	0.0	0.0	0	40.0271533333333	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	9	0.0003375	1
-id	fileName	cutoffScore
-1	500ngEColi_115minrun_90mingrad_top20_CID_new_3.raw	-1.0
+id	fileName	idFileName	cutoffScore
+1	500ngEColi_115minrun_90mingrad_top20_CID_new_3.raw	/BiblioSpec/tests/inputs/tiny-v2.msf	-1.0
 id	scoreType	probabilityType
 0	UNKNOWN	NOT_A_PROBABILITY_VALUE
 1	PERCOLATOR QVALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT
