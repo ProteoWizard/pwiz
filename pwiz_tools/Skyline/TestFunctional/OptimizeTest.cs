@@ -766,9 +766,9 @@ namespace pwiz.SkylineTestFunctional
                 var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
                 EnableDocumentGridColumns(documentGrid, Resources.SkylineViewContext_GetTransitionListReportSpec_Mixed_Transition_List, 5,
                     new[]
-                    { 
-                        "Proteins!*.Peptides!*.Precursors!*.ExplicitCompensationVoltage", 
-                        "Proteins!*.Peptides!*.Precursors!*.ExplicitDeclusteringPotential", 
+                    {
+                        "Proteins!*.Peptides!*.Precursors!*.ExplicitCompensationVoltage",
+                        "Proteins!*.Peptides!*.Precursors!*.Transitions!*.ExplicitDeclusteringPotential", 
                     });
                 const double explicitCV = 13.45;
                 const double explicitDP = 14.32;
@@ -777,10 +777,10 @@ namespace pwiz.SkylineTestFunctional
                 WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
                                         SkylineWindow.Document.MoleculeTransitionGroups.First()
                                             .ExplicitValues.CompensationVoltage.Equals(explicitCV)));
-                var colDP = FindDocumentGridColumn(documentGrid, "Precursor.ExplicitDeclusteringPotential");
+                var colDP = FindDocumentGridColumn(documentGrid, "ExplicitDeclusteringPotential");
                 RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colDP.Index].Value = explicitDP);
-                WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
-                                        SkylineWindow.Document.MoleculeTransitionGroups.First()
+                WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitions.Any() &&
+                                        SkylineWindow.Document.MoleculeTransitions.First()
                                             .ExplicitValues.DeclusteringPotential.Equals(explicitDP)));
                 RunUI(() => documentGrid.Close());
                 outTransitionsFinalWithOptLib2 = outTransitionsFinalWithOptLib2.Replace(".csv", "_explicit.csv");

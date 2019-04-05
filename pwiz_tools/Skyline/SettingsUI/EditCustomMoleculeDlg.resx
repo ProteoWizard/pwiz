@@ -125,7 +125,7 @@
     <value>Bottom, Left</value>
   </data>
   <data name="textIonMobility.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 234</value>
+    <value>9, 189</value>
   </data>
   <data name="textIonMobility.Size" type="System.Drawing.Size, System.Drawing">
     <value>135, 20</value>
@@ -405,33 +405,6 @@
   <data name="&gt;&gt;textDeclusteringPotential.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
-  <data name="textCompensationVoltage.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="textCompensationVoltage.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 189</value>
-  </data>
-  <data name="textCompensationVoltage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>135, 22</value>
-  </data>
-  <data name="textCompensationVoltage.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
-  </data>
-  <data name="textCompensationVoltage.ToolTip" xml:space="preserve">
-    <value>Overrides any predicted or library compensation voltage value</value>
-  </data>
-  <data name="&gt;&gt;textCompensationVoltage.Name" xml:space="preserve">
-    <value>textCompensationVoltage</value>
-  </data>
-  <data name="&gt;&gt;textCompensationVoltage.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textCompensationVoltage.Parent" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;textCompensationVoltage.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
   <data name="textCharge.Location" type="System.Drawing.Point, System.Drawing">
     <value>15, 210</value>
   </data>
@@ -571,10 +544,10 @@
     <value>Bottom, Left</value>
   </data>
   <data name="comboBoxIonMobilityUnits.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 277</value>
+    <value>9, 234</value>
   </data>
   <data name="comboBoxIonMobilityUnits.Size" type="System.Drawing.Size, System.Drawing">
-    <value>121, 21</value>
+    <value>150, 21</value>
   </data>
   <data name="comboBoxIonMobilityUnits.TabIndex" type="System.Int32, mscorlib">
     <value>21</value>
@@ -601,7 +574,7 @@
     <value>NoControl</value>
   </data>
   <data name="labelIonMobilityUnits.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 257</value>
+    <value>6, 214</value>
   </data>
   <data name="labelIonMobilityUnits.Size" type="System.Drawing.Size, System.Drawing">
     <value>87, 13</value>
@@ -658,39 +631,6 @@
   <data name="&gt;&gt;labelCCS.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="labelCompensationVoltage.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="labelCompensationVoltage.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelCompensationVoltage.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelCompensationVoltage.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 169</value>
-  </data>
-  <data name="labelCompensationVoltage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 17</value>
-  </data>
-  <data name="labelCompensationVoltage.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
-  </data>
-  <data name="labelCompensationVoltage.Text" xml:space="preserve">
-    <value>Compensation volta&amp;ge:</value>
-  </data>
-  <data name="&gt;&gt;labelCompensationVoltage.Name" xml:space="preserve">
-    <value>labelCompensationVoltage</value>
-  </data>
-  <data name="&gt;&gt;labelCompensationVoltage.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelCompensationVoltage.Parent" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;labelCompensationVoltage.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
   <data name="labelDeclusteringPotential.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
@@ -734,7 +674,7 @@
     <value>NoControl</value>
   </data>
   <data name="labelIonMobility.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 214</value>
+    <value>6, 169</value>
   </data>
   <data name="labelIonMobility.Size" type="System.Drawing.Size, System.Drawing">
     <value>115, 17</value>

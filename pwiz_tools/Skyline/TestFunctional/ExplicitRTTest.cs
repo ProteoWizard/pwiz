@@ -164,7 +164,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForCondition(() => File.Exists(documentFile));
             RunUI(() =>
             {
-                SkylineWindow.OpenFile(documentFile);
+                SkylineWindow.OpenFile(documentFile+"d"); //Highjacking this existing test to also test our handling of user trying to open a Skyline-related file (like .skyd) instead of actual Skyline file
                 SkylineWindow.SaveDocument(documentFile.Replace(".sky", "_updated.sky")); // These are some of our oldest small mol docs, save an updated version for debug ease
             });
             
