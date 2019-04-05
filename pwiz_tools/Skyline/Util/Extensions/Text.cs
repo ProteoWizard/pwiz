@@ -72,9 +72,14 @@ namespace pwiz.Skyline.Util.Extensions
         /// files to be imported directly into Excel on the same system.
         /// <param name="cultureInfo">The culture for which the separator is requested.</param>
         /// </summary>
-        public static char GetCsvSeparator(CultureInfo cultureInfo)
+        public static char GetCsvSeparator(IFormatProvider cultureInfo)
         {
-            return (Equals(SEPARATOR_CSV.ToString(CultureInfo.InvariantCulture), cultureInfo.NumberFormat.NumberDecimalSeparator) ? SEPARATOR_CSV_INTL : SEPARATOR_CSV);
+            var numberFormat = cultureInfo.GetFormat(typeof(NumberFormatInfo)) as NumberFormatInfo;
+            if (numberFormat != null && Equals(SEPARATOR_CSV.ToString(CultureInfo.InvariantCulture), numberFormat.NumberDecimalSeparator))
+            {
+                return SEPARATOR_CSV_INTL;
+            }
+            return SEPARATOR_CSV;
         }
 
         /// <summary>
