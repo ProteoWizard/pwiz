@@ -442,6 +442,9 @@
   <data name="InterpolatedNumberOfPoints">
     <value>Interpolated Number of Points</value>
   </data>
+  <data name="InterpolatedSpectrumIds">
+    <value>Interpolated Spectrum Ids</value>
+  </data>
   <data name="InterpolatedTimes">
     <value>Interpolated Times</value>
   </data>
@@ -915,6 +918,9 @@
   <data name="RawNumberOfPoints">
     <value>Raw Number of Points</value>
   </data>
+  <data name="RawSpectrumIds">
+    <value>Raw Spectrum Ids</value>
+  </data>
   <data name="RawTimes">
     <value>Raw Times</value>
   </data>
@@ -1001,6 +1007,9 @@
   </data>
   <data name="SMILES">
     <value>SMILES</value>
+  </data>
+  <data name="SpectrumIds">
+    <value>Spectrum Ids</value>
   </data>
   <data name="StandardError">
     <value>Standard Error</value>
