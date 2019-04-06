@@ -461,11 +461,11 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                     curveFitter.SingleBatchReplicateIndex.Value];
                 if (string.IsNullOrEmpty(chromatogramSet.BatchName))
                 {
-                    title = TextUtil.SpaceSeparate(title, string.Format("(Replicate: {0})", chromatogramSet.Name));
+                    title = TextUtil.SpaceSeparate(title, string.Format(QuantificationStrings.CalibrationForm_GetFormTitle__Replicate___0__, chromatogramSet.Name));
                 }
                 else
                 {
-                    title = TextUtil.SpaceSeparate(title, string.Format("(Batch: {0})", chromatogramSet.BatchName));
+                    title = TextUtil.SpaceSeparate(title, string.Format(QuantificationStrings.CalibrationForm_GetFormTitle__Batch___0__, chromatogramSet.BatchName));
                 }
             }
             else
@@ -473,7 +473,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 if (_skylineWindow.Document.Settings.MeasuredResults.Chromatograms.Select(c => c.BatchName).Distinct()
                         .Count() > 1)
                 {
-                    title = TextUtil.SpaceSeparate(title, "(All Replicates)");
+                    title = TextUtil.SpaceSeparate(title, QuantificationStrings.CalibrationForm_GetFormTitle__All_Replicates_);
                 }
             }
             return title;
