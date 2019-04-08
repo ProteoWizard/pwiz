@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using pwiz.Skyline.Model.Databinding.Entities;
 using ZedGraph;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
