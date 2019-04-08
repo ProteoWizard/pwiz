@@ -128,6 +128,7 @@ class RawFileImpl : public RawFile
     virtual const vector<MassAnalyzerType>& getMassAnalyzers() const;
     virtual const vector<DetectorType>& getDetectors() const;
 
+    virtual std::string getSampleID() const;
     virtual std::string getTrailerExtraValue(long scanNumber, const std::string& name) const;
     virtual double getTrailerExtraValueDouble(long scanNumber, const std::string& name) const;
     virtual long getTrailerExtraValueLong(long scanNumber, const std::string& name) const;
@@ -593,6 +594,16 @@ const vector<DetectorType>& RawFileImpl::getDetectors() const
     if (detectors_.empty())
         detectors_ = getDetectorsForInstrumentModel(getInstrumentModel());
     return detectors_;
+}
+
+
+std::string RawFileImpl::getSampleID() const
+{
+#ifndef _WIN64
+    return value(SeqRowSampleID);
+#else
+    return ToStdString(raw_->SampleInformation->SampleId);
+#endif
 }
 
 
