@@ -4885,6 +4885,7 @@ namespace pwiz.Skyline
         {
             SummaryReplicateGraphPane.GroupByReplicateAnnotation =
                 DocumentAnnotations.ANNOTATION_PREFIX + annotationName;
+            UpdateSummaryGraphs();
         }
 
         public void OrderByReplicateAnnotation(ReplicateValue replicateValue)
