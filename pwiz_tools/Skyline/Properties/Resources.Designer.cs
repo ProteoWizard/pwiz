@@ -1388,6 +1388,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Annotation: .
+        /// </summary>
+        public static string Annotation_DisambiguationPrefix_Annotation__ {
+            get {
+                return ResourceManager.GetString("Annotation_DisambiguationPrefix_Annotation__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Peptides.
         /// </summary>
         public static string AnnotationDef_AnnotationTarget_Peptides {
@@ -21193,6 +21202,15 @@ namespace pwiz.Skyline.Properties {
         public static string ProgramPathContainer_Validate_ProgramPathCollectors_must_have_a_program_name {
             get {
                 return ResourceManager.GetString("ProgramPathContainer_Validate_ProgramPathCollectors_must_have_a_program_name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Property: .
+        /// </summary>
+        public static string Property_DisambiguationPrefix_Property__ {
+            get {
+                return ResourceManager.GetString("Property_DisambiguationPrefix_Property__", resourceCulture);
             }
         }
         
