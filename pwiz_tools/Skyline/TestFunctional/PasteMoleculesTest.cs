@@ -93,7 +93,7 @@ namespace pwiz.SkylineTestFunctional
 
         const double precursorMzAtZNeg2 = 96.0329118;
         const double productMzAtZNeg2 = 59.5128179;
-        const double precursorCE = 1.23;
+        const double explicitCE = 1.23;
         const double precursorDT = 2.34;
         const double highEnergyDtOffset = -.012;
         const double precursorCCS = 345.6;
@@ -109,6 +109,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var docEmpty = NewDocument();
 
+            TestPerTransitionValues();
             TestToolServiceAccess();
             TestLabelsNoFormulas();
             TestPrecursorTransitions();
@@ -190,7 +191,7 @@ namespace pwiz.SkylineTestFunctional
                 string.Format(Resources.CustomMolecule_Validate_The_mass__0__of_the_custom_molecule_exceeeds_the_maximum_of__1__, 503970013.01879, CustomMolecule.MAX_MASS), fullColumnOrder);
             TestError(line1 + line4, // Insanely small molecule
                 string.Format(Resources.CustomMolecule_Validate_The_mass__0__of_the_custom_molecule_is_less_than_the_minimum_of__1__, 2.01588, CustomMolecule.MIN_MASS), fullColumnOrder);
-            TestError(line1 + line2start + +precursorMzAtZNeg2 + "\t" + productMzAtZNeg2 + "\t-2\t-2\t\t\t" + precursorRTWindow + "\t" + precursorCE + "\t" + note + "\t\t\t" + precursorDT + "\t" + highEnergyDtOffset, // Explicit retention time window without retention time
+            TestError(line1 + line2start + +precursorMzAtZNeg2 + "\t" + productMzAtZNeg2 + "\t-2\t-2\t\t\t" + precursorRTWindow + "\t" + explicitCE + "\t" + note + "\t\t\t" + precursorDT + "\t" + highEnergyDtOffset, // Explicit retention time window without retention time
                 Resources.Peptide_ExplicitRetentionTimeWindow_Explicit_retention_time_window_requires_an_explicit_retention_time_value_, fullColumnOrder);
             TestError(line5.Replace("[M-2H]", "[M+H]"), string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Adduct__0__charge__1__does_not_agree_with_declared_charge__2_, "[M+H]", 1, -2), fullColumnOrder);
             TestError(line6, string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Adduct__0__charge__1__does_not_agree_with_declared_charge__2_, "M-3H", -3, -2), fullColumnOrder);
@@ -288,16 +289,16 @@ namespace pwiz.SkylineTestFunctional
                 var transitionGroup = testTransitionGroups[0];
                 var precursor = docTest.Molecules.First();
                 var product = transitionGroup.Transitions.First();
-                Assert.AreEqual(precursorCE, transitionGroup.ExplicitValues.CollisionEnergy);
+                Assert.AreEqual(explicitCE, product.ExplicitValues.CollisionEnergy);
                 Assert.AreEqual(expectedIM, transitionGroup.ExplicitValues.IonMobility);
                 Assert.AreEqual(expectedTypeIM, transitionGroup.ExplicitValues.IonMobilityUnits);
                 Assert.AreEqual(precursorCCS, transitionGroup.ExplicitValues.CollisionalCrossSectionSqA);
-                Assert.AreEqual(slens, transitionGroup.ExplicitValues.SLens);
-                Assert.AreEqual(coneVoltage, transitionGroup.ExplicitValues.ConeVoltage);
+                Assert.AreEqual(slens, product.ExplicitValues.SLens);
+                Assert.AreEqual(coneVoltage, product.ExplicitValues.ConeVoltage);
                 Assert.AreEqual(expectedCV, transitionGroup.ExplicitValues.CompensationVoltage);
-                Assert.AreEqual(declusteringPotential, transitionGroup.ExplicitValues.DeclusteringPotential);
+                Assert.AreEqual(declusteringPotential, product.ExplicitValues.DeclusteringPotential);
                 Assert.AreEqual(note, product.Annotations.Note);
-                Assert.AreEqual(highEnergyDtOffset, transitionGroup.ExplicitValues.IonMobilityHighEnergyOffset.Value, 1E-7);
+                Assert.AreEqual(highEnergyDtOffset, product.ExplicitValues.IonMobilityHighEnergyOffset.Value, 1E-7);
                 Assert.AreEqual(precursorRT, precursor.ExplicitRetentionTime.RetentionTime);
                 Assert.AreEqual(precursorRTWindow, precursor.ExplicitRetentionTime.RetentionTimeWindow);
                 Assert.IsTrue(ReferenceEquals(transitionGroup.TransitionGroup, product.Transition.Group));
@@ -531,7 +532,7 @@ namespace pwiz.SkylineTestFunctional
             var cvValueStr = asDriftTime ? string.Empty : compensationVoltage.ToString(CultureInfo.CurrentCulture);
             return "MyMolecule\tMyMol\tMyFrag\t" + caffeineFormula + "\t" + caffeineFragment + "\t" +
                            precursorMzAtZNeg2 + "\t" + productMzAtZNeg2 + "\t-2\t-2\tlight\t" +
-                           precursorRT + "\t" + precursorRTWindow + "\t" + precursorCE + "\t" + note + "\t\t\t" + dtValueStr +
+                           precursorRT + "\t" + precursorRTWindow + "\t" + explicitCE + "\t" + note + "\t\t\t" + dtValueStr +
                            "\t" + highEnergyDtOffset + "\t" + precursorCCS + "\t" + slens + "\t" + coneVoltage +
                            "\t" + cvValueStr + "\t" + declusteringPotential + "\t" + caffeineInChiKey + "\t" +
                            caffeineHMDB + "\t" + caffeineInChi + "\t" + caffeineCAS + "\t" + caffeineSMILES
@@ -675,7 +676,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.Document.MoleculeTransitions.First().Note.Equals(noteText)));
 
                 // Simulate user editing the peptide in the document grid
-                RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides));
+                RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Molecules));
                 WaitForCondition(() => (documentGrid.RowCount == 8));  // Let it initialize
                 const double explicitRT = 123.45;
                 var colRT = FindDocumentGridColumn(documentGrid, "ExplicitRetentionTime");
@@ -692,10 +693,10 @@ namespace pwiz.SkylineTestFunctional
                 // Simulate user editing the precursor in the document grid, also check for molecule IDs
                 EnableDocumentGridColumns(documentGrid, Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors, 16, new[] {
                     "Proteins!*.Peptides!*.Precursors!*.ExplicitIonMobility",
-                    "Proteins!*.Peptides!*.Precursors!*.ExplicitIonMobilityHighEnergyOffset",
+                    "Proteins!*.Peptides!*.Precursors!*.Transitions!*.ExplicitIonMobilityHighEnergyOffset",
                     "Proteins!*.Peptides!*.Precursors!*.ExplicitCollisionalCrossSection",
-                    "Proteins!*.Peptides!*.Precursors!*.ExplicitCollisionEnergy",
-                    "Proteins!*.Peptides!*.Precursors!*.ExplicitDeclusteringPotential",
+                    "Proteins!*.Peptides!*.Precursors!*.Transitions!*.ExplicitCollisionEnergy",
+                    "Proteins!*.Peptides!*.Precursors!*.Transitions!*.ExplicitDeclusteringPotential",
                     "Proteins!*.Peptides!*.Precursors!*.ExplicitCompensationVoltage",
                     "Proteins!*.Peptides!*.InChiKey",
                     "Proteins!*.Peptides!*.InChI",
@@ -703,26 +704,26 @@ namespace pwiz.SkylineTestFunctional
                     "Proteins!*.Peptides!*.SMILES",
                     "Proteins!*.Peptides!*.CAS"});
 
-                const double explicitCE = 123.45;
+                const double explicitCE2= 123.45;
                 var colCE = FindDocumentGridColumn(documentGrid, "ExplicitCollisionEnergy");
-                RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colCE.Index].Value = explicitCE);
+                RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colCE.Index].Value = explicitCE2);
                 WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
-                  SkylineWindow.Document.MoleculeTransitionGroups.First().ExplicitValues.CollisionEnergy.Equals(explicitCE)));
+                  SkylineWindow.Document.MoleculeTransitions.First().ExplicitValues.CollisionEnergy.Equals(explicitCE2)));
 
                 const double explicitDP = 12.345;
                 var colDP = FindDocumentGridColumn(documentGrid, "ExplicitDeclusteringPotential");
                 RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colDP.Index].Value = explicitDP);
                 WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
-                  SkylineWindow.Document.MoleculeTransitionGroups.First().ExplicitValues.DeclusteringPotential.Equals(explicitDP)));
+                  SkylineWindow.Document.MoleculeTransitions.First().ExplicitValues.DeclusteringPotential.Equals(explicitDP)));
 
                 const double explicitCV = 13.45;
-                var colCV = FindDocumentGridColumn(documentGrid, "ExplicitCompensationVoltage");
+                var colCV = FindDocumentGridColumn(documentGrid, "Precursor.ExplicitCompensationVoltage");
                 RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colCV.Index].Value = explicitCV);
                 WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
                   SkylineWindow.Document.MoleculeTransitionGroups.First().ExplicitValues.CompensationVoltage.Equals(explicitCV)));
 
                 const double explicitDT = 23.465;
-                var colDT = FindDocumentGridColumn(documentGrid, "ExplicitIonMobility");
+                var colDT = FindDocumentGridColumn(documentGrid, "Precursor.ExplicitIonMobility");
                 RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colDT.Index].Value = explicitDT);
                 WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
                   SkylineWindow.Document.MoleculeTransitionGroups.First().ExplicitValues.IonMobility.Equals(explicitDT)));
@@ -731,35 +732,35 @@ namespace pwiz.SkylineTestFunctional
                 var colDTOffset = FindDocumentGridColumn(documentGrid, "ExplicitIonMobilityHighEnergyOffset");
                 RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colDTOffset.Index].Value = explicitDTOffset);
                 WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
-                  SkylineWindow.Document.MoleculeTransitionGroups.First().ExplicitValues.IonMobilityHighEnergyOffset.Equals(explicitDTOffset)));
+                  SkylineWindow.Document.MoleculeTransitions.First().ExplicitValues.IonMobilityHighEnergyOffset.Equals(explicitDTOffset)));
 
                 const double explicitCCS = 345.6;
-                var colCCS = FindDocumentGridColumn(documentGrid, "ExplicitCollisionalCrossSection");
+                var colCCS = FindDocumentGridColumn(documentGrid, "Precursor.ExplicitCollisionalCrossSection");
                 RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colCCS.Index].Value = explicitCCS);
                 WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
                   SkylineWindow.Document.MoleculeTransitionGroups.First().ExplicitValues.CollisionalCrossSectionSqA.Equals(explicitCCS)));
 
-            var colInChiKey = FindDocumentGridColumn(documentGrid, "Peptide.InChiKey");
+            var colInChiKey = FindDocumentGridColumn(documentGrid, "Precursor.Peptide.InChiKey");
             var reportedInChiKey = string.Empty;
             RunUI(() => reportedInChiKey = documentGrid.DataGridView.Rows[0].Cells[colInChiKey.Index].Value.ToString());
             Assume.AreEqual(caffeineInChiKey, reportedInChiKey, "unexpected molecule inchikey");
 
-            var colInChI = FindDocumentGridColumn(documentGrid, "Peptide.InChI");
+            var colInChI = FindDocumentGridColumn(documentGrid, "Precursor.Peptide.InChI");
             var reportedInChI = string.Empty;
             RunUI(() => reportedInChI = documentGrid.DataGridView.Rows[0].Cells[colInChI.Index].Value.ToString());
             Assume.AreEqual(caffeineInChi.Substring(6), reportedInChI, "unexpected molecule inchi");
 
-            var colHMDB = FindDocumentGridColumn(documentGrid, "Peptide.HMDB");
+            var colHMDB = FindDocumentGridColumn(documentGrid, "Precursor.Peptide.HMDB");
             var reportedHMDB = string.Empty;
             RunUI(() => reportedHMDB = documentGrid.DataGridView.Rows[0].Cells[colHMDB.Index].Value.ToString());
             Assume.AreEqual(caffeineHMDB.Substring(4), reportedHMDB, "unexpected molecule hmdb");
 
-            var colCAS = FindDocumentGridColumn(documentGrid, "Peptide.CAS");
+            var colCAS = FindDocumentGridColumn(documentGrid, "Precursor.Peptide.CAS");
             var reportedCAS = string.Empty;
             RunUI(() => reportedCAS = documentGrid.DataGridView.Rows[0].Cells[colCAS.Index].Value.ToString());
             Assume.AreEqual(caffeineCAS, reportedCAS, "unexpected molecule cas");
 
-            var colSMILES = FindDocumentGridColumn(documentGrid, "Peptide.SMILES");
+            var colSMILES = FindDocumentGridColumn(documentGrid, "Precursor.Peptide.SMILES");
             var reportedSMILES = string.Empty;
             RunUI(() => reportedSMILES = documentGrid.DataGridView.Rows[0].Cells[colSMILES.Index].Value.ToString());
             Assume.AreEqual(caffeineSMILES, reportedSMILES, "unexpected molecule smiles");
@@ -1171,6 +1172,34 @@ namespace pwiz.SkylineTestFunctional
             NewDocument();
         }
 
+        private void TestPerTransitionValues()
+        {
+            // Test our handling of fragments with unique explicit values
+            var docOrig = NewDocument();
+            const string precursorsTransitionList =
+                "Molecule List Name,Molecule,Label Type,Precursor m/z,Precursor Charge,Product m/z,Product Charge,Explicit Collision Energy,Explicit Retention Time\n" +
+                "ThompsonIS,Apain,light,452,1,384,1,20,1\n" +
+                "ThompsonIS,Apain,light,452,1,188,1,25,1\n" +
+                "ThompsonIS,Apain,heavy,455,1,387,1,20,1\n" +
+                "ThompsonIS,Apain,heavy,455,1,191,1,25,1\n";
+            SetClipboardText(precursorsTransitionList);
+
+            // Paste directly into targets area
+            RunUI(() => SkylineWindow.Paste());
+
+            var pastedDoc = WaitForDocumentChange(docOrig);
+            Assume.AreEqual(1, pastedDoc.MoleculeGroupCount);
+            Assume.AreEqual(1, pastedDoc.MoleculeCount);
+            var precursors = pastedDoc.MoleculeTransitionGroups.ToArray();
+            Assume.IsTrue(!precursors[0].PrecursorAdduct.HasIsotopeLabels);
+            Assume.IsTrue(precursors[1].PrecursorAdduct.HasIsotopeLabels);
+            var transitions = pastedDoc.MoleculeTransitions.ToArray();
+            Assume.AreEqual(2, transitions.Count(t => t.ExplicitValues.CollisionEnergy == 20));
+            Assume.AreEqual(2, transitions.Count(t => t.ExplicitValues.CollisionEnergy == 25));
+            TestTransitionListOutput(pastedDoc, "per_trans.csv", "per_trans_expected.csv", ExportFileType.List);
+            NewDocument();
+        }
+
         private void TestTransitionListOutput(SrmDocument importDoc, string outputName, string expectedName, ExportFileType fileType)
         {
             // Write out a transition list
@@ -1185,7 +1214,6 @@ namespace pwiz.SkylineTestFunctional
                 {
                     exportMethodDlg.InstrumentType = ExportInstrumentType.AGILENT_TOF;
                     exportMethodDlg.ExportStrategy = ExportStrategy.Single;
-                    exportMethodDlg.OptimizeType = ExportOptimize.CE;
                     exportMethodDlg.MethodType = ExportMethodType.Standard;
                 });
             }
@@ -1199,7 +1227,9 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(exportMethodDlg, () => exportMethodDlg.OkDialog(csvPath));
 
             // Check for expected output.
-            var csvOut = File.ReadAllText(csvPath);
+            var csvOut = File.ReadAllText(csvPath).
+                Replace("_","."). // Watch out for alternate fragment format in culture "fr"
+                Replace(Resources.CustomIon_DisplayName_Ion, "Ion"); // Watch out for L10N of display name
             var csvExpected = File.ReadAllText(csvExpectedPath);
             AssertEx.FieldsEqual(csvExpected, csvOut, 0.0000011);
         }

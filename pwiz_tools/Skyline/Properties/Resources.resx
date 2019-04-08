@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -3612,9 +3612,6 @@ Are you sure you want to continue?</value>
   <data name="NextGenStandardSignalNoiseCalc_Name_Standard_signal_to_noise" xml:space="preserve">
     <value>Standard signal to noise</value>
   </data>
-  <data name="NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatograms_from__0__full_scan_settings_must_be_enabled_" xml:space="preserve">
-    <value>To extract chromatograms from {0} full-scan settings must be enabled.</value>
-  </data>
   <data name="SkylineWindow_ModifyPeptide_Modify__0__" xml:space="preserve">
     <value>Modify {0}</value>
   </data>
@@ -6201,7 +6198,7 @@ If you prefer you can choose to report anonymously.</value>
     <value>The sequence '{0}' is not a valid modified peptide sequence.</value>
   </data>
   <data name="SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List" xml:space="preserve">
-    <value>Molecule Transition List</value>
+    <value>Small Molecule Transition List</value>
   </data>
   <data name="StartPage_getBoxPanels_" xml:space="preserve">
     <value>Get hands-on experience starting with a broad set of SRM measurements, importing instrument data, and refining the document. Start with an unrefined document requiring over 2000 transitions and 39 injections to measure unscheduled on a Thermo TSQ. Learn how to import all 39 injections into a single replicate. Use a hydrophobicity to retention time regression and ms/ms spectral library peak intensity correlation to improve confidence in measured peaks. Use the Skyline refinement dialog to remove all but the best transitions for the highest confidence peaks. Step through the scheduling process to reduce the document to a transition list that can be measured in a single injection. Import and view multiple replicates of the single-injection method.</value>
@@ -10380,6 +10377,9 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="RemovePeptides_MenuItemText_Remove_Peptide_Peaks___" xml:space="preserve">
     <value>Remove Peptide Peaks...</value>
   </data>
+  <data name="RemovePeptides_MenuItemText_Remove_Molecule_Peaks___" xml:space="preserve">
+    <value>Remove Molecule Peaks...</value>
+  </data>
   <data name="RemoveTransitions_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_transition_peak_" xml:space="preserve">
     <value>Are you sure you want to remove this transition peak?</value>
   </data>
@@ -10404,6 +10404,9 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="DeletePeptides_MenuItemText_Delete_Peptides___" xml:space="preserve">
     <value>Delete Peptides...</value>
   </data>
+  <data name="DeletePeptides_GetMenuItemText_Delete_Molecules___" xml:space="preserve">
+    <value>Delete Molecules...</value>
+  </data>
   <data name="DeletePrecursors_MenuItemText_Delete_Precursors___" xml:space="preserve">
     <value>Delete Precursors...</value>
   </data>
@@ -10415,6 +10418,9 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="DeleteProteins_MenuItemText_Delete_Proteins___" xml:space="preserve">
     <value>Delete Proteins...</value>
+  </data>
+  <data name="DeleteProteins_MenuItemText_Delete_Molecule_Lists___" xml:space="preserve">
+    <value>Delete Molecule Lists...</value>
   </data>
   <data name="TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0___" xml:space="preserve">
     <value>Unable to resolve molecule from '{0}'.</value>
@@ -10512,5 +10518,45 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="CommandLine_LogDocumentDelta_Added___0_" xml:space="preserve">
     <value>Added: {0}</value>
+  </data>
+  <data name="SkylineViewContext_GetDocumentGridRowSources_Molecule_Lists" xml:space="preserve">
+    <value>Molecule Lists</value>
+  </data>
+  <data name="SkylineViewContext_GetDocumentGridRowSources_Molecules" xml:space="preserve">
+    <value>Molecules</value>
+  </data>
+  <data name="Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_molecule_list___0___" xml:space="preserve">
+    <value>Are you sure you want to delete the molecule list '{0}'?</value>
+  </data>
+  <data name="Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__molecule_lists_" xml:space="preserve">
+    <value>Are you sure you want to delete these {0} molecule lists?</value>
+  </data>
+  <data name="RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_molecule_peak_" xml:space="preserve">
+    <value>Are you sure you want to remove this molecule peak?</value>
+  </data>
+  <data name="RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_molecule_" xml:space="preserve">
+    <value>Are you sure you want to remove these {0} peaks from one molecule?</value>
+  </data>
+  <data name="RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__molecules_" xml:space="preserve">
+    <value>Are you sure you want to remove these {0} peaks from {1} molecules?</value>
+  </data>
+  <data name="SkylineDataSchema_GetTypeDescription_Item_in_list___0__" xml:space="preserve">
+    <value>Item in list '{0}'</value>
+  </data>
+  <data name="Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_molecule___0___" xml:space="preserve">
+    <value>Are you sure you want to delete the molecule '{0}'?</value>
+  </data>
+  <data name="Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__molecules_" xml:space="preserve">
+    <value>Are you sure you want to delete these {0} molecules?</value>
+  </data>
+  <data name="TransitionSettingsControl_ValidateAdductListTextBox__0__must_contain_a_comma_separated_list_of_integers_describing_charge_states_between__1__and__2__" xml:space="preserve">
+    <value>{0} must contain a comma separated list of integers describing charge states between {1} and {2}.</value>
+  </data>
+  <data name="SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filename_extension_and_are_in_XML_format_" xml:space="preserve">
+    <value>The file you are trying to open ("{0}") does not appear to be a Skyline document. Skyline documents normally have a "{1}" or "{2}" filename extension and are in XML format.</value>
+  </data>
+  <data name="NoFullScanFilteringException_NoFullScanFilteringException_The_file__0__does_not_contain_SRM_MRM_chromatograms__To_extract_chromatograms_from_its_spectra__go_to_Settings___Transition_Settings___Full_Scan_and_choose_options_appropriate_to_the_acquisition_method_used_" xml:space="preserve">
+    <value>The file {0} does not contain SRM/MRM chromatograms. To extract chromatograms from its spectra, go to Settings &gt; Transition Settings &gt; Full-Scan and choose options appropriate to the acquisition method used.</value>
+    <comment>replaces NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatograms_from__0__full_scan_settings_must_be_enabled_</comment>
   </data>
 </root>

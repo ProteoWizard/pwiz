@@ -466,6 +466,8 @@ namespace pwiz.Skyline.Model.Results
 
         public SampleType SampleType { get; private set; }
 
+        public string BatchName { get; private set; }
+
         #region Property change methods
 
         public ChromatogramSet ChangeMSDataFileInfos(IList<ChromFileInfo> prop)
@@ -583,6 +585,11 @@ namespace pwiz.Skyline.Model.Results
         public ChromatogramSet ChangeDilutionFactor(double dilutionFactor)
         {
             return ChangeProp(ImClone(this), im => im.SampleDilutionFactor = dilutionFactor);
+        }
+
+        public ChromatogramSet ChangeBatchName(string batchName)
+        {
+            return ChangeProp(ImClone(this), im => im.BatchName = string.IsNullOrEmpty(batchName) ? null : batchName);
         }
 
         #endregion

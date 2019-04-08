@@ -32,7 +32,7 @@ namespace pwiz.Common.DataBinding
     {
         private readonly IDictionary<PropertyPath, ColumnDescriptor> _columnDescriptors = new Dictionary<PropertyPath, ColumnDescriptor>();
         
-        public ViewInfo(DataSchema dataSchema, Type rootType, ViewSpec viewSpec) : this(ColumnDescriptor.RootColumn(dataSchema, rootType), viewSpec)
+        public ViewInfo(DataSchema dataSchema, Type rootType, ViewSpec viewSpec) : this(ColumnDescriptor.RootColumn(dataSchema, rootType, viewSpec.UiMode), viewSpec)
         {
         }
 
@@ -89,6 +89,7 @@ namespace pwiz.Common.DataBinding
                 .SetName(Name)
                 .SetRowSource(RowSourceName)
                 .SetSublistId(SublistId)
+                .SetUiMode(ParentColumn.UiMode)
                 .SetColumns(DisplayColumns.Select(dc=>dc.ColumnSpec))
                 .SetFilters(Filters.Select(filterInfo=>filterInfo.FilterSpec));
         }

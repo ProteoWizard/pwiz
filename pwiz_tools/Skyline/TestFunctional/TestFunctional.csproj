@@ -156,6 +156,7 @@
     <Compile Include="AuditLogTest.cs" />
     <Compile Include="AutoSelectTest.cs" />
     <Compile Include="BackgroundEventThreadsTest.cs" />
+    <Compile Include="BatchCalibrationTest.cs" />
     <Compile Include="BlibIrtTest.cs" />
     <Compile Include="CalibrationScenariosTest.cs" />
     <Compile Include="CalibrationTest.cs" />
@@ -165,6 +166,7 @@
     <Compile Include="ChromGraphTransformTest.cs" />
     <Compile Include="ChromUITest.cs" />
     <Compile Include="DisplayLanguageTest.cs" />
+    <Compile Include="DocumentGridChromatogramDataTest.cs" />
     <Compile Include="DuplicateTransitionGroupTest.cs" />
     <Compile Include="EncyclopeDiaScoreTest.cs" />
     <Compile Include="ExplicitPeakScoreTest.cs" />
@@ -365,6 +367,7 @@
     <None Include="AssayLibraryImportTest.zip" />
     <None Include="AuditLogSavingTest.zip" />
     <None Include="BackgroundProteomeTest.zip" />
+    <None Include="BatchCalibrationTest.zip" />
     <None Include="CalibrationScenariosTest.zip" />
     <None Include="CalibrationTest.zip" />
     <None Include="CancelExportReportTest.zip" />
@@ -373,6 +376,7 @@
     <None Include="ChromUITest.zip" />
     <None Include="ConfigureToolsDlgTest.zip" />
     <None Include="CopyPasteTest.zip" />
+    <None Include="DocumentGridChromatogramDataTest.zip" />
     <None Include="DocumentGridTest.zip" />
     <None Include="DocumentSizeErrorTest.zip" />
     <None Include="DuplicateTransitionGroupTest.zip" />

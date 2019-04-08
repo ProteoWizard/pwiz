@@ -27,7 +27,7 @@ namespace pwiz.Common.DataBinding.Attributes
     /// IDictionary.)
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
-    public class OneToManyAttribute : Attribute
+    public class OneToManyAttribute : InUiModesAttribute
     {
         /// <summary>
         /// Specifies the name of a property on the Item class

@@ -160,7 +160,7 @@ namespace pwiz.Skyline.Model
                 massH = calc.GetFragmentMass(tranNew, isotopeDist);
             }
             var isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(tranNew, losses, isotopeDist);
-            var nodeTranMatching = new TransitionDocNode(tranNew, losses, massH, new TransitionDocNode.TransitionQuantInfo(isotopeDistInfo, libInfo, nodeTran.IsQuantitative(settings)));
+            var nodeTranMatching = new TransitionDocNode(tranNew, losses, massH, new TransitionDocNode.TransitionQuantInfo(isotopeDistInfo, libInfo, nodeTran.IsQuantitative(settings)), nodeTran.ExplicitValues);
             return nodeTranMatching;
         }
 
@@ -285,7 +285,7 @@ namespace pwiz.Skyline.Model
                         continue;
                     var tran = new Transition(this, measuredIon.Adduct, null, measuredIon.SettingsCustomIon);
                     var mass = settings.GetFragmentMass(null, null, tran, null);
-                    var nodeTran = new TransitionDocNode(tran, null, mass, TransitionDocNode.TransitionQuantInfo.DEFAULT);
+                    var nodeTran = new TransitionDocNode(tran, null, mass, TransitionDocNode.TransitionQuantInfo.DEFAULT, ExplicitTransitionValues.EMPTY);
                     if (minMz <= nodeTran.Mz && nodeTran.Mz <= maxMz)
                         yield return nodeTran;
                 }
@@ -653,7 +653,7 @@ namespace pwiz.Skyline.Model
             Transition transition = new Transition(this, massIndex, customMolecule);
             var quantInfo = TransitionDocNode.TransitionQuantInfo.GetLibTransitionQuantInfo(transition, losses,
                 Transition.CalcMass(precursorMassH, losses), transitionRanks).ChangeIsotopeDistInfo(isotopeDistInfo);
-            var transitionDocNode = new TransitionDocNode(transition, losses, precursorMassH, quantInfo);
+            var transitionDocNode = new TransitionDocNode(transition, losses, precursorMassH, quantInfo, ExplicitTransitionValues.EMPTY);
             if (massIndex < 0)
             {
                 transitionDocNode = transitionDocNode.ChangeQuantitative(false);
@@ -666,7 +666,7 @@ namespace pwiz.Skyline.Model
         {
             Transition transition = new Transition(this, type, cleavageOffset, 0, charge, null, customMolecule);
             var info = TransitionDocNode.TransitionQuantInfo.GetLibTransitionQuantInfo(transition, losses, Transition.CalcMass(massH, losses), transitionRanks);
-            return new TransitionDocNode(transition, losses, massH, info);
+            return new TransitionDocNode(transition, losses, massH, info, ExplicitTransitionValues.EMPTY);
         }
 
         /// <summary>

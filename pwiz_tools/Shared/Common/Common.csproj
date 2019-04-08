@@ -133,7 +133,6 @@
     <Compile Include="Database\SqliteOperations.cs" />
     <Compile Include="DataBinding\AbstractViewContext.cs" />
     <Compile Include="DataBinding\AggregateOperation.cs" />
-    <Compile Include="DataBinding\Attributes\AdvancedAttribute.cs" />
     <Compile Include="DataBinding\Attributes\ColumnCaptionAttribute.cs" />
     <Compile Include="DataBinding\Attributes\ExpensiveAttribute.cs" />
     <Compile Include="DataBinding\Attributes\InvariantDisplayNameAttribute.cs" />
@@ -142,6 +141,8 @@
     <Compile Include="DataBinding\Attributes\DataGridViewColumnTypeAttribute.cs" />
     <Compile Include="DataBinding\Attributes\FormatAttribute.cs" />
     <Compile Include="DataBinding\Attributes\OneToManyAttribute.cs" />
+    <Compile Include="DataBinding\Attributes\UiModeAttribute.cs" />
+    <Compile Include="DataBinding\Attributes\HiddenAttribute.cs" />
     <Compile Include="DataBinding\ChainedPropertyDescriptor.cs" />
     <Compile Include="DataBinding\CollectionInfo.cs" />
     <Compile Include="DataBinding\ColumnFormats.cs" />
@@ -276,6 +277,7 @@
     <Compile Include="DataBinding\Internal\Pivoter.cs" />
     <Compile Include="DataBinding\Internal\QueryRequestor.cs" />
     <Compile Include="DataBinding\Internal\QueryResults.cs" />
+    <Compile Include="DataBinding\IUiModeInfo.cs" />
     <Compile Include="DataBinding\Layout\RowFilter.cs" />
     <Compile Include="DataBinding\Internal\RowSourceWrapper.cs" />
     <Compile Include="DataBinding\IRowSource.cs" />
@@ -504,6 +506,8 @@
     <None Include="Resources\up-pro32.bmp" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Resources\HiddenColumns.bmp" />
+    <Content Include="Resources\UnknownUiMode.png" />
     <EmbeddedResource Include="DataBinding\Documentation\DocumentationGenerator.css" />
     <Content Include="Resources\agg_mean.bmp" />
     <Content Include="Resources\agg_median.bmp" />

@@ -129,7 +129,7 @@ void TSVReader::parseHeader() {
     for (vector<TSVColumnTranslator>::iterator i = targetColumns_.begin(); i != targetColumns_.end(); i++) {
         if (i->position_ < 0) {
             if (i->name_ != "m_score") {
-                throw BlibException(false, "Did not find required column '%s'", i->name_.c_str());
+                throw BlibException(false, "Did not find required column '%s'. Only OpenSWATH .tsv files are supported.", i->name_.c_str());
             } else {
                 if (scoreThreshold_ < 1) {
                     throw BlibException(false,

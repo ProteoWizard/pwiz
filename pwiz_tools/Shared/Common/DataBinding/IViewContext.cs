@@ -67,5 +67,6 @@ namespace pwiz.Common.DataBinding
         int GetImageIndex(ViewSpec viewSpec);
         event Action ViewsChanged;
         DataSchema DataSchema { get; }
+        IEnumerable<IUiModeInfo> AvailableUiModes { get; }
     }
 }

@@ -7,6 +7,26 @@ namespace pwiz.Skyline.Model.Databinding
     {
         private Tuple<Key, ChromatogramGroupInfo> _withoutPoints;
         private Tuple<Key, ChromatogramGroupInfo> _withPoints;
+        private Tuple<Key, MsDataFileScanIds> _scanIds;
+
+        public MsDataFileScanIds GetScanIds(SrmDocument document, MsDataFileUri msDataFileUri)
+        {
+            var key = new Key(document, null, msDataFileUri, IdentityPath.ROOT);
+            if (_scanIds != null && Equals(key, _scanIds.Item1))
+            {
+                return _scanIds.Item2;
+            }
+
+            var measuredResults = document.MeasuredResults;
+            if (measuredResults == null)
+            {
+                return null;
+            }
+
+            var msDataFileScanIds = measuredResults.LoadMSDataFileScanIds(msDataFileUri);
+            _scanIds = Tuple.Create(key, msDataFileScanIds);
+            return msDataFileScanIds;
+        }
 
         public ChromatogramGroupInfo GetChromatogramGroupInfo(SrmDocument document, 
             ChromatogramSet chromatogramSet, MsDataFileUri filePath,
