@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -390,10 +391,42 @@ namespace pwiz.SkylineTestUtil
             var verStart = xmlText.IndexOf("format_version=\"", StringComparison.Ordinal) + 16;
             string schemaVer = xmlText.Substring(verStart, xmlText.Substring(verStart).IndexOf("\"", StringComparison.Ordinal));
             // ReSharper restore LocalizableElement
+
+            ValidatesAgainstSchema(xmlText, "Skyline_" + schemaVer);
+        }
+
+        [Localizable(false)]
+        public static void ValidateAuditLogAgainstSchema(string xmlText)
+        {
+            int documentHashIndex = xmlText.IndexOf("document_hash", StringComparison.Ordinal);
+            int formatVersionIndex = xmlText.IndexOf("format_version=\"", StringComparison.Ordinal);
+
+            string version = "0";
+            if (documentHashIndex < 0)
+                Assert.Fail("Invalid Audit Log. No audit_log tag found");
+            if (formatVersionIndex > 0 && formatVersionIndex < documentHashIndex)
+            {
+                version = xmlText.Substring(formatVersionIndex + 16,
+                    xmlText.Substring(formatVersionIndex + 16).IndexOf("\"", StringComparison.Ordinal));
+            }
+
+            // While a change in Skyline schema is often associated with change in audit log
+            // schema, it's not always the case
+            if (double.Parse(version, CultureInfo.InvariantCulture) > 4.21)
+            {
+                version = "4.21";
+            }
+
+            ValidatesAgainstSchema(xmlText, "AuditLog.Skyl_" + version);
+        }
+
+
+        public static void ValidatesAgainstSchema(string xmlText, string xsdName)
+        {
             var assembly = Assembly.GetAssembly(typeof(AssertEx));
-            var schemaFileName = typeof(AssertEx).Namespace + String.Format(CultureInfo.InvariantCulture, @".Schemas.Skyline_{0}.xsd", schemaVer);
-            var schemaFile = assembly.GetManifestResourceStream(schemaFileName);   
-            Assert.IsNotNull(schemaFile, "could not locate a schema file called "+schemaFileName);
+            var schemaFileName = typeof(AssertEx).Namespace + String.Format(CultureInfo.InvariantCulture, @".Schemas.{0}.xsd", xsdName);
+            var schemaFile = assembly.GetManifestResourceStream(schemaFileName);
+            Assert.IsNotNull(schemaFile, "could not locate a schema file called " + schemaFileName);
             using (var schemaReader = new XmlTextReader(schemaFile))
             {
                 var schema = XmlSchema.Read(schemaReader, OldSchemaValidationCallBack);
@@ -935,6 +968,14 @@ namespace pwiz.SkylineTestUtil
             Cloned(target.TransitionSettings.Instrument, copy.TransitionSettings.Instrument, defTran.Instrument);
             Cloned(target.TransitionSettings.FullScan, copy.TransitionSettings.FullScan, defTran.FullScan);
             Cloned(target.TransitionSettings, copy.TransitionSettings);
+            var defData = defSet.DataSettings;
+            Cloned(target.DataSettings.AnnotationDefs, copy.DataSettings.AnnotationDefs, defData.AnnotationDefs);
+            Cloned(target.DataSettings.GroupComparisonDefs, copy.DataSettings.GroupComparisonDefs, defData.GroupComparisonDefs);
+            Cloned(target.DataSettings.Lists, copy.DataSettings.Lists, defData.Lists);
+            Cloned(target.DataSettings.ViewSpecList, copy.DataSettings.ViewSpecList, defData.ViewSpecList);
+            Assert.AreEqual(target.DataSettings, copy.DataSettings);  // Might both by DataSettings.DEFAULT
+            if (!DataSettings.DEFAULT.Equals(target.DataSettings))
+                Assert.AreNotSame(target.DataSettings, copy.DataSettings);
             Cloned(target, copy);
         }
 

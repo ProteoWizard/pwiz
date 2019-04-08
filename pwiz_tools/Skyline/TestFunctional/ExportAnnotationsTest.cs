@@ -78,7 +78,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(()=>documentGrid.ChooseView(Resources.SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List));
             WaitForConditionUI(() => documentGrid.IsComplete);
             var colExplicitCollisionEnergy =
-                documentGrid.FindColumn(PropertyPath.Root.Property("Precursor").Property("ExplicitCollisionEnergy"));
+                documentGrid.FindColumn(PropertyPath.Parse("ExplicitCollisionEnergy"));
             // The three columns we want to paste into are all next to each other. The first two rows belong
             // to the same Precursor. Set the focus to the second row, and the first column that we are pasting into
             RunUI(() =>
@@ -103,7 +103,7 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// Export the "ExplicitCollisionEnerge", "ExplicitRetentionTime" and "ExplicitRetentionTimeWindow" properties.
+        /// Export the "ExplicitCollisionEnergy", "ExplicitRetentionTime" and "ExplicitRetentionTimeWindow" properties.
         /// </summary>
         private void ExportProperties(string filename)
         {

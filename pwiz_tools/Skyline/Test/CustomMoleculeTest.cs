@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
@@ -39,14 +40,19 @@ namespace pwiz.SkylineTest
             });
             var smallMoleculeLibraryAttributes = 
                 SmallMoleculeLibraryAttributes.Create("MyMolecule", "H2O", "MyInChiKey", moleculeAccessionNumbers.GetNonInChiKeys());
-            var customMolecule = new CustomMolecule(smallMoleculeLibraryAttributes);
-            var target = new Target(customMolecule);
-            var serializableString = target.ToSerializableString();
+            for (var loop = 0; loop < 2; loop++)
+            {
+                var customMolecule = CustomMolecule.FromSmallMoleculeLibraryAttributes(smallMoleculeLibraryAttributes);
+                var target = new Target(customMolecule);
+                var serializableString = target.ToSerializableString();
 
-            var roundTrip = Target.FromSerializableString(serializableString);
-            Assert.AreEqual(target, roundTrip);
-            Assert.AreEqual(customMolecule, roundTrip.Molecule);
-            Assert.AreEqual(customMolecule.AccessionNumbers, roundTrip.Molecule.AccessionNumbers);
+                var roundTrip = Target.FromSerializableString(serializableString);
+                Assert.AreEqual(target, roundTrip);
+                Assert.AreEqual(customMolecule, roundTrip.Molecule);
+                Assert.AreEqual(customMolecule.AccessionNumbers, roundTrip.Molecule.AccessionNumbers);
+                smallMoleculeLibraryAttributes = // Masses instead of formula
+                    SmallMoleculeLibraryAttributes.Create("MyMolecule", null, new TypedMass(123.4, MassType.Monoisotopic), new TypedMass(123.45, MassType.Average), "MyInChiKey", moleculeAccessionNumbers.GetNonInChiKeys());
+            }
         }
     }
 }

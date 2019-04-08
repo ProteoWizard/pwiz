@@ -1080,7 +1080,7 @@ from the document.</value>
   </data>
   <data name="textRTRegressionThreshold.ToolTip" xml:space="preserve">
     <value>Precursors will be removed from the document
-until the target value for the risiduals of a linear
+until the target value for the correlation coefficient of a linear
 regression with the optimal retention time calculator
 exceed this threshold.</value>
   </data>

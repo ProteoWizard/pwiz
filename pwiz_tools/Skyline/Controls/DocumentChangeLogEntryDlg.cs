@@ -8,13 +8,9 @@ namespace pwiz.Skyline.Controls
 {
     public partial class DocumentChangeLogEntryDlg : FormEx
     {
-        private readonly SrmDocument _doc;
-
-        public DocumentChangeLogEntryDlg(SrmDocument doc)
+        public DocumentChangeLogEntryDlg()
         {
             InitializeComponent();
-
-            _doc = doc;
         }
 
         public AuditLogEntry Entry { get; private set; }
@@ -22,8 +18,8 @@ namespace pwiz.Skyline.Controls
         public void OkDialog()
         {
             Entry = string.IsNullOrEmpty(logMessageTextBox.Text)
-                ? AuditLogEntry.GetUndocumentedChangeEntry(_doc)
-                : AuditLogEntry.CreateSimpleEntry(_doc, MessageType.modified_outside_of_skyline, logMessageTextBox.Text);
+                ? AuditLogEntry.CreateUndocumentedChangeEntry()
+                : AuditLogEntry.CreateSimpleEntry(MessageType.modified_outside_of_skyline, SrmDocument.DOCUMENT_TYPE.none, logMessageTextBox.Text);
             DialogResult = DialogResult.OK;
         }
 
@@ -34,7 +30,7 @@ namespace pwiz.Skyline.Controls
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
-            Entry = AuditLogEntry.GetUndocumentedChangeEntry(_doc);
+            Entry = AuditLogEntry.CreateUndocumentedChangeEntry();
             DialogResult = DialogResult.Cancel;
         }
 

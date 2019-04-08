@@ -561,6 +561,28 @@ namespace pwiz.Skyline
         public static StartPage StartWindow { get; private set; }
         public static SrmDocument ActiveDocument { get { return MainWindow != null ? MainWindow.Document : null; } }
         public static SrmDocument ActiveDocumentUI { get { return MainWindow != null ? MainWindow.DocumentUI : null; } }
+        
+        /// <summary>
+        /// Gets the current UI mode (proteomic / small molecule / mixed) as a function of  <see cref="Settings"/>
+        /// and the contents of the current document
+        /// </summary>
+        public static SrmDocument.DOCUMENT_TYPE ModeUI
+        {
+            get
+            {
+                SrmDocument.DOCUMENT_TYPE mode;
+                if (ActiveDocument != null)
+                {
+                    mode = MainWindow.GetModeUIHelper().ModeUI; // Document contents help determine UI mode
+                }
+                else if (!Enum.TryParse(Settings.Default.UIMode, out mode))
+                {
+                    mode = SrmDocument.DOCUMENT_TYPE.proteomic; // No saved setting, default to tradition
+                }
+
+                return mode;
+            }
+        }
 
         /// <summary>
         /// Shortcut to the application name stored in <see cref="Settings"/>

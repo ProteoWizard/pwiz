@@ -176,7 +176,7 @@ toolset acc cc : "-o " : -D
     -I$(--python-include) -I$(--extra-include)
     : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## Borland C++ 5.5.x
-toolset borland bcc32 : -e -n : /D
+toolset borland bcc32 : -e -n : "-Nd /D" " /D" ""
     : -WC -w- -q "-I$(toolset-root)Include" "-L$(toolset-root)Lib"
     [ opt --release : -O2 -vi -w-inl ]
     [ opt --debug : -v -Od -vi- ]
@@ -688,7 +688,7 @@ else if ! $(--def[2]) { actions "[COMPILE]" {
     "$(--cc)" "$(--bin)$(<:D=)" "$(--dir)$(<:D)$(./)" $(--out)$(<) "$(--def)$(--defs)" "$(--flags)" "$(>)" "$(--libs)"
 } }
 else { actions "[COMPILE]" {
-    "$(--cc)" "$(--bin)$(<:D=)" "$(--dir)$(<:D)$(./)" $(--out)$(<) "$(--def[1])$(--defs:J=$(--def[2]))$(--def[3])" "$(--flags)"  "$(>)" "$(--libs)"
+    "$(--cc)" "$(--bin)$(<:D=)" "$(--dir)$(<:D)$(./)" $(--out)$(<) $(--def[1])$(--defs:J=$(--def[2]))$(--def[3]) "$(--flags)"  "$(>)" "$(--libs)"
 } }
 
 if $(OS) = VMS { actions "[COMPILE.LINK]" {

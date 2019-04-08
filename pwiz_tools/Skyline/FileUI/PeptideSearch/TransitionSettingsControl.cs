@@ -21,6 +21,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             InitializeComponent();
             SetFields(_documentContainer.Document.Settings.TransitionSettings);
             PeptideIonTypes = PeptideIonTypes.Union(new[] { IonType.precursor, IonType.y }).ToArray(); // Add p, y if not already set
+            InitialPeptideIonTypes = PeptideIonTypes.ToArray();
         }
 
         public TransitionFilterAndLibrariesSettings FilterAndLibrariesSettings
@@ -101,6 +102,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { txtPrecursorIonCharges.Text = value.ToString(@", "); }
         }
 
+        public IonType[] InitialPeptideIonTypes // For recovering inital settings when user is messing with Full Scan MS1 settings
+        {
+            get;
+        }
+
         public IonType[] PeptideIonTypes
         {
             get { return TransitionFilter.ParseTypes(txtIonTypes.Text, new IonType[0]); }
@@ -169,25 +175,24 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             val = proteomic ?
                 ArrayUtil.Parse(control.Text, Adduct.FromStringAssumeProtonated, TextUtil.SEPARATOR_CSV, new Adduct[0]) : // Treat "1" as protonated, proteomic [M+H]
                 ArrayUtil.Parse(control.Text, Adduct.FromStringAssumeChargeOnly, TextUtil.SEPARATOR_CSV, new Adduct[0]);  // Treat "1" as [M+]
-            if (val.Length > 0 && !val.Contains(i => minCharge > Math.Abs(i.AdductCharge) || Math.Abs(i.AdductCharge) > maxCharge))
+            if (val.Length > 0 && val.All(adduct=>TransitionFilter.IsChargeInRange(adduct, minCharge, maxCharge, proteomic)))
             {
                 return true;
             }
-            helper.ShowTextBoxError(control, Resources.MessageBoxHelper_ValidateAdductListTextBox__0__must_contain_a_comma_separated_list_of_adducts_or_integers_describing_charge_states_with_absolute_values_from__1__to__2__,
-                null, minCharge, maxCharge);
+
+            string message;
+            if (proteomic)
+            {
+                message = Resources.TransitionSettingsControl_ValidateAdductListTextBox__0__must_contain_a_comma_separated_list_of_integers_describing_charge_states_between__1__and__2__;
+            }
+            else
+            {
+                message = Resources
+                    .MessageBoxHelper_ValidateAdductListTextBox__0__must_contain_a_comma_separated_list_of_adducts_or_integers_describing_charge_states_with_absolute_values_from__1__to__2__;
+            }
+            helper.ShowTextBoxError(control, message, null, minCharge, maxCharge);
             val = new Adduct[0];
             return false;
-        }
-        public static bool ValidateAdductListTextBox(MessageBoxHelper helper, TabControl tabControl, int tabIndex,
-            TextBox control, bool proteomic, int min, int max, out Adduct[] val)
-        {
-            bool valid = ValidateAdductListTextBox(helper, control, proteomic, min, max, out val);
-            if (!valid && tabControl.SelectedIndex != tabIndex)
-            {
-                tabControl.SelectedIndex = tabIndex;
-                control.Focus();
-            }
-            return valid;
         }
 
         public TransitionSettings GetTransitionSettings(Form parent)

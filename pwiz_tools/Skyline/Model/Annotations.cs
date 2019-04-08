@@ -115,7 +115,7 @@ namespace pwiz.Skyline.Model
             
             public string Name { get; private set; }
 
-            [Track]
+            [Track(ignoreName:true)]
             public string Value
             {
                 get {
@@ -154,7 +154,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        [TrackChildren]
+        [TrackChildren(ignoreName:true)]
         public IEnumerable<Annotation> AnnotationsEnumerable
         {
             get

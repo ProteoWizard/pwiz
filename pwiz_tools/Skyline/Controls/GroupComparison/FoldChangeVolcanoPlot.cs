@@ -108,12 +108,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         public bool AnyProteomic
         {
-            get { return Document.DocumentType != SrmDocument.DOCUMENT_TYPE.small_molecules; }
+            get { return Document.IsEmptyOrHasPeptides; } // Treat empty as proteomic per tradition
         }
 
         public bool AnyMolecules
         {
-            get { return Document.DocumentType != SrmDocument.DOCUMENT_TYPE.proteomic; }
+            get { return Document.HasSmallMolecules; }
         }
 
         public bool PerProtein
@@ -794,7 +794,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     .ToArray();
 
             _skylineWindow.ModifyDocument(GroupComparisonStrings.FoldChangeVolcanoPlot_RemoveBelowCutoffs_Remove_peptides_below_cutoffs, document => (SrmDocument)document.RemoveAll(indices),
-                docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, indices.Length == 1 ? MessageType.removed_single_below_cutoffs : MessageType.removed_below_cutoffs,
+                docPair => AuditLogEntry.CreateSimpleEntry(indices.Length == 1 ? MessageType.removed_single_below_cutoffs : MessageType.removed_below_cutoffs, docPair.NewDocumentType,
                     indices.Length, GroupComparisonDef.Name).Merge(CutoffSettings.EntryCreator.Create(docPair)));
         }
 

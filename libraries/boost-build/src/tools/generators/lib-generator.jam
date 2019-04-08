@@ -81,11 +81,13 @@ rule lib ( names + : sources * : requirements * : default-build * :
     {
         if <name> in $(requirements:G)
         {
+            import errors ;
             errors.user-error "When several names are given to the 'lib' rule" :
                 "it is not allowed to specify the <name> feature." ;
         }
         if $(sources)
         {
+            import errors ;
             errors.user-error "When several names are given to the 'lib' rule" :
                 "it is not allowed to specify sources." ;
         }

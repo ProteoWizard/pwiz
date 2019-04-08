@@ -95,7 +95,7 @@ feature.subfeature asciidoctor : backend
 == Initialization
 
 To use the `asciidoctor` tool you need to declare it in a configuration file
-with the `using` rule. The initialiation takes the following arguments:
+with the `using` rule. The initialization takes the following arguments:
 
 * `command`: The command, with any extra arguments, to execute.
 

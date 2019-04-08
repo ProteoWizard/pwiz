@@ -341,6 +341,7 @@
       <DependentUpon>AuditLogStrings.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\AuditLog\CustomPropertyLocalizer.cs" />
+    <Compile Include="Model\AuditLog\Databinding\AuditLogRowTime.cs" />
     <Compile Include="Model\AuditLog\Databinding\TextImageColumn.cs" />
     <Compile Include="Model\AuditLog\EnumNames.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -362,19 +363,20 @@
     <Compile Include="Model\AuditLog\ReflectorEnumerator.cs" />
     <Compile Include="Model\AuditLog\ReflectorToString.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
-      <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Databinding\Entities\ColumnToolTips.Designer.cs">
-      <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Databinding\ListColumnPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\ListLookupDataGridViewColumn.cs" />
     <Compile Include="Model\Databinding\ListLookupPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\BoundComboBoxColumn.cs" />
+    <Compile Include="Model\Databinding\ProteomicDisplayNameAttribute.cs" />
     <Compile Include="Model\Databinding\RowActions\DeleteNodesAction.cs" />
     <Compile Include="Model\Databinding\RowActions\RemovePeaksAction.cs" />
     <Compile Include="Model\Databinding\RowActions\RowAction.cs" />
@@ -402,9 +404,11 @@
     <Compile Include="Model\AuditLog\AuditLogEntry.cs" />
     <Compile Include="Model\AuditLog\DiffNode.cs" />
     <Compile Include="Model\AuditLog\PropertyName.cs" />
+    <Compile Include="Model\ExplicitTransitionValues.cs" />
     <Compile Include="Model\Lib\BlibData\DbRefSpectraPeakAnnotations.cs" />
     <Compile Include="Model\Lib\ExplicitPeakBounds.cs" />
     <Compile Include="Model\Lib\LibKeyIndex.cs" />
+    <Compile Include="Model\Lib\SpectralLibraryExporter.cs" />
     <Compile Include="Model\Lib\ViewLibraryPepInfoList.cs" />
     <Compile Include="Model\Lib\LibKeyMap.cs" />
     <Compile Include="Model\Lib\LibraryKey.cs" />
@@ -473,6 +477,12 @@
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiSession.cs" />
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiUrl.cs" />
     <Compile Include="Model\TargetResolver.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Util\UiModes.cs" />
     <Compile Include="SettingsUI\IonMobility\UseSpectralLibraryIonMobilityValuesControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -1446,11 +1456,6 @@
     <Compile Include="Controls\UndoRedoButtons.cs" />
     <Compile Include="Model\V01\Sequence.cs" />
     <Compile Include="Model\V01\XmlExport.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
     <Compile Include="ProtocolBuffers\GeneratedCode\ChromatogramGroupData.cs" />
     <Compile Include="ProtocolBuffers\GeneratedCode\SkylineDocument.cs" />
     <Compile Include="SettingsUI\AddModificationsDlg.cs">
@@ -2511,6 +2516,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\PasteDlg.zh-CHS.resx">
       <DependentUpon>PasteDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\RefineDlg.ja.resx">
       <DependentUpon>RefineDlg.cs</DependentUpon>
@@ -2808,6 +2814,10 @@
       <Link>unimod.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Condition=" '$(Platform)' == 'x86' " Include="..\Shared\ProteowizardWrapper\obj\x86\timsdata.dll">
+      <Link>timsdata.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Condition=" '$(Platform)' == 'x64' " Include="..\Shared\ProteowizardWrapper\obj\x64\timsdata.dll">
       <Link>timsdata.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -2855,11 +2865,13 @@
     <Content Include="Resources\Locked.bmp" />
     <EmbeddedResource Include="Resources\MoleculeLib.bmp" />
     <Content Include="Resources\MoleculeStandard.bmp" />
+    <Content Include="Resources\MoleculeUI.bmp" />
     <Content Include="Resources\Pindownlight.bmp" />
     <Content Include="Resources\Pinleftlight.bmp" />
     <EmbeddedResource Include="Model\Lib\Midas\mapping.xml">
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <Content Include="Resources\ProteinUI.bmp" />
     <Content Include="Resources\Replicate.bmp" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\APOA1.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\Biognosys11.sky" />
@@ -2879,9 +2891,13 @@
     <None Include="Resources\StartPage\GroupedStudies_thumb.jpg" />
     <None Include="Resources\StartPage\DIA_thumb.jpg" />
     <None Include="Resources\StartPage\SmallMolecule_thumb.jpg" />
+    <EmbeddedResource Include="Resources\StartPage\WizardMoleculeIcon.png" />
     <EmbeddedResource Include="Resources\StartPage\HiResMetabolomics_thumb.png" />
     <EmbeddedResource Include="Resources\StartPage\SmallMoleculeMethodDevCEOpt_thumb.png" />
     <EmbeddedResource Include="Resources\StartPage\SmallMoleculeQuantification_thumb.png" />
+    <EmbeddedResource Include="Resources\UIModeMixed.bmp" />
+    <EmbeddedResource Include="Resources\UIModeProteomic.bmp" />
+    <EmbeddedResource Include="Resources\UIModeSmallMolecules.bmp" />
     <Content Include="Resources\Unlocked.bmp" />
     <Content Include="Resources\warning.png" />
     <Content Include="SkylineProcessRunner.exe">
@@ -2997,6 +3013,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditCustomMoleculeDlg.ja.resx">
       <DependentUpon>EditCustomMoleculeDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditCustomMoleculeDlg.resx">
       <DependentUpon>EditCustomMoleculeDlg.cs</DependentUpon>
@@ -3004,6 +3021,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditCustomMoleculeDlg.zh-CHS.resx">
       <DependentUpon>EditCustomMoleculeDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditDPDlg.ja.resx">
       <DependentUpon>EditDPDlg.cs</DependentUpon>
@@ -3255,9 +3273,11 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\PeptideSettingsUI.ja.resx">
       <DependentUpon>PeptideSettingsUI.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\PeptideSettingsUI.zh-CHS.resx">
       <DependentUpon>PeptideSettingsUI.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\RTDetails.ja.resx">
       <DependentUpon>RTDetails.cs</DependentUpon>
@@ -3689,6 +3709,11 @@
     </Compile>
     <Compile Include="Util\ExceptionPointers.cs" />
     <Compile Include="Util\FormattableList.cs" />
+    <Compile Include="Util\ModeUIAwareForm.cs" />
+    <Compile Include="Util\ModeUIInvariantFormEx.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Util\PeptideToMoleculeTextMapper.cs" />
     <Compile Include="Util\HistogramHelper.cs" />
     <Compile Include="Util\LongOperationRunner.cs" />
     <Compile Include="Util\CultureUtil.cs" />
@@ -4813,6 +4838,26 @@
       <TargetPath>
       </TargetPath>
       <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="Microsoft.VC90.CRT">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="Microsoft.VC90.MFC">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Exclude</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>

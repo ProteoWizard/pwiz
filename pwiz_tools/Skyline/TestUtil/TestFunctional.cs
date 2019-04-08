@@ -782,7 +782,7 @@ namespace pwiz.SkylineTestUtil
             return false;
         }
 
-        public static bool WaitForConditionUI(Func<bool> func)
+        public static bool WaitForConditionUI([InstantHandle] Func<bool> func)
         {
             return WaitForConditionUI(WAIT_TIME, func);
         }
@@ -1233,7 +1233,7 @@ namespace pwiz.SkylineTestUtil
                 result += allInfoItem + "\r\n";
 
             if (entry.ExtraInfo != null)
-                result += string.Format("Extra Info: {0}\r\n", LogMessage.ParseLogString(entry.ExtraInfo, LogLevel.all_info));
+                result += string.Format("Extra Info: {0}\r\n", LogMessage.ParseLogString(entry.ExtraInfo, LogLevel.all_info, entry.DocumentType));
 
             return result;
         }

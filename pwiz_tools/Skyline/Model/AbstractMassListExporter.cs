@@ -781,7 +781,7 @@ namespace pwiz.Skyline.Model
             if (!Equals(OptimizeType, ExportOptimize.CE))
                 step = 0;
 
-            return Document.GetCollisionEnergy(nodePep, nodeGroup, step);
+            return Document.GetCollisionEnergy(nodePep, nodeGroup, nodeTran, step);
         }
 
         protected double GetDeclusteringPotential(PeptideDocNode nodePep,
@@ -789,7 +789,7 @@ namespace pwiz.Skyline.Model
                                                   TransitionDocNode nodeTran,
                                                   int step)
         {
-            double? explicitDP = nodeGroup.ExplicitValues.DeclusteringPotential;
+            double? explicitDP = ExplicitTransitionValues.Get(nodeTran).DeclusteringPotential;
             if (explicitDP.HasValue)
             {
                 return step == 0 ? explicitDP.Value : 0;  // No optimizing of explicit values
@@ -803,7 +803,7 @@ namespace pwiz.Skyline.Model
             {
                 if (!Equals(OptimizeType, ExportOptimize.DP))
                     step = 0;
-                return Document.GetDeclusteringPotential(nodePep, nodeGroup, step);
+                return Document.GetDeclusteringPotential(nodePep, nodeGroup, nodeTran, step);
             }
 
             return Document.GetOptimizedDeclusteringPotential(nodePep, nodeGroup, nodeTran);
@@ -842,7 +842,7 @@ namespace pwiz.Skyline.Model
             // If optimizing, get the appropriate value for the current tune level
             if (ExportOptimize.CompensationVoltageTuneTypes.Contains(OptimizeType))
             {
-                return Document.GetCompensationVoltage(nodePep, nodeGroup, step, tuneLevel);
+                return Document.GetCompensationVoltage(nodePep, nodeGroup, nodeTran, step, tuneLevel);
             }
             // If ignoring values in the document return an empty value
             if (prediction.OptimizedMethodType == OptimizedMethodType.None)

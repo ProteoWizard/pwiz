@@ -224,7 +224,7 @@ def reverse(path):
     # to an extra '..' that is created by os.path.join()
     return os.sep.join('..' for t in path.split(os.sep))
 #   #
-#   # Auxillary rule: does all the semantic of 'join', except for error cheching.
+#   # Auxiliary rule: does all the semantic of 'join', except for error checking.
 #   # The error checking is separated because this rule is recursive, and I don't
 #   # like the idea of checking the same input over and over.
 #   #

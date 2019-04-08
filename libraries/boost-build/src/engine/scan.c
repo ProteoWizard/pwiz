@@ -548,8 +548,8 @@ int yylex()
                         if ( next == '<' )
                         {
                             /* Accept conditionals only for tokens that start with "<" or "!<" */
-                            if ( b > buf && buf[ 0 ] == '<' ||
-                                ( b > buf + 1 && buf[ 0 ] == '!' && buf[ 1 ] == '<' ))
+                            if ( ( (b > buf) && (buf[ 0 ] == '<') ) ||
+                                ( (b > (buf + 1)) && (buf[ 0 ] == '!') && (buf[ 1 ] == '<') ))
                             {
                                 is_conditional = 1;
                             }

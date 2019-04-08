@@ -233,5 +233,9 @@ namespace pwiz.MSGraph
             Y = (float)y;
             Z = (float)z;
         }
+        public override string ToString() // For ease of debugging
+        {
+            return string.Format(@"{0},{1},{2}", X, Y, Z);
+        }
     }
 }

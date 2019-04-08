@@ -118,7 +118,7 @@ namespace pwiz.Skyline.FileUI
 
             public override MessageInfo MessageInfo
             {
-                get { return new MessageInfo(MessageType.managed_results); }
+                get { return new MessageInfo(MessageType.managed_results, SrmDocument.DOCUMENT_TYPE.none); }
             }
 
             public ManageResultsSettings(List<RenamedReplicate> renamedReplicates, List<string> removedReplicates, List<string> removedLibraryRuns,
@@ -139,27 +139,27 @@ namespace pwiz.Skyline.FileUI
 
                 if (RenamedReplicates.Count != 0)
                 {
-                    entry = entry.AppendAllInfo(RenamedReplicates.Select(r => r.ToMessage(LogLevel.all_info)));
+                    entry = entry.AppendAllInfo(RenamedReplicates.Select(r => DetailLogMessage.FromLogMessage(r.ToMessage(LogLevel.all_info))));
                 }
 
                 if (_removedAllLibraryRuns)
                 {
-                    entry = entry.AppendAllInfo(new[] { new MessageInfo(MessageType.removed_all_libraries) });
+                    entry = entry.AppendAllInfo(new[] { new MessageInfo(MessageType.removed_all_libraries, docPair.OldDocumentType) });
                 }
                 else
                 {
                     entry = entry.AppendAllInfo(RemovedLibraryRuns.Select(run =>
-                        new MessageInfo(MessageType.removed_library_run, run)).ToList());
+                        new MessageInfo(MessageType.removed_library_run, docPair.OldDocumentType, run)).ToList());
                 }
 
                 if (_removedAllReplicates)
                 {
-                    entry = entry.AppendAllInfo(new[] { new MessageInfo(MessageType.removed_all_replicates) });
+                    entry = entry.AppendAllInfo(new[] { new MessageInfo(MessageType.removed_all_replicates, docPair.OldDocumentType) });
                 }
                 else
                 {
                     entry = entry.AppendAllInfo(RemovedReplicates.Select(repl =>
-                        new MessageInfo(MessageType.removed_replicate, repl)).ToList());
+                        new MessageInfo(MessageType.removed_replicate, docPair.OldDocumentType, repl)).ToList());
                 }
 
                 return entry;
@@ -526,7 +526,7 @@ namespace pwiz.Skyline.FileUI
 
             public LogMessage ToMessage(LogLevel level)
             {
-                return new MessageInfo(MessageType.renamed_replicate, OldName, NewName).ToMessage(level);
+                return new MessageInfo(MessageType.renamed_replicate, SrmDocument.DOCUMENT_TYPE.none, OldName, NewName).ToMessage(level);
             }
 
             public string OldName { get; set; }

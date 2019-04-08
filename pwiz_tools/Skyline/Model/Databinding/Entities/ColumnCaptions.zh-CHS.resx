@@ -1046,9 +1046,6 @@
   <data name="AbsLog2FoldChange">
     <value>绝对 Log2 倍数变化</value>
   </data>
-  <data name="DocumentFormat">
-    <value>文档格式版本</value>
-  </data>
   <data name="Reason">
     <value>原因</value>
   </data>

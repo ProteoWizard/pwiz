@@ -157,7 +157,7 @@ namespace pwiz.Skyline
 
             if (document.Settings.DataSettings.AuditLogging)
             {
-                var entry = AuditLogEntry.GetAuditLoggingStartExistingDocEntry(document);
+                var entry = AuditLogEntry.GetAuditLoggingStartExistingDocEntry(document, GetModeUIHelper().ModeUI);
                 document = entry?.AppendEntryToDocument(document) ?? document;
             }
 
@@ -242,7 +242,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private AuditLogEntry AskForLogEntry(SrmDocument doc)
+        private AuditLogEntry AskForLogEntry()
         {
             AuditLogEntry result = null;
             Invoke((Action)(() =>
@@ -254,7 +254,7 @@ namespace pwiz.Skyline
                 {
                     if (alert.ShowDialog(this) == DialogResult.Yes)
                     {
-                        using (var docChangeEntryDlg = new DocumentChangeLogEntryDlg(doc))
+                        using (var docChangeEntryDlg = new DocumentChangeLogEntryDlg())
                         {
                             docChangeEntryDlg.ShowDialog(this);
                             result = docChangeEntryDlg.Entry;
@@ -262,7 +262,7 @@ namespace pwiz.Skyline
                         }
                     }
 
-                    result = AuditLogEntry.GetUndocumentedChangeEntry(doc);
+                    result = AuditLogEntry.CreateUndocumentedChangeEntry();
                 }
             }));
             return result;
@@ -285,6 +285,14 @@ namespace pwiz.Skyline
             Exception exception = null;
             SrmDocument document = null;
 
+            // A fairly common support question is "why won't this Skyline file open?" when they are actually
+            // trying to open a .skyd file or somesuch.  Probably an artifact of Windows hiding file extensions.
+            // Try to work around it by finding a plausible matching .sky file when asked to open a .sky? file.
+            if (!path.EndsWith(SrmDocument.EXT) && !SrmDocument.IsSkylineFile(path, out _)) // Tolerate rename, eg foo.ski
+            {
+                path = SrmDocument.FindSiblingSkylineFile(path);
+            }
+
             try
             {
                 using (var longWaitDlg = new LongWaitDlg(this)
@@ -296,15 +304,15 @@ namespace pwiz.Skyline
                 {
                     longWaitDlg.PerformWork(parentWindow ?? this, 500, progressMonitor =>
                     {
-                        string hash;
+                        string skylineDocumentHash;
                         using (var reader = new HashingStreamReaderWithProgress(path, progressMonitor))
                         {
                             XmlSerializer ser = new XmlSerializer(typeof (SrmDocument));
                             document = (SrmDocument) ser.Deserialize(reader);
-                            hash = reader.Stream.Done();
+                            skylineDocumentHash = reader.Stream.Done();
                         }
 
-                        document = document.ReadAuditLog(path, hash, AskForLogEntry);
+                        document = document.ReadAuditLog(path, skylineDocumentHash, AskForLogEntry);
                     });
 
                     if (longWaitDlg.IsCanceled)
@@ -314,6 +322,11 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 exception = x;
+                // Was that even a Skyline file?
+                if (!SrmDocument.IsSkylineFile(path, out var explained))
+                {
+                    exception = new IOException(explained); // Offer a more helpful explanation than that from the failed XML parser
+                }
             }
 
             if (exception == null)
@@ -371,6 +384,15 @@ namespace pwiz.Skyline
             if (SequenceTree != null && SequenceTree.Nodes.Count > 0 && !SequenceTree.RestoredFromPersistentString)
                 SequenceTree.SelectedNode = SequenceTree.Nodes[0];
 
+            // Once user has opened an existing document, stop reminding them to set a default UI mode
+            if (string.IsNullOrEmpty(Settings.Default.UIMode))
+            {
+                var mode = document.DocumentType == SrmDocument.DOCUMENT_TYPE.none
+                    ? SrmDocument.DOCUMENT_TYPE.proteomic
+                    : document.DocumentType;
+                Settings.Default.UIMode = mode.ToString();
+            }
+            
             return true;
         }
 
@@ -1241,173 +1263,10 @@ namespace pwiz.Skyline
 
         public void ShowExportSpectralLibraryDialog()
         {
-            if (Document.MoleculeTransitionGroupCount == 0)
-            {
-                MessageDlg.Show(this, Resources.SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_at_least_one_peptide_precursor_to_export_a_spectral_library_);
-                return;
-            }
-            else if (!Document.Settings.HasResults)
-            {
-                MessageDlg.Show(this, Resources.SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_results_to_export_a_spectral_library_);
-                return;
-            }
-
-            using (var dlg = new SaveFileDialog
-            {
-                Title = Resources.SkylineWindow_ShowExportSpectralLibraryDialog_Export_Spectral_Library,
-                OverwritePrompt = true,
-                DefaultExt = BiblioSpecLiteSpec.EXT,
-                Filter = TextUtil.FileDialogFiltersAll(BiblioSpecLiteSpec.FILTER_BLIB)
-            })
-            {
-                if (!string.IsNullOrEmpty(DocumentFilePath))
-                    dlg.InitialDirectory = Path.GetDirectoryName(DocumentFilePath);
-
-                if (dlg.ShowDialog(this) == DialogResult.Cancel)
-                    return;
-
-                try
-                {
-                    using (var longWaitDlg = new LongWaitDlg
-                    {
-                        Text = Resources.SkylineWindow_ShowExportSpectralLibraryDialog_Export_Spectral_Library,
-                        Message = string.Format(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_Exporting_spectral_library__0____, Path.GetFileName(dlg.FileName))
-                    })
-                    {
-                        longWaitDlg.PerformWork(this, 800, monitor => ExportSpectralLibrary(DocumentFilePath, Document, dlg.FileName, monitor));
-                    }
-                }
-                catch (Exception x)
-                {
-                    MessageDlg.ShowWithException(this, TextUtil.LineSeparate(string.Format(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_Failed_exporting_spectral_library_to__0__, dlg.FileName), x.Message), x);
-                }
-            }
+            var libraryExporter = new SpectralLibraryExporter(Document, DocumentFilePath);
+            libraryExporter.ShowExportSpectralLibraryDialog(this);
         }
 
-        public static void ExportSpectralLibrary(string sourceFile, SrmDocument document, string path, IProgressMonitor progressMonitor)
-        {
-            const string name = "exported";
-            var spectra = new Dictionary<LibKey, SpectrumMzInfo>();
-            foreach (var nodePepGroup in document.MoleculeGroups)
-            {
-                foreach (var nodePep in nodePepGroup.Molecules)
-                {
-                    foreach (var nodeTranGroup in nodePep.TransitionGroups)
-                    {
-                        for (var i = 0; i < document.Settings.MeasuredResults.Chromatograms.Count; i++)
-                        {
-                            ProcessTransitionGroup(sourceFile, spectra, document, nodePep, nodeTranGroup, i);
-                        }
-                    }
-                }
-            }
-
-            var rCalcIrt = document.Settings.HasRTPrediction
-                ? document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator as RCalcIrt
-                : null;
-            IProgressStatus status = new ProgressStatus();
-            if (rCalcIrt != null && progressMonitor != null)
-            {
-                progressMonitor.UpdateProgress(status = status.ChangeSegments(0, 2));
-            }
-
-            using (var blibDb = BlibDb.CreateBlibDb(path))
-            {
-                var libSpec = new BiblioSpecLiteSpec(name, path);
-                blibDb.CreateLibraryFromSpectra(libSpec, spectra.Values.ToList(), name, progressMonitor, ref status);
-            }
-
-            if (rCalcIrt != null)
-            {
-                IrtDb.CreateIrtDb(path).AddPeptides(progressMonitor, rCalcIrt.GetDbIrtPeptides().ToList(), ref status);
-            }
-        }
-
-        private static void ProcessTransitionGroup(string sourceFile, IDictionary<LibKey, SpectrumMzInfo> spectra,
-            SrmDocument document, PeptideDocNode nodePep, TransitionGroupDocNode nodeTranGroup, int replicateIndex)
-        {
-            LibKey key;
-            if (nodePep.IsProteomic)
-            {
-                var sequence = document.Settings.GetPrecursorCalc(nodeTranGroup.TransitionGroup.LabelType, nodePep.ExplicitMods).GetModifiedSequence(nodePep.Peptide.Target, false);
-                key = new LibKey(sequence, nodeTranGroup.PrecursorAdduct.AdductCharge);
-            }
-            else
-            {
-                // For small molecules, the "modification" is expressed in the adduct
-                key = new LibKey(nodeTranGroup.CustomMolecule.GetSmallMoleculeLibraryAttributes(), nodeTranGroup.PrecursorAdduct);
-            }
-            var mi = new List<SpectrumPeaksInfo.MI>();
-            var rt = 0.0;
-            var im = IonMobilityAndCCS.EMPTY;
-            var imGroup = TransitionGroupIonMobilityInfo.EMPTY; // CCS may be available only at group level
-            var groupChromInfos = nodeTranGroup.GetSafeChromInfo(replicateIndex);
-            if (!groupChromInfos.IsEmpty)
-            {
-                var chromInfo = groupChromInfos.First(info => info.OptimizationStep == 0);
-                imGroup = chromInfo.IonMobilityInfo;
-            }
-            var maxApex = float.MinValue;
-            string chromFileName = null;
-            foreach (var nodeTran in nodeTranGroup.Transitions)
-            {
-                if (nodeTran.IsMs1)
-                    continue;
-                var chromInfos = nodeTran.GetSafeChromInfo(replicateIndex);
-                if (chromInfos.IsEmpty)
-                    continue;
-                var chromInfo = chromInfos.First(info => info.OptimizationStep == 0);
-                if (chromInfo.Area == 0)
-                    continue;
-                if (chromFileName == null)
-                {
-                    var chromFileInfo = document.Settings.MeasuredResults.Chromatograms[replicateIndex].MSDataFileInfos.FirstOrDefault(file => ReferenceEquals(file.Id, chromInfo.FileId));
-                    if (chromFileInfo != null)
-                        chromFileName = chromFileInfo.FilePath.GetFileName();
-                }
-                List<SpectrumPeakAnnotation> annotations = null;
-                if (nodeTran.Transition.IsNonReporterCustomIon()) // CONSIDER(bspratt) include annotation for all non-peptide-fragment transitions?
-                {
-                    var smallMoleculeLibraryAttributes = nodeTran.Transition.CustomIon.GetSmallMoleculeLibraryAttributes();
-                    var ion = new CustomIon(smallMoleculeLibraryAttributes, nodeTran.Transition.Adduct, nodeTran.GetMoleculeMass());
-                    if (!string.IsNullOrEmpty(nodeTran.Annotations.Note))
-                    {
-                        annotations = new List<SpectrumPeakAnnotation> { SpectrumPeakAnnotation.Create(ion, nodeTran.Annotations.Note) };
-                    }
-                }
-                mi.Add(new SpectrumPeaksInfo.MI { Mz = nodeTran.Mz, Intensity = chromInfo.Area, Quantitative = nodeTran.ExplicitQuantitative, Annotations = annotations});
-                if (chromInfo.Height > maxApex)
-                {
-                    maxApex = chromInfo.Height;
-                    rt = chromInfo.RetentionTime;
-                    im = IonMobilityAndCCS.GetIonMobilityAndCCS(chromInfo.IonMobility.IonMobility, chromInfo.IonMobility.CollisionalCrossSectionSqA ?? imGroup.CollisionalCrossSection, 0);
-                }
-            }
-            if (chromFileName == null)
-                return;
-            SpectrumMzInfo spectrumMzInfo;
-            if (!spectra.TryGetValue(key, out spectrumMzInfo))
-            {
-                spectrumMzInfo = new SpectrumMzInfo
-                {
-                    SourceFile = sourceFile,
-                    Key = key,
-                    PrecursorMz = nodeTranGroup.PrecursorMz,
-                    SpectrumPeaks = new SpectrumPeaksInfo(mi.ToArray()),
-                    RetentionTimes = new List<SpectrumMzInfo.IonMobilityAndRT>(),
-                    IonMobility = im,
-                    RetentionTime = rt
-                };
-                spectra[key] = spectrumMzInfo;
-            }
-            var isBest = replicateIndex == nodePep.BestResult;
-            if (isBest)
-            {
-                spectrumMzInfo.IonMobility = im;
-                spectrumMzInfo.RetentionTime = rt;
-            }
-            spectrumMzInfo.RetentionTimes.Add(new SpectrumMzInfo.IonMobilityAndRT(chromFileName, im, rt, isBest));
-        }
 
         private void exportReportMenuItem_Click(object sender, EventArgs e)
         {
@@ -1611,9 +1470,9 @@ namespace pwiz.Skyline
             }         
         }
 
-        private static void AddMessageInfo<T>(IList<MessageInfo> messageInfos, MessageType type, IEnumerable<T> items)
+        private static void AddMessageInfo<T>(IList<MessageInfo> messageInfos, MessageType type, SrmDocument.DOCUMENT_TYPE docType, IEnumerable<T> items)
         {
-            messageInfos.AddRange(items.Select(item => new MessageInfo(type, item)));
+            messageInfos.AddRange(items.Select(item => new MessageInfo(type, docType, item)));
         }
 
         private void ImportPeakBoundaries(string fileName, long lineCount, string description)
@@ -1647,12 +1506,12 @@ namespace pwiz.Skyline
             }, docPair =>
             {
                 var allInfo = new List<MessageInfo>();
-                AddMessageInfo(allInfo, MessageType.removed_unrecognized_peptide, peakBoundaryImporter.UnrecognizedPeptides);
-                AddMessageInfo(allInfo, MessageType.removed_unrecognized_file,
+                AddMessageInfo(allInfo, MessageType.removed_unrecognized_peptide, docPair.OldDocumentType, peakBoundaryImporter.UnrecognizedPeptides);
+                AddMessageInfo(allInfo, MessageType.removed_unrecognized_file, docPair.OldDocumentType,
                     peakBoundaryImporter.UnrecognizedFiles.Select(AuditLogPath.Create));
-                AddMessageInfo(allInfo, MessageType.removed_unrecognized_charge_state, peakBoundaryImporter.UnrecognizedChargeStates);
+                AddMessageInfo(allInfo, MessageType.removed_unrecognized_charge_state, docPair.OldDocumentType, peakBoundaryImporter.UnrecognizedChargeStates);
 
-                return AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.imported_peak_boundaries,
+                return AuditLogEntry.CreateSimpleEntry(MessageType.imported_peak_boundaries, docPair.OldDocumentType,
                         Path.GetFileName(fileName))
                     .AppendAllInfo(allInfo);
             });
@@ -1811,17 +1670,18 @@ namespace pwiz.Skyline
                 string extraInfo = null;
                 if (importInfo.File)
                 {
-                    info = new MessageInfo(MessageType.imported_fasta, importInfo.Text);
+                    info = new MessageInfo(MessageType.imported_fasta, docPair.NewDocumentType, importInfo.Text);
                 }
                 else
                 {
                     info = new MessageInfo(peptideList
                         ? MessageType.imported_peptide_list
-                        : MessageType.imported_fasta_paste);
+                        : MessageType.imported_fasta_paste, 
+                        docPair.NewDocumentType);
                     extraInfo = importInfo.Text;
                 }
 
-                return AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc, info, extraInfo)
+                return AuditLogEntry.CreateSingleMessageEntry(info, extraInfo)
                     .Merge(docPair, entryCreatorList);
             });
 
@@ -1893,11 +1753,10 @@ namespace pwiz.Skyline
                     modifyingDocumentException = x;
                     return doc;
                 }
-            }, docPair => AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
-                new MessageInfo(
-                    transitionCount == 1
-                        ? MessageType.pasted_single_small_molecule_transition
-                        : MessageType.pasted_small_molecule_transition_list, transitionCount), csvText));
+            }, docPair => AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(
+                transitionCount == 1
+                    ? MessageType.pasted_single_small_molecule_transition
+                    : MessageType.pasted_small_molecule_transition_list, docPair.NewDocumentType, transitionCount), csvText));
 
             if (modifyingDocumentException != null)
             {
@@ -2075,7 +1934,7 @@ namespace pwiz.Skyline
                     importIntensities = addLibraryResult == DialogResult.Yes;
 
                     if(importIntensities)
-                        entryCreators.Add(new MessageInfo(MessageType.imported_spectral_library_intensities));
+                        entryCreators.Add(new MessageInfo(MessageType.imported_spectral_library_intensities, docNew.DocumentType));
 
                 }
                 if (importIntensities && !ImportMassListIntensities(ref docNew, librarySpectra, assayLibrary, out docLibrarySpec, out docLibrary, out indexOldLibrary))
@@ -2134,8 +1993,7 @@ namespace pwiz.Skyline
                     extraInfo = inputs.InputText;
                 }
 
-                return AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
-                    new MessageInfo(msgType, args), extraInfo).Merge(docPair, entryCreators);
+                return AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(msgType, docPair.NewDocumentType, args), extraInfo).Merge(docPair, entryCreators);
             });
 
             if (selectPath != null)
@@ -2455,13 +2313,13 @@ namespace pwiz.Skyline
                 return docNew;
             }, docPair =>
             {
-                var entry = AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, MessageType.imported_doc,
-                    MessageType.imported_docs, filePaths.Select(AuditLogPath.Create), filePaths.Length,
+                var entry = AuditLogEntry.CreateCountChangeEntry(MessageType.imported_doc,
+                    MessageType.imported_docs, docPair.NewDocumentType, filePaths.Select(AuditLogPath.Create), filePaths.Length,
                     MessageArgs.DefaultSingular, null);
 
                 if (filePaths.Length > 1)
                     entry.AppendAllInfo(filePaths.Select(file =>
-                        new MessageInfo(MessageType.imported_doc, AuditLogPath.Create(file))));
+                        new MessageInfo(MessageType.imported_doc, docPair.NewDocumentType, AuditLogPath.Create(file))));
 
                 return entry.Merge(docPair, entryCreatorList, false);
             });
@@ -3267,8 +3125,7 @@ namespace pwiz.Skyline
                                     .SkylineDataSchema_VerifyDocumentCurrent_The_document_was_modified_in_the_middle_of_the_operation_);
                             }
                             return newDocument;
-                        }, docPair => AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
-                            new MessageInfo(MessageType.imported_annotations, filename)));
+                        }, docPair => AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(MessageType.imported_annotations, docPair.NewDocumentType, filename)));
                     }
                 }
             }

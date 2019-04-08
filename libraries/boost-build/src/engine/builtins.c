@@ -43,7 +43,7 @@
 /* With VC8 (VS2005) these are not defined:
  *   FSCTL_GET_REPARSE_POINT  (expects WINVER >= 0x0500 _WIN32_WINNT >= 0x0500 )
  *   IO_REPARSE_TAG_SYMLINK   (is part of a separate Driver SDK)
- * So define them explicitily to their expected values.
+ * So define them explicitly to their expected values.
  */
 #ifndef FSCTL_GET_REPARSE_POINT
 # define FSCTL_GET_REPARSE_POINT 0x000900a8
@@ -457,7 +457,7 @@ void load_builtins()
         bind_builtin( "READLINK", builtin_readlink, 0, args );
     }
 
-      {
+    {
           const char * args[] = { "directories", "*", 0 };
           bind_builtin( "RESCAN",
                         builtin_rescan, 0, args );
@@ -1586,7 +1586,7 @@ LIST * builtin_normalize_path( FRAME * frame, int flags )
     LIST * arg = lol_get( frame->args, 0 );
 
     /* First, we iterate over all '/'-separated elements, starting from the end
-     * of string. If we see a '..', we remove a preceeding path element. If we
+     * of string. If we see a '..', we remove a preceding path element. If we
      * see '.', we remove it. Removal is done by overwriting data using '\1'
      * characters. After the whole string has been processed, we do a second
      * pass, removing any entered '\1' characters.
@@ -1633,13 +1633,13 @@ LIST * builtin_normalize_path( FRAME * frame, int flags )
             *current = '/';
 
     /* Now we remove any extra path elements by overwriting them with '\1'
-     * characters and cound how many more unused '..' path elements there are
+     * characters and count how many more unused '..' path elements there are
      * remaining. Note that each remaining path element with always starts with
      * a '/' character.
      */
     for ( end = in->value + in->size - 1; end >= in->value; )
     {
-        /* Set 'current' to the next occurence of '/', which always exists. */
+        /* Set 'current' to the next occurrence of '/', which always exists. */
         for ( current = end; *current != '/'; --current );
 
         if ( current == end )

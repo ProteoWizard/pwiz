@@ -630,7 +630,7 @@ namespace pwiz.Skyline.Controls.Graphs
             graphChromatograms.IsCanceled = IsUserCanceled = true;
             Program.MainWindow.ModifyDocument(Resources.AllChromatogramsGraph_btnCancel_Click_Cancel_import,
                 doc => FilterFiles(doc, info => IsCachedFile(doc, info)),
-                docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.canceled_import));
+                docPair => AuditLogEntry.CreateSimpleEntry(MessageType.canceled_import, docPair.OldDocumentType));
         }
 
         private bool IsCachedFile(SrmDocument doc, ChromFileInfo info)

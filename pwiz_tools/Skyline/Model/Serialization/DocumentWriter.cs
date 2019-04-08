@@ -172,21 +172,25 @@ namespace pwiz.Skyline.Model.Serialization
             return sb.ToString();
         }
 
+        private void WriteExplicitTransitionValuesAttributes(XmlWriter writer, ExplicitTransitionValues importedAttributes)
+        {
+            writer.WriteAttributeNullable(ATTR.explicit_collision_energy, importedAttributes.CollisionEnergy);
+            writer.WriteAttributeNullable(ATTR.explicit_ion_mobility_high_energy_offset, importedAttributes.IonMobilityHighEnergyOffset);
+            writer.WriteAttributeNullable(ATTR.explicit_s_lens, importedAttributes.SLens);
+            writer.WriteAttributeNullable(ATTR.explicit_cone_voltage, importedAttributes.ConeVoltage);
+            writer.WriteAttributeNullable(ATTR.explicit_declustering_potential, importedAttributes.DeclusteringPotential);
+        }
+
+
         /// <summary>
         /// Serializes any optionally explicitly specified CE, RT and DT information to attributes only
         /// </summary>
         private void WriteExplicitTransitionGroupValuesAttributes(XmlWriter writer, ExplicitTransitionGroupValues importedAttributes)
         {
-            writer.WriteAttributeNullable(ATTR.explicit_collision_energy, importedAttributes.CollisionEnergy);
             writer.WriteAttributeNullable(ATTR.explicit_ion_mobility, importedAttributes.IonMobility);
-            writer.WriteAttributeNullable(ATTR.explicit_ion_mobility_high_energy_offset, importedAttributes.IonMobilityHighEnergyOffset);
             if (importedAttributes.IonMobility.HasValue)
                 writer.WriteAttribute(ATTR.explicit_ion_mobility_units, importedAttributes.IonMobilityUnits.ToString());
             writer.WriteAttributeNullable(ATTR.explicit_ccs_sqa, importedAttributes.CollisionalCrossSectionSqA);
-            writer.WriteAttributeNullable(ATTR.explicit_s_lens, importedAttributes.SLens);
-            writer.WriteAttributeNullable(ATTR.explicit_cone_voltage, importedAttributes.ConeVoltage);
-            writer.WriteAttributeNullable(ATTR.explicit_declustering_potential, importedAttributes.DeclusteringPotential);
-            writer.WriteAttributeNullable(ATTR.explicit_compensation_voltage, importedAttributes.CompensationVoltage);
         }
 
         /// <summary>
@@ -562,6 +566,7 @@ namespace pwiz.Skyline.Model.Serialization
             Transition transition = nodeTransition.Transition;
             writer.WriteAttribute(ATTR.fragment_type, transition.IonType);
             writer.WriteAttribute(ATTR.quantitative, nodeTransition.ExplicitQuantitative, true);
+            WriteExplicitTransitionValuesAttributes(writer, nodeTransition.ExplicitValues);
             if (transition.IsCustom())
             {
                 if (!(transition.CustomIon is SettingsCustomIon))
@@ -647,8 +652,8 @@ namespace pwiz.Skyline.Model.Serialization
                     SrmDocument.GetDeclusteringPotential);
             }
 
-            if (nodeGroup.ExplicitValues.CollisionEnergy.HasValue)
-                ce = nodeGroup.ExplicitValues.CollisionEnergy; // Explicitly imported, overrides any calculation
+            if (nodeTransition.ExplicitValues.CollisionEnergy.HasValue)
+                ce = nodeTransition.ExplicitValues.CollisionEnergy; // Explicitly imported, overrides any calculation
 
             if (ce.HasValue)
             {

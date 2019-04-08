@@ -55,15 +55,20 @@ namespace pwiz.Skyline.SettingsUI
 
         public EditOptimizationLibraryDlg(SrmDocument document, OptimizationLibrary lib, IEnumerable<OptimizationLibrary> existing)
         {
-            _existing = existing;
+            _existing = existing.ToArray();
             _document = document;
 
             InitializeComponent();
 
             Icon = Resources.Skyline;
 
+            var knownLibraryTargets = _existing.Where(l => l.IsUsable).SelectMany(l => l.GetOptimizations()).Select(o => o.Target);
+
+            var targetResolver = TargetResolver.MakeTargetResolver(document, knownLibraryTargets);
+            columnSequence.TargetResolver = targetResolver; // Makes it possible to show just "caffeine" instead of "#$#caffeine#C8H10N4O2#"
+
             _gridViewLibraryDriver = new LibraryGridViewDriver(gridViewLibrary, bindingSourceLibrary,
-                                                               new SortableBindingList<DbOptimization>(), this, document);
+                                                               new SortableBindingList<DbOptimization>(), this, document, targetResolver);
 
             if (lib != null)
             {
@@ -356,17 +361,17 @@ namespace pwiz.Skyline.SettingsUI
             var keySet = new HashSet<OptimizationKey>();
             foreach (DbOptimization optimization in optimizationList)
             {
-                string seqModified = optimization.Target.Sequence;
-                if (LibraryGridViewDriver.ValidateSequence(seqModified) != null)
+                string seqModified = optimization.Target.ToSerializableString();
+                if (_gridViewLibraryDriver.ValidateSequence(seqModified) != null)
                 {
-                    MessageDlg.Show(this, string.Format(Resources.EditOptimizationLibraryDlg_ValidateOptimizationList_The_value__0__is_not_a_valid_modified_peptide_sequence_,
+                    MessageDlg.Show(this, ModeUIAwareStringFormat(Resources.EditOptimizationLibraryDlg_ValidateOptimizationList_The_value__0__is_not_a_valid_modified_peptide_sequence_,
                                                         seqModified));
                     return false;
                 }
 
                 if (keySet.Contains(optimization.Key))
                 {
-                    MessageDlg.Show(this, string.Format(Resources.EditOptimizationLibraryDlg_ValidateOptimizationList_The_optimization_with_sequence__0___charge__1___fragment_ion__2__and_product_charge__3__appears_in_the__4__table_more_than_once_,
+                    MessageDlg.Show(this, ModeUIAwareStringFormat(Resources.EditOptimizationLibraryDlg_ValidateOptimizationList_The_optimization_with_sequence__0___charge__1___fragment_ion__2__and_product_charge__3__appears_in_the__4__table_more_than_once_,
                                                         seqModified, optimization.Adduct, optimization.FragmentIon, optimization.ProductAdduct, tableName));
                     return false;
                 }
@@ -389,13 +394,14 @@ namespace pwiz.Skyline.SettingsUI
 
             private readonly EditOptimizationLibraryDlg _form;
             private readonly SrmDocument _document;
+            private readonly TargetResolver _targetResolver;
 
             public BindingList<DbOptimization> Optimizations { get; private set; }
 
             private static readonly Regex RGX_PRODUCT_ION = new Regex(@"^[\s]*(?<ion>precursor|[abcxyz][\d]+)[\s]*(?:-[\s]*(?<loss>[\d]+(?:[\.,][\d]+)?)[\s]*)?$", RegexOptions.IgnoreCase);
 
             public LibraryGridViewDriver(DataGridViewEx gridView, BindingSource bindingSource,
-                                         SortableBindingList<DbOptimization> items, EditOptimizationLibraryDlg form, SrmDocument document)
+                                         SortableBindingList<DbOptimization> items, EditOptimizationLibraryDlg form, SrmDocument document, TargetResolver targetResolver)
                 : base(gridView, bindingSource, items)
             {
                 gridView.UserDeletingRow += gridView_UserDeletingRow;
@@ -404,6 +410,7 @@ namespace pwiz.Skyline.SettingsUI
                 gridView.CellParsing += gridView_CellParsing;
                 _form = form;
                 _document = document;
+                _targetResolver = targetResolver ?? TargetResolver.MakeTargetResolver(document);
                 Optimizations = new BindingList<DbOptimization>();
                 Optimizations.ListChanged += OptimizationsChanged;
             }
@@ -480,9 +487,18 @@ namespace pwiz.Skyline.SettingsUI
                         {
                             if (!string.IsNullOrWhiteSpace(optimization.PeptideModSeq))
                             {
-                                e.Value = (optimization.Adduct.AdductCharge > 1)
+                                if (optimization.Target.IsProteomic)
+                                {
+                                    e.Value = (Math.Abs(optimization.Adduct.AdductCharge) > 1)
                                     ? optimization.PeptideModSeq + Transition.GetChargeIndicator(optimization.Adduct)
                                     : optimization.PeptideModSeq;
+                                    
+                                }
+                                else
+                                {
+                                    e.Value = _targetResolver.FormatTarget(optimization.Target) + optimization.Adduct.AdductFormula;
+                                }
+
                                 e.FormattingApplied = true;
                             }
                         }
@@ -491,9 +507,16 @@ namespace pwiz.Skyline.SettingsUI
                         {
                             if (!string.IsNullOrWhiteSpace(optimization.FragmentIon))
                             {
-                                e.Value = (optimization.ProductAdduct.AdductCharge > 1)
+                                if (optimization.Target.IsProteomic)
+                                {
+                                    e.Value = (Math.Abs(optimization.ProductAdduct.AdductCharge) > 1)
                                     ? (optimization.FragmentIon + Transition.GetChargeIndicator(optimization.ProductAdduct))
                                     : optimization.FragmentIon;
+                                }
+                                else
+                                {
+                                    e.Value = optimization.FragmentIon + optimization.Adduct.AdductFormula;
+                                }
                                 e.FormattingApplied = true;
                             }
                         }
@@ -512,7 +535,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     case COLUMN_SEQUENCE:
                         {
-                            var seqCharge = new SequenceAndCharge(value);
+                            var seqCharge = new SequenceAndCharge(value, this);
                             e.Value = seqCharge.ModifiedSequence;
                             Items[e.RowIndex].Adduct = seqCharge.Charge;
                             e.ParsingApplied = true;
@@ -531,14 +554,24 @@ namespace pwiz.Skyline.SettingsUI
 
             private class SequenceAndCharge
             {
-                public SequenceAndCharge(string sequenceAndCharge)
+                public SequenceAndCharge(string sequenceAndCharge, LibraryGridViewDriver driver)
                 {
                     const int min = TransitionGroup.MIN_PRECURSOR_CHARGE;
                     const int max = TransitionGroup.MAX_PRECURSOR_CHARGE;
 
+                    Target target;
+                    Adduct adduct;
+                    if (driver.IsMoleculeWithAdduct(sequenceAndCharge, out target, out adduct))
+                    {
+                        ModifiedSequence = target;
+                        Charge = adduct;
+                    }
+                    else
+                    {
                     string seq = Transition.StripChargeIndicators(sequenceAndCharge, min, max);
                     ModifiedSequence = SequenceMassCalc.NormalizeModifiedSequence(new Target(seq));
                     Charge = Transition.GetChargeFromIndicator(sequenceAndCharge, min, max, Adduct.SINGLY_PROTONATED);
+                }
                 }
 
                 public Target ModifiedSequence { get; private set; }
@@ -549,12 +582,23 @@ namespace pwiz.Skyline.SettingsUI
             {
                 public FragmentAndCharge(string fragmentAndCharge)
                 {
+                    string frag;
+                    Adduct adduct;
+                    if (IsMoleculeFragmentWithAdduct(fragmentAndCharge, out frag, out adduct))
+                    {
+                        FragmentIon = frag;
+                        Adduct = adduct;
+                    }
+                    else
+                    {
                     const int min = Transition.MIN_PRODUCT_CHARGE;
                     const int max = Transition.MAX_PRODUCT_CHARGE;
 
-                    string frag = Transition.StripChargeIndicators(fragmentAndCharge, min, max);
+                        frag = Transition.StripChargeIndicators(fragmentAndCharge, min, max);
                     FragmentIon = NormalizeProductIon(frag);
-                    Adduct = Transition.GetChargeFromIndicator(fragmentAndCharge, min, max, Adduct.SINGLY_PROTONATED);
+                        Adduct = Transition.GetChargeFromIndicator(fragmentAndCharge, min, max,
+                            Adduct.SINGLY_PROTONATED);
+                    }
                 }
 
                 public string FragmentIon { get; private set; }
@@ -579,7 +623,7 @@ namespace pwiz.Skyline.SettingsUI
                     add = GridView.DoPaste(MessageParent, ValidateOptimizationRow,
                         values =>
                         {
-                            var seqCharge = new SequenceAndCharge(values[0]);
+                            var seqCharge = new SequenceAndCharge(values[0], this);
                             var fragCharge = new FragmentAndCharge(values[1]);
                             libraryOptimizationsNew.Add(new DbOptimization(ViewDbType,
                                 seqCharge.ModifiedSequence,
@@ -594,7 +638,7 @@ namespace pwiz.Skyline.SettingsUI
                     add = GridView.DoPaste(MessageParent, ValidateOptimizationRow,
                         values =>
                         {
-                            var seqCharge = new SequenceAndCharge(values[0]);
+                            var seqCharge = new SequenceAndCharge(values[0], this);
                             libraryOptimizationsNew.Add(new DbOptimization(ViewDbType,
                                 seqCharge.ModifiedSequence,
                                 seqCharge.Charge,
@@ -634,14 +678,14 @@ namespace pwiz.Skyline.SettingsUI
                 string seq = columns[0] as string;
                 string prod = prodVisible ? columns[1] as string : null;
                 string val = columns.Last() as string;
-                string message;
+                string message; 
                 if (string.IsNullOrWhiteSpace(seq))
                 {
-                    message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_Missing_peptide_sequence_on_line__0_, lineNumber);
+                    message = _form.ModeUIAwareStringFormat(Resources.PeptideGridViewDriver_ValidateRow_Missing_peptide_sequence_on_line__0_, lineNumber);
                 }
                 else if (ValidateSequence(seq) != null)
                 {
-                    message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1_, seq, lineNumber);
+                    message = _form.ModeUIAwareStringFormat(Resources.PeptideGridViewDriver_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1_, seq, lineNumber);
                 }
                 else if (prodVisible && string.IsNullOrWhiteSpace(prod))
                 {
@@ -683,6 +727,9 @@ namespace pwiz.Skyline.SettingsUI
                 else if (columnIndex == COLUMN_PRODUCT_ION && GridView.IsCurrentCellInEditMode)
                 {
                     string chargeText = value;
+                    var formattedValue = GridView.Rows[rowIndex].Cells[COLUMN_SEQUENCE].FormattedValue;
+                    if (formattedValue != null)
+                        ValidateSequence(formattedValue.ToString());
                     errorText = ValidateProductIon(chargeText);
                 }
                 else if (columnIndex == COLUMN_VALUE && GridView.IsCurrentCellInEditMode)
@@ -699,7 +746,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         case COLUMN_SEQUENCE:
                         {
-                            var seqCharge = new SequenceAndCharge(value);
+                            var seqCharge = new SequenceAndCharge(value, this);
                             curKey.PeptideModSeq = seqCharge.ModifiedSequence;
                             curKey.PrecursorAdduct = seqCharge.Charge;
                             break;
@@ -729,13 +776,51 @@ namespace pwiz.Skyline.SettingsUI
                 return true;
             }
 
-            public static string ValidateSequence(string sequenceText)
+
+            public static bool IsMoleculeFragmentWithAdduct(string text, out string fragment, out Adduct adduct)
+            {
+                fragment = String.Empty;
+                adduct = Adduct.EMPTY;
+                if (string.IsNullOrEmpty(text))
+                    return false;
+                text = text.Trim();
+                var adductPosition = Transition.FindAdductDescription(text, out adduct);
+                if (adductPosition < 0)
+                    return false;
+                fragment = text.Substring(0, adductPosition);
+                return true;
+            }
+
+            public bool IsMoleculeWithAdduct(string text, out Target target, out Adduct adduct)
+            {
+                target = Target.EMPTY;
+                adduct = Adduct.EMPTY;
+                if (string.IsNullOrEmpty(text))
+                    return false;
+                text = text.Trim();
+                var adductPosition = Transition.FindAdductDescription(text, out adduct);
+                if (adductPosition > 0)
+                {
+                    text = text.Substring(0, adductPosition);
+                }
+
+                target = _targetResolver.TryResolveTarget(text, out var msg) ?? Target.FromSerializableString(text);
+                return !target.IsProteomic;
+            }
+
+            public string ValidateSequence(string sequenceText)
             {
                 if (string.IsNullOrWhiteSpace(sequenceText))
                     return Resources.LibraryGridViewDriver_ValidateSequence_Sequence_cannot_be_empty_;
                 if (!FastaSequence.IsExSequence(Transition.StripChargeIndicators(sequenceText, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE)))
-                    return string.Format(Resources.EditOptimizationLibraryDlg_ValidateOptimizationList_The_value__0__is_not_a_valid_modified_peptide_sequence_, sequenceText);
+                {
+                    if (IsMoleculeWithAdduct(sequenceText, out var target, out var adduct))
+                    {
+                        return null;
+                    }
 
+                    return _form.ModeUIAwareStringFormat(Resources.EditOptimizationLibraryDlg_ValidateOptimizationList_The_value__0__is_not_a_valid_modified_peptide_sequence_, sequenceText);
+                }
                 return null;
             }
 
@@ -746,8 +831,11 @@ namespace pwiz.Skyline.SettingsUI
 
                 string stripped = Transition.StripChargeIndicators(productIonText, Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE);
                 if (!RGX_PRODUCT_ION.IsMatch(stripped))
+                {
+                    if (Transition.FindAdductDescription(productIonText, out var adduct)>0)
+                        return null; // Looks like a smallmol fragment name and an adduct
                     return string.Format(Resources.LibraryGridViewDriver_ValidateProductIon_Product_ion__0__is_invalid_, stripped);
-
+                }
                 return null;
             }
 
@@ -806,11 +894,11 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             private static double GetCollisionEnergy(SrmSettings settings, PeptideDocNode nodePep,
-            TransitionGroupDocNode nodeGroup, CollisionEnergyRegression regression, int step)
+            TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, CollisionEnergyRegression regression, int step)
             {
                 var charge = nodeGroup.TransitionGroup.PrecursorAdduct;
                 double mz = settings.GetRegressionMz(nodePep, nodeGroup);
-                return regression.GetCollisionEnergy(charge, mz) + regression.StepSize * step;
+                return regression.GetCollisionEnergy(charge, mz) + regression.StepSize * step; // Note this ignores any explicitly set value in nodeTran or nodeGroup
             }
 
             public void AddResults()

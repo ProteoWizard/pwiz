@@ -339,6 +339,7 @@ namespace pwiz.Skyline.SettingsUI
                 textPrecursorIsotopeFilter.Enabled = true;
                 comboPrecursorAnalyzerType.Enabled = true;
             }
+            FullScanEnabledChanged?.Invoke(new FullScanEnabledChangeEventArgs(comboPrecursorAnalyzerType.Enabled, null)); // Fire event so Filter iontypes settings can update as needed
             UpdateRetentionTimeFilterUi();
         }
 
@@ -352,28 +353,28 @@ namespace pwiz.Skyline.SettingsUI
             _driverEnrichments.SelectedIndexChangedEvent(sender, e);
         }
 
-        public bool ValidateFullScanSettings(MessageBoxHelper helper, out TransitionFullScan fullScanSettings, TabControl tabControl = null, int tabIndex = -1)
+        public bool ValidateFullScanSettings(MessageBoxHelper helper, out TransitionFullScan fullScanSettings)
         {
             fullScanSettings = null;
 
             double? precursorIsotopeFilter;
-            if (!ValidatePrecursorIsotopeFilter(helper, out precursorIsotopeFilter, tabControl, tabIndex))
+            if (!ValidatePrecursorIsotopeFilter(helper, out precursorIsotopeFilter))
                 return false;
 
             double? precursorRes;
-            if (!ValidatePrecursorRes(helper, precursorIsotopeFilter, out precursorRes, tabControl, tabIndex))
+            if (!ValidatePrecursorRes(helper, precursorIsotopeFilter, out precursorRes))
                 return false;
 
             double? precursorResMz;
-            if (!ValidatePrecursorResMz(helper, out precursorResMz, tabControl, tabIndex))
+            if (!ValidatePrecursorResMz(helper, out precursorResMz))
                 return false;
 
             double? productRes;
-            if (!ValidateProductRes(helper, out productRes, tabControl, tabIndex))
+            if (!ValidateProductRes(helper, out productRes))
                 return false;
 
             double? productResMz;
-            if (!ValidateProductResMz(helper, out productResMz, tabControl, tabIndex))
+            if (!ValidateProductResMz(helper, out productResMz))
                 return false;
 
             RetentionTimeFilterType retentionTimeFilterType = RetentionTimeFilterType;
@@ -398,7 +399,7 @@ namespace pwiz.Skyline.SettingsUI
             return true;
         }
 
-        public bool ValidatePrecursorIsotopeFilter(MessageBoxHelper helper, out double? precursorIsotopeFilter, TabControl tabControl = null, int tabIndex = -1)
+        public bool ValidatePrecursorIsotopeFilter(MessageBoxHelper helper, out double? precursorIsotopeFilter)
         {
             precursorIsotopeFilter = null;
             FullScanPrecursorIsotopes precursorIsotopes = PrecursorIsotopesCurrent;
@@ -416,17 +417,8 @@ namespace pwiz.Skyline.SettingsUI
                     maxFilt = TransitionFullScan.MAX_ISOTOPE_PERCENT;
                 }
                 double precIsotopeFilt;
-                bool valid;
-                if (null != tabControl)
-                {
-                    valid = helper.ValidateDecimalTextBox(tabControl, tabIndex, textPrecursorIsotopeFilter,
-                                                          minFilt, maxFilt, out precIsotopeFilt);
-                }
-                else
-                {
-                    valid = helper.ValidateDecimalTextBox(textPrecursorIsotopeFilter,
-                                                          minFilt, maxFilt, out precIsotopeFilt);
-                }
+                bool valid = helper.ValidateDecimalTextBox(textPrecursorIsotopeFilter,
+                    minFilt, maxFilt, out precIsotopeFilt);
 
                 if (!valid)
                     return false;
@@ -437,7 +429,7 @@ namespace pwiz.Skyline.SettingsUI
             return true;
         }
 
-        public bool ValidatePrecursorRes(MessageBoxHelper helper, double? precursorIsotopeFilter, out double? precursorRes, TabControl tabControl = null, int tabIndex = -1)
+        public bool ValidatePrecursorRes(MessageBoxHelper helper, double? precursorIsotopeFilter, out double? precursorRes)
         {
             precursorRes = null;
             FullScanPrecursorIsotopes precursorIsotopes = PrecursorIsotopesCurrent;
@@ -448,19 +440,10 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     if (precursorIsotopes != FullScanPrecursorIsotopes.Count || precursorIsotopeFilter != 1)
                     {
-                        if (null != tabControl)
-                        {
-                            helper.ShowTextBoxError(tabControl, tabIndex, textPrecursorIsotopeFilter,
-                                                    Resources.
-                                                        TransitionSettingsUI_OkDialog_For_MS1_filtering_with_a_QIT_mass_analyzer_only_1_isotope_peak_is_supported);
-                        }
-                        else
-                        {
-                            helper.ShowTextBoxError(textPrecursorIsotopeFilter,
-                                                    Resources.
-                                                        TransitionSettingsUI_OkDialog_For_MS1_filtering_with_a_QIT_mass_analyzer_only_1_isotope_peak_is_supported);
+                        helper.ShowTextBoxError(textPrecursorIsotopeFilter,
+                                                Resources.
+                                                    TransitionSettingsUI_OkDialog_For_MS1_filtering_with_a_QIT_mass_analyzer_only_1_isotope_peak_is_supported);
 
-                        }
 
                         return false;
                     }
@@ -470,16 +453,8 @@ namespace pwiz.Skyline.SettingsUI
 
                 double precRes;
                 bool valid;
-                if (null != tabControl)
-                {
-                    valid = helper.ValidateDecimalTextBox(tabControl, tabIndex, textPrecursorRes,
-                                                          minFilt, maxFilt, out precRes);
-                }
-                else
-                {
-                    valid = helper.ValidateDecimalTextBox(textPrecursorRes,
-                                                          minFilt, maxFilt, out precRes);
-                }
+                valid = helper.ValidateDecimalTextBox(textPrecursorRes,
+                                                      minFilt, maxFilt, out precRes);
                 if (!valid)
                     return false;
 
@@ -489,7 +464,7 @@ namespace pwiz.Skyline.SettingsUI
             return true;
         }
 
-        public bool ValidatePrecursorResMz(MessageBoxHelper helper, out double? precursorResMz, TabControl tabControl = null, int tabIndex = -1)
+        public bool ValidatePrecursorResMz(MessageBoxHelper helper, out double? precursorResMz)
         {
             precursorResMz = null;
             FullScanPrecursorIsotopes precursorIsotopes = PrecursorIsotopesCurrent;
@@ -498,19 +473,9 @@ namespace pwiz.Skyline.SettingsUI
                 if (IsResMzAnalyzer(PrecursorMassAnalyzer))
                 {
                     double precResMz;
-                    bool valid;
-                    if (null != tabControl)
-                    {
-                        valid = helper.ValidateDecimalTextBox(tabControl, tabIndex, textPrecursorAt,
+                    bool valid = helper.ValidateDecimalTextBox(textPrecursorAt,
                                                               TransitionFullScan.MIN_RES_MZ,
                                                               TransitionFullScan.MAX_RES_MZ, out precResMz);
-                    }
-                    else
-                    {
-                        valid = helper.ValidateDecimalTextBox(textPrecursorAt,
-                                                              TransitionFullScan.MIN_RES_MZ,
-                                                              TransitionFullScan.MAX_RES_MZ, out precResMz);
-                    }
 
                     if (!valid)
                         return false;
@@ -599,6 +564,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 comboProductAnalyzerType.Enabled = true;
             }
+            FullScanEnabledChanged?.Invoke(new FullScanEnabledChangeEventArgs(null, comboProductAnalyzerType.Enabled));// Fire event so Filter iontypes settings can update as needed
             UpdateRetentionTimeFilterUi();
         }
 
@@ -664,7 +630,7 @@ namespace pwiz.Skyline.SettingsUI
             set { _driverIsolationScheme.Combo.SelectedItem = value; }
         }
 
-        public bool ValidateProductRes(MessageBoxHelper helper, out double? productRes, TabControl tabControl = null, int tabIndex = -1)
+        public bool ValidateProductRes(MessageBoxHelper helper, out double? productRes)
         {
             FullScanAcquisitionMethod acquisitionMethod = AcquisitionMethod;
             productRes = null;
@@ -676,16 +642,7 @@ namespace pwiz.Skyline.SettingsUI
                 GetFilterMinMax(ProductMassAnalyzer, out minFilt, out maxFilt);
 
                 double prodRes;
-                bool valid;
-                if (null != tabControl)
-                {
-                    valid = helper.ValidateDecimalTextBox(tabControl, (int) TransitionSettingsUI.TABS.FullScan,
-                                                          textProductRes, minFilt, maxFilt, out prodRes);
-                }
-                else
-                {
-                    valid = helper.ValidateDecimalTextBox(textProductRes, minFilt, maxFilt, out prodRes);
-                }
+                bool valid = helper.ValidateDecimalTextBox(textProductRes, minFilt, maxFilt, out prodRes);
 
                 if (!valid)
                     return false;
@@ -715,7 +672,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public bool ValidateProductResMz(MessageBoxHelper helper, out double? productResMz, TabControl tabControl = null, int tabIndex = -1)
+        public bool ValidateProductResMz(MessageBoxHelper helper, out double? productResMz)
         {
             FullScanAcquisitionMethod acquisitionMethod = AcquisitionMethod;
             productResMz = null;
@@ -725,23 +682,11 @@ namespace pwiz.Skyline.SettingsUI
                 if (IsResMzAnalyzer(ProductMassAnalyzer))
                 {
                     double prodResMz;
-                    bool valid;
-                    if (null != tabControl)
-                    {
-                        valid = helper.ValidateDecimalTextBox(tabControl, (int) TransitionSettingsUI.TABS.FullScan,
-                                                              textProductAt,
-                                                              TransitionFullScan.MIN_RES_MZ,
-                                                              TransitionFullScan.MAX_RES_MZ, out prodResMz);
-
-                    }
-                    else
-                    {
-                        valid = helper.ValidateDecimalTextBox(textProductAt,
-                                                              TransitionFullScan.MIN_RES_MZ,
-                                                              TransitionFullScan.MAX_RES_MZ, out prodResMz);
+                    bool valid = helper.ValidateDecimalTextBox(textProductAt,
+                        TransitionFullScan.MIN_RES_MZ,
+                        TransitionFullScan.MAX_RES_MZ, out prodResMz);
 
 
-                    }
 
                     if (!valid)
                     {
@@ -1131,6 +1076,23 @@ namespace pwiz.Skyline.SettingsUI
         public bool IsDIA()
         {
             return AcquisitionMethod == FullScanAcquisitionMethod.DIA;
+        }
+
+        /// <summary>
+        /// Changes to Full Scan MS1 and/or MS2 settings may require changes in Filter iontypes settings
+        /// </summary>
+        public event FullScanEnabledChange FullScanEnabledChanged;
+        public delegate void FullScanEnabledChange(FullScanEnabledChangeEventArgs e);
+
+        public class FullScanEnabledChangeEventArgs : EventArgs
+        {
+            public FullScanEnabledChangeEventArgs(bool? ms1Enabled, bool? msmsEnabled)
+            {
+                MS1Enabled = ms1Enabled;
+                MSMSEnabled = msmsEnabled;
+            }
+            public bool? MS1Enabled { get; private set; }
+            public bool? MSMSEnabled { get; private set; }
         }
 
     }

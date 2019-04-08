@@ -128,7 +128,7 @@ namespace pwiz.Skyline.Util
                 // Check for implied positive ion mode - we see "MH", "MH+", "MNH4+" etc in the wild
                 // Also watch for for label-only like  "[M2Cl37]"
                 var posNext = input.IndexOf('M') + 1;
-                if (posNext > 0)
+                if (posNext > 0 && posNext < input.Length)
                 {
                     if (input[posNext] != '+' && input[posNext] != '-') 
                     {
@@ -217,7 +217,7 @@ namespace pwiz.Skyline.Util
             new Regex(
                 @"\[?(?<multM>\d*)M(?<label>(\(.*\)|[^\+\-]*))?(?<adduct>[\+\-][^\]]*)(\](?<declaredChargeCount>\d*)(?<declaredChargeSign>[+-]*)?)?$",
                 RegexOptions.ExplicitCapture | RegexOptions.Singleline | RegexOptions.CultureInvariant);
-        private static readonly Regex ADDUCT_INNER_REGEX = new Regex(@"(?<oper>\+|\-)(?<multM>\d+)?(?<ion>[^-+]*)",
+        private static readonly Regex ADDUCT_INNER_REGEX = new Regex(@"(?<oper>\+|\-)(?<multM>\d+)?\(?(?<ion>[^-+\)]*)\)?",
             RegexOptions.ExplicitCapture | RegexOptions.Singleline | RegexOptions.CultureInvariant);
         private static readonly Regex ADDUCT_ION_REGEX = new Regex(@"(?<multM>\d+)?(?<ion>[A-Z][a-z]?['\""]?)",
             RegexOptions.ExplicitCapture | RegexOptions.Singleline | RegexOptions.CultureInvariant);

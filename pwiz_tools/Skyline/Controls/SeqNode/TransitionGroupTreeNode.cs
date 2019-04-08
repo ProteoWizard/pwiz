@@ -429,7 +429,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 {
                     customTable.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Molecule, nodeGroup.CustomMolecule.Name, rt);
                     customTable.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Precursor_charge,
-                        nodeGroup.TransitionGroup.PrecursorAdduct.AdductCharge.ToString(LocalizationHelper.CurrentCulture), rt);
+                        FormatAdductTip(nodeGroup.TransitionGroup.PrecursorAdduct), rt);
                     customTable.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Precursor_mz,
                         string.Format(@"{0:F04}", nodeGroup.PrecursorMz), rt);
                     if (nodeGroup.CustomMolecule.Formula != null)

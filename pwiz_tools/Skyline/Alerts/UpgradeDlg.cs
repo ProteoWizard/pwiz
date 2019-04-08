@@ -24,7 +24,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
-    public partial class UpgradeDlg : FormEx
+    public partial class UpgradeDlg : ModeUIInvariantFormEx // This dialog is neither proteomic nor small mol
     {
         private readonly string _defaultButtonText;
 

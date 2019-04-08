@@ -353,7 +353,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                 }
                 break; // case Controller_MS
 
-                case Controller_PDA:
+                /*case Controller_PDA:
                 {
                     // "Total Scan" appears to be the equivalent of the TIC
                     index_.push_back(IndexEntry());
@@ -380,7 +380,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                     ci.chromatogramType = MS_emission_chromatogram;
                     ci.polarityType = CVID_Unknown;
                     idMap_[ci.id] = ci.index;
-                }
+                }*/
 
                 default:
                     // TODO: are there sensible default chromatograms for other controller types?

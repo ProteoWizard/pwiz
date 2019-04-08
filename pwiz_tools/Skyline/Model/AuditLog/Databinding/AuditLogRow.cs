@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Attributes;
@@ -75,7 +74,10 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
         [InvariantDisplayName("AuditLogRowId")]
         public AuditLogRowId Id { get; private set; }
 
-        public string TimeStamp { get { return _entry.TimeStamp.ToString(CultureInfo.CurrentCulture); } }
+        public AuditLogRowTime Time
+        {
+            get { return new AuditLogRowTime(_entry.TimeStampUTC, _entry.TimeZoneOffset); }
+        }
 
         public class AuditLogRowText
         {
@@ -125,7 +127,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             get
             {
                 return new AuditLogRowText(_entry.UndoRedo.ToString(),
-                    LogMessage.ParseLogString(_entry.ExtraInfo, LogLevel.all_info), _entry.UndoAction,
+                    LogMessage.ParseLogString(_entry.ExtraInfo, LogLevel.all_info, _entry.DocumentType), _entry.UndoAction,
                     IsMultipleUndo);
             }
         }
@@ -137,13 +139,12 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             get
             {
                 return new AuditLogRowText(_entry.Summary.ToString(),
-                    LogMessage.ParseLogString(_entry.ExtraInfo, LogLevel.all_info), _entry.UndoAction,
+                    LogMessage.ParseLogString(_entry.ExtraInfo, LogLevel.all_info, _entry.DocumentType), _entry.UndoAction,
                     IsMultipleUndo);
             }
         }
 
         public string SkylineVersion { get { return _entry.SkylineVersion; } }
-        public double DocumentFormat { get { return _entry.FormatVersion.AsDouble(); } }
         public string User { get { return _entry.User; } }
 
         [OneToMany(ForeignKey = @"AuditLogRow")]
@@ -158,7 +159,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             set
             {
                 var newEntry = Entry.ChangeReason(value);
-                ModifyDocument(EditDescription.SetColumn(@"Reason", value), d => ChangeEntry(d, newEntry),
+                ModifyDocument(EditColumnDescription(nameof(Reason), value), d => ChangeEntry(d, newEntry),
                     docPair => null);
             }
         }

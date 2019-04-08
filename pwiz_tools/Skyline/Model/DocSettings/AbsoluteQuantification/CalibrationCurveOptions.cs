@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public bool LogXAxis { get; set; }
         public bool LogYAxis { get; set; }
         public string[] DisplaySampleTypes { get; set; }
-        public bool SingleReplicate { get; set; }
+        public bool SingleBatch { get; set; }
 
         public bool DisplaySampleType(SampleType sampleType)
         {

@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" version="0.9">
+  <xs:element name="audit_log_root" type="audit_log_root_type"/>
+
+  <xs:complexType name="audit_log_root_type">
+    <xs:sequence>
+      <xs:element name="document_hash" type="xs:string" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="root_hash" type="xs:string" minOccurs="1" maxOccurs="1" />
+      <xs:element name="audit_log" type="audit_log_type" minOccurs="1" maxOccurs="1" />
+    </xs:sequence>
+    <xs:attribute name="format_version" type="xs:double" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="audit_log_type">
+    <xs:sequence>
+      <xs:element name="audit_log_entry" type="audit_log_entry_type" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="audit_log_entry_type">
+    <xs:sequence>
+      <xs:element name="reason" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="extra_info" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="undo_redo" type="message_type" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="summary" type="message_type" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="all_info" type="message_type" minOccurs="1" maxOccurs="unbounded"/>
+      <xs:element name="en_extra_info" type="xs:string" minOccurs="0" />
+      <xs:element name="hash" type="xs:string" minOccurs="1" maxOccurs="1" />
+    </xs:sequence>
+    <xs:attribute name="skyline_version" type="xs:string" use="required"/>
+    <xs:attribute name="time_stamp" type="xs:dateTime" use="required"/>
+    <xs:attribute name="user" type="xs:string" use="required"/>
+    <xs:attribute name="mode" default="p">
+      <xs:annotation>
+        <xs:documentation>
+          Gives the document and/or UI mode at the time of the event: p=proteomic, m=molecules, x=mixed
+          May be omitted if mode has no effect on human readable log value, or document and/or UI mode is proteomic
+        </xs:documentation>
+      </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="p"/>
+            <xs:enumeration value="m"/>
+            <xs:enumeration value="x"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="message_type">
+    <xs:sequence>
+      <xs:element name="type" type="xs:string"/>
+      <xs:element name="name" type="xs:string" minOccurs="0" maxOccurs="unbounded" />
+      <xs:element name="reason" type="xs:string" minOccurs="0"/>
+      <xs:element name="en_expanded" type="xs:string" minOccurs="0" />
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>
