@@ -84,7 +84,7 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
-        private void linkLabelHelp_LinkClicked(object sender, System.Windows.Forms.LinkLabelLinkClickedEventArgs e)
+        private void lblCustomFormatString_LinkClicked(object sender, System.Windows.Forms.LinkLabelLinkClickedEventArgs e)
         {
             WebHelpers.OpenSkylineShortLink(this, @"helptopic-docgridformats");
         }

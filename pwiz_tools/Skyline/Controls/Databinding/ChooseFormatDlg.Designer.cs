@@ -56,7 +56,7 @@
             resources.ApplyResources(this.lblCustomFormatString, "lblCustomFormatString");
             this.lblCustomFormatString.Name = "lblCustomFormatString";
             this.lblCustomFormatString.TabStop = true;
-            this.lblCustomFormatString.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelHelp_LinkClicked);
+            this.lblCustomFormatString.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lblCustomFormatString_LinkClicked);
             // 
             // tbxCustomFormat
             // 
