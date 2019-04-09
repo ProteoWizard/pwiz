@@ -30,6 +30,8 @@
 #define _MATRIX_USE_STATIC_LIB
 #endif
 
+#include "pwiz/utility/misc/Filesystem.hpp"
+#include "boost/filesystem/detail/utf8_codecvt_facet.hpp"
 #include "CommandLine.h"
 #include "BlibBuilder.h"
 #include "AllBuildParsers.h"
@@ -56,8 +58,8 @@ int main(int argc, char* argv[])
     //    _crtBreakAlloc = 624219;
 #endif
 #endif
-
-    enable_utf8_path_operations();
+    bnw::args utf8ArgWrapper(argc, argv); // modifies argv in-place with UTF-8 version on Windows
+    pwiz::util::enable_utf8_path_operations();
 
     // Are we anticipating an error message?
     string expectedError="";

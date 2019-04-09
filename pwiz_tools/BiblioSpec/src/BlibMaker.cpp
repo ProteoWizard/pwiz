@@ -19,18 +19,16 @@
 // limitations under the License.
 //
 
+#include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include <sqlite3.h>
 #include <time.h>
-#include <boost/lexical_cast.hpp>
-
 #include "zlib.h"
 #include "BlibMaker.h"
 #include "SqliteRoutine.h"
 #include <boost/log/detail/snprintf.hpp>
 #include "SmallMolMetadata.h"
-#include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
-#include <boost/algorithm/string/replace.hpp>
 
 namespace BiblioSpec {
 
@@ -144,7 +142,7 @@ void BlibMaker::init()
         // Remove it, if this is to be an overwrite
         if (overwrite) {
             libName.close();
-            remove(lib_name);
+            bfs::remove(lib_name);
             ifstream libName2(lib_name);
             if (libName2.good()) {
                 Verbosity::error("Failed to remove existing redundant "
@@ -220,7 +218,7 @@ void BlibMaker::abort_current_library(){
     }
 
     // delete file
-    remove(lib_name);
+    bfs::remove(lib_name);
 }
 
 /**

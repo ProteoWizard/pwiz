@@ -97,8 +97,8 @@ alias BlibFilter : ../src//BlibFilter ;
 alias BlibToMs2 : ../src//BlibToMs2 ;
 alias BlibSearch : ../src//BlibSearch ;
 
-exe CompareLibraryContents : CompareLibraryContents.cpp ../src/CommandLine.cpp ../src/Verbosity.cpp : <include>../src <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3 <library>/ext/boost//program_options <library>/ext/boost//filesystem <library>/ext/boost//nowide ;
-exe CompareTextFiles : CompareTextFiles.cpp ../src/CommandLine.cpp ../src/Verbosity.cpp : <include>../src <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3 <library>/ext/boost//program_options <library>/ext/boost//filesystem <library>/ext/boost//nowide ;
+exe CompareLibraryContents : CompareLibraryContents.cpp ../src/CommandLine.cpp ../src/Verbosity.cpp : <include>../src <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3 <library>/ext/boost//program_options <library>/ext/boost//filesystem <library>/ext/boost//nowide ;
+exe CompareTextFiles : CompareTextFiles.cpp ../src/CommandLine.cpp ../src/Verbosity.cpp : <include>../src <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3 <library>/ext/boost//program_options <library>/ext/boost//filesystem <library>/ext/boost//nowide ;
 
 local build-tests ;
 local filter-tests ;

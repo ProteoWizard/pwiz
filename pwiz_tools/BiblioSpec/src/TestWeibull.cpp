@@ -41,7 +41,7 @@ void ParseCommandLine(const int argc,
                       ops::variables_map& options_table);
 
 int main(int argc, char** argv){
-
+  bnw::args utf8ArgWrapper(argc, argv); // modifies argv in-place with UTF-8 version on Windows
   BiblioSpec::enable_utf8_path_operations();
 
   // delcare storage for options values

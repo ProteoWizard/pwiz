@@ -35,17 +35,8 @@
 #include "CommandLine.h"
 #include "Verbosity.h"
 #include "pwiz/utility/misc/Std.hpp"
-#include <boost/filesystem/path.hpp>
-#include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
 
 namespace BiblioSpec {
-
-void enable_utf8_path_operations()
-{
-    std::locale global_loc = std::locale();
-    std::locale loc(global_loc, new boost::filesystem::detail::utf8_codecvt_facet);
-    boost::filesystem::path::imbue(loc);
-}
 
 CommandLine::CommandLine(const char* exeName,
                          const options_description& options,

@@ -155,7 +155,7 @@ int executeBlib(const vector<string>& argv)
         fullCommand = command + options + inputs + libName + outputs;
     cerr << "Running " << fullCommand << endl;
 
-    int returnValue = system(fullCommand.c_str());
+    int returnValue = bnw::system(fullCommand.c_str());
 
     if (expectedErrorMsg != "")
     {
@@ -168,7 +168,7 @@ int executeBlib(const vector<string>& argv)
     string fullCompareCommand = compareCmd + outputs + references + skiplines;
     cerr << "Testing output with: " << fullCompareCommand << endl;
     
-    returnValue = system(fullCompareCommand.c_str());
+    returnValue = bnw::system(fullCompareCommand.c_str());
 
     if (returnValue != 0)
         throw runtime_error("Compare returned " + lexical_cast<string>(returnValue));

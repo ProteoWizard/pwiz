@@ -26,6 +26,7 @@
  */
 
 #include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <sqlite3.h>
@@ -94,8 +95,8 @@ using namespace BiblioSpec;
  * library and store it in a new library.
  */
 int main(int argc, char* argv[]) {
-
-    enable_utf8_path_operations();
+    bnw::args utf8ArgWrapper(argc, argv); // modifies argv in-place with UTF-8 version on Windows
+    pwiz::util::enable_utf8_path_operations();
 
     // declare storage for options values
     ops::variables_map options_table;

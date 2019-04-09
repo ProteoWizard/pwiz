@@ -55,6 +55,7 @@ void add2Table(RefSpectrum* tmpSpec, sqlite3* db);
 
 int main(int argc, char* argv[])
 {
+    bnw::args utf8ArgWrapper(argc, argv); // modifies argv in-place with UTF-8 version on Windows
     BiblioSpec::enable_utf8_path_operations();
 
 // TODO: add option for redundant/not redundant

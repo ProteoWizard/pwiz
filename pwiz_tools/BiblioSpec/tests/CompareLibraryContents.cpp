@@ -20,9 +20,9 @@
 //
 
 #include "Compare.h"
-#include "CommandLine.h"
 #include "pwiz/utility/misc/unit.hpp"
-#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include "boost/xpressive/xpressive_dynamic.hpp"
 #include <cstring>
 #include <stdlib.h>
@@ -165,7 +165,7 @@ void getObserved(const char* libName, vector<string>& outputLines){
 void removeObservedFiles(const string& libName){
     string outName = libName;
     outName += ".observed";
-    remove(outName.c_str());
+    bfs::remove(outName.c_str());
 }
 
 // When the output does not match the expected, print the observed output
@@ -267,7 +267,8 @@ int test (const vector<string>& args)
 
 int main(int argc, char* argv[])
 {
-    BiblioSpec::enable_utf8_path_operations();
+    bnw::args utf8ArgWrapper(argc, argv); // modifies argv in-place with UTF-8 version on Windows
+    pwiz::util::enable_utf8_path_operations();
 
     try
     {

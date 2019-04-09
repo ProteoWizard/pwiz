@@ -47,8 +47,6 @@ using namespace boost::program_options;
 
 namespace BiblioSpec {
 
-void enable_utf8_path_operations();
-
 class CommandLine{
 
  private:

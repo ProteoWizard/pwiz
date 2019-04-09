@@ -20,7 +20,7 @@
 //
 
 #include "Compare.h"
-#include "CommandLine.h"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include <stdlib.h>
 
@@ -115,7 +115,8 @@ int test (const vector<string>& args)
 
 int main(int argc, char* argv[])
 {
-    BiblioSpec::enable_utf8_path_operations();
+    bnw::args utf8ArgWrapper(argc, argv); // modifies argv in-place with UTF-8 version on Windows
+    pwiz::util::enable_utf8_path_operations();
 
     try
     {
