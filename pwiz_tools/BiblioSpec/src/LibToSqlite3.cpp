@@ -43,7 +43,7 @@
 #include "original-Spectrum.h"
 #include "original-RefSpectrum.h"
 #include "original-Modifications.h"
-#include "CommandLine.h"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include "zlib.h"
 #include <iomanip>
 #include <map>
@@ -56,7 +56,7 @@ void add2Table(RefSpectrum* tmpSpec, sqlite3* db);
 int main(int argc, char* argv[])
 {
     bnw::args utf8ArgWrapper(argc, argv); // modifies argv in-place with UTF-8 version on Windows
-    BiblioSpec::enable_utf8_path_operations();
+    pwiz::util::enable_utf8_path_operations();
 
 // TODO: add option for redundant/not redundant
     if(argc < 3) {
