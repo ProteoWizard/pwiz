@@ -1,0 +1,4 @@
+file	scan	charge	adduct	inchikey	retention-time	chemicalformula	moleculename
+demo.ms2	136	3	[M+3H]3+	RYYVLZVUVIJVGH-UHFFFAOYSA-N	20.0	C8H10N4O2	Caffeine
+demo.ms2	140	3	[M+3H]	LFQSCWFLJHTTHZ-UHFFFAOYAB		C2H6O	Ethanol
+demo.ms2	142	3	[M+3H]	YAPQBXQYLJRXSA-UHFFFAOYSA-N 	60.0	C7H8N4O2	Theobromine

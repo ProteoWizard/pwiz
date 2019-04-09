@@ -109,7 +109,7 @@ namespace pwiz.Skyline.Model.Databinding
         {
             foreach (var reportSpec in reportSpecs)
             {
-                yield return Convert(reportSpec).GetViewSpec();
+                yield return Convert(reportSpec).GetViewSpec().SetUiMode(string.Empty);
             }
         }
         public ViewInfo Convert(ReportSpec reportSpec)

@@ -782,7 +782,7 @@ namespace pwiz.SkylineTestUtil
             return false;
         }
 
-        public static bool WaitForConditionUI(Func<bool> func)
+        public static bool WaitForConditionUI([InstantHandle] Func<bool> func)
         {
             return WaitForConditionUI(WAIT_TIME, func);
         }

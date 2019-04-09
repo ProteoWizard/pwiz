@@ -130,6 +130,9 @@ in the document.</value>
 first internal standard label type, before version 0.7 this was always light/heavy, and
 appeared on the heavy transitions.</value>
   </data>
+  <data name="AutoSelectMolecules">
+    <value>If true, then Skyline will automatically add or remove molecules from the Molecule List based on the current settings.</value>
+  </data>
   <data name="AutoSelectPeptides">
     <value>If true, then Skyline will automatically add or remove peptides based on the Peptide Settings Filter.</value>
   </data>
@@ -152,6 +155,18 @@ appeared on the heavy transitions.</value>
     <value>The area of the rectangle formed by the integration boundaries, and the
 baseline and a line perpendicular to minimum intersection intensity between the
 integration boundaries and the chromatogram for the transition peak.</value>
+  </data>
+  <data name="BatchFiguresOfMerit">
+    <value>Figures of merit calculated using the subset of external standard replicates that have the same Batch Name as this replicate.</value>
+  </data>
+  <data name="BatchLimitOfDetection">
+    <value>Lower limit of detection calculated using the subset of external standard replicates that have the same Batch Name as this replicate.</value>
+  </data>
+  <data name="BatchLimitOfQuantification">
+    <value>Lower limit of quantification calculated using the subset of external standard replicates that have the same Batch Name as this replicate.</value>
+  </data>
+  <data name="BatchName">
+    <value>Name of the batch that this replicate belongs to. The calibration curve for a particular replicate will be </value>
   </data>
   <data name="BeginPos">
     <value>The position of the first (N-terminal) amino acid of the peptide within its
@@ -404,6 +419,9 @@ between the peak integration boundaries.</value>
   <data name="InterpolatedNumberOfPoints">
     <value>The number of points in the interpolated chromatogram.</value>
   </data>
+  <data name="InterpolatedSpectrumIds">
+    <value>Identifiers of the spectra that contributed to the points in the interpolated chromatogram.</value>
+  </data>
   <data name="InterpolatedTimes">
     <value>The retention times in the interpolated chromatogram.</value>
   </data>
@@ -610,14 +628,59 @@ cysteine alkylation. (example: AGLC[+57]QTFVYGGC[+57]R)</value>
     <value>Last time and date at which the original mass spectrometer file was
 modified on disk</value>
   </data>
+  <data name="Molecule">
+    <value>Molecules belong to Molecule Lists and contain Percursors.</value>
+  </data>
   <data name="MoleculeFormula">
     <value>An atomic chemical formula for the neutral, unlabeled molecule to be measured in a mass spectrometer.</value>
+  </data>
+  <data name="MoleculeListLocator">
+      <value>Unique identifier of the molecule list within the document. This begins with "MoleculeGroup:".</value>
+    <comment>Do not translate "MoleculeGroup:".</comment>
+  </data>
+  <data name="MoleculeListName">
+    <value>The name of the molecule list.</value>
+  </data>
+  <data name="MoleculeListNote">
+    <value>A free text not associated with the molecule list.</value>
+  </data>
+  <data name="MoleculeList">
+    <value>A grouping of molecules in a Skyline document.</value>
+  </data>
+  <data name="MoleculeLists">
+    <value>The top level set of the groupings of all of the molecules in a Skyline document.</value>
+  </data>
+  <data name="MoleculeLocator">
+    <value>Unique identifier of the molecule within the document. This begins with "Molecule:".</value>
+    <comment>Do not translate "Molecule:".</comment>
   </data>
   <data name="MoleculeName">
     <value>A general name that may be assigned to a molecule in its neutral, unlabeled form.</value>
   </data>
+  <data name="MoleculeNote">
+    <value>A free text note associated with the molecule.</value>
+  </data>
+  <data name="MoleculePeakFoundRatio">
+    <value>Molecule Peak Found Ratio</value>
+  </data>
   <data name="MonoisotopicMasses">
     <value>The modified sequence where modifications are referred to by their monoisotopic masses, e.g. "C[+57.021464]".</value>
+  </data>
+  <data name="MoleculeResult">
+    <value>Molecule Result</value>
+  </data>
+  <data name="MoleculeResultLocator">
+    <value>Unique identifier of the Molecule Result within the document. This will begin with "MoleculeResult:" and will contain the molecule name and the replicate name.</value>
+    <comment>Do not translate "MoleculeResult:"</comment>
+  </data>
+  <data name="MoleculeResults">
+    <value>The results associated with the molecule.</value>
+  </data>
+  <data name="MoleculeRetentionTime">
+    <value>The average of the Best Retention Time values for the precursors in a particular replicate.</value>
+  </data>
+  <data name="Molecules">
+    <value>The molecules in a Molecule List.</value>
   </data>
   <data name="MsLevel">
     <value>Indicates whether the result was obtained using only precursor intensities (MS Level 1) or product intensities (MS Level 2).</value>
@@ -905,6 +968,9 @@ measured.</value>
   <data name="RawNumberOfPoints">
     <value>The number of points in the raw (uninterpolated) chromatogram.</value>
   </data>
+  <data name="RawSpectrumIds">
+    <value>Identifiers of the spectra that contributed to the points in the raw (uninterpolated) chromatogram.</value>
+  </data>
   <data name="RawTimes">
     <value>The retention times in the raw (uninterpolated) chromatogram.</value>
   </data>
@@ -995,6 +1061,9 @@ file, or the file name again for other file types.</value>
   </data>
   <data name="Slope">
     <value>Coefficient of the linear term in the fitted curve or line.</value>
+  </data>
+  <data name="SpectrumIds">
+    <value>Identifiers of the spectra that contributed to the chromatogram.</value>
   </data>
   <data name="StandardError">
     <value>The standard error of the estimated value in the linear fit.</value>
@@ -1137,9 +1206,6 @@ higher than the other extent.</value>
   </data>
   <data name="UserSetTotal">
     <value>True if the default choice of peak or its boundaries was manually altered.</value>
-  </data>
-  <data name="Value">
-    <value>Value</value>
   </data>
   <data name="CollisionalCrossSection">
     <value>A measure of ion mobility, in square angstroms, which is typically converted to appropriate units (eg drift time, inverseK0) and used in extracting chromatograms from ion mobility mass spectra.</value>

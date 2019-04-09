@@ -17,8 +17,13 @@
  * limitations under the License.
  */
 
+using pwiz.Common.DataBinding.Attributes;
+using pwiz.Skyline.Util;
+
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
+    [ProteomicDisplayName(nameof(ProteinResult))]
+    [InvariantDisplayName("MoleculeListResult")]
     public class ProteinResult : Result
     {
         public ProteinResult(Protein protein, ResultFile resultFile) : base(protein, resultFile)
@@ -30,6 +35,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             return File.ToString();
         }
+
+        [InvariantDisplayName("MoleculeList", InUiMode = UiModes.SMALL_MOLECULES)]
         public Protein Protein
         {
             get { return (Protein) SkylineDocNode; }

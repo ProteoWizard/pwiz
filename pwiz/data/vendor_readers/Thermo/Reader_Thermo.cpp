@@ -140,8 +140,15 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd, const
 
     auto instData = rawfile.getInstrumentData();
 
-    /*SamplePtr samplePtr(new Sample("sample"));
-    for (int i=0; i < (int) ValueID_Double_Count; ++i)
+    string sampleID = rawfile.getSampleID();
+    if (!sampleID.empty())
+    {
+        SamplePtr samplePtr(new Sample(sampleID));
+        samplePtr->set(MS_sample_name, sampleID);
+        msd.samplePtrs.push_back(samplePtr);
+    }
+
+    /*for (int i=0; i < (int) ValueID_Double_Count; ++i)
         if (rawfile.value((ValueID_Double) i) > 0)
             samplePtr->userParams.push_back(UserParam(rawfile.name((ValueID_Double) i),
                                                       lexical_cast<string>(rawfile.value((ValueID_Double) i)),
@@ -155,8 +162,7 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd, const
         if (!rawfile.value((ValueID_String) i).empty())
             samplePtr->userParams.push_back(UserParam(rawfile.name((ValueID_String) i),
                                                       rawfile.value((ValueID_String) i),
-                                                      "xsd:string"));
-    msd.samplePtrs.push_back(samplePtr);*/
+                                                      "xsd:string"));*/
 
     SoftwarePtr softwareXcalibur(new Software);
     softwareXcalibur->id = "Xcalibur";

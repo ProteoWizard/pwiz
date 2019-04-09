@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
@@ -36,6 +37,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
     {
         private bool _inChangeView;
         private bool _showHiddenFields;
+
         // ReSharper disable PrivateFieldCanBeConvertedToLocalVariable
         private readonly ChooseColumnsTab _chooseColumnsTab;
         private readonly FilterTab _filterTab;
@@ -81,11 +83,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             foreach (var tab in _editorWidgets)
             {
                 tab.SetViewEditor(this);
-            }
-            toolButtonShowAdvanced.Checked = ShowHiddenFields;
-            if (!ShowHiddenFields)
-            {
-                tabControl1.TabPages.Remove(tabPageSource);
             }
             AddTooltipHandler(_chooseColumnsTab.AvailableFieldsTree);
             AddTooltipHandler(_filterTab.AvailableFieldsTree);
@@ -156,6 +153,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             _selectedPaths = undoEntry.Value;
             toolButtonUndo.Enabled = _undoIndex > 1;
             toolButtonRedo.Enabled = _undoIndex < _undoStack.Count;
+            UpdateUiModesDropdown();
             if (ViewChange != null)
             {
                 ViewChange(this, new EventArgs());
@@ -205,8 +203,25 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                     return;
                 }
                 _showHiddenFields = value;
-                toolButtonShowAdvanced.Checked = ShowHiddenFields;
-                if (ShowHiddenFields)
+                toolButtonShowHiddenColumns.Checked = ShowHiddenFields;
+                ViewChange?.Invoke(this, new EventArgs());
+            }
+        }
+
+        public bool ShowSourceTab
+        {
+            get
+            {
+                return tabPageSource.Parent == tabControl1;
+            }
+            set
+            {
+                if (ShowSourceTab == value)
+                {
+                    return;
+                }
+
+                if (value)
                 {
                     if (tabPageSource.Parent == null)
                     {
@@ -220,22 +235,8 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                         tabControl1.TabPages.Remove(tabPageSource);
                     }
                 }
-                if (null != ViewChange)
-                {
-                    ViewChange(this, new EventArgs());
-                }
-            }
-        }
 
-        public bool ShowSourceTab
-        {
-            get
-            {
-                return tabPageSource.Visible;
-            }
-            set
-            {
-                tabPageSource.Visible = value;
+                ViewChange?.Invoke(this, new EventArgs());
             }
         }
 
@@ -334,11 +335,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 _inChangeView = false;
             }
-        }
-
-        private void toolButtonShowAdvanced_Click(object sender, EventArgs e)
-        {
-            ShowHiddenFields = !ShowHiddenFields;
         }
 
         public void AddViewEditorWidget(ViewEditorWidget viewEditorWidget)
@@ -468,7 +464,10 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         public void ShowColumnDocumentation(bool showInTaskbar)
         {
-            var documentationGenerator = new DocumentationGenerator(ChooseColumnsTab.ViewInfo.ParentColumn);
+            var documentationGenerator = new DocumentationGenerator(ChooseColumnsTab.ViewInfo.ParentColumn)
+            {
+                IncludeHidden = ShowHiddenFields
+            };
             DocumentationViewer documentationViewer = new DocumentationViewer(showInTaskbar);
             documentationViewer.DocumentationHtml = documentationGenerator.GetDocumentationHtmlPage();
             documentationViewer.Show(this);
@@ -484,6 +483,53 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                     toolTip1.Show(args.Node.ToolTipText, treeView);
                 }
             };
+        }
+
+        public void UpdateUiModesDropdown()
+        {
+            var uiModes = ViewContext.AvailableUiModes.ToArray();
+            uiModeDropdown.Visible = uiModes.Length > 1;
+            uiModeDropdown.DropDownItems.Clear();
+            uiModeDropdown.Image = Resources.UnknownUiMode;
+            uiModeDropdown.ToolTipText = ViewInfo.ParentColumn.UiMode;
+            uiModeDropdown.ImageTransparentColor = Color.Empty;
+            foreach (var uiMode in uiModes)
+            {
+                var button = MakeUiModeButton(uiMode);
+                if (uiMode.Name == ViewInfo.ParentColumn.UiMode)
+                {
+                    button.Checked = true;
+                    uiModeDropdown.ToolTipText = uiMode.Label;
+                    uiModeDropdown.Image = uiMode.Image;
+                    uiModeDropdown.ImageTransparentColor = uiMode.TransparentColor;
+                }
+
+                uiModeDropdown.DropDownItems.Add(button);
+            }
+        }
+
+        private ToolStripButton MakeUiModeButton(IUiModeInfo uiMode)
+        {
+            var button = new ToolStripButton(uiMode.Label, uiMode.Image);
+            button.ImageTransparentColor = uiMode.TransparentColor;
+            button.Click += (sender, args) =>
+            {
+                var parentColumn = ColumnDescriptor.RootColumn(ViewInfo.ParentColumn.DataSchema,
+                    ViewInfo.ParentColumn.PropertyType, uiMode.Name);
+                SetViewInfo(new ViewInfo(parentColumn, ViewInfo.ViewSpec.SetUiMode(uiMode.Name)),
+                    new PropertyPath[0]);
+            };
+            return button;
+        }
+
+        private void showHiddenFieldsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowHiddenFields = !ShowHiddenFields;
+        }
+
+        private void showSourceTabMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowSourceTab = !ShowSourceTab;
         }
     }
 }

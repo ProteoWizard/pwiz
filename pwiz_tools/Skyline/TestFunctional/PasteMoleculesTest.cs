@@ -676,7 +676,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.Document.MoleculeTransitions.First().Note.Equals(noteText)));
 
                 // Simulate user editing the peptide in the document grid
-                RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides));
+                RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Molecules));
                 WaitForCondition(() => (documentGrid.RowCount == 8));  // Let it initialize
                 const double explicitRT = 123.45;
                 var colRT = FindDocumentGridColumn(documentGrid, "ExplicitRetentionTime");

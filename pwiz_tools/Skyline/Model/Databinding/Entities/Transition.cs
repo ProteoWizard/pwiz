@@ -32,6 +32,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
+    [InvariantDisplayName(nameof(Transition))]
     [AnnotationTarget(AnnotationDef.AnnotationTarget.transition)]
     public class Transition : SkylineDocNode<TransitionDocNode>
     {
@@ -53,7 +54,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [InvariantDisplayName("TransitionResults")]
-        [OneToMany(ForeignKey = "Transition", ItemDisplayName = "TransitionResult")]
+        [OneToMany(ForeignKey = nameof(TransitionResult.Transition))]
         public IDictionary<ResultKey, TransitionResult> Results
         {
             get
@@ -127,6 +128,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 : string.Empty;
             }
         }
+        [Hidden(InUiMode = UiModes.PROTEOMIC)]
         public string ProductAdduct
         {
             get
@@ -139,6 +141,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return DocNode.Transition.IonType; }
         }
         [Format(NullValue = TextUtil.EXCEL_NA)]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public int? FragmentIonOrdinal
         {
             get
@@ -148,6 +151,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return DocNode.Transition.Ordinal;
             }
         }
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public char? CleavageAa
         {
             get
@@ -158,6 +162,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
         [Format(NullValue = TextUtil.EXCEL_NA)]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public double? LossNeutralMass
         {
             get
@@ -167,6 +172,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return DocNode.LostMass;
             }
         }
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public string Losses
         {
             get
@@ -176,6 +182,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     : (DocNode.HasLoss ? string.Join(@", ", DocNode.Losses.ToStrings()) : string.Empty);
             }
         }
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public string LossFormulas
         {
             get
@@ -194,7 +201,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return DocNode.ExplicitQuantitative; }
             set
             {
-                ChangeDocNode(EditDescription.SetColumn(@"Quantitative", value),
+                ChangeDocNode(EditColumnDescription(nameof(Quantitative), value),
                     docNode=>docNode.ChangeQuantitative(value));
             }
         }
@@ -263,7 +270,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public string Note
         {
             get { return DocNode.Note; }
-            set { ChangeDocNode(EditDescription.SetColumn(@"TransitionNote", value),
+            set { ChangeDocNode(EditColumnDescription(nameof(Note), value),
                 docNode=>(TransitionDocNode) docNode.ChangeAnnotations(docNode.Annotations.ChangeNote(value)));}
         }
         [Format(NullValue = TextUtil.EXCEL_NA)]

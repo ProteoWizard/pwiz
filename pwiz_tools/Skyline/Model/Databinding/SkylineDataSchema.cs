@@ -64,6 +64,32 @@ namespace pwiz.Skyline.Model.Databinding
             _elementRefCache = CachedValue.Create(this, () => new ElementRefs(Document));
         }
 
+        public override string DefaultUiMode
+        {
+            get
+            {
+                return UiModes.FromDocumentType(ModeUI);
+            }
+        }
+
+        public SrmDocument.DOCUMENT_TYPE ModeUI
+        {
+            get
+            {
+                if (SkylineWindow != null)
+                {
+                    return SkylineWindow.ModeUI;
+                }
+
+                if (_documentContainer.Document.DocumentType == Program.ModeUI)
+                {
+                    return _documentContainer.Document.DocumentType;
+                }
+
+                return SrmDocument.DOCUMENT_TYPE.mixed;
+            }
+        }
+
         protected override bool IsScalar(Type type)
         {
             return base.IsScalar(type) || type == typeof(IsotopeLabelType) || type == typeof(DocumentLocation) ||
@@ -280,6 +306,24 @@ namespace pwiz.Skyline.Model.Databinding
             return ColumnToolTips.ResourceManager.GetString(columnCaption.GetCaption(DataSchemaLocalizer.INVARIANT));
         }
 
+        public override IColumnCaption GetInvariantDisplayName(string uiMode, Type type)
+        {
+            if (typeof(ListItem).IsAssignableFrom(type))
+            {
+                return ColumnCaption.UnlocalizableCaption(ListItemTypes.INSTANCE.GetListName(type));
+            }
+            return base.GetInvariantDisplayName(uiMode, type);
+        }
+
+        public override string GetTypeDescription(string uiMode, Type type)
+        {
+            if (typeof(ListItem).IsAssignableFrom(type))
+            {
+                return string.Format(Resources.SkylineDataSchema_GetTypeDescription_Item_in_list___0__, ListItemTypes.INSTANCE.GetListName(type));
+            }
+            return base.GetTypeDescription(uiMode, type);
+        }
+
         public ImmutableSortedList<ResultKey, Replicate> ReplicateList { get { return _replicates.Value; } }
         public IDictionary<ResultFileKey, ResultFile> ResultFileList { get { return _resultFiles.Value; } }
 
@@ -488,12 +532,22 @@ namespace pwiz.Skyline.Model.Databinding
             }
             return listLookupPropertyDescriptor;
         }
-        
+
         public static SkylineDataSchema MemoryDataSchema(SrmDocument document, DataSchemaLocalizer localizer)
         {
             var documentContainer = new MemoryDocumentContainer();
             documentContainer.SetDocument(document, documentContainer.Document);
             return new SkylineDataSchema(documentContainer, localizer);
+        }
+
+        public override string NormalizeUiMode(string uiMode)
+        {
+            if (string.IsNullOrEmpty(uiMode))
+            {
+                return UiModes.PROTEOMIC;
+            }
+
+            return uiMode;
         }
     }
 }

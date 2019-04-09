@@ -34,6 +34,7 @@ using pwiz.Skyline.Model.AuditLog.Databinding;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest.Reporting
@@ -66,17 +67,17 @@ namespace pwiz.SkylineTest.Reporting
         [TestMethod]
         public void TestAllColumnCaptionsAreLocalized()
         {
-            var documentContainer = new MemoryDocumentContainer();
-            Assert.IsTrue(documentContainer.SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), documentContainer.Document));
-            SkylineDataSchema skylineDataSchema = new SkylineDataSchema(documentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             var missingCaptions = new HashSet<ColumnCaption>();
-            foreach (var columnDescriptor in
-                    EnumerateAllColumnDescriptors(skylineDataSchema, STARTING_TYPES))
+            foreach (var skylineDataSchema in EnumerateDataSchemas())
             {
-                var invariantCaption = skylineDataSchema.GetColumnCaption(columnDescriptor) as ColumnCaption;
-                if (invariantCaption != null && !skylineDataSchema.DataSchemaLocalizer.HasEntry(invariantCaption))
+                foreach (var columnDescriptor in
+                    EnumerateAllColumnDescriptors(skylineDataSchema, STARTING_TYPES))
                 {
-                    missingCaptions.Add(invariantCaption);
+                    var invariantCaption = skylineDataSchema.GetColumnCaption(columnDescriptor) as ColumnCaption;
+                    if (invariantCaption != null && !skylineDataSchema.DataSchemaLocalizer.HasEntry(invariantCaption))
+                    {
+                        missingCaptions.Add(invariantCaption);
+                    }
                 }
             }
             if (missingCaptions.Count == 0)
@@ -96,23 +97,24 @@ namespace pwiz.SkylineTest.Reporting
         [TestMethod]
         public void TestAllColumnToolTipsAreLocalized()
         {
-            var documentContainer = new MemoryDocumentContainer();
-            Assert.IsTrue(documentContainer.SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), documentContainer.Document));
-            SkylineDataSchema skylineDataSchema = new SkylineDataSchema(documentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             var missingCaptions = new HashSet<ColumnCaption>();
-            foreach (var columnDescriptor in
-                    EnumerateAllColumnDescriptors(skylineDataSchema, STARTING_TYPES))
+            foreach (var skylineDataSchema in EnumerateDataSchemas())
             {
-                var invariantDescription = skylineDataSchema.GetColumnDescription(columnDescriptor);
-                if (string.IsNullOrEmpty(invariantDescription))
+                foreach (var columnDescriptor in
+                    EnumerateAllColumnDescriptors(skylineDataSchema, STARTING_TYPES))
                 {
-                    var invariantCaption = skylineDataSchema.GetColumnCaption(columnDescriptor) as ColumnCaption;
-                    if (invariantCaption != null)
+                    var invariantDescription = skylineDataSchema.GetColumnDescription(columnDescriptor);
+                    if (string.IsNullOrEmpty(invariantDescription))
                     {
-                        missingCaptions.Add(invariantCaption);
+                        var invariantCaption = skylineDataSchema.GetColumnCaption(columnDescriptor) as ColumnCaption;
+                        if (invariantCaption != null)
+                        {
+                            missingCaptions.Add(invariantCaption);
+                        }
                     }
                 }
             }
+
             if (missingCaptions.Count == 0)
             {
                 return;
@@ -128,12 +130,10 @@ namespace pwiz.SkylineTest.Reporting
         [TestMethod]
         public void TestCheckForUnusedColumnCaptions()
         {
-            var documentContainer = new MemoryDocumentContainer();
-            Assert.IsTrue(documentContainer.SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), documentContainer.Document));
-            SkylineDataSchema dataSchema = new SkylineDataSchema(documentContainer, DataSchemaLocalizer.INVARIANT);
             var columnCaptions = new HashSet<string>();
             foreach (
-                var resourceManager in SkylineDataSchema.GetLocalizedSchemaLocalizer().ColumnCaptionResourceManagers)
+                var resourceManager in SkylineDataSchema.GetLocalizedSchemaLocalizer()
+                    .ColumnCaptionResourceManagers)
             {
                 var resourceSet = resourceManager.GetResourceSet(CultureInfo.InvariantCulture, true, true);
                 var enumerator = resourceSet.GetEnumerator();
@@ -146,11 +146,15 @@ namespace pwiz.SkylineTest.Reporting
                     }
                 }
             }
-            foreach (var columnDescriptor in EnumerateAllColumnDescriptors(dataSchema, STARTING_TYPES))
+            foreach (var dataSchema in EnumerateDataSchemas())
             {
-                var invariantCaption = dataSchema.GetColumnCaption(columnDescriptor);
-                columnCaptions.Remove(invariantCaption.GetCaption(DataSchemaLocalizer.INVARIANT));
+                foreach (var columnDescriptor in EnumerateAllColumnDescriptors(dataSchema, STARTING_TYPES))
+                {
+                    var invariantCaption = dataSchema.GetColumnCaption(columnDescriptor);
+                    columnCaptions.Remove(invariantCaption.GetCaption(DataSchemaLocalizer.INVARIANT));
+                }
             }
+
             var unusedCaptions = columnCaptions.ToArray();
             Assert.AreEqual(0, unusedCaptions.Length, "Unused entries found in ColumnCaptions.resx: {0}", string.Join(",", unusedCaptions));
         }
@@ -161,9 +165,6 @@ namespace pwiz.SkylineTest.Reporting
         [TestMethod]
         public void TestCheckForUnusedColumnTooltips()
         {
-            var documentContainer = new MemoryDocumentContainer();
-            Assert.IsTrue(documentContainer.SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), documentContainer.Document));
-            SkylineDataSchema dataSchema = new SkylineDataSchema(documentContainer, DataSchemaLocalizer.INVARIANT);
             var columnCaptions = new HashSet<string>();
             var resourceManager = ColumnToolTips.ResourceManager;
             var resourceSet = resourceManager.GetResourceSet(CultureInfo.InvariantCulture, true, true);
@@ -176,15 +177,27 @@ namespace pwiz.SkylineTest.Reporting
                     columnCaptions.Add(key);
                 }
             }
-            foreach (var columnDescriptor in EnumerateAllColumnDescriptors(dataSchema, STARTING_TYPES))
+
+            foreach (var dataSchema in EnumerateDataSchemas())
             {
-                var invariantCaption = dataSchema.GetColumnCaption(columnDescriptor);
-                columnCaptions.Remove(invariantCaption.GetCaption(DataSchemaLocalizer.INVARIANT));
+                foreach (var columnDescriptor in EnumerateAllColumnDescriptors(dataSchema, STARTING_TYPES))
+                {
+                    var invariantCaption = dataSchema.GetColumnCaption(columnDescriptor);
+                    columnCaptions.Remove(invariantCaption.GetCaption(DataSchemaLocalizer.INVARIANT));
+                }
             }
+
             var unusedCaptions = columnCaptions.ToArray();
             Assert.AreEqual(0, unusedCaptions.Length, "Unused entries found in ColumnToolTips.resx: {0}", string.Join(",", unusedCaptions));
         }
 
+        public IEnumerable<SkylineDataSchema> EnumerateDataSchemas()
+        {
+            var documentContainer = new MemoryDocumentContainer();
+            Assert.IsTrue(documentContainer.SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), documentContainer.Document));
+            var dataSchema = new SkylineDataSchema(documentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            yield return dataSchema;
+        }
 
         public IEnumerable<ColumnDescriptor> EnumerateAllColumnDescriptors(DataSchema dataSchema,
             ICollection<Type> startingTypes)
@@ -198,19 +211,23 @@ namespace pwiz.SkylineTest.Reporting
                 {
                     continue;
                 }
-                var rootColumn = ColumnDescriptor.RootColumn(dataSchema, type);
-                foreach (var child in GetChildColumns(rootColumn))
+
+                foreach (var uiMode in UiModes.AllModes)
                 {
-                    typeQueue.Enqueue(child.PropertyType);
-                    yield return child;
-                    foreach (var grandChild in GetChildColumns(child))
+                    var rootColumn = ColumnDescriptor.RootColumn(dataSchema, type, uiMode.Name);
+                    foreach (var child in GetChildColumns(rootColumn))
                     {
-                        yield return grandChild;
-                        if (grandChild.GetAttributes().OfType<ChildDisplayNameAttribute>().Any()
-                            && child.GetAttributes().OfType<ChildDisplayNameAttribute>().Any())
+                        typeQueue.Enqueue(child.PropertyType);
+                        yield return child;
+                        foreach (var grandChild in GetChildColumns(child))
                         {
-                            Assert.Fail("Two levels of child display names found on property {0} of type {1}", 
-                                grandChild.PropertyPath, rootColumn.PropertyType);
+                            yield return grandChild;
+                            if (grandChild.GetAttributes().OfType<ChildDisplayNameAttribute>().Any()
+                                && child.GetAttributes().OfType<ChildDisplayNameAttribute>().Any())
+                            {
+                                Assert.Fail("Two levels of child display names found on property {0} of type {1}",
+                                    grandChild.PropertyPath, rootColumn.PropertyType);
+                            }
                         }
                     }
                 }
@@ -236,7 +253,12 @@ namespace pwiz.SkylineTest.Reporting
             var allPropertyNames = new HashSet<string>(invariantColumnCaptions.Select(caption=>caption.InvariantCaption));
             var sortedPropertyNames = allPropertyNames.ToArray();
             Array.Sort(sortedPropertyNames, StringComparer.InvariantCultureIgnoreCase);
-            using (var xmlWriter = XmlWriter.Create(writer))
+            var settings = new XmlWriterSettings()
+            {
+                NewLineChars = Environment.NewLine,
+                Indent = true
+            };
+            using (var xmlWriter = XmlWriter.Create(writer, settings))
             {
                 xmlWriter.WriteStartElement("root");
                 foreach (string propertyName in sortedPropertyNames)

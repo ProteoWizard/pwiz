@@ -151,18 +151,6 @@ namespace pwiz.Common.DataBinding.Internal
         {
             TransformStack = TransformStack.EMPTY;
         }
-        public ViewSpec ViewSpec
-        {
-            get
-            {
-                // TODO(nicksh):Apply current sort if any.
-                return ViewInfo.ViewSpec;
-            }
-            set
-            {
-                ViewInfo = new ViewInfo(ViewInfo.ParentColumn, value);
-            }
-        }
 
         public INewRowHandler NewRowHandler
         {
