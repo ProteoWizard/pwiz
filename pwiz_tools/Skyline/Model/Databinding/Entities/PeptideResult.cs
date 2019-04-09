@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.Linq;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Hibernate;
@@ -100,6 +101,36 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public override string ToString()
         {
             return string.Format(@"RT: {0:0.##}", ChromInfo.RetentionTime);
+        }
+
+        [Format(Formats.PEAK_AREA_NORMALIZED)]
+        public double? ModifiedAreaProportion
+        {
+            get
+            {
+                var normalizedArea = _quantificationResult.Value?.NormalizedArea;
+                if (!normalizedArea.HasValue)
+                {
+                    return null;
+                }
+
+                double total = 0;
+                var unmodifiedSequence = Peptide.DocNode.RawUnmodifiedTextId;
+                foreach (var peptide in Peptide.Protein.Peptides)
+                {
+                    if (unmodifiedSequence == peptide.DocNode.RawUnmodifiedTextId)
+                    {
+                        foreach (var peptideResult in peptide.Results.Values)
+                        {
+                            if (peptideResult.ResultFile.Replicate.Name == ResultFile.Replicate.Name)
+                            {
+                                total += peptideResult._quantificationResult.Value?.NormalizedArea ?? 0.0;
+                            }
+                        }
+                    }
+                }
+                return normalizedArea.Value / total;
+            }
         }
 
         public ResultFile ResultFile { get { return GetResultFile(); } }
