@@ -212,7 +212,7 @@ struct Spectrum2Impl : public Spectrum
 typedef boost::shared_ptr<Spectrum2Impl> Spectrum2ImplPtr;
 
 
-void ToStdVectorsFromXyData(IXyData<double>^ xyData, pwiz::util::BinaryData<double>& xVector, pwiz::util::BinaryData<double>& yVector)
+void ToStdVectorsFromXyData(IXyData<double>^ xyData, pwiz::util::BinaryData<double>& xVector, pwiz::util::BinaryData<double>& yVector, double yScaleFactor = 1.0)
 {
     xVector.clear();
     yVector.clear();
@@ -223,7 +223,7 @@ void ToStdVectorsFromXyData(IXyData<double>^ xyData, pwiz::util::BinaryData<doub
         for (size_t i = 0, end = xyData->Count; i < end; ++i)
         {
             xVector.push_back(xyData->GetXValue(i));
-            yVector.push_back(xyData->GetYValue(i));
+            yVector.push_back(xyData->GetYValue(i) * yScaleFactor);
         }
     }
 }
@@ -787,7 +787,7 @@ void Spectrum2Impl::getData(bool doCentroid, pwiz::util::BinaryData<double>& mz,
             }
         }
 
-        ToStdVectorsFromXyData(spectrumData, mz, intensities);        
+        ToStdVectorsFromXyData(spectrumData, mz, intensities, doCentroid ? 100 : 1);        
     }
     CATCH_AND_FORWARD
 }
