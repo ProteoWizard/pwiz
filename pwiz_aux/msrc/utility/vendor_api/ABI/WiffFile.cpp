@@ -53,6 +53,10 @@ using namespace Clearcore2::Data::DataAccess::SampleData;
 using namespace Clearcore2::RawXYProcessing;
 #endif
 
+// peak areas from Sciex are very small values relative to peak heights;
+// multiplying them by this scaling factor makes them more comparable
+const int PEAK_AREA_SCALE_FACTOR = 100;
+
 #include "WiffFile2.ipp"
 
 namespace pwiz {
@@ -790,7 +794,7 @@ void SpectrumImpl::getData(bool doCentroid, pwiz::util::BinaryData<double>& mz, 
             {
                 PeakClass^ peak = peakList[(int)i];
                 mz[i] = peak->xValue;
-                intensities[i] = peak->area * 100;
+                intensities[i] = peak->area * PEAK_AREA_SCALE_FACTOR;
             }
         }
         else
