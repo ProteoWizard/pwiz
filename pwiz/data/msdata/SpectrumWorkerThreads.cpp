@@ -78,7 +78,7 @@ class SpectrumWorkerThreads::Impl
 
         useThreads_ = useWorkerThreads && !(isBruker || (isDemultiplexed)); // Bruker library is not thread-friendly
         //useThreads_ = !(isBruker); // Bruker library is not thread-friendly
-        cout << "useThreads: " << useThreads_ << endl;
+
         if (sl.size() > 0 && useThreads_)
         {
             // create one task per spectrum

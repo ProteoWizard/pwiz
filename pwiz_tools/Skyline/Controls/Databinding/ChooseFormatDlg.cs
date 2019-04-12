@@ -83,5 +83,10 @@ namespace pwiz.Skyline.Controls.Databinding
                 _inChangeText = false;
             }
         }
+
+        private void lblCustomFormatString_LinkClicked(object sender, System.Windows.Forms.LinkLabelLinkClickedEventArgs e)
+        {
+            WebHelpers.OpenSkylineShortLink(this, @"helptopic-docgridformats");
+        }
     }
 }
