@@ -71,7 +71,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(viewEditor, viewEditor.OkDialog);
             RunUI(()=>documentGrid.ChooseView(viewName));
             WaitForConditionUI(() => documentGrid.IsComplete);
-            VerifyDocumentGrid(documentGrid);
+            RunUI(()=> VerifyDocumentGrid(documentGrid));
         }
 
         /// <summary>
