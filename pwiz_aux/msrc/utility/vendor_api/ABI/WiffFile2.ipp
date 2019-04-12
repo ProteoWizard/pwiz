@@ -787,7 +787,7 @@ void Spectrum2Impl::getData(bool doCentroid, pwiz::util::BinaryData<double>& mz,
             }
         }
 
-        ToStdVectorsFromXyData(spectrumData, mz, intensities, doCentroid ? 100 : 1);        
+        ToStdVectorsFromXyData(spectrumData, mz, intensities, doCentroid ? PEAK_AREA_SCALE_FACTOR : 1);        
     }
     CATCH_AND_FORWARD
 }
