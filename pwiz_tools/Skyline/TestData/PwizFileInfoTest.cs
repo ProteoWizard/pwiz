@@ -91,8 +91,13 @@ namespace pwiz.SkylineTestData
             var testFilesDir = new TestFilesDir(TestContext, testZipPath);
 
             VerifyTicChromatogram(testFilesDir.GetTestPath("081809_100fmol-MichromMix-05" + ExtensionTestContext.ExtAgilentRaw), 5257, 8023);
-            VerifyTicChromatogram(testFilesDir.GetTestPath("051309_digestion" + ExtensionTestContext.ExtAbWiff), 6703, 357300);
-            VerifyTicChromatogram(testFilesDir.GetTestPath("OnyxTOFMS" + ExtensionTestContext.ExtAbWiff2), 240, 143139); 
+
+            if (ExtensionTestContext.CanImportAbWiff)
+                VerifyTicChromatogram(testFilesDir.GetTestPath("051309_digestion.wiff"), 6703, 357300);
+
+            if (ExtensionTestContext.CanImportAbWiff2)
+                VerifyTicChromatogram(testFilesDir.GetTestPath("OnyxTOFMS.wiff2"), 240, 143139); 
+
             VerifyTicChromatogram(testFilesDir.GetTestPath("CE_Vantage_15mTorr_0001_REP1_01" + ExtensionTestContext.ExtThermoRaw), 608, 54066072);
             VerifyTicChromatogram(testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + ExtensionTestContext.ExtWatersRaw), 5108, 372494752);
         }
