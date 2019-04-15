@@ -1591,6 +1591,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Modified Area Proportion.
+        /// </summary>
+        public static string ModifiedAreaProportion {
+            get {
+                return ResourceManager.GetString("ModifiedAreaProportion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Modified Sequence.
         /// </summary>
         public static string ModifiedSequence {

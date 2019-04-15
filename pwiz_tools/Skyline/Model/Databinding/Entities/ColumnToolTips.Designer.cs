@@ -1643,6 +1643,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The normalized area of this peptide result divided by the sum of all peptide results in this protein and replicate that have the same unmodified sequence..
+        /// </summary>
+        public static string ModifiedAreaProportion {
+            get {
+                return ResourceManager.GetString("ModifiedAreaProportion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Peptide sequence including any amino acid modifications such as
         ///cysteine alkylation. (example: AGLC[+57]QTFVYGGC[+57]R).
         /// </summary>
