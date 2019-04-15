@@ -86,7 +86,7 @@ rule init ( version ? : location : options * )
 
         if [ path.exists $(location).tar.bz2 ]
         {
-            tar.extract $(location).tar.bz2 : *.c *.cxx *.h : : : check-last-file-only ;
+            tar.extract $(location).tar.bz2 : *.c *.cxx *.h : : : <check-last-file-only>true ;
         }
         else if ! [ path.exists $(location) ]
         {
