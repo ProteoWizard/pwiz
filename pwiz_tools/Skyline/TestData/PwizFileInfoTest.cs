@@ -83,6 +83,20 @@ namespace pwiz.SkylineTestData
             }
         }
 
+        [TestMethod]
+        public void TestTicChromatogram()
+        {
+            const string testZipPath = @"TestData\PwizFileInfoTest.zip";
+
+            var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+
+            VerifyTicChromatogram(testFilesDir.GetTestPath("081809_100fmol-MichromMix-05" + ExtensionTestContext.ExtAgilentRaw), 5257, 8023);
+            VerifyTicChromatogram(testFilesDir.GetTestPath("051309_digestion" + ExtensionTestContext.ExtAbWiff), 6703, 357300);
+            VerifyTicChromatogram(testFilesDir.GetTestPath("OnyxTOFMS" + ExtensionTestContext.ExtAbWiff2), 240, 143139); 
+            VerifyTicChromatogram(testFilesDir.GetTestPath("CE_Vantage_15mTorr_0001_REP1_01" + ExtensionTestContext.ExtThermoRaw), 608, 54066072);
+            VerifyTicChromatogram(testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + ExtensionTestContext.ExtWatersRaw), 5108, 372494752);
+        }
+
         private static void VerifyInstrumentInfo(string path, string model, string ionization, string analyzer, string detector)
         {
             using (var msDataFile = new MsDataFileImpl(path))
@@ -95,6 +109,16 @@ namespace pwiz.SkylineTestData
                 Assert.AreEqual(ionization, instrument.Ionization);
                 Assert.AreEqual(analyzer, instrument.Analyzer);
                 Assert.AreEqual(detector, instrument.Detector);
+            }
+        }
+
+        private static void VerifyTicChromatogram(string path, int count, double maxIntensity)
+        {
+            using (var msDataFile = new MsDataFileImpl(path))
+            {
+                var tic = msDataFile.GetTotalIonCurrent();
+                Assert.AreEqual(count, tic.Length);
+                Assert.AreEqual(maxIntensity, tic.Max());
             }
         }
     }

@@ -654,13 +654,13 @@ int testReader(const Reader& reader, const vector<string>& args, bool testAccept
         
         for (size_t i=0; i < testpaths.size(); ++i)
         {
+            ++totalTests;
             const string& rawpath = testpaths[i];
             const string& parentPath = parentPaths[i];
             if (generateMzML && !testAcceptOnly)
                 generate(reader, rawpath, parentPath, config);
             else
             {
-                ++totalTests;
                 try
                 {
                     test(reader, testAcceptOnly, requireUnicodeSupport, rawpath, parentPath, config);
@@ -695,6 +695,9 @@ int testReader(const Reader& reader, const vector<string>& args, bool testAccept
             }
         }
     }
+
+    if (totalTests == 0)
+        throw runtime_error("no vendor test data found (try running without --incremental)");
 
     if (failedTests > 0)
         throw runtime_error("failed " + lexical_cast<string>(failedTests) + " of " + lexical_cast<string>(totalTests) + " tests");

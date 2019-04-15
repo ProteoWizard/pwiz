@@ -604,6 +604,16 @@ struct CompassDataImpl : public CompassData
         CATCH_AND_FORWARD
     }
 
+    virtual ChromatogramPtr getTIC() const
+    {
+        return ChromatogramPtr();
+    }
+
+    virtual ChromatogramPtr getBPC() const
+    {
+        return ChromatogramPtr();
+    }
+
     virtual std::string getOperatorName() const
     {
         if (!hasMSData_) return "";

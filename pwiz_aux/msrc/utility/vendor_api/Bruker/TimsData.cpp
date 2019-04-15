@@ -65,8 +65,10 @@ FragmentationMode translateScanMode(int scanMode)
 
         case 2:
         case 8:
+        case 9:
             return FragmentationMode_CID;
 
+        case 3:
         case 4:
         case 5:
             return FragmentationMode_ISCID; // in-source or broadband CID
@@ -175,6 +177,12 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
     string queryFrameCount = "SELECT COUNT(*) FROM Frames";
     size_t count = sqlite::query(db, queryFrameCount.c_str()).begin()->get<sqlite3_int64>(0);
     frames_.reserve(count);
+    tic_.reset(new Chromatogram);
+    bpc_.reset(new Chromatogram);
+    tic_->times.reserve(count);
+    tic_->intensities.reserve(count);
+    bpc_->times.reserve(count);
+    bpc_->intensities.reserve(count);
 
     if (!combineIonMobilitySpectra)
     {
@@ -207,14 +215,21 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         int msLevel;
         switch (msmsType)
         {
-            case 0: msLevel = 1; break;
-            case 2: msLevel = 2; break;
-            case 8: msLevel = 2; break;
+            case 0: msLevel = 1; break; // MS1
+            case 2: msLevel = 2; break; // MRM
+            case 8: msLevel = 2; break; // PASEF
+            case 9: msLevel = 2; break; // DIA
             default: throw runtime_error("Unhandled msmsType: " + lexical_cast<string>(msmsType));
         }
 
         double bpi = row.get<double>(++idx);
         double tic = row.get<double>(++idx);
+
+        tic_->times.push_back(rt);
+        bpc_->times.push_back(rt);
+        tic_->intensities.push_back(tic);
+        bpc_->intensities.push_back(bpi);
+
         int numScans = row.get<int>(++idx);
         int numPeaks = row.get<int>(++idx);
         if (numPeaks == 0)
@@ -406,6 +421,9 @@ size_t TimsDataImpl::getLCSourceCount() const { return 0; }
 size_t TimsDataImpl::getLCSpectrumCount(int source) const { return 0; }
 LCSpectrumSourcePtr TimsDataImpl::getLCSource(int source) const { return 0; }
 LCSpectrumPtr TimsDataImpl::getLCSpectrum(int source, int scan) const { return LCSpectrumPtr(); }
+
+ChromatogramPtr TimsDataImpl::getTIC() const { return tic_; }
+ChromatogramPtr TimsDataImpl::getBPC() const { return bpc_; }
 
 std::string TimsDataImpl::getOperatorName() const { return operatorName_; }
 std::string TimsDataImpl::getAnalysisName() const { return ""; }
