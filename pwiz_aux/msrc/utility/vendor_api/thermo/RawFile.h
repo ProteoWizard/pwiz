@@ -438,6 +438,7 @@ class PWIZ_API_DECL RawFile
     virtual const std::vector<MassAnalyzerType>& getMassAnalyzers() const = 0;
     virtual const std::vector<DetectorType>& getDetectors() const = 0;
 
+    virtual std::string getSampleID() const = 0;
     virtual std::string getTrailerExtraValue(long scanNumber, const std::string& name) const = 0;
     virtual double getTrailerExtraValueDouble(long scanNumber, const std::string& name) const = 0;
     virtual long getTrailerExtraValueLong(long scanNumber, const std::string& name) const = 0;

@@ -136,14 +136,14 @@ namespace pwiz.SkylineTestFunctional
             });
             var calibrationForm = WaitForOpenForm<CalibrationForm>();
             Assert.IsNotNull(calibrationForm);
-            Assert.IsTrue(Settings.Default.CalibrationCurveOptions.SingleReplicate);
+            Assert.IsTrue(Settings.Default.CalibrationCurveOptions.SingleBatch);
             RunUI(() =>
             {
                 documentGrid.DataGridView.CurrentCell =
                     documentGrid.DataGridView.Rows[0].Cells[colCalibrationCurve.Index];
                 documentGrid.DataGridView.SendKeyDownUp(new KeyEventArgs(Keys.Space));
             });
-            Assert.IsFalse(Settings.Default.CalibrationCurveOptions.SingleReplicate);
+            Assert.IsFalse(Settings.Default.CalibrationCurveOptions.SingleBatch);
         }
     }
 }

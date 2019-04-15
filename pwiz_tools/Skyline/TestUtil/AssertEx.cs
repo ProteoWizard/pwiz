@@ -410,6 +410,13 @@ namespace pwiz.SkylineTestUtil
                     xmlText.Substring(formatVersionIndex + 16).IndexOf("\"", StringComparison.Ordinal));
             }
 
+            // While a change in Skyline schema is often associated with change in audit log
+            // schema, it's not always the case
+            if (double.Parse(version, CultureInfo.InvariantCulture) > 4.21)
+            {
+                version = "4.21";
+            }
+
             ValidatesAgainstSchema(xmlText, "AuditLog.Skyl_" + version);
         }
 

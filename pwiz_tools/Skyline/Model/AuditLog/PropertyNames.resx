@@ -1028,13 +1028,22 @@
   <data name="ExplicitTransitionGroupValues_CollisionEnergy" xml:space="preserve">
     <value>Collision energy</value>
   </data>
+  <data name="ExplicitTransitionValues_CollisionEnergy" xml:space="preserve">
+    <value>Collision energy</value>
+  </data>
   <data name="ExplicitTransitionGroupValues_CompensationVoltage" xml:space="preserve">
     <value>Compensation voltage</value>
   </data>
   <data name="ExplicitTransitionGroupValues_ConeVoltage" xml:space="preserve">
     <value>Cone voltage</value>
   </data>
+  <data name="ExplicitTransitionValues_ConeVoltage" xml:space="preserve">
+    <value>Cone voltage</value>
+  </data>
   <data name="ExplicitTransitionGroupValues_DeclusteringPotential" xml:space="preserve">
+    <value>Declustering potential</value>
+  </data>
+  <data name="ExplicitTransitionValues_DeclusteringPotential" xml:space="preserve">
     <value>Declustering potential</value>
   </data>
   <data name="ExplicitTransitionGroupValues_IonMobility" xml:space="preserve">
@@ -1046,7 +1055,13 @@
   <data name="ExplicitTransitionGroupValues_IonMobilityHighEnergyOffset" xml:space="preserve">
     <value>High energy ion mobility offset</value>
   </data>
+  <data name="ExplicitTransitionValues_IonMobilityHighEnergyOffset" xml:space="preserve">
+    <value>High energy ion mobility offset</value>
+  </data>
   <data name="ExplicitTransitionGroupValues_SLens" xml:space="preserve">
+    <value>S-Lens</value>
+  </data>
+  <data name="ExplicitTransitionValues_SLens" xml:space="preserve">
     <value>S-Lens</value>
   </data>
   <data name="ImportFastaSettings_AutoTrain" xml:space="preserve">
@@ -1170,6 +1185,9 @@
     <value>Precursor charges</value>
   </data>
   <data name="TransitionGroupDocNode_ExplicitValues" xml:space="preserve">
+    <value>Explicit values</value>
+  </data>
+  <data name="TransitionDocNode_ExplicitValues" xml:space="preserve">
     <value>Explicit values</value>
   </data>
   <data name="TransitionGroupDocNode_LabelType" xml:space="preserve">
@@ -1384,5 +1402,8 @@
   </data>
   <data name="DataSettings_AuditLogging" xml:space="preserve">
     <value>Audit logging</value>
+  </data>
+  <data name="ListData_Rows" xml:space="preserve">
+    <value>Rows</value>
   </data>
 </root>

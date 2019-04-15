@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
@@ -25,10 +26,13 @@ using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
     [AnnotationTarget(AnnotationDef.AnnotationTarget.protein)]
+    [ProteomicDisplayName(nameof(Protein))]
+    [InvariantDisplayName("MoleculeList", ExceptInUiMode = UiModes.PROTEOMIC)]
     public class Protein : SkylineDocNode<PeptideGroupDocNode>
     {
         private readonly CachedValue<Peptide[]> _peptides;
@@ -42,6 +46,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         [OneToMany(ForeignKey = "Protein")]
         [HideWhen(AncestorOfType = typeof(FoldChangeBindingSource.FoldChangeRow))]
+        [InvariantDisplayName("Molecules", ExceptInUiMode = UiModes.PROTEOMIC)]
         public IList<Peptide> Peptides
         {
             get
@@ -50,8 +55,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        [OneToMany(ItemDisplayName = "ResultFile")]
         [HideWhen(AncestorsOfAnyOfTheseTypes = new []{typeof(SkylineDocument), typeof(FoldChangeBindingSource.FoldChangeRow)})]
+        [Obsolete]
         public IDictionary<ResultKey, ResultFile> Results
         {
             get { return _results.Value; }
@@ -87,40 +92,46 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return new PeptideGroupDocNode(new PeptideGroup(), null, null, new PeptideDocNode[0]);
         }
 
-        [InvariantDisplayName("ProteinName")]
+        [ProteomicDisplayName("ProteinName")]
+        [InvariantDisplayName("MoleculeListName")]
         public string Name
         {
             get { return DocNode.Name; }
-            set { ChangeDocNode(EditDescription.SetColumn(@"ProteinName", value),
+            set { ChangeDocNode(EditColumnDescription(nameof(Name), value),
                 docNode=>docNode.ChangeName(value)); } // the user can overide this label
         }
         [InvariantDisplayName("ProteinDescription")]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public string Description
         {
             get { return DocNode.Description; }
-            set { ChangeDocNode(EditDescription.SetColumn(@"ProteinDescription", value),
+            set { ChangeDocNode(EditColumnDescription(nameof(Description), value),
                 docNode => docNode.ChangeDescription(value));
             } // the user can ovveride this label
         }
         [InvariantDisplayName("ProteinAccession")]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public string Accession
         {
             get { return DocNode.ProteinMetadata.Accession; }
         }
 
         [InvariantDisplayName("ProteinPreferredName")]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public string PreferredName
         {
             get { return DocNode.ProteinMetadata.PreferredName; }
         }
 
         [InvariantDisplayName("ProteinGene")]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public string Gene
         {
             get { return DocNode.ProteinMetadata.Gene; }
         }
 
         [InvariantDisplayName("ProteinSpecies")]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public string Species
         {
             get { return DocNode.ProteinMetadata.Species; }
@@ -134,12 +145,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         // }
 
         [InvariantDisplayName("ProteinSequence")]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public string Sequence 
         {
             get { return DocNode.PeptideGroup.Sequence; }
         }
 
         [Importable]
+        [InvariantDisplayName("AutoSelectMolecules", ExceptInUiMode = UiModes.PROTEOMIC)]
         public bool AutoSelectPeptides
         {
             get { return DocNode.AutoManageChildren; }
@@ -149,7 +162,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     return;
                 }
-                ChangeDocNode(EditDescription.SetColumn(nameof(AutoSelectPeptides), value), docNode=>
+                ChangeDocNode(EditColumnDescription(nameof(AutoSelectPeptides), value), docNode=>
                 {
                     docNode = (PeptideGroupDocNode) docNode.ChangeAutoManageChildren(value);
                     if (docNode.AutoManageChildren)
@@ -162,12 +175,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 });
             }
         }
-        [InvariantDisplayName("ProteinNote")]
+        [ProteomicDisplayName("ProteinNote")]
+        [InvariantDisplayName("MoleculeListNote")]
         [Importable]
         public string Note
         {
             get { return DocNode.Note; }
-            set { ChangeDocNode(EditDescription.SetColumn(@"ProteinNote", value),
+            set { ChangeDocNode(EditColumnDescription(nameof(Note), value),
                 docNode => (PeptideGroupDocNode) docNode.ChangeAnnotations(docNode.Annotations.ChangeNote(value)));
             }
         }
@@ -180,9 +194,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             if (nodeCount == 1)
             {
-                return string.Format(Resources.Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_protein___0___, this);
+                return string.Format(DataSchema.ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic
+                    ? Resources.Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_protein___0___
+                    : Resources.Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_molecule_list___0___, this);
             }
-            return string.Format(Resources.Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__proteins_, nodeCount);
+            return string.Format(DataSchema.ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic ? Resources.Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__proteins_
+                : Resources.Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__molecule_lists_, nodeCount);
         }
 
         protected override NodeRef NodeRefPrototype
@@ -190,7 +207,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return MoleculeGroupRef.PROTOTYPE; }
         }
 
-        [InvariantDisplayName("ProteinLocator")]
+        [ProteomicDisplayName("ProteinLocator")]
+        [InvariantDisplayName("MoleculeListLocator")]
         public string Locator { get { return GetLocator(); } }
     }
 }

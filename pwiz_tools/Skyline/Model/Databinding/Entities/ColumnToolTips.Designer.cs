@@ -182,6 +182,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to If true, then Skyline will automatically add or remove molecules from the Molecule List based on the current settings..
+        /// </summary>
+        public static string AutoSelectMolecules {
+            get {
+                return ResourceManager.GetString("AutoSelectMolecules", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to If true, then Skyline will automatically add or remove peptides based on the Peptide Settings Filter..
         /// </summary>
         public static string AutoSelectPeptides {
@@ -243,6 +252,42 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string Background {
             get {
                 return ResourceManager.GetString("Background", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Figures of merit calculated using the subset of external standard replicates that have the same Batch Name as this replicate..
+        /// </summary>
+        public static string BatchFiguresOfMerit {
+            get {
+                return ResourceManager.GetString("BatchFiguresOfMerit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lower limit of detection calculated using the subset of external standard replicates that have the same Batch Name as this replicate..
+        /// </summary>
+        public static string BatchLimitOfDetection {
+            get {
+                return ResourceManager.GetString("BatchLimitOfDetection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lower limit of quantification calculated using the subset of external standard replicates that have the same Batch Name as this replicate..
+        /// </summary>
+        public static string BatchLimitOfQuantification {
+            get {
+                return ResourceManager.GetString("BatchLimitOfQuantification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name of the batch that this replicate belongs to. The calibration curve for a particular replicate will be .
+        /// </summary>
+        public static string BatchName {
+            get {
+                return ResourceManager.GetString("BatchName", resourceCulture);
             }
         }
         
@@ -1058,6 +1103,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Identifiers of the spectra that contributed to the points in the interpolated chromatogram..
+        /// </summary>
+        public static string InterpolatedSpectrumIds {
+            get {
+                return ResourceManager.GetString("InterpolatedSpectrumIds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The retention times in the interpolated chromatogram..
         /// </summary>
         public static string InterpolatedTimes {
@@ -1654,6 +1708,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Molecules belong to Molecule Lists and contain Percursors..
+        /// </summary>
+        public static string Molecule {
+            get {
+                return ResourceManager.GetString("Molecule", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An atomic chemical formula for the neutral, unlabeled molecule to be measured in a mass spectrometer..
         /// </summary>
         public static string MoleculeFormula {
@@ -1663,11 +1726,128 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A grouping of molecules in a Skyline document..
+        /// </summary>
+        public static string MoleculeList {
+            get {
+                return ResourceManager.GetString("MoleculeList", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unique identifier of the molecule list within the document. This begins with &quot;MoleculeGroup:&quot;..
+        /// </summary>
+        public static string MoleculeListLocator {
+            get {
+                return ResourceManager.GetString("MoleculeListLocator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The name of the molecule list..
+        /// </summary>
+        public static string MoleculeListName {
+            get {
+                return ResourceManager.GetString("MoleculeListName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A free text not associated with the molecule list..
+        /// </summary>
+        public static string MoleculeListNote {
+            get {
+                return ResourceManager.GetString("MoleculeListNote", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The top level set of the groupings of all of the molecules in a Skyline document..
+        /// </summary>
+        public static string MoleculeLists {
+            get {
+                return ResourceManager.GetString("MoleculeLists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unique identifier of the molecule within the document. This begins with &quot;Molecule:&quot;..
+        /// </summary>
+        public static string MoleculeLocator {
+            get {
+                return ResourceManager.GetString("MoleculeLocator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A general name that may be assigned to a molecule in its neutral, unlabeled form..
         /// </summary>
         public static string MoleculeName {
             get {
                 return ResourceManager.GetString("MoleculeName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A free text note associated with the molecule..
+        /// </summary>
+        public static string MoleculeNote {
+            get {
+                return ResourceManager.GetString("MoleculeNote", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule Peak Found Ratio.
+        /// </summary>
+        public static string MoleculePeakFoundRatio {
+            get {
+                return ResourceManager.GetString("MoleculePeakFoundRatio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule Result.
+        /// </summary>
+        public static string MoleculeResult {
+            get {
+                return ResourceManager.GetString("MoleculeResult", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unique identifier of the Molecule Result within the document. This will begin with &quot;MoleculeResult:&quot; and will contain the molecule name and the replicate name..
+        /// </summary>
+        public static string MoleculeResultLocator {
+            get {
+                return ResourceManager.GetString("MoleculeResultLocator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The results associated with the molecule..
+        /// </summary>
+        public static string MoleculeResults {
+            get {
+                return ResourceManager.GetString("MoleculeResults", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The average of the Best Retention Time values for the precursors in a particular replicate..
+        /// </summary>
+        public static string MoleculeRetentionTime {
+            get {
+                return ResourceManager.GetString("MoleculeRetentionTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The molecules in a Molecule List..
+        /// </summary>
+        public static string Molecules {
+            get {
+                return ResourceManager.GetString("Molecules", resourceCulture);
             }
         }
         
@@ -2466,6 +2646,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Identifiers of the spectra that contributed to the points in the raw (uninterpolated) chromatogram..
+        /// </summary>
+        public static string RawSpectrumIds {
+            get {
+                return ResourceManager.GetString("RawSpectrumIds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The retention times in the raw (uninterpolated) chromatogram..
         /// </summary>
         public static string RawTimes {
@@ -2734,6 +2923,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string SMILES {
             get {
                 return ResourceManager.GetString("SMILES", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Identifiers of the spectra that contributed to the chromatogram..
+        /// </summary>
+        public static string SpectrumIds {
+            get {
+                return ResourceManager.GetString("SpectrumIds", resourceCulture);
             }
         }
         
@@ -3186,15 +3384,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string UTCTime {
             get {
                 return ResourceManager.GetString("UTCTime", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Value.
-        /// </summary>
-        public static string Value {
-            get {
-                return ResourceManager.GetString("Value", resourceCulture);
             }
         }
     }

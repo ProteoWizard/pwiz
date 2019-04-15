@@ -217,6 +217,11 @@ namespace pwiz.Common.DataBinding
                 return result;
             }
         }
+
+        public override string ToString() // For debugging convenience
+        {
+            return Name;
+        }
     }
     public class FilterSpec
     {
@@ -321,6 +326,7 @@ namespace pwiz.Common.DataBinding
         {
             Columns = ImmutableList.Empty<ColumnSpec>();
             Filters = ImmutableList.Empty<FilterSpec>();
+            UiMode = string.Empty;
         }
         public string Name { get; private set; }
         public ViewSpec SetName(string value)
@@ -337,6 +343,13 @@ namespace pwiz.Common.DataBinding
         public ViewSpec SetRowType(Type type)
         {
             return SetRowSource(type.FullName);
+        }
+
+        public string UiMode { get; private set; }
+
+        public ViewSpec SetUiMode(string uiMode)
+        {
+            return ChangeProp(ImClone(this), im => im.UiMode = uiMode ?? string.Empty);
         }
 
 
@@ -378,7 +391,8 @@ namespace pwiz.Common.DataBinding
                 {
                     Name = reader.GetAttribute("name"),
                     RowSource = reader.GetAttribute("rowsource"),
-                    SublistName = reader.GetAttribute("sublist")
+                    SublistName = reader.GetAttribute("sublist"),
+                    UiMode = reader.GetAttribute("uimode") ?? string.Empty
                 };
             var columns = new List<ColumnSpec>();
             var filters = new List<FilterSpec>();
@@ -427,6 +441,11 @@ namespace pwiz.Common.DataBinding
             {
                 writer.WriteAttributeString("sublist", SublistName);
             }
+
+            if (!string.IsNullOrEmpty(UiMode))
+            {
+                writer.WriteAttributeString("uimode", UiMode);
+            }
             foreach (var column in Columns)
             {
                 writer.WriteStartElement("column");
@@ -450,7 +469,8 @@ namespace pwiz.Common.DataBinding
                    && Equals(other.RowSource, RowSource)
                    && Columns.SequenceEqual(other.Columns)
                    && Filters.SequenceEqual(other.Filters)
-                   && SublistId.Equals(other.SublistId);
+                   && SublistId.Equals(other.SublistId)
+                   && UiMode.Equals(other.UiMode);
         }
 
         public override bool Equals(object obj)
@@ -470,6 +490,7 @@ namespace pwiz.Common.DataBinding
                 result = (result*397) ^ CollectionUtil.GetHashCodeDeep(Columns);
                 result = (result*397) ^ CollectionUtil.GetHashCodeDeep(Filters);
                 result = (result*397) ^ SublistId.GetHashCode();
+                result = (result*397) ^ UiMode.GetHashCode();
                 return result;
             }
         }
@@ -478,5 +499,11 @@ namespace pwiz.Common.DataBinding
         {
             return CaseInsensitiveComparer.Default.Compare(Name, other.Name);
         }
+
+        public override string ToString() // For debugging convenience
+        {
+            return Name;
+        }
+
     }
 }

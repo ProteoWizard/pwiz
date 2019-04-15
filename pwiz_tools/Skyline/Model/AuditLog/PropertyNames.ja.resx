@@ -1157,6 +1157,9 @@
   <data name="TransitionGroupDocNode_ExplicitValues" xml:space="preserve">
     <value>指定された値</value>
   </data>
+  <data name="TransitionDocNode_ExplicitValues" xml:space="preserve">
+    <value>指定された値</value>
+  </data>
   <data name="TransitionGroupDocNode_LabelType" xml:space="preserve">
     <value>同位体標識タイプ</value>
   </data>

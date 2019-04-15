@@ -8,13 +8,13 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 4	N/A	271.0	1	N/A	-	-	1	46	0.0	0.0	0.0	0	8.047	N/A	N/A	Nordiazepam	C15H11ClN2O	[M+H]	N/A	cas:1088-11-5	4	836	0.0	0
 5	N/A	318.0	1	N/A	-	-	1	9	0.0	0.0	0.0	0	8.828	N/A	N/A	Phosmet	C11H12NO4PS2	[M+H]	N/A	cas:732-11-6	5	837	0.0	0
 6	N/A	324.0	1	N/A	-	-	1	27	0.0	0.0	0.0	0	6.808	N/A	N/A	LSD	C20H25N3O	[M+H]	N/A	cas:50-37-3	6	856	0.0	0
-id	fileName	cutoffScore
-1	C:/LabSolutions/Data/GUS-Project/Library_data_files/Positive-ions/1-1_Diazepam_CE_Select.lcd	-1.0
-2	C:/LabSolutions/Data/GUS-Project/Library_data_files/Positive-ions/45-1_Midazolam_CE_Select.lcd	-1.0
-3	C:/LabSolutions/Data/GUS-Project/Library_data_files/Positive-ions/49-1_7-aminonitrazepam _CE_Select.lcd	-1.0
-4	C:/LabSolutions/Data/GUS-Project/Library_data_files/Positive-ions/50-1_Nordiazepam_CE_Select.lcd	-1.0
-5	C:/LabSolutions/Data/GUS-Project/Library_data_files/Positive-ions/50-1_Phosmet_CE_Select.lcd	-1.0
-6	C:/LabSolutions/Data/GUS-Project/Library_data_files/Positive-ions/52-1_LSD_CE_Select.lcd	-1.0
+id	fileName	idFileName	cutoffScore
+1	C:/LabSolutions/Data/GUS-Project/Library_data_files/Positive-ions/1-1_Diazepam_CE_Select.lcd	/BiblioSpec/tests/inputs/Small_Library-Positive-ions_CE-Merged.mlb	-1.0
+2	C:/LabSolutions/Data/GUS-Project/Library_data_files/Positive-ions/45-1_Midazolam_CE_Select.lcd	/BiblioSpec/tests/inputs/Small_Library-Positive-ions_CE-Merged.mlb	-1.0
+3	C:/LabSolutions/Data/GUS-Project/Library_data_files/Positive-ions/49-1_7-aminonitrazepam _CE_Select.lcd	/BiblioSpec/tests/inputs/Small_Library-Positive-ions_CE-Merged.mlb	-1.0
+4	C:/LabSolutions/Data/GUS-Project/Library_data_files/Positive-ions/50-1_Nordiazepam_CE_Select.lcd	/BiblioSpec/tests/inputs/Small_Library-Positive-ions_CE-Merged.mlb	-1.0
+5	C:/LabSolutions/Data/GUS-Project/Library_data_files/Positive-ions/50-1_Phosmet_CE_Select.lcd	/BiblioSpec/tests/inputs/Small_Library-Positive-ions_CE-Merged.mlb	-1.0
+6	C:/LabSolutions/Data/GUS-Project/Library_data_files/Positive-ions/52-1_LSD_CE_Select.lcd	/BiblioSpec/tests/inputs/Small_Library-Positive-ions_CE-Merged.mlb	-1.0
 id	scoreType	probabilityType
 0	UNKNOWN	NOT_A_PROBABILITY_VALUE
 1	PERCOLATOR QVALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT
