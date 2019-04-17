@@ -31,10 +31,11 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ChooseFormatDlg));
             this.label1 = new System.Windows.Forms.Label();
             this.comboFormat = new System.Windows.Forms.ComboBox();
-            this.lblCustomFormatString = new System.Windows.Forms.Label();
+            this.lblCustomFormatString = new System.Windows.Forms.LinkLabel();
             this.tbxCustomFormat = new System.Windows.Forms.TextBox();
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.SuspendLayout();
             // 
             // label1
@@ -54,6 +55,8 @@
             // 
             resources.ApplyResources(this.lblCustomFormatString, "lblCustomFormatString");
             this.lblCustomFormatString.Name = "lblCustomFormatString";
+            this.lblCustomFormatString.TabStop = true;
+            this.lblCustomFormatString.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lblCustomFormatString_LinkClicked);
             // 
             // tbxCustomFormat
             // 
@@ -93,6 +96,7 @@
             this.Name = "ChooseFormatDlg";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -102,7 +106,7 @@
 
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ComboBox comboFormat;
-        private System.Windows.Forms.Label lblCustomFormatString;
+        private System.Windows.Forms.LinkLabel lblCustomFormatString;
         private System.Windows.Forms.TextBox tbxCustomFormat;
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.Button btnCancel;

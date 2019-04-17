@@ -625,6 +625,9 @@
   <data name="MissedCleavages">
     <value>Missed Cleavages</value>
   </data>
+  <data name="ModifiedAreaProportion">
+    <value>Modified Area Proportion</value>
+  </data>
   <data name="ModifiedSequence">
     <value>Modified Sequence</value>
   </data>
