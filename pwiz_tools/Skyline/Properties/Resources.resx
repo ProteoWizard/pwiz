@@ -10559,4 +10559,10 @@ Click 'Retry' to try building again with original spectrum files placed next to 
     <value>The file {0} does not contain SRM/MRM chromatograms. To extract chromatograms from its spectra, go to Settings &gt; Transition Settings &gt; Full-Scan and choose options appropriate to the acquisition method used.</value>
     <comment>replaces NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatograms_from__0__full_scan_settings_must_be_enabled_</comment>
   </data>
+  <data name="Property_DisambiguationPrefix_Property__" xml:space="preserve">
+    <value>Property: </value>
+  </data>
+  <data name="Annotation_DisambiguationPrefix_Annotation__" xml:space="preserve">
+    <value>Annotation: </value>
+  </data>
 </root>
