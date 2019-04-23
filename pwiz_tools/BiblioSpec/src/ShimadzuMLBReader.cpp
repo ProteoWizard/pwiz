@@ -129,7 +129,7 @@ namespace BiblioSpec
             charge = 1;
             break;
         case 0x10: // "other(+)"
-            precursorAdduct = NULL;
+            precursorAdduct = "[M+]";
             charge = 1;
             break;
         case 0x20:
@@ -149,7 +149,7 @@ namespace BiblioSpec
             charge = 1;
             break;
         case 0x200: // "other(-)"
-            precursorAdduct = NULL;
+            precursorAdduct = "[M-]";
             charge = 1;
             break;
         default:
@@ -167,14 +167,14 @@ namespace BiblioSpec
     void ShimadzuMLBReader::readMSMSSP()
     {
         int specCount =
-            getRowCount("(SELECT DISTINCT SP_ID FROM MSMSSP)");
+            getRowCount("(SELECT DISTINCT SP_ID FROM MSMSSP WHERE MSStage IS 2)");
         Verbosity::status("Parsing %d spectra.", specCount);
         ProgressIndicator progress(specCount);
         sqlite3_stmt* statement = 
             getStmt(
                 "SELECT SP_ID, RT, PrecursorMZ, SpecPeak, AdductType, CompForm, CompName, IUPACNo, CASNo, DataFilePath "
                 "FROM MSMSSP "
-                "WHERE SP_ID IN (SELECT DISTINCT SP_ID FROM MSMSSP)");
+                "WHERE SP_ID IN (SELECT DISTINCT SP_ID FROM MSMSSP WHERE MSStage IS 2)");
 
         // turn each row of returned table into a spectrum
         while (hasNext(statement))
