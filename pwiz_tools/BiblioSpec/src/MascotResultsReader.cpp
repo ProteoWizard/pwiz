@@ -25,10 +25,10 @@
  * the MascotSpecReader so the file only has to be opened and parsed once.
  */
 
-#include <sys/stat.h>
 #include "MascotResultsReader.h"
 #include "BlibUtils.h"
-#include <boost/algorithm/string.hpp>
+#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 
 namespace BiblioSpec {
 
@@ -47,7 +47,28 @@ MascotResultsReader::MascotResultsReader(BlibBuilder& maker,
         cachePath = ".";
     }
 
-    ms_file_ = new ms_mascotresfile(datFileName, 0, "", 
+    string datFileNameStr(datFileName), realDatFilePath;
+    if (pwiz::util::findUnicodeBytes(datFileNameStr) != datFileNameStr.end())
+    {
+        Verbosity::warn("Mascot Parser does not support Unicode in filepaths ('%s'): copying file to a temporary non-Unicode path", datFileName);
+        string sanitizedFilename = bfs::path(datFileNameStr).filename().string();
+        string::const_iterator unicodeByteItr;
+        while ((unicodeByteItr = pwiz::util::findUnicodeBytes(sanitizedFilename)) != sanitizedFilename.end())
+        {
+            sanitizedFilename[unicodeByteItr - sanitizedFilename.cbegin()] = '_';
+        }
+
+        realDatFilePath = (bfs::temp_directory_path() / sanitizedFilename).string();
+        if (!bfs::exists(realDatFilePath))
+        {
+            bfs::copy_file(datFileNameStr, realDatFilePath);
+            tmpDatFile_.reset(new TempFileDeleter(realDatFilePath));
+        }
+    }
+    else
+        realDatFilePath = datFileNameStr;
+
+    ms_file_ = new ms_mascotresfile(realDatFilePath.c_str(), 0, "",
                                     cacheFlag,
                                     cachePath);
 
@@ -56,7 +77,7 @@ MascotResultsReader::MascotResultsReader(BlibBuilder& maker,
         if( error !=  ms_mascotresfile::ERR_NO_ERROR ) {
             string msg = getErrorMessage(error);
             throw BlibException(true, "Error with '%s'. %s", 
-                                datFileName, msg.c_str());
+                                realDatFilePath.c_str(), msg.c_str());
         }
     }
 
@@ -82,7 +103,7 @@ MascotResultsReader::MascotResultsReader(BlibBuilder& maker,
                                         flags2);
 
     // register the name with BuildParser, but don't try to open it
-    this->setSpecFileName(datFileName, false);
+    this->setSpecFileName(realDatFilePath.c_str(), false);
 
     ms_params_ = new ms_searchparams(*ms_file_);
 
@@ -91,7 +112,7 @@ MascotResultsReader::MascotResultsReader(BlibBuilder& maker,
 
     // create the spec reader, sharing the file and results objects
     delete specReader_;  
-    specReader_ = new MascotSpecReader(datFileName, ms_file_, ms_results_, rawFiles_);
+    specReader_ = new MascotSpecReader(realDatFilePath.c_str(), ms_file_, ms_results_, rawFiles_, tmpDatFile_);
 
     // get modifications information
     for(int i=1; 0 != ms_params_->getFixedModsDelta(i); i++){
@@ -838,15 +859,11 @@ unsigned int MascotResultsReader::getCacheFlag(const char* filename,
   unsigned int flag = ms_mascotresfile::RESFILE_NOFLAG;
 
   // determine the size of the .dat file
-  struct stat fileStats;
-  int gotStats = stat(filename, &fileStats);
-  if( gotStats != 0 ){
-    throw BlibException(true, "Unable to read filesize of %s.", filename);
-  }
+  auto size = bfs::file_size(filename);
   Verbosity::debug("File size in bytes is %d and threshold is %d.",
-                   fileStats.st_size , threshold);
+      size, threshold);
 
-  if( fileStats.st_size > threshold  ){
+  if (size > threshold  ){
     flag = ms_mascotresfile::RESFILE_USE_CACHE;
   }
 

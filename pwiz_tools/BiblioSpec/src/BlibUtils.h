@@ -31,11 +31,10 @@
 #include <cstdlib>
 #include "Verbosity.h"
 #include "BlibException.h"
-#include "boost/filesystem/operations.hpp"
-#include "boost/filesystem/fstream.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Stream.hpp"
 #include "pwiz/utility/misc/Container.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 
 using std::numeric_limits;
 using std::min;
@@ -239,6 +238,26 @@ template <class T> size_t getMaxElementIndex(const std::vector<T>& elements)
 
     return max_idx;
 }
+
+
+class TempFileDeleter
+{
+    bfs::path filepath_;
+
+    public:
+    TempFileDeleter(const bfs::path& filepath) : filepath_(filepath)
+    {
+    }
+
+    ~TempFileDeleter()
+    {
+        boost::system::error_code ec;
+        bfs::remove(filepath_, ec);
+    }
+
+    const bfs::path& filepath() const { return filepath_; }
+};
+
 
 /**
  * Return the full path to the location of the executable.

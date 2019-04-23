@@ -26,6 +26,26 @@
 #include <cstring>
 #include <cstdlib>
 
+
+class TempFileDeleter
+{
+    bfs::path filepath_;
+
+    public:
+    TempFileDeleter(const bfs::path& filepath) : filepath_(filepath)
+    {
+    }
+
+    ~TempFileDeleter()
+    {
+        boost::system::error_code ec;
+        bfs::remove(filepath_, ec);
+    }
+
+    const bfs::path& filepath() const { return filepath_; }
+};
+
+
 // Run the given BiblioSpec tool with the given arguments
 int executeBlib(const vector<string>& argv)
 {
@@ -58,6 +78,8 @@ int executeBlib(const vector<string>& argv)
     string references, skiplines;
     string outputs; // passed with -o
     string expectedErrorMsg = "";
+    bool unicodeTest = false;
+    vector<TempFileDeleter> tempFiles;
 
     string compareCmd; // CompareLibraryContents or CompareTextFiles
 
@@ -73,6 +95,8 @@ int executeBlib(const vector<string>& argv)
             // Is this a negative test?
             if (token[1] == 'e')
                 expectedErrorMsg = token.substr(3);
+            else if (bal::iequals(token, "--unicode"))
+                unicodeTest = true;
             else if (bal::istarts_with(token, "--out="))
                 outputs += token.substr(6) + " ";
             else
@@ -118,6 +142,17 @@ int executeBlib(const vector<string>& argv)
         }
         else
         {
+            if (unicodeTest)
+            {
+                bfs::path unicodePath(token);
+                unicodePath = unicodePath.parent_path() / ("试验_" + unicodePath.filename().string());
+                if (!bfs::exists(unicodePath))
+                {
+                    bfs::copy_file(token, unicodePath);
+                    tempFiles.emplace_back(unicodePath);
+                }
+                token = unicodePath.string();
+            }
             inputs += token + " ";
         }
     }

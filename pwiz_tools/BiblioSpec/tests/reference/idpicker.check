@@ -289,8 +289,8 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 198	AGFAGDDAPR	488.72412109375	2	AGFAGDDAPR	-	-	1	65	0.0	0.0	0.0	0	29.9456666666667	N/A	N/A	N/A	N/A	N/A	N/A	N/A	2	3952	0.0	4
 199	KNYELLCGDNTRK	537.599060058594	3	KNYELLC[+57.0]GDNTRK	-	-	1	113	0.0	0.0	0.0	0	30.0063333333333	N/A	N/A	N/A	N/A	N/A	N/A	N/A	2	3955	0.0	4
 id	fileName	idFileName	cutoffScore
-1	/BiblioSpec/tests/inputs/OR20070831_S_mix7_FTFT_06.mzML	/BiblioSpec/tests/inputs/orbi-small-eg.idpXML	-1.0
-2	/BiblioSpec/tests/inputs/OR20070831_S_mix7_FTFT_07.mzXML	/BiblioSpec/tests/inputs/orbi-small-eg.idpXML	-1.0
+1	/BiblioSpec/tests/inputs/OR20070831_S_mix7_FTFT_06.mzML	/BiblioSpec/tests/inputs/试验_orbi-small-eg.idpXML	-1.0
+2	/BiblioSpec/tests/inputs/OR20070831_S_mix7_FTFT_07.mzXML	/BiblioSpec/tests/inputs/试验_orbi-small-eg.idpXML	-1.0
 id	scoreType	probabilityType
 0	UNKNOWN	NOT_A_PROBABILITY_VALUE
 1	PERCOLATOR QVALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT

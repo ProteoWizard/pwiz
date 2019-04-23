@@ -45,6 +45,7 @@
 #include "PsmFile.h"
 #include "PwizReader.h"
 #include "SpecFileReader.h"
+#include "pwiz/utility/misc/Filesystem.hpp"
 
 namespace ops = boost::program_options;
 using namespace BiblioSpec;
@@ -73,6 +74,9 @@ string getTargetReportName(const string& specFileName,
  */
 int main(int argc, char* argv[])
 {
+    bnw::args utf8ArgWrapper(argc, argv); // modifies argv in-place with UTF-8 version on Windows
+    pwiz::util::enable_utf8_path_operations();
+
     // declare storage for options values
     ops::variables_map options_table;
 

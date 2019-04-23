@@ -31,7 +31,6 @@
 #endif
 
 #include "pwiz/utility/misc/Filesystem.hpp"
-#include "boost/filesystem/detail/utf8_codecvt_facet.hpp"
 #include "CommandLine.h"
 #include "BlibBuilder.h"
 #include "AllBuildParsers.h"
