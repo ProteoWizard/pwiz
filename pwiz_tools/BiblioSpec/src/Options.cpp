@@ -22,10 +22,8 @@
 //class definition for Options
 
 #include "Options.h"
+#include "pwiz/utility/misc/Std.hpp"
 
-
-
-using namespace std;
 
 /**
  * Create an options object and set all options to default values.

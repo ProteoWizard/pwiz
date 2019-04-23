@@ -33,7 +33,6 @@
 #include "Verbosity.h"
 #include "saxhandler.h"
 
-using namespace std;
 
 namespace BiblioSpec {
 

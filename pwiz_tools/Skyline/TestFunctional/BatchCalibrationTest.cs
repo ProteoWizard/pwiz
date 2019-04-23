@@ -135,12 +135,19 @@ namespace pwiz.SkylineTestFunctional
                 documentGrid.FindColumn(propertyPathResults.Property(nameof(PeptideResult.Quantification)));
             for (int iRow = 0; iRow < documentGrid.RowCount; iRow++)
             {
-                var row = documentGrid.DataGridView.Rows[iRow];
-                var peptide = (Peptide) row.Cells[colPeptide.Index].Value;
-                var replicate = (Replicate) row.Cells[colReplicate.Index].Value;
-                var calibrationCurve = (LinkValue<CalibrationCurve>) row.Cells[colCalibrationCurve.Index].Value;
-                var replicateCalibrationCurve =
-                    (LinkValue<CalibrationCurve>) row.Cells[colReplicateCalibrationCurve.Index].Value;
+                Peptide peptide = null;
+                Replicate replicate = null;
+                var calibrationCurve = default(LinkValue<CalibrationCurve>);
+                var replicateCalibrationCurve = default(LinkValue<CalibrationCurve>);
+                RunUI(() =>
+                {
+                    var row = documentGrid.DataGridView.Rows[iRow];
+                    peptide = (Peptide)row.Cells[colPeptide.Index].Value;
+                    replicate = (Replicate)row.Cells[colReplicate.Index].Value;
+                    calibrationCurve = (LinkValue<CalibrationCurve>)row.Cells[colCalibrationCurve.Index].Value;
+                    replicateCalibrationCurve =
+                        (LinkValue<CalibrationCurve>)row.Cells[colReplicateCalibrationCurve.Index].Value;
+                });
                 if (hasBatchNames)
                 {
                     Assert.AreNotEqual(calibrationCurve.Value.PointCount, replicateCalibrationCurve.Value.PointCount);

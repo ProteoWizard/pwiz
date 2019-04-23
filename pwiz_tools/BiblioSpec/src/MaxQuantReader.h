@@ -29,8 +29,9 @@
 #include <sstream>
 #include <stdexcept>
 
-using namespace std;
-using namespace boost;
+using boost::tokenizer;
+using boost::escaped_list_separator;
+
 
 namespace BiblioSpec {
 

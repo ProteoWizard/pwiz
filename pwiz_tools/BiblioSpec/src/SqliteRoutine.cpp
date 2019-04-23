@@ -21,8 +21,8 @@
 
 
 #include "SqliteRoutine.h"
+#include "pwiz/utility/misc/Std.hpp"
 
-using namespace std;
 
 namespace BiblioSpec {
 

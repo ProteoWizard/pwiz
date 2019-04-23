@@ -44,6 +44,7 @@ using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Controls.Graphs.Calibration;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -4549,18 +4550,16 @@ namespace pwiz.Skyline
 
         private int AddReplicateOrderAndGroupByMenuItems(ToolStrip menuStrip, int iInsert)
         {
-            string groupBy = SummaryReplicateGraphPane.GroupByReplicateAnnotation;
-            var replicateAnnotations = DocumentUI.Settings.DataSettings.AnnotationDefs
-                .Where(annotationDef => annotationDef.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate))
-                .ToArray();
-            if (replicateAnnotations.Length == 0)
-                groupBy = null;
+            string currentGroupBy = SummaryReplicateGraphPane.GroupByReplicateAnnotation;
+            var groupByValues = ReplicateValue.GetGroupableReplicateValues(DocumentUI.Settings).ToArray();
+            if (groupByValues.Length == 0)
+                currentGroupBy = null;
 
             // If not grouped by an annotation, show the order-by menuitem
-            if (string.IsNullOrEmpty(groupBy))
+            if (string.IsNullOrEmpty(currentGroupBy))
             {
-                var orderByReplicateAnnotationDef = replicateAnnotations.FirstOrDefault(
-                        annotationDef => SummaryReplicateGraphPane.OrderByReplicateAnnotation == annotationDef.Name);
+                var orderByReplicateAnnotationDef = groupByValues.FirstOrDefault(
+                    value => SummaryReplicateGraphPane.OrderByReplicateAnnotation == value.ToPersistedString());
                 menuStrip.Items.Insert(iInsert++, replicateOrderContextMenuItem);
                 replicateOrderContextMenuItem.DropDownItems.Clear();
                 replicateOrderContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
@@ -4574,42 +4573,42 @@ namespace pwiz.Skyline
                 replicateOrderAcqTimeContextMenuItem.Checked
                     = null == orderByReplicateAnnotationDef &&
                       SummaryReplicateOrder.time == SummaryReplicateGraphPane.ReplicateOrder;
-                foreach (var annotationDef in replicateAnnotations)
+                foreach (var replicateValue in groupByValues)
                 {
                     replicateOrderContextMenuItem.DropDownItems.Add(OrderByReplicateAnnotationMenuItem(
-                        annotationDef, SummaryReplicateGraphPane.OrderByReplicateAnnotation));
+                        replicateValue, SummaryReplicateGraphPane.OrderByReplicateAnnotation));
                 }
             }
             
-            if (replicateAnnotations.Length > 0)
+            if (groupByValues.Length > 0)
             {
                 menuStrip.Items.Insert(iInsert++, groupReplicatesByContextMenuItem);
                 groupReplicatesByContextMenuItem.DropDownItems.Clear();
                 groupReplicatesByContextMenuItem.DropDownItems.Add(groupByReplicateContextMenuItem);
-                groupByReplicateContextMenuItem.Checked = string.IsNullOrEmpty(groupBy);
-                foreach (var annotationDef in replicateAnnotations)
+                groupByReplicateContextMenuItem.Checked = string.IsNullOrEmpty(currentGroupBy);
+                foreach (var replicateValue in groupByValues)
                 {
                     groupReplicatesByContextMenuItem.DropDownItems
-                        .Add(GroupByReplicateAnnotationMenuItem(annotationDef, groupBy));
+                        .Add(GroupByReplicateAnnotationMenuItem(replicateValue, currentGroupBy));
                 }
             }
             return iInsert;
         }
 
-        private ToolStripMenuItem GroupByReplicateAnnotationMenuItem(AnnotationDef annotationDef, string groupBy)
+        private ToolStripMenuItem GroupByReplicateAnnotationMenuItem(ReplicateValue replicateValue, string groupBy)
         {
-            return new ToolStripMenuItem(annotationDef.Name, null, (sender, eventArgs)=>GroupByReplicateAnnotation(annotationDef.Name))
+            return new ToolStripMenuItem(replicateValue.Title, null, (sender, eventArgs)=>GroupByReplicateValue(replicateValue))
                        {
-                           Checked = (annotationDef.Name == groupBy),
+                           Checked = replicateValue.ToPersistedString() == groupBy
                        };
         }
 
-        private ToolStripMenuItem OrderByReplicateAnnotationMenuItem(AnnotationDef annotationDef, string currentOrderBy)
+        private ToolStripMenuItem OrderByReplicateAnnotationMenuItem(ReplicateValue replicateValue, string currentOrderBy)
         {
-            return new ToolStripMenuItem(annotationDef.Name, null,
-                                         (sender, eventArgs) => OrderByReplicateAnnotation(annotationDef.Name))
+            return new ToolStripMenuItem(replicateValue.Title, null,
+                                         (sender, eventArgs) => OrderByReplicateAnnotation(replicateValue))
                 {
-                    Checked = (annotationDef.Name == currentOrderBy)
+                    Checked = replicateValue.ToPersistedString() == currentOrderBy
                 };
         }
 
@@ -4873,18 +4872,25 @@ namespace pwiz.Skyline
 
         private void groupByReplicateContextMenuItem_Click(object sender, EventArgs e)
         {
-            GroupByReplicateAnnotation(null);
+            GroupByReplicateValue(null);
+        }
+
+        public void GroupByReplicateValue(ReplicateValue replicateValue)
+        {
+            SummaryReplicateGraphPane.GroupByReplicateAnnotation = replicateValue?.ToPersistedString();
+            UpdateSummaryGraphs();
         }
 
         public void GroupByReplicateAnnotation(string annotationName)
         {
-            SummaryReplicateGraphPane.GroupByReplicateAnnotation = annotationName;
+            SummaryReplicateGraphPane.GroupByReplicateAnnotation =
+                DocumentAnnotations.ANNOTATION_PREFIX + annotationName;
             UpdateSummaryGraphs();
         }
 
-        public void OrderByReplicateAnnotation(string annotationName)
+        public void OrderByReplicateAnnotation(ReplicateValue replicateValue)
         {
-            SummaryReplicateGraphPane.OrderByReplicateAnnotation = annotationName;
+            SummaryReplicateGraphPane.OrderByReplicateAnnotation = replicateValue.ToPersistedString();
             UpdateSummaryGraphs();
         }
 

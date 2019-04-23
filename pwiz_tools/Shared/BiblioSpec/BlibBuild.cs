@@ -142,15 +142,21 @@ namespace pwiz.BiblioSpec
                 argv.Add("-E");
             }
             string dirCommon = PathEx.GetCommonRoot(InputFiles);
-            var stdinBuilder = new StringBuilder();
-            foreach (string fileName in InputFiles)
-                stdinBuilder.AppendLine(PathEx.RemovePrefix(fileName, dirCommon));
-            if (TargetSequences != null)
+
+            string stdinFilename = Path.GetTempFileName();
+            argv.Add($"-S \"{stdinFilename}\"");
+            using (var stdinFile = new StreamWriter(stdinFilename, false, new UTF8Encoding(false)))
             {
-                argv.Add("-U");
-                stdinBuilder.AppendLine();
-                foreach (string targetSequence in TargetSequences)
-                    stdinBuilder.AppendLine(targetSequence);
+                foreach (string fileName in InputFiles)
+                    stdinFile.WriteLine(PathEx.RemovePrefix(fileName, dirCommon));
+
+                if (TargetSequences != null)
+                {
+                    argv.Add("-U");
+                    stdinFile.WriteLine();
+                    foreach (string targetSequence in TargetSequences)
+                        stdinFile.WriteLine(targetSequence);
+                }
             }
             // ReSharper restore LocalizableElement
 
@@ -167,20 +173,23 @@ namespace pwiz.BiblioSpec
                                          Arguments = string.Join(@" ", argv.ToArray()),
                                          RedirectStandardOutput = true,
                                          RedirectStandardError = true,
-                                         RedirectStandardInput = true
+                                         RedirectStandardInput = true,
+                                         StandardOutputEncoding = Encoding.UTF8,
+                                         StandardErrorEncoding = Encoding.UTF8
                                      };
             bool isComplete = false;
             ambiguous = new string[0];
             try
             {
-                var processRunner = new ProcessRunner {MessagePrefix = @"AMBIGUOUS:"};
-                processRunner.Run(psiBlibBuilder, stdinBuilder.ToString(), progressMonitor, ref status);
+                var processRunner = new ProcessRunner { MessagePrefix = @"AMBIGUOUS:" };
+                processRunner.Run(psiBlibBuilder, null, progressMonitor, ref status);
                 isComplete = status.IsComplete;
                 if (isComplete)
                     ambiguous = processRunner.MessageLog().Distinct().OrderBy(s => s).ToArray();
             }
             finally 
             {
+                File.Delete(stdinFilename);
                 if (!isComplete)
                 {
                     // If something happened (error or cancel) to end processing, then

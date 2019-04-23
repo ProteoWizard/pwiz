@@ -31,7 +31,6 @@
 #include <boost/filesystem.hpp>
 #include "AminoAcidMasses.h"
 
-using namespace std;
 
 namespace fs = boost::filesystem;
 

@@ -605,6 +605,9 @@ edited all transitions for a precursor use the same integration boundaries</valu
   <data name="MissedCleavages">
     <value>The number of missed cleavage sites in the peptide sequence</value>
   </data>
+  <data name="ModifiedAreaProportion">
+    <value>The normalized area of this peptide result divided by the sum of all peptide results in this protein and replicate that have the same unmodified sequence.</value>
+  </data>
   <data name="ModifiedSequence">
     <value>Peptide sequence including any amino acid modifications such as
 cysteine alkylation. (example: AGLC[+57]QTFVYGGC[+57]R)</value>
