@@ -53,6 +53,10 @@ using namespace Clearcore2::Data::DataAccess::SampleData;
 using namespace Clearcore2::RawXYProcessing;
 #endif
 
+// peak areas from Sciex are very small values relative to peak heights;
+// multiplying them by this scaling factor makes them more comparable
+const int PEAK_AREA_SCALE_FACTOR = 100;
+
 #include "WiffFile2.ipp"
 
 namespace pwiz {
@@ -568,7 +572,7 @@ void ExperimentImpl::getSIC(size_t index, pwiz::util::BinaryData<double>& times,
     try
     {
         if (index >= transitionCount)
-            throw std::out_of_range("[Experiment::getSIC()] index out of range");
+            throw std::out_of_range("[Experiment::getSIC()] index " + lexical_cast<string>(index) + " out of range");
 
         ExtractedIonChromatogramSettings^ option = gcnew ExtractedIonChromatogramSettings(index);
         ExtractedIonChromatogram^ xic = msExperiment->GetExtractedIonChromatogram(option);
@@ -592,7 +596,8 @@ void ExperimentImpl::getAcquisitionMassRange(double& startMz, double& stopMz) co
 {
     try
     {
-        if ((ExperimentType) msExperiment->Details->ExperimentType != MRM)
+        if ((ExperimentType) msExperiment->Details->ExperimentType != MRM &&
+            (ExperimentType) msExperiment->Details->ExperimentType != SIM)
         {
             startMz = msExperiment->Details->StartMass;
             stopMz = msExperiment->Details->EndMass;
@@ -789,7 +794,7 @@ void SpectrumImpl::getData(bool doCentroid, pwiz::util::BinaryData<double>& mz, 
             {
                 PeakClass^ peak = peakList[(int)i];
                 mz[i] = peak->xValue;
-                intensities[i] = peak->area;
+                intensities[i] = peak->area * PEAK_AREA_SCALE_FACTOR;
             }
         }
         else
