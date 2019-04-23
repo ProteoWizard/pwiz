@@ -438,6 +438,11 @@ PWIZ_API_DECL std::string Reader_mz5::identify(const string& filename, const str
 #endif
         return getType();
     }
+    catch (ReaderFail& e)
+    {
+        if (bal::contains(e.what(), "MZ5 does not support Unicode"))
+            throw e;
+    }
     catch (std::runtime_error&)
     {
         return "";

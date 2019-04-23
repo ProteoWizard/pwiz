@@ -34,7 +34,6 @@
 #include "SearchLibrary.h"
 //#include "zlib.h"
 
-using namespace std;
 namespace ops = boost::program_options;
 
 namespace BiblioSpec {

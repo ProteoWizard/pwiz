@@ -20,6 +20,7 @@
 //
 
 #include "Verbosity.h"
+#include "pwiz/utility/misc/Std.hpp"
 
 namespace BiblioSpec {
 

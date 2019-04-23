@@ -113,6 +113,7 @@ project
       <link>static
       <include>$(PWIZ_ROOT_PATH)/libraries/SQLite
       <include>$(PWIZ_ROOT_PATH)/libraries/expat-2.0.1/lib
+      <define>PWIZ_CONFIG_NO_CONTAINER_OUTPUT_OPERATORS
       <toolset>msvc:<define>VENDOR_READERS
       <toolset>msvc:<library>$(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers
 ;
@@ -270,6 +271,7 @@ lib blib_v_1
 exe LibToSqlite3
   : # sources
     LibToSqlite3.cpp
+    blib
     $(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3
   : # requirements
     <link>static

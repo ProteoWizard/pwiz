@@ -8,7 +8,7 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 4	VIYTTNAVEAVHRQFRKLTK	792.46	3	VIYTTNAVEAVHRQFRKLTK	-	-	1	527	0.0	0.0	0.0	0	32.906203333333	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	10074	0.0	15
 5	VMRMLR	403.73	2	VMRMLR	-	-	1	355	0.0	0.0	0.0	0	32.902475	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	10072	0.0	15
 id	fileName	idFileName	cutoffScore
-1	/BiblioSpec/tests/inputs/msgf-test.mzML	/BiblioSpec/tests/inputs/msgf-test.mzid	-1.0
+1	/BiblioSpec/tests/inputs/msgf-test.mzML	/BiblioSpec/tests/inputs/试验_msgf-test.mzid	-1.0
 id	scoreType	probabilityType
 0	UNKNOWN	NOT_A_PROBABILITY_VALUE
 1	PERCOLATOR QVALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT

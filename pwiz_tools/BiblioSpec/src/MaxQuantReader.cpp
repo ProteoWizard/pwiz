@@ -26,6 +26,9 @@
  */
 
 #include "MaxQuantReader.h"
+#include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
+namespace filesystem = bfs;
 
 namespace BiblioSpec {
 
@@ -68,10 +71,6 @@ MaxQuantReader::~MaxQuantReader()
 {
     if (specReader_ == this)
         specReader_ = NULL; // so parent class doesn't try to delete itself
-    if (tsvFile_.is_open())
-    {
-        tsvFile_.close();
-    }
 }
 
 /**
@@ -419,7 +418,7 @@ void MaxQuantReader::parseHeader(string& line)
         // check each column for a match
         for (size_t i = 0; i < numColumns; i++)
         {
-            if (iequals(*token, targetColumns_[i].name_))
+            if (bal::iequals(*token, targetColumns_[i].name_))
             {
                 targetColumns_[i].position_ = colNumber;
                 break;
@@ -464,8 +463,8 @@ void MaxQuantReader::collectPsms()
 
     // get file size and set progress
     streampos originalPos = tsvFile_.tellg();
-    int lineCount = count(istreambuf_iterator<char>(tsvFile_),
-                          istreambuf_iterator<char>(), '\n') + 1;
+    int lineCount = count(std::istreambuf_iterator<char>(tsvFile_),
+                          std::istreambuf_iterator<char>(), '\n') + 1;
     tsvFile_.seekg(originalPos);
     ProgressIndicator progress(lineCount);
 
@@ -599,14 +598,14 @@ void MaxQuantReader::storeLine(MaxQuantLine& entry)
 void MaxQuantReader::addDoublesToVector(vector<double>& v, const string& valueList)
 {
     vector<string> doubles;
-    split(doubles, valueList, is_any_of(";"));
+    bal::split(doubles, valueList, bal::is_any_of(";"));
 
     try
     {
-        transform(doubles.begin(), doubles.end(),
-                  back_inserter(v), lexical_cast<double, string>);
+        for (const string& value : doubles)
+            v.emplace_back(lexical_cast<double>(value));
     }
-    catch (bad_lexical_cast e)
+    catch (bad_lexical_cast&)
     {
         Verbosity::error("Could not cast \"%s\" to doubles", valueList.c_str());
     }
@@ -621,9 +620,9 @@ void MaxQuantReader::addModsToVector(vector<SeqMod>& v, const string& modificati
 {
     // split modifications whole names
     vector<string> modNames;
-    if (!iequals(modifications, "Unmodified"))
+    if (!bal::iequals(modifications, "Unmodified"))
     {
-        split(modNames, modifications, is_any_of(","));
+        bal::split(modNames, modifications, bal::is_any_of(","));
     }
 
     // remove underscore from beginning and end if they exist
@@ -760,11 +759,12 @@ SeqMod MaxQuantReader::searchForMod(vector<string>& modNames, string modSequence
     string modAbbreviation = modSequence.substr(modStart, posCloseParen - modStart);
 
     // search list of mod names using abbreviation
-    const MaxQuantModification* lookup;
+    const MaxQuantModification* lookup = NULL;
     for (vector<string>::const_iterator i = modNames.begin(); i != modNames.end(); ++i) {
-        if (iequals(modAbbreviation, i->substr(0, modAbbreviation.length())) &&
-            (lookup = MaxQuantModification::find(modBank_, *i)) != NULL) {
-            return SeqMod(getModPosition(modSequence, posOpenParen), lookup->massDelta);
+        if (bal::iequals(modAbbreviation, i->substr(0, modAbbreviation.length()))) {
+            lookup = MaxQuantModification::find(modBank_, *i);
+            if (lookup != NULL)
+                return SeqMod(getModPosition(modSequence, posOpenParen), lookup->massDelta);
         }
     }
 
@@ -780,7 +780,7 @@ SeqMod MaxQuantReader::searchForMod(vector<string>& modNames, string modSequence
         }
         // Make sure we found a space and that there is at least 1 char after it
         if (newStart + 1 < i->length() && (*i)[newStart] == ' ' &&
-            iequals(modAbbreviation, i->substr(++newStart, modAbbreviation.length())) &&
+            bal::iequals(modAbbreviation, i->substr(++newStart, modAbbreviation.length())) &&
             (lookup = MaxQuantModification::find(modBank_, i->substr(newStart))) != NULL) {
             return SeqMod(getModPosition(modSequence, posOpenParen), lookup->massDelta);
         }
