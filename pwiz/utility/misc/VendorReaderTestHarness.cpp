@@ -286,20 +286,23 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
         boost::shared_ptr<std::iostream> serializedStreamPtr(stringstreamPtr);
 #ifndef WITHOUT_MZ5
         // mzML <-> mz5
-        string targetResultFilename_mz5 = bfs::change_extension(targetResultFilename, ".mz5").string();
+        if (findUnicodeBytes(rawpath) == rawpath.end())
         {
-            MSData msd_mz5;
-            Serializer_mz5 serializer_mz5;
-            serializer_mz5.write(targetResultFilename_mz5, msd);
-            serializer_mz5.read(targetResultFilename_mz5, msd_mz5);
+            string targetResultFilename_mz5 = bfs::change_extension(targetResultFilename, ".mz5").string();
+            {
+                MSData msd_mz5;
+                Serializer_mz5 serializer_mz5;
+                serializer_mz5.write(targetResultFilename_mz5, msd);
+                serializer_mz5.read(targetResultFilename_mz5, msd_mz5);
 
-            DiffConfig diffConfig_mz5;
-            diffConfig_mz5.ignoreExtraBinaryDataArrays = true;
-            Diff<MSData, DiffConfig> diff_mz5(msd, msd_mz5, diffConfig_mz5);
-            if (diff_mz5) cerr << headDiff(diff_mz5, 5000) << endl;
-            unit_assert(!diff_mz5);
+                DiffConfig diffConfig_mz5;
+                diffConfig_mz5.ignoreExtraBinaryDataArrays = true;
+                Diff<MSData, DiffConfig> diff_mz5(msd, msd_mz5, diffConfig_mz5);
+                if (diff_mz5) cerr << headDiff(diff_mz5, 5000) << endl;
+                unit_assert(!diff_mz5);
+            }
+            bfs::remove(targetResultFilename_mz5);
         }
-        bfs::remove(targetResultFilename_mz5);
 #endif
         DiffConfig diffConfig_non_mzML;
         diffConfig_non_mzML.ignoreMetadata = true;
@@ -460,18 +463,21 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
             boost::shared_ptr<std::iostream> serializedStreamPtr(stringstreamPtr);
 #ifndef WITHOUT_MZ5
             // mzML <-> mz5
-            string targetResultFilename_mz5 = bfs::change_extension(targetResultFilename, ".mz5").string();
+            if (findUnicodeBytes(rawpath) == rawpath.end())
             {
-                MSData msd_mz5;
-                Serializer_mz5 serializer_mz5;
-                serializer_mz5.write(targetResultFilename_mz5, msd);
-                serializer_mz5.read(targetResultFilename_mz5, msd_mz5);
+                string targetResultFilename_mz5 = bfs::change_extension(targetResultFilename, ".mz5").string();
+                {
+                    MSData msd_mz5;
+                    Serializer_mz5 serializer_mz5;
+                    serializer_mz5.write(targetResultFilename_mz5, msd);
+                    serializer_mz5.read(targetResultFilename_mz5, msd_mz5);
 
-                Diff<MSData, DiffConfig> diff_mz5(msd, msd_mz5);
-                if (diff_mz5) cerr << headDiff(diff_mz5, 5000) << endl;
-                unit_assert(!diff_mz5);
+                    Diff<MSData, DiffConfig> diff_mz5(msd, msd_mz5);
+                    if (diff_mz5) cerr << headDiff(diff_mz5, 5000) << endl;
+                    unit_assert(!diff_mz5);
+                }
+                bfs::remove(targetResultFilename_mz5);
             }
-            bfs::remove(targetResultFilename_mz5);
 #endif
         }
     }
