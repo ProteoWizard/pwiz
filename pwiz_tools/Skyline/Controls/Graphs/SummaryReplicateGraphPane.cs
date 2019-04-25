@@ -249,13 +249,13 @@ namespace pwiz.Skyline.Controls.Graphs
             private ImmutableList<ReplicateGroup> _replicateGroups;
 
 
-            protected GraphData(SrmDocument document, IdentityPath identityPath, DisplayTypeChrom displayType, GraphValues.ReplicateGroupOp replicateGroupOp, PaneKey paneKey)
+            protected GraphData(SrmDocument document, IdentityPath identityPath, DisplayTypeChrom displayType, ReplicateGroupOp replicateGroupOp, PaneKey paneKey)
                 : this(document, new[] { identityPath }, displayType, replicateGroupOp, paneKey)
             {
             }
 
             protected GraphData(SrmDocument document, IEnumerable<IdentityPath> selectedDocNodePaths, DisplayTypeChrom displayType,
-                GraphValues.ReplicateGroupOp replicateGroupOp, PaneKey paneKey)
+                ReplicateGroupOp replicateGroupOp, PaneKey paneKey)
             {
                 _document = document;
                 _selectedDocNodePaths = ImmutableList.ValueOf(selectedDocNodePaths);
@@ -619,7 +619,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            public GraphValues.ReplicateGroupOp ReplicateGroupOp { get; private set; }
+            public ReplicateGroupOp ReplicateGroupOp { get; private set; }
 
             public virtual PointPair PointPairMissing(int xValue)
             {
@@ -774,7 +774,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var chromatograms = _document.Settings.MeasuredResults.Chromatograms;
 
                 var result = new List<ReplicateGroup>();
-                if (ReplicateGroupOp.GroupByAnnotation == null)
+                if (ReplicateGroupOp.GroupByValue == null)
                 {
                     foreach (var index in replicateIndexes)
                     {
@@ -815,18 +815,20 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    var lookup = replicateIndexes.ToLookup(replicateIndex => chromatograms[replicateIndex].Annotations.GetAnnotation(ReplicateGroupOp.GroupByAnnotation));
+                    var lookup = replicateIndexes.ToLookup(replicateIndex =>
+                        ReplicateGroupOp.GroupByValue.GetValue(chromatograms[replicateIndex]));
                     var keys = lookup.Select(grouping => grouping.Key).ToList();
                     if (keys.Count > 2)
                     {
                         // If there are more than 2 groups then exclude replicates with blank annotation values.
                         keys.Remove(null);
                     }
-                    keys.Sort();
+
+                    keys.Sort(Comparer<object>.Create(CollectionUtil.CompareColumnValues));
                     // ReSharper disable AssignNullToNotNullAttribute
                     foreach (var key in keys)
                     {
-                        result.Add(new ReplicateGroup((key ?? string.Empty).ToString(), ReplicateIndexSet.OfValues(lookup[key])));
+                        result.Add(new ReplicateGroup(key?.ToString() ?? string.Empty, ReplicateIndexSet.OfValues(lookup[key])));
                     }
                     // ReSharper restore AssignNullToNotNullAttribute
                 }
@@ -874,6 +876,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public string GroupName { get; private set; }
+
         public ChromFileInfo FileInfo { get; private set; }
         public ReplicateIndexSet ReplicateIndexes { get; private set; }
         public bool IsAllGroup { get; private set; }

@@ -34,7 +34,6 @@
 #include "BuildParser.h"
 #include "Verbosity.h"
 
-using namespace std;
 
 /*
  * Schema for idpXML files

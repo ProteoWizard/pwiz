@@ -20,6 +20,7 @@
 //
 
 #include "Compare.h"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include <stdlib.h>
 
@@ -114,6 +115,9 @@ int test (const vector<string>& args)
 
 int main(int argc, char* argv[])
 {
+    bnw::args utf8ArgWrapper(argc, argv); // modifies argv in-place with UTF-8 version on Windows
+    pwiz::util::enable_utf8_path_operations();
+
     try
     {
         return test(vector<string>(argv, argv + argc));

@@ -66,6 +66,7 @@ class MascotResultsReader : public BuildParser{
   vector<string> specFileExtensions_;  // a list of possible extensions
   ProgressIndicator* readSpecProgress_; // each spec read from .dat file 
   vector<string> rawFiles_; // a list of distiller rawfiles
+  boost::shared_ptr<TempFileDeleter> tmpDatFile_;
 
   void getIsotopeMasses();
   void applyIsotopeDiffs(PSM* psm, string quantName);

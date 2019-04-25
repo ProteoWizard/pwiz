@@ -23,7 +23,6 @@
 
 #include "DotProduct.h"
 
-using namespace std;
 
 namespace BiblioSpec {
 

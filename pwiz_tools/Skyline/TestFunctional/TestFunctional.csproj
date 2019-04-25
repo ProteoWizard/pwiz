@@ -239,6 +239,7 @@
     <Compile Include="MidasModificationTest.cs" />
     <Compile Include="MidasTest.cs" />
     <Compile Include="MiscFormsTest.cs" />
+    <Compile Include="ModifiedAreaProportionTest.cs" />
     <Compile Include="MultiSelectPeakAreaGraphTest.cs" />
     <Compile Include="MultiSelectRetentionTimeTest.cs" />
     <Compile Include="MultiSelectTest.cs" />
@@ -423,6 +424,7 @@
     <None Include="MassErrorGraphsTest.zip" />
     <None Include="MidasModificationTest.zip" />
     <None Include="MidasTest.zip" />
+    <None Include="ModifiedAreaProportionTest.zip" />
     <None Include="NegativeIonChromatogramsTest.zip" />
     <None Include="NeutralLossLibraryTest.zip" />
     <None Include="OptimizeTest.zip" />

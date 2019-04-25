@@ -29,10 +29,11 @@
 
 #include "BlibBuilder.h"
 #include "SqliteRoutine.h"
+#include "pwiz/utility/misc/Filesystem.hpp"
+#include "boost/filesystem/detail/utf8_codecvt_facet.hpp"
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/join.hpp>
 
-using namespace std;
 
 namespace BiblioSpec {
 
@@ -198,6 +199,7 @@ int BlibBuilder::parseCommandArgs(int argc, char* argv[])
             {
                 string infileName;
                 getline(*stdinStream, infileName);
+                bal::trim(infileName);
                 if (infileName.empty())
                 {
                     break;
@@ -277,11 +279,19 @@ int BlibBuilder::transferLibrary(int iLib,
                                  const ProgressIndicator* parentProgress)
 {
     // Check to see if library exists
-    struct stat fileStats;
-    int gotStats = stat(input_files.at(iLib), &fileStats);
-    if( gotStats != 0 ){
-        throw BlibException(true, "Library file '%s' cannot be opened for "
-                            "transfering", input_files.at(iLib));
+
+    {
+        auto libPath = input_files.at(iLib);
+        if (!bfs::exists(libPath))
+        {
+            throw BlibException(true, "Library file '%s' cannot be opened for "
+                "transferring: file does not exist", bfs::absolute(libPath).string().c_str());
+        }
+        ifstream test(libPath);
+        if (!test) {
+            throw BlibException(true, "Library file '%s' cannot be opened for "
+                "transferring", libPath);
+        }
     }
 
     // give the incomming library a name

@@ -30,7 +30,6 @@
 #include <boost/algorithm/string.hpp>
 #include <cmath>
 
-using namespace std;
 namespace bal = boost::algorithm;
 
 namespace BiblioSpec {

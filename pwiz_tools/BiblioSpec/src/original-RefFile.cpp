@@ -23,6 +23,7 @@
 //associateing sequence, mods, and charge with an ms2spec.  
 //file will be tab-delimited columns of file name, scanNum, charge, seq, and mods
 
+#include "pwiz/utility/misc/Std.hpp"
 #include "original-RefFile.h"
 
 refData::refData() {
