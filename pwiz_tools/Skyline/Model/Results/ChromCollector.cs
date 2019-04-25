@@ -605,6 +605,18 @@ namespace pwiz.Skyline.Model.Results
                 return 0;
             }
 
+            if (ReferenceEquals(_cachedSpillFile, spillFile))
+            {
+                if (spillFile.Stream != null)
+                {
+                    if (_bytesFromSpillFile == null || spillFile.Stream.Length != _bytesFromSpillFile.Length)
+                    {
+                        // Need to reread spill file if more bytes were written since the time it was cached.
+                        _cachedSpillFile = null;
+                    }
+                }
+            }
+
             if (!ReferenceEquals(_cachedSpillFile, spillFile))
             {
                 _cachedSpillFile = spillFile;
