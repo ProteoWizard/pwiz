@@ -10566,3 +10566,13 @@ Click 'Retry' to try building again with original spectrum files placed next to 
     <value>Annotation: </value>
   </data>
 </root>
+  <data name="ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_" xml:space="preserve">
+    <value>Failed to find a valid Thermo instrument installation.</value>
+  </data>
+  <data name="ThermoMassListExporter_EnsureLibraries_Thermo_method_creation_software_may_not_be_installed_correctly_" xml:space="preserve">
+    <value>Thermo method creation software may not be installed correctly.</value>
+  </data>
+  <data name="ThermoMassListExporter_EnsureLibraries_Thermo_instrument_software_may_not_be_installed_correctly__The_library__0__could_not_be_found_" xml:space="preserve">
+    <value>Thermo instrument software may not be installed correctly. The library {0} could not be found.</value>
+  </data>
+</root>

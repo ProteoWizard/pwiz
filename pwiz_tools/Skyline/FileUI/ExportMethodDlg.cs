@@ -303,6 +303,7 @@ namespace pwiz.Skyline.FileUI
                 return Equals(type, ExportInstrumentType.SHIMADZU) ||
                        Equals(type, ExportInstrumentType.THERMO_TSQ) ||
                        Equals(type, ExportInstrumentType.THERMO_QUANTIVA) ||
+                       Equals(type, ExportInstrumentType.THERMO_ALTIS) ||
                        Equals(type, ExportInstrumentType.THERMO_ENDURA) ||
                        Equals(type, ExportInstrumentType.WATERS) ||
                        Equals(type, ExportInstrumentType.WATERS_SYNAPT_TRAP) ||
