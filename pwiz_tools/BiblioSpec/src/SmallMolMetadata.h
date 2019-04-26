@@ -21,7 +21,8 @@
 
 #pragma once
 
-#include <string>
+#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Container.hpp"
 #include <boost/algorithm/string/replace.hpp>
 
 /**

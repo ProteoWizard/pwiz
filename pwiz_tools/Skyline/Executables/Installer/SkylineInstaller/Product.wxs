@@ -40,8 +40,6 @@
       <ComponentGroupRef Id="sk_files"/>
       <ComponentGroupRef Id="sv_files"/>
       <ComponentGroupRef Id="tr_files"/>
-      <ComponentGroupRef Id="x64_files" />
-      <ComponentGroupRef Id="x86_files" />
       <ComponentGroupRef Id="zh_CHS_files"/>
       <ComponentGroupRef Id="zh_tw_files"/>
       <ComponentGroupRef Id="Method_AbSciex_TOF_files"/>
@@ -80,8 +78,6 @@
       <Directory Id="sk_directory" Name="sk"/>
       <Directory Id="sv_directory" Name="sv"/>
       <Directory Id="tr_directory" Name="tr"/>
-      <Directory Id="x64_directory" Name="x64"/>
-      <Directory Id="x86_directory" Name="x86"/>
       <Directory Id="zh_CHS_directory" Name="zh-CHS"/>
       <Directory Id="zh_tw_directory" Name="zh-tw"/>
       
@@ -347,6 +343,12 @@
       <Component Id="Clearcore2.XmlHelpers.dll">
         <File Source="$(var.Skyline.TargetDir)/Clearcore2.XmlHelpers.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="CLFIO32.dll">
+        <File Source="$(var.Skyline.TargetDir)/CLFIO32.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="CRHAKEI2.dll">
+        <File Source="$(var.Skyline.TargetDir)/CRHAKEI2.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="DataReader.dll">
         <File Source="$(var.Skyline.TargetDir)/DataReader.dll" KeyPath="yes"/>
       </Component>
@@ -384,11 +386,17 @@
         <File Source="$(var.Skyline.TargetDir)/Interop.MSFileReaderLib.dll" KeyPath="yes"/>
       </Component>
       <?endif?>
+      <Component Id="IOModuleQTFL.dll">
+        <File Source="$(var.Skyline.TargetDir)/IOModuleQTFL.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="Kajabity_Tools.dll">
         <File Source="$(var.Skyline.TargetDir)/Kajabity Tools.dll" KeyPath="yes"/>
       </Component>
       <Component Id="log4net.dll">
         <File Source="$(var.Skyline.TargetDir)/log4net.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="MassCalcWrapObject.dll">
+        <File Source="$(var.Skyline.TargetDir)/MassCalcWrapObject.dll" KeyPath="yes"/>
       </Component>
       <Component Id="MassLynxRaw.dll">
         <File Source="$(var.Skyline.TargetDir)/MassLynxRaw.dll" KeyPath="yes"/>
@@ -405,11 +413,6 @@
       <Component Id="MethodWriter.dll">
         <File Source="$(var.Skyline.TargetDir)/MethodWriter.dll" KeyPath="yes"/>
       </Component>
-      <?if $(sys.BUILDARCH) = x64?>
-      <Component Id="mfc100u.dll">
-        <File Source="$(var.Skyline.TargetDir)/mfc100u.dll" KeyPath="yes"/>
-      </Component>
-      <?endif?>
       <Component Id="Microsoft.ConcurrencyVisualizer.Markers.dll">
         <File Source="$(var.Skyline.TargetDir)/Microsoft.ConcurrencyVisualizer.Markers.dll" KeyPath="yes"/>
       </Component>
@@ -442,11 +445,11 @@
       <Component Id="MSGraph.pdb">
         <File Source="$(var.Skyline.TargetDir)/MSGraph.pdb" KeyPath="yes"/>
       </Component>
+      <Component Id="MSMSDBCntl.dll">
+        <File Source="$(var.Skyline.TargetDir)/MSMSDBCntl.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="msparser.dll">
         <File Source="$(var.Skyline.TargetDir)/msparser.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="msvcp100.dll">
-        <File Source="$(var.Skyline.TargetDir)/msvcp100.dll" KeyPath="yes"/>
       </Component>
       <Component Id="msvcp110.dll">
         <File Source="$(var.Skyline.TargetDir)/msvcp110.dll" KeyPath="yes"/>
@@ -456,9 +459,6 @@
       </Component>
       <Component Id="msvcp140.dll">
         <File Source="$(var.Skyline.TargetDir)/msvcp140.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="msvcr100.dll">
-        <File Source="$(var.Skyline.TargetDir)/msvcr100.dll" KeyPath="yes"/>
       </Component>
       <Component Id="msvcr110.dll">
         <File Source="$(var.Skyline.TargetDir)/msvcr110.dll" KeyPath="yes"/>
@@ -495,6 +495,9 @@
       <Component Id="ParallelExtensionsExtras.dll">
         <File Source="$(var.Skyline.TargetDir)/ParallelExtensionsExtras.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="PeakItgLSS.dll">
+        <File Source="$(var.Skyline.TargetDir)/PeakItgLSS.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="ProteomeDb.dll">
         <File Source="$(var.Skyline.TargetDir)/ProteomeDb.dll" KeyPath="yes"/>
       </Component>
@@ -524,6 +527,9 @@
       </Component>
       <Component Id="pwiz_data_cli.dll">
         <File Source="$(var.Skyline.TargetDir)/pwiz_data_cli.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="QTFLDebugLog.dll">
+        <File Source="$(var.Skyline.TargetDir)/QTFLDebugLog.dll" KeyPath="yes"/>
       </Component>
       <Component Id="QTFLProtoCS.dll">
         <File Source="$(var.Skyline.TargetDir)/QTFLProtoCS.dll" KeyPath="yes"/>
@@ -905,56 +911,6 @@
       </Component>
       <Component Id="Microsoft.VC90.MFC_Microsoft.VC90.MFC.manifest">
         <File Source="$(var.Skyline.TargetDir)/Microsoft.VC90.MFC\Microsoft.VC90.MFC.manifest" KeyPath="yes"/>
-      </Component>
-      <?endif?>
-    </ComponentGroup>
-    <ComponentGroup Id="x64_files" Directory="x64_directory"> 
-      <?if $(sys.BUILDARCH) = x64 ?>
-      <Component Id="x64_CLFIO32.dll">
-        <File Source="$(var.Skyline.TargetDir)/x64\CLFIO32.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="x64_CRHAKEI2.dll">
-        <File Source="$(var.Skyline.TargetDir)/x64\CRHAKEI2.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="x64_IOModuleQTFL.dll">
-        <File Source="$(var.Skyline.TargetDir)/x64\IOModuleQTFL.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="x64_MassCalcWrapObject.dll">
-        <File Source="$(var.Skyline.TargetDir)/x64\MassCalcWrapObject.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="x64_MSMSDBCntl.dll">
-        <File Source="$(var.Skyline.TargetDir)/x64\MSMSDBCntl.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="x64_PeakItgLSS.dll">
-        <File Source="$(var.Skyline.TargetDir)/x64\PeakItgLSS.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="x64_QTFLDebugLog.dll">
-        <File Source="$(var.Skyline.TargetDir)/x64\QTFLDebugLog.dll" KeyPath="yes"/>
-      </Component>
-      <?endif?>
-    </ComponentGroup>
-    <ComponentGroup Id="x86_files" Directory="x86_directory">
-      <?if $(sys.BUILDARCH) != x64 ?>
-      <Component Id="x86_CLFIO32.dll">
-        <File Source="$(var.Skyline.TargetDir)/x86\CLFIO32.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="x86_CRHAKEI2.dll">
-        <File Source="$(var.Skyline.TargetDir)/x86\CRHAKEI2.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="x86_IOModuleQTFL.dll">
-        <File Source="$(var.Skyline.TargetDir)/x86\IOModuleQTFL.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="x86_MassCalcWrapObject.dll">
-        <File Source="$(var.Skyline.TargetDir)/x86\MassCalcWrapObject.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="x86_MSMSDBCntl.dll">
-        <File Source="$(var.Skyline.TargetDir)/x86\MSMSDBCntl.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="x86_PeakItgLSS.dll">
-        <File Source="$(var.Skyline.TargetDir)/x86\PeakItgLSS.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="x86_QTFLDebugLog.dll">
-        <File Source="$(var.Skyline.TargetDir)/x86\QTFLDebugLog.dll" KeyPath="yes"/>
       </Component>
       <?endif?>
     </ComponentGroup>

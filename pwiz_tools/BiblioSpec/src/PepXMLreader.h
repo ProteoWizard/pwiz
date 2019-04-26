@@ -31,7 +31,6 @@
 
 #include "BuildParser.h"
 #include "AminoAcidMasses.h"
-using namespace std;
 
 class BlibMaker;
 

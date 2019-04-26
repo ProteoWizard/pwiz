@@ -112,7 +112,7 @@ namespace pwiz.Skyline.Model
         }
 
         public int RevisionIndex { get; private set; }
-        public int RevisionIndexCurrent { get { return 9; } }
+        public int RevisionIndexCurrent { get { return 10; } }
         public override void ReadXml(XmlReader reader)
         {
             RevisionIndex = reader.GetIntAttribute(Attr.revision);
@@ -161,11 +161,11 @@ namespace pwiz.Skyline.Model
             {
                 reportStrings.Add(REPORTS_V8);
             }
-
-            if (revisionIndex >= 9)
+            if (revisionIndex >= 10)
             {
-                reportStrings.Add(REPORTS_V9);
+                reportStrings.Add(REPORTS_V10);
             }
+
             var list = new List<KeyValuePair<ViewGroupId, ViewSpec>>();
             var xmlSerializer = new XmlSerializer(typeof(ViewSpecList));
             foreach (var reportString in reportStrings)
@@ -315,7 +315,7 @@ namespace pwiz.Skyline.Model
     <column name='Precursor.Mz' />
     <column name='Precursor.Charge' />
     <column name='Precursor.CollisionEnergy' />
-    <column name='ExplicitCollisionEnergy' />
+    <column name='Precursor.ExplicitCollisionEnergy' />
     <column name='Precursor.Peptide.ExplicitRetentionTime' />
     <column name='Precursor.Peptide.ExplicitRetentionTimeWindow' />
     <column name='ProductMz' />
@@ -348,7 +348,7 @@ namespace pwiz.Skyline.Model
     <column name='Precursor.Mz' />
     <column name='Precursor.Charge' />
     <column name='Precursor.CollisionEnergy' />
-    <column name='ExplicitCollisionEnergy' />
+    <column name='Precursor.ExplicitCollisionEnergy' />
     <column name='Precursor.Peptide.ExplicitRetentionTime' />
     <column name='Precursor.Peptide.ExplicitRetentionTimeWindow' />
     <column name='ProductMz' />
@@ -447,7 +447,10 @@ namespace pwiz.Skyline.Model
   </view>
 </views>
 ";
-        private const string REPORTS_V9 = @"<views>
+
+        // There is no REPORTS_V9 in order to work around a problem where V4 was changed.
+
+        private const string REPORTS_V10 = @"<views>
   <view name='Mixed Transition List' rowsource='pwiz.Skyline.Model.Databinding.Entities.Transition' sublist='Results!*' uimode='mixed'>
     <column name='Precursor.Peptide.Protein.Name' />
     <column name='Precursor.Peptide.ModifiedSequence' />

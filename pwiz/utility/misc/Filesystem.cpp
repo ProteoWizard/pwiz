@@ -415,6 +415,12 @@ PWIZ_API_DECL void force_close_handles_to_filepath(const std::string& filepath, 
 }
 
 
+PWIZ_API_DECL void enable_utf8_path_operations()
+{
+    UTF8_BoostFilesystemPathImbuer::instance->imbue();
+}
+
+
 PWIZ_API_DECL int expand_pathmask(const bfs::path& pathmask,
                                   vector<bfs::path>& matchingPaths)
 {

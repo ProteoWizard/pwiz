@@ -29,7 +29,6 @@
 #include <sstream>
 #include <cstdarg>
 
-using namespace std;
 
 namespace BiblioSpec {
 

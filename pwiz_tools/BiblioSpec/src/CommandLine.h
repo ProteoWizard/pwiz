@@ -39,8 +39,10 @@
 #include <iostream> 
 #include <fstream>
 #include "boost/program_options.hpp"
+#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Stream.hpp"
+#include "pwiz/utility/misc/Container.hpp"
 
-using namespace std;
 using namespace boost::program_options;
 
 namespace BiblioSpec {
