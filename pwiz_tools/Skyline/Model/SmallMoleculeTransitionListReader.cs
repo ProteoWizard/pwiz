@@ -1170,25 +1170,6 @@ namespace pwiz.Skyline.Model
             {
                 TypedMass monoMass;
                 TypedMass averageMmass;
-                if (ionMobility.HasValue || ccsPrecursor.HasValue)
-                {
-                    if (!ionMobilityHighEnergyOffset.HasValue)
-                    {
-                        ionMobilityHighEnergyOffset = 0;
-                    }
-                }
-                else
-                {
-                    ionMobilityHighEnergyOffset = null; // Offset without a base value isn't useful
-                    ShowTransitionError(new PasteError
-                    {
-                        Column = INDEX_HIGH_ENERGY_ION_MOBILITY_OFFSET,
-                        Line = row.Index,
-                        Message = Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_No_ion_mobility_information_found_in_this_row__so_ion_mobility_high_energy_offset_can_t_be_used_
-                    });
-                    return null;
-
-                }
                 if (ionMobility.HasValue && ionMobilityUnits == eIonMobilityUnits.none)
                 {
                     ShowTransitionError(new PasteError

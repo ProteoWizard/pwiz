@@ -27137,16 +27137,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No ion mobility information found in this row, so ion mobility high energy offset can&apos;t be used..
-        /// </summary>
-        public static string SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_No_ion_mobility_information_found_in_this_row__so_ion_mobility_high_energy_offset_can_t_be_used_ {
-            get {
-                return ResourceManager.GetString("SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_No_ion_mobility_i" +
-                        "nformation_found_in_this_row__so_ion_mobility_high_energy_offset_can_t_be_used_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to unknown error.
         /// </summary>
         public static string SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_unknown_error {
