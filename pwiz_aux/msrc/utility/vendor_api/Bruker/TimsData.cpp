@@ -65,8 +65,10 @@ FragmentationMode translateScanMode(int scanMode)
 
         case 2:
         case 8:
+        case 9:
             return FragmentationMode_CID;
 
+        case 3:
         case 4:
         case 5:
             return FragmentationMode_ISCID; // in-source or broadband CID
@@ -207,9 +209,10 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         int msLevel;
         switch (msmsType)
         {
-            case 0: msLevel = 1; break;
-            case 2: msLevel = 2; break;
-            case 8: msLevel = 2; break;
+            case 0: msLevel = 1; break; // MS1
+            case 2: msLevel = 2; break; // MRM
+            case 8: msLevel = 2; break; // PASEF
+            case 9: msLevel = 2; break; // DIA
             default: throw runtime_error("Unhandled msmsType: " + lexical_cast<string>(msmsType));
         }
 
@@ -236,36 +239,65 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         frames_[frameId] = frame;
     }
 
-    hasPASEFData_ = db.has_table("PasefFrameMsMsInfo");
+    hasPASEFData_ = db.has_table("PasefFrameMsMsInfo") || db.has_table("DiaFrameMsMsInfo");
     if (hasPASEFData_ && preferOnlyMsLevel_ != 1)
     {
-        sqlite::query q(db, "SELECT Frame, ScanNumBegin, ScanNumEnd, IsolationMz, IsolationWidth, CollisionEnergy, MonoisotopicMz, Charge, ScanNumber, Intensity, Parent "
-                            "FROM PasefFrameMsMsInfo f, Precursors p where p.id=f.precursor "
-                            "ORDER BY Frame, ScanNumBegin");
-        for (sqlite::query::iterator itr = q.begin(); itr != q.end(); ++itr)
+        if (db.has_table("PasefFrameMsMsInfo"))
         {
-            sqlite::query::rows row = *itr;
-            int idx = -1;
-            int64_t frameId = row.get<sqlite3_int64>(++idx);
+            sqlite::query q(db, "SELECT Frame, ScanNumBegin, ScanNumEnd, IsolationMz, IsolationWidth, CollisionEnergy, MonoisotopicMz, Charge, ScanNumber, Intensity, Parent "
+                                "FROM PasefFrameMsMsInfo f, Precursors p WHERE p.id=f.precursor "
+                                "ORDER BY Frame, ScanNumBegin");
+            for (sqlite::query::iterator itr = q.begin(); itr != q.end(); ++itr)
+            {
+                sqlite::query::rows row = *itr;
+                int idx = -1;
+                int64_t frameId = row.get<sqlite3_int64>(++idx);
 
-            auto findItr = frames_.find(frameId);
-            if (findItr == frames_.end()) // numPeaks == 0, but sometimes still shows up in PasefFrameMsMsInfo!?
-                continue;
-            auto& frame = findItr->second;
+                auto findItr = frames_.find(frameId);
+                if (findItr == frames_.end()) // numPeaks == 0, but sometimes still shows up in PasefFrameMsMsInfo!?
+                    continue;
+                auto& frame = findItr->second;
 
-            frame->pasef_precursor_info_.emplace_back(new PasefPrecursorInfo);
-            PasefPrecursorInfo& info = *frame->pasef_precursor_info_.back();
+                frame->pasef_precursor_info_.emplace_back(new PasefPrecursorInfo);
+                PasefPrecursorInfo& info = *frame->pasef_precursor_info_.back();
 
-            info.scanBegin = row.get<int>(++idx);
-            info.scanEnd = row.get<int>(++idx) - 1; // scan end in TDF is exclusive, but in pwiz is inclusive
+                info.scanBegin = row.get<int>(++idx);
+                info.scanEnd = row.get<int>(++idx) - 1; // scan end in TDF is exclusive, but in pwiz is inclusive
 
-            info.isolationMz = row.get<double>(++idx);
-            info.isolationWidth = row.get<double>(++idx);
-            info.collisionEnergy = row.get<double>(++idx);
-            info.monoisotopicMz = row.get<double>(++idx);
-            info.charge = row.get<int>(++idx);
-            info.avgScanNumber = row.get<double>(++idx);
-            info.intensity = row.get<double>(++idx);
+                info.isolationMz = row.get<double>(++idx);
+                info.isolationWidth = row.get<double>(++idx);
+                info.collisionEnergy = row.get<double>(++idx);
+                info.monoisotopicMz = row.get<double>(++idx);
+                info.charge = row.get<int>(++idx);
+                info.avgScanNumber = row.get<double>(++idx);
+                info.intensity = row.get<double>(++idx);
+            }
+        }
+        else // DiaPasef
+        {
+            sqlite::query q(db, "SELECT Frame, ScanNumBegin, IsolationMz, IsolationWidth, CollisionEnergy "
+                                "FROM DiaFrameMsMsInfo f, DiaFrameMsMsWindows w WHERE f.WindowGroup=w.WindowGroup "
+                                "ORDER BY Frame, ScanNumBegin");
+            DiaPasefIsolationInfo info;
+            for (sqlite::query::iterator itr = q.begin(); itr != q.end(); ++itr)
+            {
+                sqlite::query::rows row = *itr;
+                int idx = -1;
+                int64_t frameId = row.get<sqlite3_int64>(++idx);
+
+                auto findItr = frames_.find(frameId);
+                if (findItr == frames_.end()) // numPeaks == 0, but sometimes still shows up in PasefFrameMsMsInfo!?
+                    continue;
+                auto& frame = findItr->second;
+
+                int scanBegin = row.get<int>(++idx);
+
+                info.isolationMz = row.get<double>(++idx);
+                info.isolationWidth = row.get<double>(++idx);
+                info.collisionEnergy = row.get<double>(++idx);
+
+                frame->diaPasefIsolationInfoByScanNumber_[scanBegin] = info;
+            }
         }
     }
 
@@ -615,6 +647,11 @@ void TimsSpectrum::getIsolationData(std::vector<double>& isolatedMZs, std::vecto
         isolatedMZs.resize(1, GetPasefPrecursorInfo().isolationMz);
         isolationModes.resize(1, IsolationMode_On);
     }
+    else if (!frame_.diaPasefIsolationInfoByScanNumber_.empty())
+    {
+        isolatedMZs.resize(1, getDiaPasefIsolationInfo().isolationMz);
+        isolationModes.resize(1, IsolationMode_On);
+    }
     else if (frame_.precursorMz_.is_initialized())
     {
         isolatedMZs.resize(1, frame_.precursorMz_.get());
@@ -633,6 +670,11 @@ void TimsSpectrum::getFragmentationData(std::vector<double>& fragmentedMZs, std:
         if (mz <= 0)
             mz = GetPasefPrecursorInfo().isolationMz;
         fragmentedMZs.resize(1, mz);
+        fragmentationModes.resize(1, translateScanMode(frame_.scanMode_));
+    }
+    else if (!frame_.diaPasefIsolationInfoByScanNumber_.empty())
+    {
+        fragmentedMZs.resize(1, getDiaPasefIsolationInfo().isolationMz);
         fragmentationModes.resize(1, translateScanMode(frame_.scanMode_));
     }
     else if (frame_.precursorMz_.is_initialized())
@@ -661,6 +703,10 @@ double TimsSpectrum::getIsolationWidth() const
 {
     if (HasPasefPrecursorInfo())
         return GetPasefPrecursorInfo().isolationWidth;
+    else if (!frame_.diaPasefIsolationInfoByScanNumber_.empty())
+    {
+        return getDiaPasefIsolationInfo().isolationWidth;
+    }
     else
         return frame_.isolationWidth_.get_value_or(0);
 }

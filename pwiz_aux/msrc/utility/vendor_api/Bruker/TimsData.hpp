@@ -57,6 +57,13 @@ struct PasefPrecursorInfo
 };
 typedef boost::shared_ptr<PasefPrecursorInfo> PasefPrecursorInfoPtr;
 
+struct DiaPasefIsolationInfo
+{
+    double isolationMz;
+    double isolationWidth;
+    double collisionEnergy;
+};
+
 struct PWIZ_API_DECL TimsFrame
 {
 
@@ -97,6 +104,7 @@ struct PWIZ_API_DECL TimsFrame
     map<int, size_t> scanIndexByScanNumber_; // for frame/scan -> index calculation with support for missing scans (e.g. allowMsMsWithoutPrecursor == false)
 
     vector<PasefPrecursorInfoPtr> pasef_precursor_info_;
+    map<int, DiaPasefIsolationInfo> diaPasefIsolationInfoByScanNumber_; // only the first scan number of each window is stored, so use lower_bound() to find the info for a given scan number
 
     TimsDataImpl & timsDataImpl_;
     vector<double> oneOverK0_; // access by (scan number - 1)
@@ -143,6 +151,16 @@ public:
     virtual bool HasPasefPrecursorInfo() const { return false; }
     virtual const PasefPrecursorInfo& GetPasefPrecursorInfo() const { return empty_; }
 
+    const DiaPasefIsolationInfo& getDiaPasefIsolationInfo() const
+    {
+        if (frame_.diaPasefIsolationInfoByScanNumber_.empty())
+            throw runtime_error("[TimsSpectrum::getDiaPasefIsolationInfo] no DIA PASEF info");
+
+        auto diaPasefIsolationInfoPair = frame_.diaPasefIsolationInfoByScanNumber_.upper_bound(scanBegin_);
+        --diaPasefIsolationInfoPair;
+        return diaPasefIsolationInfoPair->second;
+    }
+
     int scanBegin() const { return scanBegin_; }
     virtual int scanEnd() const = 0;
     virtual bool isCombinedScans() const = 0;
@@ -155,7 +173,6 @@ public:
     const TimsFrame& frame_;
     const int scanBegin_;
     const static PasefPrecursorInfo empty_;
-
 };
 
 struct TimsSpectrumNonPASEF : public TimsSpectrum
