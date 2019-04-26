@@ -393,6 +393,12 @@
   <data name="View_Layouts" xml:space="preserve">
     <value>Layouts</value>
   </data>
+  <data name="ViewSpecLayout_Layouts" xml:space="preserve">
+    <value>Layouts</value>
+  </data>
+  <data name="ViewSpecLayout_DefaultLayoutName" xml:space="preserve">
+    <value>Default Layout Name</value>
+  </data>
   <data name="FilterSpec_AuditLogColumn" xml:space="preserve">
     <value>Column</value>
   </data>
