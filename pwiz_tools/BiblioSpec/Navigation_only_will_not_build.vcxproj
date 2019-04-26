@@ -14,7 +14,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -27,7 +27,7 @@
     <NMakeBuildCommandLine>b64_all .</NMakeBuildCommandLine>
     <NMakeCleanCommandLine>CleanBiblioSpec.bat</NMakeCleanCommandLine>
     <NMakePreprocessorDefinitions>WIN32;NDEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <IncludePath>$(ProjectDir)..\..\libraries\zlib-1.2.3;$(ProjectDir)..\..\libraries\boost_1_67_0;$(ProjectDir)..\..\libraries\SQLite;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\..;$(ProjectDir)..\..\libraries\zlib-1.2.3;$(ProjectDir)..\..\libraries\boost_1_67_0;$(ProjectDir)..\..\libraries\boost_aux;$(ProjectDir)..\..\libraries\SQLite;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
@@ -54,6 +54,7 @@
     <ClCompile Include="src\MSFReader.cpp" />
     <ClCompile Include="src\MSFSpecReader.cpp" />
     <ClCompile Include="src\MzIdentMLReader.cpp" />
+    <ClCompile Include="src\mzTabReader.cpp" />
     <ClCompile Include="src\mzxmlParser.cpp" />
     <ClCompile Include="src\Options.cpp" />
     <ClCompile Include="src\original-LibIterator.cpp" />
@@ -64,6 +65,7 @@
     <ClCompile Include="src\original-RefFile.cpp" />
     <ClCompile Include="src\original-RefSpectrum.cpp" />
     <ClCompile Include="src\original-Spectrum.cpp" />
+    <ClCompile Include="src\OSWReader.cpp" />
     <ClCompile Include="src\PeakProcess.cpp" />
     <ClCompile Include="src\PepXMLreader.cpp" />
     <ClCompile Include="src\PercolatorXmlReader.cpp" />
@@ -84,6 +86,8 @@
     <ClCompile Include="src\SslReader.cpp" />
     <ClCompile Include="src\TandemNativeParser.cpp" />
     <ClCompile Include="src\TestWeibull.cpp" />
+    <ClCompile Include="src\TSVReader.cpp" />
+    <ClCompile Include="src\UnimodParser.cpp" />
     <ClCompile Include="src\Verbosity.cpp" />
     <ClCompile Include="src\WatersMseReader.cpp" />
     <ClCompile Include="src\WeibullPvalue.cpp" />
@@ -115,6 +119,7 @@
     <ClInclude Include="src\MSFReader.h" />
     <ClInclude Include="src\MSFSpecReader.h" />
     <ClInclude Include="src\MzIdentMLReader.h" />
+    <ClInclude Include="src\mzTabReader.h" />
     <ClInclude Include="src\mzxmlFinder.h" />
     <ClInclude Include="src\mzxmlParser.h" />
     <ClInclude Include="src\Options.h" />
@@ -127,6 +132,7 @@
     <ClInclude Include="src\original-RefFile.h" />
     <ClInclude Include="src\original-RefSpectrum.h" />
     <ClInclude Include="src\original-Spectrum.h" />
+    <ClInclude Include="src\OSWReader.h" />
     <ClInclude Include="src\PeakProcess.h" />
     <ClInclude Include="src\PepXMLreader.h" />
     <ClInclude Include="src\PercolatorXmlReader.h" />
@@ -153,6 +159,8 @@
     <ClInclude Include="src\SslReader.h" />
     <ClInclude Include="src\stdafx.h" />
     <ClInclude Include="src\TandemNativeParser.h" />
+    <ClInclude Include="src\TSVReader.h" />
+    <ClInclude Include="src\UnimodParser.h" />
     <ClInclude Include="src\Verbosity.h" />
     <ClInclude Include="src\WatersMseReader.h" />
     <ClInclude Include="src\WeibullPvalue.h" />

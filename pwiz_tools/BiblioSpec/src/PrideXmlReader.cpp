@@ -26,7 +26,6 @@
 #include "PrideXmlReader.h"
 #include "BlibMaker.h"
 
-using namespace std;
 
 namespace BiblioSpec {
 

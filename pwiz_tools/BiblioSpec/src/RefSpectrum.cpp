@@ -22,8 +22,8 @@
 //class definition for RefSpectrum
 
 #include "RefSpectrum.h"
+#include "pwiz/utility/misc/Std.hpp"
 
-using namespace std;
 
 namespace BiblioSpec {
 

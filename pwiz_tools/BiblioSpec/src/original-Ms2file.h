@@ -31,11 +31,10 @@
 #include <vector>
 #include <string>
 #include <exception>
-#include <time.h>
+#include <ctime>
 #include "original-Ms2Spectrum.h"
 #include "original-RefSpectrum.h"
 
-using namespace std;
 
 enum FILE_TYPE { READ, WRITE };
 enum SEQ_TYPE { SEQ, NOSEQ }; //for write lib

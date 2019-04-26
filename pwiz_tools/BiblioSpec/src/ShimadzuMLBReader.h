@@ -27,8 +27,6 @@
 #include "BuildParser.h"
 #include "sqlite3.h"
 
-using namespace std;
-using namespace boost;
 
 namespace BiblioSpec
 {

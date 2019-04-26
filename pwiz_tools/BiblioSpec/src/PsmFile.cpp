@@ -191,7 +191,7 @@ void PsmFile::createTables(const ops::variables_map& options_table){
 
         const ops::variable_value& v = i->second;
         if( ! v.empty() ) {
-            const type_info& type = v.value().type();
+            const auto& type = v.value().type();
             if( type == typeid(int) ) {
                 sprintf(zSql, "insert into BiblioParams(searchID, param, value) "
                         "values(%d,'%s',%d)",

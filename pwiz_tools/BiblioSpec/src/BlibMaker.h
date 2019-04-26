@@ -33,7 +33,6 @@
 #include "Verbosity.h"
 #include <boost/optional.hpp>
 
-using namespace std;
 
 namespace BiblioSpec {
 
