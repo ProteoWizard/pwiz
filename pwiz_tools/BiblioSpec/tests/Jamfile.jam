@@ -240,6 +240,9 @@ blib-test-build maxquant3 : -o -E -p@$(TEST_DATA_PATH)/test-mq3-mqpar.xml -x@$(T
 #blib-test-build maxquant-rpal-mzml : -o -p@$(TEST_DATA_PATH)/rpal-orbi-mqpar.xml : output/maxquant-rpal-mzml.blib : maxquant-rpal-mzml.check zbuild.skip-lines : inputs/rpal-orbi-mq-msms.txt ;
 blib-test-build maxquant-yeast-wiff : -o -p@$(TEST_DATA_PATH)/yeast-wiff-mqpar.xml : output/maxquant-yeast-wiff.blib : maxquant-yeast-wiff.check zbuild.skip-lines : inputs/yeast-wiff-msms.txt ;
 
+# Test maxquant text file with IMS info in evidence.txt
+blib-test-build maxquant_ims : -o -E : output/maxquant_ims.blib : maxquant_ims.check zbuild.skip-lines : inputs/k0ccs-msms.txt ;
+
 # Test mzid format from scaffold
 blib-test-build scaffold : -o : output/scaffold.blib : scaffold.check : inputs/scaffold.mzid ;
 

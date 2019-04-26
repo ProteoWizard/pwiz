@@ -23,9 +23,13 @@
  * The MaxQuantReader parses the PSMs from the msms.txt tab delimited file
  * and stores each record. Records are grouped by file. Spectra are then
  * retrieved from the spectrum files. 
+ * 
+ * There may also be an evidence.txt file present, from which ion mobility
+ * data may be parsed.
  */
 
 #include "MaxQuantReader.h"
+#include <boost/lexical_cast.hpp>
 
 namespace BiblioSpec {
 
@@ -50,6 +54,9 @@ MaxQuantReader::MaxQuantReader(BlibBuilder& maker,
         delete specReader_;
         specReader_ = this;
     }
+
+    // read ion mobility info from evidence.txt if it exists
+    initEvidence();
 
     // get mods path (will be empty string if not set)
     modsPath_ = maker.getMaxQuantModsPath();
@@ -105,9 +112,12 @@ void MaxQuantReader::initTargetColumns()
                                                       MaxQuantLine::insertIntensities));
     targetColumns_.push_back(MaxQuantColumnTranslator("Labeling State", -1,
                                                       MaxQuantLine::insertLabelingState));
+    targetColumns_.push_back(MaxQuantColumnTranslator("Evidence ID", -1,
+                                                      MaxQuantLine::insertEvidenceID)); // Lookup into evidence.txt file for ion mobility info
 
     // columns that can are useful but not required
     optionalColumns_.insert("Labeling State");
+    optionalColumns_.insert("Evidence ID");
 }
 
 string checkForModificationsFile(filesystem::path parentPath, const char *filename)
@@ -325,6 +335,77 @@ void MaxQuantReader::initFixedModifications()
             }
             iter->addMods(stateIter, mods);
         }
+    }
+}
+
+/**
+ * Read in the evidence file, if it exists.
+ */
+void MaxQuantReader::initEvidence()
+{
+
+    // Check same folder
+    filesystem::path tryPath = tsvName_.substr(0, tsvName_.length() - 8) + "evidence.txt"; // e.g. c:\blah\testing.msms.txt => c:\blah\testing.evidence.txt
+    Verbosity::comment(V_DETAIL, "Checking for ion mobility information in evidence.txt file in same folder as msms.txt file.");
+    if (!filesystem::exists(tryPath) || !filesystem::is_regular_file(tryPath))
+    {
+        // Not there
+        Verbosity::comment(V_DETAIL, "Did not find evidence.txt file in same folder as msms.txt file. No ion mobility values.");
+        return;
+    }
+    string evidenceFile = tryPath.string();
+
+    Verbosity::comment(V_DETAIL, "Parsing evidence file %s", evidenceFile.c_str());
+    try
+    {
+        ifstream evidence(evidenceFile);
+        string line;
+        vector<string> columns;
+        getline(evidence, line);
+        split(columns, line, is_any_of("\t"));
+        int col = 0;
+        int colK0 = -1;
+        int colCCS = -1;
+        for (vector<string>::iterator it = columns.begin(); it != columns.end(); ++it)
+        {
+            if (*it == "K0")
+            {
+                colK0 = col;
+            }
+            else if (*it == "CCS")
+            {
+                colCCS = col;
+            }
+            col++;
+        }
+        if (colK0 < 0 && colCCS < 0)
+        {
+            Verbosity::comment(V_DETAIL, "Did not find any ion mobility date in evidence.txt file.");
+            return; // This file doesn't have what we're interested in
+        }
+
+        while (evidence.good())
+        {
+            getline(evidence, line);
+            if (line.size() == 0)
+                break;
+            split(columns, line, is_any_of("\t"));
+            if (colK0 >= 0)
+                K0_.push_back(boost::lexical_cast<double>(columns[colK0]));
+            if (colCCS >= 0)
+                CCS_.push_back(boost::lexical_cast<double>(columns[colCCS]));
+        }
+        Verbosity::comment(V_DETAIL, "Done parsing %s", evidenceFile.c_str());
+    }
+    catch (std::exception& e)
+    {
+        Verbosity::error("Error parsing evidence.txt file: %s", e.what());
+        return;
+    }
+    catch (...)
+    {
+        Verbosity::error("Unknown error while parsing evidence.txt file");
+        return;
     }
 }
 
@@ -561,6 +642,22 @@ void MaxQuantReader::storeLine(MaxQuantLine& entry)
     curMaxQuantPSM_->unmodSeq = entry.sequence;
     curMaxQuantPSM_->mz = entry.mz;
     curMaxQuantPSM_->charge = entry.charge;
+    if (entry.evidenceID >= 0) // look for ion mobility info from evidence.txt file
+    {
+        if (K0_.size() > entry.evidenceID)
+        {
+            curMaxQuantPSM_->ionMobility = K0_[entry.evidenceID];
+            if (curMaxQuantPSM_->ionMobility != 0)
+            {
+                curMaxQuantPSM_->ionMobilityType = IONMOBILITY_INVERSEREDUCED_VSECPERCM2;
+            }
+        }
+        if (CCS_.size() > entry.evidenceID)
+        {
+            curMaxQuantPSM_->ccs = CCS_[entry.evidenceID];
+        }
+    }
+
     try
     {
         addModsToVector(curMaxQuantPSM_->mods, entry.modifications, entry.modifiedSequence);
@@ -844,6 +941,9 @@ bool MaxQuantReader::getSpectrum(PSM* psm,
     returnData.retentionTime = ((MaxQuantPSM*)psm)->retentionTime;
     returnData.mz = ((MaxQuantPSM*)psm)->mz;
     returnData.numPeaks = ((MaxQuantPSM*)psm)->mzs.size();
+    returnData.ionMobility = ((MaxQuantPSM*)psm)->ionMobility;
+    returnData.ionMobilityType = ((MaxQuantPSM*)psm)->ionMobilityType;
+    returnData.ccs = ((MaxQuantPSM*)psm)->ccs;
 
     if (getPeaks)
     {
