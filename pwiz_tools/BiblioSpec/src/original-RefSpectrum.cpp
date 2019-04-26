@@ -21,6 +21,7 @@
 
 //class definition for RefSpectrum
 
+#include "pwiz/utility/misc/Std.hpp"
 #include "original-RefSpectrum.h"
 
 //constructors

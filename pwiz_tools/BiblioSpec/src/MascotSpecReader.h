@@ -44,8 +44,9 @@ class MascotSpecReader : public SpecFileReader {
     MascotSpecReader(const char* filename,
                      ms_mascotresfile* ms_file, 
                      ms_mascotresults* ms_results = NULL,
-                     const std::vector<std::string>& rawfiles = std::vector<std::string>())
-        : disableRtConversion_(false), needsRtConversion_(false) {
+                     const std::vector<std::string>& rawfiles = std::vector<std::string>(),
+                     boost::shared_ptr<TempFileDeleter> tmpFileDeleter = boost::shared_ptr<TempFileDeleter>())
+        : disableRtConversion_(false), needsRtConversion_(false), tmpFileDeleter_(tmpFileDeleter) {
         setFile(ms_file, ms_results);
         filename_ = filename;
         numRawFiles_ = rawfiles.size();
@@ -207,6 +208,7 @@ class MascotSpecReader : public SpecFileReader {
     size_t numRawFiles_;
     bool disableRtConversion_; // rt units known
     bool needsRtConversion_; // rt units unknown and we've seen a retention time >750
+    boost::shared_ptr<TempFileDeleter> tmpFileDeleter_; // deletes temporary file when needed for Unicode filepath
 
     // TODO: This code is now duplicated in SpectrumList_MGF.cpp
     /**

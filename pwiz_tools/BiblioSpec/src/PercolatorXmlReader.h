@@ -34,7 +34,6 @@
 #include "BuildParser.h"
 #include "SQTreader.h"
 
-using namespace std;
 
 class BlibMaker;
 

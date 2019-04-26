@@ -31,12 +31,10 @@
 #include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
 #include <cctype>
-#include <map>
-#include <set>
-#include <vector>
+#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Stream.hpp"
+#include "pwiz/utility/misc/Container.hpp"
 
-using namespace std;
-using namespace boost;
 
 namespace BiblioSpec {
 

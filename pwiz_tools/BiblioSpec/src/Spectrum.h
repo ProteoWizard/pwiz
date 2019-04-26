@@ -39,7 +39,8 @@
 #include <vector>
 #include "BlibUtils.h" // For IONMOBILITY_TYPE enum
 
-using namespace std;
+using std::binary_function;
+
 
 namespace BiblioSpec {
 
