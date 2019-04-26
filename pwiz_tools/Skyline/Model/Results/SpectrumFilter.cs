@@ -260,7 +260,7 @@ namespace pwiz.Skyline.Model.Results
                         if (!EnabledMs)
                         {
                             filterCount += filter.AddQ3FilterValues((from TransitionDocNode nodeTran in nodeGroup.Children select nodeTran).
-                                Select(nodeTran => new SpectrumFilterValues(nodeTran.Mz, nodeTran.ExplicitValues.IonMobilityHighEnergyOffset??0)), calcWindowsQ3);
+                                Select(nodeTran => new SpectrumFilterValues(nodeTran.Mz, nodeTran.ExplicitValues.IonMobilityHighEnergyOffset ?? ionMobility.HighEnergyIonMobilityValueOffset)), calcWindowsQ3);
                         }
                         else if (!EnabledMsMs)
                         {
@@ -271,7 +271,7 @@ namespace pwiz.Skyline.Model.Results
                             filterCount += filter.AddQ1FilterValues(GetMS1MzValues(nodeGroup), calcWindowsQ1);
                             filterCount += filter.AddQ3FilterValues((from TransitionDocNode nodeTran in nodeGroup.Children
                                                      where !nodeTran.IsMs1 select nodeTran).
-                                Select(nodeTran => new SpectrumFilterValues(nodeTran.Mz, nodeTran.ExplicitValues.IonMobilityHighEnergyOffset ?? 0)), 
+                                Select(nodeTran => new SpectrumFilterValues(nodeTran.Mz, nodeTran.ExplicitValues.IonMobilityHighEnergyOffset ?? ionMobility.HighEnergyIonMobilityValueOffset)), 
                                 calcWindowsQ3);
                         }
                     }
