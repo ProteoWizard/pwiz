@@ -21,7 +21,6 @@
 
 #include "MaxQuantModReader.h"
 
-using namespace std;
 
 namespace BiblioSpec {
 
@@ -255,7 +254,7 @@ void MaxQuantModReader::endElement(const XML_Char* name)
         {
             vector<string> newLabelSubset;
             // split multiple labels (e.g. "Arg6; Lys4")
-            split(newLabelSubset, charBuf_, is_any_of(";"));
+            bal::split(newLabelSubset, charBuf_, bal::is_any_of(";"));
             // trim whitespace
             for_each(newLabelSubset.begin(), newLabelSubset.end(),
                 boost::bind(&boost::trim<string>, _1, std::locale()));
@@ -305,11 +304,11 @@ double MaxQuantModReader::parseComposition(string composition)
     double deltaMass = 0.0;
 
     vector<string> components;
-    boost::algorithm::split(components, composition, is_any_of("\t "), boost::token_compress_on);
+    bal::split(components, composition, bal::is_any_of("\t "), boost::token_compress_on);
     
     for (vector<string>::iterator i = components.begin(); i != components.end(); i++)
     {
-        boost::trim(*i);
+        bal::trim(*i);
         if (i->empty())
         {
             continue;

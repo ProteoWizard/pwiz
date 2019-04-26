@@ -30,6 +30,7 @@ using System.Text;
 using System.Threading;
 using System.Xml;
 using System.Xml.Serialization;
+using Microsoft.Win32;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -979,6 +980,87 @@ namespace pwiz.Skyline.Model
 
             writer.WriteLine();
         }
+
+        protected const string EXE_BUILD_METHOD = @"Method\Thermo\BuildThermoMethod";
+
+        // ReSharper disable LocalizableElement
+        private static readonly string[] DEPENDENCY_LIBRARIES = {
+                                                                    "Thermo.TNG.MethodXMLFactory.dll",
+                                                                    "Thermo.TNG.MethodXMLInterface.dll"
+                                                                };
+        // ReSharper restore LocalizableElement
+
+        protected static void EnsureLibraries()
+        {
+            string skylinePath = Assembly.GetExecutingAssembly().Location;
+            if (string.IsNullOrEmpty(skylinePath))
+                throw new IOException(Resources.ThermoMassListExporter_EnsureLibraries_Thermo_method_creation_software_may_not_be_installed_correctly_);
+
+            // ReSharper disable ConstantNullCoalescingCondition
+            string buildSubdir = Path.GetDirectoryName(EXE_BUILD_METHOD) ?? string.Empty;
+            string exeDir = Path.Combine(Path.GetDirectoryName(skylinePath) ?? string.Empty, buildSubdir);
+            string instrumentSoftwarePath = GetSoftwarePath();                                                        
+            if (instrumentSoftwarePath == null)
+            {
+                // If all the necessary libraries exist, then continue even if MassLynx is gone.
+                foreach (var libraryName in DEPENDENCY_LIBRARIES)
+                {
+                    if (!File.Exists(Path.Combine(exeDir, libraryName)))
+                        throw new IOException(Resources.ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_);
+                }
+                return;
+            }
+
+            // ReSharper restore ConstantNullCoalescingCondition
+            foreach (var library in DEPENDENCY_LIBRARIES)
+            {
+                string srcFile = Path.Combine(instrumentSoftwarePath, library);
+                if (!File.Exists(srcFile))
+                {
+                    throw new IOException(
+                        string.Format(Resources.ThermoMassListExporter_EnsureLibraries_Thermo_instrument_software_may_not_be_installed_correctly__The_library__0__could_not_be_found_,
+                                      srcFile));
+                }
+                // If destination file does not exist or has a different modification time from
+                // the source, then copy the source file from the installation.
+                string destFile = Path.Combine(exeDir, library);
+                if (!File.Exists(destFile) || !Equals(File.GetLastWriteTime(destFile), File.GetLastWriteTime(srcFile)))
+                    File.Copy(srcFile, destFile, true);
+            }
+        }
+
+        private static string GetSoftwarePath()
+        {
+            try
+            {
+                // CONSIDER: Might be worth breaking this up to provide more helpful error messages
+                using (var tngKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Wow6432Node\Thermo Instruments\TNG"))
+                using (var machineKey = GetFirstSubKey(tngKey))
+                using (var versionKey = GetFirstSubKey(machineKey))
+                {
+                    if (versionKey == null)
+                        return null;
+                    var valueObject = versionKey.GetValue(@"ProgramPath");
+                    if (valueObject == null)
+                        return null;
+                    return valueObject.ToString();
+                }
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static RegistryKey GetFirstSubKey(RegistryKey parentKey)
+        {
+            if (parentKey == null)
+                return null;
+            int keyCount = parentKey.SubKeyCount;
+            if (keyCount < 1)
+                return null;
+            return parentKey.OpenSubKey(parentKey.GetSubKeyNames()[0]);
+        }
     }
 
     public class ThermoQuantivaMassListExporter : ThermoMassListExporter
@@ -1729,8 +1811,6 @@ namespace pwiz.Skyline.Model
 
     public class ThermoQuantivaMethodExporter : ThermoQuantivaMassListExporter
     {
-        public const string EXE_BUILD_METHOD = @"Method\Thermo\BuildThermoMethod";
-
         public ThermoQuantivaMethodExporter(SrmDocument document)
             : base(document)
         {
@@ -1738,6 +1818,9 @@ namespace pwiz.Skyline.Model
 
         public void ExportMethod(string fileName, string templateName, string instrumentType, IProgressMonitor progressMonitor)
         {
+            if (fileName != null)
+                EnsureLibraries();
+
             if (!InitExport(fileName, progressMonitor))
                 return;
 
@@ -1760,8 +1843,6 @@ namespace pwiz.Skyline.Model
 
     public class ThermoFusionMethodExporter : ThermoFusionMassListExporter
     {
-        public const string EXE_BUILD_METHOD = @"Method\Thermo\BuildThermoMethod";
-
         public ThermoFusionMethodExporter(SrmDocument document)
             : base(document)
         {
@@ -1770,6 +1851,9 @@ namespace pwiz.Skyline.Model
 
         public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
         {
+            if (fileName != null)
+                EnsureLibraries();
+
             if (!InitExport(fileName, progressMonitor))
                 return;
 

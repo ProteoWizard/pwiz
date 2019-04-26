@@ -17,12 +17,12 @@
  * limitations under the License.
  */
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Attributes;
 
 namespace pwiz.Common.DataBinding
@@ -197,19 +197,7 @@ namespace pwiz.Common.DataBinding
             }
             o1 = UnwrapLinkValue(o1);
             o2 = UnwrapLinkValue(o2);
-            if (o1 is IComparable || o2 is IComparable)
-            {
-                return Comparer.Default.Compare(o1, o2);
-            }
-            if (o1 == null)
-            {
-                return -1;
-            }
-            if (o2 == null)
-            {
-                return 1;
-            }
-            return Comparer.Default.Compare(o1.ToString(), o2.ToString());
+            return CollectionUtil.CompareColumnValues(o1, o2);
         }
 
         private static object UnwrapLinkValue(object o)
