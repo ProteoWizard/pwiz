@@ -262,7 +262,10 @@ namespace pwiz.Common.DataBinding
             foreach (var viewSpec in viewSpecs)
             {
                 ViewLayoutList layouts = null;
-                layoutsByName?.TryGetValue(viewSpec.Name, out layouts);
+                if (viewSpec.Name != null)
+                {
+                    layoutsByName?.TryGetValue(viewSpec.Name, out layouts);
+                }
                 yield return new ViewSpecLayout(viewSpec, layouts);
 
             }
