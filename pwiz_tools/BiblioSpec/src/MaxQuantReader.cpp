@@ -383,7 +383,7 @@ bool MaxQuantReader::parseFile()
             catch (BlibException& e)
             {
                 if (bal::contains(e.what(), "Could not find spectrum file"))
-                    throw BlibException(e.hasFilename(), "%s; run with the -E flag to allow MaxQuant to use deisotoped/deconvoluted embedded spectra");
+                    throw BlibException(e.hasFilename(), "%s; run with the -E flag to allow MaxQuant to use deisotoped/deconvoluted embedded spectra", e.what());
                 throw e;
             }
             lookUpBy_ = INDEX_ID;
