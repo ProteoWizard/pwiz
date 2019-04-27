@@ -1161,6 +1161,12 @@ namespace pwiz.Skyline.Util
 
             _streamManager.Commit(SafeName, RealName, streamDest);
 
+            // Also move any files with maching basenames (useful for debugging with extra output files
+//            foreach (var baseMatchFile in Directory.EnumerateFiles(Path.GetDirectoryName(SafeName) ?? @".", Path.GetFileNameWithoutExtension(SafeName) + @".*"))
+//            {
+//                _streamManager.Commit(baseMatchFile, Path.ChangeExtension(RealName, baseMatchFile.Substring(SafeName.LastIndexOf('.'))), null);
+//            }
+
         	Dispose();
 
             return true;

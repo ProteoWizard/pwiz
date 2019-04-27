@@ -28543,6 +28543,36 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to find a valid Thermo instrument installation..
+        /// </summary>
+        public static string ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_ {
+            get {
+                return ResourceManager.GetString("ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_i" +
+                        "nstallation_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Thermo instrument software may not be installed correctly. The library {0} could not be found..
+        /// </summary>
+        public static string ThermoMassListExporter_EnsureLibraries_Thermo_instrument_software_may_not_be_installed_correctly__The_library__0__could_not_be_found_ {
+            get {
+                return ResourceManager.GetString("ThermoMassListExporter_EnsureLibraries_Thermo_instrument_software_may_not_be_inst" +
+                        "alled_correctly__The_library__0__could_not_be_found_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Thermo method creation software may not be installed correctly..
+        /// </summary>
+        public static string ThermoMassListExporter_EnsureLibraries_Thermo_method_creation_software_may_not_be_installed_correctly_ {
+            get {
+                return ResourceManager.GetString("ThermoMassListExporter_EnsureLibraries_Thermo_method_creation_software_may_not_be" +
+                        "_installed_correctly_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error loading report from the temporary file {0}.
         /// </summary>
         public static string ToolDescription_CallArgsCollector_Error_loading_report_from_the_temporary_file__0_ {
