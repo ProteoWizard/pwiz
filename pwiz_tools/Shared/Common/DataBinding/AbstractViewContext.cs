@@ -124,7 +124,7 @@ namespace pwiz.Common.DataBinding
             return true;
         }
 
-        public virtual void AddOrReplaceViews(ViewGroupId groupId, IEnumerable<ViewSpec> viewSpecs)
+        public virtual void AddOrReplaceViews(ViewGroupId groupId, IEnumerable<ViewSpecLayout> viewSpecs)
         {
             var viewSpecList = GetViewSpecList(groupId) ?? ViewSpecList.EMPTY;
             viewSpecList = viewSpecList.AddOrReplaceViews(viewSpecs);
@@ -352,7 +352,7 @@ namespace pwiz.Common.DataBinding
         public virtual void SaveView(ViewGroupId groupId, ViewSpec viewSpec, string originalName)
         {
             var viewSpecList = GetViewSpecList(groupId) ?? ViewSpecList.EMPTY;
-            viewSpecList = viewSpecList.ReplaceView(originalName, viewSpec);
+            viewSpecList = viewSpecList.ReplaceView(originalName, new ViewSpecLayout(viewSpec, viewSpecList.GetViewLayouts(viewSpec.Name)));
             SaveViewSpecList(groupId, viewSpecList);
         }
 
@@ -365,9 +365,9 @@ namespace pwiz.Common.DataBinding
         {
             var currentViews = GetViewSpecList(viewGroup.Id);
             var conflicts = new HashSet<string>();
-            foreach (var view in viewSpecList.ViewSpecs)
+            foreach (var view in viewSpecList.ViewSpecLayouts)
             {
-                var existing = currentViews.GetView(view.Name);
+                var existing = currentViews.GetViewSpecLayout(view.Name);
                 if (existing != null && !Equals(existing, view))
                 {
                     conflicts.Add(view.Name);
@@ -398,13 +398,11 @@ namespace pwiz.Common.DataBinding
                         break;
                 }
             }
-            foreach (var view in viewSpecList.ViewSpecs)
+            foreach (var view in viewSpecList.ViewSpecLayouts)
             {
                 if (null == currentViews.GetView(view.Name))
                 {
                     currentViews = currentViews.ReplaceView(null, view);
-                    currentViews = currentViews.SaveViewLayouts(currentViews.GetViewLayouts(view.Name)
-                        .Merge(viewSpecList.GetViewLayouts(view.Name).Layouts));
                 }
             }
             SaveViewSpecList(viewGroup.Id, currentViews);
