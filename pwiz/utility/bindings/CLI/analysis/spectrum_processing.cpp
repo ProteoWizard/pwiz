@@ -79,15 +79,25 @@ public ref class Version
 
 void SpectrumListFactory::wrap(msdata::MSData^ msd, System::String^ wrapper)
 {
-    b::SpectrumListFactory::wrap(msd->base(), ToStdString(wrapper));
+    wrap(msd, wrapper, nullptr);
+}
+
+void SpectrumListFactory::wrap(msdata::MSData^ msd, System::String^ wrapper, util::IterationListenerRegistry^ ilr)
+{
+    b::SpectrumListFactory::wrap(msd->base(), ToStdString(wrapper), ilr ? &ilr->base() : nullptr);
 }
 
 void SpectrumListFactory::wrap(msdata::MSData^ msd, System::Collections::Generic::IList<System::String^>^ wrappers)
 {
+    wrap(msd, wrappers, nullptr);
+}
+
+void SpectrumListFactory::wrap(msdata::MSData^ msd, System::Collections::Generic::IList<System::String^>^ wrappers, util::IterationListenerRegistry^ ilr)
+{
     std::vector<std::string> nativeWrappers;
     for each(System::String^ wrapper in wrappers)
         nativeWrappers.push_back(ToStdString(wrapper));
-    b::SpectrumListFactory::wrap(msd->base(), nativeWrappers);
+    b::SpectrumListFactory::wrap(msd->base(), nativeWrappers, ilr ? &ilr->base() : nullptr);
 }
 
 System::String^ SpectrumListFactory::usage()
