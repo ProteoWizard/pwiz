@@ -85,7 +85,7 @@ std::string longestCommonPrefix(const SequenceT& strings)
 /// heuristic that returns iterator in str pointing to first Unicode character, or str.end() if there are no Unicode characters
 inline std::string::const_iterator findUnicodeBytes(const std::string& str)
 {
-    return std::find_if(str.begin(), str.end(), [](char ch) { return !isprint(ch) || static_cast<int>(ch) < 0; });
+    return std::find_if(str.begin(), str.end(), [](char ch) { return !isprint(static_cast<unsigned char>(ch)) || static_cast<int>(ch) < 0; });
 }
 
 

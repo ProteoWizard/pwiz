@@ -376,7 +376,16 @@ bool MaxQuantReader::parseFile()
             setSpecFileName(filePsmListPair.first.c_str(), false);
         else
         {
+            try
+            {
             setSpecFileName(filePsmListPair.first.c_str(), extensions, dirs);
+            }
+            catch (BlibException& e)
+            {
+                if (bal::contains(e.what(), "Could not find spectrum file"))
+                    throw BlibException(e.hasFilename(), "%s; run with the -E flag to allow MaxQuant to use deisotoped/deconvoluted embedded spectra", e.what());
+                throw e;
+            }
             lookUpBy_ = INDEX_ID;
         }
 
@@ -618,6 +627,10 @@ void MaxQuantReader::addDoublesToVector(vector<double>& v, const string& valueLi
  */
 void MaxQuantReader::addModsToVector(vector<SeqMod>& v, const string& modifications, string modSequence)
 {
+    bal::replace_all(modSequence, "pS", "S(ph)");
+    bal::replace_all(modSequence, "pT", "T(ph)");
+    bal::replace_all(modSequence, "pY", "Y(ph)");
+
     // split modifications whole names
     vector<string> modNames;
     if (!bal::iequals(modifications, "Unmodified"))
@@ -748,7 +761,7 @@ void MaxQuantReader::addLabelModsToVector(vector<SeqMod>& v, const string& rawFi
  * the opening parentheses for the modification in the sequence, attempt to
  * look up which modification it is and return a SeqMod.
  */
-SeqMod MaxQuantReader::searchForMod(vector<string>& modNames, string modSequence, int posOpenParen) {
+SeqMod MaxQuantReader::searchForMod(vector<string>& modNames, const string& modSequence, int posOpenParen) {
     // get mod abbreviation
     size_t posCloseParen = modSequence.find(')', posOpenParen + 1);
     if (posCloseParen == string::npos) {
