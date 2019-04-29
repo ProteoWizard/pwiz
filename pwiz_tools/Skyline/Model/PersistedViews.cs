@@ -47,10 +47,10 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public PersistedViews(ReportSpecList reportSpecList, ViewSpecList viewSpecList, ToolList toolList)
         {
-            var viewItems = new List<ViewSpec>();
+            var viewItems = new List<ViewSpecLayout>();
             if (null != viewSpecList)
             {
-                viewItems.AddRange(viewSpecList.ViewSpecs);
+                viewItems.AddRange(viewSpecList.ViewSpecLayouts);
             }
             if (null != reportSpecList)
             {
@@ -65,7 +65,7 @@ namespace pwiz.Skyline.Model
                     viewItems.Add(newView);
                 }
             }
-            var viewSpecLists = new Dictionary<ViewGroup, Dictionary<string, ViewSpec>>();
+            var viewSpecLists = new Dictionary<ViewGroup, Dictionary<string, ViewSpecLayout>>();
             foreach (var viewItem in viewItems)
             {
                 ViewGroup group;
@@ -77,10 +77,10 @@ namespace pwiz.Skyline.Model
                 {
                     group = MainGroup;
                 }
-                Dictionary<string, ViewSpec> list;
+                Dictionary<string, ViewSpecLayout> list;
                 if (!viewSpecLists.TryGetValue(group, out list))
                 {
-                    list = new Dictionary<string, ViewSpec>();
+                    list = new Dictionary<string, ViewSpecLayout>();
                     viewSpecLists.Add(group, list);
                 }
                 if (!list.ContainsKey(viewItem.Name))
@@ -94,7 +94,7 @@ namespace pwiz.Skyline.Model
                         string name = viewItem.Name + i;
                         if (!list.ContainsKey(name))
                         {
-                            list.Add(name, viewItem.SetName(name));
+                            list.Add(name, viewItem.ChangeName(name));
                             break;
                         }
                     }
@@ -540,7 +540,7 @@ namespace pwiz.Skyline.Model
                 var currentView = viewSpecList.ViewSpecs.FirstOrDefault(view => view.Name == viewSpec.Name);
                 if (currentView == null || previousDefaults.Contains(new KeyValuePair<ViewGroupId, ViewSpec>(viewGroup, currentView)))
                 {
-                    viewSpecList = viewSpecList.ReplaceView(viewSpec.Name, viewSpec);
+                    viewSpecList = viewSpecList.ReplaceView(viewSpec.Name, new ViewSpecLayout(viewSpec, viewSpecList.GetViewLayouts(viewSpec.Name)));
                     _viewSpecLists[viewGroup.Name] = viewSpecList;
                 }
             }

@@ -1557,10 +1557,9 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
             var mainViewSpecList = defSet.PersistedViews.GetViewSpecList(PersistedViews.MainGroup.Id);
-            foreach (var viewSpec in DataSettings.ViewSpecList.ViewSpecs)
+            foreach (var viewSpec in DataSettings.ViewSpecList.ViewSpecLayouts)
             {
                 mainViewSpecList = mainViewSpecList.ReplaceView(viewSpec.Name, viewSpec);
-                mainViewSpecList = mainViewSpecList.SaveViewLayouts(DataSettings.ViewSpecList.GetViewLayouts(viewSpec.Name));
             }
 
             foreach (var listData in DataSettings.Lists)

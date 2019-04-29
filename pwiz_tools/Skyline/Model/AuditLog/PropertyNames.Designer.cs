@@ -3913,6 +3913,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Default Layout Name.
+        /// </summary>
+        public static string ViewSpecLayout_DefaultLayoutName {
+            get {
+                return ResourceManager.GetString("ViewSpecLayout_DefaultLayoutName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Layouts.
+        /// </summary>
+        public static string ViewSpecLayout_Layouts {
+            get {
+                return ResourceManager.GetString("ViewSpecLayout_Layouts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Reports.
         /// </summary>
         public static string ViewSpecList_Views {
