@@ -30,6 +30,7 @@
 
 #ifdef PWIZ_BINDINGS_CLI_COMBINED
     #include "../msdata/MSData.hpp"
+    #include "../common/IterationListener.hpp"
 #else
     #include "../common/SharedCLI.hpp"
     #using "pwiz_bindings_cli_common.dll" as_friend
@@ -102,9 +103,19 @@ public ref class SpectrumListFactory abstract
     static void wrap(msdata::MSData^ msd, System::String^ wrapper);
 
     /// <summary>
+    /// instantiate the SpectrumListWrapper indicated by wrapper
+    /// </summary>
+    static void wrap(msdata::MSData^ msd, System::String^ wrapper, util::IterationListenerRegistry^ ilr);
+
+    /// <summary>
     /// instantiate a list of SpectrumListWrappers
     /// </summary>
     static void wrap(msdata::MSData^ msd, System::Collections::Generic::IList<System::String^>^ wrappers);
+
+    /// <summary>
+    /// instantiate a list of SpectrumListWrappers
+    /// </summary>
+    static void wrap(msdata::MSData^ msd, System::Collections::Generic::IList<System::String^>^ wrappers, util::IterationListenerRegistry^ ilr);
 
     /// <summary>
     /// user-friendly documentation
