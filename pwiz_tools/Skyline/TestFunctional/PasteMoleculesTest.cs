@@ -1207,8 +1207,8 @@ namespace pwiz.SkylineTestFunctional
                 "Sulfamethizole,C9H10N4O2S2,[M+H],1,1.85,157.7,92.0498,1,0.51\n" +
                 "Sulfamethizole,C9H10N4O2S2,[M+Na],1,1.85,173.43,,,\n" +
                 "Sulfamethazine,C12H14N4O2S,[M+H],1,2.01,163.56,,,\n" +
-                "Sulfamethazine,C12H14N4O2S,[M+H],1,2.01,163.56,186.0336,1,0.2\n" +
-                "Sulfamethazine,C12H14N4O2S,[M+H],1,2.01,163.56,124.0873,1,0.21\n" +
+                "Sulfamethazine,C12H14N4O2S,[M+H],1,2.01,,186.0336,1,0.2\n" +
+                "Sulfamethazine,C12H14N4O2S,[M+H],1,2.01,,124.0873,1,0.21\n" +
                 "Sulfamethazine,C12H14N4O2S,[M+Na],1,2.01,172.47,,,\n" +
                 "Sulfachloropyridazine,C10H9ClN4O2S,[M+H],1,2.51,161.23,,,\n" +
                 "Sulfachloropyridazine,C10H9ClN4O2S,[M+H],1,2.51,161.23,156.011,1,0.1\n" +

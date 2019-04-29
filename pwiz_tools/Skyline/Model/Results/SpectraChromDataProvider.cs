@@ -276,7 +276,6 @@ namespace pwiz.Skyline.Model.Results
                         filterIndex,
                         dataSpectrum.Mzs,
                         dataSpectrum.Intensities,
-                        IonMobilityFilter.EMPTY, // ion mobility unknown
                         chromMap);
                 }
                 else if (_filter.EnabledMsMs || _filter.EnabledMs)
@@ -506,14 +505,14 @@ namespace pwiz.Skyline.Model.Results
                                                int filterIndex,
                                                double[] mzs,
                                                double[] intensities,
-                                               IonMobilityFilter ionMobility,
                                                ChromDataCollectorSet chromMap)
         {
             float[] intensityFloats = new float[intensities.Length];
             for (int i = 0; i < intensities.Length; i++)
                 intensityFloats[i] = (float) intensities[i];
-            var productFilters = mzs.Select(mz => new SpectrumProductFilter(new SignedMz(mz, precursorMz.IsNegative), 0)).ToArray();
-            var spectrum = new ExtractedSpectrum(modifiedSequence, peptideColor, precursorMz, ionMobility,
+            var productFilters = mzs.Select(mz => new SpectrumProductFilter(new SignedMz(mz, precursorMz.IsNegative), 0, 0)).ToArray();
+            var spectrum = new ExtractedSpectrum(modifiedSequence, peptideColor, precursorMz,
+            IonMobilityFilter.EMPTY, // ion mobility unknown
                 ChromExtractor.summed, filterIndex, productFilters, intensityFloats, null);
             chromMap.ProcessExtractedSpectrum(time, _collectors, -1, spectrum, null);
         }
