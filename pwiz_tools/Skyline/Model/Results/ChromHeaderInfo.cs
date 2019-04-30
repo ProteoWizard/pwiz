@@ -896,8 +896,8 @@ namespace pwiz.Skyline.Model.Results
 
         public double Product { get { return _product; } }
         public float ExtractionWidth { get { return _extractionWidth; }}  // In m/z
-        public float IonMobilityValue { get { return _ionMobilityValue; } } // In msec
-        public float IonMobilityExtractionWidth { get { return _ionMobilityExtractionWidth; } } // In msec
+        public float IonMobilityValue { get { return _ionMobilityValue; } } // Units depend on ion mobility type
+        public float IonMobilityExtractionWidth { get { return _ionMobilityExtractionWidth; } } // Units depend on ion mobility type
 
         public FlagValues Flags
         {

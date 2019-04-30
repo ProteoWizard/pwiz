@@ -179,7 +179,7 @@ namespace pwiz.SkylineTestFunctional
 
             public bool HasNewReports
             {
-                get { return ReportOrViewSpecs.Any(reportSpec => null != reportSpec.ViewSpec); }
+                get { return ReportOrViewSpecs.Any(reportSpec => null != reportSpec.ViewSpecLayout); }
             }
         }
     }

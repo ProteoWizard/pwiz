@@ -48,12 +48,12 @@ namespace pwiz.SkylineTest.MSstats.Normalization
             var memoryDocumentContainer = new MemoryDocumentContainer();
             Assert.IsTrue(memoryDocumentContainer.SetDocument(testDocument, memoryDocumentContainer.Document));
             SkylineDataSchema skylineDataSchema = new SkylineDataSchema(memoryDocumentContainer, DataSchemaLocalizer.INVARIANT);
-            var view = ReportSharing.DeserializeReportList(OpenTestFile("MSstats_report.skyr")).First().ViewSpec;
+            var view = ReportSharing.DeserializeReportList(OpenTestFile("MSstats_report.skyr")).First().ViewSpecLayout;
             var viewContext = new DocumentGridViewContext(skylineDataSchema);
             StringWriter stringWriter = new StringWriter();
             IProgressStatus progressStatus = new ProgressStatus();
             viewContext.Export(CancellationToken.None, new SilentProgressMonitor(), ref progressStatus,
-                viewContext.GetViewInfo(ViewGroup.BUILT_IN, view), stringWriter,
+                viewContext.GetViewInfo(ViewGroup.BUILT_IN, view.ViewSpec), stringWriter,
                 viewContext.GetCsvWriter());
             string expectedReport = new StreamReader(OpenTestFile("BrudererSubset_MSstatsInput.csv")).ReadToEnd();
             AssertEx.NoDiff(expectedReport, stringWriter.ToString());
