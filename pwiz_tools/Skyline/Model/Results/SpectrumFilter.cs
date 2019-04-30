@@ -129,10 +129,10 @@ namespace pwiz.Skyline.Model.Results
                     {
                         var key = new PrecursorTextId(SignedMz.ZERO, null, null, ChromExtractor.summed);  // TIC
                         dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, dictPrecursorMzToFilter.Count,
-                            _instrument.MinTime, _instrument.MaxTime, 0, _isHighAccMsFilter, _isHighAccProductFilter));
+                            _instrument.MinTime, _instrument.MaxTime, _isHighAccMsFilter, _isHighAccProductFilter));
                         key = new PrecursorTextId(SignedMz.ZERO, null, null, ChromExtractor.base_peak);   // BPC
                         dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, dictPrecursorMzToFilter.Count,
-                            _instrument.MinTime, _instrument.MaxTime, 0, _isHighAccMsFilter, _isHighAccProductFilter));
+                            _instrument.MinTime, _instrument.MaxTime, _isHighAccMsFilter, _isHighAccProductFilter));
                     }
                 }
                 if (EnabledMsMs)
@@ -253,15 +253,14 @@ namespace pwiz.Skyline.Model.Results
                         if (!dictPrecursorMzToFilter.TryGetValue(key, out filter))
                         {
                             filter = new SpectrumFilterPair(key, nodePep.Color, dictPrecursorMzToFilter.Count, minTime, maxTime,
-                                ionMobility.HighEnergyIonMobilityValueOffset,
                                 _isHighAccMsFilter, _isHighAccProductFilter);
                             dictPrecursorMzToFilter.Add(key, filter);
                         }
 
                         if (!EnabledMs)
                         {
-                            filterCount += filter.AddQ3FilterValues(from TransitionDocNode nodeTran in nodeGroup.Children
-                                                     select nodeTran.Mz, calcWindowsQ3);
+                            filterCount += filter.AddQ3FilterValues((from TransitionDocNode nodeTran in nodeGroup.Children select nodeTran).
+                                Select(nodeTran => new SpectrumFilterValues(nodeTran.Mz, nodeTran.ExplicitValues.IonMobilityHighEnergyOffset ?? ionMobility.HighEnergyIonMobilityValueOffset)), calcWindowsQ3);
                         }
                         else if (!EnabledMsMs)
                         {
@@ -270,9 +269,10 @@ namespace pwiz.Skyline.Model.Results
                         else
                         {
                             filterCount += filter.AddQ1FilterValues(GetMS1MzValues(nodeGroup), calcWindowsQ1);
-                            filterCount += filter.AddQ3FilterValues(from TransitionDocNode nodeTran in nodeGroup.Children
-                                                     where !nodeTran.IsMs1
-                                                     select nodeTran.Mz, calcWindowsQ3);
+                            filterCount += filter.AddQ3FilterValues((from TransitionDocNode nodeTran in nodeGroup.Children
+                                                     where !nodeTran.IsMs1 select nodeTran).
+                                Select(nodeTran => new SpectrumFilterValues(nodeTran.Mz, nodeTran.ExplicitValues.IonMobilityHighEnergyOffset ?? ionMobility.HighEnergyIonMobilityValueOffset)), 
+                                calcWindowsQ3);
                         }
                     }
                 }
@@ -280,7 +280,7 @@ namespace pwiz.Skyline.Model.Results
 
                 // For FAIMS chromatogram extraction is a special case for non-contiguous scans, so create convenient subsets of filters
                 foreach (var cv in _filterMzValues.Where(f => f.HasIonMobilityFAIMS())
-                    .Select(f => f.GetIonMobilityWindow(false).IonMobility.Mobility.Value).Distinct())
+                    .Select(f => f.GetIonMobilityWindow().IonMobility.Mobility.Value).Distinct())
                 {
                     if (_filterMzValuesFAIMSDict == null)
                     {
@@ -288,7 +288,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                     var filterCV = _filterMzValues.Where(f =>
                         !f.HasIonMobilityFAIMS() || // TIC, base peak
-                        Equals(cv, f.GetIonMobilityWindow(false).IonMobility.Mobility.Value))
+                        Equals(cv, f.GetIonMobilityWindow().IonMobility.Mobility.Value))
                         .ToArray();
                     _filterMzValuesFAIMSDict.Add(cv, filterCV);
                 }
@@ -685,7 +685,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     if (!filterPair.ContainsRetentionTime(retentionTime.Value))
                         continue;
-                    var filteredSrmSpectrum = filterPair.FilterQ3SpectrumList(spectra, _isWatersMse && GetMseLevel() > 1);
+                    var filteredSrmSpectrum = filterPair.FilterQ3SpectrumList(spectra, GetMseLevel() > 1 );
                     if (filteredSrmSpectrum != null)
                         yield return filteredSrmSpectrum;
                 }
