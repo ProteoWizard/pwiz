@@ -568,9 +568,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabControl1.Controls.Add(this.tabLabels);
             this.tabControl1.Controls.Add(this.tabIntegration);
             this.tabControl1.Controls.Add(this.tabQuantification);
-            this.tabControl1.DataBindings.Add(new System.Windows.Forms.Binding("SelectedIndex", global::pwiz.Skyline.Properties.Settings.Default, "PeptideSettingsTab", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
             this.tabControl1.Name = "tabControl1";
-            this.tabControl1.SelectedIndex = global::pwiz.Skyline.Properties.Settings.Default.PeptideSettingsTab;
             this.helpTip.SetToolTip(this.tabControl1, resources.GetString("tabControl1.ToolTip"));
             // 
             // tabDigestion

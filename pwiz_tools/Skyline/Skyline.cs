@@ -3303,7 +3303,11 @@ namespace pwiz.Skyline
 
         private void ShowPeptideSettingsUI(IWin32Window parent, PeptideSettingsUI.TABS? tab)
         {
-            using (PeptideSettingsUI ps = new PeptideSettingsUI(this, _libraryManager) { TabControlSel = tab ?? PeptideSettingsUI.LastSelectedTab })
+            using (PeptideSettingsUI ps = new PeptideSettingsUI(this, _libraryManager) { TabControlSel = tab ?? (PeptideSettingsUI.TABS)
+                    (GetModeUIHelper().ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic ? Settings.Default.PeptideSettingsTab :
+                    (GetModeUIHelper().ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules ? Settings.Default.MoleculeSettingsTab :
+                    Settings.Default.MixedMoleculeSettingsTab))
+            })
             {
                 var oldStandard = RCalcIrtStandard();
                 
@@ -3320,6 +3324,19 @@ namespace pwiz.Skyline
                     var newStandard = RCalcIrtStandard(out missingPeptides);
                     if (oldStandard != newStandard)
                         AddStandardsToDocument(newStandard, missingPeptides);
+                }
+
+                switch (GetModeUIHelper().ModeUI) // Remember which tab we were on for user convenience next time we are here
+                {
+                    case SrmDocument.DOCUMENT_TYPE.proteomic:
+                        Settings.Default.PeptideSettingsTab = (int)ps.SelectedTab;
+                        break;
+                    case SrmDocument.DOCUMENT_TYPE.small_molecules:
+                        Settings.Default.MoleculeSettingsTab = (int)ps.SelectedTab;
+                        break;
+                    case SrmDocument.DOCUMENT_TYPE.mixed:
+                        Settings.Default.MixedMoleculeSettingsTab = (int)ps.SelectedTab;
+                        break;
                 }
             }
 
