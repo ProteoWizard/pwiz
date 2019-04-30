@@ -118,39 +118,30 @@ namespace pwiz.Skyline.Controls.SeqNode
             {
                 return (int) (nodePep.HasLibInfo
                                   ? SequenceTree.ImageId.peptide_lib_decoy
-                                  : SequenceTree.ImageId.peptide_decoy);
-            }
-            if (!nodePep.IsProteomic)
-            {
-                if (nodePep.GlobalStandardType == StandardType.GLOBAL_STANDARD ||
-                    nodePep.GlobalStandardType == StandardType.SURROGATE_STANDARD)
-                {
-                    return (int) SequenceTree.ImageId.molecule_standard;
-                }
-                return (int)SequenceTree.ImageId.molecule;
+                                  : SequenceTree.ImageId.peptide_decoy); // Decoy has no small-molecule equivalent 
             }
             if (nodePep.GlobalStandardType == StandardType.IRT)
             {
                 return (int) (nodePep.HasLibInfo
-                                  ? SequenceTree.ImageId.peptide_irt_lib
-                                  : SequenceTree.ImageId.peptide_irt);
+                                  ? (nodePep.IsProteomic ? SequenceTree.ImageId.peptide_irt_lib : SequenceTree.ImageId.molecule_irt_lib)
+                                  : (nodePep.IsProteomic ? SequenceTree.ImageId.peptide_irt : SequenceTree.ImageId.molecule_irt));
             }
             if (nodePep.GlobalStandardType == StandardType.QC)
             {
                 return (int)(nodePep.HasLibInfo
                                   ? SequenceTree.ImageId.peptide_qc_lib
-                                  : SequenceTree.ImageId.peptide_qc);
+                                  : SequenceTree.ImageId.peptide_qc); // QC icon is same for peptides and molecules
             }
             if (nodePep.GlobalStandardType == StandardType.GLOBAL_STANDARD 
                 || nodePep.GlobalStandardType == StandardType.SURROGATE_STANDARD)
             {
                 return (int)(nodePep.HasLibInfo
-                                  ? SequenceTree.ImageId.peptide_standard_lib
-                                  : SequenceTree.ImageId.peptide_standard);
+                                  ? (nodePep.IsProteomic ? SequenceTree.ImageId.peptide_standard_lib : SequenceTree.ImageId.molecule_standard_lib)
+                                  : (nodePep.IsProteomic ? SequenceTree.ImageId.peptide_standard : SequenceTree.ImageId.molecule_standard));
             }
             return (int)(nodePep.HasLibInfo
-                              ? SequenceTree.ImageId.peptide_lib
-                              : SequenceTree.ImageId.peptide);
+                              ? (nodePep.IsProteomic ? SequenceTree.ImageId.peptide_lib : SequenceTree.ImageId.molecule_lib)
+                              : (nodePep.IsProteomic ? SequenceTree.ImageId.peptide : SequenceTree.ImageId.molecule));
         }
 
         public int PeakImageIndex

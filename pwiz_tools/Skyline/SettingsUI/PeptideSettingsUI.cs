@@ -46,6 +46,7 @@ namespace pwiz.Skyline.SettingsUI
     public partial class PeptideSettingsUI : FormEx, IMultipleViewProvider
     {
         private const int BORDER_BOTTOM_HEIGHT = 16;
+        public static TABS? LastSelectedTab; // Helps return user to same tab in small molecules mode, where our changes to tabs confuse the normal persistence mechanism
 
 // ReSharper disable InconsistentNaming
         public enum TABS { Digest, Prediction, Filter, Library, Modifications, Labels, /* Integration, */ Quantification }
@@ -541,6 +542,8 @@ namespace pwiz.Skyline.SettingsUI
 
         public void OkDialog()
         {
+            LastSelectedTab = SelectedTab; // For user convenience, start on same tab at next invocation
+
             PeptideSettings settings = ValidateNewSettings(true);
             if (settings == null)
                 return;
