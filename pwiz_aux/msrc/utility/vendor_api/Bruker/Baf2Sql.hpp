@@ -143,6 +143,12 @@ struct PWIZ_API_DECL Baf2SqlImpl : public CompassData
     /// returns a spectrum from the specified LC source
     virtual LCSpectrumPtr getLCSpectrum(int source, int scan) const;
 
+    /// returns a chromatogram with times and total ion currents of all spectra, or a null pointer if the format doesn't support fast access to TIC
+    virtual ChromatogramPtr getTIC() const;
+
+    /// returns a chromatogram with times and base peak intensities of all spectra, or a null pointer if the format doesn't support fast access to BPC
+    virtual ChromatogramPtr getBPC() const;
+
     virtual std::string getOperatorName() const;
     virtual std::string getAnalysisName() const ;
     virtual boost::local_time::local_date_time getAnalysisDateTime() const;
@@ -167,6 +173,7 @@ struct PWIZ_API_DECL Baf2SqlImpl : public CompassData
     InstrumentSource instrumentSource_;
     std::string acquisitionDateTime_;
     std::string operatorName_;
+    ChromatogramPtr tic_, bpi_;
 };
 
 
