@@ -85,9 +85,30 @@ namespace pwiz.Skyline.SettingsUI
         private static readonly IList<int?> _quantMsLevels = ImmutableList.ValueOf(new int?[] {null, 1, 2});
         private readonly LabelTypeComboDriver _driverSmallMolInternalStandardTypes;
 
-        public PeptideSettingsUI(SkylineWindow parent, LibraryManager libraryManager)
+        public PeptideSettingsUI(SkylineWindow parent, LibraryManager libraryManager, TABS? selectTab)
         {
             InitializeComponent();
+
+            if (selectTab == null)
+            {
+                // No active tab requested (ie we're not in a test), go with current UI mode's last-used
+                switch (GetModeUIHelper().ModeUI)
+                {
+                    case SrmDocument.DOCUMENT_TYPE.proteomic:
+                        TabControlSel = (TABS)Settings.Default.PeptideSettingsTab;
+                        break;
+                    case SrmDocument.DOCUMENT_TYPE.small_molecules:
+                        TabControlSel = (TABS)Settings.Default.MoleculeSettingsTab;
+                        break;
+                    case SrmDocument.DOCUMENT_TYPE.mixed:
+                        TabControlSel = (TABS)Settings.Default.MixedMoleculeSettingsTab;
+                        break;
+                }
+            }
+            else
+            {
+                TabControlSel = selectTab;
+            }
 
             btnUpdateIonMobilityLibraries.Visible = false; // TODO: ion mobility libraries are more complex than initially thought - put this off until after summer 2014 release
 
@@ -265,6 +286,23 @@ namespace pwiz.Skyline.SettingsUI
             if (TabControlSel != null) 
                 tabControl1.SelectedIndex = (int) TabControlSel; 
             tabControl1.FocusFirstTabStop();
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+            switch (GetModeUIHelper().ModeUI) // Remember which tab we were on for user convenience next time we are here
+            {
+                case SrmDocument.DOCUMENT_TYPE.proteomic:
+                    Settings.Default.PeptideSettingsTab = (int)SelectedTab;
+                    break;
+                case SrmDocument.DOCUMENT_TYPE.small_molecules:
+                    Settings.Default.MoleculeSettingsTab = (int)SelectedTab;
+                    break;
+                case SrmDocument.DOCUMENT_TYPE.mixed:
+                    Settings.Default.MixedMoleculeSettingsTab = (int)SelectedTab;
+                    break;
+            }
         }
 
         private void UpdatePeptideUniquenessEnabled()

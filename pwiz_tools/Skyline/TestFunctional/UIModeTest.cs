@@ -100,9 +100,15 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(()=>
                 {
                     SkylineWindow.NewDocument();
-                    SkylineWindow.SetUIMode(uimode); // Set UI mode to proteomic
+                    SkylineWindow.SetUIMode(uimode); 
                     Assert.AreEqual(uimode, SkylineWindow.GetModeUIHelper().ModeUI);
                 });
+
+                // Test per-ui-mode persistence of "peptide" settings tab choice
+                var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+                RunUI(() => Assume.AreEqual(peptideSettingsDlg.SelectedTab, (PeptideSettingsUI.TABS)uimode));
+                OkDialog(peptideSettingsDlg, peptideSettingsDlg.CancelDialog);
+
             }
 
             // Test interaction of buttons in non-empty documents
@@ -160,6 +166,12 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(finalModeUI, SkylineWindow.GetModeUIHelper().ModeUI);
                 VerifyButtonStates();
             });
+
+            // Prepare to test per-ui-mode persistence of "peptide" settings tab choice
+            var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(
+                () => SkylineWindow.ShowPeptideSettingsUI((PeptideSettingsUI.TABS)finalModeUI));
+            OkDialog(peptideSettingsDlg, peptideSettingsDlg.CancelDialog);
+
         }
 
         private static void VerifyButtonStates()
