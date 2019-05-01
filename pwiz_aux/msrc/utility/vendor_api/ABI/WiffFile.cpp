@@ -90,6 +90,10 @@ class WiffFileImpl : public WiffFile
     virtual SpectrumPtr getSpectrum(int sample, int period, int experiment, int cycle) const;
     virtual SpectrumPtr getSpectrum(ExperimentPtr experiment, int cycle) const;
 
+    virtual int getADCTraceCount(int sample) const;
+    virtual std::string getADCTraceName(int sample, int traceIndex) const;
+    virtual void getADCTrace(int sample, int traceIndex, ADCTrace& trace) const;
+
     void setSample(int sample) const;
     void setPeriod(int sample, int period) const;
     void setExperiment(int sample, int period, int experiment) const;
@@ -835,6 +839,44 @@ SpectrumPtr WiffFileImpl::getSpectrum(ExperimentPtr experiment, int cycle) const
 {
     SpectrumImplPtr spectrum(new SpectrumImpl(boost::static_pointer_cast<ExperimentImpl>(experiment), cycle));
     return spectrum;
+}
+
+
+int WiffFileImpl::getADCTraceCount(int sample) const
+{
+    try
+    {
+        setSample(sample);
+        if (!this->sample->HasADCData || this->sample->ADCSample == nullptr)
+            return 0;
+
+        return this->sample->ADCSample->ChannelCount;
+    }
+    CATCH_AND_FORWARD
+}
+
+string WiffFileImpl::getADCTraceName(int sample, int traceIndex) const
+{
+    try
+    {
+        setSample(sample);
+        return ToStdString(this->sample->ADCSample->GetChannelNameAt(traceIndex));
+    }
+    CATCH_AND_FORWARD
+}
+
+void WiffFileImpl::getADCTrace(int sample, int traceIndex, ADCTrace& trace) const
+{
+    try
+    {
+        setSample(sample);
+        auto adcData = this->sample->ADCSample->GetADCData(traceIndex);
+        ToBinaryData(adcData->GetActualXValues(), trace.x);
+        ToBinaryData(adcData->GetActualYValues(), trace.y);
+        trace.xUnits = ToStdString(adcData->XUnits);
+        trace.yUnits = ToStdString(adcData->YUnits);
+    }
+    CATCH_AND_FORWARD
 }
 
 

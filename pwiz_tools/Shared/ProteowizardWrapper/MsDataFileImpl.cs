@@ -612,19 +612,44 @@ namespace pwiz.ProteowizardWrapper
             }
             using (var chromatogram = ChromatogramList.chromatogram(0, true))
             {
-                if (chromatogram == null)
-                {
-                    return null;
-                }
-                TimeIntensityPairList timeIntensityPairList = new TimeIntensityPairList();
-                chromatogram.getTimeIntensityPairs(ref timeIntensityPairList);
-                double[] intensities = new double[timeIntensityPairList.Count];
-                for (int i = 0; i < intensities.Length; i++)
-                {
-                    intensities[i] = timeIntensityPairList[i].intensity;
-                }
-                return intensities;
+                return chromatogram?.getIntensityArray()?.data.Storage();
             }
+        }
+
+        public class PressureTrace
+        {
+            public PressureTrace(Chromatogram c)
+            {
+                Name = c.id;
+                Times = c.getTimeArray().data.Storage();
+                Pressures = c.binaryDataArrays[1].data.Storage();
+            }
+
+            public string Name { get; private set; }
+            public double[] Times { get; private set; }
+            public double[] Pressures { get; private set; }
+        }
+
+        public List<PressureTrace> GetPressureTraces()
+        {
+            if (ChromatogramList == null)
+                return null;
+
+            var result = new List<PressureTrace>();
+            for (int i = 0; i < ChromatogramList.size(); ++i)
+            {
+                if (!ChromatogramList.chromatogramIdentity(i).id.ToLower().Contains("pressure"))
+                    continue;
+
+                using (var chromatogram = ChromatogramList.chromatogram(i, true))
+                {
+                    if (chromatogram == null)
+                        return null;
+
+                    result.Add(new PressureTrace(chromatogram));
+                }
+            }
+            return result;
         }
 
         /// <summary>

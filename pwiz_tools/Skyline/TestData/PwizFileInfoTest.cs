@@ -102,6 +102,33 @@ namespace pwiz.SkylineTestData
             VerifyTicChromatogram(testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + ExtensionTestContext.ExtWatersRaw), 5108, 372494752);
         }
 
+        [TestMethod]
+        public void TestPressureTraces()
+        {
+            const string testZipPath = @"TestData\PressureTracesTest.zip";
+
+            var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+
+            using (var msDataFile = new MsDataFileImpl(testFilesDir.GetTestPath("PressureTrace1" + ExtensionTestContext.ExtAbWiff)))
+            {
+                var pressureTraces = msDataFile.GetPressureTraces();
+
+                Assert.AreEqual("Column Pressure (channel 1)", pressureTraces[0].Name);
+                Assert.AreEqual(1148, pressureTraces[0].Pressures.Length);
+                Assert.AreEqual(0, pressureTraces[0].Times.First());
+                Assert.AreEqual(1470, pressureTraces[0].Pressures.First());
+                Assert.AreEqual(9.558333, pressureTraces[0].Times.Last(), 1e-6);
+                Assert.AreEqual(210, pressureTraces[0].Pressures.Last());
+
+                Assert.AreEqual("Column Pressure (channel 4)", pressureTraces[1].Name);
+                Assert.AreEqual(3508, pressureTraces[1].Pressures.Length);
+                Assert.AreEqual(0, pressureTraces[1].Times.First());
+                Assert.AreEqual(1396, pressureTraces[1].Pressures.First());
+                Assert.AreEqual(29.225, pressureTraces[1].Times.Last(), 1e-6);
+                Assert.AreEqual(1322, pressureTraces[1].Pressures.Last());
+            }
+        }
+
         private static void VerifyInstrumentInfo(string path, string model, string ionization, string analyzer, string detector)
         {
             using (var msDataFile = new MsDataFileImpl(path))
