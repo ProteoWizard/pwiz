@@ -17185,6 +17185,26 @@ namespace pwiz.Skyline.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        public static System.Drawing.Bitmap MoleculeIrt {
+            get {
+                object obj = ResourceManager.GetObject("MoleculeIrt", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap MoleculeIrtLib {
+            get {
+                object obj = ResourceManager.GetObject("MoleculeIrtLib", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         public static System.Drawing.Bitmap MoleculeLib {
             get {
                 object obj = ResourceManager.GetObject("MoleculeLib", resourceCulture);
@@ -17208,6 +17228,16 @@ namespace pwiz.Skyline.Properties {
         public static System.Drawing.Bitmap MoleculeStandard {
             get {
                 object obj = ResourceManager.GetObject("MoleculeStandard", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap MoleculeStandardLib {
+            get {
+                object obj = ResourceManager.GetObject("MoleculeStandardLib", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
