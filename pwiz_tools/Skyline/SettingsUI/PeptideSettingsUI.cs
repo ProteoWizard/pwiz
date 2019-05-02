@@ -89,26 +89,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             InitializeComponent();
 
-            if (selectTab == null)
-            {
-                // No active tab requested (ie we're not in a test), go with current UI mode's last-used
-                switch (GetModeUIHelper().ModeUI)
-                {
-                    case SrmDocument.DOCUMENT_TYPE.proteomic:
-                        TabControlSel = (TABS)Settings.Default.PeptideSettingsTab;
-                        break;
-                    case SrmDocument.DOCUMENT_TYPE.small_molecules:
-                        TabControlSel = (TABS)Settings.Default.MoleculeSettingsTab;
-                        break;
-                    case SrmDocument.DOCUMENT_TYPE.mixed:
-                        TabControlSel = (TABS)Settings.Default.MixedMoleculeSettingsTab;
-                        break;
-                }
-            }
-            else
-            {
-                TabControlSel = selectTab;
-            }
+            RestoreTabSel(selectTab);
 
             btnUpdateIonMobilityLibraries.Visible = false; // TODO: ion mobility libraries are more complex than initially thought - put this off until after summer 2014 release
 
@@ -229,6 +210,52 @@ namespace pwiz.Skyline.SettingsUI
             UpdateLibraryDriftPeakWidthControls();
         }
 
+        /// <summary>
+        /// Restore the selected tab, or use current UI mode's last-used tab if null request
+        /// </summary>
+        private void RestoreTabSel(TABS? selectTab)
+        {
+            if (selectTab != null)
+            {
+                TabControlSel = selectTab;
+            }
+            else
+            { 
+                // No active tab requested (ie we're not in a test), go with current UI mode's last-used
+                switch (GetModeUIHelper().ModeUI)
+                {
+                    case SrmDocument.DOCUMENT_TYPE.proteomic:
+                        TabControlSel = (TABS) Settings.Default.PeptideSettingsTab;
+                        break;
+                    case SrmDocument.DOCUMENT_TYPE.small_molecules:
+                        TabControlSel = (TABS) Settings.Default.MoleculeSettingsTab;
+                        break;
+                    case SrmDocument.DOCUMENT_TYPE.mixed:
+                        TabControlSel = (TABS) Settings.Default.MixedMoleculeSettingsTab;
+                        break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Remember which tab we were on for user convenience next time we are here
+        /// </summary>
+        private void SaveTabSel()
+        {
+            switch (GetModeUIHelper().ModeUI) 
+            {
+                case SrmDocument.DOCUMENT_TYPE.proteomic:
+                    Settings.Default.PeptideSettingsTab = (int)SelectedTab;
+                    break;
+                case SrmDocument.DOCUMENT_TYPE.small_molecules:
+                    Settings.Default.MoleculeSettingsTab = (int)SelectedTab;
+                    break;
+                case SrmDocument.DOCUMENT_TYPE.mixed:
+                    Settings.Default.MixedMoleculeSettingsTab = (int)SelectedTab;
+                    break;
+            }
+        }
+
         public DigestSettings Digest { get { return _peptideSettings.DigestSettings; } }
         public PeptidePrediction Prediction { get { return _peptideSettings.Prediction; } }
         public PeptideFilter Filter { get { return _peptideSettings.Filter; } }
@@ -291,20 +318,8 @@ namespace pwiz.Skyline.SettingsUI
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             base.OnFormClosing(e);
-            switch (GetModeUIHelper().ModeUI) // Remember which tab we were on for user convenience next time we are here
-            {
-                case SrmDocument.DOCUMENT_TYPE.proteomic:
-                    Settings.Default.PeptideSettingsTab = (int)SelectedTab;
-                    break;
-                case SrmDocument.DOCUMENT_TYPE.small_molecules:
-                    Settings.Default.MoleculeSettingsTab = (int)SelectedTab;
-                    break;
-                case SrmDocument.DOCUMENT_TYPE.mixed:
-                    Settings.Default.MixedMoleculeSettingsTab = (int)SelectedTab;
-                    break;
-            }
+            SaveTabSel(); // Remember which tab we were on for user convenience next time we are here
         }
-
         private void UpdatePeptideUniquenessEnabled()
         {
             labelPeptideUniquenessConstraint.Enabled = comboBoxPeptideUniquenessConstraint.Enabled = !_driverBackgroundProteome.SelectedItem.IsNone;
