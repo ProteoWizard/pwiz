@@ -48,11 +48,8 @@ namespace pwiz.SkylineTestData
             }
 
             // ABI .wiff file
-            if (ExtensionTestContext.CanImportAbWiff)
-            {
-                VerifyInstrumentInfo(testFilesDir.GetTestPath("051309_digestion.wiff"),
-                    "4000 QTRAP", "electrospray ionization", "quadrupole/quadrupole/axial ejection linear ion trap", "electron multiplier");
-            }
+            VerifyInstrumentInfo(testFilesDir.GetTestPath("051309_digestion" + ExtensionTestContext.ExtAbWiff),
+                "4000 QTRAP", "electrospray ionization", "quadrupole/quadrupole/axial ejection linear ion trap", "electron multiplier");
 
             if (ExtensionTestContext.CanImportAbWiff2)
             {
@@ -91,9 +88,7 @@ namespace pwiz.SkylineTestData
             var testFilesDir = new TestFilesDir(TestContext, testZipPath);
 
             VerifyTicChromatogram(testFilesDir.GetTestPath("081809_100fmol-MichromMix-05" + ExtensionTestContext.ExtAgilentRaw), 5257, 8023);
-
-            if (ExtensionTestContext.CanImportAbWiff)
-                VerifyTicChromatogram(testFilesDir.GetTestPath("051309_digestion.wiff"), 6703, 357300);
+            VerifyTicChromatogram(testFilesDir.GetTestPath("051309_digestion" + ExtensionTestContext.ExtAbWiff), 2814, 357100, 2);
 
             if (ExtensionTestContext.CanImportAbWiff2)
                 VerifyTicChromatogram(testFilesDir.GetTestPath("OnyxTOFMS.wiff2"), 240, 143139); 
@@ -144,9 +139,9 @@ namespace pwiz.SkylineTestData
             }
         }
 
-        private static void VerifyTicChromatogram(string path, int count, double maxIntensity)
+        private static void VerifyTicChromatogram(string path, int count, double maxIntensity, int sampleIndex = 0)
         {
-            using (var msDataFile = new MsDataFileImpl(path))
+            using (var msDataFile = new MsDataFileImpl(path, sampleIndex))
             {
                 var tic = msDataFile.GetTotalIonCurrent();
                 Assert.AreEqual(count, tic.Length);
