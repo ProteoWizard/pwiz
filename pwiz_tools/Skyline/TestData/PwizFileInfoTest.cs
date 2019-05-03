@@ -98,7 +98,7 @@ namespace pwiz.SkylineTestData
         }
 
         [TestMethod]
-        public void TestPressureTraces()
+        public void TestQcTraces()
         {
             const string testZipPath = @"TestData\PressureTracesTest.zip";
 
@@ -106,21 +106,14 @@ namespace pwiz.SkylineTestData
 
             using (var msDataFile = new MsDataFileImpl(testFilesDir.GetTestPath("PressureTrace1" + ExtensionTestContext.ExtAbWiff)))
             {
-                var pressureTraces = msDataFile.GetPressureTraces();
+                var pressureTraces = msDataFile.GetQcTraces();
 
-                Assert.AreEqual("Column Pressure (channel 1)", pressureTraces[0].Name);
-                Assert.AreEqual(1148, pressureTraces[0].Pressures.Length);
-                Assert.AreEqual(0, pressureTraces[0].Times.First());
-                Assert.AreEqual(1470, pressureTraces[0].Pressures.First());
-                Assert.AreEqual(9.558333, pressureTraces[0].Times.Last(), 1e-6);
-                Assert.AreEqual(210, pressureTraces[0].Pressures.Last());
-
-                Assert.AreEqual("Column Pressure (channel 4)", pressureTraces[1].Name);
-                Assert.AreEqual(3508, pressureTraces[1].Pressures.Length);
-                Assert.AreEqual(0, pressureTraces[1].Times.First());
-                Assert.AreEqual(1396, pressureTraces[1].Pressures.First());
-                Assert.AreEqual(29.225, pressureTraces[1].Times.Last(), 1e-6);
-                Assert.AreEqual(1322, pressureTraces[1].Pressures.Last());
+                VerifyQcTrace(pressureTraces[0], "Column Pressure (channel 1)", 1148, 0, 9.558333, 1470, 210, "pressure", "psi");
+                VerifyQcTrace(pressureTraces[1], "Pump A Flowrate (channel 2)", 1148, 0, 9.558333, 91590, 89120, "volumetric flow rate", "uL/min");
+                VerifyQcTrace(pressureTraces[2], "Pump B Flowrate (channel 3)", 1148, 0, 9.558333, 0, 840, "volumetric flow rate", "uL/min");
+                VerifyQcTrace(pressureTraces[3], "Column Pressure (channel 4)", 3508, 0, 29.225, 1396, 1322, "pressure", "psi");
+                VerifyQcTrace(pressureTraces[4], "Pump A Flowrate (channel 5)", 3508, 0, 29.225, 7038, 7833, "volumetric flow rate", "uL/min");
+                VerifyQcTrace(pressureTraces[5], "Pump B Flowrate (channel 6)", 3508, 0, 29.225, 680, 151, "volumetric flow rate", "uL/min");
             }
         }
 
@@ -147,6 +140,23 @@ namespace pwiz.SkylineTestData
                 Assert.AreEqual(count, tic.Length);
                 Assert.AreEqual(maxIntensity, tic.Max());
             }
+        }
+
+        private static void VerifyQcTrace(MsDataFileImpl.QcTrace qcTrace,
+                                          string name, int count,
+                                          double firstTime, double lastTime,
+                                          double firstIntensity, double lastIntensity,
+                                          string measuredQuality, string intensityUnits)
+        {
+            Assert.AreEqual(name, qcTrace.Name);
+            Assert.AreEqual(measuredQuality, qcTrace.MeasuredQuality);
+            Assert.AreEqual(intensityUnits, qcTrace.IntensityUnits);
+            Assert.AreEqual(count, qcTrace.Times.Length);
+            Assert.AreEqual(qcTrace.Times.Length, qcTrace.Intensities.Length);
+            Assert.AreEqual(firstTime, qcTrace.Times.First());
+            Assert.AreEqual(firstIntensity, qcTrace.Intensities.First());
+            Assert.AreEqual(lastTime, qcTrace.Times.Last(), 1e-6);
+            Assert.AreEqual(lastIntensity, qcTrace.Intensities.Last());
         }
     }
 }

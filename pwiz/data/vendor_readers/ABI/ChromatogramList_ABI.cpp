@@ -327,7 +327,7 @@ PWIZ_API_DECL void ChromatogramList_ABI::createIndex() const
     for (int i = 0, end = wifffile_->getADCTraceCount(sample); i < end; ++i)
     {
         string name = wifffile_->getADCTraceName(sample, i);
-        if (!bal::icontains(name, "Pressure"))
+        if (!bal::icontains(name, "Pressure") && !bal::icontains(name, "Flow"))
             continue;
 
         bal::replace_all(name, "AAO Companion App. -", "");

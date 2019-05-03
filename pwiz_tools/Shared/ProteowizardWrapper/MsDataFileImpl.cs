@@ -616,29 +616,44 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
-        public class PressureTrace
+        public class QcTrace
         {
-            public PressureTrace(Chromatogram c)
+            public QcTrace(Chromatogram c)
             {
                 Name = c.id;
+                if (Name.ToLowerInvariant().Contains(@"pressure"))
+                {
+                    MeasuredQuality = "pressure";
+                    IntensityUnits = "psi";
+                }
+                else if (Name.ToLowerInvariant().Contains(@"flow"))
+                {
+                    MeasuredQuality = "volumetric flow rate";
+                    IntensityUnits = "uL/min";
+                }
+                else
+                    throw new InvalidDataException($"unsupported chromatogram type (not pressure or flow rate): {c.id}");
                 Times = c.getTimeArray().data.Storage();
-                Pressures = c.binaryDataArrays[1].data.Storage();
+                Intensities = c.binaryDataArrays[1].data.Storage();
             }
 
             public string Name { get; private set; }
             public double[] Times { get; private set; }
-            public double[] Pressures { get; private set; }
+            public double[] Intensities { get; private set; }
+            public string MeasuredQuality { get; private set; }
+            public string IntensityUnits { get; private set; }
         }
 
-        public List<PressureTrace> GetPressureTraces()
+        public List<QcTrace> GetQcTraces()
         {
             if (ChromatogramList == null)
                 return null;
 
-            var result = new List<PressureTrace>();
+            var result = new List<QcTrace>();
             for (int i = 0; i < ChromatogramList.size(); ++i)
             {
-                if (!ChromatogramList.chromatogramIdentity(i).id.ToLower().Contains("pressure"))
+                if (!ChromatogramList.chromatogramIdentity(i).id.ToLower().Contains(@"pressure") &&
+                    !ChromatogramList.chromatogramIdentity(i).id.ToLower().Contains(@"flow"))
                     continue;
 
                 using (var chromatogram = ChromatogramList.chromatogram(i, true))
@@ -646,7 +661,7 @@ namespace pwiz.ProteowizardWrapper
                     if (chromatogram == null)
                         return null;
 
-                    result.Add(new PressureTrace(chromatogram));
+                    result.Add(new QcTrace(chromatogram));
                 }
             }
             return result;
