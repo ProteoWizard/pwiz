@@ -3303,7 +3303,7 @@ namespace pwiz.Skyline
 
         private void ShowPeptideSettingsUI(IWin32Window parent, PeptideSettingsUI.TABS? tab)
         {
-            using (PeptideSettingsUI ps = new PeptideSettingsUI(this, _libraryManager) { TabControlSel = tab })
+            using (PeptideSettingsUI ps = new PeptideSettingsUI(this, _libraryManager, tab ))
             {
                 var oldStandard = RCalcIrtStandard();
                 
