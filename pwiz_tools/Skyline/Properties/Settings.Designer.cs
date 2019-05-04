@@ -2733,5 +2733,29 @@ namespace pwiz.Skyline.Properties {
                 this["UIMode"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int MoleculeSettingsTab {
+            get {
+                return ((int)(this["MoleculeSettingsTab"]));
+            }
+            set {
+                this["MoleculeSettingsTab"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int MixedMoleculeSettingsTab {
+            get {
+                return ((int)(this["MixedMoleculeSettingsTab"]));
+            }
+            set {
+                this["MixedMoleculeSettingsTab"] = value;
+            }
+        }
     }
 }
