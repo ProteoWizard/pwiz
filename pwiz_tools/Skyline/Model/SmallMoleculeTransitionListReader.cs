@@ -1138,10 +1138,17 @@ namespace pwiz.Skyline.Model
                 countValues++;
                 if (adduct.IsEmpty)
                 {
-                    // When no adduct is given, either it's implied (de)protonation, or formula is inherently charged. Formula and mz are a clue.
+                    // When no adduct is given, either it's implied (de)protonation, or formula is inherently charged. Formula and mz are a clue. Or it might be a precursor declaration.
                     try
                     {
-                      adduct = DetermineAdductFromFormulaChargeAndMz(formula, charge.Value, mz);
+                        if (precursorInfo != null && charge.Value.Equals(precursorInfo.Adduct.AdductCharge) && Math.Abs(mz - precursorInfo.Mz) <= MzMatchTolerance )
+                        {
+                            adduct = precursorInfo.Adduct; // Charge matches, mz matches, this is probably a precursor fragment declaration
+                        }
+                        else
+                        {
+                            adduct = DetermineAdductFromFormulaChargeAndMz(formula, charge.Value, mz);
+                        }
                     }
                     catch (Exception e)
                     {
