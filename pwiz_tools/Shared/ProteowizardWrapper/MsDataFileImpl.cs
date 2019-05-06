@@ -616,6 +616,18 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
+        public abstract class QcTraceQuality
+        {
+            public const string Pressure = @"pressure";
+            public const string FlowRate = @"volumetric flow rate";
+        }
+
+        public abstract class QcTraceUnits
+        {
+            public const string PoundsPerSquareInch = @"psi";
+            public const string MicrolitersPerMinute = @"uL/min";
+        }
+
         public class QcTrace
         {
             public QcTrace(Chromatogram c)
@@ -623,13 +635,13 @@ namespace pwiz.ProteowizardWrapper
                 Name = c.id;
                 if (Name.ToLowerInvariant().Contains(@"pressure"))
                 {
-                    MeasuredQuality = "pressure";
-                    IntensityUnits = "psi";
+                    MeasuredQuality = QcTraceQuality.Pressure;
+                    IntensityUnits = QcTraceUnits.PoundsPerSquareInch;
                 }
                 else if (Name.ToLowerInvariant().Contains(@"flow"))
                 {
-                    MeasuredQuality = "volumetric flow rate";
-                    IntensityUnits = "uL/min";
+                    MeasuredQuality = QcTraceQuality.FlowRate;
+                    IntensityUnits = QcTraceUnits.MicrolitersPerMinute;
                 }
                 else
                     throw new InvalidDataException($"unsupported chromatogram type (not pressure or flow rate): {c.id}");

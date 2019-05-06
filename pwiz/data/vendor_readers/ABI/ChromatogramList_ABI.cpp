@@ -231,12 +231,17 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, b
             WiffFile::ADCTrace adcTrace;
             wifffile_->getADCTrace(ie.sample, ie.transition, adcTrace);
 
-            // index currently only enumerate pressure traces
+            CVID units = CVID_Unknown;
+            if (bal::icontains(ie.id, "pressure"))
+                units = UO_pascal;
+            else if (bal::icontains(ie.id, "flow"))
+                units = UO_microliters_per_minute;
+
             if (getBinaryData)
-                result->setTimeIntensityArrays(adcTrace.x, adcTrace.y, UO_minute, UO_pascal);
+                result->setTimeIntensityArrays(adcTrace.x, adcTrace.y, UO_minute, units);
             else
             {
-                result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, UO_pascal);
+                result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, units);
                 result->defaultArrayLength = adcTrace.x.size();
             }
         }
