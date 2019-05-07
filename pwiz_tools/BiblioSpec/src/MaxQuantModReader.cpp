@@ -28,7 +28,7 @@ namespace BiblioSpec {
  * Construct MaxQuantModReader for reading modifications.xml file.
  */
 MaxQuantModReader::MaxQuantModReader(const char* xmlfilename,
-                                     set<MaxQuantModification>* modBank) : SAXHandler(),
+                                     map<string, MaxQuantModification>* modBank) : SAXHandler(),
     modBank_(modBank), fixedMods_(NULL), state_(ROOT_STATE)
 {
     this->setFileName(xmlfilename); // this is for the saxhandler
@@ -163,7 +163,7 @@ void MaxQuantModReader::endElement(const XML_Char* name)
         {
             if (curMod_.massDelta != 0.0)
             {
-                modBank_->insert(curMod_);
+                modBank_->insert(make_pair(curMod_.name, curMod_));
             }
             state_ = ROOT_STATE;
         }
@@ -299,7 +299,7 @@ void MaxQuantModReader::characters(const XML_Char *s, int len)
 /**
  * Return the mass of the given atomic composition.
  */
-double MaxQuantModReader::parseComposition(string composition)
+double MaxQuantModReader::parseComposition(const string& composition)
 {
     double deltaMass = 0.0;
 
@@ -363,7 +363,7 @@ double MaxQuantModReader::parseComposition(string composition)
 /**
  * Converts a position string from a mqpar file into a MAXQUANT_MOD_POSITION.
  */
-MaxQuantModification::MAXQUANT_MOD_POSITION MaxQuantModReader::stringToPosition(string positionString)
+MaxQuantModification::MAXQUANT_MOD_POSITION MaxQuantModReader::stringToPosition(const string& positionString)
 {
     const char* positionStringChars = positionString.c_str();
 
@@ -381,11 +381,11 @@ MaxQuantModification::MAXQUANT_MOD_POSITION MaxQuantModReader::stringToPosition(
     }
     else if (isIElement(positionStringChars, "anyNterm"))
     {
-        return MaxQuantModification::PROTEIN_C_TERM;
+        return MaxQuantModification::ANY_N_TERM;
     }
     else if (isIElement(positionStringChars, "anyCterm"))
     {
-        return MaxQuantModification::PROTEIN_C_TERM;
+        return MaxQuantModification::ANY_C_TERM;
     }
     else if (isIElement(positionStringChars, "notNterm"))
     {

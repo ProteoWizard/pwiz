@@ -28,6 +28,8 @@
 #include "MaxQuantReader.h"
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "boost/range/algorithm_ext/insert.hpp"
+
 namespace filesystem = bfs;
 
 namespace BiblioSpec {
@@ -121,7 +123,7 @@ string checkForModificationsFile(filesystem::path parentPath, const char *filena
 	return modFile;
 }
 
-bool parseModificationsFile(const char* modFile, set<MaxQuantModification>& modBank)
+bool parseModificationsFile(const char* modFile, map<string, MaxQuantModification>& modBank)
 {
 	Verbosity::comment(V_DETAIL, "Parsing modification file %s",
 		modFile);
@@ -256,6 +258,11 @@ void MaxQuantReader::initFixedModifications()
         return;
     }
 
+    // initialize fixed mod vectors for supported positions
+    fixedModBank_[MaxQuantModification::ANYWHERE].clear();
+    fixedModBank_[MaxQuantModification::ANY_N_TERM].clear();
+    fixedModBank_[MaxQuantModification::ANY_C_TERM].clear();
+
     // add all fixed mods to fixedModBank_
     for (set<string>::iterator iter = fixedMods.begin();
          iter != fixedMods.end();
@@ -270,26 +277,15 @@ void MaxQuantReader::initFixedModifications()
                              "modification.", iter->c_str());
             return;
         }
-
-        if (lookup->position != MaxQuantModification::ANYWHERE)
+        /*if (lookup->position != MaxQuantModification::ANYWHERE)
         {
             Verbosity::warn("Fixed mod '%s' will not be used (position is `not 'anywhere').",
                             iter->c_str());
-        }
+        }*/
 
-        map< MaxQuantModification::MAXQUANT_MOD_POSITION,
-            vector<const MaxQuantModification*> >::iterator vectorSearch =
-            fixedModBank_.find(lookup->position);
-        if (vectorSearch == fixedModBank_.end())
-        {
-            vector<const MaxQuantModification*> tmpMods;
-            tmpMods.push_back(lookup);
-            fixedModBank_[lookup->position] = tmpMods;
-        }
-        else
-        {
-            vectorSearch->second.push_back(lookup);
-        }
+        Verbosity::debug("Adding fixed mod '%s' (position %d).", iter->c_str(), lookup->position);
+
+        fixedModBank_[lookup->position].push_back(lookup);
     }
 
     // add all labels to labelBank_
@@ -650,7 +646,7 @@ void MaxQuantReader::addModsToVector(vector<SeqMod>& v, const string& modificati
         --sequenceLength;
     }
     // or before the final modification definition, which MaxQuant uses to destinguish
-    // between N-terminal modifications and modifications on the N-terminal amino acid
+    // between C-terminal modifications and modifications on the C-terminal amino acid
     if (modSequence[sequenceLength - 1] == ')')
     {
         size_t openPos = modSequence.find_last_of('(');
@@ -662,25 +658,22 @@ void MaxQuantReader::addModsToVector(vector<SeqMod>& v, const string& modificati
     }
 
     // get fixed modifications by position
-    vector<const MaxQuantModification*> modsAnywhere;
+    const vector<const MaxQuantModification*>& modsAnywhere = fixedModBank_.find(MaxQuantModification::ANYWHERE)->second;
+    const vector<const MaxQuantModification*>& modsAnyNTerm = fixedModBank_.find(MaxQuantModification::ANY_N_TERM)->second;
+    const vector<const MaxQuantModification*>& modsAnyCTerm = fixedModBank_.find(MaxQuantModification::ANY_C_TERM)->second;
+    
     /* Do not use since we don't know where the peptide is in relation to the Protein N-term/C-term
     vector<const MaxQuantModification*> modsProteinNTerm;
     vector<const MaxQuantModification*> modsProteinCTerm;
-    vector<const MaxQuantModification*> modsAnyNTerm;
-    vector<const MaxQuantModification*> modsAnyCTerm;
     vector<const MaxQuantModification*> modsNotNTerm;
     vector<const MaxQuantModification*> modsNotCTerm;
     */
 
-    map< MaxQuantModification::MAXQUANT_MOD_POSITION, vector<const MaxQuantModification*> >::iterator search;
-    search = fixedModBank_.find(MaxQuantModification::ANYWHERE);
-    if (search != fixedModBank_.end())
-    {
-        modsAnywhere = search->second;
-    }
+    for (const auto& mod : modsAnyNTerm) { v.emplace_back(1, mod->massDelta); }
 
     // iterate over sequence
     int modsFound = 0;
+    SeqMod seqMod;
     for (int i = 0; i < sequenceLength; i++)
     {
         switch (modSequence[i])
@@ -688,7 +681,11 @@ void MaxQuantReader::addModsToVector(vector<SeqMod>& v, const string& modificati
         case '(':
             ++modsFound;
             // which mod is it?
-            v.push_back(searchForMod(modNames, modSequence, i));
+            seqMod = searchForMod(modNames, modSequence, i);
+            // add the mod unless it's in the modsAnyCTerm list
+            if (find_if(modsAnyCTerm.begin(), modsAnyCTerm.end(), [&](const MaxQuantModification* maxQuantMod) { return maxQuantMod->massDelta == seqMod.deltaMass; }) == modsAnyCTerm.end())
+                v.push_back(seqMod);
+
             // advance iterator past modification
             i += 3;
             break;
@@ -703,12 +700,12 @@ void MaxQuantReader::addModsToVector(vector<SeqMod>& v, const string& modificati
                                     modSequence[i], modSequence.c_str(), lineNum_);
             }
             // check for fixed mods
-            vector<SeqMod> fixedMods =
-                getFixedMods(modSequence[i], (i+1) - 4*modsFound, modsAnywhere);
-            v.insert(v.end(), fixedMods.begin(), fixedMods.end());
+            boost::range::insert(v, v.end(), getFixedMods(modSequence[i], (i + 1) - 4 * modsFound, modsAnywhere));
             break;
         }
     }
+
+    for (const auto& mod : modsAnyCTerm) { v.emplace_back(sequenceLength - 4 * modsFound, mod->massDelta); }
 
     if (modsFound < (int)modNames.size())
     {
