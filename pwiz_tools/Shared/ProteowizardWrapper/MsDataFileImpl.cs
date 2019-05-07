@@ -94,6 +94,12 @@ namespace pwiz.ProteowizardWrapper
             return FULL_READER_LIST.readIds(path);
         }
 
+        public static bool SupportsMultipleSamples(string path)
+        {
+            path = path.ToLowerInvariant();
+            return path.EndsWith(@".wiff") || path.EndsWith(@".wiff2");
+        }
+
         public const string PREFIX_TOTAL = "SRM TIC ";
         public const string PREFIX_SINGLE = "SRM SIC ";
         public const string PREFIX_PRECURSOR = "SIM SIC ";
