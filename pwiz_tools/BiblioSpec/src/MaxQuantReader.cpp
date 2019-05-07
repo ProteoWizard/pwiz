@@ -683,7 +683,7 @@ void MaxQuantReader::addModsToVector(vector<SeqMod>& v, const string& modificati
             // which mod is it?
             seqMod = searchForMod(modNames, modSequence, i);
             // add the mod unless it's in the modsAnyCTerm list
-            if (find_if(modsAnyCTerm.begin(), modsAnyCTerm.end(), [&](const auto& maxQuantMod) { return maxQuantMod->massDelta == seqMod.deltaMass; }) == modsAnyCTerm.end())
+            if (find_if(modsAnyCTerm.begin(), modsAnyCTerm.end(), [&](const MaxQuantModification* maxQuantMod) { return maxQuantMod->massDelta == seqMod.deltaMass; }) == modsAnyCTerm.end())
                 v.push_back(seqMod);
 
             // advance iterator past modification
