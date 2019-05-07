@@ -73,6 +73,10 @@ class WiffFile2Impl : public WiffFile
     virtual SpectrumPtr getSpectrum(int sample, int period, int experiment, int cycle) const;
     virtual SpectrumPtr getSpectrum(ExperimentPtr experiment, int cycle) const;
 
+    virtual int getADCTraceCount(int sampleIndex) const { return 0; }
+    virtual std::string getADCTraceName(int sampleIndex, int traceIndex) const { throw std::out_of_range("WIFF2 does not support ADC traces"); }
+    virtual void getADCTrace(int sampleIndex, int traceIndex, ADCTrace& trace) const { throw std::out_of_range("WIFF2 does not support ADC traces"); };
+
     void setSample(int sample) const;
     void setPeriod(int sample, int period) const;
     void setExperiment(int sample, int period, int experiment) const;
@@ -458,8 +462,8 @@ void Experiment2Impl::initializeBPC() const
 
         // HACK: the current version version of SciexToolKit has Clearcore2.Data.DataAccess.SampleData.BasePeakChromatogramSettings set to internal but it must be used to get the BPC
         auto bpcsType = IExperiment::typeid->Assembly->GetType("Clearcore2.Data.DataAccess.SampleData.BasePeakChromatogramSettings");
-        auto bpcsCtor = bpcsType->GetConstructor(gcnew array<Type^>{ Int32::typeid, array<double>::typeid, array<double>::typeid });
-        auto bpcs = bpcsCtor->Invoke(gcnew array<Object^>{ gcnew Int32(0), nullptr, nullptr });
+        auto bpcsCtor = bpcsType->GetConstructor(gcnew array<Type^>{ Double::typeid, array<double>::typeid, array<double>::typeid });
+        auto bpcs = bpcsCtor->Invoke(gcnew array<Object^>{ gcnew Double(0), nullptr, nullptr });
         auto bpcsMethod = IExperiment::typeid->GetMethod("GetBasePeakChromatogram", gcnew array<Type^>{ bpcsType });
         auto bpmMethod = IExperiment::typeid->GetMethod("GetBasePeakMass", gcnew array<Type^>{ Int32::typeid, bpcsType });
 
@@ -467,12 +471,13 @@ void Experiment2Impl::initializeBPC() const
         ToStdVectorsFromXyData(bpc, cycleTimes_, basePeakIntensities_);
         
         basePeakMZs_.resize(cycleTimes_.size());
-        auto bpmArgs = gcnew array<Object^> { gcnew Int32(0), nullptr };
+        auto bpmArgs = gcnew array<Object^> { nullptr, nullptr };
         for (size_t i = 0; i < cycleTimes_.size(); ++i)
         {
             //basePeakMZs_[i] = msExperiment->GetBasePeakMass(i, nullptr);
             bpmArgs[0] = (int) i;
-            basePeakMZs_[i] = (double) bpmMethod->Invoke(msExperiment, bpmArgs);
+            double mz = (double) bpmMethod->Invoke(msExperiment, bpmArgs);
+            basePeakMZs_[i] = mz;
         }
         
         initializedBPC_ = true;

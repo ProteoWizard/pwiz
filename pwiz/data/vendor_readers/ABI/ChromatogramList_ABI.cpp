@@ -103,35 +103,29 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, b
         {
             map<double, double> fullFileTIC;
 
-            int sampleCount = wifffile_->getSampleCount();
-            for (int i=1; i <= sampleCount; ++i)
+            try
             {
-                try
+                int periodCount = wifffile_->getPeriodCount(ie.sample);
+                for (int ii=1; ii <= periodCount; ++ii)
                 {
-                    int periodCount = wifffile_->getPeriodCount(i);
-                    for (int ii=1; ii <= periodCount; ++ii)
+                    //Console::WriteLine("Sample {0}, Period {1}", i, ii);
+
+                    int experimentCount = wifffile_->getExperimentCount(ie.sample, ii);
+                    for (int iii=1; iii <= experimentCount; ++iii)
                     {
-                        //Console::WriteLine("Sample {0}, Period {1}", i, ii);
+                        ExperimentPtr msExperiment = experimentsMap_.find(pair<int, int>(ii, iii))->second;
 
-                        int experimentCount = wifffile_->getExperimentCount(i, ii);
-                        for (int iii=1; iii <= experimentCount; ++iii)
-                        {
-                            ExperimentPtr msExperiment = (i == sample
-                                ? experimentsMap_.find(pair<int, int>(ii, iii))->second
-                                : wifffile_->getExperiment(i, ii, iii));
-
-                            // add current experiment TIC to full file TIC
-                            vector<double> times, intensities;
-                            msExperiment->getTIC(times, intensities);
-                            for (int iiii = 0, end = intensities.size(); iiii < end; ++iiii)
-                                fullFileTIC[times[iiii]] += intensities[iiii];
-                        }
+                        // add current experiment TIC to full file TIC
+                        vector<double> times, intensities;
+                        msExperiment->getTIC(times, intensities);
+                        for (int iiii = 0, end = intensities.size(); iiii < end; ++iiii)
+                            fullFileTIC[times[iiii]] += intensities[iiii];
                     }
                 }
-                catch (exception&)
-                {
-                    // TODO: log warning
-                }
+            }
+            catch (exception&)
+            {
+                // TODO: log warning
             }
 
             result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, MS_number_of_detector_counts);
@@ -231,6 +225,27 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, b
             }
         }
         break;
+
+        case MS_chromatogram_type:
+        {
+            WiffFile::ADCTrace adcTrace;
+            wifffile_->getADCTrace(ie.sample, ie.transition, adcTrace);
+
+            CVID units = CVID_Unknown;
+            if (bal::icontains(ie.id, "pressure"))
+                units = UO_pascal;
+            else if (bal::icontains(ie.id, "flow"))
+                units = UO_microliters_per_minute;
+
+            if (getBinaryData)
+                result->setTimeIntensityArrays(adcTrace.x, adcTrace.y, UO_minute, units);
+            else
+            {
+                result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, units);
+                result->defaultArrayLength = adcTrace.x.size();
+            }
+        }
+        break;
     }
 
     return result;
@@ -243,6 +258,7 @@ PWIZ_API_DECL void ChromatogramList_ABI::createIndex() const
     IndexEntry& ie = index_.back();
     ie.index = index_.size()-1;
     ie.id = "TIC";
+    ie.sample = sample;
     ie.chromatogramType = MS_TIC_chromatogram;
     idToIndexMap_[ie.id] = ie.index;
 
@@ -311,6 +327,26 @@ PWIZ_API_DECL void ChromatogramList_ABI::createIndex() const
                 idToIndexMap_[ie.id] = ie.index;
             }
         }
+    }
+
+    for (int i = 0, end = wifffile_->getADCTraceCount(sample); i < end; ++i)
+    {
+        string name = wifffile_->getADCTraceName(sample, i);
+        if (!bal::icontains(name, "Pressure") && !bal::icontains(name, "Flow"))
+            continue;
+
+        bal::replace_all(name, "AAO Companion App. -", "");
+        bal::trim(name);
+        name += " (channel " + lexical_cast<string>(i + 1) + ")";
+
+        index_.push_back(IndexEntry());
+        IndexEntry& ie = index_.back();
+        ie.index = index_.size() - 1;
+        ie.id = name;
+        ie.sample = sample;
+        ie.transition = i;
+        ie.chromatogramType = MS_chromatogram_type;
+        idToIndexMap_[ie.id] = ie.index;
     }
 
     size_ = index_.size();

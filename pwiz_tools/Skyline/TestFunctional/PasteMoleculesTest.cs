@@ -109,6 +109,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var docEmpty = NewDocument();
 
+            TestAmbiguousPrecursorFragment();
             TestPerTransitionValues();
             TestToolServiceAccess();
             TestLabelsNoFormulas();
@@ -1317,6 +1318,31 @@ namespace pwiz.SkylineTestFunctional
                 }
             }
             throw new ApplicationException(message.ToString(), exception);
+        }
+
+        private void TestAmbiguousPrecursorFragment()
+        {
+            // Check that we understand this first line to be a precursor transition - we were getting confused 
+            // over "M-H" precursor adduct vs "-1" fragment charge, they're describing the same thing of course
+            var input =
+                "Molecule List Name,Precursor Name,Precursor m/z,Precursor Adduct,Precursor Charge,Explicit Retention Time,Product m/z,Product Charge,Explicit Collision Energy\r\n" +
+                ", \"(6R)-5,6,7,8-tetrahydrobiopterin 1\",344.1364,[M-H],-1,2.8,344.1364,-1,35\r\n" +
+                ", \"(6R)-5,6,7,8-tetrahydrobiopterin 1\",344.1364,[M-H],-1,2.8,147.9208,-1,35\r\n";
+
+            var docOrig = NewDocument();
+            SetClipboardText(input);
+
+            // Paste directly into targets area
+            RunUI(() => SkylineWindow.Paste());
+
+            var pastedDoc = WaitForDocumentChange(docOrig);
+            Assume.AreEqual(1, pastedDoc.MoleculeGroupCount);
+            Assume.AreEqual(1, pastedDoc.MoleculeCount);
+            var transitions = pastedDoc.MoleculeTransitions.ToArray();
+            Assume.AreEqual(1, transitions.Count(t => t.IsMs1)); // Formerly we saw both as fragment transitions
+            Assume.AreEqual(1, transitions.Count(t => !t.IsMs1));
+            NewDocument();
+
         }
     }  
 }
