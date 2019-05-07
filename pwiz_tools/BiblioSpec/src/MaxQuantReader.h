@@ -196,7 +196,7 @@ private:
     MaxQuantPSM* curMaxQuantPSM_; // use this instead of curPSM_
     vector<MaxQuantColumnTranslator> targetColumns_; // columns to extract
     set<string> optionalColumns_; // columns that are optional
-    set<MaxQuantModification> modBank_;   // full mod name -> delta mass
+    map<string, MaxQuantModification> modBank_;   // full mod name -> delta mass
     map< MaxQuantModification::MAXQUANT_MOD_POSITION, vector<const MaxQuantModification*> > fixedModBank_;
     vector<MaxQuantLabels> labelBank_;
 
