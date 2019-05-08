@@ -134,6 +134,9 @@ namespace pwiz.SkylineTestData
 
         private static void VerifyTicChromatogram(string path, int count, double maxIntensity, int sampleIndex = 0)
         {
+            if (!MsDataFileImpl.SupportsMultipleSamples(path))
+                sampleIndex = 0;
+
             using (var msDataFile = new MsDataFileImpl(path, sampleIndex))
             {
                 var tic = msDataFile.GetTotalIonCurrent();

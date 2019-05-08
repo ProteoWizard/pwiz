@@ -198,6 +198,8 @@
          <neucodeIntensityMode>0</neucodeIntensityMode>
          <fixedModifications>
             <string>Carbamidomethyl (C)</string>
+            <string>Carbamyl (N-term)</string>
+            <string>Amidated (C-term)</string>
          </fixedModifications>
          <enzymes>
             <string>Trypsin/P</string>
