@@ -24,6 +24,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -42,8 +43,7 @@ namespace AutoQC
         // ItemCheck and ItemChecked events on the listview are ignored until then.
         private bool _loaded;
 
-        public const bool IS_DAILY = false;
-        public const string SKYLINE_RUNNER = IS_DAILY ? "SkylineDailyRunner.exe" : "SkylineRunner.exe";
+        public const string SKYLINE_RUNNER = Program.IsDaily ? "SkylineDailyRunner.exe" : "SkylineRunner.exe";
 
         // Path to SkylineRunner.exe / SkylineDailyRunner.exe
         // Expect SkylineRunner to be in the same directory as AutoQC
@@ -67,10 +67,15 @@ namespace AutoQC
 
             UpdateLabelVisibility();
 
+            UpdateSettingsTab();
+
             Shown += ((sender, args) =>
             {
                 _loaded = true;
-                RunEnabledConfigurations();
+                if (Settings.Default.KeepAutoQcRunning)
+                {
+                    RunEnabledConfigurations();
+                }
             });
         }
 
@@ -82,6 +87,13 @@ namespace AutoQC
             _configRunners = new Dictionary<string, ConfigRunner>();
             foreach (var config in sortedConfig)
             {
+                if (config.IsEnabled && !Properties.Settings.Default.KeepAutoQcRunning)
+                {
+                    // If the config was running last time AutoQC Loader was running (and properties saved), but we are not 
+                    // automatically starting configs on startup, change its IsEnabled state
+                    config.IsEnabled = false;
+                }
+
                 AddConfiguration(config);
             }
         }
@@ -114,7 +126,7 @@ namespace AutoQC
                 if (!configRunner.IsConfigEnabled())
                     continue;
                 Program.LogInfo(string.Format("Starting configuration {0}", configRunner.GetConfigName()));
-                StartConfigRunner(configRunner); 
+                StartConfigRunner(configRunner);
             }
         }
 
@@ -155,7 +167,7 @@ namespace AutoQC
 
         private void ShowErrorDialog(string title, string message)
         {
-            MessageBox.Show(this, message, title, MessageBoxButtons.OK);    
+            MessageBox.Show(this, message, title, MessageBoxButtons.OK);
         }
 
         #region event handlers
@@ -249,7 +261,7 @@ namespace AutoQC
         {
             Settings.Default.Save();
 
-            var dialog = new SaveFileDialog { Title = "Save configurations...", Filter = "XML Files(*.xml)|*.xml" };
+            var dialog = new SaveFileDialog {Title = "Save configurations...", Filter = "XML Files(*.xml)|*.xml"};
             if (dialog.ShowDialog(this) != DialogResult.OK) return;
 
             var filePath = dialog.FileName;
@@ -273,7 +285,7 @@ namespace AutoQC
                     using (var reader = XmlReader.Create(stream))
                     {
                         while (reader.IsStartElement())
-                        {  
+                        {
                             if (reader.Name == "autoqc_config")
                             {
                                 AutoQcConfig config = AutoQcConfig.Deserialize(reader);
@@ -296,7 +308,7 @@ namespace AutoQC
             {
                 MessageBox.Show(string.Format("Could not import configurations from file {0}", filePath),
                     "Import Configurations",
-                    MessageBoxButtons.OK);  
+                    MessageBoxButtons.OK);
             }
 
             var validationErrors = new List<string>();
@@ -311,7 +323,7 @@ namespace AutoQC
                     duplicateConfigs.Add(config.Name);
                     continue;
                 }
-                
+
                 try
                 {
                     config.Validate();
@@ -348,7 +360,7 @@ namespace AutoQC
                 }
             }
             MessageBox.Show(message.ToString(), "Import Configurations", MessageBoxButtons.OK);
-            
+
         }
 
         private void listViewConfigs_ItemCheck(object sender, ItemCheckEventArgs e)
@@ -410,6 +422,10 @@ namespace AutoQC
             if (configRunner == null)
                 return null;
             configRunner.Config.IsEnabled = enabled;
+            var configList =
+                Properties.Settings.Default
+                    .ConfigList; // NOTE: This is required for settings to get updated.
+            Properties.Settings.Default.Save(); // Save the configuration state
             return configRunner;
         }
 
@@ -496,13 +512,13 @@ namespace AutoQC
 
             textBoxLog.Clear(); // clear any existing log
 
-            if (runner == null) 
+            if (runner == null)
             {
                 MessageBox.Show(string.Format("No configuration found for name \"{0}\"", configName), "",
                     MessageBoxButtons.OK);
                 return;
             }
-            
+
             if (logger == null)
             {
                 MessageBox.Show("Log for this configuration is not yet initialized.", "",
@@ -551,7 +567,7 @@ namespace AutoQC
                 var arg = "/select, \"" + runner.GetLogger().GetFile() + "\"";
                 Process.Start("explorer.exe", arg);
             }
-            else if(Directory.Exists(runner.GetLogDirectory()))
+            else if (Directory.Exists(runner.GetLogDirectory()))
             {
                 Process.Start(runner.GetLogDirectory());
             }
@@ -719,6 +735,15 @@ namespace AutoQC
             }
         }
 
+        private void UpdateSettingsTab()
+        {
+            cb_minimizeToSysTray.Checked = Settings.Default.MinimizeToSystemTray;
+            cb_keepRunning.Checked = Settings.Default.KeepAutoQcRunning;
+
+            cb_minimizeToSysTray.CheckedChanged += cb_minimizeToSysTray_CheckedChanged;
+            cb_keepRunning.CheckedChanged += cb_keepRunning_CheckedChanged;
+        }
+
         public void UpdateConfiguration(AutoQcConfig oldConfig, AutoQcConfig newConfig)
         {
             var index = -1;
@@ -760,7 +785,7 @@ namespace AutoQC
 
                 ScrollToLogEnd();
             });
-            
+
         }
 
         private void TrimDisplayedLog()
@@ -781,7 +806,7 @@ namespace AutoQC
                 textBoxLog.SelectionStart = 0;
                 textBoxLog.SelectionLength = textBoxLog.GetFirstCharIndexFromLine(1); // 0-based index
                 textBoxLog.SelectionColor = Color.Red;
-               
+
                 textBoxLog.SelectionStart = textBoxLog.TextLength;
                 textBoxLog.SelectionColor = textBoxLog.ForeColor;
                 textBoxLog.ReadOnly = true; // Make text box read-only
@@ -792,7 +817,7 @@ namespace AutoQC
         {
             RunUI(() =>
             {
-                if (trim )
+                if (trim)
                 {
                     TrimDisplayedLog();
                 }
@@ -800,10 +825,10 @@ namespace AutoQC
                 textBoxLog.SelectionStart = textBoxLog.TextLength;
                 textBoxLog.SelectionLength = 0;
                 textBoxLog.SelectionColor = Color.Red;
-                LogToUi(text, scrollToEnd, 
+                LogToUi(text, scrollToEnd,
                     false); // Already trimmed
                 textBoxLog.SelectionColor = textBoxLog.ForeColor;
-            });      
+            });
         }
 
         public void LogLinesToUi(List<string> lines)
@@ -815,7 +840,7 @@ namespace AutoQC
                     textBoxLog.AppendText(line);
                     textBoxLog.AppendText(Environment.NewLine);
                 }
-            });   
+            });
         }
 
         public void LogErrorLinesToUi(List<string> lines)
@@ -830,7 +855,7 @@ namespace AutoQC
                 }
                 textBoxLog.Select(selectionStart, textBoxLog.TextLength);
                 textBoxLog.SelectionColor = Color.Red;
-            });      
+            });
         }
 
         public void DisplayError(string title, string message)
@@ -867,7 +892,7 @@ namespace AutoQC
             {
                 try
                 {
-                    return (T)Invoke(function);
+                    return (T) Invoke(function);
                 }
                 catch (ObjectDisposedException)
                 {
@@ -878,6 +903,69 @@ namespace AutoQC
                 return function();
             }
             return default(T);
+        }
+
+        private void systray_icon_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            Show();
+            WindowState = FormWindowState.Normal;
+            systray_icon.Visible = false;
+        }
+
+        private void MainForm_Resize(object sender, EventArgs e)
+        {
+            //If the form is minimized hide it from the task bar  
+            //and show the system tray icon (represented by the NotifyIcon control)  
+            if (WindowState == FormWindowState.Minimized && Properties.Settings.Default.MinimizeToSystemTray)
+            {
+                Hide();
+                systray_icon.Visible = true;
+            }
+        }
+
+        private void cb_keepRunning_CheckedChanged(object sender, EventArgs e)
+        {
+            cb_keepRunning.Enabled = false;
+            var enable = cb_keepRunning.Checked;
+            try
+            {
+                ChangeKeepRunningState(enable);
+            }
+            catch (Exception ex)
+            {
+                var err = $"Error {(enable ? "enabling" : "disabling")} \"Keep AutoQC Loader running\"";
+                Program.LogError(err, ex);
+                ShowErrorDialog("Error Changing Settings",
+                    $"{err}.{Environment.NewLine}{Environment.NewLine}{ex.Message}{Environment.NewLine}{Environment.NewLine}{(ex.InnerException != null ? ex.InnerException.StackTrace : ex.StackTrace)}");
+
+                cb_keepRunning.CheckedChanged -= cb_keepRunning_CheckedChanged;
+                cb_keepRunning.Checked = !enable;
+                cb_keepRunning.CheckedChanged += cb_keepRunning_CheckedChanged;
+                cb_keepRunning.Enabled = true;
+                return;
+            }
+
+            Settings.Default.KeepAutoQcRunning = cb_keepRunning.Checked;
+            Settings.Default.Save();
+            cb_keepRunning.Enabled = true;
+        }
+
+        private void ChangeKeepRunningState(bool enable)
+        {
+            if (enable)
+            {
+                StartupManager.EnableKeepRunning();
+            }
+            else
+            {
+                StartupManager.DisableKeepRunning();
+            }
+        }
+
+        private void cb_minimizeToSysTray_CheckedChanged(object sender, EventArgs e)
+        {
+            Settings.Default.MinimizeToSystemTray = cb_minimizeToSysTray.Checked;
+            Settings.Default.Save();
         }
     }
 
