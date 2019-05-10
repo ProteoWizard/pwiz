@@ -33,13 +33,14 @@
     <software id="micrOTOFcontrol" version="5.0.71.422-9346-vc110">
       <cvParam cvRef="MS" accession="MS:1000726" name="micrOTOFcontrol" value=""/>
     </software>
-    <software id="pwiz_Reader_Bruker" version="3.0.19105">
+    <software id="pwiz_Reader_Bruker" version="3.0.19127">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
   <instrumentConfigurationList count="1">
     <instrumentConfiguration id="IC1">
       <referenceableParamGroupRef ref="CommonInstrumentParams"/>
+      <cvParam cvRef="MS" accession="MS:1000529" name="instrument serial number" value="1838271.23"/>
       <componentList count="5">
         <source order="1">
           <cvParam cvRef="MS" accession="MS:1000073" name="electrospray ionization" value=""/>

@@ -100,7 +100,9 @@ void initializeInstrumentConfigurationPtrs(MSData& msd,
     if (cvidModel == MS_Thermo_Electron_instrument_model)
         commonInstrumentParams->userParams.push_back(UserParam("instrument model", instData.Model));
     commonInstrumentParams->set(cvidModel);
-    commonInstrumentParams->set(MS_instrument_serial_number, instData.SerialNumber);
+
+    if (!instData.SerialNumber.empty())
+        commonInstrumentParams->set(MS_instrument_serial_number, instData.SerialNumber);
 
     // create instrument configuration templates based on the instrument model
     vector<InstrumentConfiguration> configurations = createInstrumentConfigurations(rawfile);

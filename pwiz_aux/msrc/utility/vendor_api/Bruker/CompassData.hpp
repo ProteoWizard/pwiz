@@ -310,6 +310,7 @@ struct PWIZ_API_DECL CompassData
     virtual InstrumentFamily getInstrumentFamily() const = 0;
     virtual int getInstrumentRevision() const = 0;
     virtual std::string getInstrumentDescription() const = 0;
+    virtual std::string getInstrumentSerialNumber() const = 0;
     virtual InstrumentSource getInstrumentSource() const = 0;
     virtual std::string getAcquisitionSoftware() const = 0;
     virtual std::string getAcquisitionSoftwareVersion() const = 0;

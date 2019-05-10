@@ -192,7 +192,13 @@ void fillInMetadata(const bfs::path& rootpath, MSData& msd, Reader_Bruker_Format
 
     initializeInstrumentConfigurationPtrs(msd, compassDataPtr, acquisitionSoftware);
     if (!msd.instrumentConfigurationPtrs.empty())
+    {
         msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
+
+        auto serialNumber = compassDataPtr->getInstrumentSerialNumber();
+        if (!serialNumber.empty())
+            msd.run.defaultInstrumentConfigurationPtr->set(MS_instrument_serial_number, serialNumber);
+    }
 
     msd.run.id = msd.id;
     msd.run.startTimeStamp = encode_xml_datetime(compassDataPtr->getAnalysisDateTime());

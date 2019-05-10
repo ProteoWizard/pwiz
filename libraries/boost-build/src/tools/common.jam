@@ -763,7 +763,7 @@ rule hard-link
 }
 
 
-if [ MATCH (--verbose) : [ modules.peek : ARGV ] ]
+if --verbose in [ modules.peek : ARGV ]
 {
     actions copy
     {
