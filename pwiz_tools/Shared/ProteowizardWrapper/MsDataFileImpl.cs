@@ -364,6 +364,12 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
+        public string GetInstrumentSerialNumber()
+        {
+            return _msDataFile.instrumentConfigurationList.FirstOrDefault(o => o.hasCVParam(CVID.MS_instrument_serial_number))
+                                                          ?.cvParam(CVID.MS_instrument_serial_number).value.ToString();
+        }
+
         private static bool HasInfo(UserParam uParam)
         {
             return !uParam.empty() && !String.IsNullOrEmpty(uParam.value) &&

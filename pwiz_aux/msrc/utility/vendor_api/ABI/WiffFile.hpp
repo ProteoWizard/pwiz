@@ -227,6 +227,7 @@ class PWIZ_API_DECL WiffFile
     virtual const std::vector<std::string>& getSampleNames() const = 0;
 
     virtual InstrumentModel getInstrumentModel() const = 0;
+    virtual std::string getInstrumentSerialNumber() const = 0;
     virtual IonSourceType getIonSourceType() const = 0;
     virtual boost::local_time::local_date_time getSampleAcquisitionTime(int sample, bool adjustToHostTime) const = 0;
 

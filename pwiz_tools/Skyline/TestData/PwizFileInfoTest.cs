@@ -117,6 +117,29 @@ namespace pwiz.SkylineTestData
             }
         }
 
+        [TestMethod]
+        public void TestInstrumentSerialNumbers()
+        {
+            if (Skyline.Program.NoVendorReaders)
+                return;
+
+            const string testZipPath = @"TestData\PwizFileInfoTest.zip";
+            var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+
+            if (ExtensionTestContext.CanImportAbWiff2)
+                VerifySerialNumber(testFilesDir.GetTestPath("OnyxTOFMS.wiff2"), null); // WIFF2 file with empty serial number
+
+            VerifySerialNumber(testFilesDir.GetTestPath("051309_digestion.wiff"), "U016050603");
+            VerifySerialNumber(testFilesDir.GetTestPath("081809_100fmol-MichromMix-05.d"), "50331873");
+            VerifySerialNumber(testFilesDir.GetTestPath("10nmol_Negative_MS_ID_ON_055.lcd"), null); // Shimadzu does not provide serial number
+            VerifySerialNumber(testFilesDir.GetTestPath("CE_Vantage_15mTorr_0001_REP1_01.raw"), null); // Thermo RAW file with empty serial number
+            VerifySerialNumber(testFilesDir.GetTestPath("160109_Mix1_calcurve_075.raw"), null); // Waters does not provide serial number
+
+            const string testZipPath2 = @"TestData\Results\ThermoQuant.zip";
+            var testFilesDir2 = new TestFilesDir(TestContext, testZipPath2);
+            VerifySerialNumber(testFilesDir2.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.raw"), "TQU00490");
+        }
+
         private static void VerifyInstrumentInfo(string path, string model, string ionization, string analyzer, string detector)
         {
             using (var msDataFile = new MsDataFileImpl(path))
@@ -160,6 +183,17 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(firstIntensity, qcTrace.Intensities.First());
             Assert.AreEqual(lastTime, qcTrace.Times.Last(), 1e-6);
             Assert.AreEqual(lastIntensity, qcTrace.Intensities.Last());
+        }
+
+        private static void VerifySerialNumber(string path, string serialNumber, int sampleIndex = 0)
+        {
+            if (!MsDataFileImpl.SupportsMultipleSamples(path))
+                sampleIndex = 0;
+
+            using (var msDataFile = new MsDataFileImpl(path, sampleIndex))
+            {
+                Assert.AreEqual(serialNumber, msDataFile.GetInstrumentSerialNumber());
+            }
         }
     }
 }
