@@ -25,13 +25,14 @@
     <software id="Analyst" version="unknown">
       <cvParam cvRef="MS" accession="MS:1000551" name="Analyst" value=""/>
     </software>
-    <software id="pwiz_Reader_ABI" version="3.0.19121">
+    <software id="pwiz_Reader_ABI" version="3.0.19127">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
   <instrumentConfigurationList count="1">
     <instrumentConfiguration id="IC1">
       <cvParam cvRef="MS" accession="MS:1000139" name="4000 QTRAP" value=""/>
+      <cvParam cvRef="MS" accession="MS:1000529" name="instrument serial number" value="U016980608"/>
       <componentList count="5">
         <source order="1">
           <cvParam cvRef="MS" accession="MS:1000073" name="electrospray ionization" value=""/>

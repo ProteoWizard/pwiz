@@ -671,6 +671,8 @@ struct CompassDataImpl : public CompassData
         try {return ToStdString(msAnalysis_->InstrumentDescription);} CATCH_AND_FORWARD
     }
 
+    virtual std::string getInstrumentSerialNumber() const { return ""; }
+
     virtual InstrumentSource getInstrumentSource() const { return InstrumentSource_Unknown; }
     virtual std::string getAcquisitionSoftware() const { return ""; }
     virtual std::string getAcquisitionSoftwareVersion() const { return "unknown"; }

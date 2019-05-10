@@ -83,6 +83,7 @@ class WiffFileImpl : public WiffFile
     virtual const vector<string>& getSampleNames() const;
 
     virtual InstrumentModel getInstrumentModel() const;
+    virtual std::string getInstrumentSerialNumber() const;
     virtual IonSourceType getIonSourceType() const;
     virtual blt::local_date_time getSampleAcquisitionTime(int sample, bool adjustToHostTime) const;
 
@@ -375,6 +376,11 @@ InstrumentModel WiffFileImpl::getInstrumentModel() const
         throw gcnew Exception("unknown instrument type: " + sample->Details->InstrumentName);
     }
     CATCH_AND_FORWARD
+}
+
+std::string WiffFileImpl::getInstrumentSerialNumber() const
+{
+    try {return ToStdString(sample->Details->InstrumentSerialNumber);} CATCH_AND_FORWARD
 }
 
 IonSourceType WiffFileImpl::getIonSourceType() const
