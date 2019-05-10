@@ -5,7 +5,7 @@ image:
 - Visual Studio 2019 Preview
 clone_depth: 5
 init:
-- sh: git config --global core.autocrlf false
+- git config --global core.autocrlf false
 build_script:
 - ps: '& .\quickbuild.bat address-model=64 --i-agree-to-the-vendor-licenses -j2 --abbreviate-paths pwiz executables toolset=msvc-14.1'
 test: off
