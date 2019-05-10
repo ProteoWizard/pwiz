@@ -692,7 +692,7 @@ rule remove-test-targets-shell ( target )
     result = $(.RM) [ sequence.transform path.native : "$(target-path)/$(result:BS)" ] ;
 }
 
-actions quietly capture-output bind INPUT_FILES output-file
+actions capture-output bind INPUT_FILES output-file
 {
     $(PATH_SETUP)
     $(.SHELL_SET)status=$(DISABLE_TEST_EXECUTION)
