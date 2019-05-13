@@ -129,15 +129,26 @@ namespace pwiz.SkylineTestData
             if (ExtensionTestContext.CanImportAbWiff2)
                 VerifySerialNumber(testFilesDir.GetTestPath("OnyxTOFMS.wiff2"), null); // WIFF2 file with empty serial number
 
-            VerifySerialNumber(testFilesDir.GetTestPath("051309_digestion.wiff"), "U016050603");
-            VerifySerialNumber(testFilesDir.GetTestPath("081809_100fmol-MichromMix-05.d"), "50331873");
-            VerifySerialNumber(testFilesDir.GetTestPath("10nmol_Negative_MS_ID_ON_055.lcd"), null); // Shimadzu does not provide serial number
-            VerifySerialNumber(testFilesDir.GetTestPath("CE_Vantage_15mTorr_0001_REP1_01.raw"), null); // Thermo RAW file with empty serial number
-            VerifySerialNumber(testFilesDir.GetTestPath("160109_Mix1_calcurve_075.raw"), null); // Waters does not provide serial number
+            if (ExtensionTestContext.CanImportAbWiff)
+                VerifySerialNumber(testFilesDir.GetTestPath("051309_digestion.wiff"), "U016050603");
 
-            const string testZipPath2 = @"TestData\Results\ThermoQuant.zip";
-            var testFilesDir2 = new TestFilesDir(TestContext, testZipPath2);
-            VerifySerialNumber(testFilesDir2.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.raw"), "TQU00490");
+            if (ExtensionTestContext.CanImportAgilentRaw)
+                VerifySerialNumber(testFilesDir.GetTestPath("081809_100fmol-MichromMix-05.d"), "50331873");
+
+            if (ExtensionTestContext.CanImportShimadzuRaw)
+                VerifySerialNumber(testFilesDir.GetTestPath("10nmol_Negative_MS_ID_ON_055.lcd"), null); // Shimadzu does not provide serial number
+
+            if (ExtensionTestContext.CanImportWatersRaw)
+                VerifySerialNumber(testFilesDir.GetTestPath("160109_Mix1_calcurve_075.raw"), null); // Waters does not provide serial number
+
+            if (ExtensionTestContext.CanImportThermoRaw)
+            {
+                VerifySerialNumber(testFilesDir.GetTestPath("CE_Vantage_15mTorr_0001_REP1_01.raw"), null); // Thermo RAW file with empty serial number
+
+                const string testZipPath2 = @"TestData\Results\ThermoQuant.zip";
+                var testFilesDir2 = new TestFilesDir(TestContext, testZipPath2);
+                VerifySerialNumber(testFilesDir2.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.raw"), "TQU00490");
+            }
         }
 
         private static void VerifyInstrumentInfo(string path, string model, string ionization, string analyzer, string detector)
