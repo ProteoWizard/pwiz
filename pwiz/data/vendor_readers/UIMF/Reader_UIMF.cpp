@@ -83,10 +83,8 @@ void fillInMetadata(const string& rawpath, UIMFReaderPtr rawfile, MSData& msd)
     sourceFile->id = BFS_STRING(sourcePath.leaf());
     sourceFile->name = BFS_STRING(sourcePath.leaf());
     sourceFile->location = "file:///" + BFS_GENERIC_STRING(BFS_COMPLETE(sourcePath.branch_path()));
-    //sourceFile->set(MS_UIMF_MassHunter_nativeID_format);
-    //sourceFile->set(MS_UIMF_MassHunter_format);
-    sourceFile->userParams.push_back(UserParam("UIMF nativeID format", "frame=xsd:nonNegativeInteger scan=xsd:nonNegativeInteger frameType=xsd:nonNegativeInteger"));
-    sourceFile->userParams.push_back(UserParam("UIMF file format"));
+    sourceFile->set(MS_UIMF_nativeID_format);
+    sourceFile->set(MS_UIMF_format);
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 
     msd.id = bfs::basename(sourcePath);
