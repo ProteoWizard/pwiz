@@ -1226,7 +1226,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Specifies a program title and version to use with the –tool-program-path command. Together these commands are for importing tools from a ZIP file that use the $(ProgramPath()) macro as their command. For more information see the documentation on External Tools. e.g.
+        ///   Looks up a localized string similar to Specifies a program title and version to use with the -–tool-program-path command. Together these commands are for importing tools from a ZIP file that use the $(ProgramPath()) macro as their command. For more information see the documentation on External Tools. e.g.
         ///--tool-program-macro=R,2.15.2.
         /// </summary>
         internal static string _tool_program_macro {
@@ -1236,7 +1236,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Specifies the path to an executable on the local machine for the program title and version specified by the –tool-program-macro flag..
+        ///   Looks up a localized string similar to Specifies the path to an executable on the local machine for the program title and version specified by the -–tool-program-macro flag..
         /// </summary>
         internal static string _tool_program_path {
             get {
