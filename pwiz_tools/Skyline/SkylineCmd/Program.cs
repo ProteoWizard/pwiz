@@ -49,7 +49,14 @@ namespace pwiz.SkylineCmd
             var programClass = assembly.GetType(@"pwiz.Skyline.Program");
             var mainFunction = programClass.GetMethod(@"Main");
             var argsList = args.ToList();
-            argsList.Insert(0, "--sw=" + (Console.BufferWidth-1));
+            try
+            {
+                argsList.Insert(0, "--sw=" + (Console.BufferWidth - 1));
+            }
+            catch
+            {
+                // Rely on the default width. The command is being run in an invironment without a screen width
+            }
             // ReSharper disable once PossibleNullReferenceException
             return (int) mainFunction.Invoke(null, new object[]{argsList.ToArray()});
         }
