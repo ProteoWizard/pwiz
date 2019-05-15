@@ -83,7 +83,7 @@ namespace pwiz.Common.SystemUtil
             string line;
             while ((line = reader.ReadLine(progress)) != null)
             {
-                if (writer != null && !line.StartsWith(HideLinePrefix))
+                if (writer != null && (HideLinePrefix == null || !line.StartsWith(HideLinePrefix)))
                     writer.WriteLine(line);
 
                 if (progress == null || line.ToLowerInvariant().StartsWith(@"error"))
