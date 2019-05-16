@@ -24,8 +24,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Web;
 using pwiz.Common.DataBinding.Documentation;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Irt;
@@ -74,6 +76,14 @@ namespace pwiz.Skyline
         // Internal use arguments
         public static readonly Argument ARG_INTERNAL_SCREEN_WIDTH = new Argument(@"sw", INT_VALUE,
             (c, p) => c._usageWidth = p.ValueInt) {InternalUse = true};
+        public static readonly Argument ARG_INTERNAL_CULTURE = new Argument(@"culture", () => @"en|fr|ja|zh-CHS...",
+            (c, p) => SetCulture(p.Value)) { InternalUse = true };
+
+        private static void SetCulture(string cultureName)
+        {
+            LocalizationHelper.CurrentCulture = LocalizationHelper.CurrentUICulture = new CultureInfo(cultureName);
+            LocalizationHelper.InitThread(Thread.CurrentThread);
+        }
         // Multi process import
         public static readonly Argument ARG_INTERNAL_IMPORT_FILE_CACHE = new DocArgument(@"import-file-cache", PATH_TO_FILE,
             (c, p) => Program.ReplicateCachePath = p.Value) {InternalUse = true};
@@ -87,7 +97,7 @@ namespace pwiz.Skyline
             (c, p) => c.NoAllChromatogramsGraph = true) {InternalUse = true};
 
         private static readonly ArgumentGroup GROUP_INTERNAL = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_INTERNAL, false,
-            ARG_INTERNAL_SCREEN_WIDTH, ARG_INTERNAL_IMPORT_FILE_CACHE, ARG_INTERNAL_IMPORT_PROGRESS_PIPE,
+            ARG_INTERNAL_SCREEN_WIDTH, ARG_INTERNAL_CULTURE, ARG_INTERNAL_IMPORT_FILE_CACHE, ARG_INTERNAL_IMPORT_PROGRESS_PIPE,
             ARG_TEST_UI, ARG_TEST_HIDEACG, ARG_TEST_NOACG);
 
         public bool HideAllChromatogramsGraph { get; private set; }

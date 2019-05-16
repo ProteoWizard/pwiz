@@ -18,7 +18,9 @@
  */
 
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
@@ -60,7 +62,8 @@ namespace pwiz.SkylineTestFunctional
                 var process = Process.Start(GetProcessStartInfo("\"--in=" + validFile + "\" --log-file=\"" + logFile + "\""));
                 WaitForExit(process, Program.EXIT_CODE_SUCCESS);
                 Assert.IsTrue(File.Exists(logFile), string.Format("Missing log file {0}", logFile));
-                AssertEx.Contains(File.ReadAllText(logFile), Resources.CommandLine_OpenSkyFile_Opening_file___,
+                string logText = File.ReadAllText(logFile, Encoding.UTF8);
+                AssertEx.Contains(logText, Resources.CommandLine_OpenSkyFile_Opening_file___,
                     string.Format(Resources.CommandLine_OpenSkyFile_File__0__opened_, Path.GetFileName(validFile)));
             }
             // success with redirected std-out/std-err
@@ -88,7 +91,7 @@ namespace pwiz.SkylineTestFunctional
         private string RunWithOutput(string args)
         {
             var writer = new StringWriter();
-            var processRunner = new ProcessRunner();
+            var processRunner = new ProcessRunner { OutputEncoding = Encoding.UTF8 };
             IProgressStatus status = new ProgressStatus(string.Empty);
             processRunner.Run(GetProcessStartInfo(args), null, null, ref status, writer);
             return writer.ToString();
@@ -107,7 +110,8 @@ namespace pwiz.SkylineTestFunctional
         {
             return new ProcessStartInfo(FindSkylineCmdExe())
             {
-                Arguments = arguments,
+                // Make SkylineCmd run in the current culture, which forces the output to UTF-8 encoding
+                Arguments = "--culture=" + CultureInfo.CurrentCulture.Name + " " + arguments,
                 CreateNoWindow = true,
                 UseShellExecute = false
             };
