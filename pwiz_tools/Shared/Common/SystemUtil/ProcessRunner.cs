@@ -38,6 +38,8 @@ namespace pwiz.Common.SystemUtil
     {
         public string StatusPrefix { get; set; }
 
+        public Encoding OutputEncoding { get; set; }
+
         public string MessagePrefix { get; set; }
         private readonly List<string> _messageLog = new List<string>();
 
@@ -59,6 +61,8 @@ namespace pwiz.Common.SystemUtil
             // Make sure required streams are redirected.
             psi.RedirectStandardOutput = true;
             psi.RedirectStandardError = true;
+            if (OutputEncoding != null)
+                psi.StandardOutputEncoding = psi.StandardErrorEncoding = OutputEncoding;
 
             _messageLog.Clear();
 
