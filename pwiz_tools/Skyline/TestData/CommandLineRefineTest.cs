@@ -250,6 +250,53 @@ namespace pwiz.SkylineTestData
 //            InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.masses_and_names);
 //        }
 
+        [TestMethod]
+        public void ConsoleChangeFilterSettingsTest()
+        {
+            DocumentPath = InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.none);
+            OutPath = Path.Combine(Path.GetDirectoryName(DocumentPath) ?? string.Empty, "test.sky");
+
+            Run(CommandArgs.ARG_REMOVE_ALL.ArgumentText);   // Remove results
+
+            DocumentPath = OutPath;
+            OutPath = Path.Combine(Path.GetDirectoryName(DocumentPath) ?? string.Empty, "test2.sky");
+
+            // Add charge 3 and 6 precursors
+            string output = Run(CommandArgs.ARG_TRAN_PRECURSOR_ION_CHARGES.GetArgumentTextWithValue("2, 3, 6"));
+            AssertEx.Contains(output, "test2", PropertyNames.TransitionFilter_PeptidePrecursorChargesString);
+            IsDocumentState(OutPath, 1, 4, 37, 0, 110, 969, output);
+
+            // Add fragment ion types and charges
+            var args = new List<string>
+            {
+                CommandArgs.ARG_TRAN_FRAGMENT_ION_TYPES.GetArgumentTextWithValue("y, b, p")
+            };
+            output = Run(args.ToArray());
+            AssertEx.Contains(output, "test2", PropertyNames.TransitionFilter_PeptideIonTypesString);
+            IsDocumentState(OutPath, 1, 4, 37, 0, 40, 715, output);
+            args.Add(CommandArgs.ARG_TRAN_FRAGMENT_ION_CHARGES.GetArgumentTextWithValue("1, 2"));
+            output = Run(args.ToArray());
+            AssertEx.Contains(output, "test2", PropertyNames.TransitionFilter_PeptideIonTypesString,
+                PropertyNames.TransitionFilter_PeptideProductChargesString);
+            IsDocumentState(OutPath, 1, 4, 37, 0, 40, 1459, output);
+
+            // Error cases
+            const string typesWithError = "y, b, p, u";
+            output = Run(CommandArgs.ARG_TRAN_FRAGMENT_ION_TYPES.GetArgumentTextWithValue(typesWithError));
+            AssertEx.Contains(output, new CommandArgs.ValueInvalidIonTypeListException(CommandArgs.ARG_TRAN_FRAGMENT_ION_TYPES, typesWithError).Message);
+            const int outOfRangeCharge = Transition.MAX_PRODUCT_CHARGE + 1;
+            output = Run(CommandArgs.ARG_TRAN_FRAGMENT_ION_CHARGES.GetArgumentTextWithValue(outOfRangeCharge.ToString()));
+            AssertEx.Contains(output, new CommandArgs.ValueOutOfRangeIntException(CommandArgs.ARG_TRAN_FRAGMENT_ION_CHARGES, outOfRangeCharge,
+                Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE).Message);
+            const int outOfRangePrecursorCharge = TransitionGroup.MAX_PRECURSOR_CHARGE + 1;
+            output = Run(CommandArgs.ARG_TRAN_PRECURSOR_ION_CHARGES.GetArgumentTextWithValue("1, 2, " + outOfRangePrecursorCharge));
+            AssertEx.Contains(output, new CommandArgs.ValueOutOfRangeIntException(CommandArgs.ARG_TRAN_PRECURSOR_ION_CHARGES, outOfRangePrecursorCharge,
+                TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE).Message);
+            const string chargesWithError = "2, 3, p, 5";
+            output = Run(CommandArgs.ARG_TRAN_PRECURSOR_ION_CHARGES.GetArgumentTextWithValue(chargesWithError));
+            AssertEx.Contains(output, new CommandArgs.ValueInvalidChargeListException(CommandArgs.ARG_TRAN_PRECURSOR_ION_CHARGES, chargesWithError).Message);
+        }
+
         private const int _initProt = 1;
         private const int _initList = 4;
         private const int _initPep = 37;
@@ -282,8 +329,11 @@ namespace pwiz.SkylineTestData
         {
             if (output != null)
             {
-                AssertEx.Contains(output, CommandLine.RemovedText(_initProt - proteins, _initList - lists,
-                    _initPep - peptides, _initMol - molecules, _initPrec - tranGroups, _initTran - transitions));
+                AssertEx.Contains(output,
+                    CommandLine.RemovedText(_initProt - proteins, _initList - lists, _initPep - peptides,
+                        _initMol - molecules, _initPrec - tranGroups, _initTran - transitions),
+                    CommandLine.AddedText(proteins - _initProt, lists - _initList, peptides - _initPep,
+                        molecules - _initMol, tranGroups - _initPrec, transitions - _initTran));
             }
             var doc = ResultsUtil.DeserializeDocument(docPath);
             AssertEx.IsDocumentState(doc, null, proteins+lists, peptides+molecules, tranGroups, transitions);
