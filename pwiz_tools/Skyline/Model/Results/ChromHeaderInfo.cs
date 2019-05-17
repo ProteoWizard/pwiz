@@ -1999,6 +1999,7 @@ namespace pwiz.Skyline.Model.Results
     {
         protected readonly ChromGroupHeaderInfo _groupHeaderInfo;
         protected readonly IDictionary<Type, int> _scoreTypeIndices;
+        protected readonly byte[] _textIdBytes;
         protected readonly IList<ChromCachedFile> _allFiles;
         protected readonly IReadOnlyList<ChromTransition> _allTransitions;
         protected readonly IReadOnlyList<ChromPeak> _allPeaks;
@@ -2006,6 +2007,7 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
                                      IDictionary<Type, int> scoreTypeIndices,
+                                     byte[] textIdBytes,
                                      IList<ChromCachedFile> allFiles,
                                      IReadOnlyList<ChromTransition> allTransitions,
                                      IReadOnlyList<ChromPeak> allPeaks,
@@ -2013,6 +2015,7 @@ namespace pwiz.Skyline.Model.Results
         {
             _groupHeaderInfo = groupHeaderInfo;
             _scoreTypeIndices = scoreTypeIndices;
+            _textIdBytes = textIdBytes;
             _allFiles = allFiles;
             _allTransitions = allTransitions;
             _allPeaks = allPeaks;
@@ -2024,12 +2027,21 @@ namespace pwiz.Skyline.Model.Results
         }
 
         protected ChromatogramGroupInfo(ChromGroupHeaderInfo header, ChromatogramGroupInfo copyFrom) 
-            : this(header, copyFrom._scoreTypeIndices, copyFrom._allFiles, copyFrom._allTransitions, copyFrom._allPeaks, copyFrom._allScores)
+            : this(header, copyFrom._scoreTypeIndices, copyFrom._textIdBytes, copyFrom._allFiles, copyFrom._allTransitions, copyFrom._allPeaks, copyFrom._allScores)
         {
         }
 
         internal ChromGroupHeaderInfo Header { get { return _groupHeaderInfo; } }
         public SignedMz PrecursorMz { get { return new SignedMz(_groupHeaderInfo.Precursor, _groupHeaderInfo.NegativeCharge); } }
+        public string TextId
+        {
+            get
+            {
+                return _groupHeaderInfo.TextIdIndex != -1
+                    ? Encoding.UTF8.GetString(_textIdBytes, _groupHeaderInfo.TextIdIndex, _groupHeaderInfo.TextIdLen)
+                    : null;
+            }
+        }
         public double? PrecursorCollisionalCrossSection { get { return _groupHeaderInfo.CollisionalCrossSection; } }
         public MsDataFileUri FilePath { get { return _allFiles[_groupHeaderInfo.FileIndex].FilePath; } }
         public DateTime FileWriteTime { get { return _allFiles[_groupHeaderInfo.FileIndex].FileWriteTime; } }
