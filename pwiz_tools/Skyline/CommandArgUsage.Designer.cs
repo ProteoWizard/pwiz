@@ -1272,6 +1272,33 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A comman-separated list of precursor ion charge states to apply to peptide molecules to generate precursor targets. Changes the transition filter settings for the open document..
+        /// </summary>
+        internal static string _tran_precursor_ion_charges {
+            get {
+                return ResourceManager.GetString("_tran_precursor_ion_charges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A comman-separated list of product ion charge states to apply to peptide fragments to generate product ion transitions. Changes the transition filter settings for the open document..
+        /// </summary>
+        internal static string _tran_product_ion_charges {
+            get {
+                return ResourceManager.GetString("_tran_product_ion_charges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A comman-separated list of product ion types expected in peptide fragmentation to generate product ion transitions. Changes the transition filter settings for the open document..
+        /// </summary>
+        internal static string _tran_product_ion_types {
+            get {
+                return ResourceManager.GetString("_tran_product_ion_types", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Applies To.
         /// </summary>
         internal static string CommandArgGroup_ToString_Applies_To {

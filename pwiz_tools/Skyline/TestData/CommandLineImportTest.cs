@@ -42,7 +42,7 @@ namespace pwiz.SkylineTestData
             var fastaPath = testFilesDir.GetTestPath("bov-5-prot.fasta");
 
             // with mods and invalid cutoff score
-            const string badCutoff = "1.1";
+            const double badCutoff = 1.1;
             var args = new[]
             {
                 "--in=" + docPath,
