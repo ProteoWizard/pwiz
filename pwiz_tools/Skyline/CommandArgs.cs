@@ -24,10 +24,13 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Web;
 using pwiz.Common.DataBinding.Documentation;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -70,10 +73,22 @@ namespace pwiz.Skyline
         private static readonly Func<string> COMMAND_ARGUMENTS_VALUE = () => CommandArgUsage.CommandArgs_COMMAND_ARGUMENTS_VALUE;
         private static readonly Func<string> PROGRAM_MACRO_VALUE = () => CommandArgUsage.CommandArgs_PROGRAM_MACRO_VALUE;
         private static readonly Func<string> LABEL_VALUE = () => CommandArgUsage.CommandArgs_LABEL_VALUE;
+        // ReSharper disable LocalizableElement
+        private static readonly Func<string> INT_LIST_VALUE = () => "\"1, 2, 3...\"";  // Not L10N
+        private static readonly Func<string> ION_TYPE_LIST_VALUE = () => "\"a, b, c, x, y, z, p\"";    // Not L10N
+        // ReSharper restore LocalizableElement
 
         // Internal use arguments
         public static readonly Argument ARG_INTERNAL_SCREEN_WIDTH = new Argument(@"sw", INT_VALUE,
             (c, p) => c._usageWidth = p.ValueInt) {InternalUse = true};
+        public static readonly Argument ARG_INTERNAL_CULTURE = new Argument(@"culture", () => @"en|fr|ja|zh-CHS...",
+            (c, p) => SetCulture(p.Value)) { InternalUse = true };
+
+        private static void SetCulture(string cultureName)
+        {
+            LocalizationHelper.CurrentCulture = LocalizationHelper.CurrentUICulture = new CultureInfo(cultureName);
+            LocalizationHelper.InitThread(Thread.CurrentThread);
+        }
         // Multi process import
         public static readonly Argument ARG_INTERNAL_IMPORT_FILE_CACHE = new DocArgument(@"import-file-cache", PATH_TO_FILE,
             (c, p) => Program.ReplicateCachePath = p.Value) {InternalUse = true};
@@ -87,7 +102,7 @@ namespace pwiz.Skyline
             (c, p) => c.NoAllChromatogramsGraph = true) {InternalUse = true};
 
         private static readonly ArgumentGroup GROUP_INTERNAL = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_INTERNAL, false,
-            ARG_INTERNAL_SCREEN_WIDTH, ARG_INTERNAL_IMPORT_FILE_CACHE, ARG_INTERNAL_IMPORT_PROGRESS_PIPE,
+            ARG_INTERNAL_SCREEN_WIDTH, ARG_INTERNAL_CULTURE, ARG_INTERNAL_IMPORT_FILE_CACHE, ARG_INTERNAL_IMPORT_PROGRESS_PIPE,
             ARG_TEST_UI, ARG_TEST_HIDEACG, ARG_TEST_NOACG);
 
         public bool HideAllChromatogramsGraph { get; private set; }
@@ -924,7 +939,13 @@ namespace pwiz.Skyline
             get { return SearchResultsFiles.Count > 0; }
         }
 
-        // For adjusting full-scan settings
+        // For adjusting transition filter and full-scan settings
+        public static readonly Argument ARG_TRAN_PRECURSOR_ION_CHARGES = new DocArgument(@"tran-precursor-ion-charges", INT_LIST_VALUE,
+            (c, p) => c.FilterPrecursorCharges = ParseIonCharges(p, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE));
+        public static readonly Argument ARG_TRAN_FRAGMENT_ION_CHARGES = new DocArgument(@"tran-product-ion-charges", INT_LIST_VALUE,
+            (c, p) => c.FilterProductCharges = ParseIonCharges(p, Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE));
+        public static readonly Argument ARG_TRAN_FRAGMENT_ION_TYPES = new DocArgument(@"tran-product-ion-types", ION_TYPE_LIST_VALUE,
+            (c, p) => c.FilterProductTypes = ParseIonTypes(p)) { WrapValue = true };
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_RES = new DocArgument(@"full-scan-precursor-res", RP_VALUE,
             (c, p) => c.FullScanPrecursorRes = p.ValueDouble);
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_RES_MZ = new DocArgument(@"full-scan-precursor-res-mz", MZ_VALUE,
@@ -937,6 +958,7 @@ namespace pwiz.Skyline
             (c, p) => c.FullScanRetentionTimeFilterLength = p.ValueDouble);
 
         private static readonly ArgumentGroup GROUP_SETTINGS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_SETTINGS_Document_Settings, false,
+            ARG_TRAN_PRECURSOR_ION_CHARGES, ARG_TRAN_FRAGMENT_ION_CHARGES, ARG_TRAN_FRAGMENT_ION_TYPES,
             ARG_FULL_SCAN_PRECURSOR_RES, ARG_FULL_SCAN_PRECURSOR_RES_MZ,
             ARG_FULL_SCAN_PRODUCT_RES, ARG_FULL_SCAN_PRODUCT_RES_MZ,
             ARG_FULL_SCAN_RT_FILTER_TOLERANCE)
@@ -948,6 +970,43 @@ namespace pwiz.Skyline
             }
         };
 
+        private static Adduct[] ParseIonCharges(NameValuePair p, int min, int max)
+        {
+            Assume.IsNotNull(p.Match); // Must be matched before accessing this
+            var charges = ArrayUtil.Parse(p.Value, Adduct.FromStringAssumeProtonated, TextUtil.SEPARATOR_CSV, null);
+            if (charges == null)
+                throw new ValueInvalidChargeListException(p.Match, p.Value);
+
+            foreach (var charge in charges)
+            {
+                if (min > charge.AdductCharge || charge.AdductCharge > max)
+                    throw new ValueOutOfRangeIntException(p.Match, charge.AdductCharge, min, max);
+            }
+            return charges;
+        }
+
+        private static IonType[] ParseIonTypes(NameValuePair p)
+        {
+            Assume.IsNotNull(p.Match); // Must be matched before accessing this
+            var types =  TransitionFilter.ParseTypes(p.Value, null);
+            if (types == null)
+                throw new ValueInvalidIonTypeListException(p.Match, p.Value);
+            return types;
+        }
+
+        public Adduct[] FilterPrecursorCharges { get; private set; }
+        public Adduct[] FilterProductCharges { get; private set; }
+        public IonType[] FilterProductTypes { get; private set; }
+
+        public bool FilterSettings
+        {
+            get
+            {
+                return (FilterPrecursorCharges != null ||
+                        FilterProductCharges != null ||
+                        FilterProductTypes != null);
+            }
+        }
         public double? FullScanPrecursorRes { get; private set; }
         public double? FullScanPrecursorResMz { get; private set; }
         public double? FullScanProductRes { get; private set; }
@@ -1946,7 +2005,7 @@ namespace pwiz.Skyline
             {
                 int v = ValueInt;
                 if (minVal > v || v > maxVal)
-                    throw new ValueOutOfRangeIntException(Match, Value, minVal, maxVal);
+                    throw new ValueOutOfRangeIntException(Match, v, minVal, maxVal);
                 return v;
             }
 
@@ -1967,7 +2026,7 @@ namespace pwiz.Skyline
             {
                 double v = ValueDouble;
                 if (minVal > v || v > maxVal)
-                    throw new ValueOutOfRangeDoubleException(Match, Value, minVal, maxVal);
+                    throw new ValueOutOfRangeDoubleException(Match, v, minVal, maxVal);
                 return v;
             }
 
@@ -1988,7 +2047,7 @@ namespace pwiz.Skyline
                             // Try invariant format to make command-line batch files more portable
                             return Convert.ToDateTime(Value, CultureInfo.InvariantCulture);
                         }
-                        catch (Exception e)
+                        catch (Exception)
                         {
                             throw new ValueInvalidDateException(Match, Value);
                         }
@@ -2213,15 +2272,15 @@ namespace pwiz.Skyline
         public class ValueInvalidDoubleException : UsageException
         {
             public ValueInvalidDoubleException(Argument arg, string value)
-                : base(string.Format(Resources.ValueInvalidDoubleException_ValueInvalidDoubleException_Error__The_value___0___is_not_valid_for_the_argument__1__which_requires_a_decimal_number_, value, arg.ArgumentText))
+                : base(string.Format(Resources.ValueInvalidDoubleException_ValueInvalidDoubleException_The_value___0___is_not_valid_for_the_argument__1__which_requires_a_decimal_number_, value, arg.ArgumentText))
             {
             }
         }
 
         public class ValueOutOfRangeDoubleException : UsageException
         {
-            public ValueOutOfRangeDoubleException(Argument arg, string value, double minVal, double maxVal)
-                : base(string.Format(Resources.ValueOutOfRangeIntException_ValueOutOfRangeIntException_Error__The_value___0___for_the_argument__1__must_be_between__2__and__3__, value, arg.ArgumentText, minVal, maxVal))
+            public ValueOutOfRangeDoubleException(Argument arg, double value, double minVal, double maxVal)
+                : base(string.Format(Resources.ValueOutOfRangeDoubleException_ValueOutOfRangeException_The_value___0___for_the_argument__1__must_be_between__2__and__3__, value, arg.ArgumentText, minVal, maxVal))
             {
             }
         }
@@ -2229,15 +2288,31 @@ namespace pwiz.Skyline
         public class ValueInvalidIntException : UsageException
         {
             public ValueInvalidIntException(Argument arg, string value)
-                : base(string.Format(Resources.ValueInvalidIntException_ValueInvalidIntException_Error__The_value___0___is_not_valid_for_the_argument__1__which_requires_an_integer_, value, arg.ArgumentText))
+                : base(string.Format(Resources.ValueInvalidIntException_ValueInvalidIntException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_integer_, value, arg.ArgumentText))
+            {
+            }
+        }
+
+        public class ValueInvalidChargeListException : UsageException
+        {
+            public ValueInvalidChargeListException(Argument arg, string value)
+                : base(string.Format(Resources.ValueInvalidChargeListException_ValueInvalidChargeListException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_comma_separated_list_of_integers_, value, arg.ArgumentText))
+            {
+            }
+        }
+
+        public class ValueInvalidIonTypeListException : UsageException
+        {
+            public ValueInvalidIonTypeListException(Argument arg, string value)
+                : base(string.Format(Resources.ValueInvalidIonTypeListException_ValueInvalidIonTypeListException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_comma_separated_list_of_fragment_ion_types__a__b__c__x__y__z__p__, value, arg.ArgumentText))
             {
             }
         }
 
         public class ValueOutOfRangeIntException : UsageException
         {
-            public ValueOutOfRangeIntException(Argument arg, string value, int minVal, int maxVal)
-                : base(string.Format(Resources.ValueOutOfRangeIntException_ValueOutOfRangeIntException_Error__The_value___0___for_the_argument__1__must_be_between__2__and__3__, value, arg.ArgumentText, minVal, maxVal))
+            public ValueOutOfRangeIntException(Argument arg, int value, int minVal, int maxVal)
+                : base(string.Format(Resources.ValueOutOfRangeDoubleException_ValueOutOfRangeException_The_value___0___for_the_argument__1__must_be_between__2__and__3__, value, arg.ArgumentText, minVal, maxVal))
             {
             }
         }
@@ -2245,14 +2320,15 @@ namespace pwiz.Skyline
         public class ValueInvalidDateException : UsageException
         {
             public ValueInvalidDateException(Argument arg, string value)
-                : base(string.Format(Resources.ValueInvalidDateException_ValueInvalidDateException_Error__The_value___0___is_not_valid_for_the_argument__1__which_requires_a_date_time_value_, value, arg.ArgumentText))
+                : base(string.Format(Resources.ValueInvalidDateException_ValueInvalidDateException_The_value___0___is_not_valid_for_the_argument__1__which_requires_a_date_time_value_, value, arg.ArgumentText))
             {
             }
         }
+
         public class ValueInvalidPathException : UsageException
         {
             public ValueInvalidPathException(Argument arg, string value)
-                : base(string.Format(Resources.ValueInvalidPathException_ValueInvalidPathException_Error__The_value___0___is_not_valid_for_the_argument__1__failed_attempting_to_convert_it_to_a_full_file_path_, value, arg.ArgumentText))
+                : base(string.Format(Resources.ValueInvalidPathException_ValueInvalidPathException_The_value___0___is_not_valid_for_the_argument__1__failed_attempting_to_convert_it_to_a_full_file_path_, value, arg.ArgumentText))
             {
             }
         }

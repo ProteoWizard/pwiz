@@ -16,10 +16,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -49,10 +56,45 @@ namespace pwiz.SkylineTestFunctional
                 WaitForExit(process, Program.EXIT_CODE_RAN_WITH_ERRORS);
             }
             // success
+            string validFile = TestFilesDir.GetTestPath("SkylineCmdTest.sky");
+            string logFile = TestFilesDir.GetTestPath("success.log");
             {
-                var process = Process.Start(GetProcessStartInfo("\"--in=" + TestFilesDir.GetTestPath("SkylineCmdTest.sky") + "\""));
+                var process = Process.Start(GetProcessStartInfo("\"--in=" + validFile + "\" --log-file=\"" + logFile + "\""));
                 WaitForExit(process, Program.EXIT_CODE_SUCCESS);
+                Assert.IsTrue(File.Exists(logFile), string.Format("Missing log file {0}", logFile));
+                string logText = File.ReadAllText(logFile, Encoding.UTF8);
+                AssertEx.Contains(logText, Resources.CommandLine_OpenSkyFile_Opening_file___,
+                    string.Format(Resources.CommandLine_OpenSkyFile_File__0__opened_, Path.GetFileName(validFile)));
             }
+            // success with redirected std-out/std-err
+            {
+                string output = RunWithOutput("\"--in=" + validFile + "\"");
+                AssertEx.Contains(output, Resources.CommandLine_OpenSkyFile_Opening_file___,
+                    string.Format(Resources.CommandLine_OpenSkyFile_File__0__opened_, Path.GetFileName(validFile)));
+            }
+            // usage
+            {
+                try
+                {
+                    string output = RunWithOutput("--help=ascii");
+
+                    Assert.Fail(TextUtil.LineSeparate("Successful run of SkylineCmd.exe with --help unexpected:", output));
+                }
+                catch (IOException e)
+                {
+                    Assert.IsTrue(Helpers.CountLinesInString(e.Message) > 100);
+                    AssertEx.Contains(e.Message, "SkylineCmd");
+                }
+            }
+        }
+
+        private string RunWithOutput(string args)
+        {
+            var writer = new StringWriter();
+            var processRunner = new ProcessRunner { OutputEncoding = Encoding.UTF8 };
+            IProgressStatus status = new ProgressStatus(string.Empty);
+            processRunner.Run(GetProcessStartInfo(args), null, null, ref status, writer);
+            return writer.ToString();
         }
 
         private const int EXIT_WAIT_TIME = 20 * 1000;   // 20 seconds
@@ -68,7 +110,8 @@ namespace pwiz.SkylineTestFunctional
         {
             return new ProcessStartInfo(FindSkylineCmdExe())
             {
-                Arguments = arguments,
+                // Make SkylineCmd run in the current culture, which forces the output to UTF-8 encoding
+                Arguments = "--culture=" + CultureInfo.CurrentCulture.Name + " " + arguments,
                 CreateNoWindow = true,
                 UseShellExecute = false
             };
