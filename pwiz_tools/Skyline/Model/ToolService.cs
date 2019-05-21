@@ -83,14 +83,14 @@ namespace pwiz.Skyline.Model
                 throw new ArgumentException(@"Too many report definitions");
             }
             var reportOrViewSpec = reportOrViewSpecList.First();
-            if (null == reportOrViewSpec.ViewSpec)
+            if (null == reportOrViewSpec.ViewSpecLayout)
             {
                 throw new ArgumentException(@"The report definition uses the old format.");
             }
-            return GetReportRows(Program.MainWindow.Document, reportOrViewSpec.ViewSpec, Program.MainWindow);
+            return GetReportRows(Program.MainWindow.Document, reportOrViewSpec.ViewSpecLayout, Program.MainWindow);
         }
 
-        private string GetReportRows(SrmDocument document, ViewSpec viewSpec, IProgressMonitor progressMonitor)
+        private string GetReportRows(SrmDocument document, ViewSpecLayout viewSpec, IProgressMonitor progressMonitor)
         {
             var container = new MemoryDocumentContainer();
             container.SetDocument(document, container.Document);
@@ -99,7 +99,7 @@ namespace pwiz.Skyline.Model
             IProgressStatus status = new ProgressStatus(string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
                 viewSpec.Name));
             var writer = new StringWriter();
-            if (viewContext.Export(CancellationToken.None, progressMonitor, ref status, viewContext.GetViewInfo(null, viewSpec), writer,
+            if (viewContext.Export(CancellationToken.None, progressMonitor, ref status, viewContext.GetViewInfo(null, viewSpec.ViewSpec), writer,
                 viewContext.GetCsvWriter()))
             {
                 return writer.ToString();

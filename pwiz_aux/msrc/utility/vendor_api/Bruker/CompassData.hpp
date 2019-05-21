@@ -244,6 +244,15 @@ struct PWIZ_API_DECL LCSpectrum
 typedef boost::shared_ptr<LCSpectrum> LCSpectrumPtr;
 
 
+struct PWIZ_API_DECL Chromatogram
+{
+    std::vector<double> times;
+    std::vector<double> intensities;
+};
+
+typedef boost::shared_ptr<Chromatogram> ChromatogramPtr;
+
+
 struct PWIZ_API_DECL CompassData
 {
     typedef boost::shared_ptr<CompassData> Ptr;
@@ -287,6 +296,12 @@ struct PWIZ_API_DECL CompassData
     /// returns a spectrum from the specified LC source
     virtual LCSpectrumPtr getLCSpectrum(int source, int scan) const = 0;
 
+    /// returns a chromatogram with times and total ion currents of all spectra, or a null pointer if the format doesn't support fast access to TIC
+    virtual ChromatogramPtr getTIC() const = 0;
+
+    /// returns a chromatogram with times and base peak intensities of all spectra, or a null pointer if the format doesn't support fast access to BPC
+    virtual ChromatogramPtr getBPC() const = 0;
+
     virtual std::string getOperatorName() const = 0;
     virtual std::string getAnalysisName() const = 0;
     virtual boost::local_time::local_date_time getAnalysisDateTime() const = 0;
@@ -295,6 +310,7 @@ struct PWIZ_API_DECL CompassData
     virtual InstrumentFamily getInstrumentFamily() const = 0;
     virtual int getInstrumentRevision() const = 0;
     virtual std::string getInstrumentDescription() const = 0;
+    virtual std::string getInstrumentSerialNumber() const = 0;
     virtual InstrumentSource getInstrumentSource() const = 0;
     virtual std::string getAcquisitionSoftware() const = 0;
     virtual std::string getAcquisitionSoftwareVersion() const = 0;

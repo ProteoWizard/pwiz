@@ -26,7 +26,10 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls;
 using pwiz.SkylineTestUtil;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using ZedGraph;
 
 namespace pwiz.SkylineTestFunctional
@@ -121,6 +124,10 @@ namespace pwiz.SkylineTestFunctional
         {
             OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky"));
 
+            // Add a bunch of unmeasured precursors and transitions which should not impact the statistics
+            // This once caused the CV graphs to fail to complete calculating
+            AddUnmeasuredElements();
+
             TestHistogram<AreaCVHistogramGraphPane>(SkylineWindow.ShowPeakAreaCVHistogram, HISTOGRAM_DATA_START);
             TestHistogram<AreaCVHistogram2DGraphPane>(SkylineWindow.ShowPeakAreaCVHistogram2D, HISTOGRAM2D_DATA_START);
 
@@ -137,7 +144,30 @@ namespace pwiz.SkylineTestFunctional
                 Assert.Fail("Successfully recorded data");
             }
         }
-        
+
+        private void AddUnmeasuredElements()
+        {
+            RunUI(() => SkylineWindow.ModifyDocument("Auto-pick 2 and 3 precursor charges", document => 
+                document.ChangeSettings(document.Settings.ChangeTransitionFilter(f =>
+                    f.ChangeAutoSelect(true).ChangePeptidePrecursorCharges(Adduct.ProtonatedFromCharges(2, 3))))));
+            var docAfter = SkylineWindow.Document;
+            AssertEx.IsDocumentState(docAfter, null, 48, 125, 249, 1874);
+            // Remove any added transitions that have results, because they will change the statistics
+            RunUI(() => SkylineWindow.ModifyDocument("Remove new transitions with results", document =>
+                RemoveTransitions(document, 1709, 1639, 67, 27)));
+        }
+
+        private SrmDocument RemoveTransitions(SrmDocument document, params int[] indexes)
+        {
+            foreach (var i in indexes)
+            {
+                var pathToTran = document.GetPathTo((int) SrmDocument.Level.Transitions, i-1);  // Numbers are from the 1-based status bar
+                document = (SrmDocument) document.RemoveChild(pathToTran.Parent, document.FindNode(pathToTran));
+            }
+
+            return document;
+        }
+
         private void TestHistogram<T>(Action showHistogram, int statsStartIndex) where T : SummaryGraphPane
         {
             RunUI(showHistogram);

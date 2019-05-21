@@ -57,6 +57,7 @@ class SpectrumWorkerThreads::Impl
         }
 
         bool isBruker = icPtr.get() && icPtr->hasCVParamChild(MS_Bruker_Daltonics_instrument_model);
+        bool isShimadzu = icPtr.get() && icPtr->hasCVParamChild(MS_Shimadzu_instrument_model);
 
         bool isDemultiplexed = false;
         const boost::shared_ptr<const DataProcessing> dp = sl.dataProcessingPtr();
@@ -76,7 +77,7 @@ class SpectrumWorkerThreads::Impl
             }
         }
 
-        useThreads_ = useWorkerThreads && !(isBruker || (isDemultiplexed)); // Bruker library is not thread-friendly
+        useThreads_ = useWorkerThreads && !(isBruker || isShimadzu || isDemultiplexed); // Bruker library is not thread-friendly
         //useThreads_ = !(isBruker); // Bruker library is not thread-friendly
 
         if (sl.size() > 0 && useThreads_)

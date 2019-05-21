@@ -707,7 +707,7 @@ actions capture-output bind INPUT_FILES output-file
     $(.RUN_OUTPUT_NL) >> "$(output-file)"
     echo EXIT STATUS: $(.STATUS) >> "$(output-file)"
     if $(.STATUS_0)
-        $(.CP) "$(output-file)" "$(<)"
+        $(.CP) "$(output-file)" "$(<)" > $(.NULL)
     $(.ENDIF)
     $(.SHELL_SET)verbose=$(.VERBOSE_TEST)
     if $(.STATUS_NOT_0)

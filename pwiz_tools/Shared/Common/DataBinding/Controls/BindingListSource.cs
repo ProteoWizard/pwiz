@@ -95,6 +95,20 @@ namespace pwiz.Common.DataBinding.Controls
         public IViewContext ViewContext { get; private set; }
         public void SetViewContext(IViewContext viewContext, ViewInfo viewInfo)
         {
+            ViewLayout viewLayout = null;
+            if (null != viewInfo && viewContext != null && viewInfo.ViewGroup != null)
+            {
+                var viewLayoutList = viewContext.GetViewLayoutList(viewInfo.ViewGroup.Id.ViewName(viewInfo.Name));
+                if (null != viewLayoutList)
+                {
+                    viewLayout = viewLayoutList.FindLayout(viewLayoutList.DefaultLayoutName);
+                }
+            }
+            SetViewContext(viewContext, viewInfo, viewLayout);
+        }
+
+        public void SetViewContext(IViewContext viewContext, ViewInfo viewInfo, ViewLayout viewLayout)
+        {
             ViewContext = viewContext;
             if (null == viewInfo)
             {
@@ -121,20 +135,19 @@ namespace pwiz.Common.DataBinding.Controls
                 {
                     BindingListView.ClearTransformStack();
                 }
-                if (ViewContext != null && viewInfo.ViewGroup != null)
+
+                if (viewLayout != null)
                 {
-                    var viewLayoutList = ViewContext.GetViewLayoutList(viewInfo.ViewGroup.Id.ViewName(viewInfo.Name));
-                    if (null != viewLayoutList)
-                    {
-                        var defaultLayout = viewLayoutList.FindLayout(viewLayoutList.DefaultLayoutName);
-                        if (defaultLayout != null)
-                        {
-                            ApplyLayout(defaultLayout);
-                        }
-                    }
+                    ApplyLayout(viewLayout);
                 }
             }
             OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
+        }
+
+        public void SetViewContext(IViewContext viewContext, ViewGroup viewGroup, ViewSpecLayout viewSpecLayout)
+        {
+            var viewInfo = viewContext.GetViewInfo(viewGroup, viewSpecLayout.ViewSpec);
+            SetViewContext(viewContext, viewInfo, viewSpecLayout.DefaultViewLayout);
         }
 
         public void SetView(ViewInfo viewInfo, IRowSource rows)

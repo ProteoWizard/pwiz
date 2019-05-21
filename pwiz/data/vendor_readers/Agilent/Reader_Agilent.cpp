@@ -87,6 +87,10 @@ void initializeInstrumentConfigurationPtrs(MSData& msd,
         commonInstrumentParams->userParams.push_back(UserParam("instrument model", rawfile->getDeviceName(deviceType)));
     commonInstrumentParams->set(cvidModel);
 
+    auto serialNumber = rawfile->getDeviceSerialNumber(deviceType);
+    if (!serialNumber.empty())
+        commonInstrumentParams->set(MS_instrument_serial_number, serialNumber);
+
     // create instrument configuration templates based on the instrument model
     vector<InstrumentConfiguration> configurations = createInstrumentConfigurations(rawfile);
     if (configurations.empty())
