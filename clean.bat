@@ -75,11 +75,11 @@ rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc12_x64 > nul 2>&1
 del /f /q pwiz_aux\msrc\utility\vendor_api\Waters\*.h > nul 2>&1
 
 if %VERBOSE%==1 echo   Cleaning vendor test data...
-rmdir /s /q pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.data > nul 2>&1
-rmdir /s /q pwiz\data\vendor_readers\Agilent\Reader_Agilent_Test.data > nul 2>&1
-rmdir /s /q pwiz\data\vendor_readers\ABI\Reader_ABI_Test.data > nul 2>&1
+git clean -f -d -X pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.data
 rmdir /s /q pwiz\data\vendor_readers\ABI\T2D\Reader_ABI_T2D_Test.data > nul 2>&1
-rmdir /s /q pwiz\data\vendor_readers\UIMF\Reader_UIMF_Test.data > nul 2>&1
+git clean -f -d -X pwiz\data\vendor_readers\UIMF\Reader_UIMF_Test.data
+git clean -f -d -X pwiz\data\vendor_readers\ABI\Reader_ABI_Test.data
+git clean -f -d -X pwiz\data\vendor_readers\Agilent\Reader_Agilent_Test.data
 git clean -f -d -X pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data
 git clean -f -d -X pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data
 

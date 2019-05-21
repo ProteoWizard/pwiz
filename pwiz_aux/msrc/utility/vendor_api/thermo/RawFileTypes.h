@@ -165,7 +165,7 @@ inline InstrumentModelType parseInstrumentModelType(const std::string& instrumen
     else if (type == "LTQ ORBITRAP XL ETD")     return InstrumentModelType_LTQ_Orbitrap_XL_ETD;
     else if (type == "DFS")                     return InstrumentModelType_DFS;
     else if (type == "DSQ II")                  return InstrumentModelType_DSQ_II;
-    else if (type == "ISQ")                     return InstrumentModelType_ISQ;
+    else if (type == "ISQ SERIES")              return InstrumentModelType_ISQ;
     else if (type == "MALDI LTQ XL")            return InstrumentModelType_MALDI_LTQ_XL;
     else if (type == "MALDI LTQ ORBITRAP")      return InstrumentModelType_MALDI_LTQ_Orbitrap;
     else if (type == "TSQ QUANTUM")             return InstrumentModelType_TSQ_Quantum;

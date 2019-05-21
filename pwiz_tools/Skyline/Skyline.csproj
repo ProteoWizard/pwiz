@@ -2912,6 +2912,9 @@
     <EmbeddedResource Include="Resources\UIModeSmallMolecules.bmp" />
     <None Include="Resources\Unlocked.bmp" />
     <None Include="Resources\warning.png" />
+    <EmbeddedResource Include="Resources\MoleculeIrt.bmp" />
+    <EmbeddedResource Include="Resources\MoleculeIrtLib.bmp" />
+    <EmbeddedResource Include="Resources\MoleculeStandardLib.bmp" />
     <Content Include="SkylineProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

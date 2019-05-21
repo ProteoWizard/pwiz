@@ -91,7 +91,7 @@ namespace pwiz.Skyline.Model.Databinding
             return new ViewSpecList(viewSpecs, viewSpecList.ViewLayouts);
         }
 
-        public override void AddOrReplaceViews(ViewGroupId groupId, IEnumerable<ViewSpec> viewSpecs)
+        public override void AddOrReplaceViews(ViewGroupId groupId, IEnumerable<ViewSpecLayout> viewSpecs)
         {
             var viewSpecsArray = ImmutableList.ValueOf(viewSpecs);
             if (Equals(groupId, PersistedViews.MainGroup.Id))
@@ -322,7 +322,23 @@ namespace pwiz.Skyline.Model.Databinding
             }
         }
 
-        public bool Export(CancellationToken cancellationToken, IProgressMonitor progressMonitor, ref IProgressStatus status, ViewInfo viewInfo, TextWriter writer, DsvWriter dsvWriter)
+        public bool Export(CancellationToken cancellationToken, IProgressMonitor progressMonitor,
+            ref IProgressStatus status, ViewInfo viewInfo, TextWriter writer, DsvWriter dsvWriter)
+        {
+            ViewLayout viewLayout = null;
+            if (viewInfo.ViewGroup != null)
+            {
+                var viewLayoutList = GetViewLayoutList(viewInfo.ViewGroup.Id.ViewName(viewInfo.Name));
+                if (viewLayoutList != null)
+                {
+                    viewLayout = viewLayoutList.DefaultLayout;
+                }
+            }
+
+            return Export(cancellationToken, progressMonitor, ref status, viewInfo, viewLayout, writer, dsvWriter);
+        }
+
+        public bool Export(CancellationToken cancellationToken, IProgressMonitor progressMonitor, ref IProgressStatus status, ViewInfo viewInfo, ViewLayout viewLayout, TextWriter writer, DsvWriter dsvWriter)
         {
             progressMonitor = progressMonitor ?? new SilentProgressMonitor();
             using (var bindingListSource = new BindingListSource(cancellationToken))

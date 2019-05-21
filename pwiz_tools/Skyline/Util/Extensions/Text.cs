@@ -629,12 +629,13 @@ namespace pwiz.Skyline.Util.Extensions
             }
             for (int i = 0; i < fields.Length; ++i)
             {
-                FieldNames.Add(fields[i].Trim());
-                FieldDict[fields[i]] = i;
+                var fieldName = fields[i].Trim();
+                FieldNames.Add(fieldName);
+                FieldDict[fieldName] = i;
                 // Check to see if the given column name is actually a synonym for the internal canonical (no spaces, serialized) name
                 if (headerSynonyms != null)
                 {
-                    var key = headerSynonyms.Keys.FirstOrDefault(k => string.Compare(k, fields[i], StringComparison.OrdinalIgnoreCase)==0); // Case insensitive
+                    var key = headerSynonyms.Keys.FirstOrDefault(k => string.Compare(k, fieldName, StringComparison.OrdinalIgnoreCase)==0); // Case insensitive
                     if (!string.IsNullOrEmpty(key))
                     {
                         var syn = headerSynonyms[key];

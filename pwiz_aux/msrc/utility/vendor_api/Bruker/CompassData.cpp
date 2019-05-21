@@ -604,6 +604,16 @@ struct CompassDataImpl : public CompassData
         CATCH_AND_FORWARD
     }
 
+    virtual ChromatogramPtr getTIC() const
+    {
+        return ChromatogramPtr();
+    }
+
+    virtual ChromatogramPtr getBPC() const
+    {
+        return ChromatogramPtr();
+    }
+
     virtual std::string getOperatorName() const
     {
         if (!hasMSData_) return "";
@@ -660,6 +670,8 @@ struct CompassDataImpl : public CompassData
         if (!hasMSData_) return "";
         try {return ToStdString(msAnalysis_->InstrumentDescription);} CATCH_AND_FORWARD
     }
+
+    virtual std::string getInstrumentSerialNumber() const { return ""; }
 
     virtual InstrumentSource getInstrumentSource() const { return InstrumentSource_Unknown; }
     virtual std::string getAcquisitionSoftware() const { return ""; }

@@ -53,13 +53,6 @@ ChromatogramList_Bruker::ChromatogramList_Bruker(MSData& msd,
     compassDataPtr_(compassDataPtr),
     size_(0)
 {
-    switch (format_)
-    {
-        case Reader_Bruker_Format_U2:
-            //size_ = compassXtractWrapperPtr->traceDeclarations_.size();
-            break;
-    }
-
     createIndex();
 }
 
@@ -104,6 +97,24 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Bruker::chromatogram(size_t index
     result->id = ci.id;
     result->set(ci.chromatogramType);
 
+    vendor_api::Bruker::ChromatogramPtr cd;
+
+    switch (ci.chromatogramType)
+    {
+        case MS_TIC_chromatogram:
+            cd = compassDataPtr_->getTIC();
+            break;
+
+        case MS_basepeak_chromatogram:
+            cd = compassDataPtr_->getBPC();
+            break;
+
+        default:
+            throw runtime_error("[ChromatogramList_Bruker] unsupported chromatogramType");
+    }
+
+    result->setTimeIntensityArrays(cd->times, cd->intensities, UO_second, MS_number_of_detector_counts);
+
     /*try
     {
         automation_vector<double> xArray(*trace->GetTimes(), automation_vector<double>::MOVE);
@@ -131,6 +142,28 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Bruker::chromatogram(size_t index
 
 PWIZ_API_DECL void ChromatogramList_Bruker::createIndex()
 {
+    auto tic = compassDataPtr_->getTIC();
+    if (tic)
+    {
+        index_.push_back(IndexEntry());
+        IndexEntry& ie = index_.back();
+        ie.index = index_.size() - 1;
+        ie.id = "TIC";
+        ie.chromatogramType = MS_TIC_chromatogram;
+        idToIndexMap_[ie.id] = ie.index;
+    }
+
+    auto bpc = compassDataPtr_->getBPC();
+    if (bpc)
+    {
+        index_.push_back(IndexEntry());
+        IndexEntry& ie = index_.back();
+        ie.index = index_.size() - 1;
+        ie.id = "BPC";
+        ie.chromatogramType = MS_basepeak_chromatogram;
+        idToIndexMap_[ie.id] = ie.index;
+    }
+
     /*if (format_ == Reader_Bruker_Format_U2)
     {
         CompassXtractWrapper::LC_TraceDeclarationList& tdList = compassXtractWrapperPtr_->traceDeclarations_;
@@ -155,6 +188,8 @@ PWIZ_API_DECL void ChromatogramList_Bruker::createIndex()
             //    throw runtime_error("[ChromatogramList_Bruker::chromatogram()] unexpected TraceUnit");
         }
     }*/
+
+    size_ = index_.size();
 }
 
 

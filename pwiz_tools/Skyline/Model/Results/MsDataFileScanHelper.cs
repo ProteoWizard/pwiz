@@ -104,6 +104,7 @@ namespace pwiz.Skyline.Model.Results
             minIonMobility = double.MaxValue;
             maxIonMobility = double.MinValue;
             var hasIonMobilityInfo = false;
+            int i = 0;
             foreach (var transition in ScanProvider.Transitions)
             {
                 if (!transition._ionMobilityInfo.HasIonMobilityValue || !transition._ionMobilityInfo.IonMobilityExtractionWindowWidth.HasValue)
@@ -112,7 +113,7 @@ namespace pwiz.Skyline.Model.Results
                     minIonMobility = double.MinValue;
                     maxIonMobility = double.MaxValue;
                 }
-                else if (sourceType == ChromSource.unknown || transition.Source == sourceType)
+                else if (sourceType == ChromSource.unknown || (transition.Source == sourceType && i == TransitionIndex))
                 {
                     // Products and precursors may have different expected ion mobility values in Waters MsE
                     double startIM = transition._ionMobilityInfo.IonMobility.Mobility.Value -
@@ -122,6 +123,7 @@ namespace pwiz.Skyline.Model.Results
                     maxIonMobility = Math.Max(maxIonMobility, endIM);
                     hasIonMobilityInfo = true;
                 }
+                i++;
             }
             return hasIonMobilityInfo;
         }

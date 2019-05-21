@@ -747,12 +747,6 @@ rule copy
 }
 
 
-actions copy
-{
-    $(CP) "$(>)" $(WINDOWS-CP-HACK) "$(<)" $(NULL_OUT)
-}
-
-
 rule RmTemps
 {
 }
@@ -768,21 +762,55 @@ rule hard-link
 {
 }
 
-if [ os.name ] = NT
+
+if --verbose in [ modules.peek : ARGV ]
 {
-    actions hard-link
+    actions copy
     {
-        $(RM) "$(<)" 2$(NULL_OUT) $(NULL_OUT)
-        $(LN) "$(<)" "$(>)" 2$(NULL_OUT) $(NULL_OUT)
-        IF ERRORLEVEL 1 $(CP) "$(>)" $(WINDOWS-CP-HACK) "$(<)" $(NULL_OUT)
+        $(CP) "$(>)" $(WINDOWS-CP-HACK) "$(<)" $(NULL_OUT)
+    }
+
+    if [ os.name ] = NT
+    {
+        actions hard-link
+        {
+            $(RM) "$(<)" 2$(NULL_OUT) $(NULL_OUT)
+            $(LN) "$(<)" "$(>)" 2$(NULL_OUT) $(NULL_OUT)
+            IF ERRORLEVEL 1 $(CP) "$(>)" $(WINDOWS-CP-HACK) "$(<)" $(NULL_OUT)
+        }
+    }
+    else
+    {
+        actions hard-link
+        {
+            $(RM) "$(<)" 2$(NULL_OUT) $(NULL_OUT)
+            $(LN) "$(>)" "$(<)" $(NULL_OUT)
+        }
     }
 }
 else
 {
-    actions hard-link
+    actions quietly copy
     {
-        $(RM) "$(<)" 2$(NULL_OUT) $(NULL_OUT)
-        $(LN) "$(>)" "$(<)" $(NULL_OUT)
+        $(CP) "$(>)" $(WINDOWS-CP-HACK) "$(<)" $(NULL_OUT)
+    }
+
+    if [ os.name ] = NT
+    {
+        actions quietly hard-link
+        {
+            $(RM) "$(<)" 2$(NULL_OUT) $(NULL_OUT)
+            $(LN) "$(<)" "$(>)" 2$(NULL_OUT) $(NULL_OUT)
+            IF ERRORLEVEL 1 $(CP) "$(>)" $(WINDOWS-CP-HACK) "$(<)" $(NULL_OUT)
+        }
+    }
+    else
+    {
+        actions quietly hard-link
+        {
+            $(RM) "$(<)" 2$(NULL_OUT) $(NULL_OUT)
+            $(LN) "$(>)" "$(<)" $(NULL_OUT)
+        }
     }
 }
 

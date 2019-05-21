@@ -339,11 +339,11 @@ rule extract ( tar-filepath : include-patterns * : tar-requirements * : tar-usag
             caller-location = [ path.native $(caller-location) ] ;
         }
 
-        extract-really $(tar-filepath) : $(include-patterns) : $(tar-requirements) : $(tar-usage-requirements) : $(check-last-file-only) $(keep-old-files) : $(caller-location) ;
+        extract-really $(tar-filepath) : $(include-patterns) : $(tar-requirements) : $(tar-usage-requirements) : $(check-last-file-only) : $(keep-old-files) : $(caller-location) ;
     }
 }
 
-rule extract-really ( tar-filepath : include-patterns * : tar-requirements * : tar-usage-requirements * : check-last-file-only ? keep-old-files ? : caller-location )
+rule extract-really ( tar-filepath : include-patterns * : tar-requirements * : tar-usage-requirements * : check-last-file-only ? : keep-old-files ? : caller-location )
 {
     #local project = [ project.current ] ;
 

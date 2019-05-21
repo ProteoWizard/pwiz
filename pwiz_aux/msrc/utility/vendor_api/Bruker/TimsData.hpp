@@ -240,6 +240,12 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     /// returns a spectrum from the specified LC source
     virtual LCSpectrumPtr getLCSpectrum(int source, int scan) const;
 
+    /// returns a chromatogram with times and total ion currents of all spectra, or a null pointer if the format doesn't support fast access to TIC
+    virtual ChromatogramPtr getTIC() const;
+
+    /// returns a chromatogram with times and base peak intensities of all spectra, or a null pointer if the format doesn't support fast access to BPC
+    virtual ChromatogramPtr getBPC() const;
+
     virtual std::string getOperatorName() const;
     virtual std::string getAnalysisName() const ;
     virtual boost::local_time::local_date_time getAnalysisDateTime() const;
@@ -248,6 +254,7 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     virtual InstrumentFamily getInstrumentFamily() const;
     virtual int getInstrumentRevision() const;
     virtual std::string getInstrumentDescription() const;
+    virtual std::string getInstrumentSerialNumber() const;
     virtual InstrumentSource getInstrumentSource() const;
     virtual std::string getAcquisitionSoftware() const;
     virtual std::string getAcquisitionSoftwareVersion() const;
@@ -262,12 +269,14 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     InstrumentFamily instrumentFamily_;
     int instrumentRevision_;
     InstrumentSource instrumentSource_;
+    std::string serialNumber_;
     std::string acquisitionDateTime_;
     std::string operatorName_;
     bool combineSpectra_;
     bool hasPASEFData_;
     int preferOnlyMsLevel_; // when nonzero, caller only wants spectra at this ms level
     bool allowMsMsWithoutPrecursor_; // when false, PASEF MS2 specta without precursor info will be excluded
+    ChromatogramPtr tic_, bpc_;
 
     int64_t currentFrameId_; // used for cacheing frame contents
 

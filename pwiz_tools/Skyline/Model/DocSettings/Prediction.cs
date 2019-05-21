@@ -2989,6 +2989,13 @@ namespace pwiz.Skyline.Model.DocSettings
                 collisionalCrossSectionSqA);
         }
 
+        public IonMobilityFilter ApplyOffset(double offset)
+        {
+            if (offset == 0 || !IonMobility.HasValue)
+                return this;
+            return ChangeIonMobilityValue(IonMobility.ChangeIonMobility(IonMobility.Mobility + offset));
+        }
+
         public IonMobilityFilter ChangeIonMobilityValue(IonMobilityValue value)
         {
             return (IonMobility.CompareTo(value) == 0) ? this : GetIonMobilityFilter(value, IonMobilityExtractionWindowWidth, CollisionalCrossSectionSqA);

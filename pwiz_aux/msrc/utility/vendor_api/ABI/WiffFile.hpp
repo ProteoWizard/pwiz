@@ -227,8 +227,19 @@ class PWIZ_API_DECL WiffFile
     virtual const std::vector<std::string>& getSampleNames() const = 0;
 
     virtual InstrumentModel getInstrumentModel() const = 0;
+    virtual std::string getInstrumentSerialNumber() const = 0;
     virtual IonSourceType getIonSourceType() const = 0;
     virtual boost::local_time::local_date_time getSampleAcquisitionTime(int sample, bool adjustToHostTime) const = 0;
+
+    struct ADCTrace
+    {
+        pwiz::util::BinaryData<double> x, y;
+        std::string xUnits, yUnits;
+    };
+
+    virtual int getADCTraceCount(int sample) const = 0;
+    virtual std::string getADCTraceName(int sample, int traceIndex) const = 0;
+    virtual void getADCTrace(int sample, int traceIndex, ADCTrace& trace) const = 0;
 
     virtual ExperimentPtr getExperiment(int sample, int period, int experiment) const = 0;
     virtual SpectrumPtr getSpectrum(int sample, int period, int experiment, int cycle) const = 0;

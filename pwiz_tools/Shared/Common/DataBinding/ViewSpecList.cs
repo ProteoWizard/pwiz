@@ -37,73 +37,56 @@ namespace pwiz.Common.DataBinding
         public static readonly ViewSpecList EMPTY = new ViewSpecList(ImmutableList.Empty<ViewSpec>());
 
         public ViewSpecList(IEnumerable<ViewSpec> viewSpecs)
+            : this(viewSpecs.Select(vs=>new ViewSpecLayout(vs, ViewLayoutList.EMPTY)))
         {
-            ViewSpecs = ImmutableList.ValueOf(viewSpecs);
-            ViewLayouts = ImmutableList<ViewLayoutList>.EMPTY;
         }
 
-        public ViewSpecList(IEnumerable<ViewSpec> viewSpecs, IEnumerable<ViewLayoutList> viewLayouts)
+        public ViewSpecList(IEnumerable<ViewSpec> viewSpecs, IEnumerable<ViewLayoutList> viewLayouts) 
+            : this(MakeViewSpecLayouts(viewSpecs, viewLayouts))
         {
-            ViewSpecs = ImmutableList.ValueOfOrEmpty(viewSpecs);
-            ViewLayouts = ImmutableList.ValueOfOrEmpty(viewLayouts);
         }
 
-        public ImmutableList<ViewSpec> ViewSpecs { get;private set; }
-        public ImmutableList<ViewLayoutList> ViewLayouts { get; private set; }
-        
+        public ViewSpecList(IEnumerable<ViewSpecLayout> viewSpecLayouts)
+        {
+            ViewSpecLayouts = ImmutableList.ValueOfOrEmpty(viewSpecLayouts);
+        }
+
+        public IEnumerable<ViewSpec> ViewSpecs
+        {
+            get { return Views.Select(vsl => vsl.ViewSpec); }
+        }
+
+        public IEnumerable<ViewLayoutList> ViewLayouts
+        {
+            get { return Views.Select(vsl => vsl.ViewLayoutList).Where(vll => !vll.IsEmpty); }
+        }
+
         [TrackChildren]
-        public ImmutableList<View> Views
+        public ImmutableList<ViewSpecLayout> Views
         {
-            get
-            {
-                return ImmutableList<View>.ValueOf(ViewSpecs.Select(v =>
-                    new View(v, ViewLayouts.FirstOrDefault(vll => vll.ViewName == v.Name))));
-            }
+            get { return ViewSpecLayouts; }
         }
 
-        public class View : IAuditLogObject
-        {
-            private readonly ViewLayoutList _layouts;
-            public View(ViewSpec spec, ViewLayoutList layouts)
-            {
-                ViewSpec = spec;
-                _layouts = layouts;
-            }
-
-            [TrackChildren(ignoreName:true)]
-            public ViewSpec ViewSpec { get; private set; }
-
-            [TrackChildren]
-            public ImmutableList<ViewLayout> Layouts
-            {
-                get
-                {
-                    if (_layouts == null)
-                        return ImmutableList<ViewLayout>.EMPTY;
-
-                    return _layouts.Layouts;
-                }
-            }
-
-            public string AuditLogText { get { return ViewSpec.Name; } }
-            public bool IsName { get { return true; } }
-        }
+        public ImmutableList<ViewSpecLayout> ViewSpecLayouts { get; private set; }
 
         public ViewSpecList FilterRowSources(ICollection<string> rowSources)
         {
-            return new ViewSpecList(ViewSpecs.Where(viewSpec=>rowSources.Contains(viewSpec.RowSource)));
+            return Filter(viewSpec => rowSources.Contains(viewSpec.RowSource));
         }
 
         public ViewSpecList Filter(Func<ViewSpec, bool> viewPredicate)
         {
-            var viewSpecs = ImmutableList.ValueOf(ViewSpecs.Where(viewPredicate));
-            var viewSpecNames = new HashSet<string>(viewSpecs.Select(viewSpec=>viewSpec.Name));
-            return new ViewSpecList(viewSpecs, ViewLayouts.Where(layout=>viewSpecNames.Contains(layout.ViewName)));
+            return new ViewSpecList(Views.Where(vsl => viewPredicate(vsl.ViewSpec)));
         }
 
         public ViewSpec GetView(string name)
         {
-            return ViewSpecs.FirstOrDefault(viewSpec => viewSpec.Name == name);
+            return GetViewSpecLayout(name)?.ViewSpec;
+        }
+
+        public ViewSpecLayout GetViewSpecLayout(string name)
+        {
+            return ViewSpecLayouts.FirstOrDefault(viewSpecLayout => viewSpecLayout.Name == name);
         }
 
         public ViewLayoutList GetViewLayouts(string name)
@@ -123,11 +106,11 @@ namespace pwiz.Common.DataBinding
             return new ViewSpecList(ViewSpecs, newLayouts);
         }
 
-        public ViewSpecList ReplaceView(string oldName, ViewSpec newView)
+        public ViewSpecList ReplaceView(string oldName, ViewSpecLayout newView)
         {
-            List<ViewSpec> items = new List<ViewSpec>();
+            List<ViewSpecLayout> items = new List<ViewSpecLayout>();
             bool found = false;
-            foreach (var item in ViewSpecs)
+            foreach (var item in ViewSpecLayouts)
             {
                 if (item.Name != oldName)
                 {
@@ -144,38 +127,17 @@ namespace pwiz.Common.DataBinding
             {
                 items.Add(newView);
             }
-            IEnumerable<ViewLayoutList> newLayouts;
-            if (oldName != null)
-            {
-                if (newView == null)
-                {
-                    newLayouts = ViewLayouts.Where(layout => layout.ViewName != oldName);
-                }
-                else if (newView.Name == oldName)
-                {
-                    newLayouts = ViewLayouts;
-                }
-                else
-                {
-                    newLayouts = ViewLayouts.Where(layout => layout.ViewName != newView.Name)
-                        .Select(layout => layout.ViewName == oldName ? layout.ChangeViewName(newView.Name) : layout);
-                }
-            }
-            else
-            {
-                newLayouts = ViewLayouts;
-            }
-            return new ViewSpecList(items, newLayouts);
+            return new ViewSpecList(items);
         }
 
         public ViewSpecList RenameView(string oldName, string newName)
         {
-            var viewSpec = GetView(oldName);
+            var viewSpec = GetViewSpecLayout(oldName);
             if (null == viewSpec)
             {
                 return this;
             }
-            return ReplaceView(oldName, viewSpec.SetName(newName));
+            return ReplaceView(oldName, viewSpec.ChangeName(newName));
         }
 
         public ViewSpecList DeleteViews(IEnumerable<string> names)
@@ -184,7 +146,7 @@ namespace pwiz.Common.DataBinding
             return new ViewSpecList(ViewSpecs.Where(spec=>!nameSet.Contains(spec.Name)));
         }
 
-        public ViewSpecList AddOrReplaceViews(IEnumerable<ViewSpec> viewSpecs)
+        public ViewSpecList AddOrReplaceViews(IEnumerable<ViewSpecLayout> viewSpecs)
         {
             var result = this;
             foreach (var viewSpec in viewSpecs)
@@ -211,13 +173,14 @@ namespace pwiz.Common.DataBinding
 
         private void ReadXml(XmlReader reader)
         {
-            if (ViewSpecs != null)
+            if (Views != null)
             {
                 throw new ReadOnlyException();
             }
+
             if (reader.IsEmptyElement)
             {
-                ViewSpecs = ImmutableList.Empty<ViewSpec>();
+                ViewSpecLayouts = ImmutableList.Empty<ViewSpecLayout>();
                 reader.ReadElementString(@"views");
                 return;
             }
@@ -244,8 +207,8 @@ namespace pwiz.Common.DataBinding
                     reader.Skip();
                 }
             }
-            ViewSpecs = ImmutableList.ValueOf(viewItems);
-            ViewLayouts = ImmutableList.ValueOf(layouts);
+
+            ViewSpecLayouts = ImmutableList.ValueOf(MakeViewSpecLayouts(viewItems, layouts));
         }
 
         public void WriteXml(XmlWriter writer)
@@ -275,7 +238,7 @@ namespace pwiz.Common.DataBinding
         #region Equality Members
         protected bool Equals(ViewSpecList other)
         {
-            return Equals(ViewSpecs, other.ViewSpecs) && Equals(ViewLayouts, other.ViewLayouts);
+            return Equals(ViewSpecLayouts, other.ViewSpecLayouts);
         }
 
         public override bool Equals(object obj)
@@ -288,11 +251,24 @@ namespace pwiz.Common.DataBinding
 
         public override int GetHashCode()
         {
-            unchecked
-            {
-                return (ViewSpecs.GetHashCode() * 397) ^ ViewLayouts.GetHashCode();
-            }
+            return ViewSpecLayouts.GetHashCode();
         }
         #endregion
+
+        private static IEnumerable<ViewSpecLayout> MakeViewSpecLayouts(IEnumerable<ViewSpec> viewSpecs,
+            IEnumerable<ViewLayoutList> viewLayouts)
+        {
+            Dictionary<string, ViewLayoutList> layoutsByName = viewLayouts?.ToDictionary(layout => layout.ViewName);
+            foreach (var viewSpec in viewSpecs)
+            {
+                ViewLayoutList layouts = null;
+                if (viewSpec.Name != null)
+                {
+                    layoutsByName?.TryGetValue(viewSpec.Name, out layouts);
+                }
+                yield return new ViewSpecLayout(viewSpec, layouts);
+
+            }
+        }
     }
 }

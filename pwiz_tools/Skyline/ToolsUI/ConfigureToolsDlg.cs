@@ -1035,7 +1035,8 @@ namespace pwiz.Skyline.ToolsUI
             {
                 _liveReportDriver.List.Clear();
                 var documentGridViewContext = DocumentGridViewContext.CreateDocumentGridViewContext(null, DataSchemaLocalizer.INVARIANT);
-                _liveReportDriver.List.AddRange(documentGridViewContext.GetViewSpecList(PersistedViews.ExternalToolsGroup.Id).ViewSpecs.Select(view => new ReportOrViewSpec(view)));
+                _liveReportDriver.List.AddRange(documentGridViewContext.GetViewSpecList(PersistedViews.ExternalToolsGroup.Id)
+                    .ViewSpecLayouts.Select(view => new ReportOrViewSpec(view)));
             }
 
             public void LoadList(string selectedItemLast)

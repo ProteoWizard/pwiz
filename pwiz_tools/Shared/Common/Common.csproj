@@ -308,6 +308,7 @@
     <Compile Include="DataBinding\ViewGroup.cs" />
     <Compile Include="DataBinding\ViewGroupInfo.cs" />
     <Compile Include="DataBinding\ViewInfo.cs" />
+    <Compile Include="DataBinding\ViewSpecLayout.cs" />
     <Compile Include="DataBinding\ViewSpecList.cs" />
     <Compile Include="Graph\CurveDataHandler.cs" />
     <Compile Include="Graph\DataColumn.cs" />
