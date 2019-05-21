@@ -46,7 +46,7 @@ namespace pwiz {
 namespace vendor_api {
 namespace UIMF {
 
-    
+
 class UIMFReaderImpl : public UIMFReader
 {
     public:
@@ -59,6 +59,11 @@ class UIMFReaderImpl : public UIMFReader
     virtual pair<double, double> getScanRange() const;
 
     virtual boost::local_time::local_date_time getAcquisitionTime() const;
+
+    virtual bool hasIonMobility() const { return true; }
+    virtual bool canConvertIonMobilityAndCCS() const { return false; }
+    virtual double ionMobilityToCCS(double driftTimeInMilliseconds, double mz, int charge) const;
+    virtual double ccsToIonMobility(double ccs, double mz, int charge) const;
 
     virtual void getScan(int frame, int scan, FrameType frameType, pwiz::util::BinaryData<double>& mzArray, pwiz::util::BinaryData<double>& intensityArray, bool ignoreZeroIntensityPoints) const;
     virtual double getDriftTime(int frame, int scan) const;
@@ -155,6 +160,18 @@ blt::local_date_time UIMFReaderImpl::getAcquisitionTime() const
         return blt::local_date_time(pt, blt::time_zone_ptr()); // keep time as is
     }
     CATCH_AND_FORWARD
+}
+
+
+PWIZ_API_DECL double UIMFReaderImpl::ionMobilityToCCS(double driftTime, double mz, int charge) const
+{
+    return 0;
+}
+
+
+PWIZ_API_DECL double UIMFReaderImpl::ccsToIonMobility(double ccs, double mz, int charge) const
+{
+    return 0;
 }
 
 void UIMFReaderImpl::getScan(int frame, int scan, FrameType frameType, pwiz::util::BinaryData<double>& mzArray, pwiz::util::BinaryData<double>& intensityArray, bool ignoreZeroIntensityPoints) const

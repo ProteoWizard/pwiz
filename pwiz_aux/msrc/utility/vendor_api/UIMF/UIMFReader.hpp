@@ -71,6 +71,11 @@ class PWIZ_API_DECL UIMFReader
 
     virtual boost::local_time::local_date_time getAcquisitionTime() const = 0;
 
+    virtual bool hasIonMobility() const = 0;
+    virtual bool canConvertIonMobilityAndCCS() const = 0;
+    virtual double ionMobilityToCCS(double driftTimeInMilliseconds, double mz, int charge) const = 0;
+    virtual double ccsToIonMobility(double ccs, double mz, int charge) const = 0;
+
     virtual void getScan(int frame, int scan, FrameType frameType, pwiz::util::BinaryData<double>& mzArray, pwiz::util::BinaryData<double>& intensityArray, bool ignoreZeroIntensityPoints = false) const = 0;
     virtual double getDriftTime(int frame, int scan) const = 0;
     virtual double getRetentionTime(int frame) const = 0;

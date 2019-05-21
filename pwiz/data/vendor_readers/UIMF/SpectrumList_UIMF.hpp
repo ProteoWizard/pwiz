@@ -49,7 +49,7 @@ namespace detail {
 
 using boost::shared_ptr;
 
-class PWIZ_API_DECL SpectrumList_UIMF : public SpectrumListBase
+class PWIZ_API_DECL SpectrumList_UIMF : public SpectrumListIonMobilityBase
 {
     public:
 
@@ -60,6 +60,11 @@ class PWIZ_API_DECL SpectrumList_UIMF : public SpectrumListBase
     virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel) const;
 
     //virtual pwiz::analysis::Spectrum3DPtr spectrum3d(double scanStartTime, const boost::icl::interval_set<double>& driftTimeRanges) const;
+
+    virtual bool hasIonMobility() const;
+    virtual bool canConvertIonMobilityAndCCS() const;
+    virtual double ionMobilityToCCS(double driftTime, double mz, int charge) const;
+    virtual double ccsToIonMobility(double ccs, double mz, int charge) const;
 
 #ifdef PWIZ_READER_UIMF
     SpectrumList_UIMF(const MSData& msd, UIMFReaderPtr rawfile, const Reader::Config& config);

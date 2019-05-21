@@ -179,6 +179,30 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_UIMF::spectrum(size_t index, DetailLevel 
 }*/
 
 
+PWIZ_API_DECL bool SpectrumList_UIMF::hasIonMobility() const
+{
+    return rawfile_->hasIonMobility();
+}
+
+
+PWIZ_API_DECL bool SpectrumList_UIMF::canConvertIonMobilityAndCCS() const
+{
+    return rawfile_->canConvertIonMobilityAndCCS();
+}
+
+
+PWIZ_API_DECL double SpectrumList_UIMF::ionMobilityToCCS(double driftTime, double mz, int charge) const
+{
+    return rawfile_->ionMobilityToCCS(driftTime, mz, charge);
+}
+
+
+PWIZ_API_DECL double SpectrumList_UIMF::ccsToIonMobility(double ccs, double mz, int charge) const
+{
+    return rawfile_->ccsToIonMobility(ccs, mz, charge);
+}
+
+
 PWIZ_API_DECL void SpectrumList_UIMF::createIndex() const
 {
     using namespace boost::spirit::karma;
