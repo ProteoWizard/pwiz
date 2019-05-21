@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Drawing;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -32,6 +33,13 @@ namespace pwiz.Skyline.Alerts
         public NoModeUIDlg()
         {
             InitializeComponent();
+
+            // N.B. the Imagelist we use here is all blanks, which we then replace here in the ctor. This is done
+            // so that if we ever update the proteomic/molecules/mixed bitmaps we don't have to remake this ImageList.
+            imageListBoxItemProteomic.ImageList.Images[imageListBoxItemProteomic.ImageIndex] = new Bitmap(Resources.UIModeProteomic);
+            imageListBoxItemMolecules.ImageList.Images[imageListBoxItemMolecules.ImageIndex] = new Bitmap(Resources.UIModeSmallMolecules);
+            imageListBoxItemMixed.ImageList.Images[imageListBoxItemMixed.ImageIndex] = new Bitmap(Resources.UIModeMixed);
+
             SelectModeUI(SrmDocument.DOCUMENT_TYPE.proteomic); // Make a guess at proteomic
         }
 

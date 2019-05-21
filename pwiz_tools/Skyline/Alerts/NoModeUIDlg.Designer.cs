@@ -43,6 +43,9 @@ namespace pwiz.Skyline.Alerts
             base.Dispose(disposing);
         }
 
+        // N.B. the Imagelist we use here is all blanks, which we then replace in the ctor. This is done
+        // so that if we ever update the proteomic/molecules/mixed bitmaps we don't have to remake this ImageList.
+
         #region Windows Form Designer generated code
 
         /// <summary>
@@ -68,6 +71,7 @@ namespace pwiz.Skyline.Alerts
             // 
             this.imageListModeUI.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageListModeUI.ImageStream")));
             this.imageListModeUI.TransparentColor = System.Drawing.Color.Transparent;
+            this.modeUIHandler.SetUIMode(this.imageListModeUI, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
             this.imageListModeUI.Images.SetKeyName(0, "Proteomic");
             this.imageListModeUI.Images.SetKeyName(1, "Molecules");
             this.imageListModeUI.Images.SetKeyName(2, "Mixed");
@@ -75,12 +79,12 @@ namespace pwiz.Skyline.Alerts
             // listBoxModeUI
             // 
             this.listBoxModeUI.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
+            resources.ApplyResources(this.listBoxModeUI, "listBoxModeUI");
             this.listBoxModeUI.ImageList = this.imageListModeUI;
             this.listBoxModeUI.Items.AddRange(new pwiz.Skyline.Controls.ImageListBoxItem[] {
             this.imageListBoxItemProteomic,
             this.imageListBoxItemMolecules,
             this.imageListBoxItemMixed});
-            resources.ApplyResources(this.listBoxModeUI, "listBoxModeUI");
             this.listBoxModeUI.Name = "listBoxModeUI";
             this.modeUIHandler.SetUIMode(this.listBoxModeUI, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
             // 
