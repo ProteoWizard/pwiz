@@ -58,6 +58,9 @@ class UIMFReaderImpl : public UIMFReader
     virtual size_t getFrameCount() const { return frameCount_; }
     virtual pair<double, double> getScanRange() const;
 
+    virtual const std::vector<DriftScanInfoPtr> getDriftScansForFrame(int frame) const;
+    virtual size_t getMaxDriftScansPerFrame() const { return driftScansPerFrame_; }
+    
     virtual boost::local_time::local_date_time getAcquisitionTime() const;
 
     virtual bool hasIonMobility() const { return true; }
@@ -74,10 +77,33 @@ class UIMFReaderImpl : public UIMFReader
     vector<IndexEntry> index_;
     set<FrameType> frameTypes_;
     size_t frameCount_;
+    size_t driftScansPerFrame_;
 };
 
 typedef boost::shared_ptr<UIMFReaderImpl> UIMFReaderImplPtr;
 
+
+struct DriftScanInfoImpl : public DriftScanInfo
+{
+    DriftScanInfoImpl(UIMFLibrary::ScanInfo^ scanInfo, FrameType frameType, double retentionTime);
+
+    virtual int getFrameNumber() const { return frameNumber_; }
+    virtual FrameType getFrameType() const { return frameType_; };
+    virtual int getDriftScanNumber() const { return driftScanNumber_; }
+    virtual double getDriftTime() const { return driftTime_; }
+    virtual double getRetentionTime() const { return retentionTime_; }
+    virtual int getNonZeroCount() const { return nonZeroCount_; }
+    virtual double getTIC() const { return tic_; }
+
+    private:
+    int frameNumber_;
+    FrameType frameType_;
+    int driftScanNumber_;
+    double driftTime_;
+    double retentionTime_;
+    int nonZeroCount_;
+    double tic_;
+};
 
 #pragma unmanaged
 PWIZ_API_DECL
@@ -123,13 +149,26 @@ UIMFReaderImpl::UIMFReaderImpl(const std::string& path)
         }
 
         reader_ = gcnew UIMFLibrary::DataReader(filepath, false);
-        frameCount_ = (size_t) reader_->GetGlobalParams()->NumFrames;
+        UIMFLibrary::GlobalParams^ gp = reader_->GetGlobalParams();
+        frameCount_ = (size_t) gp->NumFrames;
+        driftScansPerFrame_ = (size_t) gp->Bins;
     }
     CATCH_AND_FORWARD
 }
 
 UIMFReaderImpl::~UIMFReaderImpl()
 {
+}
+
+DriftScanInfoImpl::DriftScanInfoImpl(UIMFLibrary::ScanInfo^ scanInfo, FrameType frameType, double retentionTime)
+{
+    frameNumber_ = scanInfo->Frame;
+    frameType_ = frameType;
+    driftScanNumber_ = scanInfo->Scan;
+    driftTime_ = scanInfo->DriftTime;
+    retentionTime_ = retentionTime;
+    nonZeroCount_ = scanInfo->NonZeroCount;
+    tic_ = scanInfo->TIC;
 }
 
 pair<double, double> UIMFReaderImpl::getScanRange() const
@@ -142,6 +181,23 @@ pair<double, double> UIMFReaderImpl::getScanRange() const
                          UIMFLibrary::DataReader::ConvertBinToMZ(fp->CalibrationSlope, fp->CalibrationIntercept, gp->BinWidth, gp->TOFCorrectionTime, gp->Bins));
     }
     CATCH_AND_FORWARD
+}
+
+const std::vector<DriftScanInfoPtr> UIMFReaderImpl::getDriftScansForFrame(int frame) const
+{
+    FrameType frameType = (FrameType) reader_->GetFrameTypeForFrame(frame);
+    double retentionTime = getRetentionTime(frame);
+    System::Collections::Generic::List<UIMFLibrary::ScanInfo^>^ scanInfos = reader_->GetFrameScans(frame);
+
+    vector<DriftScanInfoPtr> driftScans;
+    driftScans.reserve(scanInfos->Count);
+
+    // Use C++/CLI for each, because otherwise scanInfos has to be converted to a C++/CLI container to use C++11 for-range
+    for each (UIMFLibrary::ScanInfo^ scanInfo in scanInfos)
+    {
+        driftScans.push_back(DriftScanInfoPtr(new DriftScanInfoImpl(scanInfo, frameType, retentionTime)));
+    }
+    return driftScans;
 }
 
 blt::local_date_time UIMFReaderImpl::getAcquisitionTime() const

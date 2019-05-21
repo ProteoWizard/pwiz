@@ -41,19 +41,33 @@ namespace vendor_api {
 namespace UIMF {
 
 
+PWIZ_API_DECL enum FrameType
+{
+    FrameType_MS1 = 1,
+    FrameType_MS2 = 2,
+    FrameType_Calibration = 3,
+    FrameType_Prescan = 4
+};
+
+
+struct PWIZ_API_DECL DriftScanInfo
+{
+    virtual int getFrameNumber() const = 0;
+    virtual FrameType getFrameType() const = 0;
+    virtual int getDriftScanNumber() const = 0;
+    virtual double getDriftTime() const = 0;
+    virtual double getRetentionTime() const = 0;
+    virtual int getNonZeroCount() const = 0;
+    virtual double getTIC() const = 0;
+};
+
+typedef boost::shared_ptr<DriftScanInfo> DriftScanInfoPtr;
+
 class PWIZ_API_DECL UIMFReader
 {
     public:
     typedef boost::shared_ptr<UIMFReader> Ptr;
     static Ptr create(const std::string& path);
-
-    enum FrameType
-    {
-        FrameType_MS1 = 1,
-        FrameType_MS2 = 2,
-        FrameType_Calibration = 3,
-        FrameType_Prescan = 4
-    };
 
     struct IndexEntry
     {
@@ -68,6 +82,9 @@ class PWIZ_API_DECL UIMFReader
     virtual const set<FrameType>& getFrameTypes() const = 0;
     virtual size_t getFrameCount() const = 0;
     virtual pair<double, double> getScanRange() const = 0; // this appears to be constant across the file
+
+    virtual const vector<DriftScanInfoPtr> getDriftScansForFrame(int frame) const = 0;
+    virtual size_t getMaxDriftScansPerFrame() const = 0;
 
     virtual boost::local_time::local_date_time getAcquisitionTime() const = 0;
 

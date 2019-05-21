@@ -60,11 +60,11 @@ void fillInMetadata(const string& rawpath, UIMFReaderPtr rawfile, MSData& msd)
 {
     msd.cvs = defaultCVList();
 
-    const set<UIMFReader::FrameType>& frameTypes = rawfile->getFrameTypes();
-    if (frameTypes.count(UIMFReader::FrameType_MS1) > 0) msd.fileDescription.fileContent.set(MS_MS1_spectrum);
-    if (frameTypes.count(UIMFReader::FrameType_Calibration) > 0) msd.fileDescription.fileContent.set(MS_calibration_spectrum);
-    if (frameTypes.count(UIMFReader::FrameType_Prescan) > 0) msd.fileDescription.fileContent.set(MS_MS1_spectrum);
-    if (frameTypes.count(UIMFReader::FrameType_MS2) > 0) msd.fileDescription.fileContent.set(MS_MSn_spectrum);
+    const set<FrameType>& frameTypes = rawfile->getFrameTypes();
+    if (frameTypes.count(FrameType_MS1) > 0) msd.fileDescription.fileContent.set(MS_MS1_spectrum);
+    if (frameTypes.count(FrameType_Calibration) > 0) msd.fileDescription.fileContent.set(MS_calibration_spectrum);
+    if (frameTypes.count(FrameType_Prescan) > 0) msd.fileDescription.fileContent.set(MS_MS1_spectrum);
+    if (frameTypes.count(FrameType_MS2) > 0) msd.fileDescription.fileContent.set(MS_MSn_spectrum);
 
 
     msd.fileDescription.fileContent.set(MS_profile_spectrum);
