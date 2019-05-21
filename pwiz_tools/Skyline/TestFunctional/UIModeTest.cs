@@ -38,36 +38,57 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class UIModeTest : AbstractFunctionalTest
     {
+
+        private bool _showStartPage;
         protected override bool ShowStartPage
         {
-            get { return true; } // So our code for drawing user attention to UI mode select buttons fires
+            get { return _showStartPage; } // So our code for drawing user attention to UI mode select buttons fires
         }
 
 
         [TestMethod]
         public void UIModeSettingsTest()
         {
-            TestFilesZip = @"TestFunctional\UIModeTest.zip";
-            Settings.Default.UIMode = ""; // Start clean - should default to proteomic UI mode
-            RunFunctionalTest();
+            PerformTest(true);
         }
 
+        [TestMethod]
+        public void UIModeSettingsTestWithoutStartPage()
+        {
+            PerformTest(false);
+        }
+
+        private void PerformTest(bool withStartPage)
+        {
+            TestFilesZip = @"TestFunctional\UIModeTest.zip";
+            Settings.Default.UIMode = ""; // Start clean - should default to proteomic UI mode
+            _showStartPage = withStartPage;
+            RunFunctionalTest();
+        }
 
         protected override void DoTest()
         {
             // This test makes hard assumptions about the content of the document, so don't alter it with our small molecule test node
             TestSmallMolecules = false;
 
-            TestPeptideToMoleculeText(); // Exercise the UI peptide->molecule translation code
+            var startPage =_showStartPage ? WaitForOpenForm<StartPage>() : null;
+            var modeDlg = WaitForOpenForm<NoModeUIDlg>(); // Expect a dialog asking user to select a default UI mode
+            RunUI(() => modeDlg.ClickOk()); // Expect it to have proteomic preselected
+            WaitForClosedForm(modeDlg);
 
-            var startPage = WaitForOpenForm<StartPage>();
-            Assert.IsTrue(startPage.GetModeUIHelper().HasModeUIExplainerToolTip); // Because of Settings.Default.UIMode = "" above
-            RunUI(() => startPage.DoAction(skylineWindow => true)); // Start a new file
-            WaitForOpenForm<SkylineWindow>();
+            if (_showStartPage)
+            {
+                // ReSharper disable PossibleNullReferenceException
+                RunUI(() => startPage.DoAction(skylineWindow => true)); // Start a new file
+                Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.proteomic, startPage.GetModeUIHelper().GetUIToolBarButtonState());
+                // ReSharper restore PossibleNullReferenceException
+                WaitForOpenForm<SkylineWindow>();
+            }
+
+            Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.proteomic, SkylineWindow.GetModeUIHelper().GetUIToolBarButtonState());
 
             RunUI(() =>
             {
-                Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.proteomic, startPage.GetModeUIHelper().GetUIToolBarButtonState());
                 SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("blank.sky"));
             });
 
@@ -104,6 +125,13 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual(uimode, SkylineWindow.GetModeUIHelper().ModeUI);
                 });
             }
+
+            if (!_showStartPage)
+            {
+                return; // No need to do this twice
+            }
+
+            TestPeptideToMoleculeText(); // Exercise the UI peptide->molecule translation code
 
             // Test interaction of buttons in non-empty documents
             TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.small_molecules, SrmDocument.DOCUMENT_TYPE.small_molecules, false);
@@ -202,7 +230,6 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 SkylineWindow.ModeUIButtonClick(clickWhat);
-                Assert.IsFalse(SkylineWindow.GetModeUIHelper().HasModeUIExplainerToolTip);
                 VerifyButtonStates();
                 var actualModeUI = SkylineWindow.GetModeUIHelper().ModeUI;
                 Assert.AreEqual(clickWhat, actualModeUI);

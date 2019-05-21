@@ -245,16 +245,21 @@ namespace pwiz.Skyline
             {
                 _fileToOpen = args[args.Length-1];
             }
-            NewDocument();
+
+            var defaultUIMode = Settings.Default.UIMode;
+            NewDocument(); // Side effect: initializes Settings.Default.UIMode to proteomic if no previous value
             chorusRequestToolStripMenuItem.Visible = Settings.Default.EnableChorus;
 
             // Set UI mode to user default (proteomic/molecule/mixed)
             SrmDocument.DOCUMENT_TYPE defaultModeUI;
-            if (!Enum.TryParse(Settings.Default.UIMode, out defaultModeUI))
+            if (Enum.TryParse(defaultUIMode, out defaultModeUI))
             {
-                defaultModeUI = SrmDocument.DOCUMENT_TYPE.proteomic;
+                SetUIMode(defaultModeUI);
             }
-            SetUIMode(defaultModeUI);
+            else
+            {
+                Settings.Default.UIMode = defaultUIMode; // OnShown() will ask user for it
+            }
 
         }
 
@@ -275,6 +280,16 @@ namespace pwiz.Skyline
                     MessageBox.Show(this, Resources.SkylineWindow_SkylineWindow_Invalid_file_specified, Program.Name);
                 }
                 _fileToOpen = null;
+            }
+
+            // If user has never selected a default UI mode, ask for it now
+            if (string.IsNullOrEmpty(Settings.Default.UIMode))
+            {
+                using (var noModeUIDlg = new NoModeUIDlg())
+                {
+                    noModeUIDlg.ShowDialog(this);
+                    GetModeUIHelper().AttemptChangeModeUI(noModeUIDlg.SelectedDocumentType);
+                }
             }
         }
 

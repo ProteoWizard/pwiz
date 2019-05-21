@@ -117,7 +117,6 @@ namespace pwiz.Skyline.Util
             public static ModeUIAwareFormHelper DEFAULT = new ModeUIAwareFormHelper(null);
 
             private SrmDocument.DOCUMENT_TYPE? _modeUI;
-            private ToolTip _modeUIExplainerToolTip;
             private ModeUIExtender _modeUIExtender;
             public ModeUIAwareFormHelper(ModeUIExtender modeUIExtender)
             {
@@ -180,8 +179,6 @@ namespace pwiz.Skyline.Util
                 }
             }
 
-            public bool HasModeUIExplainerToolTip { get { return _modeUIExplainerToolTip != null && _modeUIExplainerToolTip.Active;  } }
-
             #endregion
 
             public void SetModeUIToolStripButtons(ToolStripDropDownButton modeUIToolBarDropDownButton, Action<object, EventArgs> handler)
@@ -231,12 +228,6 @@ namespace pwiz.Skyline.Util
 
                 AttemptChangeModeUI(newModeUI);
 
-                if (_modeUIExplainerToolTip != null)
-                {
-                    // If we're here, user has clicked the buttons and no longer needs that balloon tooltip
-                    _modeUIExplainerToolTip.Active = false;
-                }
-
             }
 
 
@@ -247,38 +238,6 @@ namespace pwiz.Skyline.Util
                 if (!IgnoreModeUI)
                 {
                     PeptideToMoleculeTextMapper.TranslateForm(form, ModeUI, _modeUIExtender);
-                }
-
-                //
-                // If user has never set UI mode before, draw attention to the presumably unfamiliar buttons
-                //
-                if (_modeUIToolBarDropDownButton != null && string.IsNullOrEmpty(Settings.Default.UIMode))
-                {
-                    // No UImode set - presumably user's first time here
-                    AttemptChangeModeUI(ModeUI); // Go to default ui mode
-
-                    // Create a tooltip explaining these new buttons
-                    _modeUIExplainerToolTip = new ToolTip();
-                    _modeUIExplainerToolTip.ToolTipTitle = Resources.ModeUIAwareFormHelper_OnLoad_New__Use_this_button_to_configure_Skyline_s_user_interface_specifically_for_proteomics_or_small_molecule_use_;
-                    var toolStrip = _modeUIToolBarDropDownButton.Owner;
-                    var container = toolStrip.Parent;
-                    toolStrip.ShowItemToolTips = true;
-                    _modeUIExplainerToolTip.SetToolTip(toolStrip, _modeUIExplainerToolTip.ToolTipTitle);
-                    _modeUIExplainerToolTip.IsBalloon = true;
-                    _modeUIExplainerToolTip.Active = true;
-                    _modeUIExplainerToolTip.UseFading = true;
-                    _modeUIExplainerToolTip.UseAnimation = true;
-                    _modeUIExplainerToolTip.ShowAlways = true;
-                    _modeUIExplainerToolTip.AutoPopDelay = Int32.MaxValue; // Show it for a long time
-                    _modeUIExplainerToolTip.InitialDelay = 1;
-                    _modeUIExplainerToolTip.ReshowDelay = Int32.MaxValue; // Don't show it again
-                    var where = new Point(toolStrip.Width, -toolStrip.Height);
-                    _modeUIExplainerToolTip.Show(_modeUIExplainerToolTip.ToolTipTitle, toolStrip, where);
-                    // Position cursor on the new control
-                    var target = new Point(toolStrip.Right - toolStrip.Height, toolStrip.Top + toolStrip.Height / 2);
-                    Point screen_coords = container.PointToScreen(target);
-                    Cursor.Position = screen_coords;
-
                 }
             }
 

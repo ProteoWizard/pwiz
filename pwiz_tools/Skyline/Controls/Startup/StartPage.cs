@@ -114,8 +114,7 @@ namespace pwiz.Skyline.Controls.Startup
         }
 
         /// <summary>
-        /// Handler for the buttons that allow user to switch between proteomic, small mol, or mixed UI display.
-        /// Between the two buttons there are three states A/B/Both - we enforce that at least one is always checked.
+        /// Handler for the toolbar button dropdown that allow user to switch between proteomic, small mol, or mixed UI display.
         /// </summary>
         private void modeUIButtonClick(object sender, EventArgs e)
         {
@@ -130,6 +129,22 @@ namespace pwiz.Skyline.Controls.Startup
             UpgradeManager.CheckForUpdateAsync(this);
 
             base.OnHandleCreated(e);
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+
+            // If user has never selected a default UI mode, ask for it now
+            if (string.IsNullOrEmpty(Settings.Default.UIMode))
+            {
+                using (var noModeUIDlg = new NoModeUIDlg())
+                {
+                    noModeUIDlg.ShowDialog(this);
+                    GetModeUIHelper().AttemptChangeModeUI(noModeUIDlg.SelectedDocumentType);
+                    modeUIButtonClick(null, null);
+                }
+            }
         }
 
         public StartupAction Action { get; private set; }

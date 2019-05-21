@@ -132,6 +132,7 @@ MissingFileDlg,TestSynchSiblings
 MProphetFeaturesDlg,TestPeakPickingTutorial
 MultiButtonMsgDlg,TestShareSettings
 NameLayoutForm,TestPivotEditor
+NoModeUIDlg,UIModeSettingsTest
 OpenDataSourceDialog,TestRetentionTimeAlignment
 PasteDlg.FastaTab,ProteinMetadataFunctionalTests
 PasteDlg.PeptideListTab,TestMethodEditTutorial
