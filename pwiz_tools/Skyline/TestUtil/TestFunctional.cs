@@ -1045,6 +1045,12 @@ namespace pwiz.SkylineTestUtil
                 CommonFormEx.CheckAllFormsDisposed();
 
                 Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault(); // Release memory held in settings
+
+                if (string.IsNullOrEmpty(Settings.Default.UIMode))
+                {
+                    // Most tests do not anticipate an unitialized UI mode, nor the dialog box that pops up for that
+                    Settings.Default.UIMode = @"proteomic";
+                }
             }
             catch (Exception x)
             {
