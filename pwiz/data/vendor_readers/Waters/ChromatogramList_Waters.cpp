@@ -305,7 +305,8 @@ size_t ChromatogramList_Waters::size() const {return 0;}
 const ChromatogramIdentity& ChromatogramList_Waters::chromatogramIdentity(size_t index) const {return emptyIdentity;}
 size_t ChromatogramList_Waters::find(const std::string& id) const {return 0;}
 ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index, bool getBinaryData) const {return ChromatogramPtr();}
-ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index, bool getBinaryData, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance) const {return ChromatogramPtr();}
+ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index, DetailLevel detailLevel) const {return ChromatogramPtr();}
+ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index, DetailLevel detailLevel, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance) const {return ChromatogramPtr();}
 
 } // detail
 } // msdata
