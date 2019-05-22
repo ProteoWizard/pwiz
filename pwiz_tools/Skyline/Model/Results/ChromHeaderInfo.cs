@@ -190,7 +190,8 @@ namespace pwiz.Skyline.Model.Results
             polarity_negative = 0x40, // When set, only use negative scans.
             raw_chromatograms = 0x80,
             ion_mobility_type_bitmask = 0x700, // 3 bits for ion mobility type none, drift, inverse_mobility, spares
-            dda_acquisition_method = 0x800
+            dda_acquisition_method = 0x800,
+            extracted_qc_trace = 0x1000
         }
 
         /// <summary>
@@ -412,9 +413,9 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                return (Flags & FlagValues.extracted_base_peak) != 0
-                           ? ChromExtractor.base_peak
-                           : ChromExtractor.summed;
+                if (Flags.HasFlag(FlagValues.extracted_base_peak)) return ChromExtractor.base_peak;
+                if (Flags.HasFlag(FlagValues.extracted_qc_trace)) return ChromExtractor.qc;
+                return ChromExtractor.summed;
             }
         }
 
@@ -1617,7 +1618,7 @@ namespace pwiz.Skyline.Model.Results
 
     public enum ChromSource { fragment, sim, ms1, unknown  }
 
-    public enum ChromExtractor { summed, base_peak }
+    public enum ChromExtractor { summed, base_peak, qc }
 
     public class ChromKey : IComparable<ChromKey>
     {
@@ -1838,7 +1839,20 @@ namespace pwiz.Skyline.Model.Results
                 var isNegativeChargeNullable = MsDataFileImpl.IsNegativeChargeIdNullable(idIn);
                 bool isNegativeCharge = isNegativeChargeNullable ?? false;
                 var id = isNegativeChargeNullable.HasValue ? idIn.Substring(2) : idIn;
-                if (id.StartsWith(MsDataFileImpl.PREFIX_TOTAL))
+                var source = ChromSource.fragment;
+                var extractor = ChromExtractor.summed;
+                if (id == MsDataFileImpl.TIC)
+                {
+                    precursor = product = 0;
+                    source = ChromSource.unknown;
+                }
+                else if (id == MsDataFileImpl.BPC)
+                {
+                    precursor = product = 0;
+                    extractor = ChromExtractor.base_peak;
+                    source = ChromSource.unknown;
+                }
+                else if (id.StartsWith(MsDataFileImpl.PREFIX_TOTAL))
                 {
                     precursor = double.Parse(id.Substring(MsDataFileImpl.PREFIX_TOTAL.Length), CultureInfo.InvariantCulture);
                     product = 0;
@@ -1894,12 +1908,18 @@ namespace pwiz.Skyline.Model.Results
                         ceValue = Math.Abs(ceParsed);
                     }
                 }
-                return new ChromKey(null, new SignedMz(precursor, isNegativeCharge), null, new SignedMz(product, isNegativeCharge), ceValue, 0, ChromSource.fragment, ChromExtractor.summed, false, true, null, null);
+                return new ChromKey(null, new SignedMz(precursor, isNegativeCharge), null, new SignedMz(product, isNegativeCharge), ceValue, 0, source, extractor, false, true, null, null);
             }
             catch (FormatException)
             {
                 throw new InvalidDataException(string.Format(Resources.ChromKey_FromId_Invalid_chromatogram_ID__0__found_Failure_parsing_mz_values, idIn));
             }
+        }
+
+        public static ChromKey FromQcTrace(MsDataFileImpl.QcTrace qcTrace)
+        {
+            var qcTextBytes = Encoding.UTF8.GetBytes(qcTrace.Name);
+            return new ChromKey(qcTextBytes, 0, qcTextBytes.Length, SignedMz.ZERO, SignedMz.ZERO, 0, null, ChromSource.unknown, ChromExtractor.qc, false, false, null, null);
         }
 
         #region object overrides

@@ -10589,4 +10589,7 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="ValueInvalidPathException_ValueInvalidPathException_The_value___0___is_not_valid_for_the_argument__1__failed_attempting_to_convert_it_to_a_full_file_path_" xml:space="preserve">
     <value>The value '{0}' is not valid for the argument {1} failed attempting to convert it to a full file path.</value>
   </data>
+  <data name="GraphChromatogram_UpdateUI_No_QC_chromatogram_found" xml:space="preserve">
+    <value>No corresponding QC chromatogram found</value>
+  </data>
 </root>

@@ -80,7 +80,7 @@ namespace pwiz.Skyline.Model.Results
 
         public SpectrumFilter(SrmDocument document, MsDataFileUri msDataFileUri, IFilterInstrumentInfo instrumentInfo,
             double? maxObservedIonMobilityValue = null,
-            IRetentionTimePredictor retentionTimePredictor = null, bool firstPass = false)
+            IRetentionTimePredictor retentionTimePredictor = null, bool firstPass = false, GlobalChromatogramExtractor gce = null)
         {
             _fullScan = document.Settings.TransitionSettings.FullScan;
             _instrument = document.Settings.TransitionSettings.Instrument;
@@ -298,6 +298,23 @@ namespace pwiz.Skyline.Model.Results
                 {
                     spectrumFilterPair.AddChromKeys(listChromKeyFilterIds);
                 }
+
+                if (gce != null)
+                {
+                    foreach (var possibleGlobalIndex in new int?[] { gce.TicChromatogramIndex, gce.BpcChromatogramIndex })
+                    {
+                        if (!possibleGlobalIndex.HasValue)
+                            continue;
+                        int globalIndex = possibleGlobalIndex.Value;
+                        listChromKeyFilterIds.Add(ChromKey.FromId(gce.GetChromatogramId(globalIndex, out int indexId), false));
+                    }
+
+                    foreach (var qcTracePair in gce.QcTraceByIndex)
+                    {
+                        listChromKeyFilterIds.Add(ChromKey.FromQcTrace(qcTracePair.Value));
+                    }
+                }
+
                 _productChromKeys = listChromKeyFilterIds.ToArray();
 
                 // Sort a copy of the filter pairs by maximum retention time so that we can detect when
