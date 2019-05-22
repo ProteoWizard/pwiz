@@ -150,6 +150,55 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, b
         }
         break;
 
+        case MS_basepeak_chromatogram:
+        {
+            map<double, double> fullFileBPC;
+
+            try
+            {
+                int periodCount = wifffile_->getPeriodCount(ie.sample);
+                for (int ii = 1; ii <= periodCount; ++ii)
+                {
+                    //Console::WriteLine("Sample {0}, Period {1}", i, ii);
+
+                    int experimentCount = wifffile_->getExperimentCount(ie.sample, ii);
+                    for (int iii = 1; iii <= experimentCount; ++iii)
+                    {
+                        ExperimentPtr msExperiment = experimentsMap_.find(pair<int, int>(ii, iii))->second;
+
+                        // add current experiment TIC to full file TIC
+                        vector<double> times, intensities;
+                        msExperiment->getBPC(times, intensities);
+                        for (int iiii = 0, end = intensities.size(); iiii < end; ++iiii)
+                            fullFileBPC[times[iiii]] += intensities[iiii];
+                    }
+                }
+            }
+            catch (exception&)
+            {
+                // TODO: log warning
+            }
+
+            result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, MS_number_of_detector_counts);
+
+            if (getBinaryData)
+            {
+                BinaryDataArrayPtr timeArray = result->getTimeArray();
+                BinaryDataArrayPtr intensityArray = result->getIntensityArray();
+
+                timeArray->data.reserve(fullFileBPC.size());
+                intensityArray->data.reserve(fullFileBPC.size());
+                for (const auto& kvp : fullFileBPC)
+                {
+                    timeArray->data.push_back(kvp.first);
+                    intensityArray->data.push_back(kvp.second);
+                }
+            }
+
+            result->defaultArrayLength = fullFileBPC.size();
+        }
+        break;
+
         case MS_SRM_chromatogram:
         {
             ExperimentPtr experiment = ie.experiment;
@@ -226,16 +275,13 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, b
         }
         break;
 
-        case MS_chromatogram_type:
+        case MS_pressure_chromatogram:
+        case MS_flow_rate_chromatogram:
         {
             WiffFile::ADCTrace adcTrace;
             wifffile_->getADCTrace(ie.sample, ie.transition, adcTrace);
 
-            CVID units = CVID_Unknown;
-            if (bal::icontains(ie.id, "pressure"))
-                units = UO_pascal;
-            else if (bal::icontains(ie.id, "flow"))
-                units = UO_microliters_per_minute;
+            CVID units = ie.chromatogramType == MS_pressure_chromatogram ? UO_pascal : UO_microliters_per_minute;
 
             if (getBinaryData)
                 result->setTimeIntensityArrays(adcTrace.x, adcTrace.y, UO_minute, units);
@@ -255,12 +301,24 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, b
 PWIZ_API_DECL void ChromatogramList_ABI::createIndex() const
 {
     index_.push_back(IndexEntry());
-    IndexEntry& ie = index_.back();
-    ie.index = index_.size()-1;
-    ie.id = "TIC";
-    ie.sample = sample;
-    ie.chromatogramType = MS_TIC_chromatogram;
-    idToIndexMap_[ie.id] = ie.index;
+    {
+        IndexEntry& ie = index_.back();
+        ie.index = index_.size() - 1;
+        ie.id = "TIC";
+        ie.sample = sample;
+        ie.chromatogramType = MS_TIC_chromatogram;
+        idToIndexMap_[ie.id] = ie.index;
+    }
+
+    index_.push_back(IndexEntry());
+    {
+        IndexEntry& ie = index_.back();
+        ie.index = index_.size() - 1;
+        ie.id = "BPC";
+        ie.sample = sample;
+        ie.chromatogramType = MS_basepeak_chromatogram;
+        idToIndexMap_[ie.id] = ie.index;
+    }
 
     pwiz::vendor_api::ABI::Target target;
 
@@ -345,7 +403,7 @@ PWIZ_API_DECL void ChromatogramList_ABI::createIndex() const
         ie.id = name;
         ie.sample = sample;
         ie.transition = i;
-        ie.chromatogramType = MS_chromatogram_type;
+        ie.chromatogramType = bal::icontains(name, "Pressure") ? MS_pressure_chromatogram : MS_flow_rate_chromatogram;
         idToIndexMap_[ie.id] = ie.index;
     }
 
