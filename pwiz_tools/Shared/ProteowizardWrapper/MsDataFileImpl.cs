@@ -642,15 +642,15 @@ namespace pwiz.ProteowizardWrapper
 
         public class QcTrace
         {
-            public QcTrace(Chromatogram c)
+            public QcTrace(Chromatogram c, CVID chromatogramType)
             {
                 Name = c.id;
-                if (Name.ToLowerInvariant().Contains(@"pressure"))
+                if (chromatogramType == CVID.MS_pressure_chromatogram)
                 {
                     MeasuredQuality = QcTraceQuality.Pressure;
                     IntensityUnits = QcTraceUnits.PoundsPerSquareInch;
                 }
-                else if (Name.ToLowerInvariant().Contains(@"flow"))
+                else if (chromatogramType == CVID.MS_flow_rate_chromatogram)
                 {
                     MeasuredQuality = QcTraceQuality.FlowRate;
                     IntensityUnits = QcTraceUnits.MicrolitersPerMinute;
@@ -676,16 +676,21 @@ namespace pwiz.ProteowizardWrapper
             var result = new List<QcTrace>();
             for (int i = 0; i < ChromatogramList.size(); ++i)
             {
-                if (!ChromatogramList.chromatogramIdentity(i).id.ToLower().Contains(@"pressure") &&
-                    !ChromatogramList.chromatogramIdentity(i).id.ToLower().Contains(@"flow"))
-                    continue;
+                CVID chromatogramType;
+                using (var chromMetaData = ChromatogramList.chromatogram(i, DetailLevel.InstantMetadata))
+                {
+                    chromatogramType = chromMetaData.cvParamChild(CVID.MS_chromatogram_type).cvid;
+                    if (chromatogramType != CVID.MS_pressure_chromatogram &&
+                        chromatogramType != CVID.MS_flow_rate_chromatogram)
+                        continue;
+                }
 
                 using (var chromatogram = ChromatogramList.chromatogram(i, true))
                 {
                     if (chromatogram == null)
                         return null;
 
-                    result.Add(new QcTrace(chromatogram));
+                    result.Add(new QcTrace(chromatogram, chromatogramType));
                 }
             }
             return result;
