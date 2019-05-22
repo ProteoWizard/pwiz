@@ -1226,7 +1226,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Specifies a program title and version to use with the –tool-program-path command. Together these commands are for importing tools from a ZIP file that use the $(ProgramPath()) macro as their command. For more information see the documentation on External Tools. e.g.
+        ///   Looks up a localized string similar to Specifies a program title and version to use with the -–tool-program-path command. Together these commands are for importing tools from a ZIP file that use the $(ProgramPath()) macro as their command. For more information see the documentation on External Tools. e.g.
         ///--tool-program-macro=R,2.15.2.
         /// </summary>
         internal static string _tool_program_macro {
@@ -1236,7 +1236,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Specifies the path to an executable on the local machine for the program title and version specified by the –tool-program-macro flag..
+        ///   Looks up a localized string similar to Specifies the path to an executable on the local machine for the program title and version specified by the -–tool-program-macro flag..
         /// </summary>
         internal static string _tool_program_path {
             get {
@@ -1268,6 +1268,33 @@ namespace pwiz.Skyline {
         internal static string _tool_zip_overwrite_annotations {
             get {
                 return ResourceManager.GetString("_tool_zip_overwrite_annotations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A comman-separated list of precursor ion charge states to apply to peptide molecules to generate precursor targets. Changes the transition filter settings for the open document..
+        /// </summary>
+        internal static string _tran_precursor_ion_charges {
+            get {
+                return ResourceManager.GetString("_tran_precursor_ion_charges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A comman-separated list of product ion charge states to apply to peptide fragments to generate product ion transitions. Changes the transition filter settings for the open document..
+        /// </summary>
+        internal static string _tran_product_ion_charges {
+            get {
+                return ResourceManager.GetString("_tran_product_ion_charges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A comman-separated list of product ion types expected in peptide fragmentation to generate product ion transitions. Changes the transition filter settings for the open document..
+        /// </summary>
+        internal static string _tran_product_ion_types {
+            get {
+                return ResourceManager.GetString("_tran_product_ion_types", resourceCulture);
             }
         }
         
