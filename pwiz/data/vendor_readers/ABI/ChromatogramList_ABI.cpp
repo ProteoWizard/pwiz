@@ -81,6 +81,12 @@ PWIZ_API_DECL size_t ChromatogramList_ABI::find(const string& id) const
 
 PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, bool getBinaryData) const
 {
+    return chromatogram(index, getBinaryData ? DetailLevel_FullData : DetailLevel_FullMetadata);
+}
+
+
+PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, DetailLevel detailLevel) const
+{
     boost::call_once(indexInitialized_.flag, boost::bind(&ChromatogramList_ABI::createIndex, this));
     if (index>size_)
         throw runtime_error(("[ChromatogramList_ABI::chromatogram()] Bad index: " 
@@ -97,10 +103,15 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, b
     result->id = ie.id;
     result->set(ie.chromatogramType);
 
+    bool getBinaryData = detailLevel == DetailLevel_FullData;
+
     switch (ie.chromatogramType)
     {
         case MS_TIC_chromatogram:
         {
+            if (detailLevel < DetailLevel_FullMetadata)
+                return result;
+
             map<double, double> fullFileTIC;
 
             try
@@ -152,6 +163,9 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, b
 
         case MS_basepeak_chromatogram:
         {
+            if (detailLevel < DetailLevel_FullMetadata)
+                return result;
+
             map<double, double> fullFileBPC;
 
             try
@@ -223,6 +237,9 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, b
             if (polarityType != CVID_Unknown)
                 result->set(polarityType);
 
+            if (detailLevel < DetailLevel_FullMetadata)
+                return result;
+
             result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, MS_number_of_detector_counts);
 
             pwiz::util::BinaryData<double> times, intensities;
@@ -259,6 +276,9 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, b
             if (polarityType != CVID_Unknown)
                 result->set(polarityType);
 
+            if (detailLevel < DetailLevel_FullMetadata)
+                return result;
+
             result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, MS_number_of_detector_counts);
 
             pwiz::util::BinaryData<double> times, intensities;
@@ -278,6 +298,9 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, b
         case MS_pressure_chromatogram:
         case MS_flow_rate_chromatogram:
         {
+            if (detailLevel < DetailLevel_FullMetadata)
+                return result;
+
             WiffFile::ADCTrace adcTrace;
             wifffile_->getADCTrace(ie.sample, ie.transition, adcTrace);
 

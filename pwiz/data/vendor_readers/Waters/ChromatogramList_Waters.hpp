@@ -39,7 +39,8 @@ class PWIZ_API_DECL ChromatogramList_Waters : public ChromatogramListBase
     virtual const ChromatogramIdentity& chromatogramIdentity(size_t index) const;
     virtual size_t find(const std::string& id) const;
     virtual ChromatogramPtr chromatogram(size_t index, bool getBinaryData) const;
-    virtual ChromatogramPtr chromatogram(size_t index, bool getBinaryData, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance) const;
+    virtual ChromatogramPtr chromatogram(size_t index, DetailLevel detailLevel) const;
+    virtual ChromatogramPtr chromatogram(size_t index, DetailLevel detailLevel, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance) const;
 
 #ifdef PWIZ_READER_WATERS
     ChromatogramList_Waters(RawDataPtr rawdata);
