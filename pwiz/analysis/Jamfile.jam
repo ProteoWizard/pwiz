@@ -28,6 +28,7 @@ build-project-if-exists peakdetect ;
 build-project-if-exists peptideid ;
 build-project-if-exists demux ;
 build-project-if-exists spectrum_processing ;
+build-project-if-exists chromatogram_processing ;
 build-project-if-exists proteome_processing ;
 
 
