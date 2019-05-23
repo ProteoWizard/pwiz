@@ -199,6 +199,10 @@ namespace pwiz.Skyline
             (c, p) => c.ImportSourceDirectory = p.ValueFullPath);
         public static readonly Argument ARG_IMPORT_NAMING_PATTERN = new DocArgument(@"import-naming-pattern", REGEX_VALUE,
             (c, p) => c.ParseImportNamingPattern(p));
+        public static readonly Argument ARG_IMPORT_FILENAME_PATTERN = new DocArgument(@"import-filename-pattern", REGEX_VALUE,
+            (c, p) => c.ParseImportFileNamePattern(p));
+        public static readonly Argument ARG_IMPORT_SAMPLENAME_PATTERN = new DocArgument(@"import-samplename-pattern", REGEX_VALUE,
+            (c, p) => c.ParseImportSampleNamePattern(p));
         public static readonly Argument ARG_IMPORT_BEFORE = new DocArgument(@"import-before", DATE_VALUE,
             (c, p) => c.ImportBeforeDate = p.ValueDate);
         public static readonly Argument ARG_IMPORT_ON_OR_AFTER = new DocArgument(@"import-on-or-after", DATE_VALUE,
@@ -225,9 +229,9 @@ namespace pwiz.Skyline
 
         private static readonly ArgumentGroup GROUP_IMPORT = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_IMPORT_Importing_results_replicates, false,
             ARG_IMPORT_FILE, ARG_IMPORT_REPLICATE_NAME, ARG_IMPORT_OPTIMIZING, ARG_IMPORT_APPEND, ARG_IMPORT_ALL,
-            ARG_IMPORT_ALL_FILES, ARG_IMPORT_NAMING_PATTERN, ARG_IMPORT_BEFORE, ARG_IMPORT_ON_OR_AFTER, ARG_IMPORT_NO_JOIN,
-            ARG_IMPORT_PROCESS_COUNT, ARG_IMPORT_THREADS, ARG_IMPORT_WARN_ON_FAILURE, ARG_IMPORT_LOCKMASS_POSITIVE,
-            ARG_IMPORT_LOCKMASS_NEGATIVE, ARG_IMPORT_LOCKMASS_TOLERANCE);
+            ARG_IMPORT_ALL_FILES, ARG_IMPORT_NAMING_PATTERN, ARG_IMPORT_FILENAME_PATTERN, ARG_IMPORT_SAMPLENAME_PATTERN,
+            ARG_IMPORT_BEFORE, ARG_IMPORT_ON_OR_AFTER, ARG_IMPORT_NO_JOIN, ARG_IMPORT_PROCESS_COUNT, ARG_IMPORT_THREADS,
+            ARG_IMPORT_WARN_ON_FAILURE, ARG_IMPORT_LOCKMASS_POSITIVE, ARG_IMPORT_LOCKMASS_NEGATIVE, ARG_IMPORT_LOCKMASS_TOLERANCE);
 
         public static readonly Argument ARG_REMOVE_BEFORE = new DocArgument(@"remove-before", DATE_VALUE,
             (c, p) => c.SetRemoveBefore(p.ValueDate));
@@ -272,6 +276,8 @@ namespace pwiz.Skyline
         public bool ImportRecursive { get; private set; }
         public string ImportSourceDirectory { get; private set; }
         public Regex ImportNamingPattern { get; private set; }
+        public Regex ImportFileNamePattern { get; private set; }
+        public Regex ImportSampleNamePattern { get; private set; }
         public bool ImportWarnOnFailure { get; private set; }
         public bool RemovingResults { get; private set; }
         public DateTime? RemoveBeforeDate { get; private set; }
@@ -320,6 +326,32 @@ namespace pwiz.Skyline
                 return false;
             }
 
+            return true;
+        }
+
+        private bool ParseImportFileNamePattern(NameValuePair pair)
+        {
+            return ParseRegexArgument(pair, r => ImportFileNamePattern = r);
+        }
+
+        private bool ParseImportSampleNamePattern(NameValuePair pair)
+        {
+            return ParseRegexArgument(pair, r => ImportSampleNamePattern = r);
+        }
+
+        private bool ParseRegexArgument(NameValuePair pair, Action<Regex> assign)
+        {
+            var regexText = pair.Value;
+            try
+            {
+                assign(new Regex(regexText));
+            }
+            catch (Exception e)
+            {
+                WriteLine(Resources.CommandArgs_ParseRegexArgument_Error__Regular_expression___0___for__1__cannot_be_parsed_, regexText, pair.Match.ArgumentText);
+                WriteLine(e.Message);
+                return false;
+            }
             return true;
         }
 

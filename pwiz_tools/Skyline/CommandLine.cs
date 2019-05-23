@@ -327,7 +327,7 @@ namespace pwiz.Skyline
 
             if (commandArgs.ImportingReplicateFile)
             {
-                var listNamedPaths = new List<KeyValuePair<string, MsDataFileUri[]>>();
+                IList<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths = new List<KeyValuePair<string, MsDataFileUri[]>>();
 
                 MsDataFileUri[] files;
                 try
@@ -339,7 +339,7 @@ namespace pwiz.Skyline
                     _out.WriteLine(Resources.CommandLine_GeneralException_Error___0_, e.Message);
                     return false;
                 }
-
+                
                 if (!string.IsNullOrEmpty(commandArgs.ReplicateName))
                 { 
                     listNamedPaths.Add(new KeyValuePair<string, MsDataFileUri[]>(commandArgs.ReplicateName, files));
@@ -352,6 +352,30 @@ namespace pwiz.Skyline
                             dataFile.GetSampleName() ?? dataFile.GetFileNameWithoutExtension(),
                             new[] {dataFile}));
                     }
+
+                }
+
+                if (!ApplyFileAndSampleNameRegex(commandArgs.ImportFileNamePattern, commandArgs.ImportSampleNamePattern, ref listNamedPaths))
+                {
+                    return false;
+                }
+
+                if (string.IsNullOrEmpty(commandArgs.ReplicateName) && !commandArgs.ImportAppend)
+                {
+                    // A named path will be removed if the document contains a replicate with the same name and file path.
+                    if (!RemoveImportedFiles(listNamedPaths, out var listNewPaths))
+                    {
+                        return false;
+                    }
+
+                    if (listNewPaths.Count == 0)
+                    {
+                        _out.WriteLine(Resources.CommandLine_ImportResults_No_replicates_left_to_import_);
+                        return false;
+                    }
+
+                    listNamedPaths = listNewPaths;
+                    MakeReplicateNamesUnique(listNamedPaths);
                 }
 
                 // If expected results are not imported successfully, terminate
@@ -375,6 +399,8 @@ namespace pwiz.Skyline
                         commandArgs.LockMassParameters,
                         commandArgs.ImportBeforeDate,
                         commandArgs.ImportOnOrAfterDate,
+                        commandArgs.ImportFileNamePattern,
+                        commandArgs.ImportSampleNamePattern,
                         optimize,
                         commandArgs.ImportDisableJoining,
                         commandArgs.ImportWarnOnFailure))
@@ -959,19 +985,134 @@ namespace pwiz.Skyline
         public bool ImportResultsInDir(string sourceDir, bool recursive, Regex namingPattern, string replicateName,
             LockMassParameters lockMassParameters,
             DateTime? importBefore, DateTime? importOnOrAfter,
+            Regex fileNameRegex, Regex sampleNameRegex,
             OptimizableRegression optimize, bool disableJoining, bool warnOnFailure)
         {
             var listNamedPaths = GetDataSources(sourceDir, recursive, namingPattern, lockMassParameters);
-            if (listNamedPaths == null)
+            if (listNamedPaths == null || listNamedPaths.Count == 0)
             {
                 return false;
             }
+
+            if (!ApplyFileAndSampleNameRegex(fileNameRegex, sampleNameRegex, ref listNamedPaths))
+            {
+                return false;
+            }
+
             // If there is a single name for everything then it should override any naming from GetDataSources
             if (!string.IsNullOrEmpty(replicateName))
             {
+                // If the name exists, files should get imported into it
                 listNamedPaths = new[] { new KeyValuePair<string, MsDataFileUri[]>(replicateName, listNamedPaths.SelectMany(s => s.Value).ToArray()) };
             }
-            return ImportDataFiles(listNamedPaths, lockMassParameters, importBefore, importOnOrAfter, optimize, disableJoining, warnOnFailure);
+            else
+            {
+                // Otherwise, new replicates will be created and should have new unique names.  
+                MakeReplicateNamesUnique(listNamedPaths);
+            }
+
+            return ImportDataFiles(listNamedPaths, lockMassParameters, importBefore, importOnOrAfter,
+                optimize, disableJoining, warnOnFailure);
+        }
+
+        private void MakeReplicateNamesUnique(IList<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths)
+        {
+            var replicatesInDoc =
+                _doc.Settings.HasResults ? _doc.MeasuredResults.Chromatograms.Select(chrom => chrom.Name).ToHashSet() : new HashSet<string>();
+            var replicatesInNamedPaths = listNamedPaths.Select(path => path.Key).ToList();
+            var newNames = Helpers.EnsureUniqueNames(replicatesInNamedPaths, replicatesInDoc);
+            for (var i = 0; i < listNamedPaths.Count; i++)
+            {
+                var namedPath = listNamedPaths[i];
+                if (!Equals(newNames[i], namedPath.Key))
+                {
+                    _out.WriteLine(
+                        Resources.CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_,
+                        namedPath.Key, newNames[i]);
+                    listNamedPaths[i] = new KeyValuePair<string, MsDataFileUri[]>(newNames[i], namedPath.Value);
+                }
+            }
+        }
+
+        private bool ApplyFileAndSampleNameRegex(Regex fileNameRegex, Regex sampleNameRegex, ref IList<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths)
+        {
+            listNamedPaths = ApplyNameRegex(listNamedPaths, ApplyFileNameRegex, fileNameRegex);
+            if (listNamedPaths.Count == 0)
+            {
+                _out.WriteLine(Resources.CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_file_name_pattern___0___, fileNameRegex);
+                return false;
+            }
+
+            listNamedPaths = ApplyNameRegex(listNamedPaths, ApplySampleNameRegex, sampleNameRegex);
+            if (listNamedPaths.Count == 0)
+            {
+                _out.WriteLine(Resources.CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_sample_name_pattern___0___, sampleNameRegex);
+                return false;
+            }
+
+            return true;
+        }
+
+        private IList<KeyValuePair<string, MsDataFileUri[]>> ApplyNameRegex(IList<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths,
+                        Func<MsDataFileUri, Regex, bool> applyRegex,  Regex regex)
+        {
+            var newNamedPaths = new List<KeyValuePair<string, MsDataFileUri[]>>();
+            if (regex == null)
+            {
+                newNamedPaths.AddRange(listNamedPaths);
+                return newNamedPaths;
+            }
+
+            for (var i = 0; i < listNamedPaths.Count; i++)
+            {
+                var namedPath = listNamedPaths[i];
+                var files = namedPath.Value;
+
+                var newFiles = files.Where(file => applyRegex(file, regex)).ToArray();
+                if (newFiles.Length > 0)
+                {
+                    newNamedPaths.Add(new KeyValuePair<string, MsDataFileUri[]>(namedPath.Key, newFiles));
+                }
+            }
+            
+            return newNamedPaths;
+        }
+
+        private bool ApplyFileNameRegex(MsDataFileUri file, Regex regex)
+        {
+            if(!ApplyRegex(file.GetFileName(), regex))
+            {
+                _out.WriteLine(Resources.CommandLine_ApplyFileNameRegex_File_name___0___does_not_match_the_pattern___1____Ignoring__2_, file.GetFileName(), regex, file);
+                return false;
+            }
+            return true;
+        }
+        
+        private bool ApplySampleNameRegex(MsDataFileUri file, Regex regex)
+        {
+            if (string.IsNullOrEmpty(file.GetSampleName()))
+            {
+                _out.WriteLine(Resources.CommandLine_ApplySampleNameRegex_File___0___does_not_have_a_sample__Cannot_apply_sample_name_pattern__Ignoring_, file);
+                return false;
+            }
+
+            if (!ApplyRegex(file.GetSampleName(), regex))
+            {
+                _out.WriteLine(Resources.CommandLine_ApplySampleNameRegex_Sample_name___0___does_not_match_the_pattern___1____Ignoring__2_, file.GetSampleName(), regex, file);
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool ApplyRegex(string name, Regex regex)
+        {
+            if (regex != null)
+            {
+                var match = regex.Match(name);
+                return match.Success;
+            }
+            return true;
         }
 
         private bool ImportDataFiles(IList<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths, LockMassParameters lockMassParameters,
@@ -1152,12 +1293,6 @@ namespace pwiz.Skyline
                 listNamedPaths = listRenamedPaths;
             }
 
-            // Make sure the existing replicate does not have any "unexpected" files.
-            if(!CheckReplicateFiles(listNamedPaths, lockMassParameters))
-            {
-                return null;
-            }
-
             // remove replicates and/or files that have already been imported into the document
             List<KeyValuePair<string, MsDataFileUri[]>> listNewPaths;
             if(!RemoveImportedFiles(listNamedPaths, out listNewPaths))
@@ -1205,47 +1340,6 @@ namespace pwiz.Skyline
             return true;
         }
 
-        private bool CheckReplicateFiles(IEnumerable<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths, LockMassParameters lockMassParameters)
-        {
-            if (!_doc.Settings.HasResults)
-            {
-                return true;
-            }
-
-            // Make sure the existing replicate does not have any "unexpected" files.
-            // All existing files must be present in the current 
-            // list of files that we are trying to import to this replicate.
-            
-            foreach (var namedPaths in listNamedPaths)
-            {
-                var replicateName = namedPaths.Key;
-
-                // check if the document already has a replicate with this name
-                int indexChrom;
-                ChromatogramSet chromatogram;
-                if (_doc.Settings.MeasuredResults.TryGetChromatogramSet(replicateName, out chromatogram, out indexChrom))
-                {
-                    // and whether the files it contains match what is expected
-                    // compare case-insensitive on Windows
-                    var filePaths = new HashSet<MsDataFileUri>(namedPaths.Value.Select(path =>
-                        path.ChangeParameters(_doc, lockMassParameters).ToLower()));
-                    foreach (var dataFilePath in chromatogram.MSDataFilePaths)
-                    {
-
-                        if (!filePaths.Contains(dataFilePath.ToLower()))
-                        {
-                            _out.WriteLine(
-                                Resources.CommandLine_CheckReplicateFiles_Error__Replicate__0__in_the_document_has_an_unexpected_file__1__,
-                                replicateName,
-                                dataFilePath);
-                            return false;
-                        }
-                    }
-                }
-            }
-            return true;
-        }
-        
         private bool RemoveImportedFiles(IEnumerable<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths,
                                          out List<KeyValuePair<string, MsDataFileUri[]>> listNewNamedPaths)
         {
@@ -1328,7 +1422,7 @@ namespace pwiz.Skyline
                         _doc.Settings.MeasuredResults.TryGetChromatogramSet(replicateName, out chromatogram, out index);
 
                         string replicateFileString = replicateFile.ToString();
-                        if (chromatogram.MSDataFilePaths.Any(filePath => StringComparer.OrdinalIgnoreCase.Equals(filePath, replicateFileString)))
+                        if (chromatogram.MSDataFilePaths.Any(filePath => StringComparer.OrdinalIgnoreCase.Equals(filePath.ToString(), replicateFileString)))
                         {
                             _out.WriteLine(Resources.CommandLine_ImportResultsFile__0______1___Note__The_file_has_already_been_imported__Ignoring___, replicateName, replicateFile);
                         }

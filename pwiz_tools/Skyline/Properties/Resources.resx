@@ -10583,4 +10583,28 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="ThermoMassListExporter_EnsureLibraries_Thermo_instrument_software_may_not_be_installed_correctly__The_library__0__could_not_be_found_" xml:space="preserve">
     <value>Thermo instrument software may not be installed correctly. The library {0} could not be found.</value>
   </data>
+  <data name="CommandLine_ImportResults_No_replicates_left_to_import_" xml:space="preserve">
+    <value>No replicates left to import.</value>
+  </data>
+  <data name="CommandArgs_ParseRegexArgument_Error__Regular_expression___0___for__1__cannot_be_parsed_" xml:space="preserve">
+    <value>Error: Regular expression '{0}' for {1} cannot be parsed.</value>
+  </data>
+  <data name="CommandLine_ApplySampleNameRegex_File___0___does_not_have_a_sample__Cannot_apply_sample_name_pattern__Ignoring_" xml:space="preserve">
+    <value>File '{0}' does not have a sample. Cannot apply sample name pattern. Ignoring.</value>
+  </data>
+  <data name="CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_file_name_pattern___0___" xml:space="preserve">
+    <value>No files match the file name pattern '{0}'.</value>
+  </data>
+  <data name="CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_sample_name_pattern___0___" xml:space="preserve">
+    <value>No files match the sample name pattern '{0}'.</value>
+  </data>
+  <data name="CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_" xml:space="preserve">
+    <value>Replicate '{0}' already exists in the document, using '{1}' instead.</value>
+  </data>
+  <data name="CommandLine_ApplyFileNameRegex_File_name___0___does_not_match_the_pattern___1____Ignoring__2_" xml:space="preserve">
+    <value>File name '{0}' does not match the pattern '{1}'. Ignoring {2}</value>
+  </data>
+  <data name="CommandLine_ApplySampleNameRegex_Sample_name___0___does_not_match_the_pattern___1____Ignoring__2_" xml:space="preserve">
+    <value>Sample name '{0}' does not match the pattern '{1}'. Ignoring {2}</value>
+  </data>
 </root>
