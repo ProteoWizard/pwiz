@@ -204,7 +204,12 @@ blt::local_date_time UIMFReaderImpl::getAcquisitionTime() const
 {
     try
     {
-        System::DateTime acquisitionTime = System::DateTime::ParseExact(reader_->GetGlobalParams()->GetValue(UIMFLibrary::GlobalParamKeyType::DateStarted)->ToString(), "M/d/yyyy h:mm:ss tt", System::Globalization::DateTimeFormatInfo::InvariantInfo);
+        System::String^ dateString = reader_->GetGlobalParams()->GetValue(UIMFLibrary::GlobalParamKeyType::DateStarted)->ToString();
+        System::DateTime acquisitionTime;
+        if (!System::String::IsNullOrWhiteSpace(dateString))
+        {
+            acquisitionTime = System::DateTime::ParseExact(dateString, gcnew array<System::String^> { "M/d/yyyy h:mm:ss tt", "yyyy/M/d h:mm:ss tt" }, System::Globalization::DateTimeFormatInfo::InvariantInfo, System::Globalization::DateTimeStyles::None);
+        }
 
         // these are Boost.DateTime restrictions
         if (acquisitionTime.Year > 10000)
