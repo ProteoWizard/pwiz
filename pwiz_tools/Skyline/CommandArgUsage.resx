@@ -721,4 +721,10 @@ greater peak area.</value>
   <data name="_tran_product_ion_types" xml:space="preserve">
     <value>A comman-separated list of product ion types expected in peptide fragmentation to generate product ion transitions. Changes the transition filter settings for the open document.</value>
   </data>
+  <data name="_import_filename_pattern" xml:space="preserve">
+    <value>A regular expression that is applied to file names to select the ones that will be imported.</value>
+  </data>
+  <data name="_import_samplename_pattern" xml:space="preserve">
+    <value>A regular expression that is applied to sample names (e.g. in a multi-injection .wiff file) to select the ones that will be imported.</value>
+  </data>
 </root>

@@ -1284,8 +1284,6 @@ namespace pwiz.SkylineTestData
             FileEx.SafeDelete(outPath1);
             var outPath2 = testFilesDir.GetTestPath("Imported_multiple2.sky");
             FileEx.SafeDelete(outPath2);
-            var outPath3 = testFilesDir.GetTestPath("Imported_multiple3.sky");
-            FileEx.SafeDelete(outPath3);
             var outPath4 = testFilesDir.GetTestPath("Imported_multiple4.sky");
             FileEx.SafeDelete(outPath4);
 
@@ -1415,7 +1413,7 @@ namespace pwiz.SkylineTestData
 
             // Test: Import all files and sub-folders in test directory
             // The document should already contain a replicate named "REP01".
-            // Only one more file should be added to the "REP01" replicate.
+            // A new replicate "REP012" should be added since "REP01" already exists.
             // The document should also already contain replicate "160109_Mix1_calcurve_070".
             // There should be notes about ignoring the two files that are already in the document.
             msg = RunCommand("--in=" + outPath2,
@@ -1433,8 +1431,8 @@ namespace pwiz.SkylineTestData
 
             doc = ResultsUtil.DeserializeDocument(outPath2);
             Assert.IsTrue(doc.Settings.HasResults);
-            Assert.AreEqual(6, doc.Settings.MeasuredResults.Chromatograms.Count,
-                string.Format("Expected 6 replicates, found: {0}",
+            Assert.AreEqual(7, doc.Settings.MeasuredResults.Chromatograms.Count,
+                string.Format("Expected 7 replicates, found: {0}",
                               string.Join(", ", doc.Settings.MeasuredResults.Chromatograms.Select(chromSet => chromSet.Name).ToArray())));
             // count the number of files imported into the document
             int totalImportedFiles = 0;
@@ -1444,46 +1442,22 @@ namespace pwiz.SkylineTestData
             }
             // We should have imported 7 more file
             Assert.AreEqual(initialFileCount + 7, totalImportedFiles);
-            // In the "REP01" replicate we should have 2 files
+            // In the "REP01" replicate we should have 1 file
             ChromatogramSet chromatogramSet;
             int index;
             doc.Settings.MeasuredResults.TryGetChromatogramSet("REP01", out chromatogramSet, out index);
             Assert.IsNotNull(chromatogramSet);
-            Assert.IsTrue(chromatogramSet.MSDataFilePaths.Count() == 2);
-            Assert.IsTrue(chromatogramSet.MSDataFilePaths.Contains(rawPath));
+            Assert.IsTrue(chromatogramSet.MSDataFilePaths.Count() == 1);
             Assert.IsTrue(chromatogramSet.MSDataFilePaths.Contains(
                 new MsDataFilePath(testFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_01" +
-                extRaw))));
+                                                            extRaw))));
+            // REP012 should have the file REP01\CE_Vantage_15mTorr_0001_REP1_02.raw|mzML
+            doc.Settings.MeasuredResults.TryGetChromatogramSet("REP012", out chromatogramSet, out index);
+            Assert.IsNotNull(chromatogramSet);
+            Assert.IsTrue(chromatogramSet.MSDataFilePaths.Count() == 1);
             Assert.IsTrue(!useRaw || chromatogramSet.MSDataFilePaths.Contains(
                 GetThermoDiskPath(new MsDataFilePath(testFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_02" + extRaw)))));
-
-           
-
-            Assert.IsFalse(File.Exists(outPath3));
-            // Test: Import a single file
-            // Import 160109_Mix1_calcurve_074.raw;
-            // Use replicate name "REP01"
-            var rawPath3 = testFilesDir.GetTestPath("160109_Mix1_calcurve_074" + extRaw);
-            msg = RunCommand("--in=" + docPath,
-                       "--import-file=" + rawPath3,
-                       "--import-replicate-name=REP01",
-                       "--out=" + outPath3);
-            Assert.IsTrue(File.Exists(outPath3), msg);
-            doc = ResultsUtil.DeserializeDocument(outPath3);
-            Assert.AreEqual(1, doc.Settings.MeasuredResults.Chromatograms.Count);
-            // Now import all files and sub-folders in test directory.
-            // This should return an error since the replicate "REP01" that already
-            // exists in the document has an unexpected file: '160109_Mix1_calcurve_074.raw'.
-            msg = RunCommand("--in=" + outPath3,
-                             "--import-all=" + testFilesDir.FullPath,
-                             "--save");
-            Assert.IsTrue(
-                msg.Contains(
-                    string.Format(
-                        Resources.CommandLine_CheckReplicateFiles_Error__Replicate__0__in_the_document_has_an_unexpected_file__1__,"REP01",
-                        rawPath3)), msg);
-
-            
+ 
 
             // Test: Import non-recursive
             // Make sure only files directly in the folder get imported
@@ -1509,6 +1483,307 @@ namespace pwiz.SkylineTestData
                 File.Move(badFileMoved, badFilePath);
             File.Move(fullScanMoved, fullScanPath);
 
+        }
+
+        [TestMethod]
+        public void ConsoleFileNameRegexImportTest()
+        {
+            bool useRaw = ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportWatersRaw;
+            string testZipPath = useRaw
+                ? @"TestData\ImportAllCmdLineTest.zip"
+                : @"TestData\ImportAllCmdLineTestMzml.zip";
+            string extRaw = useRaw
+                ? ".raw"
+                : ".mzML";
+
+            var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+
+            // Contents:
+            // ImportAllCmdLineTest
+            //   -- REP01
+            //       -- CE_Vantage_15mTorr_0001_REP1_01.raw|mzML
+            //       -- CE_Vantage_15mTorr_0001_REP1_02.raw|mzML
+            //   -- REP02
+            //       -- CE_Vantage_15mTorr_0001_REP2_01.raw|mzML
+            //       -- CE_Vantage_15mTorr_0001_REP2_02.raw|mzML
+            //   -- 160109_Mix1_calcurve_070.mzML
+            //   -- 160109_Mix1_calcurve_073.mzML
+            //   -- 160109_Mix1_calcurve_071.raw (Waters .raw directory)|mzML
+            //   -- 160109_Mix1_calcurve_074.raw (Waters .raw directory)|mzML
+            //   -- bad_file.raw (Should not be imported. Only in ImportAllCmdLineTest.zip)
+            //   -- bad_file_folder
+            //       -- bad_file.raw (Should not be imported. Only in ImportAllCmdLineTest.zip)
+            //   -- FullScan.RAW|mzML (should not be imported)
+            //   -- FullScan_folder
+            //       -- FullScan.RAW|mzML (should not be imported)
+
+            var docPath = testFilesDir.GetTestPath("test.sky");
+            var outPath = testFilesDir.GetTestPath("out.sky");
+            FileEx.SafeDelete(outPath);
+
+            var rawPath = MsDataFileUri.Parse(testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML"));
+            // Test: invalid regex
+            var msg = RunCommand("--in=" + docPath,
+                "--import-file=" + rawPath.GetFilePath(),
+                "--import-filename-pattern=*",
+                "--out=" + outPath);
+            CheckRunCommandOutputContains(
+                string.Format(
+                    Resources.CommandArgs_ParseRegexArgument_Error__Regular_expression___0___for__1__cannot_be_parsed_,
+                    "*", "--import-filename-pattern"), msg);
+
+            // Test: Import a single file, apply a file name regex
+            RunCommand("--in=" + docPath,
+                "--import-file=" + rawPath.GetFilePath(),
+                "--import-filename-pattern=\\d{6}_Mix\\d",
+                "--out=" + outPath);
+
+            var doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.IsTrue(doc.Settings.HasResults);
+            Assert.AreEqual(1, doc.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.IsTrue(doc.MeasuredResults.ContainsChromatogram(rawPath.GetFileNameWithoutExtension()));
+            FileEx.SafeDelete(outPath);
+
+            // Test: Import a single file, apply a file name regex that will not match
+            var pattern = "QC*";
+            msg = RunCommand("--in=" + docPath,
+                "--import-file=" + rawPath.GetFilePath(),
+                "--import-filename-pattern=" + pattern,
+                "--out=" + outPath);
+            CheckRunCommandOutputContains(
+                string.Format(
+                    Resources.CommandLine_ApplyFileNameRegex_File_name___0___does_not_match_the_pattern___1____Ignoring__2_,
+                    rawPath.GetFileName(), pattern, rawPath), msg);
+            CheckRunCommandOutputContains(
+                string.Format(Resources.CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_file_name_pattern___0___, pattern), msg);
+            Assert.IsFalse(File.Exists(outPath));
+
+            // Test: Import all files and sub-folders; Nothing should match the given regex
+            msg = RunCommand("--in=" + docPath,
+                "--import-all=" + testFilesDir.FullPath,
+                "--import-filename-pattern="+pattern,
+                "--import-warn-on-failure",
+                "--out=" + outPath);
+            Assert.IsFalse(File.Exists(outPath));
+            CheckRunCommandOutputContains(
+                string.Format(Resources.CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_file_name_pattern___0___, pattern), msg);
+
+            // Test: Import all files and sub-folders. Only two files should get imported:
+            // Replicate "REP01" -> REP01\CE_Vantage_15mTorr_0001_REP1_01.raw|mzML
+            // Replicate "REP02" -> REP02\CE_Vantage_15mTorr_0001_REP2_01.raw|mzML
+            var regex = @"REP\d{1}_01";
+            msg = RunCommand("--in=" + docPath,
+                "--import-all=" + testFilesDir.FullPath,
+                "--import-filename-pattern=" + regex,
+                "--import-warn-on-failure",
+                "--out=" + outPath);
+            doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(2, doc.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("REP01")); // Imported from the "REP01" folder
+            Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("REP02")); // Imported from the "REP02" folder
+
+            ChromatogramSet chromatogramSet;
+            int index;
+            doc.Settings.MeasuredResults.TryGetChromatogramSet("REP01", out chromatogramSet, out index);
+            Assert.IsNotNull(chromatogramSet);
+            Assert.IsTrue(chromatogramSet.MSDataFilePaths.Count() == 1);
+            Assert.IsTrue(chromatogramSet.MSDataFilePaths.Contains(
+                new MsDataFilePath(testFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_01" +
+                                                            extRaw))));
+
+            doc.Settings.MeasuredResults.TryGetChromatogramSet("REP02", out chromatogramSet, out index);
+            Assert.IsNotNull(chromatogramSet);
+            Assert.IsTrue(chromatogramSet.MSDataFilePaths.Count() == 1);
+            Assert.IsTrue(chromatogramSet.MSDataFilePaths.Contains(
+                new MsDataFilePath(testFilesDir.GetTestPath(@"REP02\CE_Vantage_15mTorr_0001_REP2_01" +
+                                                            extRaw))));
+
+            var pathIgnored1 = MsDataFileUri.Parse(testFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_02" + extRaw));
+            var pathIgnored2 = MsDataFileUri.Parse(testFilesDir.GetTestPath(@"REP02\CE_Vantage_15mTorr_0001_REP2_02" + extRaw));
+            CheckRunCommandOutputContains(
+                string.Format(
+                    Resources.CommandLine_ApplyFileNameRegex_File_name___0___does_not_match_the_pattern___1____Ignoring__2_,
+                    pathIgnored1.GetFileName(), regex, pathIgnored1), msg);
+            CheckRunCommandOutputContains(
+                string.Format(
+                    Resources.CommandLine_ApplyFileNameRegex_File_name___0___does_not_match_the_pattern___1____Ignoring__2_,
+                    pathIgnored2.GetFileName(), regex, pathIgnored2), msg);
+
+            FileEx.SafeDelete(outPath);
+
+            // Test: Import all files and sub-folders, apply a sample name regex.  Nothing should be imported since none of the files
+            // in the test directory have sample names.  Only multi-injection .wiff files can have sample names.  
+            msg = RunCommand("--in=" + docPath,
+                "--import-all=" + testFilesDir.FullPath,
+                "--import-samplename-pattern=" + regex,
+                "--out=" + outPath);
+            CheckRunCommandOutputContains(
+                string.Format(
+                    Resources.CommandLine_ApplySampleNameRegex_File___0___does_not_have_a_sample__Cannot_apply_sample_name_pattern__Ignoring_,
+                    rawPath), msg);
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_sample_name_pattern___0___, regex), msg);
+            Assert.IsFalse(File.Exists(outPath));
+        }
+
+        [TestMethod]
+        public void ConsoleSampleNameRegexImportTest()
+        {
+            var testFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineWiffTest.zip");
+            var docPath = testFilesDir.GetTestPath("wiffcmdtest.sky");
+            var outPath = testFilesDir.GetTestPath("out.sky");
+            FileEx.SafeDelete(outPath);
+            var rawPath = MsDataFileUri.Parse(testFilesDir.GetTestPath("051309_digestion.wiff"));
+            // Make a copy of the wiff file
+            var rawPath2 = MsDataFileUri.Parse(testFilesDir.GetTestPath(rawPath.GetFileNameWithoutExtension() + "_copy.wiff"));
+            File.Copy(rawPath.GetFilePath(), rawPath2.GetFilePath());
+            Assert.IsTrue(File.Exists(rawPath2.GetFilePath()));
+            
+            var sampleNames = ImmutableList.ValueOf(new[] {"blank", "rfp9_after_h_1", "test", "rfp9_before_h_1"});
+            var sampleFiles1 = DataSourceUtil.ListSubPaths(rawPath).ToArray();
+            var sampleFiles2 = DataSourceUtil.ListSubPaths(rawPath2).ToArray();
+
+            // Test: invalid regex
+            var msg = RunCommand("--in=" + docPath,
+                "--import-file=" + rawPath.GetFilePath(),
+                "--import-samplename-pattern=*",
+                "--out=" + outPath);
+            CheckRunCommandOutputContains(
+                string.Format(
+                    Resources.CommandArgs_ParseRegexArgument_Error__Regular_expression___0___for__1__cannot_be_parsed_,
+                    "*", "--import-samplename-pattern"), msg);
+
+            // Test: Import a single file and apply a regex filter on the sample name
+            var regex = "rfp9_.*";
+            msg = RunCommand("--in=" + docPath,
+                    "--import-file=" + rawPath,
+                    "--import-samplename-pattern="+regex,
+                    "--out=" + outPath);
+
+            var doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(2, doc.MeasuredResults.Chromatograms.Count);
+            Assert.IsTrue(doc.MeasuredResults.ContainsChromatogram(sampleNames[1]));
+            Assert.IsTrue(doc.MeasuredResults.ContainsChromatogram(sampleNames[3]));
+
+            // Sample "blank" should not match
+            var sampleFile = sampleFiles1.First(file => file.GetSampleName().Equals(sampleNames[0]));
+            CheckRunCommandOutputContains(
+                string.Format(
+                    Resources.CommandLine_ApplySampleNameRegex_Sample_name___0___does_not_match_the_pattern___1____Ignoring__2_,
+                    sampleFile.GetSampleName(), regex, sampleFile), msg);
+
+            // Sample "test" should not match
+            sampleFile = sampleFiles1.First(file => file.GetSampleName().Equals(sampleNames[2]));
+            CheckRunCommandOutputContains(
+                string.Format(
+                    Resources.CommandLine_ApplySampleNameRegex_Sample_name___0___does_not_match_the_pattern___1____Ignoring__2_,
+                    sampleFile.GetSampleName(), regex, sampleFile), msg);
+
+            FileEx.SafeDelete(outPath);
+
+            // Test: Import all files in the folder and apply regex filters on file and sample names.
+            // Samples "blank" and "test" from one of the files (051309_digestion_copy.wiff) should be imported
+            regex = "blank|test";
+            var fileregex = ".*_copy";
+            msg = RunCommand("--in=" + docPath,
+                "--import-all-files=" + testFilesDir.FullPath,
+                "--import-samplename-pattern=" + regex,
+                "--import-filename-pattern="+fileregex,
+                "--out=" + outPath);
+            doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(2, doc.MeasuredResults.Chromatograms.Count);
+            Assert.IsTrue(doc.MeasuredResults.ContainsChromatogram(sampleNames[0])); // replicate "blank"
+            Assert.IsTrue(doc.MeasuredResults.ContainsChromatogram(sampleNames[2])); // replicate "test"
+            doc.MeasuredResults.TryGetChromatogramSet(sampleNames[0], out var chromatSet, out _);
+            Assert.IsNotNull(chromatSet);
+            Assert.AreEqual(1, chromatSet.MSDataFilePaths.Count());
+            Assert.IsTrue(chromatSet.MSDataFilePaths.Contains(sampleFiles2[0]));
+            foreach (var msDataFileUri in sampleFiles1)
+            {
+                // First file, 051309_digestion.wiff, should not have matched the file name regex 
+                CheckRunCommandOutputContains(
+                    string.Format(
+                        Resources.CommandLine_ApplyFileNameRegex_File_name___0___does_not_match_the_pattern___1____Ignoring__2_,
+                        msDataFileUri.GetFileName(), fileregex, msDataFileUri), msg);
+            }
+        }
+        
+        [TestMethod]
+        public void ConsoleImportDirsMakeUniqueReplicateTest()
+        {
+            bool useRaw = ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportWatersRaw;
+            string testZipPath = useRaw
+                ? @"TestData\ImportAllCmdLineTest.zip"
+                : @"TestData\ImportAllCmdLineTestMzml.zip";
+            var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+
+            // Contents:
+            // ImportAllCmdLineTest
+            //   -- REP01
+            //       -- CE_Vantage_15mTorr_0001_REP1_01.raw|mzML
+            //       -- CE_Vantage_15mTorr_0001_REP1_02.raw|mzML
+            //   -- REP02
+            //       -- CE_Vantage_15mTorr_0001_REP2_01.raw|mzML
+            //       -- CE_Vantage_15mTorr_0001_REP2_02.raw|mzML
+            //   -- 160109_Mix1_calcurve_070.mzML
+            //   -- 160109_Mix1_calcurve_073.mzML
+            //   -- 160109_Mix1_calcurve_071.raw (Waters .raw directory)|mzML
+            //   -- 160109_Mix1_calcurve_074.raw (Waters .raw directory)|mzML
+            //   -- bad_file.raw (Should not be imported. Only in ImportAllCmdLineTest.zip)
+            //   -- bad_file_folder
+            //       -- bad_file.raw (Should not be imported. Only in ImportAllCmdLineTest.zip)
+            //   -- FullScan.RAW|mzML (should not be imported)
+            //   -- FullScan_folder
+            //       -- FullScan.RAW|mzML (should not be imported)
+
+            var docPath = testFilesDir.GetTestPath("test.sky");
+            var outPath = testFilesDir.GetTestPath("out.sky");
+            FileEx.SafeDelete(outPath);
+            var rawPath = MsDataFileUri.Parse(testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML"));
+
+            // Folder 1
+            var folder1Path = testFilesDir.GetTestPath(@"Folder1\Rep1");
+            Directory.CreateDirectory(folder1Path);
+            Assert.IsTrue(Directory.Exists(folder1Path));
+            var rawPath1 = MsDataFileUri.Parse(Path.Combine(folder1Path, rawPath.GetFileName()));
+            File.Copy(rawPath.GetFilePath(), rawPath1.GetFilePath());
+
+            // Folder 2
+            var folder2Path = testFilesDir.GetTestPath(@"Folder2\Rep1");
+            Directory.CreateDirectory(folder2Path);
+            Assert.IsTrue(Directory.Exists(folder2Path));
+            var rawPath2 = MsDataFileUri.Parse(Path.Combine(folder2Path, rawPath.GetFileName()));
+            File.Copy(rawPath.GetFilePath(), rawPath2.GetFilePath());
+
+            
+            // Test: Import all in Folder 1
+            RunCommand("--in=" + docPath,
+                "--import-all=" + testFilesDir.GetTestPath("Folder1"),
+                "--save");
+            var doc = ResultsUtil.DeserializeDocument(docPath);
+            Assert.AreEqual(1, doc.MeasuredResults.Chromatograms.Count);
+            Assert.IsTrue(doc.MeasuredResults.ContainsChromatogram("Rep1"));
+
+
+            // Test: Import all in Folder2
+            var msg = RunCommand("--in=" + docPath,
+                "--import-all=" + testFilesDir.GetTestPath("Folder2"),
+                "--save");
+            doc = ResultsUtil.DeserializeDocument(docPath);
+            Assert.AreEqual(2, doc.MeasuredResults.Chromatograms.Count);
+            doc.MeasuredResults.TryGetChromatogramSet("Rep1", out var chromatogramSet1, out _);
+            Assert.IsNotNull(chromatogramSet1);
+            Assert.AreEqual(1, chromatogramSet1.MSDataFilePaths.Count());
+            Assert.IsTrue(chromatogramSet1.MSDataFilePaths.Contains(rawPath1));
+
+            doc.MeasuredResults.TryGetChromatogramSet("Rep12", out var chromatogramSet2, out _);
+            Assert.IsNotNull(chromatogramSet2);
+            Assert.AreEqual(1, chromatogramSet2.MSDataFilePaths.Count());
+            Assert.IsTrue(chromatogramSet2.MSDataFilePaths.Contains(rawPath2));
+            CheckRunCommandOutputContains(
+                string.Format(
+                    Resources
+                        .CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_,
+                    "Rep1", "Rep12"), msg);
         }
 
         //[TestMethod]

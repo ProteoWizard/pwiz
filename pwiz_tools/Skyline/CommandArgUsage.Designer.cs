@@ -484,6 +484,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A regular expression that is applied to file names to select the ones that will be imported..
+        /// </summary>
+        internal static string _import_filename_pattern {
+            get {
+                return ResourceManager.GetString("_import_filename_pattern", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Waters lockmass correction m/z for negative ion scans..
         /// </summary>
         internal static string _import_lockmass_negative {
@@ -561,6 +570,15 @@ namespace pwiz.Skyline {
         internal static string _import_replicate_name {
             get {
                 return ResourceManager.GetString("_import_replicate_name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A regular expression that is applied to sample names (e.g. in a multi-injection .wiff file) to select the ones that will be imported..
+        /// </summary>
+        internal static string _import_samplename_pattern {
+            get {
+                return ResourceManager.GetString("_import_samplename_pattern", resourceCulture);
             }
         }
         
