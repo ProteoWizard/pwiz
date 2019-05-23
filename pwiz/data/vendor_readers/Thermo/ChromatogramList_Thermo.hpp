@@ -58,6 +58,7 @@ public:
     virtual const ChromatogramIdentity& chromatogramIdentity(size_t index) const;
     virtual size_t find(const string& id) const;
     virtual ChromatogramPtr chromatogram(size_t index, bool getBinaryData) const;
+    virtual ChromatogramPtr chromatogram(size_t index, DetailLevel detailLevel) const;
     
 #ifdef PWIZ_READER_THERMO
     ChromatogramList_Thermo(const MSData& msd, RawFilePtr rawfile, const Reader::Config& config);
