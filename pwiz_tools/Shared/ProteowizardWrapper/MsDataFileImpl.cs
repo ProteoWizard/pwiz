@@ -670,14 +670,19 @@ namespace pwiz.ProteowizardWrapper
 
         public List<QcTrace> GetQcTraces()
         {
-            if (ChromatogramList == null)
+            if (ChromatogramList == null || ChromatogramList.size() == 0)
                 return null;
+
+            // some readers may return empty chromatograms at detail levels below FullMetadata
+            DetailLevel minDetailLevel = DetailLevel.InstantMetadata;
+            if (ChromatogramList.chromatogram(0, minDetailLevel).empty())
+                minDetailLevel = DetailLevel.FullMetadata;
 
             var result = new List<QcTrace>();
             for (int i = 0; i < ChromatogramList.size(); ++i)
             {
                 CVID chromatogramType;
-                using (var chromMetaData = ChromatogramList.chromatogram(i, DetailLevel.InstantMetadata))
+                using (var chromMetaData = ChromatogramList.chromatogram(i, minDetailLevel))
                 {
                     chromatogramType = chromMetaData.cvParamChild(CVID.MS_chromatogram_type).cvid;
                     if (chromatogramType != CVID.MS_pressure_chromatogram &&
