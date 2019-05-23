@@ -264,14 +264,19 @@ namespace pwiz.SkylineTestUtil
 
             TestSmallMolecules = GetBoolValue("TestSmallMolecules", false);
 
+            InitializeUIMode(); //  Most tests do not anticipate an unitialized UI mode, nor the dialog box that pops up for that
+
+            STOPWATCH.Restart();
+            Initialize();
+        }
+
+        protected static void InitializeUIMode()
+        {
             if (string.IsNullOrEmpty(Settings.Default.UIMode))
             {
                 // Most tests do not anticipate an unitialized UI mode, nor the dialog box that pops up for that
                 Settings.Default.UIMode = @"proteomic";
             }
-
-            STOPWATCH.Restart();
-            Initialize();
         }
 
         /// <summary>

@@ -1046,11 +1046,7 @@ namespace pwiz.SkylineTestUtil
 
                 Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault(); // Release memory held in settings
 
-                if (string.IsNullOrEmpty(Settings.Default.UIMode))
-                {
-                    // Most tests do not anticipate an unitialized UI mode, nor the dialog box that pops up for that
-                    Settings.Default.UIMode = @"proteomic";
-                }
+                InitializeUIMode(); //  Most tests do not anticipate an unitialized UI mode, nor the dialog box that pops up for that
             }
             catch (Exception x)
             {
@@ -1264,6 +1260,7 @@ namespace pwiz.SkylineTestUtil
                     @"Timeout {0} seconds exceeded in WaitForSkyline", waitCycles * SLEEP_INTERVAL / 1000);
                 }
                 Settings.Default.Reset();
+                InitializeUIMode(); //  Most tests do not anticipate an unitialized UI mode, nor the dialog box that pops up for that
                 Settings.Default.TestSmallMolecules = TestSmallMolecules;
                 Settings.Default.ImportResultsAutoCloseWindow = true;
                 Settings.Default.ImportResultsSimultaneousFiles = (int)MultiFileLoader.ImportResultsSimultaneousFileOptions.many;    // use maximum threads for multiple file import
