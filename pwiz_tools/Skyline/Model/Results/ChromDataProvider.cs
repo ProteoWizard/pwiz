@@ -125,11 +125,27 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        /// <summary>
+        /// Since global chromatograms can share the same index as Skyline's target chromatograms (they both start at 0),
+        /// the global chromatograms are given an index offset starting after the last target chromatogram
+        /// </summary>
         public int IndexOffset { get; set; }
 
-        public int? TicChromatogramIndex { get; private set; }
-        public int? BpcChromatogramIndex { get; private set; }
-        public IDictionary<int, MsDataFileImpl.QcTrace> QcTraceByIndex { get; private set; }
+        public int? TicChromatogramIndex { get; }
+        public int? BpcChromatogramIndex { get; }
+
+        public IList<int> GlobalChromatogramIndexes
+        {
+            get
+            {
+                var result = new List<int>();
+                if (TicChromatogramIndex.HasValue) result.Add(TicChromatogramIndex.Value);
+                if (BpcChromatogramIndex.HasValue) result.Add(BpcChromatogramIndex.Value);
+                return result;
+            }
+        }
+
+        public IDictionary<int, MsDataFileImpl.QcTrace> QcTraceByIndex { get; }
 
         public string GetChromatogramId(int index, out int indexId)
         {
@@ -246,11 +262,8 @@ namespace pwiz.Skyline.Model.Results
             if (_chromIds.Count == 0)
                 throw new NoSrmDataException(FileInfo.FilePath);
 
-            foreach (var possibleGlobalIndex in new int?[]{ _globalChromatogramExtractor.TicChromatogramIndex, _globalChromatogramExtractor.BpcChromatogramIndex})
+            foreach (int globalIndex in _globalChromatogramExtractor.GlobalChromatogramIndexes)
             {
-                if (!possibleGlobalIndex.HasValue)
-                    continue;
-                int globalIndex = possibleGlobalIndex.Value;
                 _chromIndices[globalIndex] = globalIndex;
                 _chromIds.Add(new ChromKeyProviderIdPair(ChromKey.FromId(_globalChromatogramExtractor.GetChromatogramId(globalIndex, out int indexId), false), globalIndex));
             }

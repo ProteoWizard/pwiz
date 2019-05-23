@@ -527,15 +527,9 @@ namespace pwiz.Skyline.Model.Results
                 for (int i = 0; i < _collectors.ChromKeys.Count; i++)
                     chromIds.Add(new ChromKeyProviderIdPair(_collectors.ChromKeys[i], i));
 
-                _globalChromatogramExtractor.IndexOffset = chromIds.Count;
-
-                foreach (var possibleGlobalIndex in new int?[] { _globalChromatogramExtractor.TicChromatogramIndex, _globalChromatogramExtractor.BpcChromatogramIndex })
-                {
-                    _globalChromatogramExtractor.IndexOffset--;
-                }
-
-                foreach (var qcTracePair in _globalChromatogramExtractor.QcTraceByIndex)
-                    _globalChromatogramExtractor.IndexOffset--;
+                _globalChromatogramExtractor.IndexOffset =
+                    chromIds.Count - _globalChromatogramExtractor.GlobalChromatogramIndexes.Count -
+                    _globalChromatogramExtractor.QcTraceByIndex.Count;
 
                 return chromIds;
             }
