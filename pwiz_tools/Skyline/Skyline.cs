@@ -289,6 +289,7 @@ namespace pwiz.Skyline
                 {
                     noModeUIDlg.ShowDialog(this);
                     GetModeUIHelper().AttemptChangeModeUI(noModeUIDlg.SelectedDocumentType);
+                    SetUIMode(GetModeUIHelper().ModeUI);
                 }
             }
         }
