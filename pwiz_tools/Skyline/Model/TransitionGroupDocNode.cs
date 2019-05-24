@@ -1340,8 +1340,8 @@ namespace pwiz.Skyline.Model
                                     int step = i - numSteps;
                                     UserSet userSet = UserSet.FALSE;
                                     var chromInfo = FindChromInfo(results, fileId, step);
-                                    bool isManual = chromInfo.UserSet != UserSet.FALSE &&
-                                                     chromInfo.UserSet != UserSet.REINTEGRATED;
+                                    bool isManual = chromInfo?.UserSet != UserSet.FALSE &&
+                                                     chromInfo?.UserSet != UserSet.REINTEGRATED;
                                     if (!keepUserSet || chromInfo == null || !isManual || missmatchedEmptyReintegrated)
                                     {
                                         ChromPeak peak = ChromPeak.EMPTY;
