@@ -1171,6 +1171,16 @@ PWIZ_API_DECL size_t ChromatogramList::find(const string& id) const
 }
 
 
+PWIZ_API_DECL ChromatogramPtr ChromatogramList::chromatogram(size_t index, DetailLevel detailLevel) const
+{
+    // By default faster metadata access is not implemented
+    if (detailLevel == DetailLevel_FastMetadata || detailLevel == DetailLevel_InstantMetadata)
+        return ChromatogramPtr(new Chromatogram);
+
+    return chromatogram(index, detailLevel == DetailLevel_FullData);
+}
+
+
 PWIZ_API_DECL const shared_ptr<const DataProcessing> ChromatogramList::dataProcessingPtr() const
 {
     return shared_ptr<const DataProcessing>();

@@ -77,7 +77,13 @@ PWIZ_API_DECL size_t ChromatogramList_Thermo::find(const string& id) const
 }
 
 
-PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index, bool getBinaryData) const 
+PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index, bool getBinaryData) const
+{
+    return chromatogram(index, getBinaryData ? DetailLevel_FullData : DetailLevel_FullMetadata);
+}
+
+
+PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index, DetailLevel detailLevel) const
 {
     boost::call_once(indexInitialized_.flag, boost::bind(&ChromatogramList_Thermo::createIndex, this));
     if (index>size())
@@ -92,6 +98,8 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
     if (ci.polarityType != CVID_Unknown)
         result->set(ci.polarityType);
 
+    bool getBinaryData = detailLevel == DetailLevel_FullData;
+
     try
     {
         rawfile_->setCurrentController(ci.controllerType, ci.controllerNumber);
@@ -103,6 +111,9 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
 
             case MS_TIC_chromatogram:
             {
+                if (detailLevel < DetailLevel_FullMetadata)
+                    return result;
+
                 ChromatogramDataPtr cd = rawfile_->getChromatogramData(Type_TIC, "", 0, 0, 0, rawfile_->getFirstScanTime(), rawfile_->getLastScanTime());
                 if (getBinaryData) result->setTimeIntensityArrays(cd->times(), cd->intensities(), UO_minute, MS_number_of_detector_counts);
                 else result->defaultArrayLength = cd->size();
@@ -111,6 +122,9 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
 
             case MS_SIC_chromatogram: // generate SIC for <precursor>
             {
+                if (detailLevel < DetailLevel_FullMetadata)
+                    return result;
+
                 ChromatogramDataPtr cd = rawfile_->getChromatogramData(Type_MassRange, index_[index].filter, 0, 100000, 0, rawfile_->getFirstScanTime(), rawfile_->getLastScanTime());
                 if (getBinaryData) result->setTimeIntensityArrays(cd->times(), cd->intensities(), UO_minute, MS_number_of_detector_counts);
                 else result->defaultArrayLength = cd->size();
@@ -153,6 +167,9 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
                 result->product.isolationWindow.set(MS_isolation_window_lower_offset, ci.q3Offset, MS_m_z);
                 result->product.isolationWindow.set(MS_isolation_window_upper_offset, ci.q3Offset, MS_m_z);
 
+                if (detailLevel < DetailLevel_FullMetadata)
+                    return result;
+
                 string q1 = (format("%.10g", std::locale::classic()) % ci.q1).str();
                 string q3Range = (format("%.10g-%.10g", std::locale::classic())
                                   % (ci.q3 - ci.q3Offset)
@@ -172,6 +189,9 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
                 result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, ci.q1, MS_m_z);
                 result->precursor.isolationWindow.set(MS_isolation_window_lower_offset, ci.q3Offset, MS_m_z);
                 result->precursor.isolationWindow.set(MS_isolation_window_upper_offset, ci.q3Offset, MS_m_z);
+
+                if (detailLevel < DetailLevel_FullMetadata)
+                    return result;
 
                 string q1Range = (format("%.10g-%.10g", std::locale::classic())
                                   % (ci.q1 - ci.q3Offset)
