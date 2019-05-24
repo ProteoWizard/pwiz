@@ -43,6 +43,7 @@ class PWIZ_API_DECL ChromatogramList_LockmassRefiner : public ChromatogramListWr
     static bool accept(const msdata::ChromatogramListPtr& inner);
 
     virtual msdata::ChromatogramPtr chromatogram(size_t index, bool getBinaryData = false) const;
+    virtual msdata::ChromatogramPtr chromatogram(size_t index, msdata::DetailLevel detailLevel) const;
 
     private:
     double mzPositiveScans_, mzNegativeScans_, tolerance_;

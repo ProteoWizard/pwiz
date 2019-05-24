@@ -83,6 +83,12 @@ PWIZ_API_DECL size_t ChromatogramList_Bruker::find(const string& id) const
 
 PWIZ_API_DECL ChromatogramPtr ChromatogramList_Bruker::chromatogram(size_t index, bool getBinaryData) const
 {
+    return chromatogram(index, getBinaryData ? DetailLevel_FullData : DetailLevel_FullMetadata);
+}
+
+
+PWIZ_API_DECL ChromatogramPtr ChromatogramList_Bruker::chromatogram(size_t index, DetailLevel detailLevel) const
+{
     if (index > size_)
         throw runtime_error(("[ChromatogramList_Bruker::chromatogram()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
@@ -96,6 +102,10 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Bruker::chromatogram(size_t index
     result->index = ci.index;
     result->id = ci.id;
     result->set(ci.chromatogramType);
+
+    if (detailLevel < DetailLevel_FullMetadata)
+        return result;
+    bool getBinaryData = detailLevel == DetailLevel_FullData;
 
     vendor_api::Bruker::ChromatogramPtr cd;
 
