@@ -106,11 +106,6 @@ namespace pwiz.Skyline.Controls.Startup
             // Setup to manage and interact with mode selector buttons in UI
             SetModeUIToolStripButtons(toolStripButtonModeUI);
             GetModeUIHelper().SetButtonImageForModeUI(GetModeUIHelper().ModeUI);
-            // Update the menu structure for this mode
-            if (Program.MainWindow != null)
-            {
-                Program.MainWindow.SetUIMode(GetModeUIHelper().ModeUI);
-            }
         }
 
         /// <summary>
@@ -123,6 +118,12 @@ namespace pwiz.Skyline.Controls.Startup
             PopulateWizardPanel(); // Update wizards for new UI mode
             PopulateTutorialPanel(); // Update tutorial order for new UI mode
             GetModeUIHelper().OnLoad(this); // Reprocess any needed translations
+
+            // Update the menu structure for this mode
+            if (Program.MainWindow != null)
+            {
+                Program.MainWindow.SetUIMode(GetModeUIHelper().ModeUI);
+            }
         }
 
         protected override void OnHandleCreated(EventArgs e)
