@@ -61,9 +61,8 @@ namespace pwiz.SkylineTestFunctional
         private void PerformTest(bool withStartPage)
         {
             TestFilesZip = @"TestFunctional\UIModeTest.zip";
-            Settings.Default.UIMode = ""; // Start clean - should default to proteomic UI mode
             _showStartPage = withStartPage;
-            RunFunctionalTest();
+            RunFunctionalTest(null);    // No default UI mode
         }
 
         protected override void DoTest()
@@ -231,17 +230,17 @@ namespace pwiz.SkylineTestFunctional
             if (initalModeUI != clickWhat && clickWhat != SrmDocument.DOCUMENT_TYPE.mixed && clickWhat != docType)
             {
                 // Can't force a loaded document to be another type, so we offer to create a new one
-                RunDlg<AlertDlg>(()=>SkylineWindow.ModeUIButtonClick(clickWhat), dlg=>dlg.ClickYes());
+                RunDlg<AlertDlg>(()=>SkylineWindow.SetUIMode(clickWhat), dlg=>dlg.ClickYes());
                 RunUI(()=>Assume.IsFalse(SkylineWindow.DocumentUI.MoleculeGroups.Any()));
             }
             else
             {
-                RunUI(()=>SkylineWindow.ModeUIButtonClick(clickWhat));
+                RunUI(()=>SkylineWindow.SetUIMode(clickWhat));
                 Assume.IsFalse(expectNewDocument);
             }
             RunUI(() =>
             {
-                SkylineWindow.ModeUIButtonClick(clickWhat);
+                SkylineWindow.SetUIMode(clickWhat);
                 VerifyButtonStates();
                 var actualModeUI = SkylineWindow.GetModeUIHelper().ModeUI;
                 Assert.AreEqual(clickWhat, actualModeUI);

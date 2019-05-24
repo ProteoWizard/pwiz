@@ -104,7 +104,7 @@ namespace pwiz.Skyline.Controls.Startup
             PositionButtonsModeUI();
 
             // Setup to manage and interact with mode selector buttons in UI
-            GetModeUIHelper().SetModeUIToolStripButtons(toolStripButtonModeUI, modeUIButtonClick);
+            SetModeUIToolStripButtons(toolStripButtonModeUI);
             GetModeUIHelper().SetButtonImageForModeUI(GetModeUIHelper().ModeUI);
             // Update the menu structure for this mode
             if (Program.MainWindow != null)
@@ -116,13 +116,14 @@ namespace pwiz.Skyline.Controls.Startup
         /// <summary>
         /// Handler for the toolbar button dropdown that allow user to switch between proteomic, small mol, or mixed UI display.
         /// </summary>
-        private void modeUIButtonClick(object sender, EventArgs e)
+        public override void SetUIMode(SrmDocument.DOCUMENT_TYPE mode)
         {
+            base.SetUIMode(mode);
+
             PopulateWizardPanel(); // Update wizards for new UI mode
             PopulateTutorialPanel(); // Update tutorial order for new UI mode
             GetModeUIHelper().OnLoad(this); // Reprocess any needed translations
         }
-
 
         protected override void OnHandleCreated(EventArgs e)
         {
@@ -138,11 +139,15 @@ namespace pwiz.Skyline.Controls.Startup
             // If user has never selected a default UI mode, ask for it now
             if (string.IsNullOrEmpty(Settings.Default.UIMode))
             {
-                using (var noModeUIDlg = new NoModeUIDlg())
+                if (!string.IsNullOrEmpty(Program.DefaultUiMode))
+                    Settings.Default.UIMode = Program.DefaultUiMode;
+                else
                 {
-                    noModeUIDlg.ShowDialog(this);
-                    GetModeUIHelper().AttemptChangeModeUI(noModeUIDlg.SelectedDocumentType);
-                    modeUIButtonClick(null, null);
+                    using (var noModeUIDlg = new NoModeUIDlg())
+                    {
+                        noModeUIDlg.ShowDialog(this);
+                        SetUIMode(noModeUIDlg.SelectedDocumentType);
+                    }
                 }
             }
         }
@@ -753,12 +758,6 @@ namespace pwiz.Skyline.Controls.Startup
                 TutorialLinkResources.LibraryExplorer_pdf,
                 string.Empty
                 );
-        }
-
-        public void ModeUIButtonClick(SrmDocument.DOCUMENT_TYPE mode)
-        {
-            GetModeUIHelper().ModeUIButtonClick(mode);
-            modeUIButtonClick(null, null);
         }
     }
 }

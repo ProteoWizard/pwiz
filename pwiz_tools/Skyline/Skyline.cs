@@ -142,7 +142,7 @@ namespace pwiz.Skyline
             undoRedoButtons.AttachEventHandlers();
 
             // Setup to manage and interact with mode selector buttons in UI
-            GetModeUIHelper().SetModeUIToolStripButtons(modeUIToolBarDropDownButton, modeUIButtonClick);
+            SetModeUIToolStripButtons(modeUIToolBarDropDownButton);
 
             _backgroundLoaders = new List<BackgroundLoader>();
 
@@ -260,7 +260,6 @@ namespace pwiz.Skyline
             {
                 Settings.Default.UIMode = defaultUIMode; // OnShown() will ask user for it
             }
-
         }
 
         public AllChromatogramsGraph ImportingResultsWindow { get; private set; }
@@ -285,11 +284,15 @@ namespace pwiz.Skyline
             // If user has never selected a default UI mode, ask for it now
             if (string.IsNullOrEmpty(Settings.Default.UIMode))
             {
-                using (var noModeUIDlg = new NoModeUIDlg())
+                if (!string.IsNullOrEmpty(Program.DefaultUiMode))
+                    Settings.Default.UIMode = Program.DefaultUiMode;
+                else
                 {
-                    noModeUIDlg.ShowDialog(this);
-                    GetModeUIHelper().AttemptChangeModeUI(noModeUIDlg.SelectedDocumentType);
-                    SetUIMode(GetModeUIHelper().ModeUI);
+                    using (var noModeUIDlg = new NoModeUIDlg())
+                    {
+                        noModeUIDlg.ShowDialog(this);
+                        SetUIMode(noModeUIDlg.SelectedDocumentType);
+                    }
                 }
             }
         }
@@ -5446,19 +5449,9 @@ namespace pwiz.Skyline
             }
         }
 
-        /// <summary>
-        /// Handler for the buttons that allow user to switch between proteomic, small mol, or mixed UI display.
-        /// Between the two buttons there are three states A/B/Both - we enforce that at least one is always checked.
-        /// </summary>
-        private void modeUIButtonClick(object sender, EventArgs e)
+        public override void SetUIMode(SrmDocument.DOCUMENT_TYPE mode)
         {
-            SetUIMode(GetModeUIHelper().ModeUI);
-        }
-
-        public void SetUIMode(SrmDocument.DOCUMENT_TYPE mode)
-        {
-            GetModeUIHelper().ModeUI = mode == SrmDocument.DOCUMENT_TYPE.none ? SrmDocument.DOCUMENT_TYPE.proteomic : mode;
-            GetModeUIHelper().AttemptChangeModeUI(mode);
+            base.SetUIMode(mode);
 
             UpdateDocumentUI();
             // Update any visible graphs
@@ -5473,18 +5466,10 @@ namespace pwiz.Skyline
             menuMain.ResumeLayout();
         }
 
-
-
         #region Testing Support
         //
         // For exercising UI mode selector buttons in tests
         //
-
-        public void ModeUIButtonClick(SrmDocument.DOCUMENT_TYPE mode)
-        {
-            GetModeUIHelper().ModeUIButtonClick(mode);
-        }
-
         public bool IsProteomicOrMixedUI
         {
             get { return GetModeUIHelper().GetUIToolBarButtonState() != SrmDocument.DOCUMENT_TYPE.small_molecules; }

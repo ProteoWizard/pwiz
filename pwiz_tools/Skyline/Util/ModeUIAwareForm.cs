@@ -160,28 +160,9 @@ namespace pwiz.Skyline.Util
                 return SrmDocument.DOCUMENT_TYPE.none; // Never gets here
             }
 
-            public void ModeUIButtonClick(SrmDocument.DOCUMENT_TYPE mode)
-            {
-                switch (mode)
-                {
-                    case SrmDocument.DOCUMENT_TYPE.proteomic:
-                        modeUIButtonClick(_buttonProteomic, null);
-                        break;
-                    case SrmDocument.DOCUMENT_TYPE.small_molecules:
-                        modeUIButtonClick(_buttonSmallMolecules, null);
-                        break;
-                    case SrmDocument.DOCUMENT_TYPE.mixed:
-                        modeUIButtonClick(_buttonMixed, null);
-                        break;
-                    default:
-                        Assume.Fail(@"unexpected UI mode");
-                        break;
-                }
-            }
-
             #endregion
 
-            public void SetModeUIToolStripButtons(ToolStripDropDownButton modeUIToolBarDropDownButton, Action<object, EventArgs> handler)
+            public void SetModeUIToolStripButtons(ToolStripDropDownButton modeUIToolBarDropDownButton, Action<SrmDocument.DOCUMENT_TYPE> handler)
             {
                 _modeUIToolBarDropDownButton = modeUIToolBarDropDownButton;
                 var dropDown = new ToolStripDropDown();
@@ -195,21 +176,18 @@ namespace pwiz.Skyline.Util
                 var toolStripItems = new ToolStripItem[] {_buttonProteomic, _buttonSmallMolecules, _buttonMixed};
                 foreach (var item in toolStripItems)
                 {
-                    item.Click += modeUIButtonClick;
-                    if (handler != null)
-                        item.Click += new EventHandler(handler);
+                    item.Click += (s, e) => modeUIButtonClick(s, handler);
                     item.ImageTransparentColor = Color.White;
                 }
                 dropDown.Items.AddRange(toolStripItems);
 
                 _modeUIToolBarDropDownButton.DropDown = dropDown;
-
             }
 
             /// <summary>
             /// Handler for the buttons that allow user to switch between proteomic, small mol, or mixed UI display.
             /// </summary>
-            public void modeUIButtonClick(object sender, EventArgs e)
+            public void modeUIButtonClick(object sender, Action<SrmDocument.DOCUMENT_TYPE> setModeUI)
             {
                 var senderButton = (ToolStripButton)sender;
                 SrmDocument.DOCUMENT_TYPE newModeUI;
@@ -226,11 +204,8 @@ namespace pwiz.Skyline.Util
                     newModeUI = SrmDocument.DOCUMENT_TYPE.mixed;
                 }
 
-                AttemptChangeModeUI(newModeUI);
-
+                setModeUI(newModeUI);
             }
-
-
 
             // Potentially replace "peptide" with "molecule" etc in all controls on open, or possibly disable non-proteomic components etc
             public void OnLoad(Form form)
@@ -364,7 +339,6 @@ namespace pwiz.Skyline.Util
                 SetButtonImageForModeUI(new_uimode);
 
                 Settings.Default.UIMode = ModeUI.ToString();
-
             }
 
             internal void SetButtonImageForModeUI(SrmDocument.DOCUMENT_TYPE modeUI)
@@ -396,10 +370,6 @@ namespace pwiz.Skyline.Util
             }
         }
 
-    }
-
-    public static partial class Helpers
-    {
         public interface IModeUIAwareForm
         {
             /// <summary>

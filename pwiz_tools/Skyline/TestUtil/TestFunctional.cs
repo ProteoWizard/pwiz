@@ -998,7 +998,7 @@ namespace pwiz.SkylineTestUtil
         /// <summary>
         /// Starts up Skyline, and runs the <see cref="DoTest"/> test method.
         /// </summary>
-        protected void RunFunctionalTest()
+        protected void RunFunctionalTest(string defaultUiMode = UiModes.PROTEOMIC)
         {
             try
             {
@@ -1009,6 +1009,7 @@ namespace pwiz.SkylineTestUtil
                 }
 
                 Program.FunctionalTest = true;
+                Program.DefaultUiMode = defaultUiMode;
                 Program.TestExceptions = new List<Exception>();
                 LocalizationHelper.InitThread();
 
@@ -1045,8 +1046,6 @@ namespace pwiz.SkylineTestUtil
                 CommonFormEx.CheckAllFormsDisposed();
 
                 Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault(); // Release memory held in settings
-
-                InitializeUIMode(); //  Most tests do not anticipate an unitialized UI mode, nor the dialog box that pops up for that
             }
             catch (Exception x)
             {
@@ -1260,7 +1259,6 @@ namespace pwiz.SkylineTestUtil
                     @"Timeout {0} seconds exceeded in WaitForSkyline", waitCycles * SLEEP_INTERVAL / 1000);
                 }
                 Settings.Default.Reset();
-                InitializeUIMode(); //  Most tests do not anticipate an unitialized UI mode, nor the dialog box that pops up for that
                 Settings.Default.TestSmallMolecules = TestSmallMolecules;
                 Settings.Default.ImportResultsAutoCloseWindow = true;
                 Settings.Default.ImportResultsSimultaneousFiles = (int)MultiFileLoader.ImportResultsSimultaneousFileOptions.many;    // use maximum threads for multiple file import

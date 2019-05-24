@@ -26,6 +26,7 @@ using System.Reflection;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Util
@@ -72,6 +73,17 @@ namespace pwiz.Skyline.Util
         public string ModeUIAwareStringFormat(string format, params object[] args)
         {
             return _modeUIHelper.Format(format, args);
+        }
+
+        protected void SetModeUIToolStripButtons(ToolStripDropDownButton toolStripDropDownButton)
+        {
+            GetModeUIHelper().SetModeUIToolStripButtons(toolStripDropDownButton, SetUIMode);
+        }
+
+        public virtual void SetUIMode(SrmDocument.DOCUMENT_TYPE mode)
+        {
+            GetModeUIHelper().ModeUI = mode == SrmDocument.DOCUMENT_TYPE.none ? SrmDocument.DOCUMENT_TYPE.proteomic : mode;
+            GetModeUIHelper().AttemptChangeModeUI(mode);
         }
 
         private bool IsCreatingHandle()
