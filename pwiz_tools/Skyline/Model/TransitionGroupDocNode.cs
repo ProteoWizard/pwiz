@@ -1340,7 +1340,9 @@ namespace pwiz.Skyline.Model
                                     int step = i - numSteps;
                                     UserSet userSet = UserSet.FALSE;
                                     var chromInfo = FindChromInfo(results, fileId, step);
-                                    if (!keepUserSet || chromInfo == null || chromInfo.UserSet == UserSet.FALSE || missmatchedEmptyReintegrated)
+                                    bool isManual = chromInfo.UserSet != UserSet.FALSE &&
+                                                     chromInfo.UserSet != UserSet.REINTEGRATED;
+                                    if (!keepUserSet || chromInfo == null || !isManual || missmatchedEmptyReintegrated)
                                     {
                                         ChromPeak peak = ChromPeak.EMPTY;
                                         IonMobilityFilter ionMobility = IonMobilityFilter.EMPTY;
