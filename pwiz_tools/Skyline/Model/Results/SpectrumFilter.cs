@@ -127,12 +127,12 @@ namespace pwiz.Skyline.Model.Results
 
                     if (!firstPass && !_isFAIMS)
                     {
-                        var key = new PrecursorTextId(SignedMz.ZERO, null, null, ChromExtractor.summed);  // TIC
+                        /*var key = new PrecursorTextId(SignedMz.ZERO, null, null, ChromExtractor.summed);  // TIC
                         dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, dictPrecursorMzToFilter.Count,
                             _instrument.MinTime, _instrument.MaxTime, _isHighAccMsFilter, _isHighAccProductFilter));
                         key = new PrecursorTextId(SignedMz.ZERO, null, null, ChromExtractor.base_peak);   // BPC
                         dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, dictPrecursorMzToFilter.Count,
-                            _instrument.MinTime, _instrument.MaxTime, _isHighAccMsFilter, _isHighAccProductFilter));
+                            _instrument.MinTime, _instrument.MaxTime, _isHighAccMsFilter, _isHighAccProductFilter));*/
                     }
                 }
                 if (EnabledMsMs)

@@ -227,7 +227,8 @@ namespace pwiz.Skyline.Model.Results
             var chromMapMs1Pos = new ChromDataCollectorSet(ChromSource.ms1, ms1TimeSharing, _allChromData, _blockWriter);
             var chromMapMs1Neg = new ChromDataCollectorSet(ChromSource.ms1, ms1TimeSharing, _allChromData, _blockWriter);
             var chromMapSim = new ChromDataCollectorSet(ChromSource.sim, TimeSharing.grouped, _allChromData, _blockWriter);
-            var chromMaps = new[] {chromMap, chromMapSim, chromMapMs1Pos, chromMapMs1Neg};
+            var chromMapGlobal = new ChromDataCollectorSet(ChromSource.unknown, TimeSharing.single, _allChromData, _blockWriter);
+            var chromMaps = new[] {chromMap, chromMapSim, chromMapMs1Pos, chromMapMs1Neg, chromMapGlobal};
 
             var dictPrecursorMzToIndex = new Dictionary<SignedMz, int>(); // For SRM processing
 
@@ -359,8 +360,9 @@ namespace pwiz.Skyline.Model.Results
                 CompleteChromatograms(chromMaps);
             }
 
-            if (chromMaps.Where(map=>map.ChromSource != ChromSource.unknown).All(map=>map.Count == 0))
-                throw new NoFullScanDataException(FileInfo.FilePath);
+            // TODO: how to prevent triggering this when all transitions are discarded (e.g. targets are positive but file is negative polarity)
+            //if (chromMaps.Where(map=>map.ChromSource != ChromSource.unknown).All(map=>map.Count == 0))
+            //    throw new NoFullScanDataException(FileInfo.FilePath);
         }
 
         private void AddChromCollector(int productFilterId, ChromCollector collector)
