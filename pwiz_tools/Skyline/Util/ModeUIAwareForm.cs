@@ -269,21 +269,15 @@ namespace pwiz.Skyline.Util
 
             }
 
-            public bool HasVisibleProteomicMenuItems(ToolStripItemCollection items)
+            public bool MenuItemHasOriginalText(string name)
             {
-                foreach (var item in items)
+                foreach (var item in _modeUIExtender.GetOriginalToolStripText().Keys)
                 {
                     if (item is ToolStripMenuItem menuItem)
                     {
-                        if (menuItem.DropDownItems.Count > 0)
+                        if (Equals(name, menuItem.Text))
                         {
-                            if (HasVisibleProteomicMenuItems(menuItem.DropDownItems))
-                                return true;
-                        }
-                        else if (_modeUIExtender.GetHandledComponents().TryGetValue(menuItem, out var value))
-                        {
-                            if (value.Equals(ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic) && menuItem.Visible)
-                                return true;
+                            return Equals(name, _modeUIExtender.GetOriginalToolStripText()[menuItem]);
                         }
                     }
                 }

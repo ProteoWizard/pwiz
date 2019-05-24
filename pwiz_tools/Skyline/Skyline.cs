@@ -5466,9 +5466,9 @@ namespace pwiz.Skyline
             get { return GetModeUIHelper().GetUIToolBarButtonState() != SrmDocument.DOCUMENT_TYPE.proteomic; }
         }
 
-        public bool HasEnabledProteomicMenuItems
+        public bool HasProteomicMenuItems
         {
-            get { return GetModeUIHelper().HasVisibleProteomicMenuItems(menuMain.Items); }
+            get { return GetModeUIHelper().MenuItemHasOriginalText(peptideSettingsMenuItem.Text); }
         }
         #endregion
     }
