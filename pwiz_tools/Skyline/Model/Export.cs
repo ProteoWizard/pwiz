@@ -2463,7 +2463,8 @@ namespace pwiz.Skyline.Model
         {
             try
             {
-                return proc.MainModule?.ModuleName;
+                // ReSharper disable once PossibleNullReferenceException
+                return proc.MainModule.ModuleName;
             }
             catch
             {
