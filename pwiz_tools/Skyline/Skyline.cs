@@ -281,20 +281,7 @@ namespace pwiz.Skyline
                 _fileToOpen = null;
             }
 
-            // If user has never selected a default UI mode, ask for it now
-            if (string.IsNullOrEmpty(Settings.Default.UIMode))
-            {
-                if (!string.IsNullOrEmpty(Program.DefaultUiMode))
-                    Settings.Default.UIMode = Program.DefaultUiMode;
-                else
-                {
-                    using (var noModeUIDlg = new NoModeUIDlg())
-                    {
-                        noModeUIDlg.ShowDialog(this);
-                        SetUIMode(noModeUIDlg.SelectedDocumentType);
-                    }
-                }
-            }
+            EnsureUIModeSet();
         }
 
         public void OpenPasteFileDlg(PasteFormat pf)
@@ -5449,7 +5436,7 @@ namespace pwiz.Skyline
             }
         }
 
-        public override void SetUIMode(SrmDocument.DOCUMENT_TYPE mode)
+        public sealed override void SetUIMode(SrmDocument.DOCUMENT_TYPE mode)
         {
             base.SetUIMode(mode);
 

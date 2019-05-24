@@ -26,7 +26,9 @@ using System.Reflection;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Util
@@ -84,6 +86,24 @@ namespace pwiz.Skyline.Util
         {
             GetModeUIHelper().ModeUI = mode == SrmDocument.DOCUMENT_TYPE.none ? SrmDocument.DOCUMENT_TYPE.proteomic : mode;
             GetModeUIHelper().AttemptChangeModeUI(mode);
+        }
+
+        protected void EnsureUIModeSet()
+        {
+            // If user has never selected a default UI mode, ask for it now
+            if (string.IsNullOrEmpty(Settings.Default.UIMode))
+            {
+                if (!string.IsNullOrEmpty(Program.DefaultUiMode))
+                    Settings.Default.UIMode = Program.DefaultUiMode;
+                else
+                {
+                    using (var noModeUIDlg = new NoModeUIDlg())
+                    {
+                        noModeUIDlg.ShowDialog(this);
+                        SetUIMode(noModeUIDlg.SelectedDocumentType);
+                    }
+                }
+            }
         }
 
         private bool IsCreatingHandle()

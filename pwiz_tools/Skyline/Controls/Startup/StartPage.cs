@@ -136,20 +136,7 @@ namespace pwiz.Skyline.Controls.Startup
         {
             base.OnShown(e);
 
-            // If user has never selected a default UI mode, ask for it now
-            if (string.IsNullOrEmpty(Settings.Default.UIMode))
-            {
-                if (!string.IsNullOrEmpty(Program.DefaultUiMode))
-                    Settings.Default.UIMode = Program.DefaultUiMode;
-                else
-                {
-                    using (var noModeUIDlg = new NoModeUIDlg())
-                    {
-                        noModeUIDlg.ShowDialog(this);
-                        SetUIMode(noModeUIDlg.SelectedDocumentType);
-                    }
-                }
-            }
+            EnsureUIModeSet();
         }
 
         public StartupAction Action { get; private set; }
