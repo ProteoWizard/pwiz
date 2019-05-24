@@ -72,19 +72,27 @@ namespace pwiz.SkylineTestFunctional
 
             var startPage =_showStartPage ? WaitForOpenForm<StartPage>() : null;
             var modeDlg = WaitForOpenForm<NoModeUIDlg>(); // Expect a dialog asking user to select a default UI mode
-            RunUI(() => modeDlg.ClickOk()); // Expect it to have proteomic preselected
+            RunUI(() =>
+            {
+                modeDlg.SelectModeUI(SrmDocument.DOCUMENT_TYPE.small_molecules);
+                modeDlg.ClickOk();
+            });
             WaitForClosedForm(modeDlg);
 
             if (_showStartPage)
             {
                 // ReSharper disable PossibleNullReferenceException
+                Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.small_molecules, startPage.GetModeUIHelper().GetUIToolBarButtonState());
+                // Verify that start page UI is updated
+                Assert.IsFalse(startPage.GetVisibleBoxPanels().Where(c => c is ActionBoxControl).Any(c => ((ActionBoxControl)c).IsProteomicOnly));
                 RunUI(() => startPage.DoAction(skylineWindow => true)); // Start a new file
-                Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.proteomic, startPage.GetModeUIHelper().GetUIToolBarButtonState());
                 // ReSharper restore PossibleNullReferenceException
                 WaitForOpenForm<SkylineWindow>();
             }
 
-            Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.proteomic, SkylineWindow.GetModeUIHelper().GetUIToolBarButtonState());
+            // Verify that Skyline UI isn't showing anything proteomic
+            Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.small_molecules, SkylineWindow.GetModeUIHelper().GetUIToolBarButtonState());
+            Assert.IsFalse(SkylineWindow.HasEnabledProteomicMenuItems);
 
             RunUI(() =>
             {

@@ -5465,6 +5465,11 @@ namespace pwiz.Skyline
         {
             get { return GetModeUIHelper().GetUIToolBarButtonState() != SrmDocument.DOCUMENT_TYPE.proteomic; }
         }
+
+        public bool HasEnabledProteomicMenuItems
+        {
+            get { return GetModeUIHelper().HasVisibleProteomicMenuItems(menuMain.Items); }
+        }
         #endregion
     }
 }

@@ -269,6 +269,27 @@ namespace pwiz.Skyline.Util
 
             }
 
+            public bool HasVisibleProteomicMenuItems(ToolStripItemCollection items)
+            {
+                foreach (var item in items)
+                {
+                    if (item is ToolStripMenuItem menuItem)
+                    {
+                        if (menuItem.DropDownItems.Count > 0)
+                        {
+                            if (HasVisibleProteomicMenuItems(menuItem.DropDownItems))
+                                return true;
+                        }
+                        else if (_modeUIExtender.GetHandledComponents().TryGetValue(menuItem, out var value))
+                        {
+                            if (value.Equals(ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic) && menuItem.Visible)
+                                return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
 
             public static void SetComponentEnabledStateForModeUI(Component component, bool isDesired)
             {
