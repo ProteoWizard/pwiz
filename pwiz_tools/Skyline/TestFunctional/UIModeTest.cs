@@ -72,24 +72,46 @@ namespace pwiz.SkylineTestFunctional
 
             var startPage =_showStartPage ? WaitForOpenForm<StartPage>() : null;
             var modeDlg = WaitForOpenForm<NoModeUIDlg>(); // Expect a dialog asking user to select a default UI mode
-            RunUI(() => modeDlg.ClickOk()); // Expect it to have proteomic preselected
+            RunUI(() =>
+            {
+                modeDlg.SelectModeUI(SrmDocument.DOCUMENT_TYPE.small_molecules);
+                modeDlg.ClickOk();
+            });
             WaitForClosedForm(modeDlg);
 
             if (_showStartPage)
             {
                 // ReSharper disable PossibleNullReferenceException
+                Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.small_molecules, startPage.GetModeUIHelper().GetUIToolBarButtonState());
+                // Verify that start page UI is updated
+                Assert.IsFalse(startPage.GetVisibleBoxPanels().Where(c => c is ActionBoxControl).Any(c => ((ActionBoxControl)c).IsProteomicOnly));
                 RunUI(() => startPage.DoAction(skylineWindow => true)); // Start a new file
-                Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.proteomic, startPage.GetModeUIHelper().GetUIToolBarButtonState());
                 // ReSharper restore PossibleNullReferenceException
                 WaitForOpenForm<SkylineWindow>();
             }
 
-            Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.proteomic, SkylineWindow.GetModeUIHelper().GetUIToolBarButtonState());
+            // Verify that Skyline UI isn't showing anything proteomic
+            Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.small_molecules, SkylineWindow.GetModeUIHelper().GetUIToolBarButtonState());
+            Assert.IsFalse(SkylineWindow.HasProteomicMenuItems);
 
             RunUI(() =>
             {
                 SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("blank.sky"));
             });
+
+            // Verify handling of start page invoked from Skyline menu with a populated document
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Proteomic.sky")));
+            Assert.IsTrue(SkylineWindow.HasProteomicMenuItems);
+            startPage = ShowDialog<StartPage>(SkylineWindow.OpenStartPage);
+            RunDlg<AlertDlg>(() => startPage.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules), alertDlg => alertDlg.ClickYes());
+            Assert.IsTrue(SkylineWindow.Document.MoleculeCount == 0); // Document should be empty
+            RunUI(() => startPage.DoAction(skylineWindow => true)); // Close the start window
+            Assert.IsFalse(SkylineWindow.HasProteomicMenuItems);
+
+            if (!_showStartPage)
+            {
+                return; // No need to do the rest of this this twice
+            }
 
             foreach (SrmDocument.DOCUMENT_TYPE uimode in Enum.GetValues(typeof(SrmDocument.DOCUMENT_TYPE)))
             {
@@ -129,11 +151,6 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => Assume.AreEqual(peptideSettingsDlg.SelectedTab, (PeptideSettingsUI.TABS)uimode));
                 OkDialog(peptideSettingsDlg, peptideSettingsDlg.CancelDialog);
 
-            }
-
-            if (!_showStartPage)
-            {
-                return; // No need to do this twice
             }
 
             TestPeptideToMoleculeText(); // Exercise the UI peptide->molecule translation code

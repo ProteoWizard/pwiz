@@ -255,6 +255,22 @@ namespace pwiz.Skyline.Util
                 }
             }
 
+            public bool MenuItemHasOriginalText(string name)
+            {
+                foreach (var item in _modeUIExtender.GetOriginalToolStripText().Keys)
+                {
+                    if (item is ToolStripMenuItem menuItem)
+                    {
+                        if (Equals(name, menuItem.Text))
+                        {
+                            return Equals(name, _modeUIExtender.GetOriginalToolStripText()[menuItem]);
+                        }
+                    }
+                }
+                return false;
+            }
+
+
             public static void SetComponentEnabledStateForModeUI(Component component, bool isDesired)
             {
                 if (component is ToolStripMenuItem item)
