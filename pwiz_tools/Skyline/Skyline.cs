@@ -341,11 +341,6 @@ namespace pwiz.Skyline
             DocumentChangedEvent -= listener;
         }
 
-        public SrmDocument.DOCUMENT_TYPE ModeUI
-        {
-            get { return GetModeUIHelper().ModeUI; }
-        }
-
         void IDocumentUIContainer.ListenUI(EventHandler<DocumentChangedEventArgs> listener)
         {
             DocumentUIChangedEvent += listener;
@@ -563,8 +558,8 @@ namespace pwiz.Skyline
             integrateAllMenuItem.Checked = settingsNew.TransitionSettings.Integration.IsIntegrateAll;
 
             // Update UI mode if we have introduced any new node types not handled by current ui mode
-            var changeModeUI = GetModeUIHelper().ModeUI != _documentUI.DocumentType
-                               && (GetModeUIHelper().ModeUI != SrmDocument.DOCUMENT_TYPE.mixed || IsOpeningFile) // If opening file, just override UI mode
+            var changeModeUI = ModeUI != _documentUI.DocumentType
+                               && (ModeUI != SrmDocument.DOCUMENT_TYPE.mixed || IsOpeningFile) // If opening file, just override UI mode
                                && _documentUI.DocumentType != SrmDocument.DOCUMENT_TYPE.none; // Don't change UI mode if new doc is empty
 
             if (changeModeUI)
@@ -573,7 +568,7 @@ namespace pwiz.Skyline
             }
             else if (documentPrevious == null)
             {
-                SetUIMode(GetModeUIHelper().ModeUI);
+                SetUIMode(ModeUI);
             }
         }
 
@@ -754,7 +749,7 @@ namespace pwiz.Skyline
                 AuditLogEntry entry;
                 try
                 {
-                    resultEntry = entry = logFunc?.Invoke(SrmDocumentPair.Create(docOriginal, docNew, GetModeUIHelper().ModeUI));
+                    resultEntry = entry = logFunc?.Invoke(SrmDocumentPair.Create(docOriginal, docNew, ModeUI));
                 }
                 catch (Exception ex)
                 {
@@ -769,7 +764,7 @@ namespace pwiz.Skyline
                 }
 
                 if (entry == null || entry.UndoRedo.MessageInfo.Type != MessageType.test_only)
-                    docNew = AuditLogEntry.UpdateDocument(entry, SrmDocumentPair.Create(docOriginal, docNew, GetModeUIHelper().ModeUI));
+                    docNew = AuditLogEntry.UpdateDocument(entry, SrmDocumentPair.Create(docOriginal, docNew, ModeUI));
 
                 // And mark the document as changed by the user.
                 docNew = docNew.IncrementUserRevisionIndex();
@@ -4827,7 +4822,7 @@ namespace pwiz.Skyline
                     positions[i] = -1;
             }
 
-            var isProtOnly = GetModeUIHelper().ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic;
+            var isProtOnly = ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic;
             UpdateStatusCounter(statusSequences, positions, SrmDocument.Level.MoleculeGroups, isProtOnly ? @"prot" : @"list", forceUpdate);
             UpdateStatusCounter(statusPeptides, positions, SrmDocument.Level.Molecules, isProtOnly ? @"pep" : @"mol", forceUpdate);
             UpdateStatusCounter(statusPrecursors, positions, SrmDocument.Level.TransitionGroups, @"prec", forceUpdate);

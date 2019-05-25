@@ -77,15 +77,25 @@ namespace pwiz.Skyline.Util
             return _modeUIHelper.Format(format, args);
         }
 
-        protected void SetModeUIToolStripButtons(ToolStripDropDownButton toolStripDropDownButton)
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public SrmDocument.DOCUMENT_TYPE ModeUI
         {
-            GetModeUIHelper().SetModeUIToolStripButtons(toolStripDropDownButton, SetUIMode);
+            get { return _modeUIHelper.ModeUI; }
+        }
+
+        protected void SetModeUIToolStripButtons(ToolStripDropDownButton toolStripDropDownButton, bool setButtonImage = false)
+        {
+            _modeUIHelper.SetModeUIToolStripButtons(toolStripDropDownButton, SetUIMode);
+            // Choosing the active button may be delayed until later, e.g. if document will be opened
+            if (setButtonImage)
+                _modeUIHelper.UpdateButtonImageForModeUI();
         }
 
         public virtual void SetUIMode(SrmDocument.DOCUMENT_TYPE mode)
         {
-            GetModeUIHelper().ModeUI = mode == SrmDocument.DOCUMENT_TYPE.none ? SrmDocument.DOCUMENT_TYPE.proteomic : mode;
-            GetModeUIHelper().AttemptChangeModeUI(mode);
+            _modeUIHelper.ModeUI = mode == SrmDocument.DOCUMENT_TYPE.none ? SrmDocument.DOCUMENT_TYPE.proteomic : mode;
+            _modeUIHelper.AttemptChangeModeUI(mode);
         }
 
         protected void EnsureUIModeSet()

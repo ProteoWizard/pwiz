@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
@@ -142,22 +143,13 @@ namespace pwiz.Skyline.Util
             /// Optional UI selector buttons we may manage on toolbar of SkylineWindow or Startup window
             /// </summary>
             private ToolStripDropDownButton _modeUIToolBarDropDownButton;
-            private ToolStripButton _buttonProteomic;
-            private ToolStripButton _buttonSmallMolecules;
-            private ToolStripButton _buttonMixed;
 
             #region Testing Support
 
             public SrmDocument.DOCUMENT_TYPE GetUIToolBarButtonState()
             {
-                if (_buttonProteomic.Checked && !_buttonSmallMolecules.Checked && !_buttonMixed.Checked)
-                    return SrmDocument.DOCUMENT_TYPE.proteomic;
-                if (!_buttonProteomic.Checked && _buttonSmallMolecules.Checked && !_buttonMixed.Checked)
-                    return SrmDocument.DOCUMENT_TYPE.small_molecules;
-                if (!_buttonProteomic.Checked && !_buttonSmallMolecules.Checked && _buttonMixed.Checked)
-                    return SrmDocument.DOCUMENT_TYPE.mixed;
-                Assume.Fail(@"unexpected ui mode button state");
-                return SrmDocument.DOCUMENT_TYPE.none; // Never gets here
+                return (SrmDocument.DOCUMENT_TYPE) _modeUIToolBarDropDownButton.DropDownItems
+                    .Cast<ToolStripButton>().First(b => b.Checked).Tag;
             }
 
             #endregion
@@ -166,45 +158,40 @@ namespace pwiz.Skyline.Util
             {
                 _modeUIToolBarDropDownButton = modeUIToolBarDropDownButton;
                 var dropDown = new ToolStripDropDown();
-                _buttonProteomic = new ToolStripButton(Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Proteomics_interface, Resources.UIModeProteomic);
-                _buttonProteomic.ToolTipText = Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Only_show_menus_and_controls_appropriate_to_proteomics_analysis;
-                _buttonSmallMolecules = new ToolStripButton(Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Small_Molecules_interface, Resources.UIModeSmallMolecules);
-                _buttonSmallMolecules.ToolTipText = Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Only_show_menus_and_controls_appropriate_to_small_molecule_analysis;
-                _buttonMixed = new ToolStripButton(Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Mixed_interface, Resources.UIModeMixed);
-                _buttonMixed.ToolTipText = Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Show_all_menus_and_controls;
-
-                var toolStripItems = new ToolStripItem[] {_buttonProteomic, _buttonSmallMolecules, _buttonMixed};
-                foreach (var item in toolStripItems)
-                {
-                    item.Click += (s, e) => modeUIButtonClick(s, handler);
-                    item.ImageTransparentColor = Color.White;
-                }
-                dropDown.Items.AddRange(toolStripItems);
-
+                dropDown.Items.Add(NewButton(Resources.UIModeProteomic,
+                    Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Proteomics_interface,
+                    Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Only_show_menus_and_controls_appropriate_to_proteomics_analysis,
+                    handler, SrmDocument.DOCUMENT_TYPE.proteomic));
+                dropDown.Items.Add(NewButton(Resources.UIModeSmallMolecules,
+                    Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Small_Molecules_interface,
+                    Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Only_show_menus_and_controls_appropriate_to_small_molecule_analysis,
+                    handler, SrmDocument.DOCUMENT_TYPE.small_molecules));
+                dropDown.Items.Add(NewButton(Resources.UIModeMixed,
+                    Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Mixed_interface,
+                    Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Show_all_menus_and_controls,
+                    handler, SrmDocument.DOCUMENT_TYPE.mixed));
                 _modeUIToolBarDropDownButton.DropDown = dropDown;
             }
 
-            /// <summary>
-            /// Handler for the buttons that allow user to switch between proteomic, small mol, or mixed UI display.
-            /// </summary>
-            public void modeUIButtonClick(object sender, Action<SrmDocument.DOCUMENT_TYPE> setModeUI)
+            public static ToolStripButton NewButton(Bitmap image, string text, string tip,
+                Action<SrmDocument.DOCUMENT_TYPE> handler, SrmDocument.DOCUMENT_TYPE docType)
             {
-                var senderButton = (ToolStripButton)sender;
-                SrmDocument.DOCUMENT_TYPE newModeUI;
-                if (ReferenceEquals(senderButton, _buttonProteomic))
+                return new ToolStripButton(text, image, (s, e) => handler(docType))
                 {
-                    newModeUI = SrmDocument.DOCUMENT_TYPE.proteomic;
-                }
-                else if (ReferenceEquals(senderButton, _buttonSmallMolecules))
-                {
-                    newModeUI = SrmDocument.DOCUMENT_TYPE.small_molecules;
-                }
-                else
-                {
-                    newModeUI = SrmDocument.DOCUMENT_TYPE.mixed;
-                }
+                    ToolTipText = tip,
+                    ImageTransparentColor = Color.White,
+                    Tag = docType
+                };
+            }
 
-                setModeUI(newModeUI);
+            public void UpdateButtonImageForModeUI()
+            {
+                foreach (ToolStripButton button in _modeUIToolBarDropDownButton.DropDownItems)
+                {
+                    button.Checked = Equals(button.Tag, ModeUI);
+                    if (button.Checked)
+                        _modeUIToolBarDropDownButton.Image = button.Image;
+                }
             }
 
             // Potentially replace "peptide" with "molecule" etc in all controls on open, or possibly disable non-proteomic components etc
@@ -266,9 +253,7 @@ namespace pwiz.Skyline.Util
                         AdjustMenusForModeUI(menuItem.DropDownItems);
                     }
                 }
-
             }
-
 
             public static void SetComponentEnabledStateForModeUI(Component component, bool isDesired)
             {
@@ -336,37 +321,10 @@ namespace pwiz.Skyline.Util
                 }
 
                 ModeUI = new_uimode;
-                SetButtonImageForModeUI(new_uimode);
+
+                UpdateButtonImageForModeUI();
 
                 Settings.Default.UIMode = ModeUI.ToString();
-            }
-
-            internal void SetButtonImageForModeUI(SrmDocument.DOCUMENT_TYPE modeUI)
-            {
-                Image image = null;
-                _buttonProteomic.Checked = false;
-                _buttonSmallMolecules.Checked = false;
-                _buttonMixed.Checked = false;
-                switch (modeUI)
-                {
-                    case SrmDocument.DOCUMENT_TYPE.proteomic:
-                        image = Resources.UIModeProteomic;
-                        _buttonProteomic.Checked = true;
-                        break;
-                    case SrmDocument.DOCUMENT_TYPE.small_molecules:
-                        image = Resources.UIModeSmallMolecules;
-                        _buttonSmallMolecules.Checked = true;
-                        break;
-                    case SrmDocument.DOCUMENT_TYPE.mixed:
-                        image = Resources.UIModeMixed;
-                        _buttonMixed.Checked = true;
-                        break;
-                    default:
-                        Assume.Fail(@"unknown document type");
-                        break;
-                }
-
-                _modeUIToolBarDropDownButton.Image = image;
             }
         }
 

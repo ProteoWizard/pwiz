@@ -121,7 +121,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     SkylineWindow.NewDocument();
                     SkylineWindow.SetUIMode(uimode); 
-                    Assert.AreEqual(uimode, SkylineWindow.GetModeUIHelper().ModeUI);
+                    Assert.AreEqual(uimode, SkylineWindow.ModeUI);
                 });
 
                 // Test per-ui-mode persistence of "peptide" settings tab choice
@@ -182,15 +182,15 @@ namespace pwiz.SkylineTestFunctional
             {
                 SkylineWindow.NewDocument();
                 SkylineWindow.SetUIMode(initialModeUI);
-                Assert.AreEqual(initialModeUI,SkylineWindow.GetModeUIHelper().ModeUI);
+                Assert.AreEqual(initialModeUI,SkylineWindow.ModeUI);
                 VerifyButtonStates();
 
                 SkylineWindow.OpenFile(TestFilesDir.GetTestPath(docName));
-                Assert.AreEqual(finalModeUI, SkylineWindow.GetModeUIHelper().ModeUI);
+                Assert.AreEqual(finalModeUI, SkylineWindow.ModeUI);
                 VerifyButtonStates();
 
                 SkylineWindow.NewDocument();
-                Assert.AreEqual(finalModeUI, SkylineWindow.GetModeUIHelper().ModeUI);
+                Assert.AreEqual(finalModeUI, SkylineWindow.ModeUI);
                 VerifyButtonStates();
             });
 
@@ -205,9 +205,9 @@ namespace pwiz.SkylineTestFunctional
         {
             WaitForDocumentLoaded();
             Assert.IsTrue(SkylineWindow.IsProteomicOrMixedUI ==
-                          (SkylineWindow.GetModeUIHelper().ModeUI != SrmDocument.DOCUMENT_TYPE.small_molecules)); // Checked if any proteomic data
+                          (SkylineWindow.ModeUI != SrmDocument.DOCUMENT_TYPE.small_molecules)); // Checked if any proteomic data
             Assert.IsTrue(SkylineWindow.IsSmallMoleculeOrMixedUI ==
-                          (SkylineWindow.GetModeUIHelper().ModeUI != SrmDocument.DOCUMENT_TYPE.proteomic)); // Checked if any small mol data
+                          (SkylineWindow.ModeUI != SrmDocument.DOCUMENT_TYPE.proteomic)); // Checked if any small mol data
         }
 
         private void TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE initalModeUI,
@@ -242,7 +242,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 SkylineWindow.SetUIMode(clickWhat);
                 VerifyButtonStates();
-                var actualModeUI = SkylineWindow.GetModeUIHelper().ModeUI;
+                var actualModeUI = SkylineWindow.ModeUI;
                 Assert.AreEqual(clickWhat, actualModeUI);
             });
         }

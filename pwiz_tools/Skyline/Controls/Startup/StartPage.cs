@@ -104,8 +104,7 @@ namespace pwiz.Skyline.Controls.Startup
             PositionButtonsModeUI();
 
             // Setup to manage and interact with mode selector buttons in UI
-            SetModeUIToolStripButtons(toolStripButtonModeUI);
-            GetModeUIHelper().SetButtonImageForModeUI(GetModeUIHelper().ModeUI);
+            SetModeUIToolStripButtons(toolStripButtonModeUI, true);
         }
 
         /// <summary>
@@ -117,12 +116,13 @@ namespace pwiz.Skyline.Controls.Startup
 
             PopulateWizardPanel(); // Update wizards for new UI mode
             PopulateTutorialPanel(); // Update tutorial order for new UI mode
+
             GetModeUIHelper().OnLoad(this); // Reprocess any needed translations
 
             // Update the menu structure for this mode
             if (Program.MainWindow != null)
             {
-                Program.MainWindow.SetUIMode(GetModeUIHelper().ModeUI);
+                Program.MainWindow.SetUIMode(ModeUI);
             }
         }
 
@@ -245,7 +245,7 @@ namespace pwiz.Skyline.Controls.Startup
             flowLayoutPanelWizard.Controls.Clear();
             foreach (var box in wizardBoxPanels)
             {
-                if (GetModeUIHelper().ModeUI != SrmDocument.DOCUMENT_TYPE.small_molecules || !box.IsProteomicOnly)
+                if (ModeUI != SrmDocument.DOCUMENT_TYPE.small_molecules || !box.IsProteomicOnly)
                 {
                     flowLayoutPanelWizard.Controls.Add(box);
                     if (box.IsProteomicOnly)
@@ -506,10 +506,10 @@ namespace pwiz.Skyline.Controls.Startup
 
             Control previousBox = null;
             // For small molecule mode, lead with small molecule tutorials
-            var tutorialBoxPanels = GetModeUIHelper().ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules
+            var tutorialBoxPanels = ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules
                 ? tutorialSmallMoleculeBoxPanels.ToList()
                 : tutorialProteomicBoxPanels.ToList();
-            tutorialBoxPanels.AddRange(GetModeUIHelper().ModeUI != SrmDocument.DOCUMENT_TYPE.small_molecules
+            tutorialBoxPanels.AddRange(ModeUI != SrmDocument.DOCUMENT_TYPE.small_molecules
                 ? tutorialSmallMoleculeBoxPanels
                 : tutorialProteomicBoxPanels);
             tutorialBoxPanels.AddRange(tutorialAdvancedBoxPanels);

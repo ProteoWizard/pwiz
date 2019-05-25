@@ -292,7 +292,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
                 if (_originalPeptides.Any(p => !p.Target.IsProteomic))
                 {
-                    GetModeUIHelper().ModeUI = _originalPeptides.Any(p => p.Target.IsProteomic) ? SrmDocument.DOCUMENT_TYPE.mixed : SrmDocument.DOCUMENT_TYPE.small_molecules;
+                    GetModeUIHelper().ModeUI = _originalPeptides.Any(p => p.Target.IsProteomic)
+                        ? SrmDocument.DOCUMENT_TYPE.mixed
+                        : SrmDocument.DOCUMENT_TYPE.small_molecules;
                 }
             }
             catch (DatabaseOpeningException e)

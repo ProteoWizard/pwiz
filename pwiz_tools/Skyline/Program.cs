@@ -574,7 +574,7 @@ namespace pwiz.Skyline
                 SrmDocument.DOCUMENT_TYPE mode;
                 if (ActiveDocument != null)
                 {
-                    mode = MainWindow.GetModeUIHelper().ModeUI; // Document contents help determine UI mode
+                    mode = MainWindow.ModeUI; // Document contents help determine UI mode
                 }
                 else if (!Enum.TryParse(Settings.Default.UIMode, out mode))
                 {
