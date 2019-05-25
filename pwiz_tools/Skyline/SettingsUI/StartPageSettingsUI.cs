@@ -36,7 +36,7 @@ namespace pwiz.Skyline.SettingsUI
             _skylineWindow = skylineWindow;
 
             InitializeComponent();
-            if (GetModeUIHelper().ModeUI != SrmDocument.DOCUMENT_TYPE.proteomic)
+            if (ModeUI != SrmDocument.DOCUMENT_TYPE.proteomic)
             {
                 pictureBox2.Image = Resources.WizardMoleculeIcon;
             }

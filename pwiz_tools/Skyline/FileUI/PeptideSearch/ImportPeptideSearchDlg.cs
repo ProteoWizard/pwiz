@@ -214,7 +214,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     MatchModificationsControl.ModificationSettings,
                     skippedTransitionPage ? null : TransitionSettingsControl.FilterAndLibrariesSettings, FullScanSettingsControl.FullScan,
                     ImportFastaControl.ImportSettings,
-                    GetModeUIHelper().ModeUI);
+                    ModeUI);
             }
         }
 
