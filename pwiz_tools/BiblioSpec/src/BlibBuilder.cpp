@@ -129,7 +129,9 @@ void BlibBuilder::usage()
         "   -p <filename>     Specify the path of XML parameters file for parsing MaxQuant files.\n"
         "   -P <float>        Specify pusher interval for Waters final_fragment.csv files.\n"
         "   -d [<filename>]   Document the .blib format by writing SQLite commands to a file, or stdout if no filename is given.\n"
-        "   -E                Prefer reading peaks from embedded spectra (currently only affects MaxQuant msms.txt)\n";
+        "   -E                Prefer reading peaks from embedded spectra (currently only affects MaxQuant msms.txt)\n"
+        "   -A                Output messages noting ambiguously matched spectra (spectra matched to multiple peptides)\n"
+        "   -K                Keep ambiguously matched spectra\n";
 
     cerr << usage << endl;
     exit(1);
