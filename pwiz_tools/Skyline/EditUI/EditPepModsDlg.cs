@@ -339,6 +339,7 @@ namespace pwiz.Skyline.EditUI
                 }
             }
             listItems.Add(Resources.SettingsListComboDriver_Add);
+            listItems.Add(Resources.SettingsListComboDriver_Edit_current);
             listItems.Add(Resources.SettingsListComboDriver_Edit_list);
             if (!EqualsItems(combo, listItems))
             {
@@ -370,6 +371,12 @@ namespace pwiz.Skyline.EditUI
         {
             var selectedItem = combo.SelectedItem;
             return (selectedItem != null && Resources.SettingsListComboDriver_Add == selectedItem.ToString());
+        }
+
+        private static bool EditCurrentSelected(ComboBox combo)
+        {
+            var selectedItem = combo.SelectedItem;
+            return (selectedItem != null && Resources.SettingsListComboDriver_Edit_current == combo.SelectedItem.ToString());
         }
 
         private static bool EditListSelected(ComboBox combo)
@@ -493,6 +500,22 @@ namespace pwiz.Skyline.EditUI
                     // Reset the selected index before edit was chosen.
                     combo.SelectedIndex = selectedIndexLast;
                 }
+            }
+            else if (EditCurrentSelected(combo))
+            {
+                StaticMod itemEdit;
+                if (listSettingsMods.TryGetValue((string) combo.Items[selectedIndexLast], out itemEdit))
+                {
+                    StaticMod itemNew = listSettingsMods.EditItem(this, itemEdit, listSettingsMods, null);
+                    if (!Equals(itemNew, null))
+                    {
+                        int i = listSettingsMods.IndexOf(itemEdit);
+                        listSettingsMods[i] = itemNew;
+                        LoadLists(listSettingsMods, listExplicitMods, listCombo, indexAA, itemNew.GetKey(),
+                            selectEither);
+                    }
+                }
+                combo.SelectedIndex = selectedIndexLast;
             }
             else if (EditListSelected(combo))
             {
