@@ -73,7 +73,7 @@ void PwizReader::openFile(const char* filename, bool mzSort){
             nativeIdFormat_ = MS_scan_number_only_nativeID_format;
         
         const auto& nativeIdFormatInfo = cvTermInfo(nativeIdFormat_);
-        BiblioSpec::Verbosity::debug("PwizReader lookup method is %s, nativeIdFormat is %s", specIdTypeToString(idType_), nativeIdFormatInfo.shortName());
+        BiblioSpec::Verbosity::debug("PwizReader lookup method is %s, nativeIdFormat is %s", specIdTypeToString(idType_), nativeIdFormatInfo.shortName().c_str());
 
         // HACK!  Without this block, I get an index out of bounds
         // error in getSpectrum(1, data, INDEX_ID)
@@ -222,7 +222,7 @@ bool PwizReader::getSpectrum(string identifier,
                              BiblioSpec::SpecData& returnData, 
                              bool getPeaks){
     int foundIndex = getSpecIndex(identifier);
-    BiblioSpec::Verbosity::comment(BiblioSpec::V_DETAIL, "PwizReader looking for id %s.", identifier);
+    BiblioSpec::Verbosity::comment(BiblioSpec::V_DETAIL, "PwizReader looking for id %s.", identifier.c_str());
     return getSpectrum(foundIndex, returnData, BiblioSpec::INDEX_ID, getPeaks);
 }
 
