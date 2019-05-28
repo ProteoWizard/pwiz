@@ -1471,7 +1471,7 @@
     <value>はい</value>
   </data>
   <data name="ExPeptideRowReader_CalcTransitionInfo_Invalid_extended_peptide_format__0__" xml:space="preserve">
-    <value>拡張ぺプチド形式{0}が無効</value>
+    <value>拡張ペプチド形式{0}が無効</value>
     <comment>Protein or peptide sequence</comment>
   </data>
   <data name="RInstaller_RInstaller_Load_This_Tool_requires_the_use_of_the_following_R_Packages_" xml:space="preserve">
@@ -8284,7 +8284,7 @@
     <value>マイドキュメント</value>
   </data>
   <data name="EditIrtCalcDlg_ValidatePeptideList_The_peptide__0__appears_in_the__1__table_more_than_once" xml:space="preserve">
-    <value>{1}表でぺプチド{0}が1回以上繰り返されています。</value>
+    <value>{1}表でペプチド{0}が1回以上繰り返されています。</value>
   </data>
   <data name="MQuestIntensityCalc_MQuestIntensityCalc_Intensity" xml:space="preserve">
     <value>強度</value>
