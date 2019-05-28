@@ -97,6 +97,8 @@ class PWIZ_API_DECL UIMFReader
     virtual double getDriftTime(int frame, int scan) const = 0;
     virtual double getRetentionTime(int frame) const = 0;
 
+    virtual const void getTic(std::vector<double>& timeArray, std::vector<double>& intensityArray) const = 0;
+
     virtual ~UIMFReader() {}
 };
 

@@ -38,6 +38,7 @@ PWIZ_API_DECL std::string pwiz::msdata::Reader_UIMF::identify(const std::string&
 #include "pwiz/data/msdata/Version.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "SpectrumList_UIMF.hpp"
+#include "ChromatogramList_UIMF.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 
 
@@ -69,14 +70,14 @@ void fillInMetadata(const string& rawpath, UIMFReaderPtr rawfile, MSData& msd)
 
     msd.fileDescription.fileContent.set(MS_profile_spectrum);
 
-    /*msd.fileDescription.fileContent.set(MS_TIC_chromatogram);
-    if (scanTypes & MSScanType_SelectedIon)
+    msd.fileDescription.fileContent.set(MS_TIC_chromatogram);
+    /*if (scanTypes & MSScanType_SelectedIon)
         msd.fileDescription.fileContent.set(MS_SIM_chromatogram);
     if (scanTypes & MSScanType_MultipleReaction)
         msd.fileDescription.fileContent.set(MS_SRM_chromatogram);*/
 
     // iterate over all files in AcqData
-    
+
     bfs::path sourcePath(rawpath);
 
     SourceFilePtr sourceFile(new SourceFile);
@@ -103,9 +104,9 @@ void fillInMetadata(const string& rawpath, UIMFReaderPtr rawfile, MSData& msd)
 
     // give ownership of dpPwiz to the SpectrumList (and ChromatogramList)
     SpectrumList_UIMF* sl = dynamic_cast<SpectrumList_UIMF*>(msd.run.spectrumListPtr.get());
-    //ChromatogramList_UIMF* cl = dynamic_cast<ChromatogramList_UIMF*>(msd.run.chromatogramListPtr.get());
+    ChromatogramList_UIMF* cl = dynamic_cast<ChromatogramList_UIMF*>(msd.run.chromatogramListPtr.get());
     if (sl) sl->setDataProcessingPtr(dpPwiz);
-    //if (cl) cl->setDataProcessingPtr(dpPwiz);
+    if (cl) cl->setDataProcessingPtr(dpPwiz);
 
     // add dummy IC
     msd.instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration("IC")));
@@ -135,9 +136,9 @@ void Reader_UIMF::read(const string& filename,
     UIMFReaderPtr dataReader(UIMFReader::create(filename));
 
     shared_ptr<SpectrumList_UIMF> sl(new SpectrumList_UIMF(result, dataReader, config));
-    //shared_ptr<ChromatogramList_UIMF> cl(new ChromatogramList_UIMF(dataReader));
+    shared_ptr<ChromatogramList_UIMF> cl(new ChromatogramList_UIMF(dataReader));
     result.run.spectrumListPtr = sl;
-    //result.run.chromatogramListPtr = cl;
+    result.run.chromatogramListPtr = cl;
 
     fillInMetadata(filename, dataReader, result);
 }

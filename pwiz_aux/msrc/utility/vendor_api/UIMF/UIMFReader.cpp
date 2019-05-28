@@ -34,6 +34,7 @@
 #pragma managed
 #include "pwiz/utility/misc/cpp_cli_utilities.hpp"
 #include <msclr/auto_gcroot.h>
+#using <System.dll>
 using namespace pwiz::util;
 
 
@@ -71,6 +72,8 @@ class UIMFReaderImpl : public UIMFReader
     virtual void getScan(int frame, int scan, FrameType frameType, pwiz::util::BinaryData<double>& mzArray, pwiz::util::BinaryData<double>& intensityArray, bool ignoreZeroIntensityPoints) const;
     virtual double getDriftTime(int frame, int scan) const;
     virtual double getRetentionTime(int frame) const;
+
+    virtual const void getTic(std::vector<double>& timeArray, std::vector<double>& intensityArray) const;
 
     private:
     msclr::auto_gcroot<UIMFLibrary::DataReader^> reader_;
@@ -224,13 +227,13 @@ blt::local_date_time UIMFReaderImpl::getAcquisitionTime() const
 }
 
 
-PWIZ_API_DECL double UIMFReaderImpl::ionMobilityToCCS(double driftTime, double mz, int charge) const
+double UIMFReaderImpl::ionMobilityToCCS(double driftTime, double mz, int charge) const
 {
     return 0;
 }
 
 
-PWIZ_API_DECL double UIMFReaderImpl::ccsToIonMobility(double ccs, double mz, int charge) const
+double UIMFReaderImpl::ccsToIonMobility(double ccs, double mz, int charge) const
 {
     return 0;
 }
@@ -303,6 +306,19 @@ double UIMFReaderImpl::getRetentionTime(int frame) const
 
         return reader_->GetFrameStartTimeMinutesEstimated(frame);
     } CATCH_AND_FORWARD
+}
+
+const void UIMFReaderImpl::getTic(std::vector<double>& timeArray, std::vector<double>& intensityArray) const
+{
+    timeArray.reserve(frameCount_);
+    intensityArray.reserve(frameCount_);
+
+    // GetTICByFrame: if (0, 0, 0, 0) is provided, values for all frames and scans are returned (one per frame)
+    for each (auto frameTic in reader_->GetTICByFrame(0, 0, 0, 0))
+    {
+        timeArray.push_back(reader_->GetFrameStartTimeMinutesEstimated(frameTic.Key));
+        intensityArray.push_back(frameTic.Value);
+    }
 }
 
 
