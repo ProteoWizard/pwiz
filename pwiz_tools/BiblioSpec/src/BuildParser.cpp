@@ -357,6 +357,8 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
         fileId = insertSpectrumFilename(specFilename, true); // insert as is
     }
 
+    BiblioSpec::Verbosity::debug("BuildParser lookup method is %s", specIdTypeToString(lookUpBy_));
+
     // for each psm
     map<const Protein*, sqlite3_int64> proteinIds;
     for(unsigned int i=0; i<psms_.size(); i++) {
