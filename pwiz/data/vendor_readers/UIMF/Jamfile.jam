@@ -38,6 +38,11 @@ path-constant TEST_DATA_PATH : ./Reader_UIMF_Test.data ;
 constant READER_PATH : "pwiz/data/vendor_readers/UIMF" ;
 constant READER_NAME : "Reader_UIMF" ;
 
+if [ path.exists $(API_PATH)\\UIMFLibrary.dll ]
+{
+    .hasDLLs = true ;
+}
+
 rule vendor-api-requirements ( properties * )
 {
     return [ vendor-api-usage-requirements $(properties) ] ;
@@ -49,7 +54,7 @@ rule vendor-api-usage-requirements ( properties * )
     if <toolset>msvc in $(properties) &&
        ! ( <toolset-msvc:version>9.0 in $(properties) || 9.0express in $(properties:G=) ) &&
        [ project-exists $(API_PATH) ] &&
-       [ uimf-dll-location $(API_PATH) : $(properties) ] &&
+       $(.hasDLLs) &&
        ! [ without-binary-msdata $(properties) ] &&
        ! <vendor-api-support>off in $(properties)
     {
@@ -75,7 +80,7 @@ rule vendor-api-usage-requirements ( properties * )
         {
             echo "[$(READER_PATH)] Missing API: $(READER_NAME) can only identify files, not read them." ;
         }
-        else if ! [ uimf-dll-location $(API_PATH) : $(properties) ]
+        else if ! $(.hasDLLs)
         {
             echo "[$(READER_PATH)] Missing DLL: $(READER_NAME) can only identify files, not read them." ;
         }
@@ -139,7 +144,7 @@ rule test-requirements ( properties * )
     {
         warn-once "[$(READER_PATH)] Missing API: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
     }
-    else if ! [ uimf-dll-location $(API_PATH) : $(properties) ]
+    else if ! $(.hasDLLs)
     {
         warn-once "[$(READER_PATH)] Missing DLL: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
     }

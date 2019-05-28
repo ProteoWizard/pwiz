@@ -295,7 +295,14 @@ double UIMFReaderImpl::getDriftTime(int frame, int scan) const
 
 double UIMFReaderImpl::getRetentionTime(int frame) const
 {
-    try {return reader_->GetFrameParams(frame)->GetValueDouble(UIMFLibrary::FrameParamKeyType::StartTimeMinutes);} CATCH_AND_FORWARD
+    try
+    {
+        UIMFLibrary::FrameParams^ fp = reader_->GetFrameParams(frame);
+        if (fp->HasParameter(UIMFLibrary::FrameParamKeyType::StartTimeMinutes))
+            return fp->GetValueDouble(UIMFLibrary::FrameParamKeyType::StartTimeMinutes);
+
+        return reader_->GetFrameStartTimeMinutesEstimated(frame);
+    } CATCH_AND_FORWARD
 }
 
 

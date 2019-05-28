@@ -30,11 +30,15 @@ path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/UIMF
 if [ modules.peek : NT ]
 {
 
+if [ path.exists $(API_PATH)\\UIMFLibrary.dll ]
+{
+    .hasDLLs = true ;
+}
+
 rule vendor-api-requirements ( properties * )
 {
     local result ;
-    local dll_location = [ uimf-dll-location $(API_PATH) : $(properties) ] ;
-    if $(dll_location)
+    if $(.hasDLLs)
     {
         result += <source>UIMFReader.cpp ;
         result += <using-clr>true ; # requires hacked msvc.jam
@@ -46,8 +50,7 @@ rule vendor-api-requirements ( properties * )
 rule vendor-api-usage-requirements ( properties * )
 {
     local result ;
-    local dll_location = [ uimf-dll-location $(API_PATH) : $(properties) ] ;
-    if $(dll_location)
+    if $(.hasDLLs)
     {
         # HACK: <link>shared isn't being passed in properties like I'd expect, so I also check the command-line
         if <link>shared in $(properties) || "link=shared" in [ modules.peek : ARGV ]
@@ -61,7 +64,7 @@ rule vendor-api-usage-requirements ( properties * )
             result += <library>$(PWIZ_LIBRARIES_PATH)/SQLite//sqlite3pp ;
         }
 
-        result += <assembly>$(dll_location)/UIMFLibrary.dll ;
+        result += <assembly>$(API_PATH)/UIMFLibrary.dll ;
         if ( [ MATCH (x64) : $(PLATFORM) ] )
         {
             result += <assembly-dependency>$(PWIZ_LIBRARIES_PATH)/SQLite/x64/System.Data.SQLite.dll ;
@@ -120,10 +123,9 @@ explicit UIMFReaderTest ;
 rule install-requirements ( properties * )
 {
     local result ;
-    local dll_location = [ uimf-dll-location $(API_PATH) : $(properties) ] ;
-    if $(dll_location)
+    if $(.hasDLLs)
     {
-        result += <source>$(dll_location)\\UIMFLibrary.dll ;
+        result += <source>$(API_PATH)\\UIMFLibrary.dll ;
 
         if ( [ MATCH (x64) : $(PLATFORM) ] )
         {
