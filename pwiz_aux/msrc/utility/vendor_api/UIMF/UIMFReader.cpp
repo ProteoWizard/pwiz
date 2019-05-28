@@ -208,7 +208,7 @@ blt::local_date_time UIMFReaderImpl::getAcquisitionTime() const
         System::DateTime acquisitionTime;
         if (!System::String::IsNullOrWhiteSpace(dateString))
         {
-            acquisitionTime = System::DateTime::ParseExact(dateString, gcnew array<System::String^> { "M/d/yyyy h:mm:ss tt", "yyyy/M/d h:mm:ss tt" }, System::Globalization::DateTimeFormatInfo::InvariantInfo, System::Globalization::DateTimeStyles::None);
+            acquisitionTime = System::DateTime::ParseExact(dateString, gcnew array<System::String^> { "M/d/yyyy h:mm:ss tt", "yyyy-M-d h:mm:ss tt" }, System::Globalization::DateTimeFormatInfo::InvariantInfo, System::Globalization::DateTimeStyles::None);
         }
 
         // these are Boost.DateTime restrictions
