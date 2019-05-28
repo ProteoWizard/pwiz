@@ -188,6 +188,12 @@
     <Compile Include="Alerts\AlertLinkDlg.Designer.cs">
       <DependentUpon>AlertLinkDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Alerts\NoModeUIDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\NoModeUIDlg.Designer.cs">
+      <DependentUpon>NoModeUIDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Alerts\PeptidesPerProteinDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -315,6 +321,9 @@
     </Compile>
     <Compile Include="Controls\Graphs\ReplicateGroupOp.cs" />
     <Compile Include="Controls\Graphs\ReplicateValue.cs" />
+    <Compile Include="Controls\ImageListBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Controls\TargetColumn.cs" />
     <Compile Include="FileUI\ExportAnnotationsDlg.cs">
       <SubType>Form</SubType>
@@ -1832,6 +1841,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\MissingFileDlg.zh-CHS.resx">
       <DependentUpon>MissingFileDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\NoModeUIDlg.resx">
+      <DependentUpon>NoModeUIDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\PasteFilteredPeptidesDlg.ja.resx">
       <DependentUpon>PasteFilteredPeptidesDlg.cs</DependentUpon>

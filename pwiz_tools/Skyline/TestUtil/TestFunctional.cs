@@ -998,7 +998,7 @@ namespace pwiz.SkylineTestUtil
         /// <summary>
         /// Starts up Skyline, and runs the <see cref="DoTest"/> test method.
         /// </summary>
-        protected void RunFunctionalTest()
+        protected void RunFunctionalTest(string defaultUiMode = UiModes.PROTEOMIC)
         {
             try
             {
@@ -1009,6 +1009,7 @@ namespace pwiz.SkylineTestUtil
                 }
 
                 Program.FunctionalTest = true;
+                Program.DefaultUiMode = defaultUiMode;
                 Program.TestExceptions = new List<Exception>();
                 LocalizationHelper.InitThread();
 

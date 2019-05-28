@@ -646,7 +646,7 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>tabQuantification</value>
   </data>
   <data name="cbAutoSelect.Text" xml:space="preserve">
-    <value>すべての一致ぺプチドを自動選択(&amp;A)</value>
+    <value>すべての一致ペプチドを自動選択(&amp;A)</value>
   </data>
   <data name="label6.Location" type="System.Drawing.Point, System.Drawing">
     <value>25, 160</value>
@@ -2904,7 +2904,7 @@ MS/MSスペクトルライブラリを構築します。</value>
     <value>textMaxLength</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>ぺプチド設定</value>
+    <value>ペプチド設定</value>
   </data>
   <data name="&gt;&gt;editIonMobilityLibraryCurrentContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>

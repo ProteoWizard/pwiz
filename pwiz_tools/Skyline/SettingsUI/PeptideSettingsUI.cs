@@ -222,7 +222,7 @@ namespace pwiz.Skyline.SettingsUI
             else
             { 
                 // No active tab requested (ie we're not in a test), go with current UI mode's last-used
-                switch (GetModeUIHelper().ModeUI)
+                switch (ModeUI)
                 {
                     case SrmDocument.DOCUMENT_TYPE.proteomic:
                         TabControlSel = (TABS) Settings.Default.PeptideSettingsTab;
@@ -242,7 +242,7 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private void SaveTabSel()
         {
-            switch (GetModeUIHelper().ModeUI) 
+            switch (ModeUI) 
             {
                 case SrmDocument.DOCUMENT_TYPE.proteomic:
                     Settings.Default.PeptideSettingsTab = (int)SelectedTab;
