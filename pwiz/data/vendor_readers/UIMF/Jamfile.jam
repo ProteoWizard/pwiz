@@ -38,7 +38,7 @@ path-constant TEST_DATA_PATH : ./Reader_UIMF_Test.data ;
 constant READER_PATH : "pwiz/data/vendor_readers/UIMF" ;
 constant READER_NAME : "Reader_UIMF" ;
 
-if [ path.exists $(API_PATH)\\UIMFLibrary.dll ]
+if [ get-project-expression $(API_PATH) : uimf-dll-location ]
 {
     .hasDLLs = true ;
 }
@@ -52,7 +52,6 @@ rule vendor-api-usage-requirements ( properties * )
 {
     local result ;
     if <toolset>msvc in $(properties) &&
-       ! ( <toolset-msvc:version>9.0 in $(properties) || 9.0express in $(properties:G=) ) &&
        [ project-exists $(API_PATH) ] &&
        $(.hasDLLs) &&
        ! [ without-binary-msdata $(properties) ] &&
@@ -71,10 +70,6 @@ rule vendor-api-usage-requirements ( properties * )
         else if ! ( <toolset>msvc in $(properties) )
         {
             echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME) can only identify files, not read them." ;
-        }
-        else if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "9.0" "9.0express"
-        {
-            echo "[$(READER_PATH)] MSVC version is not .NET 4 compatible: $(READER_NAME) can only identify files, not read them." ;
         }
         else if ! [ project-exists $(API_PATH) ]
         {
@@ -136,9 +131,9 @@ rule test-requirements ( properties * )
     {
         warn-once "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
     }
-    else if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "9.0" "9.0express"
+    else if ! ( <toolset>msvc in $(properties) )
     {
-        warn-once "[$(READER_PATH)] MSVC version is not .NET 4 compatible: $(READER_NAME) is only testing that it can identify files, not read them." ;
+        echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME) can only identify files, not read them." ;
     }
     else if ! [ project-exists $(API_PATH) ]
     {
