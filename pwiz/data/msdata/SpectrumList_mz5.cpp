@@ -230,7 +230,7 @@ size_t SpectrumList_mz5Impl::find(const std::string& id) const
 {
     initSpectra();
     std::map<std::string, size_t>::const_iterator it = idMap_.find(id);
-    return it != idMap_.end() ? it->second : size();
+    return it != idMap_.end() ? it->second : checkNativeIdFindResult(size(), id);
 }
 
 IndexList SpectrumList_mz5Impl::findSpotID(const std::string& spotID) const
