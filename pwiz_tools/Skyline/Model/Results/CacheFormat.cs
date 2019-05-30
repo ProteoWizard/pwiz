@@ -37,7 +37,8 @@ namespace pwiz.Skyline.Model.Results
         Eleven = 11, // Adds chromatogram start, stop times, and uncompressed size info, and new flag bit for SignedMz
         Twelve = 12, // Adds structure sizes to CacheHeaderStruct
         Thirteen = 13,
-        CURRENT = Thirteen,
+        Fourteen = 14,
+        CURRENT = Fourteen,
     }
     
     [StructLayout(LayoutKind.Sequential, Pack = 4)]

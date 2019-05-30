@@ -1059,6 +1059,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The instrument serial number read from an imported result file.
+        /// </summary>
+        public static string InstrumentSerialNumber {
+            get {
+                return ResourceManager.GetString("InstrumentSerialNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Comma separated list of chromatogram intensities..
         /// </summary>
         public static string Intensities {
@@ -2936,6 +2945,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string SampleDilutionFactor {
             get {
                 return ResourceManager.GetString("SampleDilutionFactor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A free text identifier for referring to a sample (which may be shared among multiple files). Read from the &quot;sample id&quot; attribute in an imported result file.
+        /// </summary>
+        public static string SampleId {
+            get {
+                return ResourceManager.GetString("SampleId", resourceCulture);
             }
         }
         
