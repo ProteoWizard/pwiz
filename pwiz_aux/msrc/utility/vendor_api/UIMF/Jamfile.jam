@@ -40,7 +40,7 @@ if [ modules.peek : NT ]
 {
 
 .dll-location = [ uimf-dll-location ] ;
-if $(.dll-location) && [ path.exists $(.dll-location)\\UIMFLibrary.dll ]
+if $(.dll-location)
 {
     .hasDLLs = true ;
 }
@@ -48,7 +48,7 @@ if $(.dll-location) && [ path.exists $(.dll-location)\\UIMFLibrary.dll ]
 rule vendor-api-requirements ( properties * )
 {
     local result ;
-    if <toolset>msvc in $(properties) && $(.hasDLLs)
+    if <toolset>msvc in $(properties) && $(.hasDLLs) && ! [ without-binary-msdata ]
     {
         result += <source>UIMFReader.cpp ;
         result += <using-clr>true ; # requires hacked msvc.jam
@@ -60,7 +60,7 @@ rule vendor-api-requirements ( properties * )
 rule vendor-api-usage-requirements ( properties * )
 {
     local result ;
-    if <toolset>msvc in $(properties) && $(.hasDLLs)
+    if <toolset>msvc in $(properties) && $(.hasDLLs) && ! [ without-binary-msdata ]
     {
         # HACK: <link>shared isn't being passed in properties like I'd expect, so I also check the command-line
         if <link>shared in $(properties) || "link=shared" in [ modules.peek : ARGV ]
@@ -104,11 +104,11 @@ lib pwiz_vendor_api_uimf
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
         <toolset>msvc:<cxxflags>/wd4564 # warning C4564: method 'GetIntensityBlockForDemultiplexing' of class 'UIMFLibrary::DataReader' defines unsupported default parameter 'numFramesToSum'
         <conditional>@vendor-api-requirements
-        <conditional>@msvc-requirement
+        <conditional>@msvc-dotnet-requirement
     : # default-build
     : # usage-requirements
         <conditional>@vendor-api-usage-requirements
-        <conditional>@msvc-requirement
+        <conditional>@msvc-dotnet-requirement
     ;
 
 
@@ -123,7 +123,7 @@ explicit UIMFReaderTest ;
 rule install-requirements ( properties * )
 {
     local result ;
-    if <toolset>msvc in $(properties) && $(.hasDLLs)
+    if <toolset>msvc in $(properties) && $(.hasDLLs) && ! [ without-binary-msdata ]
     {
         result += <source>$(.dll-location)\\UIMFLibrary.dll ;
 
