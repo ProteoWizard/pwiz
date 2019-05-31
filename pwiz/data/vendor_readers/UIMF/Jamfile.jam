@@ -71,6 +71,10 @@ rule vendor-api-usage-requirements ( properties * )
         {
             echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME) can only identify files, not read them." ;
         }
+        else if [ msvc-dotnet-requirement $(properties) ]
+        {
+            echo "[$(READER_PATH)] MSVC version is not .NET 4 compatible: $(READER_NAME) is only testing that it can identify files, not read them." ;
+        }
         else if ! [ project-exists $(API_PATH) ]
         {
             echo "[$(READER_PATH)] Missing API: $(READER_NAME) can only identify files, not read them." ;
@@ -133,7 +137,11 @@ rule test-requirements ( properties * )
     }
     else if ! ( <toolset>msvc in $(properties) )
     {
-        echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME) can only identify files, not read them." ;
+        warn-once "[$(READER_PATH)] Non-MSVC build: $(READER_NAME) can only identify files, not read them." ;
+    }
+    else if [ msvc-dotnet-requirement $(properties) ]
+    {
+        warn-once "[$(READER_PATH)] MSVC version is not .NET 4 compatible: $(READER_NAME) is only testing that it can identify files, not read them." ;
     }
     else if ! [ project-exists $(API_PATH) ]
     {
