@@ -206,31 +206,25 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
             }
             break;
 
-    /*case MS_absorption_chromatogram: // generate "Total Scan" chromatogram for entire run
+            case MS_absorption_chromatogram: // generate "Total Scan" chromatogram for entire run
             {
                 ChromatogramDataPtr cd = rawfile_->getChromatogramData(
-                    Type_TotalScan, Operator_None, Type_MassRange,
-                    "", "", "", 0,
-                    rawfile_->getFirstScanTime(), rawfile_->getLastScanTime()),
-                    Smoothing_None, 0);
-                pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
-                if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_minute, MS_number_of_detector_counts);
+                    Type_TotalScan, "", 0, 0, 0,
+                    rawfile_->getFirstScanTime(), rawfile_->getLastScanTime());
+                if (getBinaryData) result->setTimeIntensityArrays(cd->times(), cd->intensities(), UO_minute, UO_absorbance_unit);
                 else result->defaultArrayLength = cd->size();
             }
             break;
 
-            case MS_mass_chromatogram: // generate "ECD" chromatogram for entire run
+            case MS_emission_chromatogram: // generate "ECD" chromatogram for entire run
             {
                 ChromatogramDataPtr cd = rawfile_->getChromatogramData(
-                    Type_ECD, Operator_None, Type_MassRange,
-                    "", "", "", 0,
-                    0, std::numeric_limits<double>::max(),
-                    Smoothing_None, 0);
-                pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
-                if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_minute, MS_number_of_detector_counts);
+                    Type_ECD, "", 0, 0, 0,
+                    rawfile_->getFirstScanTime(), rawfile_->getLastScanTime());
+                if (getBinaryData) result->setTimeIntensityArrays(cd->times(), cd->intensities(), UO_minute, UO_absorbance_unit);
                 else result->defaultArrayLength = cd->size();
             }
-            break;*/
+            break;
         }
 
         return result;
@@ -373,34 +367,41 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                 }
                 break; // case Controller_MS
 
-                /*case Controller_PDA:
+                case Controller_PDA:
                 {
-                    // "Total Scan" appears to be the equivalent of the TIC
                     index_.push_back(IndexEntry());
                     IndexEntry& ci = index_.back();
                     ci.controllerType = (ControllerType) controllerType;
                     ci.controllerNumber = n;
                     ci.index = index_.size()-1;
-                    ci.id = "Total Scan";
+                    ci.id = "PDA " + lexical_cast<string>(n);
                     ci.chromatogramType = MS_absorption_chromatogram;
                     ci.polarityType = CVID_Unknown;
                     idMap_[ci.id] = ci.index;
                 }
                 break; // case Controller_PDA
 
-                case Controller_Analog:
+                case Controller_UV:
                 {
-                    // "ECD" appears to be the equivalent of the TIC
-                    index_.push_back(IndexEntry());
-                    IndexEntry& ci = index_.back();
-                    ci.controllerType = (ControllerType) controllerType;
-                    ci.controllerNumber = n;
-                    ci.index = index_.size()-1;
-                    ci.id = "ECD";
-                    ci.chromatogramType = MS_emission_chromatogram;
-                    ci.polarityType = CVID_Unknown;
-                    idMap_[ci.id] = ci.index;
-                }*/
+                    auto instrumentData = rawfile_->getInstrumentData();
+                    if (bal::ends_with(instrumentData.Units, "AbsorbanceUnits") && instrumentData.AxisLabelY.empty())
+                    {
+                        index_.push_back(IndexEntry());
+                        IndexEntry& ci = index_.back();
+                        ci.controllerType = (ControllerType)controllerType;
+                        ci.controllerNumber = n;
+                        ci.index = index_.size() - 1;
+                        ci.id = "UV " + lexical_cast<string>(n);
+                        ci.chromatogramType = MS_emission_chromatogram;
+                        ci.polarityType = CVID_Unknown;
+                        idMap_[ci.id] = ci.index;
+                    }
+                    else
+                    {
+                        // TODO: pressure/flow chromatogram
+                    }
+                }
+                break; // case Controller_UV
 
                 default:
                     // TODO: are there sensible default chromatograms for other controller types?
