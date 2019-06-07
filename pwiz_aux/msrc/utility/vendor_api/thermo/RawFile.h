@@ -333,7 +333,7 @@ enum PWIZ_API_DECL ChromatogramType
     Type_ECD = Type_MassRange
 #else
     Type_ECD = 31, // TraceType.ChannelA
-    Type_TotalScan = 23 // TraceType.SpectrumMax
+    Type_TotalScan = 22 // TraceType.TotalAbsorbance
 #endif
 };
 
