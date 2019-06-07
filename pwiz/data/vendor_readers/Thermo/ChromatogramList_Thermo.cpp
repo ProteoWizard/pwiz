@@ -345,7 +345,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
 
                                 for (size_t j=0, jc=scanInfo->scanRangeCount(); j < jc; ++j)
                                 {
-                                    double q1 = scanInfo->precursorMZ(0);
+                                    double q1 = (scanInfo->scanRange(j).first + scanInfo->scanRange(j).second) / 2.0;
                                     auto polarityType = translate(scanInfo->polarityType());
                                     string polarity = polarityStringForFilter(polarityType);
                                     string id = (format("%sSIM SIC %.10g", std::locale::classic())
