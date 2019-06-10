@@ -17068,16 +17068,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to New! Use this button to configure Skyline&apos;s user interface specifically for proteomics or generalized molecule use..
-        /// </summary>
-        public static string ModeUIAwareFormHelper_OnLoad_New__Use_this_button_to_configure_Skyline_s_user_interface_specifically_for_proteomics_or_small_molecule_use_ {
-            get {
-                return ResourceManager.GetString("ModeUIAwareFormHelper_OnLoad_New__Use_this_button_to_configure_Skyline_s_user_int" +
-                        "erface_specifically_for_proteomics_or_small_molecule_use_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Mixed interface.
         /// </summary>
         public static string ModeUIAwareFormHelper_SetModeUIToolStripButtons_Mixed_interface {

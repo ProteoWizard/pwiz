@@ -1528,6 +1528,67 @@ is_a: UO:0000111 ! energy unit
 created_by: Luke Slater
 
 [Term]
+id: UO:0010040
+name: teaspoon
+def: "A metric teaspoon is a unit of measurement of volume widely used in cooking recipes and pharmaceutic prescriptions. It equals a 5mL volume." [Wikipedia:https://en.wikipedia.org/wiki/Teaspoon]
+subset: unit_slim
+is_a: UO:0000095 ! volume unit 
+synonym: "metric teaspoon" EXACT []
+synonym: "tsp" EXACT []
+created_by: Luke Slater
+
+[Term]
+id: UO:0010041
+name: united states customary teaspoon
+def: "A United States customary units teaspoon is a unit of measurement of volume widely used in cooking recipes and pharmaceutic prescriptions in America. It equals a 4.93 mL volume." [Wikipedia:https://en.wikipedia.org/wiki/United_States_customary_units#Cooking_measures]
+is_a: UO:0000095 ! volume unit 
+synonym: "us customary teaspoon" EXACT []
+created_by: Luke Slater
+
+[Term]
+id: UO:0010042
+name: tablespoon
+def: "A metric tablespoon is a unit of measurement of volume widely used in cooking recipes and pharmaceutic prescriptions. It equals a 15mL volume." [Wikipedia:https://en.wikipedia.org/wiki/Tablespoon]
+is_a: UO:0000095 ! volume unit 
+synonym: "metric tablespoon" EXACT []
+synonym: "tbsp" EXACT []
+created_by: Luke Slater
+
+[Term]
+id: UO:0010043
+name: australian metric tablespoon
+def: "An Australian metric tablespoon is a unit of measurement of volume used in Australia for cooking recipes and pharmaceutic prescriptions. It equals a 20mL volume." [Wikipedia:https://en.wikipedia.org/wiki/Tablespoon]
+is_a: UO:0000095 ! volume unit 
+
+[Term]
+id: UO:0010044
+name: united states customary tablespoon 
+def: "A United States customary units tablespoon is a unit of measurement of volume widely used in cooking recipes and pharmaceutic prescriptions in America. It equals a 14.79 mL volume." [Wikipedia:https://en.wikipedia.org/wiki/United_States_customary_units#Cooking_measures]
+is_a: UO:0000095 ! volume unit 
+synonym: "us customary tablespoon" EXACT []
+
+[Term]
+id: UO:0010045
+name: metric cup
+def: "A metric cup is a unit of measurement of volume widely used in cooking recipes and pharmaceutic prescriptions. It equals a 250mL volume." [Wikipedia:https://en.wikipedia.org/wiki/Cooking_weights_and_measures]
+synonym: "C" EXACT []
+is_a: UO:0000095 ! volume unit 
+
+[Term]
+id: UO:0010046
+name: united states customary cup
+def: "A United States customary units cup is a unit of measurement of volume widely used in cooking recipes and pharmaceutic prescriptions in America. It equals a 236.59 mL volume." [Wikipedia:https://en.wikipedia.org/wiki/United_States_customary_units#Cooking_measures]
+is_a: UO:0000095 ! volume unit 
+synonym: "us customary cup" EXACT []
+
+[Term]
+id: UO:0010047
+name: united states fda cup
+def: "A United States FDA cup is a unit of measurement of volume used by the US Federal Department of Agriculture as a nutritional serving measure. It equals a 240 mL volume." [Wikipedia:https://en.wikipedia.org/wiki/United_States_customary_units#Cooking_measures]
+is_a: UO:0000095 ! volume unit 
+synonym: "us fda cup" EXACT []
+
+[Term]
 id: UO:0000112
 name: joule
 namespace: unit.ontology

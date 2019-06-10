@@ -167,8 +167,14 @@ void MzIdentMLReader::collectPsms(map<DBSequencePtr, Protein>& proteins) {
             {
                 SpectrumIdentificationItem& item = **item_iter_;
 
+                if (item.peptideEvidencePtr.empty())
+                {
+                    Verbosity::warn("%s does not have any PeptideEvidenceRefs", result.id.c_str());
+                    continue;
+                }
+
                 // only include top-ranked PSMs, skip decoys
-                if( item.rank != 1 || item.peptideEvidencePtr.front()->isDecoy ){ 
+                if( item.rank > 1 || item.peptideEvidencePtr.front()->isDecoy ){
                     continue;
                 }
 
@@ -366,6 +372,7 @@ double MzIdentMLReader::getScore(const SpectrumIdentificationItem& item){
                 break;
 
             case MS_PSM_level_q_value:
+            case MS_percolator_Q_value:
                 if (analysisType_ == UNKNOWN_ANALYSIS) {
                     analysisType_ = GENERIC_QVALUE_ANALYSIS;
                     scoreThreshold_ = getScoreThreshold(GENERIC_QVALUE_INPUT);

@@ -10434,9 +10434,6 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0___" xml:space="preserve">
     <value>Unable to resolve molecule from '{0}'.</value>
   </data>
-  <data name="ModeUIAwareFormHelper_OnLoad_New__Use_this_button_to_configure_Skyline_s_user_interface_specifically_for_proteomics_or_small_molecule_use_" xml:space="preserve">
-    <value>New! Use this button to configure Skyline's user interface specifically for proteomics or generalized molecule use.</value>
-  </data>
   <data name="UIModeProteomic" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\UIModeProteomic.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>

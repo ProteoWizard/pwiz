@@ -89,7 +89,7 @@ const SpectrumIdentity& SpectrumList_BTDXImpl::spectrumIdentity(size_t index) co
 size_t SpectrumList_BTDXImpl::find(const string& id) const
 {
     map<string,size_t>::const_iterator it=idToIndex_.find(id);
-    return it!=idToIndex_.end() ? it->second : size();
+    return it!=idToIndex_.end() ? it->second : checkNativeIdFindResult(size(), id);
 }
 
 

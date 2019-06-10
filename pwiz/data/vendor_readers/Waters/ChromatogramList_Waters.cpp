@@ -78,10 +78,16 @@ PWIZ_API_DECL size_t ChromatogramList_Waters::find(const string& id) const
 
 PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index, bool getBinaryData) const
 {
-    return chromatogram(index, getBinaryData, 0.0, 0.0, 0.0);
+    return chromatogram(index, getBinaryData ? DetailLevel_FullData : DetailLevel_FullMetadata);
 }
 
-PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index, bool getBinaryData, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance) const
+
+PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index, DetailLevel detailLevel) const
+{
+    return chromatogram(index, detailLevel, 0.0, 0.0, 0.0);
+}
+
+PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index, DetailLevel detailLevel, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance) const
 {
     boost::call_once(indexInitialized_.flag, boost::bind(&ChromatogramList_Waters::createIndex, this));
     if (index>size_)
@@ -106,10 +112,15 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
             result->set(translate(polarityType));
     }
 
+    bool getBinaryData = detailLevel == DetailLevel_FullData;
+
     switch (ie.chromatogramType)
     {
         case MS_TIC_chromatogram:
         {
+            if (detailLevel < DetailLevel_FullMetadata)
+                return result;
+
             map<double, double> fullFileTIC;
 
             for(int function : rawdata_->FunctionIndexList())
@@ -154,6 +165,9 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
             //result->product.isolationWindow.set(MS_isolation_window_lower_offset, ie.q3, MS_m_z);
             //result->product.isolationWindow.set(MS_isolation_window_upper_offset, ie.q3, MS_m_z);
 
+            if (detailLevel < DetailLevel_FullMetadata)
+                return result;
+
             result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, MS_number_of_detector_counts);
 
             vector<float> times;
@@ -175,6 +189,9 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
             //result->precursor.isolationWindow.set(MS_isolation_window_lower_offset, ie.q1, MS_m_z);
             //result->precursor.isolationWindow.set(MS_isolation_window_upper_offset, ie.q1, MS_m_z);
             result->precursor.activation.set(MS_CID);
+
+            if (detailLevel < DetailLevel_FullMetadata)
+                return result;
 
             result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, MS_number_of_detector_counts);
 
@@ -288,7 +305,8 @@ size_t ChromatogramList_Waters::size() const {return 0;}
 const ChromatogramIdentity& ChromatogramList_Waters::chromatogramIdentity(size_t index) const {return emptyIdentity;}
 size_t ChromatogramList_Waters::find(const std::string& id) const {return 0;}
 ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index, bool getBinaryData) const {return ChromatogramPtr();}
-ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index, bool getBinaryData, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance) const {return ChromatogramPtr();}
+ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index, DetailLevel detailLevel) const {return ChromatogramPtr();}
+ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index, DetailLevel detailLevel, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance) const {return ChromatogramPtr();}
 
 } // detail
 } // msdata
