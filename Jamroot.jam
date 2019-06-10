@@ -553,6 +553,28 @@ rule project-exists ( project-path )
     }
 }
 
+
+# simplify calling rules/variables from other projects/modules
+rule get-project-expression ( project-path : expression args * : * )
+{
+    if [ project-exists $(project-path) ]
+    {
+        import project ;
+        import modules ;
+        # support that full set of parameters that can be used (19).
+        # Example in Boost Build source file src/kernel/modules.jam, with rule call-locally
+        # Must load the project before we can 'call-in' to it, because projects are loaded differently than modules
+        return [ modules.call-in [ project.load $(project-path) ] : $(expression) $(args) : $(2) : $(3) :
+            $(4) : $(5) : $(6) : $(7) : $(8) : $(9) : $(10) : $(11) : $(12) : $(13)
+            $(14) : $(15) : $(16) : $(17) : $(18) : $(19) ] ;
+    }
+    else
+    {
+        return ;
+    }
+}
+
+
 # to make subsetting the source tree much easier,
 # use these rules to test that a sub-project path exists before building it
 rule build-project-if-exists ( project-path )
@@ -967,33 +989,6 @@ rule mhdac-dll-location ( api-path : properties * )
     if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
        $(result) &&
        [ path.exists $(result)\\MassSpecDataReader.dll ]            
-    {
-        return $(result) ;
-    }
-}
-
-rule uimf-dll-location ( api-path : properties * )
-{
-    local result ;
-    if <toolset-msvc:version>9.0 in $(properties) ||
-       <toolset-msvc:version>9.0express in $(properties)
-    {
-        # not supported
-    }
-    else # VC10 DLLs should work for VC11 as well (it's dependent on .NET version)
-    {
-        if ( [ MATCH (x64) : $(PLATFORM) ] )
-        {
-            result = $(api-path)\\x64 ;
-        }
-        else
-        {
-            result = $(api-path)\\x86 ;
-        }
-    }
-    if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
-        $(result) &&
-       [ path.exists $(result)\\UIMFLibrary.dll ]            
     {
         return $(result) ;
     }
