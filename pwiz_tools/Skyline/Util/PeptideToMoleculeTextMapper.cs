@@ -47,6 +47,15 @@ namespace pwiz.Skyline.Util
 
             public PeptideToMoleculeTextMapper(SrmDocument.DOCUMENT_TYPE modeUI, ModeUIExtender extender)
             {
+                // Japanese has a set of characters that are easily swapped between Hiragana and Katakana
+                // One orginally appeared in about 2% of the translations of the word "peptide"
+//                const char jaHeHiragana = 'へ';
+//                const char jaHeKatakana = 'ヘ';
+//                const char jaBeHiragana = 'べ';
+//                const char jaBeKatakana = 'ベ';
+                const char jaPeHiragana = 'ぺ';  // Used as a typo in "peptide"
+                const char jaPeKatakana = 'ペ';  // Used in "peptide"
+
                 // The basic replacements (not L10N to pick up not-yet-localized UI - maintain the list below in concert with this one)
                 var dict = new Dictionary<string, string>
                 {
@@ -135,6 +144,9 @@ namespace pwiz.Skyline.Util
                     {
                         set.Add(kvp);
                         set.Add(new KeyValuePair<string, string>(kvp.Key.ToLower(), kvp.Value.ToLower()));
+                        // As protection, just in case the Hiragana "Pe" ever shows up in our translations again
+                        if (cultureName.Equals(@"ja") && kvp.Key.Contains(jaPeKatakana))
+                            set.Add(new KeyValuePair<string, string>(kvp.Key.Replace(jaPeKatakana, jaPeHiragana), kvp.Value));
                     }
                 }
                 Thread.CurrentThread.CurrentUICulture = currentUICulture;

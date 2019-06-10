@@ -22,6 +22,8 @@
 #include "UnimodParser.h"
 #include "AminoAcidMasses.h"
 #include <boost/tokenizer.hpp>
+using boost::tokenizer;
+using boost::escaped_list_separator;
 
 namespace BiblioSpec {
 

@@ -75,10 +75,10 @@ void SAXHandler::characters(const XML_Char *s, int len)
 
 bool SAXHandler::parse()
 {
-    FILE* pfIn = NULL;
+    std::unique_ptr<ifstream> pfIn;
     if (!m_strFileName_.empty()) {
-        pfIn = fopen(m_strFileName_.data(), "r");
-        if (pfIn == NULL) {
+        pfIn.reset(new ifstream(m_strFileName_.c_str(), ios::binary));
+        if (!*pfIn) {
             throw BlibException(true, "Failed to open input file '%s'.", 
                                 m_strFileName_.c_str());
         }
@@ -91,7 +91,7 @@ bool SAXHandler::parse()
     string message;
     
     try {
-        if (pfIn == NULL) {
+        if (!pfIn) {
             success = (XML_Parse(m_parser_, m_bytes_, m_bytesLen_, true) != 0);
         } else {
             // HACK!! I have no idea why this is, but without this string
@@ -102,8 +102,12 @@ bool SAXHandler::parse()
             char buffer[8192];
             int readBytes = 0;
 
-            while (success && (readBytes = (int) fread(buffer, 1, sizeof(buffer), pfIn)) != 0) {
+            while (success) {
+                pfIn->read(buffer, sizeof(buffer));
+                readBytes = pfIn->gcount();
                 success = (XML_Parse(m_parser_, buffer, readBytes, false) != 0);
+                if (!success || readBytes < sizeof(buffer))
+                    break;
             }
             success = success && (XML_Parse(m_parser_, buffer, 0, true) != 0);
         }
@@ -114,9 +118,6 @@ bool SAXHandler::parse()
     }
     catch(BlibException e) { // probably from BuildParser
         if( e.hasFilename() ){
-            if (pfIn != NULL) {
-                fclose(pfIn);
-            }
             throw e;
         } else {
             message = e.what();
@@ -126,10 +127,6 @@ bool SAXHandler::parse()
     catch(std::exception e) {  // other runtime errors (e.g. memory)
         message = e.what();
         success = false;
-    }
-
-    if (pfIn != NULL) {
-        fclose(pfIn);
     }
 
     if (!success) {

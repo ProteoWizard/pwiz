@@ -157,7 +157,7 @@
     <value>最適化ライブラリ</value>
   </data>
   <data name="SrmSettings_PeptideSettings" xml:space="preserve">
-    <value>ぺプチド設定</value>
+    <value>ペプチド設定</value>
   </data>
   <data name="TransitionPrediction_PrecursorMassType" xml:space="preserve">
     <value>プリカーサー質量</value>
@@ -693,7 +693,7 @@
     <value>保持時間</value>
   </data>
   <data name="PeptideFilter_AutoSelect" xml:space="preserve">
-    <value>すべての一致ぺプチドを自動選択</value>
+    <value>すべての一致ペプチドを自動選択</value>
   </data>
   <data name="TransitionLibraries_Pick" xml:space="preserve">
     <value>選択</value>
@@ -780,7 +780,7 @@
     <value>追加</value>
   </data>
   <data name="RefinementSettings_AutoPickPeptidesAll" xml:space="preserve">
-    <value>すべてのぺプチドを自動選択</value>
+    <value>すべてのペプチドを自動選択</value>
   </data>
   <data name="RefinementSettings_AutoPickPrecursorsAll" xml:space="preserve">
     <value>すべてのプリカーサーを自動選択</value>

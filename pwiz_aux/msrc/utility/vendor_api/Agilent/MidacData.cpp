@@ -130,6 +130,8 @@ struct DriftScanImpl : public DriftScan
 
 MidacDataImpl::MidacDataImpl(const std::string& path)
 {
+    massHunterRootPath_ = path;
+
     try
     {
         String^ filepath = ToSystemString(path);

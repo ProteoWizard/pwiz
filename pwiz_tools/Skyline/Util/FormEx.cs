@@ -26,6 +26,9 @@ using System.Reflection;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Util
@@ -72,6 +75,45 @@ namespace pwiz.Skyline.Util
         public string ModeUIAwareStringFormat(string format, params object[] args)
         {
             return _modeUIHelper.Format(format, args);
+        }
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public SrmDocument.DOCUMENT_TYPE ModeUI
+        {
+            get { return _modeUIHelper.ModeUI; }
+        }
+
+        protected void SetModeUIToolStripButtons(ToolStripDropDownButton toolStripDropDownButton, bool setButtonImage = false)
+        {
+            _modeUIHelper.SetModeUIToolStripButtons(toolStripDropDownButton, SetUIMode);
+            // Choosing the active button may be delayed until later, e.g. if document will be opened
+            if (setButtonImage)
+                _modeUIHelper.UpdateButtonImageForModeUI();
+        }
+
+        public virtual void SetUIMode(SrmDocument.DOCUMENT_TYPE mode)
+        {
+            _modeUIHelper.ModeUI = mode == SrmDocument.DOCUMENT_TYPE.none ? SrmDocument.DOCUMENT_TYPE.proteomic : mode;
+            _modeUIHelper.AttemptChangeModeUI(mode);
+        }
+
+        protected void EnsureUIModeSet()
+        {
+            // If user has never selected a default UI mode, ask for it now
+            if (string.IsNullOrEmpty(Settings.Default.UIMode))
+            {
+                if (!string.IsNullOrEmpty(Program.DefaultUiMode))
+                    Settings.Default.UIMode = Program.DefaultUiMode;
+                else
+                {
+                    using (var noModeUIDlg = new NoModeUIDlg())
+                    {
+                        noModeUIDlg.ShowDialog(this);
+                        SetUIMode(noModeUIDlg.SelectedDocumentType);
+                    }
+                }
+            }
         }
 
         private bool IsCreatingHandle()

@@ -50,7 +50,6 @@
 #include "Spectrum.h"
 #include "SmallMolMetadata.h"
 
-using namespace std;
 
 namespace BiblioSpec {
 

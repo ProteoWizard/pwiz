@@ -27,7 +27,6 @@
 #include "BlibMaker.h"
 #include "AminoAcidMasses.h"
 
-using namespace std;
 namespace bxp = boost::xpressive;
 
 namespace BiblioSpec {

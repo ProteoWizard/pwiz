@@ -284,7 +284,7 @@ namespace TestRunnerLib
                 exception = e;
             }
             stopwatch.Stop();
-            LastTestDuration = (int) (stopwatch.ElapsedMilliseconds/1000);
+            LastTestDuration = (int) stopwatch.ElapsedMilliseconds;
             // Allow as much to be garbage collected as possible
 
             // Restore culture.
@@ -351,7 +351,7 @@ namespace TestRunnerLib
                     TotalMemory,
                     LastUserHandleCount + LastGdiHandleCount,
                     LastTotalHandleCount,
-                    LastTestDuration);
+                    LastTestDuration/1000);
 //                Log("# Heaps " + string.Join("\t", heapCounts.Select(s => s.ToString())) + Environment.NewLine);
 //                Log("# Handles " + string.Join("\t", handleCounts.Where(c => c.Count() > 14).Select(c => c.Key + ": " + c.Count())) + Environment.NewLine);
                 if (crtLeakedBytes > CheckCrtLeaks)
@@ -387,7 +387,7 @@ namespace TestRunnerLib
                 TotalMemory,
                 LastUserHandleCount + LastGdiHandleCount,
                 LastTotalHandleCount,
-                LastTestDuration,
+                LastTestDuration/1000,
                 test.TestMethod.Name,
                 message,
                 exception);
@@ -610,7 +610,7 @@ namespace TestRunnerLib
                 // ReSharper restore LocalizableElement
             }
 
-            Console.WriteLine(@"##teamcity[testFinished name='{0}' duration='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, LastTestDuration * 1000);
+            Console.WriteLine(@"##teamcity[testFinished name='{0}' duration='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, LastTestDuration);
         }
 
         public static IEnumerable<TestInfo> GetTestInfos(string testDll)

@@ -50,7 +50,7 @@ protected:
         ProxlPeptide() {}
         ProxlPeptide(const std::string& sequence): sequence_(sequence) {}
         ~ProxlPeptide() {}
-        double mass() const { return ProxlXmlReader::calcMass(sequence_); }
+        double mass() const { return ProxlXmlReader::calcMass(sequence_, mods_); }
 
         std::string sequence_;
         std::vector<SeqMod> mods_;
@@ -61,19 +61,24 @@ protected:
         ProxlPsm() : PSM(), linkerMass_(0.0) {}
         double linkerMass_;
     };
+    
+    struct ProxlMatches {
+        std::vector<ProxlPeptide> peptides_;
+        std::map< std::string, vector<ProxlPsm*> > psms_;        
+    };
 
     static double aaMasses_[128];
-    static double calcMass(const std::string& sequence);
+    static double calcMass(const std::string& sequence, const std::vector<SeqMod>& mods);
 
-    void applyStaticMods();
+    void calcPsms();
+    void applyStaticMods(const std::string& sequence, std::vector<SeqMod>& mods);
 
     std::vector<STATE> state_;
     std::map< std::string, vector<PSM*> > fileToPsms_;
     std::map< char, vector<double> > staticMods_;
 
-    std::vector<ProxlPeptide> curPeptides_;
     ProxlPsm* curProxlPsm_;
-    std::map< std::string, vector<ProxlPsm*> > curPsms_;
+    std::vector<ProxlMatches> proxlMatches_;
 };
 
 }

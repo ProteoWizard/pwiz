@@ -94,6 +94,12 @@ namespace pwiz.ProteowizardWrapper
             return FULL_READER_LIST.readIds(path);
         }
 
+        public static bool SupportsMultipleSamples(string path)
+        {
+            path = path.ToLowerInvariant();
+            return path.EndsWith(@".wiff") || path.EndsWith(@".wiff2");
+        }
+
         public const string PREFIX_TOTAL = "SRM TIC ";
         public const string PREFIX_SINGLE = "SRM SIC ";
         public const string PREFIX_PRECURSOR = "SIM SIC ";
@@ -358,6 +364,12 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
+        public string GetInstrumentSerialNumber()
+        {
+            return _msDataFile.instrumentConfigurationList.FirstOrDefault(o => o.hasCVParam(CVID.MS_instrument_serial_number))
+                                                          ?.cvParam(CVID.MS_instrument_serial_number).value.ToString();
+        }
+
         private static bool HasInfo(UserParam uParam)
         {
             return !uParam.empty() && !String.IsNullOrEmpty(uParam.value) &&
@@ -612,19 +624,81 @@ namespace pwiz.ProteowizardWrapper
             }
             using (var chromatogram = ChromatogramList.chromatogram(0, true))
             {
-                if (chromatogram == null)
-                {
-                    return null;
-                }
-                TimeIntensityPairList timeIntensityPairList = new TimeIntensityPairList();
-                chromatogram.getTimeIntensityPairs(ref timeIntensityPairList);
-                double[] intensities = new double[timeIntensityPairList.Count];
-                for (int i = 0; i < intensities.Length; i++)
-                {
-                    intensities[i] = timeIntensityPairList[i].intensity;
-                }
-                return intensities;
+                return chromatogram?.getIntensityArray()?.data.Storage();
             }
+        }
+
+        public abstract class QcTraceQuality
+        {
+            public const string Pressure = @"pressure";
+            public const string FlowRate = @"volumetric flow rate";
+        }
+
+        public abstract class QcTraceUnits
+        {
+            public const string PoundsPerSquareInch = @"psi";
+            public const string MicrolitersPerMinute = @"uL/min";
+        }
+
+        public class QcTrace
+        {
+            public QcTrace(Chromatogram c, CVID chromatogramType)
+            {
+                Name = c.id;
+                if (chromatogramType == CVID.MS_pressure_chromatogram)
+                {
+                    MeasuredQuality = QcTraceQuality.Pressure;
+                    IntensityUnits = QcTraceUnits.PoundsPerSquareInch;
+                }
+                else if (chromatogramType == CVID.MS_flow_rate_chromatogram)
+                {
+                    MeasuredQuality = QcTraceQuality.FlowRate;
+                    IntensityUnits = QcTraceUnits.MicrolitersPerMinute;
+                }
+                else
+                    throw new InvalidDataException($"unsupported chromatogram type (not pressure or flow rate): {c.id}");
+                Times = c.getTimeArray().data.Storage();
+                Intensities = c.binaryDataArrays[1].data.Storage();
+            }
+
+            public string Name { get; private set; }
+            public double[] Times { get; private set; }
+            public double[] Intensities { get; private set; }
+            public string MeasuredQuality { get; private set; }
+            public string IntensityUnits { get; private set; }
+        }
+
+        public List<QcTrace> GetQcTraces()
+        {
+            if (ChromatogramList == null || ChromatogramList.size() == 0)
+                return null;
+
+            // some readers may return empty chromatograms at detail levels below FullMetadata
+            DetailLevel minDetailLevel = DetailLevel.InstantMetadata;
+            if (ChromatogramList.chromatogram(0, minDetailLevel).empty())
+                minDetailLevel = DetailLevel.FullMetadata;
+
+            var result = new List<QcTrace>();
+            for (int i = 0; i < ChromatogramList.size(); ++i)
+            {
+                CVID chromatogramType;
+                using (var chromMetaData = ChromatogramList.chromatogram(i, minDetailLevel))
+                {
+                    chromatogramType = chromMetaData.cvParamChild(CVID.MS_chromatogram_type).cvid;
+                    if (chromatogramType != CVID.MS_pressure_chromatogram &&
+                        chromatogramType != CVID.MS_flow_rate_chromatogram)
+                        continue;
+                }
+
+                using (var chromatogram = ChromatogramList.chromatogram(i, true))
+                {
+                    if (chromatogram == null)
+                        return null;
+
+                    result.Add(new QcTrace(chromatogram, chromatogramType));
+                }
+            }
+            return result;
         }
 
         /// <summary>

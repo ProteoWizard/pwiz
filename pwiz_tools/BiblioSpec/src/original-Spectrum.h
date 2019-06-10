@@ -38,7 +38,8 @@
 #include <ctime>
 #include <vector>
 
-using namespace std;
+using std::binary_function;
+
 
 struct PEAK_T 
 { 

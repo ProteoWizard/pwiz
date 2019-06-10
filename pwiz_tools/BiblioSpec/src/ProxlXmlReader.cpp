@@ -22,7 +22,6 @@
 #include "ProxlXmlReader.h"
 #include "AminoAcidMasses.h"
 
-using namespace std;
 
 namespace BiblioSpec {
 
@@ -61,8 +60,7 @@ void ProxlXmlReader::startElement(const XML_Char* name, const XML_Char** attr) {
         if (isIElement("reported_peptide", name) && strcmp(getRequiredAttrValue("type", attr), "looplink") != 0) {
             state_.push_back(REPORTED_PEPTIDE_STATE);
 
-            curPeptides_.clear();
-            curPsms_.clear();
+            proxlMatches_.push_back(ProxlMatches());
         }
         break;
     case REPORTED_PEPTIDE_STATE:
@@ -76,7 +74,7 @@ void ProxlXmlReader::startElement(const XML_Char* name, const XML_Char** attr) {
         if (isIElement("peptide", name)) {
             state_.push_back(PEPTIDE_STATE);
 
-            curPeptides_.push_back(ProxlPeptide(getRequiredAttrValue("sequence", attr)));
+            proxlMatches_.back().peptides_.push_back(ProxlPeptide(getRequiredAttrValue("sequence", attr)));
         }
         break;
     case PEPTIDE_STATE:
@@ -89,13 +87,13 @@ void ProxlXmlReader::startElement(const XML_Char* name, const XML_Char** attr) {
     case MODIFICATIONS_STATE:
         if (isIElement("modification", name)) {
             // 1-based positions
-            curPeptides_.back().mods_.push_back(
+            proxlMatches_.back().peptides_.back().mods_.push_back(
                 SeqMod(getIntRequiredAttrValue("position", attr), getDoubleRequiredAttrValue("mass", attr)));
         }
         break;
     case LINKED_POSITIONS_STATE:
         if (isIElement("linked_position", name)) {
-            curPeptides_.back().links_.push_back(getIntRequiredAttrValue("position", attr));
+            proxlMatches_.back().peptides_.back().links_.push_back(getIntRequiredAttrValue("position", attr));
         }
         break;
     case PSMS_STATE:
@@ -104,9 +102,9 @@ void ProxlXmlReader::startElement(const XML_Char* name, const XML_Char** attr) {
 
             curProxlPsm_ = new ProxlPsm();
             string filename(getRequiredAttrValue("scan_file_name", attr));
-            map< string, vector<ProxlPsm*> >::iterator i = curPsms_.find(filename);
-            if (i == curPsms_.end()) {
-                curPsms_[filename] = vector<ProxlPsm*>(1, curProxlPsm_);
+            map< string, vector<ProxlPsm*> >::iterator i = proxlMatches_.back().psms_.find(filename);
+            if (i == proxlMatches_.back().psms_.end()) {
+                proxlMatches_.back().psms_[filename] = vector<ProxlPsm*>(1, curProxlPsm_);
             } else {
                 i->second.push_back(curProxlPsm_);
             }
@@ -157,10 +155,10 @@ void ProxlXmlReader::endElement(const XML_Char* name) {
         if (isIElement("proxl_input", name)) {
             state_.pop_back();
 
+            calcPsms();
             for (map< string, vector<PSM*> >::iterator i = fileToPsms_.begin(); i != fileToPsms_.end(); i++) {
                 psms_ = vector<PSM*>(i->second);
                 i->second.clear();
-                applyStaticMods();
                 setSpecFileName(i->first, true);
                 buildTables(PERCOLATOR_QVALUE);
             }
@@ -174,32 +172,6 @@ void ProxlXmlReader::endElement(const XML_Char* name) {
     case REPORTED_PEPTIDE_STATE:
         if (isIElement("reported_peptide", name)) {
             state_.pop_back();
-
-            for (map< string, vector<ProxlPsm*> >::iterator i = curPsms_.begin(); i != curPsms_.end(); i++) {
-                map< string, vector<PSM*> >::iterator lookup = fileToPsms_.find(i->first);
-                if (lookup == fileToPsms_.end()) {
-                    fileToPsms_[i->first] = vector<PSM*>();
-                    lookup = fileToPsms_.find(i->first);
-                }
-                for (vector<ProxlPsm*>::iterator j = i->second.begin(); j != i->second.end(); j++) {
-                    if ((*j)->score <= getScoreThreshold(SQT)) {
-                        for (vector<ProxlPeptide>::iterator k = curPeptides_.begin(); k != curPeptides_.end(); k++) {
-                            PSM* psm = new PSM();
-                            *psm = **j;
-                            psm->unmodSeq = k->sequence_;
-                            psm->mods = k->mods_;
-                            if (k->links_.size() == 1 && curPeptides_.size() == 2) {
-                                const ProxlPeptide& other = (k == curPeptides_.begin())
-                                    ? curPeptides_[1]
-                                    : curPeptides_[0];
-                                psm->mods.push_back(SeqMod(k->links_[0], other.mass() + (*j)->linkerMass_));
-                            }
-                            lookup->second.push_back(psm);
-                        }
-                    }
-                    delete *j;
-                }
-            }
         }
         break;
     case PEPTIDES_STATE:
@@ -248,23 +220,56 @@ void ProxlXmlReader::endElement(const XML_Char* name) {
 void ProxlXmlReader::characters(const XML_Char *s, int len) {
 }
 
-double ProxlXmlReader::calcMass(const string& sequence) {
+double ProxlXmlReader::calcMass(const string& sequence, const vector<SeqMod>& mods) {
     double sum = 2*aaMasses_['h'] + aaMasses_['o'];
     for (string::const_iterator i = sequence.begin(); i != sequence.end(); i++)
         sum += aaMasses_[*i];
+    for (vector<SeqMod>::const_iterator i = mods.begin(); i != mods.end(); i++)
+        sum += i->deltaMass;
     return sum;
 }
 
-void ProxlXmlReader::applyStaticMods() {
-    for (vector<PSM*>::iterator i = psms_.begin(); i != psms_.end(); i++) {
-        const string& seq = (*i)->unmodSeq;
-        for (int j = 0; j < seq.length(); j++) {
-            map< char, vector<double> >::const_iterator lookup = staticMods_.find(seq[j]);
-            if (lookup == staticMods_.end())
-                continue;
-            for (vector<double>::const_iterator k = lookup->second.begin(); k != lookup->second.end(); k++) {
-                (*i)->mods.push_back(SeqMod(j + 1, *k));
+void ProxlXmlReader::calcPsms() {
+
+    for (vector<ProxlMatches>::iterator match = proxlMatches_.begin(); match != proxlMatches_.end(); match++) {
+		for (vector<ProxlPeptide>::iterator k = match->peptides_.begin(); k != match->peptides_.end(); k++) {
+			applyStaticMods(k->sequence_, k->mods_);
+		}
+		for (map< string, vector<ProxlPsm*> >::iterator i = match->psms_.begin(); i != match->psms_.end(); i++) {
+            map< string, vector<PSM*> >::iterator lookup = fileToPsms_.find(i->first);
+            if (lookup == fileToPsms_.end()) {
+                fileToPsms_[i->first] = vector<PSM*>();
+                lookup = fileToPsms_.find(i->first);
             }
+            for (vector<ProxlPsm*>::iterator j = i->second.begin(); j != i->second.end(); j++) {
+                if ((*j)->score <= getScoreThreshold(SQT)) {
+                    for (vector<ProxlPeptide>::iterator k = match->peptides_.begin(); k != match->peptides_.end(); k++) {
+                        PSM* psm = new PSM();
+                        *psm = **j;
+                        psm->unmodSeq = k->sequence_;
+                        psm->mods = k->mods_;
+                        if (k->links_.size() == 1 && match->peptides_.size() == 2) {
+                            const ProxlPeptide& other = (k == match->peptides_.begin())
+                                ? match->peptides_[1]
+                                : match->peptides_[0];
+                            psm->mods.push_back(SeqMod(k->links_[0], other.mass() + (*j)->linkerMass_));
+                        }
+                        lookup->second.push_back(psm);
+                    }
+                }
+                delete *j;
+            }
+        }
+    }
+}
+
+void ProxlXmlReader::applyStaticMods(const string& sequence, vector<SeqMod>& mods) {
+    for (int i = 0; i < sequence.length(); i++) {
+        map< char, vector<double> >::const_iterator lookup = staticMods_.find(sequence[i]);
+        if (lookup == staticMods_.end())
+            continue;
+        for (vector<double>::const_iterator j = lookup->second.begin(); j != lookup->second.end(); j++) {
+            mods.push_back(SeqMod(i + 1, *j));
         }
     }
 }

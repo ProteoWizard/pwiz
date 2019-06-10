@@ -493,11 +493,11 @@ http://localhost:8080</value>
     <value>When present the tool output is piped to the Immediate Window at runtime.</value>
   </data>
   <data name="_tool_program_macro" xml:space="preserve">
-    <value>Specifies a program title and version to use with the –tool-program-path command. Together these commands are for importing tools from a ZIP file that use the $(ProgramPath()) macro as their command. For more information see the documentation on External Tools. e.g.
+    <value>Specifies a program title and version to use with the -–tool-program-path command. Together these commands are for importing tools from a ZIP file that use the $(ProgramPath()) macro as their command. For more information see the documentation on External Tools. e.g.
 --tool-program-macro=R,2.15.2</value>
   </data>
   <data name="_tool_program_path" xml:space="preserve">
-    <value>Specifies the path to an executable on the local machine for the program title and version specified by the –tool-program-macro flag.</value>
+    <value>Specifies the path to an executable on the local machine for the program title and version specified by the -–tool-program-macro flag.</value>
   </data>
   <data name="_tool_report" xml:space="preserve">
     <value>The name of a report in the settings to use as the input report for the tool.</value>
@@ -711,5 +711,14 @@ greater peak area.</value>
   </data>
   <data name="CommandArgs_GROUP_REFINEMENT_W_RESULTS" xml:space="preserve">
     <value>Refining the targets list based on imported results</value>
+  </data>
+  <data name="_tran_precursor_ion_charges" xml:space="preserve">
+    <value>A comman-separated list of precursor ion charge states to apply to peptide molecules to generate precursor targets. Changes the transition filter settings for the open document.</value>
+  </data>
+  <data name="_tran_product_ion_charges" xml:space="preserve">
+    <value>A comman-separated list of product ion charge states to apply to peptide fragments to generate product ion transitions. Changes the transition filter settings for the open document.</value>
+  </data>
+  <data name="_tran_product_ion_types" xml:space="preserve">
+    <value>A comman-separated list of product ion types expected in peptide fragmentation to generate product ion transitions. Changes the transition filter settings for the open document.</value>
   </data>
 </root>

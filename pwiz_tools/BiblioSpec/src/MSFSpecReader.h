@@ -28,8 +28,6 @@
 #include <vector>
 #include "saxhandler.h"
 
-using namespace std;
-using namespace boost;
 
 namespace BiblioSpec {
 

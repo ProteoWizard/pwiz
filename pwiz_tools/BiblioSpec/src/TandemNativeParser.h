@@ -35,7 +35,6 @@
 #include "AminoAcidMasses.h"
 #include <assert.h>
 
-using namespace std;
 namespace BiblioSpec {
 
 class BlibMaker;

@@ -147,6 +147,8 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
             instrumentRevision_ = lexical_cast<int>(value);
         else if (key == "InstrumentSourceType")
             instrumentSource_ = translateInstrumentSource(lexical_cast<int>(value));
+        else if (key == "InstrumentSerialNumber")
+            serialNumber_.swap(value);
         else if (key == "AcquisitionDateTime")
             acquisitionDateTime_.swap(value);
         else if (key == "OperatorName")
@@ -177,6 +179,12 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
     string queryFrameCount = "SELECT COUNT(*) FROM Frames";
     size_t count = sqlite::query(db, queryFrameCount.c_str()).begin()->get<sqlite3_int64>(0);
     frames_.reserve(count);
+    tic_.reset(new Chromatogram);
+    bpc_.reset(new Chromatogram);
+    tic_->times.reserve(count);
+    tic_->intensities.reserve(count);
+    bpc_->times.reserve(count);
+    bpc_->intensities.reserve(count);
 
     if (!combineIonMobilitySpectra)
     {
@@ -218,6 +226,12 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
 
         double bpi = row.get<double>(++idx);
         double tic = row.get<double>(++idx);
+
+        tic_->times.push_back(rt);
+        bpc_->times.push_back(rt);
+        tic_->intensities.push_back(tic);
+        bpc_->intensities.push_back(bpi);
+
         int numScans = row.get<int>(++idx);
         int numPeaks = row.get<int>(++idx);
         if (numPeaks == 0)
@@ -439,6 +453,9 @@ size_t TimsDataImpl::getLCSpectrumCount(int source) const { return 0; }
 LCSpectrumSourcePtr TimsDataImpl::getLCSource(int source) const { return 0; }
 LCSpectrumPtr TimsDataImpl::getLCSpectrum(int source, int scan) const { return LCSpectrumPtr(); }
 
+ChromatogramPtr TimsDataImpl::getTIC() const { return tic_; }
+ChromatogramPtr TimsDataImpl::getBPC() const { return bpc_; }
+
 std::string TimsDataImpl::getOperatorName() const { return operatorName_; }
 std::string TimsDataImpl::getAnalysisName() const { return ""; }
 boost::local_time::local_date_time TimsDataImpl::getAnalysisDateTime() const { return parse_date_time("%Y-%m-%dT%H:%M:%S%Q", acquisitionDateTime_); }
@@ -447,6 +464,7 @@ std::string TimsDataImpl::getMethodName() const { return ""; }
 InstrumentFamily TimsDataImpl::getInstrumentFamily() const { return instrumentFamily_; }
 int TimsDataImpl::getInstrumentRevision() const { return instrumentRevision_; }
 std::string TimsDataImpl::getInstrumentDescription() const { return ""; }
+std::string TimsDataImpl::getInstrumentSerialNumber() const { return serialNumber_; }
 InstrumentSource TimsDataImpl::getInstrumentSource() const { return instrumentSource_; }
 std::string TimsDataImpl::getAcquisitionSoftware() const { return acquisitionSoftware_; }
 std::string TimsDataImpl::getAcquisitionSoftwareVersion() const { return acquisitionSoftwareVersion_; }

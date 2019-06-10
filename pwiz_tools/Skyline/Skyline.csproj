@@ -188,6 +188,12 @@
     <Compile Include="Alerts\AlertLinkDlg.Designer.cs">
       <DependentUpon>AlertLinkDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Alerts\NoModeUIDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\NoModeUIDlg.Designer.cs">
+      <DependentUpon>NoModeUIDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Alerts\PeptidesPerProteinDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -312,6 +318,11 @@
     </Compile>
     <Compile Include="Controls\AuditLog\AuditLogExtraInfoForm.Designer.cs">
       <DependentUpon>AuditLogExtraInfoForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Graphs\ReplicateGroupOp.cs" />
+    <Compile Include="Controls\Graphs\ReplicateValue.cs" />
+    <Compile Include="Controls\ImageListBox.cs">
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="Controls\TargetColumn.cs" />
     <Compile Include="FileUI\ExportAnnotationsDlg.cs">
@@ -1831,6 +1842,9 @@
     <EmbeddedResource Include="Alerts\MissingFileDlg.zh-CHS.resx">
       <DependentUpon>MissingFileDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\NoModeUIDlg.resx">
+      <DependentUpon>NoModeUIDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\PasteFilteredPeptidesDlg.ja.resx">
       <DependentUpon>PasteFilteredPeptidesDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2860,17 +2874,17 @@
     <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearchPRM.png" />
     <EmbeddedResource Include="Resources\Ions_fragments.bmp" />
     <EmbeddedResource Include="Resources\Edit_Undo_Multiple.bmp" />
-    <Content Include="Resources\Locked.bmp" />
+    <None Include="Resources\Locked.bmp" />
     <EmbeddedResource Include="Resources\MoleculeLib.bmp" />
-    <Content Include="Resources\MoleculeStandard.bmp" />
-    <Content Include="Resources\MoleculeUI.bmp" />
-    <Content Include="Resources\Pindownlight.bmp" />
-    <Content Include="Resources\Pinleftlight.bmp" />
+    <None Include="Resources\MoleculeStandard.bmp" />
+    <None Include="Resources\MoleculeUI.bmp" />
+    <None Include="Resources\Pindownlight.bmp" />
+    <None Include="Resources\Pinleftlight.bmp" />
     <EmbeddedResource Include="Model\Lib\Midas\mapping.xml">
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Content Include="Resources\ProteinUI.bmp" />
-    <Content Include="Resources\Replicate.bmp" />
+    <None Include="Resources\ProteinUI.bmp" />
+    <None Include="Resources\Replicate.bmp" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\APOA1.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\Biognosys11.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\Pierce.sky" />
@@ -2896,8 +2910,11 @@
     <EmbeddedResource Include="Resources\UIModeMixed.bmp" />
     <EmbeddedResource Include="Resources\UIModeProteomic.bmp" />
     <EmbeddedResource Include="Resources\UIModeSmallMolecules.bmp" />
-    <Content Include="Resources\Unlocked.bmp" />
-    <Content Include="Resources\warning.png" />
+    <None Include="Resources\Unlocked.bmp" />
+    <None Include="Resources\warning.png" />
+    <EmbeddedResource Include="Resources\MoleculeIrt.bmp" />
+    <EmbeddedResource Include="Resources\MoleculeIrtLib.bmp" />
+    <EmbeddedResource Include="Resources\MoleculeStandardLib.bmp" />
     <Content Include="SkylineProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

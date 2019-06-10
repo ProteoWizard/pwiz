@@ -192,7 +192,13 @@ void fillInMetadata(const bfs::path& rootpath, MSData& msd, Reader_Bruker_Format
 
     initializeInstrumentConfigurationPtrs(msd, compassDataPtr, acquisitionSoftware);
     if (!msd.instrumentConfigurationPtrs.empty())
+    {
         msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
+
+        auto serialNumber = compassDataPtr->getInstrumentSerialNumber();
+        if (!serialNumber.empty())
+            msd.run.defaultInstrumentConfigurationPtr->set(MS_instrument_serial_number, serialNumber);
+    }
 
     msd.run.id = msd.id;
     msd.run.startTimeStamp = encode_xml_datetime(compassDataPtr->getAnalysisDateTime());
@@ -211,12 +217,8 @@ void Reader_Bruker::read(const string& filename,
     if (runIndex != 0)
         throw ReaderFail("[Reader_Bruker::read] multiple runs not supported");
 
-    string::const_iterator unicodeCharItr = std::find_if(filename.begin(), filename.end(), [](char ch) { return !isprint(ch) || static_cast<int>(ch) < 0; });
-    if (unicodeCharItr != filename.end())
-    {
-        auto utf8CharAsString = [](string::const_iterator ch, string::const_iterator end) { string utf8; while (ch != end && *ch < 0) { utf8 += *ch; ++ch; }; return utf8; };
-        throw ReaderFail(string("[Reader_Bruker::read()] Bruker API does not support Unicode in filepaths ('") + utf8CharAsString(unicodeCharItr, filename.end()) + "')");
-    }
+    if (findUnicodeBytes(filename) != filename.end())
+        throw ReaderFail("[Reader_Bruker::read()] Bruker API does not support Unicode in filepaths ('" + filename + "')");
 
     Reader_Bruker_Format format = Bruker::format(filename);
     if (format == Reader_Bruker_Format_Unknown)

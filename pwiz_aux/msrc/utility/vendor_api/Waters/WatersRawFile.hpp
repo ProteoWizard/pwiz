@@ -349,9 +349,9 @@ struct PWIZ_API_DECL RawData
         // apply new values
         
         MassLynxParameters parms;
-        parms.Set("mass", newMz);
-        parms.Set("tolerance", newTolerance);
-        LockMass.LockMassCorrect(parms.ToJSON());
+        parms.Set(LockMassParameter::MASS, newMz);
+        parms.Set(LockMassParameter::TOLERANCE, newTolerance);
+        LockMass.LockMassCorrect(parms);
         return true;
     }
 
@@ -448,7 +448,7 @@ enum PWIZ_API_DECL PwizFunctionType
 
 inline PwizFunctionType WatersToPwizFunctionType(MassLynxFunctionType functionType)
 {
-    return (PwizFunctionType) functionType;
+    return (PwizFunctionType) ((int) functionType - FUNCTION_TYPE_BASE);
 }
 
 
@@ -490,10 +490,10 @@ enum IonMode {
 
 inline PwizIonizationType WatersToPwizIonizationType(MassLynxIonMode ionMode)
 {
-    switch ((IonMode) ionMode)
+    switch ((IonMode) ((int) ionMode - ION_MODE_BASE))
     {
         case IM_GENERIC: return IonizationType_Generic;
-        default: return (PwizIonizationType) (int(ionMode) / 2);
+        default: return (PwizIonizationType) (((int)ionMode - ION_MODE_BASE) / 2);
     }
 }
 
@@ -509,7 +509,7 @@ enum PWIZ_API_DECL PwizPolarityType
 
 inline PwizPolarityType WatersToPwizPolarityType(MassLynxIonMode ionMode)
 {
-    switch ((IonMode) ionMode)
+    switch ((IonMode)((int)ionMode - ION_MODE_BASE))
     {
         case IM_EIP: case IM_CIP: case IM_FBP: case IM_TSP:
         case IM_ESP: case IM_AIP: case IM_LDP: case IM_FIP:

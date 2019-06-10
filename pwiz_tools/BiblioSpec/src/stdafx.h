@@ -47,7 +47,6 @@
 #include <fstream>
 #include <string>
 
-using namespace std;
 /*
  * Local Variables:
  * mode: c

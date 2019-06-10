@@ -506,10 +506,13 @@ namespace MSConvertGUI
                             MSDataFile.calculateSHA1Checksums(msd);
                         }
 
+                        var ilr = new IterationListenerRegistry();
+                        ilr.addListenerWithTimer(this, 1);
+
                         LogUpdate?.Invoke("Processing...", _info);
                         StatusUpdate?.Invoke("Processing...", ProgressBarStyle.Marquee, _info);
 
-                        SpectrumListFactory.wrap(msd, config.Filters);
+                        SpectrumListFactory.wrap(msd, config.Filters, ilr);
 
                         if ((msd.run.spectrumList == null) || msd.run.spectrumList.empty())
                         {
@@ -539,8 +542,6 @@ namespace MSConvertGUI
                                          ProgressBarStyle.Continuous, _info);
 
                         // write out the new data file
-                        var ilr = new IterationListenerRegistry();
-                        ilr.addListenerWithTimer(this, 1);
                         msg = String.Format("Writing \"{0}\"...", deduplicatedFilename);
                         LogUpdate?.Invoke(msg, _info);
                         StatusUpdate?.Invoke(msg, ProgressBarStyle.Continuous, _info);

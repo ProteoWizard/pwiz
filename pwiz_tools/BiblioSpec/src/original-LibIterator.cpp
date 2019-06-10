@@ -21,9 +21,8 @@
 
 //class definition for an iterator to access a library's spectra
 
+#include "pwiz/utility/misc/Std.hpp"
 #include "original-LibIterator.h"
-
-using namespace std;
 
 refSpecPair::refSpecPair() {
     specp = NULL;

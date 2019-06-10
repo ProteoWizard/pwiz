@@ -112,45 +112,59 @@ namespace pwiz.Skyline.Controls.SeqNode
             return sequenceTree.ImageList.Images[GetTypeImageIndex(nodePep)];
         }
 
+        // This is the set of node images that have peptide/molecule specific versions
+        private static readonly Dictionary<SequenceTree.ImageId, SequenceTree.ImageId> NON_PROTEOMIC_IMAGE_INDEXES =
+            new Dictionary<SequenceTree.ImageId, SequenceTree.ImageId>
+            {
+                {SequenceTree.ImageId.peptide_irt_lib, SequenceTree.ImageId.molecule_irt_lib},
+                {SequenceTree.ImageId.peptide_irt, SequenceTree.ImageId.molecule_irt},
+                {SequenceTree.ImageId.peptide_standard_lib, SequenceTree.ImageId.molecule_standard_lib},
+                {SequenceTree.ImageId.peptide_standard, SequenceTree.ImageId.molecule_standard},
+                {SequenceTree.ImageId.peptide_lib, SequenceTree.ImageId.molecule_lib},
+                {SequenceTree.ImageId.peptide, SequenceTree.ImageId.molecule}
+            };   
+
         private static int GetTypeImageIndex(PeptideDocNode nodePep)
         {
+            SequenceTree.ImageId index;
             if (nodePep.IsDecoy)
             {
-                return (int) (nodePep.HasLibInfo
+                index = nodePep.HasLibInfo
                                   ? SequenceTree.ImageId.peptide_lib_decoy
-                                  : SequenceTree.ImageId.peptide_decoy);
+                                  : SequenceTree.ImageId.peptide_decoy;
             }
-            if (!nodePep.IsProteomic)
+            else if (nodePep.GlobalStandardType == StandardType.IRT)
             {
-                if (nodePep.GlobalStandardType == StandardType.GLOBAL_STANDARD ||
-                    nodePep.GlobalStandardType == StandardType.SURROGATE_STANDARD)
-                {
-                    return (int) SequenceTree.ImageId.molecule_standard;
-                }
-                return (int)SequenceTree.ImageId.molecule;
-            }
-            if (nodePep.GlobalStandardType == StandardType.IRT)
-            {
-                return (int) (nodePep.HasLibInfo
+                index = nodePep.HasLibInfo
                                   ? SequenceTree.ImageId.peptide_irt_lib
-                                  : SequenceTree.ImageId.peptide_irt);
+                                  : SequenceTree.ImageId.peptide_irt;
             }
-            if (nodePep.GlobalStandardType == StandardType.QC)
+            else if (nodePep.GlobalStandardType == StandardType.QC)
             {
-                return (int)(nodePep.HasLibInfo
-                                  ? SequenceTree.ImageId.peptide_qc_lib
-                                  : SequenceTree.ImageId.peptide_qc);
+                index = nodePep.HasLibInfo
+                    ? SequenceTree.ImageId.peptide_qc_lib
+                    : SequenceTree.ImageId.peptide_qc;
             }
-            if (nodePep.GlobalStandardType == StandardType.GLOBAL_STANDARD 
-                || nodePep.GlobalStandardType == StandardType.SURROGATE_STANDARD)
+            else if (nodePep.GlobalStandardType == StandardType.GLOBAL_STANDARD 
+                  || nodePep.GlobalStandardType == StandardType.SURROGATE_STANDARD)
             {
-                return (int)(nodePep.HasLibInfo
+                index = nodePep.HasLibInfo
                                   ? SequenceTree.ImageId.peptide_standard_lib
-                                  : SequenceTree.ImageId.peptide_standard);
+                                  : SequenceTree.ImageId.peptide_standard;
             }
-            return (int)(nodePep.HasLibInfo
-                              ? SequenceTree.ImageId.peptide_lib
-                              : SequenceTree.ImageId.peptide);
+            else
+            {
+                index = nodePep.HasLibInfo
+                    ?  SequenceTree.ImageId.peptide_lib
+                    :  SequenceTree.ImageId.peptide;
+            }
+
+            // If this is a small molecule node, see if there's a special version of its image
+            if (!nodePep.IsProteomic && NON_PROTEOMIC_IMAGE_INDEXES.TryGetValue(index, out var smallMolIndex))
+            {
+                return (int)smallMolIndex;
+            }
+            return (int)index;
         }
 
         public int PeakImageIndex

@@ -109,7 +109,7 @@ namespace pwiz.SkylineTestUtil
             Assert.AreNotEqual(0, parts.Length, "Must have at least one thing contained");
             foreach (string part in parts)
             {
-                if (!value.Contains(part))
+                if (!string.IsNullOrEmpty(part) && !value.Contains(part))
                     Assert.Fail("The text '{0}' does not contain '{1}'", value, part);
             }
         }

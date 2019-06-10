@@ -3048,7 +3048,7 @@
     <value>184, 22</value>
   </data>
   <data name="peptideSettingsMenuItem.Text" xml:space="preserve">
-    <value>ぺプチド設定(&amp;P)...</value>
+    <value>ペプチド設定(&amp;P)...</value>
   </data>
   <data name="transitionSettingsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>184, 22</value>

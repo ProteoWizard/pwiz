@@ -1388,6 +1388,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Annotation: .
+        /// </summary>
+        public static string Annotation_DisambiguationPrefix_Annotation__ {
+            get {
+                return ResourceManager.GetString("Annotation_DisambiguationPrefix_Annotation__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Peptides.
         /// </summary>
         public static string AnnotationDef_AnnotationTarget_Peptides {
@@ -17059,16 +17068,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to New! Use this button to configure Skyline&apos;s user interface specifically for proteomics or generalized molecule use..
-        /// </summary>
-        public static string ModeUIAwareFormHelper_OnLoad_New__Use_this_button_to_configure_Skyline_s_user_interface_specifically_for_proteomics_or_small_molecule_use_ {
-            get {
-                return ResourceManager.GetString("ModeUIAwareFormHelper_OnLoad_New__Use_this_button_to_configure_Skyline_s_user_int" +
-                        "erface_specifically_for_proteomics_or_small_molecule_use_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Mixed interface.
         /// </summary>
         public static string ModeUIAwareFormHelper_SetModeUIToolStripButtons_Mixed_interface {
@@ -17176,6 +17175,26 @@ namespace pwiz.Skyline.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        public static System.Drawing.Bitmap MoleculeIrt {
+            get {
+                object obj = ResourceManager.GetObject("MoleculeIrt", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap MoleculeIrtLib {
+            get {
+                object obj = ResourceManager.GetObject("MoleculeIrtLib", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         public static System.Drawing.Bitmap MoleculeLib {
             get {
                 object obj = ResourceManager.GetObject("MoleculeLib", resourceCulture);
@@ -17199,6 +17218,16 @@ namespace pwiz.Skyline.Properties {
         public static System.Drawing.Bitmap MoleculeStandard {
             get {
                 object obj = ResourceManager.GetObject("MoleculeStandard", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap MoleculeStandardLib {
+            get {
+                object obj = ResourceManager.GetObject("MoleculeStandardLib", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -21193,6 +21222,15 @@ namespace pwiz.Skyline.Properties {
         public static string ProgramPathContainer_Validate_ProgramPathCollectors_must_have_a_program_name {
             get {
                 return ResourceManager.GetString("ProgramPathContainer_Validate_ProgramPathCollectors_must_have_a_program_name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Property: .
+        /// </summary>
+        public static string Property_DisambiguationPrefix_Property__ {
+            get {
+                return ResourceManager.GetString("Property_DisambiguationPrefix_Property__", resourceCulture);
             }
         }
         
@@ -28525,6 +28563,36 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to find a valid Thermo instrument installation..
+        /// </summary>
+        public static string ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_ {
+            get {
+                return ResourceManager.GetString("ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_i" +
+                        "nstallation_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Thermo instrument software may not be installed correctly. The library {0} could not be found..
+        /// </summary>
+        public static string ThermoMassListExporter_EnsureLibraries_Thermo_instrument_software_may_not_be_installed_correctly__The_library__0__could_not_be_found_ {
+            get {
+                return ResourceManager.GetString("ThermoMassListExporter_EnsureLibraries_Thermo_instrument_software_may_not_be_inst" +
+                        "alled_correctly__The_library__0__could_not_be_found_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Thermo method creation software may not be installed correctly..
+        /// </summary>
+        public static string ThermoMassListExporter_EnsureLibraries_Thermo_method_creation_software_may_not_be_installed_correctly_ {
+            get {
+                return ResourceManager.GetString("ThermoMassListExporter_EnsureLibraries_Thermo_method_creation_software_may_not_be" +
+                        "_installed_correctly_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error loading report from the temporary file {0}.
         /// </summary>
         public static string ToolDescription_CallArgsCollector_Error_loading_report_from_the_temporary_file__0_ {
@@ -31106,22 +31174,33 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: The value &apos;{0}&apos; is not valid for the argument {1} which requires a date-time value..
+        ///   Looks up a localized string similar to The value &apos;{0}&apos; is not valid for the argument {1} which requires an comma-separated list of integers..
         /// </summary>
-        public static string ValueInvalidDateException_ValueInvalidDateException_Error__The_value___0___is_not_valid_for_the_argument__1__which_requires_a_date_time_value_ {
+        public static string ValueInvalidChargeListException_ValueInvalidChargeListException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_comma_separated_list_of_integers_ {
             get {
-                return ResourceManager.GetString("ValueInvalidDateException_ValueInvalidDateException_Error__The_value___0___is_not" +
-                        "_valid_for_the_argument__1__which_requires_a_date_time_value_", resourceCulture);
+                return ResourceManager.GetString("ValueInvalidChargeListException_ValueInvalidChargeListException_The_value___0___i" +
+                        "s_not_valid_for_the_argument__1__which_requires_an_comma_separated_list_of_integ" +
+                        "ers_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: The value &apos;{0}&apos; is not valid for the argument {1} which requires a decimal number..
+        ///   Looks up a localized string similar to The value &apos;{0}&apos; is not valid for the argument {1} which requires a date-time value..
         /// </summary>
-        public static string ValueInvalidDoubleException_ValueInvalidDoubleException_Error__The_value___0___is_not_valid_for_the_argument__1__which_requires_a_decimal_number_ {
+        public static string ValueInvalidDateException_ValueInvalidDateException_The_value___0___is_not_valid_for_the_argument__1__which_requires_a_date_time_value_ {
             get {
-                return ResourceManager.GetString("ValueInvalidDoubleException_ValueInvalidDoubleException_Error__The_value___0___is" +
-                        "_not_valid_for_the_argument__1__which_requires_a_decimal_number_", resourceCulture);
+                return ResourceManager.GetString("ValueInvalidDateException_ValueInvalidDateException_The_value___0___is_not_valid_" +
+                        "for_the_argument__1__which_requires_a_date_time_value_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The value &apos;{0}&apos; is not valid for the argument {1} which requires a decimal number..
+        /// </summary>
+        public static string ValueInvalidDoubleException_ValueInvalidDoubleException_The_value___0___is_not_valid_for_the_argument__1__which_requires_a_decimal_number_ {
+            get {
+                return ResourceManager.GetString("ValueInvalidDoubleException_ValueInvalidDoubleException_The_value___0___is_not_va" +
+                        "lid_for_the_argument__1__which_requires_a_decimal_number_", resourceCulture);
             }
         }
         
@@ -31136,23 +31215,33 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: The value &apos;{0}&apos; is not valid for the argument {1} which requires an integer..
+        ///   Looks up a localized string similar to The value &apos;{0}&apos; is not valid for the argument {1} which requires an integer..
         /// </summary>
-        public static string ValueInvalidIntException_ValueInvalidIntException_Error__The_value___0___is_not_valid_for_the_argument__1__which_requires_an_integer_ {
+        public static string ValueInvalidIntException_ValueInvalidIntException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_integer_ {
             get {
-                return ResourceManager.GetString("ValueInvalidIntException_ValueInvalidIntException_Error__The_value___0___is_not_v" +
-                        "alid_for_the_argument__1__which_requires_an_integer_", resourceCulture);
+                return ResourceManager.GetString("ValueInvalidIntException_ValueInvalidIntException_The_value___0___is_not_valid_fo" +
+                        "r_the_argument__1__which_requires_an_integer_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: The value &apos;{0}&apos; is not valid for the argument {1} failed attempting to convert it to a full file path..
+        ///   Looks up a localized string similar to The value &apos;{0}&apos; is not valid for the argument {1} which requires an comma-separated list of fragment ion types (a, b, c, x, y, z, p)..
         /// </summary>
-        public static string ValueInvalidPathException_ValueInvalidPathException_Error__The_value___0___is_not_valid_for_the_argument__1__failed_attempting_to_convert_it_to_a_full_file_path_ {
+        public static string ValueInvalidIonTypeListException_ValueInvalidIonTypeListException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_comma_separated_list_of_fragment_ion_types__a__b__c__x__y__z__p__ {
             get {
-                return ResourceManager.GetString("ValueInvalidPathException_ValueInvalidPathException_Error__The_value___0___is_not" +
-                        "_valid_for_the_argument__1__failed_attempting_to_convert_it_to_a_full_file_path_" +
-                        "", resourceCulture);
+                return ResourceManager.GetString("ValueInvalidIonTypeListException_ValueInvalidIonTypeListException_The_value___0__" +
+                        "_is_not_valid_for_the_argument__1__which_requires_an_comma_separated_list_of_fra" +
+                        "gment_ion_types__a__b__c__x__y__z__p__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The value &apos;{0}&apos; is not valid for the argument {1} failed attempting to convert it to a full file path..
+        /// </summary>
+        public static string ValueInvalidPathException_ValueInvalidPathException_The_value___0___is_not_valid_for_the_argument__1__failed_attempting_to_convert_it_to_a_full_file_path_ {
+            get {
+                return ResourceManager.GetString("ValueInvalidPathException_ValueInvalidPathException_The_value___0___is_not_valid_" +
+                        "for_the_argument__1__failed_attempting_to_convert_it_to_a_full_file_path_", resourceCulture);
             }
         }
         
@@ -31166,12 +31255,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: The value &apos;{0}&apos; for the argument {1} must be between {2} and {3}..
+        ///   Looks up a localized string similar to The value &apos;{0}&apos; for the argument {1} must be between {2} and {3}..
         /// </summary>
-        public static string ValueOutOfRangeIntException_ValueOutOfRangeIntException_Error__The_value___0___for_the_argument__1__must_be_between__2__and__3__ {
+        public static string ValueOutOfRangeDoubleException_ValueOutOfRangeException_The_value___0___for_the_argument__1__must_be_between__2__and__3__ {
             get {
-                return ResourceManager.GetString("ValueOutOfRangeIntException_ValueOutOfRangeIntException_Error__The_value___0___fo" +
-                        "r_the_argument__1__must_be_between__2__and__3__", resourceCulture);
+                return ResourceManager.GetString("ValueOutOfRangeDoubleException_ValueOutOfRangeException_The_value___0___for_the_a" +
+                        "rgument__1__must_be_between__2__and__3__", resourceCulture);
             }
         }
         

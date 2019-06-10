@@ -19,10 +19,9 @@
 // limitations under the License.
 //
 
-#include "BuildParser.h"
+#include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
-#include <boost/algorithm/string.hpp>
-#include <iostream>
+#include "BuildParser.h"
 #include "SpecData.h"
 
 namespace BiblioSpec {
@@ -36,7 +35,7 @@ BuildParser::BuildParser(BlibBuilder& maker,
   lookUpBy_(SCAN_NUM_ID)
 {
     // initialize amino acid masses
-    fill(aaMasses_, aaMasses_ + sizeof(aaMasses_)/sizeof(double), 0);
+    std::fill(aaMasses_, aaMasses_ + sizeof(aaMasses_)/sizeof(double), 0);
     AminoAcidMasses::initializeMass(aaMasses_, 1);
 
     // parse full file name to get path and fileroot
@@ -110,7 +109,7 @@ void BuildParser::setSpecFileName(
                     // case insensitive filename comparison (i.e. so POSIX systems can match to basename.MGF or BaseName.mgf)
                     if (!bal::iequals(fileroot + ext, trialName))
                         continue;
-                    ifstream file(dirPath.c_str());
+                    ifstream file(dirPath.string().c_str());
                     if (file.good()) {
                         curSpecFileName_ = dirPath.string();
                         break;
@@ -357,6 +356,8 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
     } else {
         fileId = insertSpectrumFilename(specFilename, true); // insert as is
     }
+
+    BiblioSpec::Verbosity::debug("BuildParser lookup method is %s", specIdTypeToString(lookUpBy_));
 
     // for each psm
     map<const Protein*, sqlite3_int64> proteinIds;

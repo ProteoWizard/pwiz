@@ -109,6 +109,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var docEmpty = NewDocument();
 
+            TestAmbiguousPrecursorFragment();
             TestPerTransitionValues();
             TestToolServiceAccess();
             TestLabelsNoFormulas();
@@ -1197,7 +1198,48 @@ namespace pwiz.SkylineTestFunctional
             Assume.AreEqual(2, transitions.Count(t => t.ExplicitValues.CollisionEnergy == 20));
             Assume.AreEqual(2, transitions.Count(t => t.ExplicitValues.CollisionEnergy == 25));
             TestTransitionListOutput(pastedDoc, "per_trans.csv", "per_trans_expected.csv", ExportFileType.List);
+            
+
+            docOrig = NewDocument();
+            const string precursorsTransitionListHEOffset =
+                "Precursor Name,Precursor Formula,Precursor Adduct,Precursor charge,Explicit Retention Time,Collisional Cross Section (Sq A),Product m/z,product charge,explicit ion mobility High energy Offset\n" +
+                "Sulfamethizole,C9H10N4O2S2,[M+H],1,1.85,157.7,,,\n" +
+                "Sulfamethizole,C9H10N4O2S2,[M+H],1,1.85,157.7,156.0112,1,0.5\n" +
+                "Sulfamethizole,C9H10N4O2S2,[M+H],1,1.85,157.7,92.0498,1,0.51\n" +
+                "Sulfamethizole,C9H10N4O2S2,[M+Na],1,1.85,173.43,,,\n" +
+                "Sulfamethazine,C12H14N4O2S,[M+H],1,2.01,163.56,,,\n" +
+                "Sulfamethazine,C12H14N4O2S,[M+H],1,2.01,,186.0336,1,0.2\n" +
+                "Sulfamethazine,C12H14N4O2S,[M+H],1,2.01,,124.0873,1,0.21\n" +
+                "Sulfamethazine,C12H14N4O2S,[M+Na],1,2.01,172.47,,,\n" +
+                "Sulfachloropyridazine,C10H9ClN4O2S,[M+H],1,2.51,161.23,,,\n" +
+                "Sulfachloropyridazine,C10H9ClN4O2S,[M+H],1,2.51,161.23,156.011,1,0.1\n" +
+                "Sulfachloropyridazine,C10H9ClN4O2S,[M+H],1,2.51,161.23,92.0495,1,0.11\n" +
+                "Sulfachloropyridazine,C10H9ClN4O2S,[M+Na],1,2.51,171.16,,,\n" +
+                "Sulfadimethoxine,C12H14N4O4S,[M+H],1,3.68,170.01,,,\n" +
+                "Sulfadimethoxine,C12H14N4O4S,[M+H],1,3.68,170.01,156.077,1,0.3\n" +
+                "Sulfadimethoxine,C12H14N4O4S,[M+H],1,3.68,170.01,108.0445,1,0.31\n" +
+                "Sulfadimethoxine,C12H14N4O4S,[M+Na],1,3.68,177.96,,,\n";
+            SetClipboardText(precursorsTransitionListHEOffset);
+
+            // Paste directly into targets area
+            RunUI(() => SkylineWindow.Paste());
+
+            pastedDoc = WaitForDocumentChange(docOrig);
+            Assume.AreEqual(1, pastedDoc.MoleculeGroupCount);
+            Assume.AreEqual(4, pastedDoc.MoleculeCount);
+            precursors = pastedDoc.MoleculeTransitionGroups.ToArray();
+            Assume.AreEqual(8, precursors.Length);
+            transitions = pastedDoc.MoleculeTransitions.ToArray();
+            Assume.AreEqual(1, transitions.Count(t => t.ExplicitValues.IonMobilityHighEnergyOffset == 0.5));
+            Assume.AreEqual(1, transitions.Count(t => t.ExplicitValues.IonMobilityHighEnergyOffset == 0.51));
+            Assume.AreEqual(1, transitions.Count(t => t.ExplicitValues.IonMobilityHighEnergyOffset == 0.2));
+            Assume.AreEqual(1, transitions.Count(t => t.ExplicitValues.IonMobilityHighEnergyOffset == 0.21));
+            Assume.AreEqual(1, transitions.Count(t => t.ExplicitValues.IonMobilityHighEnergyOffset == 0.1));
+            Assume.AreEqual(1, transitions.Count(t => t.ExplicitValues.IonMobilityHighEnergyOffset == 0.11));
+            Assume.AreEqual(1, transitions.Count(t => t.ExplicitValues.IonMobilityHighEnergyOffset == 0.3));
+            Assume.AreEqual(1, transitions.Count(t => t.ExplicitValues.IonMobilityHighEnergyOffset == 0.31));
             NewDocument();
+
         }
 
         private void TestTransitionListOutput(SrmDocument importDoc, string outputName, string expectedName, ExportFileType fileType)
@@ -1276,6 +1318,31 @@ namespace pwiz.SkylineTestFunctional
                 }
             }
             throw new ApplicationException(message.ToString(), exception);
+        }
+
+        private void TestAmbiguousPrecursorFragment()
+        {
+            // Check that we understand this first line to be a precursor transition - we were getting confused 
+            // over "M-H" precursor adduct vs "-1" fragment charge, they're describing the same thing of course
+            var input =
+                "Molecule List Name,Precursor Name,Precursor m/z,Precursor Adduct,Precursor Charge,Explicit Retention Time,Product m/z,Product Charge,Explicit Collision Energy\r\n" +
+                ", \"(6R)-5,6,7,8-tetrahydrobiopterin 1\",344.1364,[M-H],-1,2.8,344.1364,-1,35\r\n" +
+                ", \"(6R)-5,6,7,8-tetrahydrobiopterin 1\",344.1364,[M-H],-1,2.8,147.9208,-1,35\r\n";
+
+            var docOrig = NewDocument();
+            SetClipboardText(input);
+
+            // Paste directly into targets area
+            RunUI(() => SkylineWindow.Paste());
+
+            var pastedDoc = WaitForDocumentChange(docOrig);
+            Assume.AreEqual(1, pastedDoc.MoleculeGroupCount);
+            Assume.AreEqual(1, pastedDoc.MoleculeCount);
+            var transitions = pastedDoc.MoleculeTransitions.ToArray();
+            Assume.AreEqual(1, transitions.Count(t => t.IsMs1)); // Formerly we saw both as fragment transitions
+            Assume.AreEqual(1, transitions.Count(t => !t.IsMs1));
+            NewDocument();
+
         }
     }  
 }
