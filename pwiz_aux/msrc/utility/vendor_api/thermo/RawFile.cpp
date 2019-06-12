@@ -110,7 +110,6 @@ class RawFileImpl : public RawFile
     virtual ScanType getScanType(long scanNumber) const;
     virtual ScanFilterMassAnalyzerType getMassAnalyzerType(long scanNumber) const;
     virtual ActivationType getActivationType(long scanNumber) const;
-    virtual vector<double> getIsolationWidths(long scanNumber) const;
     virtual double getIsolationWidth(int scanSegment, int scanEvent) const;
     virtual double getDefaultIsolationWidth(int scanSegment, int msLevel) const;
 
@@ -998,6 +997,8 @@ class ScanInfoImpl : public ScanInfo
     virtual double precursorMZ(long index, bool preferMonoisotope) const;
     virtual double precursorActivationEnergy(long index) const {return precursorActivationEnergies_[index];}
 
+    virtual vector<double> getIsolationWidths() const;
+
     virtual ActivationType supplementalActivationType() const {return saType_;}
     virtual double supplementalActivationEnergy() const {return saEnergy_;}
 
@@ -1059,7 +1060,7 @@ class ScanInfoImpl : public ScanInfo
     PolarityType polarityType_;
     bool isEnhanced_;
     bool isDependent_;
-    bool hasMultiplePrecursors_; // true for "MSX" mode
+    bool hasMultiplePrecursors_; // true for "MSX" mode or when there are "SPS Masses"
     bool isCorona_;
     bool isPhotoIonization_;
     bool isSourceCID_;
@@ -1087,6 +1088,7 @@ class ScanInfoImpl : public ScanInfo
     bool faimsOn_;
     double compensationVoltage_;
     double saEnergy_;
+    std::vector<double> spsMasses_;
 
     bool constantNeutralLoss_;
     double analyzerScanOffset_;
@@ -1191,6 +1193,7 @@ void ScanInfoImpl::initialize()
         precursorMZs_.clear();
         precursorActivationEnergies_.clear();
         trailerExtraMap_.clear();
+        spsMasses_.clear();
 
         if (scanNumber_ > 0)
         {
@@ -1234,8 +1237,32 @@ void ScanInfoImpl::initialize()
 #endif
         }
         parseFilterString();
+
+        if (scanNumber_ > 0)
+        {
+            // append SPS masses to precursors parsed from filter string
+            string spsMassesStr = rawfile_->getTrailerExtraValue(scanNumber_, "SPS Masses:") + rawfile_->getTrailerExtraValue(scanNumber_, "SPS Masses Continued:");
+            if (!spsMassesStr.empty())
+            {
+                vector<string> tokens;
+                bal::split(tokens, spsMassesStr, bal::is_any_of(","));
+
+                // skip first 
+                for (size_t i = 1; i < tokens.size(); ++i)
+                {
+                    bal::trim(tokens[i]);
+                    if (tokens[i].empty())
+                        continue;
+                    spsMasses_.push_back(lexical_cast<double>(tokens[i]));
+                    precursorMZs_.push_back(spsMasses_.back());
+                    precursorActivationEnergies_.push_back(precursorActivationEnergies_.back());
+                }
+                hasMultiplePrecursors_ = true;
+                isSPS_ = true;
+            }
+        }
     }
-    CATCH_AND_FORWARD
+    CATCH_AND_FORWARD_EX(filter())
 }
 
 void ScanInfoImpl::initStatusLog() const
@@ -1519,6 +1546,11 @@ vector<PrecursorInfo> ScanInfoImpl::precursorInfo() const
 
 long ScanInfoImpl::precursorCharge() const
 {
+    // "Charge State" header item for SPS spectra refers to MS2's precursor charge;
+    // CONSIDER: real charge states might be available in the instrument method
+    if (!spsMasses_.empty())
+        return 0;
+
     try
     {
         return trailerExtraValueLong("Charge State:");
@@ -1804,37 +1836,50 @@ void RawFileImpl::parseInstrumentMethod()
     }
 }
 
-vector<double> RawFileImpl::getIsolationWidths(long scanNumber) const
+vector<double> ScanInfoImpl::getIsolationWidths() const
 {
     vector<double> isolationWidths;
+
+    if (scanNumber_ == 0)
+        return isolationWidths;
+
+    if (!spsMasses_.empty())
+    {
+#ifndef _WIN64
+        double isolationWidth;
+        checkResult(raw5->GetIsolationWidthForScanNum(scanNumber_, 0, &isolationWidth));
+        isolationWidths.resize(precursorMZs_.size(), isolationWidth);
+#else
+        isolationWidths.resize(precursorMZs_.size(), filter_->GetIsolationWidth(0));
+#endif
+        return isolationWidths;
+    }
 
 #ifndef _WIN64
     IXRawfile5Ptr raw5 = (IXRawfile5Ptr) raw_;
 
     long msOrder;
-    checkResult(raw5->GetMSOrderForScanNum(scanNumber, &msOrder));
+    checkResult(raw5->GetMSOrderForScanNum(scanNumber_, &msOrder));
     if (msOrder == 1)
         return isolationWidths;
 
     long numMSOrders;
-    checkResult(raw5->GetNumberOfMSOrdersFromScanNum(scanNumber, &numMSOrders));
+    checkResult(raw5->GetNumberOfMSOrdersFromScanNum(scanNumber_, &numMSOrders));
     for (long i = 0; i < numMSOrders; i++)
     {
         double isolationWidth;
-        checkResult(raw5->GetIsolationWidthForScanNum(scanNumber, i, &isolationWidth));
+        checkResult(raw5->GetIsolationWidthForScanNum(scanNumber_, i, &isolationWidth));
         isolationWidths.push_back(isolationWidth);
     }
 #else
-    auto filter = raw_->GetFilterForScanNumber(scanNumber);
-
-    MSOrder msOrder = (MSOrder) filter->MSOrder;
+    MSOrder msOrder = (MSOrder) filter_->MSOrder;
     if ((int) msOrder == 1)
         return isolationWidths;
 
-    long massCount = filter->MassCount;
+    long massCount = filter_->MassCount;
     for (long i = 0; i < massCount; i++)
     {
-        isolationWidths.push_back(filter->GetIsolationWidth(i));
+        isolationWidths.push_back(filter_->GetIsolationWidth(i));
     }
 #endif
     return isolationWidths;

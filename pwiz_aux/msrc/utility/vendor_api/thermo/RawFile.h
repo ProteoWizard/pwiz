@@ -266,6 +266,8 @@ class PWIZ_API_DECL ScanInfo
     virtual double precursorMZ(long index, bool preferMonoisotope = true) const = 0;
     virtual double precursorActivationEnergy(long index) const = 0;
 
+    virtual std::vector<double> getIsolationWidths() const = 0;
+
     virtual ActivationType supplementalActivationType() const = 0;
     virtual double supplementalActivationEnergy() const = 0;
 
@@ -429,7 +431,6 @@ class PWIZ_API_DECL RawFile
     virtual ScanFilterMassAnalyzerType getMassAnalyzerType(long scanNumber) const = 0;
     virtual ActivationType getActivationType(long scanNumber) const = 0;
     // getDetectorType is obsolete?
-    virtual std::vector<double> getIsolationWidths(long scanNumber) const = 0;
     virtual double getIsolationWidth(int scanSegment, int scanEvent) const = 0;
     virtual double getDefaultIsolationWidth(int scanSegment, int msLevel)const = 0;
 
