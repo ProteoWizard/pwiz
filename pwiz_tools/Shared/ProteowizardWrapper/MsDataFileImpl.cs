@@ -1108,18 +1108,46 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
-        private static MsPrecursor[] GetPrecursors(Spectrum spectrum)
+        private MsPrecursor[] GetPrecursors(Spectrum spectrum)
+        {
+            // return precursors with highest ms level
+            var precursorsByMsLevel = GetPrecursorsByMsLevel(spectrum);
+            if (precursorsByMsLevel.Count == 0)
+                return new MsPrecursor[0];
+            return precursorsByMsLevel[precursorsByMsLevel.Keys.Max()].ToArray();
+        }
+
+        public IDictionary<int, IList<MsPrecursor>> GetPrecursorsByMsLevel(int scanIndex)
+        {
+            using (var spectrum = SpectrumList.spectrum(scanIndex, false))
+            {
+                return GetPrecursorsByMsLevel(spectrum);
+            }
+        }
+
+        private static IDictionary<int, IList<MsPrecursor>> GetPrecursorsByMsLevel(Spectrum spectrum)
         {
             bool negativePolarity = NegativePolarity(spectrum);
-            return spectrum.precursors.Select(p =>
-                new MsPrecursor
-                    {
-                        PrecursorMz = GetPrecursorMz(p, negativePolarity),
-                        PrecursorCollisionEnergy = GetPrecursorCollisionEnergy(p),
-                        IsolationWindowTargetMz = GetSignedMz(GetIsolationWindowValue(p, CVID.MS_isolation_window_target_m_z), negativePolarity),
-                        IsolationWindowLower = GetIsolationWindowValue(p, CVID.MS_isolation_window_lower_offset),
-                        IsolationWindowUpper = GetIsolationWindowValue(p, CVID.MS_isolation_window_upper_offset),
-                    }).ToArray();
+            var result = new Dictionary<int, IList<MsPrecursor>>();
+            foreach(var p in spectrum.precursors)
+            {
+                int msLevel = (int) p.userParam("ms level").value;
+                var msPrecursor = new MsPrecursor()
+                {
+                    PrecursorMz = GetPrecursorMz(p, negativePolarity),
+                    PrecursorCollisionEnergy = GetPrecursorCollisionEnergy(p),
+                    IsolationWindowTargetMz = GetSignedMz(GetIsolationWindowValue(p, CVID.MS_isolation_window_target_m_z), negativePolarity),
+                    IsolationWindowLower = GetIsolationWindowValue(p, CVID.MS_isolation_window_lower_offset),
+                    IsolationWindowUpper = GetIsolationWindowValue(p, CVID.MS_isolation_window_upper_offset),
+                };
+
+                if (!result.ContainsKey(msLevel))
+                    result[msLevel] = new List<MsPrecursor>() {msPrecursor};
+                else
+                    result[msLevel].Add(msPrecursor);
+            }
+
+            return result;
         }
 
         private static MsPrecursor[] GetMs1Precursors(Spectrum spectrum)

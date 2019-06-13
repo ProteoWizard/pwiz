@@ -1847,7 +1847,7 @@ vector<double> ScanInfoImpl::getIsolationWidths() const
     {
 #ifndef _WIN64
         double isolationWidth;
-        checkResult(raw5->GetIsolationWidthForScanNum(scanNumber_, 0, &isolationWidth));
+        checkResult(rawfile_->raw_->GetIsolationWidthForScanNum(scanNumber_, 0, &isolationWidth));
         isolationWidths.resize(precursorMZs_.size(), isolationWidth);
 #else
         isolationWidths.resize(precursorMZs_.size(), filter_->GetIsolationWidth(0));
@@ -1856,19 +1856,17 @@ vector<double> ScanInfoImpl::getIsolationWidths() const
     }
 
 #ifndef _WIN64
-    IXRawfile5Ptr raw5 = (IXRawfile5Ptr) raw_;
-
     long msOrder;
-    checkResult(raw5->GetMSOrderForScanNum(scanNumber_, &msOrder));
+    checkResult(rawfile_->raw_->GetMSOrderForScanNum(scanNumber_, &msOrder));
     if (msOrder == 1)
         return isolationWidths;
 
     long numMSOrders;
-    checkResult(raw5->GetNumberOfMSOrdersFromScanNum(scanNumber_, &numMSOrders));
+    checkResult(rawfile_->raw_->GetNumberOfMSOrdersFromScanNum(scanNumber_, &numMSOrders));
     for (long i = 0; i < numMSOrders; i++)
     {
         double isolationWidth;
-        checkResult(raw5->GetIsolationWidthForScanNum(scanNumber_, i, &isolationWidth));
+        checkResult(rawfile_->raw_->GetIsolationWidthForScanNum(scanNumber_, i, &isolationWidth));
         isolationWidths.push_back(isolationWidth);
     }
 #else
