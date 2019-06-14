@@ -231,6 +231,7 @@ blib-test-build tiny-v2-msf : -o : output/tiny-v2.msf.blib : tiny-v2.msf.check z
 blib-test-build tiny-v2-filtered-pdResult : -o : output/tiny-v2-filtered.pdResult.blib : tiny-v2-filtered.pdResult.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tiny-v2-filtered.pdResult ;
 blib-test-build md_special_filtered-pdResult : --unicode -o : output/md_special_filtered.pdResult.blib : md_special_filtered.pdResult.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/md_special_filtered.pdResult ;
 blib-test-build pilot : --unicode -o : output/pilot.blib : pilot.check : $(TEST_INPUTS_PATH)/MB1_98_03.group.xml ;
+blib-test-build pilot-mzid : --unicode -o : output/pilot-mzid.blib : pilot-mzid.check : $(TEST_INPUTS_PATH)/ProtPilotTest.mzid ;
 
 # Test maxquant text file
 blib-test-build maxquant : --unicode -o -E -p@$(TEST_DATA_PATH)/mqpar1.xml : output/maxquant.blib : maxquant.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test.msms.txt ;
