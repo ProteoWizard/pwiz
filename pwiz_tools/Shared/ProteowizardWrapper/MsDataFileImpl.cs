@@ -1031,7 +1031,7 @@ namespace pwiz.ProteowizardWrapper
                         UserParam param = scan.userParam(USERPARAM_DRIFT_TIME); // support files with the original drift time UserParam
                         if (param.empty())
                             return IonMobilityValue.EMPTY;
-                        value =  param.timeInSeconds() * 1000.0;
+                        value = param.timeInSeconds() * 1000.0;
                     }
                     else
                         value = driftTime.timeInSeconds() * 1000.0;
@@ -1108,9 +1108,10 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
-        private static MsPrecursor[] GetPrecursors(Spectrum spectrum)
+        private MsPrecursor[] GetPrecursors(Spectrum spectrum)
         {
             bool negativePolarity = NegativePolarity(spectrum);
+            var ionMobility = GetIonMobility(spectrum);
             return spectrum.precursors.Select(p =>
                 new MsPrecursor
                     {
@@ -1119,12 +1120,14 @@ namespace pwiz.ProteowizardWrapper
                         IsolationWindowTargetMz = GetSignedMz(GetIsolationWindowValue(p, CVID.MS_isolation_window_target_m_z), negativePolarity),
                         IsolationWindowLower = GetIsolationWindowValue(p, CVID.MS_isolation_window_lower_offset),
                         IsolationWindowUpper = GetIsolationWindowValue(p, CVID.MS_isolation_window_upper_offset),
+                        PrecursorIonMobility = ionMobility
                     }).ToArray();
         }
 
-        private static MsPrecursor[] GetMs1Precursors(Spectrum spectrum)
+        private MsPrecursor[] GetMs1Precursors(Spectrum spectrum)
         {
             bool negativePolarity = NegativePolarity(spectrum);
+            var precursorIonMobility = GetIonMobility(spectrum);
             return spectrum.scanList.scans[0].scanWindows.Select(s =>
                 {
                     double windowStart = s.cvParam(CVID.MS_scan_window_lower_limit).value;
@@ -1134,7 +1137,8 @@ namespace pwiz.ProteowizardWrapper
                         {
                             IsolationWindowTargetMz = new SignedMz(windowStart + isolationWidth, negativePolarity),
                             IsolationWindowLower = isolationWidth,
-                            IsolationWindowUpper = isolationWidth
+                            IsolationWindowUpper = isolationWidth,
+                            PrecursorIonMobility = precursorIonMobility
                         };
                 }).ToArray();
         }
@@ -1298,6 +1302,7 @@ namespace pwiz.ProteowizardWrapper
         public SignedMz? IsolationWindowTargetMz { get; set; }
         public double? IsolationWindowUpper { get; set; } // Add this to IsolationWindowTargetMz to get window upper bound
         public double? IsolationWindowLower { get; set; } // Subtract this from IsolationWindowTargetMz to get window lower bound
+        public IonMobilityValue PrecursorIonMobility { get; set; }
         public SignedMz? IsolationMz
         {
             get

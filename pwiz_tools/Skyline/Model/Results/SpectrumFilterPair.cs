@@ -47,6 +47,7 @@ namespace pwiz.Skyline.Model.Results
             IonMobilityInfo = precursorTextId.IonMobility;
             MinIonMobilityValue = IonMobilityInfo.IsEmpty ? null : IonMobilityInfo.IonMobility.Mobility - (IonMobilityInfo.IonMobilityExtractionWindowWidth??0)/2;
             MaxIonMobilityValue = IonMobilityInfo.IsEmpty ? null : MinIonMobilityValue + (IonMobilityInfo.IonMobilityExtractionWindowWidth ?? 0);
+
             HighAccQ1 = highAccQ1;
             HighAccQ3 = highAccQ3;
 
@@ -158,6 +159,12 @@ namespace pwiz.Skyline.Model.Results
                 return null;
 
             return FilterSpectrumList(spectra, Ms2ProductFilters, HighAccQ3, useIonMobilityHighEnergyOffset);
+        }
+
+        public bool ContainsMzRange(int msLevel, double mzLow, double mzHigh)
+        {
+            return (msLevel == 1 && Ms1ProductFilters.Any(filter => !(filter.TargetMz - filter.FilterWidth / 2 > mzHigh || filter.TargetMz + filter.FilterWidth / 2 < mzLow))) ||
+                   (msLevel == 2 && Ms2ProductFilters.Any(filter => !(filter.TargetMz - filter.FilterWidth / 2 > mzHigh || filter.TargetMz + filter.FilterWidth / 2 < mzLow)));
         }
 
         /// <summary>
@@ -524,12 +531,17 @@ namespace pwiz.Skyline.Model.Results
                    IonMobilityInfo.IonMobility.Units == eIonMobilityUnits.compensation_V;
         }
 
-        public bool ContainsIonMobilityValue(IonMobilityValue ionMobility, double highEnergyOffset)
+        public bool ContainsIonMobilityValue(IonMobilityValue ionMobility, double offset)
+        {
+            return ContainsIonMobilityValue(ionMobility.Mobility, offset);
+        }
+
+        public bool ContainsIonMobilityValue(double? ionMobility, double offset)
         {
             if (!ionMobility.HasValue)
                 return true; // It doesn't NOT have the ion mobility, since there isn't one
-            return (!MinIonMobilityValue.HasValue || MinIonMobilityValue.Value+highEnergyOffset <= ionMobility.Mobility) &&
-                (!MaxIonMobilityValue.HasValue || MaxIonMobilityValue.Value+highEnergyOffset >= ionMobility.Mobility);
+            return (!MinIonMobilityValue.HasValue || MinIonMobilityValue.Value + offset <= ionMobility) &&
+                   (!MaxIonMobilityValue.HasValue || MaxIonMobilityValue.Value + offset >= ionMobility);
         }
 
         public IonMobilityFilter GetIonMobilityWindow()

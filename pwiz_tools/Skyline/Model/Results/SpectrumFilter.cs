@@ -59,6 +59,8 @@ namespace pwiz.Skyline.Model.Results
         private readonly double? _maxTime;  // Copied from _instrument.MaxTime
         private double _minFilterPairsRT; // Min of range of RT filter values across FilterPairs 
         private double _maxFilterPairsRT; // Max of range of RT filter values across FilterPairs
+        private double _minFilterPairsIM; // Min of range of IonMobility filter values across FilterPairs 
+        private double _maxFilterPairsIM; // Max of range of IonMobility filter values across FilterPairs
         private readonly SpectrumFilterPair[] _filterMzValues;
         private readonly Dictionary<double,SpectrumFilterPair[]> _filterMzValuesFAIMSDict; // FAIMS chromatogram extraction is a special case for non-contiguous scans
         private readonly SpectrumFilterPair[] _filterRTValues;
@@ -125,6 +127,7 @@ namespace pwiz.Skyline.Model.Results
                     _isHighAccMsFilter = !Equals(_fullScan.PrecursorMassAnalyzer,
                         FullScanMassAnalyzerType.qit);
 
+if (false) // TODO - get MattC's code to read TIC and BPC directly
                     if (!firstPass && !_isFAIMS)
                     {
                         var key = new PrecursorTextId(SignedMz.ZERO, null, null, ChromExtractor.summed);  // TIC
@@ -308,7 +311,7 @@ namespace pwiz.Skyline.Model.Results
 
             }
 
-            InitRTLimits();
+            InitIonMobilityAndRTLimits();
         }
 
         public bool ProvidesCollisionalCrossSectionConverter { get { return _ionMobilityFunctionsProvider != null;  } }
@@ -365,10 +368,12 @@ namespace pwiz.Skyline.Model.Results
         /// <summary>
         /// Determine min and max range across all retention time filters, if any
         /// </summary>
-        private void InitRTLimits()
+        private void InitIonMobilityAndRTLimits()
         {
             _maxFilterPairsRT = double.MaxValue;
             _minFilterPairsRT = double.MinValue;
+            _maxFilterPairsIM = double.MaxValue;
+            _minFilterPairsIM = double.MinValue;
             if (FilterPairs != null)
             {
                 double? maxRT = null;
@@ -390,6 +395,26 @@ namespace pwiz.Skyline.Model.Results
                     _maxFilterPairsRT = maxRT.Value;
                 if (minRT.HasValue && !IsMseData()) // For MSe data, just start from the beginning lest we drop in mid-cycle
                     _minFilterPairsRT = minRT.Value;
+
+                double? maxIM = null;
+                double? minIM = null;
+                foreach (var fp in FilterPairs)
+                {
+                    if (!fp.MaxIonMobilityValue.HasValue || !fp.MinIonMobilityValue.HasValue)
+                    {
+                        maxIM = null;
+                        minIM = null;
+                        break;
+                    }
+                    if (fp.MaxIonMobilityValue.Value > (maxIM ?? double.MinValue))
+                        maxIM = fp.MaxIonMobilityValue.Value;
+                    if (fp.MinIonMobilityValue.Value < (minIM ?? double.MaxValue))
+                        minIM = fp.MinIonMobilityValue.Value;
+                }
+                if (maxIM.HasValue)
+                    _maxFilterPairsIM = maxIM.Value;
+                if (minIM.HasValue)
+                    _minFilterPairsIM = minIM.Value;
             }
         }
 
@@ -398,10 +423,18 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private int CompareByRT(SpectrumFilterPair x, SpectrumFilterPair y)
         {
-            return 
+            return
                 !x.MaxTime.HasValue ? 1 :
                 !y.MaxTime.HasValue ? -1 :
                 x.MaxTime.Value.CompareTo(y.MaxTime.Value);
+        }
+
+        /// <summary>
+        /// Compare filter pairs by minimum ion mobility range.
+        /// </summary>
+        public static int CompareByIM(SpectrumFilterPair x, SpectrumFilterPair y)
+        {
+            return Nullable.Compare(x.MinIonMobilityValue, y.MinIonMobilityValue);
         }
 
         public bool IsFirstPass { get; private set; }
@@ -452,6 +485,18 @@ namespace pwiz.Skyline.Model.Results
             if ((!rtCheck.HasValue) || (rtCheck.Value == 0)) // Consider these both as meaning "unknown"
                 return false; // Can't reject an as-yet-unknown value
             return ((rtCheck.Value < _minFilterPairsRT || _maxFilterPairsRT < rtCheck.Value));
+        }
+
+        public bool IsOutsideIonMobilityRange(IonMobilityValue imCheck)
+        {
+            if (!imCheck.HasValue || imCheck.Mobility.Value == 0) // Consider these both as meaning "unknown"
+                return false; // Can't reject an as-yet-unknown value
+            return ((imCheck.Mobility.Value < _minFilterPairsIM || _maxFilterPairsIM < imCheck.Mobility.Value));
+        }
+
+        public bool HasIonMobilityRange
+        {
+            get { return _minFilterPairsIM != Double.MinValue; }
         }
 
         public bool IsMseData()
@@ -538,7 +583,7 @@ namespace pwiz.Skyline.Model.Results
                     mzHigh = Math.Max(mzHigh, win.IsolationMz.Value + halfIsolationWidth);
                 }
                 var width = mzHigh - mzLow;
-                isSimSpectrum = IsSimIsolation(new IsolationWindowFilter(new SignedMz(mzLow + width/2), width));
+                isSimSpectrum = IsSimIsolation(new IsolationWindowFilter(new SignedMz(mzLow + width/2), width, null));
             }
             return isSimSpectrum;
         }
@@ -679,17 +724,22 @@ namespace pwiz.Skyline.Model.Results
                              handlingType == IsolationScheme.SpecialHandlingType.OVERLAP_MULTIPLEXED ||
                              handlingType == IsolationScheme.SpecialHandlingType.FAST_OVERLAP;
             
-            foreach (var isoWin in GetIsolationWindows(spectra[0].Precursors))
+            foreach (var isoWin in GetIsolationWindows(spectra)) // here?
             {
                 foreach (var filterPair in FindFilterPairs(isoWin, _acquisitionMethod, ignoreIso))
                 {
                     if (!filterPair.ContainsRetentionTime(retentionTime.Value))
                         continue;
-                    var filteredSrmSpectrum = filterPair.FilterQ3SpectrumList(spectra, GetMseLevel() > 1 );
+                    var filteredSrmSpectrum = filterPair.FilterQ3SpectrumList(spectra, UseDriftTimeHighEnergyOffset());
                     if (filteredSrmSpectrum != null)
                         yield return filteredSrmSpectrum;
                 }
             }
+        }
+
+        private bool UseDriftTimeHighEnergyOffset()
+        {
+            return (_isWatersMse || _isAgilentMse) && _mseLevel > 1;
         }
 
         public bool HasProductFilterPairs(double? retentionTime, MsPrecursor[] precursors)
@@ -710,33 +760,55 @@ namespace pwiz.Skyline.Model.Results
                 {
                     if (!filterPair.ContainsRetentionTime(retentionTime.Value))
                         continue;
+                    if (!filterPair.ContainsIonMobilityValue(isoWin.IonMobility, 0))
+                        continue;
                     return true;
                 }
             }
             return false;
         }
 
+
+        private IEnumerable<IsolationWindowFilter> GetIsolationWindows(MsDataSpectrum[] spectra)
+        {
+            if (spectra.Length <= 1 || (spectra.Length > 1 && Equals(spectra[0].IonMobility, spectra[1].IonMobility)))
+            {
+                foreach (var iwf in GetIsolationWindows(spectra[0].Precursors))
+                    yield return iwf;
+            }
+            else
+            {
+                foreach (var spectrum in spectra)
+                {
+                    foreach (var iwf in GetIsolationWindows(spectrum.Precursors))
+                        yield return iwf;
+                }
+            }
+        }
+
         private IEnumerable<IsolationWindowFilter> GetIsolationWindows(IList<MsPrecursor> precursors)
         {
             // Waters MSe high-energy scans actually appear to be MS1 scans without
             // any isolation m/z.  So, use the instrument range.
-            if (_mseLevel > 0)
+            if (_mseLevel > 0 && precursors.All(p => p.IsolationMz == null))
             {
                 double isolationWidth = _instrument.MaxMz - _instrument.MinMz;
                 double isolationMz = _instrument.MinMz + isolationWidth / 2;
-                if (precursors.Any(p => p.PrecursorMz.HasValue && p.PrecursorMz.Value.IsNegative))
+                foreach (var precursor in precursors.Where(p => p.PrecursorMz.HasValue && p.PrecursorMz.Value.IsNegative))
                 {
-                    yield return new IsolationWindowFilter(new SignedMz(isolationMz, true), isolationWidth);
+                    var ionMobility = precursor.PrecursorIonMobility.Mobility;
+                    yield return new IsolationWindowFilter(new SignedMz(isolationMz, true), isolationWidth, ionMobility);
                 }
-                if (precursors.Any(p => !p.PrecursorMz.HasValue || !p.PrecursorMz.Value.IsNegative))
+                foreach (var precursor in precursors.Where(p => !p.PrecursorMz.HasValue || !p.PrecursorMz.Value.IsNegative))
                 {
-                    yield return new IsolationWindowFilter(new SignedMz(isolationMz, false), isolationWidth);
+                    var ionMobility = precursor.PrecursorIonMobility.Mobility;
+                    yield return new IsolationWindowFilter(new SignedMz(isolationMz, false), isolationWidth, ionMobility);
                 }
             }
             else if (precursors.Count > 0)
             {
                 foreach (var precursor in precursors)
-                    yield return new IsolationWindowFilter(precursor.IsolationMz, precursor.IsolationWidth);
+                    yield return new IsolationWindowFilter(precursor.IsolationMz, precursor.IsolationWidth, precursor.PrecursorIonMobility.Mobility);
             }
             else
             {
@@ -746,21 +818,24 @@ namespace pwiz.Skyline.Model.Results
 
         private struct IsolationWindowFilter
         {
-            public IsolationWindowFilter(SignedMz? isolationMz, double? isolationWidth) : this()
+            public IsolationWindowFilter(SignedMz? isolationMz, double? isolationWidth, double? ionMobility) : this()
             {
                 IsolationMz = isolationMz;
                 IsolationWidth = isolationWidth;
+                IonMobility = ionMobility;
             }
 
             public SignedMz? IsolationMz { get; private set; }
             public double? IsolationWidth { get; private set; }
+            public double? IonMobility { get; private set; }
 
             #region object overrides
 
             private bool Equals(IsolationWindowFilter other)
             {
                 return other.IsolationMz.Equals(IsolationMz) &&
-                    other.IsolationWidth.Equals(IsolationWidth);
+                    other.IsolationWidth.Equals(IsolationWidth) &&
+                    Equals(IonMobility, other.IonMobility);
             }
 
             public override bool Equals(object obj)
@@ -774,8 +849,10 @@ namespace pwiz.Skyline.Model.Results
             {
                 unchecked
                 {
-                    return (IsolationMz.GetHashCode() * 397) ^
-                        (IsolationWidth.HasValue ? IsolationWidth.Value.GetHashCode() : 0);
+                    var hashCode = IsolationMz.GetHashCode();
+                    hashCode = (hashCode * 397) ^ IsolationWidth.GetHashCode();
+                    hashCode = (hashCode * 397) ^ IonMobility.GetHashCode();
+                    return hashCode;
                 }
             }
 
@@ -807,7 +884,7 @@ namespace pwiz.Skyline.Model.Results
                 double? isoTargWidth = isoWin.IsolationWidth;
                 if (!ignoreIsolationScheme)
                 {
-                    CalcDiaIsolationValues(ref isoTargMz, ref isoTargWidth);
+                    CalcDiaIsolationValues(ref isoTargMz, ref isoTargWidth, isoWin.IonMobility);
                 }
                 if (isoTargWidth.HasValue)
                 {
@@ -817,8 +894,14 @@ namespace pwiz.Skyline.Model.Results
                     if (iFilter != -1)
                     {
                         while (iFilter < _filterMzValues.Length && CompareMz(isoTargMz,
-                            _filterMzValues[iFilter].Q1, isoTargWidth.Value) == 0)
-                            filterPairs.Add(_filterMzValues[iFilter++]);
+                                   _filterMzValues[iFilter].Q1, isoTargWidth.Value) == 0)
+                        {
+                            var spectrumFilterPair = _filterMzValues[iFilter++];
+                            if (spectrumFilterPair.ContainsIonMobilityValue(isoWin.IonMobility, 0))
+                            {
+                                filterPairs.Add(spectrumFilterPair);
+                            }
+                        }
                     }
                 }
             }
@@ -834,7 +917,7 @@ namespace pwiz.Skyline.Model.Results
 
                 // Isolation width for single is based on the instrument m/z match tolerance
                 var isoTargMz = isoWin.IsolationMz.Value;
-                var isoWinSingle = new IsolationWindowFilter(isoTargMz, _instrument.MzMatchTolerance * 2);
+                var isoWinSingle = new IsolationWindowFilter(isoTargMz, _instrument.MzMatchTolerance * 2, isoWin.IonMobility);
 
                 foreach (var filterPair in FindFilterPairs(isoWinSingle, FullScanAcquisitionMethod.DIA, true))
                 {
@@ -874,7 +957,8 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public void CalcDiaIsolationValues(ref SignedMz isolationTargetMz,
-                                            ref double? isolationWidth)
+                                            ref double? isolationWidth,
+                                            double? ionMobility)
         {
             double isolationWidthValue;
             var isolationScheme = _fullScan.IsolationScheme;
@@ -907,7 +991,7 @@ namespace pwiz.Skyline.Model.Results
                 var isolationWindow = isolationScheme.GetIsolationWindow(isolationTargetMz, _instrument.MzMatchTolerance);
                 if (isolationWindow == null)
                 {
-                    _filterPairDictionary[new IsolationWindowFilter(isolationTargetMz, isolationWidth)] = new List<SpectrumFilterPair>();
+                    _filterPairDictionary[new IsolationWindowFilter(isolationTargetMz, isolationWidth, ionMobility)] = new List<SpectrumFilterPair>();
                     isolationWidth = null;
                     return;
                 }

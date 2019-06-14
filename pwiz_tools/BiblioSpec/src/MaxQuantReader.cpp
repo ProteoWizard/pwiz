@@ -353,11 +353,11 @@ void MaxQuantReader::initEvidence()
     Verbosity::comment(V_DETAIL, "Parsing evidence file %s", evidenceFile.c_str());
     try
     {
-        ifstream evidence(evidenceFile);
+        ifstream evidence(evidenceFile.c_str());
         string line;
         vector<string> columns;
         getline(evidence, line);
-        split(columns, line, is_any_of("\t"));
+        boost::split(columns, line, boost::is_any_of("\t"));
         int col = 0;
         int colK0 = -1;
         int colCCS = -1;
@@ -384,7 +384,7 @@ void MaxQuantReader::initEvidence()
             getline(evidence, line);
             if (line.size() == 0)
                 break;
-            split(columns, line, is_any_of("\t"));
+            boost::split(columns, line, boost::is_any_of("\t"));
             if (colK0 >= 0)
                 K0_.push_back(boost::lexical_cast<double>(columns[colK0]));
             if (colCCS >= 0)
