@@ -583,7 +583,7 @@ if (false) // TODO - get MattC's code to read TIC and BPC directly
                     mzHigh = Math.Max(mzHigh, win.IsolationMz.Value + halfIsolationWidth);
                 }
                 var width = mzHigh - mzLow;
-                isSimSpectrum = IsSimIsolation(new IsolationWindowFilter(new SignedMz(mzLow + width/2), width, null));
+                isSimSpectrum = IsSimIsolation(new IsolationWindowFilter(new SignedMz(mzLow + width/2), width));
             }
             return isSimSpectrum;
         }
@@ -724,7 +724,8 @@ if (false) // TODO - get MattC's code to read TIC and BPC directly
                              handlingType == IsolationScheme.SpecialHandlingType.OVERLAP_MULTIPLEXED ||
                              handlingType == IsolationScheme.SpecialHandlingType.FAST_OVERLAP;
             
-            foreach (var isoWin in GetIsolationWindows(spectra)) // here?
+Assume.IsFalse((spectra.Select(s => s.Precursors.FirstOrDefault().IsolationWindowTargetMz).Distinct().Skip(1).Any()));
+            foreach (var isoWin in GetIsolationWindows(spectra[0].Precursors)) // GetIsolationWindows(spectra)) // here?
             {
                 foreach (var filterPair in FindFilterPairs(isoWin, _acquisitionMethod, ignoreIso))
                 {
@@ -760,30 +761,10 @@ if (false) // TODO - get MattC's code to read TIC and BPC directly
                 {
                     if (!filterPair.ContainsRetentionTime(retentionTime.Value))
                         continue;
-                    if (!filterPair.ContainsIonMobilityValue(isoWin.IonMobility, 0))
-                        continue;
                     return true;
                 }
             }
             return false;
-        }
-
-
-        private IEnumerable<IsolationWindowFilter> GetIsolationWindows(MsDataSpectrum[] spectra)
-        {
-            if (spectra.Length <= 1 || (spectra.Length > 1 && Equals(spectra[0].IonMobility, spectra[1].IonMobility)))
-            {
-                foreach (var iwf in GetIsolationWindows(spectra[0].Precursors))
-                    yield return iwf;
-            }
-            else
-            {
-                foreach (var spectrum in spectra)
-                {
-                    foreach (var iwf in GetIsolationWindows(spectrum.Precursors))
-                        yield return iwf;
-                }
-            }
         }
 
         private IEnumerable<IsolationWindowFilter> GetIsolationWindows(IList<MsPrecursor> precursors)
@@ -794,21 +775,19 @@ if (false) // TODO - get MattC's code to read TIC and BPC directly
             {
                 double isolationWidth = _instrument.MaxMz - _instrument.MinMz;
                 double isolationMz = _instrument.MinMz + isolationWidth / 2;
-                foreach (var precursor in precursors.Where(p => p.PrecursorMz.HasValue && p.PrecursorMz.Value.IsNegative))
+                if (precursors.Any(p => p.PrecursorMz.HasValue && p.PrecursorMz.Value.IsNegative))
                 {
-                    var ionMobility = precursor.PrecursorIonMobility.Mobility;
-                    yield return new IsolationWindowFilter(new SignedMz(isolationMz, true), isolationWidth, ionMobility);
+                    yield return new IsolationWindowFilter(new SignedMz(isolationMz, true), isolationWidth);
                 }
-                foreach (var precursor in precursors.Where(p => !p.PrecursorMz.HasValue || !p.PrecursorMz.Value.IsNegative))
+                if (precursors.Any(p => !p.PrecursorMz.HasValue || !p.PrecursorMz.Value.IsNegative))
                 {
-                    var ionMobility = precursor.PrecursorIonMobility.Mobility;
-                    yield return new IsolationWindowFilter(new SignedMz(isolationMz, false), isolationWidth, ionMobility);
+                    yield return new IsolationWindowFilter(new SignedMz(isolationMz, false), isolationWidth);
                 }
             }
             else if (precursors.Count > 0)
             {
                 foreach (var precursor in precursors)
-                    yield return new IsolationWindowFilter(precursor.IsolationMz, precursor.IsolationWidth, precursor.PrecursorIonMobility.Mobility);
+                    yield return new IsolationWindowFilter(precursor.IsolationMz, precursor.IsolationWidth);
             }
             else
             {
@@ -818,24 +797,21 @@ if (false) // TODO - get MattC's code to read TIC and BPC directly
 
         private struct IsolationWindowFilter
         {
-            public IsolationWindowFilter(SignedMz? isolationMz, double? isolationWidth, double? ionMobility) : this()
+            public IsolationWindowFilter(SignedMz? isolationMz, double? isolationWidth) : this()
             {
                 IsolationMz = isolationMz;
                 IsolationWidth = isolationWidth;
-                IonMobility = ionMobility;
             }
 
             public SignedMz? IsolationMz { get; private set; }
             public double? IsolationWidth { get; private set; }
-            public double? IonMobility { get; private set; }
 
             #region object overrides
 
             private bool Equals(IsolationWindowFilter other)
             {
                 return other.IsolationMz.Equals(IsolationMz) &&
-                    other.IsolationWidth.Equals(IsolationWidth) &&
-                    Equals(IonMobility, other.IonMobility);
+                    other.IsolationWidth.Equals(IsolationWidth);
             }
 
             public override bool Equals(object obj)
@@ -849,10 +825,8 @@ if (false) // TODO - get MattC's code to read TIC and BPC directly
             {
                 unchecked
                 {
-                    var hashCode = IsolationMz.GetHashCode();
-                    hashCode = (hashCode * 397) ^ IsolationWidth.GetHashCode();
-                    hashCode = (hashCode * 397) ^ IonMobility.GetHashCode();
-                    return hashCode;
+                    return (IsolationMz.GetHashCode() * 397) ^
+                        (IsolationWidth.HasValue ? IsolationWidth.Value.GetHashCode() : 0);
                 }
             }
 
@@ -884,7 +858,7 @@ if (false) // TODO - get MattC's code to read TIC and BPC directly
                 double? isoTargWidth = isoWin.IsolationWidth;
                 if (!ignoreIsolationScheme)
                 {
-                    CalcDiaIsolationValues(ref isoTargMz, ref isoTargWidth, isoWin.IonMobility);
+                    CalcDiaIsolationValues(ref isoTargMz, ref isoTargWidth);
                 }
                 if (isoTargWidth.HasValue)
                 {
@@ -895,13 +869,7 @@ if (false) // TODO - get MattC's code to read TIC and BPC directly
                     {
                         while (iFilter < _filterMzValues.Length && CompareMz(isoTargMz,
                                    _filterMzValues[iFilter].Q1, isoTargWidth.Value) == 0)
-                        {
-                            var spectrumFilterPair = _filterMzValues[iFilter++];
-                            if (spectrumFilterPair.ContainsIonMobilityValue(isoWin.IonMobility, 0))
-                            {
-                                filterPairs.Add(spectrumFilterPair);
-                            }
-                        }
+                            filterPairs.Add(_filterMzValues[iFilter++]);
                     }
                 }
             }
@@ -917,7 +885,7 @@ if (false) // TODO - get MattC's code to read TIC and BPC directly
 
                 // Isolation width for single is based on the instrument m/z match tolerance
                 var isoTargMz = isoWin.IsolationMz.Value;
-                var isoWinSingle = new IsolationWindowFilter(isoTargMz, _instrument.MzMatchTolerance * 2, isoWin.IonMobility);
+                var isoWinSingle = new IsolationWindowFilter(isoTargMz, _instrument.MzMatchTolerance * 2);
 
                 foreach (var filterPair in FindFilterPairs(isoWinSingle, FullScanAcquisitionMethod.DIA, true))
                 {
@@ -957,8 +925,7 @@ if (false) // TODO - get MattC's code to read TIC and BPC directly
         }
 
         public void CalcDiaIsolationValues(ref SignedMz isolationTargetMz,
-                                            ref double? isolationWidth,
-                                            double? ionMobility)
+                                            ref double? isolationWidth)
         {
             double isolationWidthValue;
             var isolationScheme = _fullScan.IsolationScheme;
@@ -991,7 +958,7 @@ if (false) // TODO - get MattC's code to read TIC and BPC directly
                 var isolationWindow = isolationScheme.GetIsolationWindow(isolationTargetMz, _instrument.MzMatchTolerance);
                 if (isolationWindow == null)
                 {
-                    _filterPairDictionary[new IsolationWindowFilter(isolationTargetMz, isolationWidth, ionMobility)] = new List<SpectrumFilterPair>();
+                    _filterPairDictionary[new IsolationWindowFilter(isolationTargetMz, isolationWidth)] = new List<SpectrumFilterPair>();
                     isolationWidth = null;
                     return;
                 }
