@@ -23,6 +23,8 @@ namespace KeepResx
             @"skyline\executables\skylinerunner\*",
             @"skyline\executables\tools\exampleargcollector\*",
             @"skyline\executables\tools\exampleinteractivetool\*",
+            @"skyline\executables\tools\TFExport\TFExportTool\TFExportTool\Properties\Resources.resx",
+            @"skyline\executables\tools\XLTCalc\c#\SkylineIntegration\Properties\Resources.resx",
             @"skyline\controls\startup\tutoriallinkresources.resx",
             @"skyline\skylinenightly\*",
             @"skyline\skylinetester\*",
