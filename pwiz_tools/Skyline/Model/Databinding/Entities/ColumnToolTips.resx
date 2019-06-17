@@ -130,6 +130,12 @@ in the document.</value>
 first internal standard label type, before version 0.7 this was always light/heavy, and
 appeared on the heavy transitions.</value>
   </data>
+  <data name="AttributeAreaProportion">
+    <value>The ratio of the normalized area to the sum of the normalized areas of all of the other peptides or molecules in the document that have the same Attribute Area Proportion.</value>
+  </data>
+  <data name="AttributeGroupId">
+    <value>Affects the grouping of peptides or molecules in the calculation of Attribute Area Proportion.</value>
+  </data>
   <data name="AutoSelectMolecules">
     <value>If true, then Skyline will automatically add or remove molecules from the Molecule List based on the current settings.</value>
   </data>

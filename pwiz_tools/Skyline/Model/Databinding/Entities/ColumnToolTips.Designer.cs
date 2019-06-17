@@ -155,6 +155,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The ratio of the normalized area to the sum of the normalized areas of all of the other peptides or molecules in the document that have the same Attribute Area Proportion..
+        /// </summary>
+        public static string AttributeAreaProportion {
+            get {
+                return ResourceManager.GetString("AttributeAreaProportion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Affects the grouping of peptides or molecules in the calculation of Attribute Area Proportion..
+        /// </summary>
+        public static string AttributeGroupId {
+            get {
+                return ResourceManager.GetString("AttributeGroupId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Id of the detailed message.
         /// </summary>
         public static string AuditLogDetailRowId {
