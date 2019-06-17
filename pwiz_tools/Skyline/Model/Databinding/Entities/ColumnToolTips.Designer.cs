@@ -301,7 +301,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Name of the batch that this replicate belongs to. The calibration curve for a particular replicate will be .
+        ///   Looks up a localized string similar to Name of the batch that this replicate belongs to. The calibration curve for a particular replicate
+        ///will be calculated using the subset of external standards with the same batch name..
         /// </summary>
         public static string BatchName {
             get {
@@ -1780,7 +1781,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A free text not associated with the molecule list..
+        ///   Looks up a localized string similar to A free text note associated with the molecule list..
         /// </summary>
         public static string MoleculeListNote {
             get {

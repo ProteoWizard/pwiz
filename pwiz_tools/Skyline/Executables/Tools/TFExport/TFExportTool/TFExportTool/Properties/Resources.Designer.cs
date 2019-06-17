@@ -19,7 +19,7 @@ namespace TFExportTool.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -57,6 +57,62 @@ namespace TFExportTool.Properties {
             }
             set {
                 resourceCulture = value;
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon icon {
+            get {
+                object obj = ResourceManager.GetObject("icon", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to CSV (Comma delimited) (*.csv)|*.csv.
+        /// </summary>
+        internal static string Program_Main_CSV__Comma_delimited_____csv____csv {
+            get {
+                return ResourceManager.GetString("Program_Main_CSV__Comma_delimited_____csv____csv", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: {0}.
+        /// </summary>
+        internal static string Program_Main_Error___0_ {
+            get {
+                return ResourceManager.GetString("Program_Main_Error___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failure reading the report file {0}..
+        /// </summary>
+        internal static string Program_Main_Failure_reading_the_report_file__0__ {
+            get {
+                return ResourceManager.GetString("Program_Main_Failure_reading_the_report_file__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File saved to {0}..
+        /// </summary>
+        internal static string Program_Main_File_saved_to__0__ {
+            get {
+                return ResourceManager.GetString("Program_Main_File_saved_to__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missing report file path argument from Skyline, try re-installing TFExport..
+        /// </summary>
+        internal static string Program_Main_Missing_report_file_path_argument_from_Skyline__try_re_installing_TFExport_ {
+            get {
+                return ResourceManager.GetString("Program_Main_Missing_report_file_path_argument_from_Skyline__try_re_installing_TF" +
+                        "Export_", resourceCulture);
             }
         }
     }

@@ -172,7 +172,8 @@ integration boundaries and the chromatogram for the transition peak.</value>
     <value>Lower limit of quantification calculated using the subset of external standard replicates that have the same Batch Name as this replicate.</value>
   </data>
   <data name="BatchName">
-    <value>Name of the batch that this replicate belongs to. The calibration curve for a particular replicate will be </value>
+    <value>Name of the batch that this replicate belongs to. The calibration curve for a particular replicate
+will be calculated using the subset of external standards with the same batch name.</value>
   </data>
   <data name="BeginPos">
     <value>The position of the first (N-terminal) amino acid of the peptide within its
@@ -651,7 +652,7 @@ modified on disk</value>
     <value>The name of the molecule list.</value>
   </data>
   <data name="MoleculeListNote">
-    <value>A free text not associated with the molecule list.</value>
+    <value>A free text note associated with the molecule list.</value>
   </data>
   <data name="MoleculeList">
     <value>A grouping of molecules in a Skyline document.</value>
