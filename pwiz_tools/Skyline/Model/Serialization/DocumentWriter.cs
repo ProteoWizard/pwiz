@@ -37,6 +37,7 @@ namespace pwiz.Skyline.Model.Serialization
     {
         public DocumentWriter(SrmDocument document, SkylineVersion skylineVersion)
         {
+            document = CalculatedAnnotations.UpdateDocument(document);
             Settings = document.Settings;
             Document = document;
             SkylineVersion = skylineVersion;

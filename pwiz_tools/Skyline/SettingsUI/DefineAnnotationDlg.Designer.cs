@@ -28,6 +28,7 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DefineAnnotationDlg));
             this.label1 = new System.Windows.Forms.Label();
             this.tbxName = new System.Windows.Forms.TextBox();
@@ -39,6 +40,13 @@ namespace pwiz.Skyline.SettingsUI
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.label4 = new System.Windows.Forms.Label();
+            this.btnAutoCalculate = new System.Windows.Forms.Button();
+            this.tbxExpression = new System.Windows.Forms.TextBox();
+            this.btnClearAutocalculate = new System.Windows.Forms.Button();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.imageList1 = new System.Windows.Forms.ImageList(this.components);
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
+            this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // label1
@@ -101,12 +109,48 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.label4, "label4");
             this.label4.Name = "label4";
             // 
+            // btnAutoCalculate
+            // 
+            resources.ApplyResources(this.btnAutoCalculate, "btnAutoCalculate");
+            this.btnAutoCalculate.Name = "btnAutoCalculate";
+            this.btnAutoCalculate.UseVisualStyleBackColor = true;
+            this.btnAutoCalculate.Click += new System.EventHandler(this.btnAutoCalculate_Click);
+            // 
+            // tbxExpression
+            // 
+            resources.ApplyResources(this.tbxExpression, "tbxExpression");
+            this.tbxExpression.Name = "tbxExpression";
+            this.tbxExpression.ReadOnly = true;
+            // 
+            // btnClearAutocalculate
+            // 
+            resources.ApplyResources(this.btnClearAutocalculate, "btnClearAutocalculate");
+            this.btnClearAutocalculate.ImageList = this.imageList1;
+            this.btnClearAutocalculate.Name = "btnClearAutocalculate";
+            this.btnClearAutocalculate.UseVisualStyleBackColor = true;
+            this.btnClearAutocalculate.Click += new System.EventHandler(this.btnClearAutocalculate_Click);
+            // 
+            // panel1
+            // 
+            this.panel1.Controls.Add(this.tbxExpression);
+            this.panel1.Controls.Add(this.btnClearAutocalculate);
+            this.panel1.Controls.Add(this.btnAutoCalculate);
+            resources.ApplyResources(this.panel1, "panel1");
+            this.panel1.Name = "panel1";
+            // 
+            // imageList1
+            // 
+            this.imageList1.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageList1.ImageStream")));
+            this.imageList1.TransparentColor = System.Drawing.Color.Magenta;
+            this.imageList1.Images.SetKeyName(0, "Delete.bmp");
+            // 
             // DefineAnnotationDlg
             // 
             this.AcceptButton = this.btnOK;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.panel1);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOK);
@@ -121,6 +165,9 @@ namespace pwiz.Skyline.SettingsUI
             this.MinimizeBox = false;
             this.Name = "DefineAnnotationDlg";
             this.ShowInTaskbar = false;
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
+            this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -138,5 +185,10 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Button btnAutoCalculate;
+        private System.Windows.Forms.TextBox tbxExpression;
+        private System.Windows.Forms.Button btnClearAutocalculate;
+        private System.Windows.Forms.ImageList imageList1;
+        private System.Windows.Forms.Panel panel1;
     }
 }

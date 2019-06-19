@@ -736,6 +736,7 @@
     <xs:attribute name="targets" type="annotation_target_type"/>
     <xs:attribute name="type" type="data_settings_annotation_type"/>
     <xs:attribute name="lookup" type="xs:string"/>
+    <xs:attribute name="expression" type="xs:string"/>
   </xs:complexType>
   <xs:complexType name="doc_rt_alignments_type">
     <xs:sequence>

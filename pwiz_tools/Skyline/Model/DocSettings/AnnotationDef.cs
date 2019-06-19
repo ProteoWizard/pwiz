@@ -89,6 +89,14 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return ChangeProp(ImClone(this), im => im.Lookup = string.IsNullOrEmpty(lookup) ? null : lookup);
         }
+
+        public string Expression { get; private set; }
+
+        public AnnotationDef ChangeExpression(string expression)
+        {
+            return ChangeProp(ImClone(this),
+                im => im.Expression = string.IsNullOrEmpty(expression) ? null : expression);
+        }
         public Type ValueType
         {
             get
@@ -184,6 +192,7 @@ namespace pwiz.Skyline.Model.DocSettings
             targets,
             type,
             lookup,
+            expression,
         }
         private enum El
         {
@@ -203,6 +212,7 @@ namespace pwiz.Skyline.Model.DocSettings
             Type = TypeSafeEnum.ValidateOrDefault(reader.GetEnumAttribute(Attr.type, AnnotationType.text),
                 AnnotationType.text);
             Lookup = reader.GetAttribute(Attr.lookup);
+            Expression = reader.GetAttribute(Attr.expression);
             var items = new List<string>();
             if (reader.IsEmptyElement)
             {
@@ -229,6 +239,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             writer.WriteAttribute(Attr.type, Type);
             writer.WriteAttributeIfString(Attr.lookup, Lookup);
+            writer.WriteAttributeIfString(Attr.expression, Expression);
             foreach (var value in Items)
             {
                 writer.WriteElementString(El.value, value);

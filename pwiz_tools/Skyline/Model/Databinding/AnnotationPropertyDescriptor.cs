@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Model.Databinding
     public class AnnotationPropertyDescriptor : PropertyDescriptor
     {
         private bool _isValid;
-        
+       
         public AnnotationPropertyDescriptor(SkylineDataSchema dataSchema, AnnotationDef annotationDef, bool isValid) 
             : this(dataSchema, annotationDef, GetAttributes(annotationDef))
         {
@@ -60,6 +60,7 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 return null;
             }
+
             return skylineDocNode.GetAnnotation(AnnotationDef);
         }
 
@@ -93,7 +94,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         public override bool IsReadOnly
         {
-            get { return !_isValid; }
+            get { return !_isValid || !string.IsNullOrEmpty(AnnotationDef.Expression); }
         }
 
         public override Type PropertyType

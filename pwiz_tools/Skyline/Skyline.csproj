@@ -389,6 +389,7 @@
     <Compile Include="Model\Databinding\RowActions\DeleteNodesAction.cs" />
     <Compile Include="Model\Databinding\RowActions\RemovePeaksAction.cs" />
     <Compile Include="Model\Databinding\RowActions\RowAction.cs" />
+    <Compile Include="Model\DocSettings\CalculatedAnnotations.cs" />
     <Compile Include="Model\ElementLocators\ElementLocator.cs" />
     <Compile Include="Model\ElementLocators\ListRef.cs" />
     <Compile Include="Model\DocSettings\FullScanAcquisitionMethod.cs" />
@@ -490,6 +491,12 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\AutoCalculateAnnotationDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\AutoCalculateAnnotationDlg.Designer.cs">
+      <DependentUpon>AutoCalculateAnnotationDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Util\UiModes.cs" />
     <Compile Include="SettingsUI\IonMobility\UseSpectralLibraryIonMobilityValuesControl.cs">
@@ -2958,6 +2965,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\AddRetentionTimePredictorDlg.zh-CHS.resx">
       <DependentUpon>AddRetentionTimePredictorDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\AutoCalculateAnnotationDlg.resx">
+      <DependentUpon>AutoCalculateAnnotationDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\BuildBackgroundProteomeDlg.ja.resx">
       <DependentUpon>BuildBackgroundProteomeDlg.cs</DependentUpon>

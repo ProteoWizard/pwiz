@@ -20,8 +20,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.DataBinding;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -69,6 +72,7 @@ namespace pwiz.Skyline.SettingsUI
                 AnnotationName = string.Empty;
                 AnnotationType = AnnotationDef.AnnotationType.text;
                 AnnotationTargets = AnnotationDef.AnnotationTargetSet.EMPTY;
+                tbxExpression.Text = string.Empty;
                 Items = new string[0];
             }
             else
@@ -77,6 +81,7 @@ namespace pwiz.Skyline.SettingsUI
                 ListPropertyType = annotationDef.ListPropertyType;
                 AnnotationTargets = annotationDef.AnnotationTargets;
                 Items = annotationDef.Items;
+                tbxExpression.Text = annotationDef.Expression ?? string.Empty;
             }
         }
 
@@ -156,7 +161,8 @@ namespace pwiz.Skyline.SettingsUI
 
         public AnnotationDef GetAnnotationDef()
         {
-            return new AnnotationDef(AnnotationName, AnnotationTargets, ListPropertyType, Items);
+            return new AnnotationDef(AnnotationName, AnnotationTargets, ListPropertyType, Items)
+                .ChangeExpression(tbxExpression.Text);
         }
 
         private void comboType_SelectedIndexChanged(object sender, EventArgs e)
@@ -211,6 +217,36 @@ namespace pwiz.Skyline.SettingsUI
             {
                 return Helpers.PeptideToMoleculeTextMapper.Translate(AnnotationDef.AnnotationTargetPluralName(AnnotationTarget), ModeUI);
             }
+        }
+
+        private void btnAutoCalculate_Click(object sender, EventArgs e)
+        {
+            var annotationTargets = AnnotationTargets;
+            if (annotationTargets.Count != 1)
+            {
+                MessageDlg.Show(this, "Only annotations that apply to exactly one element type can be autocalculated.");
+                checkedListBoxAppliesTo.Focus();
+                return;
+            }
+
+            using (var autoCalculateDlg = new AutoCalculateAnnotationDlg())
+            {
+                autoCalculateDlg.RootColumnType = CalculatedAnnotations.RowTypeFromAnnotationTarget(annotationTargets.First());
+                if (!string.IsNullOrEmpty(tbxExpression.Text))
+                {
+                    autoCalculateDlg.PropertyPath = PropertyPath.Parse(tbxExpression.Text);
+                }
+
+                if (autoCalculateDlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    tbxExpression.Text = autoCalculateDlg.PropertyPath?.ToString() ?? string.Empty;
+                }
+            }
+        }
+
+        private void btnClearAutocalculate_Click(object sender, EventArgs e)
+        {
+            tbxExpression.Text = string.Empty;
         }
     }
 }

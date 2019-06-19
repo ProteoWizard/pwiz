@@ -37,6 +37,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         private ICollection<PropertyPath> _checkedColumns = new PropertyPath[0];
         private IViewEditor _viewEditor;
         private bool _showHiddenFields;
+        private bool _hideCollections;
         private static readonly Image[] ImagelistImages =
         {
             Resources.DataColumn,
@@ -157,12 +158,34 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                     return;
                 }
                 _showHiddenFields = value;
-                Nodes.Clear();
-                var rootColumnOld = _rootColumn;
-                _rootColumn = null;
-                RootColumn = rootColumnOld;
+                RebuildNodeTree();
             }
         }
+
+        [DefaultValue(false)]
+        public bool HideCollections
+        {
+            get { return _hideCollections; }
+            set
+            {
+                if (HideCollections == value)
+                {
+                    return;
+                }
+
+                _hideCollections = value;
+                RebuildNodeTree();
+            }
+        }
+
+        private void RebuildNodeTree()
+        {
+            Nodes.Clear();
+            var rootColumnOld = _rootColumn;
+            _rootColumn = null;
+            RootColumn = rootColumnOld;
+        }
+
         /// <summary>
         /// Returns the column associated with the node in the tree.
         /// This is the column which is the parent of the child nodes in
@@ -386,6 +409,10 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                 // ReSharper disable once ConvertIfStatementToNullCoalescingExpression
                 if (null != collectionColumn)
                 {
+                    if (HideCollections)
+                    {
+                        continue;
+                    }
                     result.Add(collectionColumn);
                 }
                 else
