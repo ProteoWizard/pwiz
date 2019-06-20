@@ -292,7 +292,8 @@ namespace pwiz.Skyline.Controls
 
         private void timerUpdate_Tick(object sender, EventArgs e)
         {
-            if (_progressValue == -1)
+            var progressValue = _progressValue;
+            if (progressValue == -1)
             {
                 progressBar.Style = ProgressBarStyle.Marquee;
                 UpdateTaskbarProgress(TaskbarProgress.TaskbarStates.Indeterminate, null);
@@ -300,7 +301,7 @@ namespace pwiz.Skyline.Controls
             else
             {
                 progressBar.Style = ProgressBarStyle.Continuous;
-                progressBar.Value = _progressValue;
+                progressBar.Value = progressValue;
                 UpdateTaskbarProgress(TaskbarProgress.TaskbarStates.Normal, progressBar.Value);
             }
 
