@@ -654,7 +654,7 @@ namespace pwiz.Skyline.Controls.Startup
             Settings.Default.ShowStartupForm = checkBoxShowStartup.Checked;
             if (DialogResult.Cancel == DialogResult)
             {
-                Settings.Default.Save();
+                Settings.Default.SaveWithoutExceptions();
             }
         }
 
