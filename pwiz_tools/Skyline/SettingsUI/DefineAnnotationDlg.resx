@@ -147,7 +147,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>4</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="tbxName.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -172,10 +172,10 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;tbxName.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>3</value>
   </data>
   <data name="comboType.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 79</value>
+    <value>6, 23</value>
   </data>
   <data name="comboType.Size" type="System.Drawing.Size, System.Drawing">
     <value>134, 21</value>
@@ -190,16 +190,16 @@
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboType.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>tabPageNormal</value>
   </data>
   <data name="&gt;&gt;comboType.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>1</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 63</value>
+    <value>6, 7</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
     <value>34, 13</value>
@@ -217,10 +217,10 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>tabPageNormal</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>0</value>
   </data>
   <data name="tbxValues.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -229,13 +229,13 @@
     <value>False</value>
   </data>
   <data name="tbxValues.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 126</value>
+    <value>3, 63</value>
   </data>
   <data name="tbxValues.Multiline" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="tbxValues.Size" type="System.Drawing.Size, System.Drawing">
-    <value>333, 127</value>
+    <value>319, 108</value>
   </data>
   <data name="tbxValues.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -247,16 +247,16 @@
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tbxValues.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>tabPageNormal</value>
   </data>
   <data name="&gt;&gt;tbxValues.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>3</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 110</value>
+    <value>3, 47</value>
   </data>
   <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
     <value>42, 13</value>
@@ -274,19 +274,19 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label3.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>tabPageNormal</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>4</value>
   </data>
   <data name="checkedListBoxAppliesTo.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left, Right</value>
   </data>
   <data name="checkedListBoxAppliesTo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 280</value>
+    <value>3, 190</value>
   </data>
   <data name="checkedListBoxAppliesTo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>333, 109</value>
+    <value>319, 139</value>
   </data>
   <data name="checkedListBoxAppliesTo.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -298,10 +298,10 @@
     <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;checkedListBoxAppliesTo.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>tabPageNormal</value>
   </data>
   <data name="&gt;&gt;checkedListBoxAppliesTo.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="btnOK.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -328,7 +328,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOK.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>2</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -355,7 +355,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>1</value>
   </data>
   <data name="label4.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -364,7 +364,7 @@
     <value>True</value>
   </data>
   <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 264</value>
+    <value>3, 174</value>
   </data>
   <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
     <value>60, 13</value>
@@ -382,73 +382,10 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label4.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>tabPageNormal</value>
   </data>
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="btnAutoCalculate.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="btnAutoCalculate.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="btnAutoCalculate.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
-  </data>
-  <data name="btnAutoCalculate.Size" type="System.Drawing.Size, System.Drawing">
-    <value>91, 23</value>
-  </data>
-  <data name="btnAutoCalculate.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
-  </data>
-  <data name="btnAutoCalculate.Text" xml:space="preserve">
-    <value>Autocalculate...</value>
-  </data>
-  <data name="&gt;&gt;btnAutoCalculate.Name" xml:space="preserve">
-    <value>btnAutoCalculate</value>
-  </data>
-  <data name="&gt;&gt;btnAutoCalculate.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnAutoCalculate.Parent" xml:space="preserve">
-    <value>panel1</value>
-  </data>
-  <data name="&gt;&gt;btnAutoCalculate.ZOrder" xml:space="preserve">
     <value>2</value>
-  </data>
-  <data name="tbxExpression.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="tbxExpression.Location" type="System.Drawing.Point, System.Drawing">
-    <value>91, 0</value>
-  </data>
-  <data name="tbxExpression.Size" type="System.Drawing.Size, System.Drawing">
-    <value>207, 20</value>
-  </data>
-  <data name="tbxExpression.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
-  </data>
-  <data name="&gt;&gt;tbxExpression.Name" xml:space="preserve">
-    <value>tbxExpression</value>
-  </data>
-  <data name="&gt;&gt;tbxExpression.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tbxExpression.Parent" xml:space="preserve">
-    <value>panel1</value>
-  </data>
-  <data name="&gt;&gt;tbxExpression.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="btnClearAutocalculate.AccessibleName" xml:space="preserve">
-    <value>Clear</value>
-  </data>
-  <data name="btnClearAutocalculate.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Right</value>
-  </data>
-  <data name="btnClearAutocalculate.ImageIndex" type="System.Int32, mscorlib">
-    <value>0</value>
   </data>
   <metadata name="imageList1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>155, 17</value>
@@ -458,7 +395,7 @@
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAABI
-        CAAAAk1TRnQBSQFMAwEBAAEIAQABCAEAARABAAEQAQAE/wEJAQAI/wFCAU0BNgEEBgABNgEEAgABKAMA
+        CAAAAk1TRnQBSQFMAwEBAAEYAQABGAEAARABAAEQAQAE/wEJAQAI/wFCAU0BNgEEBgABNgEEAgABKAMA
         AUADAAEQAwABAQEAAQgGAAEEGAABgAIAAYADAAKAAQABgAMAAYABAAGAAQACgAIAA8ABAAHAAdwBwAEA
         AfABygGmAQABMwUAATMBAAEzAQABMwEAAjMCAAMWAQADHAEAAyIBAAMpAQADVQEAA00BAANCAQADOQEA
         AYABfAH/AQACUAH/AQABkwEAAdYBAAH/AewBzAEAAcYB1gHvAQAB1gLnAQABkAGpAa0CAAH/ATMDAAFm
@@ -496,46 +433,163 @@
         AYABgwYAAQEBwwYAAQMB4wYAAQcB/wYACw==
 </value>
   </data>
-  <data name="btnClearAutocalculate.Location" type="System.Drawing.Point, System.Drawing">
-    <value>298, 0</value>
+  <data name="tabControl1.Appearance" type="System.Windows.Forms.TabAppearance, System.Windows.Forms">
+    <value>Buttons</value>
   </data>
-  <data name="btnClearAutocalculate.Size" type="System.Drawing.Size, System.Drawing">
-    <value>34, 23</value>
+  <data name="tabPageNormal.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 25</value>
   </data>
-  <data name="btnClearAutocalculate.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+  <data name="tabPageNormal.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
   </data>
-  <data name="&gt;&gt;btnClearAutocalculate.Name" xml:space="preserve">
-    <value>btnClearAutocalculate</value>
+  <data name="tabPageNormal.Size" type="System.Drawing.Size, System.Drawing">
+    <value>328, 336</value>
   </data>
-  <data name="&gt;&gt;btnClearAutocalculate.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="tabPageNormal.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
   </data>
-  <data name="&gt;&gt;btnClearAutocalculate.Parent" xml:space="preserve">
-    <value>panel1</value>
+  <data name="tabPageNormal.Text" xml:space="preserve">
+    <value>Normal</value>
   </data>
-  <data name="&gt;&gt;btnClearAutocalculate.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;tabPageNormal.Name" xml:space="preserve">
+    <value>tabPageNormal</value>
+  </data>
+  <data name="&gt;&gt;tabPageNormal.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabPageNormal.Parent" xml:space="preserve">
+    <value>tabControl1</value>
+  </data>
+  <data name="&gt;&gt;tabPageNormal.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="availableFieldsTree1.ImageIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="availableFieldsTree1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 56</value>
+  </data>
+  <data name="availableFieldsTree1.SelectedImageIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="availableFieldsTree1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>319, 277</value>
+  </data>
+  <data name="availableFieldsTree1.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="&gt;&gt;availableFieldsTree1.Name" xml:space="preserve">
+    <value>availableFieldsTree1</value>
+  </data>
+  <data name="&gt;&gt;availableFieldsTree1.Type" xml:space="preserve">
+    <value>pwiz.Common.DataBinding.Controls.Editor.AvailableFieldsTree, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;availableFieldsTree1.Parent" xml:space="preserve">
+    <value>tabPageCalculated</value>
+  </data>
+  <data name="&gt;&gt;availableFieldsTree1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="label5.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="label5.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label5.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label5.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 10</value>
+  </data>
+  <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
+    <value>60, 13</value>
+  </data>
+  <data name="label5.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="label5.Text" xml:space="preserve">
+    <value>&amp;Applies To:</value>
+  </data>
+  <data name="&gt;&gt;label5.Name" xml:space="preserve">
+    <value>label5</value>
+  </data>
+  <data name="&gt;&gt;label5.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
+    <value>tabPageCalculated</value>
+  </data>
+  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="panel1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 393</value>
+  <data name="comboAppliesTo.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 29</value>
   </data>
-  <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>332, 23</value>
+  <data name="comboAppliesTo.Size" type="System.Drawing.Size, System.Drawing">
+    <value>171, 21</value>
   </data>
-  <data name="panel1.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
+  <data name="comboAppliesTo.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
   </data>
-  <data name="&gt;&gt;panel1.Name" xml:space="preserve">
-    <value>panel1</value>
+  <data name="&gt;&gt;comboAppliesTo.Name" xml:space="preserve">
+    <value>comboAppliesTo</value>
   </data>
-  <data name="&gt;&gt;panel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;comboAppliesTo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;comboAppliesTo.Parent" xml:space="preserve">
+    <value>tabPageCalculated</value>
+  </data>
+  <data name="&gt;&gt;comboAppliesTo.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="tabPageCalculated.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 25</value>
+  </data>
+  <data name="tabPageCalculated.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabPageCalculated.Size" type="System.Drawing.Size, System.Drawing">
+    <value>328, 336</value>
+  </data>
+  <data name="tabPageCalculated.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="tabPageCalculated.Text" xml:space="preserve">
+    <value>Calculated</value>
+  </data>
+  <data name="&gt;&gt;tabPageCalculated.Name" xml:space="preserve">
+    <value>tabPageCalculated</value>
+  </data>
+  <data name="&gt;&gt;tabPageCalculated.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabPageCalculated.Parent" xml:space="preserve">
+    <value>tabControl1</value>
+  </data>
+  <data name="&gt;&gt;tabPageCalculated.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="tabControl1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 51</value>
+  </data>
+  <data name="tabControl1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>336, 365</value>
+  </data>
+  <data name="tabControl1.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name="&gt;&gt;tabControl1.Name" xml:space="preserve">
+    <value>tabControl1</value>
+  </data>
+  <data name="&gt;&gt;tabControl1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabControl1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;tabControl1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">

@@ -195,7 +195,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             else if (Equals(annotationDef.Name, MProphetResultsHandler.MAnnotationName))
                 return DetectionZScore;
 
-            return ChromInfo.Annotations.GetAnnotation(annotationDef);
+            return DataSchema.AnnotationCalculator.GetAnnotation(annotationDef, this, ChromInfo.Annotations);
         }
 
         public override string ToString()

@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
@@ -39,12 +38,14 @@ namespace pwiz.Skyline.SettingsUI
     {
         private readonly IEnumerable<AnnotationDef> _existing;
         private AnnotationDef _annotationDef;
+        private SkylineDataSchema _dataSchema;
 
         public DefineAnnotationDlg(IEnumerable<AnnotationDef> existing)
         {
             InitializeComponent();
             Icon = Resources.Skyline;
             checkedListBoxAppliesTo.Items.Clear();
+            comboAppliesTo.Items.Clear();
             foreach (var annotationTarget in new[]
                                                  {
                                                      AnnotationDef.AnnotationTarget.protein,
@@ -56,13 +57,19 @@ namespace pwiz.Skyline.SettingsUI
                                                      AnnotationDef.AnnotationTarget.transition_result,
                                                  })
             {
-                checkedListBoxAppliesTo.Items.Add(new AnnotationTargetItem(annotationTarget, ModeUI));
+                var item = new AnnotationTargetItem(annotationTarget, ModeUI);
+                checkedListBoxAppliesTo.Items.Add(item);
+                comboAppliesTo.Items.Add(item);
             }
             comboType.Items.AddRange(ListPropertyType.ListPropertyTypes().ToArray());
             comboType.SelectedIndex = 0;
             ComboHelper.AutoSizeDropDown(comboType);
             _existing = existing;
+            _dataSchema = BrowsingDataSchema.GetBrowsingDataSchema();
+            availableFieldsTree1.RootColumn = NullRootColumn;
         }
+
+        private ColumnDescriptor NullRootColumn { get { return ColumnDescriptor.RootColumn(_dataSchema, typeof(object));} }
 
         public void SetAnnotationDef(AnnotationDef annotationDef)
         {
@@ -72,7 +79,6 @@ namespace pwiz.Skyline.SettingsUI
                 AnnotationName = string.Empty;
                 AnnotationType = AnnotationDef.AnnotationType.text;
                 AnnotationTargets = AnnotationDef.AnnotationTargetSet.EMPTY;
-                tbxExpression.Text = string.Empty;
                 Items = new string[0];
             }
             else
@@ -81,7 +87,24 @@ namespace pwiz.Skyline.SettingsUI
                 ListPropertyType = annotationDef.ListPropertyType;
                 AnnotationTargets = annotationDef.AnnotationTargets;
                 Items = annotationDef.Items;
-                tbxExpression.Text = annotationDef.Expression ?? string.Empty;
+                if (annotationDef.IsCalculated)
+                {
+                    tabControl1.SelectedTab = tabPageCalculated;
+                    PropertyPath propertyPath;
+                    try
+                    {
+                        propertyPath = PropertyPath.Parse(annotationDef.Expression);
+                    }
+                    catch
+                    {
+                        propertyPath = null;
+                    }
+                    availableFieldsTree1.SelectColumn(propertyPath);
+                }
+                else
+                {
+                    tabControl1.SelectedTab = tabPageNormal;
+                }
             }
         }
 
@@ -134,11 +157,32 @@ namespace pwiz.Skyline.SettingsUI
             }
             set
             {
+                if (Equals(AnnotationTargets, value))
+                {
+                    return;
+                }
                 for (int i = 0; i < checkedListBoxAppliesTo.Items.Count; i++)
                 {
                     AnnotationDef.AnnotationTarget annotationTarget =
                         ((AnnotationTargetItem) checkedListBoxAppliesTo.Items[i]).AnnotationTarget;
                     checkedListBoxAppliesTo.SetItemChecked(i, value.Contains(annotationTarget));
+                }
+
+                if (value.Count == 1)
+                {
+                    for (int i = 0; i < comboAppliesTo.Items.Count; i++)
+                    {
+                        var item = comboAppliesTo.Items[i] as AnnotationTargetItem;
+                        if (item != null && item.AnnotationTarget == value.First())
+                        {
+                            comboAppliesTo.SelectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    comboAppliesTo.SelectedIndex = -1;
                 }
             }
         }
@@ -161,8 +205,29 @@ namespace pwiz.Skyline.SettingsUI
 
         public AnnotationDef GetAnnotationDef()
         {
-            return new AnnotationDef(AnnotationName, AnnotationTargets, ListPropertyType, Items)
-                .ChangeExpression(tbxExpression.Text);
+            var annotationDef = new AnnotationDef(AnnotationName, AnnotationTargets, ListPropertyType, Items);
+            
+            if (tabControl1.SelectedTab == tabPageCalculated)
+            {
+                var selectedColumnDescriptor = GetSelectedColumnDescriptor();
+                if (selectedColumnDescriptor != null)
+                {
+                    annotationDef = annotationDef.ChangeExpression(selectedColumnDescriptor.PropertyPath.ToString());
+                }
+            }
+
+            return annotationDef;
+        }
+
+        private ColumnDescriptor GetSelectedColumnDescriptor()
+        {
+            var selectedNode = availableFieldsTree1.SelectedNode;
+            if (selectedNode == null)
+            {
+                return null;
+            }
+
+            return availableFieldsTree1.GetValueColumn(selectedNode);
         }
 
         private void comboType_SelectedIndexChanged(object sender, EventArgs e)
@@ -193,11 +258,27 @@ namespace pwiz.Skyline.SettingsUI
                     }
                 }
             }
-            if (checkedListBoxAppliesTo.CheckedItems.Count == 0)
+
+            if (tabControl1.SelectedTab == tabPageNormal)
             {
-                MessageBox.Show(this, Resources.DefineAnnotationDlg_OkDialog_Choose_at_least_one_type_for_this_annotation_to_apply_to, Program.Name);
-                checkedListBoxAppliesTo.Focus();
-                return;
+                if (checkedListBoxAppliesTo.CheckedItems.Count == 0)
+                {
+                    messageBoxHelper.ShowTextBoxError(checkedListBoxAppliesTo, Resources.DefineAnnotationDlg_OkDialog_Choose_at_least_one_type_for_this_annotation_to_apply_to);
+                    return;
+                }
+            }
+            else
+            {
+                if (comboAppliesTo.SelectedIndex < 0)
+                {
+                    messageBoxHelper.ShowTextBoxError(comboAppliesTo, "Choose a type for this annotation to apply to.");
+                    return;
+                }
+                if (GetSelectedColumnDescriptor() == null)
+                {
+                    messageBoxHelper.ShowTextBoxError(availableFieldsTree1, "Choose a value for this annotation.");
+                    return;
+                }
             }
             DialogResult = DialogResult.OK;
             Close();
@@ -219,34 +300,63 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        private void btnAutoCalculate_Click(object sender, EventArgs e)
+        private void comboAppliesTo_SelectedIndexChanged(object sender, EventArgs e)
         {
-            var annotationTargets = AnnotationTargets;
-            if (annotationTargets.Count != 1)
+            if (comboAppliesTo.SelectedIndex < 0)
             {
-                MessageDlg.Show(this, "Only annotations that apply to exactly one element type can be autocalculated.");
-                checkedListBoxAppliesTo.Focus();
-                return;
+                availableFieldsTree1.RootColumn = NullRootColumn;
             }
 
-            using (var autoCalculateDlg = new AutoCalculateAnnotationDlg())
-            {
-                autoCalculateDlg.RootColumnType = AnnotationCalculator.RowTypeFromAnnotationTarget(annotationTargets.First());
-                if (!string.IsNullOrEmpty(tbxExpression.Text))
-                {
-                    autoCalculateDlg.PropertyPath = PropertyPath.Parse(tbxExpression.Text);
-                }
 
-                if (autoCalculateDlg.ShowDialog(this) == DialogResult.OK)
-                {
-                    tbxExpression.Text = autoCalculateDlg.PropertyPath?.ToString() ?? string.Empty;
-                }
+            var annotationTargetItem = (AnnotationTargetItem) comboAppliesTo.Items[comboAppliesTo.SelectedIndex];
+            AnnotationTargets = AnnotationDef.AnnotationTargetSet.Singleton(annotationTargetItem.AnnotationTarget);
+            availableFieldsTree1.RootColumn = ColumnDescriptor.RootColumn(_dataSchema, AnnotationCalculator.RowTypeFromAnnotationTarget(annotationTargetItem.AnnotationTarget), UiModes.FromDocumentType(ModeUI));
+        }
+
+        private void availableFieldsTree1_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            var columnDescriptor = GetSelectedColumnDescriptor();
+            if (columnDescriptor != null)
+            {
+                comboType.SelectedItem = GetListPropertyType(columnDescriptor);
             }
         }
 
-        private void btnClearAutocalculate_Click(object sender, EventArgs e)
+        public static ListPropertyType GetListPropertyType(ColumnDescriptor columnDescriptor)
         {
-            tbxExpression.Text = string.Empty;
+            var propertyType = columnDescriptor.DataSchema.GetWrappedValueType(columnDescriptor.PropertyType);
+            if (propertyType == typeof(bool))
+            {
+                return ListPropertyType.TRUE_FALSE;
+            }
+
+            if (propertyType.IsPrimitive)
+            {
+                return ListPropertyType.NUMBER;
+            }
+
+            return ListPropertyType.TEXT;
+        }
+
+        private class BrowsingDataSchema : SkylineDataSchema
+        {
+            public static BrowsingDataSchema GetBrowsingDataSchema()
+            {
+                var memoryDocumentContainer = new MemoryDocumentContainer();
+                var document = new SrmDocument(SrmSettingsList.GetDefault());
+                memoryDocumentContainer.SetDocument(document, memoryDocumentContainer.Document);
+                return new BrowsingDataSchema(memoryDocumentContainer, GetLocalizedSchemaLocalizer());
+            }
+            private BrowsingDataSchema(IDocumentContainer documentContainer, DataSchemaLocalizer dataSchemaLocalizer) :
+                base(documentContainer, dataSchemaLocalizer)
+            {
+
+            }
+
+            public override bool IsRootTypeSelectable(Type type)
+            {
+                return false;
+            }
         }
     }
 }

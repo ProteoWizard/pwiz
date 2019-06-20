@@ -23,6 +23,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.DocSettings
 {
@@ -33,6 +34,12 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private Dictionary<Tuple<Type, string>, ColumnDescriptor> _columnDescriptors =
             new Dictionary<Tuple<Type, string>, ColumnDescriptor>();
+
+        public AnnotationCalculator(SrmDocument document) 
+            : this(SkylineDataSchema.MemoryDataSchema(document, DataSchemaLocalizer.INVARIANT))
+        {
+
+        }
 
         public AnnotationCalculator(SkylineDataSchema dataSchema)
         {
@@ -98,6 +105,29 @@ namespace pwiz.Skyline.Model.DocSettings
             Annotations annotations) where T : SkylineObject
         {
             return GetAnnotation(annotationDef, typeof(T), skylineObject, annotations);
+        }
+
+        public object GetReplicateAnnotation(AnnotationDef annotationDef, ChromatogramSet chromatogramSet)
+        {
+            if (!annotationDef.IsCalculated)
+            {
+                return chromatogramSet.Annotations.GetAnnotation(annotationDef);
+            }
+
+            if (!SrmDocument.Settings.HasResults)
+            {
+                return null;
+            }
+
+            int replicateIndex;
+            if (!SrmDocument.Settings.MeasuredResults.TryGetChromatogramSet(chromatogramSet.Name, out _,
+                out replicateIndex))
+            {
+                return null;
+            }
+
+            return GetAnnotation(annotationDef, new Replicate(SkylineDataSchema, replicateIndex),
+                chromatogramSet.Annotations);
         }
 
         public object GetAnnotation(AnnotationDef annotationDef, Type skylineObjectType,
