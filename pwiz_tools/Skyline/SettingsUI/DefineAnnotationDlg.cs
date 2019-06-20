@@ -231,7 +231,7 @@ namespace pwiz.Skyline.SettingsUI
 
             using (var autoCalculateDlg = new AutoCalculateAnnotationDlg())
             {
-                autoCalculateDlg.RootColumnType = CalculatedAnnotations.RowTypeFromAnnotationTarget(annotationTargets.First());
+                autoCalculateDlg.RootColumnType = AnnotationCalculator.RowTypeFromAnnotationTarget(annotationTargets.First());
                 if (!string.IsNullOrEmpty(tbxExpression.Text))
                 {
                     autoCalculateDlg.PropertyPath = PropertyPath.Parse(tbxExpression.Text);

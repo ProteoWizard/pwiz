@@ -510,5 +510,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get { return MoleculeRef.PROTOTYPE; }
         }
+
+        protected override Type SkylineDocNodeType
+        {
+            get { return typeof(Peptide); }
+        }
     }
 }

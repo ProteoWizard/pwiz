@@ -92,6 +92,11 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public string Expression { get; private set; }
 
+        public bool IsCalculated
+        {
+            get { return !string.IsNullOrEmpty(Expression); }
+        }
+
         public AnnotationDef ChangeExpression(string expression)
         {
             return ChangeProp(ImClone(this),

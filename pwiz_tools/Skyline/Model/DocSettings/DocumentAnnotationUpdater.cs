@@ -1,8 +1,27 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2019 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
@@ -11,113 +30,41 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings
 {
-    public class CalculatedAnnotations
+    public class DocumentAnnotationUpdater
     {
-        private static readonly AnnotationDef.AnnotationTargetSet ANNOTATION_TARGET_SET_DOCNODES =
-            AnnotationDef.AnnotationTargetSet.OfValues(
-                AnnotationDef.AnnotationTarget.protein,
-                AnnotationDef.AnnotationTarget.peptide,
-                AnnotationDef.AnnotationTarget.precursor,
-                AnnotationDef.AnnotationTarget.transition,
-                AnnotationDef.AnnotationTarget.precursor_result,
-                AnnotationDef.AnnotationTarget.transition_result);
-        private static readonly AnnotationDef.AnnotationTargetSet ANNOTATION_TARGET_SET_ALL
-            = AnnotationDef.AnnotationTargetSet.OfValues(
-                Enum.GetValues(typeof(AnnotationDef.AnnotationTarget)).Cast<AnnotationDef.AnnotationTarget>());
-
-        public static SrmDocument UpdateDocument(SrmDocument document)
-        {
-            var calculatedAnnotations = GetCalculatedAnnotations(document, ANNOTATION_TARGET_SET_ALL);
-            if (calculatedAnnotations == null)
-            {
-                return document;
-            }
-
-            var newMeasuredResults = calculatedAnnotations.UpdateReplicateAnnotations(document.Settings.MeasuredResults);
-            if (!ReferenceEquals(document.Settings.MeasuredResults, newMeasuredResults))
-            {
-                document = document.ChangeMeasuredResults(newMeasuredResults);
-            }
-
-            var newChildren = document.MoleculeGroups.Select(mg => calculatedAnnotations.UpdateMoleculeGroup(mg)).ToArray();
-            if (!ReferenceEquals(document.Children, newChildren))
-            {
-                document = (SrmDocument) document.ChangeChildren(newChildren);
-            }
-
-            return document;
-        }
-
-        public static MeasuredResults UpdateMeasuredResults(SrmDocument document, MeasuredResults measuredResults)
-        {
-            if (measuredResults == null)
-            {
-                return null;
-            }
-
-            var calculateAnnotations = GetCalculatedAnnotations(document,
-                AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.replicate));
-            if (calculateAnnotations == null)
-            {
-                return measuredResults;
-            }
-
-            return calculateAnnotations.UpdateReplicateAnnotations(measuredResults);
-        }
-
-        public static IList<DocNode> UpdateMoleculeGroups(SrmDocument document,
-            IList<DocNode> moleculeGroups)
-        {
-            var calculateAnnotations = GetCalculatedAnnotations(document, ANNOTATION_TARGET_SET_DOCNODES);
-            if (calculateAnnotations == null)
-            {
-                return moleculeGroups;
-            }
-
-            var newNodes = moleculeGroups.Cast<PeptideGroupDocNode>().Select(calculateAnnotations.UpdateMoleculeGroup).ToArray();
-            if (ArrayUtil.ReferencesEqual(moleculeGroups, newNodes))
-            {
-                return moleculeGroups;
-            }
-
-            return newNodes;
-        }
-
-        public static CalculatedAnnotations GetCalculatedAnnotations(SrmDocument document,
-            AnnotationDef.AnnotationTargetSet targets)
-        {
-            var calculatedAnnotations =
-                document.Settings.DataSettings.AnnotationDefs
-                    .Where(annotationDef => !string.IsNullOrEmpty(annotationDef.Expression) && !annotationDef.AnnotationTargets.Intersect(targets).IsEmpty)
-                    .ToArray();
-            if (calculatedAnnotations.Length == 0)
-            {
-                return null;
-            }
-            return new CalculatedAnnotations(document, targets);
-        }
-
-
-        public const string ERROR_VALUE = @"#ERROR#";
         private IDictionary<AnnotationDef.AnnotationTarget, AnnotationUpdater> _annotationUpdaters;
         private TransitionResultUpdater _transitionResultUpdater;
         private PrecursorResultUpdater _precursorResultUpdater;
 
-        public CalculatedAnnotations(SrmDocument document, AnnotationDef.AnnotationTargetSet annotationTargetSet)
+        public static SrmDocument UpdateAnnotations(SrmDocument document, IProgressMonitor progressMonitor, IProgressStatus status)
         {
-            SrmDocument = document;
+            if (!document.Settings.DataSettings.AnnotationDefs.Any(def => def.IsCalculated))
+            {
+                return document;
+            }
+
+            if (progressMonitor != null)
+            {
+                progressMonitor.UpdateProgress(status.ChangeMessage("Updating calculated annotations"));
+            }
+            DocumentAnnotationUpdater updater = new DocumentAnnotationUpdater(document, progressMonitor);
+            return updater.UpdateDocument(document);
+        }
+
+        public DocumentAnnotationUpdater(SrmDocument document, IProgressMonitor progressMonitor)
+        {
             SkylineDataSchema = SkylineDataSchema.MemoryDataSchema(document, DataSchemaLocalizer.INVARIANT);
             _annotationUpdaters = new Dictionary<AnnotationDef.AnnotationTarget, AnnotationUpdater>();
             var calculatedAnnotations = document.Settings.DataSettings.AnnotationDefs
                 .Where(def => !string.IsNullOrEmpty(def.Expression)).ToArray();
-            foreach (var target in annotationTargetSet)
+            foreach (AnnotationDef.AnnotationTarget target in Enum.GetValues(typeof(AnnotationDef.AnnotationTarget)))
             {
                 var annotations = ImmutableList.ValueOf(calculatedAnnotations.Where(def => def.AnnotationTargets.Contains(target)));
                 if (annotations.Count == 0)
                 {
                     continue;
                 }
-                _annotationUpdaters[target] = AnnotationUpdater.MakeAnnotationUpdater(SkylineDataSchema, RowTypeFromAnnotationTarget(target), annotations);
+                _annotationUpdaters[target] = new AnnotationUpdater(annotations);
             }
 
             AnnotationUpdater transitionResultAnnotationUpdater;
@@ -151,8 +98,23 @@ namespace pwiz.Skyline.Model.DocSettings
                 RecursePrecursors || _annotationUpdaters.ContainsKey(AnnotationDef.AnnotationTarget.peptide);
         }
 
-        public SrmDocument SrmDocument { get; private set; }
+        public IProgressMonitor ProgressMonitor { get; private set; }
         public SkylineDataSchema SkylineDataSchema { get; private set; }
+
+        public SrmDocument UpdateDocument(SrmDocument document)
+        {
+            if (document.Settings.HasResults && _annotationUpdaters.ContainsKey(AnnotationDef.AnnotationTarget.replicate))
+            {
+                var newMeasuredResults = UpdateReplicateAnnotations(document.MeasuredResults);
+                document = document.ChangeMeasuredResults(newMeasuredResults);
+            }
+
+            var newChildren = document.MoleculeGroups.Select(UpdateMoleculeGroup).ToArray();
+            document = (SrmDocument)document.ChangeChildren(newChildren);
+            return document;
+        }
+
+
         public AnnotationDef.AnnotationTargetSet AnnotationTargetSet { get; private set; }
         public bool RecurseMoleculeGroups { get; private set; }
         public bool RecurseMolecules { get; private set; }
@@ -194,6 +156,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public PeptideGroupDocNode UpdateMoleculeGroup(PeptideGroupDocNode peptideGroupDocNode)
         {
+            CheckCancelled();
             AnnotationUpdater updater;
             var identityPath = new IdentityPath(peptideGroupDocNode.PeptideGroup);
             if (_annotationUpdaters.TryGetValue(AnnotationDef.AnnotationTarget.protein, out updater))
@@ -202,7 +165,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 var annotations = updater.UpdateAnnotations(peptideGroupDocNode.Annotations, protein);
                 if (!Equals(annotations, peptideGroupDocNode.Annotations))
                 {
-                    peptideGroupDocNode = (PeptideGroupDocNode) peptideGroupDocNode.ChangeAnnotations(annotations);
+                    peptideGroupDocNode = (PeptideGroupDocNode)peptideGroupDocNode.ChangeAnnotations(annotations);
                 }
             }
 
@@ -216,7 +179,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 .Select(peptideDocNode => UpdateMolecule(identityPath, peptideDocNode)).ToArray();
             if (!ArrayUtil.ReferencesEqual(peptideGroupDocNode.Children, newChildren))
             {
-                peptideGroupDocNode = (PeptideGroupDocNode) peptideGroupDocNode.ChangeChildren(newChildren);
+                peptideGroupDocNode = (PeptideGroupDocNode)peptideGroupDocNode.ChangeChildren(newChildren);
             }
 
             return peptideGroupDocNode;
@@ -224,6 +187,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public PeptideDocNode UpdateMolecule(IdentityPath parent, PeptideDocNode peptideDocNode)
         {
+            CheckCancelled();
             AnnotationUpdater updater;
             _annotationUpdaters.TryGetValue(AnnotationDef.AnnotationTarget.peptide, out updater);
             var identityPath = new IdentityPath(parent, peptideDocNode.Peptide);
@@ -233,7 +197,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 var annotations = updater.UpdateAnnotations(peptideDocNode.Annotations, peptide);
                 if (!Equals(annotations, peptideDocNode.Annotations))
                 {
-                    peptideDocNode = (PeptideDocNode) peptideDocNode.ChangeAnnotations(annotations);
+                    peptideDocNode = (PeptideDocNode)peptideDocNode.ChangeAnnotations(annotations);
                 }
             }
 
@@ -245,7 +209,7 @@ namespace pwiz.Skyline.Model.DocSettings
             var newChildren = peptideDocNode.TransitionGroups.Select(tg => UpdatePrecursor(identityPath, tg)).ToArray();
             if (!ArrayUtil.ReferencesEqual(peptideDocNode.Children, newChildren))
             {
-                peptideDocNode = (PeptideDocNode) peptideDocNode.ChangeChildren(newChildren);
+                peptideDocNode = (PeptideDocNode)peptideDocNode.ChangeChildren(newChildren);
             }
 
             return peptideDocNode;
@@ -253,6 +217,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public TransitionGroupDocNode UpdatePrecursor(IdentityPath parent, TransitionGroupDocNode precursorDocNode)
         {
+            CheckCancelled();
             AnnotationUpdater updater;
             _annotationUpdaters.TryGetValue(AnnotationDef.AnnotationTarget.precursor, out updater);
             IdentityPath identityPath = new IdentityPath(parent, precursorDocNode.TransitionGroup);
@@ -284,7 +249,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 .Select(transition => UpdateTransition(identityPath, transition)).ToArray();
             if (!ArrayUtil.ReferencesEqual(precursorDocNode.Children, newChildren))
             {
-                precursorDocNode = (TransitionGroupDocNode) precursorDocNode.ChangeChildren(newChildren);
+                precursorDocNode = (TransitionGroupDocNode)precursorDocNode.ChangeChildren(newChildren);
             }
 
             return precursorDocNode;
@@ -292,6 +257,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public TransitionDocNode UpdateTransition(IdentityPath parent, TransitionDocNode transitionDocNode)
         {
+            CheckCancelled();
             AnnotationUpdater updater;
             _annotationUpdaters.TryGetValue(AnnotationDef.AnnotationTarget.transition, out updater);
             IdentityPath identityPath = new IdentityPath(parent, transitionDocNode.Transition);
@@ -314,109 +280,26 @@ namespace pwiz.Skyline.Model.DocSettings
             return transitionDocNode;
         }
 
-        public static Type RowTypeFromAnnotationTarget(AnnotationDef.AnnotationTarget annotationTarget)
-        {
-            switch (annotationTarget)
-            {
-                case AnnotationDef.AnnotationTarget.protein:
-                    return typeof(Protein);
-                case AnnotationDef.AnnotationTarget.peptide:
-                    return typeof(Databinding.Entities.Peptide);
-                case AnnotationDef.AnnotationTarget.precursor:
-                    return typeof(Precursor);
-                case AnnotationDef.AnnotationTarget.transition:
-                    return typeof(Databinding.Entities.Transition);
-                case AnnotationDef.AnnotationTarget.replicate:
-                    return typeof(Replicate);
-                case AnnotationDef.AnnotationTarget.precursor_result:
-                    return typeof(PrecursorResult);
-                case AnnotationDef.AnnotationTarget.transition_result:
-                    return typeof(TransitionResult);
-                default:
-                    return null;
-            }
-        }
-
-        private static ColumnDescriptor GetColumnDescriptor(ColumnDescriptor columnDescriptor,
-            AnnotationDef annotationDef)
-        {
-            PropertyPath propertyPath;
-            try
-            {
-                propertyPath = PropertyPath.Parse(annotationDef.Expression);
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-            return ResolvePath(columnDescriptor, propertyPath);
-        }
-
-        private static ColumnDescriptor ResolvePath(ColumnDescriptor rootColumn, PropertyPath propertyPath)
-        {
-            if (propertyPath.IsRoot)
-            {
-                return rootColumn;
-            }
-
-            if (propertyPath.IsLookup)
-            {
-                return null;
-            }
-
-            var parent = ResolvePath(rootColumn, propertyPath.Parent);
-            if (parent == null)
-            {
-                return null;
-            }
-            return parent.ResolveChild(propertyPath.Name);
-        }
-
         private class AnnotationUpdater
         {
+            public AnnotationUpdater(IEnumerable<AnnotationDef> annotationDefs)
+            {
+                AnnotationDefs = ImmutableList.ValueOf(annotationDefs);
+            }
             public Annotations UpdateAnnotations(Annotations annotations, SkylineObject skylineObject)
             {
-                var rowItem = new RowItem(skylineObject);
-                for (int iAnnotation = 0; iAnnotation < AnnotationDefs.Count; iAnnotation++)
+                foreach (var annotationDef in AnnotationDefs)
                 {
-                    var columnDescriptor = ColumnDescriptors[iAnnotation];
-                    object annotationValue;
-                    if (columnDescriptor == null)
-                    {
-                        annotationValue = @"#NAME#";
-                    }
-                    else
-                    {
-                        try
-                        {
-                            annotationValue = columnDescriptor.GetPropertyValue(rowItem, null);
-                        }
-                        catch (Exception)
-                        {
-                            annotationValue = @"#ERROR#";
-                        }
-                    }
-
-                    annotations = annotations.ChangeAnnotation(AnnotationDefs[iAnnotation], annotationValue);
+                    annotations =
+                        annotations.ChangeAnnotation(annotationDef, skylineObject.GetAnnotation(annotationDef));
                 }
 
                 return annotations;
             }
 
             public ImmutableList<AnnotationDef> AnnotationDefs { get; private set; }
-            public ImmutableList<ColumnDescriptor> ColumnDescriptors { get; private set; }
-
-            public static AnnotationUpdater MakeAnnotationUpdater(SkylineDataSchema dataSchema, Type objectType,
-                IEnumerable<AnnotationDef> annotationDefs)
-            {
-                var rootColumn = ColumnDescriptor.RootColumn(dataSchema, objectType);
-                var result = new AnnotationUpdater();
-                result.AnnotationDefs = ImmutableList.ValueOf(annotationDefs);
-                result.ColumnDescriptors = ImmutableList.ValueOf(result.AnnotationDefs
-                    .Select(annotationDef => GetColumnDescriptor(rootColumn, annotationDef)));
-                return result;
-            }
         }
+
 
         private abstract class ResultUpdater<TItem, TResult> where TItem : ChromInfo where TResult : SkylineObject
         {
@@ -484,6 +367,14 @@ namespace pwiz.Skyline.Model.DocSettings
             protected override TransitionGroupChromInfo ChangeAnnotations(TransitionGroupChromInfo item, Annotations newAnnotations)
             {
                 return item.ChangeAnnotations(newAnnotations);
+            }
+        }
+
+        private void CheckCancelled()
+        {
+            if (ProgressMonitor != null && ProgressMonitor.IsCanceled)
+            {
+                throw new OperationCanceledException();
             }
         }
     }

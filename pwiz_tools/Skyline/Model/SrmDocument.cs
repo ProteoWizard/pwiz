@@ -2153,7 +2153,8 @@ namespace pwiz.Skyline.Model
         public void SerializeToXmlWriter(XmlWriter writer, SkylineVersion skylineVersion, IProgressMonitor progressMonitor,
             IProgressStatus progressStatus)
         {
-            var documentWriter = new DocumentWriter(this, skylineVersion);
+            var document = DocumentAnnotationUpdater.UpdateAnnotations(this, progressMonitor, progressStatus);
+            var documentWriter = new DocumentWriter(document, skylineVersion);
             if (progressMonitor != null)
             {
                 int transitionsWritten = 0;

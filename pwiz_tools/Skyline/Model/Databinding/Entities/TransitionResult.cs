@@ -112,7 +112,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public override object GetAnnotation(AnnotationDef annotationDef)
         {
-            return ChromInfo.Annotations.GetAnnotation(annotationDef);
+            return DataSchema.AnnotationCalculator.GetAnnotation(annotationDef, this, ChromInfo.Annotations);
         }
 
         [HideWhen(AncestorOfType = typeof(SkylineDocument))]
