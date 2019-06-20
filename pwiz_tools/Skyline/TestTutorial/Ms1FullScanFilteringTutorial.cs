@@ -176,6 +176,7 @@ namespace pwiz.SkylineTestTutorial
             // document file, so all the files should be found, and we should
             // just be able to move to the next page.
             WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page &&
+                                     importPeptideSearchDlg.ImportResultsControl.FoundResultsFiles.Count > 0 &&
                                      importPeptideSearchDlg.IsNextButtonEnabled);
             PauseForScreenShot<ImportPeptideSearchDlg.ChromatogramsPage>("Import Peptide Search - Extract Chromatograms page", 5);
 
