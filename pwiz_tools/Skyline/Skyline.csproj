@@ -494,12 +494,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="SettingsUI\AutoCalculateAnnotationDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SettingsUI\AutoCalculateAnnotationDlg.Designer.cs">
-      <DependentUpon>AutoCalculateAnnotationDlg.cs</DependentUpon>
-    </Compile>
     <Compile Include="Util\UiModes.cs" />
     <Compile Include="SettingsUI\IonMobility\UseSpectralLibraryIonMobilityValuesControl.cs">
       <SubType>UserControl</SubType>
@@ -2967,9 +2961,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\AddRetentionTimePredictorDlg.zh-CHS.resx">
       <DependentUpon>AddRetentionTimePredictorDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\AutoCalculateAnnotationDlg.resx">
-      <DependentUpon>AutoCalculateAnnotationDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\BuildBackgroundProteomeDlg.ja.resx">
       <DependentUpon>BuildBackgroundProteomeDlg.cs</DependentUpon>
