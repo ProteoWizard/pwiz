@@ -147,6 +147,12 @@
   <data name="AreaRatio">
     <value>Area Ratio</value>
   </data>
+  <data name="AttributeAreaProportion">
+    <value>Attribute Area Proportion</value>
+  </data>
+  <data name="AttributeGroupId">
+    <value>Attribute Group ID</value>
+  </data>
   <data name="AuditLogRow">
     <value>Audit Log Row</value>
   </data>
@@ -777,8 +783,14 @@
   <data name="Precursor">
     <value>Precursor</value>
   </data>
+  <data name="PrecursorAccuracy">
+    <value>Precursor Accuracy</value>
+  </data>
   <data name="PrecursorAdduct">
     <value>Precursor Adduct</value>
+  </data>
+  <data name="PrecursorCalculatedConcentration">
+    <value>Precursor Calculated Concentration</value>
   </data>
   <data name="PrecursorCharge">
     <value>Precursor Charge</value>
@@ -804,11 +816,17 @@
   <data name="PrecursorNeutralMass">
     <value>Precursor Neutral Mass</value>
   </data>
+  <data name="PrecursorNormalizedArea">
+    <value>Precursor Normalized Area</value>
+  </data>
   <data name="PrecursorNote">
     <value>Precursor Note</value>
   </data>
   <data name="PrecursorPeakFoundRatio">
     <value>Precursor Peak Found Ratio</value>
+  </data>
+  <data name="PrecursorQuantification">
+    <value>Precursor Quantification</value>
   </data>
   <data name="PrecursorReplicateNote">
     <value>Precursor Replicate Note</value>

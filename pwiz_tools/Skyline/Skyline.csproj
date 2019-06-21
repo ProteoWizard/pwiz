@@ -377,8 +377,8 @@
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Databinding\Entities\ColumnToolTips.Designer.cs">
-      <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Databinding\ListColumnPropertyDescriptor.cs" />
