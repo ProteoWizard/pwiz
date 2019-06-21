@@ -53,6 +53,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(()=>SkylineWindow.ShowDocumentGrid(true));
             var documentGrid = WaitForOpenForm<DocumentGridForm>();
             SetPrecursorConcentrations(documentGrid);
+            PauseTest();
             ShowReplicateCalibrationCurveColumns(documentGrid);
         }
 

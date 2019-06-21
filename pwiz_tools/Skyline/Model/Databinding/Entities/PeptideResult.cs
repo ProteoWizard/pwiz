@@ -203,7 +203,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return _calibrationCurveFitter.Value.GetQuantificationResult(ResultFile.Replicate.ReplicateIndex);
         }
 
-        private CalibrationCurveFitter GetCalibrationCurveFitter()
+        public CalibrationCurveFitter GetCalibrationCurveFitter()
         {
             if (string.IsNullOrEmpty(ResultFile.Replicate.BatchName) && !Peptide.DocNode.HasPrecursorConcentrations)
             {
