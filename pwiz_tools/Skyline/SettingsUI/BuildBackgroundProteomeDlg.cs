@@ -414,6 +414,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     if (null != proteomeDb)
                     {
+                        // ReSharper disable once PossibleNullReferenceException (ReSharper 2019.1 seems not to notice the check that's already here)
                         proteomeDb.Dispose();
                     }
                 }
