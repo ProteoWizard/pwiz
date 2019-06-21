@@ -167,8 +167,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public string IonMobilityUnits { get { return IonMobilityValue.GetUnitsString(ChromInfo.IonMobilityInfo.IonMobilityUnits); } }
 
         [ChildDisplayName("Precursor{0}")]
-        [InvariantDisplayName("PrecursorQuantification")]
-        public LinkValue<QuantificationResult> Quantification
+        public LinkValue<QuantificationResult> PrecursorQuantification
         {
             get
             {
