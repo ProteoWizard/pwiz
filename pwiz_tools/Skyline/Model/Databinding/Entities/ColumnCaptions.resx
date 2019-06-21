@@ -147,6 +147,12 @@
   <data name="AreaRatio">
     <value>Area Ratio</value>
   </data>
+  <data name="AttributeAreaProportion">
+    <value>Attribute Area Proportion</value>
+  </data>
+  <data name="AttributeGroupId">
+    <value>Attribute Group ID</value>
+  </data>
   <data name="AuditLogRow">
     <value>Audit Log Row</value>
   </data>
