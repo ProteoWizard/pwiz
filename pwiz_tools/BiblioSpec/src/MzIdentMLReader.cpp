@@ -407,6 +407,22 @@ double MzIdentMLReader::getScore(const SpectrumIdentificationItem& item){
         }
     }
 
+    // another round of search for secondary scores if primary scores aren't found
+    for (const CVParam& cvParam : item.cvParams)
+    {
+        switch (cvParam.cvid)
+        {
+            case MS_MS_GF_EValue:
+                if (analysisType_ == UNKNOWN_ANALYSIS) {
+                    analysisType_ = MSGF_ANALYSIS;
+                    scoreThreshold_ = getScoreThreshold(MSGF);
+                }
+                if (analysisType_ == MSGF_ANALYSIS)
+                    return cvParam.valueAs<double>();
+                break;
+        }
+    }
+
     Verbosity::error(".mzid file contains an unsupported score type");
     return 0;
 }
