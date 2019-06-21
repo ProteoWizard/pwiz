@@ -893,8 +893,10 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 {
                     if (library != null)
                     {
-                        // ReSharper disable once PossibleNullReferenceException (ReSharper 2019.1 seems not to notice the check that's already here)
+                        // (ReSharper 2019.1 seems not to notice the check that's already here)
+                        // ReSharper disable PossibleNullReferenceException
                         foreach (var pooledStream in library.ReadStreams)
+                        // ReSharper restore PossibleNullReferenceException
                             pooledStream.CloseStream();
                     }
                 }
