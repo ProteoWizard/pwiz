@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public static SrmDocument UpdateAnnotations(SrmDocument document, IProgressMonitor progressMonitor, IProgressStatus status)
         {
-            if (!document.Settings.DataSettings.AnnotationDefs.Any(def => def.IsCalculated))
+            if (document.Settings.DataSettings.AnnotationDefs.All(def => def.Expression == null))
             {
                 return document;
             }
@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Model.DocSettings
             SkylineDataSchema = SkylineDataSchema.MemoryDataSchema(document, DataSchemaLocalizer.INVARIANT);
             _annotationUpdaters = new Dictionary<AnnotationDef.AnnotationTarget, AnnotationUpdater>();
             var calculatedAnnotations = document.Settings.DataSettings.AnnotationDefs
-                .Where(def => !string.IsNullOrEmpty(def.Expression)).ToArray();
+                .Where(def => null != def.Expression).ToArray();
             foreach (AnnotationDef.AnnotationTarget target in Enum.GetValues(typeof(AnnotationDef.AnnotationTarget)))
             {
                 var annotations = ImmutableList.ValueOf(calculatedAnnotations.Where(def => def.AnnotationTargets.Contains(target)));

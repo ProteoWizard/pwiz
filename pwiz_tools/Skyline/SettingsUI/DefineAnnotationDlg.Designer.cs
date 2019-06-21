@@ -44,6 +44,8 @@ namespace pwiz.Skyline.SettingsUI
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPageNormal = new System.Windows.Forms.TabPage();
             this.tabPageCalculated = new System.Windows.Forms.TabPage();
+            this.comboAggregateOperation = new System.Windows.Forms.ComboBox();
+            this.lblAggregateOperation = new System.Windows.Forms.Label();
             this.availableFieldsTree1 = new pwiz.Common.DataBinding.Controls.Editor.AvailableFieldsTree();
             this.label5 = new System.Windows.Forms.Label();
             this.comboAppliesTo = new System.Windows.Forms.ComboBox();
@@ -141,6 +143,8 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // tabPageCalculated
             // 
+            this.tabPageCalculated.Controls.Add(this.comboAggregateOperation);
+            this.tabPageCalculated.Controls.Add(this.lblAggregateOperation);
             this.tabPageCalculated.Controls.Add(this.availableFieldsTree1);
             this.tabPageCalculated.Controls.Add(this.label5);
             this.tabPageCalculated.Controls.Add(this.comboAppliesTo);
@@ -148,14 +152,24 @@ namespace pwiz.Skyline.SettingsUI
             this.tabPageCalculated.Name = "tabPageCalculated";
             this.tabPageCalculated.UseVisualStyleBackColor = true;
             // 
+            // comboAggregateOperation
+            // 
+            this.comboAggregateOperation.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboAggregateOperation.FormattingEnabled = true;
+            resources.ApplyResources(this.comboAggregateOperation, "comboAggregateOperation");
+            this.comboAggregateOperation.Name = "comboAggregateOperation";
+            // 
+            // lblAggregateOperation
+            // 
+            resources.ApplyResources(this.lblAggregateOperation, "lblAggregateOperation");
+            this.lblAggregateOperation.Name = "lblAggregateOperation";
+            // 
             // availableFieldsTree1
             // 
             this.availableFieldsTree1.CheckedColumns = new pwiz.Common.DataBinding.PropertyPath[0];
             this.availableFieldsTree1.DrawMode = System.Windows.Forms.TreeViewDrawMode.OwnerDrawText;
-            this.availableFieldsTree1.HideCollections = true;
             resources.ApplyResources(this.availableFieldsTree1, "availableFieldsTree1");
             this.availableFieldsTree1.Name = "availableFieldsTree1";
-            this.availableFieldsTree1.ShowHiddenFields = false;
             this.availableFieldsTree1.ShowNodeToolTips = true;
             this.availableFieldsTree1.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.availableFieldsTree1_AfterSelect);
             // 
@@ -217,5 +231,7 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.ComboBox comboAppliesTo;
         private Common.DataBinding.Controls.Editor.AvailableFieldsTree availableFieldsTree1;
+        private System.Windows.Forms.ComboBox comboAggregateOperation;
+        private System.Windows.Forms.Label lblAggregateOperation;
     }
 }

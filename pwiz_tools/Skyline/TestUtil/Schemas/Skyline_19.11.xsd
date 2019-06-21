@@ -731,12 +731,17 @@
     <xs:sequence>
       <xs:element name="value" type="xs:string" minOccurs="0"
                   maxOccurs="unbounded"/>
+      <xs:element name="expression" minOccurs="0">
+        <xs:complexType>
+          <xs:attribute name="column" type="xs:string" />
+          <xs:attribute name="aggregate_op" type="xs:string" />
+        </xs:complexType>
+      </xs:element>
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" use="required"/>
     <xs:attribute name="targets" type="annotation_target_type"/>
     <xs:attribute name="type" type="data_settings_annotation_type"/>
     <xs:attribute name="lookup" type="xs:string"/>
-    <xs:attribute name="expression" type="xs:string"/>
   </xs:complexType>
   <xs:complexType name="doc_rt_alignments_type">
     <xs:sequence>

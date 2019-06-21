@@ -37,7 +37,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         private ICollection<PropertyPath> _checkedColumns = new PropertyPath[0];
         private IViewEditor _viewEditor;
         private bool _showHiddenFields;
-        private bool _hideCollections;
         private static readonly Image[] ImagelistImages =
         {
             Resources.DataColumn,
@@ -145,6 +144,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             ShowHiddenFields = ViewEditor.ShowHiddenFields;
         }
 
+        [DefaultValue(false)]
         public bool ShowHiddenFields
         {
             get
@@ -158,22 +158,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                     return;
                 }
                 _showHiddenFields = value;
-                RebuildNodeTree();
-            }
-        }
-
-        [DefaultValue(false)]
-        public bool HideCollections
-        {
-            get { return _hideCollections; }
-            set
-            {
-                if (HideCollections == value)
-                {
-                    return;
-                }
-
-                _hideCollections = value;
                 RebuildNodeTree();
             }
         }
@@ -409,10 +393,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                 // ReSharper disable once ConvertIfStatementToNullCoalescingExpression
                 if (null != collectionColumn)
                 {
-                    if (HideCollections)
-                    {
-                        continue;
-                    }
                     result.Add(collectionColumn);
                 }
                 else

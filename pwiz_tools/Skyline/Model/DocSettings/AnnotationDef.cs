@@ -24,7 +24,6 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
-using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -91,17 +90,11 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.Lookup = string.IsNullOrEmpty(lookup) ? null : lookup);
         }
 
-        public string Expression { get; private set; }
+        public AnnotationExpression Expression { get; private set; }
 
-        public bool IsCalculated
+        public AnnotationDef ChangeExpression(AnnotationExpression expression)
         {
-            get { return !string.IsNullOrEmpty(Expression); }
-        }
-
-        public AnnotationDef ChangeExpression(string expression)
-        {
-            return ChangeProp(ImClone(this),
-                im => im.Expression = string.IsNullOrEmpty(expression) ? null : expression);
+            return ChangeProp(ImClone(this), im => im.Expression = expression);
         }
         public Type ValueType
         {
@@ -198,11 +191,11 @@ namespace pwiz.Skyline.Model.DocSettings
             targets,
             type,
             lookup,
-            expression,
         }
         private enum El
         {
             value,
+            expression,
         }
 
         public static AnnotationDef Deserialize(XmlReader reader)
@@ -218,7 +211,6 @@ namespace pwiz.Skyline.Model.DocSettings
             Type = TypeSafeEnum.ValidateOrDefault(reader.GetEnumAttribute(Attr.type, AnnotationType.text),
                 AnnotationType.text);
             Lookup = reader.GetAttribute(Attr.lookup);
-            Expression = reader.GetAttribute(Attr.expression);
             var items = new List<string>();
             if (reader.IsEmptyElement)
             {
@@ -227,9 +219,20 @@ namespace pwiz.Skyline.Model.DocSettings
             else
             {
                 reader.Read();
-                while (reader.IsStartElement(El.value))
+                while (true)
                 {
-                    items.Add(reader.ReadElementString());
+                    if (reader.IsStartElement(El.value))
+                    {
+                        items.Add(reader.ReadElementString());
+                    }
+                    else if (reader.IsStartElement(El.expression))
+                    {
+                        Expression = reader.DeserializeElement<AnnotationExpression>();
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
                 reader.ReadEndElement();
             }
@@ -245,10 +248,14 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             writer.WriteAttribute(Attr.type, Type);
             writer.WriteAttributeIfString(Attr.lookup, Lookup);
-            writer.WriteAttributeIfString(Attr.expression, Expression);
             foreach (var value in Items)
             {
                 writer.WriteElementString(El.value, value);
+            }
+
+            if (Expression != null)
+            {
+                writer.WriteElement(Expression);
             }
         }
 
@@ -260,7 +267,8 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return base.Equals(other) && Equals(other.AnnotationTargets, AnnotationTargets) &&
-                   other.Type == Type && ArrayUtil.EqualsDeep(other.Items, Items) && Equals(other.Lookup, Lookup);
+                   other.Type == Type && ArrayUtil.EqualsDeep(other.Items, Items) && Equals(other.Lookup, Lookup) &&
+                   Equals(other.Expression, Expression);
         }
 
         public override bool Equals(object obj)
@@ -279,6 +287,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result * 397) ^ Type.GetHashCode();
                 result = (result * 397) ^ Items.GetHashCodeDeep();
                 result = (result * 397) ^ (Lookup == null ? 0 : Lookup.GetHashCode());
+                result = (result * 397) ^ (Expression == null ? 0 : Expression.GetHashCode());
                 return result;
             }
         }

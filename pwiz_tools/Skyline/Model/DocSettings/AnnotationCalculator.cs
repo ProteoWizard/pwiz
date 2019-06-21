@@ -32,10 +32,10 @@ namespace pwiz.Skyline.Model.DocSettings
         public const string ERROR_VALUE = @"#ERROR#";
         public const string NAME_ERROR = @"#NAME#";
 
-        private Dictionary<Tuple<Type, string>, ColumnDescriptor> _columnDescriptors =
-            new Dictionary<Tuple<Type, string>, ColumnDescriptor>();
+        private Dictionary<Tuple<Type, PropertyPath>, ColumnSelector> _columnSelectors =
+            new Dictionary<Tuple<Type, PropertyPath>, ColumnSelector>();
 
-        public AnnotationCalculator(SrmDocument document) 
+        public AnnotationCalculator(SrmDocument document)
             : this(SkylineDataSchema.MemoryDataSchema(document, DataSchemaLocalizer.INVARIANT))
         {
 
@@ -49,7 +49,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public SrmDocument SrmDocument
         {
             get { return SkylineDataSchema.Document; }
-        } 
+        }
+
         public SkylineDataSchema SkylineDataSchema { get; private set; }
 
         public static Type RowTypeFromAnnotationTarget(AnnotationDef.AnnotationTarget annotationTarget)
@@ -82,11 +83,6 @@ namespace pwiz.Skyline.Model.DocSettings
                 return rootColumn;
             }
 
-            if (propertyPath.IsLookup)
-            {
-                return null;
-            }
-
             var parent = ResolvePath(rootColumn, propertyPath.Parent);
             if (parent == null)
             {
@@ -97,6 +93,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 return null;
             }
+
             return parent.ResolveChild(propertyPath.Name);
         }
 
@@ -109,7 +106,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public object GetReplicateAnnotation(AnnotationDef annotationDef, ChromatogramSet chromatogramSet)
         {
-            if (!annotationDef.IsCalculated)
+            if (annotationDef.Expression == null)
             {
                 return chromatogramSet.Annotations.GetAnnotation(annotationDef);
             }
@@ -133,21 +130,26 @@ namespace pwiz.Skyline.Model.DocSettings
         public object GetAnnotation(AnnotationDef annotationDef, Type skylineObjectType,
             SkylineObject skylineObject, Annotations annotations)
         {
-            if (!annotationDef.IsCalculated)
+            var expression = annotationDef.Expression;
+            if (expression == null)
             {
                 return annotations.GetAnnotation(annotationDef);
             }
 
-            var column = GetColumnDescriptor(skylineObjectType, annotationDef.Expression);
-            if (column == null)
+            ColumnSelector columnSelector = GetColumnSelector(skylineObjectType, expression.Column);
+            if (!columnSelector.IsValid)
             {
                 return NAME_ERROR;
             }
 
             try
             {
-                var value = column.GetPropertyValue(new RowItem(skylineObject), null);
-                return ConvertAnnotationValue(annotationDef, value);
+                if (expression.AggregateOperation == null)
+                {
+                    return columnSelector.GetSingleValue(skylineObject);
+                }
+
+                return columnSelector.AggregateValues(expression.AggregateOperation, skylineObject);
             }
             catch (Exception)
             {
@@ -184,36 +186,21 @@ namespace pwiz.Skyline.Model.DocSettings
             return annotationDef.ParsePersistedString(strValue);
         }
 
-        private ColumnDescriptor GetColumnDescriptor(Type type, string expression)
+        private ColumnSelector GetColumnSelector(Type rootType, PropertyPath propertyPath)
         {
-            var key = Tuple.Create(type, expression);
-            ColumnDescriptor columnDescriptor;
-            lock (_columnDescriptors)
+            var key = Tuple.Create(rootType, propertyPath);
+            ColumnSelector columnSelector;
+            lock (_columnSelectors)
             {
-                if (_columnDescriptors.TryGetValue(key, out columnDescriptor))
+                if (!_columnSelectors.TryGetValue(key, out columnSelector))
                 {
-                    return columnDescriptor;
+                    var rootColumn = ColumnDescriptor.RootColumn(SkylineDataSchema, rootType);
+                    columnSelector = new ColumnSelector(rootColumn, propertyPath);
+                    _columnSelectors.Add(key, columnSelector);
                 }
-
-                PropertyPath propertyPath;
-                try
-                {
-                    propertyPath = PropertyPath.Parse(expression);
-                }
-                catch (Exception)
-                {
-                    propertyPath = null;
-                }
-
-                if (propertyPath != null)
-                {
-                    var rootColumn = ColumnDescriptor.RootColumn(SkylineDataSchema, type);
-                    columnDescriptor = ResolvePath(rootColumn, propertyPath);
-                }
-                _columnDescriptors.Add(key, columnDescriptor);
             }
 
-            return columnDescriptor;
+            return columnSelector;
         }
     }
 }

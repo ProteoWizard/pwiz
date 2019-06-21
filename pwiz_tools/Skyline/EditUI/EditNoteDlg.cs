@@ -57,7 +57,7 @@ namespace pwiz.Skyline.EditUI
                     continue;
                 }
 
-                if (annotationDef.IsCalculated)
+                if (annotationDef.Expression != null)
                 {
                     continue;
                 }

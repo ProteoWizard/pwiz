@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Model.Serialization
         /// </summary>
         public static AnnotationScrubber MakeAnnotationScrubber(StringPool stringPool, DataSettings dataSettings)
         {
-            var writeableAnnotations = dataSettings.AnnotationDefs.Where(def => !def.IsCalculated).ToArray();
+            var writeableAnnotations = dataSettings.AnnotationDefs.Where(def => def.Expression == null).ToArray();
             var validAnnotationNames = new Dictionary<AnnotationDef.AnnotationTarget, HashSet<string>>();
             foreach (AnnotationDef.AnnotationTarget target in Enum.GetValues(typeof(AnnotationDef.AnnotationTarget)))
             {

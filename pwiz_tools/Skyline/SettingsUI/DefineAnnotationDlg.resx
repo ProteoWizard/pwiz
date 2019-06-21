@@ -367,13 +367,13 @@
     <value>3, 174</value>
   </data>
   <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>60, 13</value>
+    <value>56, 13</value>
   </data>
   <data name="label4.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>&amp;Applies To:</value>
+    <value>&amp;Applies to:</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
@@ -395,7 +395,7 @@
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAABI
-        CAAAAk1TRnQBSQFMAwEBAAEYAQABGAEAARABAAEQAQAE/wEJAQAI/wFCAU0BNgEEBgABNgEEAgABKAMA
+        CAAAAk1TRnQBSQFMAwEBAAEwAQABMAEAARABAAEQAQAE/wEJAQAI/wFCAU0BNgEEBgABNgEEAgABKAMA
         AUADAAEQAwABAQEAAQgGAAEEGAABgAIAAYADAAKAAQABgAMAAYABAAGAAQACgAIAA8ABAAHAAdwBwAEA
         AfABygGmAQABMwUAATMBAAEzAQABMwEAAjMCAAMWAQADHAEAAyIBAAMpAQADVQEAA00BAANCAQADOQEA
         AYABfAH/AQACUAH/AQABkwEAAdYBAAH/AewBzAEAAcYB1gHvAQAB1gLnAQABkAGpAa0CAAH/ATMDAAFm
@@ -463,6 +463,54 @@
   <data name="&gt;&gt;tabPageNormal.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="comboAggregateOperation.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 309</value>
+  </data>
+  <data name="comboAggregateOperation.Size" type="System.Drawing.Size, System.Drawing">
+    <value>319, 21</value>
+  </data>
+  <data name="comboAggregateOperation.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="&gt;&gt;comboAggregateOperation.Name" xml:space="preserve">
+    <value>comboAggregateOperation</value>
+  </data>
+  <data name="&gt;&gt;comboAggregateOperation.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboAggregateOperation.Parent" xml:space="preserve">
+    <value>tabPageCalculated</value>
+  </data>
+  <data name="&gt;&gt;comboAggregateOperation.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="lblAggregateOperation.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblAggregateOperation.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 293</value>
+  </data>
+  <data name="lblAggregateOperation.Size" type="System.Drawing.Size, System.Drawing">
+    <value>106, 13</value>
+  </data>
+  <data name="lblAggregateOperation.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="lblAggregateOperation.Text" xml:space="preserve">
+    <value>Aggregate operation:</value>
+  </data>
+  <data name="&gt;&gt;lblAggregateOperation.Name" xml:space="preserve">
+    <value>lblAggregateOperation</value>
+  </data>
+  <data name="&gt;&gt;lblAggregateOperation.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblAggregateOperation.Parent" xml:space="preserve">
+    <value>tabPageCalculated</value>
+  </data>
+  <data name="&gt;&gt;lblAggregateOperation.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="availableFieldsTree1.ImageIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
@@ -473,7 +521,7 @@
     <value>0</value>
   </data>
   <data name="availableFieldsTree1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>319, 277</value>
+    <value>319, 234</value>
   </data>
   <data name="availableFieldsTree1.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
@@ -488,7 +536,7 @@
     <value>tabPageCalculated</value>
   </data>
   <data name="&gt;&gt;availableFieldsTree1.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="label5.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -503,13 +551,13 @@
     <value>6, 10</value>
   </data>
   <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
-    <value>60, 13</value>
+    <value>56, 13</value>
   </data>
   <data name="label5.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
   </data>
   <data name="label5.Text" xml:space="preserve">
-    <value>&amp;Applies To:</value>
+    <value>&amp;Applies to:</value>
   </data>
   <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
@@ -521,7 +569,7 @@
     <value>tabPageCalculated</value>
   </data>
   <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="comboAppliesTo.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 29</value>
@@ -542,7 +590,7 @@
     <value>tabPageCalculated</value>
   </data>
   <data name="&gt;&gt;comboAppliesTo.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>4</value>
   </data>
   <data name="tabPageCalculated.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 25</value>

@@ -35,11 +35,6 @@ namespace pwiz.Skyline.Model.Databinding
         protected virtual string[] GetDropdownItems(AnnotationPropertyDescriptor annotationPropertyDescriptor)
         {
             var annotationDef = annotationPropertyDescriptor.AnnotationDef;
-
-            annotationDef = SkylineDataSchema.Document.Settings.DataSettings.AnnotationDefs
-                                .FirstOrDefault(def => def.Name == annotationDef.Name)
-                            ?? annotationPropertyDescriptor.AnnotationDef;
-
             return new[] { string.Empty }.Concat(annotationDef.Items).ToArray();
         }
     }
