@@ -263,6 +263,7 @@ blib-test-build byonic : --unicode -o : output/byonic.blib : byonic.check byonic
 # Test mzid format from MSGF+
 blib-test-build msgf-mzid : --unicode -o : output/msgf-mzid.blib : msgf-mzid.check : $(TEST_INPUTS_PATH)/msgf-test.mzid ;
 blib-test-build msgf-mzid-nativeid : -o : output/msgf-mzid-nativeid.blib : msgf-mzid-nativeid.check : $(TEST_INPUTS_PATH)/msgf-test-nativeid.mzid ;
+blib-test-build msgf-mzid-nativeid-evalue : -o : output/msgf-mzid-nativeid-evalue.blib : msgf-mzid-nativeid-evalue.check : $(TEST_INPUTS_PATH)/msgf-test-nativeid-evalue.mzid ;
 
 # Test mzid format from PeptideShaker
 blib-test-build peptideshaker-mzid : --unicode -o : output/MoTai_PeptideShaker.blib : MoTai_PeptideShaker.check : $(TEST_INPUTS_PATH)/MoTai_PeptideShaker_subset.mzid ;
