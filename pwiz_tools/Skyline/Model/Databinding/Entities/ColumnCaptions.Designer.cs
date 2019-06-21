@@ -151,6 +151,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Attribute Area Proportion.
+        /// </summary>
+        public static string AttributeAreaProportion {
+            get {
+                return ResourceManager.GetString("AttributeAreaProportion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Attribute Group ID.
+        /// </summary>
+        public static string AttributeGroupId {
+            get {
+                return ResourceManager.GetString("AttributeGroupId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Detail Id.
         /// </summary>
         public static string AuditLogDetailRowId {
