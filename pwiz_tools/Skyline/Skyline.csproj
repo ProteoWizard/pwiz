@@ -1845,6 +1845,9 @@
     <EmbeddedResource Include="Alerts\NoModeUIDlg.resx">
       <DependentUpon>NoModeUIDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\NoModeUIDlg.zh-CHS.resx">
+      <DependentUpon>NoModeUIDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\PasteFilteredPeptidesDlg.ja.resx">
       <DependentUpon>PasteFilteredPeptidesDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -1916,6 +1919,10 @@
     <EmbeddedResource Include="CommandArgUsage.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>CommandArgUsage.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CommandArgUsage.zh-CHS.resx">
+      <DependentUpon>CommandArgUsage.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\AuditLog\AuditLogExtraInfoForm.ja.resx">
@@ -2129,6 +2136,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\VolcanoPlotPropertiesDlg.zh-CHS.resx">
       <DependentUpon>VolcanoPlotPropertiesDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Lists\ListDesigner.zh-CHS.resx">
+      <DependentUpon>ListDesigner.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\ActionBoxControl.ja.resx">
       <DependentUpon>ActionBoxControl.cs</DependentUpon>

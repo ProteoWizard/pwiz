@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -137,6 +137,9 @@
   </data>
   <data name="eIonMobilityUnits_none" xml:space="preserve">
     <value>无</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_DDA" xml:space="preserve">
+    <value>DDA</value>
   </data>
   <data name="FullScanAcquisitionMethod_DIA" xml:space="preserve">
     <value>DIA（数据非依赖性采集）</value>
