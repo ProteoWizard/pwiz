@@ -264,6 +264,117 @@
   <data name="&gt;&gt;tabPageAnnotations.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="btnAddList.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnAddList.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnAddList.Location" type="System.Drawing.Point, System.Drawing">
+    <value>515, 31</value>
+  </data>
+  <data name="btnAddList.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 23</value>
+  </data>
+  <data name="btnAddList.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="btnAddList.Text" xml:space="preserve">
+    <value>追加(&amp;A)...</value>
+  </data>
+  <data name="&gt;&gt;btnAddList.Name" xml:space="preserve">
+    <value>btnAddList</value>
+  </data>
+  <data name="&gt;&gt;btnAddList.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnAddList.Parent" xml:space="preserve">
+    <value>tabPageLists</value>
+  </data>
+  <data name="&gt;&gt;btnAddList.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="btnManageLists.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnManageLists.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnManageLists.Location" type="System.Drawing.Point, System.Drawing">
+    <value>515, 60</value>
+  </data>
+  <data name="btnManageLists.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 23</value>
+  </data>
+  <data name="btnManageLists.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="btnManageLists.Text" xml:space="preserve">
+    <value>リストを管理(&amp;M)...</value>
+  </data>
+  <data name="&gt;&gt;btnManageLists.Name" xml:space="preserve">
+    <value>btnManageLists</value>
+  </data>
+  <data name="&gt;&gt;btnManageLists.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnManageLists.Parent" xml:space="preserve">
+    <value>tabPageLists</value>
+  </data>
+  <data name="&gt;&gt;btnManageLists.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="checkedListBoxLists.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="checkedListBoxLists.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 31</value>
+  </data>
+  <data name="checkedListBoxLists.Size" type="System.Drawing.Size, System.Drawing">
+    <value>501, 199</value>
+  </data>
+  <data name="checkedListBoxLists.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;checkedListBoxLists.Name" xml:space="preserve">
+    <value>checkedListBoxLists</value>
+  </data>
+  <data name="&gt;&gt;checkedListBoxLists.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkedListBoxLists.Parent" xml:space="preserve">
+    <value>tabPageLists</value>
+  </data>
+  <data name="&gt;&gt;checkedListBoxLists.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="tabPageLists.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabPageLists.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabPageLists.Size" type="System.Drawing.Size, System.Drawing">
+    <value>622, 260</value>
+  </data>
+  <data name="tabPageLists.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="tabPageLists.Text" xml:space="preserve">
+    <value>リスト</value>
+  </data>
+  <data name="&gt;&gt;tabPageLists.Name" xml:space="preserve">
+    <value>tabPageLists</value>
+  </data>
+  <data name="&gt;&gt;tabPageLists.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabPageLists.Parent" xml:space="preserve">
+    <value>tabControl</value>
+  </data>
+  <data name="&gt;&gt;tabPageLists.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="btnAddGroupComparison.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
@@ -373,7 +484,7 @@
     <value>tabControl</value>
   </data>
   <data name="&gt;&gt;tabPageGroupComparisons.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="labelReports.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -454,7 +565,7 @@
     <value>tabControl</value>
   </data>
   <data name="&gt;&gt;tabPageReports.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="tabControl.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 12</value>

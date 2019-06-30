@@ -10089,7 +10089,7 @@
     <comment>Used in PeptideToMoleculeText.Translate to update strings like "2 peptides" to read "2 molecules" when non-peptide documents are in use</comment>
   </data>
   <data name="PeptideToMoleculeText_Molecules" xml:space="preserve">
-    <value>分子学</value>
+    <value>分子</value>
     <comment>Used in PeptideToMoleculeText.Translate to update strings like "2 peptides" to read "2 molecules" when non-peptide documents are in use</comment>
   </data>
   <data name="PeptideToMoleculeText_Protein" xml:space="preserve">

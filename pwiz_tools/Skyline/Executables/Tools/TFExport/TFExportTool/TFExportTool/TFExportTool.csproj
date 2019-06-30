@@ -76,6 +76,12 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Properties\Resources.ja.resx">
+      <DependentUpon>Resources.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TFExportDlg.ja.resx">
+      <DependentUpon>TFExportDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="TFExportDlg.resx">
       <DependentUpon>TFExportDlg.cs</DependentUpon>
     </EmbeddedResource>
