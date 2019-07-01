@@ -99,16 +99,6 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Exception constructing column of type {0}:{1}.
-        /// </summary>
-        internal static string AbstractViewContext_CreateCustomColumn_Exception_constructing_column_of_type__0___1_ {
-            get {
-                return ResourceManager.GetString("AbstractViewContext_CreateCustomColumn_Exception_constructing_column_of_type__0__" +
-                        "_1_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Executing query.
         /// </summary>
         internal static string AbstractViewContext_ExecuteQuery_Executing_query {

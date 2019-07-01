@@ -1,0 +1,733 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="_add_library_name" xml:space="preserve">
+    <value>–add-library-path操作でスペクトルライブラリに付与する名前です。</value>
+  </data>
+  <data name="_add_library_path" xml:space="preserve">
+    <value>開いているドキュメントに追加するようスペクトルライブラリを指定します。</value>
+  </data>
+  <data name="_batch_commands" xml:space="preserve">
+    <value>各行をSkylineRunner/Cmd入力のように扱ってファイルを行毎に実行します。複数コマンド実行の自動化に役立ちます。  開いているSkylineファイルはすべてのコマンド中、有効な状態を保ちます。</value>
+  </data>
+  <data name="_chromatogram_base_peaks" xml:space="preserve">
+    <value>ベースピーククロマトグラムをエクスポートします。--chromatogram-file引数が必要です。</value>
+  </data>
+  <data name="_chromatogram_file" xml:space="preserve">
+    <value>クロマトグラムのエクスポート先となるタブ区切りファイルへのパスです。デフォルトはプリカーサーとプロダクトのエクスポートです。</value>
+  </data>
+  <data name="_chromatogram_precursors" xml:space="preserve">
+    <value>プリカーサーイオンクロマトグラムをエクスポートします。--chromatogram-file引数が必要です。</value>
+  </data>
+  <data name="_chromatogram_products" xml:space="preserve">
+    <value>プロダクトイオンクロマトグラムをエクスポートします。--chromatogram-file引数が必要です。</value>
+  </data>
+  <data name="_chromatogram_tics" xml:space="preserve">
+    <value>総イオン電流クロマトグラムをエクスポートします。--chromatogram-file引数が必要です。</value>
+  </data>
+  <data name="_decoys_add" xml:space="preserve">
+    <value>mProphetを用いたモデル生成を再統合するテンプレートドキュメントにデコイを追加します。（デコイ生成法はオプションで、デフォルトは「反転」です。）</value>
+  </data>
+  <data name="_decoys_add_count" xml:space="preserve">
+    <value>追加するデコイの数です。（オプション。デフォルトではターゲットと同じ数のデコイを生成します。）</value>
+  </data>
+  <data name="_dir" xml:space="preserve">
+    <value>コマンドが実行されているディレクトリ以外で、他のすべてのパス引数にデフォルトとなるルートディレクトリを指定するのに使用します。</value>
+  </data>
+  <data name="_exp_file" xml:space="preserve">
+    <value>エクスポート先のメソッドかトランジションのリストファイル（またはディレクトリ）へのパスです。このオプションはメソッドおよびトランジションのリストのエクスポートに必要です。</value>
+  </data>
+  <data name="_exp_ignore_proteins" xml:space="preserve">
+    <value>メソッド作成時にタンパク質の境界を無視します。</value>
+  </data>
+  <data name="_exp_isolationlist_instrument" xml:space="preserve">
+    <value>単離リストをエクスポートします。このオプションは単離リストのエクスポートに必要で、デフォルトはありません。単離リストとトランジションリストまたはメソッドを同時にエクスポートできないので、このオプションは–exp-translist-instrumentまたは–exp-method-instrumentとは併用できません。</value>
+  </data>
+  <data name="_exp_max_trans" xml:space="preserve">
+    <value>エクスポート方法「タンパク質」と「バケット」のインジェクション毎の最大トランジション数、またはスケジュールメソッドに対する最大同時トランジションの数です。</value>
+  </data>
+  <data name="_exp_method_instrument" xml:space="preserve">
+    <value>メソッドをエクスポートします。このオプションはメソッドのエクスポートに必要で、デフォルトはありません。メソッドと単離リスト/トランジションリストを同時にエクスポートできないので、このオプションは–exp-isolationlist-instrumentまたは--exp-translist-instrumentとは併用できません。</value>
+  </data>
+  <data name="_exp_method_type" xml:space="preserve">
+    <value>標準メソッド、スケジュールメソッドかトリガーメソッドを設定します。デフォルトは「標準」です。</value>
+  </data>
+  <data name="_exp_optimizing" xml:space="preserve">
+    <value>最適な衝突エネルギーまたはデクラスタリングポテンシャルを見つけるために、追加のトランジションを含むメソッドをエクスポートします。</value>
+  </data>
+  <data name="_exp_polarity" xml:space="preserve">
+    <value>陽と陰イオンモードのトランジション両方のドキュメントのエクスポート動作を制御します。陽または陰イオンモードのみのトランジションの出力を許可するか、各極性に対して別々の出力を作成します。デフォルトはすべてで、単極性ドキュメントでは無視されます。</value>
+  </data>
+  <data name="_exp_primary_count" xml:space="preserve">
+    <value>--Exp-method-type=triggeredでは、プライマリを作成するトランジション数を指定します。</value>
+  </data>
+  <data name="_exp_scheduling_replicate" xml:space="preserve">
+    <value>スケジュールメソッドか、トリガーメソッドを作成する場合のみ、これを使用してください。デフォルトでは、すべての繰り返し測定の平均に基づいてスケジュールしますが、1つの測定を指定する場合、メソッドはその繰り返し測定に基づきスケジュールされます。</value>
+  </data>
+  <data name="_exp_strategy" xml:space="preserve">
+    <value>メソッドをインジェクションに分ける方法です。デフォルトは「シングル」です。</value>
+  </data>
+  <data name="_exp_template" xml:space="preserve">
+    <value>メソッドテンプレートのパスです。お使いの装置によって、これはファイルである場合もあれば、ディレクトリである場合もあります。このオプションはメソッドのエクスポートに必要です。</value>
+  </data>
+  <data name="_exp_translist_instrument" xml:space="preserve">
+    <value>トランジションリストをエクスポートします。このオプションはトランジションリストのエクスポートに必要で、デフォルトはありません。トランジションリストと単離リストまたはメソッドを同時にエクスポートできないので、このオプションは–exp-isolation-listまたは--exp-method-instrumentとは併用できません。</value>
+  </data>
+  <data name="_help" xml:space="preserve">
+    <value>このテキストを表示します。</value>
+  </data>
+  <data name="_ignore_transition_errors" xml:space="preserve">
+    <value>認識されたトランジションがあれば、そのすべてをトランジションリストかアッセイライブラリからインポートします。その際、エラー行は警告として報告されます。</value>
+  </data>
+  <data name="_import_all" xml:space="preserve">
+    <value>ドキュメント内にまだ存在しないフォルダ、すべてのファイルまたはサブフォルダからインポートし、--import-naming-patternパラメータも提供されていない場合は、ファイルまたはサブフォルダのベース名でそれぞれを命名します。--import-replicate-nameが提供されている場合、すべてのファイルは1つのマルチインジェクション繰り返し測定に追加されます。</value>
+  </data>
+  <data name="_import_all_files" xml:space="preserve">
+    <value>ドキュメント内にまだ存在しないフォルダ、すべてのファイル（サブフォルダ以外）からインポートし、--import-naming-patternパラメータも提供されていない場合は、ファイルのベース名でそれぞれを命名します。--import-replicate-nameが提供されている場合、すべてのファイルは1つのマルチインジェクション繰り返し測定に追加されます。</value>
+  </data>
+  <data name="_import_append" xml:space="preserve">
+    <value>指定された繰り返し測定にimport-fileを追加します。該当ドキュメントに指定された名前を持つ繰り返し測定が既にある場合に、意図を確認します。デフォルトではFalseに設定されています。このオプションは–import-fileオプションでのみ機能します。</value>
+  </data>
+  <data name="_import_assay_library" xml:space="preserve">
+    <value>iRTと相対プロダクトイオン存在量の列を持つアッセイライブラリのトランジションリストをインポートし、iRTカルキュレータとスペクトルライブラリを作成しピーク選択を高めます。</value>
+  </data>
+  <data name="_import_before" xml:space="preserve">
+    <value>フォルダからインポートする際には、変更された時間が指定された日付前のファイルのみインポートします。</value>
+  </data>
+  <data name="_import_document" xml:space="preserve">
+    <value>開いているドキュメントにSkylineの別のドキュメントをインポートします。これは複数ファイルに複数回、指定されている場合があります。</value>
+  </data>
+  <data name="_import_document_merge_peptides" xml:space="preserve">
+    <value>一致するペプチドを使用する場合、まとめられますが、そうでない場合、まとめられません。</value>
+  </data>
+  <data name="_import_document_results" xml:space="preserve">
+    <value>インポート済みドキュメントの結果をどのように取り扱うか決定します。デフォルトは削除です。</value>
+  </data>
+  <data name="_import_fasta" xml:space="preserve">
+    <value>開いているドキュメントにFASTAファイルをインポートします。</value>
+  </data>
+  <data name="_import_file" xml:space="preserve">
+    <value>開いているドキュメントに繰り返し測定を添付します。</value>
+  </data>
+  <data name="_import_lockmass_negative" xml:space="preserve">
+    <value>陰イオンスキャンのWatersのロックマスによる補正m/zです。</value>
+  </data>
+  <data name="_import_lockmass_positive" xml:space="preserve">
+    <value>陽イオンスキャンのWatersのロックマスによる補正m/zです。</value>
+  </data>
+  <data name="_import_lockmass_tolerance" xml:space="preserve">
+    <value>Watersのロックマスによる許容誤差m/zです。</value>
+  </data>
+  <data name="_import_naming_pattern" xml:space="preserve">
+    <value>--import-all操作で繰り返し測定に名前を付けるために、最初のグループに使用される正規表現です。（例：最初のアンダースコアの後のすべてに対し[^_]_(.*)）</value>
+  </data>
+  <data name="_import_no_join" xml:space="preserve">
+    <value>結果ファイルをメインドキュメント.skydファイルに結合することなく、個々の.skydファイルにインポートします。これはHPCクラスタとして分散処理をする際に有用です。</value>
+  </data>
+  <data name="_import_on_or_after" xml:space="preserve">
+    <value>フォルダからインポートする際には、変更された時間が指定された日付以降のファイルのみインポートします。</value>
+  </data>
+  <data name="_import_optimizing" xml:space="preserve">
+    <value>インポート中のデータは、最適な衝突エネルギーまたはデクラスタリングポテンシャルを検出するための、追加のトランジションが含まれていることを示します。</value>
+  </data>
+  <data name="_import_process_count" xml:space="preserve">
+    <value>多数のサブプロセスが単一ファイルのインポートで実行され、その後、各単一ファイルの結果がメインプロセスと結合されます。これにより、24コアNUMAサーバーでは10倍、i7プロセッサでも正しい条件の下では3～4倍に性能がアップされる可能性があります。お使いのシステムで必ずテストしてください。</value>
+  </data>
+  <data name="_import_replicate_name" xml:space="preserve">
+    <value>–import-file操作で新しい繰り返し測定に与える名前です。</value>
+  </data>
+  <data name="_import_search_add_mods" xml:space="preserve">
+    <value>開いているドキュメントにペプチド検索結果ファイルで検出したすべての修飾を追加します。</value>
+  </data>
+  <data name="_import_search_cutoff_score" xml:space="preserve">
+    <value>ペプチド検索結果ファイルからスペクトルライブラリを構築する際に、使用されるカットオフスコア（0～1）を定義します。ここで、1は最も高い信頼性一致で、0はすべてを含みます。[デフォルトは0.95]</value>
+  </data>
+  <data name="_import_search_file" xml:space="preserve">
+    <value>開いているドキュメントにペプチド検索結果ファイルをインポートし、ドキュメント特有のスペクトルライブラリを構築します。これは複数ファイルに複数回、指定されている場合があります。ターゲットとして一致したペプチドを追加するには、–import-fasta引数を使用します。</value>
+  </data>
+  <data name="_import_search_include_ambiguous" xml:space="preserve">
+    <value>スペクトルライブラリ構築時に、ペプチドの曖昧一致が複数あるスペクトルが破棄されないようにします。</value>
+  </data>
+  <data name="_import_search_prefer_embedded_spectra" xml:space="preserve">
+    <value>MaxQuant msms.txtファイルが、元のスペクトルの生データファイルを開く方法ではなく、ファイル内のスペクトルを強制的に使用するようにします。MaxQuant msms.txtファイルには、ターゲット選択に不適切な可能性がある、荷電状態のデコンボリューションスペクトルが含まれています。</value>
+  </data>
+  <data name="_import_threads" xml:space="preserve">
+    <value>多数のファイルが、メインプロセスのスレッド（ユーザーインターフェイスの[同時にインポートするファイル]に相当）を使用して並行にインポートされます。その後、それぞれの単一ファイルからの結果が結合されます。これにより、正しい条件の下では2～4倍に性能がアップされる可能性があります。お使いのシステムで必ずテストしてください。</value>
+  </data>
+  <data name="_import_transition_list" xml:space="preserve">
+    <value>Q1、Q3とペプチドシーケンスがあるシンプルなトランジションリストをインポートします。  また、ヘッダーが適切な分子トランジションリストもCSV形式でサポートします。</value>
+  </data>
+  <data name="_import_warn_on_failure" xml:space="preserve">
+    <value>ファイルのインポートが失敗しエラーが表示される場合、メッセージは警告として現れ、繰り返し測定は削除され、インポートは最後まで続行します。</value>
+  </data>
+  <data name="_in" xml:space="preserve">
+    <value>Skylineファイルを開きます</value>
+  </data>
+  <data name="_irt_calc_name" xml:space="preserve">
+    <value>アッセイライブラリのインポート中に作成されるiRTカルキュレータの名前です。（オプション）デフォルト名はドキュメントのベース名です。</value>
+  </data>
+  <data name="_irt_database_path" xml:space="preserve">
+    <value>インポート済みのアッセイライブラリで使用する、既存のiRTカルキュレータ（.irtdbファイル）へのパスです。あるいは、–irt-standards-group-nameまたは–irt-standards-fileが使用される場合には、作成済みの.irtdbファイルの出力パスです。（オプション）iRTカルキュレータのデフォルトパスはpath/to/document.irtdbです。</value>
+  </data>
+  <data name="_irt_standards_file" xml:space="preserve">
+    <value>インポート済みのアッセイライブラリに適用されるiRT標準を含む別個のアッセイライブラリへのパスです。（オプション）</value>
+  </data>
+  <data name="_irt_standards_group_name" xml:space="preserve">
+    <value>インポート済みのアッセイライブラリ内にiRT標準を含むタンパク質かペプチドのリスト名です。（オプション）</value>
+  </data>
+  <data name="_keep_empty_proteins" xml:space="preserve">
+    <value>FASTAファイルをインポート後、開いているドキュメントに空欄のタンパク質を保持します。</value>
+  </data>
+  <data name="_log_file" xml:space="preserve">
+    <value>記録されたすべての出力をファイルに送信します。</value>
+  </data>
+  <data name="_memstamp" xml:space="preserve">
+    <value>記録中のすべての出力は、管理されている2つのメモリ使用量値と、MBに四捨五入されたプロセスプライベートバイトの後に続きます。</value>
+  </data>
+  <data name="_out" xml:space="preserve">
+    <value>指定されたファイルに書き込まれること以外は、保存と同じです。</value>
+  </data>
+  <data name="_reintegrate_create_model" xml:space="preserve">
+    <value>このオプションでは、ドキュメント内で検出された結果に対し、利用可能なすべてのスコアのmProphetアルゴリズムを使用し、新しいモデルを作成します。（必要なのは、--reintegrate-model-nameです。）</value>
+  </data>
+  <data name="_reintegrate_exclude_feature" xml:space="preserve">
+    <value>モデルから名前別で特定のフィーチャースコアを除外するのに使用します。名前はユーザーインターフェイスで見つけることができます。この引数は複数フィーチャーを除外するため複数回使用することができます。</value>
+  </data>
+  <data name="_reintegrate_log_training" xml:space="preserve">
+    <value>モデルのトレーニングについての詳細が記録されるようになります。</value>
+  </data>
+  <data name="_reintegrate_model_both" xml:space="preserve">
+    <value>再統合中にデコイと2番目に良いピークのどちらも強制的に使用します。デフォルトはデコイのみの使用です。</value>
+  </data>
+  <data name="_reintegrate_model_iteration_count" xml:space="preserve">
+    <value>モデル作成中に実施された反復数をコントロールするのに使用できます。デフォルトで最大10まで許可されており、新しいモデルにより検出数が少なくなれば反復がストップします。</value>
+  </data>
+  <data name="_reintegrate_model_name" xml:space="preserve">
+    <value>再統合操作で使用するスコアモデルの名前です。モデルはあらかじめ定義する（[編集] &gt; [最適化] &gt; [再統合]フォーム）ことも、この操作中に--reintegrate-create-modelを使用して自動的に作成することもできます。</value>
+  </data>
+  <data name="_reintegrate_model_second_best" xml:space="preserve">
+    <value>再統合中に2番目に良いピークを強制的に使用します。デフォルトはデコイのみの使用です。</value>
+  </data>
+  <data name="_reintegrate_overwrite_peaks" xml:space="preserve">
+    <value>手動で統合された既存のピークは、再統合モデルで選択されたピークによって上書きされます。（必要なのは、--reintegrate-model-nameです。）</value>
+  </data>
+  <data name="_remove_all" xml:space="preserve">
+    <value>開いているドキュメントからすべての結果を削除します。</value>
+  </data>
+  <data name="_remove_before" xml:space="preserve">
+    <value>指定された日付以前に取得時間のある、開いているドキュメントからすべての結果を削除します。</value>
+  </data>
+  <data name="_report_add" xml:space="preserve">
+    <value>保存済みのレポートテンプレートファイルからレポートを実行中のプログラムに追加します。</value>
+  </data>
+  <data name="_report_conflict_resolution" xml:space="preserve">
+    <value>--report-addを使用する際、レポート名の不一致を解決する方法を、上書きするか不一致をスキップするかのいずれかで指定します。（デフォルトは、不一致のエラーメッセージを出力することです。）</value>
+  </data>
+  <data name="_report_file" xml:space="preserve">
+    <value>レポートのエクスポート先のパスです。--report-nameが指定されている場合、必要です。</value>
+  </data>
+  <data name="_report_format" xml:space="preserve">
+    <value>カンマ区切り（地域に応じてセミコロン区切り）のレポート用CSVか、タブ区切りのレポート用TSVです（デフォルトはCSV）。</value>
+  </data>
+  <data name="_report_invariant" xml:space="preserve">
+    <value>[インバリアント]（特定の言語や国・地域に依存しない）の言語設定でレポートをエクスポートします。米国英語の番号書式とスペースなしのヘッダーテキストを用いており、R統計解析プログラミング環境での使用に理想的です。</value>
+  </data>
+  <data name="_report_name" xml:space="preserve">
+    <value>Skylineの[レポートをエクスポート]フォームに表示される通りにエクスポートされるレポートの名前です。</value>
+  </data>
+  <data name="_save" xml:space="preserve">
+    <value>どんな変更もファイルに保存します。</value>
+  </data>
+  <data name="_share_type" xml:space="preserve">
+    <value>--share-zipが指定されている場合、共有するのが「最小限」または「完全」であるアーカイブタイプを特定します。「最小限」がデフォルトで、アーカイブのサイズを、ドキュメント内ターゲットを表すのに必要最小限に減らすようにしており、一方「完全」はすべてのプロジェクトファイルの完全な忠実度を維持します。</value>
+  </data>
+  <data name="_share_zip" xml:space="preserve">
+    <value>プロジェクト全体（ドキュメント、結果、ライブラリなど）をZIPアーカイブに保存します。デフォルトは最小限のアーカイブです。</value>
+  </data>
+  <data name="_timestamp" xml:space="preserve">
+    <value>記録中のすべての出力は、日時の後に続きます。</value>
+  </data>
+  <data name="CommandArgGroup_ToString_Argument" xml:space="preserve">
+    <value>引数</value>
+  </data>
+  <data name="CommandArgGroup_ToString_Description" xml:space="preserve">
+    <value>説明</value>
+  </data>
+  <data name="CommandArgs_GROUP_GENERAL_IO_General_input_output" xml:space="preserve">
+    <value>一般的な入力/出力</value>
+  </data>
+  <data name="CommandArgs_GROUP_IMPORT_Importing_results_replicates" xml:space="preserve">
+    <value>結果の繰り返し測定をインポート中</value>
+  </data>
+  <data name="CommandArgs_GROUP_REMOVE_Removing_results_replicates" xml:space="preserve">
+    <value>結果の繰り返し測定を削除中</value>
+  </data>
+  <data name="CommandArgs_GROUP_IMPORT_DOC_Importing_other_Skyline_documents" xml:space="preserve">
+    <value>他のSkylineドキュメントをインポート中</value>
+  </data>
+  <data name="CommandArgs_GROUP_FASTA_Importing_FASTA_files" xml:space="preserve">
+    <value>FASTAファイルをインポート中</value>
+  </data>
+  <data name="CommandArgs_GROUP_IMPORT_LIST_Importing_transition_lists_and_assay_libraries" xml:space="preserve">
+    <value>トランジションリストとアッセイライブラリをインポート中</value>
+  </data>
+  <data name="CommandArgs_GROUP_ADD_LIBRARY_Adding_spectral_libraries" xml:space="preserve">
+    <value>スペクトルライブラリを追加中</value>
+  </data>
+  <data name="CommandArgs_GROUP_REINTEGRATE_Reintegrate_with_advanced_peak_picking_models" xml:space="preserve">
+    <value>詳細ピーク選択モデルと統合</value>
+  </data>
+  <data name="CommandArgs_GROUP_REPORT_Exporting_reports" xml:space="preserve">
+    <value>レポートをエクスポート中</value>
+  </data>
+  <data name="CommandArgs_GROUP_CHROMATOGRAM_Exporting_chromatograms" xml:space="preserve">
+    <value>クロマトグラムをエクスポート中</value>
+  </data>
+  <data name="CommandArgs_GROUP_IMPORT_SEARCH_Importing_peptide_searches" xml:space="preserve">
+    <value>ペプチド検索をインポート中</value>
+  </data>
+  <data name="CommandArgs_GROUP_LISTS_Exporting_isolation_transition_lists" xml:space="preserve">
+    <value>単離/トランジションリストをエクスポート中</value>
+  </data>
+  <data name="CommandArgs_GROUP_METHOD_Exporting_native_instrument_methods" xml:space="preserve">
+    <value>装置メソッドのネイティブファイルをエクスポート中</value>
+  </data>
+  <data name="CommandArgs_GROUP_EXP_GENERAL_Method_and_transition_list_options" xml:space="preserve">
+    <value>メソッドとトランジションリストのオプション</value>
+  </data>
+  <data name="CommandArgs_Usage_To_access_the_command_line_interface_for_Skyline_you_can_use_either_SkylineRunner_exe_or_SkylineCmd_exe_" xml:space="preserve">
+    <value>Skylineのコマンドラインインターフェイスにアクセスするには、SkylineRunner.exeかSkylineCmd.exeのいずれかを使用できます。</value>
+  </data>
+  <data name="CommandArgs_Usage_" xml:space="preserve">
+    <value>SkylineRunner.exeはサイズが10 KB未満の超小型shim実行可能ファイルです。  Skylineのインストールが必要で、SkylineRunner使用中のコンピュータ上で自動更新型ウェブインストーラーを用いて実行されます。  SkylineRunnerはユーザーインターフェイスなしで別のSkylineプロセスの実行を開始し、実行中のSkylineインスタンスにコマンドラインからパラメータオプションをパイプ処理し、Skylineインスタンスからコマンドコンソールまで出力をプリントします。SkylineRunnerの複数インスタンスを実行することができ、Skylineの複数インスタンスを開始します。SkylineRunnerが開始したSkylineインスタンスは、同じマシンで既に実行中の可能性がある他のインスタンスから影響を受けることはありません。  SkylineRunnerが機能するのに、実行中のSkylineの参照可能なインスタンスは不要です。</value>
+  </data>
+  <data name="CommandArgs_Usage_para2" xml:space="preserve">
+    <value>SkylineRunner.exeはサイズが10 KB未満の超小型shim実行可能ファイルです。  Skylineのインストールが必要で、SkylineRunner使用中のコンピュータ上で自動更新型ウェブインストーラーを用いて実行されます。  SkylineRunnerはユーザーインターフェイスなしで別のSkylineプロセスの実行を開始し、実行中のSkylineインスタンスにコマンドラインからパラメータオプションをパイプ処理し、Skylineインスタンスからコマンドコンソールまで出力をプリントします。SkylineRunnerの複数インスタンスを実行することができ、Skylineの複数インスタンスを開始します。SkylineRunnerが開始したSkylineインスタンスは、同じマシンで既に実行中の可能性がある他のインスタンスから影響を受けることはありません。  SkylineRunnerが機能するのに、実行中のSkylineの参照可能なインスタンスは不要です。</value>
+  </data>
+  <data name="CommandArgs_Usage_para3" xml:space="preserve">
+    <value>SkylineCmd.exeは、Skyline.exeに加えて常にインストールされているシンプルな実行可能ファイルです。DLLとしてSkyline.exeモジュールを使用しており、SkylineRunner.exeよりはるかにクリーンなコマンドライン実装を提供していますが、ウェブインストーラーとしては珍しく、SkylineCmd.exeを実行するのにディスク上での常駐場所を知っておく必要があります。通常は、SkylineCmd.exeをご利用になりたい場合、「アンプラグド」インストーラーまたは「管理者権限」インストーラーのいずれか（または最近ではLIinuxシステムの場合Wine Docker Container）をご利用になれます。「アンプラグド」インストーラーはZIPファイルに入っており、ファイルを解凍し、SkylineCmd.exeを見つけて適切な位置で実行するだけです。「管理者権限」インストーラーでは、SkylineCmd.exeはC:\Program Files\Skylineｍにあります。</value>
+  </data>
+  <data name="CommandArgs_Usage_para4" xml:space="preserve">
+    <value>Skylineのコマンドラインインターフェイスは取得中のQC、スケジュール、最適化などのタスクの自動化に向いています。  Skylineコマンドラインインターフェイスを用いると、Skylineドキュメントを開き、新たに取得したデータファイルをインポートし、レポートまたは新しいメソッドをエクスポートすることができます。また、プロテオーム全体にわたるDIAとDDA実験を、完全なグラフィックユーザーインターフェイスを使用した場合より、さらに迅速で消費メモリを削減して大規模なクロマトグラム抽出およびピーク選択を実施できます。（ウェビナー14を参照：https://skyline.ms/webinar14.url）</value>
+  </data>
+  <data name="CommandArgs_Usage_Until_the_section_titled_Settings_Customization_all_other_command_line_arguments_rely_on_the____in__argument_because_they_all_rely_on_having_a_Skyline_document_open_" xml:space="preserve">
+    <value>設定のカスタマイズという名前のセクションまでは、他のすべてのコマンドライン引数は「--in」引数に依存しています。その理由は、これらすべてがSkylineドキュメントが開いた状態であることに依存しているからです。</value>
+  </data>
+  <data name="CommandArgs_GROUP_PANORAMA_Publishing_to_Panorama" xml:space="preserve">
+    <value>Panoramaに公開中</value>
+  </data>
+  <data name="CommandArgs_GROUP_PANORAMA_postamble" xml:space="preserve">
+    <value>結果ファイルをインポートする引数（--import-fileまたは-–import-all）を上記の引数と併せて使用する場合で、新しい結果がSkylineドキュメントに追加される場合のみ、そのドキュメントが指定されたPanoramaサーバーにアップロードされます。</value>
+  </data>
+  <data name="_full_scan_precursor_res" xml:space="preserve">
+    <value>プリカーサー質量アナライザーの分解能です。質量アナライザーが「セントロイド化」されている場合、値はPPMです。</value>
+  </data>
+  <data name="_full_scan_precursor_res_mz" xml:space="preserve">
+    <value>プリカーサー質量アナライザーの分解能が指定されているm/z値です。（OrbitrapおよびFT_ICRの質量アナライザーのみに適用されます。）</value>
+  </data>
+  <data name="_full_scan_product_res" xml:space="preserve">
+    <value>プロダクト質量アナライザーの分解能です。質量アナライザーが「セントロイド化」されている場合、値はPPMです。</value>
+  </data>
+  <data name="_full_scan_product_res_mz" xml:space="preserve">
+    <value>プロダクト質量アナライザーの分解能が指定されているm/z値です。（OrbitrapおよびFT_ICRの質量アナライザーのみに適用されます。）</value>
+  </data>
+  <data name="_full_scan_rt_filter_tolerance" xml:space="preserve">
+    <value>予測時間かMS/MS IDのいずれか側の（±分で表した）分数です。</value>
+  </data>
+  <data name="_panorama_folder" xml:space="preserve">
+    <value>ファイルの公開先となるPanoramaサーバー上のフォルダへのパスです（例：MyProject/MyFolder）。</value>
+  </data>
+  <data name="_panorama_password" xml:space="preserve">
+    <value>Panoramaサーバーに公開するアクセスのあるユーザーのパスワードです。</value>
+  </data>
+  <data name="_panorama_server" xml:space="preserve">
+    <value>--inファイルの公開先のPanoramaサーバーのURLです。URLにはプロトコル（httpかhttps）、ホスト名かポート（必要である場合）が、含まれていなければなりません。例：
+https://panoramaweb.org
+または
+http://localhost:8080</value>
+  </data>
+  <data name="_panorama_username" xml:space="preserve">
+    <value>Panoramaサーバーに公開するアクセスのあるユーザーのユーザー名/電子メールアドレスです。</value>
+  </data>
+  <data name="_tool_add" xml:space="preserve">
+    <value>インストール用ZIPファイルではなく、設定によって追加されるツールの名前です。</value>
+  </data>
+  <data name="_tool_add_zip" xml:space="preserve">
+    <value>ツールのインストール用ZIPファイルからツールをインポートします。</value>
+  </data>
+  <data name="_tool_arguments" xml:space="preserve">
+    <value>ツールを追加するためのオプションのコマンドライン引数で、ツール実行時に使用されます。（ウェブのURLコマンドには適用されません。）</value>
+  </data>
+  <data name="_tool_command" xml:space="preserve">
+    <value>インストール用ZIPファイルではなく、設定によって追加されるコマンドを実行するウェブページURLのコマンドです。</value>
+  </data>
+  <data name="_tool_conflict_resolution" xml:space="preserve">
+    <value>既存のインストールを上書きするか、新しいツールのインストールをスキップするかいずれかにより、ツール名の不一致を解決する方法を指示します。</value>
+  </data>
+  <data name="_tool_ignore_required_packages" xml:space="preserve">
+    <value>ZIPファイルからツールをインストールする際に、必要なパッケージを無視します。</value>
+  </data>
+  <data name="_tool_initial_dir" xml:space="preserve">
+    <value>ツールを追加するための初期ディレクトリ（オプション）で、ツール実行時に使用されます。  （ウェブのURLコマンドには適用されません。）</value>
+  </data>
+  <data name="_tool_list_export" xml:space="preserve">
+    <value>--batch-commandsの引数の改行区切りリストとしてテキストファイルに、[ツール]メニューにあるすべてのツールをエクスポートします。</value>
+  </data>
+  <data name="_tool_output_to_immediate_window" xml:space="preserve">
+    <value>ツール出力があれば、ランタイム時に[イミディエイトウィンドウ]にパイプ処理されます。</value>
+  </data>
+  <data name="_tool_program_macro" xml:space="preserve">
+    <value>-–tool-program-pathコマンドと使用するプログラムのタイトルとバージョンを指定します。これらのコマンドを併せるのは、$(ProgramPath())マクロをコマンドとして使用するZIPファイルからツールをインポートするためです。詳細は、外部ツール、--tool-program-macro=R,2.15.2
+などのドキュメンテーションを参照してください。</value>
+  </data>
+  <data name="_tool_program_path" xml:space="preserve">
+    <value>-–toolプログラムマクロのフラグによって指定されたプログラムのタイトルとバージョン用のローカルマシン上で、実行可能ファイルへのパスを指定します。</value>
+  </data>
+  <data name="_tool_report" xml:space="preserve">
+    <value>ツール用の入力レポートとして使用する設定にあるレポートの名前です。</value>
+  </data>
+  <data name="_tool_zip_conflict_resolution" xml:space="preserve">
+    <value>提供されたZIPファイルが原因するツールの不一致を解決するのに、上書きすべきか並行インストールすべきかを指定します。これは、ツールのバージョン管理とレポート名に関連する不一致向けです。</value>
+  </data>
+  <data name="_tool_zip_overwrite_annotations" xml:space="preserve">
+    <value>提供されたZIPファイルが原因で不一致となったカスタム注釈が、既存の注釈を上書きすべき（True）かスキップすべき(False)かを指定します。</value>
+  </data>
+  <data name="CommandArgs_GROUP_SETTINGS_Document_Settings" xml:space="preserve">
+    <value>ドキュメント設定</value>
+  </data>
+  <data name="CommandArgs_PATH_TO_FILE_path_to_file" xml:space="preserve">
+    <value>path/to/file（ファイル）</value>
+  </data>
+  <data name="CommandArgs_PATH_TO_FOLDER" xml:space="preserve">
+    <value>path/to/folder（フォルダ）</value>
+  </data>
+  <data name="CommandArgs_DATE_VALUE" xml:space="preserve">
+    <value>&lt;日付&gt;</value>
+  </data>
+  <data name="CommandArgs_INT_VALUE" xml:space="preserve">
+    <value>&lt;整数&gt;</value>
+  </data>
+  <data name="CommandArgs_NUM_VALUE" xml:space="preserve">
+    <value>&lt;数字&gt;</value>
+  </data>
+  <data name="CommandArgs_NAME_VALUE" xml:space="preserve">
+    <value>&lt;名前&gt;</value>
+  </data>
+  <data name="CommandArgs_FEATURE_NAME_VALUE" xml:space="preserve">
+    <value>&lt;フィーチャー名&gt;</value>
+  </data>
+  <data name="CommandArgs_REPORT_NAME_VALUE" xml:space="preserve">
+    <value>&lt;レポート名&gt;</value>
+  </data>
+  <data name="CommandArgs_PIPE_NAME_VALUE" xml:space="preserve">
+    <value>&lt;パイプ名&gt;</value>
+  </data>
+  <data name="CommandArgs_REGEX_VALUE" xml:space="preserve">
+    <value>&lt;正規表現&gt;</value>
+  </data>
+  <data name="CommandArgs_RP_VALUE" xml:space="preserve">
+    <value>&lt;分解能&gt;</value>
+  </data>
+  <data name="CommandArgs_MZ_VALUE" xml:space="preserve">
+    <value>&lt;m/z値&gt;</value>
+  </data>
+  <data name="CommandArgs_MINUTES_VALUE" xml:space="preserve">
+    <value>&lt;分&gt;</value>
+  </data>
+  <data name="CommandArgs_MILLIS_VALE" xml:space="preserve">
+    <value>&lt;ミリ秒&gt;</value>
+  </data>
+  <data name="CommandArgs_SERVER_URL_VALUE" xml:space="preserve">
+    <value>&lt;サーバーURL&gt;</value>
+  </data>
+  <data name="CommandArgs_USERNAME_VALUE" xml:space="preserve">
+    <value>&lt;ユーザー名&gt;</value>
+  </data>
+  <data name="CommandArgs_PASSWORD_VALUE" xml:space="preserve">
+    <value>&lt;パスワード&gt;</value>
+  </data>
+  <data name="CommandArgs_COMMAND_VALUE" xml:space="preserve">
+    <value>&lt;コマンド | URL&gt;</value>
+  </data>
+  <data name="CommandArgs_COMMAND_ARGUMENTS_VALUE" xml:space="preserve">
+    <value>"&lt;引数&gt;"</value>
+  </data>
+  <data name="CommandArgs_PROGRAM_MACRO_VALUE" xml:space="preserve">
+    <value>&lt;プログラムタイトル&gt;[,&lt;プログラムバージョン&gt;]</value>
+  </data>
+  <data name="CommandArgs_GROUP_ANNOTATIONS_Importing_annotations" xml:space="preserve">
+    <value>注釈をインポート中</value>
+  </data>
+  <data name="CommandArgGroup_ToString_Applies_To" xml:space="preserve">
+    <value>適用先</value>
+  </data>
+  <data name="CommandArgs_ARG_EXP_DWELL_TIME_AppliesTo" xml:space="preserve">
+    <value>Agilent
+SCIEX</value>
+  </data>
+  <data name="CommandArgs_ARG_EXP_Thermo" xml:space="preserve">
+    <value>Thermo</value>
+  </data>
+  <data name="CommandArgs_ARG_EXP_RUN_LENGTH_AppliesTo" xml:space="preserve">
+    <value>Thermo
+Waters</value>
+  </data>
+  <data name="CommandArgs_GROUP_EXP_INSTRUMENT_Vendor_specific_method_and_transition_list_options" xml:space="preserve">
+    <value>ベンダー特有のメソッドとトランジションリストのオプション</value>
+  </data>
+  <data name="_exp_add_energy_ramp" xml:space="preserve">
+    <value>トランジションリストにエネルギー勾配の列をさらに追加します。  オプションです。デフォルトはFalseです。</value>
+  </data>
+  <data name="_exp_dwell_time" xml:space="preserve">
+    <value>トランジション毎のドウェル時間です。このオプションはスケジュールされていないトランジションリストに必要です。</value>
+  </data>
+  <data name="_exp_run_length" xml:space="preserve">
+    <value>分単位で表したグラジエント全体の実行時間です。このオプションはスケジュールされていない実験に必要です。</value>
+  </data>
+  <data name="_exp_use_s_lens" xml:space="preserve">
+    <value>トランジションリストにSレンズの列（デフォルトは50）をさらに追加します。  オプションです。デフォルトはFalseです。</value>
+  </data>
+  <data name="_import_annotations" xml:space="preserve">
+    <value>ドキュメントにCSVファイルからの注釈をインポートします。[ファイル] &gt; [エクスポート] &gt; [注釈]を使用して、ドキュメントの要素に注釈を関連付けるパスを用いて、必要な形式のサンプルファイルを作成します。</value>
+  </data>
+  <data name="CommandArgs_GROUP_DECOYS" xml:space="preserve">
+    <value>デコイペプチドを追加中</value>
+  </data>
+  <data name="_decoys_discard" xml:space="preserve">
+    <value>--decoys-addを使用時に、既存のデコイを強制的に破棄します。</value>
+  </data>
+  <data name="CommandArgs_GROUP_INTERNAL" xml:space="preserve">
+    <value>部外秘</value>
+  </data>
+  <data name="CommandArgs_GROUP_REFINEMENT" xml:space="preserve">
+    <value>ターゲットリストを最適化中</value>
+  </data>
+  <data name="_refine_add_label_type" xml:space="preserve">
+    <value>同位体標識タイプのプリカーサーを追加し直します。</value>
+  </data>
+  <data name="_refine_auto_select_peptides" xml:space="preserve">
+    <value>すべてのタンパク質は、中に含むペプチドを自動選択するようリセットされます。</value>
+  </data>
+  <data name="_refine_auto_select_precursors" xml:space="preserve">
+    <value>すべてのペプチドは、中に含むプリカーサーを自動選択するようリセットされます。</value>
+  </data>
+  <data name="_refine_auto_select_transitions" xml:space="preserve">
+    <value>すべてのプリカーサーは、中に含むトランジションを自動選択するようリセットされます。</value>
+  </data>
+  <data name="_refine_label_type" xml:space="preserve">
+    <value>--refine-add-label-typeも使用されている場合、指定されている同位体標識タイプのプリカーサーが削除される（デフォルト）か、追加されます。</value>
+  </data>
+  <data name="_refine_min_peptides" xml:space="preserve">
+    <value>ペプチドがこの数より少ないタンパク質は
+ドキュメントから削除されます。</value>
+  </data>
+  <data name="_refine_min_transitions" xml:space="preserve">
+    <value>トランジションがこの数より少ないプリカーサーは ドキュメントから削除されます。</value>
+  </data>
+  <data name="_refine_missing_library" xml:space="preserve">
+    <value>ライブラリ一致に対応しないすべてのターゲットが削除されます。</value>
+  </data>
+  <data name="_refine_remove_duplicates" xml:space="preserve">
+    <value>ドキュメント内で一意でないペプチドはすべて
+削除されます。
+</value>
+  </data>
+  <data name="_refine_remove_repeats" xml:space="preserve">
+    <value>すべての反復ペプチドは削除され、
+最初に記載されたペプチドだけが残ります。
+</value>
+  </data>
+  <data name="CommandArgs_LABEL_VALUE" xml:space="preserve">
+    <value>&lt;標識タイプ&gt;</value>
+  </data>
+  <data name="_refine_max_peak_found_ratio" xml:space="preserve">
+    <value>次の数値を超えるピーク検出率を持つ全ての成分は
+ドキュメントから削除されます。
+
+緑色 = 1.0
+橙色 &gt;= 0.5
+赤色 &lt; 0.5</value>
+  </data>
+  <data name="_refine_max_peptide_peak_rank" xml:space="preserve">
+    <value>平均面積ピークランクがこの数値より
+大きいトランジションは全てドキュメントから
+削除されます。
+
+</value>
+  </data>
+  <data name="_refine_max_transition_peak_rank" xml:space="preserve">
+    <value>平均面積ピークランクがこの数値より
+大きいトランジションは全てドキュメントから
+削除されます。
+
+</value>
+  </data>
+  <data name="_refine_min_dotp" xml:space="preserve">
+    <value>プロダクトイオンピーク面積を持つプリカーサーの
+ライブラリスペクトル内積がこの閾値を下回るものは全て
+ドキュメントから削除されます。
+</value>
+  </data>
+  <data name="_refine_min_idotp" xml:space="preserve">
+    <value>MS1プリカーサーピーク面積を持つプリカーサーの
+予測される同位体分布の内積がこの閾値を下回るものは全て
+ドキュメントから削除されます。
+</value>
+  </data>
+  <data name="_refine_min_peak_found_ratio" xml:space="preserve">
+    <value>次の数値を下回るピーク検出率を持つ全ての成分は
+ドキュメントから削除されます。
+
+緑色 = 1.0
+橙色 &amp;gt;= 0.5
+赤色 &amp;lt; 0.5</value>
+  </data>
+  <data name="_refine_min_time_correlation" xml:space="preserve">
+    <value>プリカーサーは、最適保持時間カルキュレータによる
+線形回帰の相関係数目標値が
+この閾値を超えるまで、ドキュメントから
+削除されます。</value>
+  </data>
+  <data name="_refine_missing_results" xml:space="preserve">
+    <value>測定結果の無い成分は全て
+ドキュメントから削除されます。
+</value>
+  </data>
+  <data name="_refine_prefer_larger_products" xml:space="preserve">
+    <value>小さく選択性が低いプロダクトイオンと大きいプロダクト
+イオンでピーク面積が同等の場合、
+大きいプロダクトイオンを優先するように修正します。
+</value>
+  </data>
+  <data name="_refine_use_best_result" xml:space="preserve">
+    <value>最適化値の計算では各ペプチドに対して、最良の繰り返し測定のみ使用します。（分割に使用する）</value>
+  </data>
+  <data name="CommandArgs_GROUP_REFINEMENT_W_RESULTS" xml:space="preserve">
+    <value>インポートされた結果に基づいてターゲットリストを最適化中</value>
+  </data>
+  <data name="_tran_precursor_ion_charges" xml:space="preserve">
+    <value>プリカーサーターゲットを生成するペプチド分子に適用するプリカーサーイオン荷電状態のカンマ区切りのリストです。開いているドキュメント用にトランジションフィルタ設定を変更します。</value>
+  </data>
+  <data name="_tran_product_ion_charges" xml:space="preserve">
+    <value>プロダクトイオンのトランジションを生成するペプチド断片に適用する、プロダクトイオン荷電状態のカンマ区切りのリストです。開いているドキュメント用にトランジションフィルタ設定を変更します。</value>
+  </data>
+  <data name="_tran_product_ion_types" xml:space="preserve">
+    <value>プロダクトイオンのトランジションを生成するペプチド断片で予想される、プロダクトイオンタイプのカンマ区切りのリストです。開いているドキュメント用にトランジションフィルタ設定を変更します。</value>
+  </data>
+</root>
