@@ -5354,7 +5354,7 @@
     <value>テキスト「{0}」が見つかりませんでした。</value>
   </data>
   <data name="ChromatogramLibrary_LoadFromCache_Exception_reading_cache__0_" xml:space="preserve">
-    <value>ディレクトリ一覧を取得しようとして例外が発生しました。</value>
+    <value>キャッシュ読み取り例外：{0}</value>
   </data>
   <data name="CommandArgs_ParseArgsInternal_Error__Regular_expression__0__cannot_be_parsed_" xml:space="preserve">
     <value>エラー： 正規表現{0}には構文解析を行うことができません。</value>
@@ -10038,7 +10038,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>認証試行中にエラーが発生しました。</value>
   </data>
   <data name="EditRemoteAccountDlg_TestUnifiAccount_An_exception_occurred_while_trying_to_fetch_the_directory_listing_" xml:space="preserve">
-    <value>タイプ{0}の列構成時の例外：{1}</value>
+    <value>ディレクトリ一覧を取得しようとして例外が発生しました。</value>
   </data>
   <data name="ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_without_decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_" xml:space="preserve">
     <value>デコイなしではmProphetモデルを自動的にトレーニングすることはできませんが、デコイオプションではデコイは生成されませんでした。ターゲット毎のデコイ数を増やすか、mProphetモデルの自動トレーニングを無効にしてください。</value>

@@ -248,13 +248,6 @@
   <data name="DisplayColumn_SetValue_Column_is_read_only" xml:space="preserve">
     <value>列は読み取り専用です</value>
   </data>
-  <data name="AbstractViewContext_CreateCustomColumn_Exception_constructing_column_of_type__0___1_" xml:space="preserve">
-    <value>監査ログを読み取り中に例外が発生しました。
-
-監査ログファイルを削除、名前の変更したり移動することによってこのエラーが発生しなくなります。またはSkylineチームに監査ログを送信することも可能で、チームはファイルの手動修正を試みます。
-
-ご参考までに、監査ログの場所はここです：「{0}」</value>
-  </data>
   <data name="AbstractViewContext_OnDataError_An_unknown_error_occurred_updating_the_value_" xml:space="preserve">
     <value>値の更新中に不明なエラーが発生しました。</value>
   </data>
