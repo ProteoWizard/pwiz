@@ -178,9 +178,15 @@ namespace pwiz.SkylineTestTutorial
             WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page &&
                                      importPeptideSearchDlg.ImportResultsControl.FoundResultsFiles.Count > 0 &&
                                      importPeptideSearchDlg.IsNextButtonEnabled);
+
+            // Wait for extra for both source files in the list
+            TryWaitForConditionUI(10*1000, () => importPeptideSearchDlg.ImportResultsControl.FoundResultsFiles.Count == 2);
+
             RunUI(() =>
             {
                 var resultsNames = importPeptideSearchDlg.ImportResultsControl.FoundResultsFiles.Select(f => f.Name).ToArray();
+                Assert.AreEqual(2, importPeptideSearchDlg.ImportResultsControl.FoundResultsFiles.Count, TextUtil.LineSeparate("Unexpected results files found.",
+                    TextUtil.LineSeparate(resultsNames)));
                 var commonPrefix = ImportResultsDlg.GetCommonPrefix(resultsNames);
                 Assert.IsFalse(string.IsNullOrEmpty(commonPrefix), TextUtil.LineSeparate("File names do not have a common prefix.",
                     TextUtil.LineSeparate(resultsNames)));
