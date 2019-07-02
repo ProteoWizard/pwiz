@@ -128,7 +128,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             // 
             // contextMenuStrip1
             // 
-            this.contextMenuStrip1.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openViewEditorContextMenuItem,
             this.copyToGroupContextMenuItem});
