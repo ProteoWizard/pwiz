@@ -40,6 +40,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.SkylineTestTutorial
 {
@@ -155,8 +156,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
-                            ImportPeptideSearchDlg.Pages.spectra_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchFiles);
             });
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library populated page", 4);
@@ -178,6 +178,14 @@ namespace pwiz.SkylineTestTutorial
             WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page &&
                                      importPeptideSearchDlg.ImportResultsControl.FoundResultsFiles.Count > 0 &&
                                      importPeptideSearchDlg.IsNextButtonEnabled);
+            RunUI(() =>
+            {
+                var resultsNames = importPeptideSearchDlg.ImportResultsControl.FoundResultsFiles.Select(f => f.Name).ToArray();
+                var commonPrefix = ImportResultsDlg.GetCommonPrefix(resultsNames);
+                Assert.IsFalse(string.IsNullOrEmpty(commonPrefix), TextUtil.LineSeparate("File names do not have a common prefix.",
+                    TextUtil.LineSeparate(resultsNames)));
+                Assert.AreEqual("100803_000", commonPrefix);
+            });
             PauseForScreenShot<ImportPeptideSearchDlg.ChromatogramsPage>("Import Peptide Search - Extract Chromatograms page", 5);
 
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
