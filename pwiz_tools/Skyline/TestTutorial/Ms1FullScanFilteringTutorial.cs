@@ -564,6 +564,9 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() => SkylineWindow.SaveDocument());
             RunUI(SkylineWindow.NewDocument);
+
+            // Because this was showing up in the nightly test failures
+            WaitForConditionUI(() => exportMethodDlg.IsDisposed);
         }
 
         private void ZoomSingle(int index, double startTime, double endTime, double? y = null)
