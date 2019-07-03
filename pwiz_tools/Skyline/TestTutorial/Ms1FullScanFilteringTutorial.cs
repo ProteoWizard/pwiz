@@ -158,6 +158,11 @@ namespace pwiz.SkylineTestTutorial
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchFiles);
+
+                // Sanity check here, because of failure getting both files for results import below
+                var searchNames = importPeptideSearchDlg.BuildPepSearchLibControl.SearchFilenames;
+                Assert.AreEqual(searchFiles.Length, searchNames.Length, TextUtil.LineSeparate("Unexpected search files found.",
+                    TextUtil.LineSeparate(searchNames)));
             });
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library populated page", 4);
 
@@ -180,12 +185,12 @@ namespace pwiz.SkylineTestTutorial
                                      importPeptideSearchDlg.IsNextButtonEnabled);
 
             // Wait for extra for both source files in the list
-            TryWaitForConditionUI(10*1000, () => importPeptideSearchDlg.ImportResultsControl.FoundResultsFiles.Count == 2);
+            TryWaitForConditionUI(10*1000, () => importPeptideSearchDlg.ImportResultsControl.FoundResultsFiles.Count == searchFiles.Length);
 
             RunUI(() =>
             {
                 var resultsNames = importPeptideSearchDlg.ImportResultsControl.FoundResultsFiles.Select(f => f.Name).ToArray();
-                Assert.AreEqual(2, importPeptideSearchDlg.ImportResultsControl.FoundResultsFiles.Count, TextUtil.LineSeparate("Unexpected results files found.",
+                Assert.AreEqual(searchFiles.Length, importPeptideSearchDlg.ImportResultsControl.FoundResultsFiles.Count, TextUtil.LineSeparate("Unexpected results files found.",
                     TextUtil.LineSeparate(resultsNames)));
                 var commonPrefix = ImportResultsDlg.GetCommonPrefix(resultsNames);
                 Assert.IsFalse(string.IsNullOrEmpty(commonPrefix), TextUtil.LineSeparate("File names do not have a common prefix.",
