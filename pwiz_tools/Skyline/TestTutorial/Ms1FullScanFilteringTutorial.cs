@@ -187,11 +187,20 @@ namespace pwiz.SkylineTestTutorial
             // Wait for extra for both source files in the list
             TryWaitForConditionUI(10*1000, () => importPeptideSearchDlg.ImportResultsControl.FoundResultsFiles.Count == searchFiles.Length);
 
+            Assert.IsTrue(SkylineWindow.Document.Settings.HasDocumentLibrary);
+            Assert.AreEqual(searchFiles.Length, SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries[0].FileCount);
+
             RunUI(() =>
             {
+                // Check for missing files
+                var missingFiles = importPeptideSearchDlg.ImportResultsControl.MissingResultsFiles.ToArray();
+                Assert.AreEqual(0, missingFiles.Length, TextUtil.LineSeparate("Unexpected missing file found.",
+                    TextUtil.LineSeparate(missingFiles)));
+                // Check for expected results files
                 var resultsNames = importPeptideSearchDlg.ImportResultsControl.FoundResultsFiles.Select(f => f.Name).ToArray();
                 Assert.AreEqual(searchFiles.Length, importPeptideSearchDlg.ImportResultsControl.FoundResultsFiles.Count, TextUtil.LineSeparate("Unexpected results files found.",
                     TextUtil.LineSeparate(resultsNames)));
+                // Check for expected common prefix
                 var commonPrefix = ImportResultsDlg.GetCommonPrefix(resultsNames);
                 Assert.IsFalse(string.IsNullOrEmpty(commonPrefix), TextUtil.LineSeparate("File names do not have a common prefix.",
                     TextUtil.LineSeparate(resultsNames)));
