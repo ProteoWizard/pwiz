@@ -152,6 +152,9 @@ namespace pwiz.SkylineTestTutorial
                     GetTestPath("100803_0001_MCF7_TiB_L.group.xml"),  // Not L10N
                     GetTestPath("100803_0005b_MCF7_TiTip3.group.xml")  // Not L10N
                 };
+            foreach (var searchFile in searchFiles)
+                Assert.IsTrue(File.Exists(searchFile), string.Format("File {0} does not exist.", searchFile));
+
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library empty page", 3);
 
             RunUI(() =>
@@ -167,6 +170,8 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library populated page", 4);
 
             var ambiguousDlg = ShowDialog<MessageDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+            RunUI(() => AssertEx.Contains(ambiguousDlg.Message,
+                Resources.BiblioSpecLiteBuilder_AmbiguousMatches_The_library_built_successfully__Spectra_matching_the_following_peptides_had_multiple_ambiguous_peptide_matches_and_were_excluded_));
             OkDialog(ambiguousDlg, ambiguousDlg.OkDialog);
 
             // Verify document library was built
@@ -175,6 +180,8 @@ namespace pwiz.SkylineTestTutorial
             Assert.IsTrue(File.Exists(docLibPath) && File.Exists(redundantDocLibPath));
             var librarySettings = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
             Assert.IsTrue(librarySettings.HasDocumentLibrary);
+            Assert.AreEqual(searchFiles.Length, librarySettings.Libraries[0].FileCount, TextUtil.LineSeparate("Unexpected source files in library.",
+                TextUtil.LineSeparate(librarySettings.Libraries[0].LibraryFiles.FilePaths)));
 
             // We're on the "Extract Chromatograms" page of the wizard.
             // All the test results files are in the same directory as the 
@@ -186,9 +193,6 @@ namespace pwiz.SkylineTestTutorial
 
             // Wait for extra for both source files in the list
             TryWaitForConditionUI(10*1000, () => importPeptideSearchDlg.ImportResultsControl.FoundResultsFiles.Count == searchFiles.Length);
-
-            Assert.IsTrue(SkylineWindow.Document.Settings.HasDocumentLibrary);
-            Assert.AreEqual(searchFiles.Length, SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries[0].FileCount);
 
             RunUI(() =>
             {
