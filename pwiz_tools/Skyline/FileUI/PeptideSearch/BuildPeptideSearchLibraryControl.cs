@@ -129,7 +129,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private IModifyDocumentContainer DocumentContainer { get; set; }
         private LibraryManager LibraryManager { get; set; }
-        private ImportPeptideSearch ImportPeptideSearch { get; set; }
+        public ImportPeptideSearch ImportPeptideSearch { get; set; }
 
         private Form WizardForm
         {

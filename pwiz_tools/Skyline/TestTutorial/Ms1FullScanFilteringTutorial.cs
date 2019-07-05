@@ -166,10 +166,14 @@ namespace pwiz.SkylineTestTutorial
                 var searchNames = importPeptideSearchDlg.BuildPepSearchLibControl.SearchFilenames;
                 Assert.AreEqual(searchFiles.Length, searchNames.Length, TextUtil.LineSeparate("Unexpected search files found.",
                     TextUtil.LineSeparate(searchNames)));
+                var builder = importPeptideSearchDlg.BuildPepSearchLibControl.ImportPeptideSearch.GetLibBuilder(
+                    SkylineWindow.DocumentUI, SkylineWindow.DocumentFilePath, false);
+                ArrayUtil.EqualsDeep(searchFiles, builder.InputFiles);
             });
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library populated page", 4);
 
-            var ambiguousDlg = ShowDialog<MessageDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+            WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
+            var ambiguousDlg = ShowDialog<MessageDlg>(() => importPeptideSearchDlg.ClickNextButton());
             RunUI(() => AssertEx.Contains(ambiguousDlg.Message,
                 Resources.BiblioSpecLiteBuilder_AmbiguousMatches_The_library_built_successfully__Spectra_matching_the_following_peptides_had_multiple_ambiguous_peptide_matches_and_were_excluded_));
             OkDialog(ambiguousDlg, ambiguousDlg.OkDialog);
