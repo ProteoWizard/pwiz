@@ -34,6 +34,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
@@ -184,8 +185,23 @@ namespace pwiz.SkylineTestTutorial
             Assert.IsTrue(File.Exists(docLibPath) && File.Exists(redundantDocLibPath));
             var librarySettings = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
             Assert.IsTrue(librarySettings.HasDocumentLibrary);
-            Assert.AreEqual(searchFiles.Length, librarySettings.Libraries[0].FileCount, TextUtil.LineSeparate("Unexpected source files in library.",
-                TextUtil.LineSeparate(librarySettings.Libraries[0].LibraryFiles.FilePaths)));
+            var docLib = librarySettings.Libraries[0];
+            int expectedFileCount = searchFiles.Length;
+            int expectedSpectra = 552;
+            Assert.AreEqual(expectedSpectra, docLib.SpectrumCount); // 428 with TiTip3 only
+            if (expectedFileCount != docLib.FileCount)
+            {
+                using (var blibDb = BlibDb.OpenBlibDb(docLibPath))
+                {
+                    Assert.AreEqual(expectedSpectra, blibDb.GetSpectraCount());
+                    var sourceFilesInLibrary = blibDb.GetSourceFilePaths();
+                    Assert.AreEqual(expectedFileCount, sourceFilesInLibrary.Length, TextUtil.LineSeparate("Unexpected source files in SQLite library.",
+                        TextUtil.LineSeparate(sourceFilesInLibrary))
+                    );
+                }
+                Assert.AreEqual(expectedFileCount, docLib.FileCount, TextUtil.LineSeparate("Unexpected source files in loaded library.",
+                    TextUtil.LineSeparate(docLib.LibraryFiles.FilePaths)));
+            }
 
             // We're on the "Extract Chromatograms" page of the wizard.
             // All the test results files are in the same directory as the 
