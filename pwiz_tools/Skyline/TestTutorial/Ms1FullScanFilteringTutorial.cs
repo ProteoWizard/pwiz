@@ -122,6 +122,11 @@ namespace pwiz.SkylineTestTutorial
             return TestFilesDirs[0].GetTestPath(folderMs1Filtering + '\\' + path);
         }
 
+        private string PathsMessage(string message, IEnumerable<string> paths)
+        {
+            return TextUtil.LineSeparate(message, TextUtil.LineSeparate(paths));
+        }
+
         protected override void DoTest()
         {
             TestSmallMolecules = false; // The presence of the extra test node without any results is incompatible with what's being tested here.
@@ -165,11 +170,12 @@ namespace pwiz.SkylineTestTutorial
 
                 // Sanity check here, because of failure getting both files for results import below
                 var searchNames = importPeptideSearchDlg.BuildPepSearchLibControl.SearchFilenames;
-                Assert.AreEqual(searchFiles.Length, searchNames.Length, TextUtil.LineSeparate("Unexpected search files found.",
-                    TextUtil.LineSeparate(searchNames)));
+                Assert.AreEqual(searchFiles.Length, searchNames.Length,
+                    PathsMessage("Unexpected search files found.", searchNames));
                 var builder = importPeptideSearchDlg.BuildPepSearchLibControl.ImportPeptideSearch.GetLibBuilder(
                     SkylineWindow.DocumentUI, SkylineWindow.DocumentFilePath, false);
-                ArrayUtil.EqualsDeep(searchFiles, builder.InputFiles);
+                Assert.IsTrue(ArrayUtil.EqualsDeep(searchFiles, builder.InputFiles),
+                    PathsMessage("Unexpected BlibBuild input files.", builder.InputFiles));
             });
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library populated page", 4);
 
@@ -188,19 +194,18 @@ namespace pwiz.SkylineTestTutorial
             var docLib = librarySettings.Libraries[0];
             int expectedFileCount = searchFiles.Length;
             int expectedSpectra = 552;
-            Assert.AreEqual(expectedSpectra, docLib.SpectrumCount); // 428 with TiTip3 only
             if (expectedFileCount != docLib.FileCount)
             {
                 using (var blibDb = BlibDb.OpenBlibDb(docLibPath))
                 {
                     Assert.AreEqual(expectedSpectra, blibDb.GetSpectraCount());
                     var sourceFilesInLibrary = blibDb.GetSourceFilePaths();
-                    Assert.AreEqual(expectedFileCount, sourceFilesInLibrary.Length, TextUtil.LineSeparate("Unexpected source files in SQLite library.",
-                        TextUtil.LineSeparate(sourceFilesInLibrary))
-                    );
+                    Assert.AreEqual(expectedFileCount, sourceFilesInLibrary.Length,
+                        PathsMessage("Unexpected source files in SQLite library.", sourceFilesInLibrary));
                 }
-                Assert.AreEqual(expectedFileCount, docLib.FileCount, TextUtil.LineSeparate("Unexpected source files in loaded library.",
-                    TextUtil.LineSeparate(docLib.LibraryFiles.FilePaths)));
+                Assert.AreEqual(expectedSpectra, docLib.SpectrumCount); // 428 with TiTip3 only
+                Assert.AreEqual(expectedFileCount, docLib.FileCount,
+                    PathsMessage("Unexpected source files in loaded library.", docLib.LibraryFiles.FilePaths));
             }
 
             // We're on the "Extract Chromatograms" page of the wizard.
@@ -218,16 +223,16 @@ namespace pwiz.SkylineTestTutorial
             {
                 // Check for missing files
                 var missingFiles = importPeptideSearchDlg.ImportResultsControl.MissingResultsFiles.ToArray();
-                Assert.AreEqual(0, missingFiles.Length, TextUtil.LineSeparate("Unexpected missing file found.",
-                    TextUtil.LineSeparate(missingFiles)));
+                Assert.AreEqual(0, missingFiles.Length,
+                    PathsMessage("Unexpected missing file found.", missingFiles));
                 // Check for expected results files
                 var resultsNames = importPeptideSearchDlg.ImportResultsControl.FoundResultsFiles.Select(f => f.Name).ToArray();
-                Assert.AreEqual(searchFiles.Length, importPeptideSearchDlg.ImportResultsControl.FoundResultsFiles.Count, TextUtil.LineSeparate("Unexpected results files found.",
-                    TextUtil.LineSeparate(resultsNames)));
+                Assert.AreEqual(searchFiles.Length, importPeptideSearchDlg.ImportResultsControl.FoundResultsFiles.Count,
+                    PathsMessage("Unexpected results files found.", resultsNames));
                 // Check for expected common prefix
                 var commonPrefix = ImportResultsDlg.GetCommonPrefix(resultsNames);
-                Assert.IsFalse(string.IsNullOrEmpty(commonPrefix), TextUtil.LineSeparate("File names do not have a common prefix.",
-                    TextUtil.LineSeparate(resultsNames)));
+                Assert.IsFalse(string.IsNullOrEmpty(commonPrefix),
+                    PathsMessage("File names do not have a common prefix.", resultsNames));
                 Assert.AreEqual("100803_000", commonPrefix);
             });
             PauseForScreenShot<ImportPeptideSearchDlg.ChromatogramsPage>("Import Peptide Search - Extract Chromatograms page", 5);
