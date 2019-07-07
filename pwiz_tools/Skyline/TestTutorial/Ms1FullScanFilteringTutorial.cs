@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
@@ -198,7 +199,9 @@ namespace pwiz.SkylineTestTutorial
             {
                 string buildArgs = importPeptideSearchDlg.BuildPepSearchLibControl.LastBuildCommandArgs;
                 var argLines = buildArgs.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
-                Assert.IsTrue(ArrayUtil.EqualsDeep(searchFiles, argLines.Skip(1).ToArray()), buildArgs);
+                var dirCommon = PathEx.GetCommonRoot(searchFiles);
+                var searchLines = searchFiles.Select(f => PathEx.RemovePrefix(f, dirCommon)).ToArray();
+                Assert.IsTrue(ArrayUtil.EqualsDeep(searchLines, argLines.Skip(1).ToArray()), buildArgs);
                 using (var blibDb = BlibDb.OpenBlibDb(docLibPath))
                 {
                     Assert.AreEqual(expectedSpectra, blibDb.GetSpectraCount());
