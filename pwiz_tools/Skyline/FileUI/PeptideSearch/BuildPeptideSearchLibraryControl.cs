@@ -281,6 +281,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        public string LastBuildCommandArgs { get; private set; }
+
         private bool BuildPeptideSearchLibrary(CancelEventArgs e)
         {
             // Nothing to build, if now search files were specified
@@ -327,8 +329,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     try
                     {
                         ImportPeptideSearch.ClosePeptideSearchLibraryStreams(DocumentContainer.Document);
+                        var builState = new LibraryManager.BuildState(null, null);
                         var status = longWaitDlg.PerformWork(WizardForm, 800,
-                            monitor => LibraryManager.BuildLibraryBackground(DocumentContainer, builder, monitor, new LibraryManager.BuildState(null, null)));
+                            monitor => LibraryManager.BuildLibraryBackground(DocumentContainer, builder, monitor, builState));
+                        LastBuildCommandArgs = builState.BuildCommandArgs;
                         if (status.IsError)
                         {
                             // E.g. could not find external raw data for MaxQuant msms.txt; ask user if they want to retry with "prefer embedded spectra" option

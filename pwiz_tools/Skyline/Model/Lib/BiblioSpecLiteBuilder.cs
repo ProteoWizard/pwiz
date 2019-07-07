@@ -102,7 +102,11 @@ namespace pwiz.Skyline.Model.Lib
                     : string.Empty;
             }
         }
+
+        public string BuildCommandArgs { get { return _buildCommandArgs; } }
+
         private string[] _ambiguousMatches;
+        private string _buildCommandArgs;
 
         public bool BuildLibrary(IProgressMonitor progress)
         {
@@ -141,7 +145,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 try
                 {
-                    if (!blibBuilder.BuildLibrary(Action, progress, ref status, out _ambiguousMatches))
+                    if (!blibBuilder.BuildLibrary(Action, progress, ref status, out _buildCommandArgs, out _ambiguousMatches))
                     {
                         return false;
                     }

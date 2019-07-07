@@ -108,6 +108,11 @@ namespace pwiz.BiblioSpec
 
         public bool BuildLibrary(LibraryBuildAction libraryBuildAction, IProgressMonitor progressMonitor, ref IProgressStatus status, out string[] ambiguous)
         {
+            return BuildLibrary(libraryBuildAction, progressMonitor, ref status, out _, out ambiguous);
+        }
+
+        public bool BuildLibrary(LibraryBuildAction libraryBuildAction, IProgressMonitor progressMonitor, ref IProgressStatus status, out string commandArgs, out string[] ambiguous)
+        {
             // Arguments for BlibBuild
             // ReSharper disable LocalizableElement
             List<string> argv = new List<string> { "-s", "-A", "-H" };  // Read from stdin, get ambiguous match messages, high precision modifications
@@ -177,6 +182,9 @@ namespace pwiz.BiblioSpec
                                          StandardOutputEncoding = Encoding.UTF8,
                                          StandardErrorEncoding = Encoding.UTF8
                                      };
+            // Keep a copy of what got sent to BlibBuild for debugging purposes
+            commandArgs = psiBlibBuilder.Arguments + Environment.NewLine + string.Join(Environment.NewLine, InputFiles);
+
             bool isComplete = false;
             ambiguous = new string[0];
             try

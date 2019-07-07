@@ -196,6 +196,9 @@ namespace pwiz.SkylineTestTutorial
             int expectedSpectra = 552;
             if (expectedFileCount != docLib.FileCount)
             {
+                string buildArgs = importPeptideSearchDlg.BuildPepSearchLibControl.LastBuildCommandArgs;
+                var argLines = buildArgs.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+                Assert.IsTrue(ArrayUtil.EqualsDeep(searchFiles, argLines.Skip(1).ToArray()), buildArgs);
                 using (var blibDb = BlibDb.OpenBlibDb(docLibPath))
                 {
                     Assert.AreEqual(expectedSpectra, blibDb.GetSpectraCount());
