@@ -61,6 +61,7 @@ namespace pwiz.Common.SystemUtil
             // Make sure required streams are redirected.
             psi.RedirectStandardOutput = true;
             psi.RedirectStandardError = true;
+            psi.RedirectStandardInput = stdin != null;
             if (OutputEncoding != null)
                 psi.StandardOutputEncoding = psi.StandardErrorEncoding = OutputEncoding;
 

@@ -162,6 +162,7 @@ namespace pwiz.BiblioSpec
                     foreach (string targetSequence in TargetSequences)
                         stdinFile.WriteLine(targetSequence);
                 }
+                stdinFile.Close();
             }
             // ReSharper restore LocalizableElement
 
@@ -178,12 +179,10 @@ namespace pwiz.BiblioSpec
                                          Arguments = string.Join(@" ", argv.ToArray()),
                                          RedirectStandardOutput = true,
                                          RedirectStandardError = true,
-                                         RedirectStandardInput = true,
+                                         RedirectStandardInput = false,
                                          StandardOutputEncoding = Encoding.UTF8,
                                          StandardErrorEncoding = Encoding.UTF8
                                      };
-            // Keep a copy of what got sent to BlibBuild for debugging purposes
-            commandArgs = psiBlibBuilder.Arguments + Environment.NewLine + string.Join(Environment.NewLine, InputFiles);
 
             bool isComplete = false;
             ambiguous = new string[0];
@@ -197,6 +196,9 @@ namespace pwiz.BiblioSpec
             }
             finally 
             {
+                // Keep a copy of what got sent to BlibBuild for debugging purposes
+                commandArgs = psiBlibBuilder.Arguments + Environment.NewLine + string.Join(Environment.NewLine, File.ReadAllLines(stdinFilename));
+
                 File.Delete(stdinFilename);
                 if (!isComplete)
                 {
