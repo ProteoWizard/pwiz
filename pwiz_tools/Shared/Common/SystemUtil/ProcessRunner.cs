@@ -104,7 +104,7 @@ namespace pwiz.Common.SystemUtil
                         return;
                     }
 
-                    if (!string.IsNullOrEmpty(MessagePrefix) && line.StartsWith(MessagePrefix))
+                    if (MessagePrefix != null && line.StartsWith(MessagePrefix))
                     {
                         _messageLog.Add(line.Substring(MessagePrefix.Length));
                     }

@@ -177,6 +177,7 @@ namespace pwiz.SkylineTestTutorial
                     SkylineWindow.DocumentUI, SkylineWindow.DocumentFilePath, false);
                 Assert.IsTrue(ArrayUtil.EqualsDeep(searchFiles, builder.InputFiles),
                     PathsMessage("Unexpected BlibBuild input files.", builder.InputFiles));
+                importPeptideSearchDlg.BuildPepSearchLibControl.DebugMode = true;
             });
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library populated page", 4);
 
@@ -194,6 +195,7 @@ namespace pwiz.SkylineTestTutorial
             Assert.IsTrue(librarySettings.HasDocumentLibrary);
             // Verify input paths sent to BlibBuild
             string buildArgs = importPeptideSearchDlg.BuildPepSearchLibControl.LastBuildCommandArgs;
+            string buildOutput = importPeptideSearchDlg.BuildPepSearchLibControl.LastBuildOutput;
             var argLines = buildArgs.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
             var dirCommon = PathEx.GetCommonRoot(searchFiles);
             var searchLines = searchFiles.Select(f => PathEx.RemovePrefix(f, dirCommon)).ToArray();
@@ -202,23 +204,23 @@ namespace pwiz.SkylineTestTutorial
             // Verify resulting .blib file contains the expected files
             var docLib = librarySettings.Libraries[0];
             int expectedFileCount = searchFiles.Length;
-            int expectedSpectra = 552; // 428 with TiTip3 only
             int expectedRedundantSpectra = 813; // 446 with TiTip only
+            int expectedSpectra = 552; // 428 with TiTip3 only
             if (expectedFileCount != docLib.FileCount)
             {
                 var searchFileNames = searchFiles.Select(Path.GetFileName).ToArray();
                 using (var blibDbRedundant = BlibDb.OpenBlibDb(redundantDocLibPath))
                 {
                     VerifyLib(searchFileNames, expectedRedundantSpectra, blibDbRedundant.GetIdFilePaths(), blibDbRedundant.GetSpectraCount(),
-                        "Redunant library");
+                        "redunant library", buildArgs, buildOutput);
                 }
                 using (var blibDb = BlibDb.OpenBlibDb(docLibPath))
                 {
                     VerifyLib(searchFileNames, expectedSpectra, blibDb.GetIdFilePaths(), blibDb.GetSpectraCount(),
-                        "SQLite library");
+                        "SQLite library", buildArgs, buildOutput);
                 }
                 VerifyLib(searchFileNames, expectedSpectra, docLib.LibraryDetails.DataFiles.Select(d => d.IdFilePath).ToArray(), docLib.SpectrumCount,
-                    "in memory");
+                    "in memory", buildArgs, buildOutput);
             }
 
             // We're on the "Extract Chromatograms" page of the wizard.
@@ -631,7 +633,8 @@ namespace pwiz.SkylineTestTutorial
             WaitForConditionUI(() => exportMethodDlg.IsDisposed);
         }
 
-        private void VerifyLib(string[] expectedPaths, int expectedSpectra, string[] foundPaths, int foundSpectra, string sourceMessage)
+        private void VerifyLib(string[] expectedPaths, int expectedSpectra, string[] foundPaths, int foundSpectra,
+            string sourceMessage, string buildArgs, string buildOutput)
         {
             if (!ArrayUtil.EqualsDeep(expectedPaths, foundPaths) || expectedSpectra != foundSpectra)
             {
@@ -641,7 +644,11 @@ namespace pwiz.SkylineTestTutorial
                     TextUtil.LineSeparate(expectedPaths),
                     "Found:",
                     string.Format("{0} spectra", foundSpectra),
-                    TextUtil.LineSeparate(foundPaths)));
+                    TextUtil.LineSeparate(foundPaths),
+                    "Command:",
+                    buildArgs,
+                    "Output:",
+                    buildOutput));
             }
         }
 

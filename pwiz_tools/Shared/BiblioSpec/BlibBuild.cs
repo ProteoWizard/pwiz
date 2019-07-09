@@ -97,6 +97,7 @@ namespace pwiz.BiblioSpec
         public int? CompressLevel { get; set; }
         public bool IncludeAmbiguousMatches { get; set; }
         public bool? PreferEmbeddedSpectra { get; set; }
+        public bool DebugMode { get; set; }
 
         public IList<string> InputFiles
         {
@@ -108,14 +109,19 @@ namespace pwiz.BiblioSpec
 
         public bool BuildLibrary(LibraryBuildAction libraryBuildAction, IProgressMonitor progressMonitor, ref IProgressStatus status, out string[] ambiguous)
         {
-            return BuildLibrary(libraryBuildAction, progressMonitor, ref status, out _, out ambiguous);
+            return BuildLibrary(libraryBuildAction, progressMonitor, ref status, out _, out _, out ambiguous);
         }
 
-        public bool BuildLibrary(LibraryBuildAction libraryBuildAction, IProgressMonitor progressMonitor, ref IProgressStatus status, out string commandArgs, out string[] ambiguous)
+        public bool BuildLibrary(LibraryBuildAction libraryBuildAction, IProgressMonitor progressMonitor, ref IProgressStatus status, out string commandArgs, out string messageLog, out string[] ambiguous)
         {
             // Arguments for BlibBuild
             // ReSharper disable LocalizableElement
             List<string> argv = new List<string> { "-s", "-A", "-H" };  // Read from stdin, get ambiguous match messages, high precision modifications
+            if (DebugMode)
+            {
+                argv.Add("-v"); // Verbose for debugging
+                argv.Add("debug");
+            }
             if (libraryBuildAction == LibraryBuildAction.Create)
                 argv.Add("-o");
             if (CutOffScore.HasValue)
@@ -186,13 +192,24 @@ namespace pwiz.BiblioSpec
 
             bool isComplete = false;
             ambiguous = new string[0];
+            messageLog = string.Empty;
             try
             {
-                var processRunner = new ProcessRunner { MessagePrefix = @"AMBIGUOUS:" };
+                const string ambiguousPrefix = @"AMBIGUOUS:";
+                var processRunner = new ProcessRunner { MessagePrefix = DebugMode ? string.Empty : ambiguousPrefix };
                 processRunner.Run(psiBlibBuilder, null, progressMonitor, ref status);
                 isComplete = status.IsComplete;
                 if (isComplete)
-                    ambiguous = processRunner.MessageLog().Distinct().OrderBy(s => s).ToArray();
+                {
+                    var messages = processRunner.MessageLog();
+                    messageLog = string.Join(Environment.NewLine, processRunner.MessageLog());
+                    if (DebugMode)
+                    {
+                        messages = messages.Where(l => l.StartsWith(ambiguousPrefix))
+                            .Select(l => l.Substring(ambiguousPrefix.Length));
+                    }
+                    ambiguous = messages.Distinct().OrderBy(s => s).ToArray();
+                }
             }
             finally 
             {

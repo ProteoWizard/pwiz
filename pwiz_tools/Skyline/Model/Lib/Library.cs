@@ -382,6 +382,7 @@ namespace pwiz.Skyline.Model.Lib
             public LibrarySpec LibrarySpec { get; private set; }
             public BuildFunction BuildFunc { get; private set; }
             public string BuildCommandArgs { get; set; }
+            public string BuildOutput { get; set; }
             public string ExtraMessage { get; set; }
             public IrtStandard IrtStandard { get; set; }
         }
@@ -417,6 +418,7 @@ namespace pwiz.Skyline.Model.Lib
                 if (null != biblioSpecLiteBuilder)
                 {
                     buildState.BuildCommandArgs = biblioSpecLiteBuilder.BuildCommandArgs;
+                    buildState.BuildOutput = biblioSpecLiteBuilder.BuildOutput;
                     if (!string.IsNullOrEmpty(biblioSpecLiteBuilder.AmbiguousMatchesMessage))
                     {
                         buildState.ExtraMessage = biblioSpecLiteBuilder.AmbiguousMatchesMessage;
