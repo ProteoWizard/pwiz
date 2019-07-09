@@ -2534,6 +2534,7 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         public string FilePath { get; private set; }
+        public string IdFilePath { get; set; }
         public Dictionary<string, double?> CutoffScores { get; private set; }
         public int BestSpectrum { get; set; }
         public int MatchedSpectrum { get; set; }

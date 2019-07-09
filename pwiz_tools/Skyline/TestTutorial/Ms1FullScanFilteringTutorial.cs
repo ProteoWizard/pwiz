@@ -192,26 +192,33 @@ namespace pwiz.SkylineTestTutorial
             Assert.IsTrue(File.Exists(docLibPath) && File.Exists(redundantDocLibPath));
             var librarySettings = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
             Assert.IsTrue(librarySettings.HasDocumentLibrary);
+            // Verify input paths sent to BlibBuild
+            string buildArgs = importPeptideSearchDlg.BuildPepSearchLibControl.LastBuildCommandArgs;
+            var argLines = buildArgs.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+            var dirCommon = PathEx.GetCommonRoot(searchFiles);
+            var searchLines = searchFiles.Select(f => PathEx.RemovePrefix(f, dirCommon)).ToArray();
+            Assert.IsTrue(ArrayUtil.EqualsDeep(searchLines, argLines.Skip(1).ToArray()), buildArgs);
+
+            // Verify resulting .blib file contains the expected files
             var docLib = librarySettings.Libraries[0];
             int expectedFileCount = searchFiles.Length;
-            int expectedSpectra = 552;
+            int expectedSpectra = 552; // 428 with TiTip3 only
+            int expectedRedundantSpectra = 813; // 446 with TiTip only
             if (expectedFileCount != docLib.FileCount)
             {
-                string buildArgs = importPeptideSearchDlg.BuildPepSearchLibControl.LastBuildCommandArgs;
-                var argLines = buildArgs.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
-                var dirCommon = PathEx.GetCommonRoot(searchFiles);
-                var searchLines = searchFiles.Select(f => PathEx.RemovePrefix(f, dirCommon)).ToArray();
-                Assert.IsTrue(ArrayUtil.EqualsDeep(searchLines, argLines.Skip(1).ToArray()), buildArgs);
+                var searchFileNames = searchFiles.Select(Path.GetFileName).ToArray();
+                using (var blibDbRedundant = BlibDb.OpenBlibDb(redundantDocLibPath))
+                {
+                    VerifyLib(searchFileNames, expectedRedundantSpectra, blibDbRedundant.GetIdFilePaths(), blibDbRedundant.GetSpectraCount(),
+                        "Redunant library");
+                }
                 using (var blibDb = BlibDb.OpenBlibDb(docLibPath))
                 {
-                    Assert.AreEqual(expectedSpectra, blibDb.GetSpectraCount());
-                    var sourceFilesInLibrary = blibDb.GetSourceFilePaths();
-                    Assert.AreEqual(expectedFileCount, sourceFilesInLibrary.Length,
-                        PathsMessage("Unexpected source files in SQLite library.", sourceFilesInLibrary));
+                    VerifyLib(searchFileNames, expectedSpectra, blibDb.GetIdFilePaths(), blibDb.GetSpectraCount(),
+                        "SQLite library");
                 }
-                Assert.AreEqual(expectedSpectra, docLib.SpectrumCount); // 428 with TiTip3 only
-                Assert.AreEqual(expectedFileCount, docLib.FileCount,
-                    PathsMessage("Unexpected source files in loaded library.", docLib.LibraryFiles.FilePaths));
+                VerifyLib(searchFileNames, expectedSpectra, docLib.LibraryDetails.DataFiles.Select(d => d.IdFilePath).ToArray(), docLib.SpectrumCount,
+                    "in memory");
             }
 
             // We're on the "Extract Chromatograms" page of the wizard.
@@ -622,6 +629,20 @@ namespace pwiz.SkylineTestTutorial
 
             // Because this was showing up in the nightly test failures
             WaitForConditionUI(() => exportMethodDlg.IsDisposed);
+        }
+
+        private void VerifyLib(string[] expectedPaths, int expectedSpectra, string[] foundPaths, int foundSpectra, string sourceMessage)
+        {
+            if (!ArrayUtil.EqualsDeep(expectedPaths, foundPaths) || expectedSpectra != foundSpectra)
+            {
+                Assert.Fail(TextUtil.LineSeparate(string.Format("Unexpected library state in {0}", sourceMessage),
+                    "Expected:",
+                    string.Format("{0} spectra", expectedSpectra),
+                    TextUtil.LineSeparate(expectedPaths),
+                    "Found:",
+                    string.Format("{0} spectra", foundSpectra),
+                    TextUtil.LineSeparate(foundPaths)));
+            }
         }
 
         private void ZoomSingle(int index, double startTime, double endTime, double? y = null)
