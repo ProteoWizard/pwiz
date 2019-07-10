@@ -224,7 +224,7 @@ namespace pwiz.Skyline.Model.Results
                 }
                 bool kept = !settings.DiscardUnmatchedChromatograms
                     || matchingTransitions.Count > 0
-                    || chromatogram.PrecursorMz.Equals(SignedMz.ZERO);
+                    || (chromatogram.PrecursorMz.Equals(SignedMz.ZERO) && !settings.DiscardAllIonsChromatograms);
                 if (kept)
                 {
                     keptTransitionIndexes.Add(i);
@@ -418,6 +418,11 @@ namespace pwiz.Skyline.Model.Results
             public Settings ChangeNoiseTimeRange(double? value)
             {
                 return ChangeProp(ImClone(this), im => im.NoiseTimeRange = value);
+            }
+            public bool DiscardAllIonsChromatograms { get; private set; }
+            public Settings ChangeDiscardAllIonsChromatograms(bool value)
+            {
+                return ChangeProp(ImClone(this), im => im.DiscardAllIonsChromatograms = value);
             }
             public bool DiscardUnmatchedChromatograms { get; private set; }
             public Settings ChangeDiscardUnmatchedChromatograms(bool value)
