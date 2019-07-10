@@ -575,25 +575,30 @@ string abbreviate_byte_size(uintmax_t byteSize, ByteSizeAbbreviation abbreviatio
     }
 
     string suffix;
+    double byteSizeDbl;
 
     if( byteSize >= G )
     {
-        byteSize /= G;
+        byteSizeDbl = (double) byteSize / G;
+        //byteSizeDbl = round(byteSizeDbl * 100) / 100;
         suffix = GS;
     } else if( byteSize >= M )
     {
-        byteSize /= M;
+        byteSizeDbl = (double) byteSize / M;
         suffix = MS;
     } else if( byteSize >= K )
     {
-        byteSize /= K;
+        byteSizeDbl = (double) byteSize / K;
         suffix = KS;
     } else
     {
         suffix = " B";
     }
 
-    return lexical_cast<string>(byteSize) + suffix;
+    stringstream oss;
+    oss.precision(3);
+    oss << byteSizeDbl << suffix;
+    return oss.str();
 }
 
 
