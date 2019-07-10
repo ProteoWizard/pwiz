@@ -325,11 +325,16 @@ struct PWIZ_API_DECL ErrorLogItem
 enum PWIZ_API_DECL ChromatogramType
 {
     Type_MassRange,
-    Type_ECD = Type_MassRange,
     Type_TIC,
-    Type_TotalScan = Type_TIC,
     Type_BasePeak,
-    Type_NeutralFragment
+    Type_NeutralFragment,
+#ifndef _WIN64
+    Type_TotalScan = Type_TIC,
+    Type_ECD = Type_MassRange
+#else
+    Type_ECD = 31, // TraceType.ChannelA
+    Type_TotalScan = 22 // TraceType.TotalAbsorbance
+#endif
 };
 
 

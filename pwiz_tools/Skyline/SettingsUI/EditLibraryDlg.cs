@@ -125,7 +125,10 @@ namespace pwiz.Skyline.SettingsUI
                             // Library failed to load
                         }
                         LibraryRetentionTimes libRts;
+                        // (ReSharper 2019.1 seems not to notice the check that's already here)
+                        // ReSharper disable PossibleNullReferenceException
                         if (lib != null && lib.TryGetIrts(out libRts) &&
+                        // ReSharper restore PossibleNullReferenceException
                             Settings.Default.RTScoreCalculatorList.All(calc => calc.PersistencePath != path))
                         {
                             using (var addPredictorDlg = new AddRetentionTimePredictorDlg(name, path, true))
@@ -148,7 +151,10 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         if (null != lib)
                         {
+                            // (ReSharper 2019.1 seems not to notice the check that's already here)
+                            // ReSharper disable PossibleNullReferenceException
                             foreach (var pooledStream in lib.ReadStreams)
+                            // ReSharper restore PossibleNullReferenceException
                             {
                                 pooledStream.CloseStream();
                             }

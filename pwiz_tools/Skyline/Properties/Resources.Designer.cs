@@ -5931,6 +5931,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Failed saving to the user configuration file..
+        /// </summary>
+        public static string CommandLine_SaveSettings_Error__Failed_saving_to_the_user_configuration_file_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SaveSettings_Error__Failed_saving_to_the_user_configuration_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Changing full-scan extraction to +/- {0} minutes from MS/MS IDs..
         /// </summary>
         public static string CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_from_MS_MS_IDs_ {
@@ -17073,16 +17082,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Would_you_like_to_create_a_new" +
                         "_document_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to New! Use this button to configure Skyline&apos;s user interface specifically for proteomics or generalized molecule use..
-        /// </summary>
-        public static string ModeUIAwareFormHelper_OnLoad_New__Use_this_button_to_configure_Skyline_s_user_interface_specifically_for_proteomics_or_small_molecule_use_ {
-            get {
-                return ResourceManager.GetString("ModeUIAwareFormHelper_OnLoad_New__Use_this_button_to_configure_Skyline_s_user_int" +
-                        "erface_specifically_for_proteomics_or_small_molecule_use_", resourceCulture);
             }
         }
         

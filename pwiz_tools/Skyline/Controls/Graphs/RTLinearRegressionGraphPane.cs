@@ -579,24 +579,27 @@ namespace pwiz.Skyline.Controls.Graphs
                     requestContext.Settings = null;
                 }
 
-                try
+                if (GraphSummary.IsHandleCreated)
                 {
-                    GraphSummary.Invoke(new Action(() =>
+                    try
                     {
-                        try
+                        GraphSummary.Invoke(new Action(() =>
                         {
-                            if (!cancellationToken.IsCancellationRequested)
-                                UpdateGraph(false);
-                        }
-                        catch (Exception ex)
-                        {
-                            Program.ReportException(ex);
-                        }
-                    }));
-                }
-                catch (ObjectDisposedException)
-                {
-                    // Can happen during tests
+                            try
+                            {
+                                if (!cancellationToken.IsCancellationRequested)
+                                    UpdateGraph(false);
+                            }
+                            catch (Exception ex)
+                            {
+                                Program.ReportException(ex);
+                            }
+                        }));
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        // Can happen during tests
+                    }
                 }
             }
             catch (OperationCanceledException)

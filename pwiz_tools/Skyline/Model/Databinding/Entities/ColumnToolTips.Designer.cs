@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Ratio of the Analyte Concentration (specified on the Replicate) to the Calculated Concentraion.
+        ///   Looks up a localized string similar to Ratio of Calculated Concentration the Analyte Concentration (specified on the Replicate).
         /// </summary>
         public static string Accuracy {
             get {
@@ -151,6 +151,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string AreaRatio {
             get {
                 return ResourceManager.GetString("AreaRatio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The ratio of the normalized area to the sum of the normalized areas of all of the other peptides or molecules in the document that have the same Attribute Area Proportion..
+        /// </summary>
+        public static string AttributeAreaProportion {
+            get {
+                return ResourceManager.GetString("AttributeAreaProportion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Affects the grouping of peptides or molecules in the calculation of Attribute Area Proportion..
+        /// </summary>
+        public static string AttributeGroupId {
+            get {
+                return ResourceManager.GetString("AttributeGroupId", resourceCulture);
             }
         }
         
@@ -283,7 +301,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Name of the batch that this replicate belongs to. The calibration curve for a particular replicate will be .
+        ///   Looks up a localized string similar to Name of the batch that this replicate belongs to. The calibration curve for a particular replicate
+        ///will be calculated using the subset of external standards with the same batch name..
         /// </summary>
         public static string BatchName {
             get {
@@ -324,7 +343,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         /// <summary>
         ///   Looks up a localized string similar to The concentration of the analyte is calculated by either:
         ///    1. Using the calibration curve (if the Peptide Settings &gt; Quantification has a Regression Fit specified)
-        ///    2. Using the ratio to internal standard (or surrogate) and multiplying by the Internal Standard Concetration.
+        ///    2. Using the ratio to internal standard (or surrogate) and multiplying by the Internal Standard Concentration.
         /// </summary>
         public static string CalculatedConcentration {
             get {
@@ -1762,7 +1781,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A free text not associated with the molecule list..
+        ///   Looks up a localized string similar to A free text note associated with the molecule list..
         /// </summary>
         public static string MoleculeListNote {
             get {
@@ -2175,11 +2194,29 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ratio of the Precursor Calculated Concentration to the Precursor Concentration specified on the Precursor..
+        /// </summary>
+        public static string PrecursorAccuracy {
+            get {
+                return ResourceManager.GetString("PrecursorAccuracy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The adduct which is applied to the molecule to make the precursor..
         /// </summary>
         public static string PrecursorAdduct {
             get {
                 return ResourceManager.GetString("PrecursorAdduct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The concentration of the Precursor Result calculated using the isotopolog response curve..
+        /// </summary>
+        public static string PrecursorCalculatedConcentration {
+            get {
+                return ResourceManager.GetString("PrecursorCalculatedConcentration", resourceCulture);
             }
         }
         
@@ -2195,9 +2232,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///      The concentration at which this precursor was spiked into the sample.
-        ///    .
+        ///   Looks up a localized string similar to The concentration at which this precursor was spiked into the sample. This is used for generating Isotopolog Response Curves..
         /// </summary>
         public static string PrecursorConcentration {
             get {
@@ -2260,6 +2295,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The normalized area of the Precursor Result.
+        ///This is equal to the Total Area of the Precursor Result normalized according to the Normalization Method of the Peptide.
+        ///If the Peptide Normalization Method is &quot;None&quot; or ratio to a label, then the Precursor Normalized Area will be equal to the Precursor Total Area..
+        /// </summary>
+        public static string PrecursorNormalizedArea {
+            get {
+                return ResourceManager.GetString("PrecursorNormalizedArea", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A free text note associated with a precursor by clicking Edit Note on
         ///the Edit menu.
         /// </summary>
@@ -2277,6 +2323,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string PrecursorPeakFoundRatio {
             get {
                 return ResourceManager.GetString("PrecursorPeakFoundRatio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Values related to using the isotopolog response curve to quantify the precursor result..
+        /// </summary>
+        public static string PrecursorQuantification {
+            get {
+                return ResourceManager.GetString("PrecursorQuantification", resourceCulture);
             }
         }
         
@@ -2691,7 +2746,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The calibration curve made using the Precursor Concentrations and a single replicate..
+        ///   Looks up a localized string similar to The calibration curve made using the replicates that have the same Batch Name as this replicate.
+        ///If the Precursor Concentration is specified on any of the Precursors in this Peptide then the Calibration Curve will be an isotopolog response curve..
         /// </summary>
         public static string ReplicateCalibrationCurve {
             get {

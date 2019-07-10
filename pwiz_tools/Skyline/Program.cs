@@ -69,6 +69,7 @@ namespace pwiz.Skyline
         public static bool StressTest { get; set; }                 // Set true when doing stress testing (i.e. TestRunner).
         public static bool UnitTest { get; set; }                   // Set to true by AbstractUnitTest and AbstractFunctionalTest
         public static bool FunctionalTest { get; set; }             // Set to true by AbstractFunctionalTest
+        public static string DefaultUiMode { get; set; }            // Set to avoid seeing NoModeUiDlg at the start of a test
         public static bool SkylineOffscreen { get; set; }           // Set true to move Skyline windows offscreen.
         public static bool DemoMode { get; set; }                   // Set to true in demo mode (main window is full screen and pauses at screenshots)
         public static bool NoVendorReaders { get; set; }            // Set true to avoid calling vendor readers.
@@ -573,7 +574,7 @@ namespace pwiz.Skyline
                 SrmDocument.DOCUMENT_TYPE mode;
                 if (ActiveDocument != null)
                 {
-                    mode = MainWindow.GetModeUIHelper().ModeUI; // Document contents help determine UI mode
+                    mode = MainWindow.ModeUI; // Document contents help determine UI mode
                 }
                 else if (!Enum.TryParse(Settings.Default.UIMode, out mode))
                 {

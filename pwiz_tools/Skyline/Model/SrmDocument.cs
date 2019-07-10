@@ -137,11 +137,6 @@ namespace pwiz.Skyline.Model
         SrmDocument DocumentUI { get; }
 
         /// <summary>
-        /// Get the current UI mode (proteomics vs molecules vs mixed).
-        /// </summary>
-        SrmDocument.DOCUMENT_TYPE ModeUI { get; }
-
-        /// <summary>
         /// Adds an event handler to the container's document UI changed event. The
         /// event handler must be thread safe, as it may be called on any thread.
         /// </summary>

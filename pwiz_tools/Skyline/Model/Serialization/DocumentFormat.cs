@@ -61,7 +61,8 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat VERSION_4_2 = new DocumentFormat(4.2); // Release format
         public static readonly DocumentFormat VERSION_4_21 = new DocumentFormat(4.21); // Adds Lists feature
         public static readonly DocumentFormat VERSION_4_22 = new DocumentFormat(4.22); // Moves explicite CE, explicit ion mobility high energy offset etc to transition instead of peptide level
-        public static readonly DocumentFormat CURRENT = VERSION_4_22;
+        public static readonly DocumentFormat VERSION_19_1 = new DocumentFormat(19.1); // Release format
+        public static readonly DocumentFormat CURRENT = VERSION_19_1;
 
         private readonly double _versionNumber;
         public DocumentFormat(double versionNumber)
