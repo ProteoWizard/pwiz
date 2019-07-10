@@ -460,7 +460,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>表示を管理</value>
+    <value>レポートを管理</value>
   </data>
   <data name="&gt;&gt;openViewEditorContextMenuItem.Name" xml:space="preserve">
     <value>openViewEditorContextMenuItem</value>

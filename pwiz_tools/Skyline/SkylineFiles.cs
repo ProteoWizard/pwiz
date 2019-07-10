@@ -157,7 +157,7 @@ namespace pwiz.Skyline
 
             if (document.Settings.DataSettings.AuditLogging)
             {
-                var entry = AuditLogEntry.GetAuditLoggingStartExistingDocEntry(document, GetModeUIHelper().ModeUI);
+                var entry = AuditLogEntry.GetAuditLoggingStartExistingDocEntry(document, ModeUI);
                 document = entry?.AppendEntryToDocument(document) ?? document;
             }
 

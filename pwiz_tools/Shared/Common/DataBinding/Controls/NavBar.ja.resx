@@ -137,10 +137,10 @@
     <value>Magenta</value>
   </data>
   <data name="navBarButtonViews.Size" type="System.Drawing.Size, System.Drawing">
-    <value>50, 22</value>
+    <value>60, 22</value>
   </data>
   <data name="navBarButtonViews.Text" xml:space="preserve">
-    <value>ビュー</value>
+    <value>レポート</value>
   </data>
   <data name="bindingNavigatorMoveFirstItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -251,27 +251,6 @@
   </data>
   <data name="bindingNavigatorSeparator2.Size" type="System.Drawing.Size, System.Drawing">
     <value>6, 25</value>
-  </data>
-  <data name="bindingNavigatorAddNewItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
-        vAAADrwBlbxySQAAAUpJREFUOE9jGLzg7gL2/7fmcf6/Oofr/8UZvP+hwsSD60CNfx41/v/zsOH/yckC
-        pBtwfjov3ICDPSKkG3B8kiBQc93/Pw+q/u9oFydswKWZPP/PTuX7fxKo8Ui/0P993SJAzeX//94r+r++
-        Qeb/qhq5/0srFf/PL1X+P6tIFdPAU0B//nlYD9RUC8SV///cKwHivP9/72b+/3sn+f/f23H//92MAOKQ
-        /5NyNDENONQrDHbu3/ulQI0FQI3ZQI2pQI0J///digZqDPv/70bQ/3/X/f53peliGrCzXeL/lmap/+vA
-        zpX/v6RC8f/fWzFAjeH/p+Zp/J+QpfW/O0P3f3uq/v/mREPCYTIb6E+Qc//dCPjfk6FDWAM6APnz3w1/
-        IPb735qsT7oB3em6YP+CcH2cEekGtCQZ/G+IN/xfE2v8vzLahHQD6AQYGAAkI9iedfyIaQAAAABJRU5E
-        rkJggg==
-</value>
-  </data>
-  <data name="bindingNavigatorAddNewItem.RightToLeftAutoMirrorImage" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="bindingNavigatorAddNewItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 22</value>
-  </data>
-  <data name="bindingNavigatorAddNewItem.Text" xml:space="preserve">
-    <value>新しく追加</value>
   </data>
   <data name="navBarDeleteItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -405,11 +384,20 @@
   <data name="navBarButtonCopyAll.Text" xml:space="preserve">
     <value>すべてコピー</value>
   </data>
+  <data name="navBarButtonActions.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="navBarButtonActions.Size" type="System.Drawing.Size, System.Drawing">
+    <value>60, 22</value>
+  </data>
+  <data name="navBarButtonActions.Text" xml:space="preserve">
+    <value>操作</value>
+  </data>
   <data name="bindingNavigator1.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
   <data name="bindingNavigator1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>740, 25</value>
+    <value>800, 25</value>
   </data>
   <data name="bindingNavigator1.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -436,7 +424,7 @@
     <value>True</value>
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
-    <value>740, 25</value>
+    <value>800, 25</value>
   </data>
   <data name="&gt;&gt;navBarButtonViews.Name" xml:space="preserve">
     <value>navBarButtonViews</value>
@@ -497,12 +485,6 @@
   </data>
   <data name="&gt;&gt;bindingNavigatorSeparator2.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;bindingNavigatorAddNewItem.Name" xml:space="preserve">
-    <value>bindingNavigatorAddNewItem</value>
-  </data>
-  <data name="&gt;&gt;bindingNavigatorAddNewItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;navBarDeleteItem.Name" xml:space="preserve">
     <value>navBarDeleteItem</value>
@@ -569,6 +551,12 @@
   </data>
   <data name="&gt;&gt;navBarButtonCopyAll.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;navBarButtonActions.Name" xml:space="preserve">
+    <value>navBarButtonActions</value>
+  </data>
+  <data name="&gt;&gt;navBarButtonActions.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripDropDownButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>NavBar</value>

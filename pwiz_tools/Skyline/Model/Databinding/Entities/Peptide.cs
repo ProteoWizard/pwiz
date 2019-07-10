@@ -506,6 +506,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        [Importable]
+        public string AttributeGroupId
+        {
+            get { return DocNode.AttributeGroupId; }
+            set
+            {
+                ChangeDocNode(EditDescription.SetColumn(nameof(AttributeGroupId), value), docNode=>docNode.ChangeAttributeGroupId(value));
+            }
+        }
+
         protected override NodeRef NodeRefPrototype
         {
             get { return MoleculeRef.PROTOTYPE; }

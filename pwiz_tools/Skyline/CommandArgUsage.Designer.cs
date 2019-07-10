@@ -412,7 +412,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Append the import-file to the given replicate. This is an intention check in case the document already has a replicate with the given name. By default this is set to false. This option only works with the –import-file option..
+        ///   Looks up a localized string similar to Append the import-file to the given replicate. This is an intention check in case the document already has a replicate with the given name. By default this is set to false. This option only works with the -–import-file option..
         /// </summary>
         internal static string _import_append {
             get {
@@ -1272,7 +1272,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A comman-separated list of precursor ion charge states to apply to peptide molecules to generate precursor targets. Changes the transition filter settings for the open document..
+        ///   Looks up a localized string similar to A comma-separated list of precursor ion charge states to apply to peptide molecules to generate precursor targets. Changes the transition filter settings for the open document..
         /// </summary>
         internal static string _tran_precursor_ion_charges {
             get {
@@ -1281,7 +1281,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A comman-separated list of product ion charge states to apply to peptide fragments to generate product ion transitions. Changes the transition filter settings for the open document..
+        ///   Looks up a localized string similar to A comma-separated list of product ion charge states to apply to peptide fragments to generate product ion transitions. Changes the transition filter settings for the open document..
         /// </summary>
         internal static string _tran_product_ion_charges {
             get {
@@ -1290,7 +1290,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A comman-separated list of product ion types expected in peptide fragmentation to generate product ion transitions. Changes the transition filter settings for the open document..
+        ///   Looks up a localized string similar to A comma-separated list of product ion types expected in peptide fragmentation to generate product ion transitions. Changes the transition filter settings for the open document..
         /// </summary>
         internal static string _tran_product_ion_types {
             get {
