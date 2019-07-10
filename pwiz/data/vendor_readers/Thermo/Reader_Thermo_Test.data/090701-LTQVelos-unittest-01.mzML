@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd" id="090701-LTQVelos-unittest-01" version="1.1.0">
   <cvList count="2">
-    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.0.1" URI="http://psidev.cvs.sourceforge.net/*checkout*/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo"/>
-    <cv id="UO" fullName="Unit Ontology" version="12:10:2011" URI="http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo"/>
+    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.26" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
+    <cv id="UO" fullName="Unit Ontology" version="09:04:2014" URI="https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/unit.obo"/>
   </cvList>
   <fileDescription>
     <fileContent>
@@ -11,7 +11,7 @@
       <cvParam cvRef="MS" accession="MS:1001472" name="selected ion monitoring chromatogram" value=""/>
     </fileContent>
     <sourceFileList count="1">
-      <sourceFile id="RAW1" name="090701-LTQVelos-unittest-01.raw" location="file:///C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.data">
+      <sourceFile id="RAW1" name="090701-LTQVelos-unittest-01.raw" location="file:///C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.data">
         <cvParam cvRef="MS" accession="MS:1000768" name="Thermo nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000563" name="Thermo RAW format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="3a9fb3ff8f43adea2923dffed0fb335344a311f7"/>
@@ -28,7 +28,7 @@
     <software id="Xcalibur" version="2.6.0">
       <cvParam cvRef="MS" accession="MS:1000532" name="Xcalibur" value=""/>
     </software>
-    <software id="pwiz" version="3.0.10095">
+    <software id="pwiz" version="3.0.19157">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -207,7 +207,7 @@
           </scan>
         </scanList>
         <precursorList count="1">
-          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=3">
+          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=2">
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="433.192138671875" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -216,6 +216,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="433.192138671875" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.836292462936e06" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -275,7 +276,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="583.410095214844" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="89340.4375" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.077682753906e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -326,7 +327,7 @@
           </scan>
         </scanList>
         <precursorList count="1">
-          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=3">
+          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=2">
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="433.192138671875" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -335,6 +336,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="433.192138671875" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.836292462936e06" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -506,7 +508,7 @@
           </scan>
         </scanList>
         <precursorList count="1">
-          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=10">
+          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=9">
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="497.831909179688" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -515,6 +517,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="497.831909179688" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="9.551365028381e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -574,7 +577,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="488.852661132813" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.50353234375e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.600925986328e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -625,7 +628,7 @@
           </scan>
         </scanList>
         <precursorList count="1">
-          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=10">
+          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=9">
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="497.831909179688" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -634,6 +637,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="497.831909179688" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="9.551365028381e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -805,7 +809,7 @@
           </scan>
         </scanList>
         <precursorList count="1">
-          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=17">
+          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=16">
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="504.863189697266" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -814,6 +818,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="504.863189697266" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="4.40655364563e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -873,7 +878,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="495.870849609375" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="51541.46484375" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="56686.11083984375" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -924,7 +929,7 @@
           </scan>
         </scanList>
         <precursorList count="1">
-          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=17">
+          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=16">
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="504.863189697266" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -933,6 +938,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="504.863189697266" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="4.40655364563e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1104,7 +1110,7 @@
           </scan>
         </scanList>
         <precursorList count="1">
-          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=24">
+          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=23">
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="648.997314453125" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1113,6 +1119,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="648.997314453125" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="2.316237738647e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1172,7 +1179,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="784.38916015625" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="7497.75537109375" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="11967.08642578125" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1223,7 +1230,7 @@
           </scan>
         </scanList>
         <precursorList count="1">
-          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=24">
+          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=23">
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="648.997314453125" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1232,6 +1239,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="648.997314453125" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="2.316237738647e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1403,7 +1411,7 @@
           </scan>
         </scanList>
         <precursorList count="1">
-          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=31">
+          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=30">
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="442.351989746094" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1412,6 +1420,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="442.351989746094" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="77193.425674438477" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1471,7 +1480,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="597.516357421875" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="3419.64404296875" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="3757.16185760498" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1522,7 +1531,7 @@
           </scan>
         </scanList>
         <precursorList count="1">
-          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=31">
+          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=30">
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="442.351989746094" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1531,6 +1540,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="442.351989746094" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="77193.425674438477" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1702,7 +1712,7 @@
           </scan>
         </scanList>
         <precursorList count="1">
-          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=38">
+          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=37">
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="413.186279296875" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1711,6 +1721,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="413.186279296875" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="68309.912048339844" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1770,7 +1781,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="527.213195800781" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="2392.186279296875" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="3478.81237411499" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1821,7 +1832,7 @@
           </scan>
         </scanList>
         <precursorList count="1">
-          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=38">
+          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=37">
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="413.186279296875" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1830,6 +1841,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="413.186279296875" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="68309.912048339844" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2001,7 +2013,7 @@
           </scan>
         </scanList>
         <precursorList count="1">
-          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=45">
+          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=44">
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="437.7958984375" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -2010,6 +2022,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="437.7958984375" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.23130271347e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2069,7 +2082,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="399.552764892578" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="5930.9501953125" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="7052.720336914063" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2120,7 +2133,7 @@
           </scan>
         </scanList>
         <precursorList count="1">
-          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=45">
+          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=44">
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="437.7958984375" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -2129,6 +2142,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="437.7958984375" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.23130271347e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2300,7 +2314,7 @@
           </scan>
         </scanList>
         <precursorList count="1">
-          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=52">
+          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=51">
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="508.733642578125" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -2309,6 +2323,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="508.733642578125" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="74613.534568309784" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2368,7 +2383,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="499.86572265625" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="7578.1103515625" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="8633.7177734375" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2419,7 +2434,7 @@
           </scan>
         </scanList>
         <precursorList count="1">
-          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=52">
+          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=51">
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="508.733642578125" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -2428,6 +2443,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="508.733642578125" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="74613.534568309784" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2599,7 +2615,7 @@
           </scan>
         </scanList>
         <precursorList count="1">
-          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=59">
+          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=58">
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="523.963134765625" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -2608,6 +2624,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="523.963134765625" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="85529.849945068359" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2667,7 +2684,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="514.7568359375" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="6329.1796875" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="7477.098419189453" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2718,7 +2735,7 @@
           </scan>
         </scanList>
         <precursorList count="1">
-          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=59">
+          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=58">
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="523.963134765625" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -2727,6 +2744,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="523.963134765625" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="85529.849945068359" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2898,7 +2916,7 @@
           </scan>
         </scanList>
         <precursorList count="1">
-          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=66">
+          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=65">
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="409.06103515625" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -2907,6 +2925,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="409.06103515625" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.129124737549e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2966,7 +2985,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="498.956604003906" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="2144.94140625" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="2150.324235916138" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3017,7 +3036,7 @@
           </scan>
         </scanList>
         <precursorList count="1">
-          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=66">
+          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=65">
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="409.06103515625" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -3026,6 +3045,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="409.06103515625" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.129124737549e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3197,7 +3217,7 @@
           </scan>
         </scanList>
         <precursorList count="1">
-          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=73">
+          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=72">
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="516.737426757813" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -3206,6 +3226,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="516.737426757813" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.034948803558e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3265,7 +3286,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="494.790222167969" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="13476.08203125" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="14036.51485824585" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3316,7 +3337,7 @@
           </scan>
         </scanList>
         <precursorList count="1">
-          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=73">
+          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=72">
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="516.737426757813" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -3325,6 +3346,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="516.737426757813" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.034948803558e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3496,7 +3518,7 @@
           </scan>
         </scanList>
         <precursorList count="1">
-          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=80">
+          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=79">
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="425.224365234375" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -3505,6 +3527,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="425.224365234375" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.153351493073e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3555,7 +3578,7 @@
           </scan>
         </scanList>
         <precursorList count="1">
-          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=80">
+          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=79">
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="425.224365234375" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -3564,6 +3587,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="425.224365234375" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.153351493073e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3735,7 +3759,7 @@
           </scan>
         </scanList>
         <precursorList count="1">
-          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=86">
+          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=85">
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="526.893676757813" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -3744,6 +3768,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="526.893676757813" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="85246.528625488281" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3803,7 +3828,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="517.801879882813" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1279.468627929688" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1667.070190429688" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3854,7 +3879,7 @@
           </scan>
         </scanList>
         <precursorList count="1">
-          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=86">
+          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=85">
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="526.893676757813" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -3863,6 +3888,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="526.893676757813" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="85246.528625488281" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -4034,7 +4060,7 @@
           </scan>
         </scanList>
         <precursorList count="1">
-          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=93">
+          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=92">
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="459.213958740234" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -4043,6 +4069,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="459.213958740234" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.619670747833e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -4102,7 +4129,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="573.965087890625" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="4382.0673828125" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="5315.856552124023" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -4153,7 +4180,7 @@
           </scan>
         </scanList>
         <precursorList count="1">
-          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=93">
+          <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=92">
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="459.213958740234" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -4162,6 +4189,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="459.213958740234" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.619670747833e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
