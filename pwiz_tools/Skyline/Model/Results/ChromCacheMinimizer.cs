@@ -108,7 +108,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             var minimizer = new QueueWorker<MinimizeParams>(null, MinimizeAndWrite);
-            minimizer.RunAsync(1, @"Minimizing/Writing", MAX_GROUP_READ_AHEAD);
+            minimizer.RunAsync(MINIMIZING_THREADS, @"Minimizing/Writing", MAX_GROUP_READ_AHEAD);
 
             for (int iHeader = 0; iHeader < ChromGroupHeaderInfos.Count; iHeader++)
             {
