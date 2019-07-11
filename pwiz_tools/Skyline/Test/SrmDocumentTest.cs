@@ -1488,7 +1488,7 @@ namespace pwiz.SkylineTest
         };
 
         private readonly string DOC_LABEL_IMPLEMENTED = 
-        "<srm_settings format_version=\"4.11\" software_version=\"Skyline-daily (64-bit) 4.1.1.18118\">\n" +
+        "<srm_settings format_version=\"4.11\" software_version=\"Skyline-daily (64-bit) 4.1.1.18118\">\n" + // Keep -daily
         "  <settings_summary name=\"Default\">\n" +
         "    <peptide_settings>\n" +
         "      <enzyme name=\"TrypsinR\" cut=\"R\" no_cut=\"P\" sense=\"C\" />\n" +
