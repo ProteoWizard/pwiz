@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -27,6 +26,7 @@ namespace KeepResxW
             @"shared\zedgraph\*",
             @"shared\proteomedb\forms\proteomedbform.resx",
             @"skyline\executables\autoqc\*",
+            @"skyline\executables\keepresxw\*",
             @"skyline\executables\localizationhelper\*",
             @"skyline\executables\multiload\*",
             @"skyline\executables\skylinepeptidecolorgenerator\*",
@@ -72,11 +72,13 @@ namespace KeepResxW
         {
             InitializeComponent();
 
+            receivingProgress.Maximum = 4;
+
             // Hide the tabs
             tabControl1.SizeMode = TabSizeMode.Fixed;
             tabControl1.ItemSize = new Size(0, 1);
 
-            // Restore values saved in se
+            // Restore values saved in settings
             selectedPathBox.Text = Settings.Default.ProjectPath;
             versionBox.Text = Settings.Default.ProjectVersion;
             receivingProjBox.Text = Settings.Default.ReceivingProject;
@@ -89,7 +91,16 @@ namespace KeepResxW
             {
                 expectedJa.Checked = true;
             }
+        }
 
+        private void ClearProgress()
+        {
+            receivingProgress.Visible = false;
+            receivingProgress.Value = 0;
+            finishedReceiving.Visible = false;
+            filesChangedLabel.Visible = false;
+            fileChangesView.Visible = false;
+            fileChangesView.Items.Clear();
         }
 
         private void KeepResxForm_Load(object sender, EventArgs e)
@@ -231,13 +242,9 @@ namespace KeepResxW
 
         private void DoReceive()
         {
+            ClearProgress();
+
             receivingProgress.Visible = true;
-            receivingProgress.Value = 0;
-            receivingProgress.Maximum = 4;
-            finishedReceiving.Visible = false;
-            filesChangedLabel.Visible = false;
-            fileChangesView.Visible = false;
-            fileChangesView.Items.Clear();
 
             SaveReceiveSettings();
 
@@ -320,11 +327,16 @@ namespace KeepResxW
                 receivingProgress.Increment(1);
 
                 var ext = GetResxExtension(language);
+                int pathRootIndex = GetRootIndex(zip, projectPath);
                 var wrongExt = new List<ZipEntry>();
                 int fileCount = zip.Count;
 
-                foreach (var entry in zip)
+                foreach (var entry in zip.Entries.ToArray())
                 {
+                    // Fix-up entry paths to skip any extra root path information
+                    if (pathRootIndex > 0)
+                        entry.FileName = string.Join("/", entry.FileName.Split('/').Skip(pathRootIndex));
+
                     if (!entry.FileName.Contains("."))
                     {
                         fileCount--;
@@ -358,18 +370,19 @@ namespace KeepResxW
                     allWrong = true;
                 }
 
-                foreach (var file in wrongExt)
+                foreach (var entry in wrongExt)
                 {
-                    var extInZip = file.FileName.Substring(file.FileName.IndexOf(".", StringComparison.Ordinal));
+                    var extInZip = entry.FileName.Substring(entry.FileName.IndexOf(".", StringComparison.Ordinal));
                     if (extInZip.Equals(GetResxExtension(null)) && !allWrong)
                     {
-                        fileChangesView.Items.Add(new ListViewItem(new[] { file.FileName, string.Empty }));
-                        zip.RemoveEntry(file);
+                        fileChangesView.Items.Add(new ListViewItem(new[] { entry.FileName, string.Empty }));
+                        zip.RemoveEntry(entry);
                         continue;
                     }
-                    var newName = file.FileName.Replace(extInZip, ext);
-                    var oldName = file.FileName;
-                    file.FileName = newName;
+
+                    var newName = entry.FileName.Replace(extInZip, ext);
+                    var oldName = entry.FileName;
+                    entry.FileName = newName;
                     fileChangesView.Items.Add(new ListViewItem(new[] { oldName, newName }));
                 }
                 fileChangesView.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
@@ -377,6 +390,7 @@ namespace KeepResxW
                 receivingProgress.Increment(1);
 
                 zip.ExtractAll(projectPath, ExtractExistingFileAction.OverwriteSilently);
+
                 receivingProgress.Increment(1);
 
                 var sbErrors = new StringBuilder();
@@ -384,7 +398,7 @@ namespace KeepResxW
                 {
                     if (!entry.IsDirectory)
                     {
-                        string fileName = projectPath + "\\" + entry.FileName.Replace("/", "\\");
+                        string fileName = GetPath(projectPath, entry);
                         try
                         {
                             ApplyFixes(fileName);
@@ -399,10 +413,31 @@ namespace KeepResxW
                 if (sbErrors.Length != 0)
                 {
                     var errorMsg = "Errors occurred while applying fixes to the following files: \n";
-                    MessageBox.Show(errorMsg + sbErrors.ToString(), "Warning", MessageBoxButtons.OK);
+                    MessageBox.Show(errorMsg + sbErrors, "Warning", MessageBoxButtons.OK);
                 }
             }
             return true;
+        }
+
+        private static string GetPath(string projectPath, ZipEntry entry)
+        {
+            return projectPath + "\\" + entry.FileName.Replace("/", "\\");
+        }
+
+        private int GetRootIndex(ZipFile zip, string projectPath)
+        {
+            var firstEntry = zip.FirstOrDefault();
+            if (firstEntry == null)
+                return -1;
+            var projectSubdirs = new[] { "Shared", "Skyline" };
+            var pathParts = firstEntry.FileName.Split('/');
+            for (int i = 0; i < pathParts.Length; i++)
+            {
+                if (projectSubdirs.Any(s => Equals(s, pathParts[i])))
+                    return i;
+            }
+
+            return -1;
         }
 
         private static string CreateZipPath(string project, string version, string language)

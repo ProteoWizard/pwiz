@@ -355,7 +355,7 @@
             this.confirmButton.Name = "confirmButton";
             this.confirmButton.Size = new System.Drawing.Size(92, 33);
             this.confirmButton.TabIndex = 3;
-            this.confirmButton.Text = "OK";
+            this.confirmButton.Text = "Start";
             this.confirmButton.UseVisualStyleBackColor = true;
             this.confirmButton.Click += new System.EventHandler(this.confirmButton_Click);
             // 
@@ -367,7 +367,7 @@
             this.cancelButton.Name = "cancelButton";
             this.cancelButton.Size = new System.Drawing.Size(92, 33);
             this.cancelButton.TabIndex = 4;
-            this.cancelButton.Text = "Cancel";
+            this.cancelButton.Text = "Close";
             this.cancelButton.UseVisualStyleBackColor = true;
             this.cancelButton.Click += new System.EventHandler(this.cancelButton_Click);
             // 
