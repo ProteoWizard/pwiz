@@ -169,16 +169,16 @@
   <data name="listBoxModeUI.ItemHeight" type="System.Int32, mscorlib">
     <value>16</value>
   </data>
-  <data name="imageListBoxItemProteomic.ImageIndex" type="System.Int32, mscorlib">
+  <data name="imageListBoxItemProteomics.ImageIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="imageListBoxItemProteomic.Text" xml:space="preserve">
+  <data name="imageListBoxItemProteomics.Text" xml:space="preserve">
     <value>プロテオミクス</value>
   </data>
-  <data name="imageListBoxItemMolecules.ImageIndex" type="System.Int32, mscorlib">
+  <data name="imageListBoxItemMolecule.ImageIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="imageListBoxItemMolecules.Text" xml:space="preserve">
+  <data name="imageListBoxItemMolecule.Text" xml:space="preserve">
     <value>分子</value>
   </data>
   <data name="imageListBoxItemMixed.ImageIndex" type="System.Int32, mscorlib">
@@ -319,16 +319,16 @@
   <data name="&gt;&gt;imageListModeUI.Type" xml:space="preserve">
     <value>System.Windows.Forms.ImageList, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;imageListBoxItemProteomic.Name" xml:space="preserve">
-    <value>imageListBoxItemProteomic</value>
+  <data name="&gt;&gt;imageListBoxItemProteomics.Name" xml:space="preserve">
+    <value>imageListBoxItemProteomics</value>
   </data>
-  <data name="&gt;&gt;imageListBoxItemProteomic.Type" xml:space="preserve">
+  <data name="&gt;&gt;imageListBoxItemProteomics.Type" xml:space="preserve">
     <value>pwiz.Skyline.Controls.ImageListBoxItem, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="&gt;&gt;imageListBoxItemMolecules.Name" xml:space="preserve">
-    <value>imageListBoxItemMolecules</value>
+  <data name="&gt;&gt;imageListBoxItemMolecule.Name" xml:space="preserve">
+    <value>imageListBoxItemMolecule</value>
   </data>
-  <data name="&gt;&gt;imageListBoxItemMolecules.Type" xml:space="preserve">
+  <data name="&gt;&gt;imageListBoxItemMolecule.Type" xml:space="preserve">
     <value>pwiz.Skyline.Controls.ImageListBoxItem, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;imageListBoxItemMixed.Name" xml:space="preserve">
