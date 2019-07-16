@@ -142,14 +142,14 @@ namespace pwiz.SkylineTestData
 
                     Assert.AreEqual(1, tic.Count());
                     Assert.AreEqual(1, bpc.Count());
-                    Assert.AreEqual(6, qc.Count());
                     var qcNames = qc.Select(o => o.TextId).ToArray();
-                    CollectionAssert.IsSubsetOf(new string[] {"Column Pressure (channel 1)",
-                                                              "Pump A Flowrate (channel 2)",
-                                                              "Pump B Flowrate (channel 3)",
-                                                              "Column Pressure (channel 4)",
-                                                              "Pump A Flowrate (channel 5)",
-                                                              "Pump B Flowrate (channel 6)" },
+                    Assert.AreEqual(6, qcNames.Length);
+                    CollectionAssert.IsSubsetOf(new [] {"Column Pressure (channel 1)",
+                                                        "Pump A Flowrate (channel 2)",
+                                                        "Pump B Flowrate (channel 3)",
+                                                        "Column Pressure (channel 4)",
+                                                        "Pump A Flowrate (channel 5)",
+                                                        "Pump B Flowrate (channel 6)" },
                                                 qcNames);
                 }
             }

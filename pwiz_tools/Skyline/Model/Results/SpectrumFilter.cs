@@ -301,7 +301,7 @@ namespace pwiz.Skyline.Model.Results
 
                 if (gce != null)
                 {
-                    foreach (var possibleGlobalIndex in new int?[] { gce.TicChromatogramIndex, gce.BpcChromatogramIndex })
+                    foreach (var possibleGlobalIndex in new [] { gce.TicChromatogramIndex, gce.BpcChromatogramIndex })
                     {
                         if (!possibleGlobalIndex.HasValue)
                             continue;

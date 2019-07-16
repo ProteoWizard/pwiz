@@ -589,7 +589,7 @@ namespace pwiz.Skyline.Model.Results
                 timeIntensities = new TimeIntensities(times, intensities, null, null);
                 extra = new ChromExtra(0, 0);
 
-                if (timeIntensities.NumPoints > 0 && ChromExtractor.summed == chromKey.Extractor)
+                if (timeIntensities.NumPoints > 0 && ChromExtractor.summed == chromKey?.Extractor)
                 {
                     _ticArea = timeIntensities.Integral(0, timeIntensities.NumPoints - 1);
                 }
