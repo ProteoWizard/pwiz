@@ -109,14 +109,16 @@ namespace pwiz.Skyline.Model.Results
     public sealed class GlobalChromatogramExtractor
     {
         private MsDataFileImpl _dataFile;
+        private const string TIC_CHROMATOGRAM_ID = @"TIC";
+        private const string BPC_CHROMATOGRAM_ID = @"BPC";
 
         public GlobalChromatogramExtractor(MsDataFileImpl dataFile)
         {
             _dataFile = dataFile;
             IndexOffset = 0;
 
-            if (dataFile.ChromatogramCount > 0 && dataFile.GetChromatogramId(0, out int indexId) == "TIC") TicChromatogramIndex = 0;
-            if (dataFile.ChromatogramCount > 1 && dataFile.GetChromatogramId(1, out int indexId2) == "BPC") BpcChromatogramIndex = 1;
+            if (dataFile.ChromatogramCount > 0 && dataFile.GetChromatogramId(0, out int indexId) == TIC_CHROMATOGRAM_ID) TicChromatogramIndex = 0;
+            if (dataFile.ChromatogramCount > 1 && dataFile.GetChromatogramId(1, out int indexId2) == BPC_CHROMATOGRAM_ID) BpcChromatogramIndex = 1;
 
             QcTraceByIndex = new SortedDictionary<int, MsDataFileImpl.QcTrace>();
             foreach (var qcTrace in dataFile.GetQcTraces() ?? new List<MsDataFileImpl.QcTrace>())
