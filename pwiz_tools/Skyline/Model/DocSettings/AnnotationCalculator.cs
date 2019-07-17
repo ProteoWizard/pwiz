@@ -76,28 +76,6 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        private static ColumnDescriptor ResolvePath(ColumnDescriptor rootColumn, PropertyPath propertyPath)
-        {
-            if (propertyPath.IsRoot)
-            {
-                return rootColumn;
-            }
-
-            var parent = ResolvePath(rootColumn, propertyPath.Parent);
-            if (parent == null)
-            {
-                return null;
-            }
-
-            if (propertyPath.Name.StartsWith(AnnotationDef.ANNOTATION_PREFIX))
-            {
-                return null;
-            }
-
-            return parent.ResolveChild(propertyPath.Name);
-        }
-
-
         public object GetAnnotation<T>(AnnotationDef annotationDef, T skylineObject,
             Annotations annotations) where T : SkylineObject
         {
