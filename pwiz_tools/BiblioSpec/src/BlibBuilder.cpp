@@ -208,6 +208,7 @@ int BlibBuilder::parseCommandArgs(int argc, char* argv[])
                 }
                 char* name = new char[infileName.size()+1];
                 strcpy(name, infileName.c_str());
+                Verbosity::debug("Input file: %s", name);
                 input_files.push_back(name);
             }
             break;

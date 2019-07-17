@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ExportAnnotationsDlg));
             this.listBoxElementTypes = new System.Windows.Forms.ListBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.lblChooseAnnotations = new System.Windows.Forms.Label();
@@ -39,6 +40,7 @@
             this.lblElementTypes = new System.Windows.Forms.Label();
             this.cbxRemoveBlankRows = new System.Windows.Forms.CheckBox();
             this.lblInstructions = new System.Windows.Forms.Label();
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -48,21 +50,15 @@
             // listBoxElementTypes
             // 
             this.listBoxElementTypes.FormattingEnabled = true;
-            this.listBoxElementTypes.Location = new System.Drawing.Point(4, 52);
+            resources.ApplyResources(this.listBoxElementTypes, "listBoxElementTypes");
             this.listBoxElementTypes.Name = "listBoxElementTypes";
             this.listBoxElementTypes.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.listBoxElementTypes.Size = new System.Drawing.Size(211, 121);
-            this.listBoxElementTypes.TabIndex = 2;
             this.listBoxElementTypes.SelectedIndexChanged += new System.EventHandler(this.checkedListBoxElementTypes_SelectedIndexChanged);
             // 
             // splitContainer1
             // 
-            this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.splitContainer1.Location = new System.Drawing.Point(4, 179);
+            resources.ApplyResources(this.splitContainer1, "splitContainer1");
             this.splitContainer1.Name = "splitContainer1";
-            this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
             // splitContainer1.Panel1
             // 
@@ -73,114 +69,69 @@
             // 
             this.splitContainer1.Panel2.Controls.Add(this.listBoxProperties);
             this.splitContainer1.Panel2.Controls.Add(this.lblChooseProperties);
-            this.splitContainer1.Size = new System.Drawing.Size(524, 283);
-            this.splitContainer1.SplitterDistance = 140;
-            this.splitContainer1.TabIndex = 3;
             // 
             // lblChooseAnnotations
             // 
-            this.lblChooseAnnotations.AutoSize = true;
-            this.lblChooseAnnotations.Location = new System.Drawing.Point(3, 5);
+            resources.ApplyResources(this.lblChooseAnnotations, "lblChooseAnnotations");
             this.lblChooseAnnotations.Name = "lblChooseAnnotations";
-            this.lblChooseAnnotations.Size = new System.Drawing.Size(127, 13);
-            this.lblChooseAnnotations.TabIndex = 0;
-            this.lblChooseAnnotations.Text = "Export these annotations:";
             // 
             // listBoxAnnotations
             // 
-            this.listBoxAnnotations.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.listBoxAnnotations, "listBoxAnnotations");
             this.listBoxAnnotations.FormattingEnabled = true;
-            this.listBoxAnnotations.Location = new System.Drawing.Point(3, 21);
             this.listBoxAnnotations.Name = "listBoxAnnotations";
             this.listBoxAnnotations.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.listBoxAnnotations.Size = new System.Drawing.Size(518, 95);
-            this.listBoxAnnotations.TabIndex = 1;
             this.listBoxAnnotations.SelectedIndexChanged += new System.EventHandler(this.ListBoxSelectionChanged);
             // 
             // listBoxProperties
             // 
-            this.listBoxProperties.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.listBoxProperties, "listBoxProperties");
             this.listBoxProperties.FormattingEnabled = true;
-            this.listBoxProperties.Location = new System.Drawing.Point(3, 16);
             this.listBoxProperties.Name = "listBoxProperties";
             this.listBoxProperties.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.listBoxProperties.Size = new System.Drawing.Size(518, 95);
-            this.listBoxProperties.TabIndex = 1;
             this.listBoxProperties.SelectedIndexChanged += new System.EventHandler(this.ListBoxSelectionChanged);
             // 
             // lblChooseProperties
             // 
-            this.lblChooseProperties.AutoSize = true;
-            this.lblChooseProperties.Location = new System.Drawing.Point(3, 0);
+            resources.ApplyResources(this.lblChooseProperties, "lblChooseProperties");
             this.lblChooseProperties.Name = "lblChooseProperties";
-            this.lblChooseProperties.Size = new System.Drawing.Size(145, 13);
-            this.lblChooseProperties.TabIndex = 0;
-            this.lblChooseProperties.Text = "Export these other properties:";
             // 
             // btnExport
             // 
-            this.btnExport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnExport.Location = new System.Drawing.Point(362, 481);
+            resources.ApplyResources(this.btnExport, "btnExport");
             this.btnExport.Name = "btnExport";
-            this.btnExport.Size = new System.Drawing.Size(75, 23);
-            this.btnExport.TabIndex = 5;
-            this.btnExport.Text = "Export...";
             this.btnExport.UseVisualStyleBackColor = true;
             this.btnExport.Click += new System.EventHandler(this.btnExport_Click);
             // 
             // btnCancel
             // 
-            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.btnCancel, "btnCancel");
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(443, 481);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 6;
-            this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // lblElementTypes
             // 
-            this.lblElementTypes.AutoSize = true;
-            this.lblElementTypes.Location = new System.Drawing.Point(4, 36);
+            resources.ApplyResources(this.lblElementTypes, "lblElementTypes");
             this.lblElementTypes.Name = "lblElementTypes";
-            this.lblElementTypes.Size = new System.Drawing.Size(146, 13);
-            this.lblElementTypes.TabIndex = 1;
-            this.lblElementTypes.Text = "Export these types of objects:";
             // 
             // cbxRemoveBlankRows
             // 
-            this.cbxRemoveBlankRows.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.cbxRemoveBlankRows.AutoSize = true;
-            this.cbxRemoveBlankRows.Location = new System.Drawing.Point(4, 468);
+            resources.ApplyResources(this.cbxRemoveBlankRows, "cbxRemoveBlankRows");
             this.cbxRemoveBlankRows.Name = "cbxRemoveBlankRows";
-            this.cbxRemoveBlankRows.Size = new System.Drawing.Size(120, 17);
-            this.cbxRemoveBlankRows.TabIndex = 4;
-            this.cbxRemoveBlankRows.Text = "Remove blank rows";
             this.cbxRemoveBlankRows.UseVisualStyleBackColor = true;
             // 
             // lblInstructions
             // 
-            this.lblInstructions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.lblInstructions, "lblInstructions");
             this.lblInstructions.AutoEllipsis = true;
-            this.lblInstructions.Location = new System.Drawing.Point(7, 7);
             this.lblInstructions.Name = "lblInstructions";
-            this.lblInstructions.Size = new System.Drawing.Size(511, 23);
-            this.lblInstructions.TabIndex = 0;
-            this.lblInstructions.Text = "Choose which annotations and properties that you would like to export to a text f" +
-    "ile.";
             // 
             // ExportAnnotationsDlg
             // 
             this.AcceptButton = this.btnExport;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(530, 516);
             this.Controls.Add(this.lblInstructions);
             this.Controls.Add(this.cbxRemoveBlankRows);
             this.Controls.Add(this.lblElementTypes);
@@ -191,8 +142,7 @@
             this.Name = "ExportAnnotationsDlg";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Export Annotations and Properties";
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel1.PerformLayout();
             this.splitContainer1.Panel2.ResumeLayout(false);

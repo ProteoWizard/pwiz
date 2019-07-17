@@ -100,7 +100,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 else
                 {
-                    tabControl1.SelectedTab = tabPageNormal;
+                    tabControl1.SelectedTab = tabPageEditable;
                 }
             }
         }
@@ -262,7 +262,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
 
-            if (tabControl1.SelectedTab == tabPageNormal)
+            if (tabControl1.SelectedTab == tabPageEditable)
             {
                 if (checkedListBoxAppliesTo.CheckedItems.Count == 0)
                 {

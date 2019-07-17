@@ -10589,4 +10589,7 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="SkylineVersion_V19_1_Skyline_19_1" xml:space="preserve">
     <value>Skyline 19.1</value>
   </data>
+  <data name="CommandLine_SaveSettings_Error__Failed_saving_to_the_user_configuration_file_" xml:space="preserve">
+    <value>Error: Failed saving to the user configuration file.</value>
+  </data>
 </root>

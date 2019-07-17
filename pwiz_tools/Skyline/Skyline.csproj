@@ -1846,7 +1846,13 @@
     <EmbeddedResource Include="Alerts\MissingFileDlg.zh-CHS.resx">
       <DependentUpon>MissingFileDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\NoModeUIDlg.ja.resx">
+      <DependentUpon>NoModeUIDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\NoModeUIDlg.resx">
+      <DependentUpon>NoModeUIDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\NoModeUIDlg.zh-CHS.resx">
       <DependentUpon>NoModeUIDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\PasteFilteredPeptidesDlg.ja.resx">
@@ -1917,9 +1923,17 @@
       <DependentUpon>UpgradeLicenseDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="CommandArgUsage.ja.resx">
+      <DependentUpon>CommandArgUsage.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="CommandArgUsage.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>CommandArgUsage.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CommandArgUsage.zh-CHS.resx">
+      <DependentUpon>CommandArgUsage.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\AuditLog\AuditLogExtraInfoForm.ja.resx">
@@ -2113,6 +2127,9 @@
     <EmbeddedResource Include="Controls\GroupComparison\MsStatsLogoForm.zh-CHS.resx">
       <DependentUpon>MsStatsLogoForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Lists\ListDesigner.ja.resx">
+      <DependentUpon>ListDesigner.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Lists\ListDesigner.resx">
       <DependentUpon>ListDesigner.cs</DependentUpon>
     </EmbeddedResource>
@@ -2133,6 +2150,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\VolcanoPlotPropertiesDlg.zh-CHS.resx">
       <DependentUpon>VolcanoPlotPropertiesDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Lists\ListDesigner.zh-CHS.resx">
+      <DependentUpon>ListDesigner.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\ActionBoxControl.ja.resx">
       <DependentUpon>ActionBoxControl.cs</DependentUpon>
@@ -2231,6 +2251,9 @@
     <EmbeddedResource Include="FileUI\CreateIrtCalculatorDlg.zh-CHS.resx">
       <DependentUpon>CreateIrtCalculatorDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ExportAnnotationsDlg.ja.resx">
+      <DependentUpon>ExportAnnotationsDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ExportAnnotationsDlg.resx">
       <DependentUpon>ExportAnnotationsDlg.cs</DependentUpon>

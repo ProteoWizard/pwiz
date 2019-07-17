@@ -5931,6 +5931,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Failed saving to the user configuration file..
+        /// </summary>
+        public static string CommandLine_SaveSettings_Error__Failed_saving_to_the_user_configuration_file_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SaveSettings_Error__Failed_saving_to_the_user_configuration_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Changing full-scan extraction to +/- {0} minutes from MS/MS IDs..
         /// </summary>
         public static string CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_from_MS_MS_IDs_ {

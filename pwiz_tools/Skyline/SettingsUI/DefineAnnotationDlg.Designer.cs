@@ -42,7 +42,7 @@ namespace pwiz.Skyline.SettingsUI
             this.label4 = new System.Windows.Forms.Label();
             this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             this.tabControl1 = new System.Windows.Forms.TabControl();
-            this.tabPageNormal = new System.Windows.Forms.TabPage();
+            this.tabPageEditable = new System.Windows.Forms.TabPage();
             this.tabPageCalculated = new System.Windows.Forms.TabPage();
             this.comboAggregateOperation = new System.Windows.Forms.ComboBox();
             this.lblAggregateOperation = new System.Windows.Forms.Label();
@@ -51,7 +51,7 @@ namespace pwiz.Skyline.SettingsUI
             this.comboAppliesTo = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl1.SuspendLayout();
-            this.tabPageNormal.SuspendLayout();
+            this.tabPageEditable.SuspendLayout();
             this.tabPageCalculated.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -124,22 +124,22 @@ namespace pwiz.Skyline.SettingsUI
             // tabControl1
             // 
             resources.ApplyResources(this.tabControl1, "tabControl1");
-            this.tabControl1.Controls.Add(this.tabPageNormal);
+            this.tabControl1.Controls.Add(this.tabPageEditable);
             this.tabControl1.Controls.Add(this.tabPageCalculated);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
             // 
-            // tabPageNormal
+            // tabPageEditable
             // 
-            this.tabPageNormal.Controls.Add(this.label2);
-            this.tabPageNormal.Controls.Add(this.comboType);
-            this.tabPageNormal.Controls.Add(this.label4);
-            this.tabPageNormal.Controls.Add(this.tbxValues);
-            this.tabPageNormal.Controls.Add(this.label3);
-            this.tabPageNormal.Controls.Add(this.checkedListBoxAppliesTo);
-            resources.ApplyResources(this.tabPageNormal, "tabPageNormal");
-            this.tabPageNormal.Name = "tabPageNormal";
-            this.tabPageNormal.UseVisualStyleBackColor = true;
+            this.tabPageEditable.Controls.Add(this.label2);
+            this.tabPageEditable.Controls.Add(this.comboType);
+            this.tabPageEditable.Controls.Add(this.label4);
+            this.tabPageEditable.Controls.Add(this.tbxValues);
+            this.tabPageEditable.Controls.Add(this.label3);
+            this.tabPageEditable.Controls.Add(this.checkedListBoxAppliesTo);
+            resources.ApplyResources(this.tabPageEditable, "tabPageEditable");
+            this.tabPageEditable.Name = "tabPageEditable";
+            this.tabPageEditable.UseVisualStyleBackColor = true;
             // 
             // tabPageCalculated
             // 
@@ -203,8 +203,8 @@ namespace pwiz.Skyline.SettingsUI
             this.ShowInTaskbar = false;
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.tabControl1.ResumeLayout(false);
-            this.tabPageNormal.ResumeLayout(false);
-            this.tabPageNormal.PerformLayout();
+            this.tabPageEditable.ResumeLayout(false);
+            this.tabPageEditable.PerformLayout();
             this.tabPageCalculated.ResumeLayout(false);
             this.tabPageCalculated.PerformLayout();
             this.ResumeLayout(false);
@@ -226,7 +226,7 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.ImageList imageList1;
         private System.Windows.Forms.TabControl tabControl1;
-        private System.Windows.Forms.TabPage tabPageNormal;
+        private System.Windows.Forms.TabPage tabPageEditable;
         private System.Windows.Forms.TabPage tabPageCalculated;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.ComboBox comboAppliesTo;

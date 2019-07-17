@@ -108,6 +108,24 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             }
         }
 
+        public string[] GetSourceFilePaths()
+        {
+            using (var session = OpenSession())
+            {
+                var query = session.CreateQuery(@"SELECT FileName From " + typeof(DbSpectrumSourceFiles));
+                return query.List<string>().ToArray();
+            }
+        }
+
+        public string[] GetIdFilePaths()
+        {
+            using (var session = OpenSession())
+            {
+                var query = session.CreateQuery(@"SELECT IdFileName From " + typeof(DbSpectrumSourceFiles));
+                return query.List<string>().ToArray();
+            }
+        }
+
         public int GetSpectraCount()
         {
             using (var session = OpenSession())

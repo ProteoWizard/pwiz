@@ -190,7 +190,7 @@
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboType.Parent" xml:space="preserve">
-    <value>tabPageNormal</value>
+    <value>tabPageEditable</value>
   </data>
   <data name="&gt;&gt;comboType.ZOrder" xml:space="preserve">
     <value>1</value>
@@ -217,7 +217,7 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
-    <value>tabPageNormal</value>
+    <value>tabPageEditable</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
     <value>0</value>
@@ -247,7 +247,7 @@
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tbxValues.Parent" xml:space="preserve">
-    <value>tabPageNormal</value>
+    <value>tabPageEditable</value>
   </data>
   <data name="&gt;&gt;tbxValues.ZOrder" xml:space="preserve">
     <value>3</value>
@@ -274,7 +274,7 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label3.Parent" xml:space="preserve">
-    <value>tabPageNormal</value>
+    <value>tabPageEditable</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
     <value>4</value>
@@ -298,7 +298,7 @@
     <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;checkedListBoxAppliesTo.Parent" xml:space="preserve">
-    <value>tabPageNormal</value>
+    <value>tabPageEditable</value>
   </data>
   <data name="&gt;&gt;checkedListBoxAppliesTo.ZOrder" xml:space="preserve">
     <value>5</value>
@@ -382,7 +382,7 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label4.Parent" xml:space="preserve">
-    <value>tabPageNormal</value>
+    <value>tabPageEditable</value>
   </data>
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
     <value>2</value>
@@ -395,7 +395,7 @@
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAABI
-        CAAAAk1TRnQBSQFMAwEBAAEwAQABMAEAARABAAEQAQAE/wEJAQAI/wFCAU0BNgEEBgABNgEEAgABKAMA
+        CAAAAk1TRnQBSQFMAwEBAAE4AQABOAEAARABAAEQAQAE/wEJAQAI/wFCAU0BNgEEBgABNgEEAgABKAMA
         AUADAAEQAwABAQEAAQgGAAEEGAABgAIAAYADAAKAAQABgAMAAYABAAGAAQACgAIAA8ABAAHAAdwBwAEA
         AfABygGmAQABMwUAATMBAAEzAQABMwEAAjMCAAMWAQADHAEAAyIBAAMpAQADVQEAA00BAANCAQADOQEA
         AYABfAH/AQACUAH/AQABkwEAAdYBAAH/AewBzAEAAcYB1gHvAQAB1gLnAQABkAGpAa0CAAH/ATMDAAFm
@@ -436,31 +436,31 @@
   <data name="tabControl1.Appearance" type="System.Windows.Forms.TabAppearance, System.Windows.Forms">
     <value>Buttons</value>
   </data>
-  <data name="tabPageNormal.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="tabPageEditable.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 25</value>
   </data>
-  <data name="tabPageNormal.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="tabPageEditable.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 3, 3, 3</value>
   </data>
-  <data name="tabPageNormal.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="tabPageEditable.Size" type="System.Drawing.Size, System.Drawing">
     <value>328, 336</value>
   </data>
-  <data name="tabPageNormal.TabIndex" type="System.Int32, mscorlib">
+  <data name="tabPageEditable.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="tabPageNormal.Text" xml:space="preserve">
-    <value>Normal</value>
+  <data name="tabPageEditable.Text" xml:space="preserve">
+    <value>Editable</value>
   </data>
-  <data name="&gt;&gt;tabPageNormal.Name" xml:space="preserve">
-    <value>tabPageNormal</value>
+  <data name="&gt;&gt;tabPageEditable.Name" xml:space="preserve">
+    <value>tabPageEditable</value>
   </data>
-  <data name="&gt;&gt;tabPageNormal.Type" xml:space="preserve">
+  <data name="&gt;&gt;tabPageEditable.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;tabPageNormal.Parent" xml:space="preserve">
+  <data name="&gt;&gt;tabPageEditable.Parent" xml:space="preserve">
     <value>tabControl1</value>
   </data>
-  <data name="&gt;&gt;tabPageNormal.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;tabPageEditable.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="comboAggregateOperation.Location" type="System.Drawing.Point, System.Drawing">
