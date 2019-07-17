@@ -146,10 +146,10 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 if (expression.AggregateOperation == null)
                 {
-                    return columnSelector.GetSingleValue(skylineObject);
+                    return ConvertAnnotationValue(annotationDef, columnSelector.GetSingleValue(skylineObject));
                 }
 
-                return columnSelector.AggregateValues(expression.AggregateOperation, skylineObject);
+                return ConvertAnnotationValue(annotationDef, columnSelector.AggregateValues(expression.AggregateOperation, skylineObject));
             }
             catch (Exception)
             {
@@ -173,12 +173,12 @@ namespace pwiz.Skyline.Model.DocSettings
 
                 if (value is float floatValue)
                 {
-                    return floatValue;
+                    return (double) floatValue;
                 }
 
                 if (value is int intValue)
                 {
-                    return intValue;
+                    return (double) intValue;
                 }
             }
 

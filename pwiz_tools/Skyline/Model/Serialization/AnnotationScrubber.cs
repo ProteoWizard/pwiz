@@ -36,14 +36,18 @@ namespace pwiz.Skyline.Model.Serialization
         /// <summary>
         /// Construct a new AnnotationScrubber.
         /// </summary>
-        public static AnnotationScrubber MakeAnnotationScrubber(StringPool stringPool, DataSettings dataSettings)
+        public static AnnotationScrubber MakeAnnotationScrubber(StringPool stringPool, DataSettings dataSettings, bool removeInvalidAnnotations)
         {
             var writeableAnnotations = dataSettings.AnnotationDefs.Where(def => def.Expression == null).ToArray();
-            var validAnnotationNames = new Dictionary<AnnotationDef.AnnotationTarget, HashSet<string>>();
-            foreach (AnnotationDef.AnnotationTarget target in Enum.GetValues(typeof(AnnotationDef.AnnotationTarget)))
+            Dictionary<AnnotationDef.AnnotationTarget, HashSet<string>> validAnnotationNames = null;
+            if (removeInvalidAnnotations)
             {
-                var names = new HashSet<string>(writeableAnnotations.Where(def => def.AnnotationTargets.Contains(target)).Select(def => def.Name));
-                validAnnotationNames.Add(target, names);
+                validAnnotationNames = new Dictionary<AnnotationDef.AnnotationTarget, HashSet<string>>();
+                foreach (AnnotationDef.AnnotationTarget target in Enum.GetValues(typeof(AnnotationDef.AnnotationTarget)))
+                {
+                    var names = new HashSet<string>(writeableAnnotations.Where(def => def.AnnotationTargets.Contains(target)).Select(def => def.Name));
+                    validAnnotationNames.Add(target, names);
+                }
             }
             return new AnnotationScrubber(stringPool, validAnnotationNames);
         }
@@ -68,11 +72,15 @@ namespace pwiz.Skyline.Model.Serialization
                 return annotations;
             }
 
-            var validNames = _validAnnotationNames[target];
-            var newAnnotations = annotations.ListAnnotations()
-                .Where(kvp => validNames.Contains(kvp.Key))
-                .Select(kvp => new KeyValuePair<string, string>(
-                    StringPool.GetString(kvp.Key), kvp.Value));
+            var newAnnotations = annotations.ListAnnotations().AsEnumerable();
+            if (null != _validAnnotationNames)
+            {
+                var validNames = _validAnnotationNames[target];
+                newAnnotations = newAnnotations.Where(kvp => validNames.Contains(kvp.Key));
+            }
+
+            newAnnotations = newAnnotations.Select(kvp => new KeyValuePair<string, string>(
+                StringPool.GetString(kvp.Key), kvp.Value));
 
             return new Annotations(StringPool.GetString(annotations.Note), newAnnotations, annotations.ColorIndex);
         }

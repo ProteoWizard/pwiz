@@ -7706,6 +7706,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Choose a type for this annotation to apply to..
+        /// </summary>
+        public static string DefineAnnotationDlg_OkDialog_Choose_a_type_for_this_annotation_to_apply_to_ {
+            get {
+                return ResourceManager.GetString("DefineAnnotationDlg_OkDialog_Choose_a_type_for_this_annotation_to_apply_to_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Choose a value for this annotation..
+        /// </summary>
+        public static string DefineAnnotationDlg_OkDialog_Choose_a_value_for_this_annotation_ {
+            get {
+                return ResourceManager.GetString("DefineAnnotationDlg_OkDialog_Choose_a_value_for_this_annotation_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Choose at least one type for this annotation to apply to..
         /// </summary>
         public static string DefineAnnotationDlg_OkDialog_Choose_at_least_one_type_for_this_annotation_to_apply_to {

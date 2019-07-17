@@ -202,24 +202,41 @@ namespace pwiz.Skyline.SettingsUI
 
         public AnnotationDef GetAnnotationDef()
         {
-            var annotationDef = new AnnotationDef(AnnotationName, AnnotationTargets, ListPropertyType, Items);
-            
-            if (tabControl1.SelectedTab == tabPageCalculated)
+            if (!IsCalculated || null == GetSelectedColumnDescriptor())
             {
-                var selectedColumnDescriptor = GetSelectedColumnDescriptor();
-                if (selectedColumnDescriptor != null)
-                {
-                    var expression = new AnnotationExpression(selectedColumnDescriptor.PropertyPath);
-                    if (selectedColumnDescriptor.CollectionAncestor() != null)
-                    {
-                        expression = expression.ChangeAggregateOperation(
-                            comboAggregateOperation.SelectedItem as AggregateOperation);
-                    }
-                    annotationDef = annotationDef.ChangeExpression(expression);
-                }
+                return new AnnotationDef(AnnotationName, AnnotationTargets, ListPropertyType, Items);
             }
 
+            var selectedColumnDescriptor = GetSelectedColumnDescriptor();
+            var annotationDef = new AnnotationDef(AnnotationName, AnnotationTargets,
+                GetListPropertyType(selectedColumnDescriptor, AggregateOperation), null);
+            var expression = new AnnotationExpression(selectedColumnDescriptor.PropertyPath);
+            if (selectedColumnDescriptor.CollectionAncestor() != null)
+            {
+                expression = expression.ChangeAggregateOperation(AggregateOperation);
+            }
+            annotationDef = annotationDef.ChangeExpression(expression);
             return annotationDef;
+        }
+
+        public void SelectPropertyPath(PropertyPath propertyPath)
+        {
+            availableFieldsTree1.SelectColumn(propertyPath);
+        }
+
+        public bool IsCalculated
+        {
+            get { return tabControl1.SelectedTab == tabPageCalculated; }
+            set { tabControl1.SelectedTab = value ? tabPageCalculated : tabPageEditable; }
+        }
+
+        public AggregateOperation AggregateOperation
+        {
+            get
+            {
+                return comboAggregateOperation.SelectedItem as AggregateOperation;
+            }
+            set { comboAggregateOperation.SelectedItem = value; }
         }
 
         private ColumnDescriptor GetSelectedColumnDescriptor()
@@ -274,12 +291,12 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (comboAppliesTo.SelectedIndex < 0)
                 {
-                    messageBoxHelper.ShowTextBoxError(comboAppliesTo, "Choose a type for this annotation to apply to.");
+                    messageBoxHelper.ShowTextBoxError(comboAppliesTo, Resources.DefineAnnotationDlg_OkDialog_Choose_a_type_for_this_annotation_to_apply_to_);
                     return;
                 }
                 if (GetSelectedColumnDescriptor() == null)
                 {
-                    messageBoxHelper.ShowTextBoxError(availableFieldsTree1, "Choose a value for this annotation.");
+                    messageBoxHelper.ShowTextBoxError(availableFieldsTree1, Resources.DefineAnnotationDlg_OkDialog_Choose_a_value_for_this_annotation_);
                     return;
                 }
             }
@@ -319,14 +336,11 @@ namespace pwiz.Skyline.SettingsUI
         private void availableFieldsTree1_AfterSelect(object sender, TreeViewEventArgs e)
         {
             var columnDescriptor = GetSelectedColumnDescriptor();
-            if (columnDescriptor != null)
-            {
-                comboType.SelectedItem = GetListPropertyType(columnDescriptor);
-            }
 
             if (columnDescriptor == null || null == columnDescriptor.CollectionAncestor())
             {
                 comboAggregateOperation.Enabled = false;
+                AggregateOperation = null;
             }
             else
             {
@@ -341,11 +355,19 @@ namespace pwiz.Skyline.SettingsUI
                     comboAggregateOperation.SelectedIndex = Math.Max(0, Array.IndexOf(aggregateChoices, oldValue));
                 }
             }
+            if (columnDescriptor != null)
+            {
+                comboType.SelectedItem = GetListPropertyType(columnDescriptor, AggregateOperation);
+            }
         }
 
-        public static ListPropertyType GetListPropertyType(ColumnDescriptor columnDescriptor)
+        public static ListPropertyType GetListPropertyType(ColumnDescriptor columnDescriptor, AggregateOperation aggregateOperation)
         {
             var propertyType = columnDescriptor.DataSchema.GetWrappedValueType(columnDescriptor.PropertyType);
+            if (aggregateOperation != null)
+            {
+                propertyType = aggregateOperation.GetPropertyType(propertyType);
+            }
             if (propertyType == typeof(bool))
             {
                 return ListPropertyType.TRUE_FALSE;
