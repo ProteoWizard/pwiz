@@ -9,7 +9,7 @@
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>pwiz.SkylineRunner</RootNamespace>
-    <AssemblyName>SkylineDailyRunner</AssemblyName>
+    <AssemblyName>SkylineRunner</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ManifestCertificateThumbprint>B226686C5D57EC6D3C850F6DD0334C32C39A5AAC</ManifestCertificateThumbprint>
