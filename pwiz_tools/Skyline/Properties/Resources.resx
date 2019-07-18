@@ -10598,4 +10598,7 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="DefineAnnotationDlg_OkDialog_Choose_a_value_for_this_annotation_" xml:space="preserve">
     <value>Choose a value for this annotation.</value>
   </data>
+  <data name="DocumentAnnotationUpdater_UpdateAnnotations_Updating_calculated_annotations" xml:space="preserve">
+    <value>Updating calculated annotations</value>
+  </data>
 </root>
