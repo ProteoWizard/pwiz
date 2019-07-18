@@ -43,7 +43,7 @@ BuildParser::BuildParser(BlibBuilder& maker,
     fileroot_ = getFileRoot(fullFilename_);
 
     preferEmbeddedSpectra_ = maker.preferEmbeddedSpectra().get_value_or(true);
-
+    pwiz::util::throw_with_trace(runtime_error("wtf"));
     this->parentProgress_ = parentProgress_;
     this->readAddProgress_ = NULL;
     this->fileProgress_ = NULL;

@@ -24,3 +24,7 @@
 build-project-if-exists sfcap ;
 build-project-if-exists msrc ;
 
+project pwiz_aux
+    : requirements
+        <library>/ext/boost//stacktrace
+    ;

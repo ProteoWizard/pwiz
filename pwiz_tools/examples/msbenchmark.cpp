@@ -402,6 +402,8 @@ int main(int argc, char* argv[])
     catch (exception& e)
     {
         cerr << e.what() << endl;
+        const boost::stacktrace::stacktrace* st = boost::get_error_info<pwiz::util::traced>(e);
+        if (st) cerr << "Stacktrace:\n" << pwiz::util::to_string_brief(*st) << endl;
     }
     catch (...)
     {

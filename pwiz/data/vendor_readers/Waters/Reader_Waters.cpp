@@ -182,12 +182,23 @@ void Reader_Waters::read(const string& filename,
         throw ReaderFail(string("[Reader_Waters::read()] Waters API does not support Unicode in filepaths ('") + utf8CharAsString(unicodeCharItr, filename.end()) + "')");
     }
 
-    RawDataPtr rawdata = RawDataPtr(new RawData(filename, config.iterationListenerRegistry));
+    try
+    {
+        RawDataPtr rawdata = RawDataPtr(new RawData(filename, config.iterationListenerRegistry));
 
-    result.run.spectrumListPtr = SpectrumListPtr(new SpectrumList_Waters(result, rawdata, config));
-    result.run.chromatogramListPtr = ChromatogramListPtr(new ChromatogramList_Waters(rawdata));
+        result.run.spectrumListPtr = SpectrumListPtr(new SpectrumList_Waters(result, rawdata, config));
+        result.run.chromatogramListPtr = ChromatogramListPtr(new ChromatogramList_Waters(rawdata));
 
-    fillInMetadata(filename, rawdata, result);
+        fillInMetadata(filename, rawdata, result);
+    }
+    catch (exception& e)
+    {
+        throw_with_trace(e);
+    }
+    catch (...)
+    {
+        throw_with_trace(exception("unknown error opening Waters RAW"));
+    }
 }
 
 

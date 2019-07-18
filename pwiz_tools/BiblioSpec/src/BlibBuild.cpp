@@ -203,6 +203,8 @@ int main(int argc, char* argv[])
             WriteErrorLines(e.what());
             cerr << "ERROR: reading file " << inFiles.at(i) << endl;
             success = false;
+            const boost::stacktrace::stacktrace* st = boost::get_error_info<pwiz::util::traced>(e);
+            if (st) cerr << "ERROR: Stacktrace:\nERROR: " << bal::replace_all_copy(pwiz::util::to_string_brief(*st), "\n", "\nERROR: ") << endl;
         } catch(string s){ // in case a throwParseError is not caught
             failureMessage = s;
             cerr << "ERROR: " << s << endl;

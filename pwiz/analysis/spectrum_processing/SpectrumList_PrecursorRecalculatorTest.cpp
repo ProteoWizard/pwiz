@@ -116,7 +116,7 @@ int main(int argc, char* argv[])
     }
     catch (exception& e)
     {
-        TEST_FAILED(e.what())
+        TEST_FAILED_EX(e)
     }
     catch (...)
     {

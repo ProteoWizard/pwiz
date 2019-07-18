@@ -55,11 +55,11 @@ lib pwiz_data_msdata_mz5
         Translator_mz5.cpp
     : # requirements
         <link>static
-        <library>/ext/hdf5//hdf5pp
+        <library>/ext/hdf5//hdf5pp/<debug-symbols>off
         <conditional>@usage-requirements
     : # default-build
     : # usage-requirements
         <include>.
-        <library>/ext/hdf5//hdf5pp
+        <library>/ext/hdf5//hdf5pp/<debug-symbols>off
         <conditional>@usage-requirements
     ;

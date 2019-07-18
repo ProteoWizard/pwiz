@@ -83,7 +83,7 @@ inline std::string quote_string(const string& str) {return "\"" + str + "\"";}
 
 
 #define unit_assert(x) \
-    (!(x) ? throw std::runtime_error(unit_assert_message(__FILE__, __LINE__, #x)) : 0)
+    (!(x) ? throw_with_trace(std::runtime_error(unit_assert_message(__FILE__, __LINE__, #x))) : 0)
 
 #define unit_assert_to_stream(x, os) \
     ((os) << (!(x) ? unit_assert_message(__FILE__, __LINE__, #x) + "\n" : ""))
@@ -174,11 +174,16 @@ inline std::string escape_teamcity_string(const std::string& str)
 
 #define TEST_PROLOG(argc, argv) TEST_PROLOG_EX(argc, argv, "")
 
-#define TEST_FAILED(x) \
+#define TEST_FAILED_EX(ex) \
+    cerr << (ex).what() << endl; \
+    const boost::stacktrace::stacktrace* st = boost::get_error_info<pwiz::util::traced>((ex)); \
+    string stStr; \
+    if (st) stStr = pwiz::util::to_string_brief(*st), cerr << stStr << endl; \
     if (teamcityTestDecoration) \
-        cout << "##teamcity[testFailed name='" << teamcityTestName << "' message='" << pwiz::util::escape_teamcity_string((x)) << "']\n"; \
-    cerr << (x) << endl; \
+        cout << "##teamcity[testFailed name='" << teamcityTestName << "' message='" << pwiz::util::escape_teamcity_string((ex).what()) << "' details='" << pwiz::util::escape_teamcity_string(stStr) << "']\n"; \
     testExitStatus = 1;
+
+#define TEST_FAILED(msg) { std::runtime_error unit_test_exception(msg); TEST_FAILED_EX(unit_test_exception); }
 
 #define TEST_EPILOG \
     if (teamcityTestDecoration) \

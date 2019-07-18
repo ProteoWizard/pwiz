@@ -30,3 +30,8 @@ build-project-if-exists BiblioSpec ;
 build-project-if-exists Skyline ;
 build-project-if-exists Topograph ;
 build-project-if-exists sld ;
+
+project pwiz_tools
+    : requirements
+        <library>/ext/boost//stacktrace
+    ;

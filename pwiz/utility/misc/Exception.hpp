@@ -25,12 +25,58 @@
 #define _EXCEPTION_HPP_
 
 
+#include <boost/stacktrace.hpp>
+#include <boost/exception/exception.hpp>
+#include <boost/exception/info.hpp>
+#include <boost/exception/get_error_info.hpp>
 #include <stdexcept>
 #include <string>
 
-
 namespace pwiz {
 namespace util {
+
+typedef boost::error_info<struct tag_stacktrace, boost::stacktrace::stacktrace> traced;
+
+template <class E>
+void throw_with_trace(const E& e) {
+    throw boost::enable_error_info(e)
+        << traced(boost::stacktrace::stacktrace());
+}
+
+inline std::string to_string_brief(const boost::stacktrace::stacktrace& st)
+{
+    std::string result;
+
+    int throw_with_trace_index = -1;
+    for (size_t i = 0, end = st.size(); i < end; ++i)
+    {
+        auto frame_str = boost::stacktrace::to_string(st[i]);
+
+        // skip frames up to the throw_with_trace call
+        if (throw_with_trace_index < 0)
+        {
+            if (frame_str.find("throw_with_trace") != std::string::npos)
+                throw_with_trace_index = i;
+            continue;
+        }
+
+        size_t adjustedIndex = i - throw_with_trace_index;
+        if (adjustedIndex < 10)
+            result += ' ';
+        result += std::to_string(adjustedIndex);
+        result += '#';
+        result += ' ';
+        result += frame_str;
+        result += '\n';
+
+        // skip frames after main()
+        if (frame_str.find("main at") != std::string::npos)
+            break;
+    }
+
+    return result;
+}
+
 
 class usage_exception : public std::runtime_error
 {
@@ -109,20 +155,23 @@ static ReportHooker reportHooker;
 #if !defined(NDEBUG)
 #define BOOST_ENABLE_ASSERT_HANDLER
 #include <sstream>
+
 namespace boost
 {
-    inline void assertion_failed(char const * expr, char const * function, char const * file, long line) // user defined
-    {
-        std::ostringstream oss;
-        oss << "[" << file << ":" << line << "] Assertion failed: " << expr;
-        throw std::runtime_error(oss.str());
-    }
-
     inline void assertion_failed_msg(char const * expr, char const * msg, char const * function, char const * file, long line) // user defined
     {
         std::ostringstream oss;
-        oss << "[" << file << ":" << line << "] Assertion failed: " << expr << " (" << msg << ")";
+        oss << "[" << file << ":" << line << "] Assertion failed: " << expr;
+        if (msg) oss << " (" << msg << ")";
+
+        //oss << std::endl << "Backtrace:\n" << boost::stacktrace::stacktrace() << '\n';
+        //pwiz::util::throw_with_trace(std::runtime_error(oss.str()));
         throw std::runtime_error(oss.str());
+    }
+
+    inline void assertion_failed(char const * expr, char const * function, char const * file, long line) // user defined
+    {
+        assertion_failed_msg(expr, 0, function, file, line);
     }
 } // namespace boost
 #endif // !defined(NDEBUG)

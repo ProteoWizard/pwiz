@@ -66,12 +66,12 @@ rule vendor-api-usage-requirements ( properties * )
         if <link>shared in $(properties) || "link=shared" in [ modules.peek : ARGV ]
         {
             result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<link>shared ;
-            result += <library>$(PWIZ_LIBRARIES_PATH)/SQLite//sqlite3pp/<link>shared ;
+            result += <library>$(PWIZ_LIBRARIES_PATH)/SQLite//sqlite3pp/<link>shared/<debug-symbols>off ;
         }
         else
         {
             result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc ;
-            result += <library>$(PWIZ_LIBRARIES_PATH)/SQLite//sqlite3pp ;
+            result += <library>$(PWIZ_LIBRARIES_PATH)/SQLite//sqlite3pp/<debug-symbols>off ;
         }
 
         result += <assembly>$(.dll-location)/UIMFLibrary.dll ;

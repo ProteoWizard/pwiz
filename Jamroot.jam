@@ -357,9 +357,12 @@ project pwiz
         <threading>multi
 
         # change boost debug assertions to exceptions by force including Exception.hpp
-        <variant>debug,<toolset>msvc:<cxxflags>/FIpwiz/utility/misc/Exception.hpp
-        <variant>debug,<toolset>gcc:<cxxflags>"-include pwiz/utility/misc/Exception.hpp"
-        <variant>debug,<toolset>darwin:<cxxflags>"-include pwiz/utility/misc/Exception.hpp"
+        <toolset>msvc:<cxxflags>/FIpwiz/utility/misc/Exception.hpp
+        <toolset>gcc:<cxxflags>"-include pwiz/utility/misc/Exception.hpp"
+        <toolset>darwin:<cxxflags>"-include pwiz/utility/misc/Exception.hpp"
+
+        <toolset>msvc,<variant>release:<cxxflags>"/Gy /Gw /Zo- /FS"
+        <toolset>msvc:<define>_WINSOCKAPI_
 
         <toolset>msvc,<debug-symbols>on:<preserve-test-targets>off # save space on debug builds by deleting test artifacts which run successfully
 
@@ -377,6 +380,8 @@ project pwiz
         #<warnings-as-errors>on
         <warnings>all
         <threading>multi
+        <debug-symbols>on
+        <debug-store>database
     ;
 
 

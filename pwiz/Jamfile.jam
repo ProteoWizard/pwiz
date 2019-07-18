@@ -25,6 +25,10 @@ build-project-if-exists utility ;
 build-project-if-exists data ;
 build-project-if-exists analysis ;
 
+project pwiz_core
+    : requirements
+        <library>/ext/boost//stacktrace
+    ;
 
 lib pwiz_version 
     : # sources
