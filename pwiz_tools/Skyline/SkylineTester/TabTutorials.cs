@@ -37,7 +37,7 @@ namespace SkylineTester
             var testList = new List<string>();
             TabTests.GetCheckedTests(MainWindow.TutorialsTree.TopNode, testList);
 
-            var args = new StringBuilder("offscreen=off loop=1 language=");
+            var args = new StringBuilder("offscreen=off loop=1 perftests=on language=");
             args.Append(MainWindow.GetCulture(MainWindow.TutorialsLanguage));
             if (MainWindow.ShowFormNamesTutorial.Checked)
                 args.Append(" showformnames=on");

@@ -100,7 +100,7 @@ namespace SkylineTester
         };
 
         private static readonly string[] FORMS_DLLS = {"TestFunctional.dll", "TestTutorial.dll"};
-        private static readonly string[] TUTORIAL_DLLS = {"TestTutorial.dll"};
+        private static readonly string[] TUTORIAL_DLLS = {"TestTutorial.dll", "TestPerf.dll"};
 
         private readonly string _resultsDir;
         private readonly string _openFile;
@@ -370,7 +370,7 @@ namespace SkylineTester
 
                 var tutorialTests = new List<string>();
                 foreach (var tutorialDll in TUTORIAL_DLLS)
-                    tutorialTests.AddRange(GetTestInfos(tutorialDll, "NoLocalizationAttribute"));
+                    tutorialTests.AddRange(GetTestInfos(tutorialDll, "NoLocalizationAttribute", "Tutorial"));
                 foreach (var test in tutorialTests.ToArray())
                 {
                     // Remove any tutorial tests we've hacked for small molecule testing - not of interest to localizers
@@ -410,7 +410,7 @@ namespace SkylineTester
             return type.GetInterfaces().Any(t => t.Name == interfaceName);
         }
 
-        public IEnumerable<string> GetTestInfos(string testDll, string filterAttribute = null)
+        public IEnumerable<string> GetTestInfos(string testDll, string filterAttribute = null, string filterName = null)
         {
             var dllPath = Path.Combine(ExeDir, testDll);
             var assembly = Assembly.LoadFrom(dllPath);
@@ -424,7 +424,8 @@ namespace SkylineTester
                     foreach (var method in methods)
                     {
                         if (HasAttribute(method, "TestMethodAttribute") && 
-                            (filterAttribute == null || !HasAttribute(method, filterAttribute)))
+                            (filterAttribute == null || !HasAttribute(method, filterAttribute)) &&
+                            (filterName == null || method.Name.Contains(filterName)))
                             yield return method.Name;
                     }
                 }
