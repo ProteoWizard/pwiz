@@ -264,7 +264,8 @@ namespace pwiz.SkylineTestTutorial
             });
 
             {
-                var messageDlg = ShowDialog<ImportTransitionListErrorDlg>(SkylineWindow.Paste);
+                var transitionSelectdgl = ShowDialog<ImportTransitionListColumnSelectDlg>(SkylineWindow.Paste);
+                var messageDlg = ShowDialog<ImportTransitionListErrorDlg>(transitionSelectdgl.AcceptButton.PerformClick);
                 PauseForScreenShot<ImportTransitionListErrorDlg>("Error message form (expected)", 18);
                 OkDialog(messageDlg, messageDlg.CancelDialog);
 
@@ -277,11 +278,8 @@ namespace pwiz.SkylineTestTutorial
                 transitionSettingsUI.InstrumentMaxMz = 1800;
                 transitionSettingsUI.OkDialog();
             });
-            RunUI(() =>
-            {
-                SkylineWindow.Paste();
-                SkylineWindow.CollapsePeptides();
-            });
+            PasteTransitionListSkipColumnSelect();
+            RunUI(SkylineWindow.CollapsePeptides);
             PauseForScreenShot("Targets tree (selected from main window)", 19);
 
             // Adjusting Modifications Manually, p. 19.

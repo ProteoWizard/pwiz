@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -518,58 +518,58 @@ http://localhost:8080</value>
     <value>路径/到/文件夹</value>
   </data>
   <data name="CommandArgs_DATE_VALUE" xml:space="preserve">
-    <value>&lt;date&gt;</value>
+    <value>&lt;日期&gt;</value>
   </data>
   <data name="CommandArgs_INT_VALUE" xml:space="preserve">
-    <value>&lt;integer&gt;</value>
+    <value>&lt;整数&gt;</value>
   </data>
   <data name="CommandArgs_NUM_VALUE" xml:space="preserve">
-    <value>&lt;number&gt;</value>
+    <value>&lt;数&gt;</value>
   </data>
   <data name="CommandArgs_NAME_VALUE" xml:space="preserve">
-    <value>&lt;name&gt;</value>
+    <value>&lt;名称&gt;</value>
   </data>
   <data name="CommandArgs_FEATURE_NAME_VALUE" xml:space="preserve">
-    <value>&lt;feature name&gt;</value>
+    <value>&lt;特征名称&gt;</value>
   </data>
   <data name="CommandArgs_REPORT_NAME_VALUE" xml:space="preserve">
-    <value>&lt;report name&gt;</value>
+    <value>&lt;报告名称&gt;</value>
   </data>
   <data name="CommandArgs_PIPE_NAME_VALUE" xml:space="preserve">
-    <value>&lt;pipe name&gt;</value>
+    <value>&lt;管道名称&gt;</value>
   </data>
   <data name="CommandArgs_REGEX_VALUE" xml:space="preserve">
-    <value>&lt;reg-ex&gt;</value>
+    <value>&lt;正则表达式&gt;</value>
   </data>
   <data name="CommandArgs_RP_VALUE" xml:space="preserve">
-    <value>&lt;resolving power&gt;</value>
+    <value>&lt;解决权力&gt;</value>
   </data>
   <data name="CommandArgs_MZ_VALUE" xml:space="preserve">
-    <value>&lt;m/z value&gt;</value>
+    <value>&lt;质荷比值&gt;</value>
   </data>
   <data name="CommandArgs_MINUTES_VALUE" xml:space="preserve">
-    <value>&lt;minutes&gt;</value>
+    <value>&lt;分钟&gt;</value>
   </data>
   <data name="CommandArgs_MILLIS_VALE" xml:space="preserve">
-    <value>&lt;millis&gt;</value>
+    <value>&lt;毫秒&gt;</value>
   </data>
   <data name="CommandArgs_SERVER_URL_VALUE" xml:space="preserve">
-    <value>&lt;server url&gt;</value>
+    <value>&lt;服务器网址&gt;</value>
   </data>
   <data name="CommandArgs_USERNAME_VALUE" xml:space="preserve">
-    <value>&lt;username&gt;</value>
+    <value>&lt;用户名&gt;</value>
   </data>
   <data name="CommandArgs_PASSWORD_VALUE" xml:space="preserve">
-    <value>&lt;password&gt;</value>
+    <value>&lt;密码&gt;</value>
   </data>
   <data name="CommandArgs_COMMAND_VALUE" xml:space="preserve">
-    <value>&lt;command | url&gt;</value>
+    <value>&lt;程序 | 网址&gt;</value>
   </data>
   <data name="CommandArgs_COMMAND_ARGUMENTS_VALUE" xml:space="preserve">
-    <value>"&lt;arguments&gt;"</value>
+    <value>"&lt;参数&gt;"</value>
   </data>
   <data name="CommandArgs_PROGRAM_MACRO_VALUE" xml:space="preserve">
-    <value>&lt;program title&gt;[,&lt;program version&gt;]</value>
+    <value>&lt;程序命令&gt;[,&lt;程序版本&gt;]</value>
   </data>
   <data name="CommandArgs_GROUP_ANNOTATIONS_Importing_annotations" xml:space="preserve">
     <value>正在导入注释</value>

@@ -405,7 +405,7 @@ namespace pwiz.SkylineTest
                 // Import the exported list
                 IdentityPath pathAdded;
                 var inputs = new MassListInputs(actualList, CultureInfo.InvariantCulture, TextUtil.SEPARATOR_CSV);
-                docImport = docImport.ImportMassList(inputs, IdentityPath.ROOT, out pathAdded);
+                docImport = docImport.ImportMassList(inputs, null, IdentityPath.ROOT, out pathAdded);
             }
 
             if (minTransition < 2)
@@ -461,7 +461,7 @@ namespace pwiz.SkylineTest
                 try
                 {
                     var inputs = new MassListInputs(actualList, CultureInfo.InvariantCulture, TextUtil.SEPARATOR_CSV);
-                    docImport = docImport.ImportMassList(inputs, IdentityPath.ROOT, out pathAdded);
+                    docImport = docImport.ImportMassList(inputs, null, IdentityPath.ROOT, out pathAdded);
                 }
                 catch
                 {
@@ -474,7 +474,7 @@ namespace pwiz.SkylineTest
                             RefinementSettings.TestingConvertedFromProteomicPeptideNameDecorator, string.Empty);
                     }
                     var inputs = new MassListInputs(actualList, CultureInfo.InvariantCulture, TextUtil.SEPARATOR_CSV);
-                    docImport = docImport.ImportMassList(inputs, IdentityPath.ROOT, out pathAdded);
+                    docImport = docImport.ImportMassList(inputs, null, IdentityPath.ROOT, out pathAdded);
                 }
             }
             return exportedActual.Count;
@@ -1488,7 +1488,7 @@ namespace pwiz.SkylineTest
         };
 
         private readonly string DOC_LABEL_IMPLEMENTED = 
-        "<srm_settings format_version=\"4.11\" software_version=\"Skyline-daily (64-bit) 4.1.1.18118\">\n" +
+        "<srm_settings format_version=\"4.11\" software_version=\"Skyline-daily (64-bit) 4.1.1.18118\">\n" + // Keep -daily
         "  <settings_summary name=\"Default\">\n" +
         "    <peptide_settings>\n" +
         "      <enzyme name=\"TrypsinR\" cut=\"R\" no_cut=\"P\" sense=\"C\" />\n" +
