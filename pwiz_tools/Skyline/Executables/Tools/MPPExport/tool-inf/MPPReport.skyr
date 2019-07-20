@@ -15,6 +15,9 @@
       <column name="T1">Precursor.Mz</column>
       <column name="T1">ProductMz</column>
       <column name="T1">FragmentIon</column>
+      <column name="T1">Precursor.Peptide.MoleculeName</column>
+      <column name="T1">Precursor.Peptide.MoleculeFormula</column>
+      <column name="T1">Precursor.Peptide.CAS</column>
     </select>
     <group_by>
       <column name="T2">Transition</column>

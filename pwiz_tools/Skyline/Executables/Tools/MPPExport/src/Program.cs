@@ -72,7 +72,7 @@ namespace MPP_Export
 
 
             var dtOut = new DataTable();
-            const int nonPivotCols = 10; // Number of columns before replicate columns begin.
+            const int nonPivotCols = 13; // Number of columns before replicate columns begin. The 10 peptide columns, plus MoleculeName, MoleculeFormula and CAS.
             const int newCols = 5; // Number of columns before accession column in export csv.
             int rowCount = 1; // Row counter used for RT and Mass values.
             int numOfReplicates = dt.Columns.Count - nonPivotCols;
@@ -112,20 +112,31 @@ namespace MPP_Export
                 dt.Rows.Add(row);
             }
 
-            var proteinAccessions = dt.AsEnumerable()
-                .Select(dr => dr.Field<string>("ProteinAccession")) // Not L10N
+            var proteinAccessionsOrMoleculeNames = dt.AsEnumerable()
+                .Select(dr => (string.IsNullOrEmpty(dr.Field<string>(@"PeptideSequence")) || dr.Field<string>(@"PeptideSequence").Equals(@"#N/A")) ? dr.Field<string>("MoleculeName") : dr.Field<string>("ProteinAccession") )
                 .Distinct().ToArray();
 
+            var formula = new Dictionary<string, string>();
+            var CAS = new Dictionary<string, string>();
+
             Console.WriteLine(MppExportResources.Program_ParseCsv_Unique_Accessions_);
-            foreach (var proteinAccession in proteinAccessions)
+            foreach (var proteinAccessionOrMoleculeName in proteinAccessionsOrMoleculeNames)
             {
-                Console.WriteLine("# " + proteinAccession);   // Not L10N              
-                var dataRows = dt.Select(string.Format("ProteinAccession = '{0}'", proteinAccession)); // Not L10N
+                Console.WriteLine(@"# " + proteinAccessionOrMoleculeName);      
+                var dataRows = dt.Select(string.Format(@"ProteinAccession = '{0}' OR MoleculeName = '{0}'", proteinAccessionOrMoleculeName));
 
                 var replicateRowValues = new double[numOfReplicates];
-                var replicateRowDescription = ""; // Not L10N
+                var replicateRowProteinDescription = @""; 
                 foreach (var row in dataRows)
                 {
+                    if (!formula.ContainsKey(proteinAccessionOrMoleculeName))
+                    {
+                        formula[proteinAccessionOrMoleculeName] = row.Field<string>(@"MoleculeFormula");
+                    }
+                    if (!CAS.ContainsKey(proteinAccessionOrMoleculeName))
+                    {
+                        CAS[proteinAccessionOrMoleculeName] = row.Field<string>(@"CAS");
+                    }
                     for (int a = 0; a < numOfReplicates; a++)
                     {
                         double cellValue;
@@ -134,15 +145,26 @@ namespace MPP_Export
 
                         replicateRowValues[a] += cellValue;
                     }
-                    replicateRowDescription = row[1].ToString();
+                    replicateRowProteinDescription = row[1].ToString();
                 }
 
                 var newRow = dtOut.NewRow();
+                var proteomic = !(string.IsNullOrEmpty(dataRows[0].Field<string>(@"PeptideSequence")) ||
+                                 dataRows[0].Field<string>(@"PeptideSequence").Equals(@"#N/A"));
 
-                newRow[newCols] = proteinAccession;
+                if (proteomic)
+                {
+                    newRow[newCols] = proteinAccessionOrMoleculeName;
+                    newRow[2] = replicateRowProteinDescription;
+                }
+                else
+                {
+                    newRow[2] = proteinAccessionOrMoleculeName;
+                }
                 newRow[0] = rowCount;
                 newRow[1] = rowCount;
-                newRow[2] = replicateRowDescription;
+                newRow[3] = formula[proteinAccessionOrMoleculeName];
+                newRow[4] = CAS[proteinAccessionOrMoleculeName];
                 rowCount = rowCount + 1;
 
                 for (int r = 0; r < replicateRowValues.Length; r++)
