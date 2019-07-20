@@ -48,6 +48,7 @@ namespace BiblioSpec{
                         PEPTIDESHAKER_ANALYSIS,
                         MASCOT_ANALYSIS,
                         PEAKS_ANALYSIS,
+                        PROT_PILOT_ANALYSIS,
                         GENERIC_QVALUE_ANALYSIS };
 
         ANALYSIS analysisType_;

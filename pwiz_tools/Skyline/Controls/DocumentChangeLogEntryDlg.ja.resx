@@ -136,7 +136,7 @@
     <value>21</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
-    <value>ｷｬﾝｾﾙ</value>
+    <value>キャンセル</value>
   </data>
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
