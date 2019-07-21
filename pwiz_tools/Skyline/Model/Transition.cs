@@ -194,6 +194,11 @@ namespace pwiz.Skyline.Model
 
         public static string GetChargeIndicator(Adduct adduct)
         {
+            return GetChargeIndicator(adduct, LocalizationHelper.CurrentCulture);
+        }
+
+        public static string GetChargeIndicator(Adduct adduct, CultureInfo cultureInfo)
+        {
             if (!adduct.IsProteomic && !adduct.IsChargeOnly)
             {
                 return adduct.AsFormulaOrSignedInt();
@@ -204,7 +209,7 @@ namespace pwiz.Skyline.Model
                 const string pluses = "++++";
                 return charge <= pluses.Length
                     ? pluses.Substring(0, Math.Min(charge, pluses.Length))
-                    : string.Format(@"{0} +{1}", LocalizationHelper.CurrentCulture.NumberFormat.NumberGroupSeparator, charge);
+                    : string.Format(@"{0} +{1}", GetChargeSeparator(cultureInfo), charge);
             }
             else
             {
@@ -212,8 +217,13 @@ namespace pwiz.Skyline.Model
                 charge = -charge;
                 return charge <= minuses.Length
                     ? minuses.Substring(0, Math.Min(charge, minuses.Length))
-                    : string.Format(@"{0} -{1}", LocalizationHelper.CurrentCulture.NumberFormat.NumberGroupSeparator, charge);
+                    : string.Format(@"{0} -{1}", GetChargeSeparator(cultureInfo), charge);
             }
+        }
+
+        private static string GetChargeSeparator(CultureInfo cultureInfo)
+        {
+            return cultureInfo.TextInfo.ListSeparator;
         }
 
         public static int FindAdductDescription(string line, out Adduct adduct)
@@ -253,22 +263,15 @@ namespace pwiz.Skyline.Model
             var sequences = new List<string>();
             foreach (var line in text.Split('\n').Select(seq => seq.Trim()))
             {
-                int chargePos = -1;
-                for (int i = max; i >= min; i--)
+                // Allow any run of charge indicators no matter how long, because users guess this might work
+                int chargePos = FindChargeSymbolRepeatStart(line, min, max);
+                if (chargePos == -1)
                 {
-                    // Handle negative charges
-                    var charge = GetChargeIndicator(Adduct.FromChargeProtonated(-i));
-                    if (line.EndsWith(charge))
-                    {
-                        chargePos = line.LastIndexOf(charge, StringComparison.CurrentCulture);
-                        break;
-                    }
-                    charge = GetChargeIndicator(Adduct.FromChargeProtonated(i));
-                    if (line.EndsWith(charge))
-                    {
-                        chargePos = line.LastIndexOf(charge, StringComparison.CurrentCulture);
-                        break;
-                    }
+                    // Or any formal protonated charge state indicator
+                    chargePos = FindChargeIndicatorPos(line, min, max, CultureInfo.CurrentCulture);
+                    // Or the US/Invariant formatted version
+                    if (chargePos == -1 && GetChargeSeparator(CultureInfo.CurrentCulture) != GetChargeSeparator(CultureInfo.InvariantCulture))
+                        chargePos = FindChargeIndicatorPos(line, min, max, CultureInfo.InvariantCulture);
                 }
                 if (chargePos == -1)
                 {
@@ -287,6 +290,64 @@ namespace pwiz.Skyline.Model
                 sequences.Add(chargePos == -1 ? line : line.Substring(0, chargePos));
             }
             return TextUtil.LineSeparate(sequences);
+        }
+
+        private static int FindChargeSymbolRepeatStart(string line, int min, int max)
+        {
+            int chargePos = FindChargeSymbolRepeatStart('+', line, min, max);
+            if (chargePos == -1)
+                chargePos = FindChargeSymbolRepeatStart('-', line, min, max);
+            return chargePos;
+        }
+
+        private static int FindChargeSymbolRepeatStart(char c, string line, int min, int max)
+        {
+            int countCharges = CountEndsWith(c, line);
+            if (min <= countCharges && countCharges <= max)
+                return line.Length - countCharges;
+            return -1;
+        }
+
+        private static int CountEndsWith(char c, string line)
+        {
+            int i = line.Length - 1;
+            while (i >= 0 && line[i] == c)
+                i--;
+            i++; // Advance to the last position of a c
+            if (i < line.Length)
+                return line.Length - i;
+            return -1;
+        }
+
+        private static int FindChargeIndicatorPos(string line, int min, int max, CultureInfo cultureInfo)
+        {
+            for (int i = max; i >= min; i--)
+            {
+                // Handle negative charges
+                int pos = FindChargeIndicatorPos(line, GetChargeIndicator(Adduct.FromChargeProtonated(-i), cultureInfo));
+                if (pos != -1)
+                    return pos;
+                // Handle positive charges
+                pos = FindChargeIndicatorPos(line, GetChargeIndicator(Adduct.FromChargeProtonated(i), cultureInfo));
+                if (pos != -1)
+                    return pos;
+            }
+
+            return -1;
+        }
+
+        private static int FindChargeIndicatorPos(string line, string charge)
+        {
+            if (line.EndsWith(charge))
+                return line.Length - charge.Length;
+            // Try without the space, if the indicator contains a space
+            if (charge.Contains(' '))
+            {
+                var chargeCompact = charge.Replace(@" ", string.Empty);
+                if (line.EndsWith(chargeCompact))
+                    return line.Length - chargeCompact.Length;
+            }
+            return -1;
         }
 
         public static bool MayHaveChargeIndicator(string text)
@@ -318,32 +379,38 @@ namespace pwiz.Skyline.Model
             {
                 return Adduct.EMPTY;
             }
+
+            // Handle runs of charge characters no matter how long, because users guess this should work
+            foundAt = FindChargeSymbolRepeatStart('+', text, min, max);
+            if (foundAt != -1)
+                return Adduct.FromChargeProtonated(text.Length - foundAt);
+            foundAt = FindChargeSymbolRepeatStart('-', text, min, max);
+            if (foundAt != -1)
+                return Adduct.FromChargeProtonated(foundAt - text.Length);
+
             Adduct adduct;
             for (int i = max; i >= min; i--)
             {
-                // Handle negative charges
-                adduct = Adduct.FromChargeProtonated(-i);
-                var chargeIndicator = GetChargeIndicator(adduct);
-                if (text.EndsWith(chargeIndicator))
-                {
-                    foundAt = text.Length - chargeIndicator.Length;
+                adduct = GetChargeFromIndicator(text, i, out foundAt);
+                if (!adduct.IsEmpty)
                     return adduct;
-                }
-                adduct = Adduct.FromChargeProtonated(i);
-                chargeIndicator = GetChargeIndicator(adduct);
-                if (text.EndsWith(chargeIndicator))
-                {
-                    foundAt = text.Length - chargeIndicator.Length;
+                adduct = GetChargeFromIndicator(text, -i, out foundAt);
+                if (!adduct.IsEmpty)
                     return adduct;
-                }
             }
-            var adductStart = FindAdductDescription(text, out adduct);
-            if (adductStart >= 0)
-            {
-                foundAt = adductStart;
+            foundAt = FindAdductDescription(text, out adduct);
+            if (foundAt != -1)
                 return adduct;
-            }
             return Adduct.EMPTY;
+        }
+
+        private static Adduct GetChargeFromIndicator(string text, int i, out int foundAt)
+        {
+            var adduct = Adduct.FromChargeProtonated(i);
+            foundAt = FindChargeIndicatorPos(text, GetChargeIndicator(adduct));
+            if (foundAt == -1 && GetChargeSeparator(CultureInfo.CurrentCulture) != GetChargeSeparator(CultureInfo.InvariantCulture))
+                foundAt = FindChargeIndicatorPos(text, GetChargeIndicator(adduct, CultureInfo.InvariantCulture));
+            return foundAt != -1 ? adduct : Adduct.EMPTY;
         }
 
         public static string GetMassIndexText(int massIndex)
