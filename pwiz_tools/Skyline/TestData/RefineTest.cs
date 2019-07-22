@@ -19,6 +19,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NHibernate.Hql.Ast.ANTLR.Tree;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -91,7 +92,7 @@ namespace pwiz.SkylineTestData
             var document = InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.none);
 
             // First check a few refinements which should not change the document
-            var refineSettings = new RefinementSettings {RTRegressionThreshold = 0.3};
+            var refineSettings = new RefinementSettings { RTRegressionThreshold = 0.3 };
             Assert.AreSame(document, refineSettings.Refine(document));
             refineSettings.RTRegressionThreshold = null;
             refineSettings.DotProductThreshold = Statistics.AngleToNormalizedContrastAngle(0.1);    // Convert form original cos(angle) dot-product
@@ -112,7 +113,7 @@ namespace pwiz.SkylineTestData
             // First three children should be unchanged
             for (int i = 0; i < 3; i++)
                 Assert.AreSame(document.Children[i], docRefined.Children[i]);
-            var nodePepGroupRefined = (PeptideGroupDocNode) docRefined.Children[3];
+            var nodePepGroupRefined = (PeptideGroupDocNode)docRefined.Children[3];
             Assert.AreEqual(1, nodePepGroupRefined.MoleculeCount);
             Assert.AreEqual(1, nodePepGroupRefined.TransitionGroupCount);
             Assert.AreEqual(5, nodePepGroupRefined.TransitionCount);
@@ -190,14 +191,14 @@ namespace pwiz.SkylineTestData
                     new StaticMod("13C R", "R", ModTerminus.C, null, LabelAtoms.C13, null, null),
                 }));
             var docPrepareAdd = docRefineMaxPeaks.ChangeSettings(settingsNew);
-            refineSettings = new RefinementSettings {RefineLabelType = IsotopeLabelType.heavy, AddLabelType = true};
+            refineSettings = new RefinementSettings { RefineLabelType = IsotopeLabelType.heavy, AddLabelType = true };
             var docHeavy = refineSettings.Refine(docPrepareAdd);
-            Assert.AreEqual(docRefineMaxPeaks.PeptideTransitionCount*2, docHeavy.PeptideTransitionCount);
+            Assert.AreEqual(docRefineMaxPeaks.PeptideTransitionCount * 2, docHeavy.PeptideTransitionCount);
             // Verify that the precursors were added with the right transitions
             foreach (var nodePep in docHeavy.Peptides)
             {
                 Assert.AreEqual(2, nodePep.Children.Count);
-                var lightGroup = (TransitionGroupDocNode) nodePep.Children[0];
+                var lightGroup = (TransitionGroupDocNode)nodePep.Children[0];
                 Assert.AreEqual(IsotopeLabelType.light, lightGroup.TransitionGroup.LabelType);
                 var heavyGroup = (TransitionGroupDocNode)nodePep.Children[1];
                 Assert.AreEqual(IsotopeLabelType.heavy, heavyGroup.TransitionGroup.LabelType);
@@ -206,11 +207,41 @@ namespace pwiz.SkylineTestData
                 Assert.AreEqual(lightGroup.Children.Count, heavyGroup.Children.Count);
                 for (int i = 0; i < lightGroup.Children.Count; i++)
                 {
-                    var lightTran = (TransitionDocNode) lightGroup.Children[i];
-                    var heavyTran = (TransitionDocNode) heavyGroup.Children[i];
+                    var lightTran = (TransitionDocNode)lightGroup.Children[i];
+                    var heavyTran = (TransitionDocNode)heavyGroup.Children[i];
                     Assert.AreEqual(lightTran.Transition.FragmentIonName, heavyTran.Transition.FragmentIonName);
                 }
             }
+            // Pick only the precursors with the max peak area
+            document = InitRefineDocument2(0);
+            refineSettings = new RefinementSettings { MaxPrecursorPeakOnly = true };
+            var docRefineMaxPrecursorPeakOnly = refineSettings.Refine(document);
+            Assert.AreEqual(4, docRefineMaxPrecursorPeakOnly.PeptideCount);
+            Assert.AreEqual(docRefineMaxPrecursorPeakOnly.PeptideCount, docRefineMaxPrecursorPeakOnly.PeptideTransitionGroupCount);
+            Assert.AreEqual(12, docRefineMaxPrecursorPeakOnly.PeptideTransitionCount);
+            // count your +2 and +3 to verify
+            var chargeCounts =
+                (from g in docRefineMaxPrecursorPeakOnly.PeptideTransitionGroups
+                    group g by g.TransitionGroup.PrecursorAdduct.Unlabeled
+                    into gc
+                    select new {Adduct = gc.Key.Unlabeled.AdductCharge, Count = gc.Count()}).ToArray();
+            Assert.IsTrue(chargeCounts.Contains((x) => x.Adduct == 2 && x.Count == 2));
+            Assert.IsTrue(chargeCounts.Contains((x) => x.Adduct == 3 && x.Count == 2));
+
+            // Pick only the precursors with the max peak area, do not ignore standard types
+            document = InitRefineDocument2(1);
+            refineSettings = new RefinementSettings { MaxPrecursorPeakOnly = true };
+            docRefineMaxPrecursorPeakOnly = refineSettings.Refine(document);
+            Assert.AreEqual(3, docRefineMaxPrecursorPeakOnly.PeptideCount);
+            Assert.AreEqual(docRefineMaxPrecursorPeakOnly.PeptideCount, docRefineMaxPrecursorPeakOnly.PeptideTransitionGroupCount);
+            Assert.AreEqual(122, docRefineMaxPrecursorPeakOnly.PeptideTransitionCount);
+            chargeCounts =
+                (from g in docRefineMaxPrecursorPeakOnly.PeptideTransitionGroups
+                    group g by g.TransitionGroup.PrecursorAdduct.Unlabeled
+                    into gc
+                    select new { Adduct = gc.Key.Unlabeled.AdductCharge, Count = gc.Count() }).ToArray();
+            Assert.IsTrue(chargeCounts.Contains((x) => x.Adduct == 2 && x.Count == 1));
+            Assert.IsTrue(chargeCounts.Contains((x) => x.Adduct == 3 && x.Count == 2));
         }
 
         [TestMethod]
@@ -251,6 +282,25 @@ namespace pwiz.SkylineTestData
             AssertEx.IsDocumentState(converted, null, 4, 36, 38, 334);
             return converted;
 
+        }
+
+        private SrmDocument InitRefineDocument2(int testNum)
+        {
+            RefinementSettings.ConvertToSmallMoleculesMode mode = RefinementSettings.ConvertToSmallMoleculesMode.none;
+            TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"TestData\Refine.zip", mode.ToString());
+
+            if (testNum == 0)
+            {
+                var doc = ResultsUtil.DeserializeDocument(testFilesDir.GetTestPath("iPRG 2015 Study-mini.sky"));
+                AssertEx.IsDocumentState(doc, null, 1, 4, 6, 18);
+                return doc;
+            }
+            else
+            {
+                var doc = ResultsUtil.DeserializeDocument(testFilesDir.GetTestPath("sprg_all_charges-mini.sky"));
+                AssertEx.IsDocumentState(doc, null, 1, 3, 6, 271);
+                return doc;
+            }
         }
     }
 }

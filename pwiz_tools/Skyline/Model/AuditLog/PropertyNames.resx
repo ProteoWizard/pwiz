@@ -1412,4 +1412,7 @@
   <data name="ListData_Rows" xml:space="preserve">
     <value>Rows</value>
   </data>
+  <data name="RefinementSettings_MaxPrecursorPeakOnly" xml:space="preserve">
+    <value>Max precursor peak only</value>
+  </data>
 </root>

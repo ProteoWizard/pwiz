@@ -209,7 +209,7 @@ namespace pwiz.SkylineTestData
             parts.Add(LogMessage.Quote(minPeakFoundRatio));
             AssertEx.Contains(output, parts.ToArray());
             IsResultsState(OutPath, 7, 7, 54, output);
-            // Pick only most intense transtions
+            // Pick only most intense transitions
             string maxPeakRank = 4.ToString();
             args.Add(CommandArgs.ARG_REFINE_MAX_PEAK_RANK.GetArgumentTextWithValue(maxPeakRank));
             output = Run(args.ToArray());
@@ -225,6 +225,16 @@ namespace pwiz.SkylineTestData
             parts.Add(LogMessage.Quote(maxPeptideRank));
             AssertEx.Contains(output, parts.ToArray());
             IsResultsState(OutPath, 5, 5, 20, output);
+            // Pick the precursors with the maximum peaks
+            DocumentPath = InitRefineDocument2(0);
+            output = Run(CommandArgs.ARG_REFINE_MAX_PRECURSOR_PEAK_ONLY.ArgumentText);
+            AssertEx.Contains(output, PropertyNames.RefinementSettings_MaxPrecursorPeakOnly);
+            IsResultsState2(OutPath, 4, 4, 12, 0, output);
+            // Pick the precursors with the maximum peaks, not ignoring standard types
+            DocumentPath = InitRefineDocument2(1);
+            output = Run(CommandArgs.ARG_REFINE_MAX_PRECURSOR_PEAK_ONLY.ArgumentText);
+            AssertEx.Contains(output, PropertyNames.RefinementSettings_MaxPrecursorPeakOnly);
+            IsResultsState2(OutPath, 3, 3, 122, 1, output);
         }
 
 //        [TestMethod]
@@ -306,8 +316,8 @@ namespace pwiz.SkylineTestData
 
         private string InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode mode)
         {
-            TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineRefine.zip", mode.ToString());
-            string docPath = testFilesDir.GetTestPath("SRM_mini_single_replicate.sky");            
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineRefine.zip", mode.ToString());
+            string docPath = TestFilesDir.GetTestPath("SRM_mini_single_replicate.sky");            
 //            if (mode != RefinementSettings.ConvertToSmallMoleculesMode.none)
 //            {
 //                var dataPaths = new[] { testFilesDir.GetTestPath("worm1.mzML") };
@@ -317,10 +327,32 @@ namespace pwiz.SkylineTestData
             return docPath;
         }
 
+        private string InitRefineDocument2(int test)
+        {
+            if (test == 0)
+            {
+                string docPath = TestFilesDir.GetTestPath("iPRG 2015 Study-mini.sky");
+                IsDocumentState2(docPath, 1, 0, 4, 0, 6, 18, 0);
+                return docPath;
+            }
+            else
+            {
+                string docPath = TestFilesDir.GetTestPath("sprg_all_charges-mini.sky");
+                IsDocumentState2(docPath, 1, 0, 3, 0, 6, 271, 1);
+                return docPath;
+            }
+        }
+
         private void IsResultsState(string docPath, int peptides, int tranGroups, int transitions,
             string output = null)
         {
             IsDocumentState(docPath, 0, 1, peptides, 0, tranGroups, transitions, output);
+        }
+
+        private void IsResultsState2(string docPath, int peptides, int tranGroups, int transitions, int testNum,
+            string output = null)
+        {
+            IsDocumentState2(docPath, 1, 0, peptides, 0, tranGroups, transitions, testNum, output);
         }
 
         private void IsDocumentState(string docPath, int proteins, int lists,
@@ -337,6 +369,41 @@ namespace pwiz.SkylineTestData
             }
             var doc = ResultsUtil.DeserializeDocument(docPath);
             AssertEx.IsDocumentState(doc, null, proteins+lists, peptides+molecules, tranGroups, transitions);
+        }
+
+        private void IsDocumentState2(string docPath, int proteins, int lists,
+            int peptides, int molecules, int tranGroups, int transitions, int testNum,
+            string output = null)
+        {
+            int prot;
+            int pep;
+            int prec;
+            int tran;
+            if (testNum == 0)
+            {
+                prot = 1;
+                pep = 4;
+                prec = 6;
+                tran = 18;
+            }
+            else
+            {
+                prot = 1;
+                pep = 3;
+                prec = 6;
+                tran = 271;
+            }
+
+            if (output != null)
+            {
+                AssertEx.Contains(output,
+                    CommandLine.RemovedText(prot - proteins, 0 - lists, pep - peptides,
+                        0 - molecules, prec - tranGroups, tran - transitions),
+                    CommandLine.AddedText(proteins - prot, lists - 0, peptides - pep,
+                        molecules - 0, tranGroups - prec, transitions - tran));
+            }
+            var doc = ResultsUtil.DeserializeDocument(docPath);
+            AssertEx.IsDocumentState(doc, null, proteins + lists, peptides + molecules, tranGroups, transitions);
         }
     }
 }
