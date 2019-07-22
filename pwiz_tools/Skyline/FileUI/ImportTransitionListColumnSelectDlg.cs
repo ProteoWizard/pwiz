@@ -100,9 +100,9 @@ namespace pwiz.Skyline.FileUI
         {
             foreach (var comboBox in ComboBoxes)
             {
-                var comboDataSource = new[]
-                {
-                    string.Empty, 
+                comboBox.Text = string.Empty;
+                comboBox.Items.AddRange(new object[] {
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type,
@@ -111,8 +111,7 @@ namespace pwiz.Skyline.FileUI
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name
-                };
-                comboBox.DataSource = comboDataSource;
+                });
                 comboBox.SelectedIndex = 0;
                 comboBox.SelectedIndexChanged += comboChanged;       
                 ComboHelper.AutoSizeDropDown(comboBox);
@@ -136,13 +135,13 @@ namespace pwiz.Skyline.FileUI
             ComboBoxes[index].Text = text;
         }
 
-        private void SetComboValue(int index, int text, int index2)
+        private void SetComboValue(int index, int newSelectedIndex, int index2)
         {
             if (index == index2)
                 return;
             if (index < 0 || index >= ComboBoxes.Count)
                 return;
-            ComboBoxes[index].SelectedIndex = text;
+            ComboBoxes[index].SelectedIndex = newSelectedIndex;
         }
 
         public void ResizeComboBoxes()
