@@ -88,11 +88,11 @@ namespace pwiz.Skyline.Alerts
             this.listBoxModeUI.Name = "listBoxModeUI";
             this.modeUIHandler.SetUIMode(this.listBoxModeUI, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
             // 
-            // imageListBoxItemProteomic
+            // imageListBoxItemProteomics
             // 
             resources.ApplyResources(this.imageListBoxItemProteomics, "imageListBoxItemProteomics");
             // 
-            // imageListBoxItemMolecules
+            // imageListBoxItemMolecule
             // 
             resources.ApplyResources(this.imageListBoxItemMolecule, "imageListBoxItemMolecule");
             // 
@@ -130,6 +130,7 @@ namespace pwiz.Skyline.Alerts
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "NoModeUIDlg";
+            this.ShowInTaskbar = false;
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
