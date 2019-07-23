@@ -54,7 +54,7 @@ namespace pwiz.SkylineTestUtil
                 var testZipFiles = Path.Combine(directory, "TestZipFiles");
                 if (Directory.Exists(testZipFiles))
                     return Path.Combine(testZipFiles, relativePath);
-                if (File.Exists(Path.Combine(directory, Program.Name + ".sln")))
+                if (File.Exists(Path.Combine(directory, "Skyline.sln")))
                     return Path.Combine(directory, relativePath);
             }
             return null;
