@@ -5354,7 +5354,7 @@
     <value>テキスト「{0}」が見つかりませんでした。</value>
   </data>
   <data name="ChromatogramLibrary_LoadFromCache_Exception_reading_cache__0_" xml:space="preserve">
-    <value>キャッシュ読み取り例外：{0}</value>
+    <value>排除読み取りキャッシュ：{0}</value>
   </data>
   <data name="CommandArgs_ParseArgsInternal_Error__Regular_expression__0__cannot_be_parsed_" xml:space="preserve">
     <value>エラー： 正規表現{0}には構文解析を行うことができません。</value>
