@@ -827,7 +827,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Only precursors with the maximum peak area will be selected..
+        ///   Looks up a localized string similar to Only the precursor charge state with the maximum peak area will be retained..
         /// </summary>
         internal static string _refine_max_precursor_only {
             get {

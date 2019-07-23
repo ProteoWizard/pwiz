@@ -212,35 +212,35 @@ namespace pwiz.SkylineTestData
                 }
             }
             // Pick only the precursors with the max peak area
-            document = InitRefineDocument2(0);
+            document = InitRefineDocumentIprg();
             refineSettings = new RefinementSettings { MaxPrecursorPeakOnly = true };
             var docRefineMaxPrecursorPeakOnly = refineSettings.Refine(document);
-            Assert.AreEqual(4, docRefineMaxPrecursorPeakOnly.PeptideCount);
-            Assert.AreEqual(docRefineMaxPrecursorPeakOnly.PeptideCount, docRefineMaxPrecursorPeakOnly.PeptideTransitionGroupCount);
-            Assert.AreEqual(12, docRefineMaxPrecursorPeakOnly.PeptideTransitionCount);
-            // count your +2 and +3 to verify
-            var chargeCounts =
-                (from g in docRefineMaxPrecursorPeakOnly.PeptideTransitionGroups
-                    group g by g.TransitionGroup.PrecursorAdduct.Unlabeled
-                    into gc
-                    select new {Adduct = gc.Key.Unlabeled.AdductCharge, Count = gc.Count()}).ToArray();
-            Assert.IsTrue(chargeCounts.Contains((x) => x.Adduct == 2 && x.Count == 2));
-            Assert.IsTrue(chargeCounts.Contains((x) => x.Adduct == 3 && x.Count == 2));
+            VerifyPrecursorOnlyNodeCounts(docRefineMaxPrecursorPeakOnly, 4, 12);
+            VerifyChargeCounts(docRefineMaxPrecursorPeakOnly, 2, 2);
 
             // Pick only the precursors with the max peak area, do not ignore standard types
-            document = InitRefineDocument2(1);
-            refineSettings = new RefinementSettings { MaxPrecursorPeakOnly = true };
+            document = InitRefineDocumentSprg();
             docRefineMaxPrecursorPeakOnly = refineSettings.Refine(document);
-            Assert.AreEqual(3, docRefineMaxPrecursorPeakOnly.PeptideCount);
-            Assert.AreEqual(docRefineMaxPrecursorPeakOnly.PeptideCount, docRefineMaxPrecursorPeakOnly.PeptideTransitionGroupCount);
-            Assert.AreEqual(122, docRefineMaxPrecursorPeakOnly.PeptideTransitionCount);
-            chargeCounts =
-                (from g in docRefineMaxPrecursorPeakOnly.PeptideTransitionGroups
+            VerifyPrecursorOnlyNodeCounts(docRefineMaxPrecursorPeakOnly, 3, 27);
+            VerifyChargeCounts(docRefineMaxPrecursorPeakOnly, 1, 2);
+        }
+
+        private void VerifyPrecursorOnlyNodeCounts(SrmDocument doc, int peptides, int transitions)
+        {
+            Assert.AreEqual(peptides, doc.PeptideCount);
+            Assert.AreEqual(doc.PeptideCount, doc.PeptideTransitionGroupCount);
+            Assert.AreEqual(transitions, doc.PeptideTransitionCount);
+        }
+
+        private void VerifyChargeCounts(SrmDocument doc, int charge2, int charge3)
+        {
+            var chargeCounts =
+                (from g in doc.PeptideTransitionGroups
                     group g by g.TransitionGroup.PrecursorAdduct.Unlabeled
                     into gc
                     select new { Adduct = gc.Key.Unlabeled.AdductCharge, Count = gc.Count() }).ToArray();
-            Assert.IsTrue(chargeCounts.Contains((x) => x.Adduct == 2 && x.Count == 1));
-            Assert.IsTrue(chargeCounts.Contains((x) => x.Adduct == 3 && x.Count == 2));
+            Assert.IsTrue(chargeCounts.Contains((x) => x.Adduct == 2 && x.Count == charge2));
+            Assert.IsTrue(chargeCounts.Contains((x) => x.Adduct == 3 && x.Count == charge3));
         }
 
         [TestMethod]
@@ -283,23 +283,20 @@ namespace pwiz.SkylineTestData
 
         }
 
-        private SrmDocument InitRefineDocument2(int testNum)
+        private SrmDocument InitRefineDocumentIprg()
         {
-            RefinementSettings.ConvertToSmallMoleculesMode mode = RefinementSettings.ConvertToSmallMoleculesMode.none;
-            TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"TestData\Refine.zip", mode.ToString());
+            TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"TestData\Refine.zip");
+            var doc = ResultsUtil.DeserializeDocument(testFilesDir.GetTestPath("iPRG 2015 Study-mini.sky"));
+            AssertEx.IsDocumentState(doc, null, 1, 4, 6, 18);
+            return doc;
+        }
 
-            if (testNum == 0)
-            {
-                var doc = ResultsUtil.DeserializeDocument(testFilesDir.GetTestPath("iPRG 2015 Study-mini.sky"));
-                AssertEx.IsDocumentState(doc, null, 1, 4, 6, 18);
-                return doc;
-            }
-            else
-            {
-                var doc = ResultsUtil.DeserializeDocument(testFilesDir.GetTestPath("sprg_all_charges-mini.sky"));
-                AssertEx.IsDocumentState(doc, null, 1, 3, 6, 271);
-                return doc;
-            }
+        private SrmDocument InitRefineDocumentSprg()
+        {
+            TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"TestData\Refine.zip");
+            var doc = ResultsUtil.DeserializeDocument(testFilesDir.GetTestPath("sprg_all_charges-mini.sky"));
+            AssertEx.IsDocumentState(doc, null, 1, 3, 6, 54);
+            return doc;
         }
     }
 }

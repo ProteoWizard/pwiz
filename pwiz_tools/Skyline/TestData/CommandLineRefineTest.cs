@@ -51,7 +51,8 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void ConsoleRefineDocumentTest()
         {
-            DocumentPath = InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.none);
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineRefine.zip");
+            DocumentPath = InitRefineDocument("SRM_mini_single_replicate.sky");
             OutPath = Path.Combine(Path.GetDirectoryName(DocumentPath) ?? string.Empty, "test.sky");
 
             // First check a few refinements which should not change the document
@@ -155,7 +156,8 @@ namespace pwiz.SkylineTestData
         {
             Settings.Default.RTCalculatorName = Settings.Default.RTScoreCalculatorList.GetDefaults().First().Name;
 
-            DocumentPath = InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.none);
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineRefine.zip");
+            DocumentPath = InitRefineDocument("SRM_mini_single_replicate.sky");
             OutPath = Path.Combine(Path.GetDirectoryName(DocumentPath) ?? string.Empty, "test.sky");
 
             // First check a few refinements which should not change the document
@@ -226,15 +228,15 @@ namespace pwiz.SkylineTestData
             AssertEx.Contains(output, parts.ToArray());
             IsResultsState(OutPath, 5, 5, 20, output);
             // Pick the precursors with the maximum peaks
-            DocumentPath = InitRefineDocument2(0);
+            DocumentPath = InitRefineDocument("iPRG 2015 Study-mini.sky", 1, 0, 4, 6, 18);
             output = Run(CommandArgs.ARG_REFINE_MAX_PRECURSOR_PEAK_ONLY.ArgumentText);
             AssertEx.Contains(output, PropertyNames.RefinementSettings_MaxPrecursorPeakOnly);
-            IsResultsState2(OutPath, 4, 4, 12, 0, output);
+            IsResultsState(OutPath, 4, 4, 12, output, true);
             // Pick the precursors with the maximum peaks, not ignoring standard types
-            DocumentPath = InitRefineDocument2(1);
+            DocumentPath = InitRefineDocument("sprg_all_charges-mini.sky", 1, 0, 3, 6, 54);
             output = Run(CommandArgs.ARG_REFINE_MAX_PRECURSOR_PEAK_ONLY.ArgumentText);
             AssertEx.Contains(output, PropertyNames.RefinementSettings_MaxPrecursorPeakOnly);
-            IsResultsState2(OutPath, 3, 3, 122, 1, output);
+            IsResultsState(OutPath, 3, 3, 27, output, true);
         }
 
 //        [TestMethod]
@@ -263,7 +265,8 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void ConsoleChangeFilterSettingsTest()
         {
-            DocumentPath = InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.none);
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineRefine.zip");
+            DocumentPath = InitRefineDocument("SRM_mini_single_replicate.sky");
             OutPath = Path.Combine(Path.GetDirectoryName(DocumentPath) ?? string.Empty, "test.sky");
 
             Run(CommandArgs.ARG_REMOVE_ALL.ArgumentText);   // Remove results
@@ -307,52 +310,35 @@ namespace pwiz.SkylineTestData
             AssertEx.Contains(output, new CommandArgs.ValueInvalidChargeListException(CommandArgs.ARG_TRAN_PRECURSOR_ION_CHARGES, chargesWithError).Message);
         }
 
-        private const int _initProt = 1;
-        private const int _initList = 4;
-        private const int _initPep = 37;
+        // Start with values for SRM_mini_single_replicate.sky
+        private int _initProt = 1;
+        private int _initList = 4;
+        private int _initPep = 37;
         private const int _initMol = 0;
-        private const int _initPrec = 40;
-        private const int _initTran = 338;
+        private int _initPrec = 40;
+        private int _initTran = 338;
 
-        private string InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode mode)
+        private string InitRefineDocument(string docName)
         {
-            TestFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineRefine.zip", mode.ToString());
-            string docPath = TestFilesDir.GetTestPath("SRM_mini_single_replicate.sky");            
-//            if (mode != RefinementSettings.ConvertToSmallMoleculesMode.none)
-//            {
-//                var dataPaths = new[] { testFilesDir.GetTestPath("worm1.mzML") };
-//                doc = ConvertToSmallMolecules(null, ref docPath, dataPaths, mode);
-//            }
+            return InitRefineDocument(docName, _initProt, _initList, _initPep, _initPrec, _initTran);
+        }
+
+        private string InitRefineDocument(string docName, int proteins, int lists, int peptides, int tranGroups, int transitions)
+        {
+            string docPath = TestFilesDir.GetTestPath(docName);
+            _initProt = proteins;
+            _initList = lists;
+            _initPep = peptides;
+            _initPrec = tranGroups;
+            _initTran = transitions;
             IsDocumentState(docPath, _initProt, _initList, _initPep, _initMol, _initPrec, _initTran);
             return docPath;
         }
 
-        private string InitRefineDocument2(int test)
-        {
-            if (test == 0)
-            {
-                string docPath = TestFilesDir.GetTestPath("iPRG 2015 Study-mini.sky");
-                IsDocumentState2(docPath, 1, 0, 4, 0, 6, 18, 0);
-                return docPath;
-            }
-            else
-            {
-                string docPath = TestFilesDir.GetTestPath("sprg_all_charges-mini.sky");
-                IsDocumentState2(docPath, 1, 0, 3, 0, 6, 271, 1);
-                return docPath;
-            }
-        }
-
         private void IsResultsState(string docPath, int peptides, int tranGroups, int transitions,
-            string output = null)
+            string output = null, bool hasProtein = false)
         {
-            IsDocumentState(docPath, 0, 1, peptides, 0, tranGroups, transitions, output);
-        }
-
-        private void IsResultsState2(string docPath, int peptides, int tranGroups, int transitions, int testNum,
-            string output = null)
-        {
-            IsDocumentState2(docPath, 1, 0, peptides, 0, tranGroups, transitions, testNum, output);
+            IsDocumentState(docPath, hasProtein ? 1 : 0, hasProtein ? 0 : 1, peptides, 0, tranGroups, transitions, output);
         }
 
         private void IsDocumentState(string docPath, int proteins, int lists,
@@ -369,41 +355,6 @@ namespace pwiz.SkylineTestData
             }
             var doc = ResultsUtil.DeserializeDocument(docPath);
             AssertEx.IsDocumentState(doc, null, proteins+lists, peptides+molecules, tranGroups, transitions);
-        }
-
-        private void IsDocumentState2(string docPath, int proteins, int lists,
-            int peptides, int molecules, int tranGroups, int transitions, int testNum,
-            string output = null)
-        {
-            int prot;
-            int pep;
-            int prec;
-            int tran;
-            if (testNum == 0)
-            {
-                prot = 1;
-                pep = 4;
-                prec = 6;
-                tran = 18;
-            }
-            else
-            {
-                prot = 1;
-                pep = 3;
-                prec = 6;
-                tran = 271;
-            }
-
-            if (output != null)
-            {
-                AssertEx.Contains(output,
-                    CommandLine.RemovedText(prot - proteins, 0 - lists, pep - peptides,
-                        0 - molecules, prec - tranGroups, tran - transitions),
-                    CommandLine.AddedText(proteins - prot, lists - 0, peptides - pep,
-                        molecules - 0, tranGroups - prec, transitions - tran));
-            }
-            var doc = ResultsUtil.DeserializeDocument(docPath);
-            AssertEx.IsDocumentState(doc, null, proteins + lists, peptides + molecules, tranGroups, transitions);
         }
     }
 }
