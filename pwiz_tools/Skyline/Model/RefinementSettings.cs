@@ -154,6 +154,8 @@ namespace pwiz.Skyline.Model
         [Track]
         public double? MaxPepPeakRank { get; set; }
         [Track]
+        public bool MaxPrecursorPeakOnly { get; set; }
+        [Track]
         public double? MaxPeakRank { get; set; }
 
 
@@ -407,7 +409,7 @@ namespace pwiz.Skyline.Model
 
                 listPeptides.Add(nodePepRefined);
             }
-
+            
             if (MaxPepPeakRank.HasValue)
             {
                 // Calculate the average peak area for each peptide
@@ -566,6 +568,24 @@ namespace pwiz.Skyline.Model
             // If groups were added, make sure everything is in the right order.
             if (addedGroups)
                 listGroups.Sort(Peptide.CompareGroups);
+
+            if (MaxPrecursorPeakOnly && listGroups.Count > 1 &&
+                listGroups.Select(g => g.PrecursorAdduct.Unlabeled).Distinct().Count() > 1)
+            {
+                var chargeGroups =
+                    (from g in listGroups
+                        group g by g.TransitionGroup.PrecursorAdduct.Unlabeled
+                        into ga
+                        select new {Adduct = ga.Key, Area = ga.Sum(gg => gg.AveragePeakArea)}).ToArray();
+
+                if (chargeGroups.Any(n => n.Area > 0))
+                {
+                    // Assume that the probability of two measured areas being exactly equal is low
+                    // enough that taking just one is not an issue.
+                    var bestCharge = chargeGroups.Aggregate((n1, n2) => n1.Area > n2.Area ? n1 : n2);
+                    listGroups = listGroups.Where(g => Equals(g.PrecursorAdduct.Unlabeled, bestCharge.Adduct)).ToList();
+                }
+            }
 
             // Change the children, but only change auto-management, if the child
             // identities have changed, not if their contents changed.
@@ -1484,7 +1504,7 @@ namespace pwiz.Skyline.Model
         private sealed class PepAreaSortInfo
         {
             private readonly PeptideDocNode _nodePep;
-            private readonly Adduct _bestCharge;
+//            private readonly Adduct _bestCharge;
 
             public PepAreaSortInfo(PeptideDocNode nodePep,
                                    ICollection<IsotopeLabelType> internalStandardTypes,
@@ -1502,7 +1522,7 @@ namespace pwiz.Skyline.Model
 
                 // Store the best charge state and its area
                 var bestChargeGroup = chargeGroups.OrderBy(cg => cg.Area).First();
-                _bestCharge = bestChargeGroup.Charge;
+//                _bestCharge = bestChargeGroup.Charge;
                 Area = bestChargeGroup.Area ?? 0;
 
                 Index = index;
@@ -1514,11 +1534,7 @@ namespace pwiz.Skyline.Model
 
             public PeptideDocNode Peptide
             {
-                get
-                {
-                    return (PeptideDocNode) _nodePep.ChangeChildrenChecked(_nodePep.TransitionGroups.Where(
-                        nodeGroup => nodeGroup.TransitionGroup.PrecursorAdduct.Equals(_bestCharge)).ToArray());
-                }
+                get { return _nodePep; }
             }
         }
 
