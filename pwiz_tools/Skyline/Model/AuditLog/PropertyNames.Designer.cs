@@ -2707,6 +2707,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Max precursor peak only.
+        /// </summary>
+        public static string RefinementSettings_MaxPrecursorPeakOnly {
+            get {
+                return ResourceManager.GetString("RefinementSettings_MaxPrecursorPeakOnly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Min peak found ratio.
         /// </summary>
         public static string RefinementSettings_MinPeakFoundRatio {

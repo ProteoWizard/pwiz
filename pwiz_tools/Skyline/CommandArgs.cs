@@ -622,6 +622,8 @@ namespace pwiz.Skyline
             (c, p) => c.Refinement.MaxPepPeakRank = p.ValueInt) { WrapValue = true };
         public static readonly Argument ARG_REFINE_MAX_PEAK_RANK = new RefineArgument(@"refine-max-transition-peak-rank", INT_VALUE,
             (c, p) => c.Refinement.MaxPeakRank = p.ValueInt) { WrapValue = true };
+        public static readonly Argument ARG_REFINE_MAX_PRECURSOR_PEAK_ONLY = new RefineArgument(@"refine-max-precursor-only", 
+            (c, p) => c.Refinement.MaxPrecursorPeakOnly = true);
         public static readonly Argument ARG_REFINE_PREFER_LARGER_PRODUCTS = new RefineArgument(@"refine-prefer-larger-products",
             (c, p) => c.Refinement.PreferLargeIons = true);
         public static readonly Argument ARG_REFINE_MISSING_RESULTS = new RefineArgument(@"refine-missing-results",
@@ -645,7 +647,8 @@ namespace pwiz.Skyline
         private static readonly ArgumentGroup GROUP_REFINEMENT_W_RESULTS = new ArgumentGroup(
             () => CommandArgUsage.CommandArgs_GROUP_REFINEMENT_W_RESULTS, false,
             ARG_REFINE_MIN_PEAK_FOUND_RATIO, ARG_REFINE_MAX_PEAK_FOUND_RATIO, ARG_REFINE_MAX_PEPTIDE_PEAK_RANK,
-            ARG_REFINE_MAX_PEAK_RANK, ARG_REFINE_PREFER_LARGER_PRODUCTS, ARG_REFINE_MISSING_RESULTS,
+            ARG_REFINE_MAX_PEAK_RANK, ARG_REFINE_MAX_PRECURSOR_PEAK_ONLY,
+            ARG_REFINE_PREFER_LARGER_PRODUCTS, ARG_REFINE_MISSING_RESULTS,
             ARG_REFINE_MIN_TIME_CORRELATION, ARG_REFINE_MIN_DOTP, ARG_REFINE_MIN_IDOTP,
             ARG_REFINE_USE_BEST_RESULT);
 
