@@ -864,6 +864,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        [Track]
         public PeptideUniquenessConstraint PeptideUniqueness { get; private set; }
 
         #region Property change methods
