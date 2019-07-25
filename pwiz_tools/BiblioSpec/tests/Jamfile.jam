@@ -303,20 +303,22 @@ blib-test-build openswath-invalid-tsv : -o -e@~Only_OpenSWATH~ : output/openswat
 blib-test-build mascot_tims_bad : -e@0.78079097398941 -o : output/mascot_tims_bad.blib : mascot_tims_bad.check : $(TEST_INPUTS_PATH)/mascot_tims_bad.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
 
 # Test merging existing libraries
-
 blib-test-build merge : --unicode -o : output/xmerged.redundant.blib : xmerged.redundant.check : output/demo-copy.blib output/demo.blib output/pep-proph.blib : <dependency>sqt-ms2 <dependency>sqt-cms2 <dependency>pep-proph ;
 
 # Test BlibFilter
-
 blib-test-filter filter : --unicode : output/zmerged.filtered.blib : zmerged.filtered.check : output/xmerged.redundant.blib : <dependency>merge ;
 
 # Test BlibFilter on a library with precursor mobility values
-
 blib-test-filter filter-mobility : --unicode : output/mse-mobility.filtered.blib : mse-mobility.filtered.check : output/mse-mobility.blib : <dependency>mse-mobility ;
 
 # Test BlibFilter on a small molecule library
-
 blib-test-filter filter-ssl-small-mol : --unicode : output/ssl-small-mol.filtered.blib : ssl-small-mol.filtered.check : output/ssl-small-mol.blib : <dependency>ssl-small-mol ;
+
+# Test BlibFilter's best scoring mode on multiple raw files but only one search engine (score type)
+blib-test-filter filter-best-scoring-one : -b@1 --unicode : output/filter-best-scoring-one.blib : filter-best-scoring-one.check : output/maxquant3.blib : <dependency>maxquant3 ;
+
+# Test BlibFilter's best scoring mode on multiple search engines (score types)
+blib-test-filter filter-best-scoring-multi : -b@1 --unicode : output/filter-best-scoring-multi.blib : filter-best-scoring-multi.check : output/xmerged.redundant.blib : <dependency>merge ;
 
 # Test self-describing -d option
 
