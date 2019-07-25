@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System.Linq;
+using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Databinding
 {
@@ -24,21 +25,22 @@ namespace pwiz.Skyline.Model.Databinding
     {
         protected override object[] GetDropdownItems()
         {
-            var annotationPropertyDescriptor = ColumnPropertyDescriptor.DisplayColumn.ColumnDescriptor.ReflectedPropertyDescriptor as AnnotationPropertyDescriptor;
-            if (annotationPropertyDescriptor == null)
+            var propertyDescriptor =
+                ColumnPropertyDescriptor.DisplayColumn.ColumnDescriptor.ReflectedPropertyDescriptor;
+            var annotationDef = (propertyDescriptor as AnnotationPropertyDescriptor)?.AnnotationDef
+                                ?? (propertyDescriptor as ListColumnPropertyDescriptor)?.AnnotationDef;
+            if (annotationDef == null)
             {
                 return null;
             }
-            return GetDropdownItems(annotationPropertyDescriptor);
+            return GetDropdownItems(annotationDef);
         }
 
-        protected virtual string[] GetDropdownItems(AnnotationPropertyDescriptor annotationPropertyDescriptor)
+        protected virtual string[] GetDropdownItems(AnnotationDef annotationDef)
         {
-            var annotationDef = annotationPropertyDescriptor.AnnotationDef;
-
             annotationDef = SkylineDataSchema.Document.Settings.DataSettings.AnnotationDefs
                                 .FirstOrDefault(def => def.Name == annotationDef.Name)
-                            ?? annotationPropertyDescriptor.AnnotationDef;
+                            ?? annotationDef;
 
             return new[] { string.Empty }.Concat(annotationDef.Items).ToArray();
         }
