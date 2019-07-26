@@ -65,6 +65,10 @@ namespace pwiz.Skyline.Controls.Lists
             colPropertyType.Items.Clear();
             foreach (var propertyType in ListPropertyType.ListPropertyTypes(_existing))
             {
+                if (propertyType.AnnotationType == AnnotationDef.AnnotationType.value_list)
+                {
+                    continue;
+                }
                 colPropertyType.Items.Add(propertyType);
             }
             PopulatePropertyDropdown(comboIdProperty, listDef.IdProperty);

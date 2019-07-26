@@ -181,7 +181,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [DataGridViewColumnType(typeof(StandardTypeDataGridViewColumn))]
-        [Importable]
         public StandardType StandardType
         {
             get
