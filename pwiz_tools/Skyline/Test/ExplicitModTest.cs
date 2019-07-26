@@ -67,7 +67,7 @@ namespace pwiz.SkylineTest
         {
             SrmDocument docStudy7 = CreateStudy7Doc();
             string transitionList = ExportCsv(docStudy7);
-            Assert.AreEqual(69 + (TestSmallMolecules ? 2 : 0), transitionList.Split('\n').Length); // Special test mode may add an extra doc node
+            Assert.AreEqual(69, transitionList.Split('\n').Length); // Special test mode may add an extra doc node
 
             var modifications = docStudy7.Settings.PeptideSettings.Modifications;
             var listStaticMods = modifications.StaticModifications;
@@ -153,7 +153,7 @@ namespace pwiz.SkylineTest
         {
             SrmDocument docStudy7 = CreateStudy7Doc();
             string transitionList = ExportCsv(docStudy7);
-            Assert.AreEqual(TestSmallMolecules ? 71: 69, transitionList.Split('\n').Length); // Did special test mode add a docnode to the end?
+            Assert.AreEqual(69, transitionList.Split('\n').Length); // Did special test mode add a docnode to the end?
 
             var settings = docStudy7.Settings.ChangeTransitionFilter(filter => filter.ChangeAutoSelect(false));
             settings = settings.ChangePeptideModifications(mods => mods.ChangeModifications(IsotopeLabelType.heavy, ATOMIC_HEAVY_MODS));

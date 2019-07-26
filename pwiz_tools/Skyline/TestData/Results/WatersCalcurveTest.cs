@@ -158,7 +158,7 @@ namespace pwiz.SkylineTestData.Results
                         }
                     }
                     // Allow 2 missed peaks
-                    Assert.IsTrue(countPeaks >= transNew.Length - (TestSmallMolecules ? 1 : 0) - 2);
+                    Assert.IsTrue(countPeaks >= transNew.Length - 2);
 
                     // Check results calculations for peptides and groups
                     foreach (var nodePep in docResults.Peptides)
@@ -207,8 +207,6 @@ namespace pwiz.SkylineTestData.Results
                 for (int i = 0; i < doc.Children.Count; i++)
                 {
                     PeptideGroupDocNode nodePepGroup1 = (PeptideGroupDocNode)doc.Children[i];
-                    if (TestSmallMolecules && nodePepGroup1.Name.Equals(SrmDocument.TestingNonProteomicMoleculeGroupName))
-                        continue;
                     PeptideGroupDocNode nodePepGroup2 = (PeptideGroupDocNode)docPersisted.Children[i];
                     Assert.AreNotSame(nodePepGroup1, nodePepGroup2);
                     for (int j = 0; j < nodePepGroup1.Children.Count; j++)

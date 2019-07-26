@@ -58,7 +58,7 @@ namespace pwiz.SkylineTestData
             string minPeptides = 1.ToString();
             string output = Run(CommandArgs.ARG_REFINE_MIN_PEPTIDES.GetArgumentTextWithValue(minPeptides));
             AssertEx.Contains(output, Resources.CommandLine_RefineDocument_Refining_document___, Resources.CommandLine_LogNewEntries_Document_unchanged);
-            string minTrans = (TestSmallMolecules ? 1 : 2).ToString();
+            string minTrans = (2).ToString();
             output = Run(CommandArgs.ARG_REFINE_MIN_TRANSITIONS.GetArgumentTextWithValue(minTrans));
             AssertEx.Contains(output, Resources.CommandLine_RefineDocument_Refining_document___, Resources.CommandLine_LogNewEntries_Document_unchanged);
 

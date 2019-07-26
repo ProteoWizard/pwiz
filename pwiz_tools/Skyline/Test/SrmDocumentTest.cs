@@ -231,8 +231,6 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void DocumentExportProteinsTest()
         {
-            TestSmallMolecules = false; // This test is quite specific to the input data set
-
             SrmDocument document = AssertEx.Deserialize<SrmDocument>(DOC_0_1_PEPTIDES_NO_EMPTY);
             var exporter = new ThermoMassListExporter(document)
                                {
@@ -255,7 +253,7 @@ namespace pwiz.SkylineTest
             Array.Sort(names);
             for (int i = 0; i < arrayTranCounts.Length; i++)
             {
-                Assert.AreEqual(arrayTranCounts[i] + (Settings.Default.TestSmallMolecules ? 2-i : 0) , LineCount(exporter.MemoryOutput[names[i]].ToString()),
+                Assert.AreEqual(arrayTranCounts[i], LineCount(exporter.MemoryOutput[names[i]].ToString()),
                                 "Transitions not distributed correctly");                
             }
         }
@@ -276,9 +274,6 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void DocumentExport_0_1_Test()
         {
-            //This is just for testing version 1 xml documents which couldn't have Custom Ions in them anyway
-            TestSmallMolecules = false;
-
             int count = EqualCsvs(DOC_0_1_BOVINE, 4, ThermoExporters, ExportStrategy.Single, 2, null,
                                   ExportMethodType.Standard);
             Assert.AreEqual(1, count);
@@ -317,7 +312,6 @@ namespace pwiz.SkylineTest
                 return;
             }
 
-            TestSmallMolecules = false; // We wouldn't expect a mixed peptide and non-peptide mass list to work.
             var pathForLibraries = TestContext.ResultsDirectory;
 
             int count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 4, CreateWatersExporter, ExportStrategy.Single, 2, null,

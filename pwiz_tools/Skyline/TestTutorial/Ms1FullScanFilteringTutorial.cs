@@ -59,9 +59,6 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
 
-            // Lest we get "To export a scheduled method, you must first choose a retention time predictor in Peptide Settings / Prediction, or import results for all peptides in the document."
-            TestSmallMolecules = false;
-
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/MS1Filtering-2_5.pdf";
 
             TestFilesZipPaths = new[]
@@ -130,8 +127,6 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
-            TestSmallMolecules = false; // The presence of the extra test node without any results is incompatible with what's being tested here.
-
             // Clean-up before running the test
             RunUI(() => SkylineWindow.ModifyDocument("Set default settings",
                             d => d.ChangeSettings(SrmSettingsList.GetDefault())));

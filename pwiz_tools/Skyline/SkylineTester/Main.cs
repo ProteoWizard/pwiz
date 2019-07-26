@@ -256,7 +256,7 @@ namespace SkylineTester
             if (repeatCount > 1 && args.Contains("test=\"@"))
             {
                 // Pick apart a string like to get at the filename for the list of tests
-                // offscreen=True loop=1 testsmallmolecules=on repeat=100 language=en-US,fr-FR perftests=on test=\"@I:\\Dev\\bg_trunk\\pwiz_tools\\Skyline\\SkylineTester test list.txt\"
+                // offscreen=True loop=1 repeat=100 language=en-US,fr-FR perftests=on test=\"@I:\\Dev\\bg_trunk\\pwiz_tools\\Skyline\\SkylineTester test list.txt\"
                 var argparts = args.Split(new[] { "test=\"@" }, StringSplitOptions.None);
                 var newArgs = argparts[0] + argparts[1].Split('\"')[1];
                 var tests = File.ReadAllLines(argparts[1].Split('\"')[0]);

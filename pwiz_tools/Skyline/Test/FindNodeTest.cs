@@ -46,7 +46,6 @@ namespace pwiz.SkylineTest
         {
             if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none)
                 TestDirectoryName = asSmallMolecules.ToString();
-            TestSmallMolecules = false;  // Don't need the magic test node, we have an explicit test
 
             SrmDocument doc = CreateStudy7Doc();
             doc = new RefinementSettings().ConvertToSmallMolecules(doc, TestDirectoryName, asSmallMolecules);

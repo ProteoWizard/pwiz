@@ -50,9 +50,6 @@ namespace pwiz.SkylineTest
             int maxMz = docFasta.Settings.TransitionSettings.Instrument.MaxMz - 120;
             foreach (PeptideGroupDocNode nodeGroup in docFasta.Children)
             {
-                if (SrmDocument.IsSpecialNonProteomicTestDocNode(nodeGroup))
-                    continue;
-               
                 Assert.IsInstanceOfType(nodeGroup.Id, typeof(FastaSequence));
 
                 int lastEnd = docFasta.Settings.PeptideSettings.Filter.ExcludeNTermAAs - 1;
@@ -130,8 +127,6 @@ namespace pwiz.SkylineTest
 
             foreach (PeptideDocNode nodePeptide in nodePepList.Children)
             {
-                if (SrmDocument.IsSpecialNonProteomicTestDocNode(nodePeptide))
-                    continue;
                 char prev = nodePeptide.Peptide.PrevAA;
                 char next = nodePeptide.Peptide.NextAA;
                 if (prev != 'X' || next != 'X')
