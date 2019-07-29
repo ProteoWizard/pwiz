@@ -1922,7 +1922,7 @@ namespace pwiz.Skyline.Model
     public class PeptideGroupBuilder
     {
         // filename to use if no file has been specified
-        public const string DUMMY_FILENAME = @"Memory";
+        public const string CLIPBOARD_FILENAME = @"Clipboard";
         private readonly StringBuilder _sequence = new StringBuilder();
         private readonly List<PeptideDocNode> _peptides;
         private readonly Dictionary<int, Adduct> _charges;
@@ -2248,7 +2248,7 @@ namespace pwiz.Skyline.Model
 
                 finalLibrarySpectra.Add(new SpectrumMzInfo
                 {
-                    SourceFile = _sourceFile ?? DUMMY_FILENAME,
+                    SourceFile = _sourceFile ?? CLIPBOARD_FILENAME,
                     Key = new LibKey(modifiedSequenceWithIsotopes, groupLibTriple.NodeGroup.TransitionGroup.PrecursorAdduct),
                     Label = groupLibTriple.SpectrumInfo.Label,
                     PrecursorMz = groupLibTriple.SpectrumInfo.PrecursorMz,
