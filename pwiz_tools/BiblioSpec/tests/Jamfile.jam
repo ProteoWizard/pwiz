@@ -28,6 +28,7 @@ import sequence ;
 project 
   : requirements
       <link>static
+      <preserve-test-targets>on # necessary because ExecuteBlib.obj is shared between tests
 ;
 
 # extract the input files for the tests
