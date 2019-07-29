@@ -771,6 +771,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     return new ReplicateGroup[0]; // Likely user removed all results while Mass Errors window was open
                 }
+
+                var annotationCalculator = new AnnotationCalculator(_document);
                 var chromatograms = _document.Settings.MeasuredResults.Chromatograms;
 
                 var result = new List<ReplicateGroup>();
@@ -787,7 +789,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         var orderByReplicateAnnotationDef = _document.Settings.DataSettings.AnnotationDefs.FirstOrDefault(annotationDef => annotationDef.Name == OrderByReplicateAnnotation);
                         if(orderByReplicateAnnotationDef != null)
-                            query = result.OrderBy(g => chromatograms[g.ReplicateIndexes.First()].Annotations.GetAnnotation(orderByReplicateAnnotationDef));    
+                            query = result.OrderBy(g => annotationCalculator.GetReplicateAnnotation(orderByReplicateAnnotationDef, chromatograms[g.ReplicateIndexes.First()]));    
                     }
 
                     if (ReplicateOrder == SummaryReplicateOrder.document)
@@ -816,7 +818,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 else
                 {
                     var lookup = replicateIndexes.ToLookup(replicateIndex =>
-                        ReplicateGroupOp.GroupByValue.GetValue(chromatograms[replicateIndex]));
+                        ReplicateGroupOp.GroupByValue.GetValue(annotationCalculator, chromatograms[replicateIndex]));
                     var keys = lookup.Select(grouping => grouping.Key).ToList();
                     if (keys.Count > 2)
                     {

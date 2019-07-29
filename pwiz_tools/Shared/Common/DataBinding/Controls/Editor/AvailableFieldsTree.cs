@@ -144,6 +144,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             ShowHiddenFields = ViewEditor.ShowHiddenFields;
         }
 
+        [DefaultValue(false)]
         public bool ShowHiddenFields
         {
             get
@@ -157,12 +158,18 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                     return;
                 }
                 _showHiddenFields = value;
-                Nodes.Clear();
-                var rootColumnOld = _rootColumn;
-                _rootColumn = null;
-                RootColumn = rootColumnOld;
+                RebuildNodeTree();
             }
         }
+
+        private void RebuildNodeTree()
+        {
+            Nodes.Clear();
+            var rootColumnOld = _rootColumn;
+            _rootColumn = null;
+            RootColumn = rootColumnOld;
+        }
+
         /// <summary>
         /// Returns the column associated with the node in the tree.
         /// This is the column which is the parent of the child nodes in

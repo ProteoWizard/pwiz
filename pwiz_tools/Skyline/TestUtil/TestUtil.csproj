@@ -372,6 +372,9 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Schemas\Skyline_19.11.xsd">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Schemas\Skyline_19.1.xsd">
       <SubType>Designer</SubType>
     </EmbeddedResource>

@@ -827,6 +827,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Only the precursor charge state with the maximum peak area will be retained..
+        /// </summary>
+        internal static string _refine_max_precursor_only {
+            get {
+                return ResourceManager.GetString("_refine_max_precursor_only", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to All transitions with an average area peak ranking
         ///greater than this number will be removed from the
         ///document..
