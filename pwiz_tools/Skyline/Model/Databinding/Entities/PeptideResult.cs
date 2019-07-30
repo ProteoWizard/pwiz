@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using pwiz.Common.DataBinding;
@@ -107,29 +108,49 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                var normalizedArea = _quantificationResult.Value?.NormalizedArea;
-                if (!normalizedArea.HasValue)
+                var unmodifiedSequence = Peptide.DocNode.RawUnmodifiedTextId;
+                var matchingPeptides = Peptide.Protein.Peptides
+                    .Where(pep => unmodifiedSequence == pep.DocNode.RawUnmodifiedTextId);
+                return GetAreaProportion(matchingPeptides);
+            }
+        }
+
+        [Format(Formats.PEAK_AREA_NORMALIZED)]
+        public double? AttributeAreaProportion
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(Peptide.AttributeGroupId))
                 {
                     return null;
                 }
+                var matchingPeptides = SrmDocument.MoleculeGroups.SelectMany(moleculeGroup =>
+                    moleculeGroup.Molecules.Where(molecule => molecule.AttributeGroupId == Peptide.AttributeGroupId)
+                        .Select(molecule => new Peptide(DataSchema, new IdentityPath(moleculeGroup.Id, molecule.Id))));
+                return GetAreaProportion(matchingPeptides);
+            }
+        }
 
-                double total = 0;
-                var unmodifiedSequence = Peptide.DocNode.RawUnmodifiedTextId;
-                foreach (var peptide in Peptide.Protein.Peptides)
+        private double? GetAreaProportion(IEnumerable<Peptide> peptides)
+        {
+            var normalizedArea = _quantificationResult.Value?.NormalizedArea;
+            if (!normalizedArea.HasValue)
+            {
+                return null;
+            }
+            var total = 0.0;
+            foreach (var peptide in peptides)
+            {
+                foreach (var peptideResult in peptide.Results.Values)
                 {
-                    if (unmodifiedSequence == peptide.DocNode.RawUnmodifiedTextId)
+                    if (peptideResult.ResultFile.Replicate.Name == ResultFile.Replicate.Name)
                     {
-                        foreach (var peptideResult in peptide.Results.Values)
-                        {
-                            if (peptideResult.ResultFile.Replicate.Name == ResultFile.Replicate.Name)
-                            {
-                                total += peptideResult._quantificationResult.Value?.NormalizedArea ?? 0.0;
-                            }
-                        }
+                        total += peptideResult._quantificationResult.Value?.NormalizedArea ?? 0.0;
                     }
                 }
-                return normalizedArea.Value / total;
             }
+
+            return normalizedArea.Value / total;
         }
 
         public ResultFile ResultFile { get { return GetResultFile(); } }
@@ -182,7 +203,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return _calibrationCurveFitter.Value.GetQuantificationResult(ResultFile.Replicate.ReplicateIndex);
         }
 
-        private CalibrationCurveFitter GetCalibrationCurveFitter()
+        public CalibrationCurveFitter GetCalibrationCurveFitter()
         {
             if (string.IsNullOrEmpty(ResultFile.Replicate.BatchName) && !Peptide.DocNode.HasPrecursorConcentrations)
             {

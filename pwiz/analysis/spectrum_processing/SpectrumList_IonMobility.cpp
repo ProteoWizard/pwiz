@@ -30,6 +30,7 @@
 #include "pwiz/data/vendor_readers/Bruker/SpectrumList_Bruker.hpp"
 #include "pwiz/data/vendor_readers/Waters/SpectrumList_Waters.hpp"
 #include "pwiz/data/vendor_readers/Thermo/SpectrumList_Thermo.hpp"
+#include "pwiz/data/vendor_readers/UIMF/SpectrumList_UIMF.hpp"
 
 
 namespace pwiz {
@@ -72,6 +73,11 @@ SpectrumList_IonMobility::SpectrumList_IonMobility(const msdata::SpectrumListPtr
             equipment_ = IonMobilityEquipment::ThermoFAIMS;
             units_ = IonMobilityUnits::compensation_V;
         }
+    }
+    else if (dynamic_cast<detail::SpectrumList_UIMF*>(&*innermost()) != NULL)
+    {
+        equipment_ = IonMobilityEquipment::UIMFDrift;
+        units_ = IonMobilityUnits::drift_time_msec;
     }
     else // reading an mzML conversion?
     {
@@ -135,6 +141,7 @@ PWIZ_API_DECL double SpectrumList_IonMobility::ionMobilityToCCS(double ionMobili
         case IonMobilityEquipment::AgilentDrift:
         case IonMobilityEquipment::BrukerTIMS:
         case IonMobilityEquipment::WatersDrift:
+        case IonMobilityEquipment::UIMFDrift:
             return sl_->ionMobilityToCCS(ionMobility, mz, charge);
     }
 }
@@ -150,6 +157,7 @@ PWIZ_API_DECL double SpectrumList_IonMobility::ccsToIonMobility(double ccs, doub
         case IonMobilityEquipment::AgilentDrift:
         case IonMobilityEquipment::BrukerTIMS:
         case IonMobilityEquipment::WatersDrift:
+        case IonMobilityEquipment::UIMFDrift:
             return sl_->ccsToIonMobility(ccs, mz, charge);
     }
 }

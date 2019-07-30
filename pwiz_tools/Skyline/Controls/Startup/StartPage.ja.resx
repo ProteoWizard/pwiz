@@ -136,7 +136,7 @@
     <value>3, 3</value>
   </data>
   <data name="flowLayoutPanelWizard.Size" type="System.Drawing.Size, System.Drawing">
-    <value>557, 376</value>
+    <value>557, 369</value>
   </data>
   <data name="flowLayoutPanelWizard.TabIndex" type="System.Int32, mscorlib">
     <value>57</value>
@@ -154,13 +154,13 @@
     <value>0</value>
   </data>
   <data name="wizardTabPage.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
+    <value>4, 29</value>
   </data>
   <data name="wizardTabPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 3, 3, 3</value>
   </data>
   <data name="wizardTabPage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>563, 382</value>
+    <value>563, 375</value>
   </data>
   <data name="wizardTabPage.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -193,7 +193,7 @@
     <value>3, 3</value>
   </data>
   <data name="flowLayoutPanelTutorials.Size" type="System.Drawing.Size, System.Drawing">
-    <value>557, 376</value>
+    <value>557, 369</value>
   </data>
   <data name="flowLayoutPanelTutorials.TabIndex" type="System.Int32, mscorlib">
     <value>58</value>
@@ -211,13 +211,13 @@
     <value>0</value>
   </data>
   <data name="tutorialsTabPage.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
+    <value>4, 29</value>
   </data>
   <data name="tutorialsTabPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tutorialsTabPage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>563, 382</value>
+    <value>563, 375</value>
   </data>
   <data name="tutorialsTabPage.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -240,8 +240,14 @@
   <data name="tabControlMain.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Right</value>
   </data>
+  <data name="tabControlMain.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 9.75pt</value>
+  </data>
   <data name="tabControlMain.Location" type="System.Drawing.Point, System.Drawing">
     <value>278, 0</value>
+  </data>
+  <data name="tabControlMain.Padding" type="System.Drawing.Point, System.Drawing">
+    <value>10, 5</value>
   </data>
   <data name="tabControlMain.Size" type="System.Drawing.Size, System.Drawing">
     <value>571, 408</value>
@@ -358,7 +364,7 @@
     <value>True</value>
   </data>
   <data name="checkBoxShowStartup.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Arial, 9pt, style=Italic</value>
+    <value>Arial, 9pt</value>
   </data>
   <data name="checkBoxShowStartup.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
@@ -513,6 +519,48 @@
   <data name="&gt;&gt;leftPanel.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <metadata name="tooStripModeUI.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>279, 0</value>
+  </metadata>
+  <data name="tooStripModeUI.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="tooStripModeUI.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>None</value>
+  </data>
+  <data name="toolStripButtonModeUI.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>White</value>
+  </data>
+  <data name="toolStripButtonModeUI.Size" type="System.Drawing.Size, System.Drawing">
+    <value>46, 22</value>
+  </data>
+  <data name="toolStripButtonModeUI.Text" xml:space="preserve">
+    <value>ユーザーインターフェイスの選択</value>
+  </data>
+  <data name="tooStripModeUI.Location" type="System.Drawing.Point, System.Drawing">
+    <value>509, 0</value>
+  </data>
+  <data name="tooStripModeUI.Size" type="System.Drawing.Size, System.Drawing">
+    <value>58, 25</value>
+  </data>
+  <data name="tooStripModeUI.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="tooStripModeUI.Text" xml:space="preserve">
+    <value>toolStrip1</value>
+  </data>
+  <data name="&gt;&gt;tooStripModeUI.Name" xml:space="preserve">
+    <value>tooStripModeUI</value>
+  </data>
+  <data name="&gt;&gt;tooStripModeUI.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tooStripModeUI.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;tooStripModeUI.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
@@ -533,6 +581,18 @@
   </data>
   <data name="&gt;&gt;toolTip.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripButtonProteomicModeUI.Name" xml:space="preserve">
+    <value>toolStripButtonProteomicModeUI</value>
+  </data>
+  <data name="&gt;&gt;toolStripButtonProteomicModeUI.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripButtonSmallMoleculeModeUI.Name" xml:space="preserve">
+    <value>toolStripButtonSmallMoleculeModeUI</value>
+  </data>
+  <data name="&gt;&gt;toolStripButtonSmallMoleculeModeUI.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>StartPage</value>

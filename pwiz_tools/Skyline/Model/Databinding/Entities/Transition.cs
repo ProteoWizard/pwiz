@@ -342,6 +342,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get { return TransitionRef.PROTOTYPE; }
         }
+
+        protected override Type SkylineDocNodeType
+        {
+            get { return typeof(Transition); }
+        }
     }
 
     public class TransitionResultSummary : SkylineObject

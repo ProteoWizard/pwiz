@@ -30,6 +30,9 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RefineDlg));
+            this.helpTip = new System.Windows.Forms.ToolTip(this.components);
+            this.btnOK = new System.Windows.Forms.Button();
+            this.btnCancel = new System.Windows.Forms.Button();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabDocument = new System.Windows.Forms.TabPage();
             this.cbRemovePeptidesMissingLibrary = new System.Windows.Forms.CheckBox();
@@ -68,15 +71,34 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.textRTRegressionThreshold = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
-            this.btnOK = new System.Windows.Forms.Button();
-            this.btnCancel = new System.Windows.Forms.Button();
-            this.helpTip = new System.Windows.Forms.ToolTip(this.components);
+            this.cbMaxPrecursorOnly = new System.Windows.Forms.CheckBox();
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabDocument.SuspendLayout();
             this.tabResults.SuspendLayout();
             this.groupLibCorr.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
+            // 
+            // helpTip
+            // 
+            this.helpTip.AutoPopDelay = 32767;
+            this.helpTip.InitialDelay = 500;
+            this.helpTip.ReshowDelay = 100;
+            // 
+            // btnOK
+            // 
+            resources.ApplyResources(this.btnOK, "btnOK");
+            this.btnOK.Name = "btnOK";
+            this.btnOK.UseVisualStyleBackColor = true;
+            this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
+            // 
+            // btnCancel
+            // 
+            resources.ApplyResources(this.btnCancel, "btnCancel");
+            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.btnCancel.Name = "btnCancel";
+            this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // tabControl1
             // 
@@ -198,6 +220,7 @@
             // 
             // tabResults
             // 
+            this.tabResults.Controls.Add(this.cbMaxPrecursorOnly);
             this.tabResults.Controls.Add(this.textMaxPepPeakRank);
             this.tabResults.Controls.Add(this.label8);
             this.tabResults.Controls.Add(this.label4);
@@ -353,25 +376,11 @@
             resources.ApplyResources(this.label3, "label3");
             this.label3.Name = "label3";
             // 
-            // btnOK
+            // cbMaxPrecursorOnly
             // 
-            resources.ApplyResources(this.btnOK, "btnOK");
-            this.btnOK.Name = "btnOK";
-            this.btnOK.UseVisualStyleBackColor = true;
-            this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
-            // 
-            // btnCancel
-            // 
-            resources.ApplyResources(this.btnCancel, "btnCancel");
-            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Name = "btnCancel";
-            this.btnCancel.UseVisualStyleBackColor = true;
-            // 
-            // helpTip
-            // 
-            this.helpTip.AutoPopDelay = 32767;
-            this.helpTip.InitialDelay = 500;
-            this.helpTip.ReshowDelay = 100;
+            resources.ApplyResources(this.cbMaxPrecursorOnly, "cbMaxPrecursorOnly");
+            this.cbMaxPrecursorOnly.Name = "cbMaxPrecursorOnly";
+            this.cbMaxPrecursorOnly.UseVisualStyleBackColor = true;
             // 
             // RefineDlg
             // 
@@ -387,6 +396,7 @@
             this.MinimizeBox = false;
             this.Name = "RefineDlg";
             this.ShowInTaskbar = false;
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.tabControl1.ResumeLayout(false);
             this.tabDocument.ResumeLayout(false);
             this.tabDocument.PerformLayout();
@@ -443,5 +453,6 @@
         private System.Windows.Forms.TextBox textMinIdotProduct;
         private System.Windows.Forms.Label labelMinIdotProduct;
         private System.Windows.Forms.CheckBox cbRemovePeptidesMissingLibrary;
+        private System.Windows.Forms.CheckBox cbMaxPrecursorOnly;
     }
 }

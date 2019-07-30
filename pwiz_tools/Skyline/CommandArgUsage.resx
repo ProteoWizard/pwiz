@@ -202,7 +202,7 @@
     <value>Imports from a folder all files but not subfolders which are not already in the document, naming each with the base-name of the file, unless the --import-naming-pattern parameter is also supplied. If --import-replicate-name is supplied, then all files are added to one multi-injection replicate.</value>
   </data>
   <data name="_import_append" xml:space="preserve">
-    <value>Append the import-file to the given replicate. This is an intention check in case the document already has a replicate with the given name. By default this is set to false. This option only works with the –import-file option.</value>
+    <value>Append the import-file to the given replicate. This is an intention check in case the document already has a replicate with the given name. By default this is set to false. This option only works with the -–import-file option.</value>
   </data>
   <data name="_import_assay_library" xml:space="preserve">
     <value>Import an assay library transition list with columns for iRT and relative product ion abundance to create an iRT calculator and spectral library for enhanced peak picking.</value>
@@ -713,12 +713,15 @@ greater peak area.</value>
     <value>Refining the targets list based on imported results</value>
   </data>
   <data name="_tran_precursor_ion_charges" xml:space="preserve">
-    <value>A comman-separated list of precursor ion charge states to apply to peptide molecules to generate precursor targets. Changes the transition filter settings for the open document.</value>
+    <value>A comma-separated list of precursor ion charge states to apply to peptide molecules to generate precursor targets. Changes the transition filter settings for the open document.</value>
   </data>
   <data name="_tran_product_ion_charges" xml:space="preserve">
-    <value>A comman-separated list of product ion charge states to apply to peptide fragments to generate product ion transitions. Changes the transition filter settings for the open document.</value>
+    <value>A comma-separated list of product ion charge states to apply to peptide fragments to generate product ion transitions. Changes the transition filter settings for the open document.</value>
   </data>
   <data name="_tran_product_ion_types" xml:space="preserve">
-    <value>A comman-separated list of product ion types expected in peptide fragmentation to generate product ion transitions. Changes the transition filter settings for the open document.</value>
+    <value>A comma-separated list of product ion types expected in peptide fragmentation to generate product ion transitions. Changes the transition filter settings for the open document.</value>
+  </data>
+  <data name="_refine_max_precursor_only" xml:space="preserve">
+    <value>Only the precursor charge state with the maximum peak area will be retained.</value>
   </data>
 </root>

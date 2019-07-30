@@ -557,10 +557,11 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public static TransitionDocNode FromTransitionProto(StringPool stringPool, SrmSettings settings,
+        public static TransitionDocNode FromTransitionProto(AnnotationScrubber scrubber, SrmSettings settings,
             TransitionGroup group, ExplicitMods mods, IsotopeDistInfo isotopeDist, ExplicitTransitionValues pre422ExplicitTransitionValues,
             SkylineDocumentProto.Types.Transition transitionProto)
         {
+            var stringPool = scrubber.StringPool;
             IonType ionType = DataValues.FromIonType(transitionProto.FragmentType);
             MeasuredIon measuredIon = null;
             if (transitionProto.MeasuredIonName != null)
@@ -631,8 +632,8 @@ namespace pwiz.Skyline.Model
             {
                 libInfo = new TransitionLibInfo(transitionProto.LibInfo.Rank, transitionProto.LibInfo.Intensity);
             }
-            var annotations = Annotations.FromProtoAnnotations(stringPool, transitionProto.Annotations);
-            var results = TransitionChromInfo.FromProtoTransitionResults(stringPool, settings, transitionProto.Results);
+            var annotations = scrubber.ScrubAnnotations(Annotations.FromProtoAnnotations(transitionProto.Annotations), AnnotationDef.AnnotationTarget.transition);
+            var results = TransitionChromInfo.FromProtoTransitionResults(scrubber, settings, transitionProto.Results);
             var explicitTransitionValues = pre422ExplicitTransitionValues ?? ExplicitTransitionValues.Create(
                 DataValues.FromOptional(transitionProto.ExplicitCollisionEnergy),
                 DataValues.FromOptional(transitionProto.ExplicitIonMobilityHighEnergyOffset),

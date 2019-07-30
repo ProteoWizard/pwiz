@@ -334,10 +334,10 @@ Extra Info: 文件名称 =
 在文件中添加单次注射重复测定 = 真,
 要同步导入的文件 = "许多个"
 
-Undo Redo : 已在重复测定“silac_1_to_4”中从 YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > V [y4] - 504.2664+ (排名 3) 删除峰
-Summary   : 已在重复测定“silac_1_to_4”中从 YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > V [y4] - 504.2664+ (排名 3) 删除峰
+Undo Redo : 从复制“silac_1_to_4”中删除了YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > V [y4] - 504.2664+ (排名 3)的峰值
+Summary   : 从复制“silac_1_to_4”中删除了YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > V [y4] - 504.2664+ (排名 3)的峰值
 All Info  :
-已在重复测定“silac_1_to_4”中从 YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > V [y4] - 504.2664+ (排名 3) 删除峰
+从复制“silac_1_to_4”中删除了YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > V [y4] - 504.2664+ (排名 3)的峰值
 
 Undo Redo : 已更改 YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ 的峰界限
 Summary   : 已更改 YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ 的峰界限
@@ -487,20 +487,20 @@ Extra Info: 文件名称 =
 要同步导入的文件 = "许多个",
 已删除前缀 = "7_3_"
 
-Undo Redo : 已将峰 CRP > ESDTSYVSLK > 568.7817++ (heavy) 应用于所有
-Summary   : 已将峰 CRP > ESDTSYVSLK > 568.7817++ (heavy) 应用于所有
+Undo Redo : 应用所有峰值CRP > ESDTSYVSLK > 568.7817++ (heavy)
+Summary   : 应用所有峰值CRP > ESDTSYVSLK > 568.7817++ (heavy)
 All Info  :
-已将峰 CRP > ESDTSYVSLK > 568.7817++ (heavy) 应用于所有
+应用所有峰值CRP > ESDTSYVSLK > 568.7817++ (heavy)
 
-Undo Redo : 已将峰 CRP > ESDTSYVSLK > 564.7746++ 应用于所有
-Summary   : 已将峰 CRP > ESDTSYVSLK > 564.7746++ 应用于所有
+Undo Redo : 应用所有峰值CRP > ESDTSYVSLK > 564.7746++
+Summary   : 应用所有峰值CRP > ESDTSYVSLK > 564.7746++
 All Info  :
-已将峰 CRP > ESDTSYVSLK > 564.7746++ 应用于所有
+应用所有峰值CRP > ESDTSYVSLK > 564.7746++
 
-Undo Redo : 已将峰 CRP > ESDTSYVSLK > 568.7817++ (heavy) 应用于所有
-Summary   : 已将峰 CRP > ESDTSYVSLK > 568.7817++ (heavy) 应用于所有
+Undo Redo : 应用所有峰值CRP > ESDTSYVSLK > 568.7817++ (heavy)
+Summary   : 应用所有峰值CRP > ESDTSYVSLK > 568.7817++ (heavy)
 All Info  :
-已将峰 CRP > ESDTSYVSLK > 568.7817++ (heavy) 应用于所有
+应用所有峰值CRP > ESDTSYVSLK > 568.7817++ (heavy)
 
 Undo Redo : 已删除目标 CRP > ESDTSYVSLK > 568.7817++ (heavy)
 Summary   : 已删除目标 CRP > ESDTSYVSLK > 568.7817++ (heavy)

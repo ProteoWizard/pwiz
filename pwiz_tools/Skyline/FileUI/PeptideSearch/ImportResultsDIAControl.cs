@@ -63,9 +63,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public string Prefix { get; set; }
         public string Suffix { get; set; }
 
-        public List<ImportPeptideSearch.FoundResultsFile> FoundResultsFiles
+        public IList<ImportPeptideSearch.FoundResultsFile> FoundResultsFiles
         {
-            get { return _foundResultsFiles.ToList(); }
+            get { return _foundResultsFiles; }
             set
             {
                 var files = ImportResultsControl.EnsureUniqueNames(value); // May change names to ensure uniqueness
@@ -73,6 +73,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 listResultsFiles.DataSource = _foundResultsFiles;
             }
         }
+
+        public IEnumerable<string> MissingResultsFiles { get { yield break; } }
 
         public bool ResultsFilesMissing { get { return !_foundResultsFiles.Any(); } }
 

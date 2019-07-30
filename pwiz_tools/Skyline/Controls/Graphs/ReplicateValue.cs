@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
@@ -46,7 +47,7 @@ namespace pwiz.Skyline.Controls.Graphs
             return ChangeProp(ImClone(this), im => im.DisambiguateTitle = disambiguateTitle);
         }
 
-        public abstract object GetValue(ChromatogramSet chromatogramSet);
+        public abstract object GetValue(AnnotationCalculator annotationCalculator, ChromatogramSet chromatogramSet);
 
         protected abstract string DisambiguationPrefix { get; }
 
@@ -64,9 +65,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 get { return AnnotationDef.Name; }
             }
 
-            public override object GetValue(ChromatogramSet chromatogramSet)
+            public override object GetValue(AnnotationCalculator annotationCalculator, ChromatogramSet chromatogramSet)
             {
-                return chromatogramSet.Annotations.GetAnnotation(AnnotationDef);
+                return annotationCalculator.GetReplicateAnnotation(AnnotationDef, chromatogramSet);
             }
 
             public override string ToPersistedString()
@@ -97,7 +98,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 get { return _getLabelFunc(); }
             }
 
-            public override object GetValue(ChromatogramSet node)
+            public override object GetValue(AnnotationCalculator annotationCalculator, ChromatogramSet node)
             {
                 return _getValueFunc(node);
             }
@@ -133,10 +134,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 ()=>ColumnCaptions.SampleDilutionFactor, chromatogramSet=>chromatogramSet.SampleDilutionFactor);
         }
 
-        public static IEnumerable<ReplicateValue> GetGroupableReplicateValues(SrmSettings settings)
+        public static IEnumerable<ReplicateValue> GetGroupableReplicateValues(SrmDocument document)
         {
+            var settings = document.Settings;
+            var annotationCalculator = new AnnotationCalculator(document);
             var withDistinctValues = GetAllReplicateValues(settings)
-                .Where(replicateValue=>replicateValue is Annotation || HasDistinctValues(settings, replicateValue)).ToArray();
+                .Where(replicateValue=>replicateValue is Annotation || HasDistinctValues(annotationCalculator, replicateValue)).ToArray();
             var lookupByTitle = withDistinctValues.ToLookup(replicateValue => replicateValue.Title);
             foreach (var replicateValue in withDistinctValues)
             {
@@ -151,14 +154,15 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private static bool HasDistinctValues(SrmSettings settings, ReplicateValue replicateValue)
+        private static bool HasDistinctValues(AnnotationCalculator annotationCalculator, ReplicateValue replicateValue)
         {
+            var settings = annotationCalculator.SrmDocument.Settings;
             if (!settings.HasResults)
             {
                 return false;
             }
 
-            var values = settings.MeasuredResults.Chromatograms.Select(replicateValue.GetValue).Distinct().ToArray();
+            var values = settings.MeasuredResults.Chromatograms.Select(chromSet=>replicateValue.GetValue(annotationCalculator, chromSet)).Distinct().ToArray();
             return values.Length > 1;
         }
     }
