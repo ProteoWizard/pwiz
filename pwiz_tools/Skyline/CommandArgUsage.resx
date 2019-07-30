@@ -721,4 +721,7 @@ greater peak area.</value>
   <data name="_tran_product_ion_types" xml:space="preserve">
     <value>A comma-separated list of product ion types expected in peptide fragmentation to generate product ion transitions. Changes the transition filter settings for the open document.</value>
   </data>
+  <data name="_refine_max_precursor_only" xml:space="preserve">
+    <value>Only the precursor charge state with the maximum peak area will be retained.</value>
+  </data>
 </root>

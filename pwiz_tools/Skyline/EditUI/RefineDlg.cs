@@ -110,6 +110,12 @@ namespace pwiz.Skyline.EditUI
             set { cbPreferLarger.Checked = value; }
         }
 
+        public bool MaxPrecursorPeakOnly
+        {
+            get { return cbMaxPrecursorOnly.Checked; }
+            set { cbMaxPrecursorOnly.Checked = value; }
+        }
+
         public bool RemoveMissingResults
         {
             get { return radioRemoveMissing.Checked; }
@@ -216,6 +222,7 @@ namespace pwiz.Skyline.EditUI
                     return;
                 maxPepPeakRank = maxVal;
             }
+
             int? maxPeakRank = null;
             if (!string.IsNullOrEmpty(textMaxPeakRank.Text))
             {
@@ -268,6 +275,7 @@ namespace pwiz.Skyline.EditUI
                                          MinPeakFoundRatio = minPeakFoundRatio,
                                          MaxPeakFoundRatio = maxPeakFoundRatio,
                                          MaxPepPeakRank = maxPepPeakRank,
+                                         MaxPrecursorPeakOnly = cbMaxPrecursorOnly.Checked,
                                          MaxPeakRank = maxPeakRank,
                                          PreferLargeIons = cbPreferLarger.Checked,
                                          RemoveMissingResults = removeMissingResults,

@@ -4598,7 +4598,7 @@ namespace pwiz.Skyline
         private int AddReplicateOrderAndGroupByMenuItems(ToolStrip menuStrip, int iInsert)
         {
             string currentGroupBy = SummaryReplicateGraphPane.GroupByReplicateAnnotation;
-            var groupByValues = ReplicateValue.GetGroupableReplicateValues(DocumentUI.Settings).ToArray();
+            var groupByValues = ReplicateValue.GetGroupableReplicateValues(DocumentUI).ToArray();
             if (groupByValues.Length == 0)
                 currentGroupBy = null;
 

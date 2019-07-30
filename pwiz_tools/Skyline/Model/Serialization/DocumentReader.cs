@@ -41,6 +41,7 @@ namespace pwiz.Skyline.Model.Serialization
     public class DocumentReader : DocumentSerializer
     {
         private readonly StringPool _stringPool = new StringPool();
+        private AnnotationScrubber _annotationScrubber;
         public DocumentFormat FormatVersion { get; private set; }
         public PeptideGroupDocNode[] Children { get; private set; }
 
@@ -51,6 +52,8 @@ namespace pwiz.Skyline.Model.Serialization
         /// so our current C12H5[M+2H] would have been C12H7 - this requires special handling on read
         /// </summary>
         public bool DocumentMayContainMoleculesWithEmbeddedIons { get { return FormatVersion <= DocumentFormat.VERSION_3_71; } }
+
+        public bool RemoveCalculatedAnnotationValues { get; set; } = true;
 
         /// <summary>
         /// Avoids duplication of species strings
@@ -127,7 +130,7 @@ namespace pwiz.Skyline.Model.Serialization
             if (!reader.IsEmptyElement)
             {
                 reader.ReadStartElement();
-                annotations = ReadAnnotations(reader, _stringPool);
+                annotations = ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.precursor_result);
                 // Convert q value and mProphet score annotations to numbers for the ChromInfo object
                 annotations = ReadAndRemoveScoreAnnotation(annotations, MProphetResultsHandler.AnnotationName, ref qvalue);
                 annotations = ReadAndRemoveScoreAnnotation(annotations, MProphetResultsHandler.MAnnotationName, ref zscore);
@@ -183,13 +186,18 @@ namespace pwiz.Skyline.Model.Serialization
             return annotations.RemoveAnnotation(annotationName);
         }
 
+        public Annotations ReadTargetAnnotations(XmlReader reader, AnnotationDef.AnnotationTarget target)
+        {
+            var annotations = ReadAnnotations(reader);
+            return _annotationScrubber.ScrubAnnotations(annotations, target);
+        }
+
         /// <summary>
-        /// Reads annotations without ensuring that they use a single unique key string. This
-        /// is currently only used for <see cref="ChromatogramSet"/>, because it is difficult to
-        /// get it to use the version with a non-null context and the possible level of repetition
-        /// is much smaller than with the document nodes and results objects.
+        /// Reads annotations from XML. The annotations should later be passed through
+        /// <see cref="AnnotationScrubber.ScrubAnnotations"/> to ensure that the keys use a single
+        /// string object and also that calculated annotations are removed.
         /// </summary>
-        private static Annotations ReadAnnotations(XmlReader reader, StringPool stringPool)
+        public static Annotations ReadAnnotations(XmlReader reader)
         {
             string note = null;
             int color = Annotations.EMPTY.ColorIndex;
@@ -205,19 +213,12 @@ namespace pwiz.Skyline.Model.Serialization
                 string name = reader.GetAttribute(ATTR.name);
                 if (name == null)
                     throw new InvalidDataException(Resources.SrmDocument_ReadAnnotations_Annotation_found_without_name);
-                if (stringPool != null)
-                    name = stringPool.GetString(name);
                 annotations[name] = reader.ReadElementString();
             }
 
             return note != null || annotations.Count > 0
                 ? new Annotations(note, annotations, color)
                 : Annotations.EMPTY;
-        }
-
-        public static Annotations ReadAnnotations(XmlReader reader)
-        {
-            return ReadAnnotations(reader, null);
         }
 
         /// <summary>
@@ -290,7 +291,7 @@ namespace pwiz.Skyline.Model.Serialization
                 else
                 {
                     reader.ReadStartElement();
-                    Annotations = ReadAnnotations(reader, _documentReader._stringPool); // This is reliably first in all versions
+                    Annotations = _documentReader.ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.transition); // This is reliably first in all versions
                     while (reader.IsStartElement())
                     {  // The order of these elements may depend on the version of the file being read
                         if (reader.IsStartElement(EL.losses))
@@ -373,7 +374,7 @@ namespace pwiz.Skyline.Model.Serialization
                     byte[] data = Convert.FromBase64String(strContent);
                     var protoTransitionResults = new SkylineDocumentProto.Types.TransitionResults();
                     protoTransitionResults.MergeFrom(data);
-                    return TransitionChromInfo.FromProtoTransitionResults(_documentReader._stringPool, Settings, protoTransitionResults);
+                    return TransitionChromInfo.FromProtoTransitionResults(_documentReader._annotationScrubber, Settings, protoTransitionResults);
                 }
                 if (reader.IsStartElement(EL.transition_results))
                     return _documentReader.ReadResults(reader, EL.transition_peak, ReadTransitionPeak);
@@ -419,7 +420,7 @@ namespace pwiz.Skyline.Model.Serialization
                 if (!reader.IsEmptyElement)
                 {
                     reader.ReadStartElement();
-                    annotations = ReadAnnotations(reader, _documentReader._stringPool);
+                    annotations = _documentReader.ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.transition_result);
                 }
                 int countRatios = _documentReader.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count;
                 return new TransitionChromInfo(fileInfo.FileId,
@@ -532,8 +533,11 @@ namespace pwiz.Skyline.Model.Serialization
             }
 
             reader.ReadStartElement();  // Start document element
-            Settings = reader.DeserializeElement<SrmSettings>() ?? SrmSettingsList.GetDefault();
-
+            var srmSettings = reader.DeserializeElement<SrmSettings>() ?? SrmSettingsList.GetDefault();
+            _annotationScrubber = AnnotationScrubber.MakeAnnotationScrubber(_stringPool, srmSettings.DataSettings, RemoveCalculatedAnnotationValues);
+            srmSettings = _annotationScrubber.ScrubSrmSettings(srmSettings);
+            Settings = srmSettings;
+            
             if (reader.IsStartElement())
             {
                 // Support v0.1 naming
@@ -609,7 +613,7 @@ namespace pwiz.Skyline.Model.Serialization
 
             reader.ReadStartElement();
 
-            var annotations = ReadAnnotations(reader, _stringPool);
+            var annotations = ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.protein);
 
             ProteinMetadata[] alternatives;
             if (!reader.IsStartElement(EL.alternatives) || reader.IsEmptyElement)
@@ -728,7 +732,7 @@ namespace pwiz.Skyline.Model.Serialization
             else
             {
                 reader.ReadStartElement();
-                annotations = ReadAnnotations(reader, _stringPool);
+                annotations = ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.protein);
 
                 if (!reader.IsStartElement(EL.selected_peptides))
                     children = ReadPeptideListXml(reader, group);
@@ -879,7 +883,7 @@ namespace pwiz.Skyline.Model.Serialization
                 }
                 reader.ReadStartElement();
                 if (reader.IsStartElement())
-                    annotations = ReadAnnotations(reader, _stringPool);
+                    annotations = ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.peptide);
                 if (!isCustomMolecule)
                 {
                     mods = ReadExplicitMods(reader, peptide);
@@ -1117,7 +1121,7 @@ namespace pwiz.Skyline.Model.Serialization
             else
             {
                 reader.ReadStartElement();
-                var annotations = ReadAnnotations(reader, _stringPool);
+                var annotations = ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.precursor);
                 var libInfo = ReadTransitionGroupLibInfo(reader);
                 var results = ReadTransitionGroupResults(reader);
 
@@ -1255,7 +1259,7 @@ namespace pwiz.Skyline.Model.Serialization
                 transitionData.MergeFrom(data);
                 foreach (var transitionProto in transitionData.Transitions)
                 {
-                    list.Add(TransitionDocNode.FromTransitionProto(_stringPool, Settings, group, mods, isotopeDist, pre422ExplicitTransitionValues, transitionProto));
+                    list.Add(TransitionDocNode.FromTransitionProto(_annotationScrubber, Settings, group, mods, isotopeDist, pre422ExplicitTransitionValues, transitionProto));
                 }
             }
             else
