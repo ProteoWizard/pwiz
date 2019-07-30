@@ -71,5 +71,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get { return DocumentRef.PROTOTYPE; }
         }
+
+        protected override Type SkylineDocNodeType
+        {
+            get { return typeof(SkylineDocument); }
+        }
     }
 }

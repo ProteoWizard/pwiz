@@ -258,6 +258,16 @@ void MaxQuantReader::initFixedModifications()
         return;
     }
 
+    // HACK: if mqpar analyzed WIFF file, use index lookup, else use scan number
+    if (!preferEmbeddedSpectra_)
+    {
+        string mqparXml = pwiz::util::read_file_header(mqparFile, bfs::file_size(mqparFile));
+        if (mqparXml.find(".wiff</string>") != string::npos || mqparXml.find(".wiff2</string>") != string::npos)
+            lookUpBy_ = INDEX_ID;
+        else
+            lookUpBy_ = SCAN_NUM_ID;
+    }
+
     // initialize fixed mod vectors for supported positions
     fixedModBank_[MaxQuantModification::ANYWHERE].clear();
     fixedModBank_[MaxQuantModification::ANY_N_TERM].clear();
@@ -382,7 +392,6 @@ bool MaxQuantReader::parseFile()
                     throw BlibException(e.hasFilename(), "%s; run with the -E flag to allow MaxQuant to use deisotoped/deconvoluted embedded spectra", e.what());
                 throw e;
             }
-            lookUpBy_ = INDEX_ID;
         }
 
         buildTables(MAXQUANT_SCORE, filePsmListPair.first, false);

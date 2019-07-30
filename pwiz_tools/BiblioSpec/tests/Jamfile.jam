@@ -28,6 +28,7 @@ import sequence ;
 project 
   : requirements
       <link>static
+      <preserve-test-targets>on # necessary because ExecuteBlib.obj is shared between tests
 ;
 
 # extract the input files for the tests
@@ -250,7 +251,8 @@ blib-test-build maxquant-phospho : -o -E : output/maxquant-phospho.blib : maxqua
 blib-test-build maxquant3 : -o -E -p@$(TEST_DATA_PATH)/test-mq3-mqpar.xml -x@$(TEST_DATA_PATH)/test-mq3-modifications.local.xml : output/maxquant3.blib : maxquant3.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test-mq3-msms.txt ;
 
 # Test maxquant text file reading spectra from mzML
-#blib-test-build maxquant-rpal-mzml : -o -p@$(TEST_DATA_PATH)/rpal-orbi-mqpar.xml : output/maxquant-rpal-mzml.blib : maxquant-rpal-mzml.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/rpal-orbi-mq-msms.txt ;
+blib-test-build maxquant-rpal-raw : -o -p@$(TEST_DATA_PATH)/rpal-raw-mqpar.xml : output/maxquant-rpal-raw.blib : maxquant-rpal-raw.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/rpal-raw-msms.txt ;
+blib-test-build maxquant-bsa-baf : -o -p@$(TEST_DATA_PATH)/bsa-baf-mqpar.xml : output/maxquant-bsa-baf.blib : maxquant-bsa-baf.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/bsa-baf-msms.txt ;
 blib-test-build maxquant-yeast-wiff : -o -p@$(TEST_DATA_PATH)/yeast-wiff-mqpar.xml : output/maxquant-yeast-wiff.blib : maxquant-yeast-wiff.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/yeast-wiff-msms.txt ;
 blib-test-build maxquant-yeast-wiff-i18n : -o -p@$(TEST_DATA_PATH)/yeast-wiff-试验-mqpar.xml : output/maxquant-yeast-wiff-i18n.blib : maxquant-yeast-wiff-i18n.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/yeast-wiff-试验-msms.txt ;
 

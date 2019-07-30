@@ -643,9 +643,13 @@ namespace pwiz.Skyline
         {
             var setSeenEntries = GetSeenAuditLogEntries();
             var docBefore = Document;
+            if (!docBefore.Settings.DataSettings.AuditLogging)
+                _doc = AuditLogList.ToggleAuditLogging(_doc, true);
             ModifyDocument(act, logFunc);
             LogNewEntries(Document.AuditLog.AuditLogEntries, setSeenEntries);
             LogDocumentDelta(docBefore, Document);
+            if (!docBefore.Settings.DataSettings.AuditLogging)
+                _doc = AuditLogList.ToggleAuditLogging(_doc, false);
         }
 
         private bool SetFilterSettings(CommandArgs commandArgs)
