@@ -89,7 +89,64 @@ namespace pwiz.Skyline.EditUI
             {
                 labelMinIdotProduct.Enabled = textMinIdotProduct.Enabled = groupLibCorr.Enabled = true;
             }
+
+            // Consistency tab
+            
+//            var enabled = _settings.PeptideSettings.Integration.PeakScoringModel.IsTrained;
+//            if (enabled)
+//                textBoxQVal.Text = ValueOrEmpty(Settings.Default.AreaCVQValueCutoff);
+//
+//            if (!double.IsNaN(Settings.Default.AreaCVQValueCutoff))
+//                textBoxQVal.Text = Settings.Default.AreaCVQValueCutoff.ToString(LocalizationHelper.CurrentCulture);
+//
+//            var detectionsAvailablePrev = numericUpDownDetections.Enabled;
+//            var detectionsAvailable = AreaGraphController.ShouldUseQValues(_document);
+//            numericUpDownDetections.Enabled = detectionsAvailable;
+//
+//            if (detectionsAvailable)
+//            {
+//                numericUpDownDetections.Minimum = 2;
+//                numericUpDownDetections.Maximum = _document.MeasuredResults.Chromatograms.Count;
+//
+//                if (!detectionsAvailablePrev)
+//                {
+//                    numericUpDownDetections.Value = 2;
+//                }
+//            }
+//
+//            var mods = _document.Settings.PeptideSettings.Modifications;
+//            var standardTypes = mods.RatioInternalStandardTypes;
+//
+//            comboBoxNormalize.Items.Clear();
+//            _standardTypeCount = 0;
+//
+//            if (mods.HasHeavyModifications)
+//            {
+//                comboBoxNormalize.Items.AddRange(standardTypes.Select((s) => s.Title).ToArray());
+//                _standardTypeCount = standardTypes.Count;
+//            }
+//
+//            var hasGlobalStandard = _document.Settings.HasGlobalStandardArea;
+//            if (hasGlobalStandard)
+//                comboBoxNormalize.Items.Add(Resources.AreaCVToolbar_UpdateUI_Global_standards);
+//            comboBoxNormalize.Items.Add(Resources.AreaCVToolbar_UpdateUI_Medians);
+//            comboBoxNormalize.Items.Add(Resources.AreaCVToolbar_UpdateUI_None);
+//
+//            if (AreaGraphController.NormalizationMethod == AreaCVNormalizationMethod.ratio)
+//                comboBoxNormalize.SelectedIndex = AreaGraphController.AreaCVRatioIndex;
+//            else
+//            {
+//                var index = _standardTypeCount + (int)AreaGraphController.NormalizationMethod;
+//                if (!hasGlobalStandard)
+//                    --index;
+//                comboBoxNormalize.SelectedIndex = index;
+//            }
         }
+
+//        private string ValueOrEmpty(double value)
+//        {
+//            return double.IsNaN(value) ? string.Empty : value.ToString(CultureInfo.CurrentUICulture);
+//        }
 
         protected override void OnShown(EventArgs e)
         {
@@ -132,6 +189,12 @@ namespace pwiz.Skyline.EditUI
         {
             get { return Convert.ToDouble(textMinDotProduct.Text); }
             set { textMinDotProduct.Text = value.ToString(LocalizationHelper.CurrentCulture); }
+        }
+
+        public int CVCutoff
+        {
+            get { return Convert.ToInt32(textCVCutoff.Text); }
+            set { textCVCutoff.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
         public IsotopeLabelType RefineLabelType
@@ -263,6 +326,16 @@ namespace pwiz.Skyline.EditUI
 
             bool useBestResult = comboReplicateUse.SelectedIndex > 0;
 
+            double? cvCutoff = null;
+            if (!string.IsNullOrEmpty(textCVCutoff.Text))
+            {
+                double cutoffVal;
+                if (!helper.ValidateDecimalTextBox(textCVCutoff, 0, null, out cutoffVal))
+                    return;
+                cvCutoff = cutoffVal;
+                Settings.Default.AreaCVCVCutoff = cvCutoff.Value;
+            }
+
             RefinementSettings = new RefinementSettings
                                      {
                                          MinPeptidesPerProtein = minPeptidesPerProtein,
@@ -285,7 +358,8 @@ namespace pwiz.Skyline.EditUI
                                          UseBestResult = useBestResult,
                                          AutoPickChildrenAll = (cbAutoPeptides.Checked ? PickLevel.peptides : 0) |
                                                                (cbAutoPrecursors.Checked ? PickLevel.precursors : 0) |
-                                                               (cbAutoTransitions.Checked ? PickLevel.transitions : 0)
+                                                               (cbAutoTransitions.Checked ? PickLevel.transitions : 0),
+                                         CVCutoff = cvCutoff
                                      };
 
             DialogResult = DialogResult.OK;

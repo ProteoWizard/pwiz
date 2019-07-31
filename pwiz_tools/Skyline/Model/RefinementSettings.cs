@@ -189,6 +189,10 @@ namespace pwiz.Skyline.Model
 
         public enum ReplicateInclusion { all, best }
 
+        // Consistency
+        [Track]
+        public double? CVCutoff { get; set; }
+
         public SrmDocument Refine(SrmDocument document)
         {
             return Refine(document, null);
@@ -296,8 +300,15 @@ namespace pwiz.Skyline.Model
 
                 listPepGroups = listPepGroupsFiltered;                
             }
+            var refined = (SrmDocument)document.ChangeChildrenChecked(listPepGroups.ToArray(), true);
+            if (CVCutoff.HasValue)
+            {
+                AreaCVRefinementData data = new AreaCVRefinementData(refined);
+                refined = data.RemoveAboveCVCuttoff(refined);
+            }
 
-            return (SrmDocument) document.ChangeChildrenChecked(listPepGroups.ToArray(), true);
+            return refined;
+//            return (SrmDocument) document.ChangeChildrenChecked(listPepGroups.ToArray(), true);
         }
 
         private string GetAcceptProteinKey(PeptideGroupDocNode nodePepGroup)

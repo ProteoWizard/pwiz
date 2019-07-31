@@ -338,6 +338,7 @@
     <Compile Include="Controls\DocumentChangeLogEntryDlg.Designer.cs">
       <DependentUpon>DocumentChangeLogEntryDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Model\AreaCVRefinementData.cs" />
     <Compile Include="Model\AuditLog\AuditLogObject.cs" />
     <Compile Include="Model\AuditLog\AuditLogToStringHelper.cs" />
     <Compile Include="Model\AuditLog\BlockHash.cs" />

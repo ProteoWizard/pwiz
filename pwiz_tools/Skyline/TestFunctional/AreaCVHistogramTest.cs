@@ -26,6 +26,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls;
 using pwiz.SkylineTestUtil;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
@@ -212,6 +213,16 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(SkylineWindow.Undo);
 
+            WaitForHistogramBarCount(histogramInfo, itemCount);
+
+            // Verify cv cutoff refinement works
+            RefineDlg refineDlg = ShowDialog<RefineDlg>(()=>SkylineWindow.ShowRefineDlg());
+            RunUI(() => { refineDlg.CVCutoff = 20; });
+            OkDialog(refineDlg, () => refineDlg.OkDialog());
+
+            expectedBars = itemCount - GetItemsAboveCutoff(statsStartIndex);
+            WaitForHistogramBarCount(histogramInfo, expectedBars);
+            RunUI(SkylineWindow.Undo);
             WaitForHistogramBarCount(histogramInfo, itemCount);
 
             // Test if the data is correct after changing the bin width and disabling the show cv cutoff option (which affects GetTotalBars)
