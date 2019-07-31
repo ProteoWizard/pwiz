@@ -2158,6 +2158,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Peptide Uniqueness.
+        /// </summary>
+        public static string PeptideFilter_PeptideUniqueness {
+            get {
+                return ResourceManager.GetString("PeptideFilter_PeptideUniqueness", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Sequence.
         /// </summary>
         public static string PeptideGroupDocNode_Sequence {
