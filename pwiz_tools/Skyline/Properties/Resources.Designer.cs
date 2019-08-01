@@ -10682,6 +10682,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to --&gt;.
+        /// </summary>
+        public static string ExceptionDialog_InnerException {
+            get {
+                return ResourceManager.GetString("ExceptionDialog_InnerException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Caused by ---&gt;.
+        /// </summary>
+        public static string ExceptionDialog_NestedExceptionSeparator {
+            get {
+                return ResourceManager.GetString("ExceptionDialog_NestedExceptionSeparator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap ExistingQuant_thumb {

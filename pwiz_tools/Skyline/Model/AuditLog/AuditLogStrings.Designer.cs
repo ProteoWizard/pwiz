@@ -392,7 +392,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Audit log is corrupted. Audit log entry time stamps and indices should be decreasing.
+        ///   Looks up a localized string similar to Audit log is corrupted. Audit log entry time stamps and indices should be decreasing. Entry timestamp {0:G}, entry order number {1}..
         /// </summary>
         public static string AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing {
             get {

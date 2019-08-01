@@ -143,7 +143,7 @@ namespace pwiz.Skyline.Model.AuditLog
             foreach (var entry in AuditLogEntries.Enumerate())
             {
                 Assume.IsTrue(entry.TimeStampUTC <= time && entry.LogIndex > logIndex,
-                    AuditLogStrings.AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing);
+                    string.Format(AuditLogStrings.AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing, entry.TimeStampUTC, entry.LogIndex.ToString()));
 
                 time = entry.TimeStampUTC;
                 logIndex = entry.LogIndex;
@@ -206,10 +206,31 @@ namespace pwiz.Skyline.Model.AuditLog
             {
                 using (var alert = new AlertDlg())
                 {
-                    alert.Message = string.Format(
-                        AuditLogStrings.AuditLogList_ReadFromFile_An_exception_occured_while_reading_the_audit_log,
-                        fileName);
-                    alert.DetailMessage = ex.StackTrace;
+                    Exception exception = ex;
+                    StringBuilder msgBuilder = new StringBuilder("");
+                    List<string> stackList = new List<string>();
+
+
+                    do
+                    {
+                        if (msgBuilder.Length > 0)
+                        {
+                            msgBuilder.Append(Resources.ExceptionDialog_InnerException);
+                            stackList.Add(Resources.ExceptionDialog_NestedExceptionSeparator);
+                        }
+                        msgBuilder.Append(exception.Message);
+                        stackList.Add(exception.Message);
+                        stackList.Add(exception.StackTrace);
+                        exception = exception.InnerException;
+                    } while (exception != null);
+
+                    alert.Message = TextUtil.LineSeparate(
+                        string.Format(
+                            AuditLogStrings.AuditLogList_ReadFromFile_An_exception_occured_while_reading_the_audit_log,
+                            fileName),
+                        msgBuilder.ToString());
+
+                    alert.DetailMessage = TextUtil.LineSeparate(stackList);
                     alert.AddMessageBoxButtons(MessageBoxButtons.OK);
                     alert.ShowParentlessDialog();
                 }
