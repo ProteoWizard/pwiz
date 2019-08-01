@@ -568,6 +568,7 @@
           <xs:attribute name="analyte_concentration" type="xs:double" />
           <xs:attribute name="has_midas_spectra" type="xs:boolean" />
           <xs:attribute name="sample_dilution_factor" type="xs:double"/>
+          <xs:attribute name="batch_name" type="xs:string"/>
         </xs:complexType>
       </xs:element>
     </xs:sequence>
