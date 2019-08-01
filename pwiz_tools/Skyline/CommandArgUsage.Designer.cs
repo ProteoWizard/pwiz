@@ -945,6 +945,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to All elements above the cv cutoff will be removed..
+        /// </summary>
+        internal static string _refine_remove_above_cv_cutoff {
+            get {
+                return ResourceManager.GetString("_refine_remove_above_cv_cutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to All peptides that are not unique within the document
         ///will be removed..
         /// </summary>

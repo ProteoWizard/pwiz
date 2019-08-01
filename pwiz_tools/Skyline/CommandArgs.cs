@@ -636,6 +636,9 @@ namespace pwiz.Skyline
             (c, p) => c.Refinement.IdotProductThreshold = p.ValueDouble);
         public static readonly Argument ARG_REFINE_USE_BEST_RESULT = new RefineArgument(@"refine-use-best-result",
             (c, p) => c.Refinement.UseBestResult = true);
+        // Refinement consistency tab
+        public static readonly Argument ARG_REFINE_REMOVE_ABOVE_CV_CUTOFF = new RefineArgument(@"refine-remove-above-cv-cutoff", NUM_VALUE,
+            (c,p) => c.Refinement.CVCutoff = p.ValueDouble);
 
         private static readonly ArgumentGroup GROUP_REFINEMENT = new ArgumentGroup(
             () => CommandArgUsage.CommandArgs_GROUP_REFINEMENT, false,
@@ -650,7 +653,8 @@ namespace pwiz.Skyline
             ARG_REFINE_MAX_PEAK_RANK, ARG_REFINE_MAX_PRECURSOR_PEAK_ONLY,
             ARG_REFINE_PREFER_LARGER_PRODUCTS, ARG_REFINE_MISSING_RESULTS,
             ARG_REFINE_MIN_TIME_CORRELATION, ARG_REFINE_MIN_DOTP, ARG_REFINE_MIN_IDOTP,
-            ARG_REFINE_USE_BEST_RESULT);
+            ARG_REFINE_USE_BEST_RESULT, ARG_REFINE_REMOVE_ABOVE_CV_CUTOFF);
+        
 
         public RefinementSettings Refinement { get; private set; }
         public string RefinementLabelTypeName { get; private set; }   // Must store as string until document is instantiated

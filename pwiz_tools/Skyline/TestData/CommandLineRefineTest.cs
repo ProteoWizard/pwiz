@@ -237,6 +237,14 @@ namespace pwiz.SkylineTestData
             output = Run(CommandArgs.ARG_REFINE_MAX_PRECURSOR_PEAK_ONLY.ArgumentText);
             AssertEx.Contains(output, PropertyNames.RefinementSettings_MaxPrecursorPeakOnly);
             IsResultsState(OutPath, 3, 3, 27, output, true);
+
+            // Remove all elements above the cv cutoff
+            TestFilesDir = new TestFilesDir(TestContext, @"TestFunctional/AreaCVHistogramTest.zip");
+            DocumentPath = InitRefineDocument("Rat_plasma.sky", 48, 0, 125, 125, 721);
+            string cvCutoff = 20.ToString();
+            output = Run(CommandArgs.ARG_REFINE_REMOVE_ABOVE_CV_CUTOFF.GetArgumentTextWithValue(cvCutoff));
+            AssertEx.Contains(output, PropertyNames.RefinementSettings_CVCutoff);
+            IsDocumentState(OutPath, 48, 0, 3, 0, 3,18, output);
         }
 
 //        [TestMethod]

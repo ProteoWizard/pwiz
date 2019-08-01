@@ -2662,6 +2662,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Remove above cv cutoff.
+        /// </summary>
+        public static string RefinementSettings_CVCutoff {
+            get {
+                return ResourceManager.GetString("RefinementSettings_CVCutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Min dotp.
         /// </summary>
         public static string RefinementSettings_DotProductThreshold {

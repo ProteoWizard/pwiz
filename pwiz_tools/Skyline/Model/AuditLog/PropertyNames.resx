@@ -1418,4 +1418,7 @@
   <data name="PeptideFilter_PeptideUniqueness" xml:space="preserve">
     <value>Peptide Uniqueness</value>
   </data>
+  <data name="RefinementSettings_CVCutoff" xml:space="preserve">
+    <value>Remove above cv cutoff</value>
+  </data>
 </root>

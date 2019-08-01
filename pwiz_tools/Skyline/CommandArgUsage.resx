@@ -724,4 +724,7 @@ greater peak area.</value>
   <data name="_refine_max_precursor_only" xml:space="preserve">
     <value>Only the precursor charge state with the maximum peak area will be retained.</value>
   </data>
+  <data name="_refine_remove_above_cv_cutoff" xml:space="preserve">
+    <value>All elements above the cv cutoff will be removed.</value>
+  </data>
 </root>
