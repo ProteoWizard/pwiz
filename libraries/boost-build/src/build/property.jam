@@ -659,7 +659,14 @@ rule translate-paths ( properties * : path )
             local t ;
             for local v in $(values)
             {
-                t += [ path.root [ path.make $(v) ] $(path) ] ;
+                if $(p:G) = <dll-path> && [ MATCH ('\\$ORIGIN') : $(v) ]
+                {
+                    t += $(v) ;
+                }
+                else
+                {
+                    t += [ path.root [ path.make $(v) ] $(path) ] ;
+                }
             }
             t = $(t:J="&&") ;
             result += $(condition)$(t:TG=$(p:G)) ;
