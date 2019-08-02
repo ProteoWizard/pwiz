@@ -189,7 +189,7 @@ namespace pwiz.Skyline.Model.Results
             var dataFile = _spectra.Detach();
 
             // Start the second pass
-            _filter = new SpectrumFilter(_document, FileInfo.FilePath, _filter, _maxIonMobilityValue, _retentionTimePredictor, gce:_globalChromatogramExtractor);
+            _filter = new SpectrumFilter(_document, FileInfo.FilePath, _filter, _maxIonMobilityValue, _retentionTimePredictor, false, _globalChromatogramExtractor);
             _spectra = null;
             _isSrm = false;
 
@@ -360,9 +360,6 @@ namespace pwiz.Skyline.Model.Results
                 CompleteChromatograms(chromMaps);
             }
 
-            // TODO: how to prevent triggering this when all transitions are discarded (e.g. targets are positive but file is negative polarity)
-            //if (chromMaps.Where(map=>map.ChromSource != ChromSource.unknown).All(map=>map.Count == 0))
-            //    throw new NoFullScanDataException(FileInfo.FilePath);
         }
 
         private void AddChromCollector(int productFilterId, ChromCollector collector)
@@ -583,9 +580,12 @@ namespace pwiz.Skyline.Model.Results
             {
                 var statusId = _collectors.ReleaseChromatogram(id, _chromGroups, out timeIntensities);
                 extra = new ChromExtra(statusId, 0);
+                // Each chromatogram will be read only once!
+                _readChromatograms++;
             }
             else
             {
+                // BPC and TIC are extracted directly from the file's chromatograms
                 timeIntensities = new TimeIntensities(times, intensities, null, null);
                 extra = new ChromExtra(0, 0);
 
@@ -595,8 +595,6 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
-            // Each chromatogram will be read only once!
-            _readChromatograms++;
 
             UpdatePercentComplete();
             return timeIntensities.NumPoints > 0;
