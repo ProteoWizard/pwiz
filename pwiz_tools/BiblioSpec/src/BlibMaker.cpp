@@ -859,6 +859,115 @@ int BlibMaker::transferSpectrum(const char* schemaTmp,
     return spectraID;
 }
 
+int BlibMaker::transferSpectra(const char* schemaTmp,
+                               vector<pair<int, int>>& bestSpectraIdAndCount,
+                               int tableVersion)
+{
+    // create temp table for copies column
+    sql_stmt("CREATE TEMP TABLE TempSpectrumCopies (Id INTEGER PRIMARY KEY, copies INT)");
+    const char* insertSpectrumCopy = "INSERT INTO TempSpectrumCopies VALUES (?,?)";
+    sqlite3_stmt* insertSpectrumCopyStmt;
+    sqlite3_prepare(getDb(), insertSpectrumCopy, -1, &insertSpectrumCopyStmt, NULL);
+    for (const auto& idCopiesPair : bestSpectraIdAndCount)
+    {
+        sqlite3_bind_int(insertSpectrumCopyStmt, 1, idCopiesPair.first);
+        sqlite3_bind_int(insertSpectrumCopyStmt, 2, idCopiesPair.second);
+        if (sqlite3_step(insertSpectrumCopyStmt) != SQLITE_DONE)
+            throw BlibException(false, "Error inserting row into TempSpectrumCopies: %s", sqlite3_errmsg(getDb()));
+        else if (sqlite3_reset(insertSpectrumCopyStmt) != SQLITE_OK)
+            throw BlibException(false, "Error resetting insert TempSpectrumCopies: %s", sqlite3_errmsg(getDb()));
+    }
+    sqlite3_finalize(insertSpectrumCopyStmt);
+
+    // transfer spectra from source db to filtered db
+
+    // find out if the source library has the same columns as the new
+    string alternate_cols = "'0', '0', '0', '0', '0', '0', '0'";
+    if (tableVersion > 0) {
+        if (tableVersion == MIN_VERSION_IMS) {}
+        else if (tableVersion == MIN_VERSION_IMS_HEOFF) {}
+        else if (tableVersion == MIN_VERSION_CCS || tableVersion == MIN_VERSION_SMALL_MOL)
+        {
+        }
+        else if (tableVersion >= MIN_VERSION_IMS_UNITS)
+        {
+            alternate_cols = "ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType";
+            alternate_cols += SmallMolMetadata::sql_col_names_csv();
+            if (tableVersion >= MIN_VERSION_RT_BOUNDS) {
+                alternate_cols += ", startTime, endTime";
+            }
+        }
+        else
+            alternate_cols = "'0', '0', '0', '0', '', '', '', '', ''"; // Handle missing ion mobility and small molecule info
+        alternate_cols += ", retentionTime, specIDinFile, score, scoreType";
+    }
+
+    if (tableVersion >= MIN_VERSION_IMS && tableVersion <= MIN_VERSION_IMS_HEOFF) {
+        throw BlibException(false, "Best scoring mode not supported in BlibFilter for old BiblioSpec schemas.");
+    }
+    else if (tableVersion == MIN_VERSION_CCS) {
+        throw BlibException(false, "Best scoring mode not supported in BlibFilter for old BiblioSpec schemas.");
+    }
+    else if (tableVersion >= MIN_VERSION_RT_BOUNDS)
+    {
+        boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
+            "INSERT INTO RefSpectra(id, peptideSeq, precursorMZ, precursorCharge, "
+            "peptideModSeq, prevAA, nextAA, copies, numPeaks, fileID, "
+            "ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType%s, "
+            "startTime, endTime, retentionTime, specIDinFile, score, scoreType) "
+            "SELECT ref.id, peptideSeq, precursorMZ, precursorCharge, "
+            "peptideModSeq, prevAA, nextAA, tmp.copies, numPeaks, fileID, %s "
+            "FROM %s.RefSpectra ref "
+            "JOIN TempSpectrumCopies tmp ON ref.id=tmp.id "
+            "GROUP BY ref.id",
+            SmallMolMetadata::sql_col_names_csv().c_str(),
+            alternate_cols.c_str(), schemaTmp);
+        sql_stmt(zSql);
+    }
+    else
+    {
+        throw BlibException(false, "Best scoring mode not supported in BlibFilter for old BiblioSpec schemas.");
+    }
+
+    // transfer peaks
+    boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
+        "INSERT INTO RefSpectraPeaks(RefSpectraID,peakMZ,peakIntensity) "
+        "SELECT RefSpectraID, peakMZ, peakIntensity "
+        "FROM %s.RefSpectraPeaks peaks "
+        "WHERE peaks.RefSpectraID IN (SELECT id FROM RefSpectra)", schemaTmp);
+    sql_stmt(zSql);
+
+    // transfer modifications
+    boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
+        "INSERT INTO Modifications (RefSpectraID, position, mass) "
+        "SELECT RefSpectraID, position, mass "
+        "FROM %s.Modifications mods "
+        "WHERE mods.RefSpectraID IN (SELECT id FROM RefSpectra)", schemaTmp);
+    sql_stmt(zSql);
+
+    if (tableVersion >= MIN_VERSION_PEAK_ANNOT) {
+        // transfer peak annotations
+        boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
+            "INSERT INTO RefSpectraPeakAnnotations (RefSpectraID, peakIndex, name, formula, inchiKey, otherKeys, charge, adduct, comment, mzTheoretical, mzObserved) "
+            "SELECT RefSpectraID, peakIndex, name, formula, ann.inchiKey, ann.otherKeys, charge, adduct, comment, mzTheoretical, mzObserved "
+            "FROM %s.RefSpectraPeakAnnotations ann "
+            "WHERE ann.RefSpectraID IN (SELECT id FROM RefSpectra)", schemaTmp);
+        sql_stmt(zSql);
+    }
+
+    if (tableVersion >= MIN_VERSION_PROTEINS) {
+        // transfer proteins
+        boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
+            "INSERT INTO RefSpectraProteins (RefSpectraId, ProteinId) "
+            "SELECT RefSpectraID, ProteinId "
+            "FROM %s.RefSpectraProteins pro "
+            "WHERE pro.RefSpectraID IN (SELECT id FROM RefSpectra)", schemaTmp);
+        sql_stmt(zSql);
+    }
+
+    return 0;
+}
+
 void BlibMaker::transferModifications(const char* schemaTmp, 
                                       int spectraID, 
                                       int spectraTmpID)
@@ -892,36 +1001,12 @@ void BlibMaker::transferPeaks(const char* schemaTmp,
                               int spectraID, 
                               int spectraTmpID)
 {
-    typedef unsigned char Byte;
-
     boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
-            "SELECT RefSpectraID, peakMZ, peakIntensity "
+            "INSERT INTO RefSpectraPeaks(RefSpectraID,peakMZ,peakIntensity) "
+            "SELECT %d, peakMZ, peakIntensity "
             "FROM %s.RefSpectraPeaks "
-            "WHERE RefSpectraID=%d", schemaTmp, spectraTmpID);
-    smart_stmt pStmt;
-
-    int rc = sqlite3_prepare(db, zSql, -1, &pStmt, 0);
-
-    check_step(rc, pStmt, zSql, "Failed getting peaks.");
-
-    int numBytes1=sqlite3_column_bytes(pStmt,1);
-    Byte* comprM = (Byte*)sqlite3_column_blob(pStmt,1);
-    int numBytes2=sqlite3_column_bytes(pStmt,2);
-    Byte* comprI = (Byte*)sqlite3_column_blob(pStmt,2);
-
-    boost::log::aux::snprintf(zSql, ZSQLBUFLEN, "INSERT INTO RefSpectraPeaks VALUES(%d,?,?)", spectraID);
-    smart_stmt piStmt;
-    rc = sqlite3_prepare(db, zSql, -1, &piStmt, 0);
-
-    check_rc(rc, zSql, "Failed importing peaks.");
-
-    sqlite3_bind_blob(piStmt, 1, comprM, numBytes1, SQLITE_STATIC);
-    sqlite3_bind_blob(piStmt, 2, comprI, numBytes2, SQLITE_STATIC);
-
-    rc = sqlite3_step(piStmt);
-
-    if (rc != SQLITE_DONE)
-        fail_sql(rc, zSql, NULL, "Failed importing peaks.");
+            "WHERE RefSpectraID=%d", spectraID, schemaTmp, spectraTmpID);
+    sql_stmt(zSql);
 }
 
 void BlibMaker::transferPeakAnnotations(const char* schemaTmp,

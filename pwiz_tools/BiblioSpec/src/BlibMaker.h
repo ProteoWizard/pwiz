@@ -133,6 +133,9 @@ protected:
                          int spectraTmpID, 
                          int copies,
                          int tableVersion = 0);
+    int transferSpectra(const char* schemaTmp,
+                        vector<pair<int, int>>& bestSpectraIdAndCount,
+                        int tableVersion = 0);
     void transferModifications(const char* schemaTmp, int spectraID, int spectraTmpID);
     void transferPeaks(const char* schemaTmp, int spectraID, int spectraTmpID);
     void transferPeakAnnotations(const char* schemaTmp, int spectraID, int spectraTmpID);
