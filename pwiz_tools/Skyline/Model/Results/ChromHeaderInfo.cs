@@ -413,8 +413,10 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                if (Flags.HasFlag(FlagValues.extracted_base_peak)) return ChromExtractor.base_peak;
-                if (Flags.HasFlag(FlagValues.extracted_qc_trace)) return ChromExtractor.qc;
+                if (Flags.HasFlag(FlagValues.extracted_base_peak)) 
+                    return ChromExtractor.base_peak;
+                if (Flags.HasFlag(FlagValues.extracted_qc_trace)) 
+                    return ChromExtractor.qc;
                 return ChromExtractor.summed;
             }
         }

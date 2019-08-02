@@ -117,8 +117,10 @@ namespace pwiz.Skyline.Model.Results
             _dataFile = dataFile;
             IndexOffset = 0;
 
-            if (dataFile.ChromatogramCount > 0 && dataFile.GetChromatogramId(0, out int indexId) == TIC_CHROMATOGRAM_ID) TicChromatogramIndex = 0;
-            if (dataFile.ChromatogramCount > 1 && dataFile.GetChromatogramId(1, out int indexId2) == BPC_CHROMATOGRAM_ID) BpcChromatogramIndex = 1;
+            if (dataFile.ChromatogramCount > 0 && dataFile.GetChromatogramId(0, out int indexId) == TIC_CHROMATOGRAM_ID)
+                TicChromatogramIndex = 0;
+            if (dataFile.ChromatogramCount > 1 && dataFile.GetChromatogramId(1, out int indexId2) == BPC_CHROMATOGRAM_ID)
+                BpcChromatogramIndex = 1;
 
             QcTraceByIndex = new SortedDictionary<int, MsDataFileImpl.QcTrace>();
             foreach (var qcTrace in dataFile.GetQcTraces() ?? new List<MsDataFileImpl.QcTrace>())
@@ -141,8 +143,10 @@ namespace pwiz.Skyline.Model.Results
             get
             {
                 var result = new List<int>();
-                if (TicChromatogramIndex.HasValue) result.Add(TicChromatogramIndex.Value);
-                if (BpcChromatogramIndex.HasValue) result.Add(BpcChromatogramIndex.Value);
+                if (TicChromatogramIndex.HasValue)
+                    result.Add(TicChromatogramIndex.Value);
+                if (BpcChromatogramIndex.HasValue)
+                    result.Add(BpcChromatogramIndex.Value);
                 return result;
             }
         }
