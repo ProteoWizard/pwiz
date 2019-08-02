@@ -1146,10 +1146,11 @@ namespace pwiz.Skyline.Controls
     // ReSharper disable InconsistentNaming
     internal struct PAINTSTRUCT
 	{
-// ReSharper disable UnusedField.Compiler
+        // ReSharper disable UnusedField.Compiler
+#pragma warning disable 649
 		public IntPtr hdc;
-		public int fErase;
-		public Rectangle rcPaint;
+        public int fErase;
+        public Rectangle rcPaint;
 		public int fRestore;
 		public int fIncUpdate;
 		public int Reserved1;
@@ -1160,9 +1161,10 @@ namespace pwiz.Skyline.Controls
 		public int Reserved6;
 		public int Reserved7;
 		public int Reserved8;
+#pragma warning restore 649
 // ReSharper restore UnusedField.Compiler
     }
-	[StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential)]
 	internal struct POINT
 	{
 		public int x;

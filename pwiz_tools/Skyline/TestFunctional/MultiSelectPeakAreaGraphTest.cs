@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
@@ -63,10 +64,12 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 SkylineWindow.SelectAll();
+                Assert.AreEqual(6, SkylineWindow.SelectedNodes.Count(node => node is PeptideTreeNode));
                 SkylineWindow.ShowGraphPeakArea(true);
             });
             WaitForGraphs();
-            Assert.AreEqual(6, SkylineWindow.GraphPeakArea.CurveCount);
+            TryWaitForConditionUI(() => 6 == SkylineWindow.GraphPeakArea.CurveCount);   // Improve information from failing test
+            RunUI(() => Assert.AreEqual(6, SkylineWindow.GraphPeakArea.CurveCount));
 
             // Test selecting each node down to the peptide/precursor level
             foreach (var node in SkylineWindow.SequenceTree.Nodes)
@@ -85,15 +88,18 @@ namespace pwiz.SkylineTestFunctional
                         curveCount = 1;
                         break;
                 }
-                Assert.AreEqual(curveCount, SkylineWindow.GraphPeakArea.CurveCount);
-                SummaryReplicateGraphPane pane;
-                Assert.IsTrue(SkylineWindow.GraphPeakArea.TryGetGraphPane(out pane));
-                Assert.IsFalse(pane.Legend.IsVisible);
+                RunUI(() =>
+                {
+                    Assert.AreEqual(curveCount, SkylineWindow.GraphPeakArea.CurveCount);
+                    SummaryReplicateGraphPane pane;
+                    Assert.IsTrue(SkylineWindow.GraphPeakArea.TryGetGraphPane(out pane));
+                    Assert.IsFalse(pane.Legend.IsVisible);
+                });
                 // Select indavidual peptides
                 foreach (TreeNode peptide in peptideGroupTreeNode.Nodes)
                 {
                     SelectNode(peptide);
-                    Assert.AreNotEqual(0, SkylineWindow.GraphRetentionTime.CurveCount);
+                    RunUI(() => Assert.AreNotEqual(0, SkylineWindow.GraphRetentionTime.CurveCount));
                 }
             }
         }

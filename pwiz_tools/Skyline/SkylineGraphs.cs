@@ -1010,7 +1010,7 @@ namespace pwiz.Skyline
 
             var selectedTreeNode = SelectedNode as SrmTreeNode;
             var displayType = GraphChromatogram.GetDisplayType(DocumentUI, selectedTreeNode);
-            if (displayType == DisplayTypeChrom.base_peak || displayType == DisplayTypeChrom.tic)
+            if (displayType == DisplayTypeChrom.base_peak || displayType == DisplayTypeChrom.tic || displayType == DisplayTypeChrom.qc)
                 return;
             ChromFileInfoId chromFileInfoId = GetSelectedChromFileId();
 
@@ -1702,6 +1702,7 @@ namespace pwiz.Skyline
                     toolStripSeparatorTran,
                     basePeakContextMenuItem,
                     ticContextMenuItem,
+                    qcContextMenuItem,
                     toolStripSeparatorOnlyQuantitative,
                     onlyQuantitativeContextMenuItem,
                     toolStripSeparatorSplitGraph,
@@ -1913,12 +1914,44 @@ namespace pwiz.Skyline
                 basePeakContextMenuItem.Visible =
                 ticMenuItem.Visible =
                 ticContextMenuItem.Visible =
+                qcMenuItem.Visible =
+                qcContextMenuItem.Visible =
                 toolStripSeparatorTranMain.Visible =
                 toolStripSeparatorTran.Visible = showAllIonsOptions;
 
             if (!showAllIonsOptions &&
-                    (displayType == DisplayTypeChrom.base_peak || displayType == DisplayTypeChrom.tic))
+                    (displayType == DisplayTypeChrom.base_peak || displayType == DisplayTypeChrom.tic || displayType == DisplayTypeChrom.qc))
                 displayType = DisplayTypeChrom.all;
+
+            if (showAllIonsOptions)
+            {
+                qcMenuItem.DropDownItems.Clear();
+                qcContextMenuItem.DropDownItems.Clear();
+                var qcTraceNames = DocumentUI.MeasuredResults.QcTraceNames.ToList();
+                if (qcTraceNames.Count > 0)
+                {
+                    var qcTraceItems = new ToolStripItem[qcTraceNames.Count];
+                    var qcContextTraceItems = new ToolStripItem[qcTraceNames.Count];
+                    for (int i = 0; i < qcTraceNames.Count; i++)
+                    {
+                        qcTraceItems[i] = new ToolStripMenuItem(qcTraceNames[i], null, qcMenuItem_Click)
+                        {
+                            Checked = displayType == DisplayTypeChrom.qc &&
+                                      Settings.Default.ShowQcTraceName == qcTraceNames[i]
+                        };
+                        qcContextTraceItems[i] = new ToolStripMenuItem(qcTraceNames[i], null, qcMenuItem_Click)
+                        {
+                            Checked = displayType == DisplayTypeChrom.qc &&
+                                      Settings.Default.ShowQcTraceName == qcTraceNames[i]
+                        };
+                    }
+
+                    qcMenuItem.DropDownItems.AddRange(qcTraceItems);
+                    qcContextMenuItem.DropDownItems.AddRange(qcContextTraceItems);
+                }
+                else
+                    qcMenuItem.Visible = qcContextMenuItem.Visible = false;
+            }
 
             precursorsTranMenuItem.Checked = precursorsTranContextMenuItem.Checked =
                 (displayType == DisplayTypeChrom.precursors);
@@ -2286,6 +2319,20 @@ namespace pwiz.Skyline
         public void ShowTic()
         {
             SetDisplayTypeChrom(DisplayTypeChrom.tic);
+        }
+
+        private void qcMenuItem_Click(object sender, EventArgs e)
+        {
+            var qcTraceItem = sender as ToolStripMenuItem;
+            if (qcTraceItem == null)
+                throw new InvalidOperationException(@"qcMenuItem_Click must be triggered by a ToolStripMenuItem");
+            ShowQc(qcTraceItem.Text);
+        }
+
+        public void ShowQc(string qcTraceName)
+        {
+            Settings.Default.ShowQcTraceName = qcTraceName;
+            SetDisplayTypeChrom(DisplayTypeChrom.qc);
         }
 
         public void SetDisplayTypeChrom(DisplayTypeChrom displayType)
@@ -4551,7 +4598,7 @@ namespace pwiz.Skyline
         private int AddReplicateOrderAndGroupByMenuItems(ToolStrip menuStrip, int iInsert)
         {
             string currentGroupBy = SummaryReplicateGraphPane.GroupByReplicateAnnotation;
-            var groupByValues = ReplicateValue.GetGroupableReplicateValues(DocumentUI.Settings).ToArray();
+            var groupByValues = ReplicateValue.GetGroupableReplicateValues(DocumentUI).ToArray();
             if (groupByValues.Length == 0)
                 currentGroupBy = null;
 

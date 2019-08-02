@@ -82,7 +82,7 @@ namespace pwiz.Skyline.Model.Results
 
         public SpectrumFilter(SrmDocument document, MsDataFileUri msDataFileUri, IFilterInstrumentInfo instrumentInfo,
             double? maxObservedIonMobilityValue = null,
-            IRetentionTimePredictor retentionTimePredictor = null, bool firstPass = false)
+            IRetentionTimePredictor retentionTimePredictor = null, bool firstPass = false, GlobalChromatogramExtractor gce = null)
         {
             _fullScan = document.Settings.TransitionSettings.FullScan;
             _instrument = document.Settings.TransitionSettings.Instrument;
@@ -127,7 +127,9 @@ namespace pwiz.Skyline.Model.Results
                     _isHighAccMsFilter = !Equals(_fullScan.PrecursorMassAnalyzer,
                         FullScanMassAnalyzerType.qit);
 
-if (false) // TODO - get MattC's code to read TIC and BPC directly
+                    /*
+                     Leaving this here in case we ever decide to fall back to our own BPC+TIC extraction in cases where data
+                     file doesn't have them ready to go, as in mzXML
                     if (!firstPass && !_isFAIMS)
                     {
                         var key = new PrecursorTextId(SignedMz.ZERO, null, null, ChromExtractor.summed);  // TIC
@@ -137,6 +139,7 @@ if (false) // TODO - get MattC's code to read TIC and BPC directly
                         dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, dictPrecursorMzToFilter.Count,
                             _instrument.MinTime, _instrument.MaxTime, _isHighAccMsFilter, _isHighAccProductFilter));
                     }
+                    */
                 }
                 if (EnabledMsMs)
                 {
@@ -301,6 +304,23 @@ if (false) // TODO - get MattC's code to read TIC and BPC directly
                 {
                     spectrumFilterPair.AddChromKeys(listChromKeyFilterIds);
                 }
+
+                if (gce != null)
+                {
+                    foreach (var possibleGlobalIndex in new [] { gce.TicChromatogramIndex, gce.BpcChromatogramIndex })
+                    {
+                        if (!possibleGlobalIndex.HasValue)
+                            continue;
+                        int globalIndex = possibleGlobalIndex.Value;
+                        listChromKeyFilterIds.Add(ChromKey.FromId(gce.GetChromatogramId(globalIndex, out int indexId), false));
+                    }
+
+                    foreach (var qcTracePair in gce.QcTraceByIndex)
+                    {
+                        listChromKeyFilterIds.Add(ChromKey.FromQcTrace(qcTracePair.Value));
+                    }
+                }
+
                 _productChromKeys = listChromKeyFilterIds.ToArray();
 
                 // Sort a copy of the filter pairs by maximum retention time so that we can detect when

@@ -58,8 +58,8 @@ namespace pwiz.Skyline.Alerts
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(NoModeUIDlg));
             this.imageListModeUI = new System.Windows.Forms.ImageList(this.components);
             this.listBoxModeUI = new pwiz.Skyline.Controls.ImageListBox();
-            this.imageListBoxItemProteomic = new pwiz.Skyline.Controls.ImageListBoxItem();
-            this.imageListBoxItemMolecules = new pwiz.Skyline.Controls.ImageListBoxItem();
+            this.imageListBoxItemProteomics = new pwiz.Skyline.Controls.ImageListBoxItem();
+            this.imageListBoxItemMolecule = new pwiz.Skyline.Controls.ImageListBoxItem();
             this.imageListBoxItemMixed = new pwiz.Skyline.Controls.ImageListBoxItem();
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
@@ -82,19 +82,19 @@ namespace pwiz.Skyline.Alerts
             resources.ApplyResources(this.listBoxModeUI, "listBoxModeUI");
             this.listBoxModeUI.ImageList = this.imageListModeUI;
             this.listBoxModeUI.Items.AddRange(new pwiz.Skyline.Controls.ImageListBoxItem[] {
-            this.imageListBoxItemProteomic,
-            this.imageListBoxItemMolecules,
+            this.imageListBoxItemProteomics,
+            this.imageListBoxItemMolecule,
             this.imageListBoxItemMixed});
             this.listBoxModeUI.Name = "listBoxModeUI";
             this.modeUIHandler.SetUIMode(this.listBoxModeUI, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
             // 
-            // imageListBoxItemProteomic
+            // imageListBoxItemProteomics
             // 
-            resources.ApplyResources(this.imageListBoxItemProteomic, "imageListBoxItemProteomic");
+            resources.ApplyResources(this.imageListBoxItemProteomics, "imageListBoxItemProteomics");
             // 
-            // imageListBoxItemMolecules
+            // imageListBoxItemMolecule
             // 
-            resources.ApplyResources(this.imageListBoxItemMolecules, "imageListBoxItemMolecules");
+            resources.ApplyResources(this.imageListBoxItemMolecule, "imageListBoxItemMolecule");
             // 
             // imageListBoxItemMixed
             // 
@@ -130,6 +130,7 @@ namespace pwiz.Skyline.Alerts
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "NoModeUIDlg";
+            this.ShowInTaskbar = false;
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -139,8 +140,8 @@ namespace pwiz.Skyline.Alerts
         #endregion
         private pwiz.Skyline.Controls.ImageListBox listBoxModeUI;
         private System.Windows.Forms.ImageList imageListModeUI;
-        private Controls.ImageListBoxItem imageListBoxItemProteomic;
-        private Controls.ImageListBoxItem imageListBoxItemMolecules;
+        private Controls.ImageListBoxItem imageListBoxItemProteomics;
+        private Controls.ImageListBoxItem imageListBoxItemMolecule;
         private Controls.ImageListBoxItem imageListBoxItemMixed;
         private Label label2;
         private Label label1;

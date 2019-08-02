@@ -39,6 +39,7 @@ namespace pwiz.Skyline.Model.Results
         private readonly string _cachePath;
         private Collectors _collectors;
         private Spectra _spectra;
+        private GlobalChromatogramExtractor _globalChromatogramExtractor;
         private IDemultiplexer _demultiplexer;
         private readonly IRetentionTimePredictor _retentionTimePredictor;
         private List<string> _scanIdList = new List<string>();
@@ -83,6 +84,7 @@ namespace pwiz.Skyline.Model.Results
         {
             _document = document;
             _cachePath = cachePath;
+            _globalChromatogramExtractor = new GlobalChromatogramExtractor(dataFile);
 
             // If no SRM spectra, then full-scan filtering must be enabled
             _isSrm = dataFile.HasSrmSpectra;
@@ -112,7 +114,7 @@ namespace pwiz.Skyline.Model.Results
             bool firstPass = (_retentionTimePredictor != null);
             _filter = new SpectrumFilter(_document, FileInfo.FilePath, new DataFileInstrumentInfo(dataFile),
                 _maxIonMobilityValue,
-                _retentionTimePredictor, firstPass);
+                _retentionTimePredictor, firstPass, _globalChromatogramExtractor);
 
             if (!_isSrm && (_filter.EnabledMs || _filter.EnabledMsMs))
             {
@@ -187,7 +189,7 @@ namespace pwiz.Skyline.Model.Results
             var dataFile = _spectra.Detach();
 
             // Start the second pass
-            _filter = new SpectrumFilter(_document, FileInfo.FilePath, _filter, _maxIonMobilityValue, _retentionTimePredictor);
+            _filter = new SpectrumFilter(_document, FileInfo.FilePath, _filter, _maxIonMobilityValue, _retentionTimePredictor, false, _globalChromatogramExtractor);
             _spectra = null;
             _isSrm = false;
 
@@ -225,7 +227,8 @@ namespace pwiz.Skyline.Model.Results
             var chromMapMs1Pos = new ChromDataCollectorSet(ChromSource.ms1, ms1TimeSharing, _allChromData, _blockWriter);
             var chromMapMs1Neg = new ChromDataCollectorSet(ChromSource.ms1, ms1TimeSharing, _allChromData, _blockWriter);
             var chromMapSim = new ChromDataCollectorSet(ChromSource.sim, TimeSharing.grouped, _allChromData, _blockWriter);
-            var chromMaps = new[] {chromMap, chromMapSim, chromMapMs1Pos, chromMapMs1Neg};
+            var chromMapGlobal = new ChromDataCollectorSet(ChromSource.unknown, TimeSharing.single, _allChromData, _blockWriter);
+            var chromMaps = new[] {chromMap, chromMapSim, chromMapMs1Pos, chromMapMs1Neg, chromMapGlobal};
 
             var dictPrecursorMzToIndex = new Dictionary<SignedMz, int>(); // For SRM processing
 
@@ -360,8 +363,6 @@ VerifyTimesCount(chromMapMs);
                 CompleteChromatograms(chromMaps);
             }
 
-            if (chromMaps.All(map=>map.Count == 0))
-                throw new NoFullScanDataException(FileInfo.FilePath);
         }
 
 private static void VerifyTimesCount(ChromDataCollectorSet chromMapMs)
@@ -538,9 +539,14 @@ private static void VerifyTimesCount(ChromDataCollectorSet chromMapMs)
         {
             get
             {
-                var chromIds = new ChromKeyProviderIdPair[_collectors.ChromKeys.Count];
-                for (int i = 0; i < chromIds.Length; i++)
-                    chromIds[i] = new ChromKeyProviderIdPair(_collectors.ChromKeys[i], i); 
+                var chromIds = new List<ChromKeyProviderIdPair>(_collectors.ChromKeys.Count);
+                for (int i = 0; i < _collectors.ChromKeys.Count; i++)
+                    chromIds.Add(new ChromKeyProviderIdPair(_collectors.ChromKeys[i], i));
+
+                _globalChromatogramExtractor.IndexOffset =
+                    chromIds.Count - _globalChromatogramExtractor.GlobalChromatogramIndexes.Count -
+                    _globalChromatogramExtractor.QcTraceByIndex.Count;
+
                 return chromIds;
             }
         }
@@ -584,21 +590,28 @@ private static void VerifyTimesCount(ChromDataCollectorSet chromMapMs)
 
         public override bool GetChromatogram(int id, Target modifiedSequence, Color peptideColor, out ChromExtra extra, out TimeIntensities timeIntensities)
         {
-            var statusId = _collectors.ReleaseChromatogram(id, _chromGroups,
-                out timeIntensities);
-            if (timeIntensities.NumPoints > 0)
+            var chromKey = _collectors.ChromKeys.Count > id ? _collectors.ChromKeys[id] : null;
+
+            if (!SignedMz.ZERO.Equals(chromKey?.Precursor ?? SignedMz.ZERO) ||
+                !_globalChromatogramExtractor.GetChromatogram(id, out float[] times, out float[] intensities))
             {
-                var chromKey = _collectors.ChromKeys[id];
-                if (SignedMz.ZERO.Equals(chromKey.Precursor) && SignedMz.ZERO.Equals(chromKey.Product) &&
-                    ChromExtractor.summed == chromKey.Extractor)
+                var statusId = _collectors.ReleaseChromatogram(id, _chromGroups, out timeIntensities);
+                extra = new ChromExtra(statusId, 0);
+                // Each chromatogram will be read only once!
+                _readChromatograms++;
+            }
+            else
+            {
+                // BPC and TIC are extracted directly from the file's chromatograms
+                timeIntensities = new TimeIntensities(times, intensities, null, null);
+                extra = new ChromExtra(0, 0);
+
+                if (timeIntensities.NumPoints > 0 && ChromExtractor.summed == chromKey?.Extractor)
                 {
                     _ticArea = timeIntensities.Integral(0, timeIntensities.NumPoints - 1);
                 }
             }
-            extra = new ChromExtra(statusId, 0);
 
-            // Each chromatogram will be read only once!
-            _readChromatograms++;
 
             UpdatePercentComplete();
             return timeIntensities.NumPoints > 0;

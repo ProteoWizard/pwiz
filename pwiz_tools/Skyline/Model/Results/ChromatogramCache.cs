@@ -286,6 +286,7 @@ namespace pwiz.Skyline.Model.Results
         {
             return new ChromatogramGroupInfo(chromGroupHeaderInfo,
                                              _scoreTypeIndices,
+                                             _textIdBytes,
                                              _cachedFiles,
                                              _chromTransitions,
                                              _chromatogramPeaks,

@@ -276,6 +276,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
                      frameScanPair.first, *scanNumbers.begin());
 
             vector<Scan>& scans = result->scanList.scans;
+            scans.reserve(scanNumbers.size());
             for (auto itr = ++scanNumbers.begin(); itr != scanNumbers.end(); ++itr)
             {
                 scans.push_back(Scan());

@@ -373,8 +373,8 @@
     <value>反復ペプチドを削除(&amp;R)</value>
   </data>
   <data name="cbRemoveRepeatedPeptides.ToolTip" xml:space="preserve">
-    <value>すべての重複ペプチドは削除され、
-最初に記載された各ペプチドだけが残ります。</value>
+    <value>すべての反復ペプチドは削除され、
+最初に記載されたペプチドだけが残ります。</value>
   </data>
   <data name="&gt;&gt;cbRemoveRepeatedPeptides.Name" xml:space="preserve">
     <value>cbRemoveRepeatedPeptides</value>
@@ -1077,8 +1077,8 @@
     <value>1</value>
   </data>
   <data name="textRTRegressionThreshold.ToolTip" xml:space="preserve">
-    <value>プリカーサーは、最適保持時間カルキュレータを持つ
-線形回帰の残差の目標値が
+    <value>プリカーサーは、最適保持時間カルキュレータによる
+線形回帰の相関係数目標値が
 この閾値を超えるまで、ドキュメントから
 削除されます。</value>
   </data>

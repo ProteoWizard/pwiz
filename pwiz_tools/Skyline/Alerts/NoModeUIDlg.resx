@@ -169,17 +169,17 @@
   <data name="listBoxModeUI.ItemHeight" type="System.Int32, mscorlib">
     <value>16</value>
   </data>
-  <data name="imageListBoxItemProteomic.ImageIndex" type="System.Int32, mscorlib">
+  <data name="imageListBoxItemProteomics.ImageIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="imageListBoxItemProteomic.Text" xml:space="preserve">
-    <value>Proteomic</value>
+  <data name="imageListBoxItemProteomics.Text" xml:space="preserve">
+    <value>Proteomics</value>
   </data>
-  <data name="imageListBoxItemMolecules.ImageIndex" type="System.Int32, mscorlib">
+  <data name="imageListBoxItemMolecule.ImageIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="imageListBoxItemMolecules.Text" xml:space="preserve">
-    <value>Molecules</value>
+  <data name="imageListBoxItemMolecule.Text" xml:space="preserve">
+    <value>Molecule</value>
   </data>
   <data name="imageListBoxItemMixed.ImageIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -200,7 +200,7 @@
     <value>listBoxModeUI</value>
   </data>
   <data name="&gt;&gt;listBoxModeUI.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.ImageListBox, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.ImageListBox, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;listBoxModeUI.Parent" xml:space="preserve">
     <value>$this</value>
@@ -311,7 +311,7 @@ created Skyline documents.</value>
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;imageListModeUI.Name" xml:space="preserve">
     <value>imageListModeUI</value>
@@ -319,28 +319,28 @@ created Skyline documents.</value>
   <data name="&gt;&gt;imageListModeUI.Type" xml:space="preserve">
     <value>System.Windows.Forms.ImageList, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;imageListBoxItemProteomic.Name" xml:space="preserve">
-    <value>imageListBoxItemProteomic</value>
+  <data name="&gt;&gt;imageListBoxItemProteomics.Name" xml:space="preserve">
+    <value>imageListBoxItemProteomics</value>
   </data>
-  <data name="&gt;&gt;imageListBoxItemProteomic.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.ImageListBoxItem, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  <data name="&gt;&gt;imageListBoxItemProteomics.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.ImageListBoxItem, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="&gt;&gt;imageListBoxItemMolecules.Name" xml:space="preserve">
-    <value>imageListBoxItemMolecules</value>
+  <data name="&gt;&gt;imageListBoxItemMolecule.Name" xml:space="preserve">
+    <value>imageListBoxItemMolecule</value>
   </data>
-  <data name="&gt;&gt;imageListBoxItemMolecules.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.ImageListBoxItem, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  <data name="&gt;&gt;imageListBoxItemMolecule.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.ImageListBoxItem, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;imageListBoxItemMixed.Name" xml:space="preserve">
     <value>imageListBoxItemMixed</value>
   </data>
   <data name="&gt;&gt;imageListBoxItemMixed.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.ImageListBoxItem, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.ImageListBoxItem, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>NoModeUIDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
