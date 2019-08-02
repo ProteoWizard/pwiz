@@ -857,7 +857,8 @@ rule msvc-dotnet-requirement ( properties * )
     # require VS 2013 because of .NET Framework version
     if ! ( <toolset-msvc:version>12.0 in $(properties) ||
            <toolset-msvc:version>14.0 in $(properties) ||
-           <toolset-msvc:version>14.1 in $(properties) )
+           <toolset-msvc:version>14.1 in $(properties) ||
+           <toolset-msvc:version>14.2 in $(properties) )
     { return <build>no ; }
 }
 

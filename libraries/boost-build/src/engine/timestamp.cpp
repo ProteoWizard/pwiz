@@ -63,7 +63,7 @@ static struct hash * bindhash = 0;
 static void time_enter( void *, OBJECT *, int const found,
     timestamp const * const );
 
-static char * time_progress[] =
+static const char * time_progress[] =
 {
     "INIT",
     "NOENTRY",

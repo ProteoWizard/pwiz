@@ -112,6 +112,9 @@ static void register_wait( int job_id );
  */
 #define MAX_RAW_COMMAND_LENGTH 32766
 
+ /* Communication buffers size */
+#define IO_BUFFER_SIZE ( 64 * 1024 )
+
 /* We hold handles for pipes used to communicate with child processes in two
  * element arrays indexed as follows.
  */
@@ -221,7 +224,7 @@ void exec_init( void )
 {
     if ( globs.jobs > cmdtab_size )
     {
-        cmdtab = BJAM_REALLOC( cmdtab, globs.jobs * sizeof( *cmdtab ) );
+        cmdtab = (_cmdtab_t*)BJAM_REALLOC( cmdtab, globs.jobs * sizeof( *cmdtab ) );
         memset( cmdtab + cmdtab_size, 0, ( globs.jobs - cmdtab_size ) * sizeof( *cmdtab ) );
         cmdtab_size = globs.jobs;
     }
@@ -497,14 +500,14 @@ static void invoke_cmd( char const * const command, int const slot )
 
     /* Create pipes for communicating with the child process. */
     if ( !CreatePipe( &cmdtab[ slot ].pipe_out[ EXECCMD_PIPE_READ ],
-        &cmdtab[ slot ].pipe_out[ EXECCMD_PIPE_WRITE ], &sa, 0 ) )
+        &cmdtab[ slot ].pipe_out[ EXECCMD_PIPE_WRITE ], &sa, IO_BUFFER_SIZE ) )
     {
         reportWindowsError( "CreatePipe", slot );
         return;
     }
     if ( globs.pipe_action && !CreatePipe( &cmdtab[ slot ].pipe_err[
         EXECCMD_PIPE_READ ], &cmdtab[ slot ].pipe_err[ EXECCMD_PIPE_WRITE ],
-        &sa, 0 ) )
+        &sa, IO_BUFFER_SIZE ) )
     {
         reportWindowsError( "CreatePipe", slot );
         return;
@@ -748,8 +751,6 @@ static void record_times( HANDLE const process, timing_info * const time )
     }
 }
 
-
-#define IO_BUFFER_SIZE ( 16 * 1024 )
 
 static char ioBuffer[ IO_BUFFER_SIZE + 1 ];
 

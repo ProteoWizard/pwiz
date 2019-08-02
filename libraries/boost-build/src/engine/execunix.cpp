@@ -72,7 +72,7 @@ static clock_t tps;
 #define OUT 0
 #define ERR 1
 
-static struct
+static struct cmdtab_t
 {
     int          pid;            /* on win32, a real process handle */
     int          fd[ 2 ];        /* file descriptors for stdout and stderr */
@@ -109,9 +109,9 @@ void exec_init( void )
     int i;
     if ( globs.jobs > cmdtab_size )
     {
-        cmdtab = BJAM_REALLOC( cmdtab, globs.jobs * sizeof( *cmdtab ) );
+        cmdtab = (cmdtab_t*)BJAM_REALLOC( cmdtab, globs.jobs * sizeof( *cmdtab ) );
         memset( cmdtab + cmdtab_size, 0, ( globs.jobs - cmdtab_size ) * sizeof( *cmdtab ) );
-        wait_fds = BJAM_REALLOC( wait_fds, WAIT_FDS_SIZE * sizeof ( *wait_fds ) );
+        wait_fds = (pollfd*)BJAM_REALLOC( wait_fds, WAIT_FDS_SIZE * sizeof ( *wait_fds ) );
         for ( i = cmdtab_size; i < globs.jobs; ++i )
         {
             GET_WAIT_FD( i )[ OUT ].fd = -1;

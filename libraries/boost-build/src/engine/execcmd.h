@@ -15,6 +15,7 @@
 #ifndef EXECCMD_H
 #define EXECCMD_H
 
+#include "config.h"
 #include "lists.h"
 #include "strings.h"
 #include "timestamp.h"
