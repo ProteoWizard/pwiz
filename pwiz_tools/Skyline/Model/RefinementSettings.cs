@@ -192,6 +192,10 @@ namespace pwiz.Skyline.Model
         // Consistency
         [Track]
         public double? CVCutoff { get; set; }
+        [Track]
+        public double? QValueCutoff { get; set; }
+        [Track]
+        public int? MinimumDetections { get; set; }
 
         public SrmDocument Refine(SrmDocument document)
         {
@@ -303,7 +307,11 @@ namespace pwiz.Skyline.Model
             var refined = (SrmDocument)document.ChangeChildrenChecked(listPepGroups.ToArray(), true);
             if (CVCutoff.HasValue)
             {
-                AreaCVRefinementData data = new AreaCVRefinementData(refined);
+                AreaCVRefinementData data;
+                if (QValueCutoff.HasValue && MinimumDetections.HasValue)
+                    data = new AreaCVRefinementData(refined, new AreaCVRefinementData.AreaCVRefinementSettings(CVCutoff.Value, QValueCutoff.Value, MinimumDetections.Value));
+                else
+                    data = new AreaCVRefinementData(refined, new AreaCVRefinementData.AreaCVRefinementSettings(CVCutoff.Value));
                 refined = data.RemoveAboveCVCuttoff(refined);
             }
 

@@ -16,11 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -30,6 +25,11 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Windows.Forms;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -91,14 +91,15 @@ namespace pwiz.Skyline.EditUI
             }
 
             // Consistency tab
-            
-//            var enabled = _settings.PeptideSettings.Integration.PeakScoringModel.IsTrained;
-//            if (enabled)
-//                textBoxQVal.Text = ValueOrEmpty(Settings.Default.AreaCVQValueCutoff);
-//
-//            if (!double.IsNaN(Settings.Default.AreaCVQValueCutoff))
-//                textBoxQVal.Text = Settings.Default.AreaCVQValueCutoff.ToString(LocalizationHelper.CurrentCulture);
-//
+            textQVal.Enabled = document.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained;
+            numericUpDownDetections.Enabled = textQVal.Enabled;
+            if (numericUpDownDetections.Enabled)
+            {
+                numericUpDownDetections.Minimum = 2;
+                numericUpDownDetections.Maximum = _document.MeasuredResults.Chromatograms.Count;
+                numericUpDownDetections.Value = 2;
+            }
+
 //            var detectionsAvailablePrev = numericUpDownDetections.Enabled;
 //            var detectionsAvailable = AreaGraphController.ShouldUseQValues(_document);
 //            numericUpDownDetections.Enabled = detectionsAvailable;
@@ -195,6 +196,22 @@ namespace pwiz.Skyline.EditUI
         {
             get { return Convert.ToInt32(textCVCutoff.Text); }
             set { textCVCutoff.Text = value.ToString(LocalizationHelper.CurrentCulture); }
+        }
+
+        public double QValueCutoff
+        {
+            get
+            {
+                double result;
+                return double.TryParse(textQVal.Text, out result) ? result : double.NaN;
+            }
+            set { textQVal.Text = value.ToString(CultureInfo.CurrentCulture); }
+        }
+
+        public int MinimumDetections
+        {
+            get { return (int) numericUpDownDetections.Value; }
+            set { numericUpDownDetections.Value = value; }
         }
 
         public IsotopeLabelType RefineLabelType
@@ -336,6 +353,22 @@ namespace pwiz.Skyline.EditUI
                 Settings.Default.AreaCVCVCutoff = cvCutoff.Value;
             }
 
+            double? qvalueCutoff = null;
+            if (!string.IsNullOrWhiteSpace(textQVal.Text))
+            {
+                double qvalue;
+                if (!helper.ValidateDecimalTextBox(textQVal, 0.0, 1.0, out qvalue))
+                    return;
+                qvalueCutoff = qvalue;
+                Settings.Default.AreaCVQValueCutoff = qvalueCutoff.Value;
+            }
+
+            int? minimumDetections = null;
+            if (numericUpDownDetections.Enabled)
+            {
+                minimumDetections = (int) numericUpDownDetections.Value;
+            }
+
             RefinementSettings = new RefinementSettings
                                      {
                                          MinPeptidesPerProtein = minPeptidesPerProtein,
@@ -359,7 +392,9 @@ namespace pwiz.Skyline.EditUI
                                          AutoPickChildrenAll = (cbAutoPeptides.Checked ? PickLevel.peptides : 0) |
                                                                (cbAutoPrecursors.Checked ? PickLevel.precursors : 0) |
                                                                (cbAutoTransitions.Checked ? PickLevel.transitions : 0),
-                                         CVCutoff = cvCutoff
+                                         CVCutoff = cvCutoff,
+                                         QValueCutoff = qvalueCutoff,
+                                         MinimumDetections =  minimumDetections
                                      };
 
             DialogResult = DialogResult.OK;

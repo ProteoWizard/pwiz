@@ -10,9 +10,10 @@ namespace pwiz.Skyline.Model
 {
     public class AreaCVRefinementData : Immutable
     {
-        public AreaCVRefinementData(SrmDocument document)
+        public readonly AreaCVRefinementSettings _settings;
+        public AreaCVRefinementData(SrmDocument document, AreaCVRefinementSettings settings)
         {
-
+            _settings = settings;
             if (document == null || !document.Settings.HasResults)
                 return;
 
@@ -22,6 +23,13 @@ namespace pwiz.Skyline.Model
             var data = new List<InternalData>();
             var ms1 = false;
             var best = false;
+            double? qvalueCutoff = null;
+            if (document.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained &&
+                !double.IsNaN(_settings.QValueCutoff) &&
+                _settings.QValueCutoff < 1.0)
+            {
+                qvalueCutoff = settings.QValueCutoff;
+            }
 
             foreach (var peptideGroup in document.MoleculeGroups)
             {
@@ -43,6 +51,12 @@ namespace pwiz.Skyline.Model
                                 if (groupChromInfo == null)
                                     continue;
 
+                                if (qvalueCutoff.HasValue)
+                                {
+                                    if (!(groupChromInfo.QValue.HasValue && groupChromInfo.QValue.Value < qvalueCutoff.Value))
+                                        continue;
+                                }
+
                                 if (!groupChromInfo.Area.HasValue)
                                     continue;
                                 var index = i;
@@ -61,6 +75,8 @@ namespace pwiz.Skyline.Model
                                 areas.Add(new CVAreaInfo(sumArea, normalizedArea));
                             }
 
+                            if (qvalueCutoff.HasValue && areas.Count < _settings.MinimumDetections)
+                                continue;
                             AddToInternalData(data, areas, peptideGroup, peptide, transitionGroupDocNode);
                         }
                     }
@@ -99,7 +115,7 @@ namespace pwiz.Skyline.Model
 
         public SrmDocument RemoveAboveCVCuttoff(SrmDocument document)
         {
-            var cutoff = Settings.Default.AreaCVCVCutoff / 100.0;
+            var cutoff = _settings.CVCutoff / 100.0;
 
             var ids = new HashSet<int>(Data.Where(d => d.CV < cutoff)
                 .SelectMany(d => d.PeptideAnnotationPairs)
@@ -198,6 +214,27 @@ namespace pwiz.Skyline.Model
             }
 
             #endregion
+        }
+
+        public class AreaCVRefinementSettings
+        {
+            public AreaCVRefinementSettings(double cvCutoff)
+            {
+                CVCutoff = cvCutoff;
+                QValueCutoff = double.NaN;
+                MinimumDetections = -1;
+            }
+
+            public AreaCVRefinementSettings(double cvCutoff, double qValueCutoff, int minimumDetections)
+            {
+                CVCutoff = cvCutoff;
+                QValueCutoff = qValueCutoff;
+                MinimumDetections = minimumDetections;
+            }
+
+            public double QValueCutoff { get; private set; }
+            public double CVCutoff { get; private set; }
+            public int MinimumDetections { get; private set; }
         }
     }
 }

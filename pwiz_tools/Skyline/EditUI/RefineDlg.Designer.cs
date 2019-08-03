@@ -79,7 +79,7 @@
             this.numericUpDownDetections = new System.Windows.Forms.NumericUpDown();
             this.labelReplicates = new System.Windows.Forms.Label();
             this.labelDetections = new System.Windows.Forms.Label();
-            this.label1QVal = new System.Windows.Forms.Label();
+            this.labelQVal = new System.Windows.Forms.Label();
             this.textQVal = new System.Windows.Forms.TextBox();
             this.labelNormalize = new System.Windows.Forms.Label();
             this.labelCV = new System.Windows.Forms.Label();
@@ -426,7 +426,7 @@
             this.groupDetection.Controls.Add(this.numericUpDownDetections);
             this.groupDetection.Controls.Add(this.labelReplicates);
             this.groupDetection.Controls.Add(this.labelDetections);
-            this.groupDetection.Controls.Add(this.label1QVal);
+            this.groupDetection.Controls.Add(this.labelQVal);
             this.groupDetection.Controls.Add(this.textQVal);
             resources.ApplyResources(this.groupDetection, "groupDetection");
             this.groupDetection.Name = "groupDetection";
@@ -447,10 +447,10 @@
             resources.ApplyResources(this.labelDetections, "labelDetections");
             this.labelDetections.Name = "labelDetections";
             // 
-            // label1QVal
+            // labelQVal
             // 
-            resources.ApplyResources(this.label1QVal, "label1QVal");
-            this.label1QVal.Name = "label1QVal";
+            resources.ApplyResources(this.labelQVal, "labelQVal");
+            this.labelQVal.Name = "labelQVal";
             // 
             // textQVal
             // 
@@ -554,7 +554,7 @@
         private System.Windows.Forms.GroupBox groupDetection;
         private System.Windows.Forms.Label labelReplicates;
         private System.Windows.Forms.Label labelDetections;
-        private System.Windows.Forms.Label label1QVal;
+        private System.Windows.Forms.Label labelQVal;
         private System.Windows.Forms.TextBox textQVal;
         private System.Windows.Forms.Label labelNormalize;
         private System.Windows.Forms.Label labelCV;
