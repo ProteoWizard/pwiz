@@ -260,6 +260,8 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
     for (size_t i=0; i < msdCount; ++i)
     {
         MSData& msd = *msds[i];
+        if (os_) (*os_) << "MzML serialization test of " << config.resultFilename(msd.run.id + ".mzML") << endl;
+
         calculateSourceFileChecksums(msd.fileDescription.sourceFilePtrs);
         mangleSourceFileLocations(sourceName, msd.fileDescription.sourceFilePtrs);
         manglePwizSoftware(msd);
@@ -288,6 +290,7 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
         // mzML <-> mz5
         if (findUnicodeBytes(rawpath) == rawpath.end())
         {
+            if (os_) (*os_) << "MZ5 serialization test of " << config.resultFilename(msd.run.id + ".mzML") << endl;
             string targetResultFilename_mz5 = bfs::change_extension(targetResultFilename, ".mz5").string();
             {
                 MSData msd_mz5;
@@ -363,9 +366,6 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
         }
     }
 
-    msds.clear();
-    msdCount = msds.size();
-
     // test reverse iteration of metadata on a fresh document;
     // this tests that caching optimization for forward iteration doesn't hide problems;
     // i.e. SpectrumList_Thermo::findPrecursorSpectrumIndex()
@@ -373,6 +373,7 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
     {
         MSData msd_reverse;
         reader.read(rawpath, rawheader, msd_reverse, i, readerConfig);
+        if (os_) (*os_) << "Reverse iteration test of " << config.resultFilename(msd_reverse.run.id + ".mzML") << endl;
 
         if (msd_reverse.run.spectrumListPtr.get())
             for (size_t j = 0, end = msd_reverse.run.spectrumListPtr->size(); j < end; ++j)
@@ -435,6 +436,7 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
         for (size_t i = 0; i < msdCount; ++i)
         {
             MSData& msd = *msds[i];
+            if (os_) (*os_) << "Unicode support mzML serialization test of " << config.resultFilename(msd.run.id + ".mzML") << endl;
 
             calculateSourceFileChecksums(msd.fileDescription.sourceFilePtrs);
             mangleSourceFileLocations(sourceNameAsPath.string(), msd.fileDescription.sourceFilePtrs, newSourceName.string());

@@ -540,7 +540,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                 long precursorCharge = scanInfo->precursorCharge();
 
                 // if an appropriate zoom scan was found, try to get monoisotopic m/z and/or charge from it
-                ScanInfoPtr zoomScanInfo = findPrecursorZoomScan(msLevel - 1, isolationMz, index);
+                ScanInfoPtr zoomScanInfo = findPrecursorZoomScan(raw, msLevel - 1, isolationMz, index);
                 if (zoomScanInfo.get())
                 {
                     if (selectedIonMz == isolationMz)
@@ -589,7 +589,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                 // to last isolation m/z of the current scan;
                 // i.e. MS3 with filter "234.56@cid30.00 123.45@cid30.00" matches to MS2 with filter "234.56@cid30.00"
                 double precursorIsolationMz = i > 0 ? scanInfo->precursorMZ(i-1, false) : 0;
-                size_t precursorScanIndex = findPrecursorSpectrumIndex(msLevel - 1, precursorIsolationMz, index);
+                size_t precursorScanIndex = findPrecursorSpectrumIndex(raw, msLevel - 1, precursorIsolationMz, index);
                 if (precursorScanIndex < index_.size())
                 {
                     precursor.spectrumID = index_[precursorScanIndex].id;
@@ -597,7 +597,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                     if (detailLevel >= DetailLevel_FullMetadata)
                     {
                         double isolationQueryWidth = isolationWidth == 0 ? isolationWidth : defaultIsolationWindowLowerOffset;
-                        double precursorIntensity = getPrecursorIntensity(precursorScanIndex, isolationMz, isolationQueryWidth);
+                        double precursorIntensity = getPrecursorIntensity(precursorScanIndex, isolationMz, isolationQueryWidth, msLevelsToCentroid);
                         if (precursorIntensity > 0)
                             selectedIon.set(MS_peak_intensity, precursorIntensity, MS_number_of_detector_counts);
                     }
@@ -811,7 +811,7 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
 }
 
 
-PWIZ_API_DECL size_t SpectrumList_Thermo::findPrecursorSpectrumIndex(int precursorMsLevel, double precursorIsolationMz, size_t index) const
+PWIZ_API_DECL size_t SpectrumList_Thermo::findPrecursorSpectrumIndex(RawFile* raw, int precursorMsLevel, double precursorIsolationMz, size_t index) const
 {
     // exit early if the precursor MS level doesn't exist (i.e. targeted MSn runs)
     if (numSpectraOfMSOrder(static_cast<MSOrder>(precursorMsLevel)) == 0)
@@ -833,7 +833,7 @@ PWIZ_API_DECL size_t SpectrumList_Thermo::findPrecursorSpectrumIndex(int precurs
             // if potential precursor scan is a zoom scan, make sure the precursorIsolationMz is in the scan window
             if (ie.scanType == ScanType_Zoom)
             {
-                auto zoomScanInfo = rawfile_->getScanInfo(ie.scan);
+                auto zoomScanInfo = raw->getScanInfo(ie.scan);
                 bool mzInRange = false;
                 for (size_t i = 0, end = zoomScanInfo->scanRangeCount(); i < end && !mzInRange; ++i)
                 {
@@ -852,7 +852,7 @@ PWIZ_API_DECL size_t SpectrumList_Thermo::findPrecursorSpectrumIndex(int precurs
 }
 
 
-PWIZ_API_DECL double SpectrumList_Thermo::getPrecursorIntensity(int precursorSpectrumIndex, double isolationMz, double isolationHalfWidth) const
+PWIZ_API_DECL double SpectrumList_Thermo::getPrecursorIntensity(int precursorSpectrumIndex, double isolationMz, double isolationHalfWidth, const pwiz::util::IntegerSet& msLevelsToCentroid) const
 {
     SpectrumPtr precursorSpectrum;
 
@@ -863,8 +863,9 @@ PWIZ_API_DECL double SpectrumList_Thermo::getPrecursorIntensity(int precursorSpe
             precursorSpectrum = findItr->spectrum;
     }
 
+    // CONSIDER: is it worth it to keep separate caches for centroid and profile spectra?
     if (!precursorSpectrum)
-        precursorSpectrum = spectrum(precursorSpectrumIndex, true);
+        precursorSpectrum = spectrum(precursorSpectrumIndex, true, msLevelsToCentroid);
 
     const auto& mz = precursorSpectrum->getMZArray()->data;
     const auto& intensity = precursorSpectrum->getIntensityArray()->data;
@@ -889,7 +890,7 @@ PWIZ_API_DECL double SpectrumList_Thermo::getPrecursorIntensity(int precursorSpe
     the precursor monoisotopic m/z and charge state information from
     the zoom scans, when the instrument is run in a triple-play mode.
 */
-PWIZ_API_DECL ScanInfoPtr SpectrumList_Thermo::findPrecursorZoomScan(int precursorMsLevel, double precursorIsolationMz, size_t index) const
+PWIZ_API_DECL ScanInfoPtr SpectrumList_Thermo::findPrecursorZoomScan(RawFile* raw, int precursorMsLevel, double precursorIsolationMz, size_t index) const
 {
     // exit early if the precursor MS level doesn't exist (i.e. targeted MSn runs) OR no zoom scans exist
     if (numSpectraOfScanType(ScanType_Zoom) == 0)
@@ -906,7 +907,7 @@ PWIZ_API_DECL ScanInfoPtr SpectrumList_Thermo::findPrecursorZoomScan(int precurs
 
         // Get the scan info and check if the precursor mass of this
         // MSn scan is with in the window of the zoom scan
-        ScanInfoPtr zoomScanInfo = rawfile_->getScanInfo(index+1);
+        ScanInfoPtr zoomScanInfo = raw->getScanInfo(index+1);
         if (precursorIsolationMz < zoomScanInfo->lowMass() ||
             precursorIsolationMz > zoomScanInfo->highMass())
             continue;

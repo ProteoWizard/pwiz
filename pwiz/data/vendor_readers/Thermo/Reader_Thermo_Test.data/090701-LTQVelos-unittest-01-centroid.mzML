@@ -28,7 +28,7 @@
     <software id="Xcalibur" version="2.6.0">
       <cvParam cvRef="MS" accession="MS:1000532" name="Xcalibur" value=""/>
     </software>
-    <software id="pwiz" version="3.0.19157">
+    <software id="pwiz" version="3.0.19217">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -220,7 +220,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="433.192138671875" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.836292462936e06" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.83095070015e06" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -340,7 +340,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="433.192138671875" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.836292462936e06" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.83095070015e06" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -521,7 +521,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="497.831909179688" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="9.551365028381e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="9.468562627563e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -641,7 +641,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="497.831909179688" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="9.551365028381e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="9.468562627563e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -822,7 +822,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="504.863189697266" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="4.40655364563e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="4.231916014099e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -942,7 +942,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="504.863189697266" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="4.40655364563e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="4.231916014099e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1123,7 +1123,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="648.997314453125" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="2.316237738647e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="2.094260253906e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1183,7 +1183,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="784.38916015625" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="11967.08642578125" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="10826.896728515625" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1243,7 +1243,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="648.997314453125" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="2.316237738647e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="2.094260253906e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1424,7 +1424,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="442.351989746094" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="77193.425674438477" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="73602.163665771484" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1484,7 +1484,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="597.516357421875" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="3757.16185760498" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="3727.559295654297" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1544,7 +1544,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="442.351989746094" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="77193.425674438477" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="73602.163665771484" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1725,7 +1725,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="413.186279296875" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="68309.912048339844" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="60794.38064956665" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1785,7 +1785,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="527.213195800781" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="3478.81237411499" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="3461.096435546875" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1845,7 +1845,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="413.186279296875" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="68309.912048339844" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="60794.38064956665" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2026,7 +2026,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="437.7958984375" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.23130271347e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.137153541107e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2146,7 +2146,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="437.7958984375" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.23130271347e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.137153541107e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2327,7 +2327,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="508.733642578125" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="74613.534568309784" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="59128.820952892303" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2447,7 +2447,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="508.733642578125" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="74613.534568309784" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="59128.820952892303" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2628,7 +2628,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="523.963134765625" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="85529.849945068359" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="75662.204833984375" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2688,7 +2688,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="514.7568359375" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="7477.098419189453" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="7340.539611816406" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2748,7 +2748,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="523.963134765625" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="85529.849945068359" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="75662.204833984375" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2929,7 +2929,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="409.06103515625" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.129124737549e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.042628994751e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3049,7 +3049,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="409.06103515625" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.129124737549e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.042628994751e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3230,7 +3230,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="516.737426757813" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.034948803558e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="97426.092269897461" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3290,7 +3290,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="494.790222167969" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="14036.51485824585" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="14021.819396972656" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3350,7 +3350,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="516.737426757813" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.034948803558e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="97426.092269897461" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3531,7 +3531,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="425.224365234375" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.153351493073e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="95574.805679321289" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3591,7 +3591,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="425.224365234375" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.153351493073e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="95574.805679321289" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3772,7 +3772,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="526.893676757813" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="85246.528625488281" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="66627.12109375" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3892,7 +3892,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="526.893676757813" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="85246.528625488281" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="66627.12109375" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -4073,7 +4073,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="459.213958740234" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.619670747833e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.227319919739e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -4133,7 +4133,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="573.965087890625" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="5315.856552124023" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="5274.598510742188" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -4193,7 +4193,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="459.213958740234" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.619670747833e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="1.227319919739e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
               </selectedIon>
             </selectedIonList>
             <activation>

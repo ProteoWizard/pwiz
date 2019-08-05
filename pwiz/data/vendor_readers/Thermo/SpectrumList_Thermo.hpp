@@ -103,9 +103,9 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListIonMobilityBase
     typedef MemoryMRUCache<CacheEntry, BOOST_MULTI_INDEX_MEMBER(CacheEntry, size_t, index) > CacheType;
     mutable CacheType precursorCache_;
 
-    size_t findPrecursorSpectrumIndex(int precursorMsLevel, double precursorIsolationMz, size_t index) const;
-    double getPrecursorIntensity(int precursorSpectrumIndex, double isolationMz, double isolationHalfWidth) const;
-    pwiz::vendor_api::Thermo::ScanInfoPtr findPrecursorZoomScan(int precursorMsLevel, double precursorIsolationMz, size_t index) const;
+    size_t findPrecursorSpectrumIndex(RawFile* raw, int precursorMsLevel, double precursorIsolationMz, size_t index) const;
+    double getPrecursorIntensity(int precursorSpectrumIndex, double isolationMz, double isolationHalfWidth, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
+    pwiz::vendor_api::Thermo::ScanInfoPtr findPrecursorZoomScan(RawFile* raw, int precursorMsLevel, double precursorIsolationMz, size_t index) const;
 
 #endif // PWIZ_READER_THERMO
 };
