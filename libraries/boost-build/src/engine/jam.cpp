@@ -134,6 +134,7 @@
 #include "timestamp.h"
 #include "variable.h"
 #include "execcmd.h"
+#include "sysinfo.h"
 
 /* Macintosh is "special" */
 #ifdef OS_MAC
@@ -164,7 +165,7 @@ struct globs globs =
 };
 
 /* Symbols to be defined as true for use in Jambase. */
-static char * othersyms[] = { OSMAJOR, OSMINOR, OSPLAT, JAMVERSYM, 0 };
+static const char * othersyms[] = { OSMAJOR, OSMINOR, OSPLAT, JAMVERSYM, 0 };
 
 
 /* Known for sure:
@@ -271,6 +272,7 @@ int main( int argc, char * * argv, char * * arg_environ )
     char            const * progname = argv[ 0 ];
     module_t              * environ_module;
     int                     is_debugger;
+    b2::system_info sys_info;
 
     saved_argv0 = argv[ 0 ];
 
@@ -361,16 +363,20 @@ int main( int argc, char * * argv, char * * arg_environ )
         usage( progname );
     }
 
+    /* Set default parallel jobs to match cpu threads. This can be overridden
+    the usual way with -jX or PARALLELISM env var. */
+    globs.jobs = sys_info.cpu_thread_count();
+
     /* Version info. */
     if ( ( s = getoptval( optv, 'v', 0 ) ) )
     {
-        out_printf( "Boost.Jam  Version %s. %s.\n", VERSION, OSMINOR );
-        out_printf( "   Copyright 1993-2002 Christopher Seiwald and Perforce "
-            "Software, Inc.\n" );
-        out_printf( "   Copyright 2001 David Turner.\n" );
-        out_printf( "   Copyright 2001-2004 David Abrahams.\n" );
-        out_printf( "   Copyright 2002-2015 Rene Rivera.\n" );
-        out_printf( "   Copyright 2003-2015 Vladimir Prus.\n" );
+        out_printf( "B2 Version %s. %s.\n", VERSION, OSMINOR );
+        out_printf( "  Copyright 1993-2002 Christopher Seiwald and Perforce Software, Inc.\n" );
+        out_printf( "  Copyright 2001 David Turner.\n" );
+        out_printf( "  Copyright 2001-2004 David Abrahams.\n" );
+        out_printf( "  Copyright 2002-2019 Rene Rivera.\n" );
+        out_printf( "  Copyright 2003-2015 Vladimir Prus.\n" );
+        out_printf( "\n  DEFAULTS: jobs = %i\n", globs.jobs);
         return EXITOK;
     }
 
@@ -589,9 +595,9 @@ int main( int argc, char * * argv, char * * arg_environ )
         {
             if ( arg_v[ n ][ 0 ] == '-' )
             {
-                char * f = "-:l:d:j:f:gs:t:ano:qv";
+                const char * f = "-:l:d:j:f:gs:t:ano:qv";
                 for ( ; *f; ++f ) if ( *f == arg_v[ n ][ 1 ] ) break;
-                if ( ( f[ 1 ] == ':' ) && ( arg_v[ n ][ 2 ] == '\0' ) ) ++n;
+                if ( f[0] && f[1] && ( f[ 1 ] == ':' ) && ( arg_v[ n ][ 2 ] == '\0' ) ) ++n;
             }
             else
             {
@@ -600,6 +606,30 @@ int main( int argc, char * * argv, char * * arg_environ )
                 object_free( target );
             }
         }
+
+        /* The build system may set the PARALLELISM variable to override -j
+         * options.
+         */
+        {
+            LIST * const p = var_get( root_module(), constant_PARALLELISM );
+            if ( !list_empty( p ) )
+            {
+                int const j = atoi( object_str( list_front( p ) ) );
+                if ( j < 1 )
+                    out_printf( "Invalid value of PARALLELISM: %s.\n",
+                        object_str( list_front( p ) ) );
+                else
+                    globs.jobs = j;
+            }
+        }
+
+        /* KEEP_GOING overrides -q option. */
+        {
+            LIST * const p = var_get( root_module(), constant_KEEP_GOING );
+            if ( !list_empty( p ) )
+                globs.quitquick = atoi( object_str( list_front( p ) ) ) ? 0 : 1;
+        }
+
 
         if ( list_empty( targets_to_update() ) )
             mark_target_for_updating( constant_all );
@@ -629,28 +659,6 @@ int main( int argc, char * * argv, char * * arg_environ )
             object_free( target );
         }
 
-        /* The build system may set the PARALLELISM variable to override -j
-         * options.
-         */
-        {
-            LIST * const p = var_get( root_module(), constant_PARALLELISM );
-            if ( !list_empty( p ) )
-            {
-                int const j = atoi( object_str( list_front( p ) ) );
-                if ( j < 1 )
-                    out_printf( "Invalid value of PARALLELISM: %s.\n",
-                        object_str( list_front( p ) ) );
-                else
-                    globs.jobs = j;
-            }
-        }
-
-        /* KEEP_GOING overrides -q option. */
-        {
-            LIST * const p = var_get( root_module(), constant_KEEP_GOING );
-            if ( !list_empty( p ) )
-                globs.quitquick = atoi( object_str( list_front( p ) ) ) ? 0 : 1;
-        }
 
         /* Now make target. */
         {

@@ -2757,5 +2757,17 @@ namespace pwiz.Skyline.Properties {
                 this["MixedMoleculeSettingsTab"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string ShowQcTraceName {
+            get {
+                return ((string)(this["ShowQcTraceName"]));
+            }
+            set {
+                this["ShowQcTraceName"] = value;
+            }
+        }
     }
 }

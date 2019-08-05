@@ -197,6 +197,11 @@ def register_globals ():
         'on'],        # Fail the compilation if there are warnings.
         ['incidental', 'propagated'])
 
+    feature.feature('coverage', [
+        'off',        # Disable coverage generation for the tool.
+        'on'],        # Enable coverage generation for the tool.
+        ['incidental', 'propagated'])
+
     feature.feature('c++-template-depth',
         [str(i) for i in range(64,1024+1,64)] +
         [str(i) for i in range(20,1000+1,10)] +
@@ -265,6 +270,9 @@ def register_globals ():
         # Advanced RISC Machines
         'arm',
 
+	# z Systems (aka s390x)
+	's390x',
+
         # Combined architectures for platforms/toolsets that support building for
         # multiple architectures at once. "combined" would be the default multi-arch
         # for the toolset.
@@ -310,7 +318,10 @@ def register_globals ():
 
         # Advanced RISC Machines
         'armv2', 'armv2a', 'armv3', 'armv3m', 'armv4', 'armv4t', 'armv5',
-        'armv5t', 'armv5te', 'armv6', 'armv6j', 'iwmmxt', 'ep9312'],
+        'armv5t', 'armv5te', 'armv6', 'armv6j', 'iwmmxt', 'ep9312',
+
+	# z Systems (aka s390x)
+	'z196', 'zEC12', 'z13', 'z13', 'z14'],
 
         ['propagated', 'optional'])
 

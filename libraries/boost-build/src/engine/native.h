@@ -7,6 +7,7 @@
 #ifndef NATIVE_H_VP_2003_12_09
 #define NATIVE_H_VP_2003_12_09
 
+#include "config.h"
 #include "function.h"
 #include "frames.h"
 #include "lists.h"

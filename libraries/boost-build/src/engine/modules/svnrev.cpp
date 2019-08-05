@@ -56,7 +56,7 @@ static void processfile(const char *name,
 {
     char str[MAX_LINELENGTH], str_base[MAX_LINELENGTH];
     char name_base[MAX_LINELENGTH];
-    char *p1;
+	const char *p1;
     FILE *fp, *fp_base;
     int build, maj_build;
     int year, month, day;
@@ -98,7 +98,7 @@ static void processfile(const char *name,
         name_base[(int)(p1 - name)] = '\0';
     } else {
         name_base[0] = '\0';
-        p1 = (char*)name;
+        p1 = (const char*)name;
     } /* if */
     sprintf(name_base + strlen(name_base), ".svn/text-base/%s.svn-base", p1);
 

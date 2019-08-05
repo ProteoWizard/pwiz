@@ -30,6 +30,12 @@ feature.feature architecture
         # Advanced RISC Machines
         arm
 
+        # RISC-V
+        riscv
+
+        # z Systems (aka s390x)
+        s390x
+
         # Combined architectures for platforms/toolsets that support building for
         # multiple architectures at once. "combined" would be the default multi-arch
         # for the toolset.

@@ -73,7 +73,7 @@ void path_parse( char const * file, PATHNAME * f )
 #if PATH_DELIM == '\\'
     /* On NT, look for dir\ as well */
     {
-        char * const p1 = strrchr( p ? p + 1 : file, '\\' );
+        char const * p1 = strrchr( p ? p + 1 : file, '\\' );
         if ( p1 ) p = p1;
     }
 #endif

@@ -11,6 +11,7 @@
 #ifndef TIMESTAMP_H_SW_2011_11_18
 #define TIMESTAMP_H_SW_2011_11_18
 
+#include "config.h"
 #include "object.h"
 
 #ifdef OS_NT

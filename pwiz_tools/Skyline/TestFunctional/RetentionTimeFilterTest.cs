@@ -255,17 +255,20 @@ namespace pwiz.SkylineTestFunctional
         private void AssertChromatogramWindow(SrmDocument document, ChromatogramSet chromatogramSet,
             double expectedStartTime, double expectedEndTime, params ChromatogramGroupInfo[] chromGroupInfos)
         {
-            ChromatogramGroupInfo[] basePeakChromatograms;
-            Assert.IsTrue(document.Settings.MeasuredResults.TryLoadAllIonsChromatogram(chromatogramSet, ChromExtractor.base_peak, true,
-                out basePeakChromatograms));
-            if (basePeakChromatograms.Length > 0)
+            ChromatogramGroupInfo[] ticChromatograms;
+            Assert.IsTrue(document.Settings.MeasuredResults.TryLoadAllIonsChromatogram(chromatogramSet,
+                ChromExtractor.summed, true,
+                out ticChromatograms));
+            if (ticChromatograms.Length > 0)
             {
-                double runStartTime = basePeakChromatograms.Min(chromGroup => chromGroup.TimeIntensitiesGroup.MinTime);
+                double runStartTime =
+                    ticChromatograms.Min(chromGroup => chromGroup.TimeIntensitiesGroup.MinTime);
                 double runEndTime =
-                    basePeakChromatograms.Max(chromGroup => chromGroup.TimeIntensitiesGroup.MaxTime);
+                    ticChromatograms.Max(chromGroup => chromGroup.TimeIntensitiesGroup.MaxTime);
                 expectedStartTime = Math.Max(runStartTime, expectedStartTime);
                 expectedEndTime = Math.Min(runEndTime, expectedEndTime);
             }
+
             const double delta = .15;
             foreach (var chromGroupInfo in chromGroupInfos)
             {
