@@ -51,6 +51,14 @@
 #ifndef IO_REPARSE_TAG_SYMLINK
 # define IO_REPARSE_TAG_SYMLINK	(0xA000000CL)
 #endif
+
+#include <io.h>
+#if !defined(__BORLANDC__)
+#define dup _dup
+#define dup2 _dup2
+#define open _open
+#define close _close
+#endif /* __BORLANDC__ */
 #endif /* OS_NT */
 
 #if defined(USE_EXECUNIX)
@@ -1855,7 +1863,7 @@ LIST * builtin_pad( FRAME * frame, int flags )
         return list_new( object_copy( string ) );
     else
     {
-        char * buffer = BJAM_MALLOC( desired + 1 );
+        char * buffer = (char *)BJAM_MALLOC( desired + 1 );
         int i;
         LIST * result;
 
@@ -2003,7 +2011,7 @@ LIST *builtin_readlink( FRAME * frame, int flags )
         if ( buf != static_buf )
             BJAM_FREE( buf );
         bufsize *= 2;
-        buf = BJAM_MALLOC( bufsize );
+        buf = (char *)BJAM_MALLOC( bufsize );
     }
 
     if ( buf != static_buf )
@@ -2383,7 +2391,7 @@ PyObject * bjam_backtrace( PyObject * self, PyObject * args )
     PyObject     * result = PyList_New( 0 );
     struct frame * f = frame_before_python_call;
 
-    for ( ; f = f->prev; )
+    for ( ; (f = f->prev); )
     {
         PyObject   * tuple = PyTuple_New( 4 );
         char const * file;
@@ -2425,8 +2433,10 @@ PyObject * bjam_caller( PyObject * self, PyObject * args )
 
 #ifdef HAVE_POPEN
 
-#if defined(_MSC_VER) || defined(__BORLANDC__)
+#if defined(_MSC_VER) || defined(__BORLANDC__) || defined(__MINGW64__) || defined(__MINGW32__)
+    #undef popen
     #define popen windows_popen_wrapper
+    #undef pclose
     #define pclose _pclose
 
     /*

@@ -657,7 +657,7 @@ RULE * lookup_rule( OBJECT * rulename, module_t * m, int local_only )
     else if ( !local_only && m->imported_modules )
     {
         /* Try splitting the name into module and rule. */
-        char * p = strchr( object_str( rulename ), '.' ) ;
+        const char * p = strchr( object_str( rulename ), '.' ) ;
         if ( p )
         {
             /* Now, r->name keeps the module name, and p + 1 keeps the rule

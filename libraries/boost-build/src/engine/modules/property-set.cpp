@@ -66,7 +66,7 @@ static void ps_map_init( struct ps_map * map )
     size_t i;
     map->table_size = 2;
     map->num_elems = 0;
-    map->table = BJAM_MALLOC( map->table_size * sizeof( struct ps_map_entry * ) );
+    map->table = (struct ps_map_entry * *)BJAM_MALLOC( map->table_size * sizeof( struct ps_map_entry * ) );
     for ( i = 0; i < map->table_size; ++i )
     {
         map->table[ i ] = NULL;
@@ -94,7 +94,7 @@ static void ps_map_rehash( struct ps_map * map )
 {
     struct ps_map old = *map;
     size_t i;
-    map->table = BJAM_MALLOC( map->table_size * 2 * sizeof( struct ps_map_entry * ) );
+    map->table = (struct ps_map_entry * *)BJAM_MALLOC( map->table_size * 2 * sizeof( struct ps_map_entry * ) );
     map->table_size *= 2;
     for ( i = 0; i < map->table_size; ++i )
     {
@@ -134,7 +134,7 @@ static struct ps_map_entry * ps_map_insert(struct ps_map * map, LIST * key)
         ps_map_rehash( map );
         bucket = hash_val % map->table_size;
     }
-    pos = BJAM_MALLOC( sizeof( struct ps_map_entry ) );
+    pos = (struct ps_map_entry *)BJAM_MALLOC( sizeof( struct ps_map_entry ) );
     pos->next = map->table[bucket];
     pos->key = key;
     pos->value = 0;

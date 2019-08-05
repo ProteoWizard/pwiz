@@ -17,7 +17,7 @@
  *        was supplied for an option that does not require one."
  */
 
-int getoptions( int argc, char * * argv, char * opts, bjam_option * optv )
+int getoptions( int argc, char * * argv, const char * opts, bjam_option * optv )
 {
     int i;
     int optc = N_OPTS;
@@ -40,7 +40,7 @@ int getoptions( int argc, char * * argv, char * opts, bjam_option * optv )
 
         for ( arg = &argv[ i ][ 1 ]; *arg; ++arg )
         {
-            char * f;
+            const char * f;
 
             for ( f = opts; *f; ++f )
                 if ( *f == *arg )
@@ -56,7 +56,7 @@ int getoptions( int argc, char * * argv, char * opts, bjam_option * optv )
 
             if ( f[ 1 ] != ':' )
             {
-                optv++->val = "true";
+                optv++->val = (char *)"true";
             }
             else if ( arg[ 1 ] )
             {

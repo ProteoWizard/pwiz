@@ -15,12 +15,12 @@
 
 #include "constants.h"
 #include "jambase.h"
-#include "jamgram.h"
+#include "jamgram.hpp"
 
 
 struct keyword
 {
-    char * word;
+    const char * word;
     int    type;
 } keywords[] =
 {
@@ -94,7 +94,7 @@ void yyfparse( OBJECT * s )
     include * i = (include *)BJAM_MALLOC( sizeof( *i ) );
 
     /* Push this onto the incp chain. */
-    i->string = "";
+    i->string = (char*)"";
     i->strings = 0;
     i->file = 0;
     i->fname = object_copy( s );
@@ -104,7 +104,7 @@ void yyfparse( OBJECT * s )
 
     /* If the filename is "+", it means use the internal jambase. */
     if ( !strcmp( object_str( s ), "+" ) )
-        i->strings = jambase;
+        i->strings = (char**)jambase;
 }
 
 
@@ -684,7 +684,7 @@ int yylex()
         if ( !notkeyword && !( isalpha( *buf ) && ( scanmode == SCAN_PUNCT || scanmode == SCAN_PARAMS || scanmode == SCAN_ASSIGN ) ) )
             for ( k = keywords; k->word; ++k )
                 if ( ( *buf == *k->word ) && !strcmp( k->word, buf ) )
-                { 
+                {
                     yylval.type = k->type;
                     yylval.keyword = k->word;  /* used by symdump */
                     break;
