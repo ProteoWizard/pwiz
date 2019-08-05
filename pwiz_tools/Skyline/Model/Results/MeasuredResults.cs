@@ -558,6 +558,19 @@ namespace pwiz.Skyline.Model.Results
             get { return Caches.Any(cache => cache.HasAllIonsChromatograms); }
         }
 
+        public IEnumerable<string> QcTraceNames
+        {
+            get
+            {
+                var qcTraceInfos = Caches.SelectMany(cache=>cache.ChromGroupHeaderInfos
+                                                                 .Where(header => header.Flags.HasFlag(ChromGroupHeaderInfo.FlagValues.extracted_qc_trace))
+                                                                 .Select(header => cache.LoadChromatogramInfo(header)));
+                var qcTraceNames = qcTraceInfos.Select(info => info.TextId).Distinct().ToList();
+                qcTraceNames.Sort();
+                return qcTraceNames;
+            }
+        }
+
         public bool TryLoadAllIonsChromatogram(int index,
                                                ChromExtractor extractor,
                                                bool loadPoints,

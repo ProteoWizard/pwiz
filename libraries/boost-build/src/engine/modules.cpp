@@ -399,7 +399,7 @@ void module_set_fixed_variables( struct module_t * m, int n_variables )
 {
     /* Reallocate */
     struct hash * variable_indices;
-    LIST * * fixed_variables = BJAM_MALLOC( n_variables * sizeof( LIST * ) );
+    LIST * * fixed_variables = (LIST * *)BJAM_MALLOC( n_variables * sizeof( LIST * ) );
     if ( m->fixed_variables )
     {
         memcpy( fixed_variables, m->fixed_variables, m->num_fixed_variables * sizeof( LIST * ) );

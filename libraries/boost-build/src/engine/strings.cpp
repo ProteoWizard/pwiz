@@ -148,7 +148,8 @@ void string_append_range( string * self, char const * start, char const * finish
 
     maybe_reserve( self, new_size );
 
-    memcpy( self->value + self->size, start, rhs_size );
+    if ( start != finish )
+        memcpy( self->value + self->size, start, rhs_size );
     self->size = new_size;
     self->value[ new_size ] = 0;
 
@@ -219,7 +220,7 @@ void string_unit_test()
     }
 
     {
-        char * const original = "  \n\t\v  Foo \r\n\v \tBar\n\n\r\r\t\n\v\t \t";
+        const char * const original = "  \n\t\v  Foo \r\n\v \tBar\n\n\r\r\t\n\v\t \t";
         string copy[ 1 ];
         string_copy( copy, original );
         assert( !strcmp( copy->value, original ) );
@@ -228,7 +229,7 @@ void string_unit_test()
     }
 
     {
-        char * const foo = "Foo    ";
+        const char * const foo = "Foo    ";
         string foo_copy[ 1 ];
         string_copy( foo_copy, foo );
         string_rtrim( foo_copy );
@@ -238,7 +239,7 @@ void string_unit_test()
         assert( !strcmp( foo_copy->value, "Foo" ) );
     }
     {
-        char * const bar = "Bar\0\0\0";
+        const char * const bar = "Bar\0\0\0";
         string bar_copy[ 1 ];
         string_copy( bar_copy, bar );
         string_rtrim( bar_copy );

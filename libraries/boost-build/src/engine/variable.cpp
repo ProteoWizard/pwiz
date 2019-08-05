@@ -58,7 +58,7 @@ struct _variable
 };
 
 static LIST * * var_enter( struct module_t *, OBJECT * symbol );
-static void var_dump( OBJECT * symbol, LIST * value, char * what );
+static void var_dump( OBJECT * symbol, LIST * value, const char * what );
 
 
 /*
@@ -71,7 +71,7 @@ static void var_dump( OBJECT * symbol, LIST * value, char * what );
  * Otherwise, split the value at blanks.
  */
 
-void var_defines( struct module_t * module, char * const * e, int preprocess )
+void var_defines( struct module_t * module, const char * const * e, int preprocess )
 {
     string buf[ 1 ];
 
@@ -79,7 +79,7 @@ void var_defines( struct module_t * module, char * const * e, int preprocess )
 
     for ( ; *e; ++e )
     {
-        char * val;
+        const char * val;
 
         if ( ( val = strchr( *e, '=' ) )
 #if defined( OS_MAC )
@@ -102,8 +102,8 @@ void var_defines( struct module_t * module, char * const * e, int preprocess )
             }
             else
             {
-                char * p;
-                char * pp;
+                const char * p;
+                const char * pp;
                 char split =
 #if defined( OPT_NO_EXTERNAL_VARIABLE_SPLIT )
                     '\0'
@@ -365,7 +365,7 @@ static LIST * * var_enter( struct module_t * module, OBJECT * symbol )
  * var_dump() - dump a variable to stdout
  */
 
-static void var_dump( OBJECT * symbol, LIST * value, char * what )
+static void var_dump( OBJECT * symbol, LIST * value, const char * what )
 {
     out_printf( "%s %s = ", what, object_str( symbol ) );
     list_print( value );
