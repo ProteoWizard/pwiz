@@ -10682,20 +10682,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to --&gt;.
-        /// </summary>
-        public static string ExceptionDialog_InnerException {
-            get {
-                return ResourceManager.GetString("ExceptionDialog_InnerException", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Caused by ---&gt;.
         /// </summary>
-        public static string ExceptionDialog_NestedExceptionSeparator {
+        public static string ExceptionDialog_Caused_by_____ {
             get {
-                return ResourceManager.GetString("ExceptionDialog_NestedExceptionSeparator", resourceCulture);
+                return ResourceManager.GetString("ExceptionDialog_Caused_by_____", resourceCulture);
             }
         }
         

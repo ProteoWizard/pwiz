@@ -10601,10 +10601,7 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="DocumentAnnotationUpdater_UpdateAnnotations_Updating_calculated_annotations" xml:space="preserve">
     <value>Updating calculated annotations</value>
   </data>
-  <data name="ExceptionDialog_InnerException" xml:space="preserve">
-    <value>--&gt;</value>
-  </data>
-  <data name="ExceptionDialog_NestedExceptionSeparator" xml:space="preserve">
+  <data name="ExceptionDialog_Caused_by_____" xml:space="preserve">
     <value>Caused by ---&gt;</value>
   </data>
 </root>

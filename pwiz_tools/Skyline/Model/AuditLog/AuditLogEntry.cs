@@ -143,7 +143,8 @@ namespace pwiz.Skyline.Model.AuditLog
             foreach (var entry in AuditLogEntries.Enumerate())
             {
                 Assume.IsTrue(entry.TimeStampUTC <= time && entry.LogIndex > logIndex,
-                    string.Format(AuditLogStrings.AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing, entry.TimeStampUTC, entry.LogIndex.ToString()));
+                    string.Format(AuditLogStrings.AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing_Entry_timestamp__0_G___entry_order_number, 
+                        entry.TimeStampUTC, entry.LogIndex.ToString()));
 
                 time = entry.TimeStampUTC;
                 logIndex = entry.LogIndex;
@@ -215,8 +216,8 @@ namespace pwiz.Skyline.Model.AuditLog
                     {
                         if (msgBuilder.Length > 0)
                         {
-                            msgBuilder.Append(Resources.ExceptionDialog_InnerException);
-                            stackList.Add(Resources.ExceptionDialog_NestedExceptionSeparator);
+                            msgBuilder.Append(@"--->");
+                            stackList.Add(Resources.ExceptionDialog_Caused_by_____);
                         }
                         msgBuilder.Append(exception.Message);
                         stackList.Add(exception.Message);
