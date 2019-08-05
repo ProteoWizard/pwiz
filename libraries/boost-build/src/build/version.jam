@@ -6,8 +6,8 @@
 import numbers ;
 
 
-.major = "2018" ;
-.minor = "02" ;
+.major = "4" ;
+.minor = "0" ;
 
 
 rule boost-build ( )
@@ -19,16 +19,16 @@ rule boost-build ( )
 rule print ( )
 {
     if [ verify-engine-version ]
-    {        
+    {
         ECHO "Boost.Build" [ boost-build ] ;
-    }    
+    }
 }
 
 
 rule verify-engine-version ( )
 {
     local v = [ modules.peek : JAM_VERSION ] ;
-    
+
     if $(v[1]) != $(.major) || $(v[2]) != $(.minor)
     {
         local argv = [ modules.peek : ARGV ] ;
@@ -43,7 +43,7 @@ rule verify-engine-version ( )
     else
     {
         return true ;
-    }    
+    }
 }
 
 
@@ -94,7 +94,7 @@ rule version-less ( lhs + : rhs + )
     {
         result = "true" ;
     }
-    
+
     return $(result) ;
 }
 
@@ -133,7 +133,7 @@ rule check-jam-version ( version + )
 rule __test__ ( )
 {
     import assert ;
-    
+
     local jam-version = [ modules.peek : JAM_VERSION ] ;
     local future-version = $(jam-version) ;
     future-version += "1" ;

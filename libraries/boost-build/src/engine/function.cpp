@@ -834,14 +834,14 @@ static int expand_modifiers( STACK * s, int n )
 {
     int i;
     int total = 1;
-    LIST * * args = stack_get( s );
+    LIST * * args = (LIST**)stack_get( s );
     for ( i = 0; i < n; ++i )
         total *= list_length( args[ i ] );
 
     if ( total != 0 )
     {
-        VAR_EDITS * out = stack_allocate( s, total * sizeof( VAR_EDITS ) );
-        LISTITER * iter = stack_allocate( s, n * sizeof( LIST * ) );
+        VAR_EDITS * out = (VAR_EDITS*)stack_allocate( s, total * sizeof( VAR_EDITS ) );
+        LISTITER * iter = (LISTITER*)stack_allocate( s, n * sizeof( LIST * ) );
         for ( i = 0; i < n; ++i )
             iter[ i ] = list_begin( args[ i ] );
         i = 0;
@@ -1523,7 +1523,7 @@ static int compile_emit_actions( compiler * c, PARSE * parse )
 
 static JAM_FUNCTION * compile_to_function( compiler * c )
 {
-    JAM_FUNCTION * const result = BJAM_MALLOC( sizeof( JAM_FUNCTION ) );
+    JAM_FUNCTION * const result = (JAM_FUNCTION*)BJAM_MALLOC( sizeof( JAM_FUNCTION ) );
     int i;
     result->base.type = FUNCTION_JAM;
     result->base.reference_count = 1;
@@ -1533,16 +1533,17 @@ static JAM_FUNCTION * compile_to_function( compiler * c )
     result->base.rulename = 0;
 
     result->code_size = c->code->size;
-    result->code = BJAM_MALLOC( c->code->size * sizeof( instruction ) );
+    result->code = (instruction*)BJAM_MALLOC( c->code->size * sizeof( instruction ) );
     memcpy( result->code, c->code->data, c->code->size * sizeof( instruction ) );
 
-    result->constants = BJAM_MALLOC( c->constants->size * sizeof( OBJECT * ) );
-    memcpy( result->constants, c->constants->data, c->constants->size * sizeof(
-        OBJECT * ) );
+    result->constants = (OBJECT**)BJAM_MALLOC( c->constants->size * sizeof( OBJECT * ) );
+    if ( c->constants->size != 0 )
+        memcpy( result->constants, c->constants->data,
+                c->constants->size * sizeof( OBJECT * ) );
     result->num_constants = c->constants->size;
 
     result->num_subfunctions = c->rules->size;
-    result->functions = BJAM_MALLOC( c->rules->size * sizeof( SUBFUNCTION ) );
+    result->functions = (SUBFUNCTION*)BJAM_MALLOC( c->rules->size * sizeof( SUBFUNCTION ) );
     for ( i = 0; i < c->rules->size; ++i )
     {
         struct stored_rule * const rule = &dynamic_array_at( struct stored_rule,
@@ -1554,9 +1555,10 @@ static JAM_FUNCTION * compile_to_function( compiler * c )
         result->functions[ i ].local = rule->local;
     }
 
-    result->actions = BJAM_MALLOC( c->actions->size * sizeof( SUBACTION ) );
-    memcpy( result->actions, c->actions->data, c->actions->size * sizeof(
-        SUBACTION ) );
+    result->actions = (SUBACTION*)BJAM_MALLOC( c->actions->size * sizeof( SUBACTION ) );
+    if ( c->actions->size != 0 )
+        memcpy( result->actions, c->actions->data,
+                c->actions->size * sizeof( SUBACTION ) );
     result->num_subactions = c->actions->size;
 
     result->generic = 0;
@@ -1621,7 +1623,7 @@ static void var_parse_free( VAR_PARSE * );
 
 static VAR_PARSE_GROUP * var_parse_group_new()
 {
-    VAR_PARSE_GROUP * const result = BJAM_MALLOC( sizeof( VAR_PARSE_GROUP ) );
+    VAR_PARSE_GROUP * const result = (VAR_PARSE_GROUP*)BJAM_MALLOC( sizeof( VAR_PARSE_GROUP ) );
     dynamic_array_init( result->elems );
     return result;
 }
@@ -1698,7 +1700,7 @@ static void var_parse_actions_free( VAR_PARSE_ACTIONS * actions )
 
 static VAR_PARSE_VAR * var_parse_var_new()
 {
-    VAR_PARSE_VAR * result = BJAM_MALLOC( sizeof( VAR_PARSE_VAR ) );
+    VAR_PARSE_VAR * result = (VAR_PARSE_VAR*)BJAM_MALLOC( sizeof( VAR_PARSE_VAR ) );
     result->base.type = VAR_PARSE_TYPE_VAR;
     result->name = var_parse_group_new();
     result->subscript = 0;
@@ -2988,7 +2990,7 @@ static struct arg_list * arg_list_compile_builtin( char const * * args,
 FUNCTION * function_builtin( LIST * ( * func )( FRAME * frame, int flags ),
     int flags, char const * * args )
 {
-    BUILTIN_FUNCTION * result = BJAM_MALLOC( sizeof( BUILTIN_FUNCTION ) );
+    BUILTIN_FUNCTION * result = (BUILTIN_FUNCTION*)BJAM_MALLOC( sizeof( BUILTIN_FUNCTION ) );
     result->base.type = FUNCTION_BUILTIN;
     result->base.reference_count = 1;
     result->base.rulename = 0;
@@ -3416,9 +3418,10 @@ static struct arg_list arg_compile_impl( struct argument_compiler * c,
         break;
     }
     result.size = c->args->size;
-    result.args = BJAM_MALLOC( c->args->size * sizeof( struct argument ) );
-    memcpy( result.args, c->args->data, c->args->size * sizeof( struct argument
-        ) );
+    result.args = (struct argument*)BJAM_MALLOC( c->args->size * sizeof( struct argument ) );
+    if ( c->args->size != 0 )
+        memcpy( result.args, c->args->data,
+                c->args->size * sizeof( struct argument ) );
     return result;
 }
 
@@ -3474,7 +3477,7 @@ static struct arg_list * arg_list_compile( PARSE * parse, int * num_arguments )
         argument_list_compiler_init( c );
         argument_list_compiler_recurse( c, parse );
         *num_arguments = c->args->size;
-        result = BJAM_MALLOC( c->args->size * sizeof( struct arg_list ) );
+        result = (struct arg_list*)BJAM_MALLOC( c->args->size * sizeof( struct arg_list ) );
         memcpy( result, c->args->data, c->args->size * sizeof( struct arg_list )
             );
         argument_list_compiler_free( c );
@@ -3514,9 +3517,10 @@ static struct arg_list * arg_list_compile_builtin( char const * * args,
             argument_compiler_free( arg_comp );
         }
         *num_arguments = c->args->size;
-        result = BJAM_MALLOC( c->args->size * sizeof( struct arg_list ) );
-        memcpy( result, c->args->data, c->args->size * sizeof( struct arg_list )
-            );
+        result = (struct arg_list *)BJAM_MALLOC( c->args->size * sizeof( struct arg_list ) );
+        if ( c->args->size != 0 )
+            memcpy( result, c->args->data,
+                    c->args->size * sizeof( struct arg_list ) );
         argument_list_compiler_free( c );
         return result;
     }
@@ -3630,7 +3634,7 @@ FUNCTION * function_bind_variables( FUNCTION * f, module_t * module,
 #endif
     {
         JAM_FUNCTION * func = (JAM_FUNCTION *)f;
-        JAM_FUNCTION * new_func = BJAM_MALLOC( sizeof( JAM_FUNCTION ) );
+        JAM_FUNCTION * new_func = (JAM_FUNCTION *)BJAM_MALLOC( sizeof( JAM_FUNCTION ) );
         instruction * code;
         int i;
         assert( f->type == FUNCTION_JAM );
@@ -3638,7 +3642,7 @@ FUNCTION * function_bind_variables( FUNCTION * f, module_t * module,
         new_func->base.reference_count = 1;
         new_func->base.formal_arguments = argument_list_bind_variables(
             f->formal_arguments, f->num_formal_arguments, module, counter );
-        new_func->code = BJAM_MALLOC( func->code_size * sizeof( instruction ) );
+        new_func->code = (instruction *)BJAM_MALLOC( func->code_size * sizeof( instruction ) );
         memcpy( new_func->code, func->code, func->code_size * sizeof(
             instruction ) );
         new_func->generic = (FUNCTION *)func;
@@ -4781,8 +4785,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_COMBINE_STRINGS);
             size_t const buffer_size = code->arg * sizeof( expansion_item );
-            LIST * * const stack_pos = stack_get( s );
-            expansion_item * items = stack_allocate( s, buffer_size );
+            LIST * * const stack_pos = (LIST * * const)stack_get( s );
+            expansion_item * items = (expansion_item *)stack_allocate( s, buffer_size );
             LIST * result;
             int i;
             for ( i = 0; i < code->arg; ++i )
@@ -4957,9 +4961,9 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
 
                 /* Construct os-specific cat command. */
                 {
-                    char * command = "cat";
-                    char * quote = "\"";
-                    char * redirect = "1>&2";
+                    const char * command = "cat";
+                    const char * quote = "\"";
+                    const char * redirect = "1>&2";
 
                 #ifdef OS_NT
                     command = "type";
@@ -5103,7 +5107,7 @@ static struct arg_list * arg_list_compile_python( PyObject * bjam_signature,
         }
 
         *num_arguments = c->args->size;
-        result = BJAM_MALLOC( c->args->size * sizeof( struct arg_list ) );
+        result = (struct arg_list *)BJAM_MALLOC( c->args->size * sizeof( struct arg_list ) );
         memcpy( result, c->args->data, c->args->size * sizeof( struct arg_list )
             );
         argument_list_compiler_free( c );
@@ -5115,7 +5119,7 @@ static struct arg_list * arg_list_compile_python( PyObject * bjam_signature,
 
 FUNCTION * function_python( PyObject * function, PyObject * bjam_signature )
 {
-    PYTHON_FUNCTION * result = BJAM_MALLOC( sizeof( PYTHON_FUNCTION ) );
+    PYTHON_FUNCTION * result = (PYTHON_FUNCTION *)BJAM_MALLOC( sizeof( PYTHON_FUNCTION ) );
 
     result->base.type = FUNCTION_PYTHON;
     result->base.reference_count = 1;

@@ -541,7 +541,7 @@ def main_real():
 
     # Process each target specified on the command-line and convert it into
     # internal Boost Build target objects. Detect special clean target. If no
-    # main Boost Build targets were explictly requested use the current project
+    # main Boost Build targets were explicitly requested use the current project
     # as the target.
     for id in target_ids:
         if id == "clean":

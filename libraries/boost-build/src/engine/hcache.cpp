@@ -25,6 +25,8 @@
  * @boundname@ timestamp_sec timestamp_nsec @file@ @file@ @file@ ...
  */
 
+#include "config.h"
+
 #ifdef OPT_HEADER_CACHE_EXT
 
 #include "jam.h"

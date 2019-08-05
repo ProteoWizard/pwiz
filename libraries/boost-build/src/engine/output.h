@@ -7,6 +7,7 @@
 #ifndef BJAM_OUTPUT_H
 #define BJAM_OUTPUT_H
 
+#include "config.h"
 #include "object.h"
 #include "timestamp.h"
 

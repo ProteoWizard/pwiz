@@ -447,7 +447,7 @@ int file_collect_archive_content_( file_archive_info_t * const archive )
              * filename strings longer than 15 characters, i.e. those that do
              * not fit into ar_name.
              */
-            string_table = BJAM_MALLOC_ATOMIC( lar_size + 1 );
+            string_table = (char*)BJAM_MALLOC_ATOMIC( lar_size + 1 );
             if ( read( fd, string_table, lar_size ) != lar_size )
                 out_printf( "error reading string table\n" );
             string_table[ lar_size ] = '\0';

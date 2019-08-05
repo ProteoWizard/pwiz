@@ -1106,7 +1106,7 @@ static CMD * make1cmds( TARGET * t )
             /* This action has already been processed for another target.
              * Just set up the dependency graph correctly and move on.
              */
-            first = a0->action->first_cmd;
+            first = (CMD *)a0->action->first_cmd;
             if( cmds )
             {
                 last_cmd->next = cmdlist_append_cmd( last_cmd->next, first );
@@ -1115,7 +1115,7 @@ static CMD * make1cmds( TARGET * t )
             {
                 cmds = first;
             }
-            last_cmd = a0->action->last_cmd;
+            last_cmd = (CMD *)a0->action->last_cmd;
             continue;
         }
 
