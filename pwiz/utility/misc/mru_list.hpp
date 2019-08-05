@@ -112,9 +112,9 @@ public:
   const_reverse_iterator rbegin() const {return il.rbegin();}
   const_reverse_iterator rend() const {return il.rend();}
 
-  typename iterator find(const typename KeyExtractor::result_type& key) const
+  iterator find(const typename KeyExtractor::result_type& key) const
   {
-      const auto& idx = il.get<hash_index_tag>();
+      const auto& idx = il.template get<hash_index_tag>();
       return il.project<0>(idx.find(key));
   }
 

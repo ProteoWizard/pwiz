@@ -2703,7 +2703,7 @@ RawFile* RawFileImpl::getRawByThread(size_t currentThreadId) const
         return reinterpret_cast<RawFile*>(insertPair->second.get());
     }
 #else
-    return reinterpret_cast<RawFile*>(this);
+    return const_cast<RawFileImpl*>(this);
 #endif
 }
 
