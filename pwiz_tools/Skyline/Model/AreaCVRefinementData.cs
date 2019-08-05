@@ -28,7 +28,13 @@ namespace pwiz.Skyline.Model
                 !double.IsNaN(_settings.QValueCutoff) &&
                 _settings.QValueCutoff < 1.0)
             {
-                qvalueCutoff = settings.QValueCutoff;
+                qvalueCutoff = _settings.QValueCutoff;
+            }
+
+            int? minDetections = null;
+            if (_settings.MinimumDetections != -1)
+            {
+                minDetections = _settings.MinimumDetections;
             }
 
             foreach (var peptideGroup in document.MoleculeGroups)
@@ -75,7 +81,7 @@ namespace pwiz.Skyline.Model
                                 areas.Add(new CVAreaInfo(sumArea, normalizedArea));
                             }
 
-                            if (qvalueCutoff.HasValue && areas.Count < _settings.MinimumDetections)
+                            if (qvalueCutoff.HasValue && minDetections.HasValue && areas.Count < minDetections.Value)
                                 continue;
                             AddToInternalData(data, areas, peptideGroup, peptide, transitionGroupDocNode);
                         }
