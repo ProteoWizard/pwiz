@@ -196,6 +196,8 @@ namespace pwiz.Skyline.Model
         public double? QValueCutoff { get; set; }
         [Track]
         public int? MinimumDetections { get; set; }
+        [Track]
+        public AreaCVNormalizationMethod NormalizationMethod { get; set; }
 
         public SrmDocument Refine(SrmDocument document)
         {
@@ -309,7 +311,7 @@ namespace pwiz.Skyline.Model
             {
                 AreaCVRefinementData data;
                 if (QValueCutoff.HasValue && MinimumDetections.HasValue)
-                    data = new AreaCVRefinementData(refined, new AreaCVRefinementData.AreaCVRefinementSettings(CVCutoff.Value, QValueCutoff.Value, MinimumDetections.Value));
+                    data = new AreaCVRefinementData(refined, new AreaCVRefinementData.AreaCVRefinementSettings(CVCutoff.Value, QValueCutoff.Value, MinimumDetections.Value, NormalizationMethod));
                 else
                     data = new AreaCVRefinementData(refined, new AreaCVRefinementData.AreaCVRefinementSettings(CVCutoff.Value));
                 refined = data.RemoveAboveCVCuttoff(refined);

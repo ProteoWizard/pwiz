@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -21,6 +22,8 @@ namespace pwiz.Skyline.Model
             var areas = new List<CVAreaInfo>(replicates);
             var annotations = new string[] { null };
             var data = new List<InternalData>();
+            var hasHeavyMods = document.Settings.PeptideSettings.Modifications.HasHeavyModifications;
+            var hasGlobalStandards = document.Settings.HasGlobalStandardArea;
             var ms1 = false;
             var best = false;
             double? qvalueCutoff = null;
@@ -36,6 +39,10 @@ namespace pwiz.Skyline.Model
             {
                 minDetections = _settings.MinimumDetections;
             }
+
+            MedianInfo medianInfo = null;
+            if (_settings.NormalizationMethod == AreaCVNormalizationMethod.medians)
+                medianInfo = CalculateMedianAreas(document);
 
             foreach (var peptideGroup in document.MoleculeGroups)
             {
@@ -78,6 +85,22 @@ namespace pwiz.Skyline.Model
                                     .FirstOrDefault(c => c.OptimizationStep == 0).Area);
 
                                 var normalizedArea = sumArea;
+                                if (_settings.NormalizationMethod == AreaCVNormalizationMethod.medians)
+                                    normalizedArea /= medianInfo.Medians[i] / medianInfo.MedianMedian;
+                                else if (_settings.NormalizationMethod == AreaCVNormalizationMethod.global_standards &&
+                                         hasGlobalStandards)
+                                    normalizedArea =
+                                        NormalizeToGlobalStandard(document, transitionGroupDocNode, i, sumArea);
+                                else if (_settings.NormalizationMethod == AreaCVNormalizationMethod.ratio && hasHeavyMods && _settings.RatioIndex >= 0)
+                                {
+                                    var ci = transitionGroupDocNode.GetSafeChromInfo(i).FirstOrDefault(c => c.OptimizationStep == 0);
+                                    if (ci != null)
+                                    {
+                                        var ratioValue = ci.GetRatio(_settings.RatioIndex);
+                                        if (ratioValue != null)
+                                            normalizedArea /= ratioValue.Ratio;
+                                    }
+                                }
                                 areas.Add(new CVAreaInfo(sumArea, normalizedArea));
                             }
 
@@ -142,7 +165,77 @@ namespace pwiz.Skyline.Model
                 (int) SrmDocument.Level.Molecules);
         }
 
+        private MedianInfo CalculateMedianAreas(SrmDocument document)
+        {
+            double? qvalueCutoff = null;
+            if (!double.IsNaN(_settings.QValueCutoff))
+                qvalueCutoff = _settings.QValueCutoff;
+            var replicates = document.MeasuredResults.Chromatograms.Count;
+            var allAreas = new List<List<double?>>(document.MoleculeTransitionGroupCount);
+
+            foreach (var transitionGroupDocNode in document.MoleculeTransitionGroups)
+            {
+                if (transitionGroupDocNode.IsDecoy)
+                    continue;
+
+                var detections = 0;
+                var areas = new List<double?>(replicates);
+
+                for (var i = 0; i < replicates; ++i)
+                {
+                    double? area = transitionGroupDocNode.GetPeakArea(i, qvalueCutoff);
+                    if (area.HasValue)
+                        ++detections;
+                    areas.Add(area);
+                }
+
+                if (qvalueCutoff.HasValue && _settings.MinimumDetections != -1 && detections < _settings.MinimumDetections)
+                    continue;
+
+                allAreas.Add(areas);
+            }
+
+            var medians = new List<double>(replicates);
+            for (var i = 0; i < replicates; ++i)
+                medians.Add(new Statistics(GetReplicateAreas(allAreas, i)).Median());
+
+            return new MedianInfo(medians, new Statistics(medians).Median());
+        }
+
+        private IEnumerable<double> GetReplicateAreas(List<List<double?>> allAreas, int replicateIndex)
+        {
+            foreach (var areas in allAreas)
+            {
+                var area = areas[replicateIndex];
+                if (area.HasValue)
+                    yield return area.Value;
+            }
+        }
+
+        private static double NormalizeToGlobalStandard(SrmDocument document, TransitionGroupDocNode transitionGroupDocNode, int replicateIndex, double area)
+        {
+            var chromSet = document.MeasuredResults.Chromatograms[replicateIndex];
+            var groupChromSet = transitionGroupDocNode.Results[replicateIndex];
+            var fileInfoFirst = chromSet.GetFileInfo(groupChromSet.First(c => c.OptimizationStep == 0).FileId);
+            var globalStandard = document.Settings.CalcGlobalStandardArea(replicateIndex, fileInfoFirst);
+            if (globalStandard != 0.0)
+                area /= globalStandard;
+            return area;
+        }
+
         public IList<CVData> Data { get; private set; }
+
+        private class MedianInfo
+        {
+            public MedianInfo(List<double> medians, double medianMedian)
+            {
+                Medians = medians;
+                MedianMedian = medianMedian;
+            }
+
+            public IList<double> Medians { get; private set; }
+            public double MedianMedian { get; private set; }
+        }
 
         public class PeptideAnnotationPair
         {
@@ -229,18 +322,23 @@ namespace pwiz.Skyline.Model
                 CVCutoff = cvCutoff;
                 QValueCutoff = double.NaN;
                 MinimumDetections = -1;
+                NormalizationMethod = AreaCVNormalizationMethod.none;
+                RatioIndex = -1;
             }
 
-            public AreaCVRefinementSettings(double cvCutoff, double qValueCutoff, int minimumDetections)
+            public AreaCVRefinementSettings(double cvCutoff, double qValueCutoff, int minimumDetections, AreaCVNormalizationMethod normalizationMethod)
             {
                 CVCutoff = cvCutoff;
                 QValueCutoff = qValueCutoff;
                 MinimumDetections = minimumDetections;
+                NormalizationMethod = normalizationMethod;
             }
 
             public double QValueCutoff { get; private set; }
             public double CVCutoff { get; private set; }
             public int MinimumDetections { get; private set; }
+            public AreaCVNormalizationMethod NormalizationMethod { get; private set; }
+            public int RatioIndex { get; private set; }
         }
     }
 }

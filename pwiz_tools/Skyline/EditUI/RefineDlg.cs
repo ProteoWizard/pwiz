@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Skyline.Controls.Graphs;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -40,6 +41,8 @@ namespace pwiz.Skyline.EditUI
 
         private readonly string _removeLabelText;
         private readonly string _removeTipText;
+
+        private int _standardTypeCount;
 
         public RefineDlg(SrmDocument document)
         {
@@ -100,54 +103,54 @@ namespace pwiz.Skyline.EditUI
                 numericUpDownDetections.Value = 2;
             }
 
-//            var detectionsAvailablePrev = numericUpDownDetections.Enabled;
-//            var detectionsAvailable = AreaGraphController.ShouldUseQValues(_document);
-//            numericUpDownDetections.Enabled = detectionsAvailable;
-//
-//            if (detectionsAvailable)
-//            {
-//                numericUpDownDetections.Minimum = 2;
-//                numericUpDownDetections.Maximum = _document.MeasuredResults.Chromatograms.Count;
-//
-//                if (!detectionsAvailablePrev)
-//                {
-//                    numericUpDownDetections.Value = 2;
-//                }
-//            }
-//
-//            var mods = _document.Settings.PeptideSettings.Modifications;
-//            var standardTypes = mods.RatioInternalStandardTypes;
-//
-//            comboBoxNormalize.Items.Clear();
-//            _standardTypeCount = 0;
-//
-//            if (mods.HasHeavyModifications)
-//            {
-//                comboBoxNormalize.Items.AddRange(standardTypes.Select((s) => s.Title).ToArray());
-//                _standardTypeCount = standardTypes.Count;
-//            }
-//
-//            var hasGlobalStandard = _document.Settings.HasGlobalStandardArea;
-//            if (hasGlobalStandard)
-//                comboBoxNormalize.Items.Add(Resources.AreaCVToolbar_UpdateUI_Global_standards);
-//            comboBoxNormalize.Items.Add(Resources.AreaCVToolbar_UpdateUI_Medians);
-//            comboBoxNormalize.Items.Add(Resources.AreaCVToolbar_UpdateUI_None);
-//
-//            if (AreaGraphController.NormalizationMethod == AreaCVNormalizationMethod.ratio)
-//                comboBoxNormalize.SelectedIndex = AreaGraphController.AreaCVRatioIndex;
-//            else
-//            {
-//                var index = _standardTypeCount + (int)AreaGraphController.NormalizationMethod;
-//                if (!hasGlobalStandard)
-//                    --index;
-//                comboBoxNormalize.SelectedIndex = index;
-//            }
+            var mods = _document.Settings.PeptideSettings.Modifications;
+            var standardTypes = mods.RatioInternalStandardTypes;
+            comboNormalizeTo.Items.Clear();
+
+            if (mods.HasHeavyModifications)
+            {
+                comboNormalizeTo.Items.AddRange(standardTypes.Select((s) => s.Title).ToArray());
+                _standardTypeCount = standardTypes.Count;
+            }
+
+            
+            var hasGlobalStandard = _document.Settings.HasGlobalStandardArea;
+            if (hasGlobalStandard)
+                comboNormalizeTo.Items.Add(Resources.AreaCVToolbar_UpdateUI_Global_standards);
+            comboNormalizeTo.Items.Add(Resources.AreaCVToolbar_UpdateUI_Medians);
+            comboNormalizeTo.Items.Add(Resources.AreaCVToolbar_UpdateUI_None);
+            comboNormalizeTo.SelectedIndex = comboNormalizeTo.Items.Count - 1;
         }
 
-//        private string ValueOrEmpty(double value)
-//        {
-//            return double.IsNaN(value) ? string.Empty : value.ToString(CultureInfo.CurrentUICulture);
-//        }
+        private AreaCVNormalizationMethod GetNormalizationIndex(int idx, SrmDocument doc)
+        {
+            if (idx < _standardTypeCount)
+            {
+                return AreaCVNormalizationMethod.ratio;
+            }
+            idx -= _standardTypeCount;
+            if (!doc.Settings.HasGlobalStandardArea)
+                idx++;
+
+            var normalizationMethod = AreaCVNormalizationMethod.none;
+            switch (idx)
+            {
+                case 0:
+                    normalizationMethod =
+                        doc.Settings.HasGlobalStandardArea
+                            ? AreaCVNormalizationMethod.global_standards
+                            : AreaCVNormalizationMethod.medians;
+                    break;
+                case 1:
+                    normalizationMethod = AreaCVNormalizationMethod.medians;
+                    break;
+                case 2:
+                    normalizationMethod = AreaCVNormalizationMethod.none;
+                    break;
+            }
+
+            return normalizationMethod;
+        }
 
         protected override void OnShown(EventArgs e)
         {
@@ -213,6 +216,7 @@ namespace pwiz.Skyline.EditUI
             get { return (int) numericUpDownDetections.Value; }
             set { numericUpDownDetections.Value = value; }
         }
+        
 
         public IsotopeLabelType RefineLabelType
         {
@@ -369,6 +373,9 @@ namespace pwiz.Skyline.EditUI
                 minimumDetections = (int) numericUpDownDetections.Value;
             }
 
+            var normIdx = comboNormalizeTo.SelectedIndex;
+            var normMethod = GetNormalizationIndex(normIdx, _document);
+
             RefinementSettings = new RefinementSettings
                                      {
                                          MinPeptidesPerProtein = minPeptidesPerProtein,
@@ -394,7 +401,8 @@ namespace pwiz.Skyline.EditUI
                                                                (cbAutoTransitions.Checked ? PickLevel.transitions : 0),
                                          CVCutoff = cvCutoff,
                                          QValueCutoff = qvalueCutoff,
-                                         MinimumDetections =  minimumDetections
+                                         MinimumDetections =  minimumDetections,
+                                         NormalizationMethod = normMethod
                                      };
 
             DialogResult = DialogResult.OK;
