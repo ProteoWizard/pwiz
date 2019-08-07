@@ -115,7 +115,7 @@ public:
   iterator find(const typename KeyExtractor::result_type& key) const
   {
       const auto& idx = il.template get<hash_index_tag>();
-      return il.project<0>(idx.find(key));
+      return this->il.template project<0>(idx.find(key));
   }
 
 private:

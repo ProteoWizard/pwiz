@@ -366,6 +366,8 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
         }
     }
 
+    msds.clear();
+
     // test reverse iteration of metadata on a fresh document;
     // this tests that caching optimization for forward iteration doesn't hide problems;
     // i.e. SpectrumList_Thermo::findPrecursorSpectrumIndex()
@@ -383,8 +385,6 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
             for (size_t j = 0, end = msd_reverse.run.chromatogramListPtr->size(); j < end; ++j)
                 msd_reverse.run.chromatogramListPtr->chromatogram(end - j - 1);
     }
-
-    msds.clear();
 
     // no unicode test for HTTP paths
     if (isHTTP(rawpath))
@@ -694,10 +694,11 @@ int testReader(const Reader& reader, const vector<string>& args, bool testAccept
                     }
                     catch (...)
                     {
-                        //string foo;
-                        //cin >> foo;
-                        throw runtime_error("Cannot rename " + rawpath + ": there are unreleased file locks!");
-                        //cerr << "Cannot rename " << rawpath << ": there are unreleased file locks!" << endl;
+                        // HACK: bug in CompassXtract, used only for YEP/FID formats now, keeps directory locked after opening it but has no problem with re-opening the file
+                        if (bfs::exists(bfs::path(rawpath) / "Analysis.yep"))
+                            cerr << "Cannot rename " << rawpath << ": there are unreleased file locks!" << endl;
+                        else
+                            throw runtime_error("Cannot rename " + rawpath + ": there are unreleased file locks!");
                     }
                 }
             }
