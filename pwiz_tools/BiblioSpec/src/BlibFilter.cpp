@@ -391,6 +391,9 @@ void BlibFilter::buildNonRedundantLib() {
                     optional_cols += ", startTime, endTime";
                     if (tableExists(redundantDbName_, "Proteins")) {
                         tableVersion_ = MIN_VERSION_PROTEINS;
+                        if (tableColumnExists(redundantDbName_, "RefSpectra", "totalIonCurrent")) {
+                            tableVersion_ = MIN_VERSION_TIC;
+                        }
                     }
                 } else if (tableExists(redundantDbName_, "RefSpectraPeakAnnotations")) {
                     tableVersion_ = MIN_VERSION_PEAK_ANNOT;
@@ -473,6 +476,7 @@ void BlibFilter::buildNonRedundantLib() {
     int retentionTimeIndex = columns["retentionTime"];
     int startTimeIndex = columns["startTime"];
     int endTimeIndex = columns["endTime"];
+    int ticIndex = columns["totalIonCurrent"];
     int numPeaksIndex = columns["numPeaks"];
 
     // setup for getting peak data
@@ -539,6 +543,9 @@ void BlibFilter::buildNonRedundantLib() {
             tmpRef->setStartTime(sqlite3_column_double(pStmt, startTimeIndex));
             tmpRef->setEndTime(sqlite3_column_double(pStmt, endTimeIndex));
         }
+
+        if (ticIndex > 0)
+            tmpRef->setTotalIonCurrentRaw(sqlite3_column_double(pStmt, ticIndex));
 
         tmpRef->setIonMobilityHighEnergyOffset(highEnergyOffsetIndex > 0 ? sqlite3_column_double(pStmt, highEnergyOffsetIndex) : 0);
         tmpRef->setRetentionTime(sqlite3_column_double(pStmt, retentionTimeIndex));

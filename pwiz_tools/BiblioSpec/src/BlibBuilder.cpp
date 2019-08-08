@@ -310,6 +310,8 @@ int BlibBuilder::transferLibrary(int iLib,
     int tableVersion = 0;
     if (tableColumnExists(schemaTmp, "RefSpectra", "retentionTime")) {
         if (tableColumnExists(schemaTmp, "RefSpectra", "startTime")) {
+            tableVersion = MIN_VERSION_TIC;
+        } else if (tableColumnExists(schemaTmp, "RefSpectra", "startTime")) {
             tableVersion = MIN_VERSION_RT_BOUNDS;
         } else if (tableExists(schemaTmp, "RefSpectraPeakAnnotations")) {
             tableVersion = MIN_VERSION_PEAK_ANNOT;

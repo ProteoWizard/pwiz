@@ -49,8 +49,9 @@ class BlibMaker
     // integer values minorVersion, the minorVersion field has been taken
     // for use as a schemaVersion
 #define MAJOR_VERSION_CURRENT 0
-#define MINOR_VERSION_CURRENT 9
+#define MINOR_VERSION_CURRENT 10
 
+#define MIN_VERSION_TIC       10 // Version 10 adds TIC as a column
 #define MIN_VERSION_PROTEINS   9 // Version 9 adds Proteins and RefSpectraProteins tables
 #define MIN_VERSION_RT_BOUNDS  8 // Version 8 adds startTime and endTime
 #define MIN_VERSION_PEAK_ANNOT 7 // Version 7 adds peak annotations
