@@ -211,6 +211,7 @@ void BlibFilter::getCommandLineValues(ops::variables_map& options_table){
     useBestScoring_ = options_table["best-scoring"].as<bool>();
 }
 
+
 void BlibFilter::attachAll()
 {
     Verbosity::status("Filtering redundant library '%s'.",
@@ -218,6 +219,8 @@ void BlibFilter::attachAll()
     boost::log::aux::snprintf(zSql, ZSQLBUFLEN, "ATTACH DATABASE '%s' as %s", SqliteRoutine::ESCAPE_APOSTROPHES(redundantFileName_).c_str(),
             redundantDbName_);
     sql_stmt(zSql);
+
+    createUpdatedRefSpectraView(redundantDbName_);
 }
 
 void BlibFilter::commit()
@@ -393,6 +396,7 @@ void BlibFilter::buildNonRedundantLib() {
                         tableVersion_ = MIN_VERSION_PROTEINS;
                         if (tableColumnExists(redundantDbName_, "RefSpectra", "totalIonCurrent")) {
                             tableVersion_ = MIN_VERSION_TIC;
+                            optional_cols += ", totalIonCurrent";
                         }
                     }
                 } else if (tableExists(redundantDbName_, "RefSpectraPeakAnnotations")) {
@@ -437,10 +441,13 @@ void BlibFilter::buildNonRedundantLib() {
     }
    boost::log::aux::snprintf(zSql, ZSQLBUFLEN,  
             "SELECT id,peptideSeq,precursorMZ,precursorCharge,peptideModSeq,"
-            "prevAA, nextAA, numPeaks, score, scoreType %s "
-            "FROM %s.RefSpectra "
+            "prevAA, nextAA, numPeaks, score, scoreType, "
+            "ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType, "
+            "moleculeName, chemicalFormula, inchiKey, otherKeys, precursorAdduct, "
+            "startTime, endTime, totalIonCurrent, retentionTime, specIDinFile "
+            "FROM RefSpectraTransfer "
             "WHERE numPeaks >= %i "
-            "ORDER BY %s", optional_cols.c_str(), redundantDbName_, minPeaks_,
+            "ORDER BY %s", minPeaks_,
             order_by.c_str());
 
     smart_stmt pStmt;
@@ -467,9 +474,7 @@ void BlibFilter::buildNonRedundantLib() {
     int ionMobilityTypeIndex = columns["ionMobilityType"];
     int ionMobilityValueIndex = columns["ionMobilityValue"]; // V3 and earlier
     int ionMobilityIndex = columns["ionMobility"];
-    if (ionMobilityIndex == 0) ionMobilityIndex = columns["driftTimeMsec"];
-    int highEnergyOffsetIndex = columns["driftTimeHighEnergyOffsetMsec"];
-    if (highEnergyOffsetIndex == 0) highEnergyOffsetIndex = columns["ionMobilityHighEnergyOffset"];
+    int highEnergyOffsetIndex = columns["ionMobilityHighEnergyOffset"];
     int scoreIndex = columns["score"];
     int scoreTypeIndex = columns["scoreType"];
     int scanNumberIndex = columns["SpecIDinFile"];

@@ -125,6 +125,7 @@ protected:
     virtual string getLSID();
     virtual void getNextRevision(int* dataRev);
 
+    void createUpdatedRefSpectraView(const char* schemaTmp);
     bool tableExists(const char* schmaTmp, const char* tableName);
     bool tableColumnExists(const char* schmaTmp, const char* tableName, 
                            const char* columnName);
