@@ -12,6 +12,7 @@
 #ifndef CWD_H
 #define CWD_H
 
+#include "config.h"
 #include "object.h"
 
 

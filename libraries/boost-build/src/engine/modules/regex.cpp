@@ -37,7 +37,7 @@ LIST * regex_split( FRAME * frame, int flags )
     OBJECT * s;
     OBJECT * separator;
     regexp * re;
-    const char * pos;
+    const char * pos, * prev;
     LIST * result = L0;
     LISTITER iter = list_begin( args );
     s = list_item( iter );
@@ -45,11 +45,18 @@ LIST * regex_split( FRAME * frame, int flags )
     
     re = regex_compile( separator );
 
-    pos = object_str( s );
+    prev = pos = object_str( s );
     while ( regexec( re, pos ) )
     {
-        result = list_push_back( result, object_new_range( pos, re->startp[ 0 ] - pos ) );
-        pos = re->endp[ 0 ];
+        result = list_push_back( result, object_new_range( prev, re->startp[ 0 ] - prev ) );
+        prev = re->endp[ 0 ];
+        /* Handle empty matches */
+        if ( *pos == '\0' )
+            break;
+        else if ( pos == re->endp[ 0 ] )
+            pos++;
+        else
+            pos = re->endp[ 0 ];
     }
 
     result = list_push_back( result, object_new( pos ) );
@@ -108,7 +115,13 @@ LIST * regex_replace( FRAME * frame, int flags )
     {
         string_append_range( buf, pos, re->startp[ 0 ] );
         string_append( buf, object_str( replacement ) );
-        pos = re->endp[ 0 ];
+        /* Handle empty matches */
+        if ( *pos == '\0' )
+            break;
+        else if ( pos == re->endp[ 0 ] )
+            string_push_back( buf, *pos++ );
+        else
+            pos = re->endp[ 0 ];
     }
     string_append( buf, pos );
 

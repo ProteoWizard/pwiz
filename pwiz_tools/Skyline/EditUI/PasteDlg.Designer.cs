@@ -330,7 +330,7 @@ namespace pwiz.Skyline.EditUI
             resources.ApplyResources(this.radioPeptide, "radioPeptide");
             this.radioPeptide.Name = "radioPeptide";
             this.radioPeptide.TabStop = true;
-            this.modeUIHandler.SetUIMode(this.radioPeptide, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.mixed_only);
+            this.modeUIHandler.SetUIMode(this.radioPeptide, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
             this.radioPeptide.UseVisualStyleBackColor = true;
             this.radioPeptide.CheckedChanged += new System.EventHandler(this.radioPeptide_CheckedChanged);
             // 
@@ -370,7 +370,7 @@ namespace pwiz.Skyline.EditUI
             resources.ApplyResources(this.btnCustomMoleculeColumns, "btnCustomMoleculeColumns");
             this.btnCustomMoleculeColumns.Name = "btnCustomMoleculeColumns";
             this.toolTip1.SetToolTip(this.btnCustomMoleculeColumns, resources.GetString("btnCustomMoleculeColumns.ToolTip"));
-            this.modeUIHandler.SetUIMode(this.btnCustomMoleculeColumns, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol);
+            this.modeUIHandler.SetUIMode(this.btnCustomMoleculeColumns, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
             this.btnCustomMoleculeColumns.UseVisualStyleBackColor = true;
             this.btnCustomMoleculeColumns.Click += new System.EventHandler(this.btnCustomMoleculeColumns_Click);
             // 
@@ -379,7 +379,7 @@ namespace pwiz.Skyline.EditUI
             resources.ApplyResources(this.radioMolecule, "radioMolecule");
             this.radioMolecule.Name = "radioMolecule";
             this.radioMolecule.TabStop = true;
-            this.modeUIHandler.SetUIMode(this.radioMolecule, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.mixed_only);
+            this.modeUIHandler.SetUIMode(this.radioMolecule, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
             this.radioMolecule.UseVisualStyleBackColor = true;
             // 
             // PasteDlg

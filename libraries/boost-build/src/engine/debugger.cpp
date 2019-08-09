@@ -758,7 +758,7 @@ static void debug_child_info( int argc, const char * * argv )
         LIST * locals = L0;
         if ( debug_frame->function )
         {
-            locals = function_get_variables( debug_frame->function );
+            locals = function_get_variables( (FUNCTION*)debug_frame->function );
         }
         debug_list_write( command_output, locals );
         fflush( command_output );
@@ -864,7 +864,7 @@ static const char * debug_format_message( const char * format, va_list vargs )
     for ( ; ; )
     {
         va_list args;
-        buf = malloc( sz );
+        buf = (char *)malloc( sz );
         if ( !buf )
             return 0;
         #ifndef va_copy
@@ -2704,10 +2704,10 @@ static int process_command( char * line )
 {
     int result;
     size_t capacity = 8;
-    const char * * buffer = malloc( capacity * sizeof( const char * ) );
-    const char * * current = buffer;
+    char * * buffer = (char **)malloc( capacity * sizeof( char * ) );
+    char * * current = buffer;
     char * iter = line;
-    const char * saved = iter;
+    char * saved = iter;
     *current = iter;
     for ( ; ; )
     {
@@ -2741,7 +2741,7 @@ static int process_command( char * line )
         /* resize the buffer if necessary */
         if ( current == buffer + capacity )
         {
-            buffer = realloc( (void *)buffer, capacity * 2 * sizeof( const char * ) );
+            buffer = (char**)realloc( (void *)buffer, capacity * 2 * sizeof( char * ) );
             current = buffer + capacity;
         }
         /* append the token to the buffer */
@@ -2752,7 +2752,7 @@ static int process_command( char * line )
             *iter++ = '\0';
         }
     }
-    result = run_command( current - buffer, buffer );
+    result = run_command( current - buffer, (const char **)buffer );
     free( (void *)buffer );
     return result;
 }
