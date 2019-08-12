@@ -395,6 +395,9 @@ class PWIZ_API_DECL RawFile
 
     static shared_ptr<RawFile> create(const std::string& filename);
 
+    // on 64-bit (RawFileReader), returns a thread-specific accessor to avoid the need for locking
+    virtual RawFile* getRawByThread(size_t currentThreadId) const = 0;
+
     virtual std::string getFilename() const = 0;
     virtual boost::local_time::local_date_time getCreationDate(bool adjustToHostTime = true) const = 0;
 
