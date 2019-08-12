@@ -313,8 +313,16 @@ namespace pwiz.Skyline.Controls.Graphs
             GraphPane.Title.Text = string.Format(Resources.GraphFullScan_CreateGraph__0_____1_F2__min_, _msDataFileScanHelper.FileName, retentionTime);
             if (Settings.Default.ShowFullScanNumber && _msDataFileScanHelper.MsDataSpectra.Any())
             {
-                GraphPane.Title.Text = TextUtil.SpaceSeparate(GraphPane.Title.Text, 
-                    Resources.GraphFullScan_CreateGraph_Scan_Number_, _msDataFileScanHelper.MsDataSpectra[0].Id);
+                if (_msDataFileScanHelper.MsDataSpectra.Length > 1) // For ion mobility, show the overall range
+                {
+                    GraphPane.Title.Text = TextUtil.SpaceSeparate(GraphPane.Title.Text,
+                        Resources.GraphFullScan_CreateGraph_Scan_Range_, _msDataFileScanHelper.MsDataSpectra[0].Id, @"-", _msDataFileScanHelper.MsDataSpectra.Last().Id); 
+                }
+                else
+                {
+                    GraphPane.Title.Text = TextUtil.SpaceSeparate(GraphPane.Title.Text,
+                        Resources.GraphFullScan_CreateGraph_Scan_Number_, _msDataFileScanHelper.MsDataSpectra[0].Id);
+                }
             }
 
             FireSelectedScanChanged(retentionTime);

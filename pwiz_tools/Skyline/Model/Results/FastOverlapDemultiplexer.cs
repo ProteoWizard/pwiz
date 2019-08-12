@@ -145,7 +145,6 @@ namespace pwiz.Skyline.Model.Results
                 IsolationWindowTargetMz = new SignedMz((lowerMz + upperMz) / 2),
                 IsolationWindowLower = (upperMz - lowerMz) / 2,
                 IsolationWindowUpper = (upperMz - lowerMz) / 2,
-                PrecursorIonMobility = IonMobilityValue.EMPTY
             };
         }
 

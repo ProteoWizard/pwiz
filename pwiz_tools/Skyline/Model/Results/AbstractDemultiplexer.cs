@@ -435,8 +435,7 @@ namespace pwiz.Skyline.Model.Results
                     {
                         PrecursorMz = new SignedMz(deconvRegion.CenterMz, originalSpectrum.NegativeCharge) ,
                         IsolationWindowLower =  deconvRegion.Width/2.0,
-                        IsolationWindowUpper =  deconvRegion.Width/2.0,
-                        PrecursorIonMobility = IonMobilityValue.EMPTY
+                        IsolationWindowUpper =  deconvRegion.Width/2.0
                     };
                 deconvSpec.Precursors[0] = precursor;
                 deconvSpec.Centroided = originalSpectrum.Centroided;

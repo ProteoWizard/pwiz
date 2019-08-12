@@ -397,8 +397,10 @@ void MaxQuantReader::initEvidence()
             boost::split(columns, line, boost::is_any_of("\t"));
             if (colK0 >= 0)
                 K0_.push_back(boost::lexical_cast<double>(columns[colK0]));
+            /* Some versions of MaxQuant are known to emit incorrect CCS values. Until we figure out how to tell them apart, best to just ignore. (bspratt July 2019)
             if (colCCS >= 0)
                 CCS_.push_back(boost::lexical_cast<double>(columns[colCCS]));
+            */
         }
         Verbosity::comment(V_DETAIL, "Done parsing %s", evidenceFile.c_str());
     }

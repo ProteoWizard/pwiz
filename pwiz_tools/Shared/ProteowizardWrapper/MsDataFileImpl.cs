@@ -988,6 +988,25 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
+        public int GetMsLevelAndIonMobility(int scanIndex, out IonMobilityValue imValue)
+        {
+            using (var spectrum = SpectrumList.spectrum(scanIndex, _detailMsLevel))
+            {
+                int? level = GetMsLevel(spectrum);
+                imValue = GetIonMobility(spectrum);
+                if (level.HasValue || _detailMsLevel == DetailLevel.FullMetadata)
+                    return level ?? 0;
+
+                // If level is not found with faster metadata methods, try the slower ones.
+                if (_detailMsLevel == DetailLevel.InstantMetadata)
+                    _detailMsLevel = DetailLevel.FastMetadata;
+                else if (_detailMsLevel == DetailLevel.FastMetadata)
+                    _detailMsLevel = DetailLevel.FullMetadata;
+                return GetMsLevelAndIonMobility(scanIndex, out imValue);
+            }
+        }
+
+
         private static int? GetMsLevel(Spectrum spectrum)
         {
             CVParam param = spectrum.cvParam(CVID.MS_ms_level);
@@ -1115,7 +1134,6 @@ namespace pwiz.ProteowizardWrapper
         private MsPrecursor[] GetPrecursors(Spectrum spectrum)
         {
             bool negativePolarity = NegativePolarity(spectrum);
-            var ionMobility = GetIonMobility(spectrum);
             return spectrum.precursors.Select(p =>
                 new MsPrecursor
                     {
@@ -1124,14 +1142,12 @@ namespace pwiz.ProteowizardWrapper
                         IsolationWindowTargetMz = GetSignedMz(GetIsolationWindowValue(p, CVID.MS_isolation_window_target_m_z), negativePolarity),
                         IsolationWindowLower = GetIsolationWindowValue(p, CVID.MS_isolation_window_lower_offset),
                         IsolationWindowUpper = GetIsolationWindowValue(p, CVID.MS_isolation_window_upper_offset),
-                        PrecursorIonMobility = ionMobility
                     }).ToArray();
         }
 
         private MsPrecursor[] GetMs1Precursors(Spectrum spectrum)
         {
             bool negativePolarity = NegativePolarity(spectrum);
-            var precursorIonMobility = GetIonMobility(spectrum);
             return spectrum.scanList.scans[0].scanWindows.Select(s =>
                 {
                     double windowStart = s.cvParam(CVID.MS_scan_window_lower_limit).value;
@@ -1141,8 +1157,7 @@ namespace pwiz.ProteowizardWrapper
                         {
                             IsolationWindowTargetMz = new SignedMz(windowStart + isolationWidth, negativePolarity),
                             IsolationWindowLower = isolationWidth,
-                            IsolationWindowUpper = isolationWidth,
-                            PrecursorIonMobility = precursorIonMobility
+                            IsolationWindowUpper = isolationWidth
                         };
                 }).ToArray();
         }
@@ -1306,7 +1321,6 @@ namespace pwiz.ProteowizardWrapper
         public SignedMz? IsolationWindowTargetMz { get; set; }
         public double? IsolationWindowUpper { get; set; } // Add this to IsolationWindowTargetMz to get window upper bound
         public double? IsolationWindowLower { get; set; } // Subtract this from IsolationWindowTargetMz to get window lower bound
-        public IonMobilityValue PrecursorIonMobility { get; set; }
         public SignedMz? IsolationMz
         {
             get

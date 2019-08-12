@@ -70,6 +70,7 @@ namespace pwiz.Skyline.Model.Results
         private readonly bool _isWatersMse;
         private readonly bool _isAgilentMse;
         private readonly bool _isFAIMS; // TIC and Base peak are meaningless with FAIMS, where we can't know the actual overall ion counts -also can't share times
+        private readonly bool _isIonMobilityFiltered;
         private readonly bool _isElectronIonizationMse; // All ions, data MS1 only, but produces just fragments
         private readonly IEnumerable<MsInstrumentConfigInfo> _configInfoList;
         private readonly IIonMobilityFunctionsProvider _ionMobilityFunctionsProvider;
@@ -104,16 +105,17 @@ namespace pwiz.Skyline.Model.Results
                 : null;
             var ionMobilityMax = maxObservedIonMobilityValue ?? 0;
 
-            // TIC and Base peak are meaningless with FAIMS, where we can't know the actual overall ion counts -also can't share times
-            if (instrumentInfo != null && instrumentInfo.IonMobilityUnits == eIonMobilityUnits.compensation_V)
+            // TIC and Base peak are meaningless with FAIMS, where we can't know the actual overall ion counts -also can't reliably share times with any ion mobility scheme
+            if (instrumentInfo != null && instrumentInfo.IonMobilityUnits != eIonMobilityUnits.none)
             {
                 foreach (var pair in document.MoleculePrecursorPairs)
                 {
                     double windowIM;
                     var ionMobility = document.Settings.GetIonMobility(
                         pair.NodePep, pair.NodeGroup, null, libraryIonMobilityInfo, _ionMobilityFunctionsProvider, ionMobilityMax, out windowIM);
-                    _isFAIMS = ionMobility.HasIonMobilityValue && (ionMobility.IonMobility.Units == eIonMobilityUnits.compensation_V);
-                    if (_isFAIMS)
+                    _isIonMobilityFiltered = ionMobility.HasIonMobilityValue;
+                    _isFAIMS = _isIonMobilityFiltered && (ionMobility.IonMobility.Units == eIonMobilityUnits.compensation_V);
+                    if (_isIonMobilityFiltered)
                     {
                         break;
                     }
@@ -167,7 +169,7 @@ namespace pwiz.Skyline.Model.Results
                 bool canSchedule = !firstPass && CanSchedule(document, retentionTimePredictor);
                 // TODO: Figure out a way to turn off time sharing on first SIM scan so that
                 //       times can be shared for MS1 without SIM scans
-                _isSharedTime = !canSchedule && !_isFAIMS;
+                _isSharedTime = !canSchedule && !_isIonMobilityFiltered;
 
                 int filterCount = 0;
                 foreach (var nodePep in document.Molecules)
@@ -744,17 +746,61 @@ namespace pwiz.Skyline.Model.Results
                              handlingType == IsolationScheme.SpecialHandlingType.OVERLAP_MULTIPLEXED ||
                              handlingType == IsolationScheme.SpecialHandlingType.FAST_OVERLAP;
             
-Assume.IsFalse((spectra.Select(s => s.Precursors.FirstOrDefault().IsolationWindowTargetMz).Distinct().Skip(1).Any()));
-            foreach (var isoWin in GetIsolationWindows(spectra[0].Precursors)) // GetIsolationWindows(spectra)) // here?
+            // For diaPASEF we will see the isolation window shift periodically as we cycle through ion mobilities - and we may see overlaps
+            bool is_diaPASEF = false;
+            for (var indexFirst = 0; indexFirst < spectra.Length;)
             {
-                foreach (var filterPair in FindFilterPairs(isoWin, _acquisitionMethod, ignoreIso))
+                var indexLast = indexFirst + 1;
+                while (indexLast < spectra.Length && ArrayUtil.EqualsDeep(spectra[indexFirst].Precursors, spectra[indexLast].Precursors))
                 {
-                    if (!filterPair.ContainsRetentionTime(retentionTime.Value))
-                        continue;
-                    var filteredSrmSpectrum = filterPair.FilterQ3SpectrumList(spectra, UseDriftTimeHighEnergyOffset());
-                    if (filteredSrmSpectrum != null)
-                        yield return filteredSrmSpectrum;
+                    indexLast++;
                 }
+
+                is_diaPASEF |= _acquisitionMethod == FullScanAcquisitionMethod.DIA && indexLast < spectra.Length; // Isolation window changed within single RT and multiple IM scans
+                var selectedSpectra = is_diaPASEF
+                    ? spectra.Skip(indexFirst).Take(indexLast - indexFirst).ToArray()
+                    : spectra;
+                var imWinCenter = is_diaPASEF ? (spectra[indexFirst].IonMobility.Mobility.Value+spectra[indexLast - 1].IonMobility.Mobility.Value)*.5 : 0;
+
+                foreach (var isoWin in GetIsolationWindows(spectra[indexFirst].Precursors))
+                {
+                    foreach (var filterPair in FindFilterPairs(isoWin, _acquisitionMethod, ignoreIso))
+                    {
+                        if (!filterPair.ContainsRetentionTime(retentionTime.Value))
+                            continue;
+                        if (is_diaPASEF)
+                        {
+                            // We may encounter multiple window groups that include our mz and 1/K0 range, use the one whose mz,1/K0 boundbox we are most centered on
+                            var distanceMz = isoWin.IsolationMz.Value - filterPair.Q1;
+                            var distanceIM = imWinCenter - (filterPair.MinIonMobilityValue.Value + filterPair.MaxIonMobilityValue.Value)*.5;
+                            var distanceToCenter = Math.Sqrt(distanceMz * distanceMz + distanceIM * distanceIM);
+                            if (_filterPairBestDiaPasefDistanceDictionary.TryGetValue(filterPair, out var leastDistanceObserved))
+                            {
+                                if (distanceToCenter > leastDistanceObserved)
+                                {
+                                    continue; // Inferior overlap with mz,1/K0 boundbox - ignore
+                                }
+                                if (distanceToCenter < leastDistanceObserved)
+                                {
+                                    // Better match, use this moving forward
+                                    _filterPairBestDiaPasefDistanceDictionary[filterPair] = distanceToCenter;
+                                }
+                            }
+                            else
+                            {
+                                _filterPairBestDiaPasefDistanceDictionary[filterPair] = distanceToCenter;
+                            }
+                        }
+
+                        var filteredSrmSpectrum = filterPair.FilterQ3SpectrumList(selectedSpectra, UseDriftTimeHighEnergyOffset());
+                        if (filteredSrmSpectrum != null)
+                        {
+                            yield return filteredSrmSpectrum;
+                        }
+                    }
+                }
+
+                indexFirst = indexLast;
             }
         }
 
@@ -856,6 +902,8 @@ Assume.IsFalse((spectra.Select(s => s.Precursors.FirstOrDefault().IsolationWindo
         // Has to be concurrent, because both the spectrum reader thread and chromatogram extraction thread use this
         private readonly IDictionary<IsolationWindowFilter, IList<SpectrumFilterPair>> _filterPairDictionary =
             new ConcurrentDictionary<IsolationWindowFilter, IList<SpectrumFilterPair>>();
+        private readonly IDictionary<SpectrumFilterPair, double> _filterPairBestDiaPasefDistanceDictionary =
+            new ConcurrentDictionary<SpectrumFilterPair, double>();
 
         private IEnumerable<SpectrumFilterPair> FindFilterPairs(IsolationWindowFilter isoWin,
                                                                 FullScanAcquisitionMethod acquisitionMethod, bool ignoreIsolationScheme = false)
