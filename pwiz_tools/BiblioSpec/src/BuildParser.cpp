@@ -109,6 +109,12 @@ void BuildParser::setSpecFileName(
                     // case insensitive filename comparison (i.e. so POSIX systems can match to basename.MGF or BaseName.mgf)
                     if (!bal::iequals(fileroot + ext, trialName))
                         continue;
+
+                    if (bfs::is_directory(dirPath)) {
+                        curSpecFileName_ = dirPath.string();
+                        break;
+                    }
+
                     ifstream file(dirPath.string().c_str());
                     if (file.good()) {
                         curSpecFileName_ = dirPath.string();

@@ -50,6 +50,7 @@ using std::locale;
 #include <memory>
 #include <boost/smart_ptr.hpp>
 using std::auto_ptr;
+using std::unique_ptr;
 using boost::shared_ptr;
 using boost::weak_ptr;
 using boost::scoped_ptr;
