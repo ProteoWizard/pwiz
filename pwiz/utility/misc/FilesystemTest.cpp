@@ -231,29 +231,29 @@ void testExpandPathmask()
 
 void testAbbreviateByteSize()
 {
-    unit_assert(abbreviate_byte_size(1) == "1 B");
-    unit_assert(abbreviate_byte_size(999) == "999 B");
-    unit_assert(abbreviate_byte_size(1000) == "1 KB");
-    unit_assert(abbreviate_byte_size(999999) == "999 KB");
-    unit_assert(abbreviate_byte_size(1000000) == "1 MB");
-    unit_assert(abbreviate_byte_size(999999999) == "999 MB");
-    unit_assert(abbreviate_byte_size(1000000000) == "1 GB");
+    unit_assert_operator_equal("1 B", abbreviate_byte_size(1));
+    unit_assert_operator_equal("999 B", abbreviate_byte_size(999));
+    unit_assert_operator_equal("1 KB", abbreviate_byte_size(1000));
+    unit_assert_operator_equal("999 KB", abbreviate_byte_size(999000));
+    unit_assert_operator_equal("1 MB", abbreviate_byte_size(1000000));
+    unit_assert_operator_equal("999 MB", abbreviate_byte_size(999000000));
+    unit_assert_operator_equal("1 GB", abbreviate_byte_size(1000000000));
 
-    unit_assert(abbreviate_byte_size(1, ByteSizeAbbreviation_IEC) == "1 B");
-    unit_assert(abbreviate_byte_size(1023, ByteSizeAbbreviation_IEC) == "1023 B");
-    unit_assert(abbreviate_byte_size(1024, ByteSizeAbbreviation_IEC) == "1 KiB");
-    unit_assert(abbreviate_byte_size((1024 << 10)-1, ByteSizeAbbreviation_IEC) == "1023 KiB");
-    unit_assert(abbreviate_byte_size((1024 << 10), ByteSizeAbbreviation_IEC) == "1 MiB");
-    unit_assert(abbreviate_byte_size((1024 << 20)-1, ByteSizeAbbreviation_IEC) == "1023 MiB");
-    unit_assert(abbreviate_byte_size((1024 << 20), ByteSizeAbbreviation_IEC) == "1 GiB");
+    unit_assert_operator_equal("1 B", abbreviate_byte_size(1, ByteSizeAbbreviation_IEC));
+    unit_assert_operator_equal("1023 B", abbreviate_byte_size(1023, ByteSizeAbbreviation_IEC));
+    unit_assert_operator_equal("1 KiB", abbreviate_byte_size(1024, ByteSizeAbbreviation_IEC));
+    unit_assert_operator_equal("1023 KiB", abbreviate_byte_size((1024 << 10)-1024, ByteSizeAbbreviation_IEC));
+    unit_assert_operator_equal("1 MiB", abbreviate_byte_size((1024 << 10), ByteSizeAbbreviation_IEC));
+    unit_assert_operator_equal("1023 MiB", abbreviate_byte_size((1024 << 20)-(1024*1024), ByteSizeAbbreviation_IEC));
+    unit_assert_operator_equal("1 GiB", abbreviate_byte_size((1024 << 20), ByteSizeAbbreviation_IEC));
 
-    unit_assert(abbreviate_byte_size(1, ByteSizeAbbreviation_JEDEC) == "1 B");
-    unit_assert(abbreviate_byte_size(1023, ByteSizeAbbreviation_JEDEC) == "1023 B");
-    unit_assert(abbreviate_byte_size(1024, ByteSizeAbbreviation_JEDEC) == "1 KB");
-    unit_assert(abbreviate_byte_size((1024 << 10)-1, ByteSizeAbbreviation_JEDEC) == "1023 KB");
-    unit_assert(abbreviate_byte_size((1024 << 10), ByteSizeAbbreviation_JEDEC) == "1 MB");
-    unit_assert(abbreviate_byte_size((1024 << 20)-1, ByteSizeAbbreviation_JEDEC) == "1023 MB");
-    unit_assert(abbreviate_byte_size((1024 << 20), ByteSizeAbbreviation_JEDEC) == "1 GB");
+    unit_assert_operator_equal("1 B", abbreviate_byte_size(1, ByteSizeAbbreviation_JEDEC));
+    unit_assert_operator_equal("1023 B", abbreviate_byte_size(1023, ByteSizeAbbreviation_JEDEC));
+    unit_assert_operator_equal("1 KB", abbreviate_byte_size(1024, ByteSizeAbbreviation_JEDEC));
+    unit_assert_operator_equal("1023 KB", abbreviate_byte_size((1024 << 10)-1024, ByteSizeAbbreviation_JEDEC));
+    unit_assert_operator_equal("1 MB", abbreviate_byte_size((1024 << 10), ByteSizeAbbreviation_JEDEC));
+    unit_assert_operator_equal("1023 MB", abbreviate_byte_size((1024 << 20)-(1024*1024), ByteSizeAbbreviation_JEDEC));
+    unit_assert_operator_equal("1 GB", abbreviate_byte_size((1024 << 20), ByteSizeAbbreviation_JEDEC));
 }
 
 
