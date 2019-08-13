@@ -1003,7 +1003,7 @@ local rule toolset-tag ( name : type ? : property-set )
         case tru64cxx* : tag += tru ;
         case vacpp* : tag += xlc ;
     }
-    local version = [ MATCH "<toolset.*version>([0123456789]+)[.]([0123456789]*)"
+    local version = [ MATCH "<toolset.*version>([0123456789]+)[.]?([0123456789]*)"
         : $(properties) ] ;
     # For historical reasons, vc6.0 and vc7.0 use different naming.
     if $(tag) = vc

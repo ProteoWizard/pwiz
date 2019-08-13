@@ -20,6 +20,8 @@
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestData
@@ -91,7 +93,7 @@ namespace pwiz.SkylineTestData
             VerifyTicChromatogram(testFilesDir.GetTestPath("051309_digestion" + ExtensionTestContext.ExtAbWiff), 2814, 357100, 2);
 
             if (ExtensionTestContext.CanImportAbWiff2)
-                VerifyTicChromatogram(testFilesDir.GetTestPath("OnyxTOFMS.wiff2"), 240, 143139); 
+                VerifyTicChromatogram(testFilesDir.GetTestPath("OnyxTOFMS.wiff2"), 240, 143139);
 
             VerifyTicChromatogram(testFilesDir.GetTestPath("CE_Vantage_15mTorr_0001_REP1_01" + ExtensionTestContext.ExtThermoRaw), 608, 54066072);
             VerifyTicChromatogram(testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + ExtensionTestContext.ExtWatersRaw), 5108, 372494752);
@@ -114,6 +116,42 @@ namespace pwiz.SkylineTestData
                 VerifyQcTrace(pressureTraces[3], "Column Pressure (channel 4)", 3508, 0, 29.225, 1396, 1322, MsDataFileImpl.QcTraceQuality.Pressure, MsDataFileImpl.QcTraceUnits.PoundsPerSquareInch);
                 VerifyQcTrace(pressureTraces[4], "Pump A Flowrate (channel 5)", 3508, 0, 29.225, 7038, 7833, MsDataFileImpl.QcTraceQuality.FlowRate, MsDataFileImpl.QcTraceUnits.MicrolitersPerMinute);
                 VerifyQcTrace(pressureTraces[5], "Pump B Flowrate (channel 6)", 3508, 0, 29.225, 680, 151, MsDataFileImpl.QcTraceQuality.FlowRate, MsDataFileImpl.QcTraceUnits.MicrolitersPerMinute);
+
+                string docPath = testFilesDir.GetTestPath("PressureTrace1.sky");
+                SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
+                AssertEx.IsDocumentState(doc, 0, 1, 3, 9);
+
+                using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
+                {
+                    const string replicateName = "PressureTrace1";
+                    string extRaw = ExtensionTestContext.ExtAbWiff;
+                    var chromSets = new[]
+                    {
+                        new ChromatogramSet(replicateName, new[]
+                            { new MsDataFilePath(testFilesDir.GetTestPath("PressureTrace1" + extRaw)),  }),
+                    };
+                    var docResults = doc.ChangeMeasuredResults(new MeasuredResults(chromSets));
+                    Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
+                    docContainer.AssertComplete();
+                    docResults = docContainer.Document;
+
+                    var chromCache = docResults.Settings.MeasuredResults.GetChromCacheMinimizer(docResults).ChromatogramCache;
+                    var tic = chromCache.LoadAllIonsChromatogramInfo(ChromExtractor.summed, chromSets[0]);
+                    var bpc = chromCache.LoadAllIonsChromatogramInfo(ChromExtractor.base_peak, chromSets[0]);
+                    var qc = chromCache.LoadAllIonsChromatogramInfo(ChromExtractor.qc, chromSets[0]);
+
+                    Assert.AreEqual(1, tic.Count());
+                    Assert.AreEqual(1, bpc.Count());
+                    var qcNames = qc.Select(o => o.TextId).ToArray();
+                    Assert.AreEqual(6, qcNames.Length);
+                    CollectionAssert.IsSubsetOf(new [] {"Column Pressure (channel 1)",
+                                                        "Pump A Flowrate (channel 2)",
+                                                        "Pump B Flowrate (channel 3)",
+                                                        "Column Pressure (channel 4)",
+                                                        "Pump A Flowrate (channel 5)",
+                                                        "Pump B Flowrate (channel 6)" },
+                                                qcNames);
+                }
             }
         }
 
