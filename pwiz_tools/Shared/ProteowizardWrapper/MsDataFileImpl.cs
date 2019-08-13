@@ -804,6 +804,12 @@ namespace pwiz.ProteowizardWrapper
                 Centroided = IsCentroided(spectrum),
                 NegativeCharge = NegativePolarity(spectrum)
             };
+            if (IonMobilityUnits == eIonMobilityUnits.inverse_K0_Vsec_per_cm2)
+            {
+                var scan = spectrum.scanList.scans[0];
+                var param = scan.userParam(@"windowGroup"); // For Bruker diaPASEF
+                msDataSpectrum.WindowGroup = param.empty() ? 0 : int.Parse(param.value);
+            }
             if (spectrum.binaryDataArrays.Count <= 1)
             {
                 msDataSpectrum.Mzs = new double[0];
@@ -1368,6 +1374,7 @@ namespace pwiz.ProteowizardWrapper
         public bool NegativeCharge { get; set; } // True if negative ion mode
         public double[] Mzs { get; set; }
         public double[] Intensities { get; set; }
+        public int WindowGroup { get; set; } // For Bruker diaPASEF
 
         public static int WatersFunctionNumberFromId(string id)
         {

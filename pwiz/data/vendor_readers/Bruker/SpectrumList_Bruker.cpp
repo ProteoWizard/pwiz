@@ -260,7 +260,14 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
             return result;
 
         if (spectrum->isIonMobilitySpectrum())
+        {
             scan.set(MS_inverse_reduced_ion_mobility, spectrum->oneOverK0(), MS_Vs_cm_2);
+            int windowGroup = spectrum->getWindowGroup();
+            if (windowGroup > 0)
+            {
+                scan.userParams.push_back(UserParam("windowGroup", lexical_cast<string>(windowGroup)));
+            }
+        }
 
         if (detailLevel == DetailLevel_FastMetadata)
             return result;

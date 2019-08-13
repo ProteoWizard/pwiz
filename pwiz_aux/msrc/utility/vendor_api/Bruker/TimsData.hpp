@@ -97,6 +97,7 @@ struct PWIZ_API_DECL TimsFrame
     std::pair<double, double> scanRange_;
     optional<int> chargeState_;
     optional<double> isolationWidth_;
+    optional<int> windowGroup_;
 
     optional<double> precursorMz_;
     int scanMode_;
@@ -140,6 +141,7 @@ public:
     virtual std::pair<double, double> getScanRange() const;
     virtual int getChargeState() const;
     virtual double getIsolationWidth() const;
+    virtual int getWindowGroup() const;
 
     virtual bool isIonMobilitySpectrum() const { return oneOverK0() > 0; }
     virtual double oneOverK0() const;

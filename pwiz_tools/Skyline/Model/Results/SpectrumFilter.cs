@@ -69,7 +69,6 @@ namespace pwiz.Skyline.Model.Results
         private readonly bool _isWatersFile;
         private readonly bool _isWatersMse;
         private readonly bool _isAgilentMse;
-        private readonly bool _isFAIMS; // TIC and Base peak are meaningless with FAIMS, where we can't know the actual overall ion counts -also can't share times
         private readonly bool _isIonMobilityFiltered;
         private readonly bool _isElectronIonizationMse; // All ions, data MS1 only, but produces just fragments
         private readonly IEnumerable<MsInstrumentConfigInfo> _configInfoList;
@@ -114,7 +113,6 @@ namespace pwiz.Skyline.Model.Results
                     var ionMobility = document.Settings.GetIonMobility(
                         pair.NodePep, pair.NodeGroup, null, libraryIonMobilityInfo, _ionMobilityFunctionsProvider, ionMobilityMax, out windowIM);
                     _isIonMobilityFiltered = ionMobility.HasIonMobilityValue;
-                    _isFAIMS = _isIonMobilityFiltered && (ionMobility.IonMobility.Units == eIonMobilityUnits.compensation_V);
                     if (_isIonMobilityFiltered)
                     {
                         break;
@@ -132,7 +130,7 @@ namespace pwiz.Skyline.Model.Results
                     /*
                      Leaving this here in case we ever decide to fall back to our own BPC+TIC extraction in cases where data
                      file doesn't have them ready to go, as in mzXML
-                    if (!firstPass && !_isFAIMS)
+                    if (!firstPass && instrumentInfo.IonMobilityUnits != eIonMobilityUnits.none)
                     {
                         var key = new PrecursorTextId(SignedMz.ZERO, null, null, ChromExtractor.summed);  // TIC
                         dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, dictPrecursorMzToFilter.Count,
@@ -748,6 +746,7 @@ namespace pwiz.Skyline.Model.Results
             
             // For diaPASEF we will see the isolation window shift periodically as we cycle through ion mobilities - and we may see overlaps
             bool is_diaPASEF = false;
+            Dictionary<SpectrumFilterPair, List<ExtractedSpectrum>> diaPasefFilteredSpectra = null;
             for (var indexFirst = 0; indexFirst < spectra.Length;)
             {
                 var indexLast = indexFirst + 1;
@@ -757,10 +756,15 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 is_diaPASEF |= _acquisitionMethod == FullScanAcquisitionMethod.DIA && indexLast < spectra.Length; // Isolation window changed within single RT and multiple IM scans
+                if (is_diaPASEF && diaPasefFilteredSpectra == null)
+                {
+                    diaPasefFilteredSpectra = new Dictionary<SpectrumFilterPair, List<ExtractedSpectrum>>();
+                }
                 var selectedSpectra = is_diaPASEF
                     ? spectra.Skip(indexFirst).Take(indexLast - indexFirst).ToArray()
                     : spectra;
                 var imWinCenter = is_diaPASEF ? (spectra[indexFirst].IonMobility.Mobility.Value+spectra[indexLast - 1].IonMobility.Mobility.Value)*.5 : 0;
+                int windowGroup = is_diaPASEF ? spectra[indexFirst].WindowGroup : 0;
 
                 foreach (var isoWin in GetIsolationWindows(spectra[indexFirst].Precursors))
                 {
@@ -768,39 +772,76 @@ namespace pwiz.Skyline.Model.Results
                     {
                         if (!filterPair.ContainsRetentionTime(retentionTime.Value))
                             continue;
-                        if (is_diaPASEF)
-                        {
-                            // We may encounter multiple window groups that include our mz and 1/K0 range, use the one whose mz,1/K0 boundbox we are most centered on
-                            var distanceMz = isoWin.IsolationMz.Value - filterPair.Q1;
-                            var distanceIM = imWinCenter - (filterPair.MinIonMobilityValue.Value + filterPair.MaxIonMobilityValue.Value)*.5;
-                            var distanceToCenter = Math.Sqrt(distanceMz * distanceMz + distanceIM * distanceIM);
-                            if (_filterPairBestDiaPasefDistanceDictionary.TryGetValue(filterPair, out var leastDistanceObserved))
-                            {
-                                if (distanceToCenter > leastDistanceObserved)
-                                {
-                                    continue; // Inferior overlap with mz,1/K0 boundbox - ignore
-                                }
-                                if (distanceToCenter < leastDistanceObserved)
-                                {
-                                    // Better match, use this moving forward
-                                    _filterPairBestDiaPasefDistanceDictionary[filterPair] = distanceToCenter;
-                                }
-                            }
-                            else
-                            {
-                                _filterPairBestDiaPasefDistanceDictionary[filterPair] = distanceToCenter;
-                            }
-                        }
 
                         var filteredSrmSpectrum = filterPair.FilterQ3SpectrumList(selectedSpectra, UseDriftTimeHighEnergyOffset());
                         if (filteredSrmSpectrum != null)
                         {
-                            yield return filteredSrmSpectrum;
+                            if (is_diaPASEF)
+                            {
+                                // We may encounter multiple window groups that include our mz and 1/K0 range, use the one whose mz,1/K0 boundbox we are most centered on
+                                var distanceMz = isoWin.IsolationMz.Value - filterPair.Q1;
+                                var distanceIM = imWinCenter - (filterPair.MinIonMobilityValue.Value + filterPair.MaxIonMobilityValue.Value) * .5;
+                                var distanceToCenter = Math.Sqrt(distanceMz * distanceMz + distanceIM * distanceIM);
+                                if (_filterPairBestDiaPasefDistanceAndWindowGroupDictionary.TryGetValue(filterPair, out var bestDistanceAndWindowGroup))
+                                {
+                                    if (distanceToCenter > bestDistanceAndWindowGroup.distance && windowGroup != bestDistanceAndWindowGroup.windowGroup)
+                                    {
+                                        continue; // Inferior overlap with mz,1/K0 boundbox - ignore
+                                    }
+                                    if (distanceToCenter < bestDistanceAndWindowGroup.distance)
+                                    {
+                                        // Better match, use this moving forward
+                                        bestDistanceAndWindowGroup.distance = distanceToCenter;
+                                        bestDistanceAndWindowGroup.windowGroup = windowGroup;
+                                    }
+                                }
+                                else
+                                {
+                                    _filterPairBestDiaPasefDistanceAndWindowGroupDictionary[filterPair] = new DiaPasefDistanceAndWindowGroup
+                                        { distance = distanceToCenter, windowGroup = windowGroup };
+                                }
+                            }
+
+                            if (is_diaPASEF)
+                            {
+                                if (!diaPasefFilteredSpectra.TryGetValue(filterPair, out var list))
+                                {
+                                    list = new List<ExtractedSpectrum>();
+                                    diaPasefFilteredSpectra[filterPair] = list;
+                                }
+                                list.Add(filteredSrmSpectrum);
+                            }
+                            else
+                            {
+                                yield return filteredSrmSpectrum;
+                            }
                         }
                     }
                 }
 
                 indexFirst = indexLast;
+            }
+
+            if (is_diaPASEF)
+            {
+                // We may have worked through several isolation windows all at the same retention time - sum their intensities.
+                foreach (var kvp in diaPasefFilteredSpectra)
+                {
+                    var filteredSrmSpectrum = kvp.Value.First();
+                    foreach (var extractedSpectrum in kvp.Value.Skip(1))
+                    {
+                        for (var i = 0; i < filteredSrmSpectrum.Intensities.Length; i++)
+                        {
+                            filteredSrmSpectrum.Intensities[i] += extractedSpectrum.Intensities[i];
+                            filteredSrmSpectrum.MassErrors[i] += extractedSpectrum.MassErrors[i];
+                        }
+                    }
+                    for (var i = 0; i < filteredSrmSpectrum.Intensities.Length; i++)
+                    {
+                        filteredSrmSpectrum.MassErrors[i] /= kvp.Value.Count; // Average the mass errors TODO(bspratt) - this is probably not the correct math?
+                    }
+                    yield return filteredSrmSpectrum;
+                }
             }
         }
 
@@ -902,8 +943,14 @@ namespace pwiz.Skyline.Model.Results
         // Has to be concurrent, because both the spectrum reader thread and chromatogram extraction thread use this
         private readonly IDictionary<IsolationWindowFilter, IList<SpectrumFilterPair>> _filterPairDictionary =
             new ConcurrentDictionary<IsolationWindowFilter, IList<SpectrumFilterPair>>();
-        private readonly IDictionary<SpectrumFilterPair, double> _filterPairBestDiaPasefDistanceDictionary =
-            new ConcurrentDictionary<SpectrumFilterPair, double>();
+
+        private class DiaPasefDistanceAndWindowGroup
+        {
+            public double distance;
+            public int windowGroup;
+        }
+        private readonly IDictionary<SpectrumFilterPair, DiaPasefDistanceAndWindowGroup> _filterPairBestDiaPasefDistanceAndWindowGroupDictionary =
+            new ConcurrentDictionary<SpectrumFilterPair, DiaPasefDistanceAndWindowGroup>();
 
         private IEnumerable<SpectrumFilterPair> FindFilterPairs(IsolationWindowFilter isoWin,
                                                                 FullScanAcquisitionMethod acquisitionMethod, bool ignoreIsolationScheme = false)

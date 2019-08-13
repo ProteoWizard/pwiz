@@ -289,7 +289,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         }
         else // DiaPasef
         {
-            sqlite::query q(db, "SELECT Frame, ScanNumBegin, IsolationMz, IsolationWidth, CollisionEnergy "
+            sqlite::query q(db, "SELECT Frame, ScanNumBegin, IsolationMz, IsolationWidth, CollisionEnergy, f.WindowGroup "
                                 "FROM DiaFrameMsMsInfo f, DiaFrameMsMsWindows w WHERE f.WindowGroup=w.WindowGroup "
                                 "ORDER BY Frame, ScanNumBegin");
             DiaPasefIsolationInfo info;
@@ -310,6 +310,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                 info.isolationWidth = row.get<double>(++idx);
                 info.collisionEnergy = row.get<double>(++idx);
 
+                frame->windowGroup_ = row.get<int>(++idx);
                 frame->diaPasefIsolationInfoByScanNumber_[scanBegin] = info;
             }
         }
@@ -727,6 +728,11 @@ double TimsSpectrum::getIsolationWidth() const
     }
     else
         return frame_.isolationWidth_.get_value_or(0);
+}
+
+int TimsSpectrum::getWindowGroup() const
+{
+    return frame_.windowGroup_.get_value_or(0);
 }
 
 

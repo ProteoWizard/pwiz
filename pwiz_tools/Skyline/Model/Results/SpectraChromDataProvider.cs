@@ -476,8 +476,7 @@ namespace pwiz.Skyline.Model.Results
 
         /// <summary>
         /// Process a list of spectra - typically of length one,
-        /// but possibly a set of drift bins all with same retention time 
-        /// (and potentially varying isolation window as in diaPASEF),
+        /// but possibly a set of drift bins all with same retention time,
         /// or a set of Agilent ramped-CE Mse scans to be averaged
         /// </summary>
         private void ProcessSpectrumList(MsDataSpectrum[] spectra,
@@ -995,8 +994,8 @@ namespace pwiz.Skyline.Model.Results
                         }
 
                         // Deal with ion mobility data - look ahead for a run of scans all 
-                        // with the same retention time and potentially varying isolation window (as in diaPASEF).  
-                        // For non-IMS data we'll just get a single "ion mobility bin" with no ion mobility value.
+                        // with the same retention time.  For non-IMS data we'll just get
+                        // a single "ion mobility bin" with no ion mobility value.
                         //
                         // Also for Agilent ramped-CE msE, gather MS2 scans together
                         // so they get averaged.
@@ -1204,14 +1203,12 @@ namespace pwiz.Skyline.Model.Results
                 _filter = filter;
                 _dataFile = dataFile;
                 _rt = null;
-                _precursors = null;
                 _previousIonMobilityValue = IonMobilityValue.EMPTY;
                 _lenSpectra = dataFile.SpectrumCount;
             }
 
             private int _lookAheadIndex;
             private double? _rt;
-            private MsPrecursor[] _precursors; // Useful for PASEF, allows us to detect change in isolation window within a set of ion mobility scans
             private readonly SpectrumFilter _filter;
             private readonly MsDataFileImpl _dataFile;
             private MsDataSpectrum _lookAheadDataSpectrum; // Result of _datafile.GetSpectrum(_lookaheadIndex), or null
@@ -1281,10 +1278,9 @@ namespace pwiz.Skyline.Model.Results
                 return _lookAheadIndex;
             }
 
-            private bool NextSpectrumIsIonMobilityScanForCurrentRetentionTimeAndIsolationWindow(MsDataSpectrum nextSpectrum)
+            private bool NextSpectrumIsIonMobilityScanForCurrentRetentionTime(MsDataSpectrum nextSpectrum)
             {
                 bool result = ((_rt ?? 0) == (nextSpectrum.RetentionTime ?? -1)) &&
-                              (nextSpectrum.Level==1 ||  ArrayUtil.EqualsDeep(_precursors, nextSpectrum.Precursors)) && // For diaPASEF, looking for runs of MS2 with same MS1 ion mobility
                               IonMobilityValue.IsExpectedValueOrdering(_previousIonMobilityValue, nextSpectrum.IonMobility);
                 _previousIonMobilityValue = nextSpectrum.IonMobility;
                 return result;
@@ -1300,8 +1296,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             // Deal with ion mobility data - look ahead for a run of scans all
-            // with the same retention time and potentially varying isolation window (as in diaPASEF). 
-            // For non-IMS data we'll just get
+            // with the same retention time.  For non-IMS data we'll just get
             // a single "ion mobility bin" with no ion mobility value.
             //
             // Also for Agilent ramped-CE msE, gather MS2 scans together
@@ -1312,7 +1307,6 @@ namespace pwiz.Skyline.Model.Results
                 int listLevel = dataSpectrum.Level;
                 double startCE = GetPrecursorCollisionEnergy(dataSpectrum);
                 _previousIonMobilityValue = IonMobilityValue.EMPTY;
-                _precursors = null;
                 double rtTotal = 0;
                 double? rtFirst = null;
                 _lookAheadDataSpectrum = null;
@@ -1325,10 +1319,6 @@ namespace pwiz.Skyline.Model.Results
                         rtTotal += dataSpectrum.RetentionTime.Value;
                         if (!rtFirst.HasValue)
                             rtFirst = dataSpectrum.RetentionTime;
-                        if (_precursors == null)
-                        {
-                            _precursors = dataSpectrum.Precursors;
-                        }
                     }
                     if (!_filter.IsAgilentMse && !dataSpectrum.IonMobility.HasValue)
                         break;
@@ -1337,9 +1327,9 @@ namespace pwiz.Skyline.Model.Results
                     {
                         dataSpectrum = _lookAheadDataSpectrum = _dataFile.GetSpectrum(_lookAheadIndex);
                         // Reasons to keep adding to the list:
-                        //   Retention time and isolation window (if any) hasn't changed but ion mobility has changed, or
+                        //   Retention time hasn't changed but ion mobility has changed, or
                         //   Agilent ramped-CE data - MS2 scans get averaged
-                        if (!(NextSpectrumIsIonMobilityScanForCurrentRetentionTimeAndIsolationWindow(dataSpectrum) ||
+                        if (!(NextSpectrumIsIonMobilityScanForCurrentRetentionTime(dataSpectrum) ||
                               NextSpectrumIsAgilentMse(dataSpectrum, listLevel, startCE)))
                             break;
                     }
