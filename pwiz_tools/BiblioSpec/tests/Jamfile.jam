@@ -257,6 +257,9 @@ blib-test-build maxquant-bsa-baf-v1_6_7 : -o -p@$(TEST_DATA_PATH)/bsa-baf-mqpar.
 blib-test-build maxquant-yeast-wiff : -o -p@$(TEST_DATA_PATH)/yeast-wiff-mqpar.xml : output/maxquant-yeast-wiff.blib : maxquant-yeast-wiff.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/yeast-wiff-msms.txt ;
 blib-test-build maxquant-yeast-wiff-i18n : -o -p@$(TEST_DATA_PATH)/yeast-wiff-试验-mqpar.xml : output/maxquant-yeast-wiff-i18n.blib : maxquant-yeast-wiff-i18n.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/yeast-wiff-试验-msms.txt ;
 
+# Test maxquant reading spectra from WIFF with peak picking
+blib-test-build maxquant-prg2012-wiff : -o -p@$(TEST_DATA_PATH)/prg2012-wiff-mqpar.xml : output/maxquant-prg2012-wiff.blib : maxquant-prg2012-wiff.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/prg2012-wiff-msms.txt : <toolset>gcc:<build>no ;
+
 # Test mzid format from scaffold
 blib-test-build scaffold : --unicode -o : output/scaffold.blib : scaffold.check : $(TEST_INPUTS_PATH)/scaffold.mzid ;
 
