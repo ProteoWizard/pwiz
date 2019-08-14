@@ -43,13 +43,6 @@ namespace pwiz.SkylineTestUtil
             return consoleBuffer.ToString();
         }
 
-        public void SaveDocument(SrmDocument document, string path)
-        {
-            var cmdline = new CommandLine();
-            cmdline.SaveDocument(document, path, TextWriter.Null);
-        }
-
-
         public SrmDocument ConvertToSmallMolecules(SrmDocument doc, ref string docPath, IEnumerable<string> dataPaths,
             RefinementSettings.ConvertToSmallMoleculesMode mode)
         {

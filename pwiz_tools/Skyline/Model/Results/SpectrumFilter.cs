@@ -130,7 +130,7 @@ namespace pwiz.Skyline.Model.Results
                     /*
                      Leaving this here in case we ever decide to fall back to our own BPC+TIC extraction in cases where data
                      file doesn't have them ready to go, as in mzXML
-                    if (!firstPass && instrumentInfo.IonMobilityUnits != eIonMobilityUnits.none)
+                    if (!firstPass && _isIonMobilityFiltered)
                     {
                         var key = new PrecursorTextId(SignedMz.ZERO, null, null, ChromExtractor.summed);  // TIC
                         dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, dictPrecursorMzToFilter.Count,
@@ -755,7 +755,7 @@ namespace pwiz.Skyline.Model.Results
                     indexLast++;
                 }
 
-                is_diaPASEF |= _acquisitionMethod == FullScanAcquisitionMethod.DIA && indexLast < spectra.Length; // Isolation window changed within single RT and multiple IM scans
+                is_diaPASEF |= _acquisitionMethod == FullScanAcquisitionMethod.DIA && indexLast < spectra.Length && spectra[indexFirst].WindowGroup > 0; // Isolation window changed within single RT and multiple IM scans
                 if (is_diaPASEF && diaPasefFilteredSpectra == null)
                 {
                     diaPasefFilteredSpectra = new Dictionary<SpectrumFilterPair, List<ExtractedSpectrum>>();

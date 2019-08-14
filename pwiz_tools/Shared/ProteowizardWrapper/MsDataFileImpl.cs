@@ -806,8 +806,7 @@ namespace pwiz.ProteowizardWrapper
             };
             if (IonMobilityUnits == eIonMobilityUnits.inverse_K0_Vsec_per_cm2)
             {
-                var scan = spectrum.scanList.scans[0];
-                var param = scan.userParam(@"windowGroup"); // For Bruker diaPASEF
+                var param = spectrum.scanList.scans[0].userParam(@"windowGroup"); // For Bruker diaPASEF
                 msDataSpectrum.WindowGroup = param.empty() ? 0 : int.Parse(param.value);
             }
             if (spectrum.binaryDataArrays.Count <= 1)
@@ -1012,7 +1011,6 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
-
         private static int? GetMsLevel(Spectrum spectrum)
         {
             CVParam param = spectrum.cvParam(CVID.MS_ms_level);
@@ -1137,7 +1135,7 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
-        private MsPrecursor[] GetPrecursors(Spectrum spectrum)
+        private static MsPrecursor[] GetPrecursors(Spectrum spectrum)
         {
             bool negativePolarity = NegativePolarity(spectrum);
             return spectrum.precursors.Select(p =>
@@ -1151,7 +1149,7 @@ namespace pwiz.ProteowizardWrapper
                     }).ToArray();
         }
 
-        private MsPrecursor[] GetMs1Precursors(Spectrum spectrum)
+        private static MsPrecursor[] GetMs1Precursors(Spectrum spectrum)
         {
             bool negativePolarity = NegativePolarity(spectrum);
             return spectrum.scanList.scans[0].scanWindows.Select(s =>

@@ -36,7 +36,7 @@ namespace pwiz.SkylineTestData.Results
     /// in the sublibrary associated with the original final_fragment.csv
     /// </summary>
     [TestClass]
-    public class BlibDriftTimeTest : AbstractUnitTestEx
+    public class BlibDriftTimeTest : AbstractUnitTest
     {
 
         [TestMethod]
@@ -72,7 +72,6 @@ namespace pwiz.SkylineTestData.Results
                 Assert.IsTrue(docContainer.SetDocument(docResults, docOriginal, true));
                 docContainer.AssertComplete();
                 var document = docContainer.Document;
-SaveDocument(document, @"c:\tmp\foo.sky");
                 
                 float tolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
                 double maxHeight = 0;

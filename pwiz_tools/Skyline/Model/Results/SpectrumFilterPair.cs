@@ -47,7 +47,6 @@ namespace pwiz.Skyline.Model.Results
             IonMobilityInfo = precursorTextId.IonMobility;
             MinIonMobilityValue = IonMobilityInfo.IsEmpty ? null : IonMobilityInfo.IonMobility.Mobility - (IonMobilityInfo.IonMobilityExtractionWindowWidth??0)/2;
             MaxIonMobilityValue = IonMobilityInfo.IsEmpty ? null : MinIonMobilityValue + (IonMobilityInfo.IonMobilityExtractionWindowWidth ?? 0);
-
             HighAccQ1 = highAccQ1;
             HighAccQ3 = highAccQ3;
 
