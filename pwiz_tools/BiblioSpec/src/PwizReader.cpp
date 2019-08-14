@@ -25,8 +25,11 @@
  */
 
 #include "PwizReader.h"
+#include "pwiz/analysis/spectrum_processing/SpectrumListFactory.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_PeakPicker.hpp"
 
 using namespace pwiz::msdata;
+using namespace pwiz::analysis;
 using namespace boost;
 
 PwizReader::PwizReader() : curPositionInIndexMzPairs_(0)  {
@@ -57,6 +60,8 @@ void PwizReader::openFile(const char* filename, bool mzSort){
         delete fileReader_;
         #ifdef VENDOR_READERS
         fileReader_ = new MSDataFile(fileName_, &allReaders_);
+        if (SpectrumList_PeakPicker::supportsVendorPeakPicking(fileName_))
+            SpectrumListFactory::wrap(*fileReader_, "peakPicking true 1-");
         #else
         fileReader_ = new MSDataFile(fileName_);
         #endif
