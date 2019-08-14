@@ -281,7 +281,7 @@ blib-test-build metamorpheus-mzid : --unicode -o : output/metamorpheus.blib : me
 blib-test-build mse : --unicode -o : output/mse.blib : mse.check : $(TEST_INPUTS_PATH)/tiny_final_fragment.csv ;
 
 # Test waters csv format with precursor mobility
-blib-test-build mse-mobility : -o -P@0.068999 : output/mse-mobility.blib : mse-mobility.check : $(TEST_INPUTS_PATH)/waters-mobility.final_fragment.csv : <toolset>gcc:<build>no ;
+blib-test-build mse-mobility : -o -P@0.068999 : output/mse-mobility.blib : mse-mobility.check : $(TEST_INPUTS_PATH)/waters-mobility.final_fragment.csv : <vendor-api-support>on ;
 
 # Check backward compatibilty with previous notions of ion mobility
 blib-test-build mse-mobility-v12 : -o : output/mse-mobility-from-v12.blib : mse-mobility-from-v12.check mse-mobility.skip-lines : inputs/mse-mobility-v12.blib ;
@@ -313,7 +313,7 @@ blib-test-build merge : --unicode -o : output/xmerged-redundant.blib : xmerged-r
 blib-test-filter filter : --unicode : output/zmerged-filtered.blib : zmerged-filtered.check : output/xmerged-redundant.blib : <dependency>merge ;
 
 # Test BlibFilter on a library with precursor mobility values
-blib-test-filter filter-mobility : --unicode : output/mse-mobility-filtered.blib : mse-mobility-filtered.check : output/mse-mobility.blib : <dependency>mse-mobility ;
+blib-test-filter filter-mobility : --unicode : output/mse-mobility-filtered.blib : mse-mobility-filtered.check : output/mse-mobility.blib : <dependency>mse-mobility <toolset>gcc:<build>no;
 
 # Test BlibFilter on a small molecule library
 blib-test-filter filter-ssl-small-mol : --unicode : output/ssl-small-mol-filtered.blib : ssl-small-mol-filtered.check : output/ssl-small-mol.blib : <dependency>ssl-small-mol ;
