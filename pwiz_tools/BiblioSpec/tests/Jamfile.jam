@@ -260,6 +260,9 @@ blib-test-build maxquant-yeast-wiff-i18n : -o -p@$(TEST_DATA_PATH)/yeast-wiff-è¯
 # Test maxquant text file with IMS info in evidence.txt
 blib-test-build maxquant_ims : -o -E : output/maxquant_ims.blib : maxquant_ims.check zbuild.skip-lines : inputs/k0ccs-msms.txt ;
 
+# Test maxquant reading spectra from WIFF with peak picking
+blib-test-build maxquant-prg2012-wiff : -o -p@$(TEST_DATA_PATH)/prg2012-wiff-mqpar.xml : output/maxquant-prg2012-wiff.blib : maxquant-prg2012-wiff.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/prg2012-wiff-msms.txt : <vendor-api-support>off:<build>no ;
+
 # Test mzid format from scaffold
 blib-test-build scaffold : --unicode -o : output/scaffold.blib : scaffold.check : $(TEST_INPUTS_PATH)/scaffold.mzid ;
 
