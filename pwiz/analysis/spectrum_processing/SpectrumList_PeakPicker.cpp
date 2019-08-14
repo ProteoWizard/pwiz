@@ -155,8 +155,7 @@ PWIZ_API_DECL bool SpectrumList_PeakPicker::supportsVendorPeakPicking(const std:
                                                + ReaderPtr(new Reader_Bruker_TDF)
                                                + ReaderPtr(new Reader_Shimadzu)
                                                + ReaderPtr(new Reader_Thermo)
-                                               + ReaderPtr(new Reader_Waters)
-                                               + ReaderPtr(new Reader_Agilent);
+                                               + ReaderPtr(new Reader_Waters);
     return !peakPickingVendorReaders.identify(rawpath).empty();
 }
 
