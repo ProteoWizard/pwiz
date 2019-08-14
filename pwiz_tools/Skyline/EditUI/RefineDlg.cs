@@ -113,7 +113,6 @@ namespace pwiz.Skyline.EditUI
                 _standardTypeCount = standardTypes.Count;
             }
 
-            
             var hasGlobalStandard = _document.Settings.HasGlobalStandardArea;
             if (hasGlobalStandard)
                 comboNormalizeTo.Items.Add(Resources.AreaCVToolbar_UpdateUI_Global_standards);
@@ -122,14 +121,14 @@ namespace pwiz.Skyline.EditUI
             comboNormalizeTo.SelectedIndex = comboNormalizeTo.Items.Count - 1;
         }
 
-        private AreaCVNormalizationMethod GetNormalizationIndex(int idx, SrmDocument doc)
+        private AreaCVNormalizationMethod GetNormalizationMethod(int idx)
         {
             if (idx < _standardTypeCount)
             {
                 return AreaCVNormalizationMethod.ratio;
             }
             idx -= _standardTypeCount;
-            if (!doc.Settings.HasGlobalStandardArea)
+            if (!_document.Settings.HasGlobalStandardArea)
                 idx++;
 
             var normalizationMethod = AreaCVNormalizationMethod.none;
@@ -137,7 +136,7 @@ namespace pwiz.Skyline.EditUI
             {
                 case 0:
                     normalizationMethod =
-                        doc.Settings.HasGlobalStandardArea
+                        _document.Settings.HasGlobalStandardArea
                             ? AreaCVNormalizationMethod.global_standards
                             : AreaCVNormalizationMethod.medians;
                     break;
@@ -216,7 +215,48 @@ namespace pwiz.Skyline.EditUI
             get { return (int) numericUpDownDetections.Value; }
             set { numericUpDownDetections.Value = value; }
         }
-        
+
+        public AreaCVNormalizationMethod NormalizationMethod
+        {
+            get
+            {
+                var selected = comboNormalizeTo.SelectedItem.ToString();
+                if (Equals(selected, "None"))
+                    return AreaCVNormalizationMethod.none;
+                else if (Equals(selected, "Medians"))
+                    return AreaCVNormalizationMethod.medians;
+                else if (Equals(selected, "Global standards"))
+                    return AreaCVNormalizationMethod.global_standards;
+                else
+                    return AreaCVNormalizationMethod.ratio;
+            }
+            set
+            {
+                if (!Equals(value, AreaCVNormalizationMethod.ratio))
+                    if (value == AreaCVNormalizationMethod.global_standards)
+                        comboNormalizeTo.SelectedItem = "Global standards";
+                    else if (value == AreaCVNormalizationMethod.medians)
+                        comboNormalizeTo.SelectedItem = "Medians";
+                    else
+                        comboNormalizeTo.SelectedItem = "None";
+            }
+        }
+
+        public IsotopeLabelType CVRefineLabelType
+        {
+            get
+            {
+                string cvRefineTypeName = comboNormalizeTo.SelectedItem.ToString();
+                if (string.IsNullOrEmpty(cvRefineTypeName) || Equals(cvRefineTypeName, "None")
+                    || Equals(cvRefineTypeName, "Medians") || Equals(cvRefineTypeName, "Global standards"))
+                    return null;
+                cvRefineTypeName = Char.ToLowerInvariant(cvRefineTypeName[0]) + cvRefineTypeName.Substring(1);
+                var typedMods = _settings.PeptideSettings.Modifications.GetModificationsByName(cvRefineTypeName);
+                return typedMods.LabelType;
+            }
+
+            set { comboNormalizeTo.SelectedItem = value.Title; }
+        }
 
         public IsotopeLabelType RefineLabelType
         {
@@ -374,7 +414,9 @@ namespace pwiz.Skyline.EditUI
             }
 
             var normIdx = comboNormalizeTo.SelectedIndex;
-            var normMethod = GetNormalizationIndex(normIdx, _document);
+            var normMethod = GetNormalizationMethod(normIdx);
+
+            IsotopeLabelType ratioIndex = CVRefineLabelType;
 
             RefinementSettings = new RefinementSettings
                                      {
@@ -402,7 +444,8 @@ namespace pwiz.Skyline.EditUI
                                          CVCutoff = cvCutoff,
                                          QValueCutoff = qvalueCutoff,
                                          MinimumDetections =  minimumDetections,
-                                         NormalizationMethod = normMethod
+                                         NormalizationMethod = normMethod,
+                                         NormalizationLabelType = ratioIndex
                                      };
 
             DialogResult = DialogResult.OK;

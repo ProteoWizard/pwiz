@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
@@ -30,15 +28,11 @@ namespace pwiz.Skyline.Model
             if (document.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained &&
                 !double.IsNaN(_settings.QValueCutoff) &&
                 _settings.QValueCutoff < 1.0)
-            {
                 qvalueCutoff = _settings.QValueCutoff;
-            }
 
             int? minDetections = null;
             if (_settings.MinimumDetections != -1)
-            {
                 minDetections = _settings.MinimumDetections;
-            }
 
             MedianInfo medianInfo = null;
             if (_settings.NormalizationMethod == AreaCVNormalizationMethod.medians)
@@ -87,8 +81,7 @@ namespace pwiz.Skyline.Model
                                 var normalizedArea = sumArea;
                                 if (_settings.NormalizationMethod == AreaCVNormalizationMethod.medians)
                                     normalizedArea /= medianInfo.Medians[i] / medianInfo.MedianMedian;
-                                else if (_settings.NormalizationMethod == AreaCVNormalizationMethod.global_standards &&
-                                         hasGlobalStandards)
+                                else if (_settings.NormalizationMethod == AreaCVNormalizationMethod.global_standards && hasGlobalStandards)
                                     normalizedArea =
                                         NormalizeToGlobalStandard(document, transitionGroupDocNode, i, sumArea);
                                 else if (_settings.NormalizationMethod == AreaCVNormalizationMethod.ratio && hasHeavyMods && _settings.RatioIndex >= 0)
@@ -317,21 +310,13 @@ namespace pwiz.Skyline.Model
 
         public class AreaCVRefinementSettings
         {
-            public AreaCVRefinementSettings(double cvCutoff)
-            {
-                CVCutoff = cvCutoff;
-                QValueCutoff = double.NaN;
-                MinimumDetections = -1;
-                NormalizationMethod = AreaCVNormalizationMethod.none;
-                RatioIndex = -1;
-            }
-
-            public AreaCVRefinementSettings(double cvCutoff, double qValueCutoff, int minimumDetections, AreaCVNormalizationMethod normalizationMethod)
+            public AreaCVRefinementSettings(double cvCutoff, double qValueCutoff, int minimumDetections, AreaCVNormalizationMethod normalizationMethod, int ratioIndex)
             {
                 CVCutoff = cvCutoff;
                 QValueCutoff = qValueCutoff;
                 MinimumDetections = minimumDetections;
                 NormalizationMethod = normalizationMethod;
+                RatioIndex = ratioIndex;
             }
 
             public double QValueCutoff { get; private set; }

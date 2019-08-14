@@ -124,6 +124,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky"));
+            TestRefinement();
 
             // Add a bunch of unmeasured precursors and transitions which should not impact the statistics
             // This once caused the CV graphs to fail to complete calculating
@@ -213,16 +214,6 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(SkylineWindow.Undo);
 
-            WaitForHistogramBarCount(histogramInfo, itemCount);
-
-            // Verify cv cutoff refinement works
-            RefineDlg refineDlg = ShowDialog<RefineDlg>(()=>SkylineWindow.ShowRefineDlg());
-            RunUI(() => { refineDlg.CVCutoff = 20; });
-            OkDialog(refineDlg, () => refineDlg.OkDialog());
-
-            expectedBars = itemCount - GetItemsAboveCutoff(statsStartIndex);
-            WaitForHistogramBarCount(histogramInfo, expectedBars);
-            RunUI(SkylineWindow.Undo);
             WaitForHistogramBarCount(histogramInfo, itemCount);
 
             // Test if the data is correct after changing the bin width and disabling the show cv cutoff option (which affects GetTotalBars)
@@ -320,6 +311,49 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.medians));
             WaitForGraphs();
             AssertDataCorrect(pane, statsStartIndex++);
+        }
+
+        private void TestRefinement()
+        {
+            var graphStates = new [] {(48, 15, 15, 86), (48, 3, 3, 18), (48, 10, 10, 58)};
+
+            // Verify cv cutoff refinement works
+            var refineDlg = ShowDialog<RefineDlg>(() => SkylineWindow.ShowRefineDlg());
+            RunUI(() => { refineDlg.CVCutoff = 30; });
+            OkDialog(refineDlg, () => refineDlg.OkDialog());
+            var doc = SkylineWindow.Document;
+            var refineDocState = (doc.PeptideGroupCount, doc.PeptideCount, doc.PeptideTransitionGroupCount,
+                doc.PeptideTransitionCount);
+            Assert.AreEqual(graphStates[0], refineDocState);
+            RunUI(SkylineWindow.Undo);
+
+            // Normalize to global standards
+            refineDlg = ShowDialog<RefineDlg>(() => SkylineWindow.ShowRefineDlg());
+            RunUI(() =>
+            {
+                refineDlg.CVCutoff = 20;
+                refineDlg.NormalizationMethod = AreaCVNormalizationMethod.global_standards;
+            });
+            OkDialog(refineDlg, () => refineDlg.OkDialog());
+            doc = SkylineWindow.Document;
+            refineDocState = (doc.PeptideGroupCount, doc.PeptideCount, doc.PeptideTransitionGroupCount,
+                doc.PeptideTransitionCount);
+            Assert.AreEqual(graphStates[1], refineDocState);
+            RunUI(SkylineWindow.Undo);
+
+            // Normalize to medians
+            refineDlg = ShowDialog<RefineDlg>(() => SkylineWindow.ShowRefineDlg());
+            RunUI(() =>
+            {
+                refineDlg.CVCutoff = 20;
+                refineDlg.NormalizationMethod = AreaCVNormalizationMethod.medians;
+            });
+            OkDialog(refineDlg, () => refineDlg.OkDialog());
+            doc = SkylineWindow.Document;
+            refineDocState = (doc.PeptideGroupCount, doc.PeptideCount, doc.PeptideTransitionGroupCount,
+                doc.PeptideTransitionCount);
+            Assert.AreEqual(graphStates[2], refineDocState);
+            RunUI(SkylineWindow.Undo);
         }
 
         private string[][] GetExpected(string[] foundText)

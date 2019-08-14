@@ -417,6 +417,7 @@
             // 
             // comboNormalizeTo
             // 
+            this.comboNormalizeTo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboNormalizeTo.FormattingEnabled = true;
             resources.ApplyResources(this.comboNormalizeTo, "comboNormalizeTo");
             this.comboNormalizeTo.Name = "comboNormalizeTo";

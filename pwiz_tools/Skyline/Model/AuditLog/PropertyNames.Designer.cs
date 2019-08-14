@@ -2734,6 +2734,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Minimum Detections.
+        /// </summary>
+        public static string RefinementSettings_MinimumDetections {
+            get {
+                return ResourceManager.GetString("RefinementSettings_MinimumDetections", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Min peak found ratio.
         /// </summary>
         public static string RefinementSettings_MinPeakFoundRatio {
@@ -2766,6 +2775,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string RefinementSettings_PreferLargeIons {
             get {
                 return ResourceManager.GetString("RefinementSettings_PreferLargeIons", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove above qvalue cutoff.
+        /// </summary>
+        public static string RefinementSettings_QValueCutoff {
+            get {
+                return ResourceManager.GetString("RefinementSettings_QValueCutoff", resourceCulture);
             }
         }
         

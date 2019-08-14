@@ -237,38 +237,77 @@ namespace pwiz.SkylineTestData
             output = Run(CommandArgs.ARG_REFINE_MAX_PRECURSOR_PEAK_ONLY.ArgumentText);
             AssertEx.Contains(output, PropertyNames.RefinementSettings_MaxPrecursorPeakOnly);
             IsResultsState(OutPath, 3, 3, 27, output, true);
+        }
 
+        [TestMethod]
+        public void ConsoleRefineConsistencyTest()
+        {
             // Remove all elements above the cv cutoff
             TestFilesDir = new TestFilesDir(TestContext, @"TestFunctional/AreaCVHistogramTest.zip");
             DocumentPath = InitRefineDocument("Rat_plasma.sky", 48, 0, 125, 125, 721);
+            OutPath = Path.Combine(Path.GetDirectoryName(DocumentPath) ?? string.Empty, "test.sky");
             string cvCutoff = 20.ToString();
-            output = Run(CommandArgs.ARG_REFINE_REMOVE_ABOVE_CV_CUTOFF.GetArgumentTextWithValue(cvCutoff));
+            var output = Run(CommandArgs.ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF.GetArgumentTextWithValue(cvCutoff));
             AssertEx.Contains(output, PropertyNames.RefinementSettings_CVCutoff);
-            IsDocumentState(OutPath, 48, 0, 3, 0, 3,18, output);
+            IsDocumentState(OutPath, 48, 0, 3, 0, 3, 18, output);
+
+            // Refine elements with the qvalue cutoff.
+            TestFilesZip = @"http://proteome.gs.washington.edu/software/test/skyline-perf/AreaCVHistogramQValueAndRatioTest.zip";
+            
+            DocumentPath = InitRefineDocument("BrukerDIA3_0.sky", 3, 0, 34460, 37202, 220867);
+            cvCutoff = 20.ToString();
+            var qvalueCutoff = 0.01.ToString();
+            var args = new List<string>()
+            {
+                CommandArgs.ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF.GetArgumentTextWithValue(cvCutoff),
+                CommandArgs.ARG_REFINE_QVALUE_CUTOFF.GetArgumentTextWithValue(qvalueCutoff)
+            };
+            var  parts = new List<string>()
+            {
+                PropertyNames.RefinementSettings_CVCutoff,
+                PropertyNames.RefinementSettings_QValueCutoff
+            };
+            output = Run(args.ToArray());
+            AssertEx.Contains(output, parts.ToArray());
+            IsDocumentState(OutPath, 3, 0, 9379, 0, 9929, 58934, output);
+
+            // Refine elements with minimum detections
+            var minDetections = 3.ToString();
+            args.Add(CommandArgs.ARG_REFINE_MINIMUM_DETECTIONS.GetArgumentTextWithValue(minDetections));
+            parts.Add(PropertyNames.RefinementSettings_MinimumDetections);
+            output = Run(args.ToArray());
+            AssertEx.Contains(output, parts.ToArray());
+            // TODO: insert document state values
+
+            // Normalize to global standards
+            args.Clear();
+            args.Add(CommandArgs.ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF.GetArgumentTextWithValue(cvCutoff));
+            args.Add(CommandArgs.ARG_REFINE_CV_GLOBAL_NORMALIZE.GetArgumentTextWithValue("global_standards"));
+            parts.RemoveAt(parts.Count - 1);
         }
 
-//        [TestMethod]
-//        public void ConsoleRefineConvertToSmallMoleculesTest()
-//        {
-//            // Exercise the code that helps match heavy labeled ion formulas with unlabled
-//            Assert.AreEqual("C5H12NO2S", BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula("C5H9H'3NO2S"));
-//            Assert.IsNull(BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(""));
-//            Assert.IsNull(BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(null));
-//
-//            InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.formulas);
-//        }
-//
-//        [TestMethod]
-//        public void ConsoleRefineConvertToSmallMoleculeMassesTest()
-//        {
-//            InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.masses_only);
-//        }
-//
-//        [TestMethod]
-//        public void ConsoleRefineConvertToSmallMoleculeMassesAndNamesTest()
-//        {
-//            InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.masses_and_names);
-//        }
+        //        [TestMethod]
+        //        public void ConsoleRefineConvertToSmallMoleculesTest()
+        //        {
+        //            // Exercise the code that helps match heavy labeled ion formulas with unlabled
+        //            Assert.AreEqual("C5H12NO2S", BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula("C5H9H'3NO2S"));
+        //            Assert.IsNull(BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(""));
+        //            Assert.IsNull(BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(null));
+        //
+        //            InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.formulas);
+        //        }
+        //
+        //        [TestMethod]
+        //        public void ConsoleRefineConvertToSmallMoleculeMassesTest()
+        //        {
+        //            InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.masses_only);
+        //        }
+        //
+        //        [TestMethod]
+        //        public void ConsoleRefineConvertToSmallMoleculeMassesAndNamesTest()
+        //        {
+        //            InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.masses_and_names);
+        //        }
 
         [TestMethod]
         public void ConsoleChangeFilterSettingsTest()

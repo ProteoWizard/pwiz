@@ -1421,4 +1421,10 @@
   <data name="RefinementSettings_CVCutoff" xml:space="preserve">
     <value>Remove above cv cutoff</value>
   </data>
+  <data name="RefinementSettings_QValueCutoff" xml:space="preserve">
+    <value>Remove above qvalue cutoff</value>
+  </data>
+  <data name="RefinementSettings_MinimumDetections" xml:space="preserve">
+    <value>Minimum Detections</value>
+  </data>
 </root>

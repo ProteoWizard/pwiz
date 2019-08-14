@@ -21,6 +21,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
@@ -198,6 +199,8 @@ namespace pwiz.Skyline.Model
         public int? MinimumDetections { get; set; }
         [Track]
         public AreaCVNormalizationMethod NormalizationMethod { get; set; }
+        [Track]
+        public IsotopeLabelType NormalizationLabelType { get; set; }
 
         public SrmDocument Refine(SrmDocument document)
         {
@@ -309,16 +312,36 @@ namespace pwiz.Skyline.Model
             var refined = (SrmDocument)document.ChangeChildrenChecked(listPepGroups.ToArray(), true);
             if (CVCutoff.HasValue)
             {
-                AreaCVRefinementData data;
-                if (QValueCutoff.HasValue && MinimumDetections.HasValue)
-                    data = new AreaCVRefinementData(refined, new AreaCVRefinementData.AreaCVRefinementSettings(CVCutoff.Value, QValueCutoff.Value, MinimumDetections.Value, NormalizationMethod));
-                else
-                    data = new AreaCVRefinementData(refined, new AreaCVRefinementData.AreaCVRefinementSettings(CVCutoff.Value));
+                if (NormalizationMethod == AreaCVNormalizationMethod.global_standards &&
+                    !document.Settings.HasGlobalStandardArea)
+                {
+                    // error
+                }
+                double qvalue = QValueCutoff.HasValue ? QValueCutoff.Value : double.NaN;
+                int minDetections = MinimumDetections.HasValue ? MinimumDetections.Value : -1;
+                int ratioIndex = GetLabelIndex(NormalizationLabelType, document);
+                var data = new AreaCVRefinementData(refined, new AreaCVRefinementData.AreaCVRefinementSettings(CVCutoff.Value, qvalue, minDetections, NormalizationMethod, ratioIndex));
                 refined = data.RemoveAboveCVCuttoff(refined);
             }
 
             return refined;
 //            return (SrmDocument) document.ChangeChildrenChecked(listPepGroups.ToArray(), true);
+        }
+
+        private int GetLabelIndex(IsotopeLabelType type, SrmDocument doc)
+        {
+            if (type != null)
+            {
+                var mods = doc.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes;
+                var idx = mods.IndexOf(mod => Equals(mod.Name, type.Name));
+                if (idx == -1)
+                {
+                    // error
+                }
+                return idx;
+            }
+
+            return -1;
         }
 
         private string GetAcceptProteinKey(PeptideGroupDocNode nodePepGroup)
