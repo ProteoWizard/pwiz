@@ -27,6 +27,7 @@ using pwiz.CLI.data;
 using pwiz.CLI.msdata;
 using pwiz.CLI.analysis;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.ProteowizardWrapper
@@ -796,7 +797,7 @@ namespace pwiz.ProteowizardWrapper
                 Index = spectrum.index,
                 RetentionTime = GetStartTime(spectrum),
                 IonMobility = GetIonMobility(spectrum),
-                Precursors = GetPrecursors(spectrum),
+                PrecursorsByMsLevel = GetPrecursorsByMsLevel(spectrum),
                 Centroided = IsCentroided(spectrum),
                 NegativeCharge = NegativePolarity(spectrum)
             };
@@ -1368,7 +1369,37 @@ namespace pwiz.ProteowizardWrapper
         public int Index { get; set; } // index into parent file, if any
         public double? RetentionTime { get; set; }
         public IonMobilityValue IonMobility { get { return _ionMobility ?? IonMobilityValue.EMPTY; } set { _ionMobility = value; } }
-        public MsPrecursor[] Precursors { get; set; }
+
+        public IList<MsPrecursor> GetPrecursorsByMsLevel(int level)
+        {
+            IList<MsPrecursor> precursors;
+            if (PrecursorsByMsLevel != null && PrecursorsByMsLevel.TryGetValue(level, out precursors))
+            {
+                return precursors;
+            }
+
+            return new MsPrecursor[0];
+        }
+
+        public IDictionary<int, IList<MsPrecursor>> PrecursorsByMsLevel { get; set; }
+
+        public MsPrecursor[] Precursors
+        {
+            get
+            {
+                if ((PrecursorsByMsLevel?.Count ?? 0) == 0)
+                {
+                    return new MsPrecursor[0];
+                }
+
+                return GetPrecursorsByMsLevel(PrecursorsByMsLevel.Keys.Max()).ToArray();
+            }
+            set
+            {
+                PrecursorsByMsLevel = new Dictionary<int, IList<MsPrecursor>>{{1, value}};
+            }
+        }
+
         public bool Centroided { get; set; }
         public bool NegativeCharge { get; set; } // True if negative ion mode
         public double[] Mzs { get; set; }
