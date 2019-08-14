@@ -222,17 +222,16 @@ blib-test-build bad-index : -o : output/bad-index.blib : bad-index.check : $(TES
 
 blib-test-build idpicker : --unicode -o : output/idpicker.blib : idpicker.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/orbi-small-eg.idpXML ;
 blib-test-build tandem : --unicode -o : output/tandem.blib : tandem.check zbuild-rt.skip-lines : $(TEST_INPUTS_PATH)/out_260_1_step01.2009_09_02_10_55_23.xtan.xml ;
-blib-test-build pride-mascot : --unicode -o : output/pride-mascot.blib : pride-mascot.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test.mascot.pride.xml ;
-blib-test-build pride-xcorr : -o : output/pride-xcorr.blib : pride-xcorr.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test.xcorr.pride.xml ;
-blib-test-build pride-bytes : -o : output/pride-xcorr-bytes.blib : pride-xcorr-bytes.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test.bytes.pride.xml ;
-blib-test-build pride-xcorr-no-charges : -o : output/pride-xcorr-nocharges.blib : pride-xcorr-nocharges.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test.xcorr.nocharges.pride.xml ;
-blib-test-build pride-mill : -o : output/pride-mill.blib : pride-mill.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test.mill.pride.xml ;
-blib-test-build tiny-msf : --unicode -o : output/tiny-msf.blib : tiny-msf.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tiny.msf ;
-blib-test-build tiny-v2-msf : -o : output/tiny-v2-msf.blib : tiny-v2-msf.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tiny-v2.msf ;
-blib-test-build tiny-v2-filtered-pdResult : -o : output/tiny-v2-filtered-pdResult.blib : tiny-v2-filtered-pdResult.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tiny-v2-filtered.pdResult ;
-blib-test-build md_special_filtered-pdResult : --unicode -o : output/md_special_filtered-pdResult.blib : md_special_filtered-pdResult.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/md_special_filtered.pdResult ;
+blib-test-build pride-mascot : --unicode -o : output/pride.mascot.blib : pride.mascot.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test.mascot.pride.xml ;
+blib-test-build pride-xcorr : -o : output/pride.xcorr.blib : pride.xcorr.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test.xcorr.pride.xml ;
+blib-test-build pride-bytes : -o : output/pride.xcorr.bytes.blib : pride.xcorr.bytes.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test.bytes.pride.xml ;
+blib-test-build pride-xcorr-no-charges : -o : output/pride.xcorr.nocharges.blib : pride.xcorr.nocharges.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test.xcorr.nocharges.pride.xml ;
+blib-test-build pride-mill : -o : output/pride.mill.blib : pride.mill.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test.mill.pride.xml ;
+blib-test-build tiny-msf : --unicode -o : output/tiny.msf.blib : tiny.msf.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tiny.msf ;
+blib-test-build tiny-v2-msf : -o : output/tiny-v2.msf.blib : tiny-v2.msf.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tiny-v2.msf ;
+blib-test-build tiny-v2-filtered-pdResult : -o : output/tiny-v2-filtered.pdResult.blib : tiny-v2-filtered.pdResult.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tiny-v2-filtered.pdResult ;
+blib-test-build md_special_filtered-pdResult : --unicode -o : output/md_special_filtered.pdResult.blib : md_special_filtered.pdResult.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/md_special_filtered.pdResult ;
 blib-test-build pilot : --unicode -o : output/pilot.blib : pilot.check : $(TEST_INPUTS_PATH)/MB1_98_03.group.xml ;
-blib-test-build pilot-mzid : --unicode -o : output/pilot-mzid.blib : pilot-mzid.check : $(TEST_INPUTS_PATH)/ProtPilotTest.mzid ;
 
 # Test maxquant text file
 blib-test-build maxquant : --unicode -o -E -p@$(TEST_DATA_PATH)/mqpar1.xml : output/maxquant.blib : maxquant.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test.msms.txt ;
@@ -241,7 +240,7 @@ blib-test-build maxquant : --unicode -o -E -p@$(TEST_DATA_PATH)/mqpar1.xml : out
 blib-test-build maxquant-spectrum-file-not-found : -o -e@~run_with_the_-E_flag~ : output/maxquant-spectrum-file-not-found.blib : maxquant-spectrum-file-not-found.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test.msms.txt ;
 
 # Test reading from stdin (filenames and target sequences)
-blib-test-build maxquant-targeted : -o -s -u -U -S@$(TEST_DATA_PATH)/maxquant-targeted-stdin.txt -E -p@$(TEST_DATA_PATH)/mqpar1.xml : output/maxquant-targeted.blib : maxquant-targeted.check zbuild.skip-lines : : <dependency>maxquant ;
+blib-test-build maxquant-targeted : -o -s -u -U -S@$(TEST_DATA_PATH)/maxquant-targeted-stdin.txt -E -p@$(TEST_DATA_PATH)/mqpar1.xml : output/maxquant.targeted.blib : maxquant.targeted.check zbuild.skip-lines : : <dependency>maxquant ;
 
 # Test maxquant text file (new format) (and lookup for mqpar.xml works)
 blib-test-build maxquant2 : -o -E : output/maxquant2.blib : maxquant2.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test2.msms.txt ;
@@ -307,22 +306,22 @@ blib-test-build openswath-invalid-tsv : -o -e@~Only_OpenSWATH~ : output/openswat
 blib-test-build mascot_tims_bad : -e@0.78079097398941 -o : output/mascot_tims_bad.blib : mascot_tims_bad.check : $(TEST_INPUTS_PATH)/mascot_tims_bad.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
 
 # Test merging existing libraries
-blib-test-build merge : --unicode -o : output/xmerged-redundant.blib : xmerged-redundant.check : output/sqt-cms2.blib output/sqt-ms2.blib output/pep-proph.blib : <dependency>sqt-ms2 <dependency>sqt-cms2 <dependency>pep-proph ;
+blib-test-build merge : --unicode -o : output/xmerged.redundant.blib : xmerged.redundant.check : output/sqt-cms2.blib output/sqt-ms2.blib output/pep-proph.blib : <dependency>sqt-ms2 <dependency>sqt-cms2 <dependency>pep-proph ;
 
 # Test BlibFilter
-blib-test-filter filter : --unicode : output/zmerged-filtered.blib : zmerged-filtered.check : output/xmerged-redundant.blib : <dependency>merge ;
+blib-test-filter filter : --unicode : output/zmerged.filtered.blib : zmerged.filtered.check : output/xmerged.redundant.blib : <dependency>merge ;
 
 # Test BlibFilter on a library with precursor mobility values
-blib-test-filter filter-mobility : --unicode : output/mse-mobility-filtered.blib : mse-mobility-filtered.check : output/mse-mobility.blib : <dependency>mse-mobility ;
+blib-test-filter filter-mobility : --unicode : output/mse-mobility.filtered.blib : mse-mobility.filtered.check : output/mse-mobility.blib : <dependency>mse-mobility ;
 
 # Test BlibFilter on a small molecule library
-blib-test-filter filter-ssl-small-mol : --unicode : output/ssl-small-mol-filtered.blib : ssl-small-mol-filtered.check : output/ssl-small-mol.blib : <dependency>ssl-small-mol ;
+blib-test-filter filter-ssl-small-mol : --unicode : output/ssl-small-mol.filtered.blib : ssl-small-mol.filtered.check : output/ssl-small-mol.blib : <dependency>ssl-small-mol ;
 
 # Test BlibFilter's best scoring mode on multiple raw files but only one search engine (score type)
 blib-test-filter filter-best-scoring-one : -b@1 --unicode : output/filter-best-scoring-one.blib : filter-best-scoring-one.check : output/maxquant3.blib : <dependency>maxquant3 ;
 
 # Test BlibFilter's best scoring mode on multiple search engines (score types)
-blib-test-filter filter-best-scoring-multi : -b@1 --unicode : output/filter-best-scoring-multi.blib : filter-best-scoring-multi.check : output/xmerged-redundant.blib : <dependency>merge ;
+blib-test-filter filter-best-scoring-multi : -b@1 --unicode : output/filter-best-scoring-multi.blib : filter-best-scoring-multi.check : output/xmerged.redundant.blib : <dependency>merge ;
 
 # Test self-describing -d option
 
