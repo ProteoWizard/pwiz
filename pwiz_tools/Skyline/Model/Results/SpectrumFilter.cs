@@ -800,10 +800,6 @@ namespace pwiz.Skyline.Model.Results
                                     _filterPairBestDiaPasefDistanceAndWindowGroupDictionary[filterPair] = new DiaPasefDistanceAndWindowGroup
                                         { distance = distanceToCenter, windowGroup = windowGroup };
                                 }
-                            }
-
-                            if (is_diaPASEF)
-                            {
                                 if (!diaPasefFilteredSpectra.TryGetValue(filterPair, out var list))
                                 {
                                     list = new List<ExtractedSpectrum>();
