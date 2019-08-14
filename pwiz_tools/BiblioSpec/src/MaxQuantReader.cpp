@@ -46,16 +46,6 @@ MaxQuantReader::MaxQuantReader(BlibBuilder& maker,
     // MaxQuant defaults to requiring external spectra
     preferEmbeddedSpectra_ = maker.preferEmbeddedSpectra().get_value_or(false);
 
-    if (preferEmbeddedSpectra_) // user wants deconv or has no access to sources
-    {
-        setSpecFileName(tsvName_, // this is for BuildParser
-            false);  // don't look for the file
-
-                     // point to self as spec reader
-        delete specReader_;
-        specReader_ = this;
-    }
-
     // get mods path (will be empty string if not set)
     modsPath_ = maker.getMaxQuantModsPath();
 
@@ -258,6 +248,30 @@ void MaxQuantReader::initFixedModifications()
         return;
     }
 
+    string mqparXml = pwiz::util::read_file_header(mqparFile, bfs::file_size(mqparFile));
+
+    // force embedded spectra for TIMS-DDA because there's no way to map those msms.txt scan numbers to external spectra
+    if (mqparXml.find("<lcmsRunType>TIMS-DDA</lcmsRunType>") != string::npos)
+        preferEmbeddedSpectra_ = true;
+
+    if (preferEmbeddedSpectra_) // user wants deconv or has no access to sources
+    {
+        setSpecFileName(tsvName_, // this is for BuildParser
+            false);  // don't look for the file
+
+        // point to self as spec reader
+        delete specReader_;
+        specReader_ = this;
+    }
+    else
+    {
+        // HACK: if mqpar analyzed WIFF file, use index lookup, else use scan number
+        if (mqparXml.find(".wiff</string>") != string::npos || mqparXml.find(".wiff2</string>") != string::npos)
+            lookUpBy_ = INDEX_ID;
+        else
+            lookUpBy_ = SCAN_NUM_ID;
+    }
+
     // initialize fixed mod vectors for supported positions
     fixedModBank_[MaxQuantModification::ANYWHERE].clear();
     fixedModBank_[MaxQuantModification::ANY_N_TERM].clear();
@@ -382,7 +396,6 @@ bool MaxQuantReader::parseFile()
                     throw BlibException(e.hasFilename(), "%s; run with the -E flag to allow MaxQuant to use deisotoped/deconvoluted embedded spectra", e.what());
                 throw e;
             }
-            lookUpBy_ = INDEX_ID;
         }
 
         buildTables(MAXQUANT_SCORE, filePsmListPair.first, false);
