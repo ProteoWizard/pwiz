@@ -281,7 +281,7 @@ blib-test-build metamorpheus-mzid : --unicode -o : output/metamorpheus.blib : me
 blib-test-build mse : --unicode -o : output/mse.blib : mse.check : $(TEST_INPUTS_PATH)/tiny_final_fragment.csv ;
 
 # Test waters csv format with precursor mobility
-blib-test-build mse-mobility : -o -P@0.068999 : output/mse-mobility.blib : mse-mobility.check : $(TEST_INPUTS_PATH)/waters-mobility.final_fragment.csv : <vendor-api-support>off:<build>no ;
+blib-test-build mse-mobility : -o -P@0.068999 : output/mse-mobility.blib : mse-mobility.check : $(TEST_INPUTS_PATH)/waters-mobility.final_fragment.csv : <toolset>gcc:<build>no ;
 
 # Check backward compatibilty with previous notions of ion mobility
 blib-test-build mse-mobility-v12 : -o : output/mse-mobility-from-v12.blib : mse-mobility-from-v12.check mse-mobility.skip-lines : inputs/mse-mobility-v12.blib ;
