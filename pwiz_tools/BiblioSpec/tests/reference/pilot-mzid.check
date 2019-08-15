@@ -1,17 +1,17 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:pilot-mzid.blib	5	1	9
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:pilot-mzid.blib	5	1	10
 id	RefSpectraID	position	mass
 1	1	1	79.96633
 2	2	6	79.96633
 3	2	10	79.96633
 4	3	9	15.994915
 5	5	6	79.96633
-id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
-1	SVSHGSNHTQKPDEQR	472.465183923532	4	S[+80.0]VSHGSNHTQKPDEQR	-	-	1	357	0.0	0.0	0.0	0	10.696633333333	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	sample=1 period=1 cycle=2054 experiment=2	0.99000001	7
-2	KDDSHSAEDSEDEKEDHK	565.958825447199	4	KDDSHS[+80.0]AEDS[+80.0]EDEKEDHK	-	-	1	392	0.0	0.0	0.0	0	10.706633333333	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	sample=1 period=1 cycle=2054 experiment=3	0.981000006	7
-3	NNQGQQQNMESSGSQGGR	641.61016576808	3	NNQGQQQNM[+16.0]ESSGSQGGR	-	-	1	165	0.0	0.0	0.0	0	10.717466666667	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	sample=1 period=1 cycle=2054 experiment=4	0.99000001	7
-4	LGGNEQVTR	487.264271064408	2	LGGNEQVTR	-	-	1	178	0.0	0.0	0.0	0	3.356016666667	N/A	N/A	N/A	N/A	N/A	N/A	N/A	2	sample=1 period=1 cycle=519 experiment=2	0.994000001	7
-5	SVSHGSNHTQKPDEQR	472.465793928729	4	SVSHGS[+80.0]NHTQKPDEQR	-	-	1	459	0.0	0.0	0.0	0	13.562133333333	N/A	N/A	N/A	N/A	N/A	N/A	N/A	2	sample=1 period=1 cycle=2348 experiment=2	0.977999985	7
+id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	totalIonCurrent	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
+1	SVSHGSNHTQKPDEQR	472.46518392	4	S[+80.0]VSHGSNHTQKPDEQR	-	-	1	357	0.0	0.0	0.0	0	10.69663333	N/A	N/A	2414.0	N/A	N/A	N/A	N/A	N/A	1	sample=1 period=1 cycle=2054 experiment=2	0.99000001	7
+2	KDDSHSAEDSEDEKEDHK	565.95882544	4	KDDSHS[+80.0]AEDS[+80.0]EDEKEDHK	-	-	1	392	0.0	0.0	0.0	0	10.70663333	N/A	N/A	1829.0	N/A	N/A	N/A	N/A	N/A	1	sample=1 period=1 cycle=2054 experiment=3	0.98100000	7
+3	NNQGQQQNMESSGSQGGR	641.61016576	3	NNQGQQQNM[+16.0]ESSGSQGGR	-	-	1	165	0.0	0.0	0.0	0	10.71746666	N/A	N/A	747.0	N/A	N/A	N/A	N/A	N/A	1	sample=1 period=1 cycle=2054 experiment=4	0.99000001	7
+4	LGGNEQVTR	487.26427106	2	LGGNEQVTR	-	-	1	178	0.0	0.0	0.0	0	3.35601666	N/A	N/A	152.0	N/A	N/A	N/A	N/A	N/A	2	sample=1 period=1 cycle=519 experiment=2	0.99400000	7
+5	SVSHGSNHTQKPDEQR	472.46579392	4	SVSHGS[+80.0]NHTQKPDEQR	-	-	1	459	0.0	0.0	0.0	0	13.56213333	N/A	N/A	1414.0	N/A	N/A	N/A	N/A	N/A	2	sample=1 period=1 cycle=2348 experiment=2	0.97799998	7
 id	fileName	idFileName	cutoffScore
 1	/BiblioSpec/tests/inputs/ProtPilotTest1.mzML	/BiblioSpec/tests/inputs/试验_ProtPilotTest.mzid	-1.0
 2	/BiblioSpec/tests/inputs/ProtPilotTest2.mzML	/BiblioSpec/tests/inputs/试验_ProtPilotTest.mzid	-1.0

@@ -8,6 +8,7 @@
 #ifndef HCACHE_H
 #define HCACHE_H
 
+#include "config.h"
 #include "lists.h"
 #include "regexp.h"
 #include "rules.h"
