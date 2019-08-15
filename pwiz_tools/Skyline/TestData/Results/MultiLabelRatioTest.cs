@@ -35,7 +35,6 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void TestCustomReportsCompatibility()
         {
-            TestSmallMolecules = false; // Mixed molecule docs create different report columns
             var myType = typeof (MultiLabelRatioTest);
             var document = ResultsUtil.DeserializeDocument("MultiLabel.sky", myType);
             // ReSharper disable once AssignNullToNotNullAttribute

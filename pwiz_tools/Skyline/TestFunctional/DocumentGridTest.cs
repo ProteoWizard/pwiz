@@ -102,7 +102,7 @@ namespace pwiz.SkylineTestFunctional
 
             // The DocumentGrid which is showing "PeptideReplicates" should be showing the Cartesian product 
             // of peptides and replicates
-            AssertRowCount(SkylineWindow.Document.PeptideCount * 2 + (TestSmallMolecules ? 1 : 0), peptideReplicatesForm);
+            AssertRowCount(SkylineWindow.Document.PeptideCount * 2, peptideReplicatesForm);
 
             // The Results Grid should show the two replicates
             WaitForConditionUI(() => liveResultsGrid.IsComplete);
