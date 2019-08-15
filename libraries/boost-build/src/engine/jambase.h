@@ -12,4 +12,4 @@
  * declaration for that array.
  */
 
-extern char *jambase[];
+extern const char *jambase[];
