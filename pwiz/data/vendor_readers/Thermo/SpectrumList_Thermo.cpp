@@ -424,7 +424,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
 
         if (scanInfo->hasMultiplePrecursors())
         {
-            vector<double> isolationWidths = raw->getIsolationWidths(ie.scan);
+            vector<double> isolationWidths = scanInfo->getIsolationWidths();
             if (precursorCount != (long) isolationWidths.size())
             {
                 throw runtime_error("precursor count does not match isolation width count");

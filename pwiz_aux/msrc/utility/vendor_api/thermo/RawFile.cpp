@@ -217,7 +217,6 @@ class RawFileThreadImpl : public RawFile
     virtual ScanType getScanType(long scanNumber) const;
     virtual ScanFilterMassAnalyzerType getMassAnalyzerType(long scanNumber) const;
     virtual ActivationType getActivationType(long scanNumber) const;
-    virtual vector<double> getIsolationWidths(long scanNumber) const;
     virtual double getIsolationWidth(int scanSegment, int scanEvent) const;
     virtual double getDefaultIsolationWidth(int scanSegment, int msLevel) const;
 
@@ -2625,24 +2624,6 @@ ActivationType RawFileThreadImpl::getActivationType(long scanNumber) const
     CATCH_AND_FORWARD
 }
 
-
-vector<double> RawFileThreadImpl::getIsolationWidths(long scanNumber) const
-{
-    vector<double> isolationWidths;
-
-    auto filter = raw_->GetFilterForScanNumber(scanNumber);
-
-    MSOrder msOrder = (MSOrder)filter->MSOrder;
-    if ((int)msOrder == 1)
-        return isolationWidths;
-
-    long massCount = filter->MassCount;
-    for (long i = 0; i < massCount; i++)
-    {
-        isolationWidths.push_back(filter->GetIsolationWidth(i));
-    }
-    return isolationWidths;
-}
 
 double RawFileThreadImpl::getIsolationWidth(int scanSegment, int scanEvent) const
 {
