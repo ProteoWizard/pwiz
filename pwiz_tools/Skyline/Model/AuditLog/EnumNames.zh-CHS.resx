@@ -138,6 +138,9 @@
   <data name="eIonMobilityUnits_none" xml:space="preserve">
     <value>无</value>
   </data>
+  <data name="FullScanAcquisitionMethod_DDA" xml:space="preserve">
+    <value>DDA</value>
+  </data>
   <data name="FullScanAcquisitionMethod_DIA" xml:space="preserve">
     <value>DIA（数据非依赖性采集）</value>
   </data>

@@ -763,6 +763,42 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to gene.
+        /// </summary>
+        public static string PeptideUniquenessConstraint_gene {
+            get {
+                return ResourceManager.GetString("PeptideUniquenessConstraint_gene", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to none.
+        /// </summary>
+        public static string PeptideUniquenessConstraint_none {
+            get {
+                return ResourceManager.GetString("PeptideUniquenessConstraint_none", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to protein.
+        /// </summary>
+        public static string PeptideUniquenessConstraint_protein {
+            get {
+                return ResourceManager.GetString("PeptideUniquenessConstraint_protein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to species.
+        /// </summary>
+        public static string PeptideUniquenessConstraint_species {
+            get {
+                return ResourceManager.GetString("PeptideUniquenessConstraint_species", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Large.
         /// </summary>
         public static string PointSize_large {

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="ModeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <metadata name="contextMenuTreeNode.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 56</value>
   </metadata>
@@ -170,19 +173,19 @@
     <value>193, 26</value>
   </data>
   <data name="addMoleculeContextMenuItem.Text" xml:space="preserve">
-    <value>添加小分子...</value>
+    <value>添加分子…</value>
   </data>
   <data name="addSmallMoleculePrecursorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 26</value>
   </data>
   <data name="addSmallMoleculePrecursorContextMenuItem.Text" xml:space="preserve">
-    <value>添加母离子...</value>
+    <value>添加母离子…</value>
   </data>
   <data name="addTransitionMoleculeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 26</value>
   </data>
   <data name="addTransitionMoleculeContextMenuItem.Text" xml:space="preserve">
-    <value>添加离子对...</value>
+    <value>添加离子对…</value>
   </data>
   <data name="removePeakContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 26</value>
@@ -1593,6 +1596,18 @@
   <data name="redoToolBarButton.Text" xml:space="preserve">
     <value>恢复</value>
   </data>
+  <data name="toolStripSeparatorSelectUI.Size" type="System.Drawing.Size, System.Drawing">
+    <value>6, 25</value>
+  </data>
+  <data name="modeUIToolBarDropDownButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>White</value>
+  </data>
+  <data name="modeUIToolBarDropDownButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>46, 26</value>
+  </data>
+  <data name="modeUIToolBarDropDownButton.Text" xml:space="preserve">
+    <value>用户界面选择</value>
+  </data>
   <data name="mainToolStrip.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 24</value>
   </data>
@@ -1732,7 +1747,7 @@
     <value>170, 22</value>
   </data>
   <data name="importAssayLibraryMenuItem.Text" xml:space="preserve">
-    <value>分析库(&amp;A)...</value>
+    <value>分析库(&amp;A)…</value>
   </data>
   <data name="importMassListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>170, 22</value>
@@ -1750,7 +1765,7 @@
     <value>170, 22</value>
   </data>
   <data name="importAnnotationsMenuItem.Text" xml:space="preserve">
-    <value>注释...</value>
+    <value>注释…</value>
   </data>
   <data name="importToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>197, 22</value>
@@ -1801,7 +1816,7 @@
     <value>183, 22</value>
   </data>
   <data name="exportSpectralLibraryMenuItem.Text" xml:space="preserve">
-    <value>谱图库(&amp;S)...</value>
+    <value>谱图库(&amp;S)…</value>
   </data>
   <data name="chromatogramsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
@@ -1819,13 +1834,13 @@
     <value>183, 22</value>
   </data>
   <data name="chorusRequestToolStripMenuItem.Text" xml:space="preserve">
-    <value>Chorus 申请...</value>
+    <value>Chorus 申请…</value>
   </data>
   <data name="exportAnnotationsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
   </data>
   <data name="exportAnnotationsMenuItem.Text" xml:space="preserve">
-    <value>注释...</value>
+    <value>注释…</value>
   </data>
   <data name="exportToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>197, 22</value>
@@ -2055,40 +2070,32 @@
   <data name="removeEmptyProteinsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
   </data>
-  <data name="removeEmptyProteinsMenuItem.Text" xml:space="preserve">
-    <value>删除空蛋白质(&amp;E)</value>
+  <data name="reintegrateToolStripMenuItem.Text" xml:space="preserve">
+    <value>重新整合(&amp;R)…</value>
   </data>
-  <data name="removeEmptyPeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="generateDecoysMenuItem.RightToLeftAutoMirrorImage" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="generateDecoysMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
   </data>
-  <data name="removeEmptyPeptidesMenuItem.Text" xml:space="preserve">
-    <value>移除空肽段(&amp;V)</value>
+  <data name="generateDecoysMenuItem.Text" xml:space="preserve">
+    <value>添加诱饵(&amp;D)…</value>
   </data>
-  <data name="removeDuplicatePeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="compareModelsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
   </data>
-  <data name="removeDuplicatePeptidesMenuItem.Text" xml:space="preserve">
-    <value>删除所有重复肽段(&amp;D)</value>
+  <data name="compareModelsToolStripMenuItem.Text" xml:space="preserve">
+    <value>比较峰得分(&amp;O)…</value>
   </data>
-  <data name="removeDuplicatePeptidesMenuItem.ToolTipText" xml:space="preserve">
-    <value>文档内所有非特异性肽段
-都将被删除。</value>
-  </data>
-  <data name="removeRepeatedPeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>218, 22</value>
-  </data>
-  <data name="removeRepeatedPeptidesMenuItem.Text" xml:space="preserve">
-    <value>删除多余重复肽段(&amp;R)</value>
-  </data>
-  <data name="removeRepeatedPeptidesMenuItem.ToolTipText" xml:space="preserve">
-    <value>所有重复的肽段都将被删除，仅保留
-第一次出现的任何肽段。</value>
+  <data name="toolStripSeparator59.Size" type="System.Drawing.Size, System.Drawing">
+    <value>215, 6</value>
   </data>
   <data name="removeMissingResultsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
   </data>
   <data name="removeMissingResultsMenuItem.Text" xml:space="preserve">
-    <value>删除缺失结果(&amp;M)</value>
+    <value>删除和遗漏结果(&amp;M)</value>
   </data>
   <data name="toolStripSeparator45.Size" type="System.Drawing.Size, System.Drawing">
     <value>215, 6</value>
@@ -2097,7 +2104,13 @@
     <value>218, 22</value>
   </data>
   <data name="acceptProteinsMenuItem.Text" xml:space="preserve">
-    <value>接受蛋白质(&amp;I)...</value>
+    <value>接受蛋白质(&amp;P)…</value>
+  </data>
+  <data name="removeEmptyProteinsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>215, 22</value>
+  </data>
+  <data name="removeEmptyProteinsMenuItem.Text" xml:space="preserve">
+    <value>删除空蛋白质(&amp;E)</value>
   </data>
   <data name="associateFASTAMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
@@ -2150,26 +2163,31 @@
   <data name="acceptPeptidesMenuItem.Text" xml:space="preserve">
     <value>接受肽段(&amp;C)…</value>
   </data>
-  <data name="generateDecoysMenuItem.RightToLeftAutoMirrorImage" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="generateDecoysMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="removeEmptyPeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
   </data>
-  <data name="generateDecoysMenuItem.Text" xml:space="preserve">
-    <value>添加诱饵肽段(&amp;P)…</value>
+  <data name="removeEmptyPeptidesMenuItem.Text" xml:space="preserve">
+    <value>移除空肽段(&amp;V)</value>
   </data>
-  <data name="reintegrateToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="removeDuplicatePeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
   </data>
-  <data name="reintegrateToolStripMenuItem.Text" xml:space="preserve">
-    <value>重新合并(&amp;T)…</value>
+  <data name="removeDuplicatePeptidesMenuItem.Text" xml:space="preserve">
+    <value>删除重复测定的肽(&amp;U)</value>
   </data>
-  <data name="compareModelsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="removeDuplicatePeptidesMenuItem.ToolTipText" xml:space="preserve">
+    <value>所有在文件中不是唯一的肽
+将被删除。</value>
+  </data>
+  <data name="removeRepeatedPeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
   </data>
-  <data name="compareModelsToolStripMenuItem.Text" xml:space="preserve">
-    <value>比较峰得分(&amp;O)…</value>
+  <data name="removeRepeatedPeptidesMenuItem.Text" xml:space="preserve">
+    <value>删除重复测定的肽(&amp;I)</value>
+  </data>
+  <data name="removeRepeatedPeptidesMenuItem.ToolTipText" xml:space="preserve">
+    <value>将除去所有重复的肽以仅留下
+首次出现任何肽。</value>
   </data>
   <data name="toolStripSeparator35.Size" type="System.Drawing.Size, System.Drawing">
     <value>215, 6</value>
@@ -2181,10 +2199,10 @@
     <value>高级(&amp;A)…</value>
   </data>
   <data name="refineToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>207, 22</value>
+    <value>72, 22</value>
   </data>
   <data name="refineToolStripMenuItem.Text" xml:space="preserve">
-    <value>调整(&amp;E)</value>
+    <value>调整(&amp;R)</value>
   </data>
   <data name="toolStripSeparator6.Size" type="System.Drawing.Size, System.Drawing">
     <value>204, 6</value>
@@ -2268,7 +2286,7 @@
     <value>175, 22</value>
   </data>
   <data name="normStandardMenuItem.Text" xml:space="preserve">
-    <value>全球标准 (&amp;G)</value>
+    <value>全球标准(&amp;G)</value>
   </data>
   <data name="surrogateStandardMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>175, 22</value>
@@ -2280,7 +2298,7 @@
     <value>175, 22</value>
   </data>
   <data name="qcStandardMenuItem.Text" xml:space="preserve">
-    <value>质量控制 (&amp;C)</value>
+    <value>质量控制(&amp;C)</value>
   </data>
   <data name="irtStandardMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -2715,7 +2733,7 @@
     <value>297, 22</value>
   </data>
   <data name="transformChromInterploatedMenuItem.Text" xml:space="preserve">
-    <value>内插(&amp;l)</value>
+    <value>内插(&amp;I)</value>
   </data>
   <data name="secondDerivativeMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Ctrl+F12</value>
@@ -2931,13 +2949,34 @@
     <value>191, 22</value>
   </data>
   <data name="massErrorsMenuItem.Text" xml:space="preserve">
-    <value>质量误差</value>
+    <value>批量错误(&amp;S)</value>
   </data>
   <data name="calibrationCurveMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
   <data name="calibrationCurveMenuItem.Text" xml:space="preserve">
-    <value>校准曲线(&amp;B)</value>
+    <value>校准曲线(&amp;V)</value>
+  </data>
+  <data name="documentGridMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>Alt+3</value>
+  </data>
+  <data name="documentGridMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 22</value>
+  </data>
+  <data name="documentGridMenuItem.Text" xml:space="preserve">
+    <value>＆Document Grid</value>
+  </data>
+  <data name="resultsGridMenuItem.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="resultsGridMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>Alt+2</value>
+  </data>
+  <data name="resultsGridMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="resultsGridMenuItem.Text" xml:space="preserve">
+    <value>结果网格(&amp;R)</value>
   </data>
   <data name="addGroupComparisonMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>124, 22</value>
@@ -2949,43 +2988,40 @@
     <value>124, 22</value>
   </data>
   <data name="editGroupComparisonListMenuItem.Text" xml:space="preserve">
-    <value>编辑列表(&amp;E)…</value>
+    <value>和编辑列表(&amp;E)…</value>
   </data>
   <data name="groupComparisonsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 22</value>
+    <value>180, 22</value>
   </data>
   <data name="groupComparisonsMenuItem.Text" xml:space="preserve">
-    <value>群组比较(&amp;U)</value>
+    <value>小组比较(&amp;G)</value>
   </data>
-  <data name="resultsGridMenuItem.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
+  <data name="defineNewListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>165, 22</value>
   </data>
-  <data name="resultsGridMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
-    <value>Alt+2</value>
+  <data name="defineNewListMenuItem.Text" xml:space="preserve">
+    <value>定义新列表(&amp;N)…</value>
   </data>
-  <data name="resultsGridMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 22</value>
+  <data name="listsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
   </data>
-  <data name="resultsGridMenuItem.Text" xml:space="preserve">
-    <value>结果网格(&amp;G)</value>
-  </data>
-  <data name="documentGridMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
-    <value>Alt+3</value>
-  </data>
-  <data name="documentGridMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 22</value>
-  </data>
-  <data name="documentGridMenuItem.Text" xml:space="preserve">
-    <value>文档网格(&amp;D)</value>
+  <data name="listsMenuItem.Text" xml:space="preserve">
+    <value>＆名单</value>
   </data>
   <data name="auditLogMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Alt+4</value>
   </data>
   <data name="auditLogMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 22</value>
+    <value>180, 22</value>
   </data>
   <data name="auditLogMenuItem.Text" xml:space="preserve">
-    <value>审计日志(&amp;D)</value>
+    <value>审计日志(&amp;A)</value>
+  </data>
+  <data name="otherGridsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 22</value>
+  </data>
+  <data name="otherGridsMenuItem.Text" xml:space="preserve">
+    <value>其他网格(&amp;H)</value>
   </data>
   <data name="toolStripSeparator36.Size" type="System.Drawing.Size, System.Drawing">
     <value>188, 6</value>
@@ -3000,7 +3036,7 @@
     <value>191, 22</value>
   </data>
   <data name="statusToolStripMenuItem.Text" xml:space="preserve">
-    <value>状态栏(&amp;S)</value>
+    <value>状态栏(&amp;U)</value>
   </data>
   <data name="viewToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>44, 20</value>
@@ -3146,11 +3182,41 @@
   <data name="videosMenuItem.Text" xml:space="preserve">
     <value>视频(&amp;V)</value>
   </data>
+  <data name="webinarsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>171, 22</value>
+  </data>
+  <data name="webinarsMenuItem.Text" xml:space="preserve">
+    <value>网络研讨会</value>
+  </data>
   <data name="tutorialsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>171, 22</value>
   </data>
   <data name="tutorialsMenuItem.Text" xml:space="preserve">
-    <value>教程(&amp;T)</value>
+    <value>与教程</value>
+  </data>
+  <data name="reportsHelpMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>171, 22</value>
+  </data>
+  <data name="reportsHelpMenuItem.Text" xml:space="preserve">
+    <value>报告</value>
+  </data>
+  <data name="commandLineHelpMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>171, 22</value>
+  </data>
+  <data name="commandLineHelpMenuItem.Text" xml:space="preserve">
+    <value>命令行</value>
+  </data>
+  <data name="otherDocsHelpMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>171, 22</value>
+  </data>
+  <data name="otherDocsHelpMenuItem.Text" xml:space="preserve">
+    <value>其他</value>
+  </data>
+  <data name="documentationToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>171, 22</value>
+  </data>
+  <data name="documentationToolStripMenuItem.Text" xml:space="preserve">
+    <value>文档</value>
   </data>
   <data name="supportMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>171, 22</value>
@@ -3391,6 +3457,12 @@
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>Skyline</value>
+  </data>
+  <data name="&gt;&gt;ModeUIHandler.Name" xml:space="preserve">
+    <value>ModeUIHandler</value>
+  </data>
+  <data name="&gt;&gt;ModeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;cutContextMenuItem.Name" xml:space="preserve">
     <value>cutContextMenuItem</value>
@@ -4766,6 +4838,18 @@
   <data name="&gt;&gt;redoToolBarButton.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSplitButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;toolStripSeparatorSelectUI.Name" xml:space="preserve">
+    <value>toolStripSeparatorSelectUI</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparatorSelectUI.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;modeUIToolBarDropDownButton.Name" xml:space="preserve">
+    <value>modeUIToolBarDropDownButton</value>
+  </data>
+  <data name="&gt;&gt;modeUIToolBarDropDownButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripDropDownButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;fileToolStripMenuItem.Name" xml:space="preserve">
     <value>fileToolStripMenuItem</value>
   </data>
@@ -5269,6 +5353,12 @@
   </data>
   <data name="&gt;&gt;refineAdvancedMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator59.Name" xml:space="preserve">
+    <value>toolStripSeparator59</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator59.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator6.Name" xml:space="preserve">
     <value>toolStripSeparator6</value>
@@ -5918,6 +6008,24 @@
   <data name="&gt;&gt;calibrationCurveMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;documentGridMenuItem.Name" xml:space="preserve">
+    <value>documentGridMenuItem</value>
+  </data>
+  <data name="&gt;&gt;documentGridMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;otherGridsMenuItem.Name" xml:space="preserve">
+    <value>otherGridsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;otherGridsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;resultsGridMenuItem.Name" xml:space="preserve">
+    <value>resultsGridMenuItem</value>
+  </data>
+  <data name="&gt;&gt;resultsGridMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;groupComparisonsMenuItem.Name" xml:space="preserve">
     <value>groupComparisonsMenuItem</value>
   </data>
@@ -5936,16 +6044,16 @@
   <data name="&gt;&gt;editGroupComparisonListMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;resultsGridMenuItem.Name" xml:space="preserve">
-    <value>resultsGridMenuItem</value>
+  <data name="&gt;&gt;listsMenuItem.Name" xml:space="preserve">
+    <value>listsMenuItem</value>
   </data>
-  <data name="&gt;&gt;resultsGridMenuItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;listsMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;documentGridMenuItem.Name" xml:space="preserve">
-    <value>documentGridMenuItem</value>
+  <data name="&gt;&gt;defineNewListMenuItem.Name" xml:space="preserve">
+    <value>defineNewListMenuItem</value>
   </data>
-  <data name="&gt;&gt;documentGridMenuItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;defineNewListMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;auditLogMenuItem.Name" xml:space="preserve">
@@ -6126,6 +6234,12 @@
     <value>videosMenuItem</value>
   </data>
   <data name="&gt;&gt;videosMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;webinarsMenuItem.Name" xml:space="preserve">
+    <value>webinarsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;webinarsMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tutorialsMenuItem.Name" xml:space="preserve">
@@ -6324,6 +6438,30 @@
     <value>massErrorlogScaleContextMenuItem</value>
   </data>
   <data name="&gt;&gt;massErrorlogScaleContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;documentationToolStripMenuItem.Name" xml:space="preserve">
+    <value>documentationToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;documentationToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;reportsHelpMenuItem.Name" xml:space="preserve">
+    <value>reportsHelpMenuItem</value>
+  </data>
+  <data name="&gt;&gt;reportsHelpMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;commandLineHelpMenuItem.Name" xml:space="preserve">
+    <value>commandLineHelpMenuItem</value>
+  </data>
+  <data name="&gt;&gt;commandLineHelpMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;otherDocsHelpMenuItem.Name" xml:space="preserve">
+    <value>otherDocsHelpMenuItem</value>
+  </data>
+  <data name="&gt;&gt;otherDocsHelpMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">

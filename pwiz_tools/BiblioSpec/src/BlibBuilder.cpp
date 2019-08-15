@@ -208,6 +208,7 @@ int BlibBuilder::parseCommandArgs(int argc, char* argv[])
                 }
                 char* name = new char[infileName.size()+1];
                 strcpy(name, infileName.c_str());
+                Verbosity::debug("Input file: %s", name);
                 input_files.push_back(name);
             }
             break;
@@ -305,10 +306,14 @@ int BlibBuilder::transferLibrary(int iLib,
             input_files.at(iLib), schemaTmp);
     sql_stmt(zSql);
 
+    createUpdatedRefSpectraView(schemaTmp);
+
     // does the incomming library have retentiontime, score, etc columns
     int tableVersion = 0;
     if (tableColumnExists(schemaTmp, "RefSpectra", "retentionTime")) {
         if (tableColumnExists(schemaTmp, "RefSpectra", "startTime")) {
+            tableVersion = MIN_VERSION_TIC;
+        } else if (tableColumnExists(schemaTmp, "RefSpectra", "startTime")) {
             tableVersion = MIN_VERSION_RT_BOUNDS;
         } else if (tableExists(schemaTmp, "RefSpectraPeakAnnotations")) {
             tableVersion = MIN_VERSION_PEAK_ANNOT;
@@ -362,6 +367,8 @@ int BlibBuilder::transferLibrary(int iLib,
 
         rc = sqlite3_step(pStmt);
     }
+
+    sql_stmt("DROP VIEW RefSpectraTransfer");
 
     endTransaction();
     int numberProcessed =  progress->processed();

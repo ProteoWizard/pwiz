@@ -412,10 +412,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 finally
                 {
-                    if (null != proteomeDb)
-                    {
-                        proteomeDb.Dispose();
-                    }
+                    proteomeDb?.Dispose();
                 }
                 textPath.ForeColor = Color.Black;
             }

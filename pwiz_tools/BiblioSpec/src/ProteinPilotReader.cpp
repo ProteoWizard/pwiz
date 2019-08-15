@@ -261,6 +261,8 @@ void ProteinPilotReader::parseMatchElement(const XML_Char** attr)
     skipMods_ = false;
     skipNTermMods_ = ( strcmp(getAttrValue("nt", attr), "") == 0) ;
     skipCTermMods_ = ( strcmp(getAttrValue("ct", attr), "") == 0) ;
+    
+    // Verbosity::debug("Parsed spectrum %s match %s", curPSM_->specName.c_str(), curPSM_->unmodSeq.c_str());
 }
 
 void ProteinPilotReader::saveMatch(){

@@ -73,7 +73,7 @@ namespace pwiz.Skyline.Alerts
 
             // Make this change immediate and persistent.
             UpgradeManager.CheckAtStartup = cbAtStartup.Checked;
-            Settings.Default.Save();
+            Settings.Default.SaveWithoutExceptions();
         }
 
         private void linkReleaseNotes_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

@@ -11,6 +11,8 @@
  *  \ -) "Command line option."
  */
 
+#include "config.h"
+
 typedef struct bjam_option
 {
     char flag;   /* filled in by getoption() */
@@ -19,5 +21,5 @@ typedef struct bjam_option
 
 #define N_OPTS 256
 
-int    getoptions( int argc, char * * argv, char * opts, bjam_option * optv );
+int    getoptions( int argc, char * * argv, const char * opts, bjam_option * optv );
 char * getoptval( bjam_option * optv, char opt, int subopt );

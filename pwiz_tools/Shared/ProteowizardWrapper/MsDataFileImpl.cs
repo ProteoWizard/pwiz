@@ -82,7 +82,7 @@ namespace pwiz.ProteowizardWrapper
             return binaryDataArray.data.ToArray();
         }
 
-        private static float[] ToFloatArray(IList<double> list)
+        public static float[] ToFloatArray(IList<double> list)
         {
             float[] result = new float[list.Count];
             for (int i = 0; i < result.Length; i++)
@@ -104,6 +104,8 @@ namespace pwiz.ProteowizardWrapper
         public const string PREFIX_TOTAL = "SRM TIC ";
         public const string PREFIX_SINGLE = "SRM SIC ";
         public const string PREFIX_PRECURSOR = "SIM SIC ";
+        public const string TIC = "TIC";
+        public const string BPC = "BPC";
 
 
         public static bool? IsNegativeChargeIdNullable(string id)
@@ -646,6 +648,7 @@ namespace pwiz.ProteowizardWrapper
             public QcTrace(Chromatogram c, CVID chromatogramType)
             {
                 Name = c.id;
+                Index = c.index;
                 if (chromatogramType == CVID.MS_pressure_chromatogram)
                 {
                     MeasuredQuality = QcTraceQuality.Pressure;
@@ -663,6 +666,7 @@ namespace pwiz.ProteowizardWrapper
             }
 
             public string Name { get; private set; }
+            public int Index { get; private set; }
             public double[] Times { get; private set; }
             public double[] Intensities { get; private set; }
             public string MeasuredQuality { get; private set; }

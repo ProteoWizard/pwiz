@@ -4,9 +4,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using CsvHelper;
+using CsvHelper.Configuration;
+using TFExportTool.Properties;
+
 // ReSharper disable NonLocalizedString
 
 namespace TFExportTool
@@ -32,26 +34,38 @@ namespace TFExportTool
         private static readonly string CONFIRMING = "Confirming";
         private static readonly string FRAGMENT = "Fragment";
 
+        private static readonly string PROGRAM_NAME = "TFExport";
+
+        private static void ShowMessage(string message)
+        {
+            MessageBox.Show(message, PROGRAM_NAME, MessageBoxButtons.OK);
+        }
+
         [STAThread]
         static void Main(string[] args)
         {
             if (args.Length == 0)
             {
-                Console.WriteLine("Error opening report file from Skyline, try re-installing TFExport."); // Not L10N
+                ShowMessage(Resources.Program_Main_Missing_report_file_path_argument_from_Skyline__try_re_installing_TFExport_);
                 return;
             }
             var reportFilePath = args[0];
-            var peptideTransitions = GetTransitions(reportFilePath);
-            var filePaths = new List<string>();
-            foreach (var transitions in peptideTransitions.Values)
+
+            Dictionary<string, List<TransitionRecord>> peptideTransitions;
+            try
             {
-                foreach (var t in transitions)
-                {
-                    if (!filePaths.Contains(t.FileName))
-                        filePaths.Add(t.FileName);
-                }
+                peptideTransitions = GetTransitions(reportFilePath);
             }
-            filePaths.Sort();
+            catch (Exception e)
+            {
+                ShowMessage(string.Format(Resources.Program_Main_Failure_reading_the_report_file__0__, reportFilePath) +
+                            Environment.NewLine + e.Message);
+                return;
+            }
+
+            var filePaths = new List<string>(peptideTransitions
+                .SelectMany(trans => trans.Value).OrderBy(t => t.FileName)
+                .Select(t => t.FileName).Distinct());
             using (var tf = new TFExportDlg(filePaths))
             {
                 if (tf.ShowDialog() != DialogResult.OK)
@@ -74,7 +88,7 @@ namespace TFExportTool
                 var updatedPeptideTransitions = new Dictionary<string, List<TransitionRecord>>();
                 foreach (var k in peptideTransitions.Keys)
                 {
-                    var values = peptideTransitions[k];
+                    IList<TransitionRecord> values = peptideTransitions[k];
                     var transitionRecords = new List<TransitionRecord>();
                     foreach (var v in values)
                     {
@@ -83,31 +97,10 @@ namespace TFExportTool
                     }
                     
                     var fileAreas = new Dictionary<string, List<double>>();
-                    if (_useAvgIntensity) // if average intensity then calculate values
-                    {
-                        foreach (var v in values)
-                        {
-                            var key = v.ModifiedSequence + "," + v.PrecursorMz + "," + v.FragmentIon + "," +
-                                      v.IsotopeLabelType + "," + v.ProductMz;
-                            if (!fileAreas.ContainsKey(key))
-                                fileAreas.Add(key, new List<double>());
-                            fileAreas[key].Add(v.Area);
-                        }
-                    } // if use intensity from specific file
-                    else
-                    {
-                        foreach (var v in values)
-                        {
-                            if(!v.FileName.Equals(_intensityFile))
-                                continue;
-                            var key = v.ModifiedSequence + "," + v.PrecursorMz + "," + v.FragmentIon + "," +
-                                      v.IsotopeLabelType + "," + v.ProductMz;
-                            if (!fileAreas.ContainsKey(key))
-                                fileAreas.Add(key, new List<double>());
-                            fileAreas[key].Add(v.Area);
-                        }
-                    }
-                    // even if area from a single file is used will still funnel through this averageing code 
+                    AddTransitionFileAreas(_useAvgIntensity
+                        ? values
+                        : values.Where(tr => Equals(tr.FileName, _intensityFile)), fileAreas);
+                    // even if area from a single file is used will still funnel through this averaging code 
                     // but instead will just have an int array with one value so the average will be that value(value in selected file)
                     var avgAreas = new Dictionary<string, double>();
                     foreach (var fileArea in fileAreas)
@@ -117,7 +110,7 @@ namespace TFExportTool
                     }
                     foreach (var avgArea in avgAreas)
                     {
-                        var keyInfo = avgArea.Key.Split(',');
+                        var keyInfo = GetKeyParts(avgArea.Key);
                         var seq = keyInfo[0];
                         var precursorMz = keyInfo[1];
                         var fragmentIon = keyInfo[2];
@@ -166,12 +159,13 @@ namespace TFExportTool
                     // Sort final list of transitions by peptide, then label type, then peak area
                     all.Sort((x, y) =>
                     {
-                        if(x.IsotopeLabelType == y.IsotopeLabelType)
-                            return y.Area.CompareTo(x.Area); 
-                        if (_internalStandardType.ToString().Equals(x.IsotopeLabelType))
-                            return -1;
-                        if (_internalStandardType.ToString().Equals(y.IsotopeLabelType))
-                            return 1;
+                        if (x.IsotopeLabelType != y.IsotopeLabelType)
+                        {
+                            if (_internalStandardType.ToString().Equals(x.IsotopeLabelType))
+                                return -1;
+                            if (_internalStandardType.ToString().Equals(y.IsotopeLabelType))
+                                return 1;
+                        }
                         return y.Area.CompareTo(x.Area);
                     });
                     updatedPeptideTransitions[k] = all;
@@ -179,8 +173,8 @@ namespace TFExportTool
                 // EXPORT
                 using (var saveFileDialog = new SaveFileDialog
                 {
-                    FileName = "TFExport.csv", // Not L10N
-                    Filter = "csv files (*.csv)|*.csv" // Not L10N
+                    FileName = @"TFExport.csv", // Not L10N
+                    Filter = Resources.Program_Main_CSV__Comma_delimited_____csv____csv
                 })
                 {
                     if (saveFileDialog.ShowDialog() != DialogResult.OK)
@@ -188,43 +182,72 @@ namespace TFExportTool
                         return;
                     }
                     var saveFileLocation = saveFileDialog.FileName;
-                    var res = WriteToCsv(saveFileLocation, updatedPeptideTransitions);
-                    if (string.IsNullOrEmpty(res))
+                    try
                     {
-                        Console.WriteLine("File saved to {0}.", saveFileLocation);
+                        WriteToCsv(saveFileLocation, updatedPeptideTransitions);
+                        ShowMessage(string.Format(Resources.Program_Main_File_saved_to__0__, saveFileLocation));
                     }
-                    else // if not success
+                    catch(Exception e)
                     {
-                        Console.WriteLine("Error: {0}", res);
+                        ShowMessage(string.Format(Resources.Program_Main_Error___0_, e.Message));
                     }
                 }
             }
            
         }
-        private static string ValidateTransitions(Dictionary<String, List<TransitionRecord>> peptideTransitions)
+
+        private static void AddTransitionFileAreas(IEnumerable<TransitionRecord> values, IDictionary<string, List<double>> fileAreas)
         {
-            return string.Empty; // TODO pointless
-            foreach (var transitions in peptideTransitions.Values)
+            foreach (var v in values)
             {
-                foreach (TransitionRecord transition in transitions)
-                {
-                    if (string.IsNullOrEmpty(transition.TFExport_WorkFlow))
-                        return string.Format("Missing Annotation 'TFExport_WorkFlow' for a precursor in {0} - {1}",
-                            transition.ProteinName, transition.PeptideModifiedSequence);
-                    if(transition.ProductCharge <= 0)
-                        return string.Format("Product charge is less less than or equal to 0 for a precursor in {0} - {1}",
-                           transition.ProteinName, transition.PeptideModifiedSequence);
-                }
+                var key = GetKey(v);
+                if (!fileAreas.ContainsKey(key))
+                    fileAreas.Add(key, new List<double>());
+                fileAreas[key].Add(v.Area);
             }
-            return string.Empty;
         }
 
-        // Auto poulate transitions based on the users settings
-        private static void AutoFillTransitions(Dictionary<String, List<TransitionRecord>> records)
+        private static readonly char KEY_SEP = ',';
+
+        private static string GetKey(TransitionRecord tr)
         {
-            if(!_isAutoFill) // Do nothing if is not autofill
+            var key = tr.ModifiedSequence + KEY_SEP +
+                      tr.PrecursorMz.ToString(CultureInfo.InstalledUICulture) + KEY_SEP +
+                      tr.FragmentIon + KEY_SEP +
+                      tr.IsotopeLabelType + KEY_SEP +
+                      tr.ProductMz.ToString(CultureInfo.InvariantCulture);
+            return key;
+        }
+
+        private static string[] GetKeyParts(string key)
+        {
+            return key.Split(KEY_SEP);
+        }
+
+        // TODO pointless
+//        private static void ValidateTransitions(Dictionary<String, List<TransitionRecord>> peptideTransitions)
+//        {
+//            foreach (var transitions in peptideTransitions.Values)
+//            {
+//                foreach (TransitionRecord transition in transitions)
+//                {
+//                    if (string.IsNullOrEmpty(transition.TFExport_WorkFlow))
+//                        throw new Exception(string.Format("Missing Annotation 'TFExport_WorkFlow' for a precursor in {0} - {1}",
+//                            transition.ProteinName, transition.PeptideModifiedSequence));
+//                    if (transition.ProductCharge <= 0)
+//                        throw new Exception(string.Format("Product charge is less less than or equal to 0 for a precursor in {0} - {1}",
+//                           transition.ProteinName, transition.PeptideModifiedSequence));
+//                }
+//            }
+//        }
+
+        // Auto populate transitions based on the users settings
+        private static void AutoFillTransitions(Dictionary<string, List<TransitionRecord>> records)
+        {
+            if(!_isAutoFill) // Do nothing if is not auto-fill
                 return;
-            if (_isAutoFillAll) {
+            if (_isAutoFillAll)
+            {
                 foreach (var transitions in records.Values)
                 {
                     foreach (TransitionRecord t in transitions)
@@ -232,7 +255,9 @@ namespace TFExportTool
                         t.TFExport_WorkFlow = TARGET_PEAK;
                     }
                 }
-            } else {
+            }
+            else
+            {
                 foreach (var transitions in records.Values)
                 {
                     var standards = new Dictionary<string, List<TransitionRecord>>();
@@ -253,7 +278,9 @@ namespace TFExportTool
                                 if (!currentWorkFlow.Equals(TARGET_PEAK) && currentWorkFlow.Equals(string.Empty))
                                     standards[key][i].TFExport_WorkFlow = _isAutoFillConfirming ? CONFIRMING : FRAGMENT;
                             }
-                        } else {
+                        }
+                        else
+                        {
                             for (var i = 0; i < standards[key].Count; i++)
                             {
                                 if (i == 0)
@@ -261,18 +288,18 @@ namespace TFExportTool
                                 else
                                     standards[key][i].TFExport_WorkFlow = _isAutoFillConfirming ? CONFIRMING : FRAGMENT;
                             }
-                        }
-                        
+                        }                        
                     }
                 }
             }
         }
 
-        private static Dictionary<string, List<TransitionRecord>> GetTransitions(String reportLocation)
+        private static Dictionary<string, List<TransitionRecord>> GetTransitions(string reportLocation)
         {
-            var csv = new CsvReader(File.OpenText(reportLocation));
+            var csv = new CsvReader(File.OpenText(reportLocation),
+                new CsvConfiguration {CultureInfo = CultureInfo.InvariantCulture});
             // loops through each row as csv.CurrentRecord
-            var peptideTransitions = new Dictionary<String, List<TransitionRecord>>();
+            var peptideTransitions = new Dictionary<string, List<TransitionRecord>>();
             // creates dictionary from Skyline report of peptides -> precursors
             while (csv.Read())
             {
@@ -299,29 +326,27 @@ namespace TFExportTool
                     var fileName = csv.GetField<string>(16);
                     var area = csv.GetField<string>(17);
                     var precursorCharge = csv.GetField<int>(18);
-                    double areaint;
-                    double.TryParse(area, out areaint);
+                    double.TryParse(area, out var areaInt);
 
                     var record = new TransitionRecord(proteinName, peptideModifiedSequence, isotopeLabelType,
                         modifiedSequence,
                         TFExport_IntegrationStrategy, TFExport_WindowType, TFExport_WorkFlow, precursorMz, productMz,
                         productCharge,
                         bestRetentionTime, fragmentIon, fragmentIonType, standardType,
-                        collisionEnergy, fileName, retentionTime, areaint, precursorCharge);
-                    var key = record.ProteinName + "-" +record.PeptideModifiedSequence;
+                        collisionEnergy, fileName, retentionTime, areaInt, precursorCharge);
+                    var key = record.ProteinName + "-" + record.PeptideModifiedSequence;
                     if (!peptideTransitions.ContainsKey(key))
                         peptideTransitions.Add(key, new List<TransitionRecord>());
                     peptideTransitions[key].Add(record);
                 }
-                catch(Exception e)
+                catch(Exception)
                 {
-                    Console.WriteLine("There was an issue processing the skyline report.  " +
-                                    "Ensure that the tool is using the TFExport report in Skyline." + e.StackTrace);
+                    throw new IOException("There was an issue processing the Skyline report. Ensure that the tool is using the TFExport report in Skyline.");
                 }
             }
             return peptideTransitions;
         }
-        private static string WriteToCsv(string saveLocation, Dictionary<string, List<TransitionRecord>> peptideTransitions )
+        private static void WriteToCsv(string saveLocation, Dictionary<string, List<TransitionRecord>> peptideTransitions)
         {
             int startRow = 6;
             int rowCount = 0;
@@ -329,33 +354,39 @@ namespace TFExportTool
             foreach (var peptide in peptideTransitions.Values)
                 rowCount += peptide.Count;
 
-            // Auto Fill Transition Wofkflow information
+            // Auto Fill Transition Workflow information
             AutoFillTransitions(peptideTransitions);
-            // Validate rows
+            // Validate rows : No longer used
             // Ensure necessary data exists to export a TF formatted file
-            var res = ValidateTransitions(peptideTransitions);
-            if (!string.IsNullOrEmpty(res))
-                return res; // if error validating return here, res will be logged to Immediate Window in Skyline
+//            ValidateTransitions(peptideTransitions);
 
-            var emptyLine = ",,,,,,,,,,,,,,,,,,,,,,,,";
-            List<string> csvLines = new List<string>(); // each object is a line that will be outputted when the result csv file is saved
+            const string emptyLine = ",,,,,,,,,,,,,,,,,,,,,,,,";
+            var csvLines = new List<string>
+            {
+                "TraceFinder Compound Database Mass List Export,,,,,,,,,,,,,,,,,,,,,,,,",
+                emptyLine,
+                "Schema Version,Peak Header Line Number,Peak Last Row Line Number,Compound Header Line Number,,,,,,,,,,,,,,,,,,,,,",
+                string.Format("1,{0},{1},{2},,,,,,,,,,,,,,,,,,,,,", startRow, rowCount + startRow, rowCount + startRow + 2),
+                ",,,,,,,,,,,,,,,,,,,,,,,,",
+                "Protein Name,Compound Name,Workflow,Associated Target Peak,MS Order,Precursor m/z,Product m/z,m/z,Height Threshold,Area Threshold,Collision Energy,Modification,Lens,Energy Ramp,Ion Coelution,Ratio Window,Target Ratio,Window Type,Ion Type,PeakPolarity,Adduct,Charge State,Retention Time,Retention Time Window,Integration Strategy"
+            }; // each object is a line that will be outputted when the result csv file is saved
             // Header row/version info
-            csvLines.Add("TraceFinder Compound Database Mass List Export,,,,,,,,,,,,,,,,,,,,,,,,"); // line1
-            csvLines.Add(emptyLine); // line2
-            csvLines.Add("Schema Version,Peak Header Line Number,Peak Last Row Line Number,Compound Header Line Number,,,,,,,,,,,,,,,,,,,,,");// line3
-            csvLines.Add(string.Format("1,{0},{1},{2},,,,,,,,,,,,,,,,,,,,,", startRow, rowCount + startRow, rowCount + startRow + 2));// line4
-            csvLines.Add(",,,,,,,,,,,,,,,,,,,,,,,,"); // line5
+            // line1
+            // line2
+            // line3
+            // line4
+            // line5
             // First section column headers
-            csvLines.Add("Protein Name,Compound Name,Workflow,Associated Target Peak,MS Order,Precursor m/z,Product m/z,m/z,Height Threshold,Area Threshold,Collision Energy,Modification,Lens,Energy Ramp,Ion Coelution,Ratio Window,Target Ratio,Window Type,Ion Type,PeakPolarity,Adduct,Charge State,Retention Time,Retention Time Window,Integration Strategy"); // line6 - column headers
+            // line6 - column headers
             // First section data rows
 
             Dictionary<string, List<TransitionRecord>> peptideAnalytes = new Dictionary<string, List<TransitionRecord>>();
-            foreach (var k in peptideTransitions.Keys)
+            foreach (var pt in peptideTransitions)
             {
-                var transitions = peptideTransitions[k];
+                var transitions = pt.Value;
                 foreach (var transitionRecord in transitions)
                 {
-                    var newKey = k + transitionRecord.IsotopeLabelType;
+                    var newKey = pt.Key + transitionRecord.IsotopeLabelType;
                     if(!peptideAnalytes.ContainsKey(newKey))
                         peptideAnalytes.Add(newKey, new List<TransitionRecord>());
                     peptideAnalytes[newKey].Add(transitionRecord);
@@ -518,46 +549,26 @@ namespace TFExportTool
                 }
             }
 
-
-            var success = WriteCsv(csvLines, saveLocation);
-            if (success)
-                return string.Empty;
-            return "There was an error writing to the output file.";
-        }
-
-        private static bool WriteCsv(List<string> csvLines, string saveLocation)
-        {
-            var sb = new StringBuilder();
-            foreach (var line in csvLines)
+            using (var outfile = new StreamWriter(saveLocation))
             {
-                sb.Append(line + Environment.NewLine);
-            }
-            try
-            {
-                using (StreamWriter outfile =
-                    new StreamWriter(
-                        saveLocation)
-                    )
+                foreach (var line in csvLines)
                 {
-                    outfile.Write(sb.ToString());
+                    outfile.WriteLine(line);
                 }
             }
-            catch (Exception)
-            {
-                return false;
-            }
-            return true;
         }
+
         // one TransitionRecord is one row of the Skyline output so it must stay consistent with the report
         class TransitionRecord
         {
+            // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
             public String ProteinName { get; private set; }
             public String PeptideModifiedSequence { get; private set; }
             public String IsotopeLabelType { get; private set; }
             public String ModifiedSequence { get; private set; }
             // ReSharper disable InconsistentNaming
-            public string TFExport_IntegrationStrategy { get; set; }
-            public String TFExport_WindowType { get; set; }
+            public string TFExport_IntegrationStrategy { get; private set; }
+            public String TFExport_WindowType { get; private set; }
             public String TFExport_WorkFlow { get; set; }
             // ReSharper restore InconsistentNaming
             public double PrecursorMz { get; private set; }
@@ -566,12 +577,14 @@ namespace TFExportTool
             public String BestRetentionTime { get; private set; }
             public String FragmentIon { get; private set; }
             public String FragmentIonType { get; private set; }
+            // ReSharper disable once UnusedAutoPropertyAccessor.Local
             public String StandardType { get; private set; }
             public String CollisionEnergy { get; private set; }
             public String FileName { get; private set; }
             public String RetentionTime { get; private set; }
             public double Area { get; set; }
-            public int PrecursorCharge { get; set; }
+            public int PrecursorCharge { get; private set; }
+            // ReSharper restore AutoPropertyCanBeMadeGetOnly.Local
 
             public TransitionRecord(string proteinName, string peptideModifiedSequence, string isotopeLabelType,
                 string modifiedSequence, string tfExportIntegrationStrategy, string tfExportWindowType,
