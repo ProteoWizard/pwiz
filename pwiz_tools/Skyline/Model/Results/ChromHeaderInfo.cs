@@ -251,7 +251,7 @@ namespace pwiz.Skyline.Model.Results
             _startPeakIndex = startPeakIndex;
             _startScoreIndex = startScoreIndex;
             _maxPeakIndex = maxPeakIndex != -1 ? CheckByte(maxPeakIndex, byte.MaxValue - 1) : NO_MAX_PEAK;
-            _numPoints = numPoints;
+            _numPoints = precursor == SignedMz.ZERO ? 0 : CheckUShort(numPoints);
             _compressedSize = compressedSize;
             _uncompressedSize = uncompressedSize;
             _locationPoints = location;
