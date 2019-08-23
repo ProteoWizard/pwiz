@@ -57,6 +57,10 @@ PepXMLreader::PepXMLreader(BlibBuilder& maker,
     dirs.push_back("../../");  // look in grandparent dir in addition to cwd
     extensions.push_back(".mzML"); // look for spec in mzML files
     extensions.push_back(".mzXML"); // look for spec in mzXML files
+    extensions.push_back(".ms2");
+    extensions.push_back(".cms2");
+    extensions.push_back(".bms2");
+    extensions.push_back(".pms2");
 }
 
 PepXMLreader::~PepXMLreader() {
@@ -176,6 +180,12 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            } else if(search_engine.find("crux") == 0) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from Crux.");
                analysisType_ = CRUX_ANALYSIS;
+           
+           } else if(search_engine.find("comet") == 0) {
+               Verbosity::comment(V_DEBUG, "Pepxml file is from Comet.");
+               analysisType_ = COMET_ANALYSIS;
+               scoreType_ = TANDEM_EXPECTATION_VALUE; // expect values should be compatible with X!Tandem
+               probCutOff = getScoreThreshold(TANDEM);
            }// else assume peptide prophet or inter prophet 
 
            if (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS &&
@@ -459,6 +469,7 @@ bool PepXMLreader::scorePasses(double score){
     case MSGF_ANALYSIS:
     case PEAKS_ANALYSIS:
     case CRUX_ANALYSIS:
+    case COMET_ANALYSIS:
         if(score <= probCutOff){
             return true;
         }
