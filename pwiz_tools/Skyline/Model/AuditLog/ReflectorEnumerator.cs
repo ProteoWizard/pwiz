@@ -483,7 +483,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
             foreach (var node in added)
             {
-                if (expand || AuditLogObject.GetAuditLogObject(node.Element).IsName)
+                if (expand || AuditLogObject.IsNameObject(node.Element))
                 {
                     var info = objectInfo.ChangeObjectPair(ObjectPair.Create(null, node.Element));
                     var nodeIter = EnumerateDiffNodes(node.Property.GetPropertyType(node.Element), info, node.Property, docType, expand,
