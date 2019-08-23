@@ -49,9 +49,9 @@ namespace pwiz.SkylineTestFunctional
                 graph.Type == GraphTypeSummary.replicate && graph.Controller is AreaGraphController);
             OrderBy(peakAreaGraph, (index, item)=>item.Text == ColumnCaptions.AnalyteConcentration);
             VerifyOrder(peakAreaGraph, chromSet=>chromSet.AnalyteConcentration);
-            OrderBy(peakAreaGraph, (index, item)=>item.Text == "ReplicateAnnotation");
+            OrderBy(peakAreaGraph, (index, item)=>item.Text == @"ReplicateAnnotation");
             VerifyOrder(peakAreaGraph, chromSet => chromSet.Annotations.GetAnnotation("ReplicateAnnotation"));
-            OrderBy(peakAreaGraph, (index, item) => item.Text == "RandomNumber");
+            OrderBy(peakAreaGraph, (index, item) => item.Text == @"RandomNumber");
             VerifyOrder(peakAreaGraph, chromSet=>Convert.ToDouble(chromSet.Annotations.GetAnnotation("RandomNumber"), CultureInfo.InvariantCulture));
             // Order by document
             OrderBy(peakAreaGraph, (index, item)=>index == 0);
