@@ -78,7 +78,7 @@ Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Ref
 Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Reference shape (weighted)", Weight = "6,37667416013993", Percentage Contribution = "0,388874968036389" }
 Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Reference co-elution (weighted)", Weight = "-0,065138831096493", Percentage Contribution = "0,0507666149251778" }
 Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Reference co-elution count", Weight = "0,529255441222042", Percentage Contribution = "0,0990597558341638" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Standard Intensity", Weight = "0,618573362728928", Percentage Contribution = "0,164944472809889" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Standard Intensity", Weight = "0,618573362728928", Percentage Contribution = "0,164944472809888" }
 Reintegrate > Peak scoring model > Use decoys is True
 Reintegrate > Peak scoring model > Uses second best peaks is False
 Reintegrate > Integrate all peaks is True
@@ -150,7 +150,7 @@ Extra Info: Peak scoring model = "test1":
         {
             Score Name = "Standard Intensity",
             Weight = "0,618573362728928",
-            Percentage Contribution = "0,164944472809889"
+            Percentage Contribution = "0,164944472809888"
         }
     ],
     Use decoys = True,
@@ -176,7 +176,7 @@ Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Ref
 Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Reference shape (weighted)", Weight = "6,37667416013993", Percentage Contribution = "0,388874968036389" }
 Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Reference co-elution (weighted)", Weight = "-0,065138831096493", Percentage Contribution = "0,0507666149251778" }
 Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Reference co-elution count", Weight = "0,529255441222042", Percentage Contribution = "0,0990597558341638" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Standard Intensity", Weight = "0,618573362728928", Percentage Contribution = "0,164944472809889" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Standard Intensity", Weight = "0,618573362728928", Percentage Contribution = "0,164944472809888" }
 Reintegrate > Peak scoring model > Use decoys is True
 Reintegrate > Peak scoring model > Uses second best peaks is False
 Reintegrate > Only integrate significant q values is True
@@ -249,7 +249,7 @@ Extra Info: Peak scoring model = "test1":
         {
             Score Name = "Standard Intensity",
             Weight = "0,618573362728928",
-            Percentage Contribution = "0,164944472809889"
+            Percentage Contribution = "0,164944472809888"
         }
     ],
     Use decoys = True,
