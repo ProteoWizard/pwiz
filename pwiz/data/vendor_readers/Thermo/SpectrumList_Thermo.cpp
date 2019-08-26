@@ -877,7 +877,7 @@ PWIZ_API_DECL double SpectrumList_Thermo::getPrecursorIntensity(int precursorSpe
 
     double precursorIntensity = 0;
     auto intensityItr = intensity.begin() + (mzItr - mz.begin());
-    while (*mzItr < isolationMz + isolationHalfWidth)
+    while (mzItr != mz.end() && *mzItr < isolationMz + isolationHalfWidth)
     {
         precursorIntensity += *intensityItr;
         ++mzItr;

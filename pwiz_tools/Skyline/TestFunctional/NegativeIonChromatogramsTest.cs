@@ -43,11 +43,8 @@ namespace pwiz.SkylineTestFunctional
         // Verify proper peak selection when polarity information is present
         protected override void DoTest()
         {
-            TestSmallMolecules = false; // This is small molecule data, no need for extra nodes
-
-
             // CONSIDER: in this zip file is a tiny data set "134.sky" and "134.mzml" that demonstrate how we still don't
-            //           do a perfect job of handingling chromatograms with same Q1Q3 and overlapping RT ranges.  There
+            //           do a perfect job of handling chromatograms with same Q1Q3 and overlapping RT ranges.  There
             //           are two chromatograms in the mzml with Q1=134Q3=134 and similar time ranges.  We don't pick the best
             //           of the two so a would-be peak match gets missed.
 

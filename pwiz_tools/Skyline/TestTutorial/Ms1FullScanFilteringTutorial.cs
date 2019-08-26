@@ -53,14 +53,11 @@ namespace pwiz.SkylineTestTutorial
     public class Ms1FullScanFilteringTutorial : AbstractFunctionalTest
     {
         [TestMethod, MinidumpLeakThreshold(15)]
-        [Timeout(36000000)]  // These can take a long time in code coverage mode
+        [Timeout(60*60*1000)]  // These can take a long time in code coverage mode (1 hour)
         public void TestMs1Tutorial()
         {
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
-
-            // Lest we get "To export a scheduled method, you must first choose a retention time predictor in Peptide Settings / Prediction, or import results for all peptides in the document."
-            TestSmallMolecules = false;
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/MS1Filtering-2_5.pdf";
 
@@ -130,8 +127,6 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
-            TestSmallMolecules = false; // The presence of the extra test node without any results is incompatible with what's being tested here.
-
             // Clean-up before running the test
             RunUI(() => SkylineWindow.ModifyDocument("Set default settings",
                             d => d.ChangeSettings(SrmSettingsList.GetDefault())));

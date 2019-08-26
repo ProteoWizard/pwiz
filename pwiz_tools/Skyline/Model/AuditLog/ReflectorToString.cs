@@ -127,7 +127,7 @@ namespace pwiz.Skyline.Model.AuditLog
                         return LogMessage.MISSING;
 
                     return Indent(indent,
-                        AuditLogToStringHelper.ToString(obj, o => ToString(
+                        AuditLogToStringHelper.ToString(obj, property.DecimalPlaces, o => ToString(
                             node.Property.GetPropertyType(o), rootPair, docType, o, state)), state.IndentLevel - 1);
                 }
             }
@@ -146,7 +146,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
             var obj = node.Objects.First();
             var property = node.Property;
-            var auditLogObj = AuditLogObject.GetAuditLogObject(obj);
+            var auditLogObj = AuditLogObject.GetAuditLogObject(obj, property.DecimalPlaces, out _);
 
             var result = @"{0}";
             string format;
