@@ -643,9 +643,13 @@ namespace pwiz.Skyline
         {
             var setSeenEntries = GetSeenAuditLogEntries();
             var docBefore = Document;
+            if (!docBefore.Settings.DataSettings.AuditLogging)
+                _doc = AuditLogList.ToggleAuditLogging(_doc, true);
             ModifyDocument(act, logFunc);
             LogNewEntries(Document.AuditLog.AuditLogEntries, setSeenEntries);
             LogDocumentDelta(docBefore, Document);
+            if (!docBefore.Settings.DataSettings.AuditLogging)
+                _doc = AuditLogList.ToggleAuditLogging(_doc, false);
         }
 
         private bool SetFilterSettings(CommandArgs commandArgs)
@@ -2395,12 +2399,28 @@ namespace pwiz.Skyline
                 {
                     _out.WriteLine(Resources.CommandLine_ImportToolsFromZip_Installed_tool__0_, tool.Title);
                 }
-                Settings.Default.Save();
+
+                SaveSettings();
             }
             else
             {
                 _out.WriteLine(Resources.CommandLine_ImportToolsFromZip_Canceled_installing_tools_from__0__, filename);
             }
+        }
+
+        private bool SaveSettings()
+        {
+            try
+            {
+                Settings.Default.Save();
+                return true;
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine(Resources.CommandLine_SaveSettings_Error__Failed_saving_to_the_user_configuration_file_);
+                _out.WriteLine(x.Message);
+            }
+            return false;
         }
 
         // A function for adding tools to the Tools Menu.
@@ -2481,7 +2501,7 @@ namespace pwiz.Skyline
             arguments = arguments ?? string.Empty; 
             initialDirectory = initialDirectory ?? string.Empty; 
             Settings.Default.ToolList.Add(new ToolDescription(title, command, arguments, initialDirectory, outputToImmediateWindow, reportTitle));
-            Settings.Default.Save();        
+            SaveSettings();        
         }
 
         // A function for running each line of a text file like a SkylineRunner command
@@ -2625,7 +2645,8 @@ namespace pwiz.Skyline
                 }
                 if (imported)
                 {
-                    Settings.Default.Save();
+                    if (!SaveSettings())
+                        return false;
                     _out.WriteLine(Resources.CommandLine_ImportSkyr_Success__Imported_Reports_from__0_, Path.GetFileNameWithoutExtension(path));
                 }
             }

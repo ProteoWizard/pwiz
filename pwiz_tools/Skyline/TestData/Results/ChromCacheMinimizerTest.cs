@@ -61,7 +61,8 @@ namespace pwiz.SkylineTestData.Results
                 ChromCacheMinimizer chromCacheMinimizer =
                     docResults.Settings.MeasuredResults.GetChromCacheMinimizer(docResults);
                 ChromCacheMinimizer.Settings settings =
-                    new ChromCacheMinimizer.Settings().ChangeDiscardUnmatchedChromatograms(true);
+                    new ChromCacheMinimizer.Settings().ChangeDiscardUnmatchedChromatograms(true)
+                                                      .ChangeDiscardAllIonsChromatograms(false);
                 ChromCacheMinimizer.MinStatistics minStatistics = null;
                 chromCacheMinimizer.Minimize(settings, s => minStatistics = s, null);
                 Assert.AreEqual(100, minStatistics.PercentComplete);
@@ -85,11 +86,13 @@ namespace pwiz.SkylineTestData.Results
                 ChromCacheMinimizer minimizerWithOnlyFirstProtein =
                     docWithOnlyFirstPeptide.Settings.MeasuredResults.GetChromCacheMinimizer(docWithOnlyFirstPeptide);
                 minimizerMissingFirstProtein.Minimize(settings, s => statsMissingFirstProtein = s, null);
+                settings = settings.ChangeDiscardAllIonsChromatograms(true);
                 minimizerWithOnlyFirstProtein.Minimize(settings, s => statsWithOnlyFirstProtein = s, null);
                 Assert.AreEqual(100, statsMissingFirstProtein.PercentComplete);
                 Assert.AreEqual(100, statsWithOnlyFirstProtein.PercentComplete);
                 Assert.AreEqual(1.0, statsMissingFirstProtein.MinimizedRatio + statsWithOnlyFirstProtein.MinimizedRatio,
                                 .00001);
+                settings = settings.ChangeDiscardAllIonsChromatograms(false);
                 settings = settings.ChangeDiscardUnmatchedChromatograms(false);
                 ChromCacheMinimizer.MinStatistics statsMissingFirstProteinKeepAll = null;
                 ChromCacheMinimizer.MinStatistics statsWithOnlyFirstProteinKeepAll = null;

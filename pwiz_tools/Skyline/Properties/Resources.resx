@@ -10434,9 +10434,6 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0___" xml:space="preserve">
     <value>Unable to resolve molecule from '{0}'.</value>
   </data>
-  <data name="ModeUIAwareFormHelper_OnLoad_New__Use_this_button_to_configure_Skyline_s_user_interface_specifically_for_proteomics_or_small_molecule_use_" xml:space="preserve">
-    <value>New! Use this button to configure Skyline's user interface specifically for proteomics or generalized molecule use.</value>
-  </data>
   <data name="UIModeProteomic" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\UIModeProteomic.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -10588,5 +10585,23 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="ValueInvalidPathException_ValueInvalidPathException_The_value___0___is_not_valid_for_the_argument__1__failed_attempting_to_convert_it_to_a_full_file_path_" xml:space="preserve">
     <value>The value '{0}' is not valid for the argument {1} failed attempting to convert it to a full file path.</value>
+  </data>
+  <data name="GraphChromatogram_UpdateUI_No_QC_chromatogram_found" xml:space="preserve">
+    <value>No corresponding QC chromatogram found</value>
+ </data>
+  <data name="SkylineVersion_V19_1_Skyline_19_1" xml:space="preserve">
+    <value>Skyline 19.1</value>
+  </data>
+  <data name="CommandLine_SaveSettings_Error__Failed_saving_to_the_user_configuration_file_" xml:space="preserve">
+    <value>Error: Failed saving to the user configuration file.</value>
+  </data>
+  <data name="DefineAnnotationDlg_OkDialog_Choose_a_type_for_this_annotation_to_apply_to_" xml:space="preserve">
+    <value>Choose a type for this annotation to apply to.</value>
+  </data>
+  <data name="DefineAnnotationDlg_OkDialog_Choose_a_value_for_this_annotation_" xml:space="preserve">
+    <value>Choose a value for this annotation.</value>
+  </data>
+  <data name="DocumentAnnotationUpdater_UpdateAnnotations_Updating_calculated_annotations" xml:space="preserve">
+    <value>Updating calculated annotations</value>
   </data>
 </root>

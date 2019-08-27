@@ -114,29 +114,22 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, D
 
             map<double, double> fullFileTIC;
 
-            try
+            int periodCount = wifffile_->getPeriodCount(ie.sample);
+            for (int ii=1; ii <= periodCount; ++ii)
             {
-                int periodCount = wifffile_->getPeriodCount(ie.sample);
-                for (int ii=1; ii <= periodCount; ++ii)
+                //Console::WriteLine("Sample {0}, Period {1}", i, ii);
+
+                int experimentCount = wifffile_->getExperimentCount(ie.sample, ii);
+                for (int iii=1; iii <= experimentCount; ++iii)
                 {
-                    //Console::WriteLine("Sample {0}, Period {1}", i, ii);
+                    ExperimentPtr msExperiment = experimentsMap_.find(pair<int, int>(ii, iii))->second;
 
-                    int experimentCount = wifffile_->getExperimentCount(ie.sample, ii);
-                    for (int iii=1; iii <= experimentCount; ++iii)
-                    {
-                        ExperimentPtr msExperiment = experimentsMap_.find(pair<int, int>(ii, iii))->second;
-
-                        // add current experiment TIC to full file TIC
-                        vector<double> times, intensities;
-                        msExperiment->getTIC(times, intensities);
-                        for (int iiii = 0, end = intensities.size(); iiii < end; ++iiii)
-                            fullFileTIC[times[iiii]] += intensities[iiii];
-                    }
+                    // add current experiment TIC to full file TIC
+                    vector<double> times, intensities;
+                    msExperiment->getTIC(times, intensities);
+                    for (int iiii = 0, end = intensities.size(); iiii < end; ++iiii)
+                        fullFileTIC[times[iiii]] += intensities[iiii];
                 }
-            }
-            catch (exception&)
-            {
-                // TODO: log warning
             }
 
             result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, MS_number_of_detector_counts);
@@ -168,29 +161,22 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, D
 
             map<double, double> fullFileBPC;
 
-            try
+            int periodCount = wifffile_->getPeriodCount(ie.sample);
+            for (int ii = 1; ii <= periodCount; ++ii)
             {
-                int periodCount = wifffile_->getPeriodCount(ie.sample);
-                for (int ii = 1; ii <= periodCount; ++ii)
+                //Console::WriteLine("Sample {0}, Period {1}", i, ii);
+
+                int experimentCount = wifffile_->getExperimentCount(ie.sample, ii);
+                for (int iii = 1; iii <= experimentCount; ++iii)
                 {
-                    //Console::WriteLine("Sample {0}, Period {1}", i, ii);
+                    ExperimentPtr msExperiment = experimentsMap_.find(pair<int, int>(ii, iii))->second;
 
-                    int experimentCount = wifffile_->getExperimentCount(ie.sample, ii);
-                    for (int iii = 1; iii <= experimentCount; ++iii)
-                    {
-                        ExperimentPtr msExperiment = experimentsMap_.find(pair<int, int>(ii, iii))->second;
-
-                        // add current experiment TIC to full file TIC
-                        vector<double> times, intensities;
-                        msExperiment->getBPC(times, intensities);
-                        for (int iiii = 0, end = intensities.size(); iiii < end; ++iiii)
-                            fullFileBPC[times[iiii]] += intensities[iiii];
-                    }
+                    // add current experiment TIC to full file TIC
+                    vector<double> times, intensities;
+                    msExperiment->getBPC(times, intensities);
+                    for (int iiii = 0, end = intensities.size(); iiii < end; ++iiii)
+                        fullFileBPC[times[iiii]] += intensities[iiii];
                 }
-            }
-            catch (exception&)
-            {
-                // TODO: log warning
             }
 
             result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, MS_number_of_detector_counts);

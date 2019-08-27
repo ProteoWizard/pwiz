@@ -61,6 +61,7 @@ namespace pwiz.Common.SystemUtil
             // Make sure required streams are redirected.
             psi.RedirectStandardOutput = true;
             psi.RedirectStandardError = true;
+            psi.RedirectStandardInput = stdin != null;
             if (OutputEncoding != null)
                 psi.StandardOutputEncoding = psi.StandardErrorEncoding = OutputEncoding;
 
@@ -103,7 +104,7 @@ namespace pwiz.Common.SystemUtil
                         return;
                     }
 
-                    if (!string.IsNullOrEmpty(MessagePrefix) && line.StartsWith(MessagePrefix))
+                    if (MessagePrefix != null && line.StartsWith(MessagePrefix))
                     {
                         _messageLog.Add(line.Substring(MessagePrefix.Length));
                     }

@@ -157,7 +157,7 @@
     <value>0</value>
   </data>
   <data name="labelModifications.Text" xml:space="preserve">
-    <value>导入的搜索结果似乎包含下方列出的修饰。请选择您希望加入文档的修饰：</value>
+    <value>导入的搜索结果似乎包含下列修改。请选择您希望加入文档的修饰：</value>
   </data>
   <data name="&gt;&gt;labelModifications.Name" xml:space="preserve">
     <value>labelModifications</value>

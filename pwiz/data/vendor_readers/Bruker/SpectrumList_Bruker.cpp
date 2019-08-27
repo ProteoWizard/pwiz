@@ -99,8 +99,8 @@ PWIZ_API_DECL size_t SpectrumList_Bruker::find(const string& id) const
                 // fall through and return size_ (id not found)
             }
         }
-
-        return size_;
+        
+        return checkNativeIdFindResult(size_, id);
     }
     return scanItr->second;
 }
@@ -276,6 +276,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
                      frameScanPair.first, *scanNumbers.begin());
 
             vector<Scan>& scans = result->scanList.scans;
+            scans.reserve(scanNumbers.size());
             for (auto itr = ++scanNumbers.begin(); itr != scanNumbers.end(); ++itr)
             {
                 scans.push_back(Scan());

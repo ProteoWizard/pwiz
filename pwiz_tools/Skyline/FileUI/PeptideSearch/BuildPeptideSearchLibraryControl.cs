@@ -129,7 +129,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private IModifyDocumentContainer DocumentContainer { get; set; }
         private LibraryManager LibraryManager { get; set; }
-        private ImportPeptideSearch ImportPeptideSearch { get; set; }
+        public ImportPeptideSearch ImportPeptideSearch { get; set; }
 
         private Form WizardForm
         {
@@ -157,6 +157,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         }
 
         public bool? PreferEmbeddedSpectra { get; set; }
+        public bool DebugMode { get; set; }
 
         public ImportPeptideSearchDlg.Workflow WorkflowType
         {
@@ -281,6 +282,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        public string LastBuildCommandArgs { get; private set; }
+        public string LastBuildOutput { get; private set; }
+
         private bool BuildPeptideSearchLibrary(CancelEventArgs e)
         {
             // Nothing to build, if now search files were specified
@@ -307,6 +311,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 builder = ImportPeptideSearch.GetLibBuilder(DocumentContainer.Document, DocumentContainer.DocumentFilePath, cbIncludeAmbiguousMatches.Checked);
                 builder.PreferEmbeddedSpectra = PreferEmbeddedSpectra;
+                builder.DebugMode = DebugMode;
             }
             catch (FileEx.DeleteException de)
             {
@@ -327,8 +332,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     try
                     {
                         ImportPeptideSearch.ClosePeptideSearchLibraryStreams(DocumentContainer.Document);
+                        var buildState = new LibraryManager.BuildState(null, null);
                         var status = longWaitDlg.PerformWork(WizardForm, 800,
-                            monitor => LibraryManager.BuildLibraryBackground(DocumentContainer, builder, monitor, new LibraryManager.BuildState(null, null)));
+                            monitor => LibraryManager.BuildLibraryBackground(DocumentContainer, builder, monitor, buildState));
+                        LastBuildCommandArgs = buildState.BuildCommandArgs;
+                        LastBuildOutput = buildState.BuildOutput;
                         if (status.IsError)
                         {
                             // E.g. could not find external raw data for MaxQuant msms.txt; ask user if they want to retry with "prefer embedded spectra" option

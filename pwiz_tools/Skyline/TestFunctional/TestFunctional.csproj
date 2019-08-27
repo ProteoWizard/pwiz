@@ -171,6 +171,7 @@
     <Compile Include="EncyclopeDiaScoreTest.cs" />
     <Compile Include="ExplicitPeakScoreTest.cs" />
     <Compile Include="ExportAnnotationsTest.cs" />
+    <Compile Include="ExpressionAnnotationsTest.cs" />
     <Compile Include="FormUtilTest.cs" />
     <Compile Include="FullScanFilterInteractionTest.cs" />
     <Compile Include="ImportAnnotationsTest.cs" />
@@ -247,6 +248,7 @@
     <Compile Include="NeutralLossLibraryTest.cs" />
     <Compile Include="NeutralLossTest.cs" />
     <Compile Include="NonLinearRegressionTest.cs" />
+    <Compile Include="OrderByReplicateAnnotationTest.cs" />
     <Compile Include="PasteMoleculesTest.cs" />
     <Compile Include="PeakScoringModelTest.cs" />
     <Compile Include="PivotEditorTest.cs" />

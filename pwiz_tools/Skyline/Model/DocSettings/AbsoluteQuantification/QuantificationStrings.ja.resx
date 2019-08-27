@@ -272,4 +272,13 @@
   <data name="CalibrationCurve_ToString_Turning_Point___0_" xml:space="preserve">
     <value>転回点：{0}</value>
   </data>
+  <data name="CalibrationForm_GetFormTitle__Replicate___0__" xml:space="preserve">
+    <value>（繰り返し測定：{0}）</value>
+  </data>
+  <data name="CalibrationForm_GetFormTitle__Batch___0__" xml:space="preserve">
+    <value>（バッチ：{0}）</value>
+  </data>
+  <data name="CalibrationForm_GetFormTitle__All_Replicates_" xml:space="preserve">
+    <value>（すべての繰り返し測定）</value>
+  </data>
 </root>

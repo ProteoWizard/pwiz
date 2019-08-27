@@ -290,9 +290,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     string title = Chromatogram.FilePath.GetSampleOrFileName();
                     var extractor = Chromatogram.Header.Extractor;
-                    return string.Format(extractor == ChromExtractor.base_peak
-                                             ? Resources.ChromGraphItem_Title__0____base_peak
-                                             : Resources.ChromGraphItem_Title__0____TIC, title);
+                    if (extractor == ChromExtractor.base_peak)
+                        return string.Format(Resources.ChromGraphItem_Title__0____base_peak, title);
+                    if (extractor == ChromExtractor.summed)
+                        return string.Format(Resources.ChromGraphItem_Title__0____TIC, title);
+                    return Chromatogram.GroupInfo.TextId ?? @"no summary text";
                 }
                 if (_step != 0)
                     return string.Format(Resources.ChromGraphItem_Title_Step__0_, _step);

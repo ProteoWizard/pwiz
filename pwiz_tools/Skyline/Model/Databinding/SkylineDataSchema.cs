@@ -48,6 +48,7 @@ namespace pwiz.Skyline.Model.Databinding
         private readonly CachedValue<ImmutableSortedList<ResultKey, Replicate>> _replicates;
         private readonly CachedValue<IDictionary<ResultFileKey, ResultFile>> _resultFiles;
         private readonly CachedValue<ElementRefs> _elementRefCache;
+        private readonly CachedValue<AnnotationCalculator> _annotationCalculator;
 
         private SrmDocument _batchChangesOriginalDocument;
         private List<EditDescription> _batchEditDescriptions;
@@ -62,6 +63,7 @@ namespace pwiz.Skyline.Model.Databinding
             _replicates = CachedValue.Create(this, CreateReplicateList);
             _resultFiles = CachedValue.Create(this, CreateResultFileList);
             _elementRefCache = CachedValue.Create(this, () => new ElementRefs(Document));
+            _annotationCalculator = CachedValue.Create(this, () => new AnnotationCalculator(this));
         }
 
         public override string DefaultUiMode
@@ -265,6 +267,11 @@ namespace pwiz.Skyline.Model.Databinding
         public ChromDataCache ChromDataCache { get; private set; }
         public ElementRefs ElementRefs { get { return _elementRefCache.Value; } }
 
+        public AnnotationCalculator AnnotationCalculator
+        {
+            get { return _annotationCalculator.Value; }
+        }
+
         public override PropertyDescriptor GetPropertyDescriptor(Type type, string name)
         {
             var propertyDescriptor = base.GetPropertyDescriptor(type, name);
@@ -453,9 +460,9 @@ namespace pwiz.Skyline.Model.Databinding
             if (value == null)
                 return string.Empty;
 
-            // TODO: only allow reflection for all info?
+            // TODO: only allow reflection for all info? Okay to use null for decimal places?
             bool unused;
-            return DiffNode.ObjectToString(true, value, out unused);
+            return DiffNode.ObjectToString(true, value, null, out unused);
         }
 
         public void ModifyDocument(EditDescription editDescription, Func<SrmDocument, SrmDocument> action, Func<SrmDocumentPair, AuditLogEntry> logFunc = null)

@@ -101,7 +101,7 @@ namespace pwiz.Skyline.Alerts
 
         public EmptyProteinsSettings FormSettings
         {
-            get { return new EmptyProteinsSettings(IsKeepEmptyProteins, EmptyProteins, GetModeUIHelper().ModeUI); }
+            get { return new EmptyProteinsSettings(IsKeepEmptyProteins, EmptyProteins, ModeUI); }
         }
     }
 }

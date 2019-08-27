@@ -156,7 +156,7 @@ rule init ( version ? : command * : options * )
         if $(addr) = 32 { cond += "$(condition)/<architecture>/<address-model>" ; }
 
         toolset.flags clang-win.compile .CC $(cond) : $(compiler) -m$(addr) ;
-        toolset.flags clang-win.link .LD $(cond) : $(compiler) -m$(addr) /link "/incremental:no" ;
+        toolset.flags clang-win.link .LD $(cond) : $(compiler) -m$(addr) /link "/incremental:no" "/manifest" ;
         toolset.flags clang-win.compile .ASM $(cond) : $(assembler) -nologo ;
         toolset.flags clang-win.archive .LD $(cond) : $(archiver) /nologo ;
         toolset.flags clang-win.link .MT $(cond) : $(manifest-tool) -nologo ;

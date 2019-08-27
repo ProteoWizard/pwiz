@@ -65,40 +65,27 @@
             // 
             // exportButton
             // 
-            this.exportButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.exportButton, "exportButton");
             this.exportButton.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.exportButton.Location = new System.Drawing.Point(258, 439);
             this.exportButton.Name = "exportButton";
-            this.exportButton.Size = new System.Drawing.Size(75, 23);
-            this.exportButton.TabIndex = 2;
-            this.exportButton.Text = "Export";
             this.exportButton.UseVisualStyleBackColor = true;
             // 
             // labelResult
             // 
-            this.labelResult.AutoSize = true;
+            resources.ApplyResources(this.labelResult, "labelResult");
             this.labelResult.ForeColor = System.Drawing.Color.Red;
-            this.labelResult.Location = new System.Drawing.Point(13, 13);
             this.labelResult.Name = "labelResult";
-            this.labelResult.Size = new System.Drawing.Size(0, 13);
-            this.labelResult.TabIndex = 1;
             // 
             // cancelButton
             // 
-            this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.cancelButton, "cancelButton");
             this.cancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.cancelButton.Location = new System.Drawing.Point(339, 439);
             this.cancelButton.Name = "cancelButton";
-            this.cancelButton.Size = new System.Drawing.Size(75, 23);
-            this.cancelButton.TabIndex = 3;
-            this.cancelButton.Text = "Cancel";
             this.cancelButton.UseVisualStyleBackColor = true;
             // 
             // groupBoxImportOptions
             // 
-            this.groupBoxImportOptions.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.groupBoxImportOptions, "groupBoxImportOptions");
             this.groupBoxImportOptions.Controls.Add(this.groupBoxSort);
             this.groupBoxImportOptions.Controls.Add(this.groupBoxRT);
             this.groupBoxImportOptions.Controls.Add(this.label4);
@@ -108,130 +95,87 @@
             this.groupBoxImportOptions.Controls.Add(this.label2);
             this.groupBoxImportOptions.Controls.Add(this.flowLayoutPanel2);
             this.groupBoxImportOptions.Controls.Add(this.label1);
-            this.groupBoxImportOptions.Location = new System.Drawing.Point(12, 46);
             this.groupBoxImportOptions.Name = "groupBoxImportOptions";
-            this.groupBoxImportOptions.Size = new System.Drawing.Size(401, 387);
-            this.groupBoxImportOptions.TabIndex = 1;
             this.groupBoxImportOptions.TabStop = false;
-            this.groupBoxImportOptions.Text = "Export Options (optional)";
             // 
             // groupBoxSort
             // 
-            this.groupBoxSort.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.groupBoxSort, "groupBoxSort");
             this.groupBoxSort.Controls.Add(this.radioButtonIntensityAvg);
             this.groupBoxSort.Controls.Add(this.radioButtonIntensityFromFile);
             this.groupBoxSort.Controls.Add(this.comboBoxDataSetIntensitySort);
-            this.groupBoxSort.Location = new System.Drawing.Point(12, 284);
             this.groupBoxSort.Name = "groupBoxSort";
-            this.groupBoxSort.Size = new System.Drawing.Size(378, 97);
-            this.groupBoxSort.TabIndex = 8;
             this.groupBoxSort.TabStop = false;
-            this.groupBoxSort.Text = "Sort Product Ions";
             // 
             // radioButtonIntensityAvg
             // 
-            this.radioButtonIntensityAvg.AutoSize = true;
+            resources.ApplyResources(this.radioButtonIntensityAvg, "radioButtonIntensityAvg");
             this.radioButtonIntensityAvg.Checked = true;
-            this.radioButtonIntensityAvg.Location = new System.Drawing.Point(6, 19);
             this.radioButtonIntensityAvg.Name = "radioButtonIntensityAvg";
-            this.radioButtonIntensityAvg.Size = new System.Drawing.Size(127, 17);
-            this.radioButtonIntensityAvg.TabIndex = 0;
             this.radioButtonIntensityAvg.TabStop = true;
-            this.radioButtonIntensityAvg.Text = "Use intensity average";
             this.radioButtonIntensityAvg.UseVisualStyleBackColor = true;
             // 
             // radioButtonIntensityFromFile
             // 
-            this.radioButtonIntensityFromFile.AutoSize = true;
-            this.radioButtonIntensityFromFile.Location = new System.Drawing.Point(6, 42);
+            resources.ApplyResources(this.radioButtonIntensityFromFile, "radioButtonIntensityFromFile");
             this.radioButtonIntensityFromFile.Name = "radioButtonIntensityFromFile";
-            this.radioButtonIntensityFromFile.Size = new System.Drawing.Size(181, 17);
-            this.radioButtonIntensityFromFile.TabIndex = 1;
-            this.radioButtonIntensityFromFile.Text = "Use values from a single data set";
             this.radioButtonIntensityFromFile.UseVisualStyleBackColor = true;
             this.radioButtonIntensityFromFile.CheckedChanged += new System.EventHandler(this.radioButton2_CheckedChanged);
             // 
             // comboBoxDataSetIntensitySort
             // 
             this.comboBoxDataSetIntensitySort.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBoxDataSetIntensitySort.Enabled = false;
+            resources.ApplyResources(this.comboBoxDataSetIntensitySort, "comboBoxDataSetIntensitySort");
             this.comboBoxDataSetIntensitySort.FormattingEnabled = true;
-            this.comboBoxDataSetIntensitySort.Location = new System.Drawing.Point(17, 65);
             this.comboBoxDataSetIntensitySort.Name = "comboBoxDataSetIntensitySort";
-            this.comboBoxDataSetIntensitySort.Size = new System.Drawing.Size(170, 21);
-            this.comboBoxDataSetIntensitySort.TabIndex = 2;
             // 
             // groupBoxRT
             // 
-            this.groupBoxRT.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.groupBoxRT, "groupBoxRT");
             this.groupBoxRT.Controls.Add(this.radioButtonRTAvg);
             this.groupBoxRT.Controls.Add(this.radioButtonUseDataSet);
             this.groupBoxRT.Controls.Add(this.comboBoxRTFiles);
             this.groupBoxRT.Controls.Add(this.label5);
             this.groupBoxRT.Controls.Add(this.numericUpDown1);
-            this.groupBoxRT.Location = new System.Drawing.Point(12, 138);
             this.groupBoxRT.Name = "groupBoxRT";
-            this.groupBoxRT.Size = new System.Drawing.Size(378, 143);
-            this.groupBoxRT.TabIndex = 7;
             this.groupBoxRT.TabStop = false;
-            this.groupBoxRT.Text = "Retention Time";
             // 
             // radioButtonRTAvg
             // 
-            this.radioButtonRTAvg.AutoSize = true;
+            resources.ApplyResources(this.radioButtonRTAvg, "radioButtonRTAvg");
             this.radioButtonRTAvg.Checked = true;
-            this.radioButtonRTAvg.Location = new System.Drawing.Point(6, 19);
             this.radioButtonRTAvg.Name = "radioButtonRTAvg";
-            this.radioButtonRTAvg.Size = new System.Drawing.Size(152, 17);
-            this.radioButtonRTAvg.TabIndex = 0;
             this.radioButtonRTAvg.TabStop = true;
-            this.radioButtonRTAvg.Text = "Use retention time average";
             this.radioButtonRTAvg.UseVisualStyleBackColor = true;
             // 
             // radioButtonUseDataSet
             // 
-            this.radioButtonUseDataSet.AutoSize = true;
-            this.radioButtonUseDataSet.Location = new System.Drawing.Point(6, 42);
+            resources.ApplyResources(this.radioButtonUseDataSet, "radioButtonUseDataSet");
             this.radioButtonUseDataSet.Name = "radioButtonUseDataSet";
-            this.radioButtonUseDataSet.Size = new System.Drawing.Size(181, 17);
-            this.radioButtonUseDataSet.TabIndex = 1;
-            this.radioButtonUseDataSet.Text = "Use values from a single data set";
             this.radioButtonUseDataSet.UseVisualStyleBackColor = true;
             this.radioButtonUseDataSet.CheckedChanged += new System.EventHandler(this.radioButton3_CheckedChanged);
             // 
             // comboBoxRTFiles
             // 
             this.comboBoxRTFiles.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBoxRTFiles.Enabled = false;
+            resources.ApplyResources(this.comboBoxRTFiles, "comboBoxRTFiles");
             this.comboBoxRTFiles.FormattingEnabled = true;
-            this.comboBoxRTFiles.Location = new System.Drawing.Point(17, 65);
             this.comboBoxRTFiles.Name = "comboBoxRTFiles";
-            this.comboBoxRTFiles.Size = new System.Drawing.Size(170, 21);
-            this.comboBoxRTFiles.TabIndex = 2;
             // 
             // label5
             // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(6, 102);
+            resources.ApplyResources(this.label5, "label5");
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(147, 13);
-            this.label5.TabIndex = 3;
-            this.label5.Text = "Retention Time Window (sec)";
             // 
             // numericUpDown1
             // 
-            this.numericUpDown1.Location = new System.Drawing.Point(159, 99);
+            resources.ApplyResources(this.numericUpDown1, "numericUpDown1");
             this.numericUpDown1.Maximum = new decimal(new int[] {
             999,
             0,
             0,
             0});
             this.numericUpDown1.Name = "numericUpDown1";
-            this.numericUpDown1.Size = new System.Drawing.Size(43, 20);
-            this.numericUpDown1.TabIndex = 4;
             this.numericUpDown1.Value = new decimal(new int[] {
             120,
             0,
@@ -240,145 +184,99 @@
             // 
             // label4
             // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(9, 104);
+            resources.ApplyResources(this.label4, "label4");
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(118, 13);
-            this.label4.TabIndex = 5;
-            this.label4.Text = "Internal Standard Type:";
             // 
             // comboBoxStandard
             // 
             this.comboBoxStandard.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxStandard.FormattingEnabled = true;
             this.comboBoxStandard.Items.AddRange(new object[] {
-            "none",
-            "light",
-            "heavy"});
-            this.comboBoxStandard.Location = new System.Drawing.Point(137, 101);
+            resources.GetString("comboBoxStandard.Items"),
+            resources.GetString("comboBoxStandard.Items1"),
+            resources.GetString("comboBoxStandard.Items2")});
+            resources.ApplyResources(this.comboBoxStandard, "comboBoxStandard");
             this.comboBoxStandard.Name = "comboBoxStandard";
-            this.comboBoxStandard.Size = new System.Drawing.Size(121, 21);
-            this.comboBoxStandard.TabIndex = 0;
             // 
             // label3
             // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(6, 16);
+            resources.ApplyResources(this.label3, "label3");
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(86, 13);
-            this.label3.TabIndex = 0;
-            this.label3.Text = "Auto Fill Options:";
             // 
             // flowLayoutPanel1
             // 
             this.flowLayoutPanel1.Controls.Add(this.radioButtonAll);
             this.flowLayoutPanel1.Controls.Add(this.radioButtonOne);
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(138, 34);
+            resources.ApplyResources(this.flowLayoutPanel1, "flowLayoutPanel1");
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(63, 54);
-            this.flowLayoutPanel1.TabIndex = 2;
             // 
             // radioButtonAll
             // 
-            this.radioButtonAll.AutoSize = true;
-            this.radioButtonAll.Location = new System.Drawing.Point(3, 3);
+            resources.ApplyResources(this.radioButtonAll, "radioButtonAll");
             this.radioButtonAll.Name = "radioButtonAll";
-            this.radioButtonAll.Size = new System.Drawing.Size(36, 17);
-            this.radioButtonAll.TabIndex = 0;
             this.radioButtonAll.TabStop = true;
-            this.radioButtonAll.Text = "All";
             this.radioButtonAll.UseVisualStyleBackColor = true;
             this.radioButtonAll.CheckedChanged += new System.EventHandler(this.radioButtonAll_CheckedChanged);
             // 
             // radioButtonOne
             // 
-            this.radioButtonOne.AutoSize = true;
-            this.radioButtonOne.Location = new System.Drawing.Point(3, 26);
+            resources.ApplyResources(this.radioButtonOne, "radioButtonOne");
             this.radioButtonOne.Name = "radioButtonOne";
-            this.radioButtonOne.Size = new System.Drawing.Size(45, 17);
-            this.radioButtonOne.TabIndex = 1;
             this.radioButtonOne.TabStop = true;
-            this.radioButtonOne.Text = "One";
             this.radioButtonOne.UseVisualStyleBackColor = true;
             this.radioButtonOne.CheckedChanged += new System.EventHandler(this.radioButtonOne_CheckedChanged);
             // 
             // label2
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(200, 36);
+            resources.ApplyResources(this.label2, "label2");
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(70, 13);
-            this.label2.TabIndex = 3;
-            this.label2.Text = "Set others to:";
             // 
             // flowLayoutPanel2
             // 
             this.flowLayoutPanel2.Controls.Add(this.radioButtonConfirming);
             this.flowLayoutPanel2.Controls.Add(this.radioButtonFragment);
-            this.flowLayoutPanel2.Location = new System.Drawing.Point(270, 36);
+            resources.ApplyResources(this.flowLayoutPanel2, "flowLayoutPanel2");
             this.flowLayoutPanel2.Name = "flowLayoutPanel2";
-            this.flowLayoutPanel2.Size = new System.Drawing.Size(104, 54);
-            this.flowLayoutPanel2.TabIndex = 4;
             // 
             // radioButtonConfirming
             // 
-            this.radioButtonConfirming.AutoSize = true;
-            this.radioButtonConfirming.Enabled = false;
-            this.radioButtonConfirming.Location = new System.Drawing.Point(3, 3);
+            resources.ApplyResources(this.radioButtonConfirming, "radioButtonConfirming");
             this.radioButtonConfirming.Name = "radioButtonConfirming";
-            this.radioButtonConfirming.Size = new System.Drawing.Size(92, 17);
-            this.radioButtonConfirming.TabIndex = 0;
             this.radioButtonConfirming.TabStop = true;
-            this.radioButtonConfirming.Text = "Confirming Ion";
             this.radioButtonConfirming.UseVisualStyleBackColor = true;
             // 
             // radioButtonFragment
             // 
-            this.radioButtonFragment.AutoSize = true;
-            this.radioButtonFragment.Enabled = false;
-            this.radioButtonFragment.Location = new System.Drawing.Point(3, 26);
+            resources.ApplyResources(this.radioButtonFragment, "radioButtonFragment");
             this.radioButtonFragment.Name = "radioButtonFragment";
-            this.radioButtonFragment.Size = new System.Drawing.Size(69, 17);
-            this.radioButtonFragment.TabIndex = 1;
             this.radioButtonFragment.TabStop = true;
-            this.radioButtonFragment.Text = "Fragment";
             this.radioButtonFragment.UseVisualStyleBackColor = true;
             // 
             // label1
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(6, 36);
+            resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(126, 13);
-            this.label1.TabIndex = 1;
-            this.label1.Text = "Number of Target Peaks:";
             // 
             // labelDescription
             // 
-            this.labelDescription.AutoSize = true;
-            this.labelDescription.Location = new System.Drawing.Point(20, 13);
+            resources.ApplyResources(this.labelDescription, "labelDescription");
             this.labelDescription.Name = "labelDescription";
-            this.labelDescription.Size = new System.Drawing.Size(324, 26);
-            this.labelDescription.TabIndex = 0;
-            this.labelDescription.Text = "Values from Skyline\'s document grid are used by default,\r\nthe options below can b" +
-    "e used to quickly populate certain columns.";
             // 
             // TFExportDlg
             // 
             this.AcceptButton = this.exportButton;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cancelButton;
-            this.ClientSize = new System.Drawing.Size(429, 470);
             this.Controls.Add(this.labelDescription);
             this.Controls.Add(this.groupBoxImportOptions);
             this.Controls.Add(this.cancelButton);
             this.Controls.Add(this.labelResult);
             this.Controls.Add(this.exportButton);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "TFExportDlg";
-            this.Text = "Trace Finder Export";
             this.groupBoxImportOptions.ResumeLayout(false);
             this.groupBoxImportOptions.PerformLayout();
             this.groupBoxSort.ResumeLayout(false);
