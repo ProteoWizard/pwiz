@@ -468,7 +468,7 @@ namespace pwiz.SkylineTestTutorial
 
             findResultsForm = FormUtil.OpenForms.OfType<FindResultsForm>().FirstOrDefault();
             Assert.IsNotNull(findResultsForm);
-            Assert.AreEqual(34 + (TestSmallMolecules ? 1 : 0), findResultsForm.ItemCount);
+            Assert.AreEqual(34, findResultsForm.ItemCount);
         }
 
         private void ValidateCoefficients(EditPeakScoringModelDlg editDlgFromSrm, int coeffIndex)

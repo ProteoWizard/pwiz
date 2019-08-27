@@ -11,6 +11,7 @@
 #ifndef HEADERS_SW20111118_H
 #define HEADERS_SW20111118_H
 
+#include "config.h"
 #include "object.h"
 #include "rules.h"
 #include "regexp.h"

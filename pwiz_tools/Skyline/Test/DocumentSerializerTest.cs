@@ -107,10 +107,7 @@ namespace pwiz.SkylineTest
                         StringAssert.DoesNotMatch(documentText, regexpTransitionData);
                     }
                     var document2 = (SrmDocument)xmlSerializer.Deserialize(new StringReader(stringWriter.ToString()));
-                    if (!Settings.Default.TestSmallMolecules)
-                    {
-                        Assert.AreEqual(document, document2);
-                    }
+                    Assert.AreEqual(document, document2);
                 }
             }
             finally

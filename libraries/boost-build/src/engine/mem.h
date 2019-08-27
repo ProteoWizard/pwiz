@@ -8,70 +8,15 @@
 #ifndef BJAM_MEM_H
 #define BJAM_MEM_H
 
-#ifdef OPT_BOEHM_GC
+#include "config.h"
 
-    /* Use Boehm GC memory allocator. */
-    #include <gc.h>
+/* Standard C memory allocation. */
+#include <stdlib.h>
 
-    #define bjam_malloc_x(s) memset(GC_malloc(s),0,s)
-    #define bjam_malloc_atomic_x(s) memset(GC_malloc_atomic(s),0,s)
-    #define bjam_calloc_x(n,s) memset(GC_malloc((n)*(s)),0,(n)*(s))
-    #define bjam_calloc_atomic_x(n,s) memset(GC_malloc_atomic((n)*(s)),0,(n)*(s))
-    #define bjam_realloc_x(p,s) GC_realloc(p,s)
-    #define bjam_free_x(p) GC_free(p)
-    #define bjam_mem_init_x() GC_init(); GC_enable_incremental()
-
-    #define bjam_malloc_raw_x(s) malloc(s)
-    #define bjam_calloc_raw_x(n,s) calloc(n,s)
-    #define bjam_realloc_raw_x(p,s) realloc(p,s)
-    #define bjam_free_raw_x(p) free(p)
-
-    #ifndef BJAM_NEWSTR_NO_ALLOCATE
-    # define BJAM_NEWSTR_NO_ALLOCATE
-    #endif
-
-#elif defined( OPT_DUMA )
-
-    /* Use Duma memory debugging library. */
-    #include <stdlib.h>
-
-    #define _DUMA_CONFIG_H_
-    #define DUMA_NO_GLOBAL_MALLOC_FREE
-    #define DUMA_EXPLICIT_INIT
-    #define DUMA_NO_THREAD_SAFETY
-    #define DUMA_NO_CPP_SUPPORT
-    /* #define DUMA_NO_LEAKDETECTION */
-    /* #define DUMA_USE_FRAMENO */
-    /* #define DUMA_PREFER_ATEXIT */
-    /* #define DUMA_OLD_DEL_MACRO */
-    /* #define DUMA_NO_HANG_MSG */
-    #define DUMA_PAGE_SIZE 4096
-    #define DUMA_MIN_ALIGNMENT 1
-    /* #define DUMA_GNU_INIT_ATTR 0 */
-    typedef unsigned int DUMA_ADDR;
-    typedef unsigned int DUMA_SIZE;
-    #include <duma.h>
-
-    #define bjam_malloc_x(s) malloc(s)
-    #define bjam_calloc_x(n,s) calloc(n,s)
-    #define bjam_realloc_x(p,s) realloc(p,s)
-    #define bjam_free_x(p) free(p)
-
-    #ifndef BJAM_NEWSTR_NO_ALLOCATE
-    # define BJAM_NEWSTR_NO_ALLOCATE
-    #endif
-
-#else
-
-    /* Standard C memory allocation. */
-    #include <stdlib.h>
-
-    #define bjam_malloc_x(s) malloc(s)
-    #define bjam_calloc_x(n,s) calloc(n,s)
-    #define bjam_realloc_x(p,s) realloc(p,s)
-    #define bjam_free_x(p) free(p)
-
-#endif
+#define bjam_malloc_x(s) malloc(s)
+#define bjam_calloc_x(n,s) calloc(n,s)
+#define bjam_realloc_x(p,s) realloc(p,s)
+#define bjam_free_x(p) free(p)
 
 #ifndef bjam_malloc_atomic_x
     #define bjam_malloc_atomic_x(s) bjam_malloc_x(s)

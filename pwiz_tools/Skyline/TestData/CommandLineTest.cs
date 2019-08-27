@@ -662,9 +662,6 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void ConsoleExportTrigger()
         {
-            // The special mode for exercising non-proteomic molecules just doesn't make sense with this test
-            TestSmallMolecules = false; 
-
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
             string failurePath = testFilesDir.GetTestPath("Failure_test.csv");
@@ -786,9 +783,6 @@ namespace pwiz.SkylineTestData
             string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
             string outPath = testFilesDir.GetTestPath("Output_file.sky");
             string tsvPath = testFilesDir.GetTestPath("Exported_test_report.csv");
-
-            // The special mode for exercising non-proteomic molecules just doesn't make sense with this test
-            TestSmallMolecules = false; 
 
             // Import the first RAW file (or mzML for international)
             string rawPath = testFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +

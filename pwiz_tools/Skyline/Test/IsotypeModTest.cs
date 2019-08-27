@@ -114,8 +114,6 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void MultiLabelTypeListTest()
         {
-            TestSmallMolecules = false; // we don't expect to roundtrip export/import of transition lists for non-proteomic molecules
-
             int startRev = 0;
             SrmDocument document = new SrmDocument(SrmSettingsList.GetDefault().ChangeTransitionInstrument(inst => inst.ChangeMaxMz(1800)));
 

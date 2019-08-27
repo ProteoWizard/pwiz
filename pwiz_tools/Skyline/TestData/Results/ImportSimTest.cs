@@ -56,7 +56,6 @@ namespace pwiz.SkylineTestData.Results
                 return;
             }
 
-            TestSmallMolecules = false; // Don't need that magic extra node
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath = testFilesDir.GetTestPath(DOCUMENT_NAME);
             string cachePath = ChromatogramCache.FinalPathForName(docPath, null);
