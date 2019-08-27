@@ -53,7 +53,7 @@ namespace pwiz.SkylineTestTutorial
     public class Ms1FullScanFilteringTutorial : AbstractFunctionalTest
     {
         [TestMethod, MinidumpLeakThreshold(15)]
-        [Timeout(36000000)]  // These can take a long time in code coverage mode
+        [Timeout(60*60*1000)]  // These can take a long time in code coverage mode (1 hour)
         public void TestMs1Tutorial()
         {
             // Set true to look at tutorial screenshots.
@@ -600,16 +600,19 @@ namespace pwiz.SkylineTestTutorial
                 dlg.TimeWindow = 10;
                 dlg.OkDialog();
             });
-            WaitForDocumentChangeLoaded(doc);
+            doc = WaitForDocumentChangeLoaded(doc);
 
             // Now deviating from the tutorial script for a moment to make sure we can choose a Scheduled export method.
+            // CONSIDER: This refinement seems to be a no-op. Not sure why it is here.
             RunDlg<RefineDlg>(SkylineWindow.ShowRefineDlg, dlg =>
             {
-                dlg.MinPeptides = 1; // Not L10N
+                dlg.MinPeptides = 1; // This would get rid of proteins with no peptides (none exist)
                 const double minPeakFoundRatio = 0.1;
-                dlg.MinPeakFoundRatio = minPeakFoundRatio;
-                dlg.OkDialog();
+                dlg.MinPeakFoundRatio = minPeakFoundRatio; // This would get rid of undetected transitions (none exist)
+                dlg.OkDialog(); // Will not change the document or add an Undo entry
             });
+            // Nothing should have changed on the UI thread
+            RunUI(() => Assert.AreSame(doc, SkylineWindow.DocumentUI));
 
             // Ready to export, although we will just cancel out of the dialog.
             var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
@@ -621,11 +624,11 @@ namespace pwiz.SkylineTestTutorial
             });
             WaitForClosedForm(exportMethodDlg);
 
-            RunUI(() => SkylineWindow.SaveDocument());
-            RunUI(SkylineWindow.NewDocument);
-
             // Because this was showing up in the nightly test failures
             WaitForConditionUI(() => exportMethodDlg.IsDisposed);
+
+            RunUI(() => SkylineWindow.SaveDocument());
+            RunUI(SkylineWindow.NewDocument);
         }
 
         private void VerifyLib(string[] expectedPaths, int expectedSpectra, string[] foundPaths, int foundSpectra,
