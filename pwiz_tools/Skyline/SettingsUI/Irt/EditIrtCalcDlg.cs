@@ -35,6 +35,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.ChromLib;
+using pwiz.Skyline.Model.Prosit;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -904,6 +905,34 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 AddToLibrary(irtAverages);
             }
 
+            public class NopProgressMonitor : IProgressMonitor
+            {
+                public bool IsCanceled
+                {
+                    get { return false; }
+                }
+                public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+                {
+                    return UpdateProgressResponse.normal;
+                }
+
+                public bool HasUI
+                {
+                    get { return false; }
+                }
+            }
+
+            public void AddProsit()
+            {
+                /*var ps = new PrositService(...); // Get from settings
+                var iRTMap = ps.PredictiRTs(Program.ActiveDocumentUI.Settings, Program.ActiveDocumentUI.Peptides.ToArray());
+                var iRTAverages = RCalcIrt.ProcessRetentionTimes(new NopProgressMonitor(),
+                    new[] { new PrositIRTProvider(Program.ActiveDocumentUI.Settings, iRTMap, "Prosit Calc", ps) }, 1,
+                    IrtStandard.CIRT_SHORT.Peptides.ToArray(),
+                    iRTMap.Select(kvp => new DbIrtPeptide(kvp.Key.ModifiedTarget, kvp.Value, false, null)).ToArray());
+                AddToLibrary(iRTAverages);*/
+            }
+
             public void AddIrtDatabase()
             {
                 var irtCalcs = Settings.Default.RTScoreCalculatorList.Where(calc => calc is RCalcIrt).Cast<RCalcIrt>();
@@ -1309,6 +1338,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     LibraryPeptideList.Remove(libraryPeptide);
                 }
             }
+        }
+
+        private void addPrositToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            _gridViewLibraryDriver.AddProsit();
         }
     }
 }

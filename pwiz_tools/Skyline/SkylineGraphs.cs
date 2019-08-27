@@ -28,6 +28,7 @@ using DigitalRune.Windows.Docking;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.MSGraph;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
@@ -42,14 +43,17 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Controls.Graphs.Calibration;
+using pwiz.Skyline.Controls.Graphs.Spectrum;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
+using pwiz.Skyline.Model.Prosit;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using ZedGraph;
 using pwiz.Skyline.Util.Extensions;
+using PeptideDocNode = pwiz.Skyline.Model.PeptideDocNode;
 using Transition = pwiz.Skyline.Model.Transition;
 
 namespace pwiz.Skyline
@@ -318,7 +322,7 @@ namespace pwiz.Skyline
                     }
                 }
 
-                bool enable = settingsNew.PeptideSettings.Libraries.HasLibraries;
+                bool enable = true;//settingsNew.PeptideSettings.Libraries.HasLibraries;
                 if (enable)
                 {
                     UpdateIonTypesMenuItemsVisibility();
@@ -1138,6 +1142,7 @@ namespace pwiz.Skyline
                 fragmentionsContextMenuItem.Checked = set.ShowFragmentIons;
                 menuStrip.Items.Insert(iInsert++, fragmentionsContextMenuItem);
             }
+
             precursorIonContextMenuItem.Checked = set.ShowPrecursorIon;
             menuStrip.Items.Insert(iInsert++, precursorIonContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator11);
@@ -1165,6 +1170,20 @@ namespace pwiz.Skyline
             lockYaxisContextMenuItem.Checked = set.LockYAxis;
             menuStrip.Items.Insert(iInsert++, lockYaxisContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator14);
+
+            // Need to test small mol
+            if (isProteomic)
+            {
+                prositLibMatchItem.Checked = Settings.Default.Prosit;
+                menuStrip.Items.Insert(iInsert++, prositLibMatchItem);
+                mirrorMenuItem.Checked = Settings.Default.LibMatchMirror;
+                // TODO: check if prosit is available here, otherwise if there is just a single
+                // spec lib, mirror plots wont be possible
+                if (_graphSpectrum.AvailableSpectra != null)
+                    menuStrip.Items.Insert(iInsert++, mirrorMenuItem);
+                menuStrip.Items.Insert(iInsert++, toolStripSeparator61);
+            }
+
             menuStrip.Items.Insert(iInsert++, spectrumPropsContextMenuItem);
             showLibraryChromatogramsSpectrumContextMenuItem.Checked = set.ShowLibraryChromatograms;
             menuStrip.Items.Insert(iInsert++, showLibraryChromatogramsSpectrumContextMenuItem);

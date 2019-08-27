@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
@@ -29,9 +30,12 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Prosit.Communication;
+using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.Util;
@@ -214,6 +218,7 @@ namespace pwiz.Skyline.SettingsUI
     {
         LibraryManager LibraryManager { get; }
         void ModifyDocument(string description, Func<SrmDocument, SrmDocument> act, Func<SrmDocumentPair, AuditLogEntry> logFunc);
+        SrmDocument Document { get; }
     }
 
     public sealed class LibraryBuildNotificationHandler
@@ -395,6 +400,50 @@ namespace pwiz.Skyline.SettingsUI
 
         private bool AddIrts(LibraryManager.BuildState buildState)
         {
+            {
+                var doc = NotificationContainer.Document;
+                var added = false;
+                Library lib;
+                var initialMessage = Resources.LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_Adding_iRTs_to_library;
+                using (var longWait = new LongWaitDlg { Text = Resources.LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_Adding_iRTs_to_library }) {
+                    var status = longWait.PerformWork(TopMostApplicationForm, 800, monitor =>
+                    {
+                        var initStatus = new ProgressStatus(initialMessage).ChangeSegments(0, 2);
+                        monitor.UpdateProgress(initStatus);
+                        lib = NotificationContainer.LibraryManager.TryGetLibrary(buildState.LibrarySpec) ??
+                              NotificationContainer.LibraryManager.LoadLibrary(buildState.LibrarySpec, () => new DefaultFileLoadMonitor(monitor));
+                        foreach (var stream in lib.ReadStreams)
+                            stream.CloseStream();
+                        if (longWait.IsCanceled)
+                            return;
+                        var irtProviders = lib.RetentionTimeProvidersIrt.ToArray();
+                        if (!irtProviders.Any())
+                            irtProviders = lib.RetentionTimeProviders.ToArray();
+
+                        // Get iRT peptide docNodes
+                        var standardSeqs = buildState.IrtStandard.Peptides.Select(pep => pep.PeptideModSeq).ToArray();
+
+                        var mrts = irtProviders[0].PeptideRetentionTimes.ToArray();
+                        var standardMrts = mrts.Where(mrt => standardSeqs.Contains(mrt.PeptideSequence.Sequence))
+                            .ToArray();
+                        var otherMrts = mrts.Except(standardMrts).ToArray();
+                        if (standardMrts.Select(mrt => mrt.PeptideSequence).Distinct().Count() != standardSeqs.Length)
+                            return;
+                        var standardPeptides = standardMrts.Select(d =>
+                            new DbIrtPeptide(d.PeptideSequence, d.RetentionTime, true, TimeSource.peak));
+                        var otherIrtPeptides = otherMrts.Select(mrt =>
+                            new DbIrtPeptide(mrt.PeptideSequence, mrt.RetentionTime, false, TimeSource.scan));
+                        var irtDb = IrtDb.CreateIrtDb(buildState.LibrarySpec.FilePath);
+                        irtDb.AddPeptides(monitor, standardPeptides.Concat(otherIrtPeptides).ToArray());
+                        added = true;
+                    });
+                    if (status.IsCanceled)
+                        return false;
+                    if (status.IsError)
+                        throw status.ErrorException;
+                    return added;
+                }
+            }
             try
             {
                 Library lib;

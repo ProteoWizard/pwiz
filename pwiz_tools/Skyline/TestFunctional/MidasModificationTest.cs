@@ -19,6 +19,7 @@
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Controls.Graphs.Spectrum;
 using pwiz.Skyline.Model;
 using pwiz.SkylineTestUtil;
 

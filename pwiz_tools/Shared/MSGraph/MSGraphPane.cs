@@ -349,7 +349,7 @@ namespace pwiz.MSGraph
                     float yPixel = yAxis.Scale.Transform( pt.Y );
 
                     // labelled points must be at least 3 pixels off the X axis
-                    if( xAxisPixel - yPixel < 3 )
+                    if( Math.Abs(xAxisPixel - yPixel) < 3 )
                         continue;
 
                     PointAnnotation annotation = info.AnnotatePoint(pt);
@@ -374,7 +374,8 @@ namespace pwiz.MSGraph
                     var i = annotationsPrioritized[annotation];
                     PointPair pt = fullList[maxIndexList[i]];
                     float yPixel = yAxis.Scale.Transform(pt.Y);
-                    double labelY = yAxis.Scale.ReverseTransform(yPixel - 5);
+                    var shift = pt.Y < 0 ? 5 : -5;
+                    double labelY = yAxis.Scale.ReverseTransform(yPixel + shift);
 
                     if (!AllowCurveOverlap)
                     {
@@ -403,7 +404,7 @@ namespace pwiz.MSGraph
                     }
 
                     TextObj text = new TextObj( annotation.Label, pt.X, labelY,
-                                                CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom )
+                                                CoordType.AxisXYScale, AlignH.Center, pt.Y < 0 ? AlignV.Top : AlignV.Bottom )
                     {
                         ZOrder = ZOrder.A_InFront,
                         FontSpec = annotation.FontSpec,

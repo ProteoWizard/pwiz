@@ -1946,14 +1946,16 @@ namespace pwiz.Skyline.Model
 
     public struct PeptidePrecursorPair
     {
-        public PeptidePrecursorPair(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup) : this()
+        public PeptidePrecursorPair(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, double? ce = null)
         {
             NodePep = nodePep;
             NodeGroup = nodeGroup;
+            CE = ce;
         }
 
         public PeptideDocNode NodePep { get; private set; }
         public TransitionGroupDocNode NodeGroup { get; private set; }
+        public double? CE { get; private set; }
     }
 
     public class ExplicitRetentionTimeInfo : IAuditLogComparable

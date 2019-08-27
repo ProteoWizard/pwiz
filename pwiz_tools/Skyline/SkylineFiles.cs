@@ -52,6 +52,8 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Optimization;
+using pwiz.Skyline.Model.Prosit.Communication;
+using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -2019,6 +2021,15 @@ namespace pwiz.Skyline
             }
         }
 
+        public string PrositLibraryFileName
+        {
+            get
+            {
+                return Path.Combine(Path.GetDirectoryName(DocumentFilePath),
+                    "Prosit_" + PrositIntensityModel.SIGNATURE + BiblioSpecLiteSpec.EXT);
+            }
+        }
+
         public string AssayLibraryName
         {
             get { return Path.GetFileNameWithoutExtension(DocumentFilePath) + BiblioSpecLiteSpec.ASSAY_NAME; }
@@ -2141,6 +2152,80 @@ namespace pwiz.Skyline
             return true;
         }
 
+        public bool ImportMassListIntensities(ref SrmDocument doc, string libPath, string libName,
+            List<SpectrumMzInfo> librarySpectra,
+            out BiblioSpecLiteSpec docLibrarySpec, out BiblioSpecLiteLibrary docLibrary, out int indexOldLibrary)
+        {
+            docLibrarySpec = null;
+            docLibrary = null;
+            indexOldLibrary = -1;
+
+            librarySpectra = SpectrumMzInfo.RemoveDuplicateSpectra(librarySpectra);
+
+            indexOldLibrary = doc.Settings.PeptideSettings.Libraries.LibrarySpecs.IndexOf(spec => spec != null && spec.FilePath == libPath);
+            var libraryLinkedToDoc = indexOldLibrary != -1;
+            if (libraryLinkedToDoc)
+            {
+                var oldName = doc.Settings.PeptideSettings.Libraries.LibrarySpecs[indexOldLibrary].Name;
+                var libraryOld = doc.Settings.PeptideSettings.Libraries.GetLibrary(oldName);
+                var additionalSpectra = SpectrumMzInfo.GetInfoFromLibrary(libraryOld);
+                additionalSpectra = SpectrumMzInfo.RemoveDuplicateSpectra(additionalSpectra);
+                librarySpectra = SpectrumMzInfo.MergeWithOverwrite(librarySpectra, additionalSpectra);
+                foreach (var stream in libraryOld.ReadStreams)
+                    stream.CloseStream();
+            }
+
+            var libraryExists = File.Exists(libPath);
+            if (libraryExists && !libraryLinkedToDoc)
+            {
+                var replaceLibraryMessage = string.Format(Resources.SkylineWindow_ImportMassList_There_is_an_existing_library_with_the_same_name__0__as_the_document_library_to_be_created___Overwrite_this_library_or_skip_import_of_library_intensities_, AssayLibraryName);
+                // If the document does not have an assay library linked to it, then ask if user wants to delete the one that we have found
+                var replaceLibraryResult = MultiButtonMsgDlg.Show(this, replaceLibraryMessage,
+                    Resources.SkylineWindow_ImportMassList__Overwrite, Resources.SkylineWindow_ImportMassList__Skip, true);
+                if (replaceLibraryResult == DialogResult.Cancel)
+                    return false;
+                if (replaceLibraryResult == DialogResult.No)
+                    librarySpectra.Clear();
+            }
+            if (!librarySpectra.Any())
+                return true;
+
+            // Delete the existing library; either it's not tied to the document or we've already extracted the spectra
+            if (libraryExists)
+            {
+                FileEx.SafeDelete(libPath);
+                FileEx.SafeDelete(Path.ChangeExtension(libPath, BiblioSpecLiteSpec.EXT_REDUNDANT));
+            }
+
+            using (var blibDb = BlibDb.CreateBlibDb(libPath))
+            {
+                docLibrarySpec = new BiblioSpecLiteSpec(libName ?? Path.GetFileNameWithoutExtension(libPath), libPath);
+                using (var longWaitDlg = new LongWaitDlg(this) { Text = "Creating Spectral Library" })
+                {
+                    var docNew = doc;
+                    BiblioSpecLiteLibrary docLibraryNew = null;
+                    var docLibrarySpec2 = docLibrarySpec;
+                    var indexOldLibrary2 = indexOldLibrary;
+                    longWaitDlg.PerformWork(this, 1000, progressMonitor =>
+                    {
+                        docLibraryNew = blibDb.CreateLibraryFromSpectra(docLibrarySpec2, librarySpectra, AssayLibraryName ?? Path.GetFileNameWithoutExtension(libPath), progressMonitor);
+                        if (docLibraryNew == null)
+                            return;
+                        var newSettings = docNew.Settings.ChangePeptideLibraries(libs => libs.ChangeLibrary(docLibraryNew, docLibrarySpec2, indexOldLibrary2));
+                        var status = new ProgressStatus(Resources.SkylineWindow_ImportMassList_Finishing_up_import);
+                        progressMonitor.UpdateProgress(status);
+                        progressMonitor.UpdateProgress(status.ChangePercentComplete(100));
+                        docNew = docNew.ChangeSettings(newSettings);
+                    });
+                    doc = docNew;
+                    docLibrary = docLibraryNew;
+                    if (docLibrary == null)
+                        return false;
+                }
+            }
+            return true;
+        }
+
         private bool ImportMassListIntensities(ref SrmDocument doc, List<SpectrumMzInfo> librarySpectra, bool assayLibrary,
             out BiblioSpecLiteSpec docLibrarySpec, out BiblioSpecLiteLibrary docLibrary, out int indexOldLibrary)
         {
@@ -2197,8 +2282,8 @@ namespace pwiz.Skyline
             }
             using (var blibDb = BlibDb.CreateBlibDb(AssayLibraryFileName))
             {
-                docLibrarySpec = new BiblioSpecLiteSpec(AssayLibraryName, AssayLibraryFileName);
-                using (var longWaitDlg = new LongWaitDlg(this) { Text = Resources.SkylineWindow_ImportMassList_Creating_Spectral_Library })
+                docLibrarySpec = new BiblioSpecLiteSpec(AssayLibraryName ?? Path.GetFileNameWithoutExtension(AssayLibraryFileName), AssayLibraryFileName);
+                using (var longWaitDlg = new LongWaitDlg(this) { Text = "Creating Spectral Library" })
                 {
                     var docNew = doc;
                     BiblioSpecLiteLibrary docLibraryNew = null;
@@ -2206,7 +2291,7 @@ namespace pwiz.Skyline
                     var indexOldLibrary2 = indexOldLibrary;
                     longWaitDlg.PerformWork(this, 1000, progressMonitor =>
                     {
-                        docLibraryNew = blibDb.CreateLibraryFromSpectra(docLibrarySpec2, librarySpectra, AssayLibraryName, progressMonitor);
+                        docLibraryNew = blibDb.CreateLibraryFromSpectra(docLibrarySpec2, librarySpectra, AssayLibraryName ?? Path.GetFileNameWithoutExtension(AssayLibraryFileName), progressMonitor);
                         if (docLibraryNew == null)
                             return;
                         var newSettings = docNew.Settings.ChangePeptideLibraries(libs => libs.ChangeLibrary(docLibraryNew, docLibrarySpec2, indexOldLibrary2));

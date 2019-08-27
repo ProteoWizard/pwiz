@@ -35,6 +35,7 @@ using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.ChromLib;
 using pwiz.Skyline.Model.Lib.Midas;
+using pwiz.Skyline.Model.Prosit;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
@@ -412,17 +413,17 @@ namespace pwiz.Skyline.Model.Lib
             lock (loadLock)
             {
                 success = builder.BuildLibrary(monitor);
-                var biblioSpecLiteBuilder = builder as BiblioSpecLiteBuilder;
-                if (null != biblioSpecLiteBuilder)
+                var iRTCapableBuilder = builder as IiRTCapableLibraryBuilder;
+                if (null != iRTCapableBuilder)
                 {
-                    if (!string.IsNullOrEmpty(biblioSpecLiteBuilder.AmbiguousMatchesMessage))
+                    if (!string.IsNullOrEmpty(iRTCapableBuilder.AmbiguousMatchesMessage))
                     {
-                        buildState.ExtraMessage = biblioSpecLiteBuilder.AmbiguousMatchesMessage;
+                        buildState.ExtraMessage = iRTCapableBuilder.AmbiguousMatchesMessage;
                     }
-                    if (biblioSpecLiteBuilder.IrtStandard != null &&
-                        biblioSpecLiteBuilder.IrtStandard != IrtStandard.EMPTY)
+                    if (iRTCapableBuilder.IrtStandard != null &&
+                        iRTCapableBuilder.IrtStandard != IrtStandard.EMPTY)
                     {
-                        buildState.IrtStandard = biblioSpecLiteBuilder.IrtStandard;
+                        buildState.IrtStandard = iRTCapableBuilder.IrtStandard;
                     }
                 }
             }
@@ -763,7 +764,7 @@ namespace pwiz.Skyline.Model.Lib
         /// <param name="labelType">An <see cref="IsotopeLabelType"/> for which to get spectra</param>
         /// <param name="redundancy">Level of redundancy requested in returned values</param>
         /// <returns>An enumeration of <see cref="SpectrumInfo"/></returns>
-        public abstract IEnumerable<SpectrumInfo> GetSpectra(LibKey key,
+        public abstract IEnumerable<SpectrumInfoLibrary> GetSpectra(LibKey key,
             IsotopeLabelType labelType, LibraryRedundancy redundancy);
 
         /// <summary>
@@ -1083,7 +1084,7 @@ namespace pwiz.Skyline.Model.Lib
             return false;
         }
 
-        public override IEnumerable<SpectrumInfo> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
+        public override IEnumerable<SpectrumInfoLibrary> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
         {
             // This base class only handles best match spectra
             if (redundancy == LibraryRedundancy.best)
@@ -1091,7 +1092,7 @@ namespace pwiz.Skyline.Model.Lib
                 int i = FindEntry(key);
                 if (i != -1)
                 {
-                    yield return new SpectrumInfo(this, labelType, i)
+                    yield return new SpectrumInfoLibrary(this, labelType, i)
                     {
                         SpectrumHeaderInfo = CreateSpectrumHeaderInfo(_libraryEntries[i])
                     };
@@ -2183,21 +2184,36 @@ namespace pwiz.Skyline.Model.Lib
         }
     }
 
-
-    /// <summary>
-    /// Information required for spectrum display in a list.
-    /// </summary>
-    public class SpectrumInfo
+    public abstract class SpectrumInfo
     {
-        public SpectrumInfo(Library library, IsotopeLabelType labelType, object spectrumKey)
-            : this(library, labelType, null, null, null, true, spectrumKey)
+        public SpectrumInfo(IsotopeLabelType labelType, bool isBest)
+        {
+            LabelType = labelType;
+            IsBest = isBest;
+        }
+
+        public IsotopeLabelType LabelType { get; protected set; }
+        public abstract string Name { get; }
+        public bool IsBest { get; protected set; }
+        public abstract SpectrumPeaksInfo SpectrumPeaksInfo { get; }
+
+        public abstract LibraryChromGroup ChromatogramData { get; }
+    }
+
+    public class SpectrumInfoLibrary : SpectrumInfo
+    {
+        private Library _library;
+
+        public SpectrumInfoLibrary(Library library, IsotopeLabelType labelType, object spectrumKey):
+            this(library, labelType, null, null, null, true, spectrumKey)
         {
         }
 
-        public SpectrumInfo(Library library, IsotopeLabelType labelType,
-            string filePath, double? retentionTime, IonMobilityAndCCS ionMobilityInfo, bool isBest, object spectrumKey)
-        {
-            Library = library;
+        public SpectrumInfoLibrary(Library library, IsotopeLabelType labelType, string filePath,
+            double? retentionTime, IonMobilityAndCCS ionMobilityInfo, bool isBest, object spectrumKey) :
+                base(labelType, true)
+    {
+            _library = library;
             LabelType = labelType;
             SpectrumKey = spectrumKey;
             FilePath = filePath;
@@ -2206,34 +2222,66 @@ namespace pwiz.Skyline.Model.Lib
             IsBest = isBest;
         }
 
-        protected Library Library { get; private set; }
-        public IsotopeLabelType LabelType { get; private set; }
-        public string LibName { get { return Library.Name; } }
         public object SpectrumKey { get; private set; }
+
+        public override string Name
+        {
+            get { return _library.Name; }
+        }
+
+        public override SpectrumPeaksInfo SpectrumPeaksInfo
+        {
+            get { return _library.LoadSpectrum(SpectrumKey); }
+        }
+
+        public override LibraryChromGroup ChromatogramData
+        {
+            get { return _library.LoadChromatogramData(SpectrumKey); }
+        }
+
+        public SpectrumHeaderInfo SpectrumHeaderInfo { get; set; }
+
         public string FilePath { get; private set; }
 
         public string FileName
         {
             get
             {
-                try
-                {
+                try {
                     return Path.GetFileName(FilePath);
                 }
-                catch
-                {
+                catch {
                     return FilePath;
                 }
             }
         }
         public double? RetentionTime { get; set; }
         public IonMobilityAndCCS IonMobilityInfo { get; private set; }
-        public bool IsBest { get; private set; }
+    }
 
-        public SpectrumHeaderInfo SpectrumHeaderInfo { get; set; }
+    public class SpectrumInfoProsit : SpectrumInfo
+    {
+        private SpectrumPeaksInfo _peaksInfo;
 
-        public SpectrumPeaksInfo SpectrumPeaksInfo { get { return Library.LoadSpectrum(SpectrumKey); } }
-        public LibraryChromGroup LoadChromatogramData() { return Library.LoadChromatogramData(SpectrumKey); }
+        public SpectrumInfoProsit(PrositMSMSSpectra msmsSpectrum, TransitionGroupDocNode precursor) : base(precursor.LabelType, true)
+        {
+            _peaksInfo = msmsSpectrum.GetSpectrum(precursor).SpectrumPeaks;
+        }
+
+        public override string Name
+        {
+            get { return "Prosit"; }
+        }
+
+        public override SpectrumPeaksInfo SpectrumPeaksInfo
+        {
+            get { return _peaksInfo; }
+        }
+
+        public override LibraryChromGroup ChromatogramData
+        {
+            get { return null; }
+        }
     }
 
     public class LibraryChromGroup

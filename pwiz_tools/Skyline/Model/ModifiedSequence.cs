@@ -133,6 +133,11 @@ namespace pwiz.Skyline.Model
             _defaultMassType = defaultMassType;
         }
 
+        public ImmutableList<Modification> ExplicitMods
+        {
+            get { return _explicitMods; }
+        }
+
        public string MonoisotopicMasses
         {
             get { return Format(mods => FormatMassModification(mods, MassType.Monoisotopic, true)); }

@@ -63,6 +63,7 @@ using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Graphs.Spectrum;
 using pwiz.Skyline.Controls.Lists;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.ElementLocators;
@@ -71,6 +72,8 @@ using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
+using pwiz.Skyline.Model.Prosit.Communication;
+using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
@@ -87,7 +90,7 @@ namespace pwiz.Skyline
     /// Main window class for the Skyline application.  Skyline is an SDI application,
     /// but it is intentionally designed around a document window instance without
     /// assuming that it is the only such window in the application to allow it to
-    /// become either MDI or multiple-SDI per process.
+    /// become either MDI or multiple-SDI per process.get
     /// </summary>
     public partial class SkylineWindow
         : FormEx,
@@ -96,7 +99,8 @@ namespace pwiz.Skyline
             IProgressMonitor,
             ILibraryBuildNotificationContainer,
             IToolMacroProvider,
-            IModifyDocumentContainer
+            IModifyDocumentContainer,
+            IRetentionScoreSource
     {
         private SequenceTreeForm _sequenceTreeForm;
         private ImmediateWindow _immediateWindow;
@@ -183,6 +187,9 @@ namespace pwiz.Skyline
             _importPeptideSearchManager = new ImportPeptideSearchManager();
             _importPeptideSearchManager.ProgressUpdateEvent += UpdateProgress;
             _importPeptideSearchManager.Register(this);
+
+            RTScoreCalculatorList.DEFAULTS[2].ScoreProvider
+                .Attach(this);
 
             DocumentUIChangedEvent += ShowAutoTrainResults;
 
@@ -3715,6 +3722,15 @@ namespace pwiz.Skyline
             }
         }
 
+        public void ShowToolOptionsUI(ToolOptionsUI.TABS tab)
+        {
+            using (var dlg = new ToolOptionsUI())
+            {
+                dlg.NavigateToTab(tab);
+                dlg.ShowDialog(this);
+            }
+        }
+
         private void updatesToolsMenuItem_Click(object sender, EventArgs e)
         {
             ShowToolUpdatesDlg();
@@ -5466,6 +5482,32 @@ namespace pwiz.Skyline
             get { return GetModeUIHelper().MenuItemHasOriginalText(peptideSettingsMenuItem.Text); }
         }
         #endregion
+
+        private void prositLibMatchItem_Click(object sender, EventArgs e)
+        {
+            prositLibMatchItem.Checked = !prositLibMatchItem.Checked;
+            _graphSpectrumSettings.Prosit = prositLibMatchItem.Checked;
+        }
+
+        public bool ValidateSource()
+        {
+            return true;
+        }
+
+        public double? GetScore(Target target)
+        {
+            var node = Document.Peptides.FirstOrDefault(p => p.ModifiedTarget.Equals(target));
+            if (node == null)
+                return null;
+            return PrositRetentionTimeModel.Instance?.PredictSingle(PrositPredictionClient.Current, Document.Settings,
+                node)[node];
+        }
+
+        private void mirrorMenuItem_Click(object sender, EventArgs e)
+        {
+            mirrorMenuItem.Checked = !mirrorMenuItem.Checked;
+            _graphSpectrumSettings.Mirror = mirrorMenuItem.Checked;
+        }
     }
 }
 

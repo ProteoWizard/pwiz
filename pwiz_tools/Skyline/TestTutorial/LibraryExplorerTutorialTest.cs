@@ -28,6 +28,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Graphs.Spectrum;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 

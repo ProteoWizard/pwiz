@@ -411,6 +411,7 @@ namespace pwiz.Skyline.SettingsUI
 
             foreach (var measuredPeptide in Peptides)
             {
+                
                 times.Add(measuredPeptide.RetentionTime);
                 double? score = calc.ScoreSequence(measuredPeptide.Target);
                 scores.Add(score ?? calc.UnknownScore);

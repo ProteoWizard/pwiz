@@ -1492,7 +1492,7 @@ namespace pwiz.Skyline.Model.Lib
             return i;
         }
 
-        public override IEnumerable<SpectrumInfo> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
+        public override IEnumerable<SpectrumInfoLibrary> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
         {
             if (redundancy == LibraryRedundancy.best && SchemaVersion < 1)
             {
@@ -1512,14 +1512,14 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
-        private IEnumerable<SpectrumInfo> GetRedundantSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
+        private IEnumerable<SpectrumInfoLibrary> GetRedundantSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
         {
             // No redundant spectra before schema version 1
             if (SchemaVersion == 0)
-                return new SpectrumInfo[0];
+                return new SpectrumInfoLibrary[0];
             int i = FindEntry(key);
             if (i == -1)
-                return new SpectrumInfo[0];
+                return new SpectrumInfoLibrary[0];
 
             var hasRetentionTimesTable = RetentionTimesPsmCount() != 0;
             var info = _libraryEntries[i];
@@ -1575,7 +1575,7 @@ namespace pwiz.Skyline.Model.Lib
                         iDTorCCS = reader.GetOrdinal(RetentionTimes.ionMobilityValue);
                         iDriftTimeVsCCS = reader.GetOrdinal(RetentionTimes.ionMobilityType);
                     }
-                    var listSpectra = new List<SpectrumInfo>();
+                    var listSpectra = new List<SpectrumInfoLibrary>();
                     while (reader.Read())
                     {
                         string filePath = reader.GetString(iFilePath);
@@ -1627,7 +1627,7 @@ namespace pwiz.Skyline.Model.Lib
                         object spectrumKey = i;
                         if (!isBest || redundancy == LibraryRedundancy.all_redundant)
                             spectrumKey = new SpectrumLiteKey(i, redundantId, isBest);
-                        listSpectra.Add(new SpectrumInfo(this, labelType, filePath, retentionTime, ionMobilityInfo, isBest,
+                        listSpectra.Add(new SpectrumInfoLibrary(this, labelType, filePath, retentionTime, ionMobilityInfo, isBest,
                                                          spectrumKey)
                                             {
                                                 SpectrumHeaderInfo = CreateSpectrumHeaderInfo(_libraryEntries[i])

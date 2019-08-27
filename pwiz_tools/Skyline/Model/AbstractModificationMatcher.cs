@@ -42,6 +42,7 @@ namespace pwiz.Skyline.Model
         protected IsotopeLabelType DocDefHeavyLabelType { get; private set; }
         protected Dictionary<StaticMod, IsotopeLabelType> UserDefinedTypedMods { get; private set; }
         public Dictionary<AAModKey, AAModMatch> Matches { get; private set; }
+        public Dictionary<AAModInfo, AAModMatch> MatchInfos { get; private set; }
 
         public List<string> UnmatchedSequences { get; private set; }
 
@@ -74,6 +75,7 @@ namespace pwiz.Skyline.Model
             InitUserDefTypedModDict(new TypedModifications(DocDefHeavyLabelType, DefSetHeavy), true);
 
             Matches = new Dictionary<AAModKey, AAModMatch>();
+            MatchInfos = new Dictionary<AAModInfo, AAModMatch>();
             UnmatchedSequences = new List<string>();
             _foundHeavyLabels = new List<StaticMod>();
 
@@ -155,6 +157,7 @@ namespace pwiz.Skyline.Model
                 if (match != null)
                 {
                     AddMatch(info.ModKey, (AAModMatch)match);
+                    MatchInfos.Add(info, (AAModMatch)match);
                     var heavyMod = match.Value.HeavyMod;
                     if (!info.AppearsToBeSpecificMod && heavyMod != null && string.IsNullOrEmpty(heavyMod.AAs)
                         && !_foundHeavyLabels.Contains(heavyMod))

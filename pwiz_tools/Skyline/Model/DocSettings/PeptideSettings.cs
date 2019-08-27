@@ -2155,7 +2155,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <param name="key">The LibKey to match on</param>
         /// <param name="labelType">The IsotopeLabelType to match on</param>
         /// <param name="bestMatch">True if only best-match spectra are included</param>
-        public IEnumerable<SpectrumInfo> GetSpectra(LibKey key, IsotopeLabelType labelType, bool bestMatch)
+        public IEnumerable<SpectrumInfoLibrary> GetSpectra(LibKey key, IsotopeLabelType labelType, bool bestMatch)
         {
             Assume.IsTrue(IsLoaded);
 

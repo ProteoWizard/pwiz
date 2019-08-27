@@ -101,6 +101,7 @@ namespace pwiz.Skyline.SettingsUI
             this.toolStripSeparator15 = new System.Windows.Forms.ToolStripSeparator();
             this.zoomSpectrumContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator27 = new System.Windows.Forms.ToolStripSeparator();
+            this.prositCheckBox = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.splitPeptideList)).BeginInit();
             this.splitPeptideList.Panel1.SuspendLayout();
@@ -140,6 +141,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // PeptideListPanel
             // 
+            this.PeptideListPanel.Controls.Add(this.prositCheckBox);
             this.PeptideListPanel.Controls.Add(this.listPeptide);
             this.PeptideListPanel.Controls.Add(this.cbShowModMasses);
             resources.ApplyResources(this.PeptideListPanel, "PeptideListPanel");
@@ -681,6 +683,12 @@ namespace pwiz.Skyline.SettingsUI
             this.toolStripSeparator27.Name = "toolStripSeparator27";
             resources.ApplyResources(this.toolStripSeparator27, "toolStripSeparator27");
             // 
+            // prositCheckBox
+            // 
+            resources.ApplyResources(this.prositCheckBox, "prositCheckBox");
+            this.prositCheckBox.Name = "prositCheckBox";
+            this.prositCheckBox.UseVisualStyleBackColor = true;
+            // 
             // ViewLibraryDlg
             // 
             this.AcceptButton = this.btnCancel;
@@ -801,9 +809,6 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.ToolStripMenuItem showChromatogramsContextMenuItem;
         private System.Windows.Forms.Label MoleculeLabel;
         private System.Windows.Forms.ToolStripButton btnFragmentIons;
-
-
-
-
+        private System.Windows.Forms.CheckBox prositCheckBox;
     }
 }

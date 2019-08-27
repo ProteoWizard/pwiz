@@ -23,6 +23,7 @@ using System.Linq;
 using pwiz.Skyline.Util;
 using ZedGraph;
 using pwiz.MSGraph;
+using pwiz.Skyline.Controls.Graphs.Spectrum;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 
@@ -313,14 +314,15 @@ namespace pwiz.Skyline.Controls.Graphs
             return _displayState.GetGraphPane(GraphControl, paneKey);
         }
 
-        public CurveItem AddSpectrum(AbstractSpectrumGraphItem item)
+        public CurveItem AddSpectrum(AbstractSpectrumGraphItem item, bool refresh=true)
         {
             var pane = _displayState.GetOrCreateGraphPane(GraphControl, PaneKey.DEFAULT);
             pane.Title.Text = item.Title;
             var curveItem = GraphControl.AddGraphItem(pane, item);
             curveItem.Label.IsVisible = false;
             pane.Legend.IsVisible = false;
-            GraphControl.Refresh();
+            if (refresh)
+                GraphControl.Refresh();
             return curveItem;
         }
 

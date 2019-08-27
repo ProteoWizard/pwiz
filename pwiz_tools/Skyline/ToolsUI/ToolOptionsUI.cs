@@ -18,11 +18,15 @@
  */
 
 using System;
+using System.Drawing;
 using System.Globalization;
 using System.Linq;
+using System.Net.Sockets;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Model.Prosit;
+using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Model.Themes;
@@ -73,6 +77,50 @@ namespace pwiz.Skyline.ToolsUI
             }
             comboCompactFormatOption.Items.AddRange(CompactFormatOption.ALL_VALUES.ToArray());
             comboCompactFormatOption.SelectedItem = CompactFormatOption.FromSettings();
+
+            var iModels = PrositIntensityModel.Models.ToArray();
+            var rtModels = PrositRetentionTimeModel.Models.ToArray();
+            var servers = new[] { "prosit server ip here" };
+            intensityModelCombo.Items.AddRange(iModels);
+            iRTModelCombo.Items.AddRange(rtModels);
+            serverCombo.Items.AddRange(servers);
+
+            if (iModels.Contains(Settings.Default.PrositIntensityModel))
+                intensityModelCombo.SelectedItem = Settings.Default.PrositIntensityModel;
+            if (rtModels.Contains(Settings.Default.PrositRetentionTimeModel))
+                iRTModelCombo.SelectedItem = Settings.Default.PrositRetentionTimeModel;
+
+
+            serverStatusLabel.Text = string.Empty;
+            if (servers.Contains(Settings.Default.PrositServer))
+            {
+                serverCombo.SelectedItem = Settings.Default.PrositServer;
+            }
+        }
+
+        private void UpdateServerStatus(string server)
+        {
+            try
+            {
+                var split = server.Split(':');
+                // This throws if the server can't be reached, or
+                // if parsing was not successful
+                using (var client = new TcpClient())
+                {
+                    var result = client.ConnectAsync(split[0], int.Parse(split[1])).Wait(500);
+                    if (!result)
+                        throw new PrositException(null);
+                }
+            }
+            catch
+            {
+                serverStatusLabel.Text = PrositResources.ToolOptionsUI_UpdateServerStatus_Server_unavailable;
+                serverStatusLabel.ForeColor = Color.Red;
+                return;
+            }
+
+            serverStatusLabel.Text = PrositResources.ToolOptionsUI_ToolOptionsUI_Server_online;
+            serverStatusLabel.ForeColor = Color.Green;
         }
 
         private void btnEditServers_Click(object sender, EventArgs e)
@@ -112,7 +160,11 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     Settings.Default.CompactFormatOption = compactFormatOption.Name;
                 }
-                Settings.Default.CurrentColorScheme = comboColorScheme.SelectedItem as string;
+                Settings.Default.CurrentColorScheme = (string) comboColorScheme.SelectedItem;
+
+                Settings.Default.PrositIntensityModel = (string) intensityModelCombo.SelectedItem;
+                Settings.Default.PrositRetentionTimeModel = (string)iRTModelCombo.SelectedItem;
+                Settings.Default.PrositServer = (string) serverCombo.SelectedItem;
             }
             base.OnClosed(e);
         }
@@ -138,7 +190,7 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         // ReSharper disable InconsistentNaming
-        public enum TABS { Panorama, Chorus, Language, Miscellaneous, Display }
+        public enum TABS { Panorama, Chorus, Language, Miscellaneous, Display, Prosit }
         // ReSharper restore InconsistentNaming
 
         public class PanoramaTab : IFormView { }
@@ -146,11 +198,17 @@ namespace pwiz.Skyline.ToolsUI
         public class LanguageTab : IFormView { }
         public class MiscellaneousTab : IFormView { }
         public class DisplayTab : IFormView { }
+        public class PrositTab : IFormView { }
 
         private static readonly IFormView[] TAB_PAGES =
         {
-            new PanoramaTab(), new ChorusTab(), new LanguageTab(), new MiscellaneousTab(), new DisplayTab(),
+            new PanoramaTab(), new ChorusTab(), new LanguageTab(), new MiscellaneousTab(), new DisplayTab(), new PrositTab()
         };
+
+        public void NavigateToTab(TABS tab)
+        {
+            SelectedTab = tab;
+        }
 
         #region Functional testing support
 
@@ -214,6 +272,16 @@ namespace pwiz.Skyline.ToolsUI
             {
                 Settings.Default.Reset();
             }
+        }
+
+        private void serverCombo_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateServerStatus((string)serverCombo.SelectedItem);
+        }
+
+        private void prositDescrLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            WebHelpers.OpenLink(@"https://www.proteomicsdb.org/prosit/");
         }
     }
 }

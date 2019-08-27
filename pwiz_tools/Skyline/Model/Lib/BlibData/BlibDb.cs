@@ -204,8 +204,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
         private DbRefSpectra RefSpectrumFromPeaks(ISession session, SpectrumMzInfo spectrum, IDictionary<string, long> sourceFiles)
         {
-            if (string.IsNullOrEmpty(spectrum.SourceFile))
-                throw new InvalidDataException(@"Spectrum must have a source file");
+            //if (string.IsNullOrEmpty(spectrum.SourceFile))
+            //    throw new InvalidDataException(@"Spectrum must have a source file");
 
             var peaksInfo = spectrum.SpectrumPeaks;
             var smallMoleculeAttributes = spectrum.SmallMoleculeLibraryAttributes ?? SmallMoleculeLibraryAttributes.EMPTY;
@@ -668,7 +668,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         {
             bool foundBestSpectrum = false;
 
-            foreach(SpectrumInfo spectrum in spectra)
+            foreach(SpectrumInfoLibrary spectrum in spectra)
             {
                 if(spectrum.IsBest)
                 {
@@ -750,7 +750,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             public string FilePath { get; private set; }
         }
 
-        private static DbRefSpectra MakeRefSpectrum(ISession session, bool convertingToSmallMolecules, SpectrumInfo spectrum, Target peptideSeq, Target modifiedPeptideSeq, double precMz, Adduct precChg, SmallMoleculeLibraryAttributes smallMoleculeAttributes, IDictionary<string, long> dictFiles)
+        private static DbRefSpectra MakeRefSpectrum(ISession session, bool convertingToSmallMolecules, SpectrumInfoLibrary spectrum, Target peptideSeq, Target modifiedPeptideSeq, double precMz, Adduct precChg, SmallMoleculeLibraryAttributes smallMoleculeAttributes, IDictionary<string, long> dictFiles)
         {
             var refSpectra = new DbRefSpectra
                                 {
@@ -770,7 +770,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             return refSpectra;
         }
 
-        private static void MakeRefSpectrum(ISession session, bool convertingToSmallMolecules, SpectrumInfo spectrum, DbRefSpectra refSpectra, IDictionary<string, long> dictFiles)
+        private static void MakeRefSpectrum(ISession session, bool convertingToSmallMolecules, SpectrumInfoLibrary spectrum, DbRefSpectra refSpectra, IDictionary<string, long> dictFiles)
         {
             short copies = (short)spectrum.SpectrumHeaderInfo.GetRankValue(LibrarySpec.PEP_RANK_COPIES);
             var peaksInfo = spectrum.SpectrumPeaksInfo;
