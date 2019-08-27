@@ -85,9 +85,9 @@ namespace pwiz.SkylineTestTutorial
         {
             // Setting the UI mode, p 2  
             var startPage = WaitForOpenForm<StartPage>();
-            RunUI(() => startPage.ModeUIButtonClick(SrmDocument.DOCUMENT_TYPE.proteomic));
+            RunUI(() => startPage.SetUIMode(SrmDocument.DOCUMENT_TYPE.proteomic));
             PauseForScreenShot<StartPage>("Start Window proteomic", 2);
-            RunUI(() => startPage.ModeUIButtonClick(SrmDocument.DOCUMENT_TYPE.small_molecules));
+            RunUI(() => startPage.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules));
             PauseForScreenShot<StartPage>("Start Window small molecule", 3);
             RunUI(() => startPage.DoAction(skylineWindow => true));
             WaitForOpenForm<SkylineWindow>();

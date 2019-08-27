@@ -59,7 +59,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         public AddIrtStandardsToDocumentSettings FormSettings
         {
-            get { return new AddIrtStandardsToDocumentSettings(NumTransitions, GetModeUIHelper().ModeUI); }
+            get { return new AddIrtStandardsToDocumentSettings(NumTransitions, ModeUI); }
         }
 
         private void btnYes_Click(object sender, EventArgs e)

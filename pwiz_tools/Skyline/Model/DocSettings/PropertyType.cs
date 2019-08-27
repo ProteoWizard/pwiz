@@ -10,11 +10,13 @@ namespace pwiz.Skyline.Model.DocSettings
     {
         public const string LookupPrefix = "LOOKUP:";
         public static readonly ListPropertyType TEXT = new ListPropertyType(AnnotationDef.AnnotationType.text, null);
+        public static readonly ListPropertyType NUMBER = new ListPropertyType(AnnotationDef.AnnotationType.number, null);
+        public static readonly ListPropertyType TRUE_FALSE = new ListPropertyType(AnnotationDef.AnnotationType.true_false, null);
         private static readonly ImmutableList<ListPropertyType> ScalarPropertyTypes = ImmutableList.ValueOf(new[]
         {
             TEXT,
-            new ListPropertyType(AnnotationDef.AnnotationType.number, null),
-            new ListPropertyType(AnnotationDef.AnnotationType.true_false, null),
+            NUMBER,
+            TRUE_FALSE,
             new ListPropertyType(AnnotationDef.AnnotationType.value_list, null),
         });
         public ListPropertyType(AnnotationDef.AnnotationType annotationType, string lookup)

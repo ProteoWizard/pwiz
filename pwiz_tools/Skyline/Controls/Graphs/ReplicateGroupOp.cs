@@ -18,7 +18,7 @@
  */
 using System.ComponentModel;
 using System.Linq;
-using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -56,9 +56,9 @@ namespace pwiz.Skyline.Controls.Graphs
         /// and the current Settings.Default.ShowPeptideCV.  Note that if the ReplicateGroupOp is not grouping on
         /// an annotation, the AggregateOp will always be set to MEAN.
         /// </summary>
-        public static ReplicateGroupOp FromCurrentSettings(SrmSettings settings)
+        public static ReplicateGroupOp FromCurrentSettings(SrmDocument document)
         {
-            return FromCurrentSettings(settings, GraphValues.AggregateOp.FromCurrentSettings());
+            return FromCurrentSettings(document, GraphValues.AggregateOp.FromCurrentSettings());
         }
 
         /// <summary>
@@ -66,13 +66,13 @@ namespace pwiz.Skyline.Controls.Graphs
         /// and the specified AggregateOp.  Note that if the ReplicateGroupOp is not grouping on an annotation,
         /// the AggregateOp will be override with the value MEAN.
         /// </summary>
-        public static ReplicateGroupOp FromCurrentSettings(SrmSettings settings, GraphValues.AggregateOp aggregateOp)
+        public static ReplicateGroupOp FromCurrentSettings(SrmDocument document, GraphValues.AggregateOp aggregateOp)
         {
             ReplicateValue replicateValue = null;
             string annotationName = Settings.Default.GroupByReplicateAnnotation;
             if (null != annotationName)
             {
-                replicateValue = ReplicateValue.GetGroupableReplicateValues(settings)
+                replicateValue = ReplicateValue.GetGroupableReplicateValues(document)
                     .FirstOrDefault(value => value.ToPersistedString() == annotationName);
             }
             if (null == replicateValue)

@@ -52,10 +52,10 @@ namespace pwiz.Skyline.Alerts
             AddButton(DialogResult.Cancel);
             AddButton(DialogResult.OK, btnText);
 
-            if (GetModeUIHelper().ModeUI != SrmDocument.DOCUMENT_TYPE.proteomic)
+            if (ModeUI != SrmDocument.DOCUMENT_TYPE.proteomic)
             {
                // Force replacement of "peptide" etc with "molecule" etc in all controls on open
-                Helpers.PeptideToMoleculeTextMapper.TranslateForm(this, GetModeUIHelper().ModeUI);
+                Helpers.PeptideToMoleculeTextMapper.TranslateForm(this, ModeUI);
             }
         }
 
@@ -77,10 +77,10 @@ namespace pwiz.Skyline.Alerts
             AddButton(DialogResult.No, btnNoText);
             AddButton(DialogResult.Yes, btnYesText);
 
-            if (GetModeUIHelper().ModeUI != SrmDocument.DOCUMENT_TYPE.proteomic)
+            if (ModeUI != SrmDocument.DOCUMENT_TYPE.proteomic)
             {
                 // Force replacement of "peptide" etc with "molecule" etc in all controls on open
-                Helpers.PeptideToMoleculeTextMapper.TranslateForm(this, GetModeUIHelper().ModeUI);
+                Helpers.PeptideToMoleculeTextMapper.TranslateForm(this, ModeUI);
             }
         }
 

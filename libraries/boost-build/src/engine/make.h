@@ -11,6 +11,7 @@
 #ifndef MAKE_SW20111118_H
 #define MAKE_SW20111118_H
 
+#include "config.h"
 #include "lists.h"
 #include "object.h"
 #include "rules.h"

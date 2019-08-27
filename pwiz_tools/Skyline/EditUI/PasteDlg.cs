@@ -902,27 +902,19 @@ namespace pwiz.Skyline.EditUI
                 btnCustomMoleculeColumns.Visible = radioMolecule.Visible = radioPeptide.Visible = (value == PasteFormat.transition_list);
                 if (value == PasteFormat.transition_list)
                 {
-                    int shift = 0;
-                    if (GetModeUIHelper().ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic)
+                    if (ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic)
                     {
                         radioPeptide.Checked = true;
-                        shift = btnTransitionListHelp.Left - radioPeptide.Left;
                     }
-                    else if (GetModeUIHelper().ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules)
+                    else if (ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules)
                     {
                         radioPeptide.Checked = false;
-                        shift = btnCustomMoleculeColumns.Left - radioPeptide.Left;
                     }
                     else
                     {
                         radioPeptide.Checked = Settings.Default.TransitionListInsertPeptides;
                     }
-                    IsMolecule = btnCustomMoleculeColumns.Enabled = !radioPeptide.Checked;
-                    if (!radioPeptide.Visible) // Left align the columns and help buttons as needed
-                    {
-                        btnCustomMoleculeColumns.Left -= shift;
-                        btnTransitionListHelp.Left -= shift;
-                    }
+                    IsMolecule = !radioPeptide.Checked;
                     UpdateMoleculeType();
                 }
                 for (int i = tabControl1.Controls.Count - 1; i >= 0; i--)

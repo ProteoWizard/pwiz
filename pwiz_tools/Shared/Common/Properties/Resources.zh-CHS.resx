@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -195,40 +195,40 @@
     <value>本列不存在</value>
   </data>
   <data name="CustomizeViewForm_ValidateViewName_View_name_cannot_be_blank_" xml:space="preserve">
-    <value>视图名称不能为空。</value>
+    <value>报告名称不能为空。</value>
   </data>
   <data name="CustomizeViewForm_ValidateViewName_There_is_already_a_built_in_view_named___0___" xml:space="preserve">
-    <value>已经存在名为“{0}”的内置视图。</value>
+    <value>已有一个名为“{0}”的内置报告。</value>
   </data>
   <data name="CustomizeViewForm_ValidateViewName_Do_you_want_to_overwrite_the_existing_view_named___0__" xml:space="preserve">
-    <value>您是否想要覆盖名为“{0}”的现有视图</value>
+    <value>您是否要覆盖名为“{0}”的现有报告</value>
   </data>
   <data name="CustomizeViewForm_UpdatePropertySheet_Column_Properties" xml:space="preserve">
     <value>列属性</value>
   </data>
   <data name="CustomizeViewForm_UpdatePropertySheet_No_Selection" xml:space="preserve">
-    <value>无选择</value>
+    <value>没有选择</value>
   </data>
   <data name="CustomizeViewForm_UpdatePropertySheet_Multiple_Selection" xml:space="preserve">
     <value>多重选择</value>
   </data>
   <data name="NavBar_RefreshUi_Transforming_data___" xml:space="preserve">
-    <value>转化数据…</value>
+    <value>转换数据…</value>
   </data>
   <data name="NavBar_RefreshUi__Filtered_from__0__" xml:space="preserve">
     <value>（从{0}过滤）</value>
   </data>
   <data name="NavBar_RefreshUi__Transforming_data____" xml:space="preserve">
-    <value>（转化数据…）</value>
+    <value>（转换数据…）</value>
   </data>
   <data name="NavBar_NavBarButtonViewsOnDropDownOpening_Edit_View___" xml:space="preserve">
-    <value>编辑视图…</value>
+    <value>编辑报告…</value>
   </data>
   <data name="NavBar_NavBarButtonViewsOnDropDownOpening_Manage_Views___" xml:space="preserve">
-    <value>管理视图…</value>
+    <value>管理报告…</value>
   </data>
   <data name="NavBar_NavBarButtonViewsOnDropDownOpening_Customize_View" xml:space="preserve">
-    <value>自定义视图…</value>
+    <value>自定义报告…</value>
   </data>
   <data name="PropertyPath_Parse_Invalid_character____" xml:space="preserve">
     <value>无效字符'*'</value>
@@ -247,9 +247,6 @@
   </data>
   <data name="DisplayColumn_SetValue_Column_is_read_only" xml:space="preserve">
     <value>本列为只读模式</value>
-  </data>
-  <data name="AbstractViewContext_CreateCustomColumn_Exception_constructing_column_of_type__0___1_" xml:space="preserve">
-    <value>构建类型{0}:{1}列异常</value>
   </data>
   <data name="AbstractViewContext_OnDataError_An_unknown_error_occurred_updating_the_value_" xml:space="preserve">
     <value>更新数值时出现未知错误。</value>
@@ -273,16 +270,16 @@
     <value>写入行 {0:#,0}/{1:#,0}</value>
   </data>
   <data name="ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_the_view___0___" xml:space="preserve">
-    <value>您是否确定想要删除视图“{0}”？</value>
+    <value>您是否确定要删除报告“{0}”？</value>
   </data>
   <data name="ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_these__0__views_" xml:space="preserve">
-    <value>您是否确定想要删除这些{0}视图？</value>
+    <value>您是否确定要删除这 {0} 个报告？</value>
   </data>
   <data name="RecordNavBar_UpdateNow__Filtered_from__0__" xml:space="preserve">
     <value>（从{0}过滤）</value>
   </data>
   <data name="RecordNavBar_UpdateNow__0__of__1_" xml:space="preserve">
-    <value>{0} of {1}</value>
+    <value>{0}/{1}</value>
     <comment>Example : 1 of 10
 </comment>
   </data>
@@ -344,22 +341,22 @@
     <value>名称不能为空</value>
   </data>
   <data name="ChooseViewsControl_listView1_AfterLabelEdit_There_is_already_a_view_named___0___" xml:space="preserve">
-    <value>已经存在名为“{0}”的视图。</value>
+    <value>已有一个名为“{0}”的报告。</value>
   </data>
   <data name="ViewGroup_BUILT_IN_Built_In_Views" xml:space="preserve">
-    <value>内置视图</value>
+    <value>内置报告</value>
   </data>
   <data name="AbstractViewContext_CopyViewsToGroup_The_name___0___already_exists__Do_you_want_to_replace_it_" xml:space="preserve">
-    <value>名称“{0}”已经存在。您是否想要替换它？</value>
+    <value>名称“{0}”已存在。你想替换它吗？</value>
   </data>
   <data name="AbstractViewContext_CopyViewsToGroup_The_following_names_already_exist_" xml:space="preserve">
-    <value>下列名称已经存在：</value>
+    <value>以下名称已存在：</value>
   </data>
   <data name="AbstractViewContext_CopyViewsToGroup_Do_you_want_to_replace_them_" xml:space="preserve">
-    <value>您是否想要替换它们？</value>
+    <value>你想替换它们吗？</value>
   </data>
   <data name="ViewEditor_ValidateViewName_There_is_already_a_view_named___0___" xml:space="preserve">
-    <value>已经存在名为“{0}”的视图。</value>
+    <value>已有一个名为“{0}”的报告。</value>
   </data>
   <data name="DocumentationGenerator_GetHtmlForType_Map_of__0__to__1_" xml:space="preserve">
     <value>{0} 到 {1} 的图谱</value>
@@ -401,7 +398,7 @@
     <value>最小值 {0}</value>
   </data>
   <data name="AggregateOperation_Max_Max__0_" xml:space="preserve">
-    <value>大值 {0}</value>
+    <value>最大值 {0}</value>
   </data>
   <data name="AggregateOperation_StdDev_StdDev__0_" xml:space="preserve">
     <value>标准差 {0}</value>
@@ -517,5 +514,8 @@
   </data>
   <data name="PivotSpec_GetDescription_Values_" xml:space="preserve">
     <value>值：</value>
+  </data>
+  <data name="UnknownUiMode" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\UnknownUiMode.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

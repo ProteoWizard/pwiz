@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -213,6 +213,9 @@
   </data>
   <data name="ToolInstaller_GetToolInfo_Error__It_does_not_contain_the_required__0__in_the__1__directory_" xml:space="preserve">
     <value>错误：{1}目录中不包含所需的{0}。</value>
+  </data>
+  <data name="WizardMoleculeIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\WizardMoleculeIcon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="WizardPeptideIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\StartPage\WizardPeptideIcon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -835,9 +838,6 @@
   </data>
   <data name="Transition_Validate_Product_ion_charge__0__must_be_between__1__and__2__" xml:space="preserve">
     <value>子离子电荷{0}必须在{1}和{2}之间。</value>
-  </data>
-  <data name="PeptideChromInfoCalculator_AddChromInfo_Duplicate_transition___0___found_for_peak_areas" xml:space="preserve">
-    <value>针对峰面积发现的重复离子对“{0}”</value>
   </data>
   <data name="ShareListDlg_ImportFile_The_name__0__already_exists_Do_you_want_to_replace_it" xml:space="preserve">
     <value>名称“{0}”已经存在。您是否想要替换它？</value>
@@ -2160,6 +2160,9 @@
   <data name="MoleculeStandard" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\MoleculeStandard.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="MoleculeStandardLib" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\MoleculeStandardLib.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="OK" xml:space="preserve">
     <value>确定</value>
   </data>
@@ -3282,6 +3285,12 @@
   </data>
   <data name="MoleculeLib" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\moleculelib.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="MoleculeIrt" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\moleculeirt.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="MoleculeIrtLib" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\moleculeirtlib.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="ChorusSession_TOP_LEVEL_ITEMS_Public_Projects" xml:space="preserve">
     <value>公共项目</value>
@@ -4956,7 +4965,7 @@
     <comment>Rank for transition node</comment>
   </data>
   <data name="SkylineWindow_ModifyPeptide_Modify_Small_Molecule" xml:space="preserve">
-    <value>修改小分子</value>
+    <value>修改分子</value>
   </data>
   <data name="CopyPasteTest_DoTest_Could_not_read_the_pasted_transition_list___Transition_list_must_be_in_separated_columns_and_cannot_contain_blank_lines_" xml:space="preserve">
     <value>无法读取粘贴的离子对。 离子对必须在单独列中并且不能包含空行。</value>
@@ -5299,13 +5308,13 @@
     <value>加载背景蛋白质组{0}失败。</value>
   </data>
   <data name="Peptide_ThrowIfNotSmallMolecule_Direct_editing_of_this_value_is_only_supported_for_small_molecules_" xml:space="preserve">
-    <value>直接编辑该值只受小分子支持。</value>
+    <value>仅支持对非蛋白质组学分子直接编辑该值。</value>
   </data>
   <data name="SkylineWindow_ImportMassList_Finishing_up_import" xml:space="preserve">
-    <value>正在结束导入</value>
+    <value>完成导入</value>
   </data>
   <data name="PanoramaHelper_ValidateFolder_" xml:space="preserve">
-    <value>尝试验证访问服务器 {1} 的 Panorma 文件夹 {0} 时，出现了未知错误。
+    <value>尝试验证访问服务器 {1} 上的 Panorama 文件夹 {0} 时发生未知错误。
 {2}</value>
   </data>
   <data name="DoconvolutionMethod_NONE_None" xml:space="preserve">
@@ -5432,10 +5441,10 @@
     <value>原子富集百分比{0}必须介于{1}和{2}之间</value>
   </data>
   <data name="RtGraphValue_FWB_Time" xml:space="preserve">
-    <value>FWB 时间</value>
+    <value>FWB时间</value>
   </data>
   <data name="SkylineWindow_AddSmallMolecule_Add_small_molecule_precursor__0_" xml:space="preserve">
-    <value>添加小分子母离子{0}</value>
+    <value>添加分子母离子 {0}</value>
   </data>
   <data name="TransitionFullScan_ValidateRes_The_mz_value_at_which_the_resolving_power_is_calibrated_is_required_for__0__" xml:space="preserve">
     <value>{0}需要质荷比值，分辨力将在该值上被校准。</value>
@@ -5545,6 +5554,9 @@
   </data>
   <data name="ImportFastaHelper_CheckSequence_There_is_no_sequence_for_this_protein" xml:space="preserve">
     <value>无此蛋白质序列</value>
+  </data>
+  <data name="EditDriftTimePredictorDlg_OkDialog_A_drift_time_predictor_with_the_name__0__already_exists_" xml:space="preserve">
+    <value>具有名称{0}的漂移时间预测器已经存在。</value>
   </data>
   <data name="CommandLine_ApplyNamingPattern_Error__Duplicate_replicate_name___0___after_applying_regular_expression_" xml:space="preserve">
     <value>错误：应用正则表达式后重复测定名称“{0}”重复。</value>
@@ -6372,7 +6384,7 @@
     <value>重叠</value>
   </data>
   <data name="PasteDlg_GetMoleculePeptideGroup_Molecule_List__0_" xml:space="preserve">
-    <value>分子列表{0}</value>
+    <value>分子列表 {0}</value>
   </data>
   <data name="SkylineWindow_removeDuplicatePeptidesMenuItem_Click_Remove_duplicate_peptides" xml:space="preserve">
     <value>删除所有重复肽段</value>
@@ -7148,7 +7160,7 @@
     <value>修饰时间</value>
   </data>
   <data name="CommandLine_ImportTransitionList_Finishing_up_import" xml:space="preserve">
-    <value>正在结束导入</value>
+    <value>完成导入</value>
   </data>
   <data name="ExportFileTypeExtension_LOCALIZED_VALUES_Method" xml:space="preserve">
     <value>方法</value>
@@ -8208,7 +8220,7 @@
     <value>尝试创建蛋白质组文件{0}出错。</value>
   </data>
   <data name="StartPage_SmallMolecule_Description" xml:space="preserve">
-    <value>学习如何使用 Skyline 瞄准非蛋白质组学的小分子离子。您将导入在代谢组学实验中使用的小分子离子对列表，并从 Waters Xevo TQS 中导入 14 个运行。开始学习如何在小分子实验中应用 Skyline 界面的强大功能。</value>
+    <value>了解如何使用 Skyline 靶向非蛋白质组学离子。您将导入在代谢组学实验中使用的分子离子对列表，并将从 Waters Xevo TQS 导入 14 次运行。开始学习如何将 Skyline 界面的强大功能应用于非蛋白质组学实验。</value>
   </data>
   <data name="CommandLine_ImportToolsFromZip_Error__the_file_specified_with_the___tool_add_zip_command_is_not_a__zip_file__Please_specify_a_valid__zip_file_" xml:space="preserve">
     <value>错误：以“--工具-添加-zip”命令指定的文件不是 .zip 文件。请指定有效的 .zip 文件。</value>
@@ -8422,7 +8434,7 @@
     <value>单一</value>
   </data>
   <data name="SkylineWindow_AddSmallMolecule_Add_small_molecule__0_" xml:space="preserve">
-    <value>添加小分子{0}</value>
+    <value>添加分子 {0}</value>
   </data>
   <data name="ComparePeakPickingDlg_ComparePeakPickingDlg_Fraction_of_Manual_ID_s" xml:space="preserve">
     <value>手动 ID 的部分</value>
@@ -8835,13 +8847,13 @@
     <value>..\Resources\warning.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List" xml:space="preserve">
-    <value>插入小分子离子对列表</value>
+    <value>插入分子离子对列表</value>
   </data>
   <data name="InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0___column_1____2_" xml:space="preserve">
-    <value>第 {0} 行第 {1} 列上的错误：{2}</value>
+    <value>{0}行{1}上的错误：{2}</value>
   </data>
   <data name="SmallMoleculeTransitionListReader_SmallMoleculeTransitionListReader_" xml:space="preserve">
-    <value>读取小分子列标题时发生错误，未识别：
+    <value>读取分子列标题时出错，无法识别：
 {0}
 支持的值包含：
 {1}</value>
@@ -9031,19 +9043,19 @@
   <data name="PasteDlg_btnTransitionListHelp_Click_" xml:space="preserve">
     <value>使用此窗口最简易的方法是从 Excel（或如果数据是 CSV 格式，则使用任何文本编辑器）复制并将其粘贴到网格。
     
-请注意，您可以在 Skyline 中通过向左或右拖动列标题调整列顺序。 
+请注意，您可以在 Skyline 中通过向左或右拖动列标题调整列顺序。
 
 大多数肽离子对列表可以用“文件|导入|离子对列表...”菜单项目导入或甚至直接粘贴到“目标”窗口。</value>
   </data>
-<data name="PasteDlg_btnTransitionListHelp_Click_SmallMol_" xml:space="preserve">
+  <data name="PasteDlg_btnTransitionListHelp_Click_SmallMol_" xml:space="preserve">
     <value>使用此窗口最简易的方法是从 Excel（或如果数据是 CSV 格式，则使用任何文本编辑器）复制并将其粘贴到网格。
     
-请注意，您可以在 Skyline 中通过向左或右拖动列标题调整列顺序。 对于小分子，您还可以选择以“列...”按钮启用哪些列。
+请注意，您可以在 Skyline 中通过向左或右拖动列标题调整列顺序。 对于分子，您还可以使用“列...”按钮选择要启用的列。
 
-大多数肽离子对列表可以用“文件|导入|离子对列表...”菜单项目导入或甚至直接粘贴到“目标”窗口。如果小分子离子对列表使用以下名称作为列标题，您也可以对其进行此操作：</value>
+大多数肽离子对列表可以用“文件|导入|离子对列表...”菜单项目导入或甚至直接粘贴到“目标”窗口。如果它们使用这些名称作为列标题，您也可以使用分子离子对列表执行此操作：</value>
   </data>
   <data name="PasteDlg_btnTransitionListHelp_Click_2_" xml:space="preserve">
-    <value>在小分子离子公式上注释：
+    <value>关于分子离子公式的注释：
 
 如果您的离子对列表格式将公式和加合物汇总在单一列（例如“C8H10N4O2[M+Na]”）中，那么使用“离子公式”列，而丢弃“加合物”列。 如果您的离子对列表将中和公式和加合物放置在不同的列中，那么对中和公式使用“离子公式”，而对加合物使用“加合物”列。</value>
   </data>
@@ -9076,9 +9088,6 @@
   </data>
   <data name="ViewLibraryDlg_MatchModifications_Add_modifications" xml:space="preserve">
     <value>添加修饰</value>
-  </data>
-  <data name="PeptideChromInfoCalculator_AddChromInfo_Conflict_with_transition__0__in__1__for_peak_area_calculation__Did_you_mean_to_use_a_different_precursor_charge_state_or_label_" xml:space="preserve">
-    <value>与峰面积计算 {1} 中的离子对 {0} 相冲突。您是否是指使用不同的母离子电荷状态或标记？</value>
   </data>
   <data name="IsolationSchemeList_GetDefaults_Results_only" xml:space="preserve">
     <value>仅有结果</value>
@@ -9626,40 +9635,40 @@
     <value>化学式(&amp;C)：</value>
   </data>
   <data name="TransitionFilter_SmallMoleculePrecursorAdducts_Small_molecule_precursor_adducts" xml:space="preserve">
-    <value>小分子母离子加合物</value>
+    <value>分子母离子加合物</value>
   </data>
   <data name="CustomMolecule_Validate_Custom_molecules_must_specify_a_formula_or_valid_monoisotopic_and_average_masses_" xml:space="preserve">
-    <value>自定义分子必须指定公式或有效的单一同位素质量和平均质量。</value>
+    <value>定制分子必须指定一个公式或有效的单一同位素和平均质量。</value>
   </data>
   <data name="CustomMolecule_DisplayName_Molecule" xml:space="preserve">
     <value>分子</value>
   </data>
   <data name="SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_InChiKey_" xml:space="preserve">
-    <value>{0} 不是有效的 InChiKey。</value>
+    <value>{0}不是有效的InChiKey。</value>
   </data>
   <data name="SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_HMDB_identifier_" xml:space="preserve">
-    <value>{0} 不是有效的 HMDB 标识符。</value>
+    <value>{0}不是有效的HMDB标识符。</value>
   </data>
   <data name="SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_InChI_identifier_" xml:space="preserve">
-    <value>{0} 不是有效的 InChI 标识符。</value>
+    <value>{0}不是有效的InChI标识符。</value>
   </data>
   <data name="SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_CAS_registry_number_" xml:space="preserve">
-    <value>{0} 不是有效的 CAS 注册号。</value>
+    <value>{0}不是有效的CAS注册号。</value>
   </data>
   <data name="SkylineWindow_AddSmallMolecule_Add_Small_Molecule_and_Precursor" xml:space="preserve">
-    <value>添加小分子和母离子</value>
+    <value>添加分子和母离子</value>
   </data>
   <data name="RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules" xml:space="preserve">
-    <value>转换为小分子</value>
+    <value>转换为分子</value>
   </data>
   <data name="SmallMoleculeLibraryAttributes_Validate_A_small_molecule_is_defined_by_a_chemical_formula_and_at_least_one_of_Name__InChiKey__or_other_keys__HMDB_etc_" xml:space="preserve">
-    <value>小分子由化学式和名称、InChiKey 和其他键（HMDB 等）中的至少一个定义</value>
+    <value>分子由化学式和“名称”、“InChiKey”或其他键（HMDB 等）中的至少一个定义</value>
   </data>
   <data name="ValidatingIonMobilityPeptide_ValidateAdduct_A_valid_adduct_description__e_g____M_H____must_be_provided_" xml:space="preserve">
-    <value>必须提供有效的加合物描述（例如 "[M+H]"）。</value>
+    <value>必须提供有效的加合物描述（例如“[M + H]”）。</value>
   </data>
   <data name="TransitionSettingsUI_OkDialog_Small_molecule_ion_types_must_contain_a_comma_separated_list_of_ion_types__Valid_types_are__f___for_fragment__and_or__p___for_precursor_" xml:space="preserve">
-    <value>小分子离子类型必须包含离子类型的逗号分隔列表。有效的类型是“f”（代表子离子）和/或“p”（代表母离子）</value>
+    <value>分子离子类型必须包含一个以逗号分隔的离子类型列表。有效的类型是“f”（代表子离子）和/或“p”（代表母离子）</value>
   </data>
   <data name="ViewLibraryDlg_UpdateStatusArea_Molecules__0__through__1__of__2__total_" xml:space="preserve">
     <value>通过 {1}（总计为 {2}）的 {0} 个分子。</value>
@@ -9910,51 +9919,17 @@
   <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_Formula" xml:space="preserve">
     <value>公式</value>
   </data>
+  <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_Monoisotopic_mass" xml:space="preserve">
+    <value>单一同位素质量</value>
+  </data>
+  <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_Average_mass" xml:space="preserve">
+    <value>平均质量</value>
+  </data>
   <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_InChIKey" xml:space="preserve">
     <value>InChIKey</value>
   </data>
   <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_OtherIDs" xml:space="preserve">
     <value>其他 ID</value>
-  </data>
-  <data name="PeptideToMoleculeText_Peptide" xml:space="preserve">
-    <value>肽段</value>
-    <comment>Used in PeptideToMoleculeText.Translate to update strings like "choose a peptide" to read "choose a molecule" when non-peptide documents are in use</comment>
-  </data>
-  <data name="PeptideToMoleculeText_Molecule" xml:space="preserve">
-    <value>分子</value>
-    <comment>Used in PeptideToMoleculeText.Translate to update strings like "choose a peptide" to read "choose a molecule" when non-peptide documents are in use</comment>
-  </data>
-  <data name="PeptideToMoleculeText_Peptides" xml:space="preserve">
-    <value>肽段</value>
-    <comment>Used in PeptideToMoleculeText.Translate to update strings like "2 peptides" to read "2 molecules" when non-peptide documents are in use</comment>
-  </data>
-  <data name="PeptideToMoleculeText_Molecules" xml:space="preserve">
-    <value>分子</value>
-    <comment>Used in PeptideToMoleculeText.Translate to update strings like "2 peptides" to read "2 molecules" when non-peptide documents are in use</comment>
-  </data>
-  <data name="PeptideToMoleculeText_Protein" xml:space="preserve">
-    <value>蛋白质</value>
-    <comment>Used in PeptideToMoleculeText.Translate to update strings like "choose a protein" to read "choose a molecule list" when non-peptide documents are in use</comment>
-  </data>
-  <data name="PeptideToMoleculeText_Molecule_List" xml:space="preserve">
-    <value>分子列表</value>
-    <comment>Used in PeptideToMoleculeText.Translate to update strings like "choose a protein" to read "choose a molecule list" when non-peptide documents are in use</comment>
-  </data>
-  <data name="PeptideToMoleculeText_Proteins" xml:space="preserve">
-    <value>蛋白质</value>
-    <comment>Used in PeptideToMoleculeText.Translate to update strings like "2 proteins" to read "2 molecule lists" when non-peptide documents are in use</comment>
-  </data>
-  <data name="PeptideToMoleculeText_Molecule_Lists" xml:space="preserve">
-    <value>分子列表</value>
-    <comment>&gt;Used in PeptideToMoleculeText.Translate to update strings like  "2 proteins" to read "2 molecule lists" when non-peptide documents are in use</comment>
-  </data>
-  <data name="PeptideToMoleculeText_Modified_Sequence" xml:space="preserve">
-    <value>修饰序列</value>
-    <comment>&gt;Used in PeptideToMoleculeText.Translate to update strings like "select a modifed sequence" to read "select a molecule" when non-peptide documents are in use</comment>
-  </data>
-  <data name="PeptideToMoleculeText_Peptide_List" xml:space="preserve">
-    <value>肽段列表</value>
-    <comment>&gt;Used in PeptideToMoleculeText.Translate to update strings like "select a peptide list" to read "select a molecule list" when non-peptide documents are in use</comment>
   </data>
   <data name="ToolOptionsUI_btnResetSettings_Click_Are_you_sure_you_want_to_clear_all_saved_settings__This_will_immediately_return__0__to_its_original_configuration_and_cannot_be_undone_" xml:space="preserve">
     <value>您确定要清除所有已保存的设置吗？这将立即把 {0} 退回到其原始配置，此操作不能撤销。</value>
@@ -9968,8 +9943,8 @@
   <data name="PeptideGroupTreeNode_ChildUndoHeading__0__molecules" xml:space="preserve">
     <value>{0} 分子</value>
   </data>
-  <data name="PeptideGroupTreeNode_Heading_Molecule_Group" xml:space="preserve">
-    <value>分子群组</value>
+  <data name="PeptideGroupTreeNode_Heading_Molecule_List" xml:space="preserve">
+    <value>分子列表</value>
   </data>
   <data name="PeptideTreeNode_Heading_Title_Molecule" xml:space="preserve">
     <value>分子</value>
@@ -10101,6 +10076,146 @@
   <data name="AlignmentForm_UpdateGraph_Time_from_Regression" xml:space="preserve">
     <value>回归的时间</value>
   </data>
+  <data name="PeptideToMoleculeText_Peptide" xml:space="preserve">
+    <value>肽段</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "choose a peptide" to read "choose a molecule" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Molecule" xml:space="preserve">
+    <value>分子</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "choose a peptide" to read "choose a molecule" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Peptides" xml:space="preserve">
+    <value>肽段</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "2 peptides" to read "2 molecules" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Molecules" xml:space="preserve">
+    <value>分子</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "2 peptides" to read "2 molecules" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Protein" xml:space="preserve">
+    <value>蛋白质</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "choose a protein" to read "choose a molecule list" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Molecule_List" xml:space="preserve">
+    <value>分子列表</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "choose a protein" to read "choose a molecule list" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Proteins" xml:space="preserve">
+    <value>蛋白质</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "2 proteins" to read "2 molecule lists" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Molecule_Lists" xml:space="preserve">
+    <value>分子列表</value>
+    <comment>&gt;Used in PeptideToMoleculeText.Translate to update strings like  "2 proteins" to read "2 molecule lists" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Modified_Sequence" xml:space="preserve">
+    <value>修改序列</value>
+    <comment>&gt;Used in PeptideToMoleculeText.Translate to update strings like "select a modifed sequence" to read "select a molecule" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Modified_Peptide_Sequence" xml:space="preserve">
+    <value>已修改的肽序列</value>
+    <comment>&gt;Used in PeptideToMoleculeText.Translate to update strings like "select a modifed peptide sequence" to read "select a molecule" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Peptide_Sequence" xml:space="preserve">
+    <value>肽序列</value>
+    <comment>&gt;Used in PeptideToMoleculeText.Translate to update strings like "select a peptide sequence" to read "select a molecule" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Peptide_List" xml:space="preserve">
+    <value>肽段列表</value>
+    <comment>&gt;Used in PeptideToMoleculeText.Translate to update strings like "select a peptide list" to read "select a molecule list" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Ion_charges" xml:space="preserve">
+    <value>离子电荷</value>
+    <comment>&gt;Used in PeptideToMoleculeText.Translate to update strings like "Ion charges" to read "Ion adducts" when non-peptide documents are in use</comment>
+  </data>
+  <data name="PeptideToMoleculeText_Ion_adducts" xml:space="preserve">
+    <value>离子加合物</value>
+    <comment>Used in PeptideToMoleculeText.Translate to update strings like "Ion charges" to read "Ion adducts" when non-peptide documents are in use</comment>
+  </data>
+  <data name="ListDesigner_OkDialog_There_is_already_a_list_named___0___" xml:space="preserve">
+    <value>已有一个名为“{0}”的列表。</value>
+  </data>
+  <data name="ListDesigner_OkDialog_Duplicate_property_name" xml:space="preserve">
+    <value>重复测定的属性名称</value>
+  </data>
+  <data name="ListDesigner_OkDialog_No_such_property" xml:space="preserve">
+    <value>没有此属性</value>
+  </data>
+  <data name="ListDesigner_OkDialog_There_was_an_error_trying_to_apply_this_list_definition_to_the_original_data_" xml:space="preserve">
+    <value>尝试将此列表定义应用于原始数据时出错：</value>
+  </data>
+  <data name="ListGridForm_BindingListSourceOnListChanged_List__" xml:space="preserve">
+    <value>列表：</value>
+  </data>
+  <data name="ListColumnPropertyDescriptor_SetValue_List_has_been_deleted" xml:space="preserve">
+    <value>列表已被删除</value>
+  </data>
+  <data name="ListColumnPropertyDescriptor_SetValue_List_item_has_been_deleted_" xml:space="preserve">
+    <value>列表项已被删除。</value>
+  </data>
+  <data name="ListColumnPropertyDescriptor_ChangeListData_No_such_list__0_" xml:space="preserve">
+    <value>没有此列表 {0}</value>
+  </data>
+  <data name="ListPropertyType_Label_Lookup__" xml:space="preserve">
+    <value>查询：</value>
+  </data>
+  <data name="ListPropertyType_GetAnnotationTypeName_Text" xml:space="preserve">
+    <value>文本</value>
+  </data>
+  <data name="ListPropertyType_GetAnnotationTypeName_Number" xml:space="preserve">
+    <value>编号</value>
+  </data>
+  <data name="ListPropertyType_GetAnnotationTypeName_True_False" xml:space="preserve">
+    <value>正确/错误</value>
+  </data>
+  <data name="ListPropertyType_GetAnnotationTypeName_Value_List" xml:space="preserve">
+    <value>值列表</value>
+  </data>
+  <data name="ListDefList_Label_Lists" xml:space="preserve">
+    <value>列表</value>
+  </data>
+  <data name="ListDefList_Title_Define_Lists" xml:space="preserve">
+    <value>定义列表</value>
+  </data>
+  <data name="ListExceptionDetail_ColumnNotFound_Column___0___does_not_exist_" xml:space="preserve">
+    <value>列“{0}”不存在。</value>
+  </data>
+  <data name="ListExceptionDetail_DuplicateValue_Duplicate_value___1___found_in_column___0___" xml:space="preserve">
+    <value>在“{0}”列中找到重复测定的值“{1}”。</value>
+  </data>
+  <data name="ListExceptionDetail_NullValue_Column___0___cannot_be_blank_" xml:space="preserve">
+    <value>列“{0}”不能为空。</value>
+  </data>
+  <data name="ListExceptionDetail_InvalidValue_Invalid_value___1___for_column___0___" xml:space="preserve">
+    <value>列“{0}”的值“{1}”无效。</value>
+  </data>
+  <data name="ListViewContext_CommitAddNew_Add_new_item_to_list___0__" xml:space="preserve">
+    <value>将新项目添加到列表“{0}”中</value>
+  </data>
+  <data name="ListViewContext_ValidateNewRow_The_new_row_could_not_be_added_because_of_the_following_error_" xml:space="preserve">
+    <value>由于以下错误，无法添加新行：</value>
+  </data>
+  <data name="ListViewContext_ValidateNewRow_Press_OK_to_continue_editing_your_row__or_Cancel_to_throw_away_the_new_row_" xml:space="preserve">
+    <value>按“确定”继续编辑行，或按“取消”放弃新行。</value>
+  </data>
+  <data name="ListViewContext_Delete_Are_you_sure_you_want_to_delete_the__0__selected_items_from_the_list___1___" xml:space="preserve">
+    <value>您是否确定想要从列表“{1}”中删除 {0} 个所选项？</value>
+  </data>
+  <data name="ListViewContext_Delete_Delete_from_list___0__" xml:space="preserve">
+    <value>从列表“{0}”中删除</value>
+  </data>
+  <data name="DocumentSettingsDlg_OkDialog_The_list___0___has__1__items_in_it__If_you_remove_that_list_from_your_document__those_items_will_be_deleted__Are_you_sure_you_want_to_delete_those_items_from_that_list_" xml:space="preserve">
+    <value>列表“{0}”中包含 {1} 个项目。如果从文档中删除该列表，这些项目也将被删除。您是否确定想要从该列表中删除这些项？</value>
+  </data>
+  <data name="DocumentSettingsDlg_OkDialog_The_following_lists_have_items_in_them_which_will_be_deleted_when_you_remove_the_lists_from_your_document_" xml:space="preserve">
+    <value>当您从文档中删除以下列表时，这些列表中包含的项目也将被删除：</value>
+  </data>
+  <data name="DocumentSettingsDlg_OkDialog_List___0___with__1__items" xml:space="preserve">
+    <value>包含 {1} 项的列表“{0}”</value>
+  </data>
+  <data name="DocumentSettingsDlg_OkDialog_Are_you_sure_you_want_to_delete_those_items_from_those_lists_" xml:space="preserve">
+    <value>您是否确定想要从这些列表中删除这些项？</value>
+  </data>
   <data name="RefineDlg_cbAdd_CheckedChanged_Precursors_of_the_chosen_isotope_label_type_will_be_added_if_they_are_missing" xml:space="preserve">
     <value>将添加选中同位素标记类型的母离子（如果缺失）</value>
   </data>
@@ -10135,16 +10250,25 @@
     <value>高级主题</value>
   </data>
   <data name="StartPage_SmallMoleculeMethodDevCEOpt_Description" xml:space="preserve">
-    <value>学习如何创建以来自文献引文的稳定同位素标记小分子为目标的 Skyline 文档，仅指定为母离子质荷比、子离子质荷比和碰撞能量值。通过使用来自 Sciex 三重四极杆的初始 CE 值，从 Waters Xevo TQ-S 导入多重复测定数据集，对小分子执行保留时间调度和碰撞能量优化。了解最初为目标蛋白质组学使用而创建的许多现有 Skyline 特征，现在是怎样应用于小分子数据的。</value>
+    <value>了解如何创建一个 Skyline 文档，使其靶向源自文献引文的稳定同位素标记分子，仅指定母离子质荷比、子离子质荷比和碰撞能量值。通过使用来自 Sciex 三重四极杆的初始 CE 值，从 Waters Xevo TQ-S 导入多重复测定数据集，从而对分子执行保留时间预定和碰撞能量优化。了解有多少最初为目标蛋白质组学使用而创建的现有 Skyline 特征现在可用于非蛋白质组学分子数据。</value>
   </data>
   <data name="StartPage_SmallMoleculeQuantification_Description" xml:space="preserve">
-    <value>学习如何创建一个以小分子为目标的 Skyline 文档，它们系被指定为母离子化学式和加合物以及子离子质荷比值。导入使用三重四极杆中 LC-MS/MS 收集的多重复测定数据集，并了解最初被创建用于靶向蛋白质组学的许多现有 Skyline 功能现在是怎样应用于小分子数据的。</value>
+    <value>了解如何创建一个 Skyline 文档，使其靶向指定了母离子化学式和加合物、以及子离子质荷比值的分子。导入在三重四极杆上使用 LC-MS/MS 收集到的多重复测定数据集，并查看有多少最初为目标蛋白质组学使用而创建的现有 Skyline 特征现在可用于非蛋白质组学分子数据。</value>
   </data>
   <data name="StartPage_HiResMetabolomics_Description" xml:space="preserve">
-    <value>学习如何创建一个以小分子为目标的 Skyline 文档，它们系被指定为母离子化学式和加合物。导入针对一组血浆样品在 Q Exactive Orbitrap 质谱仪上收集的多重复测定数据集，并了解最初被创建用于靶向蛋白质组学的许多现有 Skyline 功能是怎样应用于小分子数据的。</value>
+    <value>了解如何创建一个 Skyline 文档，使其靶向指定母离子化学式和加合物的分子。导入在 Q Exactive Orbitrap 质谱仪上收集到的多重复测定数据集以获取一组血浆样本，并查看有多少最初为目标蛋白质组学使用而创建的现有 Skyline 特征可用于非蛋白质组学分子数据。</value>
   </data>
   <data name="LinearInLogSpace_Label_Linear_in_Log_Space" xml:space="preserve">
     <value>对数空间中的线性</value>
+  </data>
+  <data name="MoleculeUI" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\MoleculeUI.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ProteinUI" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ProteinUI.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_DDA_DDA" xml:space="preserve">
+    <value>DDA</value>
   </data>
   <data name="Edit_Undo_Multiple" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Edit_Undo_Multiple.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -10212,10 +10336,254 @@
     <value>上传文档</value>
   </data>
   <data name="CommandArgs_PanoramaArgsComplete_" xml:space="preserve">
-    <value>请为向 Panorama 上传文档时需要的以下参数指定一个值：
+    <value>请为向 Panorma 上传文档时需要的以下参数指定一个值：
 {0}</value>
   </data>
-  <data name="PeptideToMoleculeText_Peptide_Sequence" xml:space="preserve">
-    <value>肽段序列</value>
+  <data name="FullScanAcquisitionMethod_FromName__0__is_not_a_valid_Full_Scan_Acquisition_Method" xml:space="preserve">
+    <value>{0} 不是有效的全扫描采集方法</value>
+  </data>
+  <data name="SkylineVersion_V4_2_Skyline_4_2" xml:space="preserve">
+    <value>Skyline 4.2</value>
+  </data>
+  <data name="BiblioSpecLiteBuilder_Embedded" xml:space="preserve">
+    <value>已嵌入</value>
+  </data>
+  <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__" xml:space="preserve">
+    <value>无法在与 MaxQuant 输入文件“{1}”相同的目录中或其父目录或祖父目录中找到与“{0}”匹配的外部谱图文件。
+
+如果您没有原始文件，则可以使用输入文件中的嵌入谱图来构建库。然而，MaxQuant 已嵌入谱图中的子离子是已去卷积电荷状态，并且将仅包含单电荷子离子，可能不代表由质谱仪测得的强度。
+
+</value>
+  </data>
+  <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptionsSupportsExtensions__0__" xml:space="preserve">
+    <value>单击“已嵌入”使用已嵌入的谱图。
+单击“重试”尝试使用位于输入文件旁边的原始谱图文件（具有支持的文件扩展名：{0}）再次构建。</value>
+  </data>
+  <data name="CommandLine_ShowLibraryMissingExternalSpectraError_DescriptionWithSupportedExtensions__0__" xml:space="preserve">
+    <value>使用参数“--导入-搜索-首选-已嵌入-谱图”来强制库构建使用嵌入的谱图，或将原始谱图文件放在输入文件（带有支持的文件扩展名：{0}）旁并重新运行。</value>
+  </data>
+  <data name="RInstaller_InstallPackages_Error__Failed_to_connect_to_the_website__0_" xml:space="preserve">
+    <value>错误：无法连接到网站{0}</value>
+  </data>
+  <data name="RemovePeaksAction_RemovePeaks_No_peaks_are_selected" xml:space="preserve">
+    <value>未选择峰</value>
+  </data>
+  <data name="RemovePeaksAction_RemovePeaks_Remove_peaks" xml:space="preserve">
+    <value>删除峰</value>
+  </data>
+  <data name="RemovePeaksAction_RemovePeaks_Removing_Peaks" xml:space="preserve">
+    <value>正在删除峰</value>
+  </data>
+  <data name="RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_peptide_peak_" xml:space="preserve">
+    <value>您是否确定想要删除此肽峰？</value>
+  </data>
+  <data name="RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_peptide_" xml:space="preserve">
+    <value>您是否确定想要从一个肽中删除这 {0} 个峰？</value>
+  </data>
+  <data name="RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__peptides_" xml:space="preserve">
+    <value>您是否确定想要从 {1} 个肽中删除这 {0} 个峰？</value>
+  </data>
+  <data name="RemovePeptides_MenuItemText_Remove_Peptide_Peaks___" xml:space="preserve">
+    <value>删除肽峰...</value>
+  </data>
+  <data name="RemovePeptides_MenuItemText_Remove_Molecule_Peaks___" xml:space="preserve">
+    <value>删除分子峰...</value>
+  </data>
+  <data name="RemoveTransitions_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_transition_peak_" xml:space="preserve">
+    <value>您是否确定想要删除此离子对峰？</value>
+  </data>
+  <data name="RemoveTransitions_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_transition_" xml:space="preserve">
+    <value>您是否确定想要从一个离子对中删除这 {0} 个峰？</value>
+  </data>
+  <data name="RemoveTransitions_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__transitions_" xml:space="preserve">
+    <value>您是否确定想要从 {1} 个离子对中删除这 {0} 个峰？</value>
+  </data>
+  <data name="RemoveTransitions_MenuItemText_Remove_Transition_Peaks___" xml:space="preserve">
+    <value>删除离子对峰...</value>
+  </data>
+  <data name="RemovePrecursors_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_precursor_peak_" xml:space="preserve">
+    <value>您是否确定想要删除此母离子峰？</value>
+  </data>
+  <data name="RemovePrecursors_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_precursor_" xml:space="preserve">
+    <value>您是否确定想要从一个母离子中删除这 {0} 个峰？</value>
+  </data>
+  <data name="DeleteTransitions_MenuItemText_Delete_Transitions___" xml:space="preserve">
+    <value>删除离子对...</value>
+  </data>
+  <data name="DeletePeptides_MenuItemText_Delete_Peptides___" xml:space="preserve">
+    <value>删除肽...</value>
+  </data>
+  <data name="DeletePeptides_GetMenuItemText_Delete_Molecules___" xml:space="preserve">
+    <value>删除分子...</value>
+  </data>
+  <data name="DeletePrecursors_MenuItemText_Delete_Precursors___" xml:space="preserve">
+    <value>删除母离子...</value>
+  </data>
+  <data name="RemovePrecursors_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__precursors_" xml:space="preserve">
+    <value>您是否确定想要从 {1} 个母离子中删除这 {0} 个峰？</value>
+  </data>
+  <data name="RemovePrecursors_MenuItemText_Remove_Precursor_Peaks___" xml:space="preserve">
+    <value>删除母离子峰...</value>
+  </data>
+  <data name="DeleteProteins_MenuItemText_Delete_Proteins___" xml:space="preserve">
+    <value>删除蛋白质...</value>
+  </data>
+  <data name="DeleteProteins_MenuItemText_Delete_Molecule_Lists___" xml:space="preserve">
+    <value>删除分子列表...</value>
+  </data>
+  <data name="TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0___" xml:space="preserve">
+    <value>无法解析“{0}”中的分子。</value>
+  </data>
+  <data name="UIModeProteomic" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\UIModeProteomic.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="UIModeSmallMolecules" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\UIModeSmallMolecules.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="UIModeMixed" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\UIModeMixed.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_SetModeUIToolStripButtons_Proteomics_interface" xml:space="preserve">
+    <value>蛋白质组学界面</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_SetModeUIToolStripButtons_Small_Molecules_interface" xml:space="preserve">
+    <value>分子界面</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_SetModeUIToolStripButtons_Mixed_interface" xml:space="preserve">
+    <value>混合界面</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_proteomics_interface_because_the_current_document_contains_small_molecules_data_" xml:space="preserve">
+    <value>无法切换到蛋白质组学界面，因为当前文档包含非蛋白质组学分子数据。</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Cannot_switch_to_molecule_interface_because_the_current_document_contains_proteomics_data_" xml:space="preserve">
+    <value>无法切换到分子界面，因为当前文档包含蛋白质组学数据。</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_EnableNeededButtonsForModeUI___Would_you_like_to_create_a_new_empty_document_" xml:space="preserve">
+    <value>  您是否想要创建一个新的空文档？</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_EnableNeededButtonsForModeUI_Would_you_like_to_create_a_new_document_" xml:space="preserve">
+    <value>您是否想要创建一个新文档？</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_SetModeUIToolStripButtons_Only_show_menus_and_controls_appropriate_to_proteomics_analysis" xml:space="preserve">
+    <value>仅显示适用于蛋白质组学分析的菜单和控件</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_SetModeUIToolStripButtons_Only_show_menus_and_controls_appropriate_to_small_molecule_analysis" xml:space="preserve">
+    <value>仅显示适用于非蛋白质组学分子分析的菜单和控件</value>
+  </data>
+  <data name="ModeUIAwareFormHelper_SetModeUIToolStripButtons_Show_all_menus_and_controls" xml:space="preserve">
+    <value>显示所有菜单和控件</value>
+  </data>
+  <data name="ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_" xml:space="preserve">
+    <value>值“{0}”对于参数 {1} 无效。使用 {2} 中的一个</value>
+  </data>
+  <data name="CommandArgs_GROUP_TOOLS_Tools_Installation" xml:space="preserve">
+    <value>工具安装</value>
+  </data>
+  <data name="CommandArgs_GROUP_TOOLS_The_arguments_below_can_be_used_to_install_tools_onto_the_Tools_menu_and_do_not_rely_on_the____in__argument_because_they_independent_of_a_specific_Skyline_document_" xml:space="preserve">
+    <value>下面的参数可用于在“工具”菜单上安装工具，而不依赖于“--in”参数，因为它们独立于特定的 Skyline 文档。</value>
+  </data>
+  <data name="CommandArgs_ErrorArgsExclusiveText_Error__The_arguments__0__and__1__options_cannot_be_used_together_" xml:space="preserve">
+    <value>错误：参数 {0} 和 {1} 选项不能一起使用。</value>
+  </data>
+  <data name="TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0____could_be_any_of__1_" xml:space="preserve">
+    <value>无法解析“{0}”中的分子：可能是 {1} 中的任何一个</value>
+    <comment>{0} is search text, {1} is a list of molecule names that the search text could refer to</comment>
+  </data>
+  <data name="CommandLine_ImportAnnotations_Error__Failed_while_reading_annotations_" xml:space="preserve">
+    <value>错误：读取注释时失败。</value>
+  </data>
+  <data name="CommandLine_RefineDocument_Error__The_label_type___0___was_not_found_in_the_document_" xml:space="preserve">
+    <value>错误：标记类型“{0}”不在文档中。</value>
+  </data>
+  <data name="CommandLine_RefineDocument_Choose_one_of__0_" xml:space="preserve">
+    <value>选择一个 {0}</value>
+  </data>
+  <data name="CommandLine_RefineDocument_Refining_document___" xml:space="preserve">
+    <value>正在调整文档...</value>
+  </data>
+  <data name="CommandLine_LogNewEntries_Document_unchanged" xml:space="preserve">
+    <value>文档未更改</value>
+  </data>
+  <data name="CommandLine_LogDocumentDelta_Removed___0_" xml:space="preserve">
+    <value>已删除：{0}</value>
+  </data>
+  <data name="CommandLine_LogDocumentDelta_Added___0_" xml:space="preserve">
+    <value>已添加：{0}</value>
+  </data>
+  <data name="SkylineViewContext_GetDocumentGridRowSources_Molecule_Lists" xml:space="preserve">
+    <value>分子列表</value>
+  </data>
+  <data name="SkylineViewContext_GetDocumentGridRowSources_Molecules" xml:space="preserve">
+    <value>分子学</value>
+  </data>
+  <data name="Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_molecule_list___0___" xml:space="preserve">
+    <value>您是否确定想要删除分子列表“{0}”？</value>
+  </data>
+  <data name="Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__molecule_lists_" xml:space="preserve">
+    <value>您是否确定想要删除这 {0} 个分子列表？</value>
+  </data>
+  <data name="RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_molecule_peak_" xml:space="preserve">
+    <value>您是否确定想要删除此分子峰？</value>
+  </data>
+  <data name="RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_molecule_" xml:space="preserve">
+    <value>您是否确定想要从一个分子中删除这 {0} 个峰？</value>
+  </data>
+  <data name="RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__molecules_" xml:space="preserve">
+    <value>您是否确定想要从 {1} 个分子中删除这 {0} 个峰？</value>
+  </data>
+  <data name="SkylineDataSchema_GetTypeDescription_Item_in_list___0__" xml:space="preserve">
+    <value>列表“{0}”中的项</value>
+  </data>
+  <data name="Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_molecule___0___" xml:space="preserve">
+    <value>您是否确定想要删除分子“{0}”？</value>
+  </data>
+  <data name="Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__molecules_" xml:space="preserve">
+    <value>您是否确定想要这 {0} 个分子？</value>
+  </data>
+  <data name="TransitionSettingsControl_ValidateAdductListTextBox__0__must_contain_a_comma_separated_list_of_integers_describing_charge_states_between__1__and__2__" xml:space="preserve">
+    <value>{0} 必须包含以逗号分隔的整数列表，用于描述 {1} 和 {2} 之间的电荷状态。</value>
+  </data>
+  <data name="SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filename_extension_and_are_in_XML_format_" xml:space="preserve">
+    <value>您尝试打开的文件（“{0}”）似乎不是 Skyline 文档。Skyline 文档通常具有“{1}”或“{2}”文件扩展名，并且是 XML 格式。</value>
+  </data>
+  <data name="NoFullScanFilteringException_NoFullScanFilteringException_The_file__0__does_not_contain_SRM_MRM_chromatograms__To_extract_chromatograms_from_its_spectra__go_to_Settings___Transition_Settings___Full_Scan_and_choose_options_appropriate_to_the_acquisition_method_used_" xml:space="preserve">
+    <value>文件 {0} 不包含 SRM/MRM 色谱图。要从其谱图中提取色谱图，请转至“设置&gt;离子对设置&gt;全扫描”，然后选择适合所用采集方法的选项。</value>
+    <comment>replaces NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatograms_from__0__full_scan_settings_must_be_enabled_</comment>
+  </data>
+  <data name="Property_DisambiguationPrefix_Property__" xml:space="preserve">
+    <value>属性：</value>
+  </data>
+  <data name="Annotation_DisambiguationPrefix_Annotation__" xml:space="preserve">
+    <value>注解：</value>
+  </data>
+  <data name="ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_" xml:space="preserve">
+    <value>无法找到有效的 Thermo 仪器安装。</value>
+  </data>
+  <data name="ThermoMassListExporter_EnsureLibraries_Thermo_method_creation_software_may_not_be_installed_correctly_" xml:space="preserve">
+    <value>可能未正确安装 Thermo 方法创建软件。</value>
+  </data>
+  <data name="ThermoMassListExporter_EnsureLibraries_Thermo_instrument_software_may_not_be_installed_correctly__The_library__0__could_not_be_found_" xml:space="preserve">
+    <value>可能未正确安装 Thermo 仪器软件。库{0}无法找到。</value>
+  </data>
+  <data name="ValueInvalidDoubleException_ValueInvalidDoubleException_The_value___0___is_not_valid_for_the_argument__1__which_requires_a_decimal_number_" xml:space="preserve">
+    <value>值“{0}”对于必须是十进制数的参数 {1} 无效。</value>
+  </data>
+  <data name="ValueOutOfRangeDoubleException_ValueOutOfRangeException_The_value___0___for_the_argument__1__must_be_between__2__and__3__" xml:space="preserve">
+    <value>参数 {1} 的值“{0}”必须介于 {2} 和 {3} 之间。</value>
+  </data>
+  <data name="ValueInvalidIntException_ValueInvalidIntException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_integer_" xml:space="preserve">
+    <value>值“{0}”对于参数 {1} 无效，该参数必须是整数。</value>
+  </data>
+  <data name="ValueInvalidChargeListException_ValueInvalidChargeListException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_comma_separated_list_of_integers_" xml:space="preserve">
+    <value>值“{0}”对于参数 {1} 无效，该参数必须是以逗号分隔的整数列表。</value>
+  </data>
+  <data name="ValueInvalidIonTypeListException_ValueInvalidIonTypeListException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_comma_separated_list_of_fragment_ion_types__a__b__c__x__y__z__p__" xml:space="preserve">
+    <value>值“{0}”对于参数 {1} 无效，该参数必须是以逗号分隔的片段离子类型列表(a, b, c, x, y, z, p)。</value>
+  </data>
+  <data name="ValueInvalidDateException_ValueInvalidDateException_The_value___0___is_not_valid_for_the_argument__1__which_requires_a_date_time_value_" xml:space="preserve">
+    <value>值“{0}”对于必须是日期时间值的参数 {1} 无效。</value>
+  </data>
+  <data name="ValueInvalidPathException_ValueInvalidPathException_The_value___0___is_not_valid_for_the_argument__1__failed_attempting_to_convert_it_to_a_full_file_path_" xml:space="preserve">
+    <value>值“{0}”对于参数 {1} 无效，尝试将其转换为完整文件路径失败。</value>
   </data>
 </root>

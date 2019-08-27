@@ -88,6 +88,7 @@ public:
     mutable map<string, size_t> idMap_;
 
     void createIndex() const;
+    IndexEntry& addChromatogram(const string& id, ControllerType controllerType, int controllerNumber, CVID chromatogramType, const string& filter) const;
 #endif // PWIZ_READER_THERMO
 };
 

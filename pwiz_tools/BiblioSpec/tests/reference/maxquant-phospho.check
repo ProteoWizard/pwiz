@@ -1,16 +1,16 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:maxquant-phospho.blib	5	1	9
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:maxquant-phospho.blib	5	1	10
 id	RefSpectraID	position	mass
 1	2	3	79.96633
 2	3	3	79.96633
 3	4	3	79.96633
 4	5	3	79.96633
-id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
-1	HLVDEPQNLIK	653.3617	2	HLVDEPQNLIK	-	-	1	11	0.0	0.0	0.0	0	36.373	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	352	0.023801	13
-2	PRSGTVELPK	582.29465	2	PRS[+80.0]GTVELPK	-	-	1	8	0.0	0.0	0.0	0	34.268	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	183	0.0329	13
-3	PRSGTVELPK	582.29465	2	PRS[+80.0]GTVELPK	-	-	1	8	0.0	0.0	0.0	0	34.306	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	186	0.0329	13
-4	PRSGTVELPK	582.29465	2	PRS[+80.0]GTVELPK	-	-	1	9	0.0	0.0	0.0	0	34.343	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	189	0.035158	13
-5	PRSGTVELPK	582.29465	2	PRS[+80.0]GTVELPK	-	-	1	8	0.0	0.0	0.0	0	34.38	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	192	0.037572	13
+id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	totalIonCurrent	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
+1	HLVDEPQNLIK	653.3617	2	HLVDEPQNLIK	-	-	1	11	0.0	0.0	0.0	0	36.373	N/A	N/A	10053.19	N/A	N/A	N/A	N/A	N/A	1	352	0.023801	13
+2	PRSGTVELPK	582.29465	2	PRS[+80.0]GTVELPK	-	-	1	8	0.0	0.0	0.0	0	34.268	N/A	N/A	15525.60	N/A	N/A	N/A	N/A	N/A	1	183	0.0329	13
+3	PRSGTVELPK	582.29465	2	PRS[+80.0]GTVELPK	-	-	1	8	0.0	0.0	0.0	0	34.306	N/A	N/A	20418.70	N/A	N/A	N/A	N/A	N/A	1	186	0.0329	13
+4	PRSGTVELPK	582.29465	2	PRS[+80.0]GTVELPK	-	-	1	9	0.0	0.0	0.0	0	34.343	N/A	N/A	29290.60	N/A	N/A	N/A	N/A	N/A	1	189	0.035158	13
+5	PRSGTVELPK	582.29465	2	PRS[+80.0]GTVELPK	-	-	1	8	0.0	0.0	0.0	0	34.38	N/A	N/A	30880.20	N/A	N/A	N/A	N/A	N/A	1	192	0.037572	13
 id	fileName	idFileName	cutoffScore
 1	ah_20101029r_BSA_CID_FT_centroid_2uscan_1	/BiblioSpec/tests/inputs/test-phospho.msms.txt	-1.0
 id	scoreType	probabilityType

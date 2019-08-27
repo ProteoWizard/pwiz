@@ -620,6 +620,12 @@
   <data name="ticContextMenuItem.Text" xml:space="preserve">
     <value>TIC</value>
   </data>
+  <data name="qcContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="qcContextMenuItem.Text" xml:space="preserve">
+    <value>QC</value>
+  </data>
   <data name="toolStripSeparatorOnlyQuantitative.Size" type="System.Drawing.Size, System.Drawing">
     <value>164, 6</value>
   </data>
@@ -2688,7 +2694,13 @@ first occurrence of any peptide.</value>
     <value>210, 22</value>
   </data>
   <data name="ticMenuItem.Text" xml:space="preserve">
-    <value>TI&amp;C</value>
+    <value>T&amp;IC</value>
+  </data>
+  <data name="qcMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 22</value>
+  </data>
+  <data name="qcMenuItem.Text" xml:space="preserve">
+    <value>Q&amp;C</value>
   </data>
   <data name="toolStripSeparator56.Size" type="System.Drawing.Size, System.Drawing">
     <value>207, 6</value>
@@ -3960,6 +3972,12 @@ first occurrence of any peptide.</value>
     <value>ticContextMenuItem</value>
   </data>
   <data name="&gt;&gt;ticContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;qcContextMenuItem.Name" xml:space="preserve">
+    <value>qcContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;qcContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparatorOnlyQuantitative.Name" xml:space="preserve">
@@ -5798,6 +5816,12 @@ first occurrence of any peptide.</value>
   <data name="&gt;&gt;ticMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;qcMenuItem.Name" xml:space="preserve">
+    <value>qcMenuItem</value>
+  </data>
+  <data name="&gt;&gt;qcMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;toolStripSeparator56.Name" xml:space="preserve">
     <value>toolStripSeparator56</value>
   </data>
@@ -6468,6 +6492,6 @@ first occurrence of any peptide.</value>
     <value>SkylineWindow</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

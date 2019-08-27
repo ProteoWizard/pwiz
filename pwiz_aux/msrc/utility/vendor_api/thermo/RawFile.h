@@ -325,11 +325,16 @@ struct PWIZ_API_DECL ErrorLogItem
 enum PWIZ_API_DECL ChromatogramType
 {
     Type_MassRange,
-    Type_ECD = Type_MassRange,
     Type_TIC,
-    Type_TotalScan = Type_TIC,
     Type_BasePeak,
-    Type_NeutralFragment
+    Type_NeutralFragment,
+#ifndef _WIN64
+    Type_TotalScan = Type_TIC,
+    Type_ECD = Type_MassRange
+#else
+    Type_ECD = 31, // TraceType.ChannelA
+    Type_TotalScan = 22 // TraceType.TotalAbsorbance
+#endif
 };
 
 
@@ -389,6 +394,9 @@ class PWIZ_API_DECL RawFile
     public:
 
     static shared_ptr<RawFile> create(const std::string& filename);
+
+    // on 64-bit (RawFileReader), returns a thread-specific accessor to avoid the need for locking
+    virtual RawFile* getRawByThread(size_t currentThreadId) const = 0;
 
     virtual std::string getFilename() const = 0;
     virtual boost::local_time::local_date_time getCreationDate(bool adjustToHostTime = true) const = 0;

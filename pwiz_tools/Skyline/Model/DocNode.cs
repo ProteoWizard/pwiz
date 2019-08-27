@@ -727,19 +727,11 @@ namespace pwiz.Skyline.Model
             List<DocNode> childrenNew = new List<DocNode>(Children);
             List<int> nodeCountStack = new List<int>(_nodeCountStack);
 
-            // Support for small molecule work - most tests have a special node added to see if it breaks anything
-            bool hasSpecialTestNode = childrenNew.Any() && SrmDocument.IsSpecialNonProteomicTestDocNode(childrenNew.Last());
-            if (hasSpecialTestNode)
-                childrenNew.RemoveAt(childrenNew.Count-1);
-
             foreach(DocNode childAdd in childrenAdd)
             {
                 childrenNew.Add(childAdd);
                 AddCounts(childAdd, nodeCountStack);
             }
-
-            if (hasSpecialTestNode)
-                childrenNew.Add(Children.Last()); // Restorethe special test node, at the end
 
             return ChangeChildren(childrenNew, nodeCountStack);
         }

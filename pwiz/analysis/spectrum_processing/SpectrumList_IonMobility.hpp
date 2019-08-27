@@ -60,7 +60,7 @@ class PWIZ_API_DECL SpectrumList_IonMobility : public msdata::SpectrumListWrappe
 
 
 private:
-    enum class IonMobilityEquipment { None, AgilentDrift, WatersDrift, WatersSonar, BrukerTIMS, ThermoFAIMS };
+    enum class IonMobilityEquipment { None, AgilentDrift, WatersDrift, WatersSonar, BrukerTIMS, ThermoFAIMS, UIMFDrift };
     IonMobilityEquipment equipment_;
     IonMobilityUnits units_;
     msdata::SpectrumListIonMobilityBase* sl_;
