@@ -239,30 +239,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 BelowCVCutoff = (double)belowCvCutoffCount / Total;
             }
         }
-
-        private class AreaInfo
-        {
-            public AreaInfo(double area, double normalizedArea)
-            {
-                Area = area;
-                NormalizedArea = normalizedArea;
-            }
-
-            public double Area { get; private set; }
-            public double NormalizedArea { get; private set; }
-        }
-
-        private class MedianInfo
-        {
-            public MedianInfo(List<double> medians, double medianMedian)
-            {
-                Medians = medians;
-                MedianMedian = medianMedian;
-            }
-
-            public IList<double> Medians { get; private set; }
-            public double MedianMedian { get; private set; }
-        }
         
         private MedianInfo CalculateMedianAreas(SrmDocument document)
         {
@@ -323,40 +299,6 @@ namespace pwiz.Skyline.Controls.Graphs
         public double MedianCV { get; private set; } // Median CV
         public double MeanCV { get; private set; } // Mean CV
         public double BelowCVCutoff { get; private set; } // Fraction/Percentage of CV's below cutoff
-
-        public class PeptideAnnotationPair
-        {
-            public PeptideAnnotationPair(PeptideGroupDocNode peptideGroup, PeptideDocNode peptide, TransitionGroupDocNode tranGroup, string annotation, double cvRaw)
-            {
-                PeptideGroup = peptideGroup;
-                Peptide = peptide;
-                TransitionGroup = tranGroup;
-                Annotation = annotation;
-                CVRaw = cvRaw;
-            }
-
-            public PeptideGroupDocNode PeptideGroup { get; private set; }
-            public PeptideDocNode Peptide { get; private set; }
-            public TransitionGroupDocNode TransitionGroup { get; private set; }
-            public string Annotation { get; private set; }
-            public double CVRaw { get; private set; }
-        }
-
-        public class CVData
-        {
-            public CVData(IEnumerable<PeptideAnnotationPair> peptideAnnotationPairs, double cv, double meanArea, int frequency)
-            {
-                PeptideAnnotationPairs = peptideAnnotationPairs;
-                CV = cv;
-                MeanArea = meanArea;
-                Frequency = frequency;
-            }
-
-            public IEnumerable<PeptideAnnotationPair> PeptideAnnotationPairs { get; private set; }
-            public double CV { get; private set; }
-            public double MeanArea { get; private set; }
-            public int Frequency { get; private set; }
-        }
 
         private class InternalData
         {

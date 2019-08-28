@@ -793,6 +793,33 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Normalize to the specified type.
+        /// </summary>
+        internal static string _refine_cv_global_normalize {
+            get {
+                return ResourceManager.GetString("_refine_cv_global_normalize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Nomalize to a reference type..
+        /// </summary>
+        internal static string _refine_cv_reference_normalize {
+            get {
+                return ResourceManager.GetString("_refine_cv_reference_normalize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All elements above the cv cutoff will be removed..
+        /// </summary>
+        internal static string _refine_cv_remove_above_cutoff {
+            get {
+                return ResourceManager.GetString("_refine_cv_remove_above_cutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Precursors of the specified isotope label type will be removed (default) or added if --refine-add-label-type is also used..
         /// </summary>
         internal static string _refine_label_type {
@@ -945,11 +972,11 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to All elements above the cv cutoff will be removed..
+        ///   Looks up a localized string similar to All elements above the q value will be removed..
         /// </summary>
-        internal static string _refine_remove_above_cv_cutoff {
+        internal static string _refine_qvalue_cutoff {
             get {
-                return ResourceManager.GetString("_refine_remove_above_cv_cutoff", resourceCulture);
+                return ResourceManager.GetString("_refine_qvalue_cutoff", resourceCulture);
             }
         }
         

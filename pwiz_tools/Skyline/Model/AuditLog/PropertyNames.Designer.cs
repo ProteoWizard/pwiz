@@ -2770,6 +2770,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Normalization to standard type.
+        /// </summary>
+        public static string RefinementSettings_NormalizationLabelType {
+            get {
+                return ResourceManager.GetString("RefinementSettings_NormalizationLabelType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Normalization method.
+        /// </summary>
+        public static string RefinementSettings_NormalizationMethod {
+            get {
+                return ResourceManager.GetString("RefinementSettings_NormalizationMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Prefer larger product ions.
         /// </summary>
         public static string RefinementSettings_PreferLargeIons {

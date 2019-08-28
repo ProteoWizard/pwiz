@@ -124,12 +124,13 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky"));
-            TestRefinement();
+            
 
             // Add a bunch of unmeasured precursors and transitions which should not impact the statistics
             // This once caused the CV graphs to fail to complete calculating
             AddUnmeasuredElements();
 
+            TestRefinement();
             TestHistogram<AreaCVHistogramGraphPane>(SkylineWindow.ShowPeakAreaCVHistogram, HISTOGRAM_DATA_START);
             TestHistogram<AreaCVHistogram2DGraphPane>(SkylineWindow.ShowPeakAreaCVHistogram2D, HISTOGRAM2D_DATA_START);
 
@@ -208,10 +209,8 @@ namespace pwiz.SkylineTestFunctional
                 itemCount = histogramInfo.Items;
                 SkylineWindow.RemoveAboveCVCutoff(graph);
             });
-
             int expectedBars = itemCount - GetItemsAboveCutoff(statsStartIndex);
             WaitForHistogramBarCount(histogramInfo, expectedBars);
-
             RunUI(SkylineWindow.Undo);
 
             WaitForHistogramBarCount(histogramInfo, itemCount);
@@ -315,13 +314,14 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestRefinement()
         {
-            var graphStates = new [] {(48, 15, 15, 86), (48, 3, 3, 18), (48, 10, 10, 58)};
+            var graphStates = new [] { (48, 3, 4, 36), (48, 10, 11, 76) };
 
             // Verify cv cutoff refinement works
+            var doc = SkylineWindow.Document; // tmp
             var refineDlg = ShowDialog<RefineDlg>(() => SkylineWindow.ShowRefineDlg());
-            RunUI(() => { refineDlg.CVCutoff = 30; });
+            RunUI(() => { refineDlg.CVCutoff = 20; });
             OkDialog(refineDlg, () => refineDlg.OkDialog());
-            var doc = SkylineWindow.Document;
+            doc = SkylineWindow.Document;
             var refineDocState = (doc.PeptideGroupCount, doc.PeptideCount, doc.PeptideTransitionGroupCount,
                 doc.PeptideTransitionCount);
             Assert.AreEqual(graphStates[0], refineDocState);
@@ -338,7 +338,7 @@ namespace pwiz.SkylineTestFunctional
             doc = SkylineWindow.Document;
             refineDocState = (doc.PeptideGroupCount, doc.PeptideCount, doc.PeptideTransitionGroupCount,
                 doc.PeptideTransitionCount);
-            Assert.AreEqual(graphStates[1], refineDocState);
+            Assert.AreEqual(graphStates[0], refineDocState);
             RunUI(SkylineWindow.Undo);
 
             // Normalize to medians
@@ -352,7 +352,7 @@ namespace pwiz.SkylineTestFunctional
             doc = SkylineWindow.Document;
             refineDocState = (doc.PeptideGroupCount, doc.PeptideCount, doc.PeptideTransitionGroupCount,
                 doc.PeptideTransitionCount);
-            Assert.AreEqual(graphStates[2], refineDocState);
+            Assert.AreEqual(graphStates[1], refineDocState);
             RunUI(SkylineWindow.Undo);
         }
 

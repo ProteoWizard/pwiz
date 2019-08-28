@@ -1427,4 +1427,10 @@
   <data name="RefinementSettings_MinimumDetections" xml:space="preserve">
     <value>Minimum Detections</value>
   </data>
+  <data name="RefinementSettings_NormalizationLabelType" xml:space="preserve">
+    <value>Normalization to standard type</value>
+  </data>
+  <data name="RefinementSettings_NormalizationMethod" xml:space="preserve">
+    <value>Normalization method</value>
+  </data>
 </root>

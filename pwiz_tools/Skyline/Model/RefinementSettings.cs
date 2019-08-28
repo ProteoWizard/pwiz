@@ -21,7 +21,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
@@ -63,6 +62,11 @@ namespace pwiz.Skyline.Model
     public sealed class RefinementSettings : AuditLogOperationSettings<RefinementSettings>, IAuditLogComparable
     {
         private bool _removeDuplicatePeptides;
+
+        public RefinementSettings()
+        {
+            NormalizationMethod = AreaCVNormalizationMethod.none;
+        }
 
         public override MessageInfo MessageInfo
         {
@@ -312,10 +316,18 @@ namespace pwiz.Skyline.Model
             var refined = (SrmDocument)document.ChangeChildrenChecked(listPepGroups.ToArray(), true);
             if (CVCutoff.HasValue)
             {
+                if (document.MeasuredResults.Chromatograms.Count < 2)
+                {
+                    throw new Exception(
+                        @"The document does not contain enough replicates to use consistency settings.");
+                }
+
+            if (document.Settings.HasResults)
                 if (NormalizationMethod == AreaCVNormalizationMethod.global_standards &&
                     !document.Settings.HasGlobalStandardArea)
                 {
                     // error
+                    throw new Exception(@"The document does not have a global standard type.");
                 }
                 double qvalue = QValueCutoff.HasValue ? QValueCutoff.Value : double.NaN;
                 int minDetections = MinimumDetections.HasValue ? MinimumDetections.Value : -1;
@@ -337,6 +349,7 @@ namespace pwiz.Skyline.Model
                 if (idx == -1)
                 {
                     // error
+                    throw new Exception(@"The document does not contain the given reference type.");
                 }
                 return idx;
             }

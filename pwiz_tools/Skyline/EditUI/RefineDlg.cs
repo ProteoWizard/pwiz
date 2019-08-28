@@ -84,6 +84,40 @@ namespace pwiz.Skyline.EditUI
                 }
             }
 
+            if (!settings.HasResults || _settings.MeasuredResults.Chromatograms.Count < 2)
+            {
+                tabControl1.TabPages.Remove(tabConsistency);
+            }
+            else
+            {
+                // Consistency tab
+                textQVal.Enabled = document.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained;
+                numericUpDownDetections.Enabled = textQVal.Enabled;
+                if (numericUpDownDetections.Enabled)
+                {
+                    numericUpDownDetections.Minimum = 2;
+                    numericUpDownDetections.Maximum = _document.MeasuredResults.Chromatograms.Count;
+                    numericUpDownDetections.Value = 2;
+                }
+
+                var mods = _document.Settings.PeptideSettings.Modifications;
+                var standardTypes = mods.RatioInternalStandardTypes;
+                comboNormalizeTo.Items.Clear();
+
+                if (mods.HasHeavyModifications)
+                {
+                    comboNormalizeTo.Items.AddRange(standardTypes.Select((s) => s.Title).ToArray());
+                    _standardTypeCount = standardTypes.Count;
+                }
+
+                var hasGlobalStandard = _document.Settings.HasGlobalStandardArea;
+                if (hasGlobalStandard)
+                    comboNormalizeTo.Items.Add(Resources.AreaCVToolbar_UpdateUI_Global_standards);
+                comboNormalizeTo.Items.Add(Resources.AreaCVToolbar_UpdateUI_Medians);
+                comboNormalizeTo.Items.Add(Resources.AreaCVToolbar_UpdateUI_None);
+                comboNormalizeTo.SelectedIndex = comboNormalizeTo.Items.Count - 1;
+            }
+
             if (settings.PeptideSettings.Libraries.HasLibraries)
             {
                 labelMinDotProduct.Enabled = textMinDotProduct.Enabled = groupLibCorr.Enabled = true;
@@ -92,37 +126,12 @@ namespace pwiz.Skyline.EditUI
             {
                 labelMinIdotProduct.Enabled = textMinIdotProduct.Enabled = groupLibCorr.Enabled = true;
             }
-
-            // Consistency tab
-            textQVal.Enabled = document.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained;
-            numericUpDownDetections.Enabled = textQVal.Enabled;
-            if (numericUpDownDetections.Enabled)
-            {
-                numericUpDownDetections.Minimum = 2;
-                numericUpDownDetections.Maximum = _document.MeasuredResults.Chromatograms.Count;
-                numericUpDownDetections.Value = 2;
-            }
-
-            var mods = _document.Settings.PeptideSettings.Modifications;
-            var standardTypes = mods.RatioInternalStandardTypes;
-            comboNormalizeTo.Items.Clear();
-
-            if (mods.HasHeavyModifications)
-            {
-                comboNormalizeTo.Items.AddRange(standardTypes.Select((s) => s.Title).ToArray());
-                _standardTypeCount = standardTypes.Count;
-            }
-
-            var hasGlobalStandard = _document.Settings.HasGlobalStandardArea;
-            if (hasGlobalStandard)
-                comboNormalizeTo.Items.Add(Resources.AreaCVToolbar_UpdateUI_Global_standards);
-            comboNormalizeTo.Items.Add(Resources.AreaCVToolbar_UpdateUI_Medians);
-            comboNormalizeTo.Items.Add(Resources.AreaCVToolbar_UpdateUI_None);
-            comboNormalizeTo.SelectedIndex = comboNormalizeTo.Items.Count - 1;
         }
 
         private AreaCVNormalizationMethod GetNormalizationMethod(int idx)
         {
+            if (idx < 0)
+                return AreaCVNormalizationMethod.none;
             if (idx < _standardTypeCount)
             {
                 return AreaCVNormalizationMethod.ratio;
@@ -246,6 +255,7 @@ namespace pwiz.Skyline.EditUI
         {
             get
             {
+                if (comboNormalizeTo.Items.Count == 0) return null;
                 string cvRefineTypeName = comboNormalizeTo.SelectedItem.ToString();
                 if (string.IsNullOrEmpty(cvRefineTypeName) || Equals(cvRefineTypeName, "None")
                     || Equals(cvRefineTypeName, "Medians") || Equals(cvRefineTypeName, "Global standards"))
@@ -394,7 +404,6 @@ namespace pwiz.Skyline.EditUI
                 if (!helper.ValidateDecimalTextBox(textCVCutoff, 0, null, out cutoffVal))
                     return;
                 cvCutoff = cutoffVal;
-                Settings.Default.AreaCVCVCutoff = cvCutoff.Value;
             }
 
             double? qvalueCutoff = null;
@@ -404,7 +413,6 @@ namespace pwiz.Skyline.EditUI
                 if (!helper.ValidateDecimalTextBox(textQVal, 0.0, 1.0, out qvalue))
                     return;
                 qvalueCutoff = qvalue;
-                Settings.Default.AreaCVQValueCutoff = qvalueCutoff.Value;
             }
 
             int? minimumDetections = null;
@@ -416,7 +424,7 @@ namespace pwiz.Skyline.EditUI
             var normIdx = comboNormalizeTo.SelectedIndex;
             var normMethod = GetNormalizationMethod(normIdx);
 
-            IsotopeLabelType ratioIndex = CVRefineLabelType;
+            IsotopeLabelType referenceType = CVRefineLabelType;
 
             RefinementSettings = new RefinementSettings
                                      {
@@ -445,7 +453,7 @@ namespace pwiz.Skyline.EditUI
                                          QValueCutoff = qvalueCutoff,
                                          MinimumDetections =  minimumDetections,
                                          NormalizationMethod = normMethod,
-                                         NormalizationLabelType = ratioIndex
+                                         NormalizationLabelType = referenceType
                                      };
 
             DialogResult = DialogResult.OK;

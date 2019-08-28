@@ -1,13 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
 {
-    public class AreaCVRefinementData : Immutable
+    public class AreaCVRefinementData
     {
         public readonly AreaCVRefinementSettings _settings;
         public AreaCVRefinementData(SrmDocument document, AreaCVRefinementSettings settings)
@@ -17,7 +19,7 @@ namespace pwiz.Skyline.Model
                 return;
 
             var replicates = document.MeasuredResults.Chromatograms.Count;
-            var areas = new List<CVAreaInfo>(replicates);
+            var areas = new List<AreaInfo>(replicates);
             var annotations = new string[] { null };
             var data = new List<InternalData>();
             var hasHeavyMods = document.Settings.PeptideSettings.Modifications.HasHeavyModifications;
@@ -94,7 +96,7 @@ namespace pwiz.Skyline.Model
                                             normalizedArea /= ratioValue.Ratio;
                                     }
                                 }
-                                areas.Add(new CVAreaInfo(sumArea, normalizedArea));
+                                areas.Add(new AreaInfo(sumArea, normalizedArea));
                             }
 
                             if (qvalueCutoff.HasValue && minDetections.HasValue && areas.Count < minDetections.Value)
@@ -108,13 +110,12 @@ namespace pwiz.Skyline.Model
             {
                 var groupedArray = grouped.ToArray();
                 return new CVData(
-                    groupedArray.Select(idata => new PeptideAnnotationPair(idata.PeptideGroup, idata.Peptide, idata.TransitionGroup, idata.CV)),
+                    groupedArray.Select(idata => new PeptideAnnotationPair(idata.PeptideGroup, idata.Peptide, idata.TransitionGroup, null, idata.CV)),
                     key.CV, key.Area, groupedArray.Length);
             }).OrderBy(d => d.CV));
-
         }
 
-        private void AddToInternalData(ICollection<InternalData> data, List<CVAreaInfo> areas,
+        private void AddToInternalData(ICollection<InternalData> data, List<AreaInfo> areas,
             PeptideGroupDocNode peptideGroup, PeptideDocNode peptide, TransitionGroupDocNode tranGroup)
         {
             var normalizedStatistics = new Statistics(areas.Select(a => a.NormalizedArea));
@@ -143,19 +144,31 @@ namespace pwiz.Skyline.Model
                 .SelectMany(d => d.PeptideAnnotationPairs)
                 .Select(pair => pair.TransitionGroup.Id.GlobalIndex));
 
-            var nodeCount = 0;
+            var setRemove = IndicesToRemove(document, ids);
+            
+            return (SrmDocument)document.RemoveAll(setRemove, null, (int)SrmDocument.Level.Molecules);
+        }
+
+        public static HashSet<int> IndicesToRemove(SrmDocument document, HashSet<int> ids)
+        {
             var setRemove = new HashSet<int>();
             foreach (var nodeMolecule in document.Molecules)
             {
                 if (nodeMolecule.GlobalStandardType != null)
                     continue;
-                foreach (var nodeGroup in nodeMolecule.TransitionGroups.Where(n => !ids.Contains(n.Id.GlobalIndex)))
-                    setRemove.Add(nodeGroup.Id.GlobalIndex);
-                nodeCount = setRemove.Count;
+                foreach (var nodeGroup in nodeMolecule.TransitionGroups)
+                {
+                    if (!ids.Contains(nodeGroup.Id.GlobalIndex) || nodeGroup.AveragePeakArea == null)
+                        setRemove.Add(nodeGroup.Id.GlobalIndex);
+                    foreach (var trans in nodeGroup.Transitions)
+                    {
+                        if (trans.AveragePeakArea == null)
+                            setRemove.Add(trans.Id.GlobalIndex);
+                    }
+                }
             }
 
-            return (SrmDocument)document.RemoveAll(setRemove, (int) SrmDocument.Level.TransitionGroups,
-                (int) SrmDocument.Level.Molecules);
+            return setRemove;
         }
 
         private MedianInfo CalculateMedianAreas(SrmDocument document)
@@ -218,62 +231,6 @@ namespace pwiz.Skyline.Model
 
         public IList<CVData> Data { get; private set; }
 
-        private class MedianInfo
-        {
-            public MedianInfo(List<double> medians, double medianMedian)
-            {
-                Medians = medians;
-                MedianMedian = medianMedian;
-            }
-
-            public IList<double> Medians { get; private set; }
-            public double MedianMedian { get; private set; }
-        }
-
-        public class PeptideAnnotationPair
-        {
-            public PeptideAnnotationPair(PeptideGroupDocNode peptideGroup, PeptideDocNode peptide, TransitionGroupDocNode tranGroup, double cvRaw)
-            {
-                PeptideGroup = peptideGroup;
-                Peptide = peptide;
-                TransitionGroup = tranGroup;
-                CVRaw = cvRaw;
-            }
-
-            public PeptideGroupDocNode PeptideGroup { get; private set; }
-            public PeptideDocNode Peptide { get; private set; }
-            public TransitionGroupDocNode TransitionGroup { get; private set; }
-            public double CVRaw { get; private set; }
-        }
-
-        public class CVData
-        {
-            public CVData(IEnumerable<PeptideAnnotationPair> peptideAnnotationPairs, double cv, double meanArea, int frequency)
-            {
-                PeptideAnnotationPairs = peptideAnnotationPairs;
-                CV = cv;
-                MeanArea = meanArea;
-                Frequency = frequency;
-            }
-
-            public IEnumerable<PeptideAnnotationPair> PeptideAnnotationPairs { get; private set; }
-            public double CV { get; private set; }
-            public double MeanArea { get; private set; }
-            public int Frequency { get; private set; }
-        }
-
-        private class CVAreaInfo
-        {
-            public CVAreaInfo(double area, double normalizedArea)
-            {
-                Area = area;
-                NormalizedArea = normalizedArea;
-            }
-
-            public double Area { get; private set; }
-            public double NormalizedArea { get; private set; }
-        }
-
         private class InternalData
         {
             public PeptideGroupDocNode PeptideGroup;
@@ -324,6 +281,70 @@ namespace pwiz.Skyline.Model
             public int MinimumDetections { get; private set; }
             public AreaCVNormalizationMethod NormalizationMethod { get; private set; }
             public int RatioIndex { get; private set; }
+        }
+    }
+
+    public class AreaInfo
+    {
+        public AreaInfo(double area, double normalizedArea)
+        {
+            Area = area;
+            NormalizedArea = normalizedArea;
+        }
+
+        public double Area { get; private set; }
+        public double NormalizedArea { get; private set; }
+    }
+
+    public class MedianInfo
+    {
+        public MedianInfo(List<double> medians, double medianMedian)
+        {
+            Medians = medians;
+            MedianMedian = medianMedian;
+        }
+
+        public IList<double> Medians { get; private set; }
+        public double MedianMedian { get; private set; }
+    }
+
+    public class PeptideAnnotationPair
+    {
+        public PeptideAnnotationPair(PeptideGroupDocNode peptideGroup, PeptideDocNode peptide, TransitionGroupDocNode tranGroup, string annotation, double cvRaw)
+        {
+            PeptideGroup = peptideGroup;
+            Peptide = peptide;
+            TransitionGroup = tranGroup;
+            Annotation = annotation;
+            CVRaw = cvRaw;
+        }
+
+        public PeptideGroupDocNode PeptideGroup { get; private set; }
+        public PeptideDocNode Peptide { get; private set; }
+        public TransitionGroupDocNode TransitionGroup { get; private set; }
+        public string Annotation { get; private set; }
+        public double CVRaw { get; private set; }
+
+    }
+
+    public class CVData
+    {
+        public CVData(IEnumerable<PeptideAnnotationPair> peptideAnnotationPairs, double cv, double meanArea, int frequency)
+        {
+            PeptideAnnotationPairs = peptideAnnotationPairs;
+            CV = cv;
+            MeanArea = meanArea;
+            Frequency = frequency;
+        }
+
+        public IEnumerable<PeptideAnnotationPair> PeptideAnnotationPairs { get; private set; }
+        public double CV { get; private set; }
+        public double MeanArea { get; private set; }
+        public int Frequency { get; private set; }
+
+        public override string ToString()
+        {
+            return CV + TextUtil.LineSeparate(PeptideAnnotationPairs.Select(p => @" " + p.Peptide.TextId));
         }
     }
 }

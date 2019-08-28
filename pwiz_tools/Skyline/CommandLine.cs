@@ -430,8 +430,17 @@ namespace pwiz.Skyline
             }
 
             _out.WriteLine(Resources.CommandLine_RefineDocument_Refining_document___);
-            ModifyDocumentWithLogging(doc => commandArgs.Refinement.Refine(doc), commandArgs.Refinement.EntryCreator.Create);
-            return true;
+            try
+            {
+                ModifyDocumentWithLogging(doc => commandArgs.Refinement.Refine(doc),
+                    commandArgs.Refinement.EntryCreator.Create);
+                return true;
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine(x.Message);
+                return false;
+            }
         }
 
         private IsotopeLabelType GetLabelTypeHelper(string label)
