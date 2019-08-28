@@ -93,7 +93,12 @@ namespace TestRunnerLib
         {
             get { return !RunPerfTests; }   // 12-hour perf runs get much slower with system heap reporting
         }
-      
+
+        public static bool WriteMiniDumps
+        {
+            get { return false; }
+        }
+
         public RunTests(
             bool demoMode,
             bool buildMode,
@@ -209,7 +214,7 @@ namespace TestRunnerLib
 
             var dumpFileName = string.Format("{0}.{1}_{2}_{3}_{4:yyyy_MM_dd__hh_mm_ss_tt}.dmp", pass, testNumber, test.TestMethod.Name, Language.TwoLetterISOLanguageName, DateTime.Now);
 
-            if (test.MinidumpLeakThreshold != null)
+            if (WriteMiniDumps && test.MinidumpLeakThreshold != null)
             {
                 try
                 {
@@ -301,7 +306,7 @@ namespace TestRunnerLib
             LastUserHandleCount = GetHandleCount(HandleType.user);
             LastGdiHandleCount = GetHandleCount(HandleType.gdi);
 
-            if (test.MinidumpLeakThreshold != null)
+            if (WriteMiniDumps && test.MinidumpLeakThreshold != null)
             {
                 try
                 {
