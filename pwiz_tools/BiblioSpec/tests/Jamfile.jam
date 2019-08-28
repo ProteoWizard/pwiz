@@ -217,6 +217,7 @@ blib-test-build prospector : -o : output/prospector.blib : prospector.check zbui
 blib-test-build smill : -o : output/smill.blib : smill.check : $(TEST_INPUTS_PATH)/CPTAC_Set4_725_091509.pep.XML ;
 blib-test-build smill_ims : -o : output/smill_ims.blib : smill_ims.check smill_ims.skip-lines : $(TEST_INPUTS_PATH)/40minG_WBP_wide_z2-3_mid_BSA_5pmol_01.pep.xml ;
 blib-test-build bad-index : -o : output/bad-index.blib : bad-index.check : $(TEST_INPUTS_PATH)/interact-prob-three-spec.pep.xml ;
+blib-test-build comet : -o : output/comet.blib : comet.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/comet.demo1.target.pep.xml ;
 
 # Test other xml formats (idpicker, xtandem)
 
