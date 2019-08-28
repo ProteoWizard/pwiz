@@ -23,10 +23,13 @@ using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -44,13 +47,33 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("OrderByReplicateAnnotation.sky")));
+
+            // Add a calculated Replicate annotation called "TotalIonCurrent"
+            var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
+            var defineAnnotationDlg = ShowDialog<DefineAnnotationDlg>(documentSettingsDlg.AddAnnotation);
+            RunUI(() =>
+            {
+                defineAnnotationDlg.AnnotationName = "TotalIonCurrent";
+                defineAnnotationDlg.IsCalculated = true;
+                defineAnnotationDlg.AnnotationTargets =
+                    AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.replicate);
+                defineAnnotationDlg.SelectPropertyPath(PropertyPath.Root.Property(nameof(Replicate.Files)).LookupAllItems().Property(nameof(ResultFile.TicArea)));
+                defineAnnotationDlg.AggregateOperation = AggregateOperation.Mean;
+            });
+            OkDialog(defineAnnotationDlg, defineAnnotationDlg.OkDialog);
+            OkDialog(documentSettingsDlg, documentSettingsDlg.OkDialog);
+
+            // Change the "Order By" on the Peak Area Replicate Comparison graph to lots of different values
             RunUI(()=>SkylineWindow.ShowPeakAreaReplicateComparison());
             var peakAreaGraph = FormUtil.OpenForms.OfType<GraphSummary>().First(graph =>
                 graph.Type == GraphTypeSummary.replicate && graph.Controller is AreaGraphController);
+
             OrderBy(peakAreaGraph, (index, item)=>item.Text == ColumnCaptions.AnalyteConcentration);
             VerifyOrder(peakAreaGraph, chromSet=>chromSet.AnalyteConcentration);
+
             OrderBy(peakAreaGraph, (index, item)=>item.Text == @"ReplicateAnnotation");
             VerifyOrder(peakAreaGraph, chromSet => chromSet.Annotations.GetAnnotation("ReplicateAnnotation"));
+
             OrderBy(peakAreaGraph, (index, item) => item.Text == @"RandomNumber");
             VerifyOrder(peakAreaGraph, chromSet=>Convert.ToDouble(chromSet.Annotations.GetAnnotation("RandomNumber"), CultureInfo.InvariantCulture));
             // Order by document
@@ -60,8 +83,18 @@ namespace pwiz.SkylineTestFunctional
             // Order by acquired time
             OrderBy(peakAreaGraph, (index, item)=>index == 1);
             VerifyOrder(peakAreaGraph, chromSet=>chromSet.MSDataFileInfos.First().RunStartTime);
+            // Order by TotalIonCurrent calculated annotation
+            OrderBy(peakAreaGraph, (index, item)=>item.Text == @"TotalIonCurrent");
+            VerifyOrder(peakAreaGraph, chromSet=>chromSet.MSDataFileInfos.First().TicArea);
         }
 
+        /// <summary>
+        /// Change the replicate "Order By" on a graph.
+        /// </summary>
+        /// <param name="graphSummary"></param>
+        /// <param name="menuItemPredicate">Function which returns true for the menu item that should be clicked.
+        /// The Document Order and Run Start Time items get chosen based on their position on the sub-menu.
+        /// The other items get chosen based on menu item text.</param>
         private void OrderBy(GraphSummary graphSummary, Func<int, ToolStripMenuItem, bool> menuItemPredicate)
         {
             RunUI(() =>
@@ -87,6 +120,9 @@ namespace pwiz.SkylineTestFunctional
             });
         }
 
+        /// <summary>
+        /// Verify that the order of replicates on the graph is based on the ordering specified by getValueFunc.
+        /// </summary>
         private void VerifyOrder<T>(GraphSummary graphSummary, Func<ChromatogramSet, T> getValueFunc)
         {
             var document = graphSummary.DocumentUIContainer.Document;
