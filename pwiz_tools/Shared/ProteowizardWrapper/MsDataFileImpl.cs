@@ -1136,7 +1136,8 @@ namespace pwiz.ProteowizardWrapper
             var result = new Dictionary<int, IList<MsPrecursor>>();
             foreach(var p in spectrum.precursors)
             {
-                int msLevel = (int) p.userParam("ms level").value;
+                var msLevelParam = p.userParam("ms level");
+                int msLevel = msLevelParam.empty() ? 1 : (int) msLevelParam.value;
                 var msPrecursor = new MsPrecursor()
                 {
                     PrecursorMz = GetPrecursorMz(p, negativePolarity),
