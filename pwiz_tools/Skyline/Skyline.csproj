@@ -523,7 +523,7 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Util\AnnotationHelper.cs" />
-    <Compile Include="Controls\Graphs\AreaCVGraphDataCache.cs" />
+    <Compile Include="Model\AreaCVGraphDataCache.cs" />
     <Compile Include="Controls\Graphs\AreaCVToolbar.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -578,7 +578,6 @@
     <Compile Include="Controls\FindResultsForm.Designer.cs">
       <DependentUpon>FindResultsForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Controls\Graphs\AreaCVGraphData.cs" />
     <Compile Include="Controls\Graphs\AreaCVHistogram2DGraphPane.cs" />
     <Compile Include="Controls\Graphs\AreaCVHistogramGraphPane.cs" />
     <Compile Include="Controls\Graphs\AreaCVToolbarProperties.cs">

@@ -332,7 +332,7 @@ namespace pwiz.Skyline.Model
                 double qvalue = QValueCutoff.HasValue ? QValueCutoff.Value : double.NaN;
                 int minDetections = MinimumDetections.HasValue ? MinimumDetections.Value : -1;
                 int ratioIndex = GetLabelIndex(NormalizationLabelType, document);
-                var data = new AreaCVRefinementData(refined, new AreaCVRefinementData.AreaCVRefinementSettings(CVCutoff.Value, qvalue, minDetections, NormalizationMethod, ratioIndex));
+                var data = new AreaCVGraphData(refined, null, null, new AreaCVGraphData.AreaCVRefinementSettings(CVCutoff.Value, qvalue, minDetections, NormalizationMethod, ratioIndex));
                 refined = data.RemoveAboveCVCuttoff(refined);
             }
 
