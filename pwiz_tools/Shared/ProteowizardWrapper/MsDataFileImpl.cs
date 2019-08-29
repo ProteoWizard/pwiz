@@ -27,7 +27,6 @@ using pwiz.CLI.data;
 using pwiz.CLI.msdata;
 using pwiz.CLI.analysis;
 using pwiz.Common.Chemistry;
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.ProteowizardWrapper
