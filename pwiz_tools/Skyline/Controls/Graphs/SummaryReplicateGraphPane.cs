@@ -790,7 +790,9 @@ namespace pwiz.Skyline.Controls.Graphs
                         var orderByReplicateValue = ReplicateValue.FromPersistedString(_document.Settings, OrderByReplicateAnnotation);
                         if (orderByReplicateValue != null)
                         {
-                            query = result.OrderBy(g => orderByReplicateValue.GetValue(annotationCalculator, chromatograms[g.ReplicateIndexes.First()]));
+                            query = result.OrderBy(
+                                g => orderByReplicateValue.GetValue(annotationCalculator,
+                                    chromatograms[g.ReplicateIndexes.First()]), CollectionUtil.ColumnValueComparer);
                         }
                     }
 
@@ -828,7 +830,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         keys.Remove(null);
                     }
 
-                    keys.Sort(Comparer<object>.Create(CollectionUtil.CompareColumnValues));
+                    keys.Sort(CollectionUtil.ColumnValueComparer);
                     // ReSharper disable AssignNullToNotNullAttribute
                     foreach (var key in keys)
                     {
