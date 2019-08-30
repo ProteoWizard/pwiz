@@ -587,7 +587,7 @@ namespace pwiz.Skyline.Model.Results
             _sourceHasDeclaredMS2Scans |= (dataSpectrum.Level == 2);
             if (_mseLevel > 0)
                 return UpdateMseLevel(dataSpectrum) == 2;
-            return dataSpectrum.Level == 2;
+            return dataSpectrum.Level > 1;
         }
 
         public int GetMseLevel()
@@ -709,7 +709,7 @@ namespace pwiz.Skyline.Model.Results
                              handlingType == IsolationScheme.SpecialHandlingType.OVERLAP_MULTIPLEXED ||
                              handlingType == IsolationScheme.SpecialHandlingType.FAST_OVERLAP;
             
-            foreach (var isoWin in GetIsolationWindows(spectra[0].Precursors))
+            foreach (var isoWin in GetIsolationWindows(spectra[0].GetPrecursorsByMsLevel(1)))
             {
                 foreach (var filterPair in FindFilterPairs(isoWin, _acquisitionMethod, ignoreIso))
                 {
