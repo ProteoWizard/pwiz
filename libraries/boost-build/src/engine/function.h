@@ -7,6 +7,7 @@
 #ifndef FUNCTION_SW20111123_H
 #define FUNCTION_SW20111123_H
 
+#include "config.h"
 #include "object.h"
 #include "frames.h"
 #include "lists.h"

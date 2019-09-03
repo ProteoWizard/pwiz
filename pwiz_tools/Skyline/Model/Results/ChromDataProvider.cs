@@ -106,12 +106,88 @@ namespace pwiz.Skyline.Model.Results
         public abstract void Dispose();
     }
 
+    public sealed class GlobalChromatogramExtractor
+    {
+        private MsDataFileImpl _dataFile;
+        private const string TIC_CHROMATOGRAM_ID = @"TIC";
+        private const string BPC_CHROMATOGRAM_ID = @"BPC";
+
+        public GlobalChromatogramExtractor(MsDataFileImpl dataFile)
+        {
+            _dataFile = dataFile;
+            IndexOffset = 0;
+
+            if (dataFile.ChromatogramCount > 0 && dataFile.GetChromatogramId(0, out int indexId) == TIC_CHROMATOGRAM_ID)
+                TicChromatogramIndex = 0;
+            if (dataFile.ChromatogramCount > 1 && dataFile.GetChromatogramId(1, out int indexId2) == BPC_CHROMATOGRAM_ID)
+                BpcChromatogramIndex = 1;
+
+            QcTraceByIndex = new SortedDictionary<int, MsDataFileImpl.QcTrace>();
+            foreach (var qcTrace in dataFile.GetQcTraces() ?? new List<MsDataFileImpl.QcTrace>())
+            {
+                QcTraceByIndex[qcTrace.Index] = qcTrace;
+            }
+        }
+
+        /// <summary>
+        /// Since global chromatograms can share the same index as Skyline's target chromatograms (they both start at 0),
+        /// the global chromatograms are given an index offset starting after the last target chromatogram
+        /// </summary>
+        public int IndexOffset { get; set; }
+
+        public int? TicChromatogramIndex { get; }
+        public int? BpcChromatogramIndex { get; }
+
+        public IList<int> GlobalChromatogramIndexes
+        {
+            get
+            {
+                var result = new List<int>();
+                if (TicChromatogramIndex.HasValue)
+                    result.Add(TicChromatogramIndex.Value);
+                if (BpcChromatogramIndex.HasValue)
+                    result.Add(BpcChromatogramIndex.Value);
+                return result;
+            }
+        }
+
+        public IDictionary<int, MsDataFileImpl.QcTrace> QcTraceByIndex { get; }
+
+        public string GetChromatogramId(int index, out int indexId)
+        {
+            return _dataFile.GetChromatogramId(index, out indexId);
+        }
+
+        public bool GetChromatogram(int index, out float[] times, out float[] intensities)
+        {
+            index -= IndexOffset;
+
+            if (QcTraceByIndex.TryGetValue(index, out MsDataFileImpl.QcTrace qcTrace))
+            {
+                times = MsDataFileImpl.ToFloatArray(qcTrace.Times);
+                intensities = MsDataFileImpl.ToFloatArray(qcTrace.Intensities);
+            }
+            else if (index == TicChromatogramIndex || index == BpcChromatogramIndex)
+            {
+                _dataFile.GetChromatogram(index, out string id, out times, out intensities);
+            }
+            else
+            {
+                times = intensities = null;
+                return false;
+            }
+
+            return true;
+        }
+    }
+
     internal sealed class ChromatogramDataProvider : ChromDataProvider
     {
         private readonly List<ChromKeyProviderIdPair> _chromIds = new List<ChromKeyProviderIdPair>();
         private readonly int[] _chromIndices;
 
         private MsDataFileImpl _dataFile;
+        private GlobalChromatogramExtractor _globalChromatogramExtractor;
         
         private readonly bool _hasMidasSpectra;
         private readonly bool _sourceHasNegativePolarityData;
@@ -143,6 +219,7 @@ namespace pwiz.Skyline.Model.Results
             : base(fileInfo, status, startPercent, endPercent, loader)
         {
             _dataFile = dataFile;
+            _globalChromatogramExtractor = new GlobalChromatogramExtractor(dataFile);
 
             if (_dataFile.IsThermoFile)
             {
@@ -190,6 +267,18 @@ namespace pwiz.Skyline.Model.Results
 
             if (_chromIds.Count == 0)
                 throw new NoSrmDataException(FileInfo.FilePath);
+
+            foreach (int globalIndex in _globalChromatogramExtractor.GlobalChromatogramIndexes)
+            {
+                _chromIndices[globalIndex] = globalIndex;
+                _chromIds.Add(new ChromKeyProviderIdPair(ChromKey.FromId(_globalChromatogramExtractor.GetChromatogramId(globalIndex, out int indexId), false), globalIndex));
+            }
+
+            foreach (var qcTracePair in _globalChromatogramExtractor.QcTraceByIndex)
+            {
+                _chromIndices[qcTracePair.Key] = qcTracePair.Key;
+                _chromIds.Add(new ChromKeyProviderIdPair(ChromKey.FromQcTrace(qcTracePair.Value), qcTracePair.Key));
+            }
 
             // CONSIDER(kaipot): Some way to support mzML files converted from MIDAS wiff files
             _hasMidasSpectra = (dataFile.IsABFile) && SpectraChromDataProvider.HasSpectrumData(dataFile);
@@ -280,10 +369,12 @@ namespace pwiz.Skyline.Model.Results
                 _readStartTime = DateTime.UtcNow; // Said to be 117x faster than Now and this is for a delta
             }
 
-            string chromId;
-            float[] times;
-            float[] intensities;
-            _dataFile.GetChromatogram(id, out chromId, out times, out intensities);
+            float[] times, intensities;
+            if (!_globalChromatogramExtractor.GetChromatogram(id, out times, out intensities))
+            {
+                _dataFile.GetChromatogram(id, out string chromId, out times, out intensities);
+            }
+
             timeIntensities = new TimeIntensities(times, intensities, null, null);
 
             // Assume that each chromatogram will be read once, though this may

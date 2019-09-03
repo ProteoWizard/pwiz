@@ -5,6 +5,7 @@
 #ifndef CLASS_H_VP_2003_08_01
 #define CLASS_H_VP_2003_08_01
 
+#include "config.h"
 #include "lists.h"
 #include "frames.h"
 
