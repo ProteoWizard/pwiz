@@ -632,8 +632,8 @@
   <data name="modified_outside_of_skyline" xml:space="preserve">
     <value>The document was modified outside of Skyline: {0}</value>
   </data>
-  <data name="AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing_Entry_timestamp__0_G___entry_order_number" xml:space="preserve">
-    <value>Audit log is corrupted. Audit log entry time stamps and indices should be decreasing. Entry timestamp {0:G}, entry order number {1}.</value>
+  <data name="AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing" xml:space="preserve">
+    <value>Audit log is corrupted. Audit log entry time stamps and indices should be decreasing. entry number {0} timestamp {1:G} occurs before entry number {2} timestamp {3:G}</value>
   </data>
   <data name="test_only" xml:space="preserve">
     <value>{0}</value>

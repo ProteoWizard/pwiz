@@ -25,7 +25,6 @@ using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Text;
 using System.Threading;
-using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -41,6 +40,17 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.AuditLog
 {
+
+    public class AuditLogException : Exception
+    {
+        public AuditLogException(string pMessage) : base(pMessage)
+        {
+        }
+        public AuditLogException(string pMessage, Exception pInner) : base(pMessage, pInner)
+        {
+        }
+    }
+
     [XmlRoot(XML_ROOT)]
     public class AuditLogList : Immutable, IXmlSerializable
     {
@@ -140,12 +150,17 @@ namespace pwiz.Skyline.Model.AuditLog
             var time = DateTime.MaxValue;
             var logIndex = int.MinValue;
 
+            //make sure the entries timestamp in the log is always increasing 
             foreach (var entry in AuditLogEntries.Enumerate())
             {
-                Assume.IsTrue(entry.TimeStampUTC <= time && entry.LogIndex > logIndex,
-                    string.Format(AuditLogStrings.AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing_Entry_timestamp__0_G___entry_order_number, 
-                        entry.TimeStampUTC, entry.LogIndex.ToString()));
-
+                if (entry.TimeStampUTC > time || entry.LogIndex <= logIndex)
+                {
+                    string msg = string.Format(
+                        AuditLogStrings.AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing,
+                        entry.LogIndex, entry.TimeStampUTC, logIndex, time);
+                    Exception e = new AuditLogException(msg);
+                    throw e;
+                }
                 time = entry.TimeStampUTC;
                 logIndex = entry.LogIndex;
             }
@@ -205,41 +220,13 @@ namespace pwiz.Skyline.Model.AuditLog
             }
             catch(Exception ex)
             {
-                using (var alert = new AlertDlg())
-                {
-                    Exception exception = ex;
-                    StringBuilder msgBuilder = new StringBuilder("");
-                    List<string> stackList = new List<string>();
 
-
-                    do
-                    {
-                        if (msgBuilder.Length > 0)
-                        {
-                            msgBuilder.Append(@"--->");
-                            stackList.Add(Resources.ExceptionDialog_Caused_by_____);
-                        }
-                        msgBuilder.Append(exception.Message);
-                        stackList.Add(exception.Message);
-                        stackList.Add(exception.StackTrace);
-                        exception = exception.InnerException;
-                    } while (exception != null);
-
-                    alert.Message = TextUtil.LineSeparate(
-                        string.Format(
-                            AuditLogStrings.AuditLogList_ReadFromFile_An_exception_occured_while_reading_the_audit_log,
-                            fileName),
-                        msgBuilder.ToString());
-
-                    alert.DetailMessage = TextUtil.LineSeparate(stackList);
-                    alert.AddMessageBoxButtons(MessageBoxButtons.OK);
-                    alert.ShowParentlessDialog();
-                }
-
-                loggedSkylineDocumentHash = null;
-                result = null;
-
-                return false;
+                var newEx = new AuditLogException(
+                    string.Format(
+                        AuditLogStrings.AuditLogList_ReadFromFile_An_exception_occured_while_reading_the_audit_log,
+                        fileName),
+                    ex);
+                throw newEx;
             }
         }
 
@@ -292,15 +279,10 @@ namespace pwiz.Skyline.Model.AuditLog
             // and get Skyline to successfully load the audit log
             if (docFormat != null && !result.RootHash.SkylAndActualHashesEqual())
             {
-                var modifiedEntries =
-                    result.AuditLogEntries.Enumerate().Where(entry => !entry.Hash.SkylAndActualHashesEqual());
-                var dlg = new AlertDlg(AuditLogStrings.AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified +
-                                       string.Join(Environment.NewLine,
-                                           modifiedEntries.Select(entry => entry.UndoRedo.ToString())),
-                    MessageBoxButtons.OK);
-                dlg.ShowParentlessDialog();
+                throw new AuditLogException(
+                    AuditLogStrings.AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified +
+                    string.Join(Environment.NewLine, modifiedEntries.Select(entry => entry.UndoRedo.ToString())));
             }
-
 
             reader.ReadEndElement();
             return true;
