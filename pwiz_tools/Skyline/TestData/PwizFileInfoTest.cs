@@ -140,8 +140,8 @@ namespace pwiz.SkylineTestData
                     var bpc = chromCache.LoadAllIonsChromatogramInfo(ChromExtractor.base_peak, chromSets[0]);
                     var qc = chromCache.LoadAllIonsChromatogramInfo(ChromExtractor.qc, chromSets[0]);
 
-                    Assert.AreEqual(1, tic.Count());
-                    Assert.AreEqual(1, bpc.Count());
+                    Assert.AreEqual(0, tic.Count());    // No longer expect these in SRM data
+                    Assert.AreEqual(0, bpc.Count());    // No longer expect these in SRM data
                     var qcNames = qc.Select(o => o.TextId).ToArray();
                     Assert.AreEqual(6, qcNames.Length);
                     CollectionAssert.IsSubsetOf(new [] {"Column Pressure (channel 1)",

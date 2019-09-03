@@ -328,7 +328,7 @@ namespace pwiz.SkylineTestTutorial
             // Checking Peptide Uniqueness, p. 18
             RunUI(() =>
             {
-                var node = SkylineWindow.SequenceTree.Nodes[SkylineWindow.SequenceTree.Nodes.Count - (TestSmallMolecules ? 3 : 2)];
+                var node = SkylineWindow.SequenceTree.Nodes[SkylineWindow.SequenceTree.Nodes.Count - 2];
                 SkylineWindow.SequenceTree.SelectedNode = node;
             });
 
@@ -371,7 +371,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 RunUI(() =>
                     {
-                        var node = SkylineWindow.SequenceTree.Nodes[SkylineWindow.SequenceTree.Nodes.Count - (TestSmallMolecules ? 4 : 3)];
+                        var node = SkylineWindow.SequenceTree.Nodes[SkylineWindow.SequenceTree.Nodes.Count - 3];
                         SkylineWindow.SequenceTree.SelectedNode = node;
                     });
                 var pickList = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildrenInTest);
@@ -461,7 +461,7 @@ namespace pwiz.SkylineTestTutorial
                 using (TextReader actual = new StreamReader(TestFilesDirs[0].GetTestPath(csvname)))
                 using (TextReader target = new StreamReader(TestFilesDirs[1].GetTestPath(csvname)))
                 {
-                    AssertEx.FieldsEqual(target, actual, 6, null, true, TestSmallMolecules ? 3 : 0);
+                    AssertEx.FieldsEqual(target, actual, 6, null, true);
                 }
             }
             PauseForAuditLog();

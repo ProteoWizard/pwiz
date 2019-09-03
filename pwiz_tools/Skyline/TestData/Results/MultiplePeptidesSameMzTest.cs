@@ -49,8 +49,6 @@ namespace pwiz.SkylineTestData.Results
             if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none)
                 TestDirectoryName = asSmallMolecules.ToString();
 
-            TestSmallMolecules = false;  // Don't need the magic test node, we have an explicit test
-
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
             string docPath;

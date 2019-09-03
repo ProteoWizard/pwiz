@@ -22,9 +22,10 @@ namespace pwiz.Skyline.Model.AuditLog
 {
     public class AuditLogObject : IAuditLogObject
     {
-        public AuditLogObject(object obj, SrmDocument.DOCUMENT_TYPE docType)
+        public AuditLogObject(object obj, int? decimalPlaces, SrmDocument.DOCUMENT_TYPE docType)
         {
             Object = obj;
+            DecimalPlaces = decimalPlaces;
             DocType = docType;
         }
 
@@ -35,7 +36,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 if (Object == null)
                     return LogMessage.MISSING;
 
-                return AuditLogToStringHelper.ToString(Object, obj =>
+                return AuditLogToStringHelper.ToString(Object, DecimalPlaces, obj =>
                        Reflector.ToString(Object.GetType(), null, DocType, obj, null)); // This will always return some non-null string representation
             }
         }
@@ -49,22 +50,29 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public object Object { get; private set; }
 
+        public int? DecimalPlaces { get; private set; }
+
         public static object GetObject(IAuditLogObject auditLogObj)
         {
             return auditLogObj is AuditLogObject obj ? obj.Object : auditLogObj;
         }
 
-        public static IAuditLogObject GetAuditLogObject(object obj)
+        public static bool IsNameObject(object obj)
         {
-            return GetAuditLogObject(obj, out _);
+            return GetAuditLogObject(obj).IsName;
         }
 
-        public static IAuditLogObject GetAuditLogObject(object obj, out bool usesReflection)
+        public static IAuditLogObject GetAuditLogObject(object obj)
+        {
+            return GetAuditLogObject(obj, null, out _);
+        }
+
+        public static IAuditLogObject GetAuditLogObject(object obj, int? decimalPlaces, out bool usesReflection)
         {
             var auditLogObj = obj as IAuditLogObject;
             usesReflection = auditLogObj == null && !Reflector.HasToString(obj) &&
                              !AuditLogToStringHelper.IsKnownType(obj);
-            return auditLogObj ?? new AuditLogObject(obj, SrmDocument.DOCUMENT_TYPE.none);
+            return auditLogObj ?? new AuditLogObject(obj, decimalPlaces, SrmDocument.DOCUMENT_TYPE.none);
         }
     }
 

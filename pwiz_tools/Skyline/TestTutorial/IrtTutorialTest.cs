@@ -308,7 +308,7 @@ namespace pwiz.SkylineTestTutorial
                 WaitForClosedForm(exportMethodDlg);
 
                 Assert.AreEqual(332, File.ReadAllLines(GetTestPath(calibrateBasename + "_0001.csv")).Length); // Not L10N
-                Assert.AreEqual(333 + (TestSmallMolecules ? 2 : 0), File.ReadAllLines(GetTestPath(calibrateBasename + "_0002.csv")).Length); // Not L10N
+                Assert.AreEqual(333, File.ReadAllLines(GetTestPath(calibrateBasename + "_0002.csv")).Length); // Not L10N
             }
 
             // Import human peptide calibration results p. 12
@@ -521,7 +521,7 @@ namespace pwiz.SkylineTestTutorial
                 WaitForClosedForm(exportMethodDlg);
             }
 
-            Assert.AreEqual(1223 + (TestSmallMolecules ? 4 : 0), File.ReadAllLines(GetTestPath(scheduledBasename + "_0001.csv")).Length); // Not L10N
+            Assert.AreEqual(1223, File.ReadAllLines(GetTestPath(scheduledBasename + "_0001.csv")).Length); // Not L10N
             Assert.IsFalse(File.Exists(GetTestPath("iRT Human+Standard_0002.csv"))); // Not L10N
 
             // Import scheduled data, p. 23
