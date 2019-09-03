@@ -743,28 +743,23 @@ namespace pwiz.Skyline.Model.Results
             bool ignoreIso = handlingType == IsolationScheme.SpecialHandlingType.OVERLAP ||
                              handlingType == IsolationScheme.SpecialHandlingType.OVERLAP_MULTIPLEXED ||
                              handlingType == IsolationScheme.SpecialHandlingType.FAST_OVERLAP;
-            
+
             // For diaPASEF we will see the isolation window shift periodically as we cycle through ion mobilities - and we may see overlaps
-            bool is_diaPASEF = false;
-            Dictionary<SpectrumFilterPair, List<ExtractedSpectrum>> diaPasefFilteredSpectra = null;
+            int windowGroup =spectra[0].WindowGroup;
+            bool is_diaPASEF = _acquisitionMethod == FullScanAcquisitionMethod.DIA && windowGroup > 0;
+            Dictionary<SpectrumFilterPair, List<ExtractedSpectrum>> diaPasefFilteredSpectra = is_diaPASEF ? new Dictionary<SpectrumFilterPair, List<ExtractedSpectrum>>() : null;
             for (var indexFirst = 0; indexFirst < spectra.Length;)
             {
-                var indexLast = indexFirst + 1;
+                var indexLast = is_diaPASEF ? indexFirst + 1 : spectra.Length;
                 while (indexLast < spectra.Length && ArrayUtil.EqualsDeep(spectra[indexFirst].Precursors, spectra[indexLast].Precursors))
                 {
                     indexLast++;
                 }
 
-                is_diaPASEF |= _acquisitionMethod == FullScanAcquisitionMethod.DIA && indexLast < spectra.Length && spectra[indexFirst].WindowGroup > 0; // Isolation window changed within single RT and multiple IM scans
-                if (is_diaPASEF && diaPasefFilteredSpectra == null)
-                {
-                    diaPasefFilteredSpectra = new Dictionary<SpectrumFilterPair, List<ExtractedSpectrum>>();
-                }
                 var selectedSpectra = is_diaPASEF
                     ? spectra.Skip(indexFirst).Take(indexLast - indexFirst).ToArray()
                     : spectra;
                 var imWinCenter = is_diaPASEF ? (spectra[indexFirst].IonMobility.Mobility.Value+spectra[indexLast - 1].IonMobility.Mobility.Value)*.5 : 0;
-                int windowGroup = is_diaPASEF ? spectra[indexFirst].WindowGroup : 0;
 
                 foreach (var isoWin in GetIsolationWindows(spectra[0].GetPrecursorsByMsLevel(1)))
                 {
@@ -874,7 +869,9 @@ namespace pwiz.Skyline.Model.Results
         {
             // Waters MSe high-energy scans actually appear to be MS1 scans without
             // any isolation m/z.  So, use the instrument range.
-            if (_mseLevel > 0 && precursors.All(p => p.IsolationMz == null))
+            // Agilent MSe high energy scans present varying isolation windows, but always with the same low end - we've traditionally ignored them since it's "all ions"
+            // Bruker all ions PASEF makes creative use of isolation windows so we do want to look at those when available
+            if (_mseLevel > 0 && (_isWatersMse || _isAgilentMse || precursors.All(p => p.IsolationMz == null)))
             {
                 double isolationWidth = _instrument.MaxMz - _instrument.MinMz;
                 double isolationMz = _instrument.MinMz + isolationWidth / 2;
