@@ -274,10 +274,14 @@ namespace pwiz.Skyline.Model.AuditLog
                 .ChangeActualHash(result.CalculateRootHash())
                 .ChangeSkylHash(Hash.FromBase64(rootHash));
 
+            // yell if audit log entry hash does not match.
             // If the docFormat is null, this is an old audit log and there won't be any entry hashes.
             // We can't just always ignore non-existent hashes, otherwise people could just delete the hash elements
             // and get Skyline to successfully load the audit log
-            if (docFormat != null && !result.RootHash.SkylAndActualHashesEqual())
+            var modifiedEntries =
+                result.AuditLogEntries.Enumerate().Where(entry => !entry.Hash.SkylAndActualHashesEqual());
+
+            if (docFormat != null && (!result.RootHash.SkylAndActualHashesEqual() || modifiedEntries.Count() > 0))
             {
                 throw new AuditLogException(
                     AuditLogStrings.AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified +
