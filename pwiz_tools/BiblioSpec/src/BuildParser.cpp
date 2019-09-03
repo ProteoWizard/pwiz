@@ -120,6 +120,8 @@ void BuildParser::setSpecFileName(
                         curSpecFileName_ = dirPath.string();
                         break;
                     }
+                    else
+                        Verbosity::comment(V_DETAIL, "cannot open spectrum file %s", dirPath.string().c_str());
                 }
 
                 if (!curSpecFileName_.empty())
@@ -151,6 +153,7 @@ void BuildParser::setSpecFileName(
         throw BlibException(true, extString.c_str());
     }// else we found a file and set the name
 
+    Verbosity::comment(V_DETAIL, "spectrum filename set to %s", curSpecFileName_.c_str());
 }
 
 /**

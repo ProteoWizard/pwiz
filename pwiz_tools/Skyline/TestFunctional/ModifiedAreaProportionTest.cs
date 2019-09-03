@@ -89,6 +89,20 @@ namespace pwiz.SkylineTestFunctional
                 }
             });
             RunUI(()=> VerifyDocumentGrid(documentGrid));
+            var docRoundTrip = AssertEx.RoundTrip(SkylineWindow.Document);
+            var peptideDocNodes = docRoundTrip.Molecules.ToArray();
+            for (int i = 0; i < peptideDocNodes.Length; i++)
+            {
+                var peptideDocNode = peptideDocNodes[i];
+                if (i % 6 == 0)
+                {
+                    Assert.IsNull(peptideDocNode.AttributeGroupId);
+                }
+                else
+                {
+                    Assert.AreEqual((i%6).ToString(), peptideDocNode.AttributeGroupId);
+                }
+            }
         }
 
         /// <summary>

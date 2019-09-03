@@ -73,9 +73,14 @@ namespace pwiz.Skyline.Model.AuditLog
             return ObjectToString(allowReflection, Objects.FirstOrDefault(o => o != null), out _);
         }
 
-        public static string ObjectToString(bool allowReflection, object obj, out bool isName)
+        protected string ObjectToString(bool allowReflection, object obj, out bool isName)
         {
-            var auditLogObj = AuditLogObject.GetAuditLogObject(obj, out var usesReflection);
+            return ObjectToString(allowReflection, obj, Property.DecimalPlaces, out isName);
+        }
+
+        public static string ObjectToString(bool allowReflection, object obj, int? decimalPlaces, out bool isName)
+        {
+            var auditLogObj = AuditLogObject.GetAuditLogObject(obj, decimalPlaces, out var usesReflection);
             isName = auditLogObj.IsName;
 
             if (usesReflection)
@@ -167,7 +172,7 @@ namespace pwiz.Skyline.Model.AuditLog
             }
             
             var obj = Objects.FirstOrDefault();
-            var isNamedChange = IsFirstExpansionNode || (obj != null && AuditLogObject.GetAuditLogObject(obj).IsName) &&
+            var isNamedChange = IsFirstExpansionNode || (obj != null && AuditLogObject.IsNameObject(obj)) &&
                                     Expanded && !canIgnoreName;
 
             if (isNamedChange)

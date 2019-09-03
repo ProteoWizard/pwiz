@@ -104,7 +104,7 @@ namespace pwiz.Skyline.Model
 
         protected override IList<DocNode> OrderedChildren(IList<DocNode> children)
         {
-            if (Peptide.IsCustomMolecule && children.Any() && !SrmDocument.IsSpecialNonProteomicTestDocNode(this))
+            if (Peptide.IsCustomMolecule && children.Any())
             {
                 // Enforce order for small molecules, except those that are fictions of the test system
                 return children.OrderBy(t => (TransitionGroupDocNode)t, new TransitionGroupDocNode.CustomIonPrecursorComparer()).ToArray();
@@ -1930,6 +1930,7 @@ namespace pwiz.Skyline.Model
                 result = (result*397) ^ InternalStandardConcentration.GetHashCode();
                 result = (result*397) ^ ConcentrationMultiplier.GetHashCode();
                 result = (result*397) ^ (NormalizationMethod == null ? 0 : NormalizationMethod.GetHashCode());
+                result = (result*397) ^ (AttributeGroupId == null ? 0 : AttributeGroupId.GetHashCode());
                 return result;
             }
         }

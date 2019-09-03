@@ -153,6 +153,7 @@
     <Compile Include="PerfLockmassTest.cs" />
     <Compile Include="PerfMeasuredDriftTimes.cs" />
     <Compile Include="PerfMeasuredInverseK0.cs" />
+    <Compile Include="PerfMs3ChromatogramTest.cs" />
     <Compile Include="PerfNegativeIonDIATest.cs" />
     <Compile Include="PerfOpenSwathConvert.cs" />
     <Compile Include="PerfOptimizeCEImportResultsNativeVsMz5Test.cs" />
@@ -230,6 +231,7 @@
   <ItemGroup>
     <None Include="DriftTimePredictorViews.zip" />
     <None Include="HiResMetabolomicsViews.zip" />
+    <None Include="PerfMs3ChromatogramTest.zip" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

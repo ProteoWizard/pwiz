@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -622,7 +622,7 @@ namespace pwiz.Skyline.Model.Results
             _sourceHasDeclaredMS2Scans |= (dataSpectrum.Level == 2);
             if (_mseLevel > 0)
                 return UpdateMseLevel(dataSpectrum) == 2;
-            return dataSpectrum.Level == 2;
+            return dataSpectrum.Level > 1;
         }
 
         public int GetMseLevel()
@@ -766,7 +766,7 @@ namespace pwiz.Skyline.Model.Results
                 var imWinCenter = is_diaPASEF ? (spectra[indexFirst].IonMobility.Mobility.Value+spectra[indexLast - 1].IonMobility.Mobility.Value)*.5 : 0;
                 int windowGroup = is_diaPASEF ? spectra[indexFirst].WindowGroup : 0;
 
-                foreach (var isoWin in GetIsolationWindows(spectra[indexFirst].Precursors))
+                foreach (var isoWin in GetIsolationWindows(spectra[0].GetPrecursorsByMsLevel(1)))
                 {
                     foreach (var filterPair in FindFilterPairs(isoWin, _acquisitionMethod, ignoreIso))
                     {

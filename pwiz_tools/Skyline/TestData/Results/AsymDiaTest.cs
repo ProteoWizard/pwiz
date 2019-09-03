@@ -66,8 +66,6 @@ namespace pwiz.SkylineTestData.Results
                 return;
             }
 
-            TestSmallMolecules = false;  // We test small molecules explicitly in this test
-
             LocalizationHelper.InitThread();    // TODO: All unit tests should be correctly initialized
 
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
