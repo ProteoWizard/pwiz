@@ -1995,7 +1995,7 @@ namespace pwiz.Skyline.Properties
         {
             new RetentionScoreCalculator(RetentionTimeRegression.SSRCALC_100_A),
             new RetentionScoreCalculator(RetentionTimeRegression.SSRCALC_300_A),
-            new RetentionScoreCalculator(RetentionTimeRegression.PROSITRTCALC)
+            // new RetentionScoreCalculator(RetentionTimeRegression.PROSITRTCALC)
         };
 
         /// <summary>

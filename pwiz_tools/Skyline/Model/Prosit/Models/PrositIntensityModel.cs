@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
         PeptidePrecursorPair,
         PrositIntensityModel.PrositIntensityOutput.PrositPrecursorOutput,
         PrositIntensityModel.PrositIntensityOutput,
-        PrositMSMSSpectra>
+        PrositMS2Spectra>
     {
         static PrositIntensityModel()
         {
@@ -61,12 +61,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
         {
             var intensityModel = _instances.FirstOrDefault(p => p.Model == model);
             if (intensityModel == null)
-            {
-                // Don't let the constructor throw that exception for now
-                if (!Models.Contains(model))
-                    return null;
                 _instances.Add(intensityModel = new PrositIntensityModel(model));
-            }
                 
             return intensityModel;
         }
@@ -97,7 +92,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
 
         public override PrositIntensityInput.PrositPrecursorInput CreatePrositInputRow(SrmSettings setting, PeptidePrecursorPair skylineInput, out PrositException exception)
         {
-            var peptideSequence = PrositHelpers.ParseSequence(setting, skylineInput.NodePep, skylineInput.NodeGroup.LabelType, out exception);
+            var peptideSequence = PrositHelpers.EncodeSequence(setting, skylineInput.NodePep, skylineInput.NodeGroup.LabelType, out exception);
             if (peptideSequence == null) // equivalently, exception != null
                 return null;
 
@@ -130,16 +125,16 @@ namespace pwiz.Skyline.Model.Prosit.Models
             return new PrositIntensityOutput(prositOutputData);
         }
 
-        public override PrositMSMSSpectra CreateSkylineOutput(SrmSettings settings, IList<PeptidePrecursorPair> skylineInputs, PrositIntensityOutput prositOutput)
+        public override PrositMS2Spectra CreateSkylineOutput(SrmSettings settings, IList<PeptidePrecursorPair> skylineInputs, PrositIntensityOutput prositOutput)
         {
-            return new PrositMSMSSpectra(settings, skylineInputs, prositOutput);
+            return new PrositMS2Spectra(settings, skylineInputs, prositOutput);
         }
 
         public sealed class PrositIntensityInput : PrositInput<PrositIntensityInput.PrositPrecursorInput>
         {
-            private const string PEPTIDES_KEY = "peptides_in:0";
-            private const string PRECURSOR_CHARGE_KEY = "precursor_charge_in:0";
-            private const string COLLISION_ENERGY_KEY = "collision_energy_in:0";
+            public static readonly string PEPTIDES_KEY = @"peptides_in:0";
+            public static readonly string PRECURSOR_CHARGE_KEY = @"precursor_charge_in:0";
+            public static readonly string COLLISION_ENERGY_KEY = @"collision_energy_in:0";
 
             public PrositIntensityInput(IList<PrositPrecursorInput> precursorInputs)
             {
@@ -195,7 +190,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
         /// </summary>
         public sealed class PrositIntensityOutput : PrositOutput<PrositIntensityOutput, PrositIntensityOutput.PrositPrecursorOutput>
         {
-            private const string OUTPUT_KEY = "out/Reshape:0";
+            public static readonly string OUTPUT_KEY = @"out/Reshape:0";
 
             public PrositIntensityOutput(MapField<string, TensorProto> prositOutput)
             {

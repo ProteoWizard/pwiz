@@ -27,26 +27,26 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Prosit
 {
-    public class PrositMSMSSpectra
+    public class PrositMS2Spectra
     {
-        public PrositMSMSSpectra(SrmSettings settings, IList<PeptidePrecursorPair> peptidePrecursorPairs, PrositIntensityModel.PrositIntensityOutput prositIntensityOutput)
+        public PrositMS2Spectra(SrmSettings settings, IList<PeptidePrecursorPair> peptidePrecursorPairs, PrositIntensityModel.PrositIntensityOutput prositIntensityOutput)
         {
-            Spectra = new PrositMSMSSpectrum[peptidePrecursorPairs.Count];
+            Spectra = new PrositMS2Spectrum[peptidePrecursorPairs.Count];
             for (int i = 0; i < peptidePrecursorPairs.Count; ++i)
-                Spectra[i] = new PrositMSMSSpectrum(settings, peptidePrecursorPairs[i], i, prositIntensityOutput);
+                Spectra[i] = new PrositMS2Spectrum(settings, peptidePrecursorPairs[i], i, prositIntensityOutput);
         }
 
-        public PrositMSMSSpectrum GetSpectrum(TransitionGroupDocNode precursor)
+        public PrositMS2Spectrum GetSpectrum(TransitionGroupDocNode precursor)
         {
             return Spectra.FirstOrDefault(s => s.PeptidePrecursorPair.NodeGroup.EqualsId(precursor));
         }
 
-        public PrositMSMSSpectrum[] Spectra { get; private set; }
+        public PrositMS2Spectrum[] Spectra { get; private set; }
     }
 
-    public class PrositMSMSSpectrum
+    public class PrositMS2Spectrum
     {
-        public PrositMSMSSpectrum(SrmSettings settings, PeptidePrecursorPair peptidePrecursorPair,
+        public PrositMS2Spectrum(SrmSettings settings, PeptidePrecursorPair peptidePrecursorPair,
             int precursorIndex, PrositIntensityModel.PrositIntensityOutput prositIntensityOutput)
         {
             PeptidePrecursorPair = peptidePrecursorPair;

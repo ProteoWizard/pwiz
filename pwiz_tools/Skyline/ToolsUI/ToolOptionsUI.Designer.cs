@@ -51,13 +51,13 @@ namespace pwiz.Skyline.ToolsUI
             this.label1 = new System.Windows.Forms.Label();
             this.powerOfTenCheckBox = new System.Windows.Forms.CheckBox();
             this.tabPage1 = new System.Windows.Forms.TabPage();
-            this.serverStatusLabel = new System.Windows.Forms.Label();
+            this.prositServerStatusLabel = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.iRTModelCombo = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();
             this.intensityModelCombo = new System.Windows.Forms.ComboBox();
-            this.serverLabel = new System.Windows.Forms.Label();
-            this.serverCombo = new System.Windows.Forms.ComboBox();
+            this.prositServerLabel = new System.Windows.Forms.Label();
+            this.prositServerCombo = new System.Windows.Forms.ComboBox();
             this.prositDescrLabel = new System.Windows.Forms.LinkLabel();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.btnCancel = new System.Windows.Forms.Button();
@@ -225,23 +225,23 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // tabPage1
             // 
-            this.tabPage1.Controls.Add(this.serverStatusLabel);
+            this.tabPage1.Controls.Add(this.prositServerStatusLabel);
             this.tabPage1.Controls.Add(this.label3);
             this.tabPage1.Controls.Add(this.iRTModelCombo);
             this.tabPage1.Controls.Add(this.label2);
             this.tabPage1.Controls.Add(this.intensityModelCombo);
-            this.tabPage1.Controls.Add(this.serverLabel);
-            this.tabPage1.Controls.Add(this.serverCombo);
+            this.tabPage1.Controls.Add(this.prositServerLabel);
+            this.tabPage1.Controls.Add(this.prositServerCombo);
             this.tabPage1.Controls.Add(this.prositDescrLabel);
             this.tabPage1.Controls.Add(this.pictureBox1);
             resources.ApplyResources(this.tabPage1, "tabPage1");
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
-            // serverStatusLabel
+            // prositServerStatusLabel
             // 
-            resources.ApplyResources(this.serverStatusLabel, "serverStatusLabel");
-            this.serverStatusLabel.Name = "serverStatusLabel";
+            resources.ApplyResources(this.prositServerStatusLabel, "prositServerStatusLabel");
+            this.prositServerStatusLabel.Name = "prositServerStatusLabel";
             // 
             // label3
             // 
@@ -267,18 +267,18 @@ namespace pwiz.Skyline.ToolsUI
             resources.ApplyResources(this.intensityModelCombo, "intensityModelCombo");
             this.intensityModelCombo.Name = "intensityModelCombo";
             // 
-            // serverLabel
+            // prositServerLabel
             // 
-            resources.ApplyResources(this.serverLabel, "serverLabel");
-            this.serverLabel.Name = "serverLabel";
+            resources.ApplyResources(this.prositServerLabel, "prositServerLabel");
+            this.prositServerLabel.Name = "prositServerLabel";
             // 
-            // serverCombo
+            // prositServerCombo
             // 
-            this.serverCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.serverCombo.FormattingEnabled = true;
-            resources.ApplyResources(this.serverCombo, "serverCombo");
-            this.serverCombo.Name = "serverCombo";
-            this.serverCombo.SelectedIndexChanged += new System.EventHandler(this.serverCombo_SelectedIndexChanged);
+            this.prositServerCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.prositServerCombo.FormattingEnabled = true;
+            resources.ApplyResources(this.prositServerCombo, "prositServerCombo");
+            this.prositServerCombo.Name = "prositServerCombo";
+            this.prositServerCombo.SelectedIndexChanged += new System.EventHandler(this.serverCombo_SelectedIndexChanged);
             // 
             // prositDescrLabel
             // 
@@ -367,13 +367,13 @@ namespace pwiz.Skyline.ToolsUI
         private System.Windows.Forms.Button btnResetSettings;
         private System.Windows.Forms.TabPage tabPage1;
         private System.Windows.Forms.PictureBox pictureBox1;
-        private System.Windows.Forms.ComboBox serverCombo;
+        private System.Windows.Forms.ComboBox prositServerCombo;
         private System.Windows.Forms.LinkLabel prositDescrLabel;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.ComboBox iRTModelCombo;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.ComboBox intensityModelCombo;
-        private System.Windows.Forms.Label serverLabel;
-        private System.Windows.Forms.Label serverStatusLabel;
+        private System.Windows.Forms.Label prositServerLabel;
+        private System.Windows.Forms.Label prositServerStatusLabel;
     }
 }

@@ -83,7 +83,7 @@ namespace pwiz.Skyline.ToolsUI
             var servers = new[] { "prosit server ip here" };
             intensityModelCombo.Items.AddRange(iModels);
             iRTModelCombo.Items.AddRange(rtModels);
-            serverCombo.Items.AddRange(servers);
+            prositServerCombo.Items.AddRange(servers);
 
             if (iModels.Contains(Settings.Default.PrositIntensityModel))
                 intensityModelCombo.SelectedItem = Settings.Default.PrositIntensityModel;
@@ -91,10 +91,10 @@ namespace pwiz.Skyline.ToolsUI
                 iRTModelCombo.SelectedItem = Settings.Default.PrositRetentionTimeModel;
 
 
-            serverStatusLabel.Text = string.Empty;
+            prositServerStatusLabel.Text = string.Empty;
             if (servers.Contains(Settings.Default.PrositServer))
             {
-                serverCombo.SelectedItem = Settings.Default.PrositServer;
+                prositServerCombo.SelectedItem = Settings.Default.PrositServer;
             }
         }
 
@@ -114,13 +114,13 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch
             {
-                serverStatusLabel.Text = PrositResources.ToolOptionsUI_UpdateServerStatus_Server_unavailable;
-                serverStatusLabel.ForeColor = Color.Red;
+                prositServerStatusLabel.Text = PrositResources.ToolOptionsUI_UpdateServerStatus_Server_unavailable;
+                prositServerStatusLabel.ForeColor = Color.Red;
                 return;
             }
 
-            serverStatusLabel.Text = PrositResources.ToolOptionsUI_ToolOptionsUI_Server_online;
-            serverStatusLabel.ForeColor = Color.Green;
+            prositServerStatusLabel.Text = PrositResources.ToolOptionsUI_ToolOptionsUI_Server_online;
+            prositServerStatusLabel.ForeColor = Color.Green;
         }
 
         private void btnEditServers_Click(object sender, EventArgs e)
@@ -164,7 +164,7 @@ namespace pwiz.Skyline.ToolsUI
 
                 Settings.Default.PrositIntensityModel = (string) intensityModelCombo.SelectedItem;
                 Settings.Default.PrositRetentionTimeModel = (string)iRTModelCombo.SelectedItem;
-                Settings.Default.PrositServer = (string) serverCombo.SelectedItem;
+                Settings.Default.PrositServer = (string) prositServerCombo.SelectedItem;
             }
             base.OnClosed(e);
         }
@@ -234,6 +234,24 @@ namespace pwiz.Skyline.ToolsUI
             set { powerOfTenCheckBox.Checked = value; }
         }
 
+        public string PrositServerCombo
+        {
+            get { return (string) prositServerCombo.SelectedItem; }
+            set { prositServerCombo.SelectedItem = value; }
+        }
+
+        public string PrositIntensityModelCombo
+        {
+            get { return (string)intensityModelCombo.SelectedItem; }
+            set { intensityModelCombo.SelectedItem = value; }
+        }
+
+        public string PrositRetentionTimeModelCombo
+        {
+            get { return (string) iRTModelCombo.SelectedItem; }
+            set { iRTModelCombo.SelectedItem = value; }
+        }
+
         #endregion
 
         private void comboColorScheme_SelectedIndexChanged(object sender, EventArgs e)
@@ -276,7 +294,7 @@ namespace pwiz.Skyline.ToolsUI
 
         private void serverCombo_SelectedIndexChanged(object sender, EventArgs e)
         {
-            UpdateServerStatus((string)serverCombo.SelectedItem);
+            UpdateServerStatus((string)prositServerCombo.SelectedItem);
         }
 
         private void prositDescrLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

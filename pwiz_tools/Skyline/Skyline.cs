@@ -188,8 +188,8 @@ namespace pwiz.Skyline
             _importPeptideSearchManager.ProgressUpdateEvent += UpdateProgress;
             _importPeptideSearchManager.Register(this);
 
-            RTScoreCalculatorList.DEFAULTS[2].ScoreProvider
-                .Attach(this);
+            // RTScoreCalculatorList.DEFAULTS[2].ScoreProvider
+            //    .Attach(this);
 
             DocumentUIChangedEvent += ShowAutoTrainResults;
 

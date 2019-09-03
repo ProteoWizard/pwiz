@@ -999,7 +999,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public const string SSRCALC_300_A = "SSRCalc 3.0 (300A)";
         public const string SSRCALC_100_A = "SSRCalc 3.0 (100A)";
-        public const string PROSITRTCALC = "Prosit RT Calc";
+        // public const string PROSITRTCALC = "Prosit RT Calc";
 
         public static IRetentionScoreCalculator GetCalculatorByName(string calcName)
         {
@@ -1009,8 +1009,8 @@ namespace pwiz.Skyline.Model.DocSettings
                     return new SSRCalc3(SSRCALC_300_A, SSRCalc3.Column.A300);
                 case SSRCALC_100_A:
                     return new SSRCalc3(SSRCALC_100_A, SSRCalc3.Column.A100);
-                case PROSITRTCALC:
-                    return new PrositRetentionScoreCalculator(PROSITRTCALC);
+                // case PROSITRTCALC:
+                //    return new PrositRetentionScoreCalculator(PROSITRTCALC);
 
             }
             return null;
@@ -1211,7 +1211,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// Make sure that the current retention scores are still valid
         /// (Not by actually looking at the scores, but by checking
         /// that the state required to calculate the scores has not changed)
-        /// If invalid, false should be returned, proming the score provider
+        /// If invalid, false should be returned, prompting the score provider
         /// to clear its cache
         /// </summary>
         /// <returns>True if still valid, false if not valid</returns>
@@ -1229,7 +1229,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
     public class RetentionScoreProvider
     {
-        private Dictionary<Target, double> _scoreCache;
+        private readonly Dictionary<Target, double> _scoreCache;
         private readonly object _cacheLock = new object();
         private IRetentionScoreSource _scoreSource;
 

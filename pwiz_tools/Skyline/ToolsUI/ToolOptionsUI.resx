@@ -648,34 +648,34 @@
   <data name="&gt;&gt;tabDisplay.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
-  <data name="serverStatusLabel.AutoSize" type="System.Boolean, mscorlib">
+  <data name="prositServerStatusLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="serverStatusLabel.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="prositServerStatusLabel.Location" type="System.Drawing.Point, System.Drawing">
     <value>137, 111</value>
   </data>
-  <data name="serverStatusLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="prositServerStatusLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>1, 0, 1, 0</value>
   </data>
-  <data name="serverStatusLabel.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="prositServerStatusLabel.Size" type="System.Drawing.Size, System.Drawing">
     <value>97, 13</value>
   </data>
-  <data name="serverStatusLabel.TabIndex" type="System.Int32, mscorlib">
+  <data name="prositServerStatusLabel.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
   </data>
-  <data name="serverStatusLabel.Text" xml:space="preserve">
+  <data name="prositServerStatusLabel.Text" xml:space="preserve">
     <value>SERVER STATUS</value>
   </data>
-  <data name="&gt;&gt;serverStatusLabel.Name" xml:space="preserve">
-    <value>serverStatusLabel</value>
+  <data name="&gt;&gt;prositServerStatusLabel.Name" xml:space="preserve">
+    <value>prositServerStatusLabel</value>
   </data>
-  <data name="&gt;&gt;serverStatusLabel.Type" xml:space="preserve">
+  <data name="&gt;&gt;prositServerStatusLabel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;serverStatusLabel.Parent" xml:space="preserve">
+  <data name="&gt;&gt;prositServerStatusLabel.Parent" xml:space="preserve">
     <value>tabPage1</value>
   </data>
-  <data name="&gt;&gt;serverStatusLabel.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;prositServerStatusLabel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
@@ -780,55 +780,55 @@
   <data name="&gt;&gt;intensityModelCombo.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
-  <data name="serverLabel.AutoSize" type="System.Boolean, mscorlib">
+  <data name="prositServerLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="serverLabel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+  <data name="prositServerLabel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <data name="serverLabel.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="prositServerLabel.Location" type="System.Drawing.Point, System.Drawing">
     <value>10, 94</value>
   </data>
   <data name="serverLabel.Size" type="System.Drawing.Size, System.Drawing">
     <value>41, 13</value>
   </data>
-  <data name="serverLabel.TabIndex" type="System.Int32, mscorlib">
+  <data name="prositServerLabel.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
-  <data name="serverLabel.Text" xml:space="preserve">
+  <data name="prositServerLabel.Text" xml:space="preserve">
     <value>&amp;Server:</value>
   </data>
-  <data name="&gt;&gt;serverLabel.Name" xml:space="preserve">
-    <value>serverLabel</value>
+  <data name="&gt;&gt;prositServerLabel.Name" xml:space="preserve">
+    <value>prositServerLabel</value>
   </data>
-  <data name="&gt;&gt;serverLabel.Type" xml:space="preserve">
+  <data name="&gt;&gt;prositServerLabel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;serverLabel.Parent" xml:space="preserve">
+  <data name="&gt;&gt;prositServerLabel.Parent" xml:space="preserve">
     <value>tabPage1</value>
   </data>
-  <data name="&gt;&gt;serverLabel.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;prositServerLabel.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
-  <data name="serverCombo.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="prositServerCombo.Location" type="System.Drawing.Point, System.Drawing">
     <value>13, 110</value>
   </data>
-  <data name="serverCombo.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="prositServerCombo.Size" type="System.Drawing.Size, System.Drawing">
     <value>122, 21</value>
   </data>
-  <data name="serverCombo.TabIndex" type="System.Int32, mscorlib">
+  <data name="prositServerCombo.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
-  <data name="&gt;&gt;serverCombo.Name" xml:space="preserve">
-    <value>serverCombo</value>
+  <data name="&gt;&gt;prositServerCombo.Name" xml:space="preserve">
+    <value>prositServerCombo</value>
   </data>
-  <data name="&gt;&gt;serverCombo.Type" xml:space="preserve">
+  <data name="&gt;&gt;prositServerCombo.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;serverCombo.Parent" xml:space="preserve">
+  <data name="&gt;&gt;prositServerCombo.Parent" xml:space="preserve">
     <value>tabPage1</value>
   </data>
-  <data name="&gt;&gt;serverCombo.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;prositServerCombo.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
   <data name="prositDescrLabel.AutoSize" type="System.Boolean, mscorlib">

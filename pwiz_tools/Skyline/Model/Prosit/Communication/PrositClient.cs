@@ -29,27 +29,25 @@ namespace pwiz.Skyline.Model.Prosit.Communication
     /// </summary>
     public class PrositPredictionClient : PredictionService.PredictionServiceClient
     {
-        public static PrositPredictionClient Current
+        private static PredictionService.PredictionServiceClient _debugPredictionClient;
+
+        public static PredictionService.PredictionServiceClient Current
         {
             get
             {
+                if (_debugPredictionClient != null)
+                    return _debugPredictionClient;
+
                 if (string.IsNullOrEmpty(Settings.Default.PrositServer))
                     throw new PrositException(PrositResources.PrositPredictionClient_Current_No_Prosit_server_set);
 
                 return new PrositPredictionClient(Settings.Default.PrositServer);
             }
-        }
-
-        public PrositPredictionClient(Channel channel) : base(channel)
-        {
-        }
-
-        public PrositPredictionClient(CallInvoker callInvoker) : base(callInvoker)
-        {
+            set { _debugPredictionClient = value; }
         }
 
         public PrositPredictionClient(string server)
-            : this(new Channel(server, ChannelCredentials.Insecure))
+            : base(new Channel(server, ChannelCredentials.Insecure))
         {
         }
     }

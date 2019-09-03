@@ -85,7 +85,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
         public override PrositRTInput.PrositPeptideInput CreatePrositInputRow(SrmSettings settings, PeptideDocNode skylineInput,
             out PrositException exception)
         {
-            var sequence = PrositHelpers.ParseSequence(settings, skylineInput, IsotopeLabelType.light, out exception);
+            var sequence = PrositHelpers.EncodeSequence(settings, skylineInput, IsotopeLabelType.light, out exception);
             if (sequence == null)
                 return null;
 
@@ -110,7 +110,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
 
         public sealed class PrositRTInput : PrositInput<PrositRTInput.PrositPeptideInput>
         {
-            private const string PEPTIDES_KEY = "sequence_integer";
+            public static readonly string PEPTIDES_KEY = @"sequence_integer";
 
             public PrositRTInput(IList<PrositPeptideInput> peptideInputs)
             {
@@ -145,7 +145,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
 
         public sealed class PrositRTOutput : PrositOutput<PrositRTOutput, PrositRTOutput.PrositPeptideOutput>
         {
-            private const string OUTPUT_KEY = "prediction/BiasAdd:0";
+            public static readonly string OUTPUT_KEY = @"prediction/BiasAdd:0";
 
             private const double iRT_MEAN = 56.35363441;
             private const double iRT_VARIANCE = 1883.0160689;

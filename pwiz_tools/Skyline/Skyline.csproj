@@ -444,7 +444,7 @@
     <Compile Include="Model\Prosit\Models\PrositRetentionTimeModel.cs" />
     <Compile Include="Model\Prosit\PrositExceptions.cs" />
     <Compile Include="Model\Prosit\PrositLibraryBuilder.cs" />
-    <Compile Include="Model\Prosit\PrositMSMSSpectra.cs" />
+    <Compile Include="Model\Prosit\PrositMS2Spectra.cs" />
     <Compile Include="Model\Prosit\PrositResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

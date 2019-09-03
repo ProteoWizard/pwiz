@@ -18,6 +18,8 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
+using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Prosit
 {
@@ -27,31 +29,46 @@ namespace pwiz.Skyline.Model.Prosit
         public static readonly int PRECURSOR_CHARGES = 6;
         public static readonly int BATCH_SIZE = 2048;
 
-        public static readonly Dictionary<char, int> AMINO_ACIDS = new Dictionary<char, int>
+        public struct PrositAA
         {
-            {'A', 1}, {'C', 2}, {'D', 3}, {'E', 4}, {'F', 5}, {'G', 6}, {'H', 7}, {'I', 8},
-            {'K', 9}, {'L', 10}, {'M', 11}, {'N', 12}, {'P', 13}, {'Q', 14}, {'R', 15}, {'S', 16},
-            {'T', 17}, {'V', 18}, {'W', 19}, {'Y', 20}
+            public PrositAA(char aa, int prositIndex, StaticMod mod = null)
+            {
+                AA = aa;
+                PrositIndex = prositIndex;
+                Mod = mod;
+            }
+
+            public char AA;
+            public int PrositIndex;
+            public StaticMod Mod;
+        }
+
+        private static readonly HashSet<PrositAA> PrositAAs = new HashSet<PrositAA>()
+        {
+            new PrositAA('A', 1), new PrositAA('C', 2), new PrositAA('D', 3),
+            new PrositAA('E', 4), new PrositAA('F', 5), new PrositAA('G', 6),
+            new PrositAA('H', 7), new PrositAA('I', 8), new PrositAA('K', 9),
+            new PrositAA('L', 10), new PrositAA('M', 11), new PrositAA('N', 12),
+            new PrositAA('P', 13), new PrositAA('Q', 14), new PrositAA('R', 15),
+            new PrositAA('S', 16), new PrositAA('T', 17), new PrositAA('V', 18),
+            new PrositAA('W', 19), new PrositAA('Y', 20),
+
+            // Mods
+            new PrositAA('C', 2, UniMod.DictStructuralModNames["Carbamidomethyl (C)"]),
+            new PrositAA('M', 21, UniMod.DictStructuralModNames["Oxidation (M)"])
         };
 
-        public static readonly Dictionary<string, int> MODIFICATIONS = new Dictionary<string, int>
-        {
-            { "Carbamidomethyl Cysteine", 2 },
-            { "Carbamidomethyl (C)", 2 },
-            { "Oxidation (M)", 21 },
-            /*{ "Phospho (ST)", 22 },
-            { "Phospho (ST)", 23 },
-            { "Phospho (Y)", 24 },
-            { "Citrullination (R)", 25 }, // ?
-            { "GlyGly (K)", 26 },
-            { "GlucNac (T)", 27 }, // ?
-            { "GlucNac (S)", 28 }, // ?
-            { "Q", 29 }, // ???
-            { "Methyl (R)", 30 },
-            { "Methyl (K)", 31 },
-            { "GalNac (T)", 32 }, // ?
-            { "GalNac (S)", 33 }, // ?
-            { "Acetyl (K)", 34 }*/
-        };
+        public static readonly Dictionary<char, PrositAA> AMINO_ACIDS =
+            PrositAAs.Where(paa => paa.Mod == null).ToDictionary(paa => paa.AA, paa => paa);
+
+        public static readonly Dictionary<int, PrositAA> AMINO_ACIDS_REVERSE =
+            AMINO_ACIDS.ToDictionary(kvp => kvp.Value.PrositIndex, kvp => kvp.Value);
+
+
+        public static readonly Dictionary<string, PrositAA> MODIFICATIONS =
+            PrositAAs.Where(paa => paa.Mod != null).ToDictionary(paa => paa.Mod.Name, paa => paa);
+
+        public static readonly Dictionary<int, PrositAA> MODIFICATIONS_REVERSE =
+            MODIFICATIONS.ToDictionary(kvp => kvp.Value.PrositIndex, kvp => kvp.Value);
     }
 }

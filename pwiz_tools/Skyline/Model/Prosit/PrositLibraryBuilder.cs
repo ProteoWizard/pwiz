@@ -28,13 +28,14 @@ using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Prosit.Communication;
 using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Util;
+using Tensorflow.Serving;
 
 namespace pwiz.Skyline.Model.Prosit
 {
     class PrositLibraryBuilder : IiRTCapableLibraryBuilder
     {
         private readonly SrmDocument _document;
-        private readonly PrositPredictionClient _prositClient;
+        private readonly PredictionService.PredictionServiceClient _prositClient;
         private readonly Func<bool> _replaceLibrary;
         private readonly IList<PeptideDocNode> _peptides;
         private readonly IList<TransitionGroupDocNode> _precursors;

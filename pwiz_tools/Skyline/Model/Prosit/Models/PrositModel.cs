@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Google.Protobuf.Collections;
 using Grpc.Core;
 using pwiz.Common.SystemUtil;
@@ -223,7 +224,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
         /// slows down constructing inputs (for larger data sets with unknown mods (and aa's)significantly,
         /// which is why PrositExceptions (only) are set as an output parameter and null is returned.
         /// </summary>
-        public static int[] ParseSequence(SrmSettings settings, PeptideDocNode peptide, IsotopeLabelType label, out PrositException exception)
+        public static int[] EncodeSequence(SrmSettings settings, PeptideDocNode peptide, IsotopeLabelType label, out PrositException exception)
         {
             var sequence = peptide.Target.Sequence;
             if (sequence.Length > Constants.PEPTIDE_SEQ_LEN) {
@@ -235,7 +236,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
             var result = new int[Constants.PEPTIDE_SEQ_LEN];
 
             for (var i = 0; i < sequence.Length; ++i) {
-                if (!Constants.AMINO_ACIDS.TryGetValue(sequence[i], out var index)) {
+                if (!Constants.AMINO_ACIDS.TryGetValue(sequence[i], out var prositAA)) {
                     exception = new PrositUnsupportedAminoAcidException(peptide.ModifiedTarget, i);
                     return null;
                 }
@@ -246,25 +247,46 @@ namespace pwiz.Skyline.Model.Prosit.Models
                     if (mod.MonoisotopicMass == 0.0)
                         continue;
 
-                    if (!Constants.MODIFICATIONS.TryGetValue(mod.StaticMod.Name, out var idx)) {
+                    if (!Constants.MODIFICATIONS.TryGetValue(mod.StaticMod.Name, out var prositAAMod)) {
                         exception = new PrositUnsupportedModificationException(peptide.ModifiedTarget,
                             mod.StaticMod,
                             mod.IndexAA);
                         return null;
                     }
 
-                    result[i] = idx;
+                    result[i] = prositAAMod.PrositIndex;
                     break;
                 }
 
                 if(result[i] == 0) {
                     // Not modified
-                    result[i] = index;
+                    result[i] = prositAA.PrositIndex;
                 }
             }
 
             exception = null;
             return result;
+        }
+
+        public static string DecodeSequence(int[] sequence, out PrositException exception)
+        {
+            exception = null;
+
+            var unmodSeq = new StringBuilder();
+            for (var i = 0; i < sequence.Length; ++i)
+            {
+                if (Constants.AMINO_ACIDS_REVERSE.TryGetValue(sequence[i], out var prositAA))
+                    unmodSeq.Append(prositAA.AA);
+                else if (Constants.MODIFICATIONS_REVERSE.TryGetValue(sequence[i], out var prositAAMod))
+                    unmodSeq.Append(string.Format("{0}({1})", prositAAMod.AA, prositAAMod.Mod.ShortName));
+                else
+                {
+                    // Method currently only used in testing, so string is fine
+                    exception = new PrositException(string.Format(@"Unknown Prosit AA index {0}", sequence[i]));
+                }
+            }
+
+            return unmodSeq.ToString();
         }
 
         /// <summary>

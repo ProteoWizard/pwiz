@@ -2263,9 +2263,9 @@ namespace pwiz.Skyline.Model.Lib
     {
         private SpectrumPeaksInfo _peaksInfo;
 
-        public SpectrumInfoProsit(PrositMSMSSpectra msmsSpectrum, TransitionGroupDocNode precursor) : base(precursor.LabelType, true)
+        public SpectrumInfoProsit(PrositMS2Spectra ms2Spectrum, TransitionGroupDocNode precursor) : base(precursor.LabelType, true)
         {
-            _peaksInfo = msmsSpectrum.GetSpectrum(precursor).SpectrumPeaks;
+            _peaksInfo = ms2Spectrum.GetSpectrum(precursor).SpectrumPeaks;
         }
 
         public override string Name
