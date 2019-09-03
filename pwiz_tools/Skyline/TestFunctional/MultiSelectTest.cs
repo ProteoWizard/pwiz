@@ -47,8 +47,6 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         protected override void DoTest()
         {
-            TestSmallMolecules = false; // Adding that extra node violates some assumptions about document shape in this test
-
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_scheduled_mini.sky")));
             
             _expectedSelNodes = new List<Identity>();

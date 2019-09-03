@@ -11,6 +11,8 @@
 #ifndef BOOST_JAM_OBJECT_H
 #define BOOST_JAM_OBJECT_H
 
+#include "config.h"
+
 typedef struct _object OBJECT;
 
 OBJECT * object_new( char const * const );

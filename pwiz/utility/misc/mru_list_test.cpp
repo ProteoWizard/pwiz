@@ -30,8 +30,16 @@ void test()
 {
     mru_list<std::string> mru(5);
 
+    unit_assert(mru.find("Fu") == mru.end());
+
     mru.insert("Fighting");
+
+    unit_assert(mru.find("Fu") == mru.end());
+
     mru.insert("Fu");
+
+    unit_assert(mru.find("Fu") == mru.begin());
+
     mru.insert("Kung");
     mru.insert("Was");
     mru.insert("Everybody");
@@ -60,6 +68,7 @@ void test()
     unit_assert(mru.size() == 5);
     unit_assert(*mru.begin() == "Wax on, wax off");
     unit_assert(*mru.rbegin() == "Kung");
+    unit_assert(mru.find("Fu") == mru.end());
 }
 
 

@@ -42,6 +42,9 @@ feature.feature instruction-set
         # Advanced RISC Machines
         armv2 armv2a armv3 armv3m armv4 armv4t armv5 armv5t armv5te armv6 armv6j iwmmxt ep9312
         armv7 armv7s
+	
+	# z Systems (aka s390x)
+	z196 zEC12 z13 z14
 
     :
         propagated optional

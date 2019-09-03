@@ -11,6 +11,7 @@
 #ifndef SEARCH_SW20111118_H
 #define SEARCH_SW20111118_H
 
+#include "config.h"
 #include "object.h"
 #include "timestamp.h"
 

@@ -10586,7 +10586,22 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="ValueInvalidPathException_ValueInvalidPathException_The_value___0___is_not_valid_for_the_argument__1__failed_attempting_to_convert_it_to_a_full_file_path_" xml:space="preserve">
     <value>The value '{0}' is not valid for the argument {1} failed attempting to convert it to a full file path.</value>
   </data>
+  <data name="GraphChromatogram_UpdateUI_No_QC_chromatogram_found" xml:space="preserve">
+    <value>No corresponding QC chromatogram found</value>
+ </data>
+  <data name="SkylineVersion_V19_1_Skyline_19_1" xml:space="preserve">
+    <value>Skyline 19.1</value>
+  </data>
   <data name="CommandLine_SaveSettings_Error__Failed_saving_to_the_user_configuration_file_" xml:space="preserve">
     <value>Error: Failed saving to the user configuration file.</value>
+  </data>
+  <data name="DefineAnnotationDlg_OkDialog_Choose_a_type_for_this_annotation_to_apply_to_" xml:space="preserve">
+    <value>Choose a type for this annotation to apply to.</value>
+  </data>
+  <data name="DefineAnnotationDlg_OkDialog_Choose_a_value_for_this_annotation_" xml:space="preserve">
+    <value>Choose a value for this annotation.</value>
+  </data>
+  <data name="DocumentAnnotationUpdater_UpdateAnnotations_Updating_calculated_annotations" xml:space="preserve">
+    <value>Updating calculated annotations</value>
   </data>
 </root>

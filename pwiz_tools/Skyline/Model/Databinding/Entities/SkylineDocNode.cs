@@ -146,6 +146,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         protected abstract NodeRef NodeRefPrototype { get; }
+        protected abstract Type SkylineDocNodeType { get; }
     }
 
     public abstract class SkylineDocNode<TDocNode> : SkylineDocNode where TDocNode : DocNode
@@ -189,7 +190,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public override object GetAnnotation(AnnotationDef annotationDef)
         {
-            return DocNode.Annotations.GetAnnotation(annotationDef);
+            return DataSchema.AnnotationCalculator.GetAnnotation(annotationDef, SkylineDocNodeType, this, DocNode.Annotations);
         }
 
         public override void SetAnnotation(AnnotationDef annotationDef, object value)

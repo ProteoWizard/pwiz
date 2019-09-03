@@ -111,10 +111,6 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            // This test is quite specific to the input data set - needs results for all nodes to export the list.  Shut off the special non-proteomic test mode, otherwise you get:
-            // To export a scheduled method, you must first choose a retention time predictor in Peptide Settings / Prediction, or import results for all peptides in the document.
-            TestSmallMolecules = false;
-
             // For now, CSV files are produced with invariant culture because some manufacturers do not handle internationalized CSVs.
             _cultureInfo = CultureInfo.InvariantCulture;
             _fieldSeparator = TextUtil.GetCsvSeparator(_cultureInfo);

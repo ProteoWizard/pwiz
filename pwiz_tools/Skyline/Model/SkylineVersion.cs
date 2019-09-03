@@ -42,8 +42,11 @@ namespace pwiz.Skyline.Model
             @"Skyline 4.1",
             CacheFormatVersion.Thirteen, DocumentFormat.VERSION_3_73);
         public static readonly SkylineVersion V4_2 = new SkylineVersion(() => Resources.SkylineVersion_V4_2_Skyline_4_2,
-            @"Skyline 4.2", //,
+            @"Skyline 4.2",
             CacheFormatVersion.Thirteen, DocumentFormat.VERSION_4_2);
+        public static readonly SkylineVersion V19_1 = new SkylineVersion(() => Resources.SkylineVersion_V19_1_Skyline_19_1, 
+            @"Skyline 19.1",
+            CacheFormatVersion.Thirteen, DocumentFormat.VERSION_4_22);
 
         private SkylineVersion(Func<String> getLabelFunc, String versionName, CacheFormatVersion cacheFormatVersion,
             DocumentFormat srmDocumentVersion) : base(versionName, getLabelFunc)
@@ -75,7 +78,7 @@ namespace pwiz.Skyline.Model
 
         public static IList<SkylineVersion> SupportedForSharing()
         {
-            List<SkylineVersion> versions = new List<SkylineVersion> { V4_2, V4_1, V3_7, V3_6 };
+            List<SkylineVersion> versions = new List<SkylineVersion> { V19_1, V4_2, V4_1, V3_7, V3_6 };
             if (CURRENT.CompareTo(versions.First()) != 0)
             {
                 versions.Insert(0, CURRENT);

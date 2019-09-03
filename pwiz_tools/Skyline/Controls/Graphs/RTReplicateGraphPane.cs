@@ -122,11 +122,11 @@ namespace pwiz.Skyline.Controls.Graphs
             ReplicateGroupOp replicateGroupOp;
             if (rtValue == RTPeptideValue.All)
             {
-                replicateGroupOp = ReplicateGroupOp.FromCurrentSettings(document.Settings, GraphValues.AggregateOp.MEAN);
+                replicateGroupOp = ReplicateGroupOp.FromCurrentSettings(document, GraphValues.AggregateOp.MEAN);
             }
             else
             {
-                replicateGroupOp = ReplicateGroupOp.FromCurrentSettings(document.Settings);
+                replicateGroupOp = ReplicateGroupOp.FromCurrentSettings(document);
             }
             var retentionTimeValue = new GraphValues.RetentionTimeTransform(rtValue, rtTransformOp, replicateGroupOp.AggregateOp);
             YAxis.Title.Text = retentionTimeValue.GetAxisTitle();
