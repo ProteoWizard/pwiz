@@ -109,6 +109,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var docEmpty = NewDocument();
 
+            TestNameCollisions();
             TestAmbiguousPrecursorFragment();
             TestPerTransitionValues();
             TestToolServiceAccess();
@@ -1343,6 +1344,36 @@ namespace pwiz.SkylineTestFunctional
             Assume.AreEqual(1, transitions.Count(t => !t.IsMs1));
             NewDocument();
 
+        }
+
+        private void TestNameCollisions()
+        {
+            // Check that we handle items with same name but different InChiKey, which is legitimate
+            var input =
+                "Molecule List Name,Precursor Name,Precursor Formula,Precursor Adduct,Precursor m/z,Precursor Charge,Product Name,Product Formula,Product Adduct,Product m/z,Product Charge,Label Type,Explicit Retention Time,Explicit Retention Time Window,Explicit Collision Energy,Note,InChiKey\n" +
+                "quant,ecgonine methyl ester,C10H17NO3,[M+H],,1,,,,,,,,,,HMDB0006406,QIQNNBXHAYSQRY-ABIFROTESA-N\n" +
+                "quant,ecgonine methyl ester,C10H17NO3,[M-H],,-1,,,,,,,,,,HMDB0006406,QIQNNBXHAYSQRY-ABIFROTESA-N\n" +
+                "quant,(4S)-4-{[(9Z)-3-hydroxyoctadec-9-enoyl]oxy}-4-(trimethylammonio)butanoate,C10H17NO4,[M+H],,1,,,,,,,,,,HMDB0013124,YUCNWOKTRWJLGY-QMMMGPOBSA-N\n" +
+                "quant,(4S)-4-{[(9Z)-3-hydroxyoctadec-9-enoyl]oxy}-4-(trimethylammonio)butanoate,C10H17NO4,[M-H],,-1,,,,,,,,,,HMDB0013124,YUCNWOKTRWJLGY-QMMMGPOBSA-N\n" +
+                "quant,7-(carboxymethylcarbamoyl)heptanoic acid,C10H17NO5,[M+H],,1,,,,,,,,,,HMDB0000953,HXATVKDSYDWTCX-UHFFFAOYSA-N\n" +
+                "quant,7-(carboxymethylcarbamoyl)heptanoic acid,C10H17NO5,[M-H],,-1,,,,,,,,,,HMDB0000953,HXATVKDSYDWTCX-UHFFFAOYSA-N\n" +
+                "quant,(4S)-4-{[(9Z)-3-hydroxyoctadec-9-enoyl]oxy}-4-(trimethylammonio)butanoate,C10H19NO5,[M+H],,1,,,,,,,,,,HMDB0013125,QJGJXKFJFRSERW-QMMMGPOBSA-N\n" +
+                "quant,(4S)-4-{[(9Z)-3-hydroxyoctadec-9-enoyl]oxy}-4-(trimethylammonio)butanoate,C10H19NO5,[M-H],,-1,,,,,,,,,,HMDB0013125,QJGJXKFJFRSERW-QMMMGPOBSA-N\n" +
+                "quant,menthol,C10H20O,[M+H],,1,,,,,,,,,,HMDB0003352,NOOLISFMXDJSKH-KXUCPTDWSA-N\n" +
+                "quant,menthol,C10H20O,[M-H],,-1,,,,,,,,,,HMDB0003352,NOOLISFMXDJSKH-KXUCPTDWSA-N\n";
+            var docOrig = NewDocument();
+            SetClipboardText(input);
+
+            // Paste directly into targets area
+            RunUI(() => SkylineWindow.Paste());
+
+            var pastedDoc = WaitForDocumentChange(docOrig);
+            Assume.AreEqual(1, pastedDoc.MoleculeGroupCount);
+            Assume.AreEqual(5, pastedDoc.MoleculeCount);
+            var transitions = pastedDoc.MoleculeTransitions.ToArray();
+            Assume.AreEqual(10, transitions.Count(t => t.IsMs1));
+            Assume.AreEqual(0, transitions.Count(t => !t.IsMs1));
+            NewDocument();
         }
     }  
 }
