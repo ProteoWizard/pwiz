@@ -197,7 +197,12 @@ namespace pwiz.Skyline.Model
                                     {
                                         pepFound =
                                             Equals(pep.CustomMolecule.Name,
-                                                precursor.Name); // If user says they're the same, believe them
+                                                precursor.Name); // If user says they're the same, believe them unless accession numbers disagree
+                                        if (pepFound && !pep.CustomMolecule.AccessionNumbers.IsEmpty && !precursor.MoleculeAccessionNumbers.IsEmpty)
+                                        {
+                                            // We've seen HMDB entries with different forumlas but identical names (e.g. HMDB0013124 and HMDB0013125)
+                                            pepFound = Equals(pep.CustomMolecule.AccessionNumbers, precursor.MoleculeAccessionNumbers);
+                                        }
                                     }
                                     else // If no names, look to other cues
                                     {

@@ -118,6 +118,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="FileList64.txt" />
     <Content Include="ProductVersion.wxi" />
     <Content Include="SkylineLicense.rtf" />
   </ItemGroup>

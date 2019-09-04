@@ -43,9 +43,6 @@ namespace pwiz.SkylineTestData.Results
 
         private void DoTestAgilentCEOpt()
         {
-            // The special mode for exercising non-proteomic molecules just doesn't make sense with this test
-            TestSmallMolecules = false; 
-
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath = testFilesDir.GetTestPath(DOCUMENT_NAME);
             string cachePath = ChromatogramCache.FinalPathForName(docPath, null);

@@ -82,8 +82,6 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            TestSmallMolecules = false; // Don't need that magic extra node, we have an explict test
-
             // Open the SRMCourse.sky file
             string documentPath1 = TestFilesDir.GetTestPath("SRMCourse.sky");
             RunUI(() => SkylineWindow.OpenFile(documentPath1));

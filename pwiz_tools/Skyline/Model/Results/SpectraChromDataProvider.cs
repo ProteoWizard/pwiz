@@ -954,7 +954,7 @@ namespace pwiz.Skyline.Model.Results
                             }
 
                             var precursors = timeAndPrecursors.Precursors;
-                            if (precursors.Any() && !_filter.HasProductFilterPairs(rtCheck, precursors))
+                            if (msLevel > 1 && precursors.Any() && !_filter.HasProductFilterPairs(rtCheck, precursors))
                             {
                                 continue;
                             }

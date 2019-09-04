@@ -51,6 +51,16 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected abstract string DisambiguationPrefix { get; }
 
+        public static ReplicateValue FromPersistedString(SrmSettings settings, string persistedString)
+        {
+            if (string.IsNullOrEmpty(persistedString))
+            {
+                return null;
+            }
+            return GetAllReplicateValues(settings)
+                .FirstOrDefault(value => value.ToPersistedString() == persistedString);
+        }
+
         public class Annotation : ReplicateValue
         {
             public Annotation(AnnotationDef annotationDef)
