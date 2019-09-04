@@ -82,7 +82,6 @@ namespace pwiz.SkylineTestData.Results
             }
 
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            TestSmallMolecules = false; // We have an explicit test for that here
 
             string docPath;
             SrmDocument document = InitAgilentMseDocument(testFilesDir, out docPath);

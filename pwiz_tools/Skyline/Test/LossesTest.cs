@@ -45,8 +45,6 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void NeutralLossListTest()
         {
-            TestSmallMolecules = false; // No concept of neutral loss for small molecules
-
             var phosphoLossMod = new StaticMod("Phospho Loss", "S, T, Y", null, false, "HPO3",
                 LabelAtoms.None, RelativeRT.Matching, null, null, new[] { new FragmentLoss("H3PO4"), });
 

@@ -42,9 +42,9 @@ namespace pwiz.SkylineTestData
             // First check a few refinements which should not change the document
             var refineSettings = new RefinementSettings();
             Assert.AreSame(document, refineSettings.Refine(document));
-            refineSettings.MinPeptidesPerProtein = (TestSmallMolecules ? 1 : 3); // That magic small molecule node has just one child
+            refineSettings.MinPeptidesPerProtein = 3;
             Assert.AreSame(document, refineSettings.Refine(document));
-            refineSettings.MinTransitionsPepPrecursor = (TestSmallMolecules ? 1 : 2);
+            refineSettings.MinTransitionsPepPrecursor = 2;
             Assert.AreSame(document, refineSettings.Refine(document));
 
             // Remove the protein with only 3 peptides

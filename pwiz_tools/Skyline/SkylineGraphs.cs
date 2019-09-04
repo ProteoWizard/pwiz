@@ -4642,6 +4642,14 @@ namespace pwiz.Skyline
             return iInsert;
         }
 
+        public ToolStripMenuItem ReplicateOrderContextMenuItem
+        {
+            get
+            {
+                return replicateOrderContextMenuItem;
+            }
+        }
+
         private ToolStripMenuItem GroupByReplicateAnnotationMenuItem(ReplicateValue replicateValue, string groupBy)
         {
             return new ToolStripMenuItem(replicateValue.Title, null, (sender, eventArgs)=>GroupByReplicateValue(replicateValue))

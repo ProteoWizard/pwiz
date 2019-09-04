@@ -899,7 +899,6 @@ namespace pwiz.SkylineTestUtil
                 if (_isPauseForScreenShots)
                 {
                     Program.PauseSeconds = -1;
-                    TestSmallMolecules = false; // Extra test node will mess up the pretty pictures
                 }
             }
         }
@@ -1259,7 +1258,6 @@ namespace pwiz.SkylineTestUtil
                     @"Timeout {0} seconds exceeded in WaitForSkyline", waitCycles * SLEEP_INTERVAL / 1000);
                 }
                 Settings.Default.Reset();
-                Settings.Default.TestSmallMolecules = TestSmallMolecules;
                 Settings.Default.ImportResultsAutoCloseWindow = true;
                 Settings.Default.ImportResultsSimultaneousFiles = (int)MultiFileLoader.ImportResultsSimultaneousFileOptions.many;    // use maximum threads for multiple file import
                 BeginAuditLogging();

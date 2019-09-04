@@ -96,7 +96,6 @@ namespace pwiz.SkylineTestData.Results
             out List<SrmDocument> docCheckpoints, bool centroided = false)
         {
             docCheckpoints = new List<SrmDocument>();
-            TestSmallMolecules = false;  // We test small molecules explicitly
 
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
@@ -437,8 +436,6 @@ namespace pwiz.SkylineTestData.Results
         public void DoFullScanSettingsTest(RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules, 
             out List<SrmDocument> docCheckPoints)
         {
-            TestSmallMolecules = false; // Don't need that magic extra node, we have an explicit test
-
             docCheckPoints = new List<SrmDocument>();
 
             var doc0 = ResultsUtil.DeserializeDocument("MultiLabel.sky", GetType());

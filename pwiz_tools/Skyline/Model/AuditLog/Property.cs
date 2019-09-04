@@ -72,6 +72,16 @@ namespace pwiz.Skyline.Model.AuditLog
         public bool IgnoreName { get { return _trackAttribute.IgnoreName; } }
         public bool DiffProperties { get { return _trackAttribute.DiffProperties; } }
 
+        public int? DecimalPlaces
+        {
+            get
+            {
+                if (_trackAttribute.DecimalPlaces == -1)
+                    return null;
+                return _trackAttribute.DecimalPlaces;
+            }
+        }
+
         public CustomPropertyLocalizer CustomLocalizer
         {
             get

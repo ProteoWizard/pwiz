@@ -55,9 +55,6 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         protected override void DoTest()
         {
-            // This test makes lots of assumptions about the shape of the document, so don't alter it with our small molecule test node
-            TestSmallMolecules = false;
-
             // tests for a blank document
             RunUI(() =>
                 {

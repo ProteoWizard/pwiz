@@ -76,6 +76,9 @@ namespace pwiz.Skyline.Model.Results
         private int _mseLastSpectrumLevel; // for averaging Agilent stepped CE spectra
         private bool _sourceHasDeclaredMS2Scans; // Used in all-ions mode to discern low and high energy scans for Bruker
 
+        private static readonly PrecursorTextId TIC_KEY = new PrecursorTextId(SignedMz.ZERO, null, null, ChromExtractor.summed);
+        private static readonly PrecursorTextId BPC_KEY = new PrecursorTextId(SignedMz.ZERO, null, null, ChromExtractor.base_peak);
+
         public IEnumerable<SpectrumFilterPair> FilterPairs { get { return _filterMzValues; } }
 
         public SpectrumFilter(SrmDocument document, MsDataFileUri msDataFileUri, IFilterInstrumentInfo instrumentInfo,
@@ -128,16 +131,17 @@ namespace pwiz.Skyline.Model.Results
                     /*
                      Leaving this here in case we ever decide to fall back to our own BPC+TIC extraction in cases where data
                      file doesn't have them ready to go, as in mzXML
+                    
                     if (!firstPass && !_isFAIMS)
                     {
-                        var key = new PrecursorTextId(SignedMz.ZERO, null, null, ChromExtractor.summed);  // TIC
+                        var key = TIC_KEY;
                         dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, dictPrecursorMzToFilter.Count,
                             _instrument.MinTime, _instrument.MaxTime, _isHighAccMsFilter, _isHighAccProductFilter));
-                        key = new PrecursorTextId(SignedMz.ZERO, null, null, ChromExtractor.base_peak);   // BPC
+                        key = BPC_KEY;
                         dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, dictPrecursorMzToFilter.Count,
                             _instrument.MinTime, _instrument.MaxTime, _isHighAccMsFilter, _isHighAccProductFilter));
                     }
-                    */
+                    //*/
                 }
                 if (EnabledMsMs)
                 {
@@ -280,6 +284,10 @@ namespace pwiz.Skyline.Model.Results
                         }
                     }
                 }
+
+                HasFullGradientMs1Filters = dictPrecursorMzToFilter.ContainsKey(TIC_KEY) ||
+                                            dictPrecursorMzToFilter.ContainsKey(BPC_KEY);
+
                 _filterMzValues = dictPrecursorMzToFilter.Values.ToArray();
 
                 // For FAIMS chromatogram extraction is a special case for non-contiguous scans, so create convenient subsets of filters
@@ -426,10 +434,11 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public bool IsFirstPass { get; private set; }
+        public bool HasFullGradientMs1Filters { get; private set; }
 
         public bool IsFilteringFullGradientMs1
         {
-            get { return !IsFirstPass; }
+            get { return !IsFirstPass && HasFullGradientMs1Filters; }
         }
 
         public bool IsWatersFile
@@ -578,7 +587,7 @@ namespace pwiz.Skyline.Model.Results
             _sourceHasDeclaredMS2Scans |= (dataSpectrum.Level == 2);
             if (_mseLevel > 0)
                 return UpdateMseLevel(dataSpectrum) == 2;
-            return dataSpectrum.Level == 2;
+            return dataSpectrum.Level > 1;
         }
 
         public int GetMseLevel()
@@ -700,7 +709,7 @@ namespace pwiz.Skyline.Model.Results
                              handlingType == IsolationScheme.SpecialHandlingType.OVERLAP_MULTIPLEXED ||
                              handlingType == IsolationScheme.SpecialHandlingType.FAST_OVERLAP;
             
-            foreach (var isoWin in GetIsolationWindows(spectra[0].Precursors))
+            foreach (var isoWin in GetIsolationWindows(spectra[0].GetPrecursorsByMsLevel(1)))
             {
                 foreach (var filterPair in FindFilterPairs(isoWin, _acquisitionMethod, ignoreIso))
                 {
