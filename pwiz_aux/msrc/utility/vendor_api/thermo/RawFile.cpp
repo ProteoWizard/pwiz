@@ -1334,6 +1334,7 @@ void ScanInfoImpl::initialize()
         {
             // append SPS masses to precursors parsed from filter string
             string spsMassesStr = rawfile_->getTrailerExtraValue(scanNumber_, "SPS Masses:") + rawfile_->getTrailerExtraValue(scanNumber_, "SPS Masses Continued:");
+            bal::trim(spsMassesStr);
             if (!spsMassesStr.empty())
             {
                 vector<string> tokens;
