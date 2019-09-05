@@ -9281,8 +9281,8 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="GraphFullScan_CreateGraph_Scan_Number_" xml:space="preserve">
     <value>Scan Number:</value>
   </data>
-  <data name="GraphFullScan_CreateGraph_Scan_Range_" xml:space="preserve">
-    <value>Scan Range:</value>
+  <data name="GraphFullScan_CreateGraph_IM_Scan_Range_" xml:space="preserve">
+    <value>IM Scan Range:</value>
   </data>
   <data name="FilterMidasLibraryDlg_OkDialog_You_must_enter_a_name_for_the_filtered_library_" xml:space="preserve">
     <value>You must enter a name for the filtered library.</value>

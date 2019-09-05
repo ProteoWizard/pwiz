@@ -934,15 +934,9 @@ namespace pwiz.Skyline.Model.Results
                     else
                     {
                         // If MS/MS filtering is not enabled, skip anything that is not a MS1 scan
-                        IonMobilityValue imCheck = IonMobilityValue.EMPTY;
-                        var msLevel = _filter.HasIonMobilityRange ? _lookaheadContext.GetMsLevelAndIonMobility(i, out imCheck) :  _lookaheadContext.GetMsLevel(i);
+                        var msLevel = _lookaheadContext.GetMsLevel(i);
                         if (!_filter.EnabledMsMs && msLevel != 1)
                             continue;
-
-                        if (_filter.IsOutsideIonMobilityRange(imCheck))
-                        {
-                            continue; // Ignore uninteresting ion mobility ranges
-                        }
 
                         // Skip quickly through the chromatographic lead-in and tail when possible 
                         if (msLevel > 1 || !_filter.IsFilteringFullGradientMs1) // We need all MS1 for TIC and BPC
@@ -1001,6 +995,9 @@ namespace pwiz.Skyline.Model.Results
                         //
 
                         var nextSpectra = _lookaheadContext.Lookahead(nextSpectrum, out rt);
+                        if (!rt.HasValue)
+                            continue; // Spectrum didn't match filter, probably due to being outside IM range
+
                         if (!_filter.ContainsTime(rt.Value))
                         {
                             if (_allChromData != null)
@@ -1222,17 +1219,12 @@ namespace pwiz.Skyline.Model.Results
                     return _dataFile.GetMsLevel(index);
             }
 
-            public int GetMsLevelAndIonMobility(int index, out IonMobilityValue imValue)
+            public IonMobilityValue GetIonMobility(int index)
             {
                 if (index == _lookAheadIndex && _lookAheadDataSpectrum != null)
-                {
-                    imValue = _lookAheadDataSpectrum.IonMobility;
-                    return _lookAheadDataSpectrum.Level;
-                }
+                    return _lookAheadDataSpectrum.IonMobility;
                 else
-                {
-                    return _dataFile.GetMsLevelAndIonMobility(index, out imValue);
-                }
+                    return _dataFile.GetIonMobility(index);
             }
 
             public double? GetRetentionTime(int index)
@@ -1312,7 +1304,7 @@ namespace pwiz.Skyline.Model.Results
                 while (_lookAheadIndex++ < _lenSpectra)
                 {
                     _rt = dataSpectrum.RetentionTime;
-                    if (_rt.HasValue && dataSpectrum.Mzs.Length != 0)
+                    if (_rt.HasValue && dataSpectrum.Mzs.Length != 0 && !_filter.IsOutsideIonMobilityRange(dataSpectrum.IonMobility))
                     {
                         spectrumList.Add(dataSpectrum);
                         rtTotal += dataSpectrum.RetentionTime.Value;

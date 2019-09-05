@@ -13170,11 +13170,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Scan Range:.
+        ///   Looks up a localized string similar to IM Scan Range:.
         /// </summary>
-        public static string GraphFullScan_CreateGraph_Scan_Range_ {
+        public static string GraphFullScan_CreateGraph_IM_Scan_Range_ {
             get {
-                return ResourceManager.GetString("GraphFullScan_CreateGraph_Scan_Range_", resourceCulture);
+                return ResourceManager.GetString("GraphFullScan_CreateGraph_IM_Scan_Range_", resourceCulture);
             }
         }
         

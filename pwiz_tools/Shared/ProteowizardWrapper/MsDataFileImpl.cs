@@ -993,24 +993,6 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
-        public int GetMsLevelAndIonMobility(int scanIndex, out IonMobilityValue imValue)
-        {
-            using (var spectrum = SpectrumList.spectrum(scanIndex, _detailMsLevel))
-            {
-                int? level = GetMsLevel(spectrum);
-                imValue = GetIonMobility(spectrum);
-                if (level.HasValue || _detailMsLevel == DetailLevel.FullMetadata)
-                    return level ?? 0;
-
-                // If level is not found with faster metadata methods, try the slower ones.
-                if (_detailMsLevel == DetailLevel.InstantMetadata)
-                    _detailMsLevel = DetailLevel.FastMetadata;
-                else if (_detailMsLevel == DetailLevel.FastMetadata)
-                    _detailMsLevel = DetailLevel.FullMetadata;
-                return GetMsLevelAndIonMobility(scanIndex, out imValue);
-            }
-        }
-
         private static int? GetMsLevel(Spectrum spectrum)
         {
             CVParam param = spectrum.cvParam(CVID.MS_ms_level);
@@ -1058,7 +1040,7 @@ namespace pwiz.ProteowizardWrapper
                         UserParam param = scan.userParam(USERPARAM_DRIFT_TIME); // support files with the original drift time UserParam
                         if (param.empty())
                             return IonMobilityValue.EMPTY;
-                        value = param.timeInSeconds() * 1000.0;
+                        value =  param.timeInSeconds() * 1000.0;
                     }
                     else
                         value = driftTime.timeInSeconds() * 1000.0;

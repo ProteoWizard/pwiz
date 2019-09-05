@@ -72,7 +72,7 @@ namespace pwiz.SkylineTestData.Results
                 Assert.IsTrue(docContainer.SetDocument(docResults, docOriginal, true));
                 docContainer.AssertComplete();
                 var document = docContainer.Document;
-                
+
                 float tolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
                 double maxHeight = 0;
                 var results = document.Settings.MeasuredResults;

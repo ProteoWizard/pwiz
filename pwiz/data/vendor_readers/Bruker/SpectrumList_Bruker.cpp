@@ -265,7 +265,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
             int windowGroup = spectrum->getWindowGroup();
             if (windowGroup > 0)
             {
-                scan.userParams.push_back(UserParam("windowGroup", lexical_cast<string>(windowGroup)));
+                scan.userParams.push_back(UserParam("windowGroup", lexical_cast<string>(windowGroup))); // diaPASEF data
             }
         }
 

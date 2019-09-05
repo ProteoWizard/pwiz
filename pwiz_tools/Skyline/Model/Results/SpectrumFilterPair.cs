@@ -160,12 +160,6 @@ namespace pwiz.Skyline.Model.Results
             return FilterSpectrumList(spectra, Ms2ProductFilters, HighAccQ3, useIonMobilityHighEnergyOffset);
         }
 
-        public bool ContainsMzRange(int msLevel, double mzLow, double mzHigh)
-        {
-            return (msLevel == 1 && Ms1ProductFilters.Any(filter => !(filter.TargetMz - filter.FilterWidth / 2 > mzHigh || filter.TargetMz + filter.FilterWidth / 2 < mzLow))) ||
-                   (msLevel == 2 && Ms2ProductFilters.Any(filter => !(filter.TargetMz - filter.FilterWidth / 2 > mzHigh || filter.TargetMz + filter.FilterWidth / 2 < mzLow)));
-        }
-
         /// <summary>
         /// Apply the filter to a list of spectra.  In "normal" operation
         /// this list has a length of one. For ion mobility data it
@@ -530,17 +524,12 @@ namespace pwiz.Skyline.Model.Results
                    IonMobilityInfo.IonMobility.Units == eIonMobilityUnits.compensation_V;
         }
 
-        public bool ContainsIonMobilityValue(IonMobilityValue ionMobility, double offset)
-        {
-            return ContainsIonMobilityValue(ionMobility.Mobility, offset);
-        }
-
-        public bool ContainsIonMobilityValue(double? ionMobility, double offset)
+        public bool ContainsIonMobilityValue(IonMobilityValue ionMobility, double highEnergyOffset)
         {
             if (!ionMobility.HasValue)
                 return true; // It doesn't NOT have the ion mobility, since there isn't one
-            return (!MinIonMobilityValue.HasValue || MinIonMobilityValue.Value + offset <= ionMobility) &&
-                   (!MaxIonMobilityValue.HasValue || MaxIonMobilityValue.Value + offset >= ionMobility);
+            return (!MinIonMobilityValue.HasValue || MinIonMobilityValue.Value+highEnergyOffset <= ionMobility.Mobility) &&
+                (!MaxIonMobilityValue.HasValue || MaxIonMobilityValue.Value+highEnergyOffset >= ionMobility.Mobility);
         }
 
         public IonMobilityFilter GetIonMobilityWindow()

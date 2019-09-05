@@ -78,6 +78,9 @@ namespace pwiz.Skyline.Model.Results
         private int _mseLastSpectrumLevel; // for averaging Agilent stepped CE spectra
         private bool _sourceHasDeclaredMS2Scans; // Used in all-ions mode to discern low and high energy scans for Bruker
 
+        private static readonly PrecursorTextId TIC_KEY = new PrecursorTextId(SignedMz.ZERO, null, null, ChromExtractor.summed);
+        private static readonly PrecursorTextId BPC_KEY = new PrecursorTextId(SignedMz.ZERO, null, null, ChromExtractor.base_peak);
+
         public IEnumerable<SpectrumFilterPair> FilterPairs { get { return _filterMzValues; } }
 
         public SpectrumFilter(SrmDocument document, MsDataFileUri msDataFileUri, IFilterInstrumentInfo instrumentInfo,
@@ -132,14 +135,14 @@ namespace pwiz.Skyline.Model.Results
                      file doesn't have them ready to go, as in mzXML
                     if (!firstPass && _isIonMobilityFiltered)
                     {
-                        var key = new PrecursorTextId(SignedMz.ZERO, null, null, ChromExtractor.summed);  // TIC
+                        var key = TIC_KEY;
                         dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, dictPrecursorMzToFilter.Count,
                             _instrument.MinTime, _instrument.MaxTime, _isHighAccMsFilter, _isHighAccProductFilter));
-                        key = new PrecursorTextId(SignedMz.ZERO, null, null, ChromExtractor.base_peak);   // BPC
+                        key = BPC_KEY;
                         dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, dictPrecursorMzToFilter.Count,
                             _instrument.MinTime, _instrument.MaxTime, _isHighAccMsFilter, _isHighAccProductFilter));
                     }
-                    */
+                    //*/
                 }
                 if (EnabledMsMs)
                 {
@@ -282,6 +285,10 @@ namespace pwiz.Skyline.Model.Results
                         }
                     }
                 }
+
+                HasFullGradientMs1Filters = dictPrecursorMzToFilter.ContainsKey(TIC_KEY) ||
+                                            dictPrecursorMzToFilter.ContainsKey(BPC_KEY);
+
                 _filterMzValues = dictPrecursorMzToFilter.Values.ToArray();
 
                 // For FAIMS chromatogram extraction is a special case for non-contiguous scans, so create convenient subsets of filters
@@ -458,10 +465,11 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public bool IsFirstPass { get; private set; }
+        public bool HasFullGradientMs1Filters { get; private set; }
 
         public bool IsFilteringFullGradientMs1
         {
-            get { return !IsFirstPass; }
+            get { return !IsFirstPass && HasFullGradientMs1Filters; }
         }
 
         public bool IsWatersFile
@@ -976,7 +984,7 @@ namespace pwiz.Skyline.Model.Results
                     if (iFilter != -1)
                     {
                         while (iFilter < _filterMzValues.Length && CompareMz(isoTargMz,
-                                   _filterMzValues[iFilter].Q1, isoTargWidth.Value) == 0)
+                            _filterMzValues[iFilter].Q1, isoTargWidth.Value) == 0)
                             filterPairs.Add(_filterMzValues[iFilter++]);
                     }
                 }

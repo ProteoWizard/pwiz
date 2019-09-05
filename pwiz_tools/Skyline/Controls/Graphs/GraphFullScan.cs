@@ -316,7 +316,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (_msDataFileScanHelper.MsDataSpectra.Length > 1) // For ion mobility, show the overall range
                 {
                     GraphPane.Title.Text = TextUtil.SpaceSeparate(GraphPane.Title.Text,
-                        Resources.GraphFullScan_CreateGraph_Scan_Range_, _msDataFileScanHelper.MsDataSpectra[0].Id, @"-", _msDataFileScanHelper.MsDataSpectra.Last().Id); 
+                        Resources.GraphFullScan_CreateGraph_IM_Scan_Range_, _msDataFileScanHelper.MsDataSpectra[0].Id, @"-", _msDataFileScanHelper.MsDataSpectra.Last().Id); 
                 }
                 else
                 {
