@@ -192,7 +192,7 @@ namespace TestPerf
                 refineDlg.CVCutoff = 20;
                 refineDlg.QValueCutoff = 0.02;
             });
-            OkDialog(refineDlg, () => refineDlg.OkDialog());
+            OkDialog(refineDlg, refineDlg.OkDialog);
             var doc = SkylineWindow.Document;
             var refineDocState = (doc.PeptideGroupCount, doc.PeptideCount, doc.PeptideTransitionGroupCount,
                 doc.PeptideTransitionCount);
@@ -206,7 +206,7 @@ namespace TestPerf
                 refineDlg.CVCutoff = 20;
                 refineDlg.QValueCutoff = 1.0;
             });
-            OkDialog(refineDlg, () => refineDlg.OkDialog());
+            OkDialog(refineDlg, refineDlg.OkDialog);
 
             doc = SkylineWindow.Document;
             var qvalue1State = (doc.PeptideGroupCount, doc.PeptideCount, doc.PeptideTransitionGroupCount,
@@ -219,7 +219,7 @@ namespace TestPerf
                 refineDlg.CVCutoff = 20;
                 refineDlg.QValueCutoff = double.NaN;
             });
-            OkDialog(refineDlg, () => refineDlg.OkDialog());
+            OkDialog(refineDlg, refineDlg.OkDialog);
             doc = SkylineWindow.Document;
             var qvalueNanState = (doc.PeptideGroupCount, doc.PeptideCount, doc.PeptideTransitionGroupCount,
                 doc.PeptideTransitionCount);
@@ -234,7 +234,7 @@ namespace TestPerf
                 refineDlg.QValueCutoff = 0.02;
                 refineDlg.MinimumDetections = 3;
             });
-            OkDialog(refineDlg, () => refineDlg.OkDialog());
+            OkDialog(refineDlg, refineDlg.OkDialog);
             doc = SkylineWindow.Document;
             refineDocState = (doc.PeptideGroupCount, doc.PeptideCount, doc.PeptideTransitionGroupCount,
                 doc.PeptideTransitionCount);
@@ -254,7 +254,7 @@ namespace TestPerf
                 refineDlg.NormalizationMethod = AreaCVNormalizationMethod.ratio;
                 refineDlg.CVRefineLabelType = IsotopeLabelType.light;
             });
-            OkDialog(refineDlg, () => refineDlg.OkDialog());
+            OkDialog(refineDlg, refineDlg.OkDialog);
             var doc = SkylineWindow.Document;
             var refineDocState = (doc.PeptideGroupCount, doc.PeptideCount, doc.PeptideTransitionGroupCount,
                 doc.PeptideTransitionCount);
@@ -271,7 +271,7 @@ namespace TestPerf
                 refineDlg.NormalizationMethod = AreaCVNormalizationMethod.ratio;
                 refineDlg.CVRefineLabelType = IsotopeLabelType.heavy;
             });
-            OkDialog(refineDlg, () => refineDlg.OkDialog());
+            OkDialog(refineDlg, refineDlg.OkDialog);
             doc = SkylineWindow.Document;
             refineDocState = (doc.PeptideGroupCount, doc.PeptideCount, doc.PeptideTransitionGroupCount,
                 doc.PeptideTransitionCount);
@@ -288,7 +288,7 @@ namespace TestPerf
                 refineDlg.NormalizationMethod = AreaCVNormalizationMethod.ratio;
                 refineDlg.CVRefineLabelType = new IsotopeLabelType("all 15N", 0);
             });
-            OkDialog(refineDlg, () => refineDlg.OkDialog());
+            OkDialog(refineDlg, refineDlg.OkDialog);
             doc = SkylineWindow.Document;
             refineDocState = (doc.PeptideGroupCount, doc.PeptideCount, doc.PeptideTransitionGroupCount,
                 doc.PeptideTransitionCount);

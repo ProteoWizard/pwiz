@@ -230,11 +230,11 @@ namespace pwiz.Skyline.EditUI
             get
             {
                 var selected = comboNormalizeTo.SelectedItem.ToString();
-                if (Equals(selected, "None"))
+                if (Equals(selected, @"None"))
                     return AreaCVNormalizationMethod.none;
-                else if (Equals(selected, "Medians"))
+                else if (Equals(selected, @"Medians"))
                     return AreaCVNormalizationMethod.medians;
-                else if (Equals(selected, "Global standards"))
+                else if (Equals(selected, @"Global standards"))
                     return AreaCVNormalizationMethod.global_standards;
                 else
                     return AreaCVNormalizationMethod.ratio;
@@ -243,11 +243,11 @@ namespace pwiz.Skyline.EditUI
             {
                 if (!Equals(value, AreaCVNormalizationMethod.ratio))
                     if (value == AreaCVNormalizationMethod.global_standards)
-                        comboNormalizeTo.SelectedItem = "Global standards";
+                        comboNormalizeTo.SelectedItem = @"Global standards";
                     else if (value == AreaCVNormalizationMethod.medians)
-                        comboNormalizeTo.SelectedItem = "Medians";
+                        comboNormalizeTo.SelectedItem = @"Medians";
                     else
-                        comboNormalizeTo.SelectedItem = "None";
+                        comboNormalizeTo.SelectedItem = @"None";
             }
         }
 
@@ -257,10 +257,10 @@ namespace pwiz.Skyline.EditUI
             {
                 if (comboNormalizeTo.Items.Count == 0) return null;
                 string cvRefineTypeName = comboNormalizeTo.SelectedItem.ToString();
-                if (string.IsNullOrEmpty(cvRefineTypeName) || Equals(cvRefineTypeName, "None")
-                    || Equals(cvRefineTypeName, "Medians") || Equals(cvRefineTypeName, "Global standards"))
+                if (string.IsNullOrEmpty(cvRefineTypeName) || Equals(cvRefineTypeName, @"None")
+                    || Equals(cvRefineTypeName, @"Medians") || Equals(cvRefineTypeName, @"Global standards"))
                     return null;
-                cvRefineTypeName = Char.ToLowerInvariant(cvRefineTypeName[0]) + cvRefineTypeName.Substring(1);
+                cvRefineTypeName = char.ToLowerInvariant(cvRefineTypeName[0]) + cvRefineTypeName.Substring(1);
                 var typedMods = _settings.PeptideSettings.Modifications.GetModificationsByName(cvRefineTypeName);
                 return typedMods.LabelType;
             }

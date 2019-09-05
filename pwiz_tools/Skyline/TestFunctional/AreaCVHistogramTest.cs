@@ -320,7 +320,7 @@ namespace pwiz.SkylineTestFunctional
             var doc = SkylineWindow.Document; // tmp
             var refineDlg = ShowDialog<RefineDlg>(() => SkylineWindow.ShowRefineDlg());
             RunUI(() => { refineDlg.CVCutoff = 20; });
-            OkDialog(refineDlg, () => refineDlg.OkDialog());
+            OkDialog(refineDlg, refineDlg.OkDialog);
             doc = SkylineWindow.Document;
             var refineDocState = (doc.PeptideGroupCount, doc.PeptideCount, doc.PeptideTransitionGroupCount,
                 doc.PeptideTransitionCount);
@@ -334,7 +334,7 @@ namespace pwiz.SkylineTestFunctional
                 refineDlg.CVCutoff = 20;
                 refineDlg.NormalizationMethod = AreaCVNormalizationMethod.global_standards;
             });
-            OkDialog(refineDlg, () => refineDlg.OkDialog());
+            OkDialog(refineDlg, refineDlg.OkDialog);
             doc = SkylineWindow.Document;
             refineDocState = (doc.PeptideGroupCount, doc.PeptideCount, doc.PeptideTransitionGroupCount,
                 doc.PeptideTransitionCount);
