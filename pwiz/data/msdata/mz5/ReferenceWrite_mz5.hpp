@@ -8,6 +8,9 @@
 // Copyright 2011 Proteomics Center
 //                Children's Hospital Boston, Boston, MA 02135
 //
+// modified by Jennifer Leclaire <leclaire@uni-mainz.de> 2019
+// Institute of Computer Science, Johannes Gutenberg-Universität Mainz
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -36,6 +39,7 @@
 
 namespace pwiz {
 namespace msdata {
+namespace triMS5 { class ReferenceWrite_triMS5; }
 namespace mz5 {
 
 /**
@@ -49,6 +53,11 @@ public:
      * @param msd MSData input object
      */
     ReferenceWrite_mz5(const pwiz::msdata::MSData& msd);
+
+	/**
+	* Grant ReferenceWrite_triMS5 access to ReferenceWrite_mz5 members
+	*/
+	friend class pwiz::msdata::triMS5::ReferenceWrite_triMS5;
 
     /**
      * Stores a CVID into internal maps and returns the corresponding index.

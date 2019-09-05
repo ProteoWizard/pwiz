@@ -114,15 +114,20 @@ class PWIZ_API_DECL Reader_BTDX : public Reader
 };
 
 
-class PWIZ_API_DECL Reader_mz5 : public Reader
+class PWIZ_API_DECL Reader_HDF5 : public Reader
 {
-    public:
-    virtual std::string identify(const std::string& filename, const std::string& head) const;
-    virtual void read(const std::string& filename, const std::string& head, MSData& result, int runIndex = 0, const Config& config = Config()) const;
-    virtual void read(const std::string& filename, const std::string& head, std::vector<MSDataPtr>& results, const Config& config = Config()) const;
-    virtual const char* getType() const {return "MZ5";}
-    virtual CVID getCvType() const {return MS_mz5_format;}
-    virtual std::vector<std::string> getFileExtensions() const {return {".mz5"};}
+public:
+	Reader_HDF5() : Reader(), isMZ5_(false), is_triMS5_(false) {}
+	virtual std::string identify(const std::string& filename, const std::string& head) const;
+	virtual void read(const std::string& filename, const std::string& head, MSData& result, int runIndex = 0, const Config& config = Config()) const;
+	virtual void read(const std::string& filename, const std::string& head, std::vector<MSDataPtr>& results, const Config& config = Config()) const;
+	virtual const char* getType() const;
+	virtual CVID getCvType() const { return isMZ5_ ? MS_mz5_format : CVID_Unknown; }
+	virtual std::vector<std::string> getFileExtensions() const;
+
+private:
+	mutable bool isMZ5_;
+	mutable bool is_triMS5_;
 };
 
 

@@ -31,6 +31,7 @@
 #include "Serializer_MSn.hpp"
 #ifndef WITHOUT_MZ5
 #include "Serializer_mz5.hpp"
+#include "Serializer_triMS5.hpp"
 #endif
 #include "DefaultReaderList.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
@@ -204,7 +205,10 @@ void writeStream(ostream& os, const MSData& msd, const MSDataFile::WriteConfig& 
         }
         case MSDataFile::Format_MZ5:
             throw runtime_error("[MSDataFile::write()] mz5 does not support writing with an output stream.");
-        default:
+		
+		case MSDataFile::Format_triMS5:
+			throw runtime_error("[MSDataFile::write()] triMS5 does not support writing with an output stream.");
+		default:
             throw runtime_error("[MSDataFile::write()] Format not implemented.");
     }
 }
@@ -231,6 +235,16 @@ void MSDataFile::write(const MSData& msd,
 #endif
             break;
         }
+		case MSDataFile::Format_triMS5:
+		{
+#ifdef WITHOUT_MZ5
+			throw runtime_error("[MSDataFile::write()] library was not built with mz5/ triMS5 support.");
+#else
+			Serializer_triMS5 serializer(config);
+			serializer.write(filename, msd, iterationListenerRegistry);
+#endif
+			break;
+		}
         default:
         {
             shared_ptr<ostream> os = openFile(filename,config.gzipped);
@@ -321,6 +335,9 @@ PWIZ_API_DECL ostream& operator<<(ostream& os, MSDataFile::Format format)
         case MSDataFile::Format_MZ5:
             os << "mz5";
             return os;
+		case MSDataFile::Format_triMS5:
+			os << "triMS5";
+			return os;
         default:
             os << "Unknown";
             return os;
@@ -335,7 +352,7 @@ PWIZ_API_DECL ostream& operator<<(ostream& os, const MSDataFile::WriteConfig& co
         config.format == MSDataFile::Format_mzXML)
         os << " " << config.binaryDataEncoderConfig
            << " indexed=\"" << boolalpha << config.indexed << "\"";
-    else if (config.format == MSDataFile::Format_MZ5)
+    else if (config.format == MSDataFile::Format_MZ5 || config.format == MSDataFile::Format_triMS5)
         os << " " << config.binaryDataEncoderConfig;
     return os;
 }

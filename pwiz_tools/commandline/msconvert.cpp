@@ -104,7 +104,8 @@ string Config::outputFilename(const string& filename, const MSData& msd) const
             extension == ".cms1" ||
             extension == ".ms2" ||
             extension == ".cms2" ||
-            extension == ".mz5")
+            extension == ".mz5"||
+			extension == ".triMS5")
             runId = bfs::basename(runId);
     }
 
@@ -189,6 +190,7 @@ Config parseCommandLine(int argc, char** argv)
     bool format_MS2 = false;
     bool format_CMS2 = false;
     bool format_mz5 = false;
+	bool format_triMS5 = false;
     bool precision_32 = false;
     bool precision_64 = false;
     bool mz_precision_32 = false;
@@ -234,6 +236,7 @@ Config parseCommandLine(int argc, char** argv)
             ": set extension for output files [mzML|mzXML|mgf|txt"
 #ifndef WITHOUT_MZ5
             "|mz5"
+			"|triMS5"
 #endif
             "]")
         ("mzML",
@@ -246,6 +249,10 @@ Config parseCommandLine(int argc, char** argv)
         ("mz5",
             po::value<bool>(&format_mz5)->zero_tokens(),
             ": write mz5 format")
+		("triMS5",
+			po::value<bool>(&format_triMS5)->zero_tokens(),
+			": write triMS5 format")
+
 #endif
         ("mgf",
             po::value<bool>(&format_MGF)->zero_tokens(),
@@ -554,7 +561,7 @@ Config parseCommandLine(int argc, char** argv)
     if (config.filenames.empty())
         throw user_error("[msconvert] No files specified.");
 
-    int count = format_text + format_mzML + format_mzXML + format_MGF + format_MS2 + format_CMS2 + format_mz5;
+    int count = format_text + format_mzML + format_mzXML + format_MGF + format_MS2 + format_CMS2 + format_mz5 + format_triMS5;
     if (count > 1) throw user_error("[msconvert] Multiple format flags specified.");
     if (format_text) config.writeConfig.format = MSDataFile::Format_Text;
     if (format_mzML) config.writeConfig.format = MSDataFile::Format_mzML;
@@ -565,6 +572,7 @@ Config parseCommandLine(int argc, char** argv)
     if (format_MS2) config.writeConfig.format = MSDataFile::Format_MS2;
     if (format_CMS2) config.writeConfig.format = MSDataFile::Format_CMS2;
     if (format_mz5) config.writeConfig.format = MSDataFile::Format_MZ5;
+	if (format_triMS5) config.writeConfig.format = MSDataFile::Format_triMS5;
 
     config.writeConfig.gzipped = gzip; // if true, file is written as .gz
 
@@ -602,6 +610,14 @@ Config parseCommandLine(int argc, char** argv)
 #endif
                 config.extension = ".mz5";
                 break;
+			case MSDataFile::Format_triMS5:
+#ifdef WITHOUT_MZ5
+				throw user_error("[msconvert] Not built with mz5/triMS5 support.");
+#endif
+				config.extension = ".triMS5";
+				break;
+
+
             default:
                 throw user_error("[msconvert] Unsupported format."); 
         }

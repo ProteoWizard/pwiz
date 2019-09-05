@@ -8,6 +8,9 @@
 // Copyright 2011 Proteomics Center
 //                Children's Hospital Boston, Boston, MA 02135
 //
+// modified by Jennifer Leclaire <leclaire@uni-mainz.de> 2019
+// Institute of Computer Science, Johannes Gutenberg-Universität Mainz
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -36,7 +39,8 @@
 
 namespace pwiz {
 namespace msdata {
-namespace mz5 {
+namespace triMS5 { class ReferenceRead_triMS5; }
+namespace mz5 {	
 
 /**
  * This class is a helper class to read and convert a mz5 file to a MSData object.
@@ -50,6 +54,11 @@ public:
      */
     ReferenceRead_mz5(pwiz::msdata::MSData& msd);
 
+	/**
+	* Grant ReferenceRead_triMS5 access to ReferenceRead_mz5 members
+	*/
+	friend class pwiz::msdata::triMS5::ReferenceRead_triMS5;
+	
     /**
      * Getter.
      * @param index

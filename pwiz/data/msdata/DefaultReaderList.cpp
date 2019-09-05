@@ -37,12 +37,14 @@
 #include "Serializer_MSn.hpp"
 #ifndef WITHOUT_MZ5
 #include "Serializer_mz5.hpp"
+#include "Serializer_triMS5.hpp"
 #endif
 #include "References.hpp"
 #include "ChromatogramListBase.hpp"
 #include "pwiz/data/msdata/Version.hpp"
 #ifndef WITHOUT_MZ5
 #include "mz5/Connection_mz5.hpp"
+#include "triMS5/Connection_triMS5.hpp"
 #endif
 
 namespace pwiz {
@@ -411,77 +413,112 @@ PWIZ_API_DECL void Reader_BTDX::read(const std::string& filename,
 
 
 //
-// Reader_mz5
+// Reader_HDF5
 //
 
-// TODO: add mz5 specific header and check this. This version only checks whether the file is a HDF5 file.
+// TODO: add mz5 and triMS5 specific header and check this. This version only checks whether the file is a HDF5 file. And distinguishes between mz5 and triMS5 by a specific dataset inside triMS5
 namespace {
 
-const char mz5Header[] = {'\x89', '\x48', '\x44', '\x46', '\x0d', '\x0a', '\x1a', '\x0a'};
-const size_t mz5HeaderSize = sizeof(mz5Header) / sizeof(char);
+	const char mz5Header[] = { '\x89', '\x48', '\x44', '\x46', '\x0d', '\x0a', '\x1a', '\x0a' };
+	const size_t mz5HeaderSize = sizeof(mz5Header) / sizeof(char);
 
 } // namespace
 
-PWIZ_API_DECL std::string Reader_mz5::identify(const string& filename, const string& head) const
+PWIZ_API_DECL std::string Reader_HDF5::identify(const string& filename, const string& head) const
 {
-    if (head.length() < mz5HeaderSize)
-        return "";
+	if (head.length() < mz5HeaderSize)
+		return "";
 
-    for (size_t i=0; i < mz5HeaderSize; ++i)
-        if (head[i] != mz5Header[i])
-            return "";
+	for (size_t i = 0; i < mz5HeaderSize; ++i)
+		if (head[i] != mz5Header[i])
+			return "";
 
-    try
-    {
 #ifndef WITHOUT_MZ5
-        mz5::Connection_mz5 c(filename, mz5::Connection_mz5::ReadOnly);
-#endif
-        return getType();
-    }
-    catch (ReaderFail& e)
-    {
-        if (bal::contains(e.what(), "MZ5 does not support Unicode"))
-            throw e;
-    }
-    catch (std::runtime_error&)
-    {
-        return "";
-    }
+	//first try if it is a triMS5 file
+	try
+	{
+		triMS5::Connection_triMS5 c(filename, triMS5::Connection_triMS5::OpenPolicy::ReadOnly);
+		is_triMS5_ = true;
+		return getType();
+	}
+	catch (std::runtime_error&) {}
 
-    return "";
+	//try the mz5 Reader
+	try
+	{
+		//or try mz5
+		mz5::Connection_mz5 c(filename, mz5::Connection_mz5::ReadOnly);
+		isMZ5_ = true;
+		return getType();
+
+	}
+	catch (std::runtime_error&) {}
+#endif
+	return "";
 }
 
-PWIZ_API_DECL void Reader_mz5::read(const string& filename,
-                                    const string& head,
-                                    MSData& result,
-                                    int runIndex,
-                                    const Config& config) const
+PWIZ_API_DECL void Reader_HDF5::read(const string& filename,
+	const string& head,
+	MSData& result,
+	int runIndex,
+	const Config& config) const
 {
 #ifdef WITHOUT_MZ5
-    throw ReaderFail("[Reader_mz5::read] library was not built with mz5 support.");
+	throw ReaderFail("[Reader_HDF5::read] library was not built with mz5/triMS5 support.");
 #else
-    if (runIndex != 0)
-        throw ReaderFail("[Reader_mz5::read] multiple runs not supported, yet...");
+	if (runIndex != 0)
+		throw ReaderFail("[Reader_HDF5::read] multiple runs not supported, yet...");
 
-    Serializer_mz5 serializer;
-    serializer.read(filename, result);
+	if (isMZ5_)
+	{
+		Serializer_mz5 serializer;
+		serializer.read(filename, result);
 
-    // TODO: add "conversion to mz5 tag", sourceFile history and pwiz
+		// TODO: add "conversion to mz5 tag", sourceFile history and pwiz
 
-    // the file-level ids can't be empty
-    if (result.id.empty() || result.run.id.empty())
-        result.id = result.run.id = bfs::basename(filename);
+		// the file-level ids can't be empty
+		if (result.id.empty() || result.run.id.empty())
+			result.id = result.run.id = bfs::basename(filename);
+	}
+
+	else if (is_triMS5_)
+	{
+		Serializer_triMS5 serializer;
+		serializer.read(filename, result);
+
+		// TODO: add "conversion to mz5 tag", sourceFile history and pwiz
+
+		// the file-level ids can't be empty
+		if (result.id.empty() || result.run.id.empty())
+			result.id = result.run.id = bfs::basename(filename);
+	}
+
+	else {
+		throw ReaderFail("[Reader_HDF5::read] file was neither identified as mz5 nor as triMS5 file.");
+	}
+
 #endif
 }
 
-PWIZ_API_DECL void Reader_mz5::read(const std::string& filename,
-                                    const std::string& head,
-                                    std::vector<MSDataPtr>& results,
-                                    const Config& config) const
+PWIZ_API_DECL void Reader_HDF5::read(const std::string& filename,
+	const std::string& head,
+	std::vector<MSDataPtr>& results,
+	const Config& config) const
 {
-    // TODO multiple read mz5
-    results.push_back(MSDataPtr(new MSData));
-    read(filename, head, *results.back());
+	// TODO multiple read mz5
+	results.push_back(MSDataPtr(new MSData));
+	read(filename, head, *results.back());
+}
+
+PWIZ_API_DECL const char * Reader_HDF5::getType() const
+{
+	return isMZ5_ ? "MZ5" : is_triMS5_ ? "triMS5" : "";
+}
+
+PWIZ_API_DECL std::vector<std::string> Reader_HDF5::getFileExtensions() const
+{
+	std::vector<std::string> extensions{ ".mz5", ".triMS5" };
+	return extensions;
 }
 
 
@@ -494,7 +531,7 @@ PWIZ_API_DECL DefaultReaderList::DefaultReaderList()
     emplace_back(new Reader_MS1);
     emplace_back(new Reader_MS2);
     emplace_back(new Reader_BTDX);
-    emplace_back(new Reader_mz5);
+    emplace_back(new Reader_HDF5);
 }
 
 
