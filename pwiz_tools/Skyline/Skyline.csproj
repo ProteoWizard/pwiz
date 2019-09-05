@@ -338,7 +338,8 @@
     <Compile Include="Controls\DocumentChangeLogEntryDlg.Designer.cs">
       <DependentUpon>DocumentChangeLogEntryDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="Model\AreaCVData.cs" />
+    <Compile Include="Controls\Graphs\AreaCVGraphData.cs" />
+    <Compile Include="Model\AreaCVRefinementData.cs" />
     <Compile Include="Model\AuditLog\AuditLogObject.cs" />
     <Compile Include="Model\AuditLog\AuditLogToStringHelper.cs" />
     <Compile Include="Model\AuditLog\BlockHash.cs" />
@@ -522,7 +523,7 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Util\AnnotationHelper.cs" />
-    <Compile Include="Model\AreaCVGraphDataCache.cs" />
+    <Compile Include="Controls\Graphs\AreaCVGraphDataCache.cs" />
     <Compile Include="Controls\Graphs\AreaCVToolbar.cs">
       <SubType>UserControl</SubType>
     </Compile>

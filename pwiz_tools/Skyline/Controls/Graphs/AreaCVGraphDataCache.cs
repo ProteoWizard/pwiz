@@ -22,11 +22,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 
-namespace pwiz.Skyline.Model
+namespace pwiz.Skyline.Controls.Graphs
 {
     public partial class AreaCVGraphData
     {

@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -11,8 +12,13 @@ namespace pwiz.Skyline.Model
 {
     public class AreaCVRefinementData
     {
-        public readonly AreaCVRefinementSettings _settings;
-        public AreaCVRefinementData(SrmDocument document, AreaCVRefinementSettings settings)
+        private readonly AreaCVRefinementSettings _settings;
+
+        public IList<CVData> Data { get; private set; }
+        public List<InternalData> IData { get; private set; }
+
+        public AreaCVRefinementData(SrmDocument document, AreaCVRefinementSettings settings,
+            CancellationToken? token = null)
         {
             _settings = settings;
             if (document == null || !document.Settings.HasResults)
@@ -20,16 +26,18 @@ namespace pwiz.Skyline.Model
 
             var replicates = document.MeasuredResults.Chromatograms.Count;
             var areas = new List<AreaInfo>(replicates);
-            var annotations = new string[] { null };
-            var data = new List<InternalData>();
+            var annotations = AnnotationHelper.GetPossibleAnnotations(document.Settings, settings.Group, AnnotationDef.AnnotationTarget.replicate);
+            if (!annotations.Any() && settings.Group == null)
+                annotations = new string[] { null };
+
+            //var data = new List<InternalData>();
+            IData = new List<InternalData>();
             var hasHeavyMods = document.Settings.PeptideSettings.Modifications.HasHeavyModifications;
             var hasGlobalStandards = document.Settings.HasGlobalStandardArea;
-            var ms1 = false;
-            var best = false;
+            var ms1 = settings.MsLevel == AreaCVMsLevel.precursors;
+            var best = settings.Transitions == AreaCVTransitions.best;
             double? qvalueCutoff = null;
-            if (document.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained &&
-                !double.IsNaN(_settings.QValueCutoff) &&
-                _settings.QValueCutoff < 1.0)
+            if (ShouldUseQValues(document))
                 qvalueCutoff = _settings.QValueCutoff;
 
             int? minDetections = null;
@@ -46,15 +54,22 @@ namespace pwiz.Skyline.Model
                 {
                     foreach (var transitionGroupDocNode in peptide.TransitionGroups)
                     {
-                        if (transitionGroupDocNode.IsDecoy)
+                        if (_settings.PointsType == PointsTypePeakArea.decoys != transitionGroupDocNode.IsDecoy)
                             continue;
 
                         foreach (var a in annotations)
                         {
                             areas.Clear();
+
+                            if (a != _settings.Annotation && (_settings.Group == null || _settings.Annotation != null))
+                                continue;
                             
-                            foreach (var i in AnnotationHelper.GetReplicateIndices(document.Settings, null, a))
+                            foreach (var i in AnnotationHelper.GetReplicateIndices(document.Settings, _settings.Group, a))
                             {
+                                if (token.HasValue && token.Value.IsCancellationRequested)
+                                {
+                                    throw new Exception(@"Cancelled");
+                                }
                                 var groupChromInfo = transitionGroupDocNode.GetSafeChromInfo(i)
                                     .FirstOrDefault(c => c.OptimizationStep == 0);
                                 if (groupChromInfo == null)
@@ -77,8 +92,8 @@ namespace pwiz.Skyline.Model
                                     var chromInfo = t.GetSafeChromInfo(index)
                                         .FirstOrDefault(c => c.OptimizationStep == 0);
                                     return chromInfo != null && (!best || chromInfo.RankByLevel == 1);
-                                }).Sum(t => (double) t.GetSafeChromInfo(index)
-                                    .FirstOrDefault(c => c.OptimizationStep == 0).Area);
+                                    // ReSharper disable once PossibleNullReferenceException
+                                }).Sum(t => (double) t.GetSafeChromInfo(index).FirstOrDefault(c => c.OptimizationStep == 0).Area);
 
                                 var normalizedArea = sumArea;
                                 if (_settings.NormalizationMethod == AreaCVNormalizationMethod.medians)
@@ -101,39 +116,19 @@ namespace pwiz.Skyline.Model
 
                             if (qvalueCutoff.HasValue && minDetections.HasValue && areas.Count < minDetections.Value)
                                 continue;
-                            AddToInternalData(data, areas, peptideGroup, peptide, transitionGroupDocNode);
+
+                            _settings.AddToInternalData(IData, areas, peptideGroup, peptide, transitionGroupDocNode, a);
                         }
                     }
                 }
             }
-            Data = ImmutableList<CVData>.ValueOf(data.GroupBy(i => i, (key, grouped) =>
+            Data = ImmutableList<CVData>.ValueOf(IData.GroupBy(i => i, (key, grouped) =>
             {
                 var groupedArray = grouped.ToArray();
                 return new CVData(
-                    groupedArray.Select(idata => new PeptideAnnotationPair(idata.PeptideGroup, idata.Peptide, idata.TransitionGroup, null, idata.CV)),
-                    key.CV, key.Area, groupedArray.Length);
+                    groupedArray.Select(idata => new PeptideAnnotationPair(idata.PeptideGroup, idata.Peptide, idata.TransitionGroup, idata.Annotation, idata.CV)),
+                    key.CVBucketed, key.Area, groupedArray.Length);
             }).OrderBy(d => d.CV));
-        }
-
-        private void AddToInternalData(ICollection<InternalData> data, List<AreaInfo> areas,
-            PeptideGroupDocNode peptideGroup, PeptideDocNode peptide, TransitionGroupDocNode tranGroup)
-        {
-            var normalizedStatistics = new Statistics(areas.Select(a => a.NormalizedArea));
-            var normalizedMean = normalizedStatistics.Mean();
-            var normalizedStdDev = normalizedStatistics.StdDev();
-
-            if (normalizedMean == 0.0 || double.IsNaN(normalizedMean) || double.IsNaN(normalizedStdDev))
-                return;
-
-            var cv = normalizedStdDev / normalizedMean;
-            data.Add(new InternalData
-            {
-                Peptide = peptide,
-                PeptideGroup = peptideGroup,
-                TransitionGroup = tranGroup,
-                CV = cv,
-                Area = 0.0
-            });
         }
 
         public SrmDocument RemoveAboveCVCuttoff(SrmDocument document)
@@ -174,14 +169,14 @@ namespace pwiz.Skyline.Model
         private MedianInfo CalculateMedianAreas(SrmDocument document)
         {
             double? qvalueCutoff = null;
-            if (!double.IsNaN(_settings.QValueCutoff))
+            if (ShouldUseQValues(document))
                 qvalueCutoff = _settings.QValueCutoff;
             var replicates = document.MeasuredResults.Chromatograms.Count;
             var allAreas = new List<List<double?>>(document.MoleculeTransitionGroupCount);
 
             foreach (var transitionGroupDocNode in document.MoleculeTransitionGroups)
             {
-                if (transitionGroupDocNode.IsDecoy)
+                if ((_settings.PointsType == PointsTypePeakArea.decoys) != transitionGroupDocNode.IsDecoy)
                     continue;
 
                 var detections = 0;
@@ -208,6 +203,13 @@ namespace pwiz.Skyline.Model
             return new MedianInfo(medians, new Statistics(medians).Median());
         }
 
+        private bool ShouldUseQValues(SrmDocument document)
+        {
+            return _settings.PointsType == PointsTypePeakArea.targets &&
+                   document.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained &&
+                   !double.IsNaN(_settings.QValueCutoff) && _settings.QValueCutoff < 1.0;
+        }
+
         private IEnumerable<double> GetReplicateAreas(List<List<double?>> allAreas, int replicateIndex)
         {
             foreach (var areas in allAreas)
@@ -228,60 +230,95 @@ namespace pwiz.Skyline.Model
                 area /= globalStandard;
             return area;
         }
+    }
 
-        public IList<CVData> Data { get; private set; }
+    public class InternalData
+    {
+        public PeptideGroupDocNode PeptideGroup;
+        public PeptideDocNode Peptide;
+        public TransitionGroupDocNode TransitionGroup;
+        public string Annotation;
+        public double CV;
+        public double CVBucketed;
+        public double Area;
 
-        private class InternalData
+        #region object overrides
+
+        protected bool Equals(InternalData other)
         {
-            public PeptideGroupDocNode PeptideGroup;
-            public PeptideDocNode Peptide;
-            public TransitionGroupDocNode TransitionGroup;
-            public double CV;
-            public double Area;
-
-            #region object overrides
-
-            protected bool Equals(InternalData other)
-            {
-                return CV.Equals(other.CV) && Area.Equals(other.Area);
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != GetType()) return false;
-                return Equals((InternalData)obj);
-            }
-
-            public override int GetHashCode()
-            {
-                unchecked
-                {
-                    return (CV.GetHashCode() * 397) ^ Area.GetHashCode();
-                }
-            }
-
-            #endregion
+            return CVBucketed.Equals(other.CVBucketed) && Area.Equals(other.Area);
         }
 
-        public class AreaCVRefinementSettings
+        public override bool Equals(object obj)
         {
-            public AreaCVRefinementSettings(double cvCutoff, double qValueCutoff, int minimumDetections, AreaCVNormalizationMethod normalizationMethod, int ratioIndex)
-            {
-                CVCutoff = cvCutoff;
-                QValueCutoff = qValueCutoff;
-                MinimumDetections = minimumDetections;
-                NormalizationMethod = normalizationMethod;
-                RatioIndex = ratioIndex;
-            }
-
-            public double QValueCutoff { get; private set; }
-            public double CVCutoff { get; private set; }
-            public int MinimumDetections { get; private set; }
-            public AreaCVNormalizationMethod NormalizationMethod { get; private set; }
-            public int RatioIndex { get; private set; }
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((InternalData)obj);
         }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (CVBucketed.GetHashCode() * 397) ^ Area.GetHashCode();
+            }
+        }
+
+        #endregion
+    }
+
+    public class AreaCVRefinementSettings
+    {
+        public AreaCVRefinementSettings(double cvCutoff, double qValueCutoff, int minimumDetections, AreaCVNormalizationMethod normalizationMethod, int ratioIndex)
+        {
+            CVCutoff = cvCutoff;
+            QValueCutoff = qValueCutoff;
+            MinimumDetections = minimumDetections;
+            NormalizationMethod = normalizationMethod;
+            RatioIndex = ratioIndex;
+            MsLevel = AreaCVMsLevel.products;   // Not MS1 for now
+            Transitions = AreaCVTransitions.all; // All transitions for now
+            Annotation = null;
+            Group = null;
+        }
+
+        public virtual void AddToInternalData(ICollection<InternalData> data, List<AreaInfo> areas,
+            PeptideGroupDocNode peptideGroup, PeptideDocNode peptide, TransitionGroupDocNode tranGroup, string annotation)
+        {
+            var normalizedStatistics = new Statistics(areas.Select(a => a.NormalizedArea));
+            var normalizedMean = normalizedStatistics.Mean();
+            var normalizedStdDev = normalizedStatistics.StdDev();
+
+            // If the mean is 0 or NaN or the standard deviaiton is NaN the cv would also be NaN
+            if (normalizedMean == 0.0 || double.IsNaN(normalizedMean) || double.IsNaN(normalizedStdDev))
+                return;
+
+            // Round cvs so that the smallest difference between two cv's is BinWidth
+            var cv = normalizedStdDev / normalizedMean;
+            data.Add(new InternalData
+            {
+                Peptide = peptide,
+                PeptideGroup = peptideGroup,
+                TransitionGroup = tranGroup,
+                Annotation = annotation,
+                CV = cv,
+                CVBucketed = cv,
+                Area = 0.0
+            });
+        }
+        protected AreaCVRefinementSettings() {}
+
+        public AreaCVNormalizationMethod NormalizationMethod { get; protected set; }
+        public AreaCVMsLevel MsLevel { get; protected set; }
+        public AreaCVTransitions Transitions { get; protected set; }
+        public int RatioIndex { get; protected set; }
+        public string Group { get; protected set; }
+        public string Annotation { get; protected set; }
+        public PointsTypePeakArea PointsType { get; protected set; }
+        public double QValueCutoff { get; protected set; }
+        public double CVCutoff { get; protected set; }
+        public int MinimumDetections { get; protected set; }
     }
 
     public class AreaInfo

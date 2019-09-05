@@ -447,7 +447,7 @@ namespace pwiz.Skyline.Model
             #endregion
         }
 
-        public class AreaCVGraphSettings
+        public class AreaCVGraphSettings : AreaCVRefinementSettings
         {
             public AreaCVGraphSettings(GraphTypeSummary graphType, bool convertToDecimal = true)
             {
