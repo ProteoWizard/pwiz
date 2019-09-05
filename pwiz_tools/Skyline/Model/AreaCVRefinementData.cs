@@ -13,9 +13,14 @@ namespace pwiz.Skyline.Model
     public class AreaCVRefinementData
     {
         private readonly AreaCVRefinementSettings _settings;
+        private IList<InternalData> _internalData;
 
         public IList<CVData> Data { get; private set; }
-        public List<InternalData> IData { get; private set; }
+
+        public double CalcMedianCV()
+        {
+            return new Statistics(_internalData.Select(d => d.CV)).Median();
+        }
 
         public AreaCVRefinementData(SrmDocument document, AreaCVRefinementSettings settings,
             CancellationToken? token = null)
@@ -31,10 +36,13 @@ namespace pwiz.Skyline.Model
                 annotations = new string[] { null };
 
             //var data = new List<InternalData>();
-            IData = new List<InternalData>();
+            _internalData = new List<InternalData>();
             var hasHeavyMods = document.Settings.PeptideSettings.Modifications.HasHeavyModifications;
             var hasGlobalStandards = document.Settings.HasGlobalStandardArea;
             var ms1 = settings.MsLevel == AreaCVMsLevel.precursors;
+            // Avoid using not-MS1 with a document that is only MS1
+            if (!ms1 && document.MoleculeTransitions.All(t => t.IsMs1))
+                ms1 = true;
             var best = settings.Transitions == AreaCVTransitions.best;
             double? qvalueCutoff = null;
             if (ShouldUseQValues(document))
@@ -117,12 +125,12 @@ namespace pwiz.Skyline.Model
                             if (qvalueCutoff.HasValue && minDetections.HasValue && areas.Count < minDetections.Value)
                                 continue;
 
-                            _settings.AddToInternalData(IData, areas, peptideGroup, peptide, transitionGroupDocNode, a);
+                            _settings.AddToInternalData(_internalData, areas, peptideGroup, peptide, transitionGroupDocNode, a);
                         }
                     }
                 }
             }
-            Data = ImmutableList<CVData>.ValueOf(IData.GroupBy(i => i, (key, grouped) =>
+            Data = ImmutableList<CVData>.ValueOf(_internalData.GroupBy(i => i, (key, grouped) =>
             {
                 var groupedArray = grouped.ToArray();
                 return new CVData(

@@ -648,13 +648,13 @@ namespace pwiz.Skyline
                 c.Refinement.NormalizationMethod = p.Value.Equals(NormalizationMethod.GLOBAL_STANDARDS.Name)
                     ? AreaCVNormalizationMethod.global_standards
                     : AreaCVNormalizationMethod.medians;
-            });
+            }) { WrapValue = true };
         public static readonly Argument ARG_REFINE_CV_REFERENCE_NORMALIZE = new RefineArgument(@"refine-cv-reference-normalize", LABEL_VALUE,
             (c, p) =>
             {
                 c.Refinement.NormalizationMethod = AreaCVNormalizationMethod.ratio;
                 c.RefinementCvLabelTypeName = p.Value;
-            });
+            }) { WrapValue = true };
         public static readonly Argument ARG_REFINE_QVALUE_CUTOFF = new RefineArgument(@"refine-qvalue-cutoff", NUM_VALUE,
             (c, p) => c.Refinement.QValueCutoff = p.ValueDouble);
         public static readonly Argument ARG_REFINE_MINIMUM_DETECTIONS = new RefineArgument(@"refine-minimum-detections", INT_VALUE,

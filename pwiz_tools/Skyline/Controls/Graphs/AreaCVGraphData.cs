@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             try
             {
-                _refinementData = new AreaCVRefinementData(document, graphSettings);
+                _refinementData = new AreaCVRefinementData(document, graphSettings, token);
             }
             catch (Exception)
             {
@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Controls.Graphs
             CalculateStats();
 
             if(IsValid)
-                MedianCV = new Statistics(IData.Select(d => d.CV)).Median();
+                MedianCV = _refinementData.CalcMedianCV();
         }
 
         public static readonly AreaCVGraphData INVALID = new AreaCVGraphData(null,
@@ -102,11 +102,6 @@ namespace pwiz.Skyline.Controls.Graphs
         public IList<CVData> Data
         {
             get { return _refinementData.Data; }
-        }
-
-        public IList<InternalData> IData
-        {
-            get { return _refinementData.IData; }
         }
 
         public bool IsValid { get; private set; }

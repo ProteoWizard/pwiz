@@ -793,7 +793,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Normalize to the specified type.
+        ///   Looks up a localized string similar to Areas used in CV calculations are normalized as specified. (default no normalization).
         /// </summary>
         internal static string _refine_cv_global_normalize {
             get {
@@ -802,7 +802,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Nomalize to a reference type..
+        ///   Looks up a localized string similar to Areas used in CV calculations are normalized to a reference type, e.g. &quot;heavy&quot;..
         /// </summary>
         internal static string _refine_cv_reference_normalize {
             get {
@@ -811,7 +811,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to All elements above the cv cutoff will be removed..
+        ///   Looks up a localized string similar to All target precursors with peak area CV above the cutoff will be removed..
         /// </summary>
         internal static string _refine_cv_remove_above_cutoff {
             get {
@@ -942,6 +942,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to All target precursors with less than the specified number of replicates with detection q value below the --refine-qvalue-cutoff are removed..
+        /// </summary>
+        internal static string _refine_minimum_detections {
+            get {
+                return ResourceManager.GetString("_refine_minimum_detections", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to All targets that do not correspond to a library match will be removed..
         /// </summary>
         internal static string _refine_missing_library {
@@ -972,7 +981,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to All elements above the q value will be removed..
+        ///   Looks up a localized string similar to All target precursors with a maximum detection q value above the cutoff will be removed. If --refine-minimum-detections is used then at least the specified number of replicates must have a detection q value below the cutoff..
         /// </summary>
         internal static string _refine_qvalue_cutoff {
             get {
