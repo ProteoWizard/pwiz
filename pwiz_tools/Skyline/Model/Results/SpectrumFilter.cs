@@ -202,7 +202,7 @@ namespace pwiz.Skyline.Model.Results
                         if (_fullScan.RetentionTimeFilterType != RetentionTimeFilterType.none)
                         {
                             peakBoundaries = document.Settings.GetExplicitPeakBounds(nodePep, msDataFileUri);
-                            if (peakBoundaries != null)
+                            if (peakBoundaries != null && !peakBoundaries.IsEmpty)
                             {
                                 minTime = peakBoundaries.StartTime - _fullScan.RetentionTimeFilterLength;
                                 maxTime = peakBoundaries.EndTime + _fullScan.RetentionTimeFilterLength;
