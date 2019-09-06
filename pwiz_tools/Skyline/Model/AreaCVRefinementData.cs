@@ -35,7 +35,6 @@ namespace pwiz.Skyline.Model
             if (!annotations.Any() && settings.Group == null)
                 annotations = new string[] { null };
 
-            //var data = new List<InternalData>();
             _internalData = new List<InternalData>();
             var hasHeavyMods = document.Settings.PeptideSettings.Modifications.HasHeavyModifications;
             var hasGlobalStandards = document.Settings.HasGlobalStandardArea;
@@ -287,6 +286,7 @@ namespace pwiz.Skyline.Model
             RatioIndex = ratioIndex;
             MsLevel = AreaCVMsLevel.products;   // Not MS1 for now
             Transitions = AreaCVTransitions.all; // All transitions for now
+            Transitions = (AreaCVTransitions) 3;
             Annotation = null;
             Group = null;
         }
