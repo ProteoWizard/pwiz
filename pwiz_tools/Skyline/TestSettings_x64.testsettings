@@ -58,6 +58,8 @@
     <DeploymentItem filename="quantitation_1.xsd" />
     <DeploymentItem filename="quantitation_2.xsd" />
     <DeploymentItem filename="SkylineCmd.exe" />
+	<!-- Prosit gRPC -->
+	<DeploymentItem filename="..\Shared\Lib\grpc_csharp_ext.x64.dll" />
   </Deployment>
   <Execution hostProcessPlatform="MSIL">
     <Timeouts runTimeout="10800000" testTimeout="480000" />

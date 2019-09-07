@@ -132,6 +132,42 @@ namespace pwiz.Skyline.Controls.Graphs.Spectrum
 
         public bool HasSpectrum { get { return GraphItem != null; }}
 
+        public TransitionGroupDocNode Precursor
+        {
+            get { return GraphItem.TransitionGroupNode; }
+        }
+
+        public int PrositNCE
+        {
+            get { return (int) comboCE.SelectedItem; }
+            set { comboCE.SelectedItem = value; }
+        }
+
+        public bool IsToolbarVisible
+        {
+            get { return toolBar.Visible; }
+        }
+
+        public bool NCEVisible
+        {
+            get { return comboCE.Visible; }
+        }
+
+        public bool MirrorComboVisible
+        {
+            get { return comboMirrorSpectrum.Visible; }
+        }
+
+        public string GraphTitle
+        {
+            get
+            {
+                if (HasSpectrum)
+                    return GraphItem.Title;
+                return GraphPane.CurveList[0].Label.Text;
+            }
+        }
+
         public string LibraryName
         {
             get { return GraphItem.LibraryName; }
@@ -229,51 +265,25 @@ namespace pwiz.Skyline.Controls.Graphs.Spectrum
                    (!ReferenceEquals(_nodeGroup.Id, nodeGroup.Id));
         }
 
-        /// <summary>
-        /// Small helper class to distinguish the 10-50 CEs from the
-        /// one calculated CE and to provide custom formatting and equality
-        /// </summary>
-        private class CEComboItem
+        private class ToolbarUpdate : IDisposable
         {
-            public CEComboItem(double ce, bool isCalculated = false)
+            private GraphSpectrum _spectrum;
+
+            public ToolbarUpdate(GraphSpectrum spectrum)
             {
-                CE = ce;
-                IsCalculated = isCalculated;
+                _spectrum = spectrum;
+                _spectrum._inToolbarUpdate = true;
             }
 
-            public double CE { get; private set; }
-            public bool IsCalculated { get; private set; }
-
-            public override string ToString()
+            public void Dispose()
             {
-                return CE.ToString(@"0.####", LocalizationHelper.CurrentUICulture);
-            }
-
-            protected bool Equals(CEComboItem other)
-            {
-                return CE.Equals(other.CE) && IsCalculated == other.IsCalculated;
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != this.GetType()) return false;
-                return Equals((CEComboItem) obj);
-            }
-
-            public override int GetHashCode()
-            {
-                unchecked
-                {
-                    return (CE.GetHashCode() * 397) ^ IsCalculated.GetHashCode();
-                }
+                _spectrum._inToolbarUpdate = false;
             }
         }
 
         private void UpdateToolbar()
         {
-            if ((_spectra == null || _spectra.Count < 2) && !Settings.Default.Prosit)
+            if (_spectra == null || (_spectra.Count < 2 && !Settings.Default.Prosit))
             {
                 toolBar.Visible = false;
             }
@@ -316,28 +326,33 @@ namespace pwiz.Skyline.Controls.Graphs.Spectrum
                         int selectedIndex = comboSpectrum.SelectedIndex;
                         object selectedMirror = comboMirrorSpectrum.SelectedItem;
 
-                        _inToolbarUpdate = true;
-                        comboSpectrum.Items.Clear();
-                        comboMirrorSpectrum.Items.Clear();
-                        comboMirrorSpectrum.Items.Add(string.Empty); // No mirror
-                        foreach (string name in listNames) {
-                            comboSpectrum.Items.Add(name);
-                            comboMirrorSpectrum.Items.Add(name);
+                        using (var _ = new ToolbarUpdate(this))
+                        {
+                            comboSpectrum.Items.Clear();
+                            comboMirrorSpectrum.Items.Clear();
+                            comboMirrorSpectrum.Items.Add(string.Empty); // No mirror
+                            foreach (string name in listNames)
+                            {
+                                comboSpectrum.Items.Add(name);
+                                comboMirrorSpectrum.Items.Add(name);
+                            }
+
+                            if (selectedIndex == 0 || selected == null ||
+                                comboSpectrum.Items.IndexOf(selected) == -1)
+                            {
+                                comboSpectrum.SelectedIndex = 0;
+                            }
+                            else
+                            {
+                                comboSpectrum.SelectedItem = selected;
+                            }
+
+                            if (selectedMirror != null && comboMirrorSpectrum.Items.IndexOf(selectedMirror) != -1)
+                            {
+                                comboMirrorSpectrum.SelectedItem = selectedMirror;
+                            }
                         }
 
-                        if (selectedIndex == 0 || selected == null ||
-                            comboSpectrum.Items.IndexOf(selected) == -1) {
-                            comboSpectrum.SelectedIndex = 0;
-                        }
-                        else {
-                            comboSpectrum.SelectedItem = selected;
-                        }
-
-                        if (selectedMirror != null && comboMirrorSpectrum.Items.IndexOf(selectedMirror) != -1) {
-                            comboMirrorSpectrum.SelectedItem = selectedMirror;
-                        }
-
-                        _inToolbarUpdate = false;
                         ComboHelper.AutoSizeDropDown(comboSpectrum);
                         ComboHelper.AutoSizeDropDown(comboMirrorSpectrum);
                     }
@@ -347,70 +362,24 @@ namespace pwiz.Skyline.Controls.Graphs.Spectrum
                 // Update CE toolbar
                 if (Settings.Default.Prosit)
                 {
-                    // TODO: remove redundacy between this and UpdateUI
-                    // Get peptide and precursor
-                    var nodeTree = _stateProvider.SelectedNode as SrmTreeNode;
-                    var nodeGroupTree = nodeTree as TransitionGroupTreeNode;
-                    var nodeTranTree = nodeTree as TransitionTreeNode;
-                    if (nodeTranTree != null)
-                        nodeGroupTree = nodeTranTree.Parent as TransitionGroupTreeNode;
+                    var ces = Enumerable.Range(Constants.MIN_NCE, Constants.MAX_NCE - Constants.MIN_NCE + 1).ToArray();
 
-                    var nodeGroup = nodeGroupTree?.DocNode;
-                    PeptideDocNode peptideDocNode = null;
-                    if (nodeGroup == null)
+                    using (var _ = new ToolbarUpdate(this))
                     {
-                        var nodePepTree = nodeTree as PeptideTreeNode;
-                        if (nodePepTree != null)
-                        {
-                            peptideDocNode = nodePepTree.DocNode;
-                            var listInfoGroups = nodePepTree.DocNode.TransitionGroups.ToArray();
-                            if (listInfoGroups.Length == 1)
-                                nodeGroup = listInfoGroups[0];
-                        }
-                    }
-                    else
-                    {
-                        peptideDocNode = (nodeGroupTree.Parent as PeptideTreeNode)?.DocNode;
-                    }
-
-                    if (peptideDocNode != null && nodeGroup != null)
-                    {
-                        const int CE_MIN = 10;
-                        const int CE_MAX = 50;
-
-                        var ce = _documentContainer.DocumentUI.Settings.TransitionSettings.Prediction.CollisionEnergy
-                            .GetCollisionEnergy(
-                                nodeGroup.PrecursorAdduct,
-                                _documentContainer.DocumentUI.Settings.GetRegressionMz(peptideDocNode, nodeGroup));
-
-                        var ces = Enumerable.Range(CE_MIN, CE_MAX - CE_MIN + 1).Select(c => (object)new CEComboItem(c)).ToList();
-                        var intCE = (int)ce;
-                        var ceIndex = intCE - CE_MIN + 1;
-                        ceIndex = Math.Max(ceIndex, 0);
-                        ceIndex = Math.Min(ceIndex, 50);
-                        ces.Insert(ceIndex, new CEComboItem(ce, true));
-                        var oldSelection = comboCE.SelectedItem as CEComboItem;
-
+                        // TODO: figure out better way with _inToolBarUpdate
                         // Not a great way of doing this, but we need to ensure that we don't get into
                         // an infinite recursion
-                        if (!ArrayUtil.EqualsDeep(comboCE.Items.Cast<CEComboItem>().ToArray(), ces))
+                        if (!ArrayUtil.EqualsDeep(comboCE.Items.Cast<int>().ToArray(), ces) || (int)comboCE.SelectedItem !=
+                            Settings.Default.PrositNCE)
                         {
                             comboCE.Items.Clear();
-                            comboCE.Items.AddRange(ces.ToArray());
+                            comboCE.Items.AddRange(ces.Select(c => (object)c).ToArray());
 
-
-                            // Only maintain the pre-defined selections
-                            if (oldSelection != null && !oldSelection.IsCalculated) {
-                                comboCE.SelectedIndex = (int)oldSelection.CE + (oldSelection.CE <= ce ? 0 : 1) - CE_MIN;
-                            }
-                            else {
-                                // Select the calculated CE
-                                comboCE.SelectedIndex = ceIndex;
-                            }
+                            comboCE.SelectedItem = Settings.Default.PrositNCE;
                         }
-
-                        enableCE = true;
                     }
+
+                    enableCE = true;
 
                     ComboHelper.AutoSizeDropDown(comboCE);
                 }
@@ -569,12 +538,48 @@ namespace pwiz.Skyline.Controls.Graphs.Spectrum
                 {
                     // Try to load a list of spectra matching the criteria for
                     // the current node group.
-                    //if (libraries.HasLibraries && libraries.IsLoaded)
+                    // if (libraries.HasLibraries && libraries.IsLoaded)
                     {
+                        // Need this to make sure we still update the toolbar if the prosit prediction throws
+                        Exception prositEx = null;
+                        _spectra = null;
+                        SpectrumDisplayInfo spectrum = null;
+                        SpectrumDisplayInfo prositSpectrum = null;
+                        if (Settings.Default.Prosit)
+                        {
+                            try
+                            {
+                                var prositClient = PrositPredictionClient.Current;
+                                var massSpectrum = PrositIntensityModel.Instance.PredictSingle(prositClient,
+                                    DocumentUI.Settings,
+                                    new PeptidePrecursorPair(nodePepTree.DocNode, nodeGroup,
+                                        Settings.Default.PrositNCE));
+                                var iRT = PrositRetentionTimeModel.Instance.PredictSingle(prositClient,
+                                    DocumentUI.Settings,
+                                    nodePepTree.DocNode);
+                                prositSpectrum = new SpectrumDisplayInfo(
+                                    new SpectrumInfoProsit(massSpectrum, nodeGroup, Settings.Default.PrositNCE),
+                                    iRT[nodePepTree.DocNode]);
+
+                                if (!MirrorPlot)
+                                {
+                                    spectrum = prositSpectrum;
+                                    _spectra = new[] { prositSpectrum };
+                                }
+                                    
+                            }
+                            catch (Exception ex)
+                            {
+                                prositEx = ex;
+                            }
+                        }
+
                         var nodeGroupChanged = NodeGroupChanged(nodeGroup);
+                        var loadFromLib = nodeGroupChanged && libraries.HasLibraries && libraries.IsLoaded &&
+                                          (!Settings.Default.Prosit || _spectra == null);
                         try
                         {
-                            if (nodeGroupChanged)
+                            if (loadFromLib)
                                 UpdateSpectra(nodeGroup, lookupSequence, lookupMods);
                             UpdateToolbar();
                         }
@@ -585,30 +590,14 @@ namespace pwiz.Skyline.Controls.Graphs.Spectrum
                             throw;
                         }
 
+                        if (prositEx != null)
+                            throw prositEx;
+
                         if (nodeGroupChanged)
                         {
                             _nodeGroup = nodeGroup;
                             if (settings.TransitionSettings.Instrument.IsDynamicMin)
                                 ZoomSpectrumToSettings();
-                        }
-
-                        SpectrumDisplayInfo spectrum = null;
-                        SpectrumDisplayInfo prositSpectrum = null;
-                        if (Settings.Default.Prosit)
-                        {
-                            var prositClient = PrositPredictionClient.Current;
-                            var selectedCEItem = comboCE.SelectedItem as CEComboItem;
-                            double? ce = null;
-                            if (selectedCEItem != null && !selectedCEItem.IsCalculated) // Just recalculate...
-                                ce = selectedCEItem.CE;
-                            var massSpectrum = PrositIntensityModel.Instance.PredictSingle(prositClient, DocumentUI.Settings,
-                                new PeptidePrecursorPair(nodePepTree.DocNode, nodeGroup, ce));
-                            var iRT = PrositRetentionTimeModel.Instance.PredictSingle(prositClient, DocumentUI.Settings,
-                                nodePepTree.DocNode);
-                            prositSpectrum = new SpectrumDisplayInfo(new SpectrumInfoProsit(massSpectrum, nodeGroup), iRT[nodePepTree.DocNode]);
-
-                            if (!MirrorPlot)
-                                spectrum = prositSpectrum;
                         }
 
                         if (!Settings.Default.Prosit || MirrorPlot)
@@ -912,8 +901,10 @@ namespace pwiz.Skyline.Controls.Graphs.Spectrum
                     _graphHelper.SetErrorGraphItem(new NoDataMSGraphItem(ex.Message));
                     return;
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    _graphHelper.SetErrorGraphItem(new NoDataMSGraphItem(ex.Message));
+                    return;
                     _graphHelper.SetErrorGraphItem(new NoDataMSGraphItem(
                                      Resources.GraphSpectrum_UpdateUI_Failure_loading_spectrum__Library_may_be_corrupted));
                     return;
@@ -1121,6 +1112,7 @@ namespace pwiz.Skyline.Controls.Graphs.Spectrum
 
         private void comboCE_SelectedIndexChanged(object sender, EventArgs e)
         {
+            Settings.Default.PrositNCE = (int) comboCE.SelectedItem;
             UpdateUI();
         }
 

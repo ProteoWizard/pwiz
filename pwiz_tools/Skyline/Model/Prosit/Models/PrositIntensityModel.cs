@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
             _instances = new List<PrositIntensityModel>(Models.Count());
         }
 
-        // Singleton
+        // Singleton pattern
         private PrositIntensityModel(string model)
         {
             if (!Models.Contains(model))
@@ -75,7 +75,6 @@ namespace pwiz.Skyline.Model.Prosit.Models
             }
         }
 
-        // Model constants
         public const string SIGNATURE = "v1";
 
         public override string Signature => SIGNATURE;
@@ -90,29 +89,15 @@ namespace pwiz.Skyline.Model.Prosit.Models
             }
         }
 
-        public override PrositIntensityInput.PrositPrecursorInput CreatePrositInputRow(SrmSettings setting, PeptidePrecursorPair skylineInput, out PrositException exception)
+        public override PrositIntensityInput.PrositPrecursorInput CreatePrositInputRow(SrmSettings settings, PeptidePrecursorPair skylineInput, out PrositException exception)
         {
-            var peptideSequence = PrositHelpers.EncodeSequence(setting, skylineInput.NodePep, skylineInput.NodeGroup.LabelType, out exception);
+            var peptideSequence = PrositHelpers.EncodeSequence(settings, skylineInput.NodePep, skylineInput.NodeGroup.LabelType, out exception);
             if (peptideSequence == null) // equivalently, exception != null
                 return null;
 
             var precursorCharge = PrositHelpers.OneHotEncode(skylineInput.NodeGroup.PrecursorCharge - 1, Constants.PRECURSOR_CHARGES);
 
-            float collisionEnergy;
-            if (skylineInput.CE.HasValue)
-            {
-                collisionEnergy = (float) (skylineInput.CE.Value / 100.0);
-            }
-            else
-            {
-                // Use current collision energy regression to calculate CE
-                collisionEnergy = (float)(setting.TransitionSettings.Prediction.CollisionEnergy.GetCollisionEnergy(
-                                              skylineInput.NodeGroup.PrecursorAdduct,
-                                              setting.GetRegressionMz(skylineInput.NodePep,
-                                                  skylineInput.NodeGroup)) / 100.0);
-            }
-
-            return new PrositIntensityInput.PrositPrecursorInput(peptideSequence, precursorCharge, collisionEnergy);
+            return new PrositIntensityInput.PrositPrecursorInput(peptideSequence, precursorCharge, skylineInput.NCE.Value / 100.0f);
         }
 
         public override PrositIntensityInput CreatePrositInput(IList<PrositIntensityInput.PrositPrecursorInput> prositInputRows)
@@ -130,6 +115,10 @@ namespace pwiz.Skyline.Model.Prosit.Models
             return new PrositMS2Spectra(settings, skylineInputs, prositOutput);
         }
 
+        /// <summary>
+        /// Input structure at the Prosit level, it contains the tensors
+        /// which are sent to Prosit.
+        /// </summary>
         public sealed class PrositIntensityInput : PrositInput<PrositIntensityInput.PrositPrecursorInput>
         {
             public static readonly string PEPTIDES_KEY = @"peptides_in:0";
@@ -156,7 +145,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
                             InputRows.SelectMany(p => p.PrecursorCharge).ToArray(),
                             InputRows.Count, Constants.PRECURSOR_CHARGES),
                         [COLLISION_ENERGY_KEY] = Create2dTensor(DataType.DtFloat, tp => tp.FloatVal,
-                            InputRows.Select(p => p.CollisionEnergy).ToArray(),
+                            InputRows.Select(p => p.NormalizedCollisionEnergy).ToArray(),
                             InputRows.Count, 1)
                     };
                 }
@@ -169,24 +158,24 @@ namespace pwiz.Skyline.Model.Prosit.Models
             /// </summary>
             public class PrositPrecursorInput
             {
-                public PrositPrecursorInput(int[] peptideSequence, float[] precursorCharge, float collisionEnergy)
+                public PrositPrecursorInput(int[] peptideSequence, float[] precursorCharge, float normalizedCollisionEnergy)
                 {
                     PeptideSequence = peptideSequence;
                     PrecursorCharge = precursorCharge;
-                    CollisionEnergy = collisionEnergy;
+                    NormalizedCollisionEnergy = normalizedCollisionEnergy;
                 }
 
 
                 public int[] PeptideSequence { get; }
                 public float[] PrecursorCharge { get; }
 
-                public float CollisionEnergy { get; }
+                public float NormalizedCollisionEnergy { get; }
             }
         }
 
         /// <summary>
         /// Represents the output returned from Prosits
-        /// intensity model.
+        /// intensity model. Is constructed directly from the incoming tensors.
         /// </summary>
         public sealed class PrositIntensityOutput : PrositOutput<PrositIntensityOutput, PrositIntensityOutput.PrositPrecursorOutput>
         {
@@ -245,7 +234,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
                     Intensities = new float[Constants.PRECURSOR_CHARGES];
                     // Copy intensities
                     for (var i = 0; i < Constants.PRECURSOR_CHARGES; ++i)
-                        Intensities[i] = PrositHelpers.ReLu(tensor.FloatVal[index++]);
+                        Intensities[i] = PrositHelpers.ReLU(tensor.FloatVal[index++]);
                 }
 
                 public float[] Intensities { get; }

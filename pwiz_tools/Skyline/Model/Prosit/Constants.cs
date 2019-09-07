@@ -26,8 +26,13 @@ namespace pwiz.Skyline.Model.Prosit
     public static class Constants
     {
         public static readonly int PEPTIDE_SEQ_LEN = 30;
+        public static readonly int IONS_PER_RESIDUE = 6;
         public static readonly int PRECURSOR_CHARGES = 6;
         public static readonly int BATCH_SIZE = 2048;
+        public static readonly int MIN_NCE = 10;
+        public static readonly int MAX_NCE = 50;
+
+        public static readonly string DEV_PROSIT_SERVER = "ip here";
 
         public struct PrositAA
         {
@@ -54,8 +59,8 @@ namespace pwiz.Skyline.Model.Prosit
             new PrositAA('W', 19), new PrositAA('Y', 20),
 
             // Mods
-            new PrositAA('C', 2, UniMod.DictStructuralModNames["Carbamidomethyl (C)"]),
-            new PrositAA('M', 21, UniMod.DictStructuralModNames["Oxidation (M)"])
+            new PrositAA('C', 2, UniMod.DictStructuralModNames[@"Carbamidomethyl (C)"]),
+            new PrositAA('M', 21, UniMod.DictStructuralModNames[@"Oxidation (M)"])
         };
 
         public static readonly Dictionary<char, PrositAA> AMINO_ACIDS =
@@ -63,7 +68,6 @@ namespace pwiz.Skyline.Model.Prosit
 
         public static readonly Dictionary<int, PrositAA> AMINO_ACIDS_REVERSE =
             AMINO_ACIDS.ToDictionary(kvp => kvp.Value.PrositIndex, kvp => kvp.Value);
-
 
         public static readonly Dictionary<string, PrositAA> MODIFICATIONS =
             PrositAAs.Where(paa => paa.Mod != null).ToDictionary(paa => paa.Mod.Name, paa => paa);

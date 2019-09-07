@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Model.Prosit
         public PrositMS2Spectrum[] Spectra { get; private set; }
     }
 
-    public class PrositMS2Spectrum
+    public class PrositMS2Spectrum : IEquatable<PrositMS2Spectrum>
     {
         public PrositMS2Spectrum(SrmSettings settings, PeptidePrecursorPair peptidePrecursorPair,
             int precursorIndex, PrositIntensityModel.PrositIntensityOutput prositIntensityOutput)
@@ -57,25 +57,31 @@ namespace pwiz.Skyline.Model.Prosit
             var ionTable = calc.GetFragmentIonMasses(precursor.TransitionGroup.Peptide.Target);
             var ions = ionTable.GetLength(1);
 
-            var mis = new List<SpectrumPeaksInfo.MI>(ions * Constants.PRECURSOR_CHARGES);
-            var max = float.MinValue;
+            var mis = new List<SpectrumPeaksInfo.MI>(ions * Constants.IONS_PER_RESIDUE);
 
             for (int i = 0; i < ions; ++i)
             {
                 var intensities = prositIntensityOutput.OutputRows[precursorIndex].Intensities[i].Intensities
                     .Select(ReLu).ToArray();
-                max = Math.Max(max, intensities.Max());
                 var yMIs = CalcMIs(ionTable[IonType.y, i], intensities, 0);
-                var bMIs = CalcMIs(ionTable[IonType.b, i], intensities, Constants.PRECURSOR_CHARGES / 2);
+                var bMIs = CalcMIs(ionTable[IonType.b, i], intensities, Constants.IONS_PER_RESIDUE / 2);
                 mis.AddRange(yMIs);
                 mis.AddRange(bMIs);
             }
 
+            var maxIntensity = mis.Max(mi => mi.Intensity);
+
             // Max Norm
             for (int i = 0; i < mis.Count; ++i)
-                mis[i] = new SpectrumPeaksInfo.MI {Mz = mis[i].Mz, Intensity = mis[i].Intensity / max}; // Yikes
+                mis[i] = new SpectrumPeaksInfo.MI {Mz = mis[i].Mz, Intensity = mis[i].Intensity / maxIntensity };
 
             SpectrumPeaks = new SpectrumPeaksInfo(mis.ToArray());
+        }
+
+        public bool Equals(PrositMS2Spectrum other)
+        {
+            return other != null && PeptidePrecursorPair.Equals(other.PeptidePrecursorPair) &&
+                   ArrayUtil.EqualsDeep(SpectrumPeaks.Peaks, other.SpectrumPeaks.Peaks);
         }
 
         private static float ReLu(float f)
@@ -85,8 +91,8 @@ namespace pwiz.Skyline.Model.Prosit
 
         private List<SpectrumPeaksInfo.MI> CalcMIs(TypedMass mass, float[] intensities, int offset)
         {
-            var result = new List<SpectrumPeaksInfo.MI>(Constants.PRECURSOR_CHARGES / 2);
-            for (var c = 0; c < Constants.PRECURSOR_CHARGES / 2; ++c)
+            var result = new List<SpectrumPeaksInfo.MI>(Constants.IONS_PER_RESIDUE / 2);
+            for (var c = 0; c < Constants.IONS_PER_RESIDUE / 2; ++c)
             {
                 // Not a possible charge
                 if (PeptidePrecursorPair.NodeGroup.PrecursorCharge <= c)

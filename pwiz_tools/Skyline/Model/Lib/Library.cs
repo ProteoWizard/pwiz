@@ -1761,7 +1761,7 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
-        public struct MI
+        public struct MI : IEquatable<MI>
         {
             private bool _notQuantitative;
             private List<SpectrumPeakAnnotation> _annotations; // A peak may have multiple annotations
@@ -1835,6 +1835,13 @@ namespace pwiz.Skyline.Model.Lib
                     }
                     return AnnotationsFirstOrDefault.Ion;
                 }
+            }
+
+            public bool Equals(MI other)
+            {
+                return Mz == other.Mz && Intensity == other.Intensity &&
+                       Quantitative == other.Quantitative &&
+                       ArrayUtil.EqualsDeep(Annotations, other.Annotations);
             }
         }
     }
@@ -2263,9 +2270,11 @@ namespace pwiz.Skyline.Model.Lib
     {
         private SpectrumPeaksInfo _peaksInfo;
 
-        public SpectrumInfoProsit(PrositMS2Spectra ms2Spectrum, TransitionGroupDocNode precursor) : base(precursor.LabelType, true)
+        public SpectrumInfoProsit(PrositMS2Spectra ms2Spectrum, TransitionGroupDocNode precursor, int nce) : base(precursor.LabelType, true)
         {
             _peaksInfo = ms2Spectrum.GetSpectrum(precursor).SpectrumPeaks;
+            Precursor = precursor;
+            NCE = nce;
         }
 
         public override string Name
@@ -2282,6 +2291,10 @@ namespace pwiz.Skyline.Model.Lib
         {
             get { return null; }
         }
+
+        public TransitionGroupDocNode Precursor { get; }
+
+        public int NCE { get; }
     }
 
     public class LibraryChromGroup

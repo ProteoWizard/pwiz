@@ -80,7 +80,7 @@ namespace pwiz.Skyline.ToolsUI
 
             var iModels = PrositIntensityModel.Models.ToArray();
             var rtModels = PrositRetentionTimeModel.Models.ToArray();
-            var servers = new[] { "prosit server ip here" };
+            var servers = new[] { Constants.DEV_PROSIT_SERVER };
             intensityModelCombo.Items.AddRange(iModels);
             iRTModelCombo.Items.AddRange(rtModels);
             prositServerCombo.Items.AddRange(servers);
@@ -90,6 +90,10 @@ namespace pwiz.Skyline.ToolsUI
             if (rtModels.Contains(Settings.Default.PrositRetentionTimeModel))
                 iRTModelCombo.SelectedItem = Settings.Default.PrositRetentionTimeModel;
 
+            ceCombo.Items.AddRange(
+                Enumerable.Range(Constants.MIN_NCE, Constants.MAX_NCE - Constants.MIN_NCE + 1).Select(c => (object) c)
+                    .ToArray());
+            ceCombo.SelectedItem = Settings.Default.PrositNCE;
 
             prositServerStatusLabel.Text = string.Empty;
             if (servers.Contains(Settings.Default.PrositServer))
@@ -165,6 +169,7 @@ namespace pwiz.Skyline.ToolsUI
                 Settings.Default.PrositIntensityModel = (string) intensityModelCombo.SelectedItem;
                 Settings.Default.PrositRetentionTimeModel = (string)iRTModelCombo.SelectedItem;
                 Settings.Default.PrositServer = (string) prositServerCombo.SelectedItem;
+                Settings.Default.PrositNCE = (int) ceCombo.SelectedItem;
             }
             base.OnClosed(e);
         }
@@ -250,6 +255,12 @@ namespace pwiz.Skyline.ToolsUI
         {
             get { return (string) iRTModelCombo.SelectedItem; }
             set { iRTModelCombo.SelectedItem = value; }
+        }
+
+        public int CECombo
+        {
+            get { return (int) ceCombo.SelectedItem; }
+            set { ceCombo.SelectedItem = value; }
         }
 
         #endregion

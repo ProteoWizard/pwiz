@@ -51,17 +51,56 @@ namespace pwiz.Skyline.Model.Prosit.Models
     /// <typeparam name="TPrositOut">The entire output of Prosit, such as a list of fragment intensities for all requested peptides</typeparam>
     /// <typeparam name="TSkylineOutput">The entire output of Prosit in Skyline  friendly data structures</typeparam>
 
-    public abstract class PrositModel<TPrositInputRow, TPrositIn, TSkylineInputRow, TPrositOutputRow, TPrositOut, TSkylineOutput> where TPrositIn : PrositInput<TPrositInputRow> where TPrositOut : PrositOutput<TPrositOut, TPrositOutputRow>, new()
+    public abstract class PrositModel<TPrositInputRow, TPrositIn, TSkylineInputRow, TPrositOutputRow, TPrositOut, TSkylineOutput>
+        where TSkylineInputRow : SkylineInputRow
+        where TPrositIn : PrositInput<TPrositInputRow>
+        where TPrositOut : PrositOutput<TPrositOut, TPrositOutputRow>, new()
     {
+        /// <summary>
+        /// A signature that is required by TensorFlow, currently v1
+        /// </summary>
         public abstract string Signature { get; }
+
+        /// <summary>
+        /// Name of the model, for example intensity or iRT
+        /// </summary>
         public abstract string Model { get; protected set; }
 
-        // Input
+        /// <summary>
+        /// Construct Prosit input given Skyline input. Note that
+        /// this function does not throw any exceptions but uses the exception out
+        /// parameter to speed up constructing large amounts of inputs.
+        /// </summary>
+        /// <param name="settings">Settings to use for construction</param>
+        /// <param name="skylineInput">The input at the Skyline level (for example docnodes)</param>
+        /// <param name="exception">Exception that occured during the creating Process</param>
+        /// <returns>The input at the Prosit level</returns>
         public abstract TPrositInputRow CreatePrositInputRow(SrmSettings settings, TSkylineInputRow skylineInput, out PrositException exception);
+
+        /// <summary>
+        /// Constructs the final input (tensors) that is sent to Prosit, given
+        /// Prosit inputs.
+        /// </summary>
+        /// <param name="prositInputRows">The prosit inputs to use</param>
+        /// <returns>A Prosit input object that can be directly sent to Prosit</returns>
         public abstract TPrositIn CreatePrositInput(IList<TPrositInputRow> prositInputRows);
 
-        // Output
+        /// <summary>
+        /// Converts a map of tensors to an easier to work with data structure,
+        /// still at the Prosit level.
+        /// </summary>
+        /// <param name="prositOutputData">The data from the prediction</param>
+        /// <returns>A Prosit output object containing the parsed information from the tensors</returns>
         public abstract TPrositOut CreatePrositOutput(MapField<string, TensorProto> prositOutputData);
+
+        /// <summary>
+        /// Constructs Skyline level outputs given Prosit outputs
+        /// </summary>
+        /// <param name="settings">Settings to use for construction</param>
+        /// <param name="skylineInputs">The original skyline inputs used for the prediction. Should
+        /// exclude items that could not be predicted</param>
+        /// <param name="prositOutput">The prosit output from the prediction</param>
+        /// <returns>A skyline level object that can be used in Skyline, for instance for display in the UI</returns>
         public abstract TSkylineOutput CreateSkylineOutput(SrmSettings settings, IList<TSkylineInputRow> skylineInputs, TPrositOut prositOutput);
 
         /// <summary>
@@ -82,6 +121,13 @@ namespace pwiz.Skyline.Model.Prosit.Models
             return tp;
         }
 
+        /// <summary>
+        /// Single threaded Prosit prediction for several inputs
+        /// </summary>
+        /// <param name="predictionClient">Client to use for prediction</param>
+        /// <param name="settings">Settings to use for constructing </param>
+        /// <param name="inputs">The precursors (and other info) to make predictions for</param>
+        /// <returns>Predictions from Prosit</returns>
         public TSkylineOutput Predict(PredictionService.PredictionServiceClient predictionClient, SrmSettings settings, IList<TSkylineInputRow> inputs)
         {
             inputs = inputs.Distinct().ToArray();
@@ -102,18 +148,62 @@ namespace pwiz.Skyline.Model.Prosit.Models
             return CreateSkylineOutput(settings, validSkylineInputs, Predict(predictionClient, prositIn));
         }
 
+
+        // Variables for remembering the previous prediction request and its outcome.
+        // Uses lock since the PrositModel classes are intended to be used as singletons
+        private readonly object _cacheLock = new object();
+        private PredictionService.PredictionServiceClient _cachedClient;
+        private SrmSettings _cachedSettings;
+        private TSkylineInputRow _cachedInput;
+        private TSkylineOutput _cachedOutput;
+        
+        /// <summary>
+        /// Makes prediction for a single precursor. The result is cached and
+        /// if the same prediction is requested, the cached result is returned. This
+        /// is useful since predictions are made from a ui updating function, which might be
+        /// called repeatedly per update.
+        /// </summary>
+        /// <param name="predictionClient">Client to use for prediction</param>
+        /// <param name="settings">Settings to use for creating inputs and outputs</param>
+        /// <param name="input">Precursor and other information</param>
+        /// <returns>Prediction from Prosit</returns>
         public TSkylineOutput PredictSingle(PredictionService.PredictionServiceClient predictionClient,
             SrmSettings settings, TSkylineInputRow input)
         {
+            lock (_cacheLock)
+            {
+                if (_cachedInput != null && _cachedOutput != null && _cachedInput.Equals(input) &&
+                    ReferenceEquals(_cachedClient, predictionClient) &&
+                    ReferenceEquals(settings, _cachedSettings))
+                    return _cachedOutput;
+            }
+
             var prositInputRow = CreatePrositInputRow(settings, input, out var exception);
             if (prositInputRow == null)
                 throw exception;
 
             var prositIn = CreatePrositInput(new[] { prositInputRow });
-            return CreateSkylineOutput(settings, new[] { input }, Predict(predictionClient, prositIn));
+            var output = CreateSkylineOutput(settings, new[] { input }, Predict(predictionClient, prositIn));
+
+            lock (_cacheLock)
+            {
+                _cachedClient = predictionClient;
+                _cachedSettings = settings;
+                _cachedInput = input;
+                _cachedOutput = output;
+            }
+
+            return output;
         }
 
-        public TPrositOut Predict(PredictionService.PredictionServiceClient predictionClient, TPrositIn inputData)
+        /// <summary>
+        /// Private version of Predict that works with data structures at
+        /// the Prosit level
+        /// </summary>
+        /// <param name="predictionClient">Client to use for prediction</param>
+        /// <param name="inputData">Input data, consisting tensors to send for prediction</param>
+        /// <returns>Predicted tensors from Prosit</returns>
+        private TPrositOut Predict(PredictionService.PredictionServiceClient predictionClient, TPrositIn inputData)
         {
             var predictRequest = new PredictRequest();
             predictRequest.ModelSpec = new ModelSpec { Name = Model /*, SignatureName = model.Signature*/ };
@@ -133,6 +223,14 @@ namespace pwiz.Skyline.Model.Prosit.Models
             }
         }
 
+        /// <summary>
+        /// Constructs batches and makes predictions in parallel
+        /// </summary>
+        /// <param name="predictionClient">Client to use for prediction</param>
+        /// <param name="progressMonitor">Monitor to show progress in UI</param>
+        /// <param name="settings">Settings to use for constructing inputs and outputs</param>
+        /// <param name="inputs">List of inputs to predict</param>
+        /// <returns>Predictions from Prosit</returns>
         public TSkylineOutput PredictBatches(PredictionService.PredictionServiceClient predictionClient, IProgressMonitor progressMonitor, SrmSettings settings, IList<TSkylineInputRow> inputs)
         {
             IProgressStatus progressStatus = new ProgressStatus(PrositResources.PrositModel_BatchPredict_Constructing_Prosit_Inputs);
@@ -202,11 +300,33 @@ namespace pwiz.Skyline.Model.Prosit.Models
 
     public class PrositHelpers
     {
-        public static float ReLu(float f)
+        /// <summary>
+        /// ReLU activation for spectra
+        /// </summary>
+        /// <param name="f">float to apply ReLU to</param>
+        /// <returns>If f is positive, returns f, otherwise 0</returns>
+        public static float ReLU(float f)
         {
             return Math.Max(f, 0.0f);
         }
 
+        /// <summary>
+        /// Applys ReLU to array
+        /// </summary>
+        /// <param name="f">Array to apply ReLU to</param>
+        /// <returns>Array with each element transformed according to ReLU activation</returns>
+        public static float[] ReLU(float[] f)
+        {
+            return f.Select(ReLU).ToArray();
+        }
+
+        /// <summary>
+        /// Split data into batches for parallel processing
+        /// </summary>
+        /// <typeparam name="T">Underlying data type</typeparam>
+        /// <param name="data">The data to split</param>
+        /// <param name="batchSize">Size of a single batch, the last batch might be smaller</param>
+        /// <returns>An enumerable that enumerates the batches</returns>
         public static IEnumerable<IEnumerable<T>> EnumerateBatches<T>(IList<T> data, int batchSize)
         {
             var dataIndex = 0;
@@ -268,26 +388,119 @@ namespace pwiz.Skyline.Model.Prosit.Models
             return result;
         }
 
-        public static string DecodeSequence(int[] sequence, out PrositException exception)
+        /// <summary>
+        /// Decodes "Prosit-encoded" peptide sequences from a tensor. Only used in testing
+        /// </summary>
+        /// <param name="tensor">Int tensor of shape n x Constants.PEPTIDE_SEQ_LEN</param>
+        /// <returns>A list of string representations of the sequence</returns>
+        public static string[] DecodeSequences(TensorProto tensor)
         {
-            exception = null;
+            return DecodeSequences2(tensor).Select(s => s.FullNames).ToArray();
 
-            var unmodSeq = new StringBuilder();
-            for (var i = 0; i < sequence.Length; ++i)
+            /*var n = tensor.TensorShape.Dim[0].Size;
+            var result = new string[n];
+            var encodedSeqs = tensor.IntVal.ToArray();
+
+            var seq = new StringBuilder(Constants.PEPTIDE_SEQ_LEN);
+            for (var i = 0; i < n; ++i)
             {
-                if (Constants.AMINO_ACIDS_REVERSE.TryGetValue(sequence[i], out var prositAA))
-                    unmodSeq.Append(prositAA.AA);
-                else if (Constants.MODIFICATIONS_REVERSE.TryGetValue(sequence[i], out var prositAAMod))
-                    unmodSeq.Append(string.Format("{0}({1})", prositAAMod.AA, prositAAMod.Mod.ShortName));
-                else
+                var idx = i * Constants.PEPTIDE_SEQ_LEN;
+                for (var j = 0; j < Constants.PEPTIDE_SEQ_LEN; ++j)
                 {
-                    // Method currently only used in testing, so string is fine
-                    exception = new PrositException(string.Format(@"Unknown Prosit AA index {0}", sequence[i]));
+                    if (encodedSeqs[idx + j] == 0) // Essentially a null terminator
+                        break;
+                    else if (Constants.AMINO_ACIDS_REVERSE.TryGetValue(encodedSeqs[idx + j], out var prositAA))
+                        seq.Append(prositAA.AA);
+                    else if (Constants.MODIFICATIONS_REVERSE.TryGetValue(encodedSeqs[idx + j], out var prositAAMod))
+                        seq.Append(string.Format(@"{0}[{1}]", prositAAMod.AA, prositAAMod.Mod.ShortName));
+                    else
+                        throw new PrositException(string.Format(@"Unknown Prosit AA index {0}", encodedSeqs[idx + j]));
+                }
+
+                result[i] = seq.ToString();
+                seq.Clear();
+            }
+
+            return result;*/
+        }
+
+        /// <summary>
+        /// Decodes "Prosit-encoded" peptide sequences from a tensor. Only used in testing
+        /// </summary>
+        /// <param name="tensor">Int tensor of shape n x Constants.PEPTIDE_SEQ_LEN</param>
+        /// <returns>A list of modified sequence objects representing the decoded sequences</returns>
+        public static ModifiedSequence[] DecodeSequences2(TensorProto tensor)
+        {
+            var n = tensor.TensorShape.Dim[0].Size;
+            var result = new ModifiedSequence[n];
+            var encodedSeqs = tensor.IntVal.ToArray();
+
+            var seq = new StringBuilder(Constants.PEPTIDE_SEQ_LEN);
+            for (var i = 0; i < n; ++i)
+            {
+                var explicitMods = new List<ExplicitMod>();
+
+                var idx = i * Constants.PEPTIDE_SEQ_LEN;
+                for (var j = 0; j < Constants.PEPTIDE_SEQ_LEN; ++j)
+                {
+                    if (encodedSeqs[idx + j] == 0) // Essentially a null terminator
+                    {
+                        break;
+                    }
+                    else if (Constants.AMINO_ACIDS_REVERSE.TryGetValue(encodedSeqs[idx + j], out var prositAA))
+                    {
+                        seq.Append(prositAA.AA);
+                    }
+                    else if (Constants.MODIFICATIONS_REVERSE.TryGetValue(encodedSeqs[idx + j], out var prositAAMod))
+                    {
+                        explicitMods.Add(new ExplicitMod(j, prositAAMod.Mod));
+                        seq.Append(prositAAMod.AA);
+                    }
+                    else
+                    {
+                        throw new PrositException(string.Format(@"Unknown Prosit AA index {0}", encodedSeqs[idx + j]));
+                    }
+                }
+
+                var unmodSeq = seq.ToString();
+                var mods = explicitMods.Select(mod => ModifiedSequence.MakeModification(unmodSeq, mod));
+                result[i] = new ModifiedSequence(seq.ToString(), mods, MassType.Monoisotopic);
+                seq.Clear();
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Decodes one hot encoded charges from a tensor. Only used in testing
+        /// </summary>
+        /// <param name="tensor">Float Tensor of shape n x Constants.PRECURSOR_CHARGES</param>
+        /// <returns></returns>
+        public static int[] DecodeCharges(TensorProto tensor)
+        {
+            var result = new int[tensor.TensorShape.Dim[0].Size];
+            for (int i = 0; i < tensor.TensorShape.Dim[0].Size; ++i)
+            {
+                result[i] = -1;
+                for (int j = 0; j < tensor.TensorShape.Dim[1].Size; ++j)
+                {
+                    if (tensor.FloatVal[i * Constants.PRECURSOR_CHARGES + j] == 1.0f)
+                    {
+                        result[i] = j + 1;
+                        break;
+                    }
+                }
+
+                if (result[i] == -1)
+                {
+                    throw new PrositException(string.Format(@"[{0}] is not a valid one-hot encoded charge", string.Join(
+                        @", ", tensor.FloatVal.Skip(i * Constants.PRECURSOR_CHARGES).Take(Constants.PRECURSOR_CHARGES))));
                 }
             }
 
-            return unmodSeq.ToString();
+            return result;
         }
+
 
         /// <summary>
         /// Charges need to be one hot encoded
@@ -298,6 +511,11 @@ namespace pwiz.Skyline.Model.Prosit.Models
             result[i] = 1.0f;
             return result;
         }
+    }
+
+    public abstract class SkylineInputRow : IEquatable<SkylineInputRow>
+    {
+        public abstract bool Equals(SkylineInputRow other);
     }
 
     /// <summary>

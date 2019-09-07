@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Controls.Graphs.Spectrum
 {
     public class SpectrumGraphItem : AbstractSpectrumGraphItem
     {
-        private TransitionGroupDocNode TransitionGroupNode { get; set; }
+        public TransitionGroupDocNode TransitionGroupNode { get; private set; }
         private TransitionDocNode TransitionNode { get; set; }
         public string LibraryName { get; private set; }
 

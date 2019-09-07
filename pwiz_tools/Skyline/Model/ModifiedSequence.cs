@@ -365,7 +365,7 @@ namespace pwiz.Skyline.Model
                 return hashCode;
             }
         }
-        private static Modification MakeModification(string unmodifiedSequence, ExplicitMod explicitMod)
+        public static Modification MakeModification(string unmodifiedSequence, ExplicitMod explicitMod)
         {
             var staticMod = explicitMod.Modification;
             int i = explicitMod.IndexAA;

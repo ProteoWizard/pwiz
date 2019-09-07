@@ -27,6 +27,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Prosit.Communication;
 using pwiz.Skyline.Model.Prosit.Models;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using Tensorflow.Serving;
 
@@ -58,12 +59,12 @@ namespace pwiz.Skyline.Model.Prosit
             // Predict fragment intensities
             var ms = PrositIntensityModel.Instance.PredictBatches(_prositClient, progress, _document.Settings,
                 _peptides.Zip(_precursors,
-                    (pep, prec) => new PeptidePrecursorPair(pep, prec)).ToArray());
+                    (pep, prec) => new PeptidePrecursorPair(pep, prec, Settings.Default.PrositNCE)).ToArray());
 
             var specMzInfo = ms.Spectra.Select(m => m.SpecMzInfo).ToList();
 
             // Predict iRTs for peptides
-            var distinctPeps = _peptides.Distinct().ToArray();
+            var distinctPeps = _peptides.Select(p => (PrositRetentionTimeModel.PeptideDocNodeWrapper) p).Distinct().ToArray();
             var iRTMap = PrositRetentionTimeModel.Instance.PredictBatches(_prositClient, progress, _document.Settings,
                 distinctPeps);
 

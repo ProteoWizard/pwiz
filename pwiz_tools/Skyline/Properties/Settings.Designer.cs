@@ -2817,5 +2817,16 @@ namespace pwiz.Skyline.Properties {
                 this["LibMatchMirror"] = value;
             }
         }
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("27")]
+        public int PrositNCE {
+            get {
+                return ((int)(this["PrositNCE"]));
+            }
+            set {
+                this["PrositNCE"] = value;
+            }
+        }
     }
 }

@@ -62,6 +62,8 @@ namespace pwiz.Skyline.ToolsUI
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
+            this.ceLabel = new System.Windows.Forms.Label();
+            this.ceCombo = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl.SuspendLayout();
             this.tabPanorama.SuspendLayout();
@@ -225,6 +227,8 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.ceLabel);
+            this.tabPage1.Controls.Add(this.ceCombo);
             this.tabPage1.Controls.Add(this.prositServerStatusLabel);
             this.tabPage1.Controls.Add(this.label3);
             this.tabPage1.Controls.Add(this.iRTModelCombo);
@@ -309,6 +313,18 @@ namespace pwiz.Skyline.ToolsUI
             this.btnOK.Name = "btnOK";
             this.btnOK.UseVisualStyleBackColor = true;
             // 
+            // ceLabel
+            // 
+            resources.ApplyResources(this.ceLabel, "ceLabel");
+            this.ceLabel.Name = "ceLabel";
+            // 
+            // ceCombo
+            // 
+            this.ceCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.ceCombo.FormattingEnabled = true;
+            resources.ApplyResources(this.ceCombo, "ceCombo");
+            this.ceCombo.Name = "ceCombo";
+            // 
             // ToolOptionsUI
             // 
             this.AcceptButton = this.btnOK;
@@ -375,5 +391,7 @@ namespace pwiz.Skyline.ToolsUI
         private System.Windows.Forms.ComboBox intensityModelCombo;
         private System.Windows.Forms.Label prositServerLabel;
         private System.Windows.Forms.Label prositServerStatusLabel;
+        private System.Windows.Forms.Label ceLabel;
+        private System.Windows.Forms.ComboBox ceCombo;
     }
 }

@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
 {
     public sealed class PrositRetentionTimeModel : PrositModel<PrositRetentionTimeModel.PrositRTInput.PrositPeptideInput,
         PrositRetentionTimeModel.PrositRTInput,
-        PeptideDocNode,
+        PrositRetentionTimeModel.PeptideDocNodeWrapper,
         PrositRetentionTimeModel.PrositRTOutput.PrositPeptideOutput,
         PrositRetentionTimeModel.PrositRTOutput,
         Dictionary<PeptideDocNode, double>>
@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
             _instances = new List<PrositRetentionTimeModel>(Models.Count());
         }
 
-        // Singleton
+        // Singleton pattern
         private PrositRetentionTimeModel(string model)
         {
             if (!Models.Contains(model))
@@ -82,7 +82,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
             get { yield return @"iRT"; }
         }
 
-        public override PrositRTInput.PrositPeptideInput CreatePrositInputRow(SrmSettings settings, PeptideDocNode skylineInput,
+        public override PrositRTInput.PrositPeptideInput CreatePrositInputRow(SrmSettings settings, PeptideDocNodeWrapper skylineInput,
             out PrositException exception)
         {
             var sequence = PrositHelpers.EncodeSequence(settings, skylineInput, IsotopeLabelType.light, out exception);
@@ -102,12 +102,49 @@ namespace pwiz.Skyline.Model.Prosit.Models
             return new PrositRTOutput(prositOutputData);
         }
 
-        public override Dictionary<PeptideDocNode, double> CreateSkylineOutput(SrmSettings settings, IList<PeptideDocNode> skylineInputs, PrositRTOutput prositOutput)
+        public override Dictionary<PeptideDocNode, double> CreateSkylineOutput(SrmSettings settings, IList<PeptideDocNodeWrapper> skylineInputs, PrositRTOutput prositOutput)
         {
             return Enumerable.Range(0, skylineInputs.Count)
-                .ToDictionary(i => skylineInputs[i], i => prositOutput.OutputRows[i].iRT);
+                .ToDictionary(i => (PeptideDocNode) skylineInputs[i], i => prositOutput.OutputRows[i].iRT);
         }
 
+        /// <summary>
+        /// A simple wrapper for PeptideDocNode, since we need to inherit
+        /// SkylineInputRow
+        /// </summary>
+        public class PeptideDocNodeWrapper : SkylineInputRow
+        {
+            private PeptideDocNode _node;
+
+            public PeptideDocNodeWrapper(PeptideDocNode node)
+            {
+                _node = node;
+            }
+
+            public static implicit operator PeptideDocNode(PeptideDocNodeWrapper pep)
+            {
+                return pep._node;
+            }
+
+            public static implicit operator PeptideDocNodeWrapper(PeptideDocNode pep)
+            {
+                return new PeptideDocNodeWrapper(pep);
+            }
+
+            public override bool Equals(SkylineInputRow other)
+            {
+                if (other == null)
+                    return false;
+                if (!(other is PeptideDocNodeWrapper pepDocNode))
+                    return false;
+                return ReferenceEquals(_node, pepDocNode._node);
+            }
+        }
+
+        /// <summary>
+        /// Input structure at the Prosit level, it contains the tensor
+        /// which is sent to Prosit.
+        /// </summary>
         public sealed class PrositRTInput : PrositInput<PrositRTInput.PrositPeptideInput>
         {
             public static readonly string PEPTIDES_KEY = @"sequence_integer";
@@ -147,8 +184,8 @@ namespace pwiz.Skyline.Model.Prosit.Models
         {
             public static readonly string OUTPUT_KEY = @"prediction/BiasAdd:0";
 
-            private const double iRT_MEAN = 56.35363441;
-            private const double iRT_VARIANCE = 1883.0160689;
+            public const double iRT_MEAN = 56.35363441;
+            public const double iRT_VARIANCE = 1883.0160689;
 
             public PrositRTOutput(MapField<string, TensorProto> prositOutput)
             {
