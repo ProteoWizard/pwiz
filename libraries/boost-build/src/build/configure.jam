@@ -13,7 +13,9 @@
 
 import "class" : new ;
 import common ;
+import indirect ;
 import path ;
+import project ;
 import property ;
 import property-set ;
 import targets ;
@@ -477,14 +479,18 @@ class check-target-builds-worker
     import configure ;
     import property-set ;
     import targets ;
+    import project ;
     import property ;
 
     rule __init__ ( target message ? : true-properties * : false-properties * )
     {
+        local project = [ project.current ] ;
         self.target = $(target) ;
         self.message = $(message) ;
-        self.true-properties = $(true-properties) ;
-        self.false-properties = $(false-properties) ;
+        self.true-properties =
+            [ configure.translate-properties $(true-properties) : $(project) ] ;
+        self.false-properties =
+            [ configure.translate-properties $(false-properties) : $(project) ] ;
     }
 
     rule check ( properties * )
@@ -507,8 +513,10 @@ class configure-choose-worker
 {
     import configure ;
     import property ;
+    import project ;
     rule __init__ ( message : * )
     {
+        local project = [ project.current ] ;
         self.message = $(message) ;
         for i in 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19
         {
@@ -523,6 +531,8 @@ class configure-choose-worker
             {
                 self.props.$(name) = $($(i)[2-]) ;
             }
+            self.props.$(name) = [ configure.translate-properties
+                $(self.props.$(name)) : $(project) ] ;
         }
     }
     rule all-properties ( )
@@ -559,13 +569,30 @@ class configure-choose-worker
     }
 }
 
+rule translate-properties ( properties * : project ? )
+{
+    if $(project) && [ $(project).location ]
+    {
+        local location = [ $(project).location ] ;
+        local m = [ $(project).project-module ] ;
+        local project-id = [ project.attribute $(m) id ] ;
+        project-id ?= [ path.root $(location) [ path.pwd ] ] ;
+        return [ property.translate $(properties)
+          : $(project-id) : $(location) : $(m) ] ;
+    }
+    else
+    {
+        return $(properties) ;
+    }
+}
 
 rule check-target-builds ( target message ? : true-properties * :
     false-properties * )
 {
     local instance = [ new check-target-builds-worker $(target) $(message) :
         $(true-properties) : $(false-properties) ] ;
-    return <conditional>@$(instance).check
+    local rulename = [ indirect.make check : $(instance) ] ;
+    return <conditional>@$(rulename)
         [ property.evaluate-conditional-relevance
             $(true-properties) $(false-properties)
           : [ configure.get-relevant-features ] ] ;
@@ -582,7 +609,8 @@ rule choose ( message : * )
         : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9)
         : $(10) : $(11) : $(12) : $(13) : $(14) : $(15) : $(16)
         : $(17) : $(18) : $(19) ] ;
-    return <conditional>@$(instance).check
+    local rulename = [ indirect.make check : $(instance) ] ;
+    return <conditional>@$(rulename)
         [ property.evaluate-conditional-relevance
             [ $(instance).all-properties ]
           : [ configure.get-relevant-features ]  ] ;

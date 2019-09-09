@@ -46,16 +46,6 @@ MaxQuantReader::MaxQuantReader(BlibBuilder& maker,
     // MaxQuant defaults to requiring external spectra
     preferEmbeddedSpectra_ = maker.preferEmbeddedSpectra().get_value_or(false);
 
-    if (preferEmbeddedSpectra_) // user wants deconv or has no access to sources
-    {
-        setSpecFileName(tsvName_, // this is for BuildParser
-            false);  // don't look for the file
-
-                     // point to self as spec reader
-        delete specReader_;
-        specReader_ = this;
-    }
-
     // get mods path (will be empty string if not set)
     modsPath_ = maker.getMaxQuantModsPath();
 
@@ -258,10 +248,24 @@ void MaxQuantReader::initFixedModifications()
         return;
     }
 
-    // HACK: if mqpar analyzed WIFF file, use index lookup, else use scan number
-    if (!preferEmbeddedSpectra_)
+    string mqparXml = pwiz::util::read_file_header(mqparFile, bfs::file_size(mqparFile));
+
+    // force embedded spectra for TIMS-DDA because there's no way to map those msms.txt scan numbers to external spectra
+    if (mqparXml.find("<lcmsRunType>TIMS-DDA</lcmsRunType>") != string::npos)
+        preferEmbeddedSpectra_ = true;
+
+    if (preferEmbeddedSpectra_) // user wants deconv or has no access to sources
     {
-        string mqparXml = pwiz::util::read_file_header(mqparFile, bfs::file_size(mqparFile));
+        setSpecFileName(tsvName_, // this is for BuildParser
+            false);  // don't look for the file
+
+        // point to self as spec reader
+        delete specReader_;
+        specReader_ = this;
+    }
+    else
+    {
+        // HACK: if mqpar analyzed WIFF file, use index lookup, else use scan number
         if (mqparXml.find(".wiff</string>") != string::npos || mqparXml.find(".wiff2</string>") != string::npos)
             lookUpBy_ = INDEX_ID;
         else
@@ -682,21 +686,23 @@ void MaxQuantReader::addModsToVector(vector<SeqMod>& v, const string& modificati
 
     // iterate over sequence
     int modsFound = 0;
+    int modsTotalLength = 0;
     SeqMod seqMod;
     for (int i = 0; i < sequenceLength; i++)
     {
         switch (modSequence[i])
         {
         case '(':
-            ++modsFound;
-            // which mod is it?
-            seqMod = searchForMod(modNames, modSequence, i);
-            // add the mod unless it's in the modsAnyCTerm list
-            if (find_if(modsAnyCTerm.begin(), modsAnyCTerm.end(), [&](const MaxQuantModification* maxQuantMod) { return maxQuantMod->massDelta == seqMod.deltaMass; }) == modsAnyCTerm.end())
-                v.push_back(seqMod);
-
-            // advance iterator past modification
-            i += 3;
+            {
+                ++modsFound;
+                int posOpenParen = i;
+                // which mod is it?
+                seqMod = searchForMod(modNames, modSequence, i);
+                modsTotalLength += i + 1 - posOpenParen;
+                // add the mod unless it's in the modsAnyCTerm list
+                if (find_if(modsAnyCTerm.begin(), modsAnyCTerm.end(), [&](const MaxQuantModification* maxQuantMod) { return maxQuantMod->massDelta == seqMod.deltaMass; }) == modsAnyCTerm.end())
+                    v.push_back(seqMod);
+            }
             break;
         case ')':
             throw BlibException(false, "Unexpected closing parentheses found in sequence %s (line %d)",
@@ -709,12 +715,12 @@ void MaxQuantReader::addModsToVector(vector<SeqMod>& v, const string& modificati
                                     modSequence[i], modSequence.c_str(), lineNum_);
             }
             // check for fixed mods
-            boost::range::insert(v, v.end(), getFixedMods(modSequence[i], (i + 1) - 4 * modsFound, modsAnywhere));
+            boost::range::insert(v, v.end(), getFixedMods(modSequence[i], i + 1 - modsTotalLength, modsAnywhere));
             break;
         }
     }
 
-    for (const auto& mod : modsAnyCTerm) { v.emplace_back(sequenceLength - 4 * modsFound, mod->massDelta); }
+    for (const auto& mod : modsAnyCTerm) { v.emplace_back(sequenceLength - modsTotalLength, mod->massDelta); }
 
     if (modsFound < (int)modNames.size())
     {
@@ -767,15 +773,24 @@ void MaxQuantReader::addLabelModsToVector(vector<SeqMod>& v, const string& rawFi
  * the opening parentheses for the modification in the sequence, attempt to
  * look up which modification it is and return a SeqMod.
  */
-SeqMod MaxQuantReader::searchForMod(vector<string>& modNames, const string& modSequence, int posOpenParen) {
+SeqMod MaxQuantReader::searchForMod(vector<string>& modNames, const string& modSequence, int& posOpenParen) {
     // get mod abbreviation
-    size_t posCloseParen = modSequence.find(')', posOpenParen + 1);
-    if (posCloseParen == string::npos) {
-        throw BlibException(false, "Closing parentheses expected but not found in sequence %s "
-                                   "(line %d)", modSequence.c_str(), lineNum_);
+    int nestDepth = 1;
+    size_t posFirstParen = posOpenParen;
+    size_t posNextParen = posOpenParen;
+    while (nestDepth > 0)
+    {
+        posNextParen = modSequence.find_first_of("()", posNextParen + 1);
+        if (posNextParen == string::npos) {
+            throw BlibException(false, "Closing parentheses expected but not found in sequence %s "
+                "(line %d)", modSequence.c_str(), lineNum_);
+        }
+        nestDepth += modSequence[posNextParen] == ')' ? -1 : 1;
     }
     size_t modStart = posOpenParen + 1;
-    string modAbbreviation = modSequence.substr(modStart, posCloseParen - modStart);
+    string modAbbreviation = modSequence.substr(modStart, posNextParen - modStart);
+
+    posOpenParen = posNextParen; // advance index to the closing parenthesis
 
     // search list of mod names using abbreviation
     const MaxQuantModification* lookup = NULL;
@@ -783,7 +798,7 @@ SeqMod MaxQuantReader::searchForMod(vector<string>& modNames, const string& modS
         if (bal::iequals(modAbbreviation, i->substr(0, modAbbreviation.length()))) {
             lookup = MaxQuantModification::find(modBank_, *i);
             if (lookup != NULL)
-                return SeqMod(getModPosition(modSequence, posOpenParen), lookup->massDelta);
+                return SeqMod(getModPosition(modSequence, posFirstParen), lookup->massDelta);
         }
     }
 
@@ -801,7 +816,7 @@ SeqMod MaxQuantReader::searchForMod(vector<string>& modNames, const string& modS
         if (newStart + 1 < i->length() && (*i)[newStart] == ' ' &&
             bal::iequals(modAbbreviation, i->substr(++newStart, modAbbreviation.length())) &&
             (lookup = MaxQuantModification::find(modBank_, i->substr(newStart))) != NULL) {
-            return SeqMod(getModPosition(modSequence, posOpenParen), lookup->massDelta);
+            return SeqMod(getModPosition(modSequence, posFirstParen), lookup->massDelta);
         }
     }
 
@@ -812,13 +827,13 @@ SeqMod MaxQuantReader::searchForMod(vector<string>& modNames, const string& modS
 
 int MaxQuantReader::getModPosition(const string& modSeq, int posOpenParen) {
     int modPosition = 0;
-    bool inMod = false;
+    int inMod = 0;
     for (int i = 0; i < posOpenParen; i++) {
         if (modSeq[i] == '(') {
-            inMod = true;
+            ++inMod;
         } else if (modSeq[i] == ')') {
-            inMod = false;
-        } else if (!inMod) {
+            --inMod;
+        } else if (inMod == 0) {
             modPosition++;
         }
     }

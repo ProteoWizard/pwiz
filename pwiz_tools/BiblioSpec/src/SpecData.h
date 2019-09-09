@@ -34,6 +34,7 @@ struct SpecData{
     double retentionTime; // in minutes
     double startTime;
     double endTime;
+    double totalIonCurrent;
     double mz;
     int charge;
     int numPeaks;
