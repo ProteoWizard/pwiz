@@ -463,6 +463,7 @@ namespace pwiz.Common.DataBinding.Controls
 
         private bool CanRememberView(ViewGroupId viewGroupId)
         {
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             return !Equals(viewGroupId, default(ViewGroupId)) && !Equals(viewGroupId, ViewGroup.BUILT_IN.Id);
         }
 
