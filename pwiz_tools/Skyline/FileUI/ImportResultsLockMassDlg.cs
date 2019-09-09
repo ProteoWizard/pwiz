@@ -50,7 +50,7 @@ namespace pwiz.Skyline.FileUI
             if (doc.Settings.TransitionSettings.FullScan.IsEnabled &&
                 namedResults.Any(n => n.Value.Any(m => m.IsWatersLockmassCorrectionCandidate())))
             {
-                // We have at least one Waters file possbily needing lockspray correction
+                // We have at least one Waters file possibly needing lockspray correction
                 using (var dlgLockMass = new ImportResultsLockMassDlg())
                 {
                     var result = dlgLockMass.ShowDialog(parent);
