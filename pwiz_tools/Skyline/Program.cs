@@ -313,6 +313,7 @@ namespace pwiz.Skyline
             }
 
             MainWindow = null;
+            SystemEvents.DisplaySettingsChanged -= SystemEventsOnDisplaySettingsChanged;
             return EXIT_CODE_SUCCESS;
         }
 
