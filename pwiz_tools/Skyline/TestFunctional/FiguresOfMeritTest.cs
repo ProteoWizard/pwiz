@@ -66,6 +66,7 @@ namespace pwiz.SkylineTestFunctional
                 count++;
                 bool doFullTest = count < 5;
                 var newQuantification = SkylineWindow.Document.Settings.PeptideSettings.Quantification;
+                // ReSharper disable once PossibleNullReferenceException
                 newQuantification = newQuantification
                         .ChangeRegressionFit(options.RegressionFit)
                         .ChangeLodCalculation(options.LodCalculation)

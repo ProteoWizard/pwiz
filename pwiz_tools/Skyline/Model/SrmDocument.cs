@@ -1184,6 +1184,7 @@ namespace pwiz.Skyline.Model
                     {
                         PeptideDocNode nodePepModified = nodePep.EnsureMods(
                             docImport.Settings.PeptideSettings.Modifications,
+                            // ReSharper disable once PossibleNullReferenceException
                             docNew.Settings.PeptideSettings.Modifications,
                             staticMods, heavyMods);
                         if (nodePepModified.GlobalStandardType != null)
