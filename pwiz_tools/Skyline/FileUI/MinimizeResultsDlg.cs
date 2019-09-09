@@ -120,6 +120,7 @@ namespace pwiz.Skyline.FileUI
                 {
                     _changingOptimizeSettings = true;
                     _settings = value;
+                    // ReSharper disable once PossibleNullReferenceException
                     cbxDiscardUnmatchedChromatograms.Checked = Settings.DiscardUnmatchedChromatograms;
                     if (Settings.NoiseTimeRange.HasValue)
                     {
