@@ -735,6 +735,15 @@ namespace pwiz.Skyline.Model
                 moleculeIdKeys.Add(MoleculeAccessionNumbers.TagSMILES, smiles);
             }
 
+            var keggCol = ColumnIndex(SmallMoleculeTransitionListColumnHeaders.idKEGG);
+            var kegg = NullForEmpty(row.GetCell(keggCol));
+            if (kegg != null)
+            {
+                // Should have form like C07481 but we'll accept anything for now, having no proper parser
+                kegg = kegg.Trim();
+                moleculeIdKeys.Add(MoleculeAccessionNumbers.TagKEGG, kegg);
+            }
+
             return !moleculeIdKeys.Any()
                 ? MoleculeAccessionNumbers.EMPTY
                 : new MoleculeAccessionNumbers(moleculeIdKeys);
@@ -1659,8 +1668,9 @@ namespace pwiz.Skyline.Model
                     SmallMoleculeTransitionListColumnHeaders.idCAS, 
                     SmallMoleculeTransitionListColumnHeaders.idInChiKey, 
                     SmallMoleculeTransitionListColumnHeaders.idInChi, 
-                    SmallMoleculeTransitionListColumnHeaders.idHMDB, 
+                    SmallMoleculeTransitionListColumnHeaders.idHMDB,
                     SmallMoleculeTransitionListColumnHeaders.idSMILES,
+                    SmallMoleculeTransitionListColumnHeaders.idKEGG,
                 }.Count(hint => SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.Where(
                     p => string.Compare(p.Value, hint, StringComparison.OrdinalIgnoreCase) == 0).Any(kvp => header.IndexOf(kvp.Key, StringComparison.OrdinalIgnoreCase) >= 0)) > 1;
             }
@@ -1721,6 +1731,7 @@ namespace pwiz.Skyline.Model
         public const string idInChi = "InChi";
         public const string idHMDB = "HMDB";
         public const string idSMILES = "SMILES";
+        public const string idKEGG = "KEGG";
 
         public static readonly List<string> KnownHeaders;
 
@@ -1762,6 +1773,7 @@ namespace pwiz.Skyline.Model
                 idHMDB,
                 idInChi,
                 idSMILES,
+                idKEGG,
             });
 
             // A dictionary of terms that can be understood as column headers - this includes
@@ -1808,6 +1820,7 @@ namespace pwiz.Skyline.Model
                     Tuple.Create(idHMDB, idHMDB),
                     Tuple.Create(idInChi, idInChi),
                     Tuple.Create(idSMILES, idSMILES),
+                    Tuple.Create(idKEGG, idKEGG),
                 })
                 {
                     if (!knownColumnHeadersAllCultures.ContainsKey(pair.Item2))
