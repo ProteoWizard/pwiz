@@ -392,6 +392,10 @@ namespace pwiz.Skyline
             this.defaultTextToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.largeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.extraLargeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.userInterfaceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.proteomicsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.moleculeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.mixedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator41 = new System.Windows.Forms.ToolStripSeparator();
             this.spectralLibrariesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator32 = new System.Windows.Forms.ToolStripSeparator();
@@ -496,10 +500,6 @@ namespace pwiz.Skyline
             this.documentSettingsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator37 = new System.Windows.Forms.ToolStripSeparator();
             this.integrateAllMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.userInterfaceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.proteomicsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.moleculeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.mixedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.placeholderToolsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparatorTools = new System.Windows.Forms.ToolStripSeparator();
@@ -552,7 +552,6 @@ namespace pwiz.Skyline
             this.massErorrRetentionTimeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorMassToChargContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorlogScaleContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator60 = new System.Windows.Forms.ToolStripSeparator();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
@@ -3045,6 +3044,7 @@ namespace pwiz.Skyline
             this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.peptidesMenuItem,
             this.textZoomToolStripMenuItem,
+            this.userInterfaceToolStripMenuItem,
             this.toolStripSeparator41,
             this.spectralLibrariesToolStripMenuItem,
             this.toolStripSeparator32,
@@ -3139,6 +3139,40 @@ namespace pwiz.Skyline
             this.extraLargeToolStripMenuItem.Name = "extraLargeToolStripMenuItem";
             resources.ApplyResources(this.extraLargeToolStripMenuItem, "extraLargeToolStripMenuItem");
             this.extraLargeToolStripMenuItem.Click += new System.EventHandler(this.extraLargeToolStripMenuItem_Click);
+            // 
+            // userInterfaceToolStripMenuItem
+            // 
+            this.userInterfaceToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.proteomicsToolStripMenuItem,
+            this.moleculeToolStripMenuItem,
+            this.mixedToolStripMenuItem});
+            this.userInterfaceToolStripMenuItem.Name = "userInterfaceToolStripMenuItem";
+            resources.ApplyResources(this.userInterfaceToolStripMenuItem, "userInterfaceToolStripMenuItem");
+            this.modeUIHandler.SetUIMode(this.userInterfaceToolStripMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
+            // 
+            // proteomicsToolStripMenuItem
+            // 
+            this.proteomicsToolStripMenuItem.Image = global::pwiz.Skyline.Properties.Resources.UIModeProteomic;
+            this.proteomicsToolStripMenuItem.Name = "proteomicsToolStripMenuItem";
+            resources.ApplyResources(this.proteomicsToolStripMenuItem, "proteomicsToolStripMenuItem");
+            this.modeUIHandler.SetUIMode(this.proteomicsToolStripMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
+            this.proteomicsToolStripMenuItem.Click += new System.EventHandler(this.proteomicsToolStripMenuItem_Click);
+            // 
+            // moleculeToolStripMenuItem
+            // 
+            this.moleculeToolStripMenuItem.Image = global::pwiz.Skyline.Properties.Resources.UIModeSmallMolecules;
+            this.moleculeToolStripMenuItem.Name = "moleculeToolStripMenuItem";
+            resources.ApplyResources(this.moleculeToolStripMenuItem, "moleculeToolStripMenuItem");
+            this.modeUIHandler.SetUIMode(this.moleculeToolStripMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
+            this.moleculeToolStripMenuItem.Click += new System.EventHandler(this.moleculeToolStripMenuItem_Click);
+            // 
+            // mixedToolStripMenuItem
+            // 
+            this.mixedToolStripMenuItem.Image = global::pwiz.Skyline.Properties.Resources.UIModeMixed;
+            this.mixedToolStripMenuItem.Name = "mixedToolStripMenuItem";
+            resources.ApplyResources(this.mixedToolStripMenuItem, "mixedToolStripMenuItem");
+            this.modeUIHandler.SetUIMode(this.mixedToolStripMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
+            this.mixedToolStripMenuItem.Click += new System.EventHandler(this.mixedToolStripMenuItem_Click);
             // 
             // toolStripSeparator41
             // 
@@ -3787,9 +3821,7 @@ namespace pwiz.Skyline
             this.transitionSettingsMenuItem,
             this.documentSettingsMenuItem,
             this.toolStripSeparator37,
-            this.integrateAllMenuItem,
-            this.toolStripSeparator60,
-            this.userInterfaceToolStripMenuItem});
+            this.integrateAllMenuItem});
             this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
             resources.ApplyResources(this.settingsToolStripMenuItem, "settingsToolStripMenuItem");
             this.settingsToolStripMenuItem.DropDownOpening += new System.EventHandler(this.settingsMenu_DropDownOpening);
@@ -3861,40 +3893,6 @@ namespace pwiz.Skyline
             this.integrateAllMenuItem.Name = "integrateAllMenuItem";
             resources.ApplyResources(this.integrateAllMenuItem, "integrateAllMenuItem");
             this.integrateAllMenuItem.Click += new System.EventHandler(this.integrateAllMenuItem_Click);
-            // 
-            // userInterfaceToolStripMenuItem
-            // 
-            this.userInterfaceToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.proteomicsToolStripMenuItem,
-            this.moleculeToolStripMenuItem,
-            this.mixedToolStripMenuItem});
-            this.userInterfaceToolStripMenuItem.Name = "userInterfaceToolStripMenuItem";
-            resources.ApplyResources(this.userInterfaceToolStripMenuItem, "userInterfaceToolStripMenuItem");
-            this.modeUIHandler.SetUIMode(this.userInterfaceToolStripMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
-            // 
-            // proteomicsToolStripMenuItem
-            // 
-            this.proteomicsToolStripMenuItem.Image = global::pwiz.Skyline.Properties.Resources.UIModeProteomic;
-            this.proteomicsToolStripMenuItem.Name = "proteomicsToolStripMenuItem";
-            resources.ApplyResources(this.proteomicsToolStripMenuItem, "proteomicsToolStripMenuItem");
-            this.modeUIHandler.SetUIMode(this.proteomicsToolStripMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
-            this.proteomicsToolStripMenuItem.Click += new System.EventHandler(this.proteomicsToolStripMenuItem_Click);
-            // 
-            // moleculeToolStripMenuItem
-            // 
-            this.moleculeToolStripMenuItem.Image = global::pwiz.Skyline.Properties.Resources.UIModeSmallMolecules;
-            this.moleculeToolStripMenuItem.Name = "moleculeToolStripMenuItem";
-            resources.ApplyResources(this.moleculeToolStripMenuItem, "moleculeToolStripMenuItem");
-            this.modeUIHandler.SetUIMode(this.moleculeToolStripMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
-            this.moleculeToolStripMenuItem.Click += new System.EventHandler(this.moleculeToolStripMenuItem_Click);
-            // 
-            // mixedToolStripMenuItem
-            // 
-            this.mixedToolStripMenuItem.Image = global::pwiz.Skyline.Properties.Resources.UIModeMixed;
-            this.mixedToolStripMenuItem.Name = "mixedToolStripMenuItem";
-            resources.ApplyResources(this.mixedToolStripMenuItem, "mixedToolStripMenuItem");
-            this.modeUIHandler.SetUIMode(this.mixedToolStripMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
-            this.mixedToolStripMenuItem.Click += new System.EventHandler(this.mixedToolStripMenuItem_Click);
             // 
             // toolsMenu
             // 
@@ -4255,11 +4253,6 @@ namespace pwiz.Skyline
             this.massErrorlogScaleContextMenuItem.Name = "massErrorlogScaleContextMenuItem";
             resources.ApplyResources(this.massErrorlogScaleContextMenuItem, "massErrorlogScaleContextMenuItem");
             this.massErrorlogScaleContextMenuItem.Click += new System.EventHandler(this.massErrorlogScaleContextMenuItem_Click);
-            // 
-            // toolStripSeparator60
-            // 
-            this.toolStripSeparator60.Name = "toolStripSeparator60";
-            resources.ApplyResources(this.toolStripSeparator60, "toolStripSeparator60");
             // 
             // SkylineWindow
             // 
@@ -4813,7 +4806,6 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem proteomicsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem moleculeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem mixedToolStripMenuItem;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator60;
     }
 }
 

@@ -570,6 +570,11 @@ namespace pwiz.Skyline
             {
                 SetUIMode(ModeUI);
             }
+
+            proteomicsToolStripMenuItem.Checked = ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic;
+            moleculeToolStripMenuItem.Checked = ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules;
+            mixedToolStripMenuItem.Checked = ModeUI == SrmDocument.DOCUMENT_TYPE.mixed;
+
         }
 
         public void ShowAutoTrainResults(object sender, DocumentChangedEventArgs e)
