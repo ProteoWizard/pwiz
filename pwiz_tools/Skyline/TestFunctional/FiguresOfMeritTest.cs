@@ -61,7 +61,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(calibrationForm);
             var results = new List<Tuple<FiguresOfMeritOptions, ModifiedSequence, FiguresOfMerit>>();
             int count = 0;
-            foreach (var options in EnumerateFiguresOfMeritOptions().OrderBy(x=>random.Next()))
+            foreach (var options in EnumerateFiguresOfMeritOptions().OrderBy(x=>random.Next()).Take(10))
             {
                 count++;
                 bool doFullTest = count < 5;
