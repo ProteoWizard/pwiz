@@ -156,6 +156,7 @@
     <Compile Include="AuditLogTest.cs" />
     <Compile Include="AutoSelectTest.cs" />
     <Compile Include="BackgroundEventThreadsTest.cs" />
+    <Compile Include="BatchCalibrationTest.cs" />
     <Compile Include="BlibIrtTest.cs" />
     <Compile Include="CalibrationScenariosTest.cs" />
     <Compile Include="CalibrationTest.cs" />
@@ -165,10 +166,12 @@
     <Compile Include="ChromGraphTransformTest.cs" />
     <Compile Include="ChromUITest.cs" />
     <Compile Include="DisplayLanguageTest.cs" />
+    <Compile Include="DocumentGridChromatogramDataTest.cs" />
     <Compile Include="DuplicateTransitionGroupTest.cs" />
     <Compile Include="EncyclopeDiaScoreTest.cs" />
     <Compile Include="ExplicitPeakScoreTest.cs" />
     <Compile Include="ExportAnnotationsTest.cs" />
+    <Compile Include="ExpressionAnnotationsTest.cs" />
     <Compile Include="FormUtilTest.cs" />
     <Compile Include="FullScanFilterInteractionTest.cs" />
     <Compile Include="ImportAnnotationsTest.cs" />
@@ -237,6 +240,7 @@
     <Compile Include="MidasModificationTest.cs" />
     <Compile Include="MidasTest.cs" />
     <Compile Include="MiscFormsTest.cs" />
+    <Compile Include="ModifiedAreaProportionTest.cs" />
     <Compile Include="MultiSelectPeakAreaGraphTest.cs" />
     <Compile Include="MultiSelectRetentionTimeTest.cs" />
     <Compile Include="MultiSelectTest.cs" />
@@ -244,6 +248,7 @@
     <Compile Include="NeutralLossLibraryTest.cs" />
     <Compile Include="NeutralLossTest.cs" />
     <Compile Include="NonLinearRegressionTest.cs" />
+    <Compile Include="OrderByReplicateAnnotationTest.cs" />
     <Compile Include="PasteMoleculesTest.cs" />
     <Compile Include="PeakScoringModelTest.cs" />
     <Compile Include="PivotEditorTest.cs" />
@@ -365,6 +370,7 @@
     <None Include="AssayLibraryImportTest.zip" />
     <None Include="AuditLogSavingTest.zip" />
     <None Include="BackgroundProteomeTest.zip" />
+    <None Include="BatchCalibrationTest.zip" />
     <None Include="CalibrationScenariosTest.zip" />
     <None Include="CalibrationTest.zip" />
     <None Include="CancelExportReportTest.zip" />
@@ -373,6 +379,7 @@
     <None Include="ChromUITest.zip" />
     <None Include="ConfigureToolsDlgTest.zip" />
     <None Include="CopyPasteTest.zip" />
+    <None Include="DocumentGridChromatogramDataTest.zip" />
     <None Include="DocumentGridTest.zip" />
     <None Include="DocumentSizeErrorTest.zip" />
     <None Include="DuplicateTransitionGroupTest.zip" />
@@ -419,6 +426,7 @@
     <None Include="MassErrorGraphsTest.zip" />
     <None Include="MidasModificationTest.zip" />
     <None Include="MidasTest.zip" />
+    <None Include="ModifiedAreaProportionTest.zip" />
     <None Include="NegativeIonChromatogramsTest.zip" />
     <None Include="NeutralLossLibraryTest.zip" />
     <None Include="OptimizeTest.zip" />

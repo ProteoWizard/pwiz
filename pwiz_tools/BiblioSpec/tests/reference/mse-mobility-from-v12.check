@@ -1,22 +1,22 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:mse-mobility-from-v12.blib	11	1	9
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:mse-mobility-from-v12.blib	11	1	10
 id	RefSpectraID	position	mass
 1	4	1	57.021464
 2	4	2	57.021464
-id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
-1	ANELLINVK	507.3024	2	ANELLINVK	-	-	1	12	3.861253	0.0	0.0	1	21.9452	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	29	6.6455	9
-2	ANGTTVLVGMPAGAK	693.8743	2	ANGTTVLVGMPAGAK	-	-	1	8	4.998219	0.0	0.0	1	20.9793	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	75	6.5567	9
-3	AVFVDLEPTVIDEVR	851.4599	2	AVFVDLEPTVIDEVR	-	-	1	36	7.070535	0.0	0.0	1	60.481	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	127	9.6536	9
-4	CCSDVFNQVVK	678.3091	2	C[+57.0]C[+57.0]SDVFNQVVK	-	-	1	12	4.932463	0.0	0.0	1	20.6643	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	17	6.7451	9
-5	EALDFFAR	484.7436	2	EALDFFAR	-	-	1	8	3.615548	0.0	0.0	1	24.9435	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	41	6.3455	9
-6	EKDIVGAVLK	536.3229	2	EKDIVGAVLK	-	-	1	8	4.010153	0.0	0.0	1	20.0247	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	58	6.267	9
-7	GVIFYESHGK	568.7873	2	GVIFYESHGK	-	-	1	9	4.134627	0.0	0.0	1	18.028	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	49	6.6374	9
-8	IGDYAGIK	418.7253	2	IGDYAGIK	-	-	1	4	3.105645	0.0	0.0	1	16.8926	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	83	6.097	9
-9	NLDIERPTYTNLNR	573.634	3	NLDIERPTYTNLNR	-	-	1	36	4.231295	0.0	0.0	1	35.3055	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	91	9.4625	9
-10	SISIVGSYVGNR	626.339	2	SISIVGSYVGNR	-	-	1	15	4.535718	0.0	0.0	1	21.7659	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	2	7.0458	9
-11	VVGLSTLPEIYEK	724.4064	2	VVGLSTLPEIYEK	-	-	1	9	5.284703	0.0	0.0	1	25.5939	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	66	6.7097	9
-id	fileName	cutoffScore
-1	/BiblioSpec/tests/inputs/waters-mobility.final_fragment.csv	-1.0
+id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	totalIonCurrent	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
+1	ANELLINVK	507.3024	2	ANELLINVK	-	-	1	12	3.861253	0.0	0.0	1	21.9452	N/A	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	29	6.6455	9
+2	ANGTTVLVGMPAGAK	693.8743	2	ANGTTVLVGMPAGAK	-	-	1	8	4.998219	0.0	0.0	1	20.9793	N/A	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	75	6.5567	9
+3	AVFVDLEPTVIDEVR	851.4599	2	AVFVDLEPTVIDEVR	-	-	1	36	7.070535	0.0	0.0	1	60.481	N/A	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	127	9.6536	9
+4	CCSDVFNQVVK	678.3091	2	C[+57.0]C[+57.0]SDVFNQVVK	-	-	1	12	4.932463	0.0	0.0	1	20.6643	N/A	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	17	6.7451	9
+5	EALDFFAR	484.7436	2	EALDFFAR	-	-	1	8	3.615548	0.0	0.0	1	24.9435	N/A	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	41	6.3455	9
+6	EKDIVGAVLK	536.3229	2	EKDIVGAVLK	-	-	1	8	4.010153	0.0	0.0	1	20.0247	N/A	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	58	6.267	9
+7	GVIFYESHGK	568.7873	2	GVIFYESHGK	-	-	1	9	4.134627	0.0	0.0	1	18.028	N/A	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	49	6.6374	9
+8	IGDYAGIK	418.7253	2	IGDYAGIK	-	-	1	4	3.105645	0.0	0.0	1	16.8926	N/A	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	83	6.097	9
+9	NLDIERPTYTNLNR	573.634	3	NLDIERPTYTNLNR	-	-	1	36	4.231295	0.0	0.0	1	35.3055	N/A	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	91	9.4625	9
+10	SISIVGSYVGNR	626.339	2	SISIVGSYVGNR	-	-	1	15	4.535718	0.0	0.0	1	21.7659	N/A	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	2	7.0458	9
+11	VVGLSTLPEIYEK	724.4064	2	VVGLSTLPEIYEK	-	-	1	9	5.284703	0.0	0.0	1	25.5939	N/A	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	66	6.7097	9
+id	fileName	idFileName	cutoffScore
+1	/BiblioSpec/tests/inputs/waters-mobility.final_fragment.csv	/BiblioSpec/tests/inputs/waters-mobility.final_fragment.csv	-1.0
 id	scoreType	probabilityType
 0	UNKNOWN	NOT_A_PROBABILITY_VALUE
 1	PERCOLATOR QVALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT

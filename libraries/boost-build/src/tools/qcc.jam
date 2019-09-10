@@ -65,6 +65,11 @@ toolset.flags qcc.compile OPTIONS <warnings-as-errors>on : -Wc,-Werror ;
 
 toolset.flags qcc.compile OPTIONS <profiling>on : -p ;
 
+toolset.flags qcc.compile OPTIONS <local-visibility>hidden : -fvisibility=hidden ;
+toolset.flags qcc.compile.c++ OPTIONS <local-visibility>hidden : -fvisibility-inlines-hidden ;
+toolset.flags qcc.compile OPTIONS <local-visibility>protected : -fvisibility=protected ;
+toolset.flags qcc.compile OPTIONS <local-visibility>global : -fvisibility=default ;
+
 toolset.flags qcc.compile OPTIONS <cflags> ;
 toolset.flags qcc.compile.c++ OPTIONS <cxxflags> ;
 toolset.flags qcc.compile DEFINES <define> ;

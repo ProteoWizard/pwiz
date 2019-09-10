@@ -73,7 +73,6 @@ namespace pwiz.SkylineTestFunctional
                 Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                 return;
             }
-            RunUI(() => TestSmallMolecules = false); //No need to add magic test nodes when we have small mol version of test
 
             CEOptimizationTest();
             OptLibNeutralLossTest();
@@ -766,9 +765,9 @@ namespace pwiz.SkylineTestFunctional
                 var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
                 EnableDocumentGridColumns(documentGrid, Resources.SkylineViewContext_GetTransitionListReportSpec_Mixed_Transition_List, 5,
                     new[]
-                    { 
-                        "Proteins!*.Peptides!*.Precursors!*.ExplicitCompensationVoltage", 
-                        "Proteins!*.Peptides!*.Precursors!*.ExplicitDeclusteringPotential", 
+                    {
+                        "Proteins!*.Peptides!*.Precursors!*.ExplicitCompensationVoltage",
+                        "Proteins!*.Peptides!*.Precursors!*.Transitions!*.ExplicitDeclusteringPotential", 
                     });
                 const double explicitCV = 13.45;
                 const double explicitDP = 14.32;
@@ -777,10 +776,10 @@ namespace pwiz.SkylineTestFunctional
                 WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
                                         SkylineWindow.Document.MoleculeTransitionGroups.First()
                                             .ExplicitValues.CompensationVoltage.Equals(explicitCV)));
-                var colDP = FindDocumentGridColumn(documentGrid, "Precursor.ExplicitDeclusteringPotential");
+                var colDP = FindDocumentGridColumn(documentGrid, "ExplicitDeclusteringPotential");
                 RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colDP.Index].Value = explicitDP);
-                WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
-                                        SkylineWindow.Document.MoleculeTransitionGroups.First()
+                WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitions.Any() &&
+                                        SkylineWindow.Document.MoleculeTransitions.First()
                                             .ExplicitValues.DeclusteringPotential.Equals(explicitDP)));
                 RunUI(() => documentGrid.Close());
                 outTransitionsFinalWithOptLib2 = outTransitionsFinalWithOptLib2.Replace(".csv", "_explicit.csv");
@@ -879,7 +878,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForGraphs();
 
             SrmDocument docCurrent = SkylineWindow.Document;
-            int transitions = docCurrent.MoleculeTransitionCount / (docCurrent.MoleculeTransitionGroupCount - (TestSmallMolecules ? 1 : 0));
+            int transitions = docCurrent.MoleculeTransitionCount / docCurrent.MoleculeTransitionGroupCount;
             foreach (var chromSet in docCurrent.Settings.MeasuredResults.Chromatograms)
                 Assert.AreEqual(transitions, SkylineWindow.GetGraphChrom(chromSet.Name).CurveCount);
             Assert.AreEqual(transitions, SkylineWindow.GraphPeakArea.CurveCount);
@@ -939,7 +938,7 @@ namespace pwiz.SkylineTestFunctional
             stepCount = stepCount*2 + 1;
 
             string[] lines = File.ReadAllLines(filePath);
-            Assert.AreEqual((document.MoleculeTransitionCount + (TestSmallMolecules ? 2 : 0)) * stepCount, lines.Length);
+            Assert.AreEqual(document.MoleculeTransitionCount * stepCount, lines.Length);
 
             int stepsSeen = 0;
             double lastPrecursorMz = 0;

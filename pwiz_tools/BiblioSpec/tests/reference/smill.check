@@ -1,13 +1,13 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:smill.blib	2	1	9
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:smill.blib	2	1	10
 id	RefSpectraID	position	mass
 1	1	11	10.007999
 2	2	11	10.007999
-id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
-1	TPAQFDADELR	637.0	2	TPAQFDADELR[+10.0]	-	-	1	1010	0.0	0.0	0.0	0	0.0	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	CPTAC_Set4_725_091509.0252.0718.2.pkl	15.04	3
-2	TPAQFDADELR	636.86	2	TPAQFDADELR[+10.0]	-	-	1	206	0.0	0.0	0.0	0	0.0	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	CPTAC_Set4_725_091509.0273.0781.2.pkl	11.75	3
-id	fileName	cutoffScore
-1	/BiblioSpec/tests/inputs/CPTAC_Set4_725_091509.mzXML	-1.0
+id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	totalIonCurrent	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
+1	TPAQFDADELR	637.0	2	TPAQFDADELR[+10.0]	-	-	1	1010	0.0	0.0	0.0	0	0.0	N/A	N/A	50074668.95	N/A	N/A	N/A	N/A	N/A	1	CPTAC_Set4_725_091509.02.0718.2.pkl	15.04	3
+2	TPAQFDADELR	636.86	2	TPAQFDADELR[+10.0]	-	-	1	206	0.0	0.0	0.0	0	0.0	N/A	N/A	3293335.09	N/A	N/A	N/A	N/A	N/A	1	CPTAC_Set4_725_091509.02.0781.2.pkl	11.75	3
+id	fileName	idFileName	cutoffScore
+1	/BiblioSpec/tests/inputs/CPTAC_Set4_725_091509.mzXML	/BiblioSpec/tests/inputs/CPTAC_Set4_725_091509.pep.XML	-1.0
 id	scoreType	probabilityType
 0	UNKNOWN	NOT_A_PROBABILITY_VALUE
 1	PERCOLATOR QVALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT

@@ -722,7 +722,10 @@ namespace seems
             }
             spectrumListForm.EndBulkLoad();
             spectrumListForm.Show(DockPanel, DockState.DockBottom);
-            Application.DoEvents();
+
+            // if no spectra, focus back on chromatograms
+            if (ShowChromatogramListForNewSources && sl.size() == 0)
+                chromatogramListForm.Show();
 
             // get the rest of the scans by sequential access
             spectrumListForm.BeginBulkLoad();

@@ -25,14 +25,11 @@
  * the non_redundant library.
  */
 
+#include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include <cstdio>
-#include <iostream>
 #include <cstdlib>
-#include <fstream>
-#include <string>
 #include <sqlite3.h>
-#include <map>
-#include <vector>
 #include <time.h>
 #include "zlib.h"
 #include "RefSpectrum.h"
@@ -69,7 +66,7 @@ class BlibFilter : public BlibMaker {
     vector<PEAK_T> getUncompressedPeaks(int& numPeaks,
                                         int& mzLen, Byte* comprM, 
                                         int& intensityLen, Byte* comprI);
-    void compAndInsert(vector<RefSpectrum*>& oneIon);
+    void compAndInsert(vector<RefSpectrum*>& oneIon, vector<pair<int, int>>& bestSpectraIdAndCount);
     map< int, vector<RefSpectrum*> > groupByScoreType(const vector<RefSpectrum*>& oneIon, map<RefSpectrum*, int>* outIndices);
     vector<RefSpectrum*> getBestScores(const vector<RefSpectrum*>& group, bool higherIsBetter);
 
@@ -98,6 +95,9 @@ using namespace BiblioSpec;
  * library and store it in a new library.
  */
 int main(int argc, char* argv[]) {
+    bnw::args utf8ArgWrapper(argc, argv); // modifies argv in-place with UTF-8 version on Windows
+    pwiz::util::enable_utf8_path_operations();
+
     // declare storage for options values
     ops::variables_map options_table;
 
@@ -211,6 +211,7 @@ void BlibFilter::getCommandLineValues(ops::variables_map& options_table){
     useBestScoring_ = options_table["best-scoring"].as<bool>();
 }
 
+
 void BlibFilter::attachAll()
 {
     Verbosity::status("Filtering redundant library '%s'.",
@@ -218,6 +219,8 @@ void BlibFilter::attachAll()
     boost::log::aux::snprintf(zSql, ZSQLBUFLEN, "ATTACH DATABASE '%s' as %s", SqliteRoutine::ESCAPE_APOSTROPHES(redundantFileName_).c_str(),
             redundantDbName_);
     sql_stmt(zSql);
+
+    createUpdatedRefSpectraView(redundantDbName_);
 }
 
 void BlibFilter::commit()
@@ -391,6 +394,10 @@ void BlibFilter::buildNonRedundantLib() {
                     optional_cols += ", startTime, endTime";
                     if (tableExists(redundantDbName_, "Proteins")) {
                         tableVersion_ = MIN_VERSION_PROTEINS;
+                        if (tableColumnExists(redundantDbName_, "RefSpectra", "totalIonCurrent")) {
+                            tableVersion_ = MIN_VERSION_TIC;
+                            optional_cols += ", totalIonCurrent";
+                        }
                     }
                 } else if (tableExists(redundantDbName_, "RefSpectraPeakAnnotations")) {
                     tableVersion_ = MIN_VERSION_PEAK_ANNOT;
@@ -434,10 +441,13 @@ void BlibFilter::buildNonRedundantLib() {
     }
    boost::log::aux::snprintf(zSql, ZSQLBUFLEN,  
             "SELECT id,peptideSeq,precursorMZ,precursorCharge,peptideModSeq,"
-            "prevAA, nextAA, numPeaks, score, scoreType %s "
-            "FROM %s.RefSpectra "
+            "prevAA, nextAA, numPeaks, score, scoreType, "
+            "ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType, "
+            "moleculeName, chemicalFormula, inchiKey, otherKeys, precursorAdduct, "
+            "startTime, endTime, totalIonCurrent, retentionTime, specIDinFile "
+            "FROM RefSpectraTransfer "
             "WHERE numPeaks >= %i "
-            "ORDER BY %s", optional_cols.c_str(), redundantDbName_, minPeaks_,
+            "ORDER BY %s", minPeaks_,
             order_by.c_str());
 
     smart_stmt pStmt;
@@ -464,15 +474,14 @@ void BlibFilter::buildNonRedundantLib() {
     int ionMobilityTypeIndex = columns["ionMobilityType"];
     int ionMobilityValueIndex = columns["ionMobilityValue"]; // V3 and earlier
     int ionMobilityIndex = columns["ionMobility"];
-    if (ionMobilityIndex == 0) ionMobilityIndex = columns["driftTimeMsec"];
-    int highEnergyOffsetIndex = columns["driftTimeHighEnergyOffsetMsec"];
-    if (highEnergyOffsetIndex == 0) highEnergyOffsetIndex = columns["ionMobilityHighEnergyOffset"];
+    int highEnergyOffsetIndex = columns["ionMobilityHighEnergyOffset"];
     int scoreIndex = columns["score"];
     int scoreTypeIndex = columns["scoreType"];
     int scanNumberIndex = columns["SpecIDinFile"];
     int retentionTimeIndex = columns["retentionTime"];
     int startTimeIndex = columns["startTime"];
     int endTimeIndex = columns["endTime"];
+    int ticIndex = columns["totalIonCurrent"];
     int numPeaksIndex = columns["numPeaks"];
 
     // setup for getting peak data
@@ -490,6 +499,9 @@ void BlibFilter::buildNonRedundantLib() {
            ZSQLBUFLEN);
     int qlen = strlen(zSqlPeakQuery);
     char* idPos = zSqlPeakQuery + qlen;
+
+    // for best scoring mode, keep track of best scoring id and its corresponding count, so these spectra and their peaks can be transferred in bulk
+    vector<pair<int, int>> bestSpectraIdAndCount;
 
     // for each spectrum entry in table
     while( rc==SQLITE_ROW ) {
@@ -537,6 +549,9 @@ void BlibFilter::buildNonRedundantLib() {
             tmpRef->setEndTime(sqlite3_column_double(pStmt, endTimeIndex));
         }
 
+        if (ticIndex > 0)
+            tmpRef->setTotalIonCurrentRaw(sqlite3_column_double(pStmt, ticIndex));
+
         tmpRef->setIonMobilityHighEnergyOffset(highEnergyOffsetIndex > 0 ? sqlite3_column_double(pStmt, highEnergyOffsetIndex) : 0);
         tmpRef->setRetentionTime(sqlite3_column_double(pStmt, retentionTimeIndex));
         tmpRef->setMods(pepModSeq.c_str());
@@ -554,29 +569,32 @@ void BlibFilter::buildNonRedundantLib() {
         int numPeaks = sqlite3_column_int(pStmt, numPeaksIndex);
 
         // get peaks for this spectrum
-        int refSpectraId = sqlite3_column_int(pStmt, 0);
-        boost::log::aux::snprintf(idPos, ZSQLBUFLEN-qlen, "%i", refSpectraId);
-        peakRc = sqlite3_prepare(peakConnection, zSqlPeakQuery, -1, &peakStmt, NULL);
-        check_rc(peakRc, zSqlPeakQuery, "Failed selecting peaks.");
-        peakRc = sqlite3_step(peakStmt);
-        if (peakRc != SQLITE_ROW) {
-            Verbosity::error("Did not find peaks for spectrum %d.", refSpectraId);
-        }
-        int numBytes1 = sqlite3_column_bytes(peakStmt, 0);
-        Byte* comprM = (Byte*)sqlite3_column_blob(peakStmt, 0);
-        int numBytes2 = sqlite3_column_bytes(peakStmt, 1);
-        Byte* comprI = (Byte*)sqlite3_column_blob(peakStmt, 1);        
+        if (!useBestScoring_) // peaks not necessary in best scoring mode
+        {
+            int refSpectraId = sqlite3_column_int(pStmt, 0);
+            boost::log::aux::snprintf(idPos, ZSQLBUFLEN - qlen, "%i", refSpectraId);
+            peakRc = sqlite3_prepare(peakConnection, zSqlPeakQuery, -1, &peakStmt, NULL);
+            check_rc(peakRc, zSqlPeakQuery, "Failed selecting peaks.");
+            peakRc = sqlite3_step(peakStmt);
+            if (peakRc != SQLITE_ROW) {
+                Verbosity::error("Did not find peaks for spectrum %d.", refSpectraId);
+            }
+            int numBytes1 = sqlite3_column_bytes(peakStmt, 0);
+            Byte* comprM = (Byte*)sqlite3_column_blob(peakStmt, 0);
+            int numBytes2 = sqlite3_column_bytes(peakStmt, 1);
+            Byte* comprI = (Byte*)sqlite3_column_blob(peakStmt, 1);
 
-        // is this slow for copying the peak vector? better to return a ptr?
-        vector<PEAK_T> peaks = getUncompressedPeaks(numPeaks, numBytes1, comprM, numBytes2, comprI);
-        sqlite3_finalize(peakStmt);
-        if (peaks.empty()) {
-            Verbosity::error("Unable to read peaks for redundant library "
-                             "spectrum %i, sequence %s, charge %i.",
-                             tmpRef->getLibSpecID(), (tmpRef->getSeq()).c_str(),
-                             tmpRef->getCharge());
+            // is this slow for copying the peak vector? better to return a ptr?
+            vector<PEAK_T> peaks = getUncompressedPeaks(numPeaks, numBytes1, comprM, numBytes2, comprI);
+            sqlite3_finalize(peakStmt);
+            if (peaks.empty()) {
+                Verbosity::error("Unable to read peaks for redundant library "
+                    "spectrum %i, sequence %s, charge %i.",
+                    tmpRef->getLibSpecID(), (tmpRef->getSeq()).c_str(),
+                    tmpRef->getCharge());
+            }
+            tmpRef->setRawPeaks(peaks);
         }
-        tmpRef->setRawPeaks(peaks);
         // TODO end nextRefSpec
 
         // if this spec has same seq and charge, add to the collection
@@ -586,7 +604,7 @@ void BlibFilter::buildNonRedundantLib() {
             if(!oneIon.empty()) {
                 Verbosity::comment(V_DETAIL, "Selecting spec for %s, charge %i from %i spectra.",
                                    lastPepModSeq.c_str(), lastCharge, oneIon.size());
-                compAndInsert(oneIon);
+                compAndInsert(oneIon, bestSpectraIdAndCount);
                 clearVector(oneIon);
             }
 
@@ -605,9 +623,12 @@ void BlibFilter::buildNonRedundantLib() {
         progress.increment();
         Verbosity::comment(V_DETAIL, "Selecting spec for %s, charge %i from %i spectra.",
                            lastPepModSeq.c_str(), lastCharge, oneIon.size());
-        compAndInsert(oneIon);
+        compAndInsert(oneIon, bestSpectraIdAndCount);
         clearVector(oneIon);
     }
+
+    if (useBestScoring_)
+        transferSpectra(redundantDbName_, bestSpectraIdAndCount, tableVersion_);
 
     // we may have selected fewer spectra than were in the library
     // update the progress indicator
@@ -676,19 +697,20 @@ vector<PEAK_T> BlibFilter::getUncompressedPeaks(int& numPeaks,
  * use the spec with the higher score.  For now, use the one with more
  * peaks. 
  */
-void BlibFilter::compAndInsert(vector<RefSpectrum*>& oneIon)
+void BlibFilter::compAndInsert(vector<RefSpectrum*>& oneIon, vector<pair<int, int>>& bestSpectraIdAndCount)
 {
     int num_spec = oneIon.size();
     int specID = 0; // id RefSpec table in filtered index
     int bestIndex = 0;
 
-    if(num_spec == 1){ // add that one spectrum
-        specID = transferSpectrum(redundantDbName_, 
-                                  oneIon.at(0)->getLibSpecID(), 
-                                  num_spec,
-                                  tableVersion_);
-    } else if(!useBestScoring_) { // choose the one with more peaks
-        if (num_spec == 2){
+    if(!useBestScoring_) { // choose the one with more peaks
+
+        if (num_spec == 1) { // add that one spectrum
+            specID = transferSpectrum(redundantDbName_,
+                oneIon.at(0)->getLibSpecID(),
+                num_spec,
+                tableVersion_);
+        } else if (num_spec == 2) {
             // in the future, pick the one with the best search score
             if( oneIon.at(0)->getNumRawPeaks() < oneIon.at(1)->getNumRawPeaks() ) {
                 bestIndex = 1;
@@ -757,58 +779,68 @@ void BlibFilter::compAndInsert(vector<RefSpectrum*>& oneIon)
                 }
         }
     } else {
-        map<RefSpectrum*, int> indices;
-        map< int, vector<RefSpectrum*> > groups = groupByScoreType(oneIon, &indices);
-        RefSpectrum* winner = NULL;
-
-        vector<RefSpectrum*> possibleWinners;
-        for (map< int, vector<RefSpectrum*> >::const_iterator i = groups.begin(); i != groups.end(); ++i) {
-            map<int, bool>::const_iterator directionLookup = higherIsBetter_.find(i->first);
-            if (directionLookup == higherIsBetter_.end()) {
-                Verbosity::error("Don't know if higher or lower is better for score type %d", i->first);
-            }
-            vector<RefSpectrum*> bestScores = getBestScores(i->second, directionLookup->second);
-            possibleWinners.insert(possibleWinners.end(), bestScores.begin(), bestScores.end());
-        }
-
-        if (possibleWinners.size() == 1) {
-            winner = possibleWinners.front();
+        if (num_spec == 1) {
+            bestSpectraIdAndCount.push_back(make_pair(oneIon.at(0)->getLibSpecID(), 1));
         } else {
-            // find highest TIC to determine final winner
-            double winningValue = -1.0;
-            for (vector<RefSpectrum*>::iterator i = possibleWinners.begin(); i != possibleWinners.end(); ++i) {
-                double specValue = (*i)->getTotalIonCurrentRaw();
-                if (specValue > winningValue) {
-                    winner = *i;
-                    winningValue = specValue;
+            map<RefSpectrum*, int> indices;
+            map< int, vector<RefSpectrum*> > groups = groupByScoreType(oneIon, &indices);
+            RefSpectrum* winner = NULL;
+
+            vector<RefSpectrum*> possibleWinners;
+            for (map< int, vector<RefSpectrum*> >::const_iterator i = groups.begin(); i != groups.end(); ++i) {
+                map<int, bool>::const_iterator directionLookup = higherIsBetter_.find(i->first);
+                if (directionLookup == higherIsBetter_.end()) {
+                    Verbosity::error("Don't know if higher or lower is better for score type %d", i->first);
                 }
+                vector<RefSpectrum*> bestScores = getBestScores(i->second, directionLookup->second);
+                possibleWinners.insert(possibleWinners.end(), bestScores.begin(), bestScores.end());
             }
 
-            /* cross-cross score among possible winners to determine final winner
-            PeakProcessor proc;
-            proc.setClearPrecursor(true);
-            proc.setNumTopPeaksToUse(100);
-            for (vector<RefSpectrum*>::iterator i = oneIon.begin(); i != oneIon.end(); ++i)
-                proc.processPeaks(*i);
-            
-            double winningScore = -1.0;
-            for (vector<RefSpectrum*>::iterator i = possibleWinners.begin(); i != possibleWinners.end(); ++i) {
-                double crossScore = 0.0;
-                for (vector<RefSpectrum*>::iterator j = possibleWinners.begin(); j != possibleWinners.end(); ++j) {
-                    if (*i == *j)
-                        continue;
-                    Match thisMatch(*i, *j);
-                    DotProduct::compare(thisMatch);
-                    crossScore += thisMatch.getScore(DOTP);
+            if (possibleWinners.size() == 1) {
+                winner = possibleWinners.front();
+            }
+            else {
+                // find highest TIC to determine final winner
+                double winningValue = -1.0;
+                for (vector<RefSpectrum*>::iterator i = possibleWinners.begin(); i != possibleWinners.end(); ++i) {
+                    double specValue = (*i)->getTotalIonCurrentRaw();
+                    if (specValue > winningValue) {
+                        winner = *i;
+                        winningValue = specValue;
+                    }
                 }
-                if (crossScore > winningScore) {
-                    winner = *i;
-                    winningScore = crossScore;
-                }
-            }*/
+
+                /* cross-cross score among possible winners to determine final winner
+                PeakProcessor proc;
+                proc.setClearPrecursor(true);
+                proc.setNumTopPeaksToUse(100);
+                for (vector<RefSpectrum*>::iterator i = oneIon.begin(); i != oneIon.end(); ++i)
+                    proc.processPeaks(*i);
+
+                double winningScore = -1.0;
+                for (vector<RefSpectrum*>::iterator i = possibleWinners.begin(); i != possibleWinners.end(); ++i) {
+                    double crossScore = 0.0;
+                    for (vector<RefSpectrum*>::iterator j = possibleWinners.begin(); j != possibleWinners.end(); ++j) {
+                        if (*i == *j)
+                            continue;
+                        Match thisMatch(*i, *j);
+                        DotProduct::compare(thisMatch);
+                        crossScore += thisMatch.getScore(DOTP);
+                    }
+                    if (crossScore > winningScore) {
+                        winner = *i;
+                        winningScore = crossScore;
+                    }
+                }*/
+            }
+
+            bestSpectraIdAndCount.push_back(make_pair(winner->getLibSpecID(), oneIon.size()));
+
+            bestIndex = indices[winner];
         }
-        specID = transferSpectrum(redundantDbName_, winner->getLibSpecID(), oneIon.size(), tableVersion_);
-        bestIndex = indices[winner];
+
+        //specID = transferSpectrum(redundantDbName_, winner->getLibSpecID(), oneIon.size(), tableVersion_);
+        specID = bestSpectraIdAndCount.back().first;
     }
 
     // add rt, RefSpectraId for all refspec

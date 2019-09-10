@@ -45,6 +45,8 @@ class PWIZ_API_DECL SpectrumList_PeakPicker : public msdata::SpectrumListWrapper
                             bool preferVendorPeakPicking,
                             const util::IntegerSet& msLevelsToPeakPick);
 
+    /// returns true if the given file 
+    static bool supportsVendorPeakPicking(const std::string& rawpath);
 
     static bool accept(const msdata::SpectrumListPtr& inner);
 

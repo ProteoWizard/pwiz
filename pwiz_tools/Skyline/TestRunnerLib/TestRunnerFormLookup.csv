@@ -132,6 +132,7 @@ MissingFileDlg,TestSynchSiblings
 MProphetFeaturesDlg,TestPeakPickingTutorial
 MultiButtonMsgDlg,TestShareSettings
 NameLayoutForm,TestPivotEditor
+NoModeUIDlg,UIModeSettingsTest
 OpenDataSourceDialog,TestRetentionTimeAlignment
 PasteDlg.FastaTab,ProteinMetadataFunctionalTests
 PasteDlg.PeptideListTab,TestMethodEditTutorial
@@ -144,6 +145,7 @@ PeptideSettingsUI.DigestionTab,TestMethodEditTutorial
 PeptideSettingsUI.FilterTab,TestEditDialogs
 PeptideSettingsUI.LibraryTab,TestMethodEditTutorial
 PeptideSettingsUI.ModificationsTab,TestNeutralLoss
+PeptideSettingsUI.LabelsTab,UIModeSettingsTest
 PeptideSettingsUI.PredictionTab,IrtFunctionalTest
 PeptideSettingsUI.QuantificationTab,TestCalibration
 PeptidesPerProteinDlg,TestImportPeptideSearch

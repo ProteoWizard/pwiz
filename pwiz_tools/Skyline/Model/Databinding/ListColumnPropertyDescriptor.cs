@@ -20,6 +20,7 @@ using System;
 using System.ComponentModel;
 using System.Linq;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Lists;
@@ -140,7 +141,7 @@ namespace pwiz.Skyline.Model.Databinding
                     doc.Settings.ChangeDataSettings(
                     
                     ChangeListData(doc.Settings.DataSettings, listData)));
-            });
+            }, AuditLogEntry.SettingsLogFunction);
 
         }
 

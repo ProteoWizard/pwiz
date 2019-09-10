@@ -69,7 +69,7 @@ namespace pwiz.SkylineTestFunctional
                     SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[2];
                     Assert.IsTrue(Equals(SkylineWindow.SequenceTree.SelectedNode.Text, SECOND_RENAMED_PROTEIN));
                     SkylineWindow.SequenceTree.SelectedNode =
-                        SkylineWindow.SequenceTree.Nodes[SkylineWindow.SequenceTree.Nodes.Count - (TestSmallMolecules ? 3 : 2)];
+                        SkylineWindow.SequenceTree.Nodes[SkylineWindow.SequenceTree.Nodes.Count - 2];
                     Assert.IsTrue(Equals(SkylineWindow.SequenceTree.SelectedNode.Text, NON_FASTA_PROTEIN_RENAMED));
                 });
             }

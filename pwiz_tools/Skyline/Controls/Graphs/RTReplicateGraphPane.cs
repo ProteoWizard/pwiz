@@ -119,14 +119,14 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             var rtTransformOp = GraphSummary.StateProvider.GetRetentionTimeTransformOperation();
             var rtValue = RTPeptideGraphPane.RTValue;
-            GraphValues.ReplicateGroupOp replicateGroupOp;
+            ReplicateGroupOp replicateGroupOp;
             if (rtValue == RTPeptideValue.All)
             {
-                replicateGroupOp = GraphValues.ReplicateGroupOp.FromCurrentSettings(document.Settings, GraphValues.AggregateOp.MEAN);
+                replicateGroupOp = ReplicateGroupOp.FromCurrentSettings(document, GraphValues.AggregateOp.MEAN);
             }
             else
             {
-                replicateGroupOp = GraphValues.ReplicateGroupOp.FromCurrentSettings(document.Settings);
+                replicateGroupOp = ReplicateGroupOp.FromCurrentSettings(document);
             }
             var retentionTimeValue = new GraphValues.RetentionTimeTransform(rtValue, rtTransformOp, replicateGroupOp.AggregateOp);
             YAxis.Title.Text = retentionTimeValue.GetAxisTitle();
@@ -342,7 +342,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         PointPairBase.Missing, PointPairBase.Missing, PointPairBase.Missing, 0);
             }
 
-            public RTGraphData(SrmDocument document, IEnumerable<IdentityPath> selectedDocNodePaths, DisplayTypeChrom displayType, GraphValues.RetentionTimeTransform retentionTimeTransform, GraphValues.ReplicateGroupOp replicateGroupOp)
+            public RTGraphData(SrmDocument document, IEnumerable<IdentityPath> selectedDocNodePaths, DisplayTypeChrom displayType, GraphValues.RetentionTimeTransform retentionTimeTransform, ReplicateGroupOp replicateGroupOp)
                 : base(document, selectedDocNodePaths, displayType, replicateGroupOp, PaneKey.DEFAULT)
             {
                 RetentionTimeTransform = retentionTimeTransform;

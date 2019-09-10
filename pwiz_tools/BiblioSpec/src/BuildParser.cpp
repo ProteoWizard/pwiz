@@ -19,10 +19,9 @@
 // limitations under the License.
 //
 
-#include "BuildParser.h"
+#include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
-#include <boost/algorithm/string.hpp>
-#include <iostream>
+#include "BuildParser.h"
 #include "SpecData.h"
 
 namespace BiblioSpec {
@@ -36,7 +35,7 @@ BuildParser::BuildParser(BlibBuilder& maker,
   lookUpBy_(SCAN_NUM_ID)
 {
     // initialize amino acid masses
-    fill(aaMasses_, aaMasses_ + sizeof(aaMasses_)/sizeof(double), 0);
+    std::fill(aaMasses_, aaMasses_ + sizeof(aaMasses_)/sizeof(double), 0);
     AminoAcidMasses::initializeMass(aaMasses_, 1);
 
     // parse full file name to get path and fileroot
@@ -54,10 +53,10 @@ BuildParser::BuildParser(BlibBuilder& maker,
 
     string stmt = "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
         "peptideModSeq, prevAA, nextAA, copies, numPeaks, ionMobility, collisionalCrossSectionSqA, "
-        "ionMobilityHighEnergyOffset, ionMobilityType, retentionTime, startTime, endTime, fileID, "
+        "ionMobilityHighEnergyOffset, ionMobilityType, retentionTime, startTime, endTime, totalIonCurrent, fileID, "
         "specIDinFile, score, scoreType" + 
         SmallMolMetadata::sql_col_names_csv() + 
-        ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ";
+        ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ";
     sqlite3_prepare(maker.getDb(), stmt.c_str(),
      -1, &insertSpectrumStmt_, NULL);
 
@@ -110,11 +109,19 @@ void BuildParser::setSpecFileName(
                     // case insensitive filename comparison (i.e. so POSIX systems can match to basename.MGF or BaseName.mgf)
                     if (!bal::iequals(fileroot + ext, trialName))
                         continue;
-                    ifstream file(dirPath.c_str());
+
+                    if (bfs::is_directory(dirPath)) {
+                        curSpecFileName_ = dirPath.string();
+                        break;
+                    }
+
+                    ifstream file(dirPath.string().c_str());
                     if (file.good()) {
                         curSpecFileName_ = dirPath.string();
                         break;
                     }
+                    else
+                        Verbosity::comment(V_DETAIL, "cannot open spectrum file %s", dirPath.string().c_str());
                 }
 
                 if (!curSpecFileName_.empty())
@@ -146,6 +153,7 @@ void BuildParser::setSpecFileName(
         throw BlibException(true, extString.c_str());
     }// else we found a file and set the name
 
+    Verbosity::comment(V_DETAIL, "spectrum filename set to %s", curSpecFileName_.c_str());
 }
 
 /**
@@ -257,7 +265,7 @@ sqlite3_int64 BuildParser::insertSpectrumFilename(string& filename,
     }
 
     // get the file ID to save with each spectrum
-    sqlite3_int64 fileId = blibMaker_.addFile(fullPath, blibMaker_.getCutoffScore());
+    sqlite3_int64 fileId = blibMaker_.addFile(fullPath, blibMaker_.getCutoffScore(), fullFilename_);
 
     const int MAX_SPECTRUM_FILES = 2000;
     int curFile = blibMaker_.getCurFile();
@@ -358,6 +366,8 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
         fileId = insertSpectrumFilename(specFilename, true); // insert as is
     }
 
+    BiblioSpec::Verbosity::debug("BuildParser lookup method is %s", specIdTypeToString(lookUpBy_));
+
     // for each psm
     map<const Protein*, sqlite3_int64> proteinIds;
     for(unsigned int i=0; i<psms_.size(); i++) {
@@ -373,6 +383,10 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
                                idStr.c_str(), curSpecFileName_.c_str());
             continue;
         }
+
+        curSpectrum.totalIonCurrent = 0;
+        for (int j = 0; j < curSpectrum.numPeaks; ++j)
+            curSpectrum.totalIonCurrent += curSpectrum.intensities[j];
 
         Verbosity::comment(V_DETAIL, "Adding spectrum %d (%s), charge %d.", 
                            psm->specKey, psm->specName.c_str(), psm->charge);
@@ -468,6 +482,7 @@ void BuildParser::insertSpectrum(PSM* psm,
         sqlite3_bind_null(insertSpectrumStmt_, field++);
         sqlite3_bind_null(insertSpectrumStmt_, field++);
     }
+    sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.totalIonCurrent);
     sqlite3_bind_int(insertSpectrumStmt_, field++, fileId);
     sqlite3_bind_text(insertSpectrumStmt_, field++, specIdStr.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_double(insertSpectrumStmt_, field++, psm->score);

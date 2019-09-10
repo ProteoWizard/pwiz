@@ -37,7 +37,6 @@
 
 #define MAX_MODS 128
 
-using namespace std;
 
 class BlibMaker;
 

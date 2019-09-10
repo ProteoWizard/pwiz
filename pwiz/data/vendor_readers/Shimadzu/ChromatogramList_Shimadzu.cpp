@@ -70,7 +70,13 @@ PWIZ_API_DECL size_t ChromatogramList_Shimadzu::find(const string& id) const
 }
 
 
-PWIZ_API_DECL ChromatogramPtr ChromatogramList_Shimadzu::chromatogram(size_t index, bool getBinaryData) const 
+PWIZ_API_DECL ChromatogramPtr ChromatogramList_Shimadzu::chromatogram(size_t index, bool getBinaryData) const
+{
+    return chromatogram(index, getBinaryData ? DetailLevel_FullData : DetailLevel_FullMetadata);
+}
+
+
+PWIZ_API_DECL ChromatogramPtr ChromatogramList_Shimadzu::chromatogram(size_t index, DetailLevel detailLevel) const
 {
     boost::call_once(indexInitialized_.flag, boost::bind(&ChromatogramList_Shimadzu::createIndex, this));
     if (index>size())
@@ -84,6 +90,8 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Shimadzu::chromatogram(size_t ind
 
     result->set(ci.chromatogramType);
 
+    bool getBinaryData = detailLevel == DetailLevel_FullData;
+
     switch (ci.chromatogramType)
     {
         default:
@@ -91,6 +99,8 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Shimadzu::chromatogram(size_t ind
 
         case MS_TIC_chromatogram:
         {
+            if (detailLevel < DetailLevel_FullMetadata)
+                return result;
 
             auto ticPtr = rawfile_->getTIC();
             if (getBinaryData)
@@ -115,6 +125,9 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Shimadzu::chromatogram(size_t ind
             result->product.isolationWindow.set(MS_isolation_window_target_m_z, ci.transition.Q3, MS_m_z);
             //result->product.isolationWindow.set(MS_isolation_window_lower_offset, ci.q3Offset, MS_m_z);
             //result->product.isolationWindow.set(MS_isolation_window_upper_offset, ci.q3Offset, MS_m_z);
+
+            if (detailLevel < DetailLevel_FullMetadata)
+                return result;
 
             if (getBinaryData)
             {

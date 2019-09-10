@@ -36,6 +36,7 @@ namespace pwiz.SkylineTest
             var doc = (SrmDocument) new XmlSerializer(typeof(SrmDocument)).Deserialize(new StringReader(DOC_CPETIDER));
             AssertEx.VerifyModifiedSequences(doc);
         }
+
         const string DOC_CPETIDER = @"<srm_settings format_version='3.73' software_version='Skyline (64-bit) '>
   <settings_summary name='Default'>
     <peptide_settings>
@@ -84,7 +85,7 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestExplicitAndHeavyModifications()
         {
-            var doc = (SrmDocument)new XmlSerializer(typeof(SrmDocument)).Deserialize(new StringReader(DOC_ARTKQTAR));
+            var doc = (SrmDocument) new XmlSerializer(typeof(SrmDocument)).Deserialize(new StringReader(DOC_ARTKQTAR));
             AssertEx.VerifyModifiedSequences(doc);
         }
 
@@ -150,7 +151,7 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestVariableAndExplicitHeavyMod()
         {
-            var doc = (SrmDocument)new XmlSerializer(typeof(SrmDocument)).Deserialize(new StringReader(DOC_AGLQFPVGR));
+            var doc = (SrmDocument) new XmlSerializer(typeof(SrmDocument)).Deserialize(new StringReader(DOC_AGLQFPVGR));
             AssertEx.VerifyModifiedSequences(doc);
         }
 
@@ -213,14 +214,17 @@ namespace pwiz.SkylineTest
     </peptide>
   </peptide_list>
 </srm_settings>";
+
         [TestMethod]
         public void TestExplicitStaticImplicitHeavy()
         {
-            var doc = (SrmDocument)new XmlSerializer(typeof(SrmDocument)).Deserialize(new StringReader(DOC_AGLQFPVGR_EXPLICITSTATIC));
+            var doc = (SrmDocument) new XmlSerializer(typeof(SrmDocument)).Deserialize(
+                new StringReader(DOC_AGLQFPVGR_EXPLICITSTATIC));
             AssertEx.VerifyModifiedSequences(doc);
         }
 
-        private const string DOC_AGLQFPVGR_EXPLICITSTATIC = @"<srm_settings format_version='3.73' software_version='Skyline (64-bit) '>
+        private const string DOC_AGLQFPVGR_EXPLICITSTATIC =
+            @"<srm_settings format_version='3.73' software_version='Skyline (64-bit) '>
   <settings_summary name='Default'>
     <peptide_settings>
       <peptide_modifications max_variable_mods='3' max_neutral_losses='1'>
@@ -280,11 +284,13 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestMultipleExplicitModsPerAminoAcid()
         {
-            var doc = (SrmDocument)new XmlSerializer(typeof(SrmDocument)).Deserialize(new StringReader(DOC_MULTIPLE_CYSTEINE_MODS));
+            var doc = (SrmDocument) new XmlSerializer(typeof(SrmDocument)).Deserialize(
+                new StringReader(DOC_MULTIPLE_CYSTEINE_MODS));
             AssertEx.VerifyModifiedSequences(doc);
         }
 
-        private const string DOC_MULTIPLE_CYSTEINE_MODS = @"<srm_settings format_version='4.11' software_version='Skyline (64-bit) '>
+        private const string DOC_MULTIPLE_CYSTEINE_MODS =
+            @"<srm_settings format_version='4.11' software_version='Skyline (64-bit) '>
   <settings_summary name='Default'>
     <peptide_settings>
       <peptide_modifications max_variable_mods='3' max_neutral_losses='1'>
@@ -342,6 +348,67 @@ namespace pwiz.SkylineTest
     </peptide>
   </protein>
 </srm_settings>";
-    }
 
+        [TestMethod]
+        public void TestExplicitHeavyImplicitStatic()
+        {
+            var doc = (SrmDocument) new XmlSerializer(typeof(SrmDocument)).Deserialize(
+                new StringReader(DOC_EXPLICIT_HEAVY_IMPLICIT_STATIC));
+            AssertEx.VerifyModifiedSequences(doc);
+
+        }
+
+        private const string DOC_EXPLICIT_HEAVY_IMPLICIT_STATIC = @"<srm_settings format_version='4.2' software_version='Skyline (64-bit) 4.2.0.19072'>
+  <settings_summary name='Default'>
+    <peptide_settings>
+      <enzyme name='Trypsin' cut='KR' no_cut='P' sense='C' />
+      <peptide_modifications max_variable_mods='8' max_neutral_losses='2'>
+        <static_modifications>
+          <static_modification name='Carbamidomethyl (C)' aminoacid='C' formula='H3C2NO' unimod_id='4' short_name='CAM' />
+        </static_modifications>
+        <heavy_modifications>
+          <static_modification name='Label:13C(6)15N(2) (K)' aminoacid='K' label_13C='true' label_15N='true' />
+          <static_modification name='Label:13C(6)15N(4) (R)' aminoacid='R' label_13C='true' label_15N='true' unimod_id='267' short_name='+10' />
+        </heavy_modifications>
+      </peptide_modifications>
+    </peptide_settings>
+    <transition_settings>
+    </transition_settings>
+  </settings_summary>
+  <peptide_list label_name='JPTQ6' websearch_status='X#UJPTQ6' auto_manage_children='false'>
+    <peptide auto_manage_children='false' sequence='TIDAGCKPYMAPER' modified_sequence='TIDAGC[+57.021464]KPYMAPER' calc_neutral_pep_mass='1607.743598' num_missed_cleavages='0'>
+      <explicit_modifications>
+        <explicit_heavy_modifications>
+          <explicit_modification index_aa='13' modification_name='Label:13C(6)15N(4) (R)' mass_diff='+10' />
+        </explicit_heavy_modifications>
+      </explicit_modifications>
+      <implicit_modifications>
+        <implicit_static_modifications>
+          <implicit_modification index_aa='5' modification_name='Carbamidomethyl (C)' mass_diff='+57' />
+        </implicit_static_modifications>
+      </implicit_modifications>
+      <precursor charge='3' calc_neutral_mass='1607.743598' precursor_mz='536.921809' collision_energy='27' modified_sequence='TIDAGC[+57.0]KPYMAPER'>
+      </precursor>
+      <precursor charge='3' isotope_label='heavy' calc_neutral_mass='1617.751867' precursor_mz='540.257898' collision_energy='27' modified_sequence='TIDAGC[+57.0]KPYMAPER[+10.0]'>
+      </precursor>
+    </peptide>
+    <peptide sequence='TMDAGCKPYMAPER' modified_sequence='TMDAGC[+57.021464]KPYMAPER' calc_neutral_pep_mass='1625.700019' num_missed_cleavages='0'>
+      <explicit_modifications>
+        <explicit_heavy_modifications>
+          <explicit_modification index_aa='13' modification_name='Label:13C(6)15N(4) (R)' mass_diff='+10' />
+        </explicit_heavy_modifications>
+      </explicit_modifications>
+      <implicit_modifications>
+        <implicit_static_modifications>
+          <implicit_modification index_aa='5' modification_name='Carbamidomethyl (C)' mass_diff='+57' />
+        </implicit_static_modifications>
+      </implicit_modifications>
+      <precursor charge='3' calc_neutral_mass='1625.700019' precursor_mz='542.907282' collision_energy='27' modified_sequence='TMDAGC[+57.0]KPYMAPER'>
+      </precursor>
+      <precursor charge='3' isotope_label='heavy' calc_neutral_mass='1635.708288' precursor_mz='546.243372' collision_energy='27' modified_sequence='TMDAGC[+57.0]KPYMAPER[+10.0]'>
+      </precursor>
+    </peptide>
+  </peptide_list>
+</srm_settings>";
+    }
 }

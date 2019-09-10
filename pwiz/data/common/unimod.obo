@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 2018:08:13 13:42
+date: 2018:10:25 09:32
 
 saved-by: psi-pi_team
 default-namespace: UNIMOD
@@ -316,7 +316,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:7
 name: Deamidated
-def: "Deamidation." [FindMod:FLAC, RESID:AA0128, FindMod:CITR, URL:http\://www.ionsource.com/Card/Deamidation/deamidation.htm, RESID:AA0214, PMID:6838602, PMID:15700232, FindMod:DEAM, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=7]
+def: "Deamidation." [PMID:6838602, RESID:AA0214, URL:http\://www.ionsource.com/Card/Deamidation/deamidation.htm, FindMod:CITR, RESID:AA0128, FindMod:FLAC, PMID:15700232, FindMod:DEAM, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=7]
 synonym: "phenyllactyl from N-term Phe Citrullination" []
 xref: record_id "7"
 xref: delta_mono_mass "0.984016"
@@ -325,7 +325,7 @@ xref: delta_composition "H(-1) N(-1) O"
 xref: username_of_poster "unimod"
 xref: group_of_poster "admin"
 xref: date_time_posted "2002-08-19 19:17:11"
-xref: date_time_modified "2011-05-12 08:53:06"
+xref: date_time_modified "2018-10-25 09:32:26"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "0"
@@ -344,6 +344,14 @@ xref: spec_2_site "R"
 xref: spec_2_position "Anywhere"
 xref: spec_2_classification "Post-translational"
 xref: spec_2_misc_notes "Protein which is post-translationally modified by the de-imination of one or more arginine residues; Peptidylarginine deiminase (PAD) converts protein bound to citrulline"
+xref: spec_2_neutral_loss_0_mono_mass "0"
+xref: spec_2_neutral_loss_0_avge_mass "0"
+xref: spec_2_neutral_loss_0_flag "false"
+xref: spec_2_neutral_loss_0_composition "0"
+xref: spec_2_neutral_loss_44_mono_mass "43.005814"
+xref: spec_2_neutral_loss_44_avge_mass "43.0247"
+xref: spec_2_neutral_loss_44_flag "false"
+xref: spec_2_neutral_loss_44_composition "H C N O"
 xref: spec_3_group "3"
 xref: spec_3_hidden "1"
 xref: spec_3_site "F"
@@ -43695,7 +43703,7 @@ is_a: UNIMOD:0 ! unimod root node
 id: UNIMOD:1970
 name: Unknown:162
 def: "Unidentified modification of 162.1258 found in open search." [URL:http\://www.matrixscience.com/blog/trying-to-illuminate-proteomics-dark-matter.html, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1970]
-synonym: "The elemental composition should be assumed incorrect" []
+synonym: "The elemental composition should be assumed incorrect Although it happens to be that of Diethylene glycol butyl ether, a common solvent." []
 xref: record_id "1970"
 xref: delta_mono_mass "162.125595"
 xref: delta_avge_mass "162.2267"
@@ -43703,7 +43711,7 @@ xref: delta_composition "H(18) C(8) O(3)"
 xref: username_of_poster "unimod"
 xref: group_of_poster ""
 xref: date_time_posted "2017-12-07 09:51:01"
-xref: date_time_modified "2017-12-07 09:54:04"
+xref: date_time_modified "2018-10-17 14:27:53"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -44295,6 +44303,58 @@ xref: spec_3_site "Y"
 xref: spec_3_position "Anywhere"
 xref: spec_3_classification "Artefact"
 xref: spec_3_misc_notes "possible side chain reaction when labeling N-term"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1999
+name: Xlink:DST[56]
+def: "DST crosslinker cleaved by sodium periodate." [URL:https\://assets.thermofisher.com/TFS-Assets/LSG/manuals/MAN0011282_DST_UG.pdf, PMID:212103, PMID:3001048, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1999]
+xref: record_id "1999"
+xref: delta_mono_mass "55.989829"
+xref: delta_avge_mass "56.0202"
+xref: delta_composition "C(2) O(2)"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2018-08-29 11:31:26"
+xref: date_time_modified "2018-08-29 11:37:13"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "N-term"
+xref: spec_2_position "Protein N-term"
+xref: spec_2_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2001
+name: ZQG
+def: "Lys conjugation to carbobenzoxy-L-glutaminyl-glycine." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2001]
+comment: Glutamine-donor substrate for transglutaminase.
+xref: record_id "2001"
+xref: delta_mono_mass "320.100836"
+xref: delta_avge_mass "320.2973"
+xref: delta_composition "H(16) C(15) N(2) O(6)"
+xref: username_of_poster "Barbara Spolaore"
+xref: group_of_poster ""
+xref: date_time_posted "2018-09-18 12:01:47"
+xref: date_time_modified "2018-09-20 16:49:06"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_1_neutral_loss_135_mono_mass "134.036779"
+xref: spec_1_neutral_loss_135_avge_mass "134.132"
+xref: spec_1_neutral_loss_135_flag "false"
+xref: spec_1_neutral_loss_135_composition "H(6) C(8) O(2)"
 is_a: UNIMOD:0 ! unimod root node
 
 

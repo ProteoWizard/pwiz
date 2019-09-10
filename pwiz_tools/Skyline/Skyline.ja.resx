@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="ModeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <metadata name="contextMenuTreeNode.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 56</value>
   </metadata>
@@ -170,7 +173,7 @@
     <value>193, 26</value>
   </data>
   <data name="addMoleculeContextMenuItem.Text" xml:space="preserve">
-    <value>低分子を追加...</value>
+    <value>分子を追加...</value>
   </data>
   <data name="addSmallMoleculePrecursorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 26</value>
@@ -1593,6 +1596,18 @@
   <data name="redoToolBarButton.Text" xml:space="preserve">
     <value>やり直し</value>
   </data>
+  <data name="toolStripSeparatorSelectUI.Size" type="System.Drawing.Size, System.Drawing">
+    <value>6, 25</value>
+  </data>
+  <data name="modeUIToolBarDropDownButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>White</value>
+  </data>
+  <data name="modeUIToolBarDropDownButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>46, 26</value>
+  </data>
+  <data name="modeUIToolBarDropDownButton.Text" xml:space="preserve">
+    <value>ユーザーインターフェイスの選択</value>
+  </data>
   <data name="mainToolStrip.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 24</value>
   </data>
@@ -2055,34 +2070,26 @@
   <data name="removeEmptyProteinsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
   </data>
-  <data name="removeEmptyProteinsMenuItem.Text" xml:space="preserve">
-    <value>空欄のタンパク質を削除(&amp;E)</value>
+  <data name="reintegrateToolStripMenuItem.Text" xml:space="preserve">
+    <value>再統合(&amp;R)...</value>
   </data>
-  <data name="removeEmptyPeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="generateDecoysMenuItem.RightToLeftAutoMirrorImage" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="generateDecoysMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
   </data>
-  <data name="removeEmptyPeptidesMenuItem.Text" xml:space="preserve">
-    <value>空欄のペプチドを削除(&amp;V)</value>
+  <data name="generateDecoysMenuItem.Text" xml:space="preserve">
+    <value>デコイを追加(&amp;D)...</value>
   </data>
-  <data name="removeDuplicatePeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="compareModelsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
   </data>
-  <data name="removeDuplicatePeptidesMenuItem.Text" xml:space="preserve">
-    <value>重複ペプチドを削除(&amp;U)</value>
+  <data name="compareModelsToolStripMenuItem.Text" xml:space="preserve">
+    <value>ピークスコアを比較(&amp;O)...</value>
   </data>
-  <data name="removeDuplicatePeptidesMenuItem.ToolTipText" xml:space="preserve">
-    <value>ドキュメント内でユニークではないすべてのペプチドは
-削除されます。</value>
-  </data>
-  <data name="removeRepeatedPeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>218, 22</value>
-  </data>
-  <data name="removeRepeatedPeptidesMenuItem.Text" xml:space="preserve">
-    <value>反復ペプチドを削除(&amp;I)</value>
-  </data>
-  <data name="removeRepeatedPeptidesMenuItem.ToolTipText" xml:space="preserve">
-    <value>すべての反復ペプチドは削除され、
-最初に記載されたペプチドだけが残ります。</value>
+  <data name="toolStripSeparator59.Size" type="System.Drawing.Size, System.Drawing">
+    <value>215, 6</value>
   </data>
   <data name="removeMissingResultsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
@@ -2098,6 +2105,12 @@
   </data>
   <data name="acceptProteinsMenuItem.Text" xml:space="preserve">
     <value>タンパク質を許可(&amp;P)...</value>
+  </data>
+  <data name="removeEmptyProteinsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>215, 22</value>
+  </data>
+  <data name="removeEmptyProteinsMenuItem.Text" xml:space="preserve">
+    <value>空欄のタンパク質を削除(&amp;E)</value>
   </data>
   <data name="associateFASTAMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
@@ -2150,26 +2163,31 @@
   <data name="acceptPeptidesMenuItem.Text" xml:space="preserve">
     <value>ペプチドを許可(&amp;C)...</value>
   </data>
-  <data name="generateDecoysMenuItem.RightToLeftAutoMirrorImage" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="generateDecoysMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="removeEmptyPeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
   </data>
-  <data name="generateDecoysMenuItem.Text" xml:space="preserve">
-    <value>デコイペプチドを追加(&amp;D)...</value>
+  <data name="removeEmptyPeptidesMenuItem.Text" xml:space="preserve">
+    <value>空欄のペプチドを削除(&amp;V)</value>
   </data>
-  <data name="reintegrateToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="removeDuplicatePeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
   </data>
-  <data name="reintegrateToolStripMenuItem.Text" xml:space="preserve">
-    <value>再統合(&amp;R)...</value>
+  <data name="removeDuplicatePeptidesMenuItem.Text" xml:space="preserve">
+    <value>重複ペプチドを削除(&amp;U)</value>
   </data>
-  <data name="compareModelsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="removeDuplicatePeptidesMenuItem.ToolTipText" xml:space="preserve">
+    <value>ドキュメント内でユニークではないすべてのペプチドは
+削除されます。</value>
+  </data>
+  <data name="removeRepeatedPeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
   </data>
-  <data name="compareModelsToolStripMenuItem.Text" xml:space="preserve">
-    <value>ピークスコアを比較(&amp;O)...</value>
+  <data name="removeRepeatedPeptidesMenuItem.Text" xml:space="preserve">
+    <value>反復ペプチドを削除(&amp;I)</value>
+  </data>
+  <data name="removeRepeatedPeptidesMenuItem.ToolTipText" xml:space="preserve">
+    <value>すべての反復ペプチドは削除され、
+最初に記載されたペプチドだけが残ります。</value>
   </data>
   <data name="toolStripSeparator35.Size" type="System.Drawing.Size, System.Drawing">
     <value>215, 6</value>
@@ -2181,7 +2199,7 @@
     <value>詳細(&amp;A)...</value>
   </data>
   <data name="refineToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>207, 22</value>
+    <value>72, 22</value>
   </data>
   <data name="refineToolStripMenuItem.Text" xml:space="preserve">
     <value>最適化(&amp;R)</value>
@@ -2931,43 +2949,13 @@
     <value>191, 22</value>
   </data>
   <data name="massErrorsMenuItem.Text" xml:space="preserve">
-    <value>質量誤差</value>
+    <value>質量誤差(&amp;S)</value>
   </data>
   <data name="calibrationCurveMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
   <data name="calibrationCurveMenuItem.Text" xml:space="preserve">
-    <value>校正曲線</value>
-  </data>
-  <data name="addGroupComparisonMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>124, 22</value>
-  </data>
-  <data name="addGroupComparisonMenuItem.Text" xml:space="preserve">
-    <value>追加...</value>
-  </data>
-  <data name="editGroupComparisonListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>124, 22</value>
-  </data>
-  <data name="editGroupComparisonListMenuItem.Text" xml:space="preserve">
-    <value>リストを編集...</value>
-  </data>
-  <data name="groupComparisonsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 22</value>
-  </data>
-  <data name="groupComparisonsMenuItem.Text" xml:space="preserve">
-    <value>グループ比較</value>
-  </data>
-  <data name="resultsGridMenuItem.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="resultsGridMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
-    <value>Alt+2</value>
-  </data>
-  <data name="resultsGridMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 22</value>
-  </data>
-  <data name="resultsGridMenuItem.Text" xml:space="preserve">
-    <value>結果グリッド(&amp;G)</value>
+    <value>校正曲線(&amp;V)</value>
   </data>
   <data name="documentGridMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Alt+3</value>
@@ -2978,14 +2966,62 @@
   <data name="documentGridMenuItem.Text" xml:space="preserve">
     <value>ドキュメントグリッド(&amp;D)</value>
   </data>
+  <data name="resultsGridMenuItem.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="resultsGridMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>Alt+2</value>
+  </data>
+  <data name="resultsGridMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="resultsGridMenuItem.Text" xml:space="preserve">
+    <value>結果グリッド(&amp;R)</value>
+  </data>
+  <data name="addGroupComparisonMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>124, 22</value>
+  </data>
+  <data name="addGroupComparisonMenuItem.Text" xml:space="preserve">
+    <value>追加(&amp;A)...</value>
+  </data>
+  <data name="editGroupComparisonListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>124, 22</value>
+  </data>
+  <data name="editGroupComparisonListMenuItem.Text" xml:space="preserve">
+    <value>リストを編集...</value>
+  </data>
+  <data name="groupComparisonsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="groupComparisonsMenuItem.Text" xml:space="preserve">
+    <value>グループ比較(&amp;G)</value>
+  </data>
+  <data name="defineNewListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>165, 22</value>
+  </data>
+  <data name="defineNewListMenuItem.Text" xml:space="preserve">
+    <value>新しいリストを定義(&amp;N)...</value>
+  </data>
+  <data name="listsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="listsMenuItem.Text" xml:space="preserve">
+    <value>リスト(&amp;L)</value>
+  </data>
   <data name="auditLogMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Alt+4</value>
   </data>
   <data name="auditLogMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 22</value>
+    <value>180, 22</value>
   </data>
   <data name="auditLogMenuItem.Text" xml:space="preserve">
-    <value>監査ログ(&amp;D)</value>
+    <value>監査ログ(&amp;A)</value>
+  </data>
+  <data name="otherGridsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 22</value>
+  </data>
+  <data name="otherGridsMenuItem.Text" xml:space="preserve">
+    <value>その他のグリッド(&amp;H)</value>
   </data>
   <data name="toolStripSeparator36.Size" type="System.Drawing.Size, System.Drawing">
     <value>188, 6</value>
@@ -3000,7 +3036,7 @@
     <value>191, 22</value>
   </data>
   <data name="statusToolStripMenuItem.Text" xml:space="preserve">
-    <value>ステータスバー(&amp;S)</value>
+    <value>ステータスバー(&amp;U)</value>
   </data>
   <data name="viewToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>44, 20</value>
@@ -3048,7 +3084,7 @@
     <value>184, 22</value>
   </data>
   <data name="peptideSettingsMenuItem.Text" xml:space="preserve">
-    <value>ぺプチド設定(&amp;P)...</value>
+    <value>ペプチド設定(&amp;P)...</value>
   </data>
   <data name="transitionSettingsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>184, 22</value>
@@ -3146,11 +3182,41 @@
   <data name="videosMenuItem.Text" xml:space="preserve">
     <value>動画(&amp;V)</value>
   </data>
+  <data name="webinarsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>171, 22</value>
+  </data>
+  <data name="webinarsMenuItem.Text" xml:space="preserve">
+    <value>ウェビナー</value>
+  </data>
   <data name="tutorialsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>171, 22</value>
   </data>
   <data name="tutorialsMenuItem.Text" xml:space="preserve">
     <value>チュートリアル(&amp;T)</value>
+  </data>
+  <data name="reportsHelpMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>171, 22</value>
+  </data>
+  <data name="reportsHelpMenuItem.Text" xml:space="preserve">
+    <value>レポート</value>
+  </data>
+  <data name="commandLineHelpMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>171, 22</value>
+  </data>
+  <data name="commandLineHelpMenuItem.Text" xml:space="preserve">
+    <value>コマンドライン</value>
+  </data>
+  <data name="otherDocsHelpMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>171, 22</value>
+  </data>
+  <data name="otherDocsHelpMenuItem.Text" xml:space="preserve">
+    <value>その他</value>
+  </data>
+  <data name="documentationToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>171, 22</value>
+  </data>
+  <data name="documentationToolStripMenuItem.Text" xml:space="preserve">
+    <value>ドキュメンテーション</value>
   </data>
   <data name="supportMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>171, 22</value>
@@ -3391,6 +3457,12 @@
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>Skyline</value>
+  </data>
+  <data name="&gt;&gt;ModeUIHandler.Name" xml:space="preserve">
+    <value>ModeUIHandler</value>
+  </data>
+  <data name="&gt;&gt;ModeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;cutContextMenuItem.Name" xml:space="preserve">
     <value>cutContextMenuItem</value>
@@ -4766,6 +4838,18 @@
   <data name="&gt;&gt;redoToolBarButton.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSplitButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;toolStripSeparatorSelectUI.Name" xml:space="preserve">
+    <value>toolStripSeparatorSelectUI</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparatorSelectUI.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;modeUIToolBarDropDownButton.Name" xml:space="preserve">
+    <value>modeUIToolBarDropDownButton</value>
+  </data>
+  <data name="&gt;&gt;modeUIToolBarDropDownButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripDropDownButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;fileToolStripMenuItem.Name" xml:space="preserve">
     <value>fileToolStripMenuItem</value>
   </data>
@@ -5269,6 +5353,12 @@
   </data>
   <data name="&gt;&gt;refineAdvancedMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator59.Name" xml:space="preserve">
+    <value>toolStripSeparator59</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator59.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator6.Name" xml:space="preserve">
     <value>toolStripSeparator6</value>
@@ -5918,6 +6008,24 @@
   <data name="&gt;&gt;calibrationCurveMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;documentGridMenuItem.Name" xml:space="preserve">
+    <value>documentGridMenuItem</value>
+  </data>
+  <data name="&gt;&gt;documentGridMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;otherGridsMenuItem.Name" xml:space="preserve">
+    <value>otherGridsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;otherGridsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;resultsGridMenuItem.Name" xml:space="preserve">
+    <value>resultsGridMenuItem</value>
+  </data>
+  <data name="&gt;&gt;resultsGridMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;groupComparisonsMenuItem.Name" xml:space="preserve">
     <value>groupComparisonsMenuItem</value>
   </data>
@@ -5936,16 +6044,16 @@
   <data name="&gt;&gt;editGroupComparisonListMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;resultsGridMenuItem.Name" xml:space="preserve">
-    <value>resultsGridMenuItem</value>
+  <data name="&gt;&gt;listsMenuItem.Name" xml:space="preserve">
+    <value>listsMenuItem</value>
   </data>
-  <data name="&gt;&gt;resultsGridMenuItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;listsMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;documentGridMenuItem.Name" xml:space="preserve">
-    <value>documentGridMenuItem</value>
+  <data name="&gt;&gt;defineNewListMenuItem.Name" xml:space="preserve">
+    <value>defineNewListMenuItem</value>
   </data>
-  <data name="&gt;&gt;documentGridMenuItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;defineNewListMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;auditLogMenuItem.Name" xml:space="preserve">
@@ -6126,6 +6234,12 @@
     <value>videosMenuItem</value>
   </data>
   <data name="&gt;&gt;videosMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;webinarsMenuItem.Name" xml:space="preserve">
+    <value>webinarsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;webinarsMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tutorialsMenuItem.Name" xml:space="preserve">
@@ -6324,6 +6438,30 @@
     <value>massErrorlogScaleContextMenuItem</value>
   </data>
   <data name="&gt;&gt;massErrorlogScaleContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;documentationToolStripMenuItem.Name" xml:space="preserve">
+    <value>documentationToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;documentationToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;reportsHelpMenuItem.Name" xml:space="preserve">
+    <value>reportsHelpMenuItem</value>
+  </data>
+  <data name="&gt;&gt;reportsHelpMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;commandLineHelpMenuItem.Name" xml:space="preserve">
+    <value>commandLineHelpMenuItem</value>
+  </data>
+  <data name="&gt;&gt;commandLineHelpMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;otherDocsHelpMenuItem.Name" xml:space="preserve">
+    <value>otherDocsHelpMenuItem</value>
+  </data>
+  <data name="&gt;&gt;otherDocsHelpMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">

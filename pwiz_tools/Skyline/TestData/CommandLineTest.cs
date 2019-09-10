@@ -662,9 +662,6 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void ConsoleExportTrigger()
         {
-            // The special mode for exercising non-proteomic molecules just doesn't make sense with this test
-            TestSmallMolecules = false; 
-
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
             string failurePath = testFilesDir.GetTestPath("Failure_test.csv");
@@ -786,9 +783,6 @@ namespace pwiz.SkylineTestData
             string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
             string outPath = testFilesDir.GetTestPath("Output_file.sky");
             string tsvPath = testFilesDir.GetTestPath("Exported_test_report.csv");
-
-            // The special mode for exercising non-proteomic molecules just doesn't make sense with this test
-            TestSmallMolecules = false; 
 
             // Import the first RAW file (or mzML for international)
             string rawPath = testFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
@@ -968,11 +962,11 @@ namespace pwiz.SkylineTestData
             const int bigValue = 100000000;
             args[3] = "--exp-dwell-time=" + bigValue;
             output = RunCommand(args);
-            AssertEx.Contains(output, new CommandArgs.ValueOutOfRangeIntException(CommandArgs.ARG_EXP_DWELL_TIME, bigValue.ToString(),
+            AssertEx.Contains(output, new CommandArgs.ValueOutOfRangeIntException(CommandArgs.ARG_EXP_DWELL_TIME, bigValue,
                 AbstractMassListExporter.DWELL_TIME_MIN, AbstractMassListExporter.DWELL_TIME_MAX).Message);
             args[3] = "--exp-run-length=" + bigValue;
             output = RunCommand(args);
-            AssertEx.Contains(output, new CommandArgs.ValueOutOfRangeIntException(CommandArgs.ARG_EXP_RUN_LENGTH, bigValue.ToString(),
+            AssertEx.Contains(output, new CommandArgs.ValueOutOfRangeIntException(CommandArgs.ARG_EXP_RUN_LENGTH, bigValue,
                 AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX).Message);
 
 

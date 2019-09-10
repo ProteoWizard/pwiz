@@ -46,7 +46,7 @@ generators.register-c-compiler diab.compile.c++ : CPP : OBJ : <toolset>diab ;
 generators.register-c-compiler diab.compile.c : C : OBJ : <toolset>diab ;
 
 
-# unlike most compliers, Diab defaults to static linking.
+# unlike most compilers, Diab defaults to static linking.
 # flags cxx LINKFLAGS <runtime-link>static :  ;
 flags diab.compile OPTIONS <debug-symbols>on : -g ;
 flags diab.link OPTIONS <debug-symbols>on : -g ;
@@ -72,7 +72,7 @@ flags diab.link OPTIONS <linkflags> ;
 
 flags diab.compile OPTIONS <link>shared : -Xpic ;
 #flags diab.compile OPTIONS <link>static : ;
-# get VxWorks link options from shell enviorment
+# get VxWorks link options from shell environment
 flags diab.link OPTIONS <link>static : [ os.environ LDFLAGS_STATIC ]  ;
 flags diab.link.dll OPTIONS          : [ os.environ LDFLAGS_SO ] ;
 flags diab.link OPTIONS <link>shared : [ os.environ LDFLAGS_DYNAMIC ] ;

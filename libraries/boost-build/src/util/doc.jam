@@ -19,8 +19,8 @@ import path ;
 
 
 # The type of output to generate.
-# "console" is formated text echoed to the console (the default);
-# "text" is formated text appended to the output file;
+# "console" is formatted text echoed to the console (the default);
+# "text" is formatted text appended to the output file;
 # "html" is HTML output to the file.
 #
 help-output = console ;

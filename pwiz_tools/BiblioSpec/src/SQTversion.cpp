@@ -22,8 +22,8 @@
 #include "BlibUtils.h"
 #include "SQTversion.h"
 #include <typeinfo>
+#include "pwiz/utility/misc/Std.hpp"
 
-using namespace std;
 namespace bxp = boost::xpressive;
 
 namespace BiblioSpec {

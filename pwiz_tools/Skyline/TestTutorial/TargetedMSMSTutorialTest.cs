@@ -88,8 +88,6 @@ namespace pwiz.SkylineTestTutorial
                 return;
             }
 
-            TestSmallMolecules = false; // Don't need that magic extra node, we have an explict test
-
             ForceMzml = true;   // 2-3x faster than raw files for this test.
 
             AsSmallMoleculesTestMode = smallMoleculesTestMode;
@@ -281,7 +279,7 @@ namespace pwiz.SkylineTestTutorial
 
             {
                 var previewReportDlg = ShowDialog<DocumentGridForm>(viewEditor.ShowPreview);
-                var expectedRows = 10 + (TestSmallMolecules ? 1 : 0);
+                var expectedRows = 10;
                 WaitForConditionUI(() => previewReportDlg.IsComplete && previewReportDlg.RowCount == expectedRows);
                 RunUI(() =>
                 {
@@ -606,7 +604,7 @@ namespace pwiz.SkylineTestTutorial
             var importProgress = ShowDialog<AllChromatogramsGraph>(importResultsDlg3.OkDialog);
             WaitForDocumentChangeLoaded(docCalibrate1);
             WaitForConditionUI(() => importProgress.Finished);
-            string expectedErrorFormat = Resources.NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatograms_from__0__full_scan_settings_must_be_enabled_;
+            string expectedErrorFormat = Resources.NoFullScanFilteringException_NoFullScanFilteringException_The_file__0__does_not_contain_SRM_MRM_chromatograms__To_extract_chromatograms_from_its_spectra__go_to_Settings___Transition_Settings___Full_Scan_and_choose_options_appropriate_to_the_acquisition_method_used_;
             if (!TryWaitForConditionUI(() => !string.IsNullOrEmpty(importProgress.Error)))
             {
                 RunUI(() =>

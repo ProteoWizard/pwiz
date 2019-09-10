@@ -35,7 +35,7 @@ namespace pwiz.Common.DataBinding
         IEnumerable<ViewGroup> ViewGroups { get; }
         ViewSpecList GetViewSpecList(ViewGroupId groupId);
         bool TryRenameView(ViewGroupId group, string oldName, string newName);
-        void AddOrReplaceViews(ViewGroupId group, IEnumerable<ViewSpec> viewSpecs);
+        void AddOrReplaceViews(ViewGroupId group, IEnumerable<ViewSpecLayout> viewSpecs);
         void DeleteViews(ViewGroupId groupId, IEnumerable<string> names);
         ViewGroup DefaultViewGroup { get; }
         ViewGroup FindGroup(ViewGroupId groupId);
@@ -67,5 +67,6 @@ namespace pwiz.Common.DataBinding
         int GetImageIndex(ViewSpec viewSpec);
         event Action ViewsChanged;
         DataSchema DataSchema { get; }
+        IEnumerable<IUiModeInfo> AvailableUiModes { get; }
     }
 }

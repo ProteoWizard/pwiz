@@ -109,7 +109,6 @@ namespace pwiz.SkylineTestData.Results
 
             string subdir = (asSmallMolecules == RefinementSettings.ConvertToSmallMoleculesMode.none) ? null : asSmallMolecules.ToString();
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE, subdir);
-            TestSmallMolecules = false; // Don't need that extra magic node
 
             bool withDriftTimePredictor = (mode == DriftFilterType.predictor); // Load the doc that has a drift time predictor?
             bool withDriftTimeFilter = (mode != DriftFilterType.none); // Perform drift time filtering?  (either with predictor, or with bare times in blib file)
@@ -215,7 +214,7 @@ namespace pwiz.SkylineTestData.Results
                             {
                                 double windowDT;
                                 var centerDriftTime = document2.Settings.GetIonMobility(
-                                    pep, nodeGroup, im, null, driftTimeMax, out windowDT);
+                                    pep, nodeGroup, null, im, null, driftTimeMax, out windowDT);
                                 Assume.AreEqual(3.86124, centerDriftTime.IonMobility.Mobility.Value, .0001, testModeStr);
                                 Assume.AreEqual(0.077224865797235934, windowDT, .0001, testModeStr);
                             }

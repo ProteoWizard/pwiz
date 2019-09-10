@@ -189,6 +189,11 @@ namespace pwiz.Skyline
 
         private bool ProcessDocument(CommandArgs commandArgs)
         {
+            if (commandArgs.FilterSettings)
+            {
+                if (!SetFilterSettings(commandArgs))
+                    return false;
+            }
             if (commandArgs.FullScanSetting)
             {
                 if (!SetFullScanSettings(commandArgs))
@@ -421,11 +426,7 @@ namespace pwiz.Skyline
             }
 
             _out.WriteLine(Resources.CommandLine_RefineDocument_Refining_document___);
-            var setSeenEntries = GetSeenAuditLogEntries();
-            var docBefore = Document;
-            ModifyDocument(doc => commandArgs.Refinement.Refine(doc), commandArgs.Refinement.EntryCreator.Create);
-            LogNewEntries(Document.AuditLog.AuditLogEntries, setSeenEntries);
-            LogDocumentDelta(docBefore, Document);
+            ModifyDocumentWithLogging(doc => commandArgs.Refinement.Refine(doc), commandArgs.Refinement.EntryCreator.Create);
             return true;
         }
 
@@ -499,14 +500,18 @@ namespace pwiz.Skyline
 
         public static string RemovedText(int prot, int list, int pep, int mol, int prec, int tran)
         {
-            return string.Format(Resources.CommandLine_LogDocumentDelta_Removed___0_,
-                GetDeltaText(prot, prot+list, pep, pep+mol, prec, tran));
+            string deltaText = GetDeltaText(prot, prot + list, pep, pep + mol, prec, tran);
+            if (deltaText == null)
+                return null;
+            return string.Format(Resources.CommandLine_LogDocumentDelta_Removed___0_, deltaText);
         }
 
         public static string AddedText(int prot, int list, int pep, int mol, int prec, int tran)
         {
-            return string.Format(Resources.CommandLine_LogDocumentDelta_Added___0_,
-                GetDeltaText(prot, prot+list, pep, pep+mol, prec, tran));
+            string deltaText = GetDeltaText(prot, prot + list, pep, pep + mol, prec, tran);
+            if (deltaText == null)
+                return null;
+            return string.Format(Resources.CommandLine_LogDocumentDelta_Added___0_, deltaText);
         }
 
         private static string GetDeltaText(int prot, int allGroup, int pep, int allMol, int prec, int tran)
@@ -628,10 +633,47 @@ namespace pwiz.Skyline
             // If nothing changed, don't create a new audit log entry, just like SkylineWindow.ModifyDocument
             if (ReferenceEquals(_doc, docOriginal))
                 return;
-            var docPair = SrmDocumentPair.Create(docOriginal, _doc);
+            var docPair = SrmDocumentPair.Create(docOriginal, _doc, SrmDocument.DOCUMENT_TYPE.none);
             var logEntry = logFunc?.Invoke(docPair);
             if (logEntry != null)
                 _doc = AuditLogEntry.UpdateDocument(logEntry, docPair);
+        }
+
+        public void ModifyDocumentWithLogging(Func<SrmDocument, SrmDocument> act, Func<SrmDocumentPair, AuditLogEntry> logFunc)
+        {
+            var setSeenEntries = GetSeenAuditLogEntries();
+            var docBefore = Document;
+            if (!docBefore.Settings.DataSettings.AuditLogging)
+                _doc = AuditLogList.ToggleAuditLogging(_doc, true);
+            ModifyDocument(act, logFunc);
+            LogNewEntries(Document.AuditLog.AuditLogEntries, setSeenEntries);
+            LogDocumentDelta(docBefore, Document);
+            if (!docBefore.Settings.DataSettings.AuditLogging)
+                _doc = AuditLogList.ToggleAuditLogging(_doc, false);
+        }
+
+        private bool SetFilterSettings(CommandArgs commandArgs)
+        {
+            try
+            {
+                ModifyDocumentWithLogging(doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFilter(f =>
+                {
+                    if (commandArgs.FilterPrecursorCharges != null)
+                        f = f.ChangePeptidePrecursorCharges(commandArgs.FilterPrecursorCharges);
+                    if (commandArgs.FilterProductCharges != null)
+                        f = f.ChangePeptideProductCharges(commandArgs.FilterProductCharges);
+                    if (commandArgs.FilterProductTypes != null)
+                        f = f.ChangePeptideIonTypes(commandArgs.FilterProductTypes);
+                    return f;
+                })), AuditLogEntry.SettingsLogFunction);
+                return true;
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Error__Failed_attempting_to_change_the_transiton_full_scan_settings_);
+                _out.WriteLine(x.Message);
+                return false;
+            }
         }
 
         private bool SetFullScanSettings(CommandArgs commandArgs)
@@ -2357,12 +2399,28 @@ namespace pwiz.Skyline
                 {
                     _out.WriteLine(Resources.CommandLine_ImportToolsFromZip_Installed_tool__0_, tool.Title);
                 }
-                Settings.Default.Save();
+
+                SaveSettings();
             }
             else
             {
                 _out.WriteLine(Resources.CommandLine_ImportToolsFromZip_Canceled_installing_tools_from__0__, filename);
             }
+        }
+
+        private bool SaveSettings()
+        {
+            try
+            {
+                Settings.Default.Save();
+                return true;
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine(Resources.CommandLine_SaveSettings_Error__Failed_saving_to_the_user_configuration_file_);
+                _out.WriteLine(x.Message);
+            }
+            return false;
         }
 
         // A function for adding tools to the Tools Menu.
@@ -2443,7 +2501,7 @@ namespace pwiz.Skyline
             arguments = arguments ?? string.Empty; 
             initialDirectory = initialDirectory ?? string.Empty; 
             Settings.Default.ToolList.Add(new ToolDescription(title, command, arguments, initialDirectory, outputToImmediateWindow, reportTitle));
-            Settings.Default.Save();        
+            SaveSettings();        
         }
 
         // A function for running each line of a text file like a SkylineRunner command
@@ -2587,7 +2645,8 @@ namespace pwiz.Skyline
                 }
                 if (imported)
                 {
-                    Settings.Default.Save();
+                    if (!SaveSettings())
+                        return false;
                     _out.WriteLine(Resources.CommandLine_ImportSkyr_Success__Imported_Reports_from__0_, Path.GetFileNameWithoutExtension(path));
                 }
             }

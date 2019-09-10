@@ -412,7 +412,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Append the import-file to the given replicate. This is an intention check in case the document already has a replicate with the given name. By default this is set to false. This option only works with the –import-file option..
+        ///   Looks up a localized string similar to Append the import-file to the given replicate. This is an intention check in case the document already has a replicate with the given name. By default this is set to false. This option only works with the -–import-file option..
         /// </summary>
         internal static string _import_append {
             get {
@@ -827,6 +827,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Only the precursor charge state with the maximum peak area will be retained..
+        /// </summary>
+        internal static string _refine_max_precursor_only {
+            get {
+                return ResourceManager.GetString("_refine_max_precursor_only", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to All transitions with an average area peak ranking
         ///greater than this number will be removed from the
         ///document..
@@ -1226,7 +1235,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Specifies a program title and version to use with the –tool-program-path command. Together these commands are for importing tools from a ZIP file that use the $(ProgramPath()) macro as their command. For more information see the documentation on External Tools. e.g.
+        ///   Looks up a localized string similar to Specifies a program title and version to use with the -–tool-program-path command. Together these commands are for importing tools from a ZIP file that use the $(ProgramPath()) macro as their command. For more information see the documentation on External Tools. e.g.
         ///--tool-program-macro=R,2.15.2.
         /// </summary>
         internal static string _tool_program_macro {
@@ -1236,7 +1245,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Specifies the path to an executable on the local machine for the program title and version specified by the –tool-program-macro flag..
+        ///   Looks up a localized string similar to Specifies the path to an executable on the local machine for the program title and version specified by the -–tool-program-macro flag..
         /// </summary>
         internal static string _tool_program_path {
             get {
@@ -1268,6 +1277,33 @@ namespace pwiz.Skyline {
         internal static string _tool_zip_overwrite_annotations {
             get {
                 return ResourceManager.GetString("_tool_zip_overwrite_annotations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A comma-separated list of precursor ion charge states to apply to peptide molecules to generate precursor targets. Changes the transition filter settings for the open document..
+        /// </summary>
+        internal static string _tran_precursor_ion_charges {
+            get {
+                return ResourceManager.GetString("_tran_precursor_ion_charges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A comma-separated list of product ion charge states to apply to peptide fragments to generate product ion transitions. Changes the transition filter settings for the open document..
+        /// </summary>
+        internal static string _tran_product_ion_charges {
+            get {
+                return ResourceManager.GetString("_tran_product_ion_charges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A comma-separated list of product ion types expected in peptide fragmentation to generate product ion transitions. Changes the transition filter settings for the open document..
+        /// </summary>
+        internal static string _tran_product_ion_types {
+            get {
+                return ResourceManager.GetString("_tran_product_ion_types", resourceCulture);
             }
         }
         

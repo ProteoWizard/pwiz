@@ -197,6 +197,11 @@ def register_globals ():
         'on'],        # Fail the compilation if there are warnings.
         ['incidental', 'propagated'])
 
+    feature.feature('coverage', [
+        'off',        # Disable coverage generation for the tool.
+        'on'],        # Enable coverage generation for the tool.
+        ['incidental', 'propagated'])
+
     feature.feature('c++-template-depth',
         [str(i) for i in range(64,1024+1,64)] +
         [str(i) for i in range(20,1000+1,10)] +
@@ -265,6 +270,9 @@ def register_globals ():
         # Advanced RISC Machines
         'arm',
 
+	# z Systems (aka s390x)
+	's390x',
+
         # Combined architectures for platforms/toolsets that support building for
         # multiple architectures at once. "combined" would be the default multi-arch
         # for the toolset.
@@ -310,7 +318,10 @@ def register_globals ():
 
         # Advanced RISC Machines
         'armv2', 'armv2a', 'armv3', 'armv3m', 'armv4', 'armv4t', 'armv5',
-        'armv5t', 'armv5te', 'armv6', 'armv6j', 'iwmmxt', 'ep9312'],
+        'armv5t', 'armv5te', 'armv6', 'armv6j', 'iwmmxt', 'ep9312',
+
+	# z Systems (aka s390x)
+	'z196', 'zEC12', 'z13', 'z13', 'z14'],
 
         ['propagated', 'optional'])
 
@@ -593,7 +604,7 @@ class CCompilingGenerator (generators.Generator):
         The only thing it does is changing the type used to represent
         'action' in the constructed dependency graph to 'CompileAction'.
         That class in turn adds additional include paths to handle a case
-        when a source file includes headers which are generated themselfs.
+        when a source file includes headers which are generated themselves.
     """
     def __init__ (self, id, composing, source_types, target_types_and_names, requirements):
         # TODO: (PF) What to do with optional_properties? It seemed that, in the bjam version, the arguments are wrong.
@@ -695,7 +706,7 @@ class LinkingGenerator (generators.Generator):
 
         # Just pass all features in property_set, it's theorically possible
         # that we'll propagate <xdll-path> features explicitly specified by
-        # the user, but then the user's to blaim for using internal feature.
+        # the user, but then the user's to blame for using internal feature.
         values = prop_set.get('<xdll-path>')
         extra += replace_grist(values, '<xdll-path>')
 

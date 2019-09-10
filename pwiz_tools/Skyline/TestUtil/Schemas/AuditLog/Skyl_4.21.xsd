@@ -30,6 +30,21 @@
     <xs:attribute name="skyline_version" type="xs:string" use="required"/>
     <xs:attribute name="time_stamp" type="xs:dateTime" use="required"/>
     <xs:attribute name="user" type="xs:string" use="required"/>
+    <xs:attribute name="mode" default="p">
+      <xs:annotation>
+        <xs:documentation>
+          Gives the document and/or UI mode at the time of the event: p=proteomic, m=molecules, x=mixed
+          May be omitted if mode has no effect on human readable log value, or document and/or UI mode is proteomic
+        </xs:documentation>
+      </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="p"/>
+            <xs:enumeration value="m"/>
+            <xs:enumeration value="x"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
   </xs:complexType>
 
   <xs:complexType name="message_type">

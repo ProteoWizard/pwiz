@@ -49,9 +49,6 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         protected override void DoTest()
         {
-            // The transition list produced by the special test nodes doesn't parse as peptides, which this test expects
-            TestSmallMolecules = false;
-
             // Open the .sky file
             string documentPath = TestFilesDir.GetTestPath(DOCUMENT_NAME);
             RunUI(() => SkylineWindow.OpenFile(documentPath));

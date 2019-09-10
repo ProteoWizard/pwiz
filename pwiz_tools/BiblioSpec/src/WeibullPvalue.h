@@ -35,7 +35,6 @@
 #include "Verbosity.h"
 #include "boost/program_options.hpp"
 
-using namespace std;
 namespace ops = boost::program_options;
 
 namespace BiblioSpec {

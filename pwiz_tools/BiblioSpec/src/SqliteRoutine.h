@@ -39,7 +39,6 @@
 #include <cstdlib>
 #include <cstdio>
 
-using namespace std;
 
 namespace BiblioSpec {
 
@@ -53,7 +52,7 @@ class SqliteRoutine{
   static bool TABLE_EXISTS(const char* tableName,sqlite3* db);
   static int TABLE_ROWS(const char* tableName, sqlite3* db);
   static void SQL_STMT(const char* zStmt, sqlite3* db);
-  static string ESCAPE_APOSTROPHES(const string& sql);
+  static std::string ESCAPE_APOSTROPHES(const std::string& sql);
   
 
 };

@@ -1,18 +1,18 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:metamorpheus.blib	6	1	9
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:metamorpheus.blib	6	1	10
 id	RefSpectraID	position	mass
 1	1	8	15.994915
 2	5	1	58.005479
 3	5	5	15.994915
-id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
-1	SLDIGNQMSTSEETK	828.378811459042	2	SLDIGNQM[+16.0]STSEETK	-	-	1	80	0.0	0.0	0.0	0	22.6775	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	sample=1 period=1 cycle=1308 experiment=18	0.0	19
-2	AKEEQELQDIQSR	525.258959128297	3	AKEEQELQDIQSR	-	-	1	149	0.0	0.0	0.0	0	23.608433333333	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	sample=1 period=1 cycle=1331 experiment=11	0.0	19
-3	AKEEQELQDIQSR	787.391046513283	2	AKEEQELQDIQSR	-	-	1	46	0.0	0.0	0.0	0	23.575283333333	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	sample=1 period=1 cycle=1330 experiment=17	0.00029724005996088	19
-4	LILPELGPVFK	613.375958058873	2	LILPELGPVFK	-	-	1	92	0.0	0.0	0.0	0	91.131416666667	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	sample=1 period=1 cycle=2982 experiment=6	0.00271133513035076	19
-5	MKPAMETAAEENTEQSQER	751.988214963927	3	M[+58.0]KPAM[+16.0]ETAAEENTEQSQER	-	-	1	48	0.0	0.0	0.0	0	14.752916666667	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	sample=1 period=1 cycle=1113 experiment=13	0.00271133513035076	19
-6	LILPELGPVFK	613.376418300442	2	LILPELGPVFK	-	-	1	113	0.0	0.0	0.0	0	90.840933333333	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	sample=1 period=1 cycle=2975 experiment=5	0.00275486622668247	19
-id	fileName	cutoffScore
-1	/BiblioSpec/tests/inputs/metamorpheus.mzML	-1.0
+id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	totalIonCurrent	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
+1	SLDIGNQMSTSEETK	828.37881145	2	SLDIGNQM[+16.0]STSEETK	-	-	1	80	0.0	0.0	0.0	0	22.6775	N/A	N/A	1096.45739269	N/A	N/A	N/A	N/A	N/A	1	sample=1 period=1 cycle=1308 experiment=18	0.0	19
+2	AKEEQELQDIQSR	525.25895912	3	AKEEQELQDIQSR	-	-	1	149	0.0	0.0	0.0	0	23.60843333	N/A	N/A	4461.25357437	N/A	N/A	N/A	N/A	N/A	1	sample=1 period=1 cycle=1331 experiment=11	0.0	19
+3	AKEEQELQDIQSR	787.39104651	2	AKEEQELQDIQSR	-	-	1	46	0.0	0.0	0.0	0	23.57528333	N/A	N/A	1481.69965744	N/A	N/A	N/A	N/A	N/A	1	sample=1 period=1 cycle=1330 experiment=17	0.00029724	19
+4	LILPELGPVFK	613.37595805	2	LILPELGPVFK	-	-	1	92	0.0	0.0	0.0	0	91.13141666	N/A	N/A	3732.10725021	N/A	N/A	N/A	N/A	N/A	1	sample=1 period=1 cycle=2982 experiment=6	0.00271133	19
+5	MKPAMETAAEENTEQSQER	751.98821496	3	M[+58.0]KPAM[+16.0]ETAAEENTEQSQER	-	-	1	48	0.0	0.0	0.0	0	14.75291666	N/A	N/A	521.71562480	N/A	N/A	N/A	N/A	N/A	1	sample=1 period=1 cycle=1113 experiment=13	0.00271133	19
+6	LILPELGPVFK	613.37641830	2	LILPELGPVFK	-	-	1	113	0.0	0.0	0.0	0	90.84093333	N/A	N/A	5078.82264709	N/A	N/A	N/A	N/A	N/A	1	sample=1 period=1 cycle=2975 experiment=5	0.00275486	19
+id	fileName	idFileName	cutoffScore
+1	/BiblioSpec/tests/inputs/metamorpheus.mzML	/BiblioSpec/tests/inputs/试验_metamorpheus.mzid	-1.0
 id	scoreType	probabilityType
 0	UNKNOWN	NOT_A_PROBABILITY_VALUE
 1	PERCOLATOR QVALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT

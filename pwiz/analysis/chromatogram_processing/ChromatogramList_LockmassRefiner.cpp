@@ -74,13 +74,18 @@ PWIZ_API_DECL bool ChromatogramList_LockmassRefiner::accept(const msdata::Chroma
 
 PWIZ_API_DECL ChromatogramPtr ChromatogramList_LockmassRefiner::chromatogram(size_t index, bool getBinaryData) const
 {
+    return chromatogram(index, getBinaryData ? DetailLevel_FullData : DetailLevel_FullMetadata);
+}
+
+PWIZ_API_DECL ChromatogramPtr ChromatogramList_LockmassRefiner::chromatogram(size_t index, DetailLevel detailLevel) const
+{
     ChromatogramPtr s;
 
     detail::ChromatogramList_Waters* waters = dynamic_cast<detail::ChromatogramList_Waters*>(&*inner_);
-    if (waters)
-        s = waters->chromatogram(index, getBinaryData, mzPositiveScans_, mzNegativeScans_, tolerance_);
+    if (waters && detailLevel > DetailLevel_FullMetadata)
+        s = waters->chromatogram(index, detailLevel, mzPositiveScans_, mzNegativeScans_, tolerance_);
     else
-        s = inner_->chromatogram(index, true);
+        s = inner_->chromatogram(index, detailLevel);
 
     s->dataProcessingPtr = dp_;
     return s;

@@ -154,6 +154,11 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile,
 
     InstrumentConfigurationPtr ic = translateAsInstrumentConfiguration(instrumentModel, IonSpray);
     ic->softwarePtr = acquisitionSoftware;
+
+    auto serialNumber = wifffile->getInstrumentSerialNumber();
+    if (!serialNumber.empty())
+        ic->set(MS_instrument_serial_number, serialNumber);
+
     msd.instrumentConfigurationPtrs.push_back(ic);
     msd.run.defaultInstrumentConfigurationPtr = ic;
 

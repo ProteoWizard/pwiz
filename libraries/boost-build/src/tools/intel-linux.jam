@@ -45,7 +45,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
                        
 # Initializes the intel-linux toolset
 #   version in mandatory
-#   name (default icpc) is used to invoke the specified intel-linux complier
+#   name (default icpc) is used to invoke the specified intel-linux compiler
 #   compile and link options allow you to specify addition command line options for each version
 rule init ( version ? :  command * : options * )
 {

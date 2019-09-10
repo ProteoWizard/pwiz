@@ -78,7 +78,7 @@ namespace pwiz.SkylineTestFunctional
             
             RunUI(() => SkylineWindow.ShowDocumentGrid(true));
             var documentGrid = FindOpenForm<DocumentGridForm>();
-            RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides));
+            RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Molecules));
             WaitForConditionUI(() => documentGrid.IsComplete);
             Assert.AreEqual(4, documentGrid.DataGridView.Rows.Count);
             foreach (var molecule in SkylineWindow.Document.Molecules)

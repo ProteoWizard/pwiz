@@ -536,10 +536,7 @@ namespace pwiz.Skyline.Model.Results
                     {
                         cachePath = _spillFiles[i].FileName;
                     }
-                    if (_spillFiles[i].Stream != null)
-                    {
-                        _spillFiles[i].Stream.Dispose();
-                    }
+                    _spillFiles[i].CloseStream();
                 }
 
                 if (cachePath != null)
@@ -603,6 +600,18 @@ namespace pwiz.Skyline.Model.Results
             {
                 timeIntensities = TimeIntensities.EMPTY;
                 return 0;
+            }
+
+            if (ReferenceEquals(_cachedSpillFile, spillFile))
+            {
+                if (spillFile.Stream != null)
+                {
+                    if (_bytesFromSpillFile == null || spillFile.Stream.Length != _bytesFromSpillFile.Length)
+                    {
+                        // Need to reread spill file if more bytes were written since the time it was cached.
+                        _cachedSpillFile = null;
+                    }
+                }
             }
 
             if (!ReferenceEquals(_cachedSpillFile, spillFile))
@@ -675,6 +684,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private class SpillFile
         {
+            private FileStream _fileStream;
             public BufferedStream Stream { get; private set; }
             public float MaxTime { get; set; }
             
@@ -688,7 +698,11 @@ namespace pwiz.Skyline.Model.Results
                     Helpers.Try<Exception>(() =>
                     {
                         string fileName = FileStreamManager.Default.GetTempFileName(xicDir, @"xic");
-                        Stream = new BufferedStream(File.Create(fileName, ushort.MaxValue, FileOptions.DeleteOnClose));
+                        // Create the FileStream with a buffer size of 1 so that it never buffers, and therefore
+                        // never tries to FlushWrite in its finalizer (errors thrown in finalizers can kill Skyline)
+                        _fileStream = File.Create(fileName, 1, FileOptions.DeleteOnClose);
+                        // Wrap the FileStream in a BufferedStream. BufferedStream does not have a finalizer
+                        Stream = new BufferedStream(_fileStream, ushort.MaxValue);
                         FileName = fileName;
                     },
                     2, 100);
@@ -698,7 +712,12 @@ namespace pwiz.Skyline.Model.Results
 
             public void CloseStream()
             {
-                Stream.Dispose();
+                if (_fileStream != null)
+                {
+                    _fileStream.Dispose();
+                    _fileStream = null;
+                }
+
                 Stream = null;
                 FileName = null;
             }

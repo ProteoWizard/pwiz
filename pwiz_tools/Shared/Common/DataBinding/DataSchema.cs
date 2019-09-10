@@ -17,11 +17,12 @@
  * limitations under the License.
  */
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Attributes;
 
 namespace pwiz.Common.DataBinding
@@ -69,6 +70,16 @@ namespace pwiz.Common.DataBinding
                 return new PropertyDescriptor[0];
             }
             return ListProperties(new HashSet<string>(), type);
+        }
+
+        public virtual string DefaultUiMode
+        {
+            get { return string.Empty; }
+        }
+
+        public virtual string NormalizeUiMode(string uiMode)
+        {
+            return uiMode;
         }
 
         protected virtual IEnumerable<PropertyDescriptor> ListProperties(HashSet<string> propertyNames, Type type)
@@ -186,19 +197,7 @@ namespace pwiz.Common.DataBinding
             }
             o1 = UnwrapLinkValue(o1);
             o2 = UnwrapLinkValue(o2);
-            if (o1 is IComparable || o2 is IComparable)
-            {
-                return Comparer.Default.Compare(o1, o2);
-            }
-            if (o1 == null)
-            {
-                return -1;
-            }
-            if (o2 == null)
-            {
-                return 1;
-            }
-            return Comparer.Default.Compare(o1.ToString(), o2.ToString());
+            return CollectionUtil.CompareColumnValues(o1, o2);
         }
 
         private static object UnwrapLinkValue(object o)
@@ -234,7 +233,7 @@ namespace pwiz.Common.DataBinding
         {
             return typeof (ILinkValue).IsAssignableFrom(type);
         }
-        private string GetBaseDisplayName(ColumnDescriptor columnDescriptor)
+        private IColumnCaption GetBaseDisplayName(ColumnDescriptor columnDescriptor)
         {
             var oneToManyColumn = columnDescriptor.GetOneToManyColumn();
             if (oneToManyColumn != null)
@@ -244,18 +243,18 @@ namespace pwiz.Common.DataBinding
                 {
                     if (@"Key" == columnDescriptor.Name && oneToManyAttribute.IndexDisplayName != null)
                     {
-                        return oneToManyAttribute.IndexDisplayName;
+                        return new ColumnCaption(oneToManyAttribute.IndexDisplayName);
                     }
                     if (@"Value" == columnDescriptor.Name && oneToManyAttribute.ItemDisplayName != null)
                     {
-                        return oneToManyAttribute.ItemDisplayName;
+                        return new ColumnCaption(oneToManyAttribute.ItemDisplayName);
                     }
                 }
             }
             var invariantDisplayNameAttribute = columnDescriptor.GetAttributes().OfType<InvariantDisplayNameAttribute>().FirstOrDefault();
             if (null != invariantDisplayNameAttribute)
             {
-                return invariantDisplayNameAttribute.InvariantDisplayName;
+                return new ColumnCaption(invariantDisplayNameAttribute.InvariantDisplayName);
             }
             if (columnDescriptor.Name == null)
             {
@@ -265,13 +264,13 @@ namespace pwiz.Common.DataBinding
                 }
                 if (columnDescriptor.PropertyType != null)
                 {
-                    return columnDescriptor.PropertyType.Name;
+                    return GetInvariantDisplayName(columnDescriptor.UiMode, columnDescriptor.PropertyType);
                 }
             } 
-            return columnDescriptor.Name;
+            return new ColumnCaption(columnDescriptor.Name);
         }
 
-        private string FormatChildDisplayName(ColumnDescriptor columnDescriptor, string childDisplayName)
+        private IColumnCaption FormatChildDisplayName(ColumnDescriptor columnDescriptor, IColumnCaption childDisplayName)
         {
             if (null == columnDescriptor)
             {
@@ -282,7 +281,7 @@ namespace pwiz.Common.DataBinding
                 
             if (null != childDisplayNameAttribute)
             {
-                childDisplayName = string.Format(childDisplayNameAttribute.InvariantFormat, childDisplayName);
+                childDisplayName = new ColumnCaption(string.Format(childDisplayNameAttribute.InvariantFormat, childDisplayName.GetCaption(DataSchemaLocalizer.INVARIANT)));
             }
             return FormatChildDisplayName(columnDescriptor.Parent, childDisplayName);
         }
@@ -295,7 +294,35 @@ namespace pwiz.Common.DataBinding
             {
                 return ColumnCaption.UnlocalizableCaption(displayNameAttribute.DisplayName);
             }
-            return new ColumnCaption(FormatChildDisplayName(columnDescriptor.Parent, GetBaseDisplayName(columnDescriptor)));
+            return FormatChildDisplayName(columnDescriptor.Parent, GetBaseDisplayName(columnDescriptor));
+        }
+
+        public virtual IColumnCaption GetInvariantDisplayName(string uiMode, Type type)
+        {
+            var invariantDisplayName = FilterAttributes(uiMode, type.GetCustomAttributes<InvariantDisplayNameAttribute>())
+                .FirstOrDefault();
+            if (invariantDisplayName != null)
+            {
+                return invariantDisplayName.ColumnCaption;
+            }
+
+            return new ColumnCaption(type.Name);
+        }
+
+        public virtual string GetTypeDescription(string uiMode, Type type)
+        {
+            return null;
+        }
+
+        public virtual IColumnCaption GetColumnCaption(string uiMode, Type type, string propertyName)
+        {
+            var columnDescriptor = ColumnDescriptor.RootColumn(this, type, uiMode).ResolveChild(propertyName);
+            if (columnDescriptor == null)
+            {
+                return new ColumnCaption(propertyName);
+            }
+
+            return GetColumnCaption(columnDescriptor);
         }
 
         public string GetColumnCaption(ColumnCaption columnCaption, ColumnCaptionType columnCaptionType)
@@ -307,26 +334,26 @@ namespace pwiz.Common.DataBinding
             return DataSchemaLocalizer.LookupColumnCaption(columnCaption);
         }
 
-        public virtual bool IsAdvanced(ColumnDescriptor columnDescriptor)
+        public virtual bool IsHidden(ColumnDescriptor columnDescriptor)
         {
             if (IsObsolete(columnDescriptor))
             {
                 return true;
             }
-            var advancedAttribute = columnDescriptor.GetAttributes().OfType<AdvancedAttribute>().FirstOrDefault();
-            if (advancedAttribute != null)
+            var hiddenAttribute = FilterAttributes(columnDescriptor.UiMode, columnDescriptor.GetAttributes()).OfType<HiddenAttribute>().FirstOrDefault();
+            if (hiddenAttribute != null)
             {
-                return advancedAttribute.Advanced;
+                return true;
             }
 
             var hideWhens = columnDescriptor.GetAttributes().OfType<HideWhenAttribute>().ToArray();
-            var advancedIfAncestor =
+            var hideIfAncestor =
                 new HashSet<Type>(hideWhens.SelectMany(attr => attr.AncestorsOfAnyOfTheseTypes).Where(type => null != type));
-            if (advancedIfAncestor.Count > 0)
+            if (hideIfAncestor.Count > 0)
             {
                 for (ColumnDescriptor ancestor = columnDescriptor.Parent; ancestor != null; ancestor = ancestor.Parent)
                 {
-                    if (advancedIfAncestor.Any(type => type.IsAssignableFrom(ancestor.PropertyType)))
+                    if (hideIfAncestor.Any(type => type.IsAssignableFrom(ancestor.PropertyType)))
                     {
                         return true;
                     }
@@ -344,6 +371,7 @@ namespace pwiz.Common.DataBinding
             }
             return false;
         }
+
         public virtual bool IsObsolete(ColumnDescriptor columnDescriptor)
         {
             return columnDescriptor.GetAttributes().OfType<ObsoleteAttribute>().Any();
@@ -392,6 +420,38 @@ namespace pwiz.Common.DataBinding
                 return new FormatAttribute(@"0.#%");
             }
             return (FormatAttribute) originalPropertyDescriptor.Attributes[typeof(FormatAttribute)];
+        }
+
+        public bool AttributeApplies(string uiMode, Attribute attribute)
+        {
+            var inUiModesAttribute = attribute as InUiModesAttribute;
+            if (inUiModesAttribute != null)
+            {
+                if (!inUiModesAttribute.AppliesInUiMode(uiMode))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private int GetAttributeClassDepth(Attribute attribute)
+        {
+            var type = attribute.GetType();
+            int depth = 0;
+            while (type != null && type != typeof(Attribute))
+            {
+                type = type.BaseType;
+                depth++;
+            }
+
+            return depth;
+        }
+
+        public IEnumerable<T> FilterAttributes<T>(string uiMode, IEnumerable<T> attributes) where T : Attribute
+        {
+            return attributes.Where(attr=>AttributeApplies(uiMode, attr)).OrderByDescending(GetAttributeClassDepth);
         }
     }
 }

@@ -157,7 +157,7 @@ namespace pwiz.Skyline
 
             if (document.Settings.DataSettings.AuditLogging)
             {
-                var entry = AuditLogEntry.GetAuditLoggingStartExistingDocEntry(document);
+                var entry = AuditLogEntry.GetAuditLoggingStartExistingDocEntry(document, ModeUI);
                 document = entry?.AppendEntryToDocument(document) ?? document;
             }
 
@@ -285,6 +285,14 @@ namespace pwiz.Skyline
             Exception exception = null;
             SrmDocument document = null;
 
+            // A fairly common support question is "why won't this Skyline file open?" when they are actually
+            // trying to open a .skyd file or somesuch.  Probably an artifact of Windows hiding file extensions.
+            // Try to work around it by finding a plausible matching .sky file when asked to open a .sky? file.
+            if (!path.EndsWith(SrmDocument.EXT) && !SrmDocument.IsSkylineFile(path, out _)) // Tolerate rename, eg foo.ski
+            {
+                path = SrmDocument.FindSiblingSkylineFile(path);
+            }
+
             try
             {
                 using (var longWaitDlg = new LongWaitDlg(this)
@@ -314,6 +322,11 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 exception = x;
+                // Was that even a Skyline file?
+                if (!SrmDocument.IsSkylineFile(path, out var explained))
+                {
+                    exception = new IOException(explained); // Offer a more helpful explanation than that from the failed XML parser
+                }
             }
 
             if (exception == null)
@@ -1457,9 +1470,9 @@ namespace pwiz.Skyline
             }         
         }
 
-        private static void AddMessageInfo<T>(IList<MessageInfo> messageInfos, MessageType type, IEnumerable<T> items)
+        private static void AddMessageInfo<T>(IList<MessageInfo> messageInfos, MessageType type, SrmDocument.DOCUMENT_TYPE docType, IEnumerable<T> items)
         {
-            messageInfos.AddRange(items.Select(item => new MessageInfo(type, item)));
+            messageInfos.AddRange(items.Select(item => new MessageInfo(type, docType, item)));
         }
 
         private void ImportPeakBoundaries(string fileName, long lineCount, string description)
@@ -1493,12 +1506,12 @@ namespace pwiz.Skyline
             }, docPair =>
             {
                 var allInfo = new List<MessageInfo>();
-                AddMessageInfo(allInfo, MessageType.removed_unrecognized_peptide, peakBoundaryImporter.UnrecognizedPeptides);
-                AddMessageInfo(allInfo, MessageType.removed_unrecognized_file,
+                AddMessageInfo(allInfo, MessageType.removed_unrecognized_peptide, docPair.OldDocumentType, peakBoundaryImporter.UnrecognizedPeptides);
+                AddMessageInfo(allInfo, MessageType.removed_unrecognized_file, docPair.OldDocumentType,
                     peakBoundaryImporter.UnrecognizedFiles.Select(AuditLogPath.Create));
-                AddMessageInfo(allInfo, MessageType.removed_unrecognized_charge_state, peakBoundaryImporter.UnrecognizedChargeStates);
+                AddMessageInfo(allInfo, MessageType.removed_unrecognized_charge_state, docPair.OldDocumentType, peakBoundaryImporter.UnrecognizedChargeStates);
 
-                return AuditLogEntry.CreateSimpleEntry(MessageType.imported_peak_boundaries,
+                return AuditLogEntry.CreateSimpleEntry(MessageType.imported_peak_boundaries, docPair.OldDocumentType,
                         Path.GetFileName(fileName))
                     .AppendAllInfo(allInfo);
             });
@@ -1623,6 +1636,7 @@ namespace pwiz.Skyline
             selectPath = null;
             using (var enumGroupsCurrent = docCurrent.MoleculeGroups.GetEnumerator())
             {
+                // ReSharper disable once PossibleNullReferenceException
                 foreach (PeptideGroupDocNode nodePepGroup in docNew.MoleculeGroups)
                 {
                     if (enumGroupsCurrent.MoveNext() &&
@@ -1643,8 +1657,10 @@ namespace pwiz.Skyline
                 if (matcher != null)
                 {
                     var pepModsNew = matcher.GetDocModifications(docNew);
+                    // ReSharper disable PossibleNullReferenceException
                     docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideModifications(mods => pepModsNew));
                     docNew.Settings.UpdateDefaultModifications(false);
+                    // ReSharper restore PossibleNullReferenceException
                 }
 
                 return docNew;
@@ -1657,13 +1673,14 @@ namespace pwiz.Skyline
                 string extraInfo = null;
                 if (importInfo.File)
                 {
-                    info = new MessageInfo(MessageType.imported_fasta, importInfo.Text);
+                    info = new MessageInfo(MessageType.imported_fasta, docPair.NewDocumentType, importInfo.Text);
                 }
                 else
                 {
                     info = new MessageInfo(peptideList
                         ? MessageType.imported_peptide_list
-                        : MessageType.imported_fasta_paste);
+                        : MessageType.imported_fasta_paste, 
+                        docPair.NewDocumentType);
                     extraInfo = importInfo.Text;
                 }
 
@@ -1742,7 +1759,7 @@ namespace pwiz.Skyline
             }, docPair => AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(
                 transitionCount == 1
                     ? MessageType.pasted_single_small_molecule_transition
-                    : MessageType.pasted_small_molecule_transition_list, transitionCount), csvText));
+                    : MessageType.pasted_small_molecule_transition_list, docPair.NewDocumentType, transitionCount), csvText));
 
             if (modifyingDocumentException != null)
             {
@@ -1920,7 +1937,7 @@ namespace pwiz.Skyline
                     importIntensities = addLibraryResult == DialogResult.Yes;
 
                     if(importIntensities)
-                        entryCreators.Add(new MessageInfo(MessageType.imported_spectral_library_intensities));
+                        entryCreators.Add(new MessageInfo(MessageType.imported_spectral_library_intensities, docNew.DocumentType));
 
                 }
                 if (importIntensities && !ImportMassListIntensities(ref docNew, librarySpectra, assayLibrary, out docLibrarySpec, out docLibrary, out indexOldLibrary))
@@ -1979,7 +1996,7 @@ namespace pwiz.Skyline
                     extraInfo = inputs.InputText;
                 }
 
-                return AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(msgType, args), extraInfo).Merge(docPair, entryCreators);
+                return AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(msgType, docPair.NewDocumentType, args), extraInfo).Merge(docPair, entryCreators);
             });
 
             if (selectPath != null)
@@ -2300,12 +2317,12 @@ namespace pwiz.Skyline
             }, docPair =>
             {
                 var entry = AuditLogEntry.CreateCountChangeEntry(MessageType.imported_doc,
-                    MessageType.imported_docs, filePaths.Select(AuditLogPath.Create), filePaths.Length,
+                    MessageType.imported_docs, docPair.NewDocumentType, filePaths.Select(AuditLogPath.Create), filePaths.Length,
                     MessageArgs.DefaultSingular, null);
 
                 if (filePaths.Length > 1)
                     entry.AppendAllInfo(filePaths.Select(file =>
-                        new MessageInfo(MessageType.imported_doc, AuditLogPath.Create(file))));
+                        new MessageInfo(MessageType.imported_doc, docPair.NewDocumentType, AuditLogPath.Create(file))));
 
                 return entry.Merge(docPair, entryCreatorList, false);
             });
@@ -3111,7 +3128,7 @@ namespace pwiz.Skyline
                                     .SkylineDataSchema_VerifyDocumentCurrent_The_document_was_modified_in_the_middle_of_the_operation_);
                             }
                             return newDocument;
-                        }, docPair => AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(MessageType.imported_annotations, filename)));
+                        }, docPair => AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(MessageType.imported_annotations, docPair.NewDocumentType, filename)));
                     }
                 }
             }

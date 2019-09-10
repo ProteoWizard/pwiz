@@ -101,7 +101,7 @@ namespace pwiz.Skyline.Model.Results
 
                                 _loader.StreamManager.Finish(_fs.Stream);
                                 _fs.Stream = null;
-                                // Allow cancelation right up to the final commit
+                                // Allow cancellation right up to the final commit
                                 if (!_loader.IsCanceled)
                                     _fs.Commit(_destinationStream);
                                 else

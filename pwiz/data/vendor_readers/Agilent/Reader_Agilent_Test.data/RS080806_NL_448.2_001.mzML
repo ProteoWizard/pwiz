@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd" id="RS080806_NL_448.2_001" version="1.1.0">
+  <cvList count="2">
+    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.12" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
+    <cv id="UO" fullName="Unit Ontology" version="09:04:2014" URI="https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/unit.obo"/>
+  </cvList>
+  <fileDescription>
+    <fileContent>
+      <cvParam cvRef="MS" accession="MS:1000235" name="total ion current chromatogram" value=""/>
+    </fileContent>
+    <sourceFileList count="10">
+      <sourceFile id="acqmethod.xml" name="acqmethod.xml" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/RS080806_NL_448.2_001.d/AcqData">
+        <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="026ab7fe2bf8dc6a2af2b9e8e5bd868f6042e7a9"/>
+      </sourceFile>
+      <sourceFile id="Contents.xml" name="Contents.xml" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/RS080806_NL_448.2_001.d/AcqData">
+        <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="448d4c14ce3663dee75e161f0a813374705597a5"/>
+      </sourceFile>
+      <sourceFile id="Devices.xml" name="Devices.xml" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/RS080806_NL_448.2_001.d/AcqData">
+        <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="44f682605947908485dbfd1749d04e54b15dcd11"/>
+      </sourceFile>
+      <sourceFile id="MSProfile.bin" name="MSProfile.bin" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/RS080806_NL_448.2_001.d/AcqData">
+        <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="0ca7e478b3e2ae6058d7c56eafac8432240087a7"/>
+      </sourceFile>
+      <sourceFile id="MSScan.bin" name="MSScan.bin" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/RS080806_NL_448.2_001.d/AcqData">
+        <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="f4fdaa5970358744ff11102219d3386a9bc9e6da"/>
+      </sourceFile>
+      <sourceFile id="MSScan.xsd" name="MSScan.xsd" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/RS080806_NL_448.2_001.d/AcqData">
+        <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="9b9d53127fae0f767fdd08dda7efd2cccb0b1552"/>
+      </sourceFile>
+      <sourceFile id="MSTS.xml" name="MSTS.xml" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/RS080806_NL_448.2_001.d/AcqData">
+        <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="c76485951d7fb2ea26db38a8425d4d3f804e70ba"/>
+      </sourceFile>
+      <sourceFile id="TCC1.cd" name="TCC1.cd" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/RS080806_NL_448.2_001.d/AcqData">
+        <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="04dae70d045dd822a8b6ecb25476e27df0f50069"/>
+      </sourceFile>
+      <sourceFile id="TCC1.cg" name="TCC1.cg" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/RS080806_NL_448.2_001.d/AcqData">
+        <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="a6d7e58844a5755e94cc1e4e936ee92fbd65d4b8"/>
+      </sourceFile>
+      <sourceFile id="Worklist.xml" name="Worklist.xml" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/RS080806_NL_448.2_001.d/AcqData">
+        <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="670839429ae594323b5ca3900531d5926e7ad559"/>
+      </sourceFile>
+    </sourceFileList>
+  </fileDescription>
+  <referenceableParamGroupList count="1">
+    <referenceableParamGroup id="CommonInstrumentParams">
+      <cvParam cvRef="MS" accession="MS:1000490" name="Agilent instrument model" value=""/>
+      <cvParam cvRef="MS" accession="MS:1000529" name="instrument serial number" value="USxxxxxxxx"/>
+      <userParam name="instrument model" value="TandemQuadrupole"/>
+    </referenceableParamGroup>
+  </referenceableParamGroupList>
+  <softwareList count="2">
+    <software id="MassHunter" version="8.0">
+      <cvParam cvRef="MS" accession="MS:1000678" name="MassHunter Data Acquisition" value=""/>
+    </software>
+    <software id="pwiz" version="3.0.19127">
+      <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
+    </software>
+  </softwareList>
+  <instrumentConfigurationList count="1">
+    <instrumentConfiguration id="IC1">
+      <referenceableParamGroupRef ref="CommonInstrumentParams"/>
+      <componentList count="5">
+        <source order="1">
+          <cvParam cvRef="MS" accession="MS:1000397" name="microelectrospray" value=""/>
+          <cvParam cvRef="MS" accession="MS:1000057" name="electrospray inlet" value=""/>
+        </source>
+        <analyzer order="2">
+          <cvParam cvRef="MS" accession="MS:1000081" name="quadrupole" value=""/>
+        </analyzer>
+        <analyzer order="3">
+          <cvParam cvRef="MS" accession="MS:1000081" name="quadrupole" value=""/>
+        </analyzer>
+        <analyzer order="4">
+          <cvParam cvRef="MS" accession="MS:1000081" name="quadrupole" value=""/>
+        </analyzer>
+        <detector order="5">
+          <cvParam cvRef="MS" accession="MS:1000253" name="electron multiplier" value=""/>
+        </detector>
+      </componentList>
+      <softwareRef ref="MassHunter"/>
+    </instrumentConfiguration>
+  </instrumentConfigurationList>
+  <dataProcessingList count="1">
+    <dataProcessing id="pwiz_Reader_Agilent_conversion">
+      <processingMethod order="0" softwareRef="pwiz">
+        <cvParam cvRef="MS" accession="MS:1000544" name="Conversion to mzML" value=""/>
+      </processingMethod>
+    </dataProcessing>
+  </dataProcessingList>
+  <run id="RS080806_NL_448.2_001" defaultInstrumentConfigurationRef="IC1" startTimeStamp="2006-08-08T12:11:57Z" defaultSourceFileRef="MSScan.bin">
+    <chromatogramList count="1" defaultDataProcessingRef="pwiz_Reader_Agilent_conversion">
+      <chromatogram index="0" id="TIC" defaultArrayLength="134">
+        <cvParam cvRef="MS" accession="MS:1000235" name="total ion current chromatogram" value=""/>
+        <binaryDataArrayList count="2">
+          <binaryDataArray encodedLength="712">
+            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000595" name="time array" value="" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <binary>eJwFwWtIUwEYBuBYpbSQIsV0y4YShYJYZG7mzvcytEWWJNsswTKMaI2CXVBYSCNxGG1na5JMLBVXkbswt1yRLSauNiUJFEyhy482y0n1I0agYTv2PIZAtdQpfyUNf+IzpXuqmf5TaqZ7ysIc/+Ji0msTjCd3nmmrSDEFpznmWohPtbJ8Es0V08aFclr6IaFxYx3ZsxpJ09dCJ0rUVBw00D/GRMJVM+0IWGitw0HfpU5a2DpI0VkXjfWO0mCznyyiEBlXJuiqf5JU7TGS1cxSBW+eit4t0k7HZ/p7LkGpohR9+PaL3vjSFDSs03A1R/ItPESWt6FyJhs+Lx8l9hwM6HdjV1MueiT5yAgL0b4pxM/kflyeLsZHzwE02g5hRlcGUpXjveQwavcdRXjzGI4sS+CeroHIS3DaZMjR18GsOokNcT30wgascmdxKanAUrwJDZ5mxNgW1OhaMa5sQ6n4CkYEauzlNLAnbmB7XItOtwFpawc0WiO+KjpxvsqEFHsbj7gutOq6UZg0Y1HZA0f8Ds6I7yLbY8FbAQsTa0Ocs6NL54A02Yt15X2E4n3Qip0o8/RjRTAAF/sAF7mHKNANYSExjHvKEdTHXcgSP0bU/QS3BE8hYUfxJ+NGQOvF9YQPB5V+JGNjGKoKotn9DHmCEOasz2HNvIBc+xK8xAQiijBuxl6jsiqC36OT8BVOQW2N4j8xpOvm</binary>
+          </binaryDataArray>
+          <binaryDataArray encodedLength="560">
+            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+            <binary>eJwlkTtoE2AUhY+IWrRDhKJxy6AYRDA41S2D9xA6daiQwaE4dSlkzCKIOBRB2sGhLlJwMGCHHykY1CHViBVqrR3aFDLEd3yVKAipVPErDofLfx/nnv9cpZ1QyliVT6GdESvfDlU+hso/QqV+qPAnVN9rpQFr+G+oAxrfQhP0F3b7PoTyq6Hcc2pPQ+MvQ61Xodobaj/hek/uS6jHTJHY2grNMDPMbPFrKENsn7L649bKtLVw27p01xq5Z03VrauPrPmH1O9YxetW+YJVPWd1TlrtE1ZznzXbDVXfhrogx87545bGmJm06pfRPQPnLesaWL9pXbxhPa5Yp89bQ2es0bPW4DE4+WN7kFoWH44yd4TaYWt5v1XAl8wme16HBl6EVu/zv5XQXCvUB1X8KG2Hsr9DQ4es0gErd9Bq8E7km3v+a02yunheQWejBxce1/A0fccP9OeX4cC/zFJodJG4TmRnYldi/9Qa98DbGvtq+HnlFxre4e9n6uSX6Klv8AYJXTneE03iM/ofoPUJHNxJoNwA+LiApgJ36hjdaOhl/Q/qBr6O</binary>
+          </binaryDataArray>
+        </binaryDataArrayList>
+      </chromatogram>
+    </chromatogramList>
+  </run>
+</mzML>

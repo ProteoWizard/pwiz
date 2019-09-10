@@ -19,7 +19,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
@@ -258,8 +260,8 @@ namespace pwiz.SkylineTest
             TestAdductOperators();
 
             var coverage = new HashSet<string>();
-
-
+            TestPentaneAdduct("[M+2NH4]", "C5H20N2", 2, coverage); // multiple of a group
+            TestPentaneAdduct("[M+2(NH4)]", "C5H20N2", 2, coverage); // multiple of a group in parenthesis
             TestPentaneAdduct("[M+2H]", "C5H14", 2, coverage);
             TestPentaneAdduct("[M2C13+2H]", "C3C'2H14", 2, coverage); // Labeled
             TestPentaneAdduct("[2M2C13+2H]", "C6C'4H26", 2, coverage); // Labeled dimer
@@ -488,6 +490,42 @@ namespace pwiz.SkylineTest
                     }
                 }
             }
+        }
+
+        [TestMethod]
+        public void ChargeStateTextTest()
+        {
+            int min = Transition.MIN_PRODUCT_CHARGE, max = Transition.MAX_PRODUCT_CHARGE;
+            for (int i = min; i < max; i++)
+            {
+                ValidateChargeText(i, Transition.GetChargeIndicator(Adduct.FromChargeProtonated(i)));
+                ValidateChargeText(-i, Transition.GetChargeIndicator(Adduct.FromChargeProtonated(-i)));
+                ValidateChargeText(i, Transition.GetChargeIndicator(Adduct.FromChargeProtonated(i), CultureInfo.InvariantCulture));
+                ValidateChargeText(-i, Transition.GetChargeIndicator(Adduct.FromChargeProtonated(-i), CultureInfo.InvariantCulture));
+                ValidateChargeText(i, GetLongFormChargeIndicator(i));
+                ValidateChargeText(-i, GetLongFormChargeIndicator(-i));
+            }
+        }
+
+        private static void ValidateChargeText(int charge, string chargeText)
+        {
+            const string pepText = "PEPTIDER";
+            int min = Transition.MIN_PRODUCT_CHARGE, max = Transition.MAX_PRODUCT_CHARGE;
+            Assert.AreEqual(pepText, Transition.StripChargeIndicators(pepText + chargeText, min, max),
+                "Unable to round trip charge text " + chargeText);
+            Assert.AreEqual(Adduct.FromChargeProtonated(charge), Transition.GetChargeFromIndicator(chargeText, min, max));
+
+            // If the charge indicator contains a space, make sure it is not necessary to be interpreted correctly
+            if (chargeText.Contains(' '))
+                ValidateChargeText(charge, chargeText.Replace(" ", string.Empty));
+        }
+
+        private string GetLongFormChargeIndicator(int i)
+        {
+            char c = i > 0 ? '+' : '-';
+            var sb = new StringBuilder();
+            sb.Append(c, Math.Abs(i));
+            return sb.ToString();
         }
     }
 }

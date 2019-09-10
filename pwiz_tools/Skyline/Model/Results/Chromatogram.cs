@@ -466,6 +466,8 @@ namespace pwiz.Skyline.Model.Results
 
         public SampleType SampleType { get; private set; }
 
+        public string BatchName { get; private set; }
+
         #region Property change methods
 
         public ChromatogramSet ChangeMSDataFileInfos(IList<ChromFileInfo> prop)
@@ -585,6 +587,11 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im.SampleDilutionFactor = dilutionFactor);
         }
 
+        public ChromatogramSet ChangeBatchName(string batchName)
+        {
+            return ChangeProp(ImClone(this), im => im.BatchName = string.IsNullOrEmpty(batchName) ? null : batchName);
+        }
+
         #endregion
 
         public static MsDataFileUri GetExistingDataFilePath(string cachePath, MsDataFileUri msDataFileUri)
@@ -689,6 +696,7 @@ namespace pwiz.Skyline.Model.Results
             tic_area,
             ion_mobility_type,
             sample_dilution_factor,
+            batch_name,
         }
 
         private static readonly IXmlElementHelper<OptimizableRegression>[] OPTIMIZATION_HELPERS =
@@ -708,6 +716,7 @@ namespace pwiz.Skyline.Model.Results
             AnalyteConcentration = reader.GetNullableDoubleAttribute(ATTR.analyte_concentration);
             SampleType = SampleType.FromName(reader.GetAttribute(ATTR.sample_type));
             SampleDilutionFactor = reader.GetDoubleAttribute(ATTR.sample_dilution_factor, DEFAULT_DILUTION_FACTOR);
+            BatchName = reader.GetAttribute(ATTR.batch_name);
             // Consume tag
             reader.Read();
 
@@ -764,6 +773,7 @@ namespace pwiz.Skyline.Model.Results
                 writer.WriteAttribute(ATTR.sample_type, SampleType.Name);
             }
             writer.WriteAttribute(ATTR.sample_dilution_factor, SampleDilutionFactor, DEFAULT_DILUTION_FACTOR);
+            writer.WriteAttributeIfString(ATTR.batch_name, BatchName);
 
             // Write optimization element, if present
             if (OptimizationFunction != null)

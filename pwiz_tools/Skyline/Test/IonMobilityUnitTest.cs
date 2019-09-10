@@ -96,9 +96,14 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC, validatingIonMobilityPeptides[1].HighEnergyDriftTimeOffsetMsec);
 
             // Test serialization of molecule with '$' in it, which we use as a tab replacement against XML parser variability
-            var molser = new CustomMolecule(SmallMoleculeLibraryAttributes.Create("caffeine$", caffeineFormula, caffeineInChiKey, caffeineHMDB));
+            var molser = CustomMolecule.FromSmallMoleculeLibraryAttributes(SmallMoleculeLibraryAttributes.Create("caffeine$", caffeineFormula, caffeineInChiKey, caffeineHMDB));
             var text = molser.ToSerializableString();
             Assert.AreEqual(molser, CustomMolecule.FromSerializableString(text));
+
+            // Test handling of SmallMoleculeLibraryAttributes for mass-only descriptions
+            var molserB = CustomMolecule.FromSmallMoleculeLibraryAttributes(SmallMoleculeLibraryAttributes.Create("caffeine$", null, new TypedMass(123.4, MassType.Monoisotopic), new TypedMass(123.45, MassType.Average), caffeineInChiKey, caffeineHMDB));
+            var textB = molserB.ToSerializableString();
+            Assert.AreEqual(molserB, CustomMolecule.FromSerializableString(textB));
 
             var dictCCS2 = new Dictionary<LibKey, IonMobilityAndCCS[]>();
             var ccs3 = new List<IonMobilityAndCCS> { IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(4, eIonMobilityUnits.drift_time_msec), null, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(5, eIonMobilityUnits.drift_time_msec), null, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC) }; // Drift times

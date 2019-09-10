@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -32,9 +33,10 @@ namespace pwiz.Common.DataBinding.Controls.Editor
     public class AvailableFieldsTree : TreeView
     {
         private ColumnDescriptor _rootColumn;
-        private bool _showAdvancedFields;
         private PropertyPath _sublistId = PropertyPath.Root;
         private ICollection<PropertyPath> _checkedColumns = new PropertyPath[0];
+        private IViewEditor _viewEditor;
+        private bool _showHiddenFields;
         private static readonly Image[] ImagelistImages =
         {
             Resources.DataColumn,
@@ -67,6 +69,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             ShowNodeToolTips = true;
         }
         [Browsable(false)]
+        [DefaultValue(null)]
         public ColumnDescriptor RootColumn
         {
             get
@@ -111,25 +114,62 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
         }
 
-        public bool ShowAdvancedFields
+        [Browsable(false)]
+        [DefaultValue(null)]
+        public IViewEditor ViewEditor
         {
-            get
-            {
-                return _showAdvancedFields;
-            }
+            get { return _viewEditor;}
             set
             {
-                if (ShowAdvancedFields == value)
+                if (ReferenceEquals(ViewEditor, value))
                 {
                     return;
                 }
-                _showAdvancedFields = value;
-                Nodes.Clear();
-                var rootColumnOld = _rootColumn;
-                _rootColumn = null;
-                RootColumn = rootColumnOld;
+
+                if (ViewEditor != null)
+                {
+                    ViewEditor.ViewChange -= ViewEditorOnViewChange;
+                }
+
+                _viewEditor = value;
+                if (ViewEditor != null)
+                {
+                    ViewEditor.ViewChange += ViewEditorOnViewChange;
+                }
             }
         }
+
+        private void ViewEditorOnViewChange(object sender, EventArgs e)
+        {
+            ShowHiddenFields = ViewEditor.ShowHiddenFields;
+        }
+
+        [DefaultValue(false)]
+        public bool ShowHiddenFields
+        {
+            get
+            {
+                return _showHiddenFields;
+            }
+            set
+            {
+                if (ShowHiddenFields == value)
+                {
+                    return;
+                }
+                _showHiddenFields = value;
+                RebuildNodeTree();
+            }
+        }
+
+        private void RebuildNodeTree()
+        {
+            Nodes.Clear();
+            var rootColumnOld = _rootColumn;
+            _rootColumn = null;
+            RootColumn = rootColumnOld;
+        }
+
         /// <summary>
         /// Returns the column associated with the node in the tree.
         /// This is the column which is the parent of the child nodes in
@@ -200,17 +240,38 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             var result = new List<TreeNode>();
             foreach (var columnDescriptor in ListChildren(parentColumnDescriptor))
             {
-                var isAdvanced = IsAdvanced(columnDescriptor, parentColumnDescriptor);
                 var child = new TreeNode();
-                if (isAdvanced)
+                if (IsObsolete(columnDescriptor))
                 {
-                    child.ForeColor = Color.Gray;
+                    SetFontStyle(child, FontStyle.Strikeout);
+                    child.ForeColor = SystemColors.GrayText;
+                }
+                else if (IsAdvanced(columnDescriptor, parentColumnDescriptor))
+                {
+                    SetFontStyle(child, FontStyle.Italic);
+                    child.ForeColor = SystemColors.GrayText;
                 }
                 child.SelectedImageIndex = child.ImageIndex = (int) GetImageIndex(columnDescriptor);
                 SetColumnDescriptor(child, columnDescriptor);
                 result.Add(child);
             }
             return result;
+        }
+
+        protected bool IsObsolete(ColumnDescriptor columnDescriptor)
+        {
+            if (columnDescriptor.Parent != null && columnDescriptor.Parent.PropertyType.IsGenericType &&
+                columnDescriptor.Parent.PropertyType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
+            {
+                return columnDescriptor.Name == nameof(KeyValuePair<object, object>.Key);
+            }
+
+            return columnDescriptor.DataSchema.IsObsolete(columnDescriptor);
+        }
+
+        protected void SetFontStyle(TreeNode node, FontStyle fontStyle)
+        {
+            node.NodeFont = new Font(node.NodeFont ?? Font, fontStyle);
         }
 
         private bool IsAdvanced(ColumnDescriptor columnDescriptor, ColumnDescriptor parent)
@@ -309,12 +370,12 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         public IEnumerable<ColumnDescriptor> ListChildren(ColumnDescriptor parent)
         {
-            var allChildren = ListAllChildren(parent);
-            if (ShowAdvancedFields)
+            IEnumerable<ColumnDescriptor> allChildren = ListAllChildren(parent);
+            if (ShowHiddenFields)
             {
                 return allChildren;
             }
-            return allChildren.Where(child => !IsAdvanced(child, parent));
+            return allChildren.Where(child => !IsAdvanced(child, parent) && !IsObsolete(child));
         }
 
         private IList<ColumnDescriptor> ListAllChildren(ColumnDescriptor parent)
@@ -322,10 +383,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             var result = new List<ColumnDescriptor>();
             if (parent.CollectionInfo != null && parent.CollectionInfo.IsDictionary)
             {
-                if (ShowAdvancedFields)
-                {
-                    result.Add(parent.ResolveChild(@"Key"));
-                }
+                result.Add(parent.ResolveChild(@"Key"));
                 result.AddRange(ListAllChildren(parent.ResolveChild(@"Value")));
                 return result;
             }
@@ -344,6 +402,29 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
             return result;
         }
+
+        private ColumnDescriptor FindColumnDescriptor(ColumnDescriptor start, PropertyPath propertyPath)
+        {
+            if (propertyPath.Equals(start.PropertyPath))
+            {
+                return start;
+            }
+
+            foreach (var child in ListAllChildren(start))
+            {
+                if (propertyPath.StartsWith(child.PropertyPath))
+                {
+                    var result = FindColumnDescriptor(child, propertyPath);
+                    if (result != null)
+                    {
+                        return result;
+                    }
+                }
+            }
+
+            return null;
+        }
+
         [Browsable(false)]
         public IEnumerable<PropertyPath> CheckedColumns
         {
@@ -389,9 +470,15 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         public void SelectColumn(PropertyPath idPath)
         {
             var node = FindTreeNode(idPath, true);
-            if (node == null)
+            if (node == null && !ShowHiddenFields && ViewEditor != null)
             {
-                return;
+                var column = FindColumnDescriptor(RootColumn, idPath);
+                if (column != null)
+                {
+                    ViewEditor.ShowHiddenFields = true;
+                }
+
+                node = FindTreeNode(idPath, true);
             }
             SelectedNode = node;
         }

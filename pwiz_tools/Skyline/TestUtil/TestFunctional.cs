@@ -782,7 +782,7 @@ namespace pwiz.SkylineTestUtil
             return false;
         }
 
-        public static bool WaitForConditionUI(Func<bool> func)
+        public static bool WaitForConditionUI([InstantHandle] Func<bool> func)
         {
             return WaitForConditionUI(WAIT_TIME, func);
         }
@@ -899,7 +899,6 @@ namespace pwiz.SkylineTestUtil
                 if (_isPauseForScreenShots)
                 {
                     Program.PauseSeconds = -1;
-                    TestSmallMolecules = false; // Extra test node will mess up the pretty pictures
                 }
             }
         }
@@ -998,7 +997,7 @@ namespace pwiz.SkylineTestUtil
         /// <summary>
         /// Starts up Skyline, and runs the <see cref="DoTest"/> test method.
         /// </summary>
-        protected void RunFunctionalTest()
+        protected void RunFunctionalTest(string defaultUiMode = UiModes.PROTEOMIC)
         {
             try
             {
@@ -1009,6 +1008,7 @@ namespace pwiz.SkylineTestUtil
                 }
 
                 Program.FunctionalTest = true;
+                Program.DefaultUiMode = defaultUiMode;
                 Program.TestExceptions = new List<Exception>();
                 LocalizationHelper.InitThread();
 
@@ -1233,7 +1233,7 @@ namespace pwiz.SkylineTestUtil
                 result += allInfoItem + "\r\n";
 
             if (entry.ExtraInfo != null)
-                result += string.Format("Extra Info: {0}\r\n", LogMessage.ParseLogString(entry.ExtraInfo, LogLevel.all_info));
+                result += string.Format("Extra Info: {0}\r\n", LogMessage.ParseLogString(entry.ExtraInfo, LogLevel.all_info, entry.DocumentType));
 
             return result;
         }
@@ -1258,7 +1258,6 @@ namespace pwiz.SkylineTestUtil
                     @"Timeout {0} seconds exceeded in WaitForSkyline", waitCycles * SLEEP_INTERVAL / 1000);
                 }
                 Settings.Default.Reset();
-                Settings.Default.TestSmallMolecules = TestSmallMolecules;
                 Settings.Default.ImportResultsAutoCloseWindow = true;
                 Settings.Default.ImportResultsSimultaneousFiles = (int)MultiFileLoader.ImportResultsSimultaneousFileOptions.many;    // use maximum threads for multiple file import
                 BeginAuditLogging();

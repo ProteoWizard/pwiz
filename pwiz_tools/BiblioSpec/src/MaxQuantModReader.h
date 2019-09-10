@@ -31,12 +31,10 @@
 #include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
 #include <cctype>
-#include <map>
-#include <set>
-#include <vector>
+#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Stream.hpp"
+#include "pwiz/utility/misc/Container.hpp"
 
-using namespace std;
-using namespace boost;
 
 namespace BiblioSpec {
 
@@ -69,26 +67,12 @@ public:
      * Given the modification's name, return a pointer to it.
      * Return NULL if not found.
      */
-    static const MaxQuantModification* find(const set<MaxQuantModification>& modBank, const string& name)
+    static const MaxQuantModification* find(const map<string, MaxQuantModification>& modBank, const string& name)
     {
-        for (set<MaxQuantModification>::const_iterator iter = modBank.begin();
-             iter != modBank.end();
-             ++iter)
-        {
-            if (iter->name == name)
-            {
-                return &*iter;
-            }
-        }
-        return NULL;
-    }
-
-    /**
-     * Implemented so these can be used in a set.
-     */
-    bool operator<(const MaxQuantModification& other) const
-    {
-        return name < other.name;
+        auto findItr = modBank.find(name);
+        if (findItr == modBank.end())
+            return NULL;
+        return &findItr->second;
     }
 };
 
@@ -111,7 +95,7 @@ public:
     string rawFile;
     vector<MaxQuantLabelingState> labelingStates;
 
-    MaxQuantLabels(string filename)
+    MaxQuantLabels(const string& filename)
     {
         rawFile = filename;
     }
@@ -119,7 +103,7 @@ public:
     /**
      * Adds a new labeling state with the given mod strings.
      */
-    void addModsStrings(vector<string> modsToAdd)
+    void addModsStrings(const vector<string>& modsToAdd)
     {
         MaxQuantLabelingState newLabelingState;
         newLabelingState.modsStrings = modsToAdd;
@@ -161,7 +145,7 @@ private:
 class MaxQuantModReader : public SAXHandler
 {
 public:
-    MaxQuantModReader(const char* xmlfilename, set<MaxQuantModification>* modBank);
+    MaxQuantModReader(const char* xmlfilename, map<string, MaxQuantModification>* modBank);
     MaxQuantModReader(const char* xmlfilename,
                       set<string>* fixedMods, vector<MaxQuantLabels>* labelBank);
     ~MaxQuantModReader();
@@ -183,7 +167,7 @@ private:
 
     map<string, double> elementMasses_;
     MaxQuantModification curMod_;
-    set<MaxQuantModification>* modBank_;
+    map<string, MaxQuantModification>* modBank_;
     set<string>* fixedMods_;
     vector<MaxQuantLabels>* labelBank_;
     vector<int> paramGroupIndices_; // raw -> paramGroupIndex
@@ -194,8 +178,8 @@ private:
     
     string charBuf_;
 
-    double parseComposition(string composition);
-    MaxQuantModification::MAXQUANT_MOD_POSITION stringToPosition(string positionString);
+    double parseComposition(const string& composition);
+    MaxQuantModification::MAXQUANT_MOD_POSITION stringToPosition(const string& positionString);
 };
 
 } // namespace

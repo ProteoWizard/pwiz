@@ -422,7 +422,15 @@ namespace pwiz.Skyline.Model.Results
 
                 // All threads must complete scoring before we complete the first pass.
                 _chromDataSets.Wait();
-                doSecondPass = _retentionTimePredictor.CreateConversion();
+                if (!_retentionTimePredictor.CreateConversion())
+                {
+                    var transitionFullScan = _document.Settings.TransitionSettings.FullScan;
+                    if (transitionFullScan.IsEnabled && transitionFullScan.RetentionTimeFilterType ==
+                        RetentionTimeFilterType.scheduling_windows)
+                    {
+                        doSecondPass = false;
+                    }
+                }
                 if (!doSecondPass && listChromData.Any(data => null != data && !IsFirstPassPeptide(data)))
                 {
                     _status = _status.ChangeWarningMessage(
@@ -742,6 +750,10 @@ namespace pwiz.Skyline.Model.Results
                 return;
             }
             var fullScan = _document.Settings.TransitionSettings.FullScan;
+            if (!fullScan.IsEnabled)
+            {
+                return;
+            }
             if (fullScan.RetentionTimeFilterType != RetentionTimeFilterType.scheduling_windows)
             {
                 return;
@@ -1349,6 +1361,8 @@ namespace pwiz.Skyline.Model.Results
                     flags |= ChromGroupHeaderInfo.FlagValues.has_calculated_mzs;
                 if (chromDataSet.Extractor == ChromExtractor.base_peak)
                     flags |= ChromGroupHeaderInfo.FlagValues.extracted_base_peak;
+                else if(chromDataSet.Extractor == ChromExtractor.qc)
+                    flags |= ChromGroupHeaderInfo.FlagValues.extracted_qc_trace;
             if (scanIdsByChromSource != null && scanIdsByChromSource.ContainsKey(ChromSource.ms1))
                         flags |= ChromGroupHeaderInfo.FlagValues.has_ms1_scan_ids;
             if (scanIdsByChromSource != null && scanIdsByChromSource.ContainsKey(ChromSource.fragment))

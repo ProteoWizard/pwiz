@@ -30,7 +30,6 @@
 #include "BlibUtils.h"
 #include <boost/algorithm/string.hpp>
 
-using namespace std;
 
 namespace BiblioSpec {
 

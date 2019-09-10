@@ -1,16 +1,16 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:msgfdb.blib	2	1	9
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:msgfdb.blib	2	1	10
 id	RefSpectraID	position	mass
 1	1	5	57.021496
 2	1	9	57.021496
 3	1	18	57.021496
 4	1	25	57.021496
 5	1	29	57.021496
-id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
-1	TPDTCPLFCDFYNPHGGCEWHYQPCGAPCLK	947.137390136719	4	TPDTC[+57.0]PLFC[+57.0]DFYNPHGGC[+57.0]EWHYQPC[+57.0]GAPC[+57.0]LK	-	-	1	754	0.0	0.0	0.0	0	43.262615	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	controllerType=0 controllerNumber=1 scan=8182	0.0	15
-2	LHNLNSNWFPEGSKPFIYQEVIDLGGEPIK	1147.91418457031	3	LHNLNSNWFPEGSKPFIYQEVIDLGGEPIK	-	-	1	588	0.0	0.0	0.0	0	57.361115	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	controllerType=0 controllerNumber=1 scan=10906	0.0	15
-id	fileName	cutoffScore
-1	/BiblioSpec/tests/inputs/ms-gfdb.mzML	-1.0
+id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	totalIonCurrent	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
+1	TPDTCPLFCDFYNPHGGCEWHYQPCGAPCLK	947.13739013	4	TPDTC[+57.0]PLFC[+57.0]DFYNPHGGC[+57.0]EWHYQPC[+57.0]GAPC[+57.0]LK	-	-	1	754	0.0	0.0	0.0	0	43.262615	N/A	N/A	32183.46	N/A	N/A	N/A	N/A	N/A	1	controllerType=0 controllerNumber=1 scan=8182	0.0	15
+2	LHNLNSNWFPEGSKPFIYQEVIDLGGEPIK	1147.91418457	3	LHNLNSNWFPEGSKPFIYQEVIDLGGEPIK	-	-	1	588	0.0	0.0	0.0	0	57.361115	N/A	N/A	20702.47	N/A	N/A	N/A	N/A	N/A	1	controllerType=0 controllerNumber=1 scan=10906	0.0	15
+id	fileName	idFileName	cutoffScore
+1	/BiblioSpec/tests/inputs/ms-gfdb.mzML	/BiblioSpec/tests/inputs/ms-gfdb.pepXML	-1.0
 id	scoreType	probabilityType
 0	UNKNOWN	NOT_A_PROBABILITY_VALUE
 1	PERCOLATOR QVALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT

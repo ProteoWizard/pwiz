@@ -69,7 +69,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
     public interface IImportResultsControl
     {
-        List<ImportPeptideSearch.FoundResultsFile> FoundResultsFiles { get; set; } // Name --> Path
+        IList<ImportPeptideSearch.FoundResultsFile> FoundResultsFiles { get; set; } // Name --> Path
+        IEnumerable<string> MissingResultsFiles { get; }
         bool ResultsFilesMissing { get; }
         int SimultaneousFiles { get; }
         bool DoAutoRetry { get; }

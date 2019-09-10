@@ -33,7 +33,6 @@
 #include "Verbosity.h"
 #include <boost/optional.hpp>
 
-using namespace std;
 
 namespace BiblioSpec {
 
@@ -50,8 +49,9 @@ class BlibMaker
     // integer values minorVersion, the minorVersion field has been taken
     // for use as a schemaVersion
 #define MAJOR_VERSION_CURRENT 0
-#define MINOR_VERSION_CURRENT 9
+#define MINOR_VERSION_CURRENT 10
 
+#define MIN_VERSION_TIC       10 // Version 10 adds TIC as a column
 #define MIN_VERSION_PROTEINS   9 // Version 9 adds Proteins and RefSpectraProteins tables
 #define MIN_VERSION_RT_BOUNDS  8 // Version 8 adds startTime and endTime
 #define MIN_VERSION_PEAK_ANNOT 7 // Version 7 adds peak annotations
@@ -100,7 +100,7 @@ public:
                   const char* msg = NULL) const;
 
     int getFileId(const std::string& file, double cutoffScore);
-    int addFile(const std::string& file, double cutoffScore);
+    int addFile(const std::string& file, double cutoffScore, const std::string& idFile);
     void insertPeaks(int spectraID, int levelCompress, int peaksCount, 
                      double* pM, float* pI);
     void beginTransaction();
@@ -125,6 +125,7 @@ protected:
     virtual string getLSID();
     virtual void getNextRevision(int* dataRev);
 
+    void createUpdatedRefSpectraView(const char* schemaTmp);
     bool tableExists(const char* schmaTmp, const char* tableName);
     bool tableColumnExists(const char* schmaTmp, const char* tableName, 
                            const char* columnName);
@@ -134,6 +135,9 @@ protected:
                          int spectraTmpID, 
                          int copies,
                          int tableVersion = 0);
+    int transferSpectra(const char* schemaTmp,
+                        vector<pair<int, int>>& bestSpectraIdAndCount,
+                        int tableVersion = 0);
     void transferModifications(const char* schemaTmp, int spectraID, int spectraTmpID);
     void transferPeaks(const char* schemaTmp, int spectraID, int spectraTmpID);
     void transferPeakAnnotations(const char* schemaTmp, int spectraID, int spectraTmpID);

@@ -1,10 +1,10 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:mascot-distiller-2.blib	1	1	9
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:mascot-distiller-2.blib	1	1	10
 id	RefSpectraID	position	mass
-id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
-1	LVNELTEFAK	582.32	2	LVNELTEFAK	-	-	1	500	0.0	0.0	0.0	0	39.512845	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	2	7.39558451312514e-05	5
-id	fileName	cutoffScore
-1	C:/Temp/ah_20101011y_BSA_MS-MS_only_5-2.RAW	-1.0
+id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	totalIonCurrent	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
+1	LVNELTEFAK	582.32	2	LVNELTEFAK	-	-	1	500	0.0	0.0	0.0	0	39.512845	N/A	N/A	1524436.50	N/A	N/A	N/A	N/A	N/A	1	2	7.39558451e-05	5
+id	fileName	idFileName	cutoffScore
+1	C:/Temp/ah_20101011y_BSA_MS-MS_only_5-2.RAW	/BiblioSpec/tests/inputs/试验_F007401b.dat	-1.0
 id	scoreType	probabilityType
 0	UNKNOWN	NOT_A_PROBABILITY_VALUE
 1	PERCOLATOR QVALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT

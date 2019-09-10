@@ -114,6 +114,10 @@ namespace Bruker {
 Baf2SqlImpl::Baf2SqlImpl(const string& rawpath) : rawpath_(rawpath), bafFilepath_((bfs::path(rawpath) / "analysis.baf").string()), bafStorage_(new BinaryStorage(bafFilepath_))
 {
     sqlite::database db(baf2sql::getSQLiteCacheFilename(bafFilepath_));
+
+    sqlite::query count(db, "SELECT COUNT(*) FROM Spectra");
+    int numSpectra = count.begin()->get<int>(0);
+
     sqlite::query q(db, "SELECT s.Id, ak.MsLevel+1, Rt, Segment, AcquisitionKey, "
                         "MzAcqRangeLower, MzAcqRangeUpper, SumIntensity, MaxIntensity, Polarity, "
                         "ProfileMzId, ProfileIntensityId, LineMzId, LineIntensityId, "
@@ -125,6 +129,13 @@ Baf2SqlImpl::Baf2SqlImpl(const string& rawpath) : rawpath_(rawpath), bafFilepath
                         "WHERE ak.Id=s.AcquisitionKey "
                         "ORDER BY Rt");
 
+    tic_.reset(new Chromatogram);
+    bpi_.reset(new Chromatogram);
+    tic_->times.reserve(numSpectra);
+    tic_->intensities.reserve(numSpectra);
+    bpi_->times.reserve(numSpectra);
+    bpi_->intensities.reserve(numSpectra);
+    spectra_.reserve(numSpectra);
     for (sqlite::query::iterator itr = q.begin(); itr != q.end(); ++itr)
     {
         sqlite::query::rows row = *itr;
@@ -150,11 +161,16 @@ Baf2SqlImpl::Baf2SqlImpl(const string& rawpath) : rawpath_(rawpath), bafFilepath
         int scanMode = row.get<int>(++idx);
         optional<double> isolationWidth(row.get<optional<double> >(++idx));
 
-        spectra_.push_back(MSSpectrumPtr(new Baf2SqlSpectrum(bafStorage_, id,
-                                                             msLevel, rt, segment, ak, startMz, endMz,
-                                                             tic, bpi, polarity, scanMode,
-                                                             profileMzId, profileIntensityId, lineMzId, lineIntensityId,
-                                                             parentId, precursorMz, isolationMode, reactionMode, isolationWidth)));
+        tic_->times.push_back(rt);
+        bpi_->times.push_back(rt);
+        tic_->intensities.push_back(tic);
+        bpi_->intensities.push_back(bpi);
+
+        spectra_.emplace_back(MSSpectrumPtr(new Baf2SqlSpectrum(bafStorage_, id,
+                                                                msLevel, rt, segment, ak, startMz, endMz,
+                                                                tic, bpi, polarity, scanMode,
+                                                                profileMzId, profileIntensityId, lineMzId, lineIntensityId,
+                                                                parentId, precursorMz, isolationMode, reactionMode, isolationWidth)));
     }
 
     sqlite::query properties(db, "SELECT Key, Value FROM Properties");
@@ -172,6 +188,8 @@ Baf2SqlImpl::Baf2SqlImpl(const string& rawpath) : rawpath_(rawpath), bafFilepath
             instrumentRevision_ = lexical_cast<int>(value);
         else if (key == "InstrumentSourceType")
             instrumentSource_ = translateInstrumentSource(lexical_cast<int>(value));
+        else if (key == "InstrumentSerialNumber")
+            serialNumber_.swap(value);
         else if (key == "AcquisitionDateTime")
             acquisitionDateTime_.swap(value);
         else if (key == "OperatorName")
@@ -190,6 +208,9 @@ size_t Baf2SqlImpl::getLCSpectrumCount(int source) const { return 0; }
 LCSpectrumSourcePtr Baf2SqlImpl::getLCSource(int source) const { return 0; }
 LCSpectrumPtr Baf2SqlImpl::getLCSpectrum(int source, int scan) const { return LCSpectrumPtr(); }
 
+ChromatogramPtr Baf2SqlImpl::getTIC() const { return tic_; }
+ChromatogramPtr Baf2SqlImpl::getBPC() const { return bpi_; }
+
 std::string Baf2SqlImpl::getOperatorName() const { return operatorName_; }
 std::string Baf2SqlImpl::getAnalysisName() const { return ""; }
 boost::local_time::local_date_time Baf2SqlImpl::getAnalysisDateTime() const { return parse_date_time("%Y-%m-%dT%H:%M:%S%Q", acquisitionDateTime_); }
@@ -198,6 +219,7 @@ std::string Baf2SqlImpl::getMethodName() const { return ""; }
 InstrumentFamily Baf2SqlImpl::getInstrumentFamily() const { return instrumentFamily_; }
 int Baf2SqlImpl::getInstrumentRevision() const { return instrumentRevision_; }
 std::string Baf2SqlImpl::getInstrumentDescription() const { return ""; }
+std::string Baf2SqlImpl::getInstrumentSerialNumber() const { return serialNumber_; }
 InstrumentSource Baf2SqlImpl::getInstrumentSource() const { return instrumentSource_; }
 std::string Baf2SqlImpl::getAcquisitionSoftware() const { return acquisitionSoftware_; }
 std::string Baf2SqlImpl::getAcquisitionSoftwareVersion() const { return acquisitionSoftwareVersion_; }

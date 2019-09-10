@@ -57,10 +57,10 @@ namespace pwiz.SkylineTestFunctional
 
             CheckDocumentGridAndColumns(mixedSky,
                 Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors,
-                4, 14, SrmDocument.DOCUMENT_TYPE.mixed);
+                4, 13, SrmDocument.DOCUMENT_TYPE.mixed);
 
             CheckDocumentGridAndColumns(mixedSky,
-                Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides,
+                Resources.SkylineViewContext_GetDocumentGridRowSources_Molecules,
                 2, 14, SrmDocument.DOCUMENT_TYPE.mixed);
 
         }
@@ -76,10 +76,10 @@ namespace pwiz.SkylineTestFunctional
 
             CheckDocumentGridAndColumns(smallMoleculeSky,
                 Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors,
-                1, 13, SrmDocument.DOCUMENT_TYPE.small_molecules);
+                1, 12, SrmDocument.DOCUMENT_TYPE.small_molecules);
 
             CheckDocumentGridAndColumns(smallMoleculeSky,
-                Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides,
+                Resources.SkylineViewContext_GetDocumentGridRowSources_Molecules,
                 1, 10, SrmDocument.DOCUMENT_TYPE.small_molecules);
 
         }

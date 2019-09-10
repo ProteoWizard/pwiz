@@ -20,7 +20,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.ElementLocators;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
@@ -36,12 +38,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             throw new InvalidOperationException();
         }
 
-        public IList<Protein> Proteins { get
+        [InvariantDisplayName("MoleculeLists", ExceptInUiMode = UiModes.PROTEOMIC)]
+        public IList<Protein> Proteins
+        {
+            get
             {
                 return DocNode.MoleculeGroups
                     .Select(peptideGroup => new Protein(DataSchema,
                         new IdentityPath(IdentityPath.ROOT, peptideGroup.Id))).ToArray();
-            } }
+            }
+        }
+
         public IList<Replicate> Replicates 
         {
             get
@@ -63,6 +70,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         protected override NodeRef NodeRefPrototype
         {
             get { return DocumentRef.PROTOTYPE; }
+        }
+
+        protected override Type SkylineDocNodeType
+        {
+            get { return typeof(SkylineDocument); }
         }
     }
 }

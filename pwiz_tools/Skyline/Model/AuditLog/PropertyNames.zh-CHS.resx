@@ -141,6 +141,9 @@
   <data name="DataSettings_GroupComparisonDefs" xml:space="preserve">
     <value>群组比较</value>
   </data>
+  <data name="DataSettings_Lists" xml:space="preserve">
+    <value>列表</value>
+  </data>
   <data name="ChargeRegressionLine_Intercept" xml:space="preserve">
     <value>截距</value>
   </data>
@@ -196,13 +199,13 @@
     <value>母离子质荷比排除窗口</value>
   </data>
   <data name="TransitionFilter_SmallMoleculeFragmentAdductsString" xml:space="preserve">
-    <value>小分子片段加合物</value>
+    <value>分子片段加合物</value>
   </data>
   <data name="TransitionFilter_SmallMoleculeIonTypesString" xml:space="preserve">
-    <value>小分子离子类型</value>
+    <value>分子离子类型</value>
   </data>
   <data name="TransitionFilter_SmallMoleculePrecursorAdductsString" xml:space="preserve">
-    <value>小分子母离子加合物</value>
+    <value>分子母离子加合物</value>
   </data>
   <data name="TransitionFullScan_AcquisitionMethod" xml:space="preserve">
     <value>采集方法</value>
@@ -390,6 +393,12 @@
   <data name="View_Layouts" xml:space="preserve">
     <value>布局</value>
   </data>
+  <data name="ViewSpecLayout_Layouts" xml:space="preserve">
+    <value>布局</value>
+  </data>
+  <data name="ViewSpecLayout_DefaultLayoutName" xml:space="preserve">
+    <value>默认布局名称</value>
+  </data>
   <data name="FilterSpec_AuditLogColumn" xml:space="preserve">
     <value>列</value>
   </data>
@@ -437,6 +446,15 @@
   </data>
   <data name="GroupComparisonDef_IdentityAnnotation" xml:space="preserve">
     <value>身份注释</value>
+  </data>
+  <data name="ListDef_Properties" xml:space="preserve">
+    <value>属性</value>
+  </data>
+  <data name="ListDef_IdProperty" xml:space="preserve">
+    <value>ID 属性</value>
+  </data>
+  <data name="ListDef_DisplayProperty" xml:space="preserve">
+    <value>显示属性</value>
   </data>
   <data name="AnnotationDef_Items" xml:space="preserve">
     <value>值</value>
@@ -890,6 +908,9 @@
   <data name="StaticMod_Label13C" xml:space="preserve">
     <value>13C</value>
   </data>
+  <data name="StaticMod_Label14C" xml:space="preserve">
+    <value>14C</value>
+  </data>
   <data name="StaticMod_Label15N" xml:space="preserve">
     <value>15N</value>
   </data>
@@ -1013,13 +1034,22 @@
   <data name="ExplicitTransitionGroupValues_CollisionEnergy" xml:space="preserve">
     <value>碰撞能量</value>
   </data>
+  <data name="ExplicitTransitionValues_CollisionEnergy" xml:space="preserve">
+    <value>碰撞能量</value>
+  </data>
   <data name="ExplicitTransitionGroupValues_CompensationVoltage" xml:space="preserve">
     <value>补偿电压</value>
   </data>
   <data name="ExplicitTransitionGroupValues_ConeVoltage" xml:space="preserve">
     <value>锥孔电压</value>
   </data>
+  <data name="ExplicitTransitionValues_ConeVoltage" xml:space="preserve">
+    <value>锥孔电压</value>
+  </data>
   <data name="ExplicitTransitionGroupValues_DeclusteringPotential" xml:space="preserve">
+    <value>去簇电压</value>
+  </data>
+  <data name="ExplicitTransitionValues_DeclusteringPotential" xml:space="preserve">
     <value>去簇电压</value>
   </data>
   <data name="ExplicitTransitionGroupValues_IonMobility" xml:space="preserve">
@@ -1031,7 +1061,13 @@
   <data name="ExplicitTransitionGroupValues_IonMobilityHighEnergyOffset" xml:space="preserve">
     <value>高能离子迁移偏置</value>
   </data>
+  <data name="ExplicitTransitionValues_IonMobilityHighEnergyOffset" xml:space="preserve">
+    <value>高能离子迁移偏置</value>
+  </data>
   <data name="ExplicitTransitionGroupValues_SLens" xml:space="preserve">
+    <value>S-Lens</value>
+  </data>
+  <data name="ExplicitTransitionValues_SLens" xml:space="preserve">
     <value>S-Lens</value>
   </data>
   <data name="ImportFastaSettings_AutoTrain" xml:space="preserve">
@@ -1155,6 +1191,9 @@
     <value>母离子电荷</value>
   </data>
   <data name="TransitionGroupDocNode_ExplicitValues" xml:space="preserve">
+    <value>明示值</value>
+  </data>
+  <data name="TransitionDocNode_ExplicitValues" xml:space="preserve">
     <value>明示值</value>
   </data>
   <data name="TransitionGroupDocNode_LabelType" xml:space="preserve">
@@ -1363,5 +1402,14 @@
   </data>
   <data name="DocumentNodeCounts_MoleculeGroupCount_smallmol" xml:space="preserve">
     <value>分子列表计数</value>
+  </data>
+  <data name="RefinementSettings_AddRefineLabelType" xml:space="preserve">
+    <value>添加标记类型</value>
+  </data>
+  <data name="DataSettings_AuditLogging" xml:space="preserve">
+    <value>审计日志记录</value>
+  </data>
+  <data name="ListData_Rows" xml:space="preserve">
+    <value>行</value>
   </data>
 </root>

@@ -70,7 +70,7 @@ namespace pwiz.SkylineTestFunctional
                 documentGrid.DataGridView.SelectAll();
             });
             var deletePeptidesButton = GetDropDownItems(documentGrid.NavBar.ActionsButton)
-                .FirstOrDefault(item => item.Text == DeleteNodesAction.Peptides.MenuItemText);
+                .FirstOrDefault(item => item.Text == DeleteNodesAction.Peptides.GetMenuItemText(SrmDocument.DOCUMENT_TYPE.proteomic));
             Assert.IsNotNull(deletePeptidesButton);
             var alertDlg = ShowDialog<AlertDlg>(deletePeptidesButton.PerformClick);
             Assert.AreNotEqual(0, SkylineWindow.Document.MoleculeCount);
@@ -132,7 +132,7 @@ namespace pwiz.SkylineTestFunctional
                 }
             });
             var menuItem = GetDropDownItems(documentGrid.NavBar.ActionsButton)
-                .FirstOrDefault(item => item.Text == RemovePeaksAction.Precursors.MenuItemText);
+                .FirstOrDefault(item => item.Text == RemovePeaksAction.Precursors.GetMenuItemText(SrmDocument.DOCUMENT_TYPE.proteomic));
             Assert.IsNotNull(menuItem);
             var confirmDialog = ShowDialog<AlertDlg>(menuItem.PerformClick);
             string expectedMessage = string.Format(
@@ -189,7 +189,7 @@ namespace pwiz.SkylineTestFunctional
                 }
             });
             var deletePeptidesAction = GetDropDownItems(documentGrid.NavBar.ActionsButton)
-                .FirstOrDefault(item => item.Text == DeleteNodesAction.Peptides.MenuItemText);
+                .FirstOrDefault(item => item.Text == DeleteNodesAction.Peptides.GetMenuItemText(SrmDocument.DOCUMENT_TYPE.proteomic));
             Assert.IsNotNull(deletePeptidesAction);
             var confirmDialog = ShowDialog<AlertDlg>(deletePeptidesAction.PerformClick);
             string expectedMessage = string.Format(
@@ -205,7 +205,7 @@ namespace pwiz.SkylineTestFunctional
 
         public void VerifyActionsEnabled(DataboundGridControl databoundGridControl, params RowAction[] rowActions)
         {
-            var enabledMenuItems = new HashSet<string>(rowActions.Select(action => action.MenuItemText));
+            var enabledMenuItems = new HashSet<string>(rowActions.Select(action => action.GetMenuItemText(SrmDocument.DOCUMENT_TYPE.proteomic)));
             var menuItems = GetDropDownItems(databoundGridControl.NavBar.ActionsButton);
             Assert.AreNotEqual(0, menuItems.Length);
             foreach (var item in menuItems)

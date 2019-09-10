@@ -8,7 +8,6 @@
 
 using namespace BiblioSpec;
 using namespace pwiz::msdata;
-using namespace std;
 
 MzXMLParser::MzXMLParser()
     : lastIndex_(-1) {

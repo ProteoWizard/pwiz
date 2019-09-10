@@ -10,6 +10,84 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
+#| tag::doc[]
+
+[[bbv2.reference.tools.compiler.gcc]]
+= GNU C++
+
+The `gcc` module supports the http://gcc.gnu.org[GNU C++ compiler] on
+Linux, a number of Unix-like system including SunOS and on Windows
+(either http://www.cygwin.com[Cygwin] or http://www.mingw.org[MinGW]).
+
+The `gcc` module is initialized using the following syntax:
+
+----
+using gcc : [version] : [c++-compile-command] : [compiler options] ;
+----
+
+This statement may be repeated several times, if you want to configure
+several versions of the compiler.
+
+If the version is not explicitly specified, it will be automatically
+detected by running the compiler with the `-v` option. If the command is
+not specified, the `g++` binary will be searched in PATH.
+
+The following options can be provided, using
+_`<option-name>option-value syntax`_:
+
+`cflags`::
+Specifies additional compiler flags that will be used when compiling C
+sources.
+
+`cxxflags`::
+Specifies additional compiler flags that will be used when compiling C++
+sources.
+
+`compileflags`::
+Specifies additional compiler flags that will be used when compiling both C
+and C++ sources.
+
+`linkflags`::
+Specifies additional command line options that will be passed to the linker.
+
+`root`::
+Specifies root directory of the compiler installation. This option is
+necessary only if it is not possible to detect this information from the
+compiler command--for example if the specified compiler command is a user
+script.
+
+`archiver`::
+Specifies the archiver command that is used to produce static
+libraries. Normally, it is autodetected using gcc `-print-prog-name`
+option or defaulted to `ar`, but in some cases you might want to
+override it, for example to explicitly use a system version instead of
+one included with gcc.
+
+`ranlib`::
+Specifies the ranlib command that is used to generated symbol table
+for static libraries. Normally, it is autodetected using gcc
+`-print-prog-name` option or defaulted to `ranlib`, but in some cases
+you might want to override it, for example to explicitly use a system
+version instead of one included with gcc.
+
+`rc`::
+Specifies the resource compiler command that will be used with the
+version of gcc that is being configured. This setting makes sense only
+for Windows and only if you plan to use resource files. By default
+`windres` will be used.
+
+`rc-type`::
+Specifies the type of resource compiler. The value can be either
+`windres` for msvc resource compiler, or `rc` for borland's resource
+compiler.
+
+In order to compile 64-bit applications, you have to specify
+`address-model=64`, and the `instruction-set` feature should refer to a 64
+bit processor. Currently, those include `nocona`, `opteron`, `athlon64` and
+`athlon-fx`.
+
+|# # end::doc[]
+
 import "class" : new ;
 import common ;
 import cygwin ;
@@ -103,31 +181,27 @@ rule init ( version ? : command * : options * : requirement * )
                 tool-command-string = $(tool-command-string:J=" ") ;
                 local tool-version = [ dump-full-version
                     $(tool-command-string) ] ;
-                if $(tool-version) != $(version)
+                # Permit a match between a two-digit version specified by the
+                # user (e.g. 4.4) and a 3-digit version reported by gcc.
+                # Since only two digits are present in the binary name
+                # anyway, insisting that user specify the 3-digit version
+                # when configuring Boost.Build, while it is not required on
+                # the command line, would be strange.
+                local versionl = [ regex.split $(version) "[.]" ] ;
+                local tool-versionl = [ regex.split $(tool-version) "[.]" ] ;
+                if ! ( $(versionl[1]) = $(tool-versionl[1]) &&
+                   $(versionl[2]:E=$(tool-versionl[2])) = $(tool-versionl[2]) &&
+                   $(versionl[3]:E=$(tool-versionl[3])) = $(tool-versionl[3]) )
                 {
-                    # Permit a match betwen a two-digit version specified by the
-                    # user (e.g. 4.4) and a 3-digit version reported by gcc.
-                    # Since only two digits are present in the binary name
-                    # anyway, insisting that user specify the 3-digit version
-                    # when configuring Boost.Build, while it is not required on
-                    # the command line, would be strange.
-                    local stripped = [ MATCH "^([0-9]+\.[0-9]+).*" :
-                        $(tool-version) ] ;
-                    if $(stripped) != $(version)
-                    {
-                        import errors ;
-                        errors.error toolset gcc "initialization:"
-                            : version '$(version)' requested but
-                                'g++-$(version)' not found and version
-                                '$(tool-version)' of default '$(tool-command)'
-                                does not match
-                            : initialized from [ errors.nearest-user-location ]
-                            ;
-                        tool-command = ;
-                    }
-                    # Use full 3-digit version to be compatible with the
-                    # 'using gcc ;' case
-                    version = $(tool-version) ;
+                    import errors ;
+                    errors.error toolset gcc "initialization:"
+                        : version '$(version)' requested but
+                            'g++-$(version)' not found and version
+                            '$(tool-version)' of default '$(tool-command)'
+                            does not match
+                        : initialized from [ errors.nearest-user-location ]
+                        ;
+                    tool-command = ;
                 }
             }
             else
@@ -157,7 +231,7 @@ rule init ( version ? : command * : options * : requirement * )
     # Information about the gcc command...
     #   The command.
     local command = $(tool-command) ;
-    #   The 'command' variable can have multiple elements but when calling the    
+    #   The 'command' variable can have multiple elements but when calling the
     # SHELL builtin we need a single string, and we need to quote elements
     # with spaces.
     local command-string = \"$(command)\" ;
@@ -185,7 +259,7 @@ rule init ( version ? : command * : options * : requirement * )
     {
         local machine = [ MATCH "^([^ ]+)" :
             [ SHELL "$(command-string) -dumpmachine" ] ] ;
-        version ?= [ dump-full-version $(command-string) ] ;
+        version ?= [ dump-version $(command-string) ] ;
         switch $(machine:L)
         {
             case *mingw* : flavor ?= mingw ;
@@ -275,7 +349,7 @@ rule init ( version ? : command * : options * : requirement * )
         rc-type = null ;
     }
     rc.configure $(rc) : $(condition) : <rc-type>$(rc-type) ;
-    
+
     toolset.flags gcc VERSION $(condition) : [ regex.split $(version) "[.]" ] ;
 
     init-cxxstd-flags $(condition) : $(version) ;
@@ -296,6 +370,12 @@ local rule dump-full-version ( command-string )
     # recognized will be used.
     return [ MATCH "^([0-9.]+)" :
         [ SHELL "$(command-string) -dumpfullversion -dumpversion" ] ] ;
+}
+
+local rule dump-version ( command-string )
+{
+    return [ MATCH "^([0-9.]+)" :
+        [ SHELL "$(command-string) -dumpversion" ] ] ;
 }
 
 # Uses -print-prog-name to get the name of the tool.
@@ -416,8 +496,8 @@ local rule compile-link-flags ( * )
     local rule init-cxxstd-flags ( condition * : version )
     {
         local std ;
-        if [ version-ge $(version) : 8.0 ] { std = 2a ; }
-        else if [ version-ge $(version) : 5.1 ] { std = 1z ; }
+        if [ version-ge $(version) : 8 ] { std = 2a ; }
+        else if [ version-ge $(version) : 5 ] { std = 1z ; }
         else if [ version-ge $(version) : 4.8 ] { std = 1y ; }
         else if [ version-ge $(version) : 4.7 ] { std = 11 ; }
         else if [ version-ge $(version) : 3.3 ] { std = 98 ; }
@@ -634,14 +714,34 @@ toolset.flags gcc.compile OPTIONS <inlining>full : -finline-functions -Wno-inlin
 
 toolset.flags gcc.compile OPTIONS <warnings>off : -w ;
 toolset.flags gcc.compile OPTIONS <warnings>on  : -Wall ;
-toolset.flags gcc.compile OPTIONS <warnings>all : -Wall -pedantic ;
+toolset.flags gcc.compile OPTIONS <warnings>all : -Wall ;
+toolset.flags gcc.compile OPTIONS <warnings>extra : -Wall -Wextra ;
+toolset.flags gcc.compile OPTIONS <warnings>pedantic : -Wall -Wextra -pedantic ;
 toolset.flags gcc.compile OPTIONS <warnings-as-errors>on : -Werror ;
 
 toolset.flags gcc.compile OPTIONS <debug-symbols>on : -g ;
 toolset.flags gcc.compile OPTIONS <profiling>on : -pg ;
 
-toolset.flags gcc.compile.c++ OPTIONS <rtti>off : -fno-rtti ;
+toolset.flags gcc.compile OPTIONS <local-visibility>hidden : -fvisibility=hidden ;
+toolset.flags gcc.compile.c++ OPTIONS <local-visibility>hidden : -fvisibility-inlines-hidden ;
+toolset.flags gcc.compile OPTIONS <local-visibility>protected : -fvisibility=protected ;
+toolset.flags gcc.compile OPTIONS <local-visibility>protected/<target-os>darwin : ;
+toolset.flags gcc.compile OPTIONS <local-visibility>global : -fvisibility=default ;
+
 toolset.flags gcc.compile.c++ OPTIONS <exception-handling>off : -fno-exceptions ;
+toolset.flags gcc.compile.c++ OPTIONS <rtti>off : -fno-rtti ;
+
+# sanitizers
+toolset.flags gcc.compile.c++ OPTIONS <address-sanitizer>on : -fsanitize=address -fno-omit-frame-pointer ;
+toolset.flags gcc.compile.c++ OPTIONS <address-sanitizer>norecover : -fsanitize=address -fno-sanitize-recover=address -fno-omit-frame-pointer ;
+toolset.flags gcc.compile.c++ OPTIONS <leak-sanitizer>on : -fsanitize=leak -fno-omit-frame-pointer ;
+toolset.flags gcc.compile.c++ OPTIONS <leak-sanitizer>norecover : -fsanitize=leak -fno-sanitize-recover=leak -fno-omit-frame-pointer ;
+toolset.flags gcc.compile.c++ OPTIONS <thread-sanitizer>on : -fsanitize=thread -fno-omit-frame-pointer ;
+toolset.flags gcc.compile.c++ OPTIONS <thread-sanitizer>norecover : -fsanitize=thread -fno-sanitize-recover=thread -fno-omit-frame-pointer ;
+toolset.flags gcc.compile.c++ OPTIONS <undefined-sanitizer>on : -fsanitize=undefined -fno-omit-frame-pointer ;
+toolset.flags gcc.compile.c++ OPTIONS <undefined-sanitizer>norecover : -fsanitize=undefined -fno-sanitize-recover=undefined -fno-omit-frame-pointer ;
+
+toolset.flags gcc.compile.c++ OPTIONS <coverage>on : --coverage ;
 
 # configure Dinkum STL to match compiler options
 toolset.flags gcc.compile.c++ DEFINES <rtti>off/<target-os>vxworks : _NO_RTTI ;
@@ -777,6 +877,24 @@ toolset.flags gcc.link FINDLIBS-ST <find-static-library> ;
 toolset.flags gcc.link FINDLIBS-SA <find-shared-library> ;
 toolset.flags gcc.link LIBRARIES <library-file> ;
 
+# Specify compile flags for linker as well as they may be needed for LTO
+toolset.flags gcc.link OPTIONS <local-visibility>hidden : -fvisibility=hidden -fvisibility-inlines-hidden ;
+toolset.flags gcc.link OPTIONS <local-visibility>protected : -fvisibility=protected ;
+toolset.flags gcc.link OPTIONS <local-visibility>protected/<target-os>darwin : ;
+toolset.flags gcc.link OPTIONS <local-visibility>global : -fvisibility=default ;
+
+# sanitizers
+toolset.flags gcc.link OPTIONS <address-sanitizer>on : -fsanitize=address -fno-omit-frame-pointer ;
+toolset.flags gcc.link OPTIONS <address-sanitizer>norecover : -fsanitize=address -fno-sanitize-recover=address -fno-omit-frame-pointer ;
+toolset.flags gcc.link OPTIONS <leak-sanitizer>on : -fsanitize=leak -fno-omit-frame-pointer ;
+toolset.flags gcc.link OPTIONS <leak-sanitizer>norecover : -fsanitize=leak -fno-sanitize-recover=leak -fno-omit-frame-pointer ;
+toolset.flags gcc.link OPTIONS <thread-sanitizer>on : -fsanitize=thread -fno-omit-frame-pointer ;
+toolset.flags gcc.link OPTIONS <thread-sanitizer>norecover : -fsanitize=thread -fno-sanitize-recover=thread -fno-omit-frame-pointer ;
+toolset.flags gcc.link OPTIONS <undefined-sanitizer>on : -fsanitize=undefined -fno-omit-frame-pointer ;
+toolset.flags gcc.link OPTIONS <undefined-sanitizer>norecover : -fsanitize=undefined -fno-sanitize-recover=undefined -fno-omit-frame-pointer ;
+
+toolset.flags gcc.link OPTIONS <coverage>on : --coverage ;
+
 toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>windows : "-Wl,--out-implib," ;
 toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>cygwin : "-Wl,--out-implib," ;
 
@@ -802,10 +920,10 @@ toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>cygwin : "-Wl,--out-implib
     # -soname equivalent, this is as close as it gets.
     #
     # The -bbigtoc option instrcuts the linker to create a TOC bigger than 64k.
-    # This is neccesary for some submodules such as math, but it does make running
+    # This is necessary for some submodules such as math, but it does make running
     # the tests a tad slower.
     #
-    # The above options are definately for AIX 5.x, and most likely also for
+    # The above options are definitely for AIX 5.x, and most likely also for
     # AIX 4.x and AIX 6.x. For details about the AIX linker see:
     # http://download.boulder.ibm.com/ibmdl/pub/software/dw/aix/es-aix_ll.pdf
     #
@@ -826,7 +944,7 @@ toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>cygwin : "-Wl,--out-implib
 
     # See note [1]
     toolset.flags gcc.link OPTIONS <target-os>darwin/<runtime-link>static : -static ;
-        
+
     # vxworks
     # On VxWorks we want to reflect what ever special flags have been set in the
     # environment for the CPU we are targeting in the cross build
@@ -834,7 +952,7 @@ toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>cygwin : "-Wl,--out-implib
     toolset.flags gcc.link     OPTIONS     <target-os>vxworks/<link>static : [ os.environ LDFLAGS_STATIC ]  ;
     toolset.flags gcc.link.dll OPTIONS     <target-os>vxworks              : [ os.environ LDFLAGS_SO ]      ;
     toolset.flags gcc.link     OPTIONS     <target-os>vxworks/<link>shared : [ os.environ LDFLAGS_DYNAMIC ] ;
-  
+
     # default
 
     local generic-os = [ set.difference $(all-os) : aix darwin vxworks solaris osf hpux ] ;
@@ -903,7 +1021,7 @@ toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>cygwin : "-Wl,--out-implib
 
     toolset.flags gcc.link OPTIONS <target-os>hpux/<strip>on : -Wl,-s ;
 
-    toolset.flags gcc.link HAVE_SONAME <target-os>hpux : "" ; 
+    toolset.flags gcc.link HAVE_SONAME <target-os>hpux : "" ;
     toolset.flags gcc.link SONAME_OPTION <target-os>hpux : +h ;
 
     # osf
@@ -1108,6 +1226,7 @@ cpu-flags gcc OPTIONS : x86 : broadwell : -march=broadwell ;
 cpu-flags gcc OPTIONS : x86 : skylake : -march=skylake ;
 cpu-flags gcc OPTIONS : x86 : skylake-avx512 : -march=skylake-avx512 ;
 cpu-flags gcc OPTIONS : x86 : cannonlake : -march=skylake-avx512 -mavx512vbmi -mavx512ifma -msha ;
+cpu-flags gcc OPTIONS : x86 : icelake : -march=icelake ;
 cpu-flags gcc OPTIONS : x86 : k6 : -march=k6 ;
 cpu-flags gcc OPTIONS : x86 : k6-2 : -march=k6-2 ;
 cpu-flags gcc OPTIONS : x86 : k6-3 : -march=k6-3 ;
@@ -1187,5 +1306,9 @@ cpu-flags gcc OPTIONS : power : rios1 : -mcpu=rios1 ;
 cpu-flags gcc OPTIONS : power : rios2 : -mcpu=rios2 ;
 cpu-flags gcc OPTIONS : power : rsc : -mcpu=rsc ;
 cpu-flags gcc OPTIONS : power : rs64a : -mcpu=rs64 ;
+cpu-flags gcc OPTIONS : s390x : z196 : -march=z196 ;
+cpu-flags gcc OPTIONS : s390x : zEC12 : -march=zEC12 ;
+cpu-flags gcc OPTIONS : s390x : z13 : -march=z13 ;
+cpu-flags gcc OPTIONS : s390x : z14 : -march=z14 ;
 # AIX variant of RS/6000 & PowerPC
 toolset.flags gcc AROPTIONS <address-model>64/<target-os>aix : "-X64" ;

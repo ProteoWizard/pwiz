@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -176,5 +177,37 @@ namespace pwiz.Common.Collections
                 destinationList[destinationIndex + i] = sourceList[sourceIndex + i];
             }
         }
+
+        /// <summary>
+        /// Compare two values that might not necessarily implement IComparable.
+        /// If either of the values implements IComparable, it is assumed that both
+        /// values implement IComparable.
+        /// If the values do not implement IComparable, then they are compared as strings.
+        /// </summary>
+        public static int CompareColumnValues(object o1, object o2)
+        {
+            if (o1 == o2)
+            {
+                return 0;
+            }
+            if (o1 is IComparable || o2 is IComparable)
+            {
+                return Comparer.Default.Compare(o1, o2);
+            }
+            if (o1 == null)
+            {
+                return -1;
+            }
+            if (o2 == null)
+            {
+                return 1;
+            }
+            return Comparer.Default.Compare(o1.ToString(), o2.ToString());
+        }
+
+        public static Comparer<object> ColumnValueComparer
+        {
+            get { return Comparer<object>.Create(CompareColumnValues); }
+        } 
     }
 }

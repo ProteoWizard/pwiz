@@ -109,7 +109,7 @@ namespace pwiz.SkylineTestUtil
             Assert.AreNotEqual(0, parts.Length, "Must have at least one thing contained");
             foreach (string part in parts)
             {
-                if (!value.Contains(part))
+                if (!string.IsNullOrEmpty(part) && !value.Contains(part))
                     Assert.Fail("The text '{0}' does not contain '{1}'", value, part);
             }
         }
@@ -408,6 +408,13 @@ namespace pwiz.SkylineTestUtil
             {
                 version = xmlText.Substring(formatVersionIndex + 16,
                     xmlText.Substring(formatVersionIndex + 16).IndexOf("\"", StringComparison.Ordinal));
+            }
+
+            // While a change in Skyline schema is often associated with change in audit log
+            // schema, it's not always the case
+            if (double.Parse(version, CultureInfo.InvariantCulture) > 4.21)
+            {
+                version = "4.21";
             }
 
             ValidatesAgainstSchema(xmlText, "AuditLog.Skyl_" + version);
@@ -811,33 +818,7 @@ namespace pwiz.SkylineTestUtil
         {
             string errmsg = string.Empty;
             if (revision != null)
-            {
-                if (Settings.Default.TestSmallMolecules && (revision == (document.RevisionIndex - 1)))
-                    revision++;
-                        // Presumably this got bumped up during document deserialization in our special test mode
                 errmsg += DocumentStateTestAreEqual("RevisionIndex", revision, document.RevisionIndex);
-            }
-            if (Settings.Default.TestSmallMolecules)
-            {
-                // We'll have added a node at the end that the test writer didn't anticipate - bump the counts accordingly
-                if (groups.HasValue)
-                    groups = document.MoleculeGroups.Where(SrmDocument.IsSpecialNonProteomicTestDocNode)
-                        .Aggregate(groups, (current, @group) => current + 1);
-                if (molecules.HasValue)
-                    molecules = document.Molecules.Where(SrmDocument.IsSpecialNonProteomicTestDocNode)
-                        .Aggregate(molecules, (current, @molecule) => current + 1);
-                if (tranGroups.HasValue)
-                    tranGroups =
-                        document.MoleculeTransitionGroups.Where(SrmDocument.IsSpecialNonProteomicTestDocNode)
-                            .Aggregate(tranGroups, (current, @transgroup) => current + 1);
-                if (transitions.HasValue)
-                {
-                    foreach (var tg in document.MoleculeTransitionGroups.Where(SrmDocument.IsSpecialNonProteomicTestDocNode))
-                    {
-                        transitions += tg.TransitionCount;
-                    }
-                }
-            }
             if (groups.HasValue)
                 errmsg += DocumentStateTestAreEqual("MoleculeGroupCount", groups, document.MoleculeGroupCount);
             if (molecules.HasValue)
@@ -1053,7 +1034,7 @@ namespace pwiz.SkylineTestUtil
                         Assert.AreEqual(mol.Note ?? string.Empty,
                             convertedMol.Note.Replace(RefinementSettings.TestingConvertedFromProteomic, string.Empty));
                     else
-                        Assert.AreEqual(mol.CustomMolecule.InvariantName, SrmDocument.TestingNonProteomicMoleculeName); // This was the magic test molecule
+                        Assert.Fail(@"unexpected empty note"); 
                     Assert.AreEqual(mol.SourceKey, convertedMol.SourceKey);
                     Assert.AreEqual(mol.Rank, convertedMol.Rank);
                     Assert.AreEqual(mol.Results, convertedMol.Results);

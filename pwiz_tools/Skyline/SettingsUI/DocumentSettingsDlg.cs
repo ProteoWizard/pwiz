@@ -67,6 +67,11 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnAddAnnotation_Click(object sender, System.EventArgs e)
         {
+            AddAnnotation();
+        }
+
+        public void AddAnnotation()
+        {
             using (var editDlg = new DefineAnnotationDlg(Settings.Default.AnnotationDefList))
             {
                 if (editDlg.ShowDialog(this) == DialogResult.OK)

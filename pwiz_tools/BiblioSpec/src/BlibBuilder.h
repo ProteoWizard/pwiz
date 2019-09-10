@@ -39,7 +39,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include "sqlite3.h"
-#include <time.h>
+#include <ctime>
 #include <vector>
 #include <set>
 #include <queue>
@@ -49,8 +49,10 @@
 #include "Verbosity.h"
 #include "BlibUtils.h"
 #include "PSM.h"
+#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Stream.hpp"
+#include "pwiz/utility/misc/Container.hpp"
 
-using namespace std;
 
 namespace BiblioSpec {
 

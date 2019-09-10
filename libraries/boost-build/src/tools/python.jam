@@ -552,7 +552,7 @@ local rule compute-default-paths ( target-os : version ? : prefix ? :
 }
 
 # The version of the python interpreter to use.
-feature.feature python : : propagated ;
+feature.feature python : : propagated symmetric ;
 feature.feature python.interpreter : : free ;
 
 toolset.flags python.capture-output PYTHON : <python.interpreter> ;
@@ -947,6 +947,12 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
 
     # Register the right suffix for extensions.
     register-extension-suffix $(extension-suffix) : $(target-requirements) ;
+
+    # Make sure that the python feature is always considered
+    # relevant for any targets that depend on python.  Without
+    # this, it would only be considered relevant when there are
+    # multiple configurations defined within the same build.
+    target-requirements += <relevant>python ;
 
     #
     # Declare the "python" target. This should really be called

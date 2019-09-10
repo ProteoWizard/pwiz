@@ -247,9 +247,6 @@
   <data name="DisplayColumn_SetValue_Column_is_read_only" xml:space="preserve">
     <value>Column is read only</value>
   </data>
-  <data name="AbstractViewContext_CreateCustomColumn_Exception_constructing_column_of_type__0___1_" xml:space="preserve">
-    <value>Exception constructing column of type {0}:{1}</value>
-  </data>
   <data name="AbstractViewContext_OnDataError_An_unknown_error_occurred_updating_the_value_" xml:space="preserve">
     <value>An unknown error occurred updating the value.</value>
   </data>
@@ -516,5 +513,8 @@
   </data>
   <data name="PivotSpec_GetDescription_Values_" xml:space="preserve">
     <value>Values:</value>
+  </data>
+  <data name="UnknownUiMode" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\UnknownUiMode.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

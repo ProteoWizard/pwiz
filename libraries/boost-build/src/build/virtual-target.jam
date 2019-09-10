@@ -309,7 +309,7 @@ class abstract-file-target : virtual-target
     }
 
     # Gets or sets the subvariant which created this target. Subvariant is set
-    # when target is brought into existance and is never changed after that. In
+    # when target is brought into existence and is never changed after that. In
     # particular, if a target is shared by multiple subvariants, only the first
     # one is stored.
     #
@@ -892,7 +892,7 @@ class action
     # Execute the action rule on the given targets, sources, and properties.
     # Since this does the final call to the engine action rule this takes
     # engine level targets and raw properties. One could override this, for
-    # example, to set additional variables on hte target that might be
+    # example, to set additional variables on the target that might be
     # difficult to determine just using toolset flags.
     # Note, you must call this base rule when overriding as otherwise the
     # actions will not execute and the engine will not run commands.

@@ -542,11 +542,12 @@ struct CompassDataImpl : public CompassData
         if ((MS_Analysis^) msAnalysis_ != nullptr) delete msAnalysis_;
         if ((LC_Analysis^) lcAnalysis_ != nullptr) lcAnalysis_->Close();
 
+        /* HACK: allow CompassXtract to keep this file locked because it doesn't seem to interfere with opening the file again
         if (format_ == Reader_Bruker_Format_YEP)
             if (bal::iends_with(rawpath_, "analysis.yep"))
                 force_close_handles_to_filepath(rawpath_);
             else
-                force_close_handles_to_filepath((bfs::path(rawpath_) / "analysis.yep").string());
+                force_close_handles_to_filepath((bfs::path(rawpath_) / "analysis.yep").string());*/
     }
 
     virtual bool hasMSData() const {return hasMSData_;}
@@ -602,6 +603,16 @@ struct CompassDataImpl : public CompassData
             return LCSpectrumPtr(new LCSpectrumImpl(sc->default[scan]));
         }
         CATCH_AND_FORWARD
+    }
+
+    virtual ChromatogramPtr getTIC() const
+    {
+        return ChromatogramPtr();
+    }
+
+    virtual ChromatogramPtr getBPC() const
+    {
+        return ChromatogramPtr();
     }
 
     virtual std::string getOperatorName() const
@@ -660,6 +671,8 @@ struct CompassDataImpl : public CompassData
         if (!hasMSData_) return "";
         try {return ToStdString(msAnalysis_->InstrumentDescription);} CATCH_AND_FORWARD
     }
+
+    virtual std::string getInstrumentSerialNumber() const { return ""; }
 
     virtual InstrumentSource getInstrumentSource() const { return InstrumentSource_Unknown; }
     virtual std::string getAcquisitionSoftware() const { return ""; }

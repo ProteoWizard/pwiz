@@ -38,6 +38,11 @@ path-constant TEST_DATA_PATH : ./Reader_UIMF_Test.data ;
 constant READER_PATH : "pwiz/data/vendor_readers/UIMF" ;
 constant READER_NAME : "Reader_UIMF" ;
 
+if [ get-project-expression $(API_PATH) : uimf-dll-location ]
+{
+    .hasDLLs = true ;
+}
+
 rule vendor-api-requirements ( properties * )
 {
     return [ vendor-api-usage-requirements $(properties) ] ;
@@ -47,9 +52,8 @@ rule vendor-api-usage-requirements ( properties * )
 {
     local result ;
     if <toolset>msvc in $(properties) &&
-       ! ( <toolset-msvc:version>9.0 in $(properties) || 9.0express in $(properties:G=) ) &&
        [ project-exists $(API_PATH) ] &&
-       [ uimf-dll-location $(API_PATH) : $(properties) ] &&
+       $(.hasDLLs) &&
        ! [ without-binary-msdata $(properties) ] &&
        ! <vendor-api-support>off in $(properties)
     {
@@ -67,15 +71,15 @@ rule vendor-api-usage-requirements ( properties * )
         {
             echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME) can only identify files, not read them." ;
         }
-        else if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "9.0" "9.0express"
+        else if [ msvc-dotnet-requirement $(properties) ]
         {
-            echo "[$(READER_PATH)] MSVC version is not .NET 4 compatible: $(READER_NAME) can only identify files, not read them." ;
+            echo "[$(READER_PATH)] MSVC version is not .NET 4 compatible: $(READER_NAME) is only testing that it can identify files, not read them." ;
         }
         else if ! [ project-exists $(API_PATH) ]
         {
             echo "[$(READER_PATH)] Missing API: $(READER_NAME) can only identify files, not read them." ;
         }
-        else if ! [ uimf-dll-location $(API_PATH) : $(properties) ]
+        else if ! $(.hasDLLs)
         {
             echo "[$(READER_PATH)] Missing DLL: $(READER_NAME) can only identify files, not read them." ;
         }
@@ -87,7 +91,7 @@ lib pwiz_reader_uimf
     : # sources
         Reader_UIMF.cpp
         SpectrumList_UIMF.cpp
-        #ChromatogramList_UIMF.cpp
+        ChromatogramList_UIMF.cpp
     : # requirements
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
         <conditional>@vendor-api-requirements
@@ -117,7 +121,7 @@ rule test-requirements ( properties * )
     {
         .extract-once = true ;
         import tar ;
-        tar.extract $(TEST_DATA_PATH).tar.bz2 : : : : check-last-file-only ;
+        tar.extract $(TEST_DATA_PATH).tar.bz2 : : : : <check-last-file-only>true ;
     }
     
     local result ;
@@ -131,7 +135,11 @@ rule test-requirements ( properties * )
     {
         warn-once "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
     }
-    else if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "9.0" "9.0express"
+    else if ! ( <toolset>msvc in $(properties) )
+    {
+        warn-once "[$(READER_PATH)] Non-MSVC build: $(READER_NAME) can only identify files, not read them." ;
+    }
+    else if [ msvc-dotnet-requirement $(properties) ]
     {
         warn-once "[$(READER_PATH)] MSVC version is not .NET 4 compatible: $(READER_NAME) is only testing that it can identify files, not read them." ;
     }
@@ -139,7 +147,7 @@ rule test-requirements ( properties * )
     {
         warn-once "[$(READER_PATH)] Missing API: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
     }
-    else if ! [ uimf-dll-location $(API_PATH) : $(properties) ]
+    else if ! $(.hasDLLs)
     {
         warn-once "[$(READER_PATH)] Missing DLL: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
     }

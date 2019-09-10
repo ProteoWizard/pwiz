@@ -109,6 +109,8 @@ void MSDataFile::write(MSData^ msd, System::String^ filename, WriteConfig^ confi
 static void translateConfig(MSDataFile::WriteConfig^ config, b::MSDataFile::WriteConfig& config2)
 {
     config2.gzipped = config->gzipped;
+    config2.indexed = config->indexed;
+    config2.useWorkerThreads = config->useWorkerThreads;
     config2.binaryDataEncoderConfig.precision = (b::BinaryDataEncoder::Precision) config->precision;
     config2.binaryDataEncoderConfig.byteOrder = (b::BinaryDataEncoder::ByteOrder) config->byteOrder;
     config2.binaryDataEncoderConfig.compression = (b::BinaryDataEncoder::Compression) config->compression;

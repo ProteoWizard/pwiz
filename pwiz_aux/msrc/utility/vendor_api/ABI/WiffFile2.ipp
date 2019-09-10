@@ -66,12 +66,17 @@ class WiffFile2Impl : public WiffFile
     virtual const vector<string>& getSampleNames() const;
 
     virtual InstrumentModel getInstrumentModel() const;
+    virtual std::string getInstrumentSerialNumber() const;
     virtual IonSourceType getIonSourceType() const;
     virtual blt::local_date_time getSampleAcquisitionTime(int sample, bool adjustToHostTime) const;
 
     virtual ExperimentPtr getExperiment(int sample, int period, int experiment) const;
     virtual SpectrumPtr getSpectrum(int sample, int period, int experiment, int cycle) const;
     virtual SpectrumPtr getSpectrum(ExperimentPtr experiment, int cycle) const;
+
+    virtual int getADCTraceCount(int sampleIndex) const { return 0; }
+    virtual std::string getADCTraceName(int sampleIndex, int traceIndex) const { throw std::out_of_range("WIFF2 does not support ADC traces"); }
+    virtual void getADCTrace(int sampleIndex, int traceIndex, ADCTrace& trace) const { throw std::out_of_range("WIFF2 does not support ADC traces"); };
 
     void setSample(int sample) const;
     void setPeriod(int sample, int period) const;
@@ -212,7 +217,7 @@ struct Spectrum2Impl : public Spectrum
 typedef boost::shared_ptr<Spectrum2Impl> Spectrum2ImplPtr;
 
 
-void ToStdVectorsFromXyData(IXyData<double>^ xyData, pwiz::util::BinaryData<double>& xVector, pwiz::util::BinaryData<double>& yVector)
+void ToStdVectorsFromXyData(IXyData<double>^ xyData, pwiz::util::BinaryData<double>& xVector, pwiz::util::BinaryData<double>& yVector, double yScaleFactor = 1.0)
 {
     xVector.clear();
     yVector.clear();
@@ -223,7 +228,7 @@ void ToStdVectorsFromXyData(IXyData<double>^ xyData, pwiz::util::BinaryData<doub
         for (size_t i = 0, end = xyData->Count; i < end; ++i)
         {
             xVector.push_back(xyData->GetXValue(i));
-            yVector.push_back(xyData->GetYValue(i));
+            yVector.push_back(xyData->GetYValue(i) * yScaleFactor);
         }
     }
 }
@@ -363,6 +368,26 @@ InstrumentModel WiffFile2Impl::getInstrumentModel() const
     CATCH_AND_FORWARD
 }
 
+std::string WiffFile2Impl::getInstrumentSerialNumber() const
+{
+    try
+    {
+        using namespace System::Reflection;
+
+        // HACK: the current version of SciexToolKit has instrument serial number hidden in internal types
+        auto sciexToolkit = IExperiment::typeid->Assembly;
+        auto sampleInformationType = sciexToolkit->GetType("Clearcore2.DataReader.SampleInformation");
+        auto sampleDataSampleType = sciexToolkit->GetType("Clearcore2.Data.DataAccess.SampleData.Sample");
+        auto sampleDataSampleInfoType = sciexToolkit->GetType("Clearcore2.Data.DataAccess.SampleData.SampleInfo");
+        auto sampleDataSample = sampleInformationType->GetProperty("Sample")->GetMethod->Invoke(msSample, nullptr);
+        auto sampleDataSampleInfo = sampleDataSampleType->GetProperty("Details")->GetMethod->Invoke(sampleDataSample, nullptr);
+        auto serialNumber = (String^) sampleDataSampleInfoType->GetProperty("InstrumentSerialNumber")->GetMethod->Invoke(sampleDataSampleInfo, nullptr);
+
+        return ToStdString(serialNumber);
+    }
+    CATCH_AND_FORWARD
+}
+
 IonSourceType WiffFile2Impl::getIonSourceType() const
 {
     try {return (IonSourceType) 0;} CATCH_AND_FORWARD
@@ -458,8 +483,8 @@ void Experiment2Impl::initializeBPC() const
 
         // HACK: the current version version of SciexToolKit has Clearcore2.Data.DataAccess.SampleData.BasePeakChromatogramSettings set to internal but it must be used to get the BPC
         auto bpcsType = IExperiment::typeid->Assembly->GetType("Clearcore2.Data.DataAccess.SampleData.BasePeakChromatogramSettings");
-        auto bpcsCtor = bpcsType->GetConstructor(gcnew array<Type^>{ Int32::typeid, array<double>::typeid, array<double>::typeid });
-        auto bpcs = bpcsCtor->Invoke(gcnew array<Object^>{ gcnew Int32(0), nullptr, nullptr });
+        auto bpcsCtor = bpcsType->GetConstructor(gcnew array<Type^>{ Double::typeid, array<double>::typeid, array<double>::typeid });
+        auto bpcs = bpcsCtor->Invoke(gcnew array<Object^>{ gcnew Double(0), nullptr, nullptr });
         auto bpcsMethod = IExperiment::typeid->GetMethod("GetBasePeakChromatogram", gcnew array<Type^>{ bpcsType });
         auto bpmMethod = IExperiment::typeid->GetMethod("GetBasePeakMass", gcnew array<Type^>{ Int32::typeid, bpcsType });
 
@@ -467,12 +492,13 @@ void Experiment2Impl::initializeBPC() const
         ToStdVectorsFromXyData(bpc, cycleTimes_, basePeakIntensities_);
         
         basePeakMZs_.resize(cycleTimes_.size());
-        auto bpmArgs = gcnew array<Object^> { gcnew Int32(0), nullptr };
+        auto bpmArgs = gcnew array<Object^> { nullptr, nullptr };
         for (size_t i = 0; i < cycleTimes_.size(); ++i)
         {
             //basePeakMZs_[i] = msExperiment->GetBasePeakMass(i, nullptr);
             bpmArgs[0] = (int) i;
-            basePeakMZs_[i] = (double) bpmMethod->Invoke(msExperiment, bpmArgs);
+            double mz = (double) bpmMethod->Invoke(msExperiment, bpmArgs);
+            basePeakMZs_[i] = mz;
         }
         
         initializedBPC_ = true;
@@ -787,7 +813,7 @@ void Spectrum2Impl::getData(bool doCentroid, pwiz::util::BinaryData<double>& mz,
             }
         }
 
-        ToStdVectorsFromXyData(spectrumData, mz, intensities);        
+        ToStdVectorsFromXyData(spectrumData, mz, intensities, doCentroid ? PEAK_AREA_SCALE_FACTOR : 1);        
     }
     CATCH_AND_FORWARD
 }

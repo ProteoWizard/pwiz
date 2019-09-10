@@ -141,6 +141,9 @@
   <data name="DataSettings_GroupComparisonDefs" xml:space="preserve">
     <value>グループ比較</value>
   </data>
+  <data name="DataSettings_Lists" xml:space="preserve">
+    <value>リスト</value>
+  </data>
   <data name="ChargeRegressionLine_Intercept" xml:space="preserve">
     <value>切片</value>
   </data>
@@ -157,7 +160,7 @@
     <value>最適化ライブラリ</value>
   </data>
   <data name="SrmSettings_PeptideSettings" xml:space="preserve">
-    <value>ぺプチド設定</value>
+    <value>ペプチド設定</value>
   </data>
   <data name="TransitionPrediction_PrecursorMassType" xml:space="preserve">
     <value>プリカーサー質量</value>
@@ -196,13 +199,13 @@
     <value>プリカーサーm/z除外ウィンドウ</value>
   </data>
   <data name="TransitionFilter_SmallMoleculeFragmentAdductsString" xml:space="preserve">
-    <value>低分子フラグメント付加物</value>
+    <value>分子フラグメント付加イオン</value>
   </data>
   <data name="TransitionFilter_SmallMoleculeIonTypesString" xml:space="preserve">
-    <value>低分子イオンタイプ</value>
+    <value>分子イオンタイプ</value>
   </data>
   <data name="TransitionFilter_SmallMoleculePrecursorAdductsString" xml:space="preserve">
-    <value>低分子プリカーサー付加物</value>
+    <value>分子プリカーサー付加イオン</value>
   </data>
   <data name="TransitionFullScan_AcquisitionMethod" xml:space="preserve">
     <value>取得メソッド</value>
@@ -390,6 +393,12 @@
   <data name="View_Layouts" xml:space="preserve">
     <value>レイアウト</value>
   </data>
+  <data name="ViewSpecLayout_Layouts" xml:space="preserve">
+    <value>レイアウト</value>
+  </data>
+  <data name="ViewSpecLayout_DefaultLayoutName" xml:space="preserve">
+    <value>デフォルトレイアウト名</value>
+  </data>
   <data name="FilterSpec_AuditLogColumn" xml:space="preserve">
     <value>列</value>
   </data>
@@ -437,6 +446,15 @@
   </data>
   <data name="GroupComparisonDef_IdentityAnnotation" xml:space="preserve">
     <value>同一注釈</value>
+  </data>
+  <data name="ListDef_Properties" xml:space="preserve">
+    <value>プロパティ</value>
+  </data>
+  <data name="ListDef_IdProperty" xml:space="preserve">
+    <value>IDプロパティ</value>
+  </data>
+  <data name="ListDef_DisplayProperty" xml:space="preserve">
+    <value>プロパティを表示</value>
   </data>
   <data name="AnnotationDef_Items" xml:space="preserve">
     <value>値</value>
@@ -693,7 +711,7 @@
     <value>保持時間</value>
   </data>
   <data name="PeptideFilter_AutoSelect" xml:space="preserve">
-    <value>すべての一致ぺプチドを自動選択</value>
+    <value>すべての一致ペプチドを自動選択</value>
   </data>
   <data name="TransitionLibraries_Pick" xml:space="preserve">
     <value>選択</value>
@@ -780,7 +798,7 @@
     <value>追加</value>
   </data>
   <data name="RefinementSettings_AutoPickPeptidesAll" xml:space="preserve">
-    <value>すべてのぺプチドを自動選択</value>
+    <value>すべてのペプチドを自動選択</value>
   </data>
   <data name="RefinementSettings_AutoPickPrecursorsAll" xml:space="preserve">
     <value>すべてのプリカーサーを自動選択</value>
@@ -889,6 +907,9 @@
   </data>
   <data name="StaticMod_Label13C" xml:space="preserve">
     <value>13C</value>
+  </data>
+  <data name="StaticMod_Label14C" xml:space="preserve">
+    <value>14C</value>
   </data>
   <data name="StaticMod_Label15N" xml:space="preserve">
     <value>15N</value>
@@ -1013,13 +1034,22 @@
   <data name="ExplicitTransitionGroupValues_CollisionEnergy" xml:space="preserve">
     <value>衝突エネルギー</value>
   </data>
+  <data name="ExplicitTransitionValues_CollisionEnergy" xml:space="preserve">
+    <value>衝突エネルギー</value>
+  </data>
   <data name="ExplicitTransitionGroupValues_CompensationVoltage" xml:space="preserve">
     <value>補償電圧</value>
   </data>
   <data name="ExplicitTransitionGroupValues_ConeVoltage" xml:space="preserve">
     <value>コーン電圧</value>
   </data>
+  <data name="ExplicitTransitionValues_ConeVoltage" xml:space="preserve">
+    <value>コーン電圧</value>
+  </data>
   <data name="ExplicitTransitionGroupValues_DeclusteringPotential" xml:space="preserve">
+    <value>デクラスタリングポテンシャル</value>
+  </data>
+  <data name="ExplicitTransitionValues_DeclusteringPotential" xml:space="preserve">
     <value>デクラスタリングポテンシャル</value>
   </data>
   <data name="ExplicitTransitionGroupValues_IonMobility" xml:space="preserve">
@@ -1031,7 +1061,13 @@
   <data name="ExplicitTransitionGroupValues_IonMobilityHighEnergyOffset" xml:space="preserve">
     <value>イオン移動度の高エネルギーオフセット</value>
   </data>
+  <data name="ExplicitTransitionValues_IonMobilityHighEnergyOffset" xml:space="preserve">
+    <value>イオン移動度の高エネルギーオフセット</value>
+  </data>
   <data name="ExplicitTransitionGroupValues_SLens" xml:space="preserve">
+    <value>S-レンズ</value>
+  </data>
+  <data name="ExplicitTransitionValues_SLens" xml:space="preserve">
     <value>S-レンズ</value>
   </data>
   <data name="ImportFastaSettings_AutoTrain" xml:space="preserve">
@@ -1155,6 +1191,9 @@
     <value>プリカーサー電荷</value>
   </data>
   <data name="TransitionGroupDocNode_ExplicitValues" xml:space="preserve">
+    <value>指定された値</value>
+  </data>
+  <data name="TransitionDocNode_ExplicitValues" xml:space="preserve">
     <value>指定された値</value>
   </data>
   <data name="TransitionGroupDocNode_LabelType" xml:space="preserve">
@@ -1363,5 +1402,14 @@
   </data>
   <data name="DocumentNodeCounts_MoleculeGroupCount_smallmol" xml:space="preserve">
     <value>分子リスト数</value>
+  </data>
+  <data name="RefinementSettings_AddRefineLabelType" xml:space="preserve">
+    <value>標識タイプを追加</value>
+  </data>
+  <data name="DataSettings_AuditLogging" xml:space="preserve">
+    <value>監査ログ記録</value>
+  </data>
+  <data name="ListData_Rows" xml:space="preserve">
+    <value>行</value>
   </data>
 </root>
