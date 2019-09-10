@@ -1764,6 +1764,7 @@ namespace pwiz.Skyline.EditUI
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.idHMDB, SmallMoleculeTransitionListColumnHeaders.idHMDB); // No need to localize
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.idInChi, SmallMoleculeTransitionListColumnHeaders.idInChi); // No need to localize
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.idSMILES, SmallMoleculeTransitionListColumnHeaders.idSMILES); // No need to localize
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.idKEGG, SmallMoleculeTransitionListColumnHeaders.idKEGG); // No need to localize
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.slens, Resources.PasteDlg_UpdateMoleculeType_S_Lens);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.coneVoltage, Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.dtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Drift_Time__msec_);
