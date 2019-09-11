@@ -127,8 +127,8 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 return new IsotopeLabelType[] {null};
             }
-            return PeptideQuantifier.PeptideDocNode.TransitionGroups.Where(tg => tg.PrecursorConcentration.HasValue)
-                .Select(tg => tg.LabelType).Distinct().OrderBy(labelType=>labelType);
+            return PeptideQuantifier.PeptideDocNode.TransitionGroups.Select(tg => tg.LabelType)
+                .Distinct().OrderBy(labelType=>labelType);
         }
 
         public IEnumerable<int> EnumerateReplicates()
@@ -443,6 +443,17 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 return PeakAreaRatioText(PeptideQuantifier.MeasuredLabelTypes, PeptideQuantifier.RatioLabelType);
             }
             return QuantificationStrings.CalibrationCurveFitter_GetYAxisTitle_Normalized_Peak_Area;
+        }
+
+        public SampleType GetSampleType(CalibrationPoint calibrationPoint)
+        {
+            if (null == calibrationPoint.LabelType)
+            {
+                ChromatogramSet chromatogramSet = SrmSettings.MeasuredResults.Chromatograms[calibrationPoint.ReplicateIndex];
+                return chromatogramSet.SampleType;
+            }
+
+            return GetSpecifiedXValue(calibrationPoint).HasValue ? SampleType.STANDARD : SampleType.UNKNOWN;
         }
 
         public double? GetSpecifiedXValue(CalibrationPoint calibrationPoint)
