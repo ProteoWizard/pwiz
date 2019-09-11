@@ -1,4 +1,5 @@
 ﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -565,7 +566,7 @@ namespace pwiz.Skyline
             if (changeModeUI)
             {
                 SetUIMode(_documentUI.DocumentType);
-        }
+            }
             else if (documentPrevious == null)
             {
                 SetUIMode(ModeUI);
@@ -2717,14 +2718,9 @@ namespace pwiz.Skyline
                         {
                             var plural = refinementSettings.NumberOfDecoys > 1;
                             return AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(
-<<<<<<< HEAD
-                                    plural ? MessageType.added_peptide_decoys : MessageType.added_peptide_decoy,
-                                    refinementSettings.NumberOfDecoys, refinementSettings.DecoysMethod));
-=======
                                 plural ? MessageType.added_peptide_decoys : MessageType.added_peptide_decoy,
                                 DocumentUI.DocumentType,
                                 refinementSettings.NumberOfDecoys, refinementSettings.DecoysMethod));
->>>>>>> remotes/origin/master
                         });
 
                     var nodePepGroup = DocumentUI.PeptideGroups.First(nodePeptideGroup => nodePeptideGroup.IsDecoy);
@@ -5504,7 +5500,6 @@ namespace pwiz.Skyline
             get { return GetModeUIHelper().MenuItemHasOriginalText(peptideSettingsMenuItem.Text); }
         }
         #endregion
-<<<<<<< HEAD
         /// <summary>
         /// Returns the unique values of TransitionDocNode.Quantitative on all selected transitions.
         /// Returns an empty array if no transitions are selected.
@@ -5554,7 +5549,9 @@ namespace pwiz.Skyline
             {
                 var originalDocument = Document;
                 var newDocument = originalDocument;
-                string message = quantitative ? "Mark transitions quantitative" : "Mark transitions non-quantitative";
+                string message = quantitative
+                    ? Resources.SkylineWindow_MarkQuantitative_Mark_transitions_quantitative
+                    : Resources.SkylineWindow_MarkQuantitative_Mark_transitions_non_quantitative;
                 var pathsToProcess = new HashSet<IdentityPath>();
                 foreach (var identityPath in SequenceTree.SelectedPaths.OrderBy(path=>path.Length))
                 {
@@ -5650,7 +5647,7 @@ namespace pwiz.Skyline
 
             var newChildren = docNodeParent.Children.Select(child => ChangeQuantitative(child, quantitative)).ToArray();
             return docNodeParent.ChangeChildrenChecked(newChildren);
-=======
+        }
 
         private void proteomicsToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -5665,7 +5662,6 @@ namespace pwiz.Skyline
         private void mixedToolStripMenuItem_Click(object sender, EventArgs e)
         {
             SetUIMode(SrmDocument.DOCUMENT_TYPE.mixed);
->>>>>>> remotes/origin/master
         }
     }
 }
