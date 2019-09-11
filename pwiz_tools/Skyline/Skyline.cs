@@ -4155,15 +4155,15 @@ namespace pwiz.Skyline
                 ActiveDocumentChanged();
             }
             else if (_sequenceTreeForm != null)
-                {
+            {
                 // Save current setting for showing spectra
                 show = Settings.Default.ShowPeptides;
                 // Close the spectrum graph window
                 _sequenceTreeForm.Hide();
                 // Restore setting and menuitem from saved value
                 Settings.Default.ShowPeptides = show;
-                }
             }
+        }
 
         private SequenceTreeForm CreateSequenceTreeForm(string persistentString)
         {
@@ -5536,11 +5536,6 @@ namespace pwiz.Skyline
         private void markTransitionsQuantitativeContextMenuItem_Click(object sender, EventArgs e)
         {
             MarkQuantitative(true);
-        }
-
-        private void markTransitionsNonQuantitativeContextMenuItem_Click(object sender, EventArgs e)
-        {
-            MarkQuantitative(false);
         }
 
         public void MarkQuantitative(bool quantitative)
