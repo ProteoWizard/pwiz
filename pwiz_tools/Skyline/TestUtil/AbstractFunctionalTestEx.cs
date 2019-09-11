@@ -224,7 +224,7 @@ namespace pwiz.SkylineTestUtil
             var librarySettingsFinal = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
             Assert.IsTrue(librarySettingsFinal.IsLoaded);
             Assert.IsTrue(librarySettingsFinal.Libraries.Count > 0);
-            Assert.AreEqual(expectedSpectra, librarySettingsFinal.Libraries[0].Keys.Count());
+            Assert.AreEqual(expectedSpectra, librarySettingsFinal.Libraries[libIndex].Keys.Count());
         }
 
         public static void AddLibrary(LibrarySpec libSpec, Library lib)

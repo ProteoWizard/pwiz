@@ -36,6 +36,8 @@ namespace pwiz.Skyline.Model.Lib
     {
         string AmbiguousMatchesMessage { get; }
         IrtStandard IrtStandard { get; }
+        string BuildCommandArgs { get; }
+        string BuildOutput { get; }
     }
 
     public sealed class BiblioSpecLiteBuilder : IiRTCapableLibraryBuilder

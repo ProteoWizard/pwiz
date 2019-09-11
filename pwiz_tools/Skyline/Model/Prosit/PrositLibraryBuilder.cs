@@ -115,5 +115,15 @@ namespace pwiz.Skyline.Model.Prosit
         }
 
         public IrtStandard IrtStandard { get; }
+
+        public string BuildCommandArgs
+        {
+            get { return null; }
+        }
+
+        public string BuildOutput
+        {
+            get { return null; }
+        }
     }
 }

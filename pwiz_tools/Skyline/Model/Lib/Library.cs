@@ -418,9 +418,9 @@ namespace pwiz.Skyline.Model.Lib
                 var iRTCapableBuilder = builder as IiRTCapableLibraryBuilder;
                 if (null != iRTCapableBuilder)
                 {
-                    buildState.BuildCommandArgs = biblioSpecLiteBuilder.BuildCommandArgs;
-                    buildState.BuildOutput = biblioSpecLiteBuilder.BuildOutput;
-                    if (!string.IsNullOrEmpty(biblioSpecLiteBuilder.AmbiguousMatchesMessage))
+                    buildState.BuildCommandArgs = iRTCapableBuilder.BuildCommandArgs;
+                    buildState.BuildOutput = iRTCapableBuilder.BuildOutput;
+                    if (!string.IsNullOrEmpty(iRTCapableBuilder.AmbiguousMatchesMessage))
                     {
                         buildState.ExtraMessage = iRTCapableBuilder.AmbiguousMatchesMessage;
                     }
