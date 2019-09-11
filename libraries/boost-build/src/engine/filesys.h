@@ -17,6 +17,7 @@
 #ifndef FILESYS_DWA20011025_H
 #define FILESYS_DWA20011025_H
 
+#include "config.h"
 #include "hash.h"
 #include "lists.h"
 #include "object.h"

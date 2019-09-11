@@ -47,8 +47,6 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
 
-            TestSmallMolecules = false;  // Don't need the magic test node
-
             var testFilesDir = TestFilesDir;
 
             // Verify our use of explict RT where multiple nodes and multiple chromatograms all have same Q1>Q3

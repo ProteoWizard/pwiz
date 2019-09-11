@@ -81,7 +81,7 @@ namespace pwiz.ProteowizardWrapper
             return binaryDataArray.data.ToArray();
         }
 
-        private static float[] ToFloatArray(IList<double> list)
+        public static float[] ToFloatArray(IList<double> list)
         {
             float[] result = new float[list.Count];
             for (int i = 0; i < result.Length; i++)
@@ -103,6 +103,8 @@ namespace pwiz.ProteowizardWrapper
         public const string PREFIX_TOTAL = "SRM TIC ";
         public const string PREFIX_SINGLE = "SRM SIC ";
         public const string PREFIX_PRECURSOR = "SIM SIC ";
+        public const string TIC = "TIC";
+        public const string BPC = "BPC";
 
 
         public static bool? IsNegativeChargeIdNullable(string id)
@@ -645,6 +647,7 @@ namespace pwiz.ProteowizardWrapper
             public QcTrace(Chromatogram c, CVID chromatogramType)
             {
                 Name = c.id;
+                Index = c.index;
                 if (chromatogramType == CVID.MS_pressure_chromatogram)
                 {
                     MeasuredQuality = QcTraceQuality.Pressure;
@@ -662,6 +665,7 @@ namespace pwiz.ProteowizardWrapper
             }
 
             public string Name { get; private set; }
+            public int Index { get; private set; }
             public double[] Times { get; private set; }
             public double[] Intensities { get; private set; }
             public string MeasuredQuality { get; private set; }
@@ -796,7 +800,7 @@ namespace pwiz.ProteowizardWrapper
                 Index = spectrum.index,
                 RetentionTime = GetStartTime(spectrum),
                 IonMobility = GetIonMobility(spectrum),
-                Precursors = GetPrecursors(spectrum),
+                PrecursorsByMsLevel = GetPrecursorsByMsLevel(spectrum),
                 Centroided = IsCentroided(spectrum),
                 NegativeCharge = NegativePolarity(spectrum)
             };
@@ -1108,18 +1112,47 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
-        private static MsPrecursor[] GetPrecursors(Spectrum spectrum)
+        private MsPrecursor[] GetPrecursors(Spectrum spectrum)
+        {
+            // return precursors with highest ms level
+            var precursorsByMsLevel = GetPrecursorsByMsLevel(spectrum);
+            if (precursorsByMsLevel.Count == 0)
+                return new MsPrecursor[0];
+            return precursorsByMsLevel[precursorsByMsLevel.Keys.Max()].ToArray();
+        }
+
+        public IDictionary<int, IList<MsPrecursor>> GetPrecursorsByMsLevel(int scanIndex)
+        {
+            using (var spectrum = SpectrumList.spectrum(scanIndex, false))
+            {
+                return GetPrecursorsByMsLevel(spectrum);
+            }
+        }
+
+        private static IDictionary<int, IList<MsPrecursor>> GetPrecursorsByMsLevel(Spectrum spectrum)
         {
             bool negativePolarity = NegativePolarity(spectrum);
-            return spectrum.precursors.Select(p =>
-                new MsPrecursor
-                    {
-                        PrecursorMz = GetPrecursorMz(p, negativePolarity),
-                        PrecursorCollisionEnergy = GetPrecursorCollisionEnergy(p),
-                        IsolationWindowTargetMz = GetSignedMz(GetIsolationWindowValue(p, CVID.MS_isolation_window_target_m_z), negativePolarity),
-                        IsolationWindowLower = GetIsolationWindowValue(p, CVID.MS_isolation_window_lower_offset),
-                        IsolationWindowUpper = GetIsolationWindowValue(p, CVID.MS_isolation_window_upper_offset),
-                    }).ToArray();
+            var result = new Dictionary<int, IList<MsPrecursor>>();
+            foreach(var p in spectrum.precursors)
+            {
+                var msLevelParam = p.userParam("ms level");
+                int msLevel = msLevelParam.empty() ? 1 : (int) msLevelParam.value;
+                var msPrecursor = new MsPrecursor()
+                {
+                    PrecursorMz = GetPrecursorMz(p, negativePolarity),
+                    PrecursorCollisionEnergy = GetPrecursorCollisionEnergy(p),
+                    IsolationWindowTargetMz = GetSignedMz(GetIsolationWindowValue(p, CVID.MS_isolation_window_target_m_z), negativePolarity),
+                    IsolationWindowLower = GetIsolationWindowValue(p, CVID.MS_isolation_window_lower_offset),
+                    IsolationWindowUpper = GetIsolationWindowValue(p, CVID.MS_isolation_window_upper_offset),
+                };
+
+                if (!result.ContainsKey(msLevel))
+                    result[msLevel] = new List<MsPrecursor>() {msPrecursor};
+                else
+                    result[msLevel].Add(msPrecursor);
+            }
+
+            return result;
         }
 
         private static MsPrecursor[] GetMs1Precursors(Spectrum spectrum)
@@ -1340,7 +1373,37 @@ namespace pwiz.ProteowizardWrapper
         public int Index { get; set; } // index into parent file, if any
         public double? RetentionTime { get; set; }
         public IonMobilityValue IonMobility { get { return _ionMobility ?? IonMobilityValue.EMPTY; } set { _ionMobility = value; } }
-        public MsPrecursor[] Precursors { get; set; }
+
+        public IList<MsPrecursor> GetPrecursorsByMsLevel(int level)
+        {
+            IList<MsPrecursor> precursors;
+            if (PrecursorsByMsLevel != null && PrecursorsByMsLevel.TryGetValue(level, out precursors))
+            {
+                return precursors;
+            }
+
+            return new MsPrecursor[0];
+        }
+
+        public IDictionary<int, IList<MsPrecursor>> PrecursorsByMsLevel { get; set; }
+
+        public MsPrecursor[] Precursors
+        {
+            get
+            {
+                if ((PrecursorsByMsLevel?.Count ?? 0) == 0)
+                {
+                    return new MsPrecursor[0];
+                }
+
+                return GetPrecursorsByMsLevel(PrecursorsByMsLevel.Keys.Max()).ToArray();
+            }
+            set
+            {
+                PrecursorsByMsLevel = new Dictionary<int, IList<MsPrecursor>>{{1, value}};
+            }
+        }
+
         public bool Centroided { get; set; }
         public bool NegativeCharge { get; set; } // True if negative ion mode
         public double[] Mzs { get; set; }

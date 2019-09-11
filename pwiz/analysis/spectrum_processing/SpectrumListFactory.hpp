@@ -49,6 +49,9 @@ class PWIZ_API_DECL SpectrumListFactory
 
     /// user-friendly documentation, with option of less or more detail
     static std::string usage(bool detailedHelp = true, const char* morehelp_prompt = NULL, int maxLineLength = 80);
+
+    /// user-friendly documentation for a specified filter
+    static std::string usage(const std::string& detailedHelpForFilter);
 };
 
 

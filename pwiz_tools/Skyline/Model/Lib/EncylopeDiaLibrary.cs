@@ -90,7 +90,7 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("elib_library")]
     public sealed class EncyclopeDiaLibrary : CachedLibrary<EncyclopeDiaLibrary.ElibSpectrumInfo>
     {
-        private const int FORMAT_VERSION_CACHE = 4;
+        private const int FORMAT_VERSION_CACHE = 5;
         private const double MIN_QUANTITATIVE_INTENSITY = 1.0;
         private ImmutableList<string> _sourceFiles;
         private readonly PooledSqliteConnection _pooledSqliteConnection;
@@ -215,6 +215,7 @@ namespace pwiz.Skyline.Model.Lib
 
                 var scores = new EncyclopeDiaScores();
                 scores.ReadScores(_pooledSqliteConnection.Connection);
+                HashSet<Tuple<string, int>> quantPeptides = new HashSet<Tuple<string, int>>();
 
                 using (var cmd = new SQLiteCommand(_pooledSqliteConnection.Connection))
                 {
@@ -251,6 +252,7 @@ namespace pwiz.Skyline.Model.Lib
                                 new ExplicitPeakBounds(reader.GetDouble(5)/60, reader.GetDouble(6)/60, qValue))));
                         }
                     }
+
                     // Also, read the PeptideQuants table in order to get peak boundaries for any peptide&sourcefiles that were
                     // not found in the Entries table.
                     cmd.CommandText =
@@ -260,6 +262,7 @@ namespace pwiz.Skyline.Model.Lib
                         while (reader.Read())
                         {
                             var libKey = Tuple.Create(reader.GetString(0), Convert.ToInt32(reader.GetValue(1)));
+                            quantPeptides.Add(libKey);
                             // Tuple of filename, score, FileData
                             Dictionary<string, Tuple<double?, FileData>> dataByFilename;
                             if (!libKeySourceFileDatas.TryGetValue(libKey, out dataByFilename))
@@ -288,8 +291,9 @@ namespace pwiz.Skyline.Model.Lib
                 Array.Sort(sourceFiles);
                 var sourceFileIds = sourceFiles.Select((file, index) => Tuple.Create(file, index))
                     .ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2);
-                var spectrumInfos =
-                    libKeySourceFileDatas.Select(entry => MakeSpectrumInfo(entry.Key.Item1, entry.Key.Item2, entry.Value, sourceFileIds));
+                var spectrumInfos = libKeySourceFileDatas
+                    .Where(entry => quantPeptides.Contains(entry.Key))
+                    .Select(entry => MakeSpectrumInfo(entry.Key.Item1, entry.Key.Item2, entry.Value, sourceFileIds));
                 SetLibraryEntries(spectrumInfos);
                 _sourceFiles = ImmutableList.ValueOf(sourceFiles);
                 // ReSharper restore PossibleMultipleEnumeration
@@ -538,6 +542,8 @@ namespace pwiz.Skyline.Model.Lib
             {
                 return null;
             }
+
+            bool anyMatch = false;
             foreach (var entry in LibraryEntriesWithSequences(peptideSequences))
             {
                 FileData fileData;
@@ -545,6 +551,16 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     return fileData.PeakBounds;
                 }
+
+                if (entry.FileDatas.Any())
+                {
+                    anyMatch = true;
+                }
+            }
+
+            if (anyMatch)
+            {
+                return ExplicitPeakBounds.EMPTY;
             }
             return null;
         }

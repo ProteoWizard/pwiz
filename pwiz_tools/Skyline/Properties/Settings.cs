@@ -106,7 +106,23 @@ namespace pwiz.Skyline.Properties
             SpectralLibraryList.RemoveDocumentLocalLibraries();
         }
 
-        
+        /// <summary>
+        /// Sometimes Save() does throw an exception (e.g. when the disk is full). This function
+        /// swallows those exceptions in cases where it would be nice to be able to save, but not
+        /// so expected that we need to inform the user that the save failed.
+        /// </summary>
+        public void SaveWithoutExceptions()
+        {
+            try
+            {
+                Save();
+            }
+            catch (Exception)
+            {
+                // Ignore exceptions
+            }
+        }
+
         /// <summary>
         /// Reload settings that may have been changed by other instances of Skyline, but preserve
         /// the values of any settings that have been modified by this instance.

@@ -16,6 +16,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ChooseViewsControl));
             this.listView1 = new System.Windows.Forms.ListView();
             this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
@@ -26,14 +27,11 @@
             // 
             // listView1
             // 
-            this.listView1.Dock = System.Windows.Forms.DockStyle.Fill;
+            resources.ApplyResources(this.listView1, "listView1");
             this.listView1.HideSelection = false;
             this.listView1.LargeImageList = this.imageList1;
-            this.listView1.Location = new System.Drawing.Point(0, 25);
             this.listView1.Name = "listView1";
-            this.listView1.Size = new System.Drawing.Size(339, 224);
             this.listView1.SmallImageList = this.imageList1;
-            this.listView1.TabIndex = 0;
             this.listView1.UseCompatibleStateImageBehavior = false;
             this.listView1.View = System.Windows.Forms.View.List;
             this.listView1.AfterLabelEdit += new System.Windows.Forms.LabelEditEventHandler(this.listView1_AfterLabelEdit);
@@ -44,7 +42,7 @@
             // imageList1
             // 
             this.imageList1.ColorDepth = System.Windows.Forms.ColorDepth.Depth8Bit;
-            this.imageList1.ImageSize = new System.Drawing.Size(16, 16);
+            resources.ApplyResources(this.imageList1, "imageList1");
             this.imageList1.TransparentColor = System.Drawing.Color.Magenta;
             // 
             // toolStrip1
@@ -53,35 +51,29 @@
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.lblGroup,
             this.toolStripComboGroup});
-            this.toolStrip1.Location = new System.Drawing.Point(0, 0);
+            resources.ApplyResources(this.toolStrip1, "toolStrip1");
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(339, 25);
-            this.toolStrip1.TabIndex = 1;
-            this.toolStrip1.Text = "toolStrip1";
             // 
             // lblGroup
             // 
             this.lblGroup.Name = "lblGroup";
-            this.lblGroup.Size = new System.Drawing.Size(43, 22);
-            this.lblGroup.Text = "&Group:";
+            resources.ApplyResources(this.lblGroup, "lblGroup");
             // 
             // toolStripComboGroup
             // 
-            this.toolStripComboGroup.AutoSize = false;
+            resources.ApplyResources(this.toolStripComboGroup, "toolStripComboGroup");
             this.toolStripComboGroup.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.toolStripComboGroup.DropDownWidth = 121;
+            this.toolStripComboGroup.DropDownWidth = 115;
             this.toolStripComboGroup.Name = "toolStripComboGroup";
-            this.toolStripComboGroup.Size = new System.Drawing.Size(200, 23);
             this.toolStripComboGroup.SelectedIndexChanged += new System.EventHandler(this.toolStripComboGroup_SelectedIndexChanged);
             // 
             // ChooseViewsControl
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.listView1);
             this.Controls.Add(this.toolStrip1);
             this.Name = "ChooseViewsControl";
-            this.Size = new System.Drawing.Size(339, 249);
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             this.ResumeLayout(false);

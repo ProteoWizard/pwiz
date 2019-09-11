@@ -1269,6 +1269,9 @@ higher than the other extent.</value>
   <data name="InChiKey" xml:space="preserve">
     <value>Standardized molecular identifier</value>
   </data>
+  <data name="KEGG" xml:space="preserve">
+    <value>Standardized molecular identifier</value>
+  </data>
   <data name="SMILES" xml:space="preserve">
     <value>Standardized molecular identifier</value>
   </data>

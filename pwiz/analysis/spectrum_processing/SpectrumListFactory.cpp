@@ -1683,6 +1683,29 @@ string SpectrumListFactory::usage(bool detailedHelp, const char *morehelp_prompt
 }
 
 
+string SpectrumListFactory::usage(const std::string& detailedHelpForFilter)
+{
+    ostringstream oss;
+
+    for (JumpTableEntry* it = jumpTable_; it != jumpTableEnd_; ++it)
+    {
+        if (it->command == detailedHelpForFilter)
+        {
+            oss << it->command << " " << it->usage[0] << endl << it->usage[1] << endl;
+            return oss.str();
+        }
+    }
+
+    oss << "Invalid filter name: " << detailedHelpForFilter << endl << endl
+        << "Supported filters are:" << endl;
+
+    for (JumpTableEntry* it = jumpTable_; it != jumpTableEnd_; ++it)
+        oss << it->command << endl;
+
+    return oss.str();
+}
+
+
 } // namespace analysis 
 } // namespace pwiz
 

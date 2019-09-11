@@ -577,6 +577,11 @@ namespace pwiz.Skyline
             {
                 SetUIMode(ModeUI);
             }
+
+            proteomicsToolStripMenuItem.Checked = ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic;
+            moleculeToolStripMenuItem.Checked = ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules;
+            mixedToolStripMenuItem.Checked = ModeUI == SrmDocument.DOCUMENT_TYPE.mixed;
+
         }
 
         public void ShowAutoTrainResults(object sender, DocumentChangedEventArgs e)
@@ -5482,6 +5487,21 @@ namespace pwiz.Skyline
             get { return GetModeUIHelper().MenuItemHasOriginalText(peptideSettingsMenuItem.Text); }
         }
         #endregion
+
+        private void proteomicsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SetUIMode(SrmDocument.DOCUMENT_TYPE.proteomic);
+        }
+
+        private void moleculeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules);
+        }
+
+        private void mixedToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SetUIMode(SrmDocument.DOCUMENT_TYPE.mixed);
+        }
 
         private void prositLibMatchItem_Click(object sender, EventArgs e)
         {

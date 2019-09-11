@@ -382,6 +382,8 @@ namespace pwiz.Skyline.Model.Lib
 
             public LibrarySpec LibrarySpec { get; private set; }
             public BuildFunction BuildFunc { get; private set; }
+            public string BuildCommandArgs { get; set; }
+            public string BuildOutput { get; set; }
             public string ExtraMessage { get; set; }
             public IrtStandard IrtStandard { get; set; }
         }
@@ -416,7 +418,9 @@ namespace pwiz.Skyline.Model.Lib
                 var iRTCapableBuilder = builder as IiRTCapableLibraryBuilder;
                 if (null != iRTCapableBuilder)
                 {
-                    if (!string.IsNullOrEmpty(iRTCapableBuilder.AmbiguousMatchesMessage))
+                    buildState.BuildCommandArgs = biblioSpecLiteBuilder.BuildCommandArgs;
+                    buildState.BuildOutput = biblioSpecLiteBuilder.BuildOutput;
+                    if (!string.IsNullOrEmpty(biblioSpecLiteBuilder.AmbiguousMatchesMessage))
                     {
                         buildState.ExtraMessage = iRTCapableBuilder.AmbiguousMatchesMessage;
                     }
@@ -2618,6 +2622,7 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         public string FilePath { get; private set; }
+        public string IdFilePath { get; set; }
         public Dictionary<string, double?> CutoffScores { get; private set; }
         public int BestSpectrum { get; set; }
         public int MatchedSpectrum { get; set; }

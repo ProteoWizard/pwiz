@@ -5931,6 +5931,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Failed saving to the user configuration file..
+        /// </summary>
+        public static string CommandLine_SaveSettings_Error__Failed_saving_to_the_user_configuration_file_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SaveSettings_Error__Failed_saving_to_the_user_configuration_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Changing full-scan extraction to +/- {0} minutes from MS/MS IDs..
         /// </summary>
         public static string CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_from_MS_MS_IDs_ {
@@ -7697,6 +7706,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Choose a type for this annotation to apply to..
+        /// </summary>
+        public static string DefineAnnotationDlg_OkDialog_Choose_a_type_for_this_annotation_to_apply_to_ {
+            get {
+                return ResourceManager.GetString("DefineAnnotationDlg_OkDialog_Choose_a_type_for_this_annotation_to_apply_to_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Choose a value for this annotation..
+        /// </summary>
+        public static string DefineAnnotationDlg_OkDialog_Choose_a_value_for_this_annotation_ {
+            get {
+                return ResourceManager.GetString("DefineAnnotationDlg_OkDialog_Choose_a_value_for_this_annotation_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Choose at least one type for this annotation to apply to..
         /// </summary>
         public static string DefineAnnotationDlg_OkDialog_Choose_at_least_one_type_for_this_annotation_to_apply_to {
@@ -7991,6 +8018,15 @@ namespace pwiz.Skyline.Properties {
         public static string DocumentAnnotations_ElementNotFoundException_Could_not_find_element___0___ {
             get {
                 return ResourceManager.GetString("DocumentAnnotations_ElementNotFoundException_Could_not_find_element___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Updating calculated annotations.
+        /// </summary>
+        public static string DocumentAnnotationUpdater_UpdateAnnotations_Updating_calculated_annotations {
+            get {
+                return ResourceManager.GetString("DocumentAnnotationUpdater_UpdateAnnotations_Updating_calculated_annotations", resourceCulture);
             }
         }
         
@@ -12985,6 +13021,15 @@ namespace pwiz.Skyline.Properties {
         public static string GraphChromatogram_UpdateUI_No_product_ion_chromatograms_found {
             get {
                 return ResourceManager.GetString("GraphChromatogram_UpdateUI_No_product_ion_chromatograms_found", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No corresponding QC chromatogram found.
+        /// </summary>
+        public static string GraphChromatogram_UpdateUI_No_QC_chromatogram_found {
+            get {
+                return ResourceManager.GetString("GraphChromatogram_UpdateUI_No_QC_chromatogram_found", resourceCulture);
             }
         }
         
@@ -24272,6 +24317,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineVersion_GetCurrentVersionName_Developer_Build {
             get {
                 return ResourceManager.GetString("SkylineVersion_GetCurrentVersionName_Developer_Build", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skyline 19.1.
+        /// </summary>
+        public static string SkylineVersion_V19_1_Skyline_19_1 {
+            get {
+                return ResourceManager.GetString("SkylineVersion_V19_1_Skyline_19_1", resourceCulture);
             }
         }
         

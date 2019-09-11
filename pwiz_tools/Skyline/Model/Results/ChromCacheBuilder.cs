@@ -1361,6 +1361,8 @@ namespace pwiz.Skyline.Model.Results
                     flags |= ChromGroupHeaderInfo.FlagValues.has_calculated_mzs;
                 if (chromDataSet.Extractor == ChromExtractor.base_peak)
                     flags |= ChromGroupHeaderInfo.FlagValues.extracted_base_peak;
+                else if(chromDataSet.Extractor == ChromExtractor.qc)
+                    flags |= ChromGroupHeaderInfo.FlagValues.extracted_qc_trace;
             if (scanIdsByChromSource != null && scanIdsByChromSource.ContainsKey(ChromSource.ms1))
                         flags |= ChromGroupHeaderInfo.FlagValues.has_ms1_scan_ids;
             if (scanIdsByChromSource != null && scanIdsByChromSource.ContainsKey(ChromSource.fragment))

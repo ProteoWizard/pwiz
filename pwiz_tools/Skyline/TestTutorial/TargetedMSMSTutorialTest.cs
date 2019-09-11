@@ -89,8 +89,6 @@ namespace pwiz.SkylineTestTutorial
                 return;
             }
 
-            TestSmallMolecules = false; // Don't need that magic extra node, we have an explict test
-
             ForceMzml = true;   // 2-3x faster than raw files for this test.
 
             AsSmallMoleculesTestMode = smallMoleculesTestMode;
@@ -282,7 +280,7 @@ namespace pwiz.SkylineTestTutorial
 
             {
                 var previewReportDlg = ShowDialog<DocumentGridForm>(viewEditor.ShowPreview);
-                var expectedRows = 10 + (TestSmallMolecules ? 1 : 0);
+                var expectedRows = 10;
                 WaitForConditionUI(() => previewReportDlg.IsComplete && previewReportDlg.RowCount == expectedRows);
                 RunUI(() =>
                 {

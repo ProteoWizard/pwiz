@@ -81,13 +81,16 @@ namespace pwiz.MSGraph
                 return;
 
             foreach( CurveItem curve in CurveList )
-                if( curve.Points is MSPointList )
+            {
+                if (curve.Points is MSPointList msPointList)
                 {
+                   
                     if( XAxis.Scale.MinAuto && XAxis.Scale.MaxAuto )
-                        ( curve.Points as MSPointList ).SetScale( bins );
+                        msPointList.SetScale( bins );
                     else
-                        ( curve.Points as MSPointList ).SetScale( XAxis.Scale, bins );
+                        msPointList.SetScale( XAxis.Scale, bins );
                 }
+            }
 
             AxisChange();
         }

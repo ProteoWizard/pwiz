@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public enum AutoZoomChrom { none, peak, window, both }
 
-    public enum DisplayTypeChrom { single, precursors, products, all, total, base_peak, tic }
+    public enum DisplayTypeChrom { single, precursors, products, all, total, base_peak, tic, qc }
 
     public partial class GraphChromatogram : DockableFormEx, IGraphContainer
     {
@@ -119,7 +119,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public static DisplayTypeChrom GetDisplayType(SrmDocument documentUI)
         {
             var displayType = DisplayType;
-            if (displayType == DisplayTypeChrom.base_peak || displayType == DisplayTypeChrom.tic)
+            if (displayType == DisplayTypeChrom.base_peak || displayType == DisplayTypeChrom.tic || displayType == DisplayTypeChrom.qc)
             {
                 if (!documentUI.Settings.HasResults || !documentUI.Settings.MeasuredResults.HasAllIonsChromatograms)
                     displayType = DisplayTypeChrom.all;
@@ -808,6 +808,13 @@ namespace pwiz.Skyline.Controls.Graphs
             // Check for appropriate chromatograms to load
             bool changedGroups = false;
 
+            var displayToExtractor = new Dictionary<DisplayTypeChrom, ChromExtractor>
+            {
+                {DisplayTypeChrom.tic, ChromExtractor.summed},
+                {DisplayTypeChrom.base_peak, ChromExtractor.base_peak},
+                {DisplayTypeChrom.qc, ChromExtractor.qc}
+            };
+
             try
             {
                 _showPeptideTotals = peptideAndTransitionGroups.ShowPeptideTotals;
@@ -817,11 +824,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 float mzMatchTolerance = (float) settings.TransitionSettings.Instrument.MzMatchTolerance;
                 var displayType = GetDisplayType(DocumentUI);
                 bool changedGroupIds;
-                if (displayType == DisplayTypeChrom.base_peak || displayType == DisplayTypeChrom.tic)
+                if (displayToExtractor.ContainsKey(displayType))
                 {
-                    var extractor = displayType == DisplayTypeChrom.base_peak
-                                        ? ChromExtractor.base_peak
-                                        : ChromExtractor.summed;
+                    var extractor = displayToExtractor[displayType];
                     if (EnsureChromInfo(results,
                                         chromatograms,
                                         nodeGroups,
@@ -1054,6 +1059,9 @@ namespace pwiz.Skyline.Controls.Graphs
                             break;
                         case DisplayTypeChrom.tic:
                             message = Resources.GraphChromatogram_UpdateUI_No_TIC_chromatogram_found;
+                            break;
+                        case DisplayTypeChrom.qc:
+                            message = Resources.GraphChromatogram_UpdateUI_No_QC_chromatogram_found;
                             break;
                     }
                     SetGraphItem(new UnavailableChromGraphItem(Helpers.PeptideToMoleculeTextMapper.Translate(message, DocumentUI.DocumentType)));
@@ -2426,7 +2434,15 @@ namespace pwiz.Skyline.Controls.Graphs
                                      out bool changedGroups,
                                      out bool changedGroupIds)
         {
-            if (UpdateGroups(nodeGroups, groupPaths, out changedGroups, out changedGroupIds) && _extractor == extractor)
+            bool qcTraceNameMatches = extractor != ChromExtractor.qc ||
+                                      (_arrayChromInfo != null &&
+                                       _arrayChromInfo.Length > 0 &&
+                                       _arrayChromInfo[0].Length > 0 &&
+                                       _arrayChromInfo[0][0].TextId == Settings.Default.ShowQcTraceName);
+
+            if (UpdateGroups(nodeGroups, groupPaths, out changedGroups, out changedGroupIds) &&
+                _extractor == extractor &&
+                qcTraceNameMatches)
                 return true;
 
             _extractor = extractor;
@@ -2467,7 +2483,8 @@ namespace pwiz.Skyline.Controls.Graphs
                             continue;
                         foreach (var chromInfo in arrayChromInfo)
                         {
-                            if (arrayNew[j] == null && Equals(listFiles[i], chromInfo.FilePath))
+                            qcTraceNameMatches = extractor != ChromExtractor.qc || Settings.Default.ShowQcTraceName == chromInfo.TextId;
+                            if (arrayNew[j] == null && Equals(listFiles[i], chromInfo.FilePath) && qcTraceNameMatches)
                                 arrayNew[j] = chromInfo;
                         }
                     }
