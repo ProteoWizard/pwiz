@@ -724,7 +724,8 @@ namespace pwiz.Skyline.Model
         private bool CalcIsProteinMetadataPending()
         {
             // Non proteomic molecules never do protein metadata searches
-            return PeptideGroups.Any(pg => pg.NeedsSearch);
+            var unsearched = (from pg in PeptideGroups where pg.ProteinMetadata.NeedsSearch() select pg);
+            return unsearched.Any();
         }
 
         public SrmDocument IncrementUserRevisionIndex()
