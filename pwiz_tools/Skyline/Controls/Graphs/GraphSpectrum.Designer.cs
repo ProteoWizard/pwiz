@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.Controls.Graphs.Spectrum
+﻿namespace pwiz.Skyline.Controls.Graphs
 {
     partial class GraphSpectrum
     {

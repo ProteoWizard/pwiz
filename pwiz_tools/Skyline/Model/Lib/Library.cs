@@ -1761,7 +1761,7 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
-        public struct MI : IEquatable<MI>
+        public struct MI
         {
             private bool _notQuantitative;
             private List<SpectrumPeakAnnotation> _annotations; // A peak may have multiple annotations
@@ -1788,6 +1788,13 @@ namespace pwiz.Skyline.Model.Lib
                     return result;
                 }
                 return this;
+            }
+
+            public MI ChangeIntensity(float intensity)
+            {
+                var result = this;
+                result.Intensity = intensity;
+                return result;
             }
 
             public SpectrumPeakAnnotation AnnotationsFirstOrDefault
@@ -1839,9 +1846,27 @@ namespace pwiz.Skyline.Model.Lib
 
             public bool Equals(MI other)
             {
-                return Mz == other.Mz && Intensity == other.Intensity &&
-                       Quantitative == other.Quantitative &&
-                       ArrayUtil.EqualsDeep(Annotations, other.Annotations);
+                return _notQuantitative == other._notQuantitative &&
+                       ArrayUtil.EqualsDeep(_annotations, other._annotations) && Mz.Equals(other.Mz) &&
+                       Intensity.Equals(other.Intensity);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                return obj is MI other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = _notQuantitative.GetHashCode();
+                    hashCode = (hashCode * 397) ^ (_annotations != null ? _annotations.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ Mz.GetHashCode();
+                    hashCode = (hashCode * 397) ^ Intensity.GetHashCode();
+                    return hashCode;
+                }
             }
         }
     }
@@ -2279,7 +2304,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override string Name
         {
-            get { return "Prosit"; }
+            get { return @"Prosit"; }
         }
 
         public override SpectrumPeaksInfo SpectrumPeaksInfo

@@ -51,6 +51,15 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public TransitionDocNode DocNode { get { return (TransitionDocNode)Model; } }
 
+        public TransitionGroupDocNode TransitionGroupNode
+        {
+            get
+            {
+                return (Parent != null ?
+                    ((TransitionGroupTreeNode)Parent).DocNode : null);
+            }
+        }
+
         public PeptideDocNode PepNode
         {
             get

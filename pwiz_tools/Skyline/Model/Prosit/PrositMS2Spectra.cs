@@ -125,7 +125,7 @@ namespace pwiz.Skyline.Model.Prosit
                 info.PrecursorMz = precursor.PrecursorMz;
                 info.RetentionTime = null;
                 info.RetentionTimes = null;
-                info.SourceFile = "Prosit" + PrositIntensityModel.Instance.Model + "_" + PrositIntensityModel.SIGNATURE; // TODO: maybe put URL here?
+                info.SourceFile = string.Format(@"Prosit{0}_{1}", PrositIntensityModel.Instance.Model, PrositIntensityModel.SIGNATURE); // TODO: maybe put URL here?
                 return info;
             }
         }

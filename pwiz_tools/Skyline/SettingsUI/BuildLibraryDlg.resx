@@ -308,10 +308,187 @@ library will be created.</value>
     <value>panelFilesPrositProperties</value>
   </data>
   <data name="&gt;&gt;iRTPeptidesLabel.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>4</value>
   </data>
   <data name="panelProperties.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="ceLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="ceLabel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="ceLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 69</value>
+  </data>
+  <data name="ceLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>32, 13</value>
+  </data>
+  <data name="ceLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="ceLabel.Text" xml:space="preserve">
+    <value>&amp;NCE:</value>
+  </data>
+  <data name="ceLabel.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;ceLabel.Name" xml:space="preserve">
+    <value>ceLabel</value>
+  </data>
+  <data name="&gt;&gt;ceLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;ceLabel.Parent" xml:space="preserve">
+    <value>panelFilesPrositProperties</value>
+  </data>
+  <data name="&gt;&gt;ceLabel.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="ceCombo.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 85</value>
+  </data>
+  <data name="ceCombo.Size" type="System.Drawing.Size, System.Drawing">
+    <value>122, 21</value>
+  </data>
+  <data name="ceCombo.TabIndex" type="System.Int32, mscorlib">
+    <value>15</value>
+  </data>
+  <data name="ceCombo.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;ceCombo.Name" xml:space="preserve">
+    <value>ceCombo</value>
+  </data>
+  <data name="&gt;&gt;ceCombo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;ceCombo.Parent" xml:space="preserve">
+    <value>panelFilesPrositProperties</value>
+  </data>
+  <data name="&gt;&gt;ceCombo.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;actionLabel.Name" xml:space="preserve">
+    <value>actionLabel</value>
+  </data>
+  <data name="&gt;&gt;actionLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;actionLabel.Parent" xml:space="preserve">
+    <value>panelFilesProps</value>
+  </data>
+  <data name="&gt;&gt;actionLabel.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;comboAction.Name" xml:space="preserve">
+    <value>comboAction</value>
+  </data>
+  <data name="&gt;&gt;comboAction.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboAction.Parent" xml:space="preserve">
+    <value>panelFilesProps</value>
+  </data>
+  <data name="&gt;&gt;comboAction.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;cbIncludeAmbiguousMatches.Name" xml:space="preserve">
+    <value>cbIncludeAmbiguousMatches</value>
+  </data>
+  <data name="&gt;&gt;cbIncludeAmbiguousMatches.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbIncludeAmbiguousMatches.Parent" xml:space="preserve">
+    <value>panelFilesProps</value>
+  </data>
+  <data name="&gt;&gt;cbIncludeAmbiguousMatches.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;cbKeepRedundant.Name" xml:space="preserve">
+    <value>cbKeepRedundant</value>
+  </data>
+  <data name="&gt;&gt;cbKeepRedundant.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbKeepRedundant.Parent" xml:space="preserve">
+    <value>panelFilesProps</value>
+  </data>
+  <data name="&gt;&gt;cbKeepRedundant.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;cbFilter.Name" xml:space="preserve">
+    <value>cbFilter</value>
+  </data>
+  <data name="&gt;&gt;cbFilter.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbFilter.Parent" xml:space="preserve">
+    <value>panelFilesProps</value>
+  </data>
+  <data name="&gt;&gt;cbFilter.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;textCutoff.Name" xml:space="preserve">
+    <value>textCutoff</value>
+  </data>
+  <data name="&gt;&gt;textCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textCutoff.Parent" xml:space="preserve">
+    <value>panelFilesProps</value>
+  </data>
+  <data name="&gt;&gt;textCutoff.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;label6.Name" xml:space="preserve">
+    <value>label6</value>
+  </data>
+  <data name="&gt;&gt;label6.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label6.Parent" xml:space="preserve">
+    <value>panelFilesProps</value>
+  </data>
+  <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;prositInfoSettingsBtn.Name" xml:space="preserve">
+    <value>prositInfoSettingsBtn</value>
+  </data>
+  <data name="&gt;&gt;prositInfoSettingsBtn.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;prositInfoSettingsBtn.Parent" xml:space="preserve">
+    <value>dataSourceGroupBox</value>
+  </data>
+  <data name="&gt;&gt;prositInfoSettingsBtn.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;prositDataSourceRadioButton.Name" xml:space="preserve">
+    <value>prositDataSourceRadioButton</value>
+  </data>
+  <data name="&gt;&gt;prositDataSourceRadioButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;prositDataSourceRadioButton.Parent" xml:space="preserve">
+    <value>dataSourceGroupBox</value>
+  </data>
+  <data name="&gt;&gt;prositDataSourceRadioButton.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;dataSourceFilesRadioButton.Name" xml:space="preserve">
+    <value>dataSourceFilesRadioButton</value>
+  </data>
+  <data name="&gt;&gt;dataSourceFilesRadioButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataSourceFilesRadioButton.Parent" xml:space="preserve">
+    <value>dataSourceGroupBox</value>
+  </data>
+  <data name="&gt;&gt;dataSourceFilesRadioButton.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
   <data name="actionLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -551,7 +728,7 @@ For SEQUEST SQT this is 1 - the maximum FDR.</value>
     <value>panelFilesPrositProperties</value>
   </data>
   <data name="&gt;&gt;panelFilesProps.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="comboStandards.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 148</value>
@@ -572,7 +749,7 @@ For SEQUEST SQT this is 1 - the maximum FDR.</value>
     <value>panelFilesPrositProperties</value>
   </data>
   <data name="&gt;&gt;comboStandards.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="panelFilesPrositProperties.Location" type="System.Drawing.Point, System.Drawing">
     <value>18, 196</value>

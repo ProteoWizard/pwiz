@@ -128,4 +128,9 @@
   <data name="ToolOptionsUI_UpdateServerStatus_Server_unavailable" xml:space="preserve">
     <value>Server unavailable</value>
   </data>
+  <data name="GraphSpectrum_UpdateUI_" xml:space="preserve">
+    <value>{0} vs {1}
+{2}
+dotp: {3}</value>
+  </data>
 </root>

@@ -61,6 +61,17 @@ namespace pwiz.Skyline.Model.Prosit {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} vs {1}
+        ///{2}
+        ///dotp: {3}.
+        /// </summary>
+        internal static string GraphSpectrum_UpdateUI_ {
+            get {
+                return ResourceManager.GetString("GraphSpectrum_UpdateUI_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Intensity model {0} does not exist.
         /// </summary>
         internal static string PrositIntensityModel_PrositIntensityModel_Intensity_model__0__does_not_exist {

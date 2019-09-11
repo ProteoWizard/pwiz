@@ -28,7 +28,6 @@ using DigitalRune.Windows.Docking;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
-using pwiz.MSGraph;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
@@ -47,7 +46,6 @@ using pwiz.Skyline.Controls.Graphs.Spectrum;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
-using pwiz.Skyline.Model.Prosit;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -322,7 +320,7 @@ namespace pwiz.Skyline
                     }
                 }
 
-                bool enable = true;//settingsNew.PeptideSettings.Libraries.HasLibraries;
+                bool enable = settingsNew.PeptideSettings.Libraries.HasLibraries || Settings.Default.Prosit;
                 if (enable)
                 {
                     UpdateIonTypesMenuItemsVisibility();
@@ -1179,7 +1177,7 @@ namespace pwiz.Skyline
                 mirrorMenuItem.Checked = Settings.Default.LibMatchMirror;
                 // TODO: check if prosit is available here, otherwise if there is just a single
                 // spec lib, mirror plots wont be possible
-                if (_graphSpectrum.AvailableSpectra != null)
+                if (GraphSpectrum.SelectionHasLibInfo)
                     menuStrip.Items.Insert(iInsert++, mirrorMenuItem);
                 menuStrip.Items.Insert(iInsert++, toolStripSeparator61);
             }

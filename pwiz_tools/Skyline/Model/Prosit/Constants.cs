@@ -29,10 +29,10 @@ namespace pwiz.Skyline.Model.Prosit
         public static readonly int IONS_PER_RESIDUE = 6;
         public static readonly int PRECURSOR_CHARGES = 6;
         public static readonly int BATCH_SIZE = 2048;
-        public static readonly int MIN_NCE = 10;
-        public static readonly int MAX_NCE = 50;
+        public static readonly int MIN_NCE = 18;
+        public static readonly int MAX_NCE = 39;
 
-        public static readonly string DEV_PROSIT_SERVER = "ip here";
+        public static readonly string DEV_PROSIT_SERVER = @"...";
 
         public struct PrositAA
         {

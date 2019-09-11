@@ -62,6 +62,8 @@
             this.listInputFiles = new System.Windows.Forms.CheckedListBox();
             this.btnPrevious = new System.Windows.Forms.Button();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
+            this.ceLabel = new System.Windows.Forms.Label();
+            this.ceCombo = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.panelProperties.SuspendLayout();
             this.panelFilesPrositProperties.SuspendLayout();
@@ -127,6 +129,8 @@
             // 
             // panelFilesPrositProperties
             // 
+            this.panelFilesPrositProperties.Controls.Add(this.ceLabel);
+            this.panelFilesPrositProperties.Controls.Add(this.ceCombo);
             this.panelFilesPrositProperties.Controls.Add(this.panelFilesProps);
             this.panelFilesPrositProperties.Controls.Add(this.comboStandards);
             this.panelFilesPrositProperties.Controls.Add(this.iRTPeptidesLabel);
@@ -304,6 +308,18 @@
             this.helpTip.InitialDelay = 500;
             this.helpTip.ReshowDelay = 100;
             // 
+            // ceLabel
+            // 
+            resources.ApplyResources(this.ceLabel, "ceLabel");
+            this.ceLabel.Name = "ceLabel";
+            // 
+            // ceCombo
+            // 
+            this.ceCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.ceCombo.FormattingEnabled = true;
+            resources.ApplyResources(this.ceCombo, "ceCombo");
+            this.ceCombo.Name = "ceCombo";
+            // 
             // BuildLibraryDlg
             // 
             this.AcceptButton = this.btnNext;
@@ -368,5 +384,7 @@
         private System.Windows.Forms.CheckBox cbFilter;
         private System.Windows.Forms.TextBox textCutoff;
         private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.Label ceLabel;
+        private System.Windows.Forms.ComboBox ceCombo;
     }
 }

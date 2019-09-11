@@ -105,6 +105,11 @@ namespace pwiz.Skyline.SettingsUI
 
             cbKeepRedundant.Checked = Settings.Default.LibraryKeepRedundant;
 
+            ceCombo.Items.AddRange(
+                Enumerable.Range(Constants.MIN_NCE, Constants.MAX_NCE - Constants.MIN_NCE + 1).Select(c => (object)c)
+                    .ToArray());
+            ceCombo.SelectedItem = Settings.Default.PrositNCE;
+
             _helper = new MessageBoxHelper(this);
 
             foreach (var standard in IrtStandard.ALL)
@@ -253,7 +258,7 @@ namespace pwiz.Skyline.SettingsUI
                     }
 
                     Builder = new PrositLibraryBuilder(doc, name, outputPath, () => true, IrtStandard,
-                        peptidesPerPrecursor, precursors);
+                        peptidesPerPrecursor, precursors, NCE);
                 }
                 else
                 {
@@ -655,6 +660,18 @@ namespace pwiz.Skyline.SettingsUI
             set { textCutoff.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
+        public bool Prosit
+        {
+            get { return prositDataSourceRadioButton.Checked; }
+            set { prositDataSourceRadioButton.Checked = value; }
+        }
+
+        public int NCE
+        {
+            get { return (int)ceCombo.SelectedItem; }
+            set { ceCombo.SelectedItem = value; }
+        }
+
         public bool LibraryKeepRedundant
         {
             get { return cbKeepRedundant.Checked; }
@@ -700,11 +717,15 @@ namespace pwiz.Skyline.SettingsUI
             {
                 iRTPeptidesLabel.Location = _iRTLabelPos;
                 comboStandards.Location = _iRTComboPos;
+                ceCombo.Visible = false;
+                ceLabel.Visible = false;
             }
             else
             {
                 iRTPeptidesLabel.Location = _actionLabelPos;
                 comboStandards.Location = _actionComboPos;
+                ceCombo.Visible = true;
+                ceLabel.Visible = true;
             }
 
             btnNext.Text = dataSourceFilesRadioButton.Checked ? Resources.BuildLibraryDlg_btnPrevious_Click__Next__ : Resources.BuildLibraryDlg_OkWizardPage_Finish;

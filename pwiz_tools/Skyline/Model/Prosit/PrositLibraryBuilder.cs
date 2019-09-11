@@ -27,7 +27,6 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Prosit.Communication;
 using pwiz.Skyline.Model.Prosit.Models;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using Tensorflow.Serving;
 
@@ -40,10 +39,11 @@ namespace pwiz.Skyline.Model.Prosit
         private readonly Func<bool> _replaceLibrary;
         private readonly IList<PeptideDocNode> _peptides;
         private readonly IList<TransitionGroupDocNode> _precursors;
+        private readonly int _nce;
 
         public PrositLibraryBuilder(SrmDocument doc, string name, string outPath, Func<bool> replaceLibrary,
             IrtStandard irtStandard,
-            IList<PeptideDocNode> peptides, IList<TransitionGroupDocNode> precursors)
+            IList<PeptideDocNode> peptides, IList<TransitionGroupDocNode> precursors, int nce)
         {
             _prositClient = PrositPredictionClient.Current;
             _peptides = peptides;
@@ -52,6 +52,7 @@ namespace pwiz.Skyline.Model.Prosit
             LibrarySpec = new BiblioSpecLiteSpec(name, outPath); // Needs to be created before building
             _replaceLibrary = replaceLibrary;
             IrtStandard = irtStandard;
+            _nce = nce;
         }
 
         public bool BuildLibrary(IProgressMonitor progress)
@@ -59,7 +60,7 @@ namespace pwiz.Skyline.Model.Prosit
             // Predict fragment intensities
             var ms = PrositIntensityModel.Instance.PredictBatches(_prositClient, progress, _document.Settings,
                 _peptides.Zip(_precursors,
-                    (pep, prec) => new PeptidePrecursorPair(pep, prec, Settings.Default.PrositNCE)).ToArray());
+                    (pep, prec) => new PeptidePrecursorPair(pep, prec, _nce)).ToArray());
 
             var specMzInfo = ms.Spectra.Select(m => m.SpecMzInfo).ToList();
 
@@ -90,6 +91,7 @@ namespace pwiz.Skyline.Model.Prosit
             if (!librarySpectra.Any())
                 return true;
 
+            // Build the library
             using (var blibDb = BlibDb.CreateBlibDb(LibrarySpec.FilePath))
             {
                 var docLibrarySpec = new BiblioSpecLiteSpec(LibrarySpec.Name, LibrarySpec.FilePath);
