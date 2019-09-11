@@ -150,7 +150,14 @@ namespace pwiz.Skyline.Model.Results
         {
             Finder = Crawdads.NewCrawdadPeakFinder();
             Finder.SetChromatogram(Times, Intensities);
-            RawPeaks = new [] {Finder.GetPeak(TimeToIndex(peakBounds.StartTime), TimeToIndex(peakBounds.EndTime))};
+            if (peakBounds.IsEmpty)
+            {
+                RawPeaks = new IFoundPeak[0];
+            }
+            else
+            {
+                RawPeaks = new[] { Finder.GetPeak(TimeToIndex(peakBounds.StartTime), TimeToIndex(peakBounds.EndTime)) };
+            }
         }
 
         private int[] TimesToIndices(double[] retentionTimes)

@@ -429,9 +429,12 @@ namespace pwiz.Skyline.Model.Results
 
             }
             var firstChromData = _listChromData.First();
-            var firstPeak = new ChromDataPeak(firstChromData, firstChromData.RawPeaks.First());
-            ChromDataPeakList chromDataPeakList = new ChromDataPeakList(firstPeak, _listChromData);
-            _listPeakSets.Add(chromDataPeakList);
+            if (firstChromData.RawPeaks.Any())
+            {
+                var firstPeak = new ChromDataPeak(firstChromData, firstChromData.RawPeaks.First());
+                ChromDataPeakList chromDataPeakList = new ChromDataPeakList(firstPeak, _listChromData);
+                _listPeakSets.Add(chromDataPeakList);
+            }
         }
         
         /// <summary>
