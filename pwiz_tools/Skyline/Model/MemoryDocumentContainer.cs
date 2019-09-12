@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Optimization;
@@ -194,10 +193,6 @@ namespace pwiz.Skyline.Model
             RetentionTimeManager.Register(this);
             Register(RetentionTimeManager);
 
-            IonMobilityManager = new IonMobilityLibraryManager();
-            IonMobilityManager.Register(this);
-            Register(IonMobilityManager);
-
             IrtDbManager = new IrtDbManager();
             IrtDbManager.Register(this);
             Register(IrtDbManager);
@@ -213,8 +208,6 @@ namespace pwiz.Skyline.Model
 
         public RetentionTimeManager RetentionTimeManager { get; private set; }
 
-        public IonMobilityLibraryManager IonMobilityManager { get; private set; }
-
         public IrtDbManager IrtDbManager { get; private set; }
 
         public OptimizationDbManager OptimizationDbManager { get; private set; }
@@ -227,7 +220,6 @@ namespace pwiz.Skyline.Model
             ChromatogramManager.ResetProgress(Document);
             LibraryManager.ResetProgress(Document);
             RetentionTimeManager.ResetProgress(Document);
-            IonMobilityManager.ResetProgress(Document);
             IrtDbManager.ResetProgress(Document);
         }
 

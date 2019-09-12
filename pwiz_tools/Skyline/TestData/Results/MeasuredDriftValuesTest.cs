@@ -111,7 +111,7 @@ namespace pwiz.SkylineTestData.Results
                 revised.Add(libKey2, IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(5, eIonMobilityUnits.drift_time_msec), null, 0.123));
                 document =
                     document.ChangeSettings(
-                        document.Settings.ChangePeptidePrediction(prediction => new PeptidePrediction(null, new IonMobilityPredictor("test", revised, null, null, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, 40, 0, 0))));
+                        document.Settings.ChangePeptidePrediction(prediction => new PeptidePrediction(null, new IonMobilityPredictor("test", revised, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, 40, 0, 0))));
                 newPred = document.Settings.PeptideSettings.Prediction.ChangeDriftTimePredictor(
                     document.Settings.PeptideSettings.Prediction.IonMobilityPredictor.ChangeMeasuredIonMobilityValuesFromResults(
                         document, docContainer.DocumentFilePath, true)).IonMobilityPredictor;

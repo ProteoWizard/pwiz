@@ -35,7 +35,6 @@ using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
-using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
@@ -779,8 +778,6 @@ namespace pwiz.Skyline
                 document = ConnectIrtDatabase(document, path);
             if (document != null)
                 document = ConnectOptimizationDatabase(document, path);
-            if (document != null)
-                document = ConnectIonMobilityDatabase(document, path);
             return document;
         }
 
@@ -921,47 +918,6 @@ namespace pwiz.Skyline
             }
 
             _out.WriteLine(Resources.CommandLine_FindOptimizationDatabase_Could_not_find_the_optimization_library__0__, Path.GetFileName(optLib.DatabasePath));
-            return null;
-        }
-
-        private SrmDocument ConnectIonMobilityDatabase(SrmDocument document, string documentPath)
-        {
-            var settings = document.Settings.ConnectIonMobilityLibrary(imdb => FindIonMobilityDatabase(documentPath, imdb));
-            if (settings == null)
-                return null;
-            if (ReferenceEquals(settings, document.Settings))
-                return document;
-            return document.ChangeSettings(settings);
-        }
-
-        private IonMobilityLibrarySpec FindIonMobilityDatabase(string documentPath, IonMobilityLibrarySpec ionMobilityLibSpec)
-        {
-
-            IonMobilityLibrarySpec result;
-            if (Settings.Default.IonMobilityLibraryList.TryGetValue(ionMobilityLibSpec.Name, out result))
-            {
-                if (result.IsNone || File.Exists(result.PersistencePath))
-                    return result;                
-            }
-
-            // First look for the file name in the document directory
-            string filePath = PathEx.FindExistingRelativeFile(documentPath, ionMobilityLibSpec.PersistencePath);
-            if (filePath != null)
-            {
-                try
-                {
-                    var lib = ionMobilityLibSpec as IonMobilityLibrary;
-                    if (lib != null)
-                        return lib.ChangeDatabasePath(filePath);
-                }
-// ReSharper disable once EmptyGeneralCatchClause
-                catch
-                {
-                    //Todo: should this fail silenty or report an error
-                }
-            }
-
-            _out.WriteLine(Resources.CommandLine_FindIonMobilityDatabase_Error__Could_not_find_the_ion_mobility_library__0__, Path.GetFileName(ionMobilityLibSpec.PersistencePath));
             return null;
         }
 

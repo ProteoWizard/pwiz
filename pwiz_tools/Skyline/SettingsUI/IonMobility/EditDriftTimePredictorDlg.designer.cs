@@ -37,11 +37,6 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
-            this.gridRegression = new pwiz.Common.Controls.CommonDataGridView();
-            this.Charge = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Slope = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Intercept = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.comboLibrary = new System.Windows.Forms.ComboBox();
             this.textResolvingPower = new System.Windows.Forms.TextBox();
             this.textName = new System.Windows.Forms.TextBox();
             this.gridMeasuredDriftTimes = new pwiz.Common.Controls.CommonDataGridView();
@@ -55,11 +50,8 @@
             this.cbLinear = new System.Windows.Forms.CheckBox();
             this.textWidthAtDt0 = new System.Windows.Forms.TextBox();
             this.textWidthAtDtMax = new System.Windows.Forms.TextBox();
-            this.bindingChargeRegressionLines = new System.Windows.Forms.BindingSource(this.components);
             this.btnOk = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
-            this.labelConversionParameters = new System.Windows.Forms.Label();
-            this.labelIonMobilityLibrary = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
@@ -69,9 +61,7 @@
             this.labelWidthDtMaxUnits = new System.Windows.Forms.Label();
             this.comboBoxIonMobilityUnits = new System.Windows.Forms.ComboBox();
             this.labelIonMobilityUnits = new System.Windows.Forms.Label();
-            ((System.ComponentModel.ISupportInitialize)(this.gridRegression)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridMeasuredDriftTimes)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.bindingChargeRegressionLines)).BeginInit();
             this.SuspendLayout();
             // 
             // helpTip
@@ -79,68 +69,6 @@
             this.helpTip.AutoPopDelay = 15000;
             this.helpTip.InitialDelay = 500;
             this.helpTip.ReshowDelay = 100;
-            // 
-            // gridRegression
-            // 
-            resources.ApplyResources(this.gridRegression, "gridRegression");
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.gridRegression.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
-            this.gridRegression.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.gridRegression.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.Charge,
-            this.Slope,
-            this.Intercept});
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.gridRegression.DefaultCellStyle = dataGridViewCellStyle2;
-            this.gridRegression.MaximumColumnCount = null;
-            this.gridRegression.Name = "gridRegression";
-            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.gridRegression.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
-            this.helpTip.SetToolTip(this.gridRegression, resources.GetString("gridRegression.ToolTip"));
-            this.gridRegression.KeyDown += new System.Windows.Forms.KeyEventHandler(this.gridRegression_KeyDown);
-            // 
-            // Charge
-            // 
-            resources.ApplyResources(this.Charge, "Charge");
-            this.Charge.Name = "Charge";
-            // 
-            // Slope
-            // 
-            resources.ApplyResources(this.Slope, "Slope");
-            this.Slope.Name = "Slope";
-            // 
-            // Intercept
-            // 
-            this.Intercept.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            resources.ApplyResources(this.Intercept, "Intercept");
-            this.Intercept.Name = "Intercept";
-            // 
-            // comboLibrary
-            // 
-            resources.ApplyResources(this.comboLibrary, "comboLibrary");
-            this.comboLibrary.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboLibrary.FormattingEnabled = true;
-            this.comboLibrary.Name = "comboLibrary";
-            this.helpTip.SetToolTip(this.comboLibrary, resources.GetString("comboLibrary.ToolTip"));
-            this.comboLibrary.SelectedIndexChanged += new System.EventHandler(this.comboIonMobilityLibrary_SelectedIndexChanged);
             // 
             // textResolvingPower
             // 
@@ -269,16 +197,6 @@
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
-            // labelConversionParameters
-            // 
-            resources.ApplyResources(this.labelConversionParameters, "labelConversionParameters");
-            this.labelConversionParameters.Name = "labelConversionParameters";
-            // 
-            // labelIonMobilityLibrary
-            // 
-            resources.ApplyResources(this.labelIonMobilityLibrary, "labelIonMobilityLibrary");
-            this.labelIonMobilityLibrary.Name = "labelIonMobilityLibrary";
-            // 
             // label3
             // 
             resources.ApplyResources(this.label3, "label3");
@@ -345,10 +263,6 @@
             this.Controls.Add(this.cbOffsetHighEnergySpectra);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.gridMeasuredDriftTimes);
-            this.Controls.Add(this.labelConversionParameters);
-            this.Controls.Add(this.gridRegression);
-            this.Controls.Add(this.comboLibrary);
-            this.Controls.Add(this.labelIonMobilityLibrary);
             this.Controls.Add(this.textResolvingPower);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.textName);
@@ -359,9 +273,7 @@
             this.MinimizeBox = false;
             this.Name = "EditDriftTimePredictorDlg";
             this.ShowInTaskbar = false;
-            ((System.ComponentModel.ISupportInitialize)(this.gridRegression)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridMeasuredDriftTimes)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.bindingChargeRegressionLines)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -375,15 +287,7 @@
         private System.Windows.Forms.Button btnOk;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox textResolvingPower;
-        private System.Windows.Forms.Label labelIonMobilityLibrary;
-        private System.Windows.Forms.ComboBox comboLibrary;
         private System.Windows.Forms.ToolTip helpTip;
-        private System.Windows.Forms.BindingSource bindingChargeRegressionLines;
-        private System.Windows.Forms.Label labelConversionParameters;
-        private pwiz.Common.Controls.CommonDataGridView gridRegression;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Charge;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Slope;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Intercept;
         private System.Windows.Forms.Label label2;
         private pwiz.Common.Controls.CommonDataGridView gridMeasuredDriftTimes;
         private System.Windows.Forms.CheckBox cbOffsetHighEnergySpectra;

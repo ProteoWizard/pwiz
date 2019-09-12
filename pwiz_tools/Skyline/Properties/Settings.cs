@@ -29,7 +29,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Hibernate;
-using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Optimization;
@@ -874,38 +873,6 @@ namespace pwiz.Skyline.Properties
                 this[typeof(DriftTimePredictorList).Name] = value;
             }
         }
-
-        public IonMobilityLibrarySpec GetIonMobilityLibraryByName(string name)
-        {
-            IonMobilityLibrarySpec dtLib;
-            return !IonMobilityLibraryList.TryGetValue(name, out dtLib) ? null : dtLib;
-        }
-
-        [UserScopedSettingAttribute]
-        public IonMobilityLibraryList IonMobilityLibraryList
-        {
-            get
-            {
-                IonMobilityLibraryList list = (IonMobilityLibraryList)this[typeof(IonMobilityLibraryList).Name];
-
-                if (list == null)
-                {
-                    list = new IonMobilityLibraryList();
-                    list.AddDefaults();
-                    IonMobilityLibraryList = list;
-                }
-                else
-                {
-                    list.EnsureDefault();
-                }
-                return list;
-            }
-            set
-            {
-                this[typeof(IonMobilityLibraryList).Name] = value;
-            }
-        }
-
         
         public PeakScoringModelSpec GetScoringModelByName(string name)
         {
@@ -2144,118 +2111,6 @@ namespace pwiz.Skyline.Properties
         }
     }
     
-    public sealed class IonMobilityLibraryList : SettingsListNotifying<IonMobilityLibrarySpec>
-    {
-        /// <summary>
-        /// <see cref="IonMobilityPredictor"/> objects depend on ion mobility libraries. If a user deletes or changes a library,
-        /// the <see cref="IonMobilityPredictor"/> objects that depend on it may need to be removed.
-        /// </summary>
-        public override bool AcceptList(Control owner, IList<IonMobilityLibrarySpec> listNew)
-        {
-            var listMissingLib = new List<IonMobilityPredictor>();
-            var listChangedLib = new List<IonMobilityPredictor>();
-            foreach (var driftTimePredictor in Settings.Default.DriftTimePredictorList.ToArray())
-            {
-                var predictor = driftTimePredictor;
-
-                // Not all ion mobility predictors use a library
-                if (predictor.IonMobilityLibrary == null)
-                    continue;
-
-                if (listNew.Contains(calc => Equals(calc, predictor.IonMobilityLibrary)))
-                {
-                    var libChanged = listNew.FirstOrDefault(calc =>
-                        Equals(calc, predictor.IonMobilityLibrary.ChangeName(calc.Name)));
-
-                    if (libChanged == null)
-                        listMissingLib.Add(predictor);
-                    else
-                        listChangedLib.Add(predictor.ChangeLibrary(libChanged));
-                }
-            }
-
-            if (listMissingLib.Count > 0)
-            {
-                var message = TextUtil.LineSeparate(Resources.IonMobilityLibraryList_AcceptList_The_drift_time_predictors_,
-                                                    TextUtil.LineSeparate(listMissingLib.Select(reg => reg.Name)),
-                                                    Resources.IonMobilityLibraryList_AcceptList_will_be_deleted_because_the_libraries_they_depend_on_have_changed__Do_you_want_to_continue_);
-                if (DialogResult.Yes != MultiButtonMsgDlg.Show(owner, message, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true))
-                {
-                    return false;
-                }
-            }
-
-            foreach (var predictor in listChangedLib)
-            {
-                Settings.Default.DriftTimePredictorList.SetValue(predictor);
-            }
-
-            return true;
-        }
-
-        public override IonMobilityLibrarySpec EditItem(Control owner, IonMobilityLibrarySpec item,
-            IEnumerable<IonMobilityLibrarySpec> existing, object tag)
-        {
-            var calc = item as IonMobilityLibrary;
-            if (item == null || calc != null)
-            {
-                using (var editIonMobilityLibraryDlg = new EditIonMobilityLibraryDlg(calc, existing))
-                {
-                    if (editIonMobilityLibraryDlg.ShowDialog(owner) == DialogResult.OK)
-                    {
-                        return editIonMobilityLibraryDlg.IonMobilityLibrary;
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        public override IonMobilityLibrarySpec CopyItem(IonMobilityLibrarySpec item)
-        {
-            return (IonMobilityLibrarySpec)item.ChangeName(string.Empty);
-        }
-
-        public override IEnumerable<IonMobilityLibrarySpec> GetDefaults(int revisionIndex)
-        {
-            return new[] { IonMobilityLibrary.NONE };
-        }
-
-        public void EnsureDefault()
-        {
-            // Make sure the default libraries are present.
-            var defaultLibraries = GetDefaults().ToArray();
-            int len = defaultLibraries.Length;
-            if (Count < len || !ArrayUtil.ReferencesEqual(defaultLibraries, this.Take(len).ToArray()))
-            {
-                foreach (var library in defaultLibraries)
-                    Remove(library);
-                foreach (var library in defaultLibraries.Reverse())
-                    Insert(0, library);
-            }
-        }
-
-        private static readonly IXmlElementHelper<IonMobilityLibrarySpec>[] DRIFT_TIME_HELPERS =
-        {
-            new XmlElementHelperSuper<IonMobilityLibrary, IonMobilityLibrarySpec>(),
-        };
-
-
-        protected override IXmlElementHelper<IonMobilityLibrarySpec>[] GetXmlElementHelpers()
-        {
-            return DRIFT_TIME_HELPERS;
-        }
-
-        public override string Title { get { return Resources.IonMobilityLibraryList_Title_Edit_Ion_Mobility_Libraries; } }
-
-        public override string Label { get { return Resources.IonMobilityLibraryList_Label_Ion_Mobility_Libraries_; } }
-
-        public bool CanEditItem(IonMobilityLibrarySpec item)
-        {
-            return item != null && !GetDefaults().Contains(item);
-        }
-    }
-
     public sealed class PeakScoringModelList : SettingsListNotifying<PeakScoringModelSpec>
     {
         private static readonly PeakScoringModelSpec[] DEFAULTS =
@@ -2382,7 +2237,7 @@ namespace pwiz.Skyline.Properties
     public sealed class DriftTimePredictorList : SettingsList<IonMobilityPredictor>
     {
         private static readonly IonMobilityPredictor NONE =
-            new IonMobilityPredictor(ELEMENT_NONE, null, null, null, 0, 0, 0, 0);
+            new IonMobilityPredictor(ELEMENT_NONE, null, 0, 0, 0, 0);
 
         public override string GetDisplayName(IonMobilityPredictor item)
         {

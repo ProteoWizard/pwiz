@@ -30,7 +30,6 @@ using pwiz.Common.DataAnalysis;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
-using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Optimization;
@@ -3142,54 +3141,6 @@ namespace pwiz.Skyline.Model.DocSettings
         }
     }
 
-    public interface IIonMobilityLibrary
-    {
-        string Name { get; }
-        IonMobilityAndCCS GetIonMobilityInfo(LibKey chargedPeptide, ChargeRegressionLine regressionLine);
-    }
-
-    public abstract class IonMobilityLibrarySpec : XmlNamedElement, IIonMobilityLibrary
-    {
-        protected IonMobilityLibrarySpec(string name)
-            : base(name)
-        {
-        }
-
-        /// <summary>
-        /// Get the ion mobility for the charged peptide.
-        /// </summary>
-        /// <param name="chargedPeptide"></param>
-        /// <param name="regressionLine"></param>
-        /// <returns>ion mobility, or null</returns>
-        public abstract IonMobilityAndCCS GetIonMobilityInfo(LibKey chargedPeptide, ChargeRegressionLine regressionLine);
-
-        public virtual bool IsUsable { get { return true; } }
-
-        public virtual bool IsNone { get { return false; } }
-
-        public virtual IonMobilityLibrarySpec Initialize(IProgressMonitor loadMonitor)
-        {
-            return this;
-        }
-
-        public virtual string PersistencePath { get { return null; } }
-
-        public virtual string PersistMinimized(string pathDestDir, SrmDocument document, IDictionary<LibKey, LibKey> smallMoleculeConversionInfo)
-        {
-            return null;
-        }
-
-        #region Implementation of IXmlSerializable
-
-        /// <summary>
-        /// For XML serialization
-        /// </summary>
-        protected IonMobilityLibrarySpec()
-        {
-        }
-
-        #endregion
-    }
 
     public class IonMobilityWindowWidthCalculator : IEquatable<IonMobilityWindowWidthCalculator>
     {
@@ -3329,8 +3280,6 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public IonMobilityPredictor(string name,
                                     Dictionary<LibKey, IonMobilityAndCCS> measuredMobilityIons,
-                                    IonMobilityLibrarySpec ionMobilityLibrary,
-                                    IList<ChargeRegressionLine> chargeSlopeIntercepts,
                                     IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType peakWidthMode,
                                     double resolvingPower,
                                     double widthAtIonMobilityZero, double widthAtIonMobilityMax)
@@ -3339,14 +3288,11 @@ namespace pwiz.Skyline.Model.DocSettings
             WindowWidthCalculator = new IonMobilityWindowWidthCalculator(peakWidthMode,
                resolvingPower, widthAtIonMobilityZero, widthAtIonMobilityMax);
             MeasuredMobilityIons = measuredMobilityIons;
-            ChargeRegressionLines = (chargeSlopeIntercepts == null) ? null : chargeSlopeIntercepts.ToArray();
-            IonMobilityLibrary = ionMobilityLibrary; // Actual loading, if any, happens in background
             Validate();
         }
 
         public static readonly IonMobilityPredictor EMPTY = new IonMobilityPredictor();  // For test purposes
 
-        public IonMobilityLibrarySpec IonMobilityLibrary { get; private set; }
 
         [TrackChildren(ignoreName:true)]
         public IonMobilityWindowWidthCalculator WindowWidthCalculator { get; set; }
@@ -3429,35 +3375,6 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        [TrackChildren]
-        public IList<ChargeRegressionLine> ChargeRegressionLines
-        {
-            get { return _chargeRegressionLines; }
-            private set
-            {
-                ChargeRegressionLine[] chargeRegressionLines;
-                if ((value != null) && value.Any())
-                {
-                    int maxcharge = value.Max(obj => obj.Charge);
-                    chargeRegressionLines = new ChargeRegressionLine[maxcharge+1];
-                    for (int charge = 0; charge <= maxcharge; charge++)
-                    {
-                        int charge1 = charge;
-                        var match = (from val in value where (val.Charge == charge1) select val).ToArray();
-                        if (match.Any())
-                            chargeRegressionLines[charge] = match.First();
-                        else
-                            chargeRegressionLines[charge] = null;
-                   }
-                }
-                else
-                {
-                    chargeRegressionLines = new ChargeRegressionLine[0];
-                }
-                _chargeRegressionLines = MakeReadOnly(chargeRegressionLines);
-            }
-        }
-
         public eIonMobilityUnits GetIonMobilityUnits()
         {
             foreach (eIonMobilityUnits units in Enum.GetValues(typeof(eIonMobilityUnits)))
@@ -3474,20 +3391,10 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             // We're usable if we have measured ion mobility values, or a CCS library
             bool usable = (_measuredMobilityIons != null) && _measuredMobilityIons.Any(m => m.IonMobility.Units == units);
-            if (IonMobilityLibrary != null && !IonMobilityLibrary.IsNone)
-            {
-                // If we have a CCS library, we need regressions, and the library itself needs to be ready
-                usable |= ( ChargeRegressionLines != null && ChargeRegressionLines.Any() && IonMobilityLibrary.IsUsable );
-            }
             return usable;
         }
 
         #region Property change methods
-
-        public IonMobilityPredictor ChangeLibrary(IonMobilityLibrarySpec prop)
-        {
-            return ChangeProp(ImClone(this), im => im.IonMobilityLibrary = prop);
-        }
 
         public IonMobilityPredictor ChangeMeasuredIonMobilityValuesFromResults(SrmDocument document, string documentFilePath, bool useHighEnergyOffset, IProgressMonitor progressMonitor = null)
         {
@@ -3533,16 +3440,6 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #endregion
 
-        public ChargeRegressionLine GetRegressionLine(int charge)
-        {
-            // These should be very short lists (maximum 5 elements).
-            // A simple sparse lookup table used over a map
-            // for ease of persistence to XML.
-            if ((charge > 0) && (charge < ChargeRegressionLines.Count))
-                return ChargeRegressionLines[charge];
-            return null;
-        }
-
         public IonMobilityAndCCS GetIonMobilityInfo(LibKey peptide, IIonMobilityFunctionsProvider ionMobilityFunctionsProvider)
         {
             var ionMobility = GetIonMobilityInfo(peptide);
@@ -3561,24 +3458,9 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             // Do we see this in our list of observed ion mobilities?
             IonMobilityAndCCS ionMobility = null;
-            var found = false;
             if (MeasuredMobilityIons != null)
             {
-                if (MeasuredMobilityIons.TryGetValue(peptide, out ionMobility))
-                    found = true;
-            }
-            if (!found && IonMobilityLibrary != null && !IonMobilityLibrary.IsNone)
-            {
-                ChargeRegressionLine regressionLine = GetRegressionLine(peptide.Charge);
-                if (regressionLine != null)
-                {
-                    if (!IonMobilityLibrary.IsUsable)
-                    {
-                        // First access?  Load the library.
-                        IonMobilityLibrary = IonMobilityLibrary.Initialize(null);
-                    }
-                    ionMobility = IonMobilityLibrary.GetIonMobilityInfo(peptide, regressionLine); //  regressionLine.GetY(peptideInfo.CollisionalCrossSection) or null;
-                }
+                MeasuredMobilityIons.TryGetValue(peptide, out ionMobility);
             }
             return ionMobility;
         }
@@ -3618,21 +3500,13 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private void Validate()
         {
-            // This is active if:
-            // Measured ion mobilities are provided, or
-            // Ion mobility library is provided
-            bool hasLib = ((IonMobilityLibrary != null) && !IonMobilityLibrary.IsNone);
-            bool hasMeasured = ((MeasuredMobilityIons != null) && MeasuredMobilityIons.Any());
-            if (hasLib || hasMeasured)
+            // This is active if measured ion mobilities are provided
+            if (MeasuredMobilityIons != null && MeasuredMobilityIons.Any())
             {
                 var messages = new List<string>();
                 var msg = WindowWidthCalculator.Validate();
                 if (msg != null)
                     messages.Add(msg);
-                if (hasLib && String.IsNullOrEmpty(IonMobilityLibrary.PersistencePath))
-                    messages.Add(Resources.IonMobilityPredictor_Validate_Ion_mobility_predictors_using_an_ion_mobility_library_must_provide_a_filename_for_the_library_);
-                if (hasLib && !ChargeRegressionLines.Any())
-                    messages.Add(Resources.IonMobilityPredictor_Validate_Ion_mobility_predictors_using_an_ion_mobility_library_must_include_per_charge_regression_values_);
                 if (messages.Any())
                     throw new InvalidDataException(TextUtil.LineSeparate(messages));
             }
@@ -3652,19 +3526,11 @@ namespace pwiz.Skyline.Model.DocSettings
 
             // Consume start tag
             reader.ReadStartElement();
-            var readHelper = new XmlElementHelper<IonMobilityLibrary>();
-            if (reader.IsStartElement(readHelper.ElementNames))
-            {
-                IonMobilityLibrary = readHelper.Deserialize(reader);
-            }
 
-            // Read all per-charge regressions
-            var list = new List<ChargeRegressionLine>();
-            while (reader.IsStartElement(EL.regression_dt))
+            while (reader.Name.Equals(@"ion_mobility_library") || reader.Name.Equals(@"regression_dt")) // Skip over ion_mobility_library stuff that never saw the light of day, but appears in some older tests
             {
-                list.Add(ChargeRegressionLine.Deserialize(reader));
+                reader.Read();
             }
-            ChargeRegressionLines = list.ToArray();
 
             // Read all measured ion mobilities
             var dict = new Dictionary<LibKey, IonMobilityAndCCS>();
@@ -3693,24 +3559,6 @@ namespace pwiz.Skyline.Model.DocSettings
             base.WriteXml(writer);
             WindowWidthCalculator.WriteXML(writer);
 
-            // Write collisional cross sections
-            if (IonMobilityLibrary != null && !IonMobilityLibrary.IsNone) 
-            {
-                var imCalc = IonMobilityLibrary as IonMobilityLibrary;
-                if (imCalc != null)
-                    writer.WriteElement(imCalc);
-            }
-
-            // Write all per-charge regressions
-            if (ChargeRegressionLines != null)
-            {
-                foreach (ChargeRegressionLine line in ChargeRegressionLines.Where(chargeRegressionLine => chargeRegressionLine != null))
-                {
-                    writer.WriteStartElement(EL.regression_dt);
-                    line.WriteXml(writer);
-                    writer.WriteEndElement();
-                }
-            }
             // Write all measured ion mobilities
             if (MeasuredMobilityIons != null)
             {
@@ -3733,8 +3581,6 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             return base.Equals(obj) &&
-                   Equals(obj.IonMobilityLibrary, IonMobilityLibrary) &&
-                   ArrayUtil.EqualsDeep(obj.ChargeRegressionLines, ChargeRegressionLines) &&
                    ArrayUtil.EqualsDeep(obj.MeasuredMobilityIons, MeasuredMobilityIons) &&
                    Equals(obj.WindowWidthCalculator, WindowWidthCalculator);
         }
@@ -3751,8 +3597,6 @@ namespace pwiz.Skyline.Model.DocSettings
             unchecked
             {
                 int result = base.GetHashCode();
-                result = (result * 397) ^ IonMobilityLibrary.GetHashCode();
-                result = (result * 397) ^ CollectionUtil.GetHashCodeDeep(ChargeRegressionLines);
                 result = (result * 397) ^ CollectionUtil.GetHashCodeDeep(MeasuredMobilityIons);
                 result = (result * 397) ^ WindowWidthCalculator.GetHashCode();
                 return result;

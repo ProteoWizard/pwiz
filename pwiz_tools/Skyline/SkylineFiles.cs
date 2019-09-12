@@ -46,7 +46,6 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.Esp;
-using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
@@ -405,8 +404,6 @@ namespace pwiz.Skyline
                 document = ConnectIrtDatabase(parent, document, path);
             if (document != null)
                 document = ConnectOptimizationDatabase(parent, document, path);
-            if (document != null)
-                document = ConnectIonMobilityLibrary(parent, document, path);
             return document;
         }
 
@@ -634,85 +631,6 @@ namespace pwiz.Skyline
                             var message = TextUtil.SpaceSeparate(
                                 Resources.SkylineWindow_FindOptimizationDatabase_The_database_file_specified_could_not_be_opened_,
                                 e.Message);
-                            MessageBox.Show(message);
-                        }
-                    }
-                    else
-                    {
-                        return null;
-                    }
-                }
-            }
-            while (true);
-        }
-
-        private SrmDocument ConnectIonMobilityLibrary(IWin32Window parent, SrmDocument document, string documentPath)
-        {
-            var settings = document.Settings.ConnectIonMobilityLibrary(imdb => FindIonMobilityLibrary(parent, documentPath, imdb));
-            if (settings == null)
-                return null;
-            if (ReferenceEquals(settings, document.Settings))
-                return document;
-            return document.ChangeSettings(settings);
-        }
-
-        private IonMobilityLibrarySpec FindIonMobilityLibrary(IWin32Window parent, string documentPath, IonMobilityLibrarySpec ionMobilityLibrarySpec)
-        {
-
-            IonMobilityLibrarySpec result;
-            if (Settings.Default.IonMobilityLibraryList.TryGetValue(ionMobilityLibrarySpec.Name, out result))
-            {
-                if (result != null && File.Exists(result.PersistencePath))
-                    return result;
-            }
-            if (documentPath == null)
-                return null;
-
-            // First look for the file name in the document directory
-            string filePath = PathEx.FindExistingRelativeFile(documentPath, ionMobilityLibrarySpec.PersistencePath);
-            if (filePath != null)
-            {
-                try
-                {
-                    var ionMobilityLib = ionMobilityLibrarySpec as IonMobilityLibrary;
-                    if (ionMobilityLib != null)
-                        return ionMobilityLib.ChangeDatabasePath(filePath);
-                }
-                // ReSharper disable once EmptyGeneralCatchClause
-                catch 
-                {
-                    //Todo: should this fail silenty or raise another dialog box?
-                }
-            }
-
-            do
-            {
-                using (var dlg = new MissingFileDlg
-                {
-                    ItemName = ionMobilityLibrarySpec.Name,
-                    ItemType = Resources.SkylineWindow_FindIonMobilityLibrary_Ion_Mobility_Library,
-                    Filter = TextUtil.FileDialogFilterAll(Resources.SkylineWindow_FindIonMobilityDatabase_ion_mobility_library_files, IonMobilityDb.EXT),
-                    FileHint = Path.GetFileName(ionMobilityLibrarySpec.PersistencePath),
-                    FileDlgInitialPath = Path.GetDirectoryName(documentPath),
-                    Title = Resources.SkylineWindow_FindIonMobilityLibrary_Find_Ion_Mobility_Library
-                })
-                {
-                    if (dlg.ShowDialog(parent) == DialogResult.OK)
-                    {
-                        if (dlg.FilePath == null)
-                            return IonMobilityLibrary.NONE;
-
-                        try
-                        {
-                            var ionMobilityLib = ionMobilityLibrarySpec as IonMobilityLibrary;
-                            if (ionMobilityLib != null)
-                                return ionMobilityLib.ChangeDatabasePath(dlg.FilePath);
-                        }
-                        catch (DatabaseOpeningException e)
-                        {
-                            var message = TextUtil.SpaceSeparate(
-                                Resources.SkylineWindow_FindIonMobilityDatabase_The_ion_mobility_library_specified_could_not_be_opened_,
-                                e.Message); 
                             MessageBox.Show(message);
                         }
                     }

@@ -110,16 +110,15 @@ namespace pwiz.SkylineTestData.Results
             string subdir = (asSmallMolecules == RefinementSettings.ConvertToSmallMoleculesMode.none) ? null : asSmallMolecules.ToString();
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE, subdir);
 
-            bool withDriftTimePredictor = (mode == DriftFilterType.predictor); // Load the doc that has a drift time predictor?
             bool withDriftTimeFilter = (mode != DriftFilterType.none); // Perform drift time filtering?  (either with predictor, or with bare times in blib file)
             string docPath;
-            SrmDocument document = InitWatersImsMseDocument(testFilesDir, driftPeakWidthCalcType, withDriftTimeFilter, withDriftTimePredictor, out docPath);
+            SrmDocument document = InitWatersImsMseDocument(testFilesDir, driftPeakWidthCalcType, withDriftTimeFilter, out docPath);
             AssertEx.IsDocumentState(document, null, 1, 1, 1, 8); // Drift time lib load bumps the doc version, so does small mol conversion
             var listChromatograms = new List<ChromatogramSet>();
             // A small subset of the QC_HDMSE_02_UCA168_3495_082213 data set (RT 21.5-22.5) from Will Thompson
             string mz5Path = "waters-mobility" + ExtensionTestContext.ExtMz5;
-            string testModeStr = withDriftTimePredictor ? "with drift time predictor" : "without drift time info";
-            if (withDriftTimeFilter && !withDriftTimePredictor)
+            string testModeStr =  "";
+            if (withDriftTimeFilter)
             {
                 testModeStr = "with drift times from spectral library";
             }
@@ -177,7 +176,7 @@ namespace pwiz.SkylineTestData.Results
                 }
                 Assume.AreEqual(1, nPeptides);
 
-                if (withDriftTimePredictor || withDriftTimeFilter)
+                if (withDriftTimeFilter)
                 {
                     // Verify that the .imdb pr .blib file goes out in the share zipfile
                     for (int complete = 0; complete <= 1; complete++)
@@ -189,7 +188,7 @@ namespace pwiz.SkylineTestData.Results
                         share.Share(new SilentProgressMonitor());
 
                         var files = share.ListEntries().ToArray();
-                        var imdbFile = withDriftTimePredictor ? "scaled.imdb" : "waters-mobility.filtered-scaled.blib";
+                        var imdbFile = "waters-mobility.filtered-scaled.blib";
                         if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none)
                         {
                             var ext = "." + imdbFile.Split('.').Last();
@@ -228,10 +227,10 @@ namespace pwiz.SkylineTestData.Results
 
         private static SrmDocument InitWatersImsMseDocument(TestFilesDir testFilesDir,
             IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType driftPeakWidthCalcType,
-            bool withDriftTimeFilter, bool withDriftTimePredictor, 
+            bool withDriftTimeFilter,  
             out string docPath)
         {
-            var skyFile = withDriftTimePredictor ? "single_with_driftinfo.sky" : "single_no_driftinfo.sky";
+            var skyFile = "single_no_driftinfo.sky";
             docPath = testFilesDir.GetTestPath(skyFile);
             var cmdline = new CommandLine();
             Assert.IsTrue(cmdline.OpenSkyFile(docPath)); // Handles any path shifts in database files, like our .imdb file
@@ -247,7 +246,7 @@ namespace pwiz.SkylineTestData.Results
                 double widthAtDtMax = 2 * driftTimeMax / resolvingPower;
                 var driftTimeWindowWidthCalculator = new IonMobilityWindowWidthCalculator(driftPeakWidthCalcType, resolvingPower, 0, widthAtDtMax);
 
-                if (withDriftTimeFilter && !withDriftTimePredictor)
+                if (withDriftTimeFilter)
                 {
                     // Use the bare drift times in the spectral library
                     var librarySpec = new BiblioSpecLiteSpec("drift test",
@@ -258,7 +257,7 @@ namespace pwiz.SkylineTestData.Results
                             ChangePeptidePrediction(p => p.ChangeUseLibraryIonMobilityValues(true))
                     );
                 }
-                else if (withDriftTimeFilter)
+                else
                 {
                     doc = doc.ChangeSettings(
                         doc.Settings.ChangePeptideSettings(ps => ps.ChangePrediction(

@@ -91,8 +91,6 @@ namespace pwiz.Skyline.SettingsUI
 
             RestoreTabSel(selectTab);
 
-            btnUpdateIonMobilityLibraries.Visible = false; // TODO: ion mobility libraries are more complex than initially thought - put this off until after summer 2014 release
-
             _parent = parent;
             _libraryManager = libraryManager;
             _peptideSettings = parent.DocumentUI.Settings.PeptideSettings;
@@ -390,15 +388,6 @@ namespace pwiz.Skyline.SettingsUI
             string nameDt = comboDriftTimePredictor.SelectedItem.ToString();
             IonMobilityPredictor ionMobilityPredictor =
                 Settings.Default.GetDriftTimePredictorByName(nameDt);
-            if (ionMobilityPredictor != null && ionMobilityPredictor.IonMobilityLibrary != null)
-            {
-                IonMobilityLibrarySpec ionMobilityLibrary =
-                    Settings.Default.GetIonMobilityLibraryByName(ionMobilityPredictor.IonMobilityLibrary.Name);
-                // Just in case the library in use in the current documet got removed,
-                // never set the library to null.  Just keep using the one we have.
-                if (ionMobilityLibrary != null && !ReferenceEquals(ionMobilityLibrary, ionMobilityPredictor.IonMobilityLibrary))
-                    ionMobilityPredictor = ionMobilityPredictor.ChangeLibrary(ionMobilityLibrary);
-            }
             bool useLibraryDriftTime = cbUseSpectralLibraryDriftTimes.Checked;
 
             var libraryDriftTimeWindowWidthCalculator = IonMobilityWindowWidthCalculator.EMPTY;
@@ -698,61 +687,6 @@ namespace pwiz.Skyline.SettingsUI
         {
             CheckDisposed();
             _driverDT.EditCurrent();
-        }
-
-        private void btnUpdateIonMobilityLibrary_Click(object sender, EventArgs e)
-        {
-            // Enable Update Ion Mobility Library button based on whether the selected predictor
-            // supports editing.
-            var driftTimePredictor = _driverDT.SelectedItem;
-            editIonMobilityLibraryCurrentContextMenuItem.Visible = driftTimePredictor != null &&
-                Settings.Default.IonMobilityLibraryList.CanEditItem(driftTimePredictor.IonMobilityLibrary);
-
-            contextMenuIonMobilityLibraries.Show(btnUpdateIonMobilityLibraries.Parent,
-                btnUpdateIonMobilityLibraries.Left, btnUpdateIonMobilityLibraries.Bottom + 1);
-        }
-
-        private void addIonMobilityLibraryContextMenuItem_Click(object sender, EventArgs e)
-        {
-            AddIonMobilityLibrary();
-        }
-
-        public void AddIonMobilityLibrary()
-        {
-            CheckDisposed();
-            var list = Settings.Default.IonMobilityLibraryList;
-            var libNew = list.EditItem(this, null, list, null);
-            if (libNew != null)
-                list.SetValue(libNew);
-        }
-
-        private void editIonMobilityLibraryCurrentContextMenuItem_Click(object sender, EventArgs e)
-        {
-            EditIonMobilityLibrary();
-        }
-
-        public void EditIonMobilityLibrary()
-        {
-            var list = Settings.Default.IonMobilityLibraryList;
-            var calcNew = list.EditItem(this, _driverDT.SelectedItem.IonMobilityLibrary, list, null);
-            if (calcNew != null)
-                list.SetValue(calcNew);
-        }
-
-        private void editIonMobilityLibraryListContextMenuItem_Click(object sender, EventArgs e)
-        {
-            EditIonMobilityLibraryList();
-        }
-
-        public void EditIonMobilityLibraryList()
-        {
-            var dtllist = Settings.Default.IonMobilityLibraryList;
-            var dtllistNew = dtllist.EditList(this, null);
-            if (dtllistNew != null)
-            {
-                dtllist.Clear();
-                dtllist.AddRange(dtllistNew);
-            }
         }
 
         private void comboBackgroundProteome_SelectedIndexChanged(object sender, EventArgs e)

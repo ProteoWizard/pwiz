@@ -27,7 +27,6 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
-using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Results;
@@ -1090,16 +1089,6 @@ namespace pwiz.Skyline.Model
                             return nodeTran.ChangeLibInfo(libInfo);
                         },
                         (int)SrmDocument.Level.Transitions);
-                }
-                if (document.Settings.HasIonMobilityLibraryPersisted)
-                {
-                    var newDbPath = document.Settings.PeptideSettings.Prediction.IonMobilityPredictor
-                        .IonMobilityLibrary.PersistMinimized(pathForLibraryFiles, document, precursorMap);
-                    var spec = new IonMobilityLibrary(document.Settings.PeptideSettings.Prediction.IonMobilityPredictor.IonMobilityLibrary.Name +
-                        @" " + Resources.RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules, newDbPath);
-                    var driftTimePredictor = document.Settings.PeptideSettings.Prediction.IonMobilityPredictor.ChangeLibrary(spec);
-                    newdoc = newdoc.ChangeSettings(newdoc.Settings.ChangePeptideSettings(newdoc.Settings.PeptideSettings.ChangePrediction(
-                        newdoc.Settings.PeptideSettings.Prediction.ChangeDriftTimePredictor(driftTimePredictor))));
                 }
             }            
             // No retention time prediction for small molecules (yet?)

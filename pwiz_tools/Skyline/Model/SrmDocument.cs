@@ -58,7 +58,6 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Find;
-using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Optimization;
@@ -607,8 +606,6 @@ namespace pwiz.Skyline.Model
                 if ((whyNot = OptimizationDbManager.IsNotLoadedDocumentExplained(this)) != null)
                     yield return whyNot;
                 if ((whyNot = DocumentRetentionTimes.IsNotLoadedExplained(Settings)) != null)
-                    yield return whyNot;
-                if ((whyNot = IonMobilityLibraryManager.IsNotLoadedDocumentExplained(this)) != null)
                     yield return whyNot;
                 // BackgroundProteome?
             }

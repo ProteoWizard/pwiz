@@ -37,11 +37,9 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 {
     public partial class EditDriftTimePredictorDlg : FormEx
     {
-        private readonly SettingsListComboDriver<IonMobilityLibrarySpec> _driverIonMobilityLibraryListComboDriver;
 
         private IonMobilityPredictor _predictor;
         private readonly IEnumerable<IonMobilityPredictor> _existing;
-        private bool _showRegressions;
         private readonly bool _smallMoleculeUI; // Set true if document is non empty and not purely peptides
 
         public const int COLUMN_SEQUENCE = 0;
@@ -54,7 +52,6 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         public EditDriftTimePredictorDlg(IEnumerable<IonMobilityPredictor> existing)
         {
             _existing = existing;
-            _showRegressions = true;
 
             InitializeComponent();
             foreach (eIonMobilityUnits units in Enum.GetValues(typeof(eIonMobilityUnits)))
@@ -75,13 +72,8 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             var targetResolver = TargetResolver.MakeTargetResolver(Program.ActiveDocumentUI);
             MeasuredDriftTimeSequence.TargetResolver = targetResolver;
 
-            // TODO: ion mobility libraries are more complex than initially thought - leave these conversions to the mass spec vendors for now
-            labelIonMobilityLibrary.Visible = comboLibrary.Visible = false;
- 
             Icon = Resources.Skyline;
 
-            _driverIonMobilityLibraryListComboDriver = new SettingsListComboDriver<IonMobilityLibrarySpec>(comboLibrary, Settings.Default.IonMobilityLibraryList);
-            _driverIonMobilityLibraryListComboDriver.LoadList(null);
             UpdateControls();
         }
 
@@ -92,7 +84,6 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             set
             {
                 _predictor = value;
-                gridRegression.Rows.Clear();
                 gridMeasuredDriftTimes.Rows.Clear();
                 if (_predictor == null)
                 {
@@ -105,17 +96,6 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                     // List any measured drift times
                     UpdateMeasuredDriftTimesControl(_predictor);
 
-                    comboLibrary.SelectedItem = (_predictor.IonMobilityLibrary != null) ? _predictor.IonMobilityLibrary.Name : null;
-                    if (_predictor.ChargeRegressionLines != null)
-                    {
-                        // Reduce the sparse indexed-by-charge list to only non-empty members for display
-                        foreach (ChargeRegressionLine r in _predictor.ChargeRegressionLines.Where(chargeRegressionLine => chargeRegressionLine != null))
-                        {
-                            gridRegression.Rows.Add(r.Charge.ToString(LocalizationHelper.CurrentCulture),
-                                r.Slope.ToString(LocalizationHelper.CurrentCulture),
-                                r.Intercept.ToString(LocalizationHelper.CurrentCulture));
-                        }
-                    }
                     textResolvingPower.Text = string.Format(@"{0:F04}", _predictor.WindowWidthCalculator.ResolvingPower);
                     textWidthAtDt0.Text = string.Format(@"{0:F04}", _predictor.WindowWidthCalculator.PeakWidthAtIonMobilityValueZero);
                     textWidthAtDtMax.Text = string.Format(@"{0:F04}", _predictor.WindowWidthCalculator.PeakWidthAtIonMobilityValueMax);
@@ -202,25 +182,8 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 textWidthAtDtMax.Location = new Point(textWidthAtDtMax.Location.X - dX, textWidthAtDtMax.Location.Y);
             }
 
-            var oldVisible = _showRegressions;
-            _showRegressions = (comboLibrary.SelectedIndex > 0); // 0th entry is "None"
-            labelConversionParameters.Enabled = gridRegression.Enabled =
-                labelConversionParameters.Visible = gridRegression.Visible =
-                    _showRegressions;
             gridMeasuredDriftTimes.Columns[COLUMN_HIGH_ENERGY_OFFSET].Visible = cbOffsetHighEnergySpectra.Checked;
 
-            if (oldVisible != _showRegressions)
-            {
-                int adjust = (gridRegression.Size.Height + 2*labelConversionParameters.Size.Height) * (_showRegressions ? 1 : -1);
-                if (!labelIonMobilityLibrary.Visible) // TODO: ion mobility libraries are more complex than initially thought - leave these conversions to the mass spec vendors for now
-                    adjust -= (2*labelIonMobilityLibrary.Size.Height + comboLibrary.Size.Height);
-                Size = new Size(Size.Width, Size.Height + adjust);
-                gridMeasuredDriftTimes.Size = new Size(gridMeasuredDriftTimes.Size.Width, gridMeasuredDriftTimes.Size.Height - adjust);
-                cbOffsetHighEnergySpectra.Location = new Point(cbOffsetHighEnergySpectra.Location.X, gridMeasuredDriftTimes.Location.Y + gridMeasuredDriftTimes.Size.Height + cbOffsetHighEnergySpectra.Size.Height/4);
-                btnUseResults.Location = new Point(btnUseResults.Location.X, cbOffsetHighEnergySpectra.Location.Y);
-                labelIonMobilityLibrary.Location = new Point(labelIonMobilityLibrary.Location.X, labelIonMobilityLibrary.Location.Y - adjust);
-                comboLibrary.Location = new Point(comboLibrary.Location.X, comboLibrary.Location.Y - adjust);
-            }
         }
 
         public void OkDialog(bool forceOverwrite = false)
@@ -228,8 +191,6 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             var helper = new MessageBoxHelper(this);
 
             var driftTable = new MeasuredDriftTimeTable(gridMeasuredDriftTimes, MeasuredDriftTimeSequence.TargetResolver);
-
-            var table = new ChargeRegressionTable(gridRegression);
 
             string name;
             if (!helper.ValidateNameTextBox(textName, out name))
@@ -246,10 +207,6 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 }
             }
             if (driftTable.GetTableMeasuredIonMobility(cbOffsetHighEnergySpectra.Checked, Units) == null) // Some error detected in the measured drift times table
-            {
-                return;
-            }
-            if (table.GetTableChargeRegressionLines() == null) // Some error detected in the charged regression lines table
             {
                 return;
             }
@@ -291,18 +248,9 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 peakWidthType = IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power;
             }
 
-            if ((comboLibrary.SelectedIndex > 0) && (comboLibrary.SelectedItem.ToString().Length == 0))
-            {
-                MessageBox.Show(this, Resources.EditDriftTimePredictorDlg_OkDialog_Drift_time_prediction_requires_an_ion_mobility_library_,
-                    Program.Name);
-                comboLibrary.Focus();
-                return;
-            }
-            var ionMobilityLibrary = _driverIonMobilityLibraryListComboDriver.SelectedItem;
-
             IonMobilityPredictor predictor =
                 new IonMobilityPredictor(name, driftTable.GetTableMeasuredIonMobility(cbOffsetHighEnergySpectra.Checked, Units), 
-                    ionMobilityLibrary, table.GetTableChargeRegressionLines(), peakWidthType, resolvingPower, widthAtDt0, widthAtDtMax);
+                    peakWidthType, resolvingPower, widthAtDt0, widthAtDtMax);
 
             _predictor = predictor;
 
@@ -322,31 +270,6 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 return Resources.EditDriftTimePredictorDlg_ValidateResolvingPower_Resolving_power_must_be_greater_than_0_;
             return null;
         }
-
-        private void comboIonMobilityLibrary_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (!_driverIonMobilityLibraryListComboDriver.SelectedIndexChangedEvent(sender, e))
-                IonMobilityLibraryChanged();
-        }
-
-        private void IonMobilityLibraryChanged()
-        {
-            var calc = _driverIonMobilityLibraryListComboDriver.SelectedItem;
-            if (calc != null)
-            {
-                try
-                {
-                    if (_predictor != null)
-                        _predictor = _predictor.ChangeLibrary(calc);
-                }
-                catch (Exception e)
-                {
-                    MessageDlg.ShowException(this, e);
-                }
-            }
-            UpdateControls();
-        }
-
 
         private void btnOk_Click(object sender, EventArgs e)
         {
@@ -388,35 +311,6 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             textName.Text = name;
         }
 
-        public void AddIonMobilityLibrary()
-        {
-            CheckDisposed();
-            _driverIonMobilityLibraryListComboDriver.AddItem();
-        }
-
-        public void EditIonMobilityLibraryList()
-        {
-            CheckDisposed();
-            _driverIonMobilityLibraryListComboDriver.EditList();
-        }
-
-        public void EditCurrentIonMobilityLibrary()
-        {
-            CheckDisposed();
-            _driverIonMobilityLibraryListComboDriver.EditCurrent();
-        }
-
-        public void ChooseIonMobilityLibrary(string name)
-        {
-            comboLibrary.SelectedItem = name;
-            UpdateControls();
-        }
-
-        public void PasteRegressionValues()
-        {
-            gridRegression.DoPaste(this, ChargeRegressionTable.ValidateRegressionCellValues);
-        }
-
         public void PasteMeasuredDriftTimes()
         {
             gridMeasuredDriftTimes.DoPaste(this, MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues);
@@ -439,7 +333,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             {
                 var driftTable = new MeasuredDriftTimeTable(gridMeasuredDriftTimes, MeasuredDriftTimeSequence.TargetResolver);
                 bool useHighEnergyOffset = cbOffsetHighEnergySpectra.Checked;
-                var tempDriftTimePredictor = new IonMobilityPredictor(@"tmp", driftTable.GetTableMeasuredIonMobility(useHighEnergyOffset, Units), null, null, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, 30, 0, 0);
+                var tempDriftTimePredictor = new IonMobilityPredictor(@"tmp", driftTable.GetTableMeasuredIonMobility(useHighEnergyOffset, Units),  IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, 30, 0, 0);
                 using (var longWaitDlg = new LongWaitDlg
                 {
                     Text = Resources.EditDriftTimePredictorDlg_GetDriftTimesFromResults_Finding_ion_mobility_values_for_peaks,
@@ -466,19 +360,6 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         #endregion
 
-
-        private void gridRegression_KeyDown(object sender, KeyEventArgs e)
-        {
-            // Handle Ctrl + V for paste
-            if (e.KeyCode == Keys.V && e.Control)
-            {
-                PasteRegressionValues();
-            }
-            else if (e.KeyCode == Keys.Delete)
-            {
-                gridRegression.DoDelete();
-            }
-        }
 
         private void gridMeasuredDriftTimes_KeyDown(object sender, KeyEventArgs e)
         {

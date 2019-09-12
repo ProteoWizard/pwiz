@@ -223,7 +223,6 @@
     <Compile Include="InsertModTest.cs" />
     <Compile Include="InsertTest.cs" />
     <Compile Include="InstallToolsTest.cs" />
-    <Compile Include="IonMobilityTest.cs" />
     <Compile Include="IrtTest.cs" />
     <Compile Include="IsolationSchemeTest.cs" />
     <Compile Include="LibraryBuildShareTest.cs" />

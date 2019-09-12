@@ -1136,11 +1136,6 @@
     <Compile Include="Model\ImportAssayLibrary.cs" />
     <Compile Include="Model\ImportPeakBoundaries.cs" />
     <Compile Include="Model\ImportPeptideSearch.cs" />
-    <Compile Include="Model\IonMobility\DbIonMobilityPeptide.cs" />
-    <Compile Include="Model\IonMobility\DbVersionInfo.cs" />
-    <Compile Include="Model\IonMobility\IonMobilityLibraryManager.cs" />
-    <Compile Include="Model\IonMobility\IonMobilityDb.cs" />
-    <Compile Include="Model\IonMobility\IonMobilityLibrary.cs" />
     <Compile Include="Model\Irt\IrtStandard.cs" />
     <Compile Include="Model\IsolationSchemeReader.cs" />
     <Compile Include="Model\Lib\AlignedRetentionTimes.cs" />
@@ -1526,18 +1521,6 @@
       <DependentUpon>FormulaBox.cs</DependentUpon>
     </Compile>
     <Compile Include="SettingsUI\IonMobility\ChargeRegressionTable.cs" />
-    <Compile Include="SettingsUI\IonMobility\ImportIonMobilityFromSpectralLibraryDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SettingsUI\IonMobility\ImportIonMobilityFromSpectralLibraryDlg.designer.cs">
-      <DependentUpon>ImportIonMobilityFromSpectralLibraryDlg.cs</DependentUpon>
-    </Compile>
-    <Compile Include="SettingsUI\IonMobility\EditIonMobilityLibraryDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SettingsUI\IonMobility\EditIonMobilityLibraryDlg.designer.cs">
-      <DependentUpon>EditIonMobilityLibraryDlg.cs</DependentUpon>
-    </Compile>
     <Compile Include="SettingsUI\IonMobility\EditDriftTimePredictorDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2788,9 +2771,6 @@
     <EmbeddedResource Include="Resources\PeptideQcLib.bmp" />
     <EmbeddedResource Include="Resources\ToolUpdateAvailable.bmp" />
     <EmbeddedResource Include="Resources\directoryicon.png" />
-    <EmbeddedResource Include="Model\IonMobility\mapping.xml">
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="Resources\Icojam-Blueberry-Basic-Arrow-right.ico" />
     <EmbeddedResource Include="Resources\Icojam-Blueberry-Basic-Arrow-left.ico" />
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\CLFIO32.dll">
@@ -3102,26 +3082,8 @@
       <DependentUpon>EditDriftTimePredictorDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\IonMobility\EditIonMobilityLibraryDlg.ja.resx">
-      <DependentUpon>EditIonMobilityLibraryDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\IonMobility\EditIonMobilityLibraryDlg.zh-CHS.resx">
-      <DependentUpon>EditIonMobilityLibraryDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\IonMobility\ImportIonMobilityFromSpectralLibraryDlg.ja.resx">
-      <DependentUpon>ImportIonMobilityFromSpectralLibraryDlg.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\FormulaBox.resx">
       <DependentUpon>FormulaBox.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\IonMobility\ImportIonMobilityFromSpectralLibraryDlg.resx">
-      <DependentUpon>ImportIonMobilityFromSpectralLibraryDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\IonMobility\EditIonMobilityLibraryDlg.resx">
-      <DependentUpon>EditIonMobilityLibraryDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\IonMobility\EditDriftTimePredictorDlg.resx">
       <DependentUpon>EditDriftTimePredictorDlg.cs</DependentUpon>
@@ -3217,10 +3179,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\FullScanSettingsControl.zh-CHS.resx">
       <DependentUpon>FullScanSettingsControl.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\IonMobility\ImportIonMobilityFromSpectralLibraryDlg.zh-CHS.resx">
-      <DependentUpon>ImportIonMobilityFromSpectralLibraryDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\IonMobility\UseSpectralLibraryIonMobilityValuesControl.ja.resx">

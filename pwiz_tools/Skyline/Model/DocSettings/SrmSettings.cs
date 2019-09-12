@@ -130,17 +130,6 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool HasDriftTimePrediction { get { return PeptideSettings.Prediction.IonMobilityPredictor != null; } }
 
-        public bool HasIonMobilityLibraryPersisted
-        {
-            get
-            {
-                return HasDriftTimePrediction && 
-                    PeptideSettings.Prediction.IonMobilityPredictor.IonMobilityLibrary != null &&
-                    !PeptideSettings.Prediction.IonMobilityPredictor.IonMobilityLibrary.IsNone &&
-                    PeptideSettings.Prediction.IonMobilityPredictor.IonMobilityLibrary.PersistencePath != null;
-            }
-        }
-
         public bool HasBackgroundProteome { get { return !PeptideSettings.BackgroundProteome.IsNone; } }
 
         public RelativeRT GetRelativeRT(IsotopeLabelType labelType, Target seq, ExplicitMods mods)
@@ -1456,11 +1445,6 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     if (!defSet.DriftTimePredictorList.Contains(PeptideSettings.Prediction.IonMobilityPredictor))
                         defSet.DriftTimePredictorList.SetValue(PeptideSettings.Prediction.IonMobilityPredictor);
-                    if (PeptideSettings.Prediction.IonMobilityPredictor.IonMobilityLibrary != null &&
-                        !defSet.IonMobilityLibraryList.Contains(PeptideSettings.Prediction.IonMobilityPredictor.IonMobilityLibrary))
-                    {
-                        defSet.IonMobilityLibraryList.SetValue(PeptideSettings.Prediction.IonMobilityPredictor.IonMobilityLibrary);
-                    }
                 }
             }
             if (PeptideSettings.Filter != null)
@@ -1625,32 +1609,6 @@ namespace pwiz.Skyline.Model.DocSettings
 
             return this.ChangeTransitionPrediction(predict =>
                 predict.ChangeOptimizationLibrary(!libNew.IsNone ? libNew : OptimizationLibrary.NONE));
-        }
-
-        public SrmSettings ConnectIonMobilityLibrary(Func<IonMobilityLibrarySpec, IonMobilityLibrarySpec> findIonMobilityLibSpec)
-        {
-            if (PeptideSettings.Prediction.IonMobilityPredictor == null)
-                return this;
-
-            var ionMobilityLibrary = PeptideSettings.Prediction.IonMobilityPredictor.IonMobilityLibrary;
-            if (ionMobilityLibrary == null)
-                return this;
-
-            var ionMobilityLibSpec = findIonMobilityLibSpec(ionMobilityLibrary);
-            if (ionMobilityLibSpec == null)
-            {
-                // cancel
-                return null;
-            }
-            if (ionMobilityLibSpec.PersistencePath == ionMobilityLibrary.PersistencePath)
-            {
-                return this;
-            }
-
-            return this.ChangePeptidePrediction(predict =>
-                predict.ChangeDriftTimePredictor(!ionMobilityLibSpec.IsNone
-                    ? predict.IonMobilityPredictor.ChangeLibrary(ionMobilityLibSpec)
-                    : null));
         }
 
         public SrmSettings ConnectLibrarySpecs(Func<Library, LibrarySpec, LibrarySpec> findLibrarySpec, string docLibPath = null)
