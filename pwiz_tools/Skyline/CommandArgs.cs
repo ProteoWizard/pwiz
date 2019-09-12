@@ -655,15 +655,14 @@ namespace pwiz.Skyline
                 c.Refinement.NormalizationMethod = AreaCVNormalizationMethod.ratio;
                 c.RefinementCvLabelTypeName = p.Value;
             }) { WrapValue = true };
-        public static readonly Argument ARG_REFINE_QVALUE_CUTOFF = new RefineArgument(@"refine-qvalue-cutoff", NUM_VALUE,
+        public static readonly Argument ARG_REFINE_CV_QVALUE_CUTOFF = new RefineArgument(@"refine-cv-qvalue-cutoff", NUM_VALUE,
             (c, p) => c.Refinement.QValueCutoff = p.ValueDouble);
-        public static readonly Argument ARG_REFINE_MINIMUM_DETECTIONS = new RefineArgument(@"refine-minimum-detections", INT_VALUE,
+        public static readonly Argument ARG_REFINE_CV_MINIMUM_DETECTIONS = new RefineArgument(@"refine-cv-minimum-detections", INT_VALUE,
             (c, p) => c.Refinement.MinimumDetections = p.ValueInt);
-        //public static readonly Argument ARG_REFINE_TRANSITIONS = new RefineArgument(@"refine-transitions", );
-        public static readonly Argument ARG_REFINE_GROUP_BY_GROUP = new RefineArgument(@"refine-group-by-group", LABEL_VALUE,
+        //public static readonly Argument ARG_REFINE_CV_TRANSITIONS = new RefineArgument(@"refine-cv-transitions", );
+        public static readonly Argument ARG_REFINE_CV_GROUP_BY_GROUP = new RefineArgument(@"refine-cv-group-by-group", LABEL_VALUE,
             (c, p) => c.Refinement.GroupByGroup = p.Value);
-        public static readonly Argument ARG_REFINE_GROUP_BY_ANNOTATION = new RefineArgument(
-            @"refine-group-by-annotation", LABEL_VALUE,
+        public static readonly Argument ARG_REFINE_CV_GROUP_BY_ANNOTATION = new RefineArgument(@"refine-cv-group-by-annotation", LABEL_VALUE,
             (c, p) => c.Refinement.GroupByAnnotation = p.Value);
 
         private static readonly ArgumentGroup GROUP_REFINEMENT = new ArgumentGroup(
@@ -681,8 +680,8 @@ namespace pwiz.Skyline
             ARG_REFINE_MIN_TIME_CORRELATION, ARG_REFINE_MIN_DOTP, ARG_REFINE_MIN_IDOTP,
             ARG_REFINE_USE_BEST_RESULT,
             ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF, ARG_REFINE_CV_GLOBAL_NORMALIZE, ARG_REFINE_CV_REFERENCE_NORMALIZE,
-            ARG_REFINE_QVALUE_CUTOFF, ARG_REFINE_MINIMUM_DETECTIONS,
-            ARG_REFINE_GROUP_BY_GROUP, ARG_REFINE_GROUP_BY_ANNOTATION);
+            ARG_REFINE_CV_QVALUE_CUTOFF, ARG_REFINE_CV_MINIMUM_DETECTIONS,
+            ARG_REFINE_CV_GROUP_BY_GROUP, ARG_REFINE_CV_GROUP_BY_ANNOTATION);
         
 
         public RefinementSettings Refinement { get; private set; }

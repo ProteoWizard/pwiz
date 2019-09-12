@@ -162,11 +162,14 @@ namespace pwiz.Skyline.EditUI
 
         private void comboGroupBy_SelectionChanged(object sender, EventArgs e)
         {
+            comboAnnotation.Items.Clear();
             if (comboGroupBy.SelectedIndex == 0)
+            {
+                comboAnnotation.Enabled = false;
                 return;
+            }
             comboAnnotation.Enabled = true;
             var annotations = new[] { Resources.GraphSummary_UpdateToolbar_All }.Concat(AnnotationHelper.GetPossibleAnnotations(_document.Settings, comboGroupBy.SelectedItem.ToString(), AnnotationDef.AnnotationTarget.replicate)).ToArray();
-            comboAnnotation.Items.Clear();
             comboAnnotation.Items.AddRange(annotations);
             comboAnnotation.SelectedIndex = 0;
         }

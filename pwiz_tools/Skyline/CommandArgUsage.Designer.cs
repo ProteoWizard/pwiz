@@ -802,6 +802,24 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to All target precursors with less than the specified number of replicates with detection q value below the --refine-qvalue-cutoff are removed..
+        /// </summary>
+        internal static string _refine_cv_minimum_detections {
+            get {
+                return ResourceManager.GetString("_refine_cv_minimum_detections", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All target precursors with a maximum detection q value above the cutoff will be removed. If --refine-minimum-detections is used then at least the specified number of replicates must have a detection q value below the cutoff..
+        /// </summary>
+        internal static string _refine_cv_qvalue_cutoff {
+            get {
+                return ResourceManager.GetString("_refine_cv_qvalue_cutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Areas used in CV calculations are normalized to a reference type, e.g. &quot;heavy&quot;..
         /// </summary>
         internal static string _refine_cv_reference_normalize {
@@ -942,15 +960,6 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to All target precursors with less than the specified number of replicates with detection q value below the --refine-qvalue-cutoff are removed..
-        /// </summary>
-        internal static string _refine_minimum_detections {
-            get {
-                return ResourceManager.GetString("_refine_minimum_detections", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to All targets that do not correspond to a library match will be removed..
         /// </summary>
         internal static string _refine_missing_library {
@@ -977,15 +986,6 @@ namespace pwiz.Skyline {
         internal static string _refine_prefer_larger_products {
             get {
                 return ResourceManager.GetString("_refine_prefer_larger_products", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to All target precursors with a maximum detection q value above the cutoff will be removed. If --refine-minimum-detections is used then at least the specified number of replicates must have a detection q value below the cutoff..
-        /// </summary>
-        internal static string _refine_qvalue_cutoff {
-            get {
-                return ResourceManager.GetString("_refine_qvalue_cutoff", resourceCulture);
             }
         }
         

@@ -270,7 +270,7 @@ namespace pwiz.SkylineTestData
 
             // Make sure grouping works
             args.RemoveAt(1);
-            args.Add(CommandArgs.ARG_REFINE_GROUP_BY_GROUP.GetArgumentTextWithValue("SubjectId"));
+            args.Add(CommandArgs.ARG_REFINE_CV_GROUP_BY_GROUP.GetArgumentTextWithValue("SubjectId"));
             output = Run(args.ToArray());
             parts.RemoveAt(1);
             parts.Add(PropertyNames.RefinementSettings_GroupByGroup);
@@ -278,7 +278,7 @@ namespace pwiz.SkylineTestData
             IsDocumentState(OutPath, 48, 0, 119, 0, 119, 689);
 
             // Make sure group by annotation works
-            args.Add(CommandArgs.ARG_REFINE_GROUP_BY_ANNOTATION.GetArgumentTextWithValue("D102"));
+            args.Add(CommandArgs.ARG_REFINE_CV_GROUP_BY_ANNOTATION.GetArgumentTextWithValue("D102"));
             output = Run(args.ToArray());
             parts.Add(PropertyNames.RefinementSettings_GroupByAnnotation);
             AssertEx.Contains(output, parts.ToArray());

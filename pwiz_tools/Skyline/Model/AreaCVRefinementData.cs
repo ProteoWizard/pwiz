@@ -42,7 +42,6 @@ namespace pwiz.Skyline.Model
             // Avoid using not-MS1 with a document that is only MS1
             if (!ms1 && document.MoleculeTransitions.All(t => t.IsMs1))
                 ms1 = true;
-            var best = settings.Transitions == AreaCVTransitions.best;
             double? qvalueCutoff = null;
             if (ShouldUseQValues(document))
                 qvalueCutoff = _settings.QValueCutoff;

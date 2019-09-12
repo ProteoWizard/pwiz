@@ -733,10 +733,10 @@ greater peak area.</value>
   <data name="_refine_cv_reference_normalize" xml:space="preserve">
     <value>Areas used in CV calculations are normalized to a reference type, e.g. "heavy".</value>
   </data>
-  <data name="_refine_qvalue_cutoff" xml:space="preserve">
+  <data name="_refine_cv_qvalue_cutoff" xml:space="preserve">
     <value>All target precursors with a maximum detection q value above the cutoff will be removed. If --refine-minimum-detections is used then at least the specified number of replicates must have a detection q value below the cutoff.</value>
   </data>
-  <data name="_refine_minimum_detections" xml:space="preserve">
+  <data name="_refine_cv_minimum_detections" xml:space="preserve">
     <value>All target precursors with less than the specified number of replicates with detection q value below the --refine-qvalue-cutoff are removed.</value>
   </data>
 </root>
