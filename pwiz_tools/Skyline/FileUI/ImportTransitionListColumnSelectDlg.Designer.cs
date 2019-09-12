@@ -29,35 +29,18 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ImportTransitionListColumnSelectDlg));
-            this.dataGrid = new pwiz.Skyline.Controls.DataGridViewEx();
             this.buttonOk = new System.Windows.Forms.Button();
             this.buttonCancel = new System.Windows.Forms.Button();
-            this.fileLabel = new System.Windows.Forms.Label();
+            this.buttonCheckForErrors = new System.Windows.Forms.Button();
             this.comboPanelOuter = new System.Windows.Forms.Panel();
             this.comboPanelInner = new System.Windows.Forms.Panel();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGrid)).BeginInit();
+            this.fileLabel = new System.Windows.Forms.Label();
+            this.dataGrid = new pwiz.Skyline.Controls.DataGridViewEx();
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.comboPanelOuter.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGrid)).BeginInit();
             this.SuspendLayout();
-            // 
-            // dataGrid
-            // 
-            this.dataGrid.AllowUserToAddRows = false;
-            this.dataGrid.AllowUserToDeleteRows = false;
-            this.dataGrid.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.dataGrid.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCells;
-            this.dataGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGrid.Location = new System.Drawing.Point(26, 36);
-            this.dataGrid.MaximumColumnCount = null;
-            this.dataGrid.Name = "dataGrid";
-            this.dataGrid.ReadOnly = true;
-            this.dataGrid.RowHeadersVisible = false;
-            this.dataGrid.Size = new System.Drawing.Size(740, 290);
-            this.dataGrid.TabIndex = 4;
-            this.dataGrid.ColumnHeadersHeightChanged += new System.EventHandler(this.dataGrid_ColumnHeadersHeightChanged);
-            this.dataGrid.ColumnWidthChanged += new System.Windows.Forms.DataGridViewColumnEventHandler(this.dataGrid_ColumnWidthChanged);
-            this.dataGrid.Scroll += new System.Windows.Forms.ScrollEventHandler(this.dataGrid_Scroll);
+            this.Resize += new System.EventHandler(this.form_Resize);
             // 
             // buttonOk
             // 
@@ -83,6 +66,35 @@
             this.buttonCancel.Text = "Cancel";
             this.buttonCancel.UseVisualStyleBackColor = true;
             // 
+            // buttonCheckForErrors
+            // 
+            this.buttonCheckForErrors.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonCheckForErrors.Location = new System.Drawing.Point(784, 89);
+            this.buttonCheckForErrors.Name = "buttonCheckForErrors";
+            this.buttonCheckForErrors.Size = new System.Drawing.Size(75, 34);
+            this.buttonCheckForErrors.TabIndex = 9;
+            this.buttonCheckForErrors.Text = "Check For Errors";
+            this.buttonCheckForErrors.UseVisualStyleBackColor = true;
+            this.buttonCheckForErrors.Click += new System.EventHandler(this.buttonCheckForErrors_Click);
+            // 
+            // comboPanelOuter
+            // 
+            this.comboPanelOuter.Controls.Add(this.comboPanelInner);
+            this.comboPanelOuter.Location = new System.Drawing.Point(26, 36);
+            this.comboPanelOuter.Name = "comboPanelOuter";
+            this.comboPanelOuter.Size = new System.Drawing.Size(739, 75);
+            this.comboPanelOuter.TabIndex = 8;
+            // 
+            // comboPanelInner
+            // 
+            this.comboPanelInner.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.comboPanelInner.Location = new System.Drawing.Point(0, 23);
+            this.comboPanelInner.Name = "comboPanelInner";
+            this.comboPanelInner.Size = new System.Drawing.Size(736, 35);
+            this.comboPanelInner.TabIndex = 0;
+            // 
             // fileLabel
             // 
             this.fileLabel.AutoSize = true;
@@ -92,20 +104,25 @@
             this.fileLabel.TabIndex = 7;
             this.fileLabel.Text = "CSV File";
             // 
-            // comboPanelOuter
+            // dataGrid
             // 
-            this.comboPanelOuter.Controls.Add(this.comboPanelInner);
-            this.comboPanelOuter.Location = new System.Drawing.Point(291, 131);
-            this.comboPanelOuter.Name = "comboPanelOuter";
-            this.comboPanelOuter.Size = new System.Drawing.Size(200, 100);
-            this.comboPanelOuter.TabIndex = 8;
-            // 
-            // comboPanelInner
-            // 
-            this.comboPanelInner.Location = new System.Drawing.Point(77, 41);
-            this.comboPanelInner.Name = "comboPanelInner";
-            this.comboPanelInner.Size = new System.Drawing.Size(81, 35);
-            this.comboPanelInner.TabIndex = 0;
+            this.dataGrid.AllowUserToAddRows = false;
+            this.dataGrid.AllowUserToDeleteRows = false;
+            this.dataGrid.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.dataGrid.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCells;
+            this.dataGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGrid.Location = new System.Drawing.Point(26, 36);
+            this.dataGrid.Name = "dataGrid";
+            this.dataGrid.ReadOnly = true;
+            this.dataGrid.RowHeadersVisible = false;
+            this.dataGrid.Size = new System.Drawing.Size(740, 290);
+            this.dataGrid.TabIndex = 4;
+            this.dataGrid.ColumnHeadersHeightChanged += new System.EventHandler(this.dataGrid_ColumnHeadersHeightChanged);
+            this.dataGrid.ColumnAdded += new System.Windows.Forms.DataGridViewColumnEventHandler(this.dataGrid_ColumnAdded);
+            this.dataGrid.ColumnWidthChanged += new System.Windows.Forms.DataGridViewColumnEventHandler(this.dataGrid_ColumnWidthChanged);
+            this.dataGrid.Scroll += new System.Windows.Forms.ScrollEventHandler(this.dataGrid_Scroll);
             // 
             // ImportTransitionListColumnSelectDlg
             // 
@@ -114,6 +131,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.buttonCancel;
             this.ClientSize = new System.Drawing.Size(884, 361);
+            this.Controls.Add(this.buttonCheckForErrors);
             this.Controls.Add(this.comboPanelOuter);
             this.Controls.Add(this.fileLabel);
             this.Controls.Add(this.dataGrid);
@@ -127,8 +145,9 @@
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Import Transition List";
-            ((System.ComponentModel.ISupportInitialize)(this.dataGrid)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.comboPanelOuter.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dataGrid)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -136,11 +155,12 @@
 
         #endregion
 
-        private Controls.DataGridViewEx dataGrid;
-        private System.Windows.Forms.Button buttonOk;
+        public Controls.DataGridViewEx dataGrid; // Public for testing only
+        public System.Windows.Forms.Button buttonOk; // Public for testing only
         private System.Windows.Forms.Button buttonCancel;
         private System.Windows.Forms.Label fileLabel;
         private System.Windows.Forms.Panel comboPanelOuter;
         private System.Windows.Forms.Panel comboPanelInner;
+        public System.Windows.Forms.Button buttonCheckForErrors; // Public for testing only
     }
 }

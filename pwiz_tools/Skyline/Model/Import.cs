@@ -737,9 +737,9 @@ namespace pwiz.Skyline.Model
             protected int PeptideColumn { get { return Indices.PeptideColumn; } }
             protected int LabelTypeColumn { get { return Indices.LabelTypeColumn; } }
             private int PrecursorColumn { get { return Indices.PrecursorColumn; } }
-            protected double PrecursorMz { get { return ColumnMz(Fields, PrecursorColumn, FormatProvider); } }
+            protected double PrecursorMz { get { return PrecursorColumn != -1 ? ColumnMz(Fields, PrecursorColumn, FormatProvider) : 0; } }
             private int ProductColumn { get { return Indices.ProductColumn; } }
-            public double ProductMz { get { return ColumnMz(Fields, ProductColumn, FormatProvider); } }
+            public double ProductMz { get { return ProductColumn != -1 ? ColumnMz(Fields, ProductColumn, FormatProvider) : 0; } }
             private int DecoyColumn { get { return Indices.DecoyColumn; } }
             public int IrtColumn { get { return Indices.IrtColumn; } }
             public double? Irt { get { return ColumnDouble(Fields, IrtColumn, FormatProvider); } }
@@ -772,6 +772,9 @@ namespace pwiz.Skyline.Model
             public TransitionImportErrorInfo NextRow(string line, long lineNum)
             {
                 Fields = line.ParseDsvFields(Separator);
+
+                if (PeptideColumn == -1)
+                    return new TransitionImportErrorInfo(Resources.MassListRowReader_NextRow_No_peptide_sequence_column_specified, null, lineNum, line);
 
                 ExTransitionInfo info = CalcTransitionInfo(lineNum);
 

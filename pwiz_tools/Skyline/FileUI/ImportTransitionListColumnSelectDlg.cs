@@ -21,73 +21,92 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI
 {
-    public partial class ImportTransitionListColumnSelectDlg : FormEx
+    public partial class ImportTransitionListColumnSelectDlg : ModeUIInvariantFormEx
     {
         public MassListImporter Importer { get; set; }
         public List<ComboBox> ComboBoxes { get; private set; }
 
-        public ImportTransitionListColumnSelectDlg(MassListImporter importer)
+        // These are only for error checking
+        private readonly SrmDocument _docCurrent;
+        private readonly MassListInputs _inputs;
+        private readonly IdentityPath _insertPath;
+
+        public ImportTransitionListColumnSelectDlg(MassListImporter importer, SrmDocument docCurrent, MassListInputs inputs, IdentityPath insertPath)
         {
             Importer = importer;
+            _docCurrent = docCurrent;
+            _inputs = inputs;
+            _insertPath = insertPath;
 
             InitializeComponent();
 
             fileLabel.Text = Importer.Inputs.InputFilename;
-         
+
+            InitializeComboBoxes();
             DisplayData();
-            InitalizeComboBoxes();
             PopulateComboBoxes();
-            dataGrid.Update();
+            //dataGrid.Update();
             ResizeComboBoxes();
         }
 
         private void DisplayData()
         {
-            var table = new DataTable();
-            var columns = Importer._rowReader.Lines[0].ParseDsvFields(Importer.Separator).Length;
-            for (var i = 0; i < columns; i++)
-            {
-                table.Columns.Add();
-            }
-            var dots = new string[columns];
-            for (var i = 0; i < columns; i++)
-            {
-                dots[i] = @"...";
-            }
+            // The pasted data will be stored as a data table
+            var table = new DataTable("TransitionList");
+
+            // Create the first row of columns
+            var numColumns = Importer._rowReader.Lines[0].ParseDsvFields(Importer.Separator).Length;
+            for (var i = 0; i < numColumns; i++)
+                table.Columns.Add().DataType = typeof(string);
+
+            // These dots are a placeholder for where the combo boxes will be
+            var dots = Enumerable.Repeat(@"...", numColumns).ToArray();
+            // The first row will actually be combo boxes, but we use dots as a placeholder because we can't put combo boxes in a data table
             table.Rows.Add(dots);
+
+            // Add the data
             for (var index = 0; index < Math.Min(100, Importer._rowReader.Lines.Count); index++)
             {
                 var line = Importer._rowReader.Lines[index];
                 table.Rows.Add(line.ParseDsvFields(Importer.Separator));
             }
+
+            // Don't bother displaying more than 100 lines of data
             if (Importer._rowReader.Lines.Count > 100)
-            {
                 table.Rows.Add(dots);
-            }
+
+            // Set the table as the source for the DataGridView that the user sees.
             dataGrid.DataSource = table;
 
-            var headersNull = Importer._rowReader.Headers == null;
-            for (var i = 0; i < columns; i++)
+            var headers = Importer._rowReader.Headers;
+            if (headers != null)
             {
-                var header = !headersNull ? Importer._rowReader.Headers[i] : string.Empty;
-                dataGrid.Columns[i].HeaderText = header;
-                dataGrid.Columns[i].SortMode = DataGridViewColumnSortMode.NotSortable;
+                for (var i = 0; i < numColumns; i++)
+                    dataGrid.Columns[i].HeaderText = headers[i];
+                dataGrid.ColumnHeadersVisible = true;
             }
-            dataGrid.ColumnHeadersVisible = !headersNull;
+
+            dataGrid.ScrollBars = dataGrid.Rows.Count * dataGrid.Rows[0].Height + dataGrid.ColumnHeadersHeight + SystemInformation.HorizontalScrollBarHeight > dataGrid.Height 
+                ? ScrollBars.Both : ScrollBars.Horizontal;
         }
 
-        private void InitalizeComboBoxes()
+        private void InitializeComboBoxes()
         {
             ComboBoxes = new List<ComboBox>();
-            for (var i = 0; i < dataGrid.Columns.Count; i++)
+            for (var i = 0; i < Importer._rowReader.Lines[0].ParseDsvFields(Importer.Separator).Length; i++)
             {
                 var combo = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList };
                 ComboBoxes.Add(combo);
@@ -118,30 +137,14 @@ namespace pwiz.Skyline.FileUI
             }
 
             var columns = Importer._rowReader.Indices;
-            SetComboValue(columns.DecoyColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy);
-            SetComboValue(columns.IrtColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT);
-            SetComboValue(columns.LabelTypeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
-            SetComboValue(columns.LibraryColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Relative_Intensity);
-            SetComboValue(columns.PeptideColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
-            SetComboValue(columns.PrecursorColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
-            SetComboValue(columns.ProductColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
-            SetComboValue(columns.ProteinColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
-        }
-
-        private void SetComboValue(int index, string text)
-        {
-            if(index < 0 || index >= ComboBoxes.Count)
-                return;
-            ComboBoxes[index].Text = text;
-        }
-
-        private void SetComboValue(int index, int newSelectedIndex, int index2)
-        {
-            if (index == index2)
-                return;
-            if (index < 0 || index >= ComboBoxes.Count)
-                return;
-            ComboBoxes[index].SelectedIndex = newSelectedIndex;
+            SetComboBoxText(columns.DecoyColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy);
+            SetComboBoxText(columns.IrtColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT);
+            SetComboBoxText(columns.LabelTypeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
+            SetComboBoxText(columns.LibraryColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Relative_Intensity);
+            SetComboBoxText(columns.PeptideColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
+            SetComboBoxText(columns.PrecursorColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
+            SetComboBoxText(columns.ProductColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+            SetComboBoxText(columns.ProteinColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
         }
 
         public void ResizeComboBoxes()
@@ -156,81 +159,132 @@ namespace pwiz.Skyline.FileUI
             for (var i = 0; i < dataGrid.Columns.Count; i++)
             {
                 var column = dataGrid.Columns[i];
-
                 var comboBox = ComboBoxes[i];
+
                 comboBox.Location = new Point(xOffset, 0);
-                comboBox.Width = column.HeaderCell.Size.Width; // + ((i == dataGrid.Columns.Count - 1) ? 1 : 1); Playing with missing line on last combo box
+                comboBox.Width = column.Width; // + ((i == dataGrid.Columns.Count - 1) ? 1 : 1); Playing with missing line on last combo box
                 height = Math.Max(height, comboBox.Height);
-                xOffset += column.HeaderCell.Size.Width;
+                xOffset += column.Width;
             }
-            var scrollBars = dataGrid.ScrollBars == ScrollBars.Vertical || dataGrid.ScrollBars == ScrollBars.Both;
+            
+            var scrollBars = dataGrid.ScrollBars == ScrollBars.Both;
             var scrollWidth = SystemInformation.VerticalScrollBarWidth;
-            var gridWidth = dataGrid.Size.Width - (scrollBars ? scrollWidth : 0) - gridBorderWidth;
-            comboPanelOuter.Size = new Size(Math.Min(gridWidth, xOffset), height);
+            var gridWidth = dataGrid.Size.Width - (scrollBars ? scrollWidth : 0) - (2 * gridBorderWidth);
+            comboPanelOuter.Size = new Size(gridWidth, height);
             comboPanelInner.Size = new Size(xOffset, height);
             comboPanelInner.Location = new Point(-dataGrid.HorizontalScrollingOffset, 0);
         }
 
+        // Checks all the column indices and resets any that have the given index to -1
+        private static void ResetDuplicateColumns(PeptideColumnIndices columns, int index)
+        {
+            if (columns.DecoyColumn == index)
+                columns.DecoyColumn = -1;
+            if (columns.IrtColumn == index)
+                columns.IrtColumn = -1;
+            if (columns.LabelTypeColumn == index)
+                columns.LabelTypeColumn = -1;
+            if (columns.LibraryColumn == index)
+                columns.LibraryColumn = -1;
+            if (columns.PeptideColumn == index)
+                columns.PeptideColumn = -1;
+            if (columns.PrecursorColumn == index)
+                columns.PrecursorColumn = -1;
+            if (columns.ProductColumn == index)
+                columns.ProductColumn = -1;
+            if (columns.ProteinColumn == index)
+                columns.ProteinColumn = -1;
+        }
+
+        // Sets the text of a combo box, with error checking
+        private void SetComboBoxText(int comboBoxIndex, string text)
+        {
+            if (comboBoxIndex < 0 || comboBoxIndex >= ComboBoxes.Count)
+                return;
+            ComboBoxes[comboBoxIndex].Text = text;
+        }
+
+        // Ensures two combo boxes do not have the same value. Usually newSelectedIndex will be zero, because that is IgnoreColumn.
+        private void CheckForComboBoxOverlap(int indexOfPreviousComboBox, int newSelectedIndex, int indexOfNewComboBox)
+        {
+            if (indexOfPreviousComboBox == indexOfNewComboBox || indexOfPreviousComboBox < 0 || indexOfPreviousComboBox >= ComboBoxes.Count)
+                return;
+            ComboBoxes[indexOfPreviousComboBox].SelectedIndex = newSelectedIndex;
+        }
+
+        // Callback for when a combo box is changed. We use it to update the index of the PeptideColumnIndices and preventing combo boxes from overlapping.
         private void comboChanged(object sender, EventArgs e)
         {
-            var combo = (ComboBox) sender;
-            var index = ComboBoxes.IndexOf(combo);
+            var comboBox = (ComboBox) sender;
+            var comboBoxIndex = ComboBoxes.IndexOf(comboBox);
             var columns = Importer._rowReader.Indices;
 
-            if (combo.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy)
+            if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy)
             {
-                SetComboValue(columns.DecoyColumn, 0, index);
-                columns.DecoyColumn = index;
+                CheckForComboBoxOverlap(columns.DecoyColumn, 0, comboBoxIndex);
+                ResetDuplicateColumns(columns, comboBoxIndex);
+                columns.DecoyColumn = comboBoxIndex;
             }
-            else if (combo.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT)
+            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT)
             {
-                SetComboValue(columns.IrtColumn, 0, index);
-                columns.IrtColumn = index;
+                CheckForComboBoxOverlap(columns.IrtColumn, 0, comboBoxIndex);
+                ResetDuplicateColumns(columns, comboBoxIndex);
+                columns.IrtColumn = comboBoxIndex;
             }
-            else if (combo.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type)
+            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type)
             {
-                SetComboValue(columns.LabelTypeColumn, 0, index);
-                columns.LabelTypeColumn = index;
+                CheckForComboBoxOverlap(columns.LabelTypeColumn, 0, comboBoxIndex);
+                ResetDuplicateColumns(columns, comboBoxIndex);
+                columns.LabelTypeColumn = comboBoxIndex;
             }
-            else if (combo.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Relative_Intensity)
+            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Relative_Intensity)
             {
-                SetComboValue(columns.LibraryColumn, 0, index);
-                columns.LibraryColumn = index;
+                CheckForComboBoxOverlap(columns.LibraryColumn, 0, comboBoxIndex);
+                ResetDuplicateColumns(columns, comboBoxIndex);
+                columns.LibraryColumn = comboBoxIndex;
             }
-            else if (combo.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence)
+            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence)
             {
-                SetComboValue(columns.PeptideColumn, 0, index);
-                columns.PeptideColumn = index;
+                CheckForComboBoxOverlap(columns.PeptideColumn, 0, comboBoxIndex);
+                ResetDuplicateColumns(columns, comboBoxIndex);
+                columns.PeptideColumn = comboBoxIndex;
             }
-            else if (combo.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z)
+            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z)
             {
-                SetComboValue(columns.PrecursorColumn, 0, index);
-                columns.PrecursorColumn = index;
+                CheckForComboBoxOverlap(columns.PrecursorColumn, 0, comboBoxIndex);
+                ResetDuplicateColumns(columns, comboBoxIndex);
+                columns.PrecursorColumn = comboBoxIndex;
             }
-            else if (combo.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z)
+            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z)
             {
-                SetComboValue(columns.ProductColumn, 0, index);
-                columns.ProductColumn = index;
+                CheckForComboBoxOverlap(columns.ProductColumn, 0, comboBoxIndex);
+                ResetDuplicateColumns(columns, comboBoxIndex);
+                columns.ProductColumn = comboBoxIndex;
             }
-            else if (combo.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name)
+            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name)
             {
-                SetComboValue(columns.ProteinColumn, 0, index);
-                columns.ProteinColumn = index;
+                CheckForComboBoxOverlap(columns.ProteinColumn, 0, comboBoxIndex);
+                ResetDuplicateColumns(columns, comboBoxIndex);
+                columns.ProteinColumn = comboBoxIndex;
             }
             else
             {
-                if (columns.DecoyColumn == index) columns.DecoyColumn = -1;
-                if (columns.IrtColumn == index) columns.IrtColumn = -1;
-                if (columns.LabelTypeColumn == index) columns.LabelTypeColumn = -1;
-                if (columns.LibraryColumn == index) columns.LibraryColumn = -1;
-                if (columns.PeptideColumn == index) columns.PeptideColumn = -1;
-                if (columns.PrecursorColumn == index) columns.PrecursorColumn = -1;
-                if (columns.ProductColumn == index) columns.ProductColumn = -1;
-                if (columns.ProteinColumn == index) columns.ProteinColumn = -1;
+                if (columns.DecoyColumn == comboBoxIndex) columns.DecoyColumn = -1;
+                if (columns.IrtColumn == comboBoxIndex) columns.IrtColumn = -1;
+                if (columns.LabelTypeColumn == comboBoxIndex) columns.LabelTypeColumn = -1;
+                if (columns.LibraryColumn == comboBoxIndex) columns.LibraryColumn = -1;
+                if (columns.PeptideColumn == comboBoxIndex) columns.PeptideColumn = -1;
+                if (columns.PrecursorColumn == comboBoxIndex) columns.PrecursorColumn = -1;
+                if (columns.ProductColumn == comboBoxIndex) columns.ProductColumn = -1;
+                if (columns.ProteinColumn == comboBoxIndex) columns.ProteinColumn = -1;
             }
         }
 
         private void dataGrid_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
+        {
+            ResizeComboBoxes();
+        }
+        private void dataGrid_ColumnHeadersHeightChanged(object sender, EventArgs e)
         {
             ResizeComboBoxes();
         }
@@ -240,9 +294,38 @@ namespace pwiz.Skyline.FileUI
             comboPanelInner.Location = new Point(-dataGrid.HorizontalScrollingOffset, 0);
         }
 
-        private void dataGrid_ColumnHeadersHeightChanged(object sender, EventArgs e)
+        private void buttonCheckForErrors_Click(object sender, EventArgs e)
+        {
+            IdentityPath testSelectPath = null;
+            List<MeasuredRetentionTime> testIrtPeptides = null;
+            List<SpectrumMzInfo> testLibrarySpectra = null;
+            List<TransitionImportErrorInfo> testErrorList = null;
+            List<PeptideGroupDocNode> testPeptideGroups = null;
+
+            _docCurrent.ImportMassList(_inputs, Importer, null,
+                _insertPath, out testSelectPath, out testIrtPeptides, out testLibrarySpectra,
+                out testErrorList, out testPeptideGroups);
+            if (testErrorList.Any())
+            {
+                using (var dlg = new ImportTransitionListErrorDlg(testErrorList, true, false))
+                {
+                    dlg.ShowDialog(this);
+                }
+            }
+            else
+            {
+                MessageDlg.Show(this, Resources.PasteDlg_ShowNoErrors_No_errors);
+            }
+        }
+
+        private void dataGrid_ColumnAdded(object sender, DataGridViewColumnEventArgs e)
+        {
+            ResizeComboBoxes();
+        }
+
+        private void form_Resize(object sender, EventArgs e)
         {
             ResizeComboBoxes();
         }
     }
-}
+}  

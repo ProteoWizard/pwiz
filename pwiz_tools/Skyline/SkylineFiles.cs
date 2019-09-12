@@ -1876,12 +1876,11 @@ namespace pwiz.Skyline
             if (importer == null)
                 return;
 
-            using (var collumnDlg = new ImportTransitionListColumnSelectDlg(importer))
+            using (var columnDlg = new ImportTransitionListColumnSelectDlg(importer, docCurrent, inputs, insertPath))
             {
-                if (collumnDlg.ShowDialog(this) == DialogResult.Cancel)
-                {
+                var result = columnDlg.ShowDialog(this);
+                if (result == DialogResult.Cancel)
                     return;
-                }
             }
             
             // User feedback
@@ -1918,7 +1917,7 @@ namespace pwiz.Skyline
             // if there are any
             if (errorList.Any())
             {
-                using (var errorDlg = new ImportTransitionListErrorDlg(errorList, isDocumentSame))
+                using (var errorDlg = new ImportTransitionListErrorDlg(errorList, isDocumentSame, false))
                 {
                     if (errorDlg.ShowDialog(this) == DialogResult.Cancel || isDocumentSame)
                     {
