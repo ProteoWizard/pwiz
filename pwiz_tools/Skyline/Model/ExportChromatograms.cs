@@ -289,7 +289,9 @@ namespace pwiz.Skyline.Model
                 case ChromExtractor.base_peak:
                     return @"BasePeak"; 
                 case ChromExtractor.summed:
-                    return @"Summed"; 
+                    return @"Summed";
+                case ChromExtractor.qc:
+                    return @"QC";
                 default:
                     throw new InvalidDataException(Resources.ChromatogramExporter_GetExtractorName_Invalid_extractor_name_);
             }

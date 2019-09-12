@@ -79,8 +79,6 @@ namespace pwiz.SkylineTestUtil
         /// This controls whether we run the various tests that are small molecule versions of our standard tests,
         /// for example DocumentExportImportTestAsSmallMolecules().  Such tests convert the entire document to small
         /// molecule representations before proceeding.
-        /// Not to be confused with the "TestSmallMolecules"
-        /// propery below, which just adds an extra small molecule node to all tests and leaves them otherwise unchanged.
         /// Developers that want to see such tests execute within the IDE can add their machine name to the SmallMoleculeDevelopers
         /// list below (partial matches suffice, so name carefully!)
         /// </summary>
@@ -89,24 +87,6 @@ namespace pwiz.SkylineTestUtil
         {
             get { return GetBoolValue("RunSmallMoleculeTestVersions", false) || SmallMoleculeDevelopers.Any(smd => Environment.MachineName.Contains(smd)); }
             set { TestContext.Properties["RunSmallMoleculeTestVersions"] = value ? "true" : "false"; }
-        }
-
-        /// <summary>
-        /// Determines whether or not to add a special small molecule node to each document for test purposes.  Not commonly used.
-        /// See RunSmallMoleculeTestVersions above.
-        /// </summary>
-        private bool? _testSmallMolecules;
-        public bool TestSmallMolecules
-        {
-            get
-            {
-                return _testSmallMolecules ?? false;
-            }
-            set
-            {
-                // Communicate this value to Skyline via Settings.Default
-                Settings.Default.TestSmallMolecules = (_testSmallMolecules = value).Value;
-            }
         }
 
         /// <summary>
@@ -261,8 +241,6 @@ namespace pwiz.SkylineTestUtil
 //            log.Info(TestContext.TestName + " started");
 
             Settings.Init();
-
-            TestSmallMolecules = GetBoolValue("TestSmallMolecules", false);
 
             STOPWATCH.Restart();
             Initialize();

@@ -286,6 +286,7 @@ namespace pwiz.Skyline.Model.Results
         {
             return new ChromatogramGroupInfo(chromGroupHeaderInfo,
                                              _scoreTypeIndices,
+                                             _textIdBytes,
                                              _cachedFiles,
                                              _chromTransitions,
                                              _chromatogramPeaks,
@@ -1203,6 +1204,7 @@ namespace pwiz.Skyline.Model.Results
                 // Copy the cache, if moving to a new location
                 using (FileSaver fs = new FileSaver(cachePathOpt))
                 {
+                    // ReSharper disable once AssignNullToNotNullAttribute
                     File.Copy(CachePath, fs.SafeName, true);
                     fs.Commit(ReadStream);
                 }

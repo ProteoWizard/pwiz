@@ -17,6 +17,7 @@
 #ifndef PARSE_DWA20011020_H
 #define PARSE_DWA20011020_H
 
+#include "config.h"
 #include "frames.h"
 #include "lists.h"
 #include "modules.h"

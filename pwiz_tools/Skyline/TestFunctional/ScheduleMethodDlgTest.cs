@@ -57,8 +57,6 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            TestSmallMolecules = false; // The presence of the extra test node without any results is incompatible with what's being tested here.
-
             // Open 160109_Mix1_calcurve.sky under TestFunctional\ManageResultsTest.zip
             string documentPath = TestFilesDir.GetTestPath("160109_Mix1_calcurve.sky");
             RunUI(() => SkylineWindow.OpenFile(documentPath));

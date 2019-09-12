@@ -22,6 +22,7 @@
  * lists without quoting.
  */
 
+#include "config.h"
 #include "lists.h"
 #include "object.h"
 #include "parse.h"

@@ -53,8 +53,6 @@ namespace pwiz.SkylineTestFunctional
                 });
 
             // 2. Document with no peptides throws exception
-            var save = TestSmallMolecules;  // This test is about missing nodes, don't add any
-            TestSmallMolecules = false;
             var documentNoPeptides = TestFilesDir.GetTestPath("ChromNoPeptides.sky");
             RunUI(() => SkylineWindow.OpenFile(documentNoPeptides));
             WaitForDocumentLoaded();
@@ -62,7 +60,6 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(Resources.SkylineWindow_ShowChromatogramFeaturesDialog_The_document_must_have_targets_for_which_to_export_chromatograms_,
                             missingPeptidesMessage.Message);
             OkDialog(missingPeptidesMessage, missingPeptidesMessage.OkDialog);
-            TestSmallMolecules = save;
 
             // 3. Exporting with no files selected throws exception
             var documentExportNoPeptides = TestFilesDir.GetTestPath("ChromToExport.sky");

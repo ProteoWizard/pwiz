@@ -1412,4 +1412,10 @@
   <data name="ListData_Rows" xml:space="preserve">
     <value>Rows</value>
   </data>
+  <data name="RefinementSettings_MaxPrecursorPeakOnly" xml:space="preserve">
+    <value>Max precursor peak only</value>
+  </data>
+  <data name="PeptideFilter_PeptideUniqueness" xml:space="preserve">
+    <value>Peptide Uniqueness</value>
+  </data>
 </root>

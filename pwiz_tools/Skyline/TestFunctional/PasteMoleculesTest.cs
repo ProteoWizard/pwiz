@@ -88,6 +88,7 @@ namespace pwiz.SkylineTestFunctional
         const string caffeineInChi = "InChI=1S/C8H10N4O2/c1-10-4-9-6-5(10)7(13)12(3)8(14)11(6)2/h4H,1-3H3";
         const string caffeineCAS = "58-08-2";
         const string caffeineSMILES = "Cn1cnc2n(C)c(=O)n(C)c(=O)c12";
+        const string caffeineKEGG = "C07481";
         const string caffeineFormula = "C8H10N4O2";
         const string caffeineFragment = "C6H5N2O"; // Not really a known fragment of caffeine
 
@@ -109,6 +110,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var docEmpty = NewDocument();
 
+            TestNameCollisions();
             TestAmbiguousPrecursorFragment();
             TestPerTransitionValues();
             TestToolServiceAccess();
@@ -150,6 +152,7 @@ namespace pwiz.SkylineTestFunctional
                     SmallMoleculeTransitionListColumnHeaders.idInChi,
                     SmallMoleculeTransitionListColumnHeaders.idCAS,
                     SmallMoleculeTransitionListColumnHeaders.idSMILES,
+                    SmallMoleculeTransitionListColumnHeaders.idKEGG,
                     SmallMoleculeTransitionListColumnHeaders.imPrecursor,
                     SmallMoleculeTransitionListColumnHeaders.imHighEnergyOffset,
                     SmallMoleculeTransitionListColumnHeaders.imUnits,
@@ -204,11 +207,11 @@ namespace pwiz.SkylineTestFunctional
                 string[] fields =
                 {
                     "MyMol", "MyPrecursor", "MyProduct", "C12H9O4", "C6H4O2", "217.049535420091", "108.020580420091", "1", "1", "heavy", "123", "5", "25", "this is a note", "[M+]", "[M+]", "7", "9", "123", "88.5", "99.6", "77.3", "66.2",
-                                caffeineInChiKey, caffeineHMDB, caffeineInChi, caffeineCAS, caffeineSMILES, "123.4", "-0.234", "Vsec/cm2"  };
+                                caffeineInChiKey, caffeineHMDB, caffeineInChi, caffeineCAS, caffeineSMILES, caffeineKEGG, "123.4", "-0.234", "Vsec/cm2"  };
                 string[] badfields =
                 {
                     "", "", "", "123", "C6H2O2[M+2H]", "fish", "-345", "cat", "pig", "12", "frog", "hamster", "boston", "", "[M+foo]", "wut", "foosballDT", "greasyDTHEO", "mumbleCCS", "gumdropSLEN", "dingleConeV", "dangleCompV", "gorseDP", "AHHHHHRGHinchik", "bananananahndb",
-                    "shamble-raft4-inchi", "bags34cas","flansmile", "12-fooim", "bumbleimheo", "dingoimunit"};
+                    "shamble-raft4-inchi", "bags34cas","flansmile", "boozlekegg", "12-fooim", "bumbleimheo", "dingoimunit"};
                 Assert.AreEqual(fields.Length, badfields.Length);
 
                 var expectedErrors = new List<string>()
@@ -255,6 +258,8 @@ namespace pwiz.SkylineTestFunctional
                         string.Format(Resources.SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_CAS_registry_number_, badfields[s++]));
                     expectedErrors.Add(
                         Resources.PasteDlg_ShowNoErrors_No_errors); s++;  // We don't have a proper SMILES syntax check yet
+                    expectedErrors.Add(
+                        Resources.PasteDlg_ShowNoErrors_No_errors); s++;  // We don't have a proper KEGG syntax check yet
                     expectedErrors.Add(
                         string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_value__0_, badfields[s++]));
                     expectedErrors.Add(
@@ -323,6 +328,9 @@ namespace pwiz.SkylineTestFunctional
                 string smiles;
                 precursor.CustomMolecule.AccessionNumbers.AccessionNumbers.TryGetValue("smILes", out smiles); // Should be case insensitive
                 Assert.AreEqual(caffeineSMILES, smiles);
+                string kegg;
+                precursor.CustomMolecule.AccessionNumbers.AccessionNumbers.TryGetValue("kEgG", out kegg); // Should be case insensitive
+                Assert.AreEqual(caffeineKEGG, kegg);
                 // Does that produce the expected transition list file?
                 TestTransitionListOutput(docTest, "PasteMoleculeTinyTest.csv", "PasteMoleculeTinyTestExpected.csv", ExportFileType.IsolationList);
                 // Does serialization of imported values work properly?
@@ -536,7 +544,7 @@ namespace pwiz.SkylineTestFunctional
                            precursorRT + "\t" + precursorRTWindow + "\t" + explicitCE + "\t" + note + "\t\t\t" + dtValueStr +
                            "\t" + highEnergyDtOffset + "\t" + precursorCCS + "\t" + slens + "\t" + coneVoltage +
                            "\t" + cvValueStr + "\t" + declusteringPotential + "\t" + caffeineInChiKey + "\t" +
-                           caffeineHMDB + "\t" + caffeineInChi + "\t" + caffeineCAS + "\t" + caffeineSMILES
+                           caffeineHMDB + "\t" + caffeineInChi + "\t" + caffeineCAS + "\t" + caffeineSMILES + "\t" + caffeineKEGG
                            + "\t" + imValueStr + "\t" + highEnergyDtOffset + "\t" + imType;
         }
 
@@ -578,6 +586,7 @@ namespace pwiz.SkylineTestFunctional
                 SmallMoleculeTransitionListColumnHeaders.idInChi,
                 SmallMoleculeTransitionListColumnHeaders.idInChiKey,
                 SmallMoleculeTransitionListColumnHeaders.idSMILES,
+                SmallMoleculeTransitionListColumnHeaders.idKEGG,
             };
             RunUI(() =>
             {
@@ -619,7 +628,7 @@ namespace pwiz.SkylineTestFunctional
             }
             // Tack on some molecule IDs so we can test reports (NB these don't match formula, so may fail in future)
             var rows = text.Replace("\r","").Split('\n').Select(line => line.Contains("lager") ?
-                line + TextUtil.CsvSeparator + string.Join(TextUtil.CsvSeparator.ToString(), caffeineCAS, caffeineHMDB, "\"" + caffeineInChi + "\"", caffeineInChiKey, caffeineSMILES) : 
+                line + TextUtil.CsvSeparator + string.Join(TextUtil.CsvSeparator.ToString(), caffeineCAS, caffeineHMDB, "\"" + caffeineInChi + "\"", caffeineInChiKey, caffeineSMILES, caffeineKEGG) : 
                 line);
             text = TextUtil.LineSeparate(rows);
             SetClipboardText(text); 
@@ -703,7 +712,8 @@ namespace pwiz.SkylineTestFunctional
                     "Proteins!*.Peptides!*.InChI",
                     "Proteins!*.Peptides!*.HMDB",
                     "Proteins!*.Peptides!*.SMILES",
-                    "Proteins!*.Peptides!*.CAS"});
+                    "Proteins!*.Peptides!*.CAS",
+                    "Proteins!*.Peptides!*.KEGG"});
 
                 const double explicitCE2= 123.45;
                 var colCE = FindDocumentGridColumn(documentGrid, "ExplicitCollisionEnergy");
@@ -765,6 +775,11 @@ namespace pwiz.SkylineTestFunctional
             var reportedSMILES = string.Empty;
             RunUI(() => reportedSMILES = documentGrid.DataGridView.Rows[0].Cells[colSMILES.Index].Value.ToString());
             Assume.AreEqual(caffeineSMILES, reportedSMILES, "unexpected molecule smiles");
+
+            var colKEGG = FindDocumentGridColumn(documentGrid, "Precursor.Peptide.KEGG");
+            var reportedKEGG = string.Empty;
+            RunUI(() => reportedKEGG = documentGrid.DataGridView.Rows[0].Cells[colKEGG.Index].Value.ToString());
+            Assume.AreEqual(caffeineKEGG, reportedKEGG, "unexpected molecule kegg");
 
                 // And clean up after ourselves
             RunUI(() => documentGrid.Close());
@@ -1343,6 +1358,36 @@ namespace pwiz.SkylineTestFunctional
             Assume.AreEqual(1, transitions.Count(t => !t.IsMs1));
             NewDocument();
 
+        }
+
+        private void TestNameCollisions()
+        {
+            // Check that we handle items with same name but different InChiKey, which is legitimate
+            var input =
+                "Molecule List Name,Precursor Name,Precursor Formula,Precursor Adduct,Precursor m/z,Precursor Charge,Product Name,Product Formula,Product Adduct,Product m/z,Product Charge,Label Type,Explicit Retention Time,Explicit Retention Time Window,Explicit Collision Energy,Note,InChiKey\n" +
+                "quant,ecgonine methyl ester,C10H17NO3,[M+H],,1,,,,,,,,,,HMDB0006406,QIQNNBXHAYSQRY-ABIFROTESA-N\n" +
+                "quant,ecgonine methyl ester,C10H17NO3,[M-H],,-1,,,,,,,,,,HMDB0006406,QIQNNBXHAYSQRY-ABIFROTESA-N\n" +
+                "quant,(4S)-4-{[(9Z)-3-hydroxyoctadec-9-enoyl]oxy}-4-(trimethylammonio)butanoate,C10H17NO4,[M+H],,1,,,,,,,,,,HMDB0013124,YUCNWOKTRWJLGY-QMMMGPOBSA-N\n" +
+                "quant,(4S)-4-{[(9Z)-3-hydroxyoctadec-9-enoyl]oxy}-4-(trimethylammonio)butanoate,C10H17NO4,[M-H],,-1,,,,,,,,,,HMDB0013124,YUCNWOKTRWJLGY-QMMMGPOBSA-N\n" +
+                "quant,7-(carboxymethylcarbamoyl)heptanoic acid,C10H17NO5,[M+H],,1,,,,,,,,,,HMDB0000953,HXATVKDSYDWTCX-UHFFFAOYSA-N\n" +
+                "quant,7-(carboxymethylcarbamoyl)heptanoic acid,C10H17NO5,[M-H],,-1,,,,,,,,,,HMDB0000953,HXATVKDSYDWTCX-UHFFFAOYSA-N\n" +
+                "quant,(4S)-4-{[(9Z)-3-hydroxyoctadec-9-enoyl]oxy}-4-(trimethylammonio)butanoate,C10H19NO5,[M+H],,1,,,,,,,,,,HMDB0013125,QJGJXKFJFRSERW-QMMMGPOBSA-N\n" +
+                "quant,(4S)-4-{[(9Z)-3-hydroxyoctadec-9-enoyl]oxy}-4-(trimethylammonio)butanoate,C10H19NO5,[M-H],,-1,,,,,,,,,,HMDB0013125,QJGJXKFJFRSERW-QMMMGPOBSA-N\n" +
+                "quant,menthol,C10H20O,[M+H],,1,,,,,,,,,,HMDB0003352,NOOLISFMXDJSKH-KXUCPTDWSA-N\n" +
+                "quant,menthol,C10H20O,[M-H],,-1,,,,,,,,,,HMDB0003352,NOOLISFMXDJSKH-KXUCPTDWSA-N\n";
+            var docOrig = NewDocument();
+            SetClipboardText(input);
+
+            // Paste directly into targets area
+            RunUI(() => SkylineWindow.Paste());
+
+            var pastedDoc = WaitForDocumentChange(docOrig);
+            Assume.AreEqual(1, pastedDoc.MoleculeGroupCount);
+            Assume.AreEqual(5, pastedDoc.MoleculeCount);
+            var transitions = pastedDoc.MoleculeTransitions.ToArray();
+            Assume.AreEqual(10, transitions.Count(t => t.IsMs1));
+            Assume.AreEqual(0, transitions.Count(t => !t.IsMs1));
+            NewDocument();
         }
     }  
 }

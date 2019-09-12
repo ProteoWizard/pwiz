@@ -18,6 +18,8 @@
 #ifndef JAM_H_VP_2003_08_01
 #define JAM_H_VP_2003_08_01
 
+#include "config.h"
+
 #ifdef HAVE_PYTHON
 #include <Python.h>
 #endif
@@ -212,7 +214,8 @@
     #define OS_ISC
     #define NO_VFORK
 #endif
-#ifdef linux
+#if defined(linux) || defined(__linux) || \
+    defined(__linux__) || defined(__gnu_linux__)
     #define OSMINOR "OS=LINUX"
     #define OS_LINUX
 #endif

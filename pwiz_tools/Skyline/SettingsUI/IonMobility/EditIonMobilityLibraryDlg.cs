@@ -624,7 +624,10 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             {
                 if (library != null)
                 {
+                    // (ReSharper 2019.1 seems not to notice the check that's already here)
+                    // ReSharper disable PossibleNullReferenceException
                     foreach (var pooledStream in library.ReadStreams)
+                    // ReSharper restore PossibleNullReferenceException
                         pooledStream.CloseStream();
                 }
             }

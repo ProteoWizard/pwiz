@@ -38,38 +38,77 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class UIModeTest : AbstractFunctionalTest
     {
+
+        private bool _showStartPage;
         protected override bool ShowStartPage
         {
-            get { return true; } // So our code for drawing user attention to UI mode select buttons fires
+            get { return _showStartPage; } // So our code for drawing user attention to UI mode select buttons fires
         }
 
 
         [TestMethod]
         public void UIModeSettingsTest()
         {
-            TestFilesZip = @"TestFunctional\UIModeTest.zip";
-            Settings.Default.UIMode = ""; // Start clean - should default to proteomic UI mode
-            RunFunctionalTest();
+            PerformTest(true);
         }
 
+        [TestMethod]
+        public void UIModeSettingsTestWithoutStartPage()
+        {
+            PerformTest(false);
+        }
+
+        private void PerformTest(bool withStartPage)
+        {
+            TestFilesZip = @"TestFunctional\UIModeTest.zip";
+            _showStartPage = withStartPage;
+            RunFunctionalTest(null);    // No default UI mode
+        }
 
         protected override void DoTest()
         {
-            // This test makes hard assumptions about the content of the document, so don't alter it with our small molecule test node
-            TestSmallMolecules = false;
+            var startPage =_showStartPage ? WaitForOpenForm<StartPage>() : null;
+            var modeDlg = WaitForOpenForm<NoModeUIDlg>(); // Expect a dialog asking user to select a default UI mode
+            RunUI(() =>
+            {
+                modeDlg.SelectModeUI(SrmDocument.DOCUMENT_TYPE.small_molecules);
+                modeDlg.ClickOk();
+            });
+            WaitForClosedForm(modeDlg);
 
-            TestPeptideToMoleculeText(); // Exercise the UI peptide->molecule translation code
+            if (_showStartPage)
+            {
+                // ReSharper disable PossibleNullReferenceException
+                Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.small_molecules, startPage.GetModeUIHelper().GetUIToolBarButtonState());
+                // Verify that start page UI is updated
+                Assert.IsFalse(startPage.GetVisibleBoxPanels().Where(c => c is ActionBoxControl).Any(c => ((ActionBoxControl)c).IsProteomicOnly));
+                RunUI(() => startPage.DoAction(skylineWindow => true)); // Start a new file
+                // ReSharper restore PossibleNullReferenceException
+                WaitForOpenForm<SkylineWindow>();
+            }
 
-            var startPage = WaitForOpenForm<StartPage>();
-            Assert.IsTrue(startPage.GetModeUIHelper().HasModeUIExplainerToolTip); // Because of Settings.Default.UIMode = "" above
-            RunUI(() => startPage.DoAction(skylineWindow => true)); // Start a new file
-            WaitForOpenForm<SkylineWindow>();
+            // Verify that Skyline UI isn't showing anything proteomic
+            Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.small_molecules, SkylineWindow.GetModeUIHelper().GetUIToolBarButtonState());
+            Assert.IsFalse(SkylineWindow.HasProteomicMenuItems);
 
             RunUI(() =>
             {
-                Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.proteomic, startPage.GetModeUIHelper().GetUIToolBarButtonState());
                 SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("blank.sky"));
             });
+
+            // Verify handling of start page invoked from Skyline menu with a populated document
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Proteomic.sky")));
+            Assert.IsTrue(SkylineWindow.HasProteomicMenuItems);
+            startPage = ShowDialog<StartPage>(SkylineWindow.OpenStartPage);
+            RunDlg<AlertDlg>(() => startPage.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules), alertDlg => alertDlg.ClickYes());
+            Assert.IsTrue(SkylineWindow.Document.MoleculeCount == 0); // Document should be empty
+            RunUI(() => startPage.DoAction(skylineWindow => true)); // Close the start window
+            Assert.IsFalse(SkylineWindow.HasProteomicMenuItems);
+
+            if (!_showStartPage)
+            {
+                return; // No need to do the rest of this this twice
+            }
 
             foreach (SrmDocument.DOCUMENT_TYPE uimode in Enum.GetValues(typeof(SrmDocument.DOCUMENT_TYPE)))
             {
@@ -101,7 +140,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     SkylineWindow.NewDocument();
                     SkylineWindow.SetUIMode(uimode); 
-                    Assert.AreEqual(uimode, SkylineWindow.GetModeUIHelper().ModeUI);
+                    Assert.AreEqual(uimode, SkylineWindow.ModeUI);
                 });
 
                 // Test per-ui-mode persistence of "peptide" settings tab choice
@@ -110,6 +149,8 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(peptideSettingsDlg, peptideSettingsDlg.CancelDialog);
 
             }
+
+            TestPeptideToMoleculeText(); // Exercise the UI peptide->molecule translation code
 
             // Test interaction of buttons in non-empty documents
             TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE.small_molecules, SrmDocument.DOCUMENT_TYPE.small_molecules, false);
@@ -155,15 +196,15 @@ namespace pwiz.SkylineTestFunctional
             {
                 SkylineWindow.NewDocument();
                 SkylineWindow.SetUIMode(initialModeUI);
-                Assert.AreEqual(initialModeUI,SkylineWindow.GetModeUIHelper().ModeUI);
+                Assert.AreEqual(initialModeUI,SkylineWindow.ModeUI);
                 VerifyButtonStates();
 
                 SkylineWindow.OpenFile(TestFilesDir.GetTestPath(docName));
-                Assert.AreEqual(finalModeUI, SkylineWindow.GetModeUIHelper().ModeUI);
+                Assert.AreEqual(finalModeUI, SkylineWindow.ModeUI);
                 VerifyButtonStates();
 
                 SkylineWindow.NewDocument();
-                Assert.AreEqual(finalModeUI, SkylineWindow.GetModeUIHelper().ModeUI);
+                Assert.AreEqual(finalModeUI, SkylineWindow.ModeUI);
                 VerifyButtonStates();
             });
 
@@ -178,9 +219,9 @@ namespace pwiz.SkylineTestFunctional
         {
             WaitForDocumentLoaded();
             Assert.IsTrue(SkylineWindow.IsProteomicOrMixedUI ==
-                          (SkylineWindow.GetModeUIHelper().ModeUI != SrmDocument.DOCUMENT_TYPE.small_molecules)); // Checked if any proteomic data
+                          (SkylineWindow.ModeUI != SrmDocument.DOCUMENT_TYPE.small_molecules)); // Checked if any proteomic data
             Assert.IsTrue(SkylineWindow.IsSmallMoleculeOrMixedUI ==
-                          (SkylineWindow.GetModeUIHelper().ModeUI != SrmDocument.DOCUMENT_TYPE.proteomic)); // Checked if any small mol data
+                          (SkylineWindow.ModeUI != SrmDocument.DOCUMENT_TYPE.proteomic)); // Checked if any small mol data
         }
 
         private void TestUIModesClickAction(SrmDocument.DOCUMENT_TYPE initalModeUI,
@@ -203,20 +244,19 @@ namespace pwiz.SkylineTestFunctional
             if (initalModeUI != clickWhat && clickWhat != SrmDocument.DOCUMENT_TYPE.mixed && clickWhat != docType)
             {
                 // Can't force a loaded document to be another type, so we offer to create a new one
-                RunDlg<AlertDlg>(()=>SkylineWindow.ModeUIButtonClick(clickWhat), dlg=>dlg.ClickYes());
+                RunDlg<AlertDlg>(()=>SkylineWindow.SetUIMode(clickWhat), dlg=>dlg.ClickYes());
                 RunUI(()=>Assume.IsFalse(SkylineWindow.DocumentUI.MoleculeGroups.Any()));
             }
             else
             {
-                RunUI(()=>SkylineWindow.ModeUIButtonClick(clickWhat));
+                RunUI(()=>SkylineWindow.SetUIMode(clickWhat));
                 Assume.IsFalse(expectNewDocument);
             }
             RunUI(() =>
             {
-                SkylineWindow.ModeUIButtonClick(clickWhat);
-                Assert.IsFalse(SkylineWindow.GetModeUIHelper().HasModeUIExplainerToolTip);
+                SkylineWindow.SetUIMode(clickWhat);
                 VerifyButtonStates();
-                var actualModeUI = SkylineWindow.GetModeUIHelper().ModeUI;
+                var actualModeUI = SkylineWindow.ModeUI;
                 Assert.AreEqual(clickWhat, actualModeUI);
             });
         }

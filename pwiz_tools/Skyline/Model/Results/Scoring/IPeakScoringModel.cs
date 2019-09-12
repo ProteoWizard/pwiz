@@ -107,7 +107,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public IPeakFeatureCalculator Calculator { get; private set; }
         [Track]
         public double Weight { get; private set; }
-        [Track]
+        [Track(decimalPlaces: 3)]   // Information only - store 3 decimal places, i.e. 0.105 == 10.5%
         public double PercentageContribution { get; private set; }
     }
 

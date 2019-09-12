@@ -62,14 +62,11 @@ namespace pwiz.SkylineTestFunctional
             AbiTofTest();
 
             // Avoid "The current document contains peptides without enough information to rank transitions for triggered acquisition."
-            var save = TestSmallMolecules;
-            TestSmallMolecules = false;
             AgilentThermoABSciexTriggeredTest();
 
             Assert.IsFalse(IsTriggeredRecordMode);  // Make sure no commits with this set to true
 
             BrukerTOFMethodTest();
-            TestSmallMolecules = save;
 
             ABSciexShortNameTest();
         }
@@ -705,7 +702,7 @@ namespace pwiz.SkylineTestFunctional
 
             ExportAbTransitionList(modsShortNameActual);
 
-            AssertEx.NoDiff(File.ReadAllText(modsShortNameExpected), ReadAllNonSmallMoleculeText(modsShortNameActual));
+            AssertEx.NoDiff(File.ReadAllText(modsShortNameExpected), File.ReadAllText(modsShortNameActual));
 
             // Test fix for explicit and variable modifications
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("shortnames_4peptide.sky")));
@@ -714,7 +711,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("shortnames_4peptide-var.sky")));
             string modsShortNameVariable = TestFilesDir.GetTestPath("ModShortName-Variable.csv");
             ExportAbTransitionList(modsShortNameVariable);
-            AssertEx.NoDiff(File.ReadAllText(modsShortNameExplicit), ReadAllNonSmallMoleculeText(modsShortNameVariable));
+            AssertEx.NoDiff(File.ReadAllText(modsShortNameExplicit), File.ReadAllText(modsShortNameVariable));
 
             string[] expectedPeptides = {"L[1Ac]VNELTEFAK", "S[1Ac]LNC[CAM]TLR", "L[1Ac]TWASHEK", "PSCVPLMR"};
             foreach (var line in File.ReadAllLines(modsShortNameExplicit))
@@ -807,17 +804,6 @@ namespace pwiz.SkylineTestFunctional
                 }
             }
             SkylineWindow.SetDocument(original, SkylineWindow.Document);
-        }
-
-        private string ReadAllNonSmallMoleculeText(string pathList)
-        {
-            var actual = File.ReadAllText(pathList);
-            if (TestSmallMolecules)
-            {
-                for (int i = 0; i++ < 4; )
-                    actual = actual.Substring(0, actual.LastIndexOf('\n') - 1); // Trim test molecule related lines
-            }
-            return actual;
         }
 
         private static void CreateDummyRTRegression()

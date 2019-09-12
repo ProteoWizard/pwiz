@@ -11,6 +11,7 @@
 #ifndef BOOST_JAM_CONSTANTS_H
 #define BOOST_JAM_CONSTANTS_H
 
+#include "config.h"
 #include "object.h"
 
 void constants_init( void );

@@ -116,7 +116,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 displayType = DisplayTypeChrom.all;
             }
 
-            var replicateGroupOp = ReplicateGroupOp.FromCurrentSettings(document.Settings);
+            var replicateGroupOp = ReplicateGroupOp.FromCurrentSettings(document);
             GraphData graphData = new MassErrorGraphData(document,
                                             identityPath,
                                             displayType,

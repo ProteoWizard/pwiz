@@ -101,6 +101,8 @@
       <generator class="native"/>
     </id>
     <property name="FileName" column="fileName"/>
+    <property name="IdFileName" column="idFileName"/>
+    <property name="CutoffScore" column="cutoffScore"/>
   </class>
   <class name="DbRefSpectraPeakAnnotations" table="RefSpectraPeakAnnotations">
     <id name="Id">

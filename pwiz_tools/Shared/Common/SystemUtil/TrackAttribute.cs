@@ -410,13 +410,14 @@ namespace pwiz.Common.SystemUtil
     public abstract class TrackAttributeBase : Attribute
     {
         protected TrackAttributeBase(bool isTab, bool ignoreName, bool ignoreDefaultParent, Type defaultValues,
-            Type customLocalizer)
+            Type customLocalizer, int decimalPlaces = -1)
         {
             IsTab = isTab;
             IgnoreName = ignoreName;
             IgnoreDefaultParent = ignoreDefaultParent;
             DefaultValues = defaultValues;
             CustomLocalizer = customLocalizer;
+            DecimalPlaces = decimalPlaces;
         }
 
         /// <summary>
@@ -444,6 +445,10 @@ namespace pwiz.Common.SystemUtil
         /// Class which extends CustomPropertyLocalizer 
         /// </summary>
         public Type CustomLocalizer { get; protected set; }
+        /// <summary>
+        /// Number of decimal places to round the value to. Defaults to -1 for no rounding.
+        /// </summary>
+        public int DecimalPlaces { get; protected set; }
     }
 
     /// <summary>
@@ -476,8 +481,9 @@ namespace pwiz.Common.SystemUtil
             bool ignoreName = false,
             bool ignoreDefaultParent = false,
             Type defaultValues = null,
-            Type customLocalizer = null)
-            : base(isTab, ignoreName, ignoreDefaultParent, defaultValues, customLocalizer) { }
+            Type customLocalizer = null,
+            int decimalPlaces = -1)
+            : base(isTab, ignoreName, ignoreDefaultParent, defaultValues, customLocalizer, decimalPlaces) { }
     }
 
     /// <summary>
