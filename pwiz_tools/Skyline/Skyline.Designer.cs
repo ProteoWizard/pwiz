@@ -240,6 +240,7 @@ namespace pwiz.Skyline
             this.areaCVdecoysToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVTransitionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVAllTransitionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaCVCountTransitionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVBestTransitionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator58 = new System.Windows.Forms.ToolStripSeparator();
             this.areaCVPrecursorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -511,6 +512,10 @@ namespace pwiz.Skyline
             this.videosMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.webinarsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tutorialsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.documentationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.reportsHelpMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.commandLineHelpMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.otherDocsHelpMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.supportMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.issuesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.checkForUpdatesSeparator = new System.Windows.Forms.ToolStripSeparator();
@@ -545,10 +550,6 @@ namespace pwiz.Skyline
             this.massErrorMassToChargContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorlogScaleContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
-            this.documentationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.reportsHelpMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.commandLineHelpMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.otherDocsHelpMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
             this.contextMenuChromatogram.SuspendLayout();
@@ -2011,6 +2012,7 @@ namespace pwiz.Skyline
             // 
             this.areaCVTransitionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.areaCVAllTransitionsToolStripMenuItem,
+            this.areaCVCountTransitionsToolStripMenuItem,
             this.areaCVBestTransitionsToolStripMenuItem,
             this.toolStripSeparator58,
             this.areaCVPrecursorsToolStripMenuItem,
@@ -2023,6 +2025,11 @@ namespace pwiz.Skyline
             this.areaCVAllTransitionsToolStripMenuItem.Name = "areaCVAllTransitionsToolStripMenuItem";
             resources.ApplyResources(this.areaCVAllTransitionsToolStripMenuItem, "areaCVAllTransitionsToolStripMenuItem");
             this.areaCVAllTransitionsToolStripMenuItem.Click += new System.EventHandler(this.areaCVAllTransitionsToolStripMenuItem_Click);
+            // 
+            // areaCVCountTransitionsToolStripMenuItem
+            // 
+            this.areaCVCountTransitionsToolStripMenuItem.Name = "areaCVCountTransitionsToolStripMenuItem";
+            resources.ApplyResources(this.areaCVCountTransitionsToolStripMenuItem, "areaCVCountTransitionsToolStripMenuItem");
             // 
             // areaCVBestTransitionsToolStripMenuItem
             // 
@@ -3962,6 +3969,33 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.tutorialsMenuItem, "tutorialsMenuItem");
             this.tutorialsMenuItem.Click += new System.EventHandler(this.tutorialsMenuItem_Click);
             // 
+            // documentationToolStripMenuItem
+            // 
+            this.documentationToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.reportsHelpMenuItem,
+            this.commandLineHelpMenuItem,
+            this.otherDocsHelpMenuItem});
+            this.documentationToolStripMenuItem.Name = "documentationToolStripMenuItem";
+            resources.ApplyResources(this.documentationToolStripMenuItem, "documentationToolStripMenuItem");
+            // 
+            // reportsHelpMenuItem
+            // 
+            this.reportsHelpMenuItem.Name = "reportsHelpMenuItem";
+            resources.ApplyResources(this.reportsHelpMenuItem, "reportsHelpMenuItem");
+            this.reportsHelpMenuItem.Click += new System.EventHandler(this.reportsHelpMenuItem_Click);
+            // 
+            // commandLineHelpMenuItem
+            // 
+            this.commandLineHelpMenuItem.Name = "commandLineHelpMenuItem";
+            resources.ApplyResources(this.commandLineHelpMenuItem, "commandLineHelpMenuItem");
+            this.commandLineHelpMenuItem.Click += new System.EventHandler(this.commandLineHelpMenuItem_Click);
+            // 
+            // otherDocsHelpMenuItem
+            // 
+            this.otherDocsHelpMenuItem.Name = "otherDocsHelpMenuItem";
+            resources.ApplyResources(this.otherDocsHelpMenuItem, "otherDocsHelpMenuItem");
+            this.otherDocsHelpMenuItem.Click += new System.EventHandler(this.otherDocsHelpMenuItem_Click);
+            // 
             // supportMenuItem
             // 
             this.supportMenuItem.Name = "supportMenuItem";
@@ -4187,33 +4221,6 @@ namespace pwiz.Skyline
             this.massErrorlogScaleContextMenuItem.Name = "massErrorlogScaleContextMenuItem";
             resources.ApplyResources(this.massErrorlogScaleContextMenuItem, "massErrorlogScaleContextMenuItem");
             this.massErrorlogScaleContextMenuItem.Click += new System.EventHandler(this.massErrorlogScaleContextMenuItem_Click);
-            // 
-            // documentationToolStripMenuItem
-            // 
-            this.documentationToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.reportsHelpMenuItem,
-            this.commandLineHelpMenuItem,
-            this.otherDocsHelpMenuItem});
-            this.documentationToolStripMenuItem.Name = "documentationToolStripMenuItem";
-            resources.ApplyResources(this.documentationToolStripMenuItem, "documentationToolStripMenuItem");
-            // 
-            // reportsHelpMenuItem
-            // 
-            this.reportsHelpMenuItem.Name = "reportsHelpMenuItem";
-            resources.ApplyResources(this.reportsHelpMenuItem, "reportsHelpMenuItem");
-            this.reportsHelpMenuItem.Click += new System.EventHandler(this.reportsHelpMenuItem_Click);
-            // 
-            // commandLineHelpMenuItem
-            // 
-            this.commandLineHelpMenuItem.Name = "commandLineHelpMenuItem";
-            resources.ApplyResources(this.commandLineHelpMenuItem, "commandLineHelpMenuItem");
-            this.commandLineHelpMenuItem.Click += new System.EventHandler(this.commandLineHelpMenuItem_Click);
-            // 
-            // otherDocsHelpMenuItem
-            // 
-            this.otherDocsHelpMenuItem.Name = "otherDocsHelpMenuItem";
-            resources.ApplyResources(this.otherDocsHelpMenuItem, "otherDocsHelpMenuItem");
-            this.otherDocsHelpMenuItem.Click += new System.EventHandler(this.otherDocsHelpMenuItem_Click);
             // 
             // SkylineWindow
             // 
@@ -4763,6 +4770,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem reportsHelpMenuItem;
         private System.Windows.Forms.ToolStripMenuItem commandLineHelpMenuItem;
         private System.Windows.Forms.ToolStripMenuItem otherDocsHelpMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaCVCountTransitionsToolStripMenuItem;
     }
 }
 

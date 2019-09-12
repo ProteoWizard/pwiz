@@ -205,6 +205,12 @@ namespace pwiz.Skyline.Model
         public AreaCVNormalizationMethod NormalizationMethod { get; set; }
         [Track]
         public IsotopeLabelType NormalizationLabelType { get; set; }
+        [Track]
+        public AreaCVTransitions Transitions { get; set; }
+        [Track]
+        public string GroupByGroup { get; set; }
+        [Track]
+        public string GroupByAnnotation { get; set; }
 
         public SrmDocument Refine(SrmDocument document)
         {
@@ -322,22 +328,26 @@ namespace pwiz.Skyline.Model
                         @"The document does not contain enough replicates to use consistency settings.");
                 }
 
-            if (document.Settings.HasResults)
-                if (NormalizationMethod == AreaCVNormalizationMethod.global_standards &&
-                    !document.Settings.HasGlobalStandardArea)
+                if (document.Settings.HasResults)
                 {
-                    // error
-                    throw new Exception(@"The document does not have a global standard type.");
+                    if (NormalizationMethod == AreaCVNormalizationMethod.global_standards &&
+                        !document.Settings.HasGlobalStandardArea)
+                    {
+                        // error
+                        throw new Exception(@"The document does not have a global standard type.");
+                    }
+
+                    double qvalue = QValueCutoff.HasValue ? QValueCutoff.Value : double.NaN;
+                    int minDetections = MinimumDetections.HasValue ? MinimumDetections.Value : -1;
+                    int ratioIndex = GetLabelIndex(NormalizationLabelType, document);
+                    var data = new AreaCVRefinementData(refined,
+                        new AreaCVRefinementSettings(CVCutoff.Value, qvalue, minDetections, NormalizationMethod,
+                            ratioIndex, Transitions, GroupByGroup, GroupByAnnotation));
+                    refined = data.RemoveAboveCVCuttoff(refined);
                 }
-                double qvalue = QValueCutoff.HasValue ? QValueCutoff.Value : double.NaN;
-                int minDetections = MinimumDetections.HasValue ? MinimumDetections.Value : -1;
-                int ratioIndex = GetLabelIndex(NormalizationLabelType, document);
-                var data = new AreaCVRefinementData(refined, new AreaCVRefinementSettings(CVCutoff.Value, qvalue, minDetections, NormalizationMethod, ratioIndex));
-                refined = data.RemoveAboveCVCuttoff(refined);
             }
 
             return refined;
-//            return (SrmDocument) document.ChangeChildrenChecked(listPepGroups.ToArray(), true);
         }
 
         private int GetLabelIndex(IsotopeLabelType type, SrmDocument doc)

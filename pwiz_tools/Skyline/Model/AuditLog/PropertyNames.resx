@@ -1433,4 +1433,10 @@
   <data name="RefinementSettings_NormalizationMethod" xml:space="preserve">
     <value>Normalization method</value>
   </data>
+  <data name="RefinementSettings_GroupByAnnotation" xml:space="preserve">
+    <value>Group by annotation</value>
+  </data>
+  <data name="RefinementSettings_GroupByGroup" xml:space="preserve">
+    <value>Group by group</value>
+  </data>
 </root>

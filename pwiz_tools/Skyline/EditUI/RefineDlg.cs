@@ -116,6 +116,18 @@ namespace pwiz.Skyline.EditUI
                 comboNormalizeTo.Items.Add(Resources.AreaCVToolbar_UpdateUI_Medians);
                 comboNormalizeTo.Items.Add(Resources.AreaCVToolbar_UpdateUI_None);
                 comboNormalizeTo.SelectedIndex = comboNormalizeTo.Items.Count - 1;
+
+                comboTransitions.Items.Add("all"); // placeholder text
+                comboTransitions.Items.Add("best"); // placeholder text
+                comboTransitions.SelectedIndex = 0;
+
+                var maxTrans = document.PeptideTransitionGroups.Max(g => g.TransitionCount);
+                for (int i = 2; i < maxTrans; i++)
+                {
+                    comboTransitions.Items.Add(i);
+                }
+
+                AddGroupByItems();
             }
 
             if (settings.PeptideSettings.Libraries.HasLibraries)
@@ -126,6 +138,37 @@ namespace pwiz.Skyline.EditUI
             {
                 labelMinIdotProduct.Enabled = textMinIdotProduct.Enabled = groupLibCorr.Enabled = true;
             }
+        }
+
+        private void AddGroupByItems()
+        {
+            var groups =
+                AnnotationHelper.FindGroupsByTarget(_document.Settings, AnnotationDef.AnnotationTarget.replicate);
+            if (!groups.Any())
+                return;
+            groupGroupBy.Enabled = true;
+            comboGroupBy.Items.Clear();
+
+            comboGroupBy.Items.Add(Resources.SkylineWindow_AddGroupByMenuItems_All_Replicates);
+            comboGroupBy.SelectedIndex = 0;
+            comboAnnotation.Enabled = false;
+            foreach (var g in groups)
+            {
+                comboGroupBy.Items.Add(g);
+            }
+
+            comboGroupBy.SelectedIndexChanged += comboGroupBy_SelectionChanged;
+        }
+
+        private void comboGroupBy_SelectionChanged(object sender, EventArgs e)
+        {
+            if (comboGroupBy.SelectedIndex == 0)
+                return;
+            comboAnnotation.Enabled = true;
+            var annotations = new[] { Resources.GraphSummary_UpdateToolbar_All }.Concat(AnnotationHelper.GetPossibleAnnotations(_document.Settings, comboGroupBy.SelectedItem.ToString(), AnnotationDef.AnnotationTarget.replicate)).ToArray();
+            comboAnnotation.Items.Clear();
+            comboAnnotation.Items.AddRange(annotations);
+            comboAnnotation.SelectedIndex = 0;
         }
 
         private AreaCVNormalizationMethod GetNormalizationMethod(int idx)
@@ -288,6 +331,28 @@ namespace pwiz.Skyline.EditUI
             set { cbAdd.Checked = value; }
         }
 
+        public string GroupByGroup
+        {
+            get { return comboGroupBy.SelectedItem.ToString(); }
+            set { comboGroupBy.SelectedItem = value; }
+        }
+
+        public string GroupByAnnotation
+        {
+            get { return comboAnnotation.SelectedIndex.ToString(); }
+            set { comboAnnotation.SelectedItem = value; }
+        }
+
+        public string[] Annotations
+        {
+            get
+            {
+                if (!comboAnnotation.Enabled)
+                    return null;
+                return comboAnnotation.Items.Cast<string>().ToArray();
+            }
+        }
+
         public void OkDialog()
         {
             var helper = new MessageBoxHelper(this);
@@ -405,7 +470,7 @@ namespace pwiz.Skyline.EditUI
                     return;
                 cvCutoff = cutoffVal;
             }
-
+            
             double? qvalueCutoff = null;
             if (!string.IsNullOrWhiteSpace(textQVal.Text))
             {
@@ -425,6 +490,18 @@ namespace pwiz.Skyline.EditUI
             var normMethod = GetNormalizationMethod(normIdx);
 
             IsotopeLabelType referenceType = CVRefineLabelType;
+
+            var transitionsSelection = GetTransitionFromIdx(comboTransitions.SelectedIndex);
+
+            string groupByGroup = null;
+            string groupByAnnotation = null;
+            if (groupGroupBy.Enabled)
+            {
+                if (comboGroupBy.SelectedIndex > 0)
+                    groupByGroup = comboGroupBy.SelectedItem.ToString();
+                    if (comboAnnotation.Enabled && comboAnnotation.SelectedIndex > 0)
+                        groupByAnnotation = comboAnnotation.SelectedItem.ToString();
+            }
 
             RefinementSettings = new RefinementSettings
                                      {
@@ -453,11 +530,33 @@ namespace pwiz.Skyline.EditUI
                                          QValueCutoff = qvalueCutoff,
                                          MinimumDetections =  minimumDetections,
                                          NormalizationMethod = normMethod,
-                                         NormalizationLabelType = referenceType
+                                         NormalizationLabelType = referenceType,
+                                         Transitions = transitionsSelection,
+                                         GroupByGroup = groupByGroup,
+                                         GroupByAnnotation = groupByAnnotation
                                      };
 
             DialogResult = DialogResult.OK;
             Close();
+        }
+
+        private AreaCVTransitions GetTransitionFromIdx(int idx)
+        {
+            if (idx > 1)
+                return (AreaCVTransitions) idx;
+
+            var transition = AreaCVTransitions.all;
+            switch (idx)
+            {
+                case 0:
+                    transition = AreaCVTransitions.all;
+                    break;
+                case 1:
+                    transition = AreaCVTransitions.best;
+                    break;
+            }
+
+            return transition;
         }
 
         private bool CanAddLabelType(IsotopeLabelType labelType)

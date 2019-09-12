@@ -73,6 +73,8 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.label3 = new System.Windows.Forms.Label();
             this.tabConsistency = new System.Windows.Forms.TabPage();
+            this.labelTransitions = new System.Windows.Forms.Label();
+            this.comboTransitions = new System.Windows.Forms.ComboBox();
             this.labelPercent = new System.Windows.Forms.Label();
             this.comboNormalizeTo = new System.Windows.Forms.ComboBox();
             this.groupDetection = new System.Windows.Forms.GroupBox();
@@ -84,6 +86,11 @@
             this.labelNormalize = new System.Windows.Forms.Label();
             this.labelCV = new System.Windows.Forms.Label();
             this.textCVCutoff = new System.Windows.Forms.TextBox();
+            this.groupGroupBy = new System.Windows.Forms.GroupBox();
+            this.labelGroupBy = new System.Windows.Forms.Label();
+            this.labelAnnotation = new System.Windows.Forms.Label();
+            this.comboGroupBy = new System.Windows.Forms.ComboBox();
+            this.comboAnnotation = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabDocument.SuspendLayout();
@@ -93,6 +100,7 @@
             this.tabConsistency.SuspendLayout();
             this.groupDetection.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownDetections)).BeginInit();
+            this.groupGroupBy.SuspendLayout();
             this.SuspendLayout();
             // 
             // helpTip
@@ -400,6 +408,9 @@
             // 
             // tabConsistency
             // 
+            this.tabConsistency.Controls.Add(this.groupGroupBy);
+            this.tabConsistency.Controls.Add(this.labelTransitions);
+            this.tabConsistency.Controls.Add(this.comboTransitions);
             this.tabConsistency.Controls.Add(this.labelPercent);
             this.tabConsistency.Controls.Add(this.comboNormalizeTo);
             this.tabConsistency.Controls.Add(this.groupDetection);
@@ -409,6 +420,18 @@
             resources.ApplyResources(this.tabConsistency, "tabConsistency");
             this.tabConsistency.Name = "tabConsistency";
             this.tabConsistency.UseVisualStyleBackColor = true;
+            // 
+            // labelTransitions
+            // 
+            resources.ApplyResources(this.labelTransitions, "labelTransitions");
+            this.labelTransitions.Name = "labelTransitions";
+            // 
+            // comboTransitions
+            // 
+            this.comboTransitions.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboTransitions.FormattingEnabled = true;
+            resources.ApplyResources(this.comboTransitions, "comboTransitions");
+            this.comboTransitions.Name = "comboTransitions";
             // 
             // labelPercent
             // 
@@ -473,6 +496,40 @@
             resources.ApplyResources(this.textCVCutoff, "textCVCutoff");
             this.textCVCutoff.Name = "textCVCutoff";
             // 
+            // groupGroupBy
+            // 
+            this.groupGroupBy.Controls.Add(this.comboAnnotation);
+            this.groupGroupBy.Controls.Add(this.comboGroupBy);
+            this.groupGroupBy.Controls.Add(this.labelAnnotation);
+            this.groupGroupBy.Controls.Add(this.labelGroupBy);
+            resources.ApplyResources(this.groupGroupBy, "groupGroupBy");
+            this.groupGroupBy.Name = "groupGroupBy";
+            this.groupGroupBy.TabStop = false;
+            // 
+            // labelGroupBy
+            // 
+            resources.ApplyResources(this.labelGroupBy, "labelGroupBy");
+            this.labelGroupBy.Name = "labelGroupBy";
+            // 
+            // labelAnnotation
+            // 
+            resources.ApplyResources(this.labelAnnotation, "labelAnnotation");
+            this.labelAnnotation.Name = "labelAnnotation";
+            // 
+            // comboGroupBy
+            // 
+            this.comboGroupBy.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboGroupBy.FormattingEnabled = true;
+            resources.ApplyResources(this.comboGroupBy, "comboGroupBy");
+            this.comboGroupBy.Name = "comboGroupBy";
+            // 
+            // comboAnnotation
+            // 
+            this.comboAnnotation.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboAnnotation.FormattingEnabled = true;
+            resources.ApplyResources(this.comboAnnotation, "comboAnnotation");
+            this.comboAnnotation.Name = "comboAnnotation";
+            // 
             // RefineDlg
             // 
             this.AcceptButton = this.btnOK;
@@ -502,6 +559,8 @@
             this.groupDetection.ResumeLayout(false);
             this.groupDetection.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownDetections)).EndInit();
+            this.groupGroupBy.ResumeLayout(false);
+            this.groupGroupBy.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -562,5 +621,12 @@
         private System.Windows.Forms.TextBox textCVCutoff;
         private System.Windows.Forms.Label labelPercent;
         private System.Windows.Forms.NumericUpDown numericUpDownDetections;
+        private System.Windows.Forms.Label labelTransitions;
+        private System.Windows.Forms.ComboBox comboTransitions;
+        private System.Windows.Forms.GroupBox groupGroupBy;
+        private System.Windows.Forms.ComboBox comboAnnotation;
+        private System.Windows.Forms.ComboBox comboGroupBy;
+        private System.Windows.Forms.Label labelAnnotation;
+        private System.Windows.Forms.Label labelGroupBy;
     }
 }

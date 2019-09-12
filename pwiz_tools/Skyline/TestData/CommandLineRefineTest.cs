@@ -22,6 +22,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NHibernate.Dialect.Function;
 using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
@@ -266,6 +267,22 @@ namespace pwiz.SkylineTestData
             parts.Add(PropertyNames.RefinementSettings_NormalizationMethod);
             AssertEx.Contains(output, parts.ToArray());
             IsDocumentState(OutPath, 48, 0, 10, 0, 10, 58);
+
+            // Make sure grouping works
+            args.RemoveAt(1);
+            args.Add(CommandArgs.ARG_REFINE_GROUP_BY_GROUP.GetArgumentTextWithValue("SubjectId"));
+            output = Run(args.ToArray());
+            parts.RemoveAt(1);
+            parts.Add(PropertyNames.RefinementSettings_GroupByGroup);
+            AssertEx.Contains(output, parts.ToArray());
+            IsDocumentState(OutPath, 48, 0, 119, 0, 119, 689);
+
+            // Make sure group by annotation works
+            args.Add(CommandArgs.ARG_REFINE_GROUP_BY_ANNOTATION.GetArgumentTextWithValue("D102"));
+            output = Run(args.ToArray());
+            parts.Add(PropertyNames.RefinementSettings_GroupByAnnotation);
+            AssertEx.Contains(output, parts.ToArray());
+            IsDocumentState(OutPath, 48, 0, 91, 0, 91, 522);
 
             // Make sure error is recorded when peptide have only 1 replicate
             TestFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineRefine.zip");

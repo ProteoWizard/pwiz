@@ -1336,6 +1336,189 @@ exceed this threshold.</value>
   <data name="&gt;&gt;tabResults.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="comboAnnotation.Location" type="System.Drawing.Point, System.Drawing">
+    <value>180, 44</value>
+  </data>
+  <data name="comboAnnotation.Size" type="System.Drawing.Size, System.Drawing">
+    <value>121, 21</value>
+  </data>
+  <data name="comboAnnotation.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;comboAnnotation.Name" xml:space="preserve">
+    <value>comboAnnotation</value>
+  </data>
+  <data name="&gt;&gt;comboAnnotation.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboAnnotation.Parent" xml:space="preserve">
+    <value>groupGroupBy</value>
+  </data>
+  <data name="&gt;&gt;comboAnnotation.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="comboGroupBy.Location" type="System.Drawing.Point, System.Drawing">
+    <value>33, 44</value>
+  </data>
+  <data name="comboGroupBy.Size" type="System.Drawing.Size, System.Drawing">
+    <value>121, 21</value>
+  </data>
+  <data name="comboGroupBy.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;comboGroupBy.Name" xml:space="preserve">
+    <value>comboGroupBy</value>
+  </data>
+  <data name="&gt;&gt;comboGroupBy.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboGroupBy.Parent" xml:space="preserve">
+    <value>groupGroupBy</value>
+  </data>
+  <data name="&gt;&gt;comboGroupBy.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="labelAnnotation.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelAnnotation.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelAnnotation.Location" type="System.Drawing.Point, System.Drawing">
+    <value>178, 28</value>
+  </data>
+  <data name="labelAnnotation.Size" type="System.Drawing.Size, System.Drawing">
+    <value>39, 13</value>
+  </data>
+  <data name="labelAnnotation.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="labelAnnotation.Text" xml:space="preserve">
+    <value>Group:</value>
+  </data>
+  <data name="&gt;&gt;labelAnnotation.Name" xml:space="preserve">
+    <value>labelAnnotation</value>
+  </data>
+  <data name="&gt;&gt;labelAnnotation.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelAnnotation.Parent" xml:space="preserve">
+    <value>groupGroupBy</value>
+  </data>
+  <data name="&gt;&gt;labelAnnotation.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="labelGroupBy.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelGroupBy.Location" type="System.Drawing.Point, System.Drawing">
+    <value>30, 28</value>
+  </data>
+  <data name="labelGroupBy.Size" type="System.Drawing.Size, System.Drawing">
+    <value>53, 13</value>
+  </data>
+  <data name="labelGroupBy.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="labelGroupBy.Text" xml:space="preserve">
+    <value>Group by:</value>
+  </data>
+  <data name="&gt;&gt;labelGroupBy.Name" xml:space="preserve">
+    <value>labelGroupBy</value>
+  </data>
+  <data name="&gt;&gt;labelGroupBy.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelGroupBy.Parent" xml:space="preserve">
+    <value>groupGroupBy</value>
+  </data>
+  <data name="&gt;&gt;labelGroupBy.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="groupGroupBy.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="groupGroupBy.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 242</value>
+  </data>
+  <data name="groupGroupBy.Size" type="System.Drawing.Size, System.Drawing">
+    <value>332, 80</value>
+  </data>
+  <data name="groupGroupBy.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="groupGroupBy.Text" xml:space="preserve">
+    <value>Grouping</value>
+  </data>
+  <data name="&gt;&gt;groupGroupBy.Name" xml:space="preserve">
+    <value>groupGroupBy</value>
+  </data>
+  <data name="&gt;&gt;groupGroupBy.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupGroupBy.Parent" xml:space="preserve">
+    <value>tabConsistency</value>
+  </data>
+  <data name="&gt;&gt;groupGroupBy.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="labelTransitions.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelTransitions.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelTransitions.Location" type="System.Drawing.Point, System.Drawing">
+    <value>22, 185</value>
+  </data>
+  <data name="labelTransitions.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
+  </data>
+  <data name="labelTransitions.Size" type="System.Drawing.Size, System.Drawing">
+    <value>61, 13</value>
+  </data>
+  <data name="labelTransitions.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="labelTransitions.Text" xml:space="preserve">
+    <value>Transitions:</value>
+  </data>
+  <data name="&gt;&gt;labelTransitions.Name" xml:space="preserve">
+    <value>labelTransitions</value>
+  </data>
+  <data name="&gt;&gt;labelTransitions.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelTransitions.Parent" xml:space="preserve">
+    <value>tabConsistency</value>
+  </data>
+  <data name="&gt;&gt;labelTransitions.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="comboTransitions.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 200</value>
+  </data>
+  <data name="comboTransitions.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="comboTransitions.Size" type="System.Drawing.Size, System.Drawing">
+    <value>121, 21</value>
+  </data>
+  <data name="comboTransitions.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;comboTransitions.Name" xml:space="preserve">
+    <value>comboTransitions</value>
+  </data>
+  <data name="&gt;&gt;comboTransitions.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboTransitions.Parent" xml:space="preserve">
+    <value>tabConsistency</value>
+  </data>
+  <data name="&gt;&gt;comboTransitions.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
   <data name="labelPercent.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -1367,7 +1550,7 @@ exceed this threshold.</value>
     <value>tabConsistency</value>
   </data>
   <data name="&gt;&gt;labelPercent.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>3</value>
   </data>
   <data name="comboNormalizeTo.Location" type="System.Drawing.Point, System.Drawing">
     <value>206, 41</value>
@@ -1391,7 +1574,7 @@ exceed this threshold.</value>
     <value>tabConsistency</value>
   </data>
   <data name="&gt;&gt;comboNormalizeTo.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>4</value>
   </data>
   <data name="numericUpDownDetections.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -1574,7 +1757,7 @@ exceed this threshold.</value>
     <value>tabConsistency</value>
   </data>
   <data name="&gt;&gt;groupDetection.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>5</value>
   </data>
   <data name="labelNormalize.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1607,7 +1790,7 @@ exceed this threshold.</value>
     <value>tabConsistency</value>
   </data>
   <data name="&gt;&gt;labelNormalize.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>6</value>
   </data>
   <data name="labelCV.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1640,7 +1823,7 @@ exceed this threshold.</value>
     <value>tabConsistency</value>
   </data>
   <data name="&gt;&gt;labelCV.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>7</value>
   </data>
   <data name="textCVCutoff.Location" type="System.Drawing.Point, System.Drawing">
     <value>25, 41</value>
@@ -1664,7 +1847,7 @@ exceed this threshold.</value>
     <value>tabConsistency</value>
   </data>
   <data name="&gt;&gt;textCVCutoff.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>8</value>
   </data>
   <data name="tabConsistency.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>

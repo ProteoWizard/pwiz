@@ -2680,6 +2680,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Group by annotation.
+        /// </summary>
+        public static string RefinementSettings_GroupByAnnotation {
+            get {
+                return ResourceManager.GetString("RefinementSettings_GroupByAnnotation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Group by group.
+        /// </summary>
+        public static string RefinementSettings_GroupByGroup {
+            get {
+                return ResourceManager.GetString("RefinementSettings_GroupByGroup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Min idotp.
         /// </summary>
         public static string RefinementSettings_IdotProductThreshold {

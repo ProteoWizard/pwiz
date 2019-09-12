@@ -314,14 +314,13 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestRefinement()
         {
-            var graphStates = new [] { (48, 3, 4, 36), (48, 10, 11, 76) };
+            var graphStates = new [] { (48, 3, 4, 36), (48, 10, 11, 76), (48, 119, 120, 707), (48, 91, 92, 540) };
 
             // Verify cv cutoff refinement works
-            var doc = SkylineWindow.Document; // tmp
             var refineDlg = ShowDialog<RefineDlg>(() => SkylineWindow.ShowRefineDlg());
             RunUI(() => { refineDlg.CVCutoff = 20; });
             OkDialog(refineDlg, refineDlg.OkDialog);
-            doc = SkylineWindow.Document;
+            var doc = SkylineWindow.Document;
             var refineDocState = (doc.PeptideGroupCount, doc.PeptideCount, doc.PeptideTransitionGroupCount,
                 doc.PeptideTransitionCount);
             Assert.AreEqual(graphStates[0], refineDocState);
@@ -348,11 +347,50 @@ namespace pwiz.SkylineTestFunctional
                 refineDlg.CVCutoff = 20;
                 refineDlg.NormalizationMethod = AreaCVNormalizationMethod.medians;
             });
-            OkDialog(refineDlg, () => refineDlg.OkDialog());
+            OkDialog(refineDlg, refineDlg.OkDialog);
             doc = SkylineWindow.Document;
             refineDocState = (doc.PeptideGroupCount, doc.PeptideCount, doc.PeptideTransitionGroupCount,
                 doc.PeptideTransitionCount);
             Assert.AreEqual(graphStates[1], refineDocState);
+            RunUI(SkylineWindow.Undo);
+
+            // Make sure grouping works and correct annotations are displayed
+            refineDlg = ShowDialog<RefineDlg>(() => SkylineWindow.ShowRefineDlg());
+            string[] annotations = null;
+            RunUI(() =>
+            {
+                refineDlg.CVCutoff = 20;
+                refineDlg.GroupByGroup = "SubjectId";
+                annotations = refineDlg.Annotations;
+            });
+            CollectionAssert.AreEqual(annotations,
+                new[]
+                {
+                    Resources.GraphSummary_UpdateToolbar_All,
+                    "D102", "D103", "D108", "D138", "D154", "D172", "D196",
+                    "H146", "H147", "H148", "H159", "H160", "H161", "H162"
+                });
+
+            OkDialog(refineDlg, refineDlg.OkDialog);
+            doc = SkylineWindow.Document;
+            refineDocState = (doc.PeptideGroupCount, doc.PeptideCount, doc.PeptideTransitionGroupCount,
+                doc.PeptideTransitionCount);
+            Assert.AreEqual(graphStates[2], refineDocState);
+            RunUI(SkylineWindow.Undo);
+
+            // Make sure group by annotation works correctly
+            refineDlg = ShowDialog<RefineDlg>(() => SkylineWindow.ShowRefineDlg());
+            RunUI(() =>
+            {
+                refineDlg.CVCutoff = 20;
+                refineDlg.GroupByGroup = "SubjectId";
+                refineDlg.GroupByAnnotation = "D102";
+            });
+            OkDialog(refineDlg, refineDlg.OkDialog);
+            doc = SkylineWindow.Document;
+            refineDocState = (doc.PeptideGroupCount, doc.PeptideCount, doc.PeptideTransitionGroupCount,
+                doc.PeptideTransitionCount);
+            Assert.AreEqual(graphStates[3], refineDocState);
             RunUI(SkylineWindow.Undo);
         }
 

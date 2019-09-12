@@ -98,7 +98,15 @@ namespace pwiz.Skyline.Model
 
                                     var chromInfo = t.GetSafeChromInfo(index)
                                         .FirstOrDefault(c => c.OptimizationStep == 0);
-                                    return chromInfo != null && (!best || chromInfo.RankByLevel == 1);
+                                    if (chromInfo == null)
+                                        return false;
+                                    if (_settings.Transitions == AreaCVTransitions.best)
+                                        return chromInfo.RankByLevel == 1;
+                                    else if (_settings.Transitions == AreaCVTransitions.all)
+                                        return true;
+                                    
+                                    return chromInfo.RankByLevel <= (int) _settings.Transitions;
+                                    //return chromInfo != null && (!best || chromInfo.RankByLevel == 1);
                                     // ReSharper disable once PossibleNullReferenceException
                                 }).Sum(t => (double) t.GetSafeChromInfo(index).FirstOrDefault(c => c.OptimizationStep == 0).Area);
 
@@ -277,7 +285,7 @@ namespace pwiz.Skyline.Model
 
     public class AreaCVRefinementSettings
     {
-        public AreaCVRefinementSettings(double cvCutoff, double qValueCutoff, int minimumDetections, AreaCVNormalizationMethod normalizationMethod, int ratioIndex)
+        public AreaCVRefinementSettings(double cvCutoff, double qValueCutoff, int minimumDetections, AreaCVNormalizationMethod normalizationMethod, int ratioIndex, AreaCVTransitions transitions, string group, string annotation)
         {
             CVCutoff = cvCutoff;
             QValueCutoff = qValueCutoff;
@@ -285,10 +293,9 @@ namespace pwiz.Skyline.Model
             NormalizationMethod = normalizationMethod;
             RatioIndex = ratioIndex;
             MsLevel = AreaCVMsLevel.products;   // Not MS1 for now
-            Transitions = AreaCVTransitions.all; // All transitions for now
-            Transitions = (AreaCVTransitions) 3;
-            Annotation = null;
-            Group = null;
+            Transitions = transitions;
+            Group = group;
+            Annotation = annotation;
         }
 
         public virtual void AddToInternalData(ICollection<InternalData> data, List<AreaInfo> areas,
