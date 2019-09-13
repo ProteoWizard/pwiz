@@ -3,8 +3,8 @@ syntax = "proto3";
 package tensorflow.serving;
 option cc_enable_arenas = true;
 
-import "Model/Prosit/protos/tensor.proto";
-import "Model/Prosit/protos/model.proto";
+import "tensor.proto";
+import "model.proto";
 
 // PredictRequest specifies which TensorFlow model to run, as well as
 // how inputs are mapped to tensors and how outputs are filtered before

@@ -5,7 +5,7 @@ option cc_enable_arenas = true;
 option cc_generic_services = false;
 
 
-import "Model/Prosit/protos/predict.proto";
+import "predict.proto";
 
 // open source marker; do not remove
 // PredictionService provides access to machine-learned models loaded by

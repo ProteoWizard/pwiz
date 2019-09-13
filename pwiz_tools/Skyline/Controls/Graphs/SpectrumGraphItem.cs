@@ -393,6 +393,16 @@ namespace pwiz.Skyline.Controls.Graphs.Spectrum
         }
     }
 
+    public class ExceptionMSGraphItem : NoDataMSGraphItem
+    {
+        public ExceptionMSGraphItem(Exception exception) : base(exception.Message)
+        {
+            Exception = exception;
+        }
+
+        public Exception Exception { get; }
+    }
+
     public abstract class AbstractMSGraphItem : IMSGraphItemExtended
     {
         public abstract string Title { get; }

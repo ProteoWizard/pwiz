@@ -26,8 +26,10 @@ using Google.Protobuf.Collections;
 using Grpc.Core;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
+using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
-using pwiz.Skyline.Controls.Graphs.Spectrum;
+using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -4848,12 +4850,99 @@ namespace pwiz.SkylineTestFunctional
             TestLivePrositMirrorPlots();
             Settings.Default.Prosit = false; // Disable Prosit to avoid that last query after building the library
             TestPrositLibraryBuild();
-
+            Settings.Default.Prosit = true; // Disable Prosit to avoid that last query after building the library
+            TestInvalidPepSequences(); // Do this at the end, otherwise it messes with the order of nodes
             var expected = RecordData ? 0 : QUERIES.Count;
             Assert.AreEqual(expected, ((FakePrositPredictionClient)PrositPredictionClient.Current).QueryIndex);
             PrositPredictionClient.Current = null;
+            Settings.Default.Prosit = false;
             if (RecordData)
                 Console.WriteLine("});");
+        }
+
+        public void TestInvalidPepSequences()
+        {
+            // Allow us to paste 'random' sequences
+            RunUI(() =>
+            {
+                // Max missed cleavages
+                SkylineWindow.ModifyDocument(null, doc => doc.ChangeSettings(doc.Settings.ChangePeptideSettings(
+                    doc.Settings.PeptideSettings.ChangeDigestSettings(new DigestSettings(2,
+                        doc.Settings.PeptideSettings.DigestSettings.ExcludeRaggedEnds)))));
+
+                // Max len
+                SkylineWindow.ModifyDocument(null, doc => doc.ChangeSettings(doc.Settings.ChangePeptideSettings(
+                    doc.Settings.PeptideSettings.ChangeFilter(
+                        doc.Settings.PeptideSettings.Filter.ChangeMaxPeptideLength(32)))));
+            });
+
+            // Unknown Amino Acid 'O'
+            TestPrositException("ROHDESKYLINE", typeof(PrositUnsupportedAminoAcidException));
+            // Too long
+            TestPrositException(string.Concat(Enumerable.Repeat("AAAA", 8)), typeof(PrositPeptideTooLongException));
+            // Unsupported mod
+            TestPrositException("S[+80]KYLINE", typeof(PrositUnsupportedModificationException), true);
+        }
+
+        private void SelectNodeBySeq(string seq)
+        {
+            seq = FastaSequence.StripModifications(seq);
+            var found = false;
+            RunUI(() =>
+            {
+                foreach (var node in SkylineWindow.SequenceTree.Nodes.OfType<TreeNodeMS>())
+                {
+                    foreach (var child in node.Nodes.OfType<TreeNodeMS>())
+                    {
+                        var pep = child as PeptideTreeNode;
+                        if (pep != null && pep.DocNode.Peptide.Sequence == seq)
+                        {
+                            found = true;
+                            SkylineWindow.SequenceTree.SelectedNode = child;
+                            return;
+                        }
+                            
+                    }
+                }
+            });
+
+            Assert.IsTrue(found, "Could not find and select sequence \"{0}\"", seq);
+            WaitForConditionUI(() => (SkylineWindow.SelectedNode as PeptideTreeNode)?.DocNode.Peptide.Sequence == seq);
+        }
+
+        private void TestPrositException(string seq, Type expectedException, bool addMods = false)
+        {
+            var doc = SkylineWindow.Document;
+            if (!addMods)
+            {
+                RunUI(() => SkylineWindow.Paste(seq));
+            }
+            else
+            {
+                RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.Paste(seq), dlg =>
+                {
+                    dlg.OkDialog();
+                });
+            }
+            WaitForDocumentChange(doc);
+
+            SelectNodeBySeq(seq);
+
+            // Add first precursor
+            RunDlg<PopupPickList>(SkylineWindow.ShowPickChildrenInTest, dlg =>
+            {
+                dlg.ToggleItem(0);
+                dlg.OnOk();
+            });
+
+            WaitForConditionUI(() => SkylineWindow.SelectedNode.Nodes.Count == 1);
+            WaitForGraphs();
+            WaitForConditionUI(() => SkylineWindow.GraphSpectrum.GraphException != null);
+
+            RunUI(() =>
+            {
+                Assert.IsInstanceOfType(SkylineWindow.GraphSpectrum.GraphException, expectedException);
+            });
         }
 
         public void TestPrositLibraryBuild()

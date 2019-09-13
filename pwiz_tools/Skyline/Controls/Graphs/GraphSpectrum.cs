@@ -131,6 +131,22 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private SpectrumGraphItem GraphItem { get; set; }
 
+        public Exception GraphException
+        {
+            get
+            {
+                if (GraphItem != null)
+                    return null;
+
+                if (GraphPane.CurveList.Count != 1)
+                    return null;
+
+                var curveItem = GraphPane.CurveList[0];
+                var item = curveItem.Tag as ExceptionMSGraphItem;
+                return item?.Exception;
+            }
+        }
+
         public bool HasSpectrum { get { return GraphItem != null; }}
 
         public TransitionGroupDocNode Precursor
@@ -941,14 +957,14 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 catch (PrositException ex)
                 {
-                    _graphHelper.SetErrorGraphItem(new NoDataMSGraphItem(ex.Message));
+                    _graphHelper.SetErrorGraphItem(new ExceptionMSGraphItem(ex));
                     return;
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    _graphHelper.SetErrorGraphItem(new NoDataMSGraphItem(ex.Message));
-                    //_graphHelper.SetErrorGraphItem(new NoDataMSGraphItem(
-                    //                 Resources.GraphSpectrum_UpdateUI_Failure_loading_spectrum__Library_may_be_corrupted));
+                    //_graphHelper.SetErrorGraphItem(new NoDataMSGraphItem(ex.Message));
+                    _graphHelper.SetErrorGraphItem(new NoDataMSGraphItem(
+                        Resources.GraphSpectrum_UpdateUI_Failure_loading_spectrum__Library_may_be_corrupted));
                     return;
                 }
             }
