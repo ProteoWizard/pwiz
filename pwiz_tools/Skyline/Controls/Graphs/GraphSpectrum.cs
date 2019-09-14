@@ -300,7 +300,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void UpdateToolbar()
         {
-            if (_spectra == null || (_spectra.Count < 2 && !Settings.Default.Prosit))
+            if ((_spectra == null || _spectra.Count < 2) && !Settings.Default.Prosit)
             {
                 toolBar.Visible = false;
             }

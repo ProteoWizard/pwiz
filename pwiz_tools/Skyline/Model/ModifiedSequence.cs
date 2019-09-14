@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -133,6 +134,7 @@ namespace pwiz.Skyline.Model
             _defaultMassType = defaultMassType;
         }
 
+        [Browsable(false)]
         public ImmutableList<Modification> ExplicitMods
         {
             get { return _explicitMods; }

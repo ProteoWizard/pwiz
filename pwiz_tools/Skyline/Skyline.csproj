@@ -171,7 +171,13 @@
       <HintPath>..\Shared\Lib\System.Interactive.Async.dll</HintPath>
     </Reference>
     <Reference Include="System.Management" />
+    <Reference Include="System.Memory">
+      <HintPath>..\Shared\Lib\System.Memory.dll</HintPath>
+    </Reference>
     <Reference Include="System.Net.Http" />
+    <Reference Include="System.Runtime.CompilerServices.Unsafe">
+      <HintPath>..\Shared\Lib\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
     <Reference Include="System.Security" />
     <Reference Include="System.Web" />
     <Reference Include="System.Data.DataSetExtensions">
