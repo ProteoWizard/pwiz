@@ -176,7 +176,7 @@ public:
         /**
          * Dataset containing all time values.
          */
-        ChomatogramTime,
+        ChromatogramTime,
         /**
          * Dataset containing all chromatogram intensities.
          */
