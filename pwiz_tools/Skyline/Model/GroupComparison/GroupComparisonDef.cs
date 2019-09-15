@@ -146,15 +146,15 @@ namespace pwiz.Skyline.Model.GroupComparison
             return ChangeProp(ImClone(this), im => im.QValueCutoff = qValueCutoff);
         }
 
-        public GroupIdentifier GetGroupIdentifier(SrmSettings settings, ChromatogramSet chromatogramSet)
+        public GroupIdentifier GetGroupIdentifier(AnnotationCalculator annotationCalculator, ChromatogramSet chromatogramSet)
         {
             AnnotationDef annotationDef =
-                settings.DataSettings.AnnotationDefs.FirstOrDefault(a => a.Name == ControlAnnotation);
+                annotationCalculator.SrmDocument.Settings.DataSettings.AnnotationDefs.FirstOrDefault(a => a.Name == ControlAnnotation);
             if (annotationDef == null)
             {
                 return default(GroupIdentifier);
             }
-            return GroupIdentifier.MakeGroupIdentifier(chromatogramSet.Annotations.GetAnnotation(annotationDef));
+            return GroupIdentifier.MakeGroupIdentifier(annotationCalculator.GetReplicateAnnotation(annotationDef, chromatogramSet));
         }
 
         public GroupIdentifier GetControlGroupIdentifier(SrmSettings settings)

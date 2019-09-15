@@ -312,22 +312,16 @@ namespace pwiz.Skyline.Model.Lib
                         // ReSharper restore LocalizableElement
                         using (SQLiteDataReader reader = select.ExecuteReader())
                         {
-                            int icolCutoffScore = -1;
-                            try
-                            {
-                                icolCutoffScore = reader.GetOrdinal(@"cutoffScore");
-                            }
-                            catch (IndexOutOfRangeException)
-                            {
-                                // SQLite returns -1 if column does not exist, but documentation says can throw IndexOutOfRangeException
-                            }
+                            int icolCutoffScore = GetColumnIndex(reader, @"cutoffScore");
+                            int icolIdFileName = GetColumnIndex(reader, @"idFileName");
                             while (reader.Read())
                             {
                                 string filename = reader.GetString(0);
+                                string idFilename = icolIdFileName > 0 ? reader.GetString(icolIdFileName) : null;
                                 SpectrumSourceFileDetails sourceFileDetails;
                                 if (!detailsByFileName.TryGetValue(filename, out sourceFileDetails))
                                 {
-                                    sourceFileDetails = new SpectrumSourceFileDetails(filename);
+                                    sourceFileDetails = new SpectrumSourceFileDetails(filename) { IdFilePath = idFilename };
                                     detailsByFileName.Add(filename, sourceFileDetails);
                                 }
                                 sourceFileDetails.BestSpectrum += Convert.ToInt32(reader.GetValue(2));
@@ -352,6 +346,18 @@ namespace pwiz.Skyline.Model.Lib
             catch (Exception)
             {
                 return _librarySourceFiles.Select(file => new SpectrumSourceFileDetails(file.FilePath));
+            }
+        }
+
+        private static int GetColumnIndex(SQLiteDataReader reader, string columnName)
+        {
+            try
+            {
+                return reader.GetOrdinal(columnName);
+            }
+            catch (IndexOutOfRangeException)
+            {
+                return -1; // SQLite returns -1 if column does not exist, but documentation says can throw IndexOutOfRangeException
             }
         }
 
@@ -1209,6 +1215,7 @@ namespace pwiz.Skyline.Model.Lib
                 return null;
             }
             int fileId = _librarySourceFiles[iFile].Id;
+            bool anySequenceMatch = false;
             foreach (var item in LibraryEntriesWithSequences(peptideSequences))
             {
                 ExplicitPeakBounds peakBoundaries;
@@ -1216,6 +1223,19 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     return peakBoundaries;
                 }
+
+                if (item.PeakBoundariesByFileId.Any())
+                {
+                    // If the library has peak boundaries for this sequence in some other file, assume
+                    // that the peptide was just not found in this file.
+                    anySequenceMatch = true;
+                }
+            }
+
+            if (anySequenceMatch)
+            {
+                // If the library has 
+                return ExplicitPeakBounds.EMPTY;
             }
             return null;
         }

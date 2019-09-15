@@ -771,6 +771,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     return new ReplicateGroup[0]; // Likely user removed all results while Mass Errors window was open
                 }
+
+                var annotationCalculator = new AnnotationCalculator(_document);
                 var chromatograms = _document.Settings.MeasuredResults.Chromatograms;
 
                 var result = new List<ReplicateGroup>();
@@ -785,9 +787,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     var query = result.OrderBy(g => 0);
                     if (!string.IsNullOrEmpty(OrderByReplicateAnnotation))
                     {
-                        var orderByReplicateAnnotationDef = _document.Settings.DataSettings.AnnotationDefs.FirstOrDefault(annotationDef => annotationDef.Name == OrderByReplicateAnnotation);
-                        if(orderByReplicateAnnotationDef != null)
-                            query = result.OrderBy(g => chromatograms[g.ReplicateIndexes.First()].Annotations.GetAnnotation(orderByReplicateAnnotationDef));    
+                        var orderByReplicateValue = ReplicateValue.FromPersistedString(_document.Settings, OrderByReplicateAnnotation);
+                        if (orderByReplicateValue != null)
+                        {
+                            query = result.OrderBy(
+                                g => orderByReplicateValue.GetValue(annotationCalculator,
+                                    chromatograms[g.ReplicateIndexes.First()]), CollectionUtil.ColumnValueComparer);
+                        }
                     }
 
                     if (ReplicateOrder == SummaryReplicateOrder.document)
@@ -816,7 +822,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 else
                 {
                     var lookup = replicateIndexes.ToLookup(replicateIndex =>
-                        ReplicateGroupOp.GroupByValue.GetValue(chromatograms[replicateIndex]));
+                        ReplicateGroupOp.GroupByValue.GetValue(annotationCalculator, chromatograms[replicateIndex]));
                     var keys = lookup.Select(grouping => grouping.Key).ToList();
                     if (keys.Count > 2)
                     {
@@ -824,7 +830,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         keys.Remove(null);
                     }
 
-                    keys.Sort(Comparer<object>.Create(CollectionUtil.CompareColumnValues));
+                    keys.Sort(CollectionUtil.ColumnValueComparer);
                     // ReSharper disable AssignNullToNotNullAttribute
                     foreach (var key in keys)
                     {

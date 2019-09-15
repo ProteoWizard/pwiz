@@ -42,7 +42,7 @@ void test(const string& filepath, double lockmassMz, double lockmassTolerance)
     ExtendedReaderList readerList;
     MSDataFile msd(filepath, &readerList);
 
-    bfs::path targetResultFilename = bfs::path(__FILE__).parent_path() / "ChromatogramList_LockmassRefinerTest.data" / (msd.run.id + ".mzML");
+    bfs::path targetResultFilename = bfs::path(__FILE__).parent_path() / "../spectrum_processing/SpectrumList_LockmassRefinerTest.data" / (msd.run.id + ".mzML");
     if (!bfs::exists(targetResultFilename))
         throw runtime_error("test result file does not exist: " + targetResultFilename.string());
     MSDataFile targetResult(targetResultFilename.string());
@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
 
         for(const string& filepath : rawpaths)
         {
-            if (bal::ends_with(filepath, "091204_NFDM_008.raw"))
+            if (bal::ends_with(filepath, "ATEHLSTLSEK_profile.raw"))
             {
                 test(filepath, 615.38, 0.1);
                 test(filepath, 0, 0.1);

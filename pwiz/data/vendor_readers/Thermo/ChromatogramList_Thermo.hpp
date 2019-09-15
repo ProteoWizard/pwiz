@@ -58,6 +58,7 @@ public:
     virtual const ChromatogramIdentity& chromatogramIdentity(size_t index) const;
     virtual size_t find(const string& id) const;
     virtual ChromatogramPtr chromatogram(size_t index, bool getBinaryData) const;
+    virtual ChromatogramPtr chromatogram(size_t index, DetailLevel detailLevel) const;
     
 #ifdef PWIZ_READER_THERMO
     ChromatogramList_Thermo(const MSData& msd, RawFilePtr rawfile, const Reader::Config& config);
@@ -87,6 +88,7 @@ public:
     mutable map<string, size_t> idMap_;
 
     void createIndex() const;
+    IndexEntry& addChromatogram(const string& id, ControllerType controllerType, int controllerNumber, CVID chromatogramType, const string& filter) const;
 #endif // PWIZ_READER_THERMO
 };
 

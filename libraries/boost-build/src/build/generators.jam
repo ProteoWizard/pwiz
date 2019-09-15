@@ -1042,7 +1042,7 @@ local rule try-one-generator-really ( project name ? : generator : target-type
     generators.dout [ indent ] " " $(targets) ;
     if $(usage-requirements)
     {
-        generators.dout [ indent ] "  with usage requirements:" $(x) ;
+        generators.dout [ indent ] "  with usage requirements:" $(usage-requirements) ;
     }
 
     if $(success)

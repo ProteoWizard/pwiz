@@ -1346,7 +1346,8 @@ public ref class SpectrumList
 
     /// <summary>
     /// retrieve a spectrum by index
-    /// <para>- binary data arrays will be provided if (getBinaryData == true)</para>
+    /// <para>- defaultArrayLength will be provided if detailLevel is at least DetailLevel.FullMetadata</para>
+    /// <para>- binary data arrays will be provided if detailLevel is at least DetailLevel.FullData</para>
     /// <para>- client may assume the underlying Spectrum^ is valid</para>
     /// </summary>
     virtual Spectrum^ spectrum(int index, DetailLevel detailLevel);
@@ -1457,6 +1458,14 @@ public ref class ChromatogramList
     /// <para>- client may assume the underlying Chromatogram^ is valid</para>
     /// </summary>
     virtual Chromatogram^ chromatogram(int index, bool getBinaryData);
+
+    /// <summary>
+    /// retrieve a chromatogram by index
+    /// <para>- defaultArrayLength will be provided if detailLevel is at least DetailLevel.FullMetadata</para>
+    /// <para>- binary data arrays will be provided if detailLevel is at least DetailLevel.FullData</para>
+    /// <para>- client may assume the underlying Chromatogram^ is valid</para>
+    /// </summary>
+    virtual Chromatogram^ chromatogram(int index, DetailLevel detailLevel);
 
     /// <summary>
     /// returns the data processing affecting chromatograms retrieved through this interface

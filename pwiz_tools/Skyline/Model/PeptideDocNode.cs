@@ -104,7 +104,7 @@ namespace pwiz.Skyline.Model
 
         protected override IList<DocNode> OrderedChildren(IList<DocNode> children)
         {
-            if (Peptide.IsCustomMolecule && children.Any() && !SrmDocument.IsSpecialNonProteomicTestDocNode(this))
+            if (Peptide.IsCustomMolecule && children.Any())
             {
                 // Enforce order for small molecules, except those that are fictions of the test system
                 return children.OrderBy(t => (TransitionGroupDocNode)t, new TransitionGroupDocNode.CustomIonPrecursorComparer()).ToArray();
@@ -517,6 +517,8 @@ namespace pwiz.Skyline.Model
 
         public NormalizationMethod NormalizationMethod { get; private set; }
 
+        public string AttributeGroupId { get; private set; }
+
         #region Property change methods
 
         private PeptideDocNode UpdateModifiedSequence(SrmSettings settingsNew)
@@ -620,6 +622,12 @@ namespace pwiz.Skyline.Model
         public PeptideDocNode ChangeNormalizationMethod(NormalizationMethod normalizationMethod)
         {
             return ChangeProp(ImClone(this), im => im.NormalizationMethod = normalizationMethod);
+        }
+
+        public PeptideDocNode ChangeAttributeGroupId(string attributeGroupId)
+        {
+            return ChangeProp(ImClone(this),
+                im => im.AttributeGroupId = string.IsNullOrEmpty(attributeGroupId) ? null : attributeGroupId);
         }
 
         #endregion
@@ -1896,7 +1904,8 @@ namespace pwiz.Skyline.Model
                 other.BestResult == BestResult &&
                 Equals(other.InternalStandardConcentration, InternalStandardConcentration) &&
                 Equals(other.ConcentrationMultiplier, ConcentrationMultiplier) &&
-                Equals(other.NormalizationMethod, NormalizationMethod);
+                Equals(other.NormalizationMethod, NormalizationMethod) &&
+                Equals(other.AttributeGroupId, AttributeGroupId);
             return equal; // For debugging convenience
         }
 
@@ -1921,6 +1930,7 @@ namespace pwiz.Skyline.Model
                 result = (result*397) ^ InternalStandardConcentration.GetHashCode();
                 result = (result*397) ^ ConcentrationMultiplier.GetHashCode();
                 result = (result*397) ^ (NormalizationMethod == null ? 0 : NormalizationMethod.GetHashCode());
+                result = (result*397) ^ (AttributeGroupId == null ? 0 : AttributeGroupId.GetHashCode());
                 return result;
             }
         }

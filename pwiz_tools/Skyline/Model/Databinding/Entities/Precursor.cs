@@ -536,6 +536,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get { return PrecursorRef.PROTOTYPE; }
         }
+
+        protected override Type SkylineDocNodeType
+        {
+            get { return typeof(Precursor); }
+        }
     }
 
     public class PrecursorResultSummary : SkylineObject

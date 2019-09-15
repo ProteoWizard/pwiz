@@ -188,6 +188,12 @@
     <Compile Include="Alerts\AlertLinkDlg.Designer.cs">
       <DependentUpon>AlertLinkDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Alerts\NoModeUIDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\NoModeUIDlg.Designer.cs">
+      <DependentUpon>NoModeUIDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Alerts\PeptidesPerProteinDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -315,6 +321,9 @@
     </Compile>
     <Compile Include="Controls\Graphs\ReplicateGroupOp.cs" />
     <Compile Include="Controls\Graphs\ReplicateValue.cs" />
+    <Compile Include="Controls\ImageListBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Controls\TargetColumn.cs" />
     <Compile Include="FileUI\ExportAnnotationsDlg.cs">
       <SubType>Form</SubType>
@@ -368,8 +377,8 @@
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Databinding\Entities\ColumnToolTips.Designer.cs">
-      <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Databinding\ListColumnPropertyDescriptor.cs" />
@@ -380,6 +389,9 @@
     <Compile Include="Model\Databinding\RowActions\DeleteNodesAction.cs" />
     <Compile Include="Model\Databinding\RowActions\RemovePeaksAction.cs" />
     <Compile Include="Model\Databinding\RowActions\RowAction.cs" />
+    <Compile Include="Model\DocSettings\AnnotationCalculator.cs" />
+    <Compile Include="Model\DocSettings\AnnotationExpression.cs" />
+    <Compile Include="Model\DocSettings\DocumentAnnotationUpdater.cs" />
     <Compile Include="Model\ElementLocators\ElementLocator.cs" />
     <Compile Include="Model\ElementLocators\ListRef.cs" />
     <Compile Include="Model\DocSettings\FullScanAcquisitionMethod.cs" />
@@ -423,6 +435,7 @@
     <Compile Include="Model\Results\RemoteApi\RemoteServerException.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteSession.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteUrl.cs" />
+    <Compile Include="Model\Serialization\AnnotationScrubber.cs" />
     <Compile Include="Model\Serialization\Pre372CustomIonTransitionGroupHandler.cs" />
     <Compile Include="Model\Serialization\XmlReadAhead.cs" />
     <Compile Include="Model\TargetMap.cs" />
@@ -1833,6 +1846,15 @@
     <EmbeddedResource Include="Alerts\MissingFileDlg.zh-CHS.resx">
       <DependentUpon>MissingFileDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\NoModeUIDlg.ja.resx">
+      <DependentUpon>NoModeUIDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\NoModeUIDlg.resx">
+      <DependentUpon>NoModeUIDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\NoModeUIDlg.zh-CHS.resx">
+      <DependentUpon>NoModeUIDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\PasteFilteredPeptidesDlg.ja.resx">
       <DependentUpon>PasteFilteredPeptidesDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -1901,9 +1923,17 @@
       <DependentUpon>UpgradeLicenseDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="CommandArgUsage.ja.resx">
+      <DependentUpon>CommandArgUsage.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="CommandArgUsage.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>CommandArgUsage.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CommandArgUsage.zh-CHS.resx">
+      <DependentUpon>CommandArgUsage.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\AuditLog\AuditLogExtraInfoForm.ja.resx">
@@ -2097,6 +2127,9 @@
     <EmbeddedResource Include="Controls\GroupComparison\MsStatsLogoForm.zh-CHS.resx">
       <DependentUpon>MsStatsLogoForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Lists\ListDesigner.ja.resx">
+      <DependentUpon>ListDesigner.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Lists\ListDesigner.resx">
       <DependentUpon>ListDesigner.cs</DependentUpon>
     </EmbeddedResource>
@@ -2117,6 +2150,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\VolcanoPlotPropertiesDlg.zh-CHS.resx">
       <DependentUpon>VolcanoPlotPropertiesDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Lists\ListDesigner.zh-CHS.resx">
+      <DependentUpon>ListDesigner.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\ActionBoxControl.ja.resx">
       <DependentUpon>ActionBoxControl.cs</DependentUpon>
@@ -2215,6 +2251,9 @@
     <EmbeddedResource Include="FileUI\CreateIrtCalculatorDlg.zh-CHS.resx">
       <DependentUpon>CreateIrtCalculatorDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ExportAnnotationsDlg.ja.resx">
+      <DependentUpon>ExportAnnotationsDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ExportAnnotationsDlg.resx">
       <DependentUpon>ExportAnnotationsDlg.cs</DependentUpon>

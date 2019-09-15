@@ -58,40 +58,40 @@ Extra Info: 文件名称 =
 在文件中添加单次注射重复测定 = 真,
 要同步导入的文件 = "许多个"
 
-Undo Redo : 已将峰 NP_036629 > K.GILAADESVGSMAK.R [28, 41] > 674.8425++ 应用于所有
-Summary   : 已将峰 NP_036629 > K.GILAADESVGSMAK.R [28, 41] > 674.8425++ 应用于所有
+Undo Redo : 应用所有峰值NP_036629 > K.GILAADESVGSMAK.R [28, 41] > 674.8425++
+Summary   : 应用所有峰值NP_036629 > K.GILAADESVGSMAK.R [28, 41] > 674.8425++
 All Info  :
-已将峰 NP_036629 > K.GILAADESVGSMAK.R [28, 41] > 674.8425++ 应用于所有
+应用所有峰值NP_036629 > K.GILAADESVGSMAK.R [28, 41] > 674.8425++
 
-Undo Redo : 已将峰 NP_112646 > K.LNDGSQITFEK.C [243, 253] > 626.3144++ 应用于所有
-Summary   : 已将峰 NP_112646 > K.LNDGSQITFEK.C [243, 253] > 626.3144++ 应用于所有
+Undo Redo : 应用所有峰值NP_112646 > K.LNDGSQITFEK.C [243, 253] > 626.3144++
+Summary   : 应用所有峰值NP_112646 > K.LNDGSQITFEK.C [243, 253] > 626.3144++
 All Info  :
-已将峰 NP_112646 > K.LNDGSQITFEK.C [243, 253] > 626.3144++ 应用于所有
+应用所有峰值NP_112646 > K.LNDGSQITFEK.C [243, 253] > 626.3144++
 
-Undo Redo : 已将峰 NP_036620 > DLTGFPQGADQR > 652.8151++ 应用于后续
-Summary   : 已将峰 NP_036620 > DLTGFPQGADQR > 652.8151++ 应用于后续
+Undo Redo : 应用峰值NP_036620 > DLTGFPQGADQR > 652.8151++到后续
+Summary   : 应用峰值NP_036620 > DLTGFPQGADQR > 652.8151++到后续
 All Info  :
-已将峰 NP_036620 > DLTGFPQGADQR > 652.8151++ 应用于后续
+应用峰值NP_036620 > DLTGFPQGADQR > 652.8151++到后续
 
-Undo Redo : 已将峰 NP_445770 > GATYAFSGSHYWR > 751.8442++ 应用于后续
-Summary   : 已将峰 NP_445770 > GATYAFSGSHYWR > 751.8442++ 应用于后续
+Undo Redo : 应用峰值NP_445770 > GATYAFSGSHYWR > 751.8442++到后续
+Summary   : 应用峰值NP_445770 > GATYAFSGSHYWR > 751.8442++到后续
 All Info  :
-已将峰 NP_445770 > GATYAFSGSHYWR > 751.8442++ 应用于后续
+应用峰值NP_445770 > GATYAFSGSHYWR > 751.8442++到后续
 
-Undo Redo : 已将峰 NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ 应用于所有
-Summary   : 已将峰 NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ 应用于所有
+Undo Redo : 应用所有峰值NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++
+Summary   : 应用所有峰值NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++
 All Info  :
-已将峰 NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ 应用于所有
+应用所有峰值NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++
 
-Undo Redo : 已将峰 NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ 应用于所有
-Summary   : 已将峰 NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ 应用于所有
+Undo Redo : 应用所有峰值NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++
+Summary   : 应用所有峰值NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++
 All Info  :
-已将峰 NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ 应用于所有
+应用所有峰值NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++
 
-Undo Redo : 已将峰 NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ 应用于所有
-Summary   : 已将峰 NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ 应用于所有
+Undo Redo : 应用所有峰值NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++
+Summary   : 应用所有峰值NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++
 All Info  :
-已将峰 NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ 应用于所有
+应用所有峰值NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++
 
 Undo Redo : 已删除目标 NP_036629 > K.GILAADESVGSMAK.R [28, 41]
 Summary   : 已删除目标 NP_036629 > K.GILAADESVGSMAK.R [28, 41]

@@ -1080,8 +1080,8 @@
   </data>
   <data name="textRTRegressionThreshold.ToolTip" xml:space="preserve">
     <value>母离子将从文档中被删除，
-直至具有最佳保留时间计算器的
-线性回归残差目标值
+直到具有最佳保留时间计算的线性
+回归相关系数的目标值
 超过此阈值。</value>
   </data>
   <data name="&gt;&gt;textRTRegressionThreshold.Name" xml:space="preserve">

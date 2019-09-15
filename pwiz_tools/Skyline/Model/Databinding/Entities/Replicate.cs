@@ -99,7 +99,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public override object GetAnnotation(AnnotationDef annotationDef)
         {
-            return ChromatogramSet.Annotations.GetAnnotation(annotationDef);
+            return DataSchema.AnnotationCalculator.GetAnnotation(annotationDef, this, ChromatogramSet.Annotations);
         }
 
         public override void SetAnnotation(AnnotationDef annotationDef, object value)

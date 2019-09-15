@@ -28,6 +28,7 @@
 
 #include "pwiz/data/vendor_readers/Agilent/SpectrumList_Agilent.hpp"
 #include "pwiz/data/vendor_readers/Waters/SpectrumList_Waters.hpp"
+#include "pwiz/data/vendor_readers/UIMF/SpectrumList_UIMF.hpp"
 
 
 namespace pwiz {
@@ -54,12 +55,18 @@ SpectrumList_3D::SpectrumList_3D(const msdata::SpectrumListPtr& inner)
     {
         mode_ = 2;
     }
+
+    detail::SpectrumList_UIMF* uimf = dynamic_cast<detail::SpectrumList_UIMF*>(&*inner);
+    if (uimf)
+    {
+        mode_ = 3;
+    }
 }
 
 
 PWIZ_API_DECL bool SpectrumList_3D::accept(const msdata::SpectrumListPtr& inner)
 {
-    return dynamic_cast<detail::SpectrumList_Agilent*>(&*inner) || dynamic_cast<detail::SpectrumList_Waters*>(&*inner);
+    return dynamic_cast<detail::SpectrumList_Agilent*>(&*inner) || dynamic_cast<detail::SpectrumList_Waters*>(&*inner) || dynamic_cast<detail::SpectrumList_UIMF*>(&*inner);
 }
 
 
@@ -75,13 +82,16 @@ PWIZ_API_DECL Spectrum3DPtr SpectrumList_3D::spectrum3d(double scanStartTime, co
     {
         default:
         case 0:
-            throw runtime_error("[SpectrumList_3D::spectrum3d] 3d spectra currently only supported for Agilent and Waters");
+            throw runtime_error("[SpectrumList_3D::spectrum3d] 3d spectra currently only supported for Agilent, Waters, and UIMF");
 
         case 1:
             return dynamic_cast<detail::SpectrumList_Agilent*>(&*inner_)->spectrum3d(scanStartTime, driftTimeRanges);
 
         case 2:
             return dynamic_cast<detail::SpectrumList_Waters*>(&*inner_)->spectrum3d(scanStartTime, driftTimeRanges);
+
+        case 3:
+            return dynamic_cast<detail::SpectrumList_UIMF*>(&*inner_)->spectrum3d(scanStartTime, driftTimeRanges);
     }
 }
 

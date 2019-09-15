@@ -119,9 +119,9 @@ namespace pwiz.Skyline.Model.Databinding
             }
             var selectedRows = dataGridView.SelectedRows.Cast<DataGridViewRow>()
                 .Select(row => (RowItem) bindingSource[row.Index]).ToArray();
-            if (!selectedRows.Any())
+            if (!selectedRows.Any() && bindingSource.Current is RowItem rowItem)
             {
-                selectedRows = new[] {bindingSource.Current as RowItem};
+                selectedRows = new[] {rowItem};
             }
 
             return selectedRows.Select(row => row.Value).OfType<SkylineDocNode>();

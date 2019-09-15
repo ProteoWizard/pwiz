@@ -28,6 +28,7 @@
 #include "pwiz/data/msdata/MSData.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include <boost/functional/hash.hpp>
+#include <boost/range/adaptor/map.hpp>
 #include <stdexcept>
 #include <iostream>
 
@@ -40,7 +41,7 @@ namespace msdata {
 class PWIZ_API_DECL SpectrumListBase : public SpectrumList
 {
     public:
-    SpectrumListBase() : MSLevelsNone() {};
+    SpectrumListBase() : MSLevelsNone(), hash_(), spectrum_id_mismatch_hash_(hash_("spectrum id mismatch")) {};
 
     /// implementation of SpectrumList
     virtual const boost::shared_ptr<const DataProcessing> dataProcessingPtr() const {return dp_;}
@@ -51,14 +52,49 @@ class PWIZ_API_DECL SpectrumListBase : public SpectrumList
     /// issues a warning once per SpectrumList instance (based on string hash)
     virtual void warn_once(const char* msg) const
     {
-        boost::hash<const char*> H;
-        if (warn_msg_hashes.insert(H(msg)).second) // .second is true iff value is new
+        if (warn_msg_hashes_.insert(hash_(msg)).second) // .second is true iff value is new
         {
             std::cerr << msg << std::endl;
         }
     }
 
     protected:
+
+    // when find() fails to find a spectrum id, check whether the id fields of the input id and the spectrum list are matching
+    size_t checkNativeIdFindResult(size_t result, const std::string& id) const
+    {
+        if (result < size() || size() == 0)
+            return result;
+
+        // early exit if warning already issued, to avoid potentially doing these calculations for thousands of ids
+        if (!warn_msg_hashes_.insert(spectrum_id_mismatch_hash_).second)
+            return size();
+
+        try
+        {
+            const auto& firstId = spectrumIdentity(0).id;
+            auto actualId = pwiz::msdata::id::parse(firstId);
+            auto actualIdKeys = actualId | boost::adaptors::map_keys;
+            auto actualIdKeySet = std::set<std::string>(actualIdKeys.begin(), actualIdKeys.end());
+
+            auto expectedId = pwiz::msdata::id::parse(id);
+            auto expectedIdKeys = expectedId | boost::adaptors::map_keys;
+            auto expectedIdKeySet = std::set<std::string>(expectedIdKeys.begin(), expectedIdKeys.end());
+
+            std::vector<std::string> missingIdKeys;
+            std::set_symmetric_difference(expectedIdKeySet.begin(), expectedIdKeySet.end(),
+                                          actualIdKeySet.begin(), actualIdKeySet.end(),
+                                          std::back_inserter(missingIdKeys));
+            if (!missingIdKeys.empty())
+                warn_once(("[SpectrumList::find]: mismatch between spectrum id format of the file (" + firstId + ") and the looked-up id (" + id + ")").c_str());
+            return size();
+        }
+        catch (std::exception& e)
+        {
+            warn_once(e.what()); // TODO: log exception
+            return size();
+        }
+    }
 
     DataProcessingPtr dp_;
 
@@ -67,7 +103,9 @@ class PWIZ_API_DECL SpectrumListBase : public SpectrumList
 
     private:
 
-    mutable std::set<size_t> warn_msg_hashes; // for warn_once use
+    mutable std::set<size_t> warn_msg_hashes_; // for warn_once use
+    boost::hash<const char*> hash_;
+    size_t spectrum_id_mismatch_hash_;
 };
 
 

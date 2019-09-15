@@ -36,7 +36,8 @@ namespace pwiz.SkylineTest
                 {MoleculeAccessionNumbers.TagCAS, "MyCAS"},
                 {MoleculeAccessionNumbers.TagHMDB, "MyHMDB"},
                 {MoleculeAccessionNumbers.TagInChI, "MyInChI"},
-                { MoleculeAccessionNumbers.TagSMILES, "MySmiles"}
+                {MoleculeAccessionNumbers.TagSMILES, "MySmiles"},
+                {MoleculeAccessionNumbers.TagKEGG, "MyKegg"}
             });
             var smallMoleculeLibraryAttributes = 
                 SmallMoleculeLibraryAttributes.Create("MyMolecule", "H2O", "MyInChiKey", moleculeAccessionNumbers.GetNonInChiKeys());

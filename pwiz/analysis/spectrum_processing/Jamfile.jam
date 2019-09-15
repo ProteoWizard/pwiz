@@ -147,7 +147,10 @@ run-if-exists SpectrumList_MZRefinerTest.cpp pwiz_analysis_spectrum_processing
 
 import path sequence ;
 run-if-exists SpectrumList_3D_Test.cpp pwiz_analysis_spectrum_processing_basic $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers//pwiz_data_vendor_readers
-    : [ path.native $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d ] # args
+    : # args
+      [ sequence.transform path.native : $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d
+                                         $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/UIMF/Reader_UIMF_Test.data/BSA_10ugml_CID.UIMF
+      ]
     : # input-files
     : <vendor-api-support>off:<build>no # requirements
     : SpectrumList_3D_Test # target name

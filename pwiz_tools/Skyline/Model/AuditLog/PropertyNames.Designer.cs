@@ -2158,6 +2158,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Peptide Uniqueness.
+        /// </summary>
+        public static string PeptideFilter_PeptideUniqueness {
+            get {
+                return ResourceManager.GetString("PeptideFilter_PeptideUniqueness", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Sequence.
         /// </summary>
         public static string PeptideGroupDocNode_Sequence {
@@ -2703,6 +2712,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string RefinementSettings_MaxPepPeakRank {
             get {
                 return ResourceManager.GetString("RefinementSettings_MaxPepPeakRank", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Max precursor peak only.
+        /// </summary>
+        public static string RefinementSettings_MaxPrecursorPeakOnly {
+            get {
+                return ResourceManager.GetString("RefinementSettings_MaxPrecursorPeakOnly", resourceCulture);
             }
         }
         

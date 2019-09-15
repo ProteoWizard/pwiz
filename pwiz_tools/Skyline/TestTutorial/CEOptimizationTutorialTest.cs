@@ -90,9 +90,6 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
-            // Lest we get "To export a scheduled method, you must first choose a retention time predictor in Peptide Settings / Prediction, or import results for all peptides in the document."
-            TestSmallMolecules = false;
-
             // Skyline Collision Energy Optimization
             RunUI(() => SkylineWindow.OpenFile(GetTestPath("CE_Vantage_15mTorr.sky"))); // Not L10N
 
