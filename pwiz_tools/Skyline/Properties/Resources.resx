@@ -10601,6 +10601,12 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="DocumentAnnotationUpdater_UpdateAnnotations_Updating_calculated_annotations" xml:space="preserve">
     <value>Updating calculated annotations</value>
   </data>
+  <data name="SkylineWindow_MarkQuantitative_Mark_transitions_quantitative" xml:space="preserve">
+    <value>Mark transitions quantitative</value>
+  </data>
+  <data name="SkylineWindow_MarkQuantitative_Mark_transitions_non_quantitative" xml:space="preserve">
+    <value>Mark transitions non-quantitative</value>
+  </data>
   <data name="prosit_logo_dark_blue" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\prosit_logo_dark_blue.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>

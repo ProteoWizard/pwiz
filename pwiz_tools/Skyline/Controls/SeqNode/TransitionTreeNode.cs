@@ -87,6 +87,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             string label = DisplayText(DocNode, SequenceTree.GetDisplaySettings(PepNode));
             if (!Equals(label, Text))
                 Text = label;
+            ForeColor = DocNode.ExplicitQuantitative ? SystemColors.WindowText : SystemColors.GrayText;
         }
         
         public int TypeImageIndex

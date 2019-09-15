@@ -53,6 +53,8 @@ namespace pwiz.Skyline
             this.qcStandardContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.irtStandardContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.modifyPeptideContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toggleQuantitativeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.markTransitionsQuantitativeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
             this.editNoteContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparatorRatios = new System.Windows.Forms.ToolStripSeparator();
@@ -583,6 +585,8 @@ namespace pwiz.Skyline
             this.removePeakContextMenuItem,
             this.setStandardTypeContextMenuItem,
             this.modifyPeptideContextMenuItem,
+            this.toggleQuantitativeContextMenuItem,
+            this.markTransitionsQuantitativeContextMenuItem,
             this.toolStripSeparator7,
             this.editNoteContextMenuItem,
             this.toolStripSeparatorRatios,
@@ -702,6 +706,18 @@ namespace pwiz.Skyline
             this.modifyPeptideContextMenuItem.Name = "modifyPeptideContextMenuItem";
             resources.ApplyResources(this.modifyPeptideContextMenuItem, "modifyPeptideContextMenuItem");
             this.modifyPeptideContextMenuItem.Click += new System.EventHandler(this.modifyPeptideMenuItem_Click);
+            // 
+            // toggleQuantitativeContextMenuItem
+            // 
+            this.toggleQuantitativeContextMenuItem.Name = "toggleQuantitativeContextMenuItem";
+            resources.ApplyResources(this.toggleQuantitativeContextMenuItem, "toggleQuantitativeContextMenuItem");
+            this.toggleQuantitativeContextMenuItem.Click += new System.EventHandler(this.toggleQuantitativeContextMenuItem_Click);
+            // 
+            // markTransitionsQuantitativeContextMenuItem
+            // 
+            this.markTransitionsQuantitativeContextMenuItem.Name = "markTransitionsQuantitativeContextMenuItem";
+            resources.ApplyResources(this.markTransitionsQuantitativeContextMenuItem, "markTransitionsQuantitativeContextMenuItem");
+            this.markTransitionsQuantitativeContextMenuItem.Click += new System.EventHandler(this.markTransitionsQuantitativeContextMenuItem_Click);
             // 
             // toolStripSeparator7
             // 
@@ -4418,7 +4434,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem autoZoomNoneContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem autoZoomBestPeakContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem autoZoomRTWindowContextMenuItem;
-        private System.Windows.Forms.ToolStrip mainToolStrip;
+        private System.Windows.Forms.ToolStrip mainToolStrip;        
         private System.Windows.Forms.ToolStripButton newToolBarButton;        
         private System.Windows.Forms.ToolStripSplitButton undoToolBarButton;        
         private System.Windows.Forms.ToolStripSplitButton redoToolBarButton;        
@@ -4829,6 +4845,8 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem proteomicsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem moleculeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem mixedToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toggleQuantitativeContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem markTransitionsQuantitativeContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator61;
         private System.Windows.Forms.ToolStripMenuItem prositLibMatchItem;
         private System.Windows.Forms.ToolStripMenuItem mirrorMenuItem;
