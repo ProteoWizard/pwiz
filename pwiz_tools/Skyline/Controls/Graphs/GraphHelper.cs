@@ -23,7 +23,6 @@ using System.Linq;
 using pwiz.Skyline.Util;
 using ZedGraph;
 using pwiz.MSGraph;
-using pwiz.Skyline.Controls.Graphs.Spectrum;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 

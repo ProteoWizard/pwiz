@@ -29,7 +29,6 @@ using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.MSGraph;
 using pwiz.ProteowizardWrapper;
-using pwiz.Skyline.Controls.Graphs.Spectrum;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;

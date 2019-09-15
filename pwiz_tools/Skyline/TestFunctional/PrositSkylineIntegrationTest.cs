@@ -4843,7 +4843,7 @@ namespace pwiz.SkylineTestFunctional
                 : new FakePrositPredictionClient(QUERIES);
 
             if (RecordData)
-                Console.WriteLine("private static List<PrositQuery> QUERIES = new List<PrositQuery>(new PrositQuery[] {");
+                Console.WriteLine(@"private static List<PrositQuery> QUERIES = new List<PrositQuery>(new PrositQuery[] {");
 
             TestPrositOptions();
             TestPrositSinglePrecursorPredictions();
@@ -4857,7 +4857,7 @@ namespace pwiz.SkylineTestFunctional
             PrositPredictionClient.Current = null;
             Settings.Default.Prosit = false;
             if (RecordData)
-                Console.WriteLine("});");
+                Console.WriteLine(@"});");
         }
 
         public void TestInvalidPepSequences()
@@ -5521,10 +5521,10 @@ namespace pwiz.SkylineTestFunctional
 
         private void LogQuery(PredictRequest request, PredictResponse response)
         {
-            if (request.ModelSpec.Name.StartsWith("intensity"))
-                Console.WriteLine("    " + PrositIntensityQuery.FromTensors(request, response).ToCode().Replace("\n", "\n    "));
+            if (request.ModelSpec.Name.StartsWith(@"intensity"))
+                Console.WriteLine(@"    " + PrositIntensityQuery.FromTensors(request, response).ToCode().Replace("\n", "\n    "));
             else if (request.ModelSpec.Name.StartsWith("iRT"))
-                Console.WriteLine("    " +
+                Console.WriteLine(@"    " +
                     PrositRetentionTimeQuery.FromTensors(request, response).ToCode().Replace("\n", "\n    "));
             else
                 Assert.Fail("Unknown model \"{0}\"", request.ModelSpec.Name);

@@ -212,6 +212,7 @@ namespace pwiz.SkylineTestUtil
         /// number of spectra.
         /// </summary>
         /// <param name="expectedSpectra">Number of spectra expected in the library</param>
+        /// <param name="libIndex">Index of library to wait for</param>
         public static void WaitForLibrary(int expectedSpectra, int libIndex = 0)
         {
             TryWaitForCondition(() =>

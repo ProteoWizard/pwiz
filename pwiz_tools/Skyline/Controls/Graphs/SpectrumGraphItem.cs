@@ -31,7 +31,7 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 
-namespace pwiz.Skyline.Controls.Graphs.Spectrum
+namespace pwiz.Skyline.Controls.Graphs
 {
     public class SpectrumGraphItem : AbstractSpectrumGraphItem
     {

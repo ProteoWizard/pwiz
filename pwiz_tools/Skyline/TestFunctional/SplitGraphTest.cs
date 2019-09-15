@@ -24,7 +24,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using ZedGraph;
 using pwiz.Skyline.Controls.Graphs;
-using pwiz.Skyline.Controls.Graphs.Spectrum;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 

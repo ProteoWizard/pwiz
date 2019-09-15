@@ -42,7 +42,6 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Controls.Graphs.Calibration;
-using pwiz.Skyline.Controls.Graphs.Spectrum;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
