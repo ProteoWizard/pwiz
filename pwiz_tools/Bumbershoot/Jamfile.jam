@@ -37,7 +37,8 @@ import property ;
 import feature ;
 import path ;
 
-version-tag = $(PWIZ_MAJOR) $(PWIZ_MINOR) $(PWIZ_SVNREV) ;
+constant numeric-version-tag : $(PWIZ_MAJOR) $(PWIZ_MINOR) $(PWIZ_BUILD_TIMESTAMP) ;
+constant version-tag : $(numeric-version-tag) $(PWIZ_GIT_REV) ;
 
 # create a VERSION file which can be used by TC to parse the canonical pwiz version
 make VERSION : : @make_VERSION : <location>$(.common-location) ;
@@ -96,6 +97,7 @@ explicit bumbershoot-bin.tar.bz2 ;
 
 .exclusion-list =
     "exclude:.svn"
+    "exclude:.git"
     "exclude:*.bak"
     "exclude:cvgen*.exe"
     "exclude:svnrev.hpp"
@@ -122,18 +124,19 @@ explicit bumbershoot-bin.tar.bz2 ;
     "exclude:pwiz_tools/Shared/ProteomeDb"
     "exclude:pwiz_tools/Shared/ProteowizardWrapper"
     "exclude:pwiz_tools/Shared/Lib/DotNetZip"
+    "exclude:pwiz_tools/Shared/Lib/NHibernate"
     "exclude:pwiz_tools/Shared/Lib/npgsql"
     "exclude:pwiz_tools/Shared/Lib/x86"
     "exclude:pwiz_tools/Shared/Lib/x64"
     "exclude:pwiz_tools/Shared/Lib/mysql.*"
     "exclude:pwiz_tools/Shared/Lib/zlib.*"
-    "exclude:pwiz_tools/Shared/Lib/Microsoft.VC*"
     "exclude:pwiz_aux/msrc/utility/vendor_api/ABI/Clearcore*.dll"
     "exclude:pwiz_aux/msrc/utility/vendor_api/ABI/Sciex*.dll"
     "exclude:pwiz_aux/msrc/utility/vendor_api/ABI/OFX*.dll"
     "exclude:pwiz_aux/msrc/utility/vendor_api/ABI/LicenseKey.h"
     "exclude:pwiz_aux/msrc/utility/vendor_api/Agilent/x*"
     "exclude:pwiz_aux/msrc/utility/vendor_api/Bruker/x*"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/Shimadzu/*.dll"
     "exclude:pwiz_aux/msrc/utility/vendor_api/Shimadzu/x*"
     "exclude:pwiz_aux/msrc/utility/vendor_api/thermo/x64"
     "exclude:pwiz_aux/msrc/utility/vendor_api/thermo/x86"

@@ -85,7 +85,6 @@ namespace TestRunnerLib
         public bool AccessInternet { get; set; }
         public bool RunPerfTests { get; set; }
         public bool RecordAuditLogs { get; set; }
-        public bool AddSmallMoleculeNodes{ get; set; }
         public bool RunsSmallMoleculeVersions { get; set; }
         public bool LiveReports { get; set; }
         public bool TeamCityTestDecoration { get; set; }
@@ -94,7 +93,12 @@ namespace TestRunnerLib
         {
             get { return !RunPerfTests; }   // 12-hour perf runs get much slower with system heap reporting
         }
-      
+
+        public static bool WriteMiniDumps
+        {
+            get { return false; }
+        }
+
         public RunTests(
             bool demoMode,
             bool buildMode,
@@ -102,7 +106,6 @@ namespace TestRunnerLib
             bool internet,
             bool showStatus,
             bool perftests,
-            bool addsmallmoleculenodes,
             bool runsmallmoleculeversions,
             bool recordauditlogs,
             bool teamcityTestDecoration,
@@ -136,7 +139,6 @@ namespace TestRunnerLib
 
             AccessInternet = internet;
             RunPerfTests = perftests;
-            AddSmallMoleculeNodes= addsmallmoleculenodes;  // Add the magic small molecule test node to all documents?
             RunsSmallMoleculeVersions = runsmallmoleculeversions;  // Run the small molecule version of various tests?
             RecordAuditLogs = recordauditlogs; // Replace or create audit logs for tutorial tests
             LiveReports = true;
@@ -212,7 +214,7 @@ namespace TestRunnerLib
 
             var dumpFileName = string.Format("{0}.{1}_{2}_{3}_{4:yyyy_MM_dd__hh_mm_ss_tt}.dmp", pass, testNumber, test.TestMethod.Name, Language.TwoLetterISOLanguageName, DateTime.Now);
 
-            if (test.MinidumpLeakThreshold != null)
+            if (WriteMiniDumps && test.MinidumpLeakThreshold != null)
             {
                 try
                 {
@@ -242,7 +244,6 @@ namespace TestRunnerLib
                 // Set the TestContext.
                 TestContext.Properties["AccessInternet"] = AccessInternet.ToString();
                 TestContext.Properties["RunPerfTests"] = RunPerfTests.ToString();
-                TestContext.Properties["TestSmallMolecules"] = AddSmallMoleculeNodes.ToString(); // Add the magic small molecule test node to every document?
                 TestContext.Properties["RunSmallMoleculeTestVersions"] = RunsSmallMoleculeVersions.ToString(); // Run the AsSmallMolecule version of tests when available?
                 TestContext.Properties["LiveReports"] = LiveReports.ToString();
                 TestContext.Properties["TestName"] = test.TestMethod.Name;
@@ -305,7 +306,7 @@ namespace TestRunnerLib
             LastUserHandleCount = GetHandleCount(HandleType.user);
             LastGdiHandleCount = GetHandleCount(HandleType.gdi);
 
-            if (test.MinidumpLeakThreshold != null)
+            if (WriteMiniDumps && test.MinidumpLeakThreshold != null)
             {
                 try
                 {

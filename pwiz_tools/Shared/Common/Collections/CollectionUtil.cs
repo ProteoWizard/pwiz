@@ -204,5 +204,10 @@ namespace pwiz.Common.Collections
             }
             return Comparer.Default.Compare(o1.ToString(), o2.ToString());
         }
+
+        public static Comparer<object> ColumnValueComparer
+        {
+            get { return Comparer<object>.Create(CompareColumnValues); }
+        } 
     }
 }

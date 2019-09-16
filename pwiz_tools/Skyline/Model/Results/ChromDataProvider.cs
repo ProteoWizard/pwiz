@@ -268,11 +268,13 @@ namespace pwiz.Skyline.Model.Results
             if (_chromIds.Count == 0)
                 throw new NoSrmDataException(FileInfo.FilePath);
 
-            foreach (int globalIndex in _globalChromatogramExtractor.GlobalChromatogramIndexes)
-            {
-                _chromIndices[globalIndex] = globalIndex;
-                _chromIds.Add(new ChromKeyProviderIdPair(ChromKey.FromId(_globalChromatogramExtractor.GetChromatogramId(globalIndex, out int indexId), false), globalIndex));
-            }
+            // CONSIDER: TIC and BPC are not well defined for SRM and produced chromatograms with over 100,000 points in
+            // Agilent CE optimization data. So, keep them off for now.
+//            foreach (int globalIndex in _globalChromatogramExtractor.GlobalChromatogramIndexes)
+//            {
+//                _chromIndices[globalIndex] = globalIndex;
+//                _chromIds.Add(new ChromKeyProviderIdPair(ChromKey.FromId(_globalChromatogramExtractor.GetChromatogramId(globalIndex, out int indexId), false), globalIndex));
+//            }
 
             foreach (var qcTracePair in _globalChromatogramExtractor.QcTraceByIndex)
             {

@@ -52,7 +52,6 @@ namespace pwiz.SkylineTestData.Results
                 return;
             }
 
-            TestSmallMolecules = false; // Don't need that magic extra node
             DoTestDemux(true);
         }
 

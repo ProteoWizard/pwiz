@@ -460,9 +460,9 @@ namespace pwiz.Skyline.Model.Databinding
             if (value == null)
                 return string.Empty;
 
-            // TODO: only allow reflection for all info?
+            // TODO: only allow reflection for all info? Okay to use null for decimal places?
             bool unused;
-            return DiffNode.ObjectToString(true, value, out unused);
+            return DiffNode.ObjectToString(true, value, null, out unused);
         }
 
         public void ModifyDocument(EditDescription editDescription, Func<SrmDocument, SrmDocument> action, Func<SrmDocumentPair, AuditLogEntry> logFunc = null)

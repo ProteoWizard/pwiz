@@ -217,6 +217,7 @@ blib-test-build prospector : -o : output/prospector.blib : prospector.check zbui
 blib-test-build smill : -o : output/smill.blib : smill.check : $(TEST_INPUTS_PATH)/CPTAC_Set4_725_091509.pep.XML ;
 blib-test-build smill_ims : -o : output/smill_ims.blib : smill_ims.check smill_ims.skip-lines : $(TEST_INPUTS_PATH)/40minG_WBP_wide_z2-3_mid_BSA_5pmol_01.pep.xml ;
 blib-test-build bad-index : -o : output/bad-index.blib : bad-index.check : $(TEST_INPUTS_PATH)/interact-prob-three-spec.pep.xml ;
+blib-test-build comet : -o : output/comet.blib : comet.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/comet.demo1.target.pep.xml ;
 
 # Test other xml formats (idpicker, xtandem)
 
@@ -256,6 +257,9 @@ blib-test-build maxquant-bsa-baf : -o -p@$(TEST_DATA_PATH)/bsa-baf-mqpar.xml : o
 blib-test-build maxquant-bsa-baf-v1_6_7 : -o -p@$(TEST_DATA_PATH)/bsa-baf-mqpar.xml : output/maxquant-bsa-baf-v1_6_7.blib : maxquant-bsa-baf-v1_6_7.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/bsa-baf-v1_6_7-msms.txt ;
 blib-test-build maxquant-yeast-wiff : -o -p@$(TEST_DATA_PATH)/yeast-wiff-mqpar.xml : output/maxquant-yeast-wiff.blib : maxquant-yeast-wiff.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/yeast-wiff-msms.txt ;
 blib-test-build maxquant-yeast-wiff-i18n : -o -p@$(TEST_DATA_PATH)/yeast-wiff-试验-mqpar.xml : output/maxquant-yeast-wiff-i18n.blib : maxquant-yeast-wiff-i18n.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/yeast-wiff-试验-msms.txt ;
+
+# Test maxquant reading spectra from WIFF with peak picking
+blib-test-build maxquant-prg2012-wiff : -o -p@$(TEST_DATA_PATH)/prg2012-wiff-mqpar.xml : output/maxquant-prg2012-wiff.blib : maxquant-prg2012-wiff.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/prg2012-wiff-msms.txt : <vendor-api-support>off:<build>no ;
 
 # Test mzid format from scaffold
 blib-test-build scaffold : --unicode -o : output/scaffold.blib : scaffold.check : $(TEST_INPUTS_PATH)/scaffold.mzid ;
