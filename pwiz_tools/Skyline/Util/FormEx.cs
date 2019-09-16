@@ -77,6 +77,12 @@ namespace pwiz.Skyline.Util
             return _modeUIHelper.Format(format, args);
         }
 
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            _modeUIHelper.Dispose();
+            base.OnHandleDestroyed(e);
+        }
+
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SrmDocument.DOCUMENT_TYPE ModeUI

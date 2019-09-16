@@ -1,6 +1,6 @@
 format-version: 1.2
-data-version: 4.1.26
-date: 13:05:2019 13:53
+data-version: 4.1.30
+date: 30:08:2019 16:10
 saved-by: Gerhard Mayer
 auto-generated-by: OBO-Edit 2.3.1
 import: http://ontologies.berkeleybop.org/pato.obo
@@ -19600,6 +19600,72 @@ id: MS:1003020
 name: flow rate chromatogram
 def: "Representation of the chromatographic flow rate versus time." [PSI:MS]
 is_a: MS:1000626 ! chromatogram type
+
+[Term]
+id: MS:1003021
+name: Fixed modification
+def: "Post-translational modification which is assumed to be present at each instance of a residue type." [PSI:PI]
+is_a: MS:1001055 ! modification parameters
+is_a: MS:1003026 ! named element in mzIdentML
+
+[Term]
+id: MS:1003022
+name: Variable modification
+def: "Post-translational modification which may or may not be present at a residue type." [PSI:PI]
+is_a: MS:1001055 ! modification parameters
+is_a: MS:1003026 ! named element in mzIdentML
+
+[Term]
+id: MS:1003023
+name: OpenPepXL
+def: "Cross-Linking MS search engine." [PSI:PI]
+is_a: MS:1000752 ! TOPP software
+
+[Term]
+id: MS:1003024
+name: OpenPepXL:score
+def: "The OpenPepXL score for a cross-link spectrum match." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1001143 ! PSM-level search engine specific statistic
+is_a: MS:1001153 ! search engine specific score
+relationship: has_order MS:1002108 ! higher score better 
+
+[Term]
+id: MS:1003025
+name: named element
+def: "A named element that is an attribute in a proteomics standards file." [PSI:PI]
+relationship: part_of MS:0000000 ! Proteomics Standards Initiative Mass Spectrometry Vocabularies
+
+[Term]
+id: MS:1003026
+name: named element in mzIdentML
+def: "A named element that is an attribute in a mzIdentML file." [PSI:PI]
+is_a: MS:1003025 ! named element
+
+[Term]
+id: MS:1003027
+name: named element in mzML
+def: "A named element that is an attribute in a mzML file." [PSI:PI]
+is_a: MS:1003025 ! named element
+
+[Term]
+id: MS:1003028
+name: Orbitrap Exploris 480
+def: "Thermo Scientific Orbitrap Exploris 480 Quadrupole Orbitrap MS." [PSI:PI]
+is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:1003029
+name: Orbitrap Eclipse
+def: "Thermo Scientific Orbitrap Eclipse mass spectrometer with Tribrid architecture consisting of quadrupole mass filter, linear ion trap and Orbitrap mass analyzers." [PSI:PI]
+is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:1003030
+name: Mascot:MinNumSigUniqueSeqs
+def: "Minimum number of significant unique sequences required in a protein hit. The setting is only relevant if the protein grouping strategy is 'family clustering'." [PSI:PI]
+xref: value-type:xsd\:nonNegativeInteger "The allowed value-type for this CV term."
+is_a: MS:1002095 ! Mascot input parameter
 
 [Term]
 id: PEFF:0000001

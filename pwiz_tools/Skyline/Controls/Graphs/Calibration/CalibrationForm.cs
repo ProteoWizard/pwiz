@@ -198,23 +198,19 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             double minY = double.MaxValue;
             _scatterPlots = new CurveList();
 
-            var sampleTypes = curveFitter.IsotopologResponseCurve
-                ? new[] {SampleType.STANDARD}
-                : SampleType.ListSampleTypes().Where(Options.DisplaySampleType);
+            IEnumerable<SampleType> sampleTypes = SampleType.ListSampleTypes()
+                .Where(Options.DisplaySampleType);
             foreach (var sampleType in sampleTypes)
             {
                 PointPairList pointPairList = new PointPairList();
                 PointPairList pointPairListExcluded = new PointPairList();
                 foreach (var standardIdentifier in curveFitter.EnumerateCalibrationPoints())
                 {
-                    if (null == standardIdentifier.LabelType)
+                    if (!Equals(sampleType, curveFitter.GetSampleType(standardIdentifier)))
                     {
-                        ChromatogramSet chromatogramSet = document.Settings.MeasuredResults.Chromatograms[standardIdentifier.ReplicateIndex];
-                        if (!Equals(sampleType, chromatogramSet.SampleType))
-                        {
-                            continue;
-                        }
+                        continue;
                     }
+
                     double? y = curveFitter.GetYValue(standardIdentifier);
                     double? xCalculated = curveFitter.GetCalculatedXValue(CalibrationCurve, standardIdentifier);
                     double? x = curveFitter.GetSpecifiedXValue(standardIdentifier)
@@ -407,13 +403,24 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                     }
                 }
 
-                var quantificationResult = curveFitter.GetQuantificationResult(_skylineWindow.SelectedResultsIndex);
-                if (quantificationResult.CalculatedConcentration.HasValue)
+                QuantificationResult quantificationResult = null;
+                double? calculatedConcentration;
+                if (curveFitter.IsotopologResponseCurve)
+                {
+                    calculatedConcentration =
+                        curveFitter.GetCalculatedConcentration(CalibrationCurve, selectionIdentifier.Value);
+                }
+                else
+                {
+                    quantificationResult = curveFitter.GetQuantificationResult(selectionIdentifier.Value.ReplicateIndex);
+                    calculatedConcentration = quantificationResult?.CalculatedConcentration;
+                }
+                if (calculatedConcentration.HasValue)
                 {
                     labelLines.Add(string.Format(@"{0} = {1}",
-                        QuantificationStrings.Calculated_Concentration, quantificationResult));
+                        QuantificationStrings.Calculated_Concentration, calculatedConcentration));
                 }
-                else if (!quantificationResult.NormalizedArea.HasValue)
+                else if (quantificationResult != null && !quantificationResult.NormalizedArea.HasValue)
                 {
                     labelLines.Add(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_The_selected_replicate_has_missing_or_truncated_transitions);
                 }
@@ -587,12 +594,10 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             if (IsEnableIsotopologResponseCurve())
             {
                 singleBatchContextMenuItem.Visible = true;
-                showSampleTypesContextMenuItem.Visible = false;
             }
             else
             {
                 singleBatchContextMenuItem.Visible = CalibrationCurveFitter.AnyBatchNames(_skylineWindow.Document.Settings);
-                showSampleTypesContextMenuItem.Visible = true;
             }
             var replicateIndexFromPoint = ReplicateIndexFromPoint(mousePt);
             if (replicateIndexFromPoint.HasValue && null == replicateIndexFromPoint.Value.LabelType)
