@@ -432,7 +432,7 @@ namespace pwiz.Skyline.SettingsUI
                 libraryDriftTimeWindowWidthCalculator = new IonMobilityWindowWidthCalculator(peakWidthType, resolvingPower, widthAtDt0, widthAtDtMax);
             }
 
-            var prediction = new PeptidePrediction(retentionTime, ionMobilityPredictor, useMeasuredRT, measuredRTWindow, useLibraryDriftTime, libraryDriftTimeWindowWidthCalculator);
+            var prediction = new PeptidePrediction(retentionTime,useMeasuredRT, measuredRTWindow);
             Helpers.AssignIfEquals(ref prediction, Prediction);
 
             // Validate and hold filter settings

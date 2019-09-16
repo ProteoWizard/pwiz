@@ -128,7 +128,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        public bool HasDriftTimePrediction { get { return PeptideSettings.Prediction.IonMobilityPredictor != null; } }
+        public bool HasDriftTimePrediction { get { return TransitionSettings.IonMobility.IonMobilityPredictor != null; } }
 
         public bool HasBackgroundProteome { get { return !PeptideSettings.BackgroundProteome.IsNone; } }
 
@@ -883,13 +883,13 @@ namespace pwiz.Skyline.Model.DocSettings
                     nodeGroup.ExplicitValues.CollisionalCrossSectionSqA,
                     ExplicitTransitionValues.Get(nodeTran).IonMobilityHighEnergyOffset ?? 0);
                 // Now get the resolving power
-                if (PeptideSettings.Prediction.IonMobilityPredictor != null)
+                if (TransitionSettings.IonMobility.IonMobilityPredictor != null)
                 {
-                    windowIM = PeptideSettings.Prediction.IonMobilityPredictor.WindowWidthCalculator.WidthAt(result.IonMobility.Mobility.Value, ionMobilityMax);
+                    windowIM = TransitionSettings.IonMobility.IonMobilityPredictor.WindowWidthCalculator.WidthAt(result.IonMobility.Mobility.Value, ionMobilityMax);
                 }
-                else if (PeptideSettings.Prediction.UseLibraryIonMobilityValues)
+                else if (TransitionSettings.IonMobility.UseLibraryIonMobilityValues)
                 {
-                    windowIM = PeptideSettings.Prediction.LibraryIonMobilityWindowWidthCalculator.WidthAt(result.IonMobility.Mobility.Value, ionMobilityMax);
+                    windowIM = TransitionSettings.IonMobility.LibraryIonMobilityWindowWidthCalculator.WidthAt(result.IonMobility.Mobility.Value, ionMobilityMax);
                 }
                 else
                 {
@@ -904,13 +904,13 @@ namespace pwiz.Skyline.Model.DocSettings
                     nodeGroup.ExplicitValues.CollisionalCrossSectionSqA,
                     ExplicitTransitionValues.Get(nodeTran).IonMobilityHighEnergyOffset ?? 0);
                 // Now get the resolving power
-                if (PeptideSettings.Prediction.IonMobilityPredictor != null)
+                if (TransitionSettings.IonMobility.IonMobilityPredictor != null)
                 {
-                    windowIM = PeptideSettings.Prediction.IonMobilityPredictor.WindowWidthCalculator.WidthAt(result.IonMobility.Mobility.Value, ionMobilityMax);
+                    windowIM = TransitionSettings.IonMobility.IonMobilityPredictor.WindowWidthCalculator.WidthAt(result.IonMobility.Mobility.Value, ionMobilityMax);
                 }
-                else if (PeptideSettings.Prediction.UseLibraryIonMobilityValues)
+                else if (TransitionSettings.IonMobility.UseLibraryIonMobilityValues)
                 {
-                    windowIM = PeptideSettings.Prediction.LibraryIonMobilityWindowWidthCalculator.WidthAt(result.IonMobility.Mobility.Value, ionMobilityMax);
+                    windowIM = TransitionSettings.IonMobility.LibraryIonMobilityWindowWidthCalculator.WidthAt(result.IonMobility.Mobility.Value, ionMobilityMax);
                 }
                 else
                 {
@@ -940,9 +940,9 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 var chargedPeptide = new LibKey(typedSequence.ModifiedSequence, typedSequence.Adduct);
 
-                if (PeptideSettings.Prediction.IonMobilityPredictor != null)
+                if (TransitionSettings.IonMobility.IonMobilityPredictor != null)
                 {
-                    var result = PeptideSettings.Prediction.IonMobilityPredictor.GetIonMobilityInfo(chargedPeptide, ionMobilityFunctionsProvider, ionMobilityMax, out ionMobilityWindow);
+                    var result = TransitionSettings.IonMobility.IonMobilityPredictor.GetIonMobilityInfo(chargedPeptide, ionMobilityFunctionsProvider, ionMobilityMax, out ionMobilityWindow);
                     if (result != null && result.IonMobility.HasValue)
                         return result;
                 }
@@ -950,9 +950,9 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (libraryIonMobilityInfo != null)
                 {
                     var dt = libraryIonMobilityInfo.GetLibraryMeasuredIonMobilityAndHighEnergyOffset(chargedPeptide, nodeGroup.PrecursorMz, ionMobilityFunctionsProvider);
-                    if (dt.IonMobility.HasValue && PeptideSettings.Prediction.UseLibraryIonMobilityValues)
+                    if (dt.IonMobility.HasValue && TransitionSettings.IonMobility.UseLibraryIonMobilityValues)
                     {
-                        ionMobilityWindow = PeptideSettings.Prediction.LibraryIonMobilityWindowWidthCalculator.WidthAt(dt.IonMobility.Mobility.Value, ionMobilityMax);
+                        ionMobilityWindow = TransitionSettings.IonMobility.LibraryIonMobilityWindowWidthCalculator.WidthAt(dt.IonMobility.Mobility.Value, ionMobilityMax);
                         return dt;
                     }
                 }
@@ -1441,10 +1441,10 @@ namespace pwiz.Skyline.Model.DocSettings
                     if (!defSet.RTScoreCalculatorList.Contains(PeptideSettings.Prediction.RetentionTime.Calculator))
                         defSet.RTScoreCalculatorList.SetValue(PeptideSettings.Prediction.RetentionTime.Calculator);
                 }
-                if (PeptideSettings.Prediction.IonMobilityPredictor != null)
+                if (TransitionSettings.IonMobility.IonMobilityPredictor != null)
                 {
-                    if (!defSet.DriftTimePredictorList.Contains(PeptideSettings.Prediction.IonMobilityPredictor))
-                        defSet.DriftTimePredictorList.SetValue(PeptideSettings.Prediction.IonMobilityPredictor);
+                    if (!defSet.DriftTimePredictorList.Contains(TransitionSettings.IonMobility.IonMobilityPredictor))
+                        defSet.DriftTimePredictorList.SetValue(TransitionSettings.IonMobility.IonMobilityPredictor);
                 }
             }
             if (PeptideSettings.Filter != null)
@@ -1868,6 +1868,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 TransitionIntegration integration = TransitionSettings.Integration ?? defTran.Integration;
                 TransitionInstrument instrument = TransitionSettings.Instrument ?? defTran.Instrument;
                 TransitionFullScan fullScan = TransitionSettings.FullScan ?? defTran.FullScan;
+                TransitionIonMobility ionMobility = TransitionSettings.IonMobility ?? defTran.IonMobility;
                 // Backward compatibility with v2.1, get a RT filter length from peptide prediction settings
                 if (fullScan.RetentionTimeFilterType == RetentionTimeFilterType.scheduling_windows &&
                     fullScan.RetentionTimeFilterLength == 0 &&
@@ -1889,6 +1890,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
                 TransitionSettings transitionSettings = new TransitionSettings(prediction,
                                                                                filter,
+                                                                               ionMobility,
                                                                                libraries,
                                                                                integration,
                                                                                instrument,

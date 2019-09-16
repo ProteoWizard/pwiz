@@ -62,7 +62,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 document = SkylineWindow.DocumentUI;
             });
 
-            var curatedDTs = document.Settings.PeptideSettings.Prediction.IonMobilityPredictor.MeasuredMobilityIons;
+            var curatedDTs = document.Settings.TransitionSettings.IonMobility.IonMobilityPredictor.MeasuredMobilityIons;
             var measuredDTs = new List<IDictionary<LibKey, IonMobilityAndCCS>>();
             var precursors = new LibKeyIndex(document.MoleculePrecursorPairs.Select(
                 p => p.NodePep.ModifiedTarget.GetLibKey(p.NodeGroup.PrecursorAdduct).LibraryKey));
@@ -88,7 +88,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 WaitForClosedForm(peptideSettingsDlg);
                 
                 document = SkylineWindow.Document;
-                measuredDTs.Add(document.Settings.PeptideSettings.Prediction.IonMobilityPredictor.MeasuredMobilityIons);
+                measuredDTs.Add(document.Settings.TransitionSettings.IonMobility.IonMobilityPredictor.MeasuredMobilityIons);
                 var count = 0;
                 foreach (var key in curatedDTs.Keys)
                 {
@@ -146,13 +146,13 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var driftTimePredictorDlg2 = ShowDialog<EditDriftTimePredictorDlg>(peptideSettingsDlg2.EditDriftTimePredictor);
             RunUI(() =>
             {
-                var oldPredictor = driftTimePredictorDlg2.Predictor;
+                var oldPredictor = driftTimePredictorDlg2.IonMobilityPredictor;
                 var dict = new Dictionary<LibKey, IonMobilityAndCCS>();
                 foreach (var entry in oldPredictor.MeasuredMobilityIons)
                 {
                     dict.Add(entry.Key, entry.Value.ChangeIonMobilityValue(entry.Value.IonMobility.ChangeIonMobility(entry.Value.IonMobility.Mobility??0 + .5)));
                 }
-                driftTimePredictorDlg2.Predictor = oldPredictor.ChangeMeasuredMobilityIons(dict).ChangeName("test") as IonMobilityPredictor;
+                driftTimePredictorDlg2.IonMobilityPredictor = oldPredictor.ChangeMeasuredMobilityIons(dict).ChangeName("test") as IonMobilityPredictor;
                 driftTimePredictorDlg2.OkDialog(true); // Force overwrite if a named predictor already exists
             });
             WaitForClosedForm(driftTimePredictorDlg2);

@@ -42,14 +42,16 @@ namespace pwiz.Skyline.Model.DocSettings
     public class TransitionSettings : Immutable, IValidating, IXmlSerializable
     {
         public TransitionSettings(TransitionPrediction prediction,
-                                  TransitionFilter filter,
-                                  TransitionLibraries libraries,
-                                  TransitionIntegration integration,
-                                  TransitionInstrument instrument,
-                                  TransitionFullScan fullScan)
+            TransitionFilter filter,
+            TransitionIonMobility ionMobility,
+            TransitionLibraries libraries,
+            TransitionIntegration integration,
+            TransitionInstrument instrument,
+            TransitionFullScan fullScan)
         {
             Prediction = prediction;
             Filter = filter;
+            IonMobility = ionMobility ?? TransitionIonMobility.EMPTY;
             Libraries = libraries;
             Integration = integration;
             Instrument = instrument;
@@ -74,6 +76,10 @@ namespace pwiz.Skyline.Model.DocSettings
 
         [TrackChildren(true)]
         public TransitionFullScan FullScan { get; private set; }
+
+        [TrackChildren(true)]
+        public TransitionIonMobility IonMobility { get; private set; }
+
 
         public bool IsMeasurablePrecursor(double mz)
         {
@@ -125,7 +131,12 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.FullScan = prop);
         }
 
-        
+        public TransitionSettings ChangeIonMobility(TransitionIonMobility prop)
+        {
+            return ChangeProp(ImClone(this), im => im.IonMobility = prop);
+        }
+
+
 
 
         #endregion
@@ -3091,5 +3102,112 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #endregion
+    }
+
+    [XmlRoot("transition_ion_mobility")]
+    public sealed class TransitionIonMobility : Immutable, IValidating, IXmlSerializable, IAuditLogComparable
+    {
+        public static TransitionIonMobility EMPTY = new TransitionIonMobility(IonMobilityPredictor.EMPTY, false, IonMobilityWindowWidthCalculator.EMPTY);
+
+        public TransitionIonMobility(IonMobilityPredictor ionMobilityPredictor, bool useLibraryIonMobilityValues, IonMobilityWindowWidthCalculator libraryIonMobilityWindowWidthCalculator)
+        {
+            IonMobilityPredictor = ionMobilityPredictor;
+            UseLibraryIonMobilityValues = useLibraryIonMobilityValues;
+            LibraryIonMobilityWindowWidthCalculator = libraryIonMobilityWindowWidthCalculator;
+
+            Validate();
+        }        
+       
+        [Track]
+        public IonMobilityPredictor IonMobilityPredictor { get; private set; }
+
+        [Track]
+        public bool UseLibraryIonMobilityValues { get; private set; }
+
+        [TrackChildren(ignoreName: true)]
+        public IonMobilityWindowWidthCalculator LibraryIonMobilityWindowWidthCalculator { get; private set; }
+
+        #region Property change methods
+        public TransitionIonMobility ChangeUseLibraryIonMobilityValues(bool prop)
+        {
+            return ChangeProp(ImClone(this), im => im.UseLibraryIonMobilityValues = prop);
+        }
+
+        public TransitionIonMobility ChangeLibraryDriftTimesWindowWidthCalculator(IonMobilityWindowWidthCalculator prop)
+        {
+            return ChangeProp(ImClone(this), im => im.LibraryIonMobilityWindowWidthCalculator = prop);
+        }
+
+        public TransitionIonMobility ChangeIonMobilityPredictor(IonMobilityPredictor prop)
+        {
+            return ChangeProp(ImClone(this), im => im.IonMobilityPredictor = prop);
+        }
+        #endregion
+
+        #region object overrides
+
+        public bool Equals(TransitionIonMobility other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(other.IonMobilityPredictor, IonMobilityPredictor) &&
+                   other.UseLibraryIonMobilityValues.Equals(UseLibraryIonMobilityValues) &&
+                   other.LibraryIonMobilityWindowWidthCalculator.Equals(LibraryIonMobilityWindowWidthCalculator);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != typeof(TransitionIonMobility)) return false;
+            return Equals((TransitionIonMobility)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int result = (IonMobilityPredictor != null ? IonMobilityPredictor.GetHashCode() : 0);
+                result = (result * 397) ^ UseLibraryIonMobilityValues.GetHashCode();
+                result = (result * 397) ^ (LibraryIonMobilityWindowWidthCalculator != null ? LibraryIonMobilityWindowWidthCalculator.GetHashCode() : 0);
+                return result;
+            }
+        }
+
+        public object GetDefaultObject(ObjectInfo<object> info)
+        {
+            return TransitionIonMobility.EMPTY;
+        }
+
+        #endregion
+        public void Validate()
+        {
+            if (UseLibraryIonMobilityValues)
+            {
+                if (LibraryIonMobilityWindowWidthCalculator == null)
+                    LibraryIonMobilityWindowWidthCalculator = IonMobilityWindowWidthCalculator.EMPTY;
+                var errmsg = LibraryIonMobilityWindowWidthCalculator.Validate();
+                if (errmsg != null)
+                {
+                    throw new InvalidDataException(errmsg);
+                }
+            }
+        }
+
+        public XmlSchema GetSchema()
+        {
+            return null;
+        }
+
+        public void ReadXml(XmlReader reader)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void WriteXml(XmlWriter writer)
+        {
+            throw new NotImplementedException();
+        }
+
     }
 }

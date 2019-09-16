@@ -720,10 +720,27 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             var prediction = TransitionSettings.Prediction.ChangePrecursorMassType(precursorMassType);
             Helpers.AssignIfEquals(ref prediction, TransitionSettings.Prediction);
 
+            // Did user change the "use spectral library ion mobility" values?
+            var ionMobility = TransitionSettings.IonMobility;
+            try
+            {
+                ionMobility =
+                    FullScanSettingsControl.UseSpectralLibraryIonMobilityValuesControl.ValidateNewSettings(true);
+                if (ionMobility == null)
+                {
+                    return false;
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+
             TransitionSettings settings;
             try
             {
-                 settings = new TransitionSettings(prediction, filter,
+                 settings = new TransitionSettings(prediction, filter, ionMobility,
                      TransitionSettings.Libraries, TransitionSettings.Integration, TransitionSettings.Instrument, fullScan);
             }
             catch (Exception x)
@@ -732,31 +749,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return false;
             }
 
-            // Did user change the "use spectral libary ion mobility" values?
-            PeptidePrediction updatedPeptidePrediction;
-            bool peptidePredictionChanged = false;
-            try
-            {
-                updatedPeptidePrediction =
-                    FullScanSettingsControl.UseSpectralLibraryIonMobilityValuesControl.ValidateNewSettings(true);
-                if (updatedPeptidePrediction == null)
-                {
-                    return false;
-                }
-
-                peptidePredictionChanged = !Equals(Document.Settings.PeptideSettings.Prediction, updatedPeptidePrediction);
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-
 
             // Only update, if anything changed
-            if (Equals(settings, TransitionSettings) && !peptidePredictionChanged)
+            if (Equals(settings, TransitionSettings))
                 return true;
 
-            ModifyDocumentNoUndo(doc => doc.ChangeSettings(doc.Settings.ChangeTransitionSettings(settings).ChangePeptideSettings(doc.Settings.PeptideSettings.ChangePrediction(updatedPeptidePrediction))));
+            ModifyDocumentNoUndo(doc => doc.ChangeSettings(doc.Settings.ChangeTransitionSettings(settings)));
             _fullScanSettingsChanged = true;
             return true;
         }

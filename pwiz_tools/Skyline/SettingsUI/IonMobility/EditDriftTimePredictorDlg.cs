@@ -38,7 +38,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
     public partial class EditDriftTimePredictorDlg : FormEx
     {
 
-        private IonMobilityPredictor _predictor;
+        private IonMobilityPredictor _ionMobilityPredictor;
         private readonly IEnumerable<IonMobilityPredictor> _existing;
         private readonly bool _smallMoleculeUI; // Set true if document is non empty and not purely peptides
 
@@ -77,29 +77,29 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             UpdateControls();
         }
 
-        public IonMobilityPredictor Predictor
+        public IonMobilityPredictor IonMobilityPredictor
         {
-            get { return _predictor; }
+            get { return _ionMobilityPredictor; }
 
             set
             {
-                _predictor = value;
+                _ionMobilityPredictor = value;
                 gridMeasuredDriftTimes.Rows.Clear();
-                if (_predictor == null)
+                if (_ionMobilityPredictor == null)
                 {
                     textName.Text = string.Empty;
                 }
                 else
                 {
-                    textName.Text = _predictor.Name;
+                    textName.Text = _ionMobilityPredictor.Name;
 
                     // List any measured drift times
-                    UpdateMeasuredDriftTimesControl(_predictor);
+                    UpdateMeasuredDriftTimesControl(_ionMobilityPredictor);
 
-                    textResolvingPower.Text = string.Format(@"{0:F04}", _predictor.WindowWidthCalculator.ResolvingPower);
-                    textWidthAtDt0.Text = string.Format(@"{0:F04}", _predictor.WindowWidthCalculator.PeakWidthAtIonMobilityValueZero);
-                    textWidthAtDtMax.Text = string.Format(@"{0:F04}", _predictor.WindowWidthCalculator.PeakWidthAtIonMobilityValueMax);
-                    cbLinear.Checked = _predictor.WindowWidthCalculator.PeakWidthMode == IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.linear_range;
+                    textResolvingPower.Text = string.Format(@"{0:F04}", _ionMobilityPredictor.WindowWidthCalculator.ResolvingPower);
+                    textWidthAtDt0.Text = string.Format(@"{0:F04}", _ionMobilityPredictor.WindowWidthCalculator.PeakWidthAtIonMobilityValueZero);
+                    textWidthAtDtMax.Text = string.Format(@"{0:F04}", _ionMobilityPredictor.WindowWidthCalculator.PeakWidthAtIonMobilityValueMax);
+                    cbLinear.Checked = _ionMobilityPredictor.WindowWidthCalculator.PeakWidthMode == IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.linear_range;
                 }
                 UpdateControls();
             }
@@ -111,25 +111,25 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             get { return (eIonMobilityUnits)comboBoxIonMobilityUnits.SelectedIndex + 1; }
         }
 
-        private void UpdateMeasuredDriftTimesControl(IonMobilityPredictor predictor)
+        private void UpdateMeasuredDriftTimesControl(IonMobilityPredictor ionMobilityPredictor)
         {
 
             // List any measured ion mobility values, taking care to show only those matching display units
             gridMeasuredDriftTimes.Rows.Clear();
-            if (predictor == null)
+            if (ionMobilityPredictor == null)
             {
                 return;
             }
-            _predictor = (_predictor??IonMobilityPredictor.EMPTY).ChangeMeasuredIonMobilityValues(predictor.MeasuredMobilityIons);
-            Units = _predictor.GetIonMobilityUnits();
+            _ionMobilityPredictor = (_ionMobilityPredictor??IonMobilityPredictor.EMPTY).ChangeMeasuredIonMobilityValues(ionMobilityPredictor.MeasuredMobilityIons);
+            Units = _ionMobilityPredictor.GetIonMobilityUnits();
             var units = Units;
 
-            if (predictor.MeasuredMobilityIons != null)
+            if (ionMobilityPredictor.MeasuredMobilityIons != null)
             {
                 bool hasHighEnergyOffsets =
-                    predictor.MeasuredMobilityIons.Any(p => p.Value.HighEnergyIonMobilityValueOffset != 0);
+                    ionMobilityPredictor.MeasuredMobilityIons.Any(p => p.Value.HighEnergyIonMobilityValueOffset != 0);
                 cbOffsetHighEnergySpectra.Checked = hasHighEnergyOffsets;
-                foreach (var p in predictor.MeasuredMobilityIons)
+                foreach (var p in ionMobilityPredictor.MeasuredMobilityIons)
                 {
                     var ccs = p.Value.CollisionalCrossSectionSqA.HasValue
                         ? string.Format(@"{0:F04}",p.Value.CollisionalCrossSectionSqA.Value)
@@ -196,7 +196,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             if (!helper.ValidateNameTextBox(textName, out name))
                 return;
 
-            if (_existing.Contains(r => !Equals(_predictor, r) && Equals(name, r.Name)) && !forceOverwrite)
+            if (_existing.Contains(r => !Equals(_ionMobilityPredictor, r) && Equals(name, r.Name)) && !forceOverwrite)
             {
                 if (MessageBox.Show(this,
                     TextUtil.LineSeparate(string.Format(Resources.EditDriftTimePredictorDlg_OkDialog_An_ion_mobility_predictor_with_the_name__0__already_exists_,name),
@@ -248,11 +248,11 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 peakWidthType = IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power;
             }
 
-            IonMobilityPredictor predictor =
+            IonMobilityPredictor ionMobilityPredictor =
                 new IonMobilityPredictor(name, driftTable.GetTableMeasuredIonMobility(cbOffsetHighEnergySpectra.Checked, Units), 
                     peakWidthType, resolvingPower, widthAtDt0, widthAtDtMax);
 
-            _predictor = predictor;
+            _ionMobilityPredictor = ionMobilityPredictor;
 
             DialogResult = DialogResult.OK;
         }

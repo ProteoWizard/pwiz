@@ -91,10 +91,10 @@ namespace pwiz.SkylineTestData.Results
                 Assert.IsTrue(docContainer.SetDocument(docResults, docOriginal, true));
                 docContainer.AssertComplete();
                 var document = docContainer.Document;
-                document = document.ChangeSettings(document.Settings.ChangePeptidePrediction(prediction => new PeptidePrediction(null, IonMobilityPredictor.EMPTY)));
+                document = document.ChangeSettings(document.Settings.ChangePeptidePrediction(prediction => new PeptidePrediction(null)));
 
                 // Verify ability to extract predictions from raw data
-                var newPred = document.Settings.PeptideSettings.Prediction.IonMobilityPredictor.ChangeMeasuredIonMobilityValuesFromResults(
+                var newPred = document.Settings.TransitionSettings.IonMobility.IonMobilityPredictor.ChangeMeasuredIonMobilityValuesFromResults(
                         document, docContainer.DocumentFilePath, true);
                 var result = newPred.MeasuredMobilityIons;
                 Assert.AreEqual(1, result.Count);
@@ -111,9 +111,11 @@ namespace pwiz.SkylineTestData.Results
                 revised.Add(libKey2, IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(5, eIonMobilityUnits.drift_time_msec), null, 0.123));
                 document =
                     document.ChangeSettings(
-                        document.Settings.ChangePeptidePrediction(prediction => new PeptidePrediction(null, new IonMobilityPredictor("test", revised, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, 40, 0, 0))));
-                newPred = document.Settings.PeptideSettings.Prediction.ChangeDriftTimePredictor(
-                    document.Settings.PeptideSettings.Prediction.IonMobilityPredictor.ChangeMeasuredIonMobilityValuesFromResults(
+                        document.Settings.ChangePeptidePrediction(prediction => new PeptidePrediction(null)).
+                            ChangeTransitionSettings(p => p.ChangeIonMobility(p.IonMobility.ChangeIonMobilityPredictor(
+                                new IonMobilityPredictor("test", revised, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, 40, 0, 0)))));
+                newPred = document.Settings.TransitionSettings.IonMobility.ChangeIonMobilityPredictor(
+                    document.Settings.TransitionSettings.IonMobility.IonMobilityPredictor.ChangeMeasuredIonMobilityValuesFromResults(
                         document, docContainer.DocumentFilePath, true)).IonMobilityPredictor;
                 result = newPred.MeasuredMobilityIons;
                 Assert.AreEqual(2, result.Count);

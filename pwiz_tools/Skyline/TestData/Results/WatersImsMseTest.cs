@@ -110,7 +110,7 @@ namespace pwiz.SkylineTestData.Results
             string subdir = (asSmallMolecules == RefinementSettings.ConvertToSmallMoleculesMode.none) ? null : asSmallMolecules.ToString();
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE, subdir);
 
-            bool withDriftTimeFilter = (mode != DriftFilterType.none); // Perform drift time filtering?  (either with predictor, or with bare times in blib file)
+            bool withDriftTimeFilter = (mode != DriftFilterType.none); // Perform drift time filtering with bare times in blib file?
             string docPath;
             SrmDocument document = InitWatersImsMseDocument(testFilesDir, driftPeakWidthCalcType, withDriftTimeFilter, out docPath);
             AssertEx.IsDocumentState(document, null, 1, 1, 1, 8); // Drift time lib load bumps the doc version, so does small mol conversion
@@ -253,15 +253,8 @@ namespace pwiz.SkylineTestData.Results
                         testFilesDir.GetTestPath("waters-mobility.filtered-scaled.blib"));
                     doc = doc.ChangeSettings(
                         doc.Settings.ChangePeptideLibraries(lib => lib.ChangeLibrarySpecs(new[] { librarySpec })).
-                            ChangePeptidePrediction(p => p.ChangeLibraryDriftTimesWindowWidthCalculator(driftTimeWindowWidthCalculator)).
-                            ChangePeptidePrediction(p => p.ChangeUseLibraryIonMobilityValues(true))
-                    );
-                }
-                else
-                {
-                    doc = doc.ChangeSettings(
-                        doc.Settings.ChangePeptideSettings(ps => ps.ChangePrediction(
-                            ps.Prediction.ChangeDriftTimePredictor(ps.Prediction.IonMobilityPredictor.ChangeDriftTimeWindowWidthCalculator(driftTimeWindowWidthCalculator)))));
+                            ChangeTransitionSettings(p => p.ChangeIonMobility(p.IonMobility.ChangeLibraryDriftTimesWindowWidthCalculator(driftTimeWindowWidthCalculator))).
+                            ChangeTransitionSettings(p => p.ChangeIonMobility(p.IonMobility.ChangeUseLibraryIonMobilityValues(true))));
                 }
             }
             return doc;

@@ -841,13 +841,13 @@ namespace pwiz.Skyline.Properties
         {
             // Null return is valid for this list, and means no ion mobility
             // calculation should be applied.
-            IonMobilityPredictor predictor;
-            if (DriftTimePredictorList.TryGetValue(name, out predictor))
+            IonMobilityPredictor ionMobilityPredictor;
+            if (DriftTimePredictorList.TryGetValue(name, out ionMobilityPredictor))
             {
-                if (predictor.GetKey() == DriftTimePredictorList.GetDefault().GetKey())
-                    predictor = null;
+                if (ionMobilityPredictor.GetKey() == DriftTimePredictorList.GetDefault().GetKey())
+                    ionMobilityPredictor = null;
             }
-            return predictor;
+            return ionMobilityPredictor;
         }
 
         [UserScopedSettingAttribute]
@@ -2234,8 +2234,12 @@ namespace pwiz.Skyline.Properties
         public override int ExcludeDefaults { get { return 1; } }
     }
 
-    public sealed class DriftTimePredictorList : SettingsList<IonMobilityPredictor>
+    public sealed class DriftTimePredictorList : SettingsList<IonMobilityPredictor> 
     {
+        // N.B. the use of the terms "Predictor" and "DriftTime" in DriftTimePredictorList and IonMobilityPredictor are
+        // historical and are now misnomers (it's a lookup, not a prediction, and its not just drift time) but we
+        // retain them for backward compatibility in audit logs
+
         private static readonly IonMobilityPredictor NONE =
             new IonMobilityPredictor(ELEMENT_NONE, null, 0, 0, 0, 0);
 
@@ -2257,7 +2261,7 @@ namespace pwiz.Skyline.Properties
 
         public void EnsureDefault()
         {
-            // Make sure the choice of no ion mobility regression is present.
+            // Make sure the choice of no ion mobility table is present.
             IonMobilityPredictor defaultElement = GetDefault();
             if (Count == 0 || this[0].GetKey() != defaultElement.GetKey())
                 Insert(0, defaultElement);
@@ -2266,10 +2270,10 @@ namespace pwiz.Skyline.Properties
         public override IonMobilityPredictor EditItem(Control owner, IonMobilityPredictor item,
             IEnumerable<IonMobilityPredictor> existing, object tag)
         {
-            using (EditDriftTimePredictorDlg editDT = new EditDriftTimePredictorDlg(existing ?? this) { Predictor = item })
+            using (EditDriftTimePredictorDlg editDT = new EditDriftTimePredictorDlg(existing ?? this) { IonMobilityPredictor = item })
             {
                 if (editDT.ShowDialog(owner) == DialogResult.OK)
-                    return editDT.Predictor;
+                    return editDT.IonMobilityPredictor;
             }
 
             return null;
@@ -2743,7 +2747,7 @@ namespace pwiz.Skyline.Properties
                 (
                     EnzymeList.GetDefault(),
                     new DigestSettings(0, false),
-                    new PeptidePrediction(null, null, true, PeptidePrediction.DEFAULT_MEASURED_RT_WINDOW, false, IonMobilityWindowWidthCalculator.EMPTY),
+                    new PeptidePrediction(null, false, PeptidePrediction.DEFAULT_MEASURED_RT_WINDOW),
                     new PeptideFilter
                     (
                         25,  // ExcludeNTermAAs
@@ -2800,6 +2804,7 @@ namespace pwiz.Skyline.Properties
                         false,  // ExclusionUseDIAWindow
                         true    // AutoSelect
                     ),
+                    TransitionIonMobility.EMPTY, 
                     new TransitionLibraries
                     (
                         0.5,    // IonMatchTolerance

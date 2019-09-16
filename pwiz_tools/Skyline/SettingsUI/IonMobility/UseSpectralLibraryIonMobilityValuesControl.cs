@@ -37,15 +37,15 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         public void InitializeSettings(IModifyDocumentContainer documentContainer, bool? defaultState = null)
         {
-            Prediction = documentContainer.Document.Settings.PeptideSettings.Prediction;
+            IonMobility = documentContainer.Document.Settings.TransitionSettings.IonMobility;
 
-            var imsWindowCalc = Prediction.LibraryIonMobilityWindowWidthCalculator;
+            var imsWindowCalc = IonMobility.LibraryIonMobilityWindowWidthCalculator;
             var resolvingPower = imsWindowCalc?.ResolvingPower ?? 0;
-            if ((defaultState ?? Prediction.UseLibraryIonMobilityValues) && resolvingPower == 0)
+            if ((defaultState ?? IonMobility.UseLibraryIonMobilityValues) && resolvingPower == 0)
             {
                 resolvingPower = 30; // Arbitrarily chosen non-zero value
             }
-            cbUseSpectralLibraryIonMobilityValues.Checked = textSpectralLibraryIonMobilityValuesResolvingPower.Enabled = defaultState ?? Prediction.UseLibraryIonMobilityValues;
+            cbUseSpectralLibraryIonMobilityValues.Checked = textSpectralLibraryIonMobilityValuesResolvingPower.Enabled = defaultState ?? IonMobility.UseLibraryIonMobilityValues;
             if (imsWindowCalc != null)
             {
                 cbLinear.Checked = imsWindowCalc.PeakWidthMode == IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.linear_range;
@@ -68,9 +68,9 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             UpdateLibraryDriftPeakWidthControls();
 
         }
-        public PeptidePrediction Prediction { get; set;} 
+        public TransitionIonMobility IonMobility { get; set;} 
 
-        public PeptidePrediction ValidateNewSettings(bool showMessages)
+        public TransitionIonMobility ValidateNewSettings(bool showMessages)
         {
             var helper = new MessageBoxHelper(ParentForm, showMessages);
 	
@@ -119,7 +119,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 libraryDriftTimeWindowWidthCalculator = new IonMobilityWindowWidthCalculator(peakWidthType, resolvingPower, widthAtDt0, widthAtDtMax);
             }
 
-            return Prediction.ChangeLibraryDriftTimesWindowWidthCalculator(libraryDriftTimeWindowWidthCalculator).ChangeUseLibraryIonMobilityValues(useLibraryDriftTime);
+            return IonMobility.ChangeLibraryDriftTimesWindowWidthCalculator(libraryDriftTimeWindowWidthCalculator).ChangeUseLibraryIonMobilityValues(useLibraryDriftTime);
         }
 
         private void UpdateLibraryDriftPeakWidthControls()

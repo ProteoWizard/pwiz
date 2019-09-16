@@ -392,6 +392,7 @@
     <Compile Include="Model\DocSettings\AnnotationCalculator.cs" />
     <Compile Include="Model\DocSettings\AnnotationExpression.cs" />
     <Compile Include="Model\DocSettings\DocumentAnnotationUpdater.cs" />
+    <Compile Include="Model\DocSettings\IonMobility.cs" />
     <Compile Include="Model\ElementLocators\ElementLocator.cs" />
     <Compile Include="Model\ElementLocators\ListRef.cs" />
     <Compile Include="Model\DocSettings\FullScanAcquisitionMethod.cs" />

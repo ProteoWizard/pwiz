@@ -100,7 +100,7 @@ namespace pwiz.Skyline.Model.Results
             var dictPrecursorMzToFilter = new SortedDictionary<PrecursorTextId, SpectrumFilterPair>(comparer);
 
             // If we're using bare measured ion mobility values from spectral libraries, go get those now
-            var libraryIonMobilityInfo = document.Settings.PeptideSettings.Prediction.UseLibraryIonMobilityValues
+            var libraryIonMobilityInfo = document.Settings.TransitionSettings.IonMobility.UseLibraryIonMobilityValues
                 ? document.Settings.GetIonMobilities(msDataFileUri)
                 : null;
             var ionMobilityMax = maxObservedIonMobilityValue ?? 0;

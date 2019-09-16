@@ -262,7 +262,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 WaitForClosedForm(peptideSettingsDlg);
 
                 var document = SkylineWindow.Document;
-                var measuredDTs = document.Settings.PeptideSettings.Prediction.IonMobilityPredictor.MeasuredMobilityIons;
+                var measuredDTs = document.Settings.TransitionSettings.IonMobility.IonMobilityPredictor.MeasuredMobilityIons;
                 Assert.IsNotNull(driftInfoExplicitDT, "driftInfoExplicitDT != null");
                 var explicitDTs = driftInfoExplicitDT.GetIonMobilityDict();
 

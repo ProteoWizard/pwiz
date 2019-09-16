@@ -1023,12 +1023,12 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            if (newdoc.Settings.PeptideSettings.Prediction.IonMobilityPredictor != null &&
-                newdoc.Settings.PeptideSettings.Prediction.IonMobilityPredictor.MeasuredMobilityIons != null &&
-                newdoc.Settings.PeptideSettings.Prediction.IonMobilityPredictor.MeasuredMobilityIons.Any())
+            if (newdoc.Settings.TransitionSettings.IonMobility.IonMobilityPredictor != null &&
+                newdoc.Settings.TransitionSettings.IonMobility.IonMobilityPredictor.MeasuredMobilityIons != null &&
+                newdoc.Settings.TransitionSettings.IonMobility.IonMobilityPredictor.MeasuredMobilityIons.Any())
             {
                 var mapped = new Dictionary<LibKey, IonMobilityAndCCS>();
-                foreach (var item in newdoc.Settings.PeptideSettings.Prediction.IonMobilityPredictor.MeasuredMobilityIons)
+                foreach (var item in newdoc.Settings.TransitionSettings.IonMobility.IonMobilityPredictor.MeasuredMobilityIons)
                 {
                     LibKey smallMolKey;
                     if (precursorMap.TryGetValue(item.Key, out smallMolKey))
@@ -1036,9 +1036,9 @@ namespace pwiz.Skyline.Model
                         mapped.Add(smallMolKey, item.Value);
                     }
                 }
-                var newpredictorDt = newdoc.Settings.PeptideSettings.Prediction.IonMobilityPredictor.ChangeMeasuredIonMobilityValues(mapped);
-                var newpredictor = newdoc.Settings.PeptideSettings.Prediction.ChangeDriftTimePredictor(newpredictorDt);
-                var newSettings = newdoc.Settings.ChangePeptideSettings(newdoc.Settings.PeptideSettings.ChangePrediction(newpredictor));
+                var newpredictorDt = newdoc.Settings.TransitionSettings.IonMobility.IonMobilityPredictor.ChangeMeasuredIonMobilityValues(mapped);
+                var newpredictor = newdoc.Settings.TransitionSettings.IonMobility.ChangeIonMobilityPredictor(newpredictorDt);
+                var newSettings = newdoc.Settings.ChangeTransitionSettings(newdoc.Settings.TransitionSettings.ChangeIonMobility(newpredictor));
                 newdoc = newdoc.ChangeSettings(newSettings);
             }
 

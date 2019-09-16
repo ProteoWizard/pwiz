@@ -606,7 +606,7 @@ namespace pwiz.Skyline.SettingsUI
             Helpers.AssignIfEquals(ref fullScan, FullScan);
 
             TransitionSettings settings = new TransitionSettings(prediction,
-                filter, libraries, integration, instrument, fullScan);
+                filter, ionMobility, libraries, integration, instrument, fullScan);
 
             // Only update, if anything changed
             if (!Equals(settings, _transitionSettings))
