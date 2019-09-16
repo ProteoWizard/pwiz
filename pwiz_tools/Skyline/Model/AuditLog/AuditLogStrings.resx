@@ -633,7 +633,7 @@
     <value>The document was modified outside of Skyline: {0}</value>
   </data>
   <data name="AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing" xml:space="preserve">
-    <value>Audit log is corrupted. Audit log entry time stamps and indices should be decreasing. entry number {0} timestamp {1:G} occurs before entry number {2} timestamp {3:G}</value>
+    <value>Audit log is corrupted. Audit log entry time stamps and indices should be decreasing. Entry number {0} timestamp {1:G} occurs before entry number {2} timestamp {3:G}.</value>
   </data>
   <data name="test_only" xml:space="preserve">
     <value>{0}</value>
@@ -655,5 +655,8 @@
 Deleting, renaming or moving the audit log file will prevent this error from occuring. You can also send the audit log to the Skyline team to have them attempt to manually fix the file.
 
 For reference, the audit log is located here: "{0}"</value>
+  </data>
+  <data name="AuditLogException_Error_when_loading_document_audit_log__0" xml:space="preserve">
+    <value>Error when loading document's audit log: {0}.</value>
   </data>
 </root>

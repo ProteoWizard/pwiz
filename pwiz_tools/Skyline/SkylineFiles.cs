@@ -320,7 +320,7 @@ namespace pwiz.Skyline
                         catch (Exception e)
                         {
                             throw new AuditLogException(
-                                string.Format("Error when loading document audit log: {0}", path), e);
+                                string.Format(AuditLogStrings.AuditLogException_Error_when_loading_document_audit_log__0, path), e);
 
                         }
                     });
@@ -332,29 +332,10 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 var ex = x;
-                var isAuditLogException = false;
-                var msgStrings = new List<string>();
-                
-                do
-                {
-                    //Make the error dialog a bit more user friendly by showing the full chain of nested exceptions in the message
-                    //so they don't have to dig through the stack traces to find the root cause.
-                    if(msgStrings.Count > 0)
-                        msgStrings.Add(Resources.ExceptionDialog_Caused_by_____);
-                    msgStrings.Add(ex.Message);
-                    if (ex.GetType() == typeof(AuditLogException))
-                    {
-                        isAuditLogException = true;
-                    }
-                    
-                    ex = ex.InnerException;
-
-                } while (ex != null);
-
-                if (isAuditLogException)
+                if (AuditLogException.IsAuditLogInvolved(x))
                 {
                     MessageDlg.ShowWithException(parentWindow ?? this, 
-                        TextUtil.LineSeparate(msgStrings),
+                        AuditLogException.GetMultiLevelMessage(x),
                         x);
                 }
                 else

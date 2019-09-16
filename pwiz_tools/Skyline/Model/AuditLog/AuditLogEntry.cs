@@ -49,6 +49,52 @@ namespace pwiz.Skyline.Model.AuditLog
         public AuditLogException(string pMessage, Exception pInner) : base(pMessage, pInner)
         {
         }
+
+        /// <summary>
+        /// Checks if the given exception was thrown due to problems with audit log processing
+        /// </summary>
+        /// <param name="ex">Exception to check</param>
+        /// <returns>True if this or any nested exception is of <see cref="AuditLogException"> AuditLogException </see> type.</returns>
+        public static bool IsAuditLogInvolved(Exception ex)
+        {
+            var isAuditLogException = false;
+
+            do      //traverse the nested exception chain to look for AuditLogException
+            {
+                if (ex.GetType() == typeof(AuditLogException))
+                {
+                    isAuditLogException = true;
+                }
+
+                ex = ex.InnerException;
+
+            } while (ex != null);
+
+            return isAuditLogException;
+        }
+
+        /// <summary>
+        /// Extracts messages from all the nested exceptions and concatenates them into a single string.
+        /// </summary>
+        /// <param name="ex">Exception to extract the message from.</param>
+        /// <returns>String with all the nested exception messages separated by new lines and exception separator --> </returns>
+        public static string GetMultiLevelMessage(Exception ex)
+        {
+            var msgStrings = new List<string>();
+
+            do
+            {
+                //Make the error dialog a bit more user friendly by showing the full chain of nested exceptions in the message
+                //so they don't have to dig through the stack traces to find the root cause.
+                if (msgStrings.Count > 0)
+                    msgStrings.Add(Resources.ExceptionDialog_Caused_by_____);
+                msgStrings.Add(ex.Message);
+                ex = ex.InnerException;
+
+            } while (ex != null);
+
+            return TextUtil.LineSeparate(msgStrings);
+        }
     }
 
     [XmlRoot(XML_ROOT)]
