@@ -724,4 +724,7 @@ greater peak area.</value>
   <data name="_refine_max_precursor_only" xml:space="preserve">
     <value>Only the precursor charge state with the maximum peak area will be retained.</value>
   </data>
+  <data name="_exp_order_by_mz" xml:space="preserve">
+    <value>Order exported method by m/z, ascending.</value>
+  </data>
 </root>

@@ -250,6 +250,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Order exported method by m/z, ascending..
+        /// </summary>
+        internal static string _exp_order_by_mz {
+            get {
+                return ResourceManager.GetString("_exp_order_by_mz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Controls export behavior for documents with both positive and negative transitions. Allows for output of only positive or only negative transitions, or creates separate outputs for each polarity. Defaults to all, and is ignored for single polarity documents..
         /// </summary>
         internal static string _exp_polarity {
