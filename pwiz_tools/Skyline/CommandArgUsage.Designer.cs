@@ -250,7 +250,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Order exported method by m/z, ascending..
+        ///   Looks up a localized string similar to Order exported method by m/z values in ascending order (precursor m/z, then product m/z when applicable) for optimized quadrupole switching..
         /// </summary>
         internal static string _exp_order_by_mz {
             get {

@@ -725,6 +725,6 @@ greater peak area.</value>
     <value>Only the precursor charge state with the maximum peak area will be retained.</value>
   </data>
   <data name="_exp_order_by_mz" xml:space="preserve">
-    <value>Order exported method by m/z, ascending.</value>
+    <value>Order exported method by m/z values in ascending order (precursor m/z, then product m/z when applicable) for optimized quadrupole switching.</value>
   </data>
 </root>
