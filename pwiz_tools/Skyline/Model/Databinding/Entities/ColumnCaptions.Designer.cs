@@ -1231,6 +1231,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to KEGG.
+        /// </summary>
+        public static string KEGG {
+            get {
+                return ResourceManager.GetString("KEGG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Key.
         /// </summary>
         public static string Key {

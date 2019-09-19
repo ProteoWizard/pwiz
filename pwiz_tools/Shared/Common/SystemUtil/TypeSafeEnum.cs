@@ -95,6 +95,7 @@ namespace pwiz.Common.SystemUtil
 
         public static bool IsValid<T>(T value) where T : struct
         {
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             return Equals(value, default(T)) || typeof(T).IsEnumDefined(value);
         }
     }

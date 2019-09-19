@@ -1636,6 +1636,7 @@ namespace pwiz.Skyline
             selectPath = null;
             using (var enumGroupsCurrent = docCurrent.MoleculeGroups.GetEnumerator())
             {
+                // ReSharper disable once PossibleNullReferenceException
                 foreach (PeptideGroupDocNode nodePepGroup in docNew.MoleculeGroups)
                 {
                     if (enumGroupsCurrent.MoveNext() &&
@@ -1656,8 +1657,10 @@ namespace pwiz.Skyline
                 if (matcher != null)
                 {
                     var pepModsNew = matcher.GetDocModifications(docNew);
+                    // ReSharper disable PossibleNullReferenceException
                     docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideModifications(mods => pepModsNew));
                     docNew.Settings.UpdateDefaultModifications(false);
+                    // ReSharper restore PossibleNullReferenceException
                 }
 
                 return docNew;

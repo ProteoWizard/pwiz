@@ -234,7 +234,7 @@ make sure your instrument can handle the number of transitions in each file.</va
     <value>164, 22</value>
   </data>
   <data name="textMaxTransitions.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="textMaxTransitions.ToolTip" xml:space="preserve">
     <value>Each file created will have at most this number of transitions, but may have fewer,
@@ -265,7 +265,7 @@ if peptide or protein boundaries do not allow the maximum.</value>
     <value>236, 17</value>
   </data>
   <data name="labelMaxTransitions.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="labelMaxTransitions.Text" xml:space="preserve">
     <value>Ma&amp;x transitions per sample injection:</value>
@@ -643,7 +643,7 @@ if peptide or protein boundaries do not allow the maximum.</value>
     <value>125, 21</value>
   </data>
   <data name="cbIgnoreProteins.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="cbIgnoreProteins.Text" xml:space="preserve">
     <value>Ignore p&amp;roteins</value>
@@ -822,7 +822,7 @@ and base name as the Analyst acquisition method.</value>
     <value>173, 24</value>
   </data>
   <data name="comboPolarityFilter.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>12</value>
   </data>
   <data name="comboPolarityFilter.ToolTip" xml:space="preserve">
     <value>Controls export behavior for documents with both positive and negative transitions. Allows for output of only positive or only negative transitions, or creates separate outputs for each polarity.</value>
@@ -933,7 +933,7 @@ and base name as the Analyst acquisition method.</value>
     <value>78, 17</value>
   </data>
   <data name="labelOptimizing.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>13</value>
   </data>
   <data name="labelOptimizing.Text" xml:space="preserve">
     <value>Optimi&amp;zing:</value>
@@ -963,7 +963,7 @@ and base name as the Analyst acquisition method.</value>
     <value>66, 17</value>
   </data>
   <data name="labelMethods.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="labelMethods.Text" xml:space="preserve">
     <value>Methods:</value>
@@ -993,7 +993,7 @@ and base name as the Analyst acquisition method.</value>
     <value>24, 17</value>
   </data>
   <data name="labelMethodNum.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="labelMethodNum.Text" xml:space="preserve">
     <value>##</value>
@@ -1350,7 +1350,7 @@ and base name as the Analyst acquisition method.</value>
     <value>117, 17</value>
   </data>
   <data name="labelPolarityFilter.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>11</value>
   </data>
   <data name="labelPolarityFilter.Text" xml:space="preserve">
     <value>Polarit&amp;y:</value>
@@ -1422,6 +1422,36 @@ and base name as the Analyst acquisition method.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbWriteCoV.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="cbSortByMz.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbSortByMz.Location" type="System.Drawing.Point, System.Drawing">
+    <value>226, 115</value>
+  </data>
+  <data name="cbSortByMz.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>1, 1, 1, 1</value>
+  </data>
+  <data name="cbSortByMz.Size" type="System.Drawing.Size, System.Drawing">
+    <value>112, 21</value>
+  </data>
+  <data name="cbSortByMz.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="cbSortByMz.Text" xml:space="preserve">
+    <value>Order by m/z</value>
+  </data>
+  <data name="&gt;&gt;cbSortByMz.Name" xml:space="preserve">
+    <value>cbSortByMz</value>
+  </data>
+  <data name="&gt;&gt;cbSortByMz.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbSortByMz.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;cbSortByMz.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">

@@ -1,5 +1,5 @@
 ﻿/*
- * Original author: Brian PRatt <bspratt .at. u.washington.edu>,
+ * Original author: Brian Pratt <bspratt .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2019 University of Washington - Seattle, WA
