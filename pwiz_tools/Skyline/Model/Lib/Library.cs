@@ -1765,6 +1765,23 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
+        private bool Equals(SpectrumPeaksInfo other)
+        {
+            return ArrayUtil.EqualsDeep(Peaks, other.Peaks);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return obj is SpectrumPeaksInfo other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return (Peaks != null ? Peaks.GetHashCode() : 0);
+        }
+
         public struct MI
         {
             private bool _notQuantitative;
@@ -2228,6 +2245,34 @@ namespace pwiz.Skyline.Model.Lib
             IsBest = isBest;
         }
 
+        protected bool Equals(SpectrumInfo other)
+        {
+            return Equals(LabelType, other.LabelType) && string.Equals(Name, other.Name) && IsBest == other.IsBest &&
+                   Equals(SpectrumPeaksInfo, other.SpectrumPeaksInfo) &&
+                   Equals(ChromatogramData, other.ChromatogramData);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((SpectrumInfo) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = (LabelType != null ? LabelType.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Name != null ? Name.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ IsBest.GetHashCode();
+                hashCode = (hashCode * 397) ^ (SpectrumPeaksInfo != null ? SpectrumPeaksInfo.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (ChromatogramData != null ? ChromatogramData.GetHashCode() : 0);
+                return hashCode;
+            }
+        }
+
         public IsotopeLabelType LabelType { get; protected set; }
         public abstract string Name { get; }
         public bool IsBest { get; protected set; }
@@ -2335,6 +2380,34 @@ namespace pwiz.Skyline.Model.Lib
         public float[] Times { get; set; }
         public IList<ChromData> ChromDatas { get { return _chromDatas; } set { _chromDatas = ImmutableList.ValueOf(value); } }
 
+        protected bool Equals(LibraryChromGroup other)
+        {
+            return ArrayUtil.EqualsDeep(_chromDatas, other._chromDatas) && StartTime.Equals(other.StartTime) &&
+                   EndTime.Equals(other.EndTime) && RetentionTime.Equals(other.RetentionTime) &&
+                   ArrayUtil.EqualsDeep(Times, other.Times);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != .GetType()) return false;
+            return Equals((LibraryChromGroup) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = (_chromDatas != null ? _chromDatas.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ StartTime.GetHashCode();
+                hashCode = (hashCode * 397) ^ EndTime.GetHashCode();
+                hashCode = (hashCode * 397) ^ RetentionTime.GetHashCode();
+                hashCode = (hashCode * 397) ^ (Times != null ? Times.GetHashCode() : 0);
+                return hashCode;
+            }
+        }
+
         public class ChromData
         {
             public double Mz { get; set; }
@@ -2346,6 +2419,35 @@ namespace pwiz.Skyline.Model.Lib
             public int MassIndex { get; set; }
             // public DriftTimeFilter driftTime { get; set; } TODO(bspratt) IMS in chromatogram libs?
 
+            protected bool Equals(ChromData other)
+            {
+                return Mz.Equals(other.Mz) && Height.Equals(other.Height) && Equals(Intensities, other.Intensities) &&
+                       Charge == other.Charge && IonType == other.IonType && Ordinal == other.Ordinal &&
+                       MassIndex == other.MassIndex;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != GetType()) return false;
+                return Equals((ChromData) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = Mz.GetHashCode();
+                    hashCode = (hashCode * 397) ^ Height.GetHashCode();
+                    hashCode = (hashCode * 397) ^ (Intensities != null ? Intensities.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ Charge;
+                    hashCode = (hashCode * 397) ^ (int) IonType;
+                    hashCode = (hashCode * 397) ^ Ordinal;
+                    hashCode = (hashCode * 397) ^ MassIndex;
+                    return hashCode;
+                }
+            }
         }
     }
 

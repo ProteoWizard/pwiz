@@ -50,7 +50,9 @@ namespace pwiz.Skyline.ToolsUI
             this.comboColorScheme = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.powerOfTenCheckBox = new System.Windows.Forms.CheckBox();
-            this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.tabProsit = new System.Windows.Forms.TabPage();
+            this.ceLabel = new System.Windows.Forms.Label();
+            this.ceCombo = new System.Windows.Forms.ComboBox();
             this.prositServerStatusLabel = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.iRTModelCombo = new System.Windows.Forms.ComboBox();
@@ -62,8 +64,6 @@ namespace pwiz.Skyline.ToolsUI
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
-            this.ceLabel = new System.Windows.Forms.Label();
-            this.ceCombo = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl.SuspendLayout();
             this.tabPanorama.SuspendLayout();
@@ -71,7 +71,7 @@ namespace pwiz.Skyline.ToolsUI
             this.tabLanguage.SuspendLayout();
             this.tabMisc.SuspendLayout();
             this.tabDisplay.SuspendLayout();
-            this.tabPage1.SuspendLayout();
+            this.tabProsit.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -80,10 +80,10 @@ namespace pwiz.Skyline.ToolsUI
             resources.ApplyResources(this.tabControl, "tabControl");
             this.tabControl.Controls.Add(this.tabPanorama);
             this.tabControl.Controls.Add(this.tabRemote);
+            this.tabControl.Controls.Add(this.tabProsit);
             this.tabControl.Controls.Add(this.tabLanguage);
             this.tabControl.Controls.Add(this.tabMisc);
             this.tabControl.Controls.Add(this.tabDisplay);
-            this.tabControl.Controls.Add(this.tabPage1);
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
             // 
@@ -225,22 +225,34 @@ namespace pwiz.Skyline.ToolsUI
             this.powerOfTenCheckBox.Name = "powerOfTenCheckBox";
             this.powerOfTenCheckBox.UseVisualStyleBackColor = true;
             // 
-            // tabPage1
+            // tabProsit
             // 
-            this.tabPage1.Controls.Add(this.ceLabel);
-            this.tabPage1.Controls.Add(this.ceCombo);
-            this.tabPage1.Controls.Add(this.prositServerStatusLabel);
-            this.tabPage1.Controls.Add(this.label3);
-            this.tabPage1.Controls.Add(this.iRTModelCombo);
-            this.tabPage1.Controls.Add(this.label2);
-            this.tabPage1.Controls.Add(this.intensityModelCombo);
-            this.tabPage1.Controls.Add(this.prositServerLabel);
-            this.tabPage1.Controls.Add(this.prositServerCombo);
-            this.tabPage1.Controls.Add(this.prositDescrLabel);
-            this.tabPage1.Controls.Add(this.pictureBox1);
-            resources.ApplyResources(this.tabPage1, "tabPage1");
-            this.tabPage1.Name = "tabPage1";
-            this.tabPage1.UseVisualStyleBackColor = true;
+            this.tabProsit.Controls.Add(this.ceLabel);
+            this.tabProsit.Controls.Add(this.ceCombo);
+            this.tabProsit.Controls.Add(this.prositServerStatusLabel);
+            this.tabProsit.Controls.Add(this.label3);
+            this.tabProsit.Controls.Add(this.iRTModelCombo);
+            this.tabProsit.Controls.Add(this.label2);
+            this.tabProsit.Controls.Add(this.intensityModelCombo);
+            this.tabProsit.Controls.Add(this.prositServerLabel);
+            this.tabProsit.Controls.Add(this.prositServerCombo);
+            this.tabProsit.Controls.Add(this.prositDescrLabel);
+            this.tabProsit.Controls.Add(this.pictureBox1);
+            resources.ApplyResources(this.tabProsit, "tabProsit");
+            this.tabProsit.Name = "tabProsit";
+            this.tabProsit.UseVisualStyleBackColor = true;
+            // 
+            // ceLabel
+            // 
+            resources.ApplyResources(this.ceLabel, "ceLabel");
+            this.ceLabel.Name = "ceLabel";
+            // 
+            // ceCombo
+            // 
+            this.ceCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.ceCombo.FormattingEnabled = true;
+            resources.ApplyResources(this.ceCombo, "ceCombo");
+            this.ceCombo.Name = "ceCombo";
             // 
             // prositServerStatusLabel
             // 
@@ -313,18 +325,6 @@ namespace pwiz.Skyline.ToolsUI
             this.btnOK.Name = "btnOK";
             this.btnOK.UseVisualStyleBackColor = true;
             // 
-            // ceLabel
-            // 
-            resources.ApplyResources(this.ceLabel, "ceLabel");
-            this.ceLabel.Name = "ceLabel";
-            // 
-            // ceCombo
-            // 
-            this.ceCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.ceCombo.FormattingEnabled = true;
-            resources.ApplyResources(this.ceCombo, "ceCombo");
-            this.ceCombo.Name = "ceCombo";
-            // 
             // ToolOptionsUI
             // 
             this.AcceptButton = this.btnOK;
@@ -349,8 +349,8 @@ namespace pwiz.Skyline.ToolsUI
             this.tabMisc.PerformLayout();
             this.tabDisplay.ResumeLayout(false);
             this.tabDisplay.PerformLayout();
-            this.tabPage1.ResumeLayout(false);
-            this.tabPage1.PerformLayout();
+            this.tabProsit.ResumeLayout(false);
+            this.tabProsit.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
 
@@ -381,7 +381,7 @@ namespace pwiz.Skyline.ToolsUI
         private System.Windows.Forms.ComboBox comboColorScheme;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnResetSettings;
-        private System.Windows.Forms.TabPage tabPage1;
+        private System.Windows.Forms.TabPage tabProsit;
         private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.ComboBox prositServerCombo;
         private System.Windows.Forms.LinkLabel prositDescrLabel;

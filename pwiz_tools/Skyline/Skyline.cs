@@ -3755,13 +3755,18 @@ namespace pwiz.Skyline
             }
         }
 
-        public void ShowToolOptionsUI(ToolOptionsUI.TABS tab)
+        public void ShowToolOptionsUI(IWin32Window owner, ToolOptionsUI.TABS tab)
         {
             using (var dlg = new ToolOptionsUI())
             {
                 dlg.NavigateToTab(tab);
-                dlg.ShowDialog(this);
+                dlg.ShowDialog(owner);
             }
+        }
+
+        public void ShowToolOptionsUI(ToolOptionsUI.TABS tab)
+        {
+            ShowToolOptionsUI(this, tab);
         }
 
         private void updatesToolsMenuItem_Click(object sender, EventArgs e)

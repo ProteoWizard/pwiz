@@ -91,11 +91,11 @@ namespace pwiz.Skyline.Model.Prosit.Models
 
         public override PrositIntensityInput.PrositPrecursorInput CreatePrositInputRow(SrmSettings settings, PeptidePrecursorPair skylineInput, out PrositException exception)
         {
-            var peptideSequence = PrositHelpers.EncodeSequence(settings, skylineInput.NodePep, skylineInput.NodeGroup.LabelType, out exception);
+            var peptideSequence = PrositHelpers.EncodeSequence(settings, skylineInput.NodePep, IsotopeLabelType.light, out exception);
             if (peptideSequence == null) // equivalently, exception != null
                 return null;
 
-            var precursorCharge = PrositHelpers.OneHotEncode(skylineInput.NodeGroup.PrecursorCharge - 1, Constants.PRECURSOR_CHARGES);
+            var precursorCharge = PrositHelpers.OneHotEncode(skylineInput.NodeGroup.PrecursorCharge - 1, PrositConstants.PRECURSOR_CHARGES);
 
             return new PrositIntensityInput.PrositPrecursorInput(peptideSequence, precursorCharge, skylineInput.NCE.Value / 100.0f);
         }
@@ -140,10 +140,10 @@ namespace pwiz.Skyline.Model.Prosit.Models
                     {
                         [PEPTIDES_KEY] = Create2dTensor(DataType.DtInt32, tp => tp.IntVal,
                             InputRows.SelectMany(p => p.PeptideSequence).ToArray(),
-                            InputRows.Count, Constants.PEPTIDE_SEQ_LEN),
+                            InputRows.Count, PrositConstants.PEPTIDE_SEQ_LEN),
                         [PRECURSOR_CHARGE_KEY] = Create2dTensor(DataType.DtFloat, tp => tp.FloatVal,
                             InputRows.SelectMany(p => p.PrecursorCharge).ToArray(),
-                            InputRows.Count, Constants.PRECURSOR_CHARGES),
+                            InputRows.Count, PrositConstants.PRECURSOR_CHARGES),
                         [COLLISION_ENERGY_KEY] = Create2dTensor(DataType.DtFloat, tp => tp.FloatVal,
                             InputRows.Select(p => p.NormalizedCollisionEnergy).ToArray(),
                             InputRows.Count, 1)
@@ -210,10 +210,10 @@ namespace pwiz.Skyline.Model.Prosit.Models
             {
                 public PrositPrecursorOutput(TensorProto tensor, ref int index)
                 {
-                    Intensities = new FragmentIonIntensity[Constants.PEPTIDE_SEQ_LEN - 1];
+                    Intensities = new FragmentIonIntensity[PrositConstants.PEPTIDE_SEQ_LEN - 1];
 
                     // Copy blocks of intensities for each ion
-                    for (var i = 0; i < Constants.PEPTIDE_SEQ_LEN - 1; ++i)
+                    for (var i = 0; i < PrositConstants.PEPTIDE_SEQ_LEN - 1; ++i)
                         Intensities[i] = new FragmentIonIntensity(tensor, ref index);
                 }
 
@@ -228,12 +228,12 @@ namespace pwiz.Skyline.Model.Prosit.Models
             {
                 public FragmentIonIntensity(TensorProto tensor, ref int index)
                 {
-                    if (index + Constants.PRECURSOR_CHARGES > tensor.FloatVal.Count)
+                    if (index + PrositConstants.PRECURSOR_CHARGES > tensor.FloatVal.Count)
                         throw new ArgumentException();
 
-                    Intensities = new float[Constants.PRECURSOR_CHARGES];
+                    Intensities = new float[PrositConstants.PRECURSOR_CHARGES];
                     // Copy intensities
-                    for (var i = 0; i < Constants.PRECURSOR_CHARGES; ++i)
+                    for (var i = 0; i < PrositConstants.PRECURSOR_CHARGES; ++i)
                         Intensities[i] = PrositHelpers.ReLU(tensor.FloatVal[index++]);
                 }
 

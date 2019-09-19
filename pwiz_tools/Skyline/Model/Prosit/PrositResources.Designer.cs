@@ -61,6 +61,16 @@ namespace pwiz.Skyline.Model.Prosit {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Some Prosit settings are not set. Would you like to set them now?.
+        /// </summary>
+        internal static string BuildLibraryDlg_dataSourceFilesRadioButton_CheckedChanged_Some_Prosit_settings_are_not_set__Would_you_like_to_set_them_now_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_dataSourceFilesRadioButton_CheckedChanged_Some_Prosit_settings_ar" +
+                        "e_not_set__Would_you_like_to_set_them_now_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} vs {1}
         ///{2}
         ///dotp: {3}.
@@ -68,6 +78,15 @@ namespace pwiz.Skyline.Model.Prosit {
         internal static string GraphSpectrum_UpdateUI_ {
             get {
                 return ResourceManager.GetString("GraphSpectrum_UpdateUI_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Some Prosit settings are not set..
+        /// </summary>
+        internal static string GraphSpectrum_UpdateUI_Some_Prosit_settings_are_not_set_ {
+            get {
+                return ResourceManager.GetString("GraphSpectrum_UpdateUI_Some_Prosit_settings_are_not_set_", resourceCulture);
             }
         }
         
@@ -124,6 +143,16 @@ namespace pwiz.Skyline.Model.Prosit {
         internal static string PrositPredictionClient_Current_No_Prosit_server_set {
             get {
                 return ResourceManager.GetString("PrositPredictionClient_Current_No_Prosit_server_set", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Prosit only supports peptides. &apos;{0}&apos; is a small molecule..
+        /// </summary>
+        internal static string PrositSmallMoleculeException_PrositSmallMoleculeException_Prosit_only_supports_peptides____0___is_a_small_molecule_ {
+            get {
+                return ResourceManager.GetString("PrositSmallMoleculeException_PrositSmallMoleculeException_Prosit_only_supports_pe" +
+                        "ptides____0___is_a_small_molecule_", resourceCulture);
             }
         }
         

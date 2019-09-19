@@ -25,9 +25,11 @@ using Google.Protobuf.Collections;
 using Grpc.Core;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Util;
 using Tensorflow;
 using Tensorflow.Serving;
+using Settings = pwiz.Skyline.Properties.Settings;
 
 namespace pwiz.Skyline.Model.Prosit.Models
 {
@@ -172,8 +174,8 @@ namespace pwiz.Skyline.Model.Prosit.Models
         {
             lock (_cacheLock)
             {
-                if (_cachedInput != null && _cachedOutput != null && _cachedInput.Equals(input) &&
-                    ReferenceEquals(_cachedClient, predictionClient) &&
+                if (PrositConstants.CACHE_PREV_PREDICTION && _cachedInput != null && _cachedOutput != null &&
+                    _cachedInput.Equals(input) && ReferenceEquals(_cachedClient, predictionClient) &&
                     ReferenceEquals(settings, _cachedSettings))
                     return _cachedOutput;
             }
@@ -248,7 +250,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
                 new List<List<TSkylineInputRow>>();
 
             // Construct batch inputs in parallel
-            ParallelEx.ForEach(PrositHelpers.EnumerateBatches(inputs, Constants.BATCH_SIZE),
+            ParallelEx.ForEach(PrositHelpers.EnumerateBatches(inputs, PrositConstants.BATCH_SIZE),
                 batchEnumerable =>
                 {
                     var batch = batchEnumerable.ToArray();
@@ -300,6 +302,62 @@ namespace pwiz.Skyline.Model.Prosit.Models
 
     public class PrositHelpers
     {
+        public static bool PrositSettingsValid
+        {
+            get
+            {
+                return !string.IsNullOrEmpty(Settings.Default.PrositServer) &&
+                       Settings.Default.PrositIntensityModel != null &&
+                       Settings.Default.PrositRetentionTimeModel != null;
+            }
+        }
+
+        /// <summary>
+        /// Calculates the normalized contrast angle of the square rooted
+        /// intensities of the two given spectra.
+        /// </summary>
+        /// <param name="spectrum1">First spectrum</param>
+        /// <param name="spectrum2">Second spectrum</param>
+        /// <param name="mzTolerance">Tolerance for considering two mzs the same</param>
+        public static double CalculateSpectrumDotp(LibraryRankedSpectrumInfo spectrum1, LibraryRankedSpectrumInfo spectrum2, double mzTolerance)
+        {
+            var matched1 = spectrum1.PeaksMatched.ToArray();
+            var matched2 = spectrum2.PeaksMatched.ToArray();
+            var intensities1All = new List<double>(matched1.Length + matched2.Length);
+            var intensities2All = new List<double>(matched1.Length + matched2.Length);
+            var matchIndex1 = 0;
+            var matchIndex2 = 0;
+            while (matchIndex1 < matched1.Length && matchIndex2 < matched2.Length)
+            {
+                var mz1 = matched1[matchIndex1].ObservedMz;
+                var mz2 = matched2[matchIndex2].ObservedMz;
+                if (Math.Abs(mz1 - mz2) <
+                    mzTolerance)
+                {
+                    intensities1All.Add(matched1[matchIndex1].Intensity);
+                    intensities2All.Add(matched2[matchIndex2].Intensity);
+
+                    ++matchIndex1;
+                    ++matchIndex2;
+                }
+                else if (mz1 < mz2)
+                {
+                    intensities1All.Add(matched1[matchIndex1].Intensity);
+                    intensities2All.Add(0.0);
+                    ++matchIndex1;
+                }
+                else
+                {
+                    intensities1All.Add(0.0);
+                    intensities2All.Add(matched2[matchIndex2].Intensity);
+                    ++matchIndex2;
+                }
+            }
+
+            return new Statistics(intensities1All).NormalizedContrastAngleSqrt(
+                new Statistics(intensities2All));
+        }
+
         /// <summary>
         /// ReLU activation for spectra
         /// </summary>
@@ -346,17 +404,20 @@ namespace pwiz.Skyline.Model.Prosit.Models
         /// </summary>
         public static int[] EncodeSequence(SrmSettings settings, PeptideDocNode peptide, IsotopeLabelType label, out PrositException exception)
         {
+            if (!peptide.IsProteomic)
+                throw new PrositSmallMoleculeException(peptide.Target);
+
             var sequence = peptide.Target.Sequence;
-            if (sequence.Length > Constants.PEPTIDE_SEQ_LEN) {
+            if (sequence.Length > PrositConstants.PEPTIDE_SEQ_LEN) {
                 exception = new PrositPeptideTooLongException(peptide.ModifiedTarget);
                 return null;
             }
 
             var modifiedSequence = ModifiedSequence.GetModifiedSequence(settings, peptide, label);
-            var result = new int[Constants.PEPTIDE_SEQ_LEN];
+            var result = new int[PrositConstants.PEPTIDE_SEQ_LEN];
 
             for (var i = 0; i < sequence.Length; ++i) {
-                if (!Constants.AMINO_ACIDS.TryGetValue(sequence[i], out var prositAA)) {
+                if (!PrositConstants.AMINO_ACIDS.TryGetValue(sequence[i], out var prositAA)) {
                     exception = new PrositUnsupportedAminoAcidException(peptide.ModifiedTarget, i);
                     return null;
                 }
@@ -367,7 +428,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
                     if (mod.MonoisotopicMass == 0.0)
                         continue;
 
-                    if (!Constants.MODIFICATIONS.TryGetValue(mod.StaticMod.Name, out var prositAAMod)) {
+                    if (!PrositConstants.MODIFICATIONS.TryGetValue(mod.StaticMod.Name, out var prositAAMod)) {
                         exception = new PrositUnsupportedModificationException(peptide.ModifiedTarget,
                             mod.StaticMod,
                             mod.IndexAA);
@@ -435,23 +496,23 @@ namespace pwiz.Skyline.Model.Prosit.Models
             var result = new ModifiedSequence[n];
             var encodedSeqs = tensor.IntVal.ToArray();
 
-            var seq = new StringBuilder(Constants.PEPTIDE_SEQ_LEN);
+            var seq = new StringBuilder(PrositConstants.PEPTIDE_SEQ_LEN);
             for (var i = 0; i < n; ++i)
             {
                 var explicitMods = new List<ExplicitMod>();
 
-                var idx = i * Constants.PEPTIDE_SEQ_LEN;
-                for (var j = 0; j < Constants.PEPTIDE_SEQ_LEN; ++j)
+                var idx = i * PrositConstants.PEPTIDE_SEQ_LEN;
+                for (var j = 0; j < PrositConstants.PEPTIDE_SEQ_LEN; ++j)
                 {
                     if (encodedSeqs[idx + j] == 0) // Essentially a null terminator
                     {
                         break;
                     }
-                    else if (Constants.AMINO_ACIDS_REVERSE.TryGetValue(encodedSeqs[idx + j], out var prositAA))
+                    else if (PrositConstants.AMINO_ACIDS_REVERSE.TryGetValue(encodedSeqs[idx + j], out var prositAA))
                     {
                         seq.Append(prositAA.AA);
                     }
-                    else if (Constants.MODIFICATIONS_REVERSE.TryGetValue(encodedSeqs[idx + j], out var prositAAMod))
+                    else if (PrositConstants.MODIFICATIONS_REVERSE.TryGetValue(encodedSeqs[idx + j], out var prositAAMod))
                     {
                         explicitMods.Add(new ExplicitMod(j, prositAAMod.Mod));
                         seq.Append(prositAAMod.AA);
@@ -484,7 +545,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
                 result[i] = -1;
                 for (int j = 0; j < tensor.TensorShape.Dim[1].Size; ++j)
                 {
-                    if (tensor.FloatVal[i * Constants.PRECURSOR_CHARGES + j] == 1.0f)
+                    if (tensor.FloatVal[i * PrositConstants.PRECURSOR_CHARGES + j] == 1.0f)
                     {
                         result[i] = j + 1;
                         break;
@@ -494,7 +555,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
                 if (result[i] == -1)
                 {
                     throw new PrositException(string.Format(@"[{0}] is not a valid one-hot encoded charge", string.Join(
-                        @", ", tensor.FloatVal.Skip(i * Constants.PRECURSOR_CHARGES).Take(Constants.PRECURSOR_CHARGES))));
+                        @", ", tensor.FloatVal.Skip(i * PrositConstants.PRECURSOR_CHARGES).Take(PrositConstants.PRECURSOR_CHARGES))));
                 }
             }
 

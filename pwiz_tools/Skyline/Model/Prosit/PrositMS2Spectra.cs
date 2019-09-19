@@ -47,24 +47,24 @@ namespace pwiz.Skyline.Model.Prosit
     public class PrositMS2Spectrum : IEquatable<PrositMS2Spectrum>
     {
         public PrositMS2Spectrum(SrmSettings settings, PeptidePrecursorPair peptidePrecursorPair,
-            int precursorIndex, PrositIntensityModel.PrositIntensityOutput prositIntensityOutput)
+            int precursorIndex, PrositIntensityModel.PrositIntensityOutput prositIntensityOutput, IsotopeLabelType labelTypeOverride = null)
         {
             PeptidePrecursorPair = peptidePrecursorPair;
             var precursor = peptidePrecursorPair.NodeGroup;
             var peptide = peptidePrecursorPair.NodePep;
 
-            var calc = settings.GetFragmentCalc(precursor.TransitionGroup.LabelType, peptide.ExplicitMods);
-            var ionTable = calc.GetFragmentIonMasses(precursor.TransitionGroup.Peptide.Target);
+            var calc = settings.GetFragmentCalc(labelTypeOverride ?? precursor.LabelType, peptide.ExplicitMods);
+            var ionTable = calc.GetFragmentIonMasses(peptide.Target); // TODO: get mods and pass them as explicit mods above?
             var ions = ionTable.GetLength(1);
 
-            var mis = new List<SpectrumPeaksInfo.MI>(ions * Constants.IONS_PER_RESIDUE);
+            var mis = new List<SpectrumPeaksInfo.MI>(ions * PrositConstants.IONS_PER_RESIDUE);
 
             for (int i = 0; i < ions; ++i)
             {
                 var intensities = prositIntensityOutput.OutputRows[precursorIndex].Intensities[i].Intensities
                     .Select(ReLu).ToArray();
                 var yMIs = CalcMIs(ionTable[IonType.y, i], intensities, 0);
-                var bMIs = CalcMIs(ionTable[IonType.b, i], intensities, Constants.IONS_PER_RESIDUE / 2);
+                var bMIs = CalcMIs(ionTable[IonType.b, i], intensities, PrositConstants.IONS_PER_RESIDUE / 2);
                 mis.AddRange(yMIs);
                 mis.AddRange(bMIs);
             }
@@ -91,8 +91,8 @@ namespace pwiz.Skyline.Model.Prosit
 
         private List<SpectrumPeaksInfo.MI> CalcMIs(TypedMass mass, float[] intensities, int offset)
         {
-            var result = new List<SpectrumPeaksInfo.MI>(Constants.IONS_PER_RESIDUE / 2);
-            for (var c = 0; c < Constants.IONS_PER_RESIDUE / 2; ++c)
+            var result = new List<SpectrumPeaksInfo.MI>(PrositConstants.IONS_PER_RESIDUE / 2);
+            for (var c = 0; c < PrositConstants.IONS_PER_RESIDUE / 2; ++c)
             {
                 // Not a possible charge
                 if (PeptidePrecursorPair.NodeGroup.PrecursorCharge <= c)

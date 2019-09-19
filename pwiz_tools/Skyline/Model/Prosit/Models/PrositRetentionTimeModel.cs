@@ -114,16 +114,16 @@ namespace pwiz.Skyline.Model.Prosit.Models
         /// </summary>
         public class PeptideDocNodeWrapper : SkylineInputRow
         {
-            private PeptideDocNode _node;
-
             public PeptideDocNodeWrapper(PeptideDocNode node)
             {
-                _node = node;
+                Node = node;
             }
+
+            public PeptideDocNode Node { get; private set; }
 
             public static implicit operator PeptideDocNode(PeptideDocNodeWrapper pep)
             {
-                return pep._node;
+                return pep.Node;
             }
 
             public static implicit operator PeptideDocNodeWrapper(PeptideDocNode pep)
@@ -137,7 +137,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
                     return false;
                 if (!(other is PeptideDocNodeWrapper pepDocNode))
                     return false;
-                return ReferenceEquals(_node, pepDocNode._node);
+                return ReferenceEquals(Node, pepDocNode.Node);
             }
         }
 
@@ -164,7 +164,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
                     {
                         [PEPTIDES_KEY] = Create2dTensor(DataType.DtInt32, tp => tp.IntVal,
                             InputRows.SelectMany(p => p.PeptideSequence).ToArray(),
-                            InputRows.Count, Constants.PEPTIDE_SEQ_LEN),
+                            InputRows.Count, PrositConstants.PEPTIDE_SEQ_LEN),
                     };
                 }
             }

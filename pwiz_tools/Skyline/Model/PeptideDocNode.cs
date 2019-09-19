@@ -1959,6 +1959,11 @@ namespace pwiz.Skyline.Model
         public TransitionGroupDocNode NodeGroup { get; private set; }
         public int? NCE { get; private set; }
 
+        public PeptidePrecursorPair WithNCE(int nce)
+        {
+            return new PeptidePrecursorPair(NodePep, NodeGroup, nce);
+        }
+
         public override bool Equals(SkylineInputRow other)
         {
             if (other == null)

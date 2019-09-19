@@ -80,7 +80,7 @@ namespace pwiz.Skyline.ToolsUI
 
             var iModels = PrositIntensityModel.Models.ToArray();
             var rtModels = PrositRetentionTimeModel.Models.ToArray();
-            var servers = new[] { Constants.DEV_PROSIT_SERVER };
+            var servers = new[] { PrositConstants.DEV_PROSIT_SERVER };
             intensityModelCombo.Items.AddRange(iModels);
             iRTModelCombo.Items.AddRange(rtModels);
             prositServerCombo.Items.AddRange(servers);
@@ -91,7 +91,7 @@ namespace pwiz.Skyline.ToolsUI
                 iRTModelCombo.SelectedItem = Settings.Default.PrositRetentionTimeModel;
 
             ceCombo.Items.AddRange(
-                Enumerable.Range(Constants.MIN_NCE, Constants.MAX_NCE - Constants.MIN_NCE + 1).Select(c => (object) c)
+                Enumerable.Range(PrositConstants.MIN_NCE, PrositConstants.MAX_NCE - PrositConstants.MIN_NCE + 1).Select(c => (object) c)
                     .ToArray());
             ceCombo.SelectedItem = Settings.Default.PrositNCE;
 
@@ -195,7 +195,7 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         // ReSharper disable InconsistentNaming
-        public enum TABS { Panorama, Chorus, Language, Miscellaneous, Display, Prosit }
+        public enum TABS { Panorama, Chorus, Prosit, Language, Miscellaneous, Display }
         // ReSharper restore InconsistentNaming
 
         public class PanoramaTab : IFormView { }

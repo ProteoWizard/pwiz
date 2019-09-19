@@ -133,4 +133,13 @@
 {2}
 dotp: {3}</value>
   </data>
+  <data name="PrositSmallMoleculeException_PrositSmallMoleculeException_Prosit_only_supports_peptides____0___is_a_small_molecule_" xml:space="preserve">
+    <value>Prosit only supports peptides. '{0}' is a small molecule.</value>
+  </data>
+  <data name="BuildLibraryDlg_dataSourceFilesRadioButton_CheckedChanged_Some_Prosit_settings_are_not_set__Would_you_like_to_set_them_now_" xml:space="preserve">
+    <value>Some Prosit settings are not set. Would you like to set them now?</value>
+  </data>
+  <data name="GraphSpectrum_UpdateUI_Some_Prosit_settings_are_not_set_" xml:space="preserve">
+    <value>Some Prosit settings are not set.</value>
+  </data>
 </root>

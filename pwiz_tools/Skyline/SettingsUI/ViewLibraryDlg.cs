@@ -679,11 +679,6 @@ namespace pwiz.Skyline.SettingsUI
                         }
                         adducts.AddRange(showAdducts.Where(a => charges.Contains(Math.Abs(a.AdductCharge)) && !adducts.Contains(a))); // And the unranked charges as well
 
-
-                        if (!prositCheckBox.Checked)
-                        {
-
-                        }
                         var spectrumInfoR = new LibraryRankedSpectrumInfo(spectrum,
                                                                           transitionGroupDocNode.TransitionGroup.LabelType,
                                                                           transitionGroupDocNode,

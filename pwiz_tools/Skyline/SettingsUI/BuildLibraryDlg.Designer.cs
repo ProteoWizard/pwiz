@@ -38,8 +38,7 @@
             this.textPath = new System.Windows.Forms.TextBox();
             this.iRTPeptidesLabel = new System.Windows.Forms.Label();
             this.panelProperties = new System.Windows.Forms.Panel();
-            this.panelFilesPrositProperties = new System.Windows.Forms.Panel();
-            this.panelFilesProps = new System.Windows.Forms.Panel();
+            this.panelFilesProperties = new System.Windows.Forms.Panel();
             this.actionLabel = new System.Windows.Forms.Label();
             this.comboAction = new System.Windows.Forms.ComboBox();
             this.cbIncludeAmbiguousMatches = new System.Windows.Forms.CheckBox();
@@ -66,10 +65,9 @@
             this.ceCombo = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.panelProperties.SuspendLayout();
-            this.panelFilesPrositProperties.SuspendLayout();
-            this.panelFilesProps.SuspendLayout();
             this.dataSourceGroupBox.SuspendLayout();
             this.panelFiles.SuspendLayout();
+            this.panelFilesProperties.SuspendLayout();
             this.SuspendLayout();
             // 
             // textName
@@ -118,36 +116,30 @@
             // panelProperties
             // 
             resources.ApplyResources(this.panelProperties, "panelProperties");
-            this.panelProperties.Controls.Add(this.panelFilesPrositProperties);
+            this.panelProperties.Controls.Add(this.panelFilesProperties);
             this.panelProperties.Controls.Add(this.dataSourceGroupBox);
             this.panelProperties.Controls.Add(this.btnBrowse);
             this.panelProperties.Controls.Add(this.label2);
             this.panelProperties.Controls.Add(this.textPath);
             this.panelProperties.Controls.Add(this.textName);
             this.panelProperties.Controls.Add(this.label4);
+            this.panelProperties.Controls.Add(this.ceLabel);
+            this.panelProperties.Controls.Add(this.ceCombo);
             this.panelProperties.Name = "panelProperties";
             // 
-            // panelFilesPrositProperties
+            // panelFilesProperties
             // 
-            this.panelFilesPrositProperties.Controls.Add(this.ceLabel);
-            this.panelFilesPrositProperties.Controls.Add(this.ceCombo);
-            this.panelFilesPrositProperties.Controls.Add(this.panelFilesProps);
-            this.panelFilesPrositProperties.Controls.Add(this.comboStandards);
-            this.panelFilesPrositProperties.Controls.Add(this.iRTPeptidesLabel);
-            resources.ApplyResources(this.panelFilesPrositProperties, "panelFilesPrositProperties");
-            this.panelFilesPrositProperties.Name = "panelFilesPrositProperties";
-            // 
-            // panelFilesProps
-            // 
-            this.panelFilesProps.Controls.Add(this.actionLabel);
-            this.panelFilesProps.Controls.Add(this.comboAction);
-            this.panelFilesProps.Controls.Add(this.cbIncludeAmbiguousMatches);
-            this.panelFilesProps.Controls.Add(this.cbKeepRedundant);
-            this.panelFilesProps.Controls.Add(this.cbFilter);
-            this.panelFilesProps.Controls.Add(this.textCutoff);
-            this.panelFilesProps.Controls.Add(this.label6);
-            resources.ApplyResources(this.panelFilesProps, "panelFilesProps");
-            this.panelFilesProps.Name = "panelFilesProps";
+            this.panelFilesProperties.Controls.Add(this.actionLabel);
+            this.panelFilesProperties.Controls.Add(this.comboAction);
+            this.panelFilesProperties.Controls.Add(this.cbIncludeAmbiguousMatches);
+            this.panelFilesProperties.Controls.Add(this.cbKeepRedundant);
+            this.panelFilesProperties.Controls.Add(this.cbFilter);
+            this.panelFilesProperties.Controls.Add(this.textCutoff);
+            this.panelFilesProperties.Controls.Add(this.label6);
+            this.panelFilesProperties.Controls.Add(this.comboStandards);
+            this.panelFilesProperties.Controls.Add(this.iRTPeptidesLabel);
+            resources.ApplyResources(this.panelFilesProperties, "panelFilesProperties");
+            this.panelFilesProperties.Name = "panelFilesProperties";
             // 
             // actionLabel
             // 
@@ -338,14 +330,12 @@
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.panelProperties.ResumeLayout(false);
             this.panelProperties.PerformLayout();
-            this.panelFilesPrositProperties.ResumeLayout(false);
-            this.panelFilesPrositProperties.PerformLayout();
-            this.panelFilesProps.ResumeLayout(false);
-            this.panelFilesProps.PerformLayout();
             this.dataSourceGroupBox.ResumeLayout(false);
             this.dataSourceGroupBox.PerformLayout();
             this.panelFiles.ResumeLayout(false);
             this.panelFiles.PerformLayout();
+            this.panelFilesProperties.ResumeLayout(false);
+            this.panelFilesProperties.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -375,8 +365,7 @@
         private System.Windows.Forms.RadioButton prositDataSourceRadioButton;
         private System.Windows.Forms.RadioButton dataSourceFilesRadioButton;
         private System.Windows.Forms.LinkLabel prositInfoSettingsBtn;
-        private System.Windows.Forms.Panel panelFilesPrositProperties;
-        private System.Windows.Forms.Panel panelFilesProps;
+        private System.Windows.Forms.Panel panelFilesProperties;
         private System.Windows.Forms.Label actionLabel;
         private System.Windows.Forms.ComboBox comboAction;
         private System.Windows.Forms.CheckBox cbIncludeAmbiguousMatches;

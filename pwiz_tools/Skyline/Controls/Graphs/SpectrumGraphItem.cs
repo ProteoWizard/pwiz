@@ -94,7 +94,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public static readonly Color COLOR_SELECTED = Color.Red;
 
         private readonly Dictionary<double, LibraryRankedSpectrumInfo.RankedMI> _ionMatches;
-        protected LibraryRankedSpectrumInfo SpectrumInfo { get; set; }
+        public LibraryRankedSpectrumInfo SpectrumInfo { get; protected set; }
         public int PeaksCount { get { return SpectrumInfo.Peaks.Count; } }
         public int PeaksMatchedCount { get { return SpectrumInfo.PeaksMatched.Count(); } }
         public int PeaksRankedCount { get { return SpectrumInfo.PeaksRanked.Count(); } }

@@ -36,7 +36,7 @@ namespace pwiz.Skyline.Model.Prosit
         public PrositPeptideTooLongException(Target target)
             : base(string.Format(
                 PrositResources.PrositPeptideTooLongException_PrositPeptideTooLongException_Peptide_Sequence___0_____1___is_longer_than_the_maximum_supported_length_by_Prosit___2__,
-                target.Sequence, FastaSequence.StripModifications(target.Sequence).Length, Constants.PEPTIDE_SEQ_LEN))
+                target.Sequence, FastaSequence.StripModifications(target.Sequence).Length, PrositConstants.PEPTIDE_SEQ_LEN))
         {
         }
     }
@@ -56,6 +56,14 @@ namespace pwiz.Skyline.Model.Prosit
         public PrositUnsupportedModificationException(Target target, StaticMod mod, int index)
             : base(string.Format(PrositResources.PrositUnsupportedModificationException_PrositUnsupportedModificationException_Modifcation___0___at_index___1___in___2___is_not_supported_by_Prosit, mod.Name,
                 index, target.Sequence))
+        {
+        }
+    }
+
+    public class PrositSmallMoleculeException : PrositException
+    {
+        public PrositSmallMoleculeException(Target target)
+            : base(string.Format(PrositResources.PrositSmallMoleculeException_PrositSmallMoleculeException_Prosit_only_supports_peptides____0___is_a_small_molecule_, target.Molecule.Name))
         {
         }
     }

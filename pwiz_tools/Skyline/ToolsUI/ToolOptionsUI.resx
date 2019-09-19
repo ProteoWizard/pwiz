@@ -415,7 +415,7 @@
     <value>tabControl</value>
   </data>
   <data name="&gt;&gt;tabLanguage.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="btnResetSettings.Location" type="System.Drawing.Point, System.Drawing">
     <value>134, 165</value>
@@ -544,7 +544,7 @@
     <value>tabControl</value>
   </data>
   <data name="&gt;&gt;tabMisc.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="comboColorScheme.Location" type="System.Drawing.Point, System.Drawing">
     <value>17, 31</value>
@@ -673,7 +673,7 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;ceLabel.Parent" xml:space="preserve">
-    <value>tabPage1</value>
+    <value>tabProsit</value>
   </data>
   <data name="&gt;&gt;ceLabel.ZOrder" xml:space="preserve">
     <value>0</value>
@@ -694,7 +694,7 @@
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;ceCombo.Parent" xml:space="preserve">
-    <value>tabPage1</value>
+    <value>tabProsit</value>
   </data>
   <data name="&gt;&gt;ceCombo.ZOrder" xml:space="preserve">
     <value>1</value>
@@ -724,10 +724,10 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;prositServerStatusLabel.Parent" xml:space="preserve">
-    <value>tabPage1</value>
+    <value>tabProsit</value>
   </data>
   <data name="&gt;&gt;prositServerStatusLabel.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -754,10 +754,10 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label3.Parent" xml:space="preserve">
-    <value>tabPage1</value>
+    <value>tabProsit</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="iRTModelCombo.Location" type="System.Drawing.Point, System.Drawing">
     <value>13, 188</value>
@@ -775,10 +775,10 @@
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;iRTModelCombo.Parent" xml:space="preserve">
-    <value>tabPage1</value>
+    <value>tabProsit</value>
   </data>
   <data name="&gt;&gt;iRTModelCombo.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>4</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -805,10 +805,10 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
-    <value>tabPage1</value>
+    <value>tabProsit</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="intensityModelCombo.Location" type="System.Drawing.Point, System.Drawing">
     <value>13, 149</value>
@@ -826,10 +826,10 @@
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;intensityModelCombo.Parent" xml:space="preserve">
-    <value>tabPage1</value>
+    <value>tabProsit</value>
   </data>
   <data name="&gt;&gt;intensityModelCombo.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>6</value>
   </data>
   <data name="prositServerLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -840,7 +840,7 @@
   <data name="prositServerLabel.Location" type="System.Drawing.Point, System.Drawing">
     <value>10, 94</value>
   </data>
-  <data name="serverLabel.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="prositServerLabel.Size" type="System.Drawing.Size, System.Drawing">
     <value>41, 13</value>
   </data>
   <data name="prositServerLabel.TabIndex" type="System.Int32, mscorlib">
@@ -856,10 +856,10 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;prositServerLabel.Parent" xml:space="preserve">
-    <value>tabPage1</value>
+    <value>tabProsit</value>
   </data>
   <data name="&gt;&gt;prositServerLabel.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>7</value>
   </data>
   <data name="prositServerCombo.Location" type="System.Drawing.Point, System.Drawing">
     <value>13, 110</value>
@@ -877,10 +877,10 @@
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;prositServerCombo.Parent" xml:space="preserve">
-    <value>tabPage1</value>
+    <value>tabProsit</value>
   </data>
   <data name="&gt;&gt;prositServerCombo.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>8</value>
   </data>
   <data name="prositDescrLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -913,10 +913,10 @@ well as iRT prediction.</value>
     <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;prositDescrLabel.Parent" xml:space="preserve">
-    <value>tabPage1</value>
+    <value>tabProsit</value>
   </data>
   <data name="&gt;&gt;prositDescrLabel.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>9</value>
   </data>
   <data name="pictureBox1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
@@ -943,40 +943,40 @@ well as iRT prediction.</value>
     <value>System.Windows.Forms.PictureBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;pictureBox1.Parent" xml:space="preserve">
-    <value>tabPage1</value>
+    <value>tabProsit</value>
   </data>
   <data name="&gt;&gt;pictureBox1.ZOrder" xml:space="preserve">
     <value>10</value>
   </data>
-  <data name="tabPage1.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="tabProsit.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
   </data>
-  <data name="tabPage1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="tabProsit.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>1, 1, 1, 1</value>
   </data>
-  <data name="tabPage1.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="tabProsit.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>1, 1, 1, 1</value>
   </data>
-  <data name="tabPage1.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="tabProsit.Size" type="System.Drawing.Size, System.Drawing">
     <value>389, 248</value>
   </data>
-  <data name="tabPage1.TabIndex" type="System.Int32, mscorlib">
+  <data name="tabProsit.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
-  <data name="tabPage1.Text" xml:space="preserve">
+  <data name="tabProsit.Text" xml:space="preserve">
     <value>Prosit</value>
   </data>
-  <data name="&gt;&gt;tabPage1.Name" xml:space="preserve">
-    <value>tabPage1</value>
+  <data name="&gt;&gt;tabProsit.Name" xml:space="preserve">
+    <value>tabProsit</value>
   </data>
-  <data name="&gt;&gt;tabPage1.Type" xml:space="preserve">
+  <data name="&gt;&gt;tabProsit.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;tabPage1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;tabProsit.Parent" xml:space="preserve">
     <value>tabControl</value>
   </data>
-  <data name="&gt;&gt;tabPage1.ZOrder" xml:space="preserve">
-    <value>5</value>
+  <data name="&gt;&gt;tabProsit.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
   <data name="tabControl.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 12</value>

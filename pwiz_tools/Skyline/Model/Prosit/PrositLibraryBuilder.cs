@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
@@ -36,6 +37,8 @@ namespace pwiz.Skyline.Model.Prosit
     {
         private readonly SrmDocument _document;
         private readonly PredictionService.PredictionServiceClient _prositClient;
+        private readonly PrositIntensityModel _intensityModel;
+        private readonly PrositRetentionTimeModel _rtModel;
         private readonly Func<bool> _replaceLibrary;
         private readonly IList<PeptideDocNode> _peptides;
         private readonly IList<TransitionGroupDocNode> _precursors;
@@ -46,6 +49,8 @@ namespace pwiz.Skyline.Model.Prosit
             IList<PeptideDocNode> peptides, IList<TransitionGroupDocNode> precursors, int nce)
         {
             _prositClient = PrositPredictionClient.Current;
+            _intensityModel = PrositIntensityModel.Instance;
+            _rtModel = PrositRetentionTimeModel.Instance;
             _peptides = peptides;
             _precursors = precursors;
             _document = doc;
@@ -58,15 +63,17 @@ namespace pwiz.Skyline.Model.Prosit
         public bool BuildLibrary(IProgressMonitor progress)
         {
             // Predict fragment intensities
-            var ms = PrositIntensityModel.Instance.PredictBatches(_prositClient, progress, _document.Settings,
+            var ms = _intensityModel.PredictBatches(_prositClient, progress, _document.Settings,
                 _peptides.Zip(_precursors,
                     (pep, prec) => new PeptidePrecursorPair(pep, prec, _nce)).ToArray());
 
             var specMzInfo = ms.Spectra.Select(m => m.SpecMzInfo).ToList();
 
             // Predict iRTs for peptides
-            var distinctPeps = _peptides.Select(p => (PrositRetentionTimeModel.PeptideDocNodeWrapper) p).Distinct().ToArray();
-            var iRTMap = PrositRetentionTimeModel.Instance.PredictBatches(_prositClient, progress, _document.Settings,
+            var distinctPeps = _peptides.Select(p => (PrositRetentionTimeModel.PeptideDocNodeWrapper) p).Distinct(
+                new SystemLinqExtensionMethods.FuncEqualityComparer<PrositRetentionTimeModel.PeptideDocNodeWrapper>(
+                    (p1, p2) => p1.Node.ModifiedSequence == p2.Node.ModifiedSequence)).ToArray();
+            var iRTMap = _rtModel.PredictBatches(_prositClient, progress, _document.Settings,
                 distinctPeps);
 
             for (var i = 0; i < specMzInfo.Count; ++i)

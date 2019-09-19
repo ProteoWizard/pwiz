@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -30,6 +29,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Prosit;
+using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
@@ -71,11 +71,6 @@ namespace pwiz.Skyline.SettingsUI
         private readonly MessageBoxHelper _helper;
         private readonly IDocumentUIContainer _documentUiContainer;
         private readonly SkylineWindow _skylineWindow;
-
-        private readonly Point _actionLabelPos;
-        private readonly Point _actionComboPos;
-        private readonly Point _iRTLabelPos;
-        private readonly Point _iRTComboPos;
         
         public BuildLibraryDlg(SkylineWindow skylineWindow)
         {
@@ -85,12 +80,6 @@ namespace pwiz.Skyline.SettingsUI
 
             _skylineWindow = skylineWindow;
             _documentUiContainer = skylineWindow;
-
-            // Store locations of those controls since we move the irt label/combo around
-            _actionLabelPos = actionLabel.Location;
-            _actionComboPos = comboAction.Location;
-            _iRTLabelPos = iRTPeptidesLabel.Location;
-            _iRTComboPos = comboStandards.Location;
 
             panelFiles.Visible = false;
             textName.Focus();
@@ -106,7 +95,7 @@ namespace pwiz.Skyline.SettingsUI
             cbKeepRedundant.Checked = Settings.Default.LibraryKeepRedundant;
 
             ceCombo.Items.AddRange(
-                Enumerable.Range(Constants.MIN_NCE, Constants.MAX_NCE - Constants.MIN_NCE + 1).Select(c => (object)c)
+                Enumerable.Range(PrositConstants.MIN_NCE, PrositConstants.MAX_NCE - PrositConstants.MIN_NCE + 1).Select(c => (object)c)
                     .ToArray());
             ceCombo.SelectedItem = Settings.Default.PrositNCE;
 
@@ -256,9 +245,40 @@ namespace pwiz.Skyline.SettingsUI
                         Array.Copy(groups, 0, precursors, index, groups.Length);
                         index += groups.Length;
                     }
+                    
+                    IrtStandard standard = null;
+                    try
+                    {
+                        var rtRegr =
+                            _documentUiContainer.DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime;
+                        if (rtRegr != null)
+                        {
+                            if (rtRegr.Calculator is RCalcIrt calc)
+                            {
+                                IrtDb.GetIrtDb(calc.DatabasePath, null, out var irtStandards);
+                                // TODO: name and path shouldn't matter
+                                standard = new IrtStandard(string.Format(@"{0}-iRT-Standards", Path.GetFileNameWithoutExtension(_documentUiContainer.DocumentFilePath)),
+                                    _documentUiContainer.DocumentFilePath, irtStandards);
+                            }
 
-                    Builder = new PrositLibraryBuilder(doc, name, outputPath, () => true, IrtStandard,
-                        peptidesPerPrecursor, precursors, NCE);
+                            // TODO: check if those peptides are also in the document?
+                        }
+                    }
+                    catch
+                    {
+                        // TODO: ignore?
+                    }
+
+                    try
+                    {
+                        Builder = new PrositLibraryBuilder(doc, name, outputPath, () => true, standard,
+                            peptidesPerPrecursor, precursors, NCE);
+                    }
+                    catch (Exception ex)
+                    {
+                        _helper.ShowTextBoxError(this, ex.Message);
+                        return false;
+                    }
                 }
                 else
                 {
@@ -712,20 +732,26 @@ namespace pwiz.Skyline.SettingsUI
 
         private void dataSourceFilesRadioButton_CheckedChanged(object sender, EventArgs e)
         {
-            panelFilesProps.Visible = dataSourceFilesRadioButton.Checked;
+            panelFilesProperties.Visible = dataSourceFilesRadioButton.Checked;
             if (dataSourceFilesRadioButton.Checked)
             {
-                iRTPeptidesLabel.Location = _iRTLabelPos;
-                comboStandards.Location = _iRTComboPos;
                 ceCombo.Visible = false;
                 ceLabel.Visible = false;
             }
             else
             {
-                iRTPeptidesLabel.Location = _actionLabelPos;
-                comboStandards.Location = _actionComboPos;
                 ceCombo.Visible = true;
                 ceLabel.Visible = true;
+
+                if (!PrositHelpers.PrositSettingsValid)
+                {
+                    using (var dlg = new AlertDlg(PrositResources.BuildLibraryDlg_dataSourceFilesRadioButton_CheckedChanged_Some_Prosit_settings_are_not_set__Would_you_like_to_set_them_now_, MessageBoxButtons.YesNo))
+                    {
+                        dlg.ShowDialog(this);
+                        if (dlg.DialogResult == DialogResult.Yes)
+                            _skylineWindow.ShowToolOptionsUI(dlg, ToolOptionsUI.TABS.Prosit);
+                    }
+                }
             }
 
             btnNext.Text = dataSourceFilesRadioButton.Checked ? Resources.BuildLibraryDlg_btnPrevious_Click__Next__ : Resources.BuildLibraryDlg_OkWizardPage_Finish;

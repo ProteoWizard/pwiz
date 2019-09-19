@@ -444,7 +444,7 @@
     <Compile Include="Model\Optimization\OptimizationDictionary.cs" />
     <Compile Include="Model\Prosit\Models\PrositIntensityModel.cs" />
     <Compile Include="Model\Prosit\Models\PrositModel.cs" />
-    <Compile Include="Model\Prosit\Constants.cs" />
+    <Compile Include="Model\Prosit\PrositConstants.cs" />
     <Compile Include="Model\Prosit\Communication\PrositPredictionClient.cs" />
     <Compile Include="Model\Prosit\Models\PrositRetentionTimeModel.cs" />
     <Compile Include="Model\Prosit\PrositExceptions.cs" />
