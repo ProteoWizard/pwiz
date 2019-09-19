@@ -396,10 +396,8 @@ Reader*Test.data
 /pwiz_aux/msrc/utility/vendor_api/thermo/ThermoFisher.CommonCore.BackgroundSubtraction.xml
 
 # Skyline generated files
-/pwiz_tools/Skyline/ProtocolBuffers/GeneratedCode/ChromatogramGroupData.cs
-/pwiz_tools/Skyline/ProtocolBuffers/GeneratedCode/SkylineDocument.cs
-/pwiz_tools/Skyline/ProtocolBuffers/tmp/ChromatogramGroupData.cs
-/pwiz_tools/Skyline/ProtocolBuffers/tmp/SkylineDocument.cs
+/pwiz_tools/Skyline/ProtocolBuffers/GeneratedCode/*.cs
+/pwiz_tools/Skyline/ProtocolBuffers/tmp/*.cs
 /pwiz_tools/Skyline/SkylineTester test list.txt
 SkylineTester Results
 /b64.bat
