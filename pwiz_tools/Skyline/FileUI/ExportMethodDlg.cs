@@ -1834,6 +1834,31 @@ namespace pwiz.Skyline.FileUI
             CalcMethodCount();
             panelSciexTune.Visible = comboOptimizing.SelectedItem.ToString().Equals(ExportOptimize.COV);
             UpdateThermoFaimsCvControl();
+
+            // Set the tooltip
+            var tooltip = Resources.ExportMethodDlg_comboOptimizing_SelectedIndexChanged_Export_a_method_with_extra_transitions_for_finding_an_optimal_value_;
+            int? stepCount = null;
+            if (comboOptimizing.SelectedItem.ToString().Equals(ExportOptimize.CE))
+            {
+                stepCount = _document.Settings.TransitionSettings.Prediction.CollisionEnergy.StepCount;
+            }
+            else if (comboOptimizing.SelectedItem.ToString().Equals(ExportOptimize.DP))
+            {
+                stepCount = _document.Settings.TransitionSettings.Prediction.DeclusteringPotential.StepCount;
+            }
+            else if (comboOptimizing.SelectedItem.ToString().Equals(ExportOptimize.COV))
+            {
+                stepCount = _document.Settings.TransitionSettings.Prediction.CompensationVoltage.StepCount;
+            }
+
+            if (stepCount.HasValue)
+            {
+                tooltip = TextUtil.LineSeparate(tooltip,
+                    string.Format(
+                        Resources.ExportMethodDlg_comboOptimizing_SelectedIndexChanged_Optimizing_for__0__will_produce_an_additional__1__transitions_per_transition_,
+                        comboOptimizing.SelectedItem, stepCount * 2));
+            }
+            helpTip.SetToolTip(comboOptimizing, tooltip);
         }
 
         private void cbIgnoreProteins_CheckedChanged(object sender, EventArgs e)
