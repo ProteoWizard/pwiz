@@ -63,7 +63,7 @@ namespace pwiz.Skyline.Model.Prosit
             {
                 var intensities = prositIntensityOutput.OutputRows[precursorIndex].Intensities[i].Intensities
                     .Select(ReLu).ToArray();
-                var yMIs = CalcMIs(ionTable[IonType.y, i], intensities, 0);
+                var yMIs = CalcMIs(ionTable[IonType.y, ions - i - 1], intensities, 0);
                 var bMIs = CalcMIs(ionTable[IonType.b, i], intensities, PrositConstants.IONS_PER_RESIDUE / 2);
                 mis.AddRange(yMIs);
                 mis.AddRange(bMIs);
