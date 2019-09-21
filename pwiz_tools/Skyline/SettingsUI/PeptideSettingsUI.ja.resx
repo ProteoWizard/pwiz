@@ -340,7 +340,7 @@
   <data name="&gt;&gt;comboBackgroundProteome.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDtMax.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Location" type="System.Drawing.Point, System.Drawing">
     <value>279, 310</value>
   </data>
   <data name="&gt;&gt;listStandardTypes.Parent" xml:space="preserve">
@@ -478,7 +478,7 @@
   <data name="label2.ToolTip" xml:space="preserve">
     <value />
   </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDt0.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Parent" xml:space="preserve">
     <value>tabPrediction</value>
   </data>
   <data name="textExcludeAAs.TabIndex" type="System.Int32, mscorlib">
@@ -621,8 +621,8 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   <data name="textSpectralLibraryDriftTimesResolvingPower.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>
   </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDtMax.Name" xml:space="preserve">
-    <value>textSpectralLibraryDriftTimesWidthAtDtMax</value>
+  <data name="&gt;&gt;textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Name" xml:space="preserve">
+    <value>textSpectralLibraryIonMobilitiesWindowWidthAtDtMax</value>
   </data>
   <data name="&gt;&gt;label19.Name" xml:space="preserve">
     <value>label19</value>
@@ -993,7 +993,7 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>どのフラグメントインスタンスにおける組み合わせでも発生可能な
 最大ニュートラルロスイベント数です。</value>
   </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDt0.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>
   </data>
   <data name="textPeptideCount.ToolTip" xml:space="preserve">
@@ -1017,7 +1017,7 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   <data name="btnEditExlusions.ToolTip" xml:space="preserve">
     <value>利用可能なペプチドの除外リストを編集</value>
   </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDtMax.Type" xml:space="preserve">
+  <data name="&gt;&gt;textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblMaxLoqCv.Parent" xml:space="preserve">
@@ -1138,7 +1138,7 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   <data name="&gt;&gt;cbAutoSelect.Name" xml:space="preserve">
     <value>cbAutoSelect</value>
   </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDt0.TabIndex" type="System.Int32, mscorlib">
+  <data name="textSpectralLibraryIonMobilitiesWindowWidthAtDt0.TabIndex" type="System.Int32, mscorlib">
     <value>15</value>
   </data>
   <data name="label13.Location" type="System.Drawing.Point, System.Drawing">
@@ -1159,7 +1159,7 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   <data name="tabFilter.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
   </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDt0.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Location" type="System.Drawing.Point, System.Drawing">
     <value>137, 310</value>
   </data>
   <data name="&gt;&gt;btnFilter.Type" xml:space="preserve">
@@ -1502,7 +1502,7 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   <data name="tabPrediction.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDt0.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textSpectralLibraryIonMobilitiesWindowWidthAtDt0.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="&gt;&gt;comboDriftTimePredictor.Parent" xml:space="preserve">
@@ -1701,8 +1701,8 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   <data name="tabPrediction.Size" type="System.Drawing.Size, System.Drawing">
     <value>363, 460</value>
   </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDt0.Name" xml:space="preserve">
-    <value>textSpectralLibraryDriftTimesWidthAtDt0</value>
+  <data name="&gt;&gt;textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Name" xml:space="preserve">
+    <value>textSpectralLibraryIonMobilitiesWindowWidthAtDt0</value>
   </data>
   <data name="label17.Size" type="System.Drawing.Size, System.Drawing">
     <value>98, 13</value>
@@ -1813,7 +1813,7 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   <data name="lblMaxLoqCvPct.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDt0.ToolTip" xml:space="preserve">
+  <data name="textSpectralLibraryIonMobilitiesWindowWidthAtDt0.ToolTip" xml:space="preserve">
     <value>スペクトルライブラリにおけるイオン移動度の許容誤差を決定する。ここで： imMax = 測定イオン移動度の最大値  W0 =イオン移動度ゼロでの幅  Wmax = imMaxでの幅 「W」はイオン移動度「M」に中心のあるイオン移動度の一致ウィンドウの幅
 W = (W0 + M*(Wmax-W0)/imMax)</value>
   </data>
@@ -2031,7 +2031,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
   <data name="&gt;&gt;textMaxNeutralLosses.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDtMax.ToolTip" xml:space="preserve">
+  <data name="textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.ToolTip" xml:space="preserve">
     <value>スペクトルライブラリにおけるイオン移動度に一致する許容誤差を決定する。ここで：
 imMax = 測定イオン移動度の最大値
 W0 = イオン移動度ゼロでの幅
@@ -2345,7 +2345,7 @@ W = (W0 + M*(Wmax-W0)/imMax)
   <data name="comboWeighting.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 130</value>
   </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDtMax.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Parent" xml:space="preserve">
     <value>tabPrediction</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
@@ -2354,7 +2354,7 @@ W = (W0 + M*(Wmax-W0)/imMax)
   <data name="btnEditStaticMods.Location" type="System.Drawing.Point, System.Drawing">
     <value>211, 36</value>
   </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDtMax.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>
   </data>
   <data name="textMinLength.Size" type="System.Drawing.Size, System.Drawing">
@@ -2705,7 +2705,7 @@ W = (W0 + M*(Wmax-W0)/imMax)
   <data name="&gt;&gt;textExcludeAAs.Name" xml:space="preserve">
     <value>textExcludeAAs</value>
   </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDt0.Type" xml:space="preserve">
+  <data name="&gt;&gt;textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="comboQuantMsLevel.Size" type="System.Drawing.Size, System.Drawing">
@@ -2785,7 +2785,7 @@ W = (W0 + M*(Wmax-W0)/imMax)
   <data name="label14.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDtMax.TabIndex" type="System.Int32, mscorlib">
+  <data name="textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.TabIndex" type="System.Int32, mscorlib">
     <value>17</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -2965,7 +2965,7 @@ W = 2T/R</value>
   <data name="&gt;&gt;comboMissedCleavages.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDtMax.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="label9.Text" xml:space="preserve">

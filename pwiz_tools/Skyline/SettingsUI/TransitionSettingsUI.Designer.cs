@@ -119,6 +119,17 @@
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.contextMenuStripPrecursorAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.contextMenuStripFragmentAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.tabIonMobility = new System.Windows.Forms.TabPage();
+            this.textSpectralLibraryIonMobilitiesWindowWidthAtDtMax = new System.Windows.Forms.TextBox();
+            this.textSpectralLibraryIonMobilitiesWindowWidthAtDt0 = new System.Windows.Forms.TextBox();
+            this.labelWidthDtMax = new System.Windows.Forms.Label();
+            this.labelWidthDtZero = new System.Windows.Forms.Label();
+            this.cbLinear = new System.Windows.Forms.CheckBox();
+            this.textSpectralLibraryDriftTimesResolvingPower = new System.Windows.Forms.TextBox();
+            this.cbUseSpectralLibraryIonMobilities = new System.Windows.Forms.CheckBox();
+            this.labelResolvingPower = new System.Windows.Forms.Label();
+            this.comboDriftTimePredictor = new System.Windows.Forms.ComboBox();
+            this.label23 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabGeneral.SuspendLayout();
@@ -130,6 +141,7 @@
             this.tabLibrary.SuspendLayout();
             this.panelPick.SuspendLayout();
             this.tabInstrument.SuspendLayout();
+            this.tabIonMobility.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -151,6 +163,7 @@
             resources.ApplyResources(this.tabControl1, "tabControl1");
             this.tabControl1.Controls.Add(this.tabGeneral);
             this.tabControl1.Controls.Add(this.tabFilter);
+            this.tabControl1.Controls.Add(this.tabIonMobility);
             this.tabControl1.Controls.Add(this.tabLibrary);
             this.tabControl1.Controls.Add(this.tabInstrument);
             this.tabControl1.Controls.Add(this.tabFullScan);
@@ -765,6 +778,83 @@
             this.contextMenuStripFragmentAdduct.Name = "contextMenuStripFragmentAdduct";
             resources.ApplyResources(this.contextMenuStripFragmentAdduct, "contextMenuStripFragmentAdduct");
             // 
+            // tabIonMobility
+            // 
+            this.tabIonMobility.Controls.Add(this.textSpectralLibraryIonMobilitiesWindowWidthAtDtMax);
+            this.tabIonMobility.Controls.Add(this.textSpectralLibraryIonMobilitiesWindowWidthAtDt0);
+            this.tabIonMobility.Controls.Add(this.labelWidthDtMax);
+            this.tabIonMobility.Controls.Add(this.labelWidthDtZero);
+            this.tabIonMobility.Controls.Add(this.cbLinear);
+            this.tabIonMobility.Controls.Add(this.textSpectralLibraryDriftTimesResolvingPower);
+            this.tabIonMobility.Controls.Add(this.cbUseSpectralLibraryIonMobilities);
+            this.tabIonMobility.Controls.Add(this.labelResolvingPower);
+            this.tabIonMobility.Controls.Add(this.comboDriftTimePredictor);
+            this.tabIonMobility.Controls.Add(this.label23);
+            resources.ApplyResources(this.tabIonMobility, "tabIonMobility");
+            this.tabIonMobility.Name = "tabIonMobility";
+            this.tabIonMobility.UseVisualStyleBackColor = true;
+            // 
+            // textSpectralLibraryIonMobilitiesWindowWidthAtDtMax
+            // 
+            resources.ApplyResources(this.textSpectralLibraryIonMobilitiesWindowWidthAtDtMax, "textSpectralLibraryIonMobilitiesWindowWidthAtDtMax");
+            this.textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Name = "textSpectralLibraryIonMobilitiesWindowWidthAtDtMax";
+            this.helpTip.SetToolTip(this.textSpectralLibraryIonMobilitiesWindowWidthAtDtMax, resources.GetString("textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.ToolTip"));
+            // 
+            // textSpectralLibraryIonMobilitiesWindowWidthAtDt0
+            // 
+            resources.ApplyResources(this.textSpectralLibraryIonMobilitiesWindowWidthAtDt0, "textSpectralLibraryIonMobilitiesWindowWidthAtDt0");
+            this.textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Name = "textSpectralLibraryIonMobilitiesWindowWidthAtDt0";
+            this.helpTip.SetToolTip(this.textSpectralLibraryIonMobilitiesWindowWidthAtDt0, resources.GetString("textSpectralLibraryIonMobilitiesWindowWidthAtDt0.ToolTip"));
+            // 
+            // labelWidthDtMax
+            // 
+            resources.ApplyResources(this.labelWidthDtMax, "labelWidthDtMax");
+            this.labelWidthDtMax.Name = "labelWidthDtMax";
+            // 
+            // labelWidthDtZero
+            // 
+            resources.ApplyResources(this.labelWidthDtZero, "labelWidthDtZero");
+            this.labelWidthDtZero.Name = "labelWidthDtZero";
+            // 
+            // cbLinear
+            // 
+            resources.ApplyResources(this.cbLinear, "cbLinear");
+            this.cbLinear.Name = "cbLinear";
+            this.cbLinear.UseVisualStyleBackColor = true;
+            // 
+            // textSpectralLibraryDriftTimesResolvingPower
+            // 
+            resources.ApplyResources(this.textSpectralLibraryDriftTimesResolvingPower, "textSpectralLibraryDriftTimesResolvingPower");
+            this.textSpectralLibraryDriftTimesResolvingPower.Name = "textSpectralLibraryDriftTimesResolvingPower";
+            this.helpTip.SetToolTip(this.textSpectralLibraryDriftTimesResolvingPower, resources.GetString("textSpectralLibraryDriftTimesResolvingPower.ToolTip"));
+            // 
+            // cbUseSpectralLibraryDriftTimes
+            // 
+            resources.ApplyResources(this.cbUseSpectralLibraryIonMobilities, "cbUseSpectralLibraryIonMobilities");
+            this.cbUseSpectralLibraryIonMobilities.Name = "cbUseSpectralLibraryIonMobilities";
+            this.helpTip.SetToolTip(this.cbUseSpectralLibraryIonMobilities, resources.GetString("cbUseSpectralLibraryDriftTimes.ToolTip"));
+            this.cbUseSpectralLibraryIonMobilities.UseVisualStyleBackColor = true;
+            this.cbUseSpectralLibraryIonMobilities.CheckedChanged += new System.EventHandler(this.cbUseSpectralLibraryDriftTimes_CheckChanged);
+            // 
+            // labelResolvingPower
+            // 
+            resources.ApplyResources(this.labelResolvingPower, "labelResolvingPower");
+            this.labelResolvingPower.Name = "labelResolvingPower";
+            // 
+            // comboDriftTimePredictor
+            // 
+            this.comboDriftTimePredictor.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboDriftTimePredictor.FormattingEnabled = true;
+            resources.ApplyResources(this.comboDriftTimePredictor, "comboDriftTimePredictor");
+            this.comboDriftTimePredictor.Name = "comboDriftTimePredictor";
+            this.helpTip.SetToolTip(this.comboDriftTimePredictor, resources.GetString("comboDriftTimePredictor.ToolTip"));
+            this.comboDriftTimePredictor.SelectedIndexChanged += new System.EventHandler(this.comboDriftTime_SelectedIndexChanged);
+            // 
+            // label23
+            // 
+            resources.ApplyResources(this.label23, "label23");
+            this.label23.Name = "label23";
+            // 
             // TransitionSettingsUI
             // 
             this.AcceptButton = this.btnOk;
@@ -798,6 +888,8 @@
             this.panelPick.PerformLayout();
             this.tabInstrument.ResumeLayout(false);
             this.tabInstrument.PerformLayout();
+            this.tabIonMobility.ResumeLayout(false);
+            this.tabIonMobility.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -893,5 +985,16 @@
         private System.Windows.Forms.ContextMenuStrip contextMenuStripFragmentAdduct;
         private System.Windows.Forms.Label label22;
         private System.Windows.Forms.TextBox textMinIonCount;
+        private System.Windows.Forms.TabPage tabIonMobility;
+        private System.Windows.Forms.TextBox textSpectralLibraryIonMobilitiesWindowWidthAtDtMax;
+        private System.Windows.Forms.TextBox textSpectralLibraryIonMobilitiesWindowWidthAtDt0;
+        private System.Windows.Forms.Label labelWidthDtMax;
+        private System.Windows.Forms.Label labelWidthDtZero;
+        private System.Windows.Forms.CheckBox cbLinear;
+        private System.Windows.Forms.TextBox textSpectralLibraryDriftTimesResolvingPower;
+        private System.Windows.Forms.CheckBox cbUseSpectralLibraryIonMobilities;
+        private System.Windows.Forms.Label labelResolvingPower;
+        private System.Windows.Forms.ComboBox comboDriftTimePredictor;
+        private System.Windows.Forms.Label label23;
     }
 }

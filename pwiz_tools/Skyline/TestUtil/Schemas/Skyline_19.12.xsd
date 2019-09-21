@@ -38,12 +38,6 @@
     <xs:attribute name="name" type="xs:string" use="required"/>
   </xs:complexType>
   <!-- Peptide Settings -->
-  <xs:simpleType name="drift_time_peak_width_calc_type">
-    <xs:restriction base="xs:string">
-      <xs:enumeration value="resolving_power" />
-      <xs:enumeration value="linear_range" />
-    </xs:restriction>
-  </xs:simpleType>
   <xs:complexType name="peptide_settings_type">
     <xs:annotation>
       <xs:documentation>Container for peptide settings information</xs:documentation>
@@ -115,28 +109,6 @@
               </xs:documentation>
             </xs:annotation>
           </xs:attribute>
-          <xs:attribute name="use_spectral_library_drift_times" type="xs:boolean">
-            <xs:annotation>
-              <xs:documentation>
-                If true, ion mobility (drift time, inverse reduced ion mobility, etc.) values found in spectral libraries will be used in chromatogram extraction.  Defaults to false.
-                N.B. The use of the term drift time in the spectral library context is historical - other ion mobility types are supported so this should be understood as ion mobility in the general sense.
-              </xs:documentation>
-            </xs:annotation>
-          </xs:attribute>
-          <xs:attribute name="spectral_library_drift_times_peak_width_calc_type" type="drift_time_peak_width_calc_type" default="resolving_power">
-            <xs:annotation>
-              <xs:documentation>
-                When spectral_library_drift_times_peak_width_calc_type is set to resolving_power, ion mobility (drift time, inverse reduced ion mobility, etc.) matching tolerance for spectral library ion mobility is calculated as:
-                For resolving power "R" at drift time "T", the width "W" of the drift time matching window centered at T is W = 2T/R
-                When spectral_library_drift_times_peak_width_calc_type is set to linear_range, ion mobility matching tolerance is calculated as:
-                For peak width at drift time zero "Wdt0" and peak width at drift time max "WdtMax" and max drift time "dtMax" at drift time "T", the width "W" of the drift time matching window centered at T is W = Wdt0 + (WdtMax-Wdt0)*T/dtMax
-              </xs:documentation>
-            </xs:annotation>
-          </xs:attribute>
-          <xs:attribute name="spectral_library_drift_times_resolving_power" type="xs:double" default="0.0"/>
-          <xs:attribute name="spectral_library_drift_times_width_at_dt_zero" type="xs:double" default="0.0"/>
-          <xs:attribute name="spectral_library_drift_times_width_at_dt_max" type="xs:double" default="0.0"/>
-
         </xs:complexType>
       </xs:element>
       <xs:element name="peptide_filter">
@@ -323,6 +295,12 @@
     </xs:sequence>
   </xs:complexType>
   <!-- Transition Settings -->
+  <xs:simpleType name="ion_mobility_peak_width_calc_type">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="resolving_power" />
+      <xs:enumeration value="linear_range" />
+    </xs:restriction>
+  </xs:simpleType>
   <xs:complexType name="transition_settings_type">
     <xs:annotation>
       <xs:documentation>Container for transition settings information</xs:documentation>
@@ -381,6 +359,58 @@
           <xs:attribute name="precursor_mz_window" type="xs:double"/>
           <xs:attribute name="exclusion_use_dia_window" type="xs:boolean"/>
           <xs:attribute name="auto_select" type="xs:boolean"/>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="transition_ion_mobility" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="ion_mobility_calibration" minOccurs="0" maxOccurs="1">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element minOccurs="0" maxOccurs="unbounded" name="measured_ion_mobility">
+                    <xs:complexType>
+                      <xs:attribute name="target" type="xs:string" use="required" /> <!-- for non-proteomics data this will actually be InChiKey or other ID -->
+                      <xs:attribute name="charge" type="xs:string" use="required" /> <!-- may be an adduct or a simple integer for protonated charge -->
+                      <!-- these are optional as we accept just ccs, just mobility, or both (neither makes no sense and is not supported) -->
+                      <xs:attribute name="ccs" type="xs:double" use="optional" />
+                      <xs:attribute name="ion_mobility" type="xs:double" use="optional" />
+                      <xs:attribute name="high_energy_ion_mobility_offset" type="xs:double" use="optional" />
+                      <xs:attribute name="ion_mobility_units" type="xs:string" use="optional" />
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
+                <xs:attribute name="name" type="xs:string" use="required" />
+                <xs:attribute name="peak_width_calc_type" type="ion_mobility_peak_width_calc_type" default="resolving_power" />
+                <xs:attribute name="resolving_power" type="xs:double" default="0.0" />
+                <xs:attribute name="width_at_ion_mobility_zero" type="xs:double" default="0.0" />
+                <xs:attribute name="width_at_ion_mobility_max" type="xs:double" default="0.0" />
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+          <xs:attribute name="spectral_library_peak_width_calc_type" type="ion_mobility_peak_width_calc_type" default="resolving_power" />
+          <xs:attribute name="spectral_library_resolving_power" type="xs:double" default="0.0" />
+          <xs:attribute name="spectral_library_width_at_ion_mobility_zero" type="xs:double" default="0.0" />
+          <xs:attribute name="spectral_library_width_at_ion_mobility_max" type="xs:double" default="0.0" />
+          <xs:attribute name="use_spectral_library_ion_mobility" type="xs:boolean">
+            <xs:annotation>
+              <xs:documentation>
+                If true, ion mobility (drift time, inverse reduced ion mobility, etc.) values found in spectral libraries will be used in chromatogram extraction.  Defaults to false.
+              </xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+          <xs:attribute name="spectral_library_ion_mobility_peak_width_calc_type" type="ion_mobility_peak_width_calc_type" default="resolving_power">
+            <xs:annotation>
+              <xs:documentation>
+                When spectral_library_ion_mobility_peak_width_calc_type is set to resolving_power, ion mobility (drift time, inverse reduced ion mobility, etc.) matching tolerance for spectral library ion mobility is calculated as:
+                For resolving power "R" at ion mobility "T", the width "W" of the ion mobility matching window centered at T is W = 2T/R
+                When spectral_library_ion_mobility_peak_width_calc_type is set to linear_range, ion mobility matching tolerance is calculated as:
+                For peak width at ion mobility zero "Wdt0" and peak width at ion mobility max "WdtMax" and max ion mobility "dtMax" at ion mobility "T", the width "W" of the ion mobility matching window centered at T is W = Wdt0 + (WdtMax-Wdt0)*T/dtMax
+              </xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+          <xs:attribute name="spectral_library_ion_mobility_resolving_power" type="xs:double" default="0.0"/>
+          <xs:attribute name="spectral_library_ion_mobility_width_at_dt_zero" type="xs:double" default="0.0"/>
+          <xs:attribute name="spectral_library_ion_mobility_width_at_dt_max" type="xs:double" default="0.0"/>
         </xs:complexType>
       </xs:element>
       <xs:element name="transition_libraries">
@@ -471,43 +501,8 @@
           <xs:attribute name="retention_time_filter_length" type="xs:double"/>
         </xs:complexType>
       </xs:element>
-      <xs:element name="TransitionIonMobility" minOccurs="0" maxOccurs="1">
-        <xs:complexType>
-          <xs:sequence>
-            <!-- N.B. the name predict_drift_time is historical, and is now a double misnomer: it's a lookup, not a prediction, and it's general ion mobility not just drift time. -->
-            <xs:element name="predict_drift_time" minOccurs="0" maxOccurs="1">
-              <xs:complexType>
-                <xs:sequence>
-                  <xs:element minOccurs="0" maxOccurs="unbounded" name="measured_dt">
-                    <xs:complexType>
-                      <xs:attribute name="modified_sequence" type="xs:string" use="required" />
-                      <!-- for non-proteomics data this will actually be InChiKey or other ID -->
-                      <xs:attribute name="charge" type="xs:string" use="required" />
-                      <!-- may be an adduct or a simple integer for protonated charge -->
-                      <!--  Drift time info is supported, but the more general ion_mobility_ family of attributes is preferred. -->
-                      <xs:attribute name="drift_time" type="xs:double" use="optional" />
-                      <xs:attribute name="high_energy_drift_time_offset" type="xs:double" use="optional" />
-                      <xs:attribute name="ccs" type="xs:double" use="optional" />
-                      <xs:attribute name="ion_mobility" type="xs:double" use="optional" />
-                      <xs:attribute name="high_energy_ion_mobility_offset" type="xs:double" use="optional" />
-                      <xs:attribute name="ion_mobility_units" type="xs:string" use="optional" />
-                    </xs:complexType>
-                  </xs:element>
-                </xs:sequence>
-                <xs:attribute name="name" type="xs:string" use="required" />
-                <xs:attribute name="peak_width_calc_type" type="drift_time_peak_width_calc_type"
-                              default="resolving_power" />
-                <xs:attribute name="resolving_power" type="xs:double" default="0.0" />
-                <xs:attribute name="width_at_dt_zero" type="xs:double" default="0.0" />
-                <xs:attribute name="width_at_dt_max" type="xs:double" default="0.0" />
-              </xs:complexType>
-            </xs:element>
-          </xs:sequence>
-        </xs:complexType>
-      </xs:element>
     </xs:sequence>
   </xs:complexType>
-
   <!-- Measured Results -->
   <xs:complexType name="measured_results_type">
     <xs:sequence>

@@ -31,6 +31,7 @@ using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
@@ -116,7 +117,8 @@ namespace pwiz.SkylineTestUtil
 
         public static TObj Deserialize<TObj>(string s)
         {
-            s = XmlUtil.XML_DIRECTIVE + s;
+            if (!s.StartsWith(XmlUtil.XML_DIRECTIVE.Substring(0,14)))
+                s = XmlUtil.XML_DIRECTIVE + s;
 
             XmlSerializer ser = new XmlSerializer(typeof(TObj));
             using (TextReader reader = new StringReader(s))
@@ -128,13 +130,19 @@ namespace pwiz.SkylineTestUtil
         public static void Serialization<TObj>(string s, Action<TObj, TObj> validate, bool checkAgainstSkylineSchema = true, string expectedTypeInSkylineSchema = null)
             where TObj : class
         {
-            Serializable(Deserialize<TObj>(s), validate, checkAgainstSkylineSchema, expectedTypeInSkylineSchema);
+            Serializable(Deserialize<TObj>(s), validate, DocumentFormat.CURRENT, checkAgainstSkylineSchema, expectedTypeInSkylineSchema);
         }
 
         public static void DeserializeNoError<TObj>(string s, bool roundTrip = true, bool checkAgainstSkylineSchema = true, string expectedSkylineSchemaType = null)
             where TObj : class
         {
-            DeserializeError<TObj, Exception>(s, roundTrip ? DeserializeType.roundtrip : DeserializeType.no_error, null, checkAgainstSkylineSchema, expectedSkylineSchemaType);
+            DeserializeError<TObj, Exception>(s, roundTrip ? DeserializeType.roundtrip : DeserializeType.no_error, DocumentFormat.CURRENT, null, checkAgainstSkylineSchema, expectedSkylineSchemaType);
+        }
+
+        public static void DeserializeNoError<TObj>(string s, DocumentFormat docFormat, bool roundTrip = true, bool checkAgainstSkylineSchema = true, string expectedSkylineSchemaType = null)
+            where TObj : class
+        {
+            DeserializeError<TObj, Exception>(s, roundTrip ? DeserializeType.roundtrip : DeserializeType.no_error, docFormat, null, checkAgainstSkylineSchema, expectedSkylineSchemaType);
         }
 
         public static void DeserializeError<TObj>(string s, string expectedExceptionText = null)
@@ -143,11 +151,17 @@ namespace pwiz.SkylineTestUtil
             DeserializeError<TObj, InvalidDataException>(s, expectedExceptionText);
         }
 
+        public static void DeserializeError<TObj>(string s, DocumentFormat formatVersion, string expectedExceptionText = null)
+            where TObj : class
+        {
+            DeserializeError<TObj, InvalidDataException>(s, DeserializeType.error, formatVersion, expectedExceptionText);
+        }
+
         public static void DeserializeError<TObj, TEx>(string s, string expectedExceptionText = null)
             where TEx : Exception
             where TObj : class
         {
-            DeserializeError<TObj, TEx>(s, DeserializeType.error, expectedExceptionText);
+            DeserializeError<TObj, TEx>(s, DeserializeType.error, DocumentFormat.CURRENT, expectedExceptionText);
         }
 
         private enum DeserializeType
@@ -155,7 +169,7 @@ namespace pwiz.SkylineTestUtil
             error, no_error, roundtrip
         }
 
-        private static void DeserializeError<TObj, TEx>(string s, DeserializeType deserializeType, string expectedExceptionText = null, bool checkAgainstSkylineSchema = true, string expectedSkylineSchemaType = null)
+        private static void DeserializeError<TObj, TEx>(string s, DeserializeType deserializeType, DocumentFormat formatVersion, string expectedExceptionText = null, bool checkAgainstSkylineSchema = true, string expectedSkylineSchemaType = null)
             where TEx : Exception
             where TObj : class
         {
@@ -176,7 +190,7 @@ namespace pwiz.SkylineTestUtil
                     }
 
                     if (deserializeType == DeserializeType.roundtrip)
-                        Serializable(obj, Cloned, checkAgainstSkylineSchema, expectedSkylineSchemaType);
+                        Serializable(obj, Cloned, formatVersion, checkAgainstSkylineSchema, expectedSkylineSchemaType);
                 }
                 catch (InvalidOperationException x)
                 {
@@ -212,17 +226,29 @@ namespace pwiz.SkylineTestUtil
 
         public static void Serializable(SrmDocument doc)
         {
-            Serializable(doc, DocumentCloned);
+            Serializable(doc, DocumentCloned, DocumentFormat.CURRENT);
             VerifyModifiedSequences(doc);
         }
 
         public static void Serializable<TObj>(TObj target, Action<TObj, TObj> validate, bool checkAgainstSkylineSchema = true, string expectedTypeInSkylineSchema = null)
             where TObj : class
         {
-            Serializable(target, 1, validate, checkAgainstSkylineSchema, expectedTypeInSkylineSchema);
+            Serializable(target, 1, validate, DocumentFormat.CURRENT, checkAgainstSkylineSchema, expectedTypeInSkylineSchema);
+        }
+
+        public static void Serializable<TObj>(TObj target, Action<TObj, TObj> validate, DocumentFormat formatVersion, bool checkAgainstSkylineSchema = true, string expectedTypeInSkylineSchema = null)
+            where TObj : class
+        {
+            Serializable(target, 1, validate, formatVersion, checkAgainstSkylineSchema, expectedTypeInSkylineSchema);
         }
 
         public static void Serializable<TObj>(TObj target, int roundTrips, Action<TObj, TObj> validate, bool checkAgainstSkylineSchema = true, string expectedTypeInSkylineSchema = null)
+            where TObj : class
+        {
+            Serializable(target, roundTrips, validate, DocumentFormat.CURRENT, checkAgainstSkylineSchema, expectedTypeInSkylineSchema);
+        }
+
+        public static void Serializable<TObj>(TObj target, int roundTrips, Action<TObj, TObj> validate, DocumentFormat formatVersion, bool checkAgainstSkylineSchema = true, string expectedTypeInSkylineSchema = null)
             where TObj : class
         {
             string expected = null;
@@ -231,10 +257,10 @@ namespace pwiz.SkylineTestUtil
 
             // Validate documents or document fragments against current schema
             if (checkAgainstSkylineSchema)
-                ValidatesAgainstSchema(target, expectedTypeInSkylineSchema);
+                ValidatesAgainstSchema(target, formatVersion, expectedTypeInSkylineSchema);
         }
 
-        public static SrmDocument Serializable(SrmDocument target, string testPath, bool checkAgainstSkylineSchema = true, string expectedTypeInSkylineSchema = null, bool forceFullLoad = false)
+        public static SrmDocument Serializable(SrmDocument target, string testPath, DocumentFormat formatVersion, bool checkAgainstSkylineSchema = true, string expectedTypeInSkylineSchema = null, bool forceFullLoad = false)
         {
             string expected = null;
             var actual = RoundTrip(target, ref expected);
@@ -242,7 +268,7 @@ namespace pwiz.SkylineTestUtil
             VerifyModifiedSequences(target);
             // Validate documents or document fragments against current schema
             if (checkAgainstSkylineSchema)
-                ValidatesAgainstSchema(target, expectedTypeInSkylineSchema);
+                ValidatesAgainstSchema(target, formatVersion, expectedTypeInSkylineSchema);
             return target;
         }
 
@@ -279,9 +305,14 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
-        /// Checks validity of a document or document fragment against the current schema
+        /// Checks validity of a document or document fragment against the indicated schema
         /// </summary>
         public static void ValidatesAgainstSchema(Object obj, string expectedTypeInSkylineSchema = null)
+        {
+            ValidatesAgainstSchema(obj, DocumentFormat.CURRENT, expectedTypeInSkylineSchema);
+        }
+
+        public static void ValidatesAgainstSchema(Object obj, DocumentFormat formatVersion, string expectedTypeInSkylineSchema = null)
         {
             var sb = new StringBuilder();
             using (var sw = new StringWriter(sb))
@@ -305,7 +336,7 @@ namespace pwiz.SkylineTestUtil
                             throw new OutOfMemoryException("Strangely large non-document object", x.InnerException);
                         }
                         var assembly = Assembly.GetAssembly(typeof(AssertEx));
-                        var xsdName = typeof(AssertEx).Namespace + String.Format(CultureInfo.InvariantCulture, ".Schemas.Skyline_{0}.xsd", SrmDocument.FORMAT_VERSION);
+                        var xsdName = typeof(AssertEx).Namespace + String.Format(CultureInfo.InvariantCulture, ".Schemas.Skyline_{0}.xsd", formatVersion);
                         var schemaStream = assembly.GetManifestResourceStream(xsdName);
                         Assert.IsNotNull(schemaStream, string.Format("Schema {0} not found in TestUtil assembly", xsdName));
                         var schemaText = (new StreamReader(schemaStream)).ReadToEnd();
@@ -458,8 +489,7 @@ namespace pwiz.SkylineTestUtil
 
         private static void ValidationCallBack(object sender, ValidationEventArgs args)
         {
-            string message = String.Format(CultureInfo.InvariantCulture, "XML Validation error using Skyline_{0}.xsd:",
-                SrmDocument.FORMAT_VERSION) + args.Message;
+            string message = @"XML Validation error: " + args.Message;
             if (null != args.Exception)
             {
                 message = TextUtil.SpaceSeparate(message, string.Format("Line {0} Position {1}", args.Exception.LineNumber, args.Exception.LinePosition));
@@ -1006,8 +1036,8 @@ namespace pwiz.SkylineTestUtil
         public static void ConvertedSmallMoleculeDocumentIsSimilar(SrmDocument document, SrmDocument converted, string testDir, RefinementSettings.ConvertToSmallMoleculesMode conversionMode)
         {
             // Are both versions valid?
-            converted = Serializable(converted, testDir, true, null, true); // Force a full load to verify library correctness
-            document = Serializable(document, testDir, true, null, true); // Force a full load to verify library correctness
+            converted = Serializable(converted, testDir, DocumentFormat.CURRENT, true, null, true); // Force a full load to verify library correctness
+            document = Serializable(document, testDir, DocumentFormat.CURRENT, true, null, true); // Force a full load to verify library correctness
 
             using (var convertedMoleculeGroupsIterator = converted.MoleculeGroups.GetEnumerator())
             {

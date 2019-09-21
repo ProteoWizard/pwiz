@@ -31,6 +31,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
@@ -38,18 +39,19 @@ namespace pwiz.Skyline.SettingsUI
     public partial class TransitionSettingsUI : FormEx, IMultipleViewProvider
     {
 // ReSharper disable InconsistentNaming
-        public enum TABS { Prediction, Filter, Library, Instrument, FullScan }
+        public enum TABS { Prediction, Filter, IonMobility, Library, Instrument, FullScan }
 // ReSharper restore InconsistentNaming
 
         public class PredictionTab : IFormView {}
-        public class FilterTab : IFormView {}
+        public class FilterTab : IFormView { }
+        public class IonMobilityTab : IFormView { }
         public class LibraryTab : IFormView {}
         public class InstrumentTab : IFormView {}
         public class FullScanTab : IFormView {}
 
         private static readonly IFormView[] TAB_PAGES =
         {
-            new PredictionTab(), new FilterTab(), new LibraryTab(), new InstrumentTab(), new FullScanTab()
+            new PredictionTab(), new FilterTab(), new IonMobilityTab(), new LibraryTab(), new InstrumentTab(), new FullScanTab()
         };
 
         private readonly SkylineWindow _parent;
@@ -58,6 +60,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly SettingsListComboDriver<CollisionEnergyRegression> _driverCE;
         private readonly SettingsListComboDriver<DeclusteringPotentialRegression> _driverDP;
         private readonly SettingsListComboDriver<CompensationVoltageParameters> _driverCoV;
+        private readonly SettingsListComboDriver<IonMobilityCalibration> _driverDT;
         private readonly SettingsListComboDriver<OptimizationLibrary> _driverOptimizationLibrary;
         private readonly SettingsListBoxDriver<MeasuredIon> _driverIons;
         public const double DEFAULT_TIME_AROUND_MS2_IDS = 5;
@@ -162,6 +165,31 @@ namespace pwiz.Skyline.SettingsUI
             if (Instrument.MaxTime.HasValue)
                 textMaxTime.Text = Instrument.MaxTime.Value.ToString(LocalizationHelper.CurrentCulture);
 
+            // Initialize ion mobility filter settings
+            _driverDT = new SettingsListComboDriver<IonMobilityCalibration>(comboDriftTimePredictor, Settings.Default.DriftTimePredictorList);
+            string selDT = (IonMobility.IonMobilityCalibration == null ? null : IonMobility.IonMobilityCalibration.Name);
+            _driverDT.LoadList(selDT);
+            cbUseSpectralLibraryIonMobilities.Checked = textSpectralLibraryDriftTimesResolvingPower.Enabled = IonMobility.UseSpectralLibraryIonMobilityValues;
+            var imsWindowCalc = IonMobility.SpectralLibraryIonMobilityWindowWidthCalculator;
+            if (imsWindowCalc != null)
+            {
+                cbLinear.Checked = imsWindowCalc.PeakWidthMode == IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.linear_range;
+                if (cbLinear.Checked)
+                {
+                    textSpectralLibraryDriftTimesResolvingPower.Text = string.Empty;
+                    textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Text = imsWindowCalc.PeakWidthAtIonMobilityValueZero.ToString(LocalizationHelper.CurrentCulture);
+                    textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Text = imsWindowCalc.PeakWidthAtIonMobilityValueMax.ToString(LocalizationHelper.CurrentCulture);
+                }
+                else
+                {
+                    textSpectralLibraryDriftTimesResolvingPower.Text = imsWindowCalc.ResolvingPower != 0
+                        ? imsWindowCalc.ResolvingPower.ToString(LocalizationHelper.CurrentCulture)
+                        : string.Empty;
+                    textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Text = string.Empty;
+                    textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Text = string.Empty;
+                }
+            }
+
             // Initialize full-scan settings
             FullScanSettingsControl = new FullScanSettingsControl(_parent)
                                           {
@@ -185,6 +213,8 @@ namespace pwiz.Skyline.SettingsUI
                 tabControlPeptidesSmallMols.SelectedIndex = 0;
             else if (ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules)
                 tabControlPeptidesSmallMols.SelectedIndex = 1;
+
+            UpdateLibraryDriftPeakWidthControls();
 
             DoIsolationSchemeChanged();
         }
@@ -246,6 +276,7 @@ namespace pwiz.Skyline.SettingsUI
         private FullScanSettingsControl FullScanSettingsControl { get; set; }
 
         public TransitionPrediction Prediction { get { return _transitionSettings.Prediction; } }
+        public TransitionIonMobility IonMobility { get { return _transitionSettings.IonMobility; } }
         public TransitionFilter Filter { get { return _transitionSettings.Filter; } }
         public TransitionLibraries Libraries { get { return _transitionSettings.Libraries; } }
         public TransitionInstrument Instrument { get { return _transitionSettings.Instrument; } }
@@ -605,6 +636,57 @@ namespace pwiz.Skyline.SettingsUI
 
             Helpers.AssignIfEquals(ref fullScan, FullScan);
 
+
+            string nameDt = comboDriftTimePredictor.SelectedItem.ToString();
+            IonMobilityCalibration ionMobilityCalibration =
+                Settings.Default.GetDriftTimePredictorByName(nameDt);
+
+            bool useSpectralLibraryIonMobility = cbUseSpectralLibraryIonMobilities.Checked;
+
+            var libraryDriftTimeWindowWidthCalculator = IonMobilityWindowWidthCalculator.EMPTY;
+            if (useSpectralLibraryIonMobility)
+            {
+                double resolvingPower = 0;
+                double widthAtDt0 = 0;
+                double widthAtDtMax = 0;
+                IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType peakWidthType;
+                if (cbLinear.Checked)
+                {
+                    if (!helper.ValidateDecimalTextBox(textSpectralLibraryIonMobilitiesWindowWidthAtDt0, out widthAtDt0))
+                        return;
+                    if (!helper.ValidateDecimalTextBox(textSpectralLibraryIonMobilitiesWindowWidthAtDtMax, out widthAtDtMax))
+                        return;
+                    var errmsg = EditIonMobilityCalibrationDlg.ValidateWidth(widthAtDt0);
+                    if (errmsg != null)
+                    {
+                        helper.ShowTextBoxError(textSpectralLibraryIonMobilitiesWindowWidthAtDt0, errmsg);
+                        return;
+                    }
+                    errmsg = EditIonMobilityCalibrationDlg.ValidateWidth(widthAtDtMax);
+                    if (errmsg != null)
+                    {
+                        helper.ShowTextBoxError(textSpectralLibraryIonMobilitiesWindowWidthAtDtMax, errmsg);
+                        return;
+                    }
+                    peakWidthType = IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.linear_range;
+                }
+                else
+                {
+                    if (!helper.ValidateDecimalTextBox(textSpectralLibraryDriftTimesResolvingPower, out resolvingPower))
+                        return;
+                    var errmsg = EditIonMobilityCalibrationDlg.ValidateResolvingPower(resolvingPower);
+                    if (errmsg != null)
+                    {
+                        helper.ShowTextBoxError(textSpectralLibraryDriftTimesResolvingPower, errmsg);
+                        return;
+                    }
+                    peakWidthType = IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power;
+                }
+                libraryDriftTimeWindowWidthCalculator = new IonMobilityWindowWidthCalculator(peakWidthType, resolvingPower, widthAtDt0, widthAtDtMax);
+            }
+            var ionMobility = new TransitionIonMobility(ionMobilityCalibration, useSpectralLibraryIonMobility, libraryDriftTimeWindowWidthCalculator);
+            Helpers.AssignIfEquals(ref ionMobility, IonMobility);
+
             TransitionSettings settings = new TransitionSettings(prediction,
                 filter, ionMobility, libraries, integration, instrument, fullScan);
 
@@ -612,12 +694,13 @@ namespace pwiz.Skyline.SettingsUI
             if (!Equals(settings, _transitionSettings))
             {
                 if (!_parent.ChangeSettingsMonitored(this, Resources.TransitionSettingsUI_OkDialog_Changing_transition_settings,
-                                                     s => s.ChangeTransitionSettings(settings)))
+                    s => s.ChangeTransitionSettings(settings)))
                 {
                     return;
                 }
                 _transitionSettings = settings;
             }
+
 
             DialogResult = DialogResult.OK;
         }
@@ -1246,6 +1329,130 @@ namespace pwiz.Skyline.SettingsUI
             if (smallMolIons.Count > 0)
                 textSmallMoleculeIonTypes.Text = TransitionFilter.ToStringSmallMoleculeIonTypes(smallMolIons, true);
         }
+
+        private void comboDriftTime_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _driverDT.SelectedIndexChangedEvent(sender, e);
+        }
+
+        public void AddDriftTimePredictor()
+        {
+            CheckDisposed();
+            _driverDT.AddItem();
+        }
+
+        public void EditIonMobilityLookup()
+        {
+            CheckDisposed();
+            _driverDT.EditCurrent();
+        }
+
+        private void cbUseSpectralLibraryDriftTimes_CheckChanged(object sender, EventArgs e)
+        {
+            bool enable = cbUseSpectralLibraryIonMobilities.Checked;
+            labelResolvingPower.Enabled =
+                textSpectralLibraryDriftTimesResolvingPower.Enabled = enable;
+            labelWidthDtZero.Enabled =
+                textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Enabled = enable;
+            labelWidthDtMax.Enabled =
+                textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Enabled = enable;
+            cbLinear.Enabled = enable;
+            // If disabling the text box, and it has content, make sure it is
+            // valid content.  Otherwise, clear the current content, which
+            // is always valid, if the measured drift time values will not be used.
+            CleanupDriftInfoText(enable, textSpectralLibraryDriftTimesResolvingPower);
+            CleanupDriftInfoText(enable, textSpectralLibraryIonMobilitiesWindowWidthAtDt0);
+            CleanupDriftInfoText(enable, textSpectralLibraryIonMobilitiesWindowWidthAtDtMax);
+        }
+
+        private void CleanupDriftInfoText(bool enable, TextBox textBox)
+        {
+            if (!enable && !string.IsNullOrEmpty(textBox.Text))
+            {
+                double value;
+                if (!double.TryParse(textBox.Text, out value) || value <= 0)
+                {
+                    textBox.Text = string.Empty;
+                }
+            }
+        }
+
+        public bool IsUseSpectralLibraryDriftTimes
+        {
+            get { return cbUseSpectralLibraryIonMobilities.Checked; }
+            set { cbUseSpectralLibraryIonMobilities.Checked = value; }
+        }
+
+        public double? SpectralLibraryDriftTimeResolvingPower
+        {
+            get
+            {
+
+                if (string.IsNullOrEmpty(textSpectralLibraryDriftTimesResolvingPower.Text))
+                    return null;
+                return Convert.ToDouble(textSpectralLibraryDriftTimesResolvingPower.Text);
+            }
+            set { textSpectralLibraryDriftTimesResolvingPower.Text = value.HasValue ? value.ToString() : string.Empty; }
+        }
+
+        public string SelectedDriftTimePredictor
+        {
+            get { return _driverDT.Combo.SelectedItem.ToString(); }
+            set { _driverDT.Combo.SelectedItem = value; }
+        }
+
+        private void UpdateLibraryDriftPeakWidthControls()
+        {
+            // Linear peak width vs Resolving Power
+            labelResolvingPower.Visible = !cbLinear.Checked;
+            textSpectralLibraryDriftTimesResolvingPower.Visible = !cbLinear.Checked;
+            labelWidthDtZero.Visible = cbLinear.Checked;
+            labelWidthDtMax.Visible = cbLinear.Checked;
+            textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Visible = cbLinear.Checked;
+            textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Visible = cbLinear.Checked;
+
+            cbLinear.Enabled = cbUseSpectralLibraryIonMobilities.Checked;
+            labelResolvingPower.Enabled = cbUseSpectralLibraryIonMobilities.Checked;
+            textSpectralLibraryDriftTimesResolvingPower.Enabled = cbUseSpectralLibraryIonMobilities.Checked;
+            labelWidthDtZero.Enabled = cbUseSpectralLibraryIonMobilities.Checked;
+            labelWidthDtMax.Enabled = cbUseSpectralLibraryIonMobilities.Checked;
+            textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Enabled = cbUseSpectralLibraryIonMobilities.Checked;
+            textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Enabled = cbUseSpectralLibraryIonMobilities.Checked;
+
+
+            if (labelWidthDtZero.Location.X > labelResolvingPower.Location.X)
+            {
+                var dX = labelWidthDtZero.Location.X - labelResolvingPower.Location.X;
+                labelWidthDtZero.Location = new Point(labelWidthDtZero.Location.X - dX, labelWidthDtZero.Location.Y);
+                labelWidthDtMax.Location = new Point(labelWidthDtMax.Location.X - dX, labelWidthDtMax.Location.Y);
+                textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Location = new Point(textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Location.X - dX, textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Location.Y);
+                textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Location = new Point(textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Location.X - dX, textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Location.Y);
+            }
+        }
+
+        private void cbLinear_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateLibraryDriftPeakWidthControls();
+        }
+
+        public void SetWidthAtDtZero(double width)
+        {
+            textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Text = width.ToString(LocalizationHelper.CurrentCulture);
+            UpdateLibraryDriftPeakWidthControls();
+        }
+
+        public void SetWidthAtDtMax(double width)
+        {
+            textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Text = width.ToString(LocalizationHelper.CurrentCulture);
+            UpdateLibraryDriftPeakWidthControls();
+        }
+
+        public void SetLinearRangeCheckboxState(bool checkedState)
+        {
+            cbLinear.Checked = checkedState;
+            UpdateLibraryDriftPeakWidthControls();
+        }
+
 
     }
 }

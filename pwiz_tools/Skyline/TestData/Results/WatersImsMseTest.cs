@@ -253,8 +253,8 @@ namespace pwiz.SkylineTestData.Results
                         testFilesDir.GetTestPath("waters-mobility.filtered-scaled.blib"));
                     doc = doc.ChangeSettings(
                         doc.Settings.ChangePeptideLibraries(lib => lib.ChangeLibrarySpecs(new[] { librarySpec })).
-                            ChangeTransitionSettings(p => p.ChangeIonMobility(p.IonMobility.ChangeLibraryDriftTimesWindowWidthCalculator(driftTimeWindowWidthCalculator))).
-                            ChangeTransitionSettings(p => p.ChangeIonMobility(p.IonMobility.ChangeUseLibraryIonMobilityValues(true))));
+                            ChangeTransitionSettings(p => p.ChangeIonMobility(p.IonMobility.ChangeSpectralLibraryIonMobilityWindowWidthCalculator(driftTimeWindowWidthCalculator))).
+                            ChangeTransitionSettings(p => p.ChangeIonMobility(p.IonMobility.ChangeUseSpectralLibraryIonMobilityValues(true))));
                 }
             }
             return doc;

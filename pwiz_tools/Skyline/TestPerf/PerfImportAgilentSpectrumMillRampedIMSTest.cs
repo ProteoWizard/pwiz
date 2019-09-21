@@ -139,14 +139,14 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             loadStopwatch.Start();
 
             // Enable use of drift times in spectral library
-            var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             RunUI(() =>
             {
                 // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-                peptideSettingsUI.IsUseSpectralLibraryDriftTimes = useDriftTimes;
-                peptideSettingsUI.SpectralLibraryDriftTimeResolvingPower = 50;
+                transitionSettingsUI.IsUseSpectralLibraryDriftTimes = useDriftTimes;
+                transitionSettingsUI.SpectralLibraryDriftTimeResolvingPower = 50;
             });
-            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+            OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
 
             // Launch import peptide search wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
@@ -242,11 +242,11 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             {
                 // Inspect the loaded data directly to derive DT and CCS
                 // Verify ability to extract predictions from raw data
-                var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(
-                    () => SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Prediction));
+                var transitionsSettingsDlg = ShowDialog<TransitionSettingsUI>(
+                    () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
 
                 // Simulate user picking Edit Current from the Drift Time Predictor combo control
-                var driftTimePredictorDlg = ShowDialog<EditDriftTimePredictorDlg>(peptideSettingsDlg.AddDriftTimePredictor);
+                var driftTimePredictorDlg = ShowDialog<EditIonMobilityCalibrationDlg>(transitionsSettingsDlg.AddDriftTimePredictor);
                 RunUI(() =>
                 {
                     driftTimePredictorDlg.SetPredictorName("test");
@@ -257,12 +257,12 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 WaitForClosedForm(driftTimePredictorDlg);
                 RunUI(() =>
                 {
-                    peptideSettingsDlg.OkDialog();
+                    transitionsSettingsDlg.OkDialog();
                 });
-                WaitForClosedForm(peptideSettingsDlg);
+                WaitForClosedForm(transitionsSettingsDlg);
 
                 var document = SkylineWindow.Document;
-                var measuredDTs = document.Settings.TransitionSettings.IonMobility.IonMobilityPredictor.MeasuredMobilityIons;
+                var measuredDTs = document.Settings.TransitionSettings.IonMobility.IonMobilityCalibration.MeasuredMobilityIons;
                 Assert.IsNotNull(driftInfoExplicitDT, "driftInfoExplicitDT != null");
                 var explicitDTs = driftInfoExplicitDT.GetIonMobilityDict();
 
@@ -400,14 +400,14 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
             // Watch for problem with reimport after changed DT window
             var docResolvingPower = SkylineWindow.Document;
-            var peptideSettingsUI2 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            var transitionSettingsUI2 = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             RunUI(() =>
             {
                 // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-                peptideSettingsUI2.IsUseSpectralLibraryDriftTimes = useDriftTimes;
-                peptideSettingsUI2.SpectralLibraryDriftTimeResolvingPower = 40;
+                transitionSettingsUI2.IsUseSpectralLibraryDriftTimes = useDriftTimes;
+                transitionSettingsUI2.SpectralLibraryDriftTimeResolvingPower = 40;
             });
-            OkDialog(peptideSettingsUI2, peptideSettingsUI2.OkDialog);
+            OkDialog(transitionSettingsUI2, transitionSettingsUI2.OkDialog);
             var docReimport = WaitForDocumentChangeLoaded(docResolvingPower);
             // Reimport data for a replicate
             RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>

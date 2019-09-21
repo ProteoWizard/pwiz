@@ -557,6 +557,11 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.MeasuredRTWindow = prop);
         }
 
+        public PeptidePrediction ChangeObsoleteIonMobilityValues(TransitionIonMobility prop)
+        {
+            return ChangeProp(ImClone(this), im => im.ObsoleteIonMobilityValues = prop);
+        }
+
         #endregion
 
         #region Implementation of IXmlSerializable
@@ -608,16 +613,14 @@ namespace pwiz.Skyline.Model.DocSettings
             return null;
         }
 
-        private const string PREFIX_SPECTRAL_LIBRARY_DRIFT_TIMES = "spectral_library_drift_times_";
-
         public void ReadXml(XmlReader reader)
         {
-            var useMeasuredRTs = reader.GetNullableBoolAttribute(ATTR.use_measured_rts);
+            bool? useMeasuredRTs = reader.GetNullableBoolAttribute(ATTR.use_measured_rts);
             MeasuredRTWindow = reader.GetNullableDoubleAttribute(ATTR.measured_rt_window);
             var obsoleteUseLibraryDriftTimes = reader.GetNullableBoolAttribute(ATTR.use_spectral_library_drift_times); // Now in transition settings, read here for backward compatibility
 
-            var obsoleteLibraryIonMobilityWindowWidthCalculator = new IonMobilityWindowWidthCalculator(reader, PREFIX_SPECTRAL_LIBRARY_DRIFT_TIMES); // Now in transition settings, read here for backward compatibility
-            IonMobilityPredictor obsoleteIonMobilityPredictor = null;
+            var obsoleteLibraryIonMobilityWindowWidthCalculator = new IonMobilityWindowWidthCalculator(reader, true, true); // Now in transition settings, read here for backward compatibility
+            DriftTimePredictor obsoleteDriftTimePredictor = null;
             // Keep XML values, if written by v0.5 or later 
             if (useMeasuredRTs.HasValue)
                 UseMeasuredRTs = useMeasuredRTs.Value;
@@ -638,13 +641,13 @@ namespace pwiz.Skyline.Model.DocSettings
                 reader.ReadStartElement();
                 // Read child elements
                 RetentionTime = reader.DeserializeElement<RetentionTimeRegression>();
-                obsoleteIonMobilityPredictor = reader.DeserializeElement<IonMobilityPredictor>();
+                obsoleteDriftTimePredictor = reader.DeserializeElement<DriftTimePredictor>();
                 reader.ReadEndElement();                
             }
 
-            if (obsoleteUseLibraryDriftTimes.HasValue || obsoleteIonMobilityPredictor != null || !obsoleteLibraryIonMobilityWindowWidthCalculator.IsEmpty)
+            if (obsoleteUseLibraryDriftTimes.HasValue || obsoleteDriftTimePredictor != null || !obsoleteLibraryIonMobilityWindowWidthCalculator.IsEmpty)
             {
-                ObsoleteIonMobilityValues = new TransitionIonMobility(obsoleteIonMobilityPredictor, obsoleteUseLibraryDriftTimes??false, obsoleteLibraryIonMobilityWindowWidthCalculator);
+                ObsoleteIonMobilityValues = new TransitionIonMobility(obsoleteDriftTimePredictor?.IonMobilityCalibration, obsoleteUseLibraryDriftTimes??false, obsoleteLibraryIonMobilityWindowWidthCalculator);
             }
 
             DoValidate();
@@ -652,34 +655,22 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public void WriteXml(XmlWriter writer)
         {
-            WriteXml(writer, null);
-        }
-        public void WriteXml(XmlWriter writer, TransitionIonMobility pre19_1_2_IonMobility)
-        {
             // Write this bool whether it is true or false, to allow its absence
             // as a marker of needing default values.
             writer.WriteAttribute(ATTR.use_measured_rts, UseMeasuredRTs, !UseMeasuredRTs);
             writer.WriteAttributeNullable(ATTR.measured_rt_window, MeasuredRTWindow);
-            if (pre19_1_2_IonMobility != null)
+            if (ObsoleteIonMobilityValues != null)
             {
                 // Writing backward compatible format - normally this is written to transition settings
-                writer.WriteAttribute(ATTR.use_spectral_library_drift_times,
-                    pre19_1_2_IonMobility.UseLibraryIonMobilityValues,
-                    !pre19_1_2_IonMobility.UseLibraryIonMobilityValues);
-                if (pre19_1_2_IonMobility.LibraryIonMobilityWindowWidthCalculator != null)
-                    pre19_1_2_IonMobility.LibraryIonMobilityWindowWidthCalculator.WriteXML(writer,
-                        PREFIX_SPECTRAL_LIBRARY_DRIFT_TIMES);
+                writer.WriteAttribute(ATTR.use_spectral_library_drift_times, ObsoleteIonMobilityValues.UseSpectralLibraryIonMobilityValues, !ObsoleteIonMobilityValues.UseSpectralLibraryIonMobilityValues);
+                ObsoleteIonMobilityValues.SpectralLibraryIonMobilityWindowWidthCalculator?.WriteXML(writer, true, true);
             }
 
             // Write child elements
             if (RetentionTime != null)
                 writer.WriteElement(RetentionTime);
-            if (pre19_1_2_IonMobility != null)
-            {
-                // Writing backward compatible format
-                if (pre19_1_2_IonMobility.IonMobilityPredictor != null)
-                    writer.WriteElement(pre19_1_2_IonMobility.IonMobilityPredictor);
-            }
+            // Writing backward compatible format
+            ObsoleteIonMobilityValues?.IonMobilityCalibration?.WriteXml(writer, true);
         }
 
         #endregion

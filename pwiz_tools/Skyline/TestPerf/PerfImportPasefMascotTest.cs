@@ -106,14 +106,14 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             loadStopwatch.Start();
 
             // Enable use of drift times in spectral library
-            var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             RunUI(() =>
             {
                 // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-                peptideSettingsUI.IsUseSpectralLibraryDriftTimes = true;
-                peptideSettingsUI.SpectralLibraryDriftTimeResolvingPower = 50;
+                transitionSettingsUI.IsUseSpectralLibraryDriftTimes = true;
+                transitionSettingsUI.SpectralLibraryDriftTimeResolvingPower = 50;
             });
-            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+            OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
 
             // Launch import peptide search wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);

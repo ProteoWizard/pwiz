@@ -38,7 +38,7 @@ namespace pwiz.SkylineTest
         {
             const string validPanoramaServer = "http://128.208.10.133:8070/";
             // Valid first
-            AssertEx.DeserializeNoError<Server>("<server uri=\"" + validPanoramaServer + "\" />", checkAgainstSkylineSchema:false);
+            AssertEx.DeserializeNoError<Server>("<server uri=\"" + validPanoramaServer + "\" />", checkAgainstSkylineSchema: false);
             AssertEx.DeserializeNoError<Server>("<server uri=\"" + validPanoramaServer + "\" " +
                                                 "username=\"\" password=\"\" />", checkAgainstSkylineSchema: false);
             AssertEx.DeserializeNoError<Server>("<server uri=\"" + validPanoramaServer + "\" " +

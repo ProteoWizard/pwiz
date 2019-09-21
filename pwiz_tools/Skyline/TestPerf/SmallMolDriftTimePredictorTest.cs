@@ -87,9 +87,9 @@ namespace TestPerf
             var area = document.MoleculePrecursorPairs.First().NodeGroup.Results.First().First().AreaMs1;
 
             // Locate drift peaks
-            var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            RunUI(() => peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Prediction);
-            var driftPredictor = ShowDialog<EditDriftTimePredictorDlg>(peptideSettingsUI.AddDriftTimePredictor);
+            var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            RunUI(() => transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Prediction);
+            var driftPredictor = ShowDialog<EditIonMobilityCalibrationDlg>(transitionSettingsUI.AddDriftTimePredictor);
             const string predictorName = "Sulfa";
             RunUI(() =>
             {
@@ -101,11 +101,9 @@ namespace TestPerf
 
             RunUI(() =>
             {
-                Assert.IsTrue(peptideSettingsUI.IsUseMeasuredRT);
-                Assert.AreEqual(2, peptideSettingsUI.TimeWindow);
-                Assert.AreEqual(predictorName, peptideSettingsUI.SelectedDriftTimePredictor);
+                Assert.AreEqual(predictorName, transitionSettingsUI.SelectedDriftTimePredictor);
             });
-            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+            OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
 
             WaitForDocumentChangeLoaded(document);
 

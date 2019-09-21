@@ -66,11 +66,11 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var transitions = document.MoleculeTransitions.ToArray();
 
             // Verify ability to extract predictions from raw data
-            var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(
-                () => SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Prediction));
+            var transitionSettingsDlg = ShowDialog<TransitionSettingsUI>(
+                () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
 
             // Simulate user picking Add from the ion mobility Predictor combo control
-            var driftTimePredictorDlg = ShowDialog<EditDriftTimePredictorDlg>(peptideSettingsDlg.AddDriftTimePredictor);
+            var driftTimePredictorDlg = ShowDialog<EditIonMobilityCalibrationDlg>(transitionSettingsDlg.AddDriftTimePredictor);
             RunUI(() =>
             {
                 driftTimePredictorDlg.SetOffsetHighEnergySpectraCheckbox(true);
@@ -82,9 +82,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             WaitForClosedForm(driftTimePredictorDlg);
             RunUI(() =>
             {
-                peptideSettingsDlg.OkDialog();
+                transitionSettingsDlg.OkDialog();
             });
-            WaitForClosedForm(peptideSettingsDlg);
+            WaitForClosedForm(transitionSettingsDlg);
 
             var docChangedDriftTimePredictor = WaitForDocumentChange(document);
 

@@ -65,12 +65,7 @@ namespace pwiz.Skyline.SettingsUI
             this.listLibraries = new System.Windows.Forms.CheckedListBox();
             this.btnUpdateCalculator = new System.Windows.Forms.Button();
             this.comboPeakScoringModel = new System.Windows.Forms.ComboBox();
-            this.comboDriftTimePredictor = new System.Windows.Forms.ComboBox();
-            this.textSpectralLibraryDriftTimesResolvingPower = new System.Windows.Forms.TextBox();
-            this.cbUseSpectralLibraryDriftTimes = new System.Windows.Forms.CheckBox();
             this.comboBoxPeptideUniquenessConstraint = new System.Windows.Forms.ComboBox();
-            this.textSpectralLibraryDriftTimesWidthAtDtMax = new System.Windows.Forms.TextBox();
-            this.textSpectralLibraryDriftTimesWidthAtDt0 = new System.Windows.Forms.TextBox();
             this.btnFilter = new System.Windows.Forms.Button();
             this.tbxMaxLoqBias = new System.Windows.Forms.TextBox();
             this.comboLodMethod = new System.Windows.Forms.ComboBox();
@@ -88,11 +83,6 @@ namespace pwiz.Skyline.SettingsUI
             this.label1 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
             this.tabPrediction = new System.Windows.Forms.TabPage();
-            this.labelWidthDtMax = new System.Windows.Forms.Label();
-            this.labelWidthDtZero = new System.Windows.Forms.Label();
-            this.cbLinear = new System.Windows.Forms.CheckBox();
-            this.labelResolvingPower = new System.Windows.Forms.Label();
-            this.label19 = new System.Windows.Forms.Label();
             this.label14 = new System.Windows.Forms.Label();
             this.label13 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
@@ -417,29 +407,6 @@ namespace pwiz.Skyline.SettingsUI
             this.helpTip.SetToolTip(this.comboPeakScoringModel, resources.GetString("comboPeakScoringModel.ToolTip"));
             this.comboPeakScoringModel.SelectedIndexChanged += new System.EventHandler(this.comboPeakScoringModel_SelectedIndexChanged);
             // 
-            // comboDriftTimePredictor
-            // 
-            resources.ApplyResources(this.comboDriftTimePredictor, "comboDriftTimePredictor");
-            this.comboDriftTimePredictor.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboDriftTimePredictor.FormattingEnabled = true;
-            this.comboDriftTimePredictor.Name = "comboDriftTimePredictor";
-            this.helpTip.SetToolTip(this.comboDriftTimePredictor, resources.GetString("comboDriftTimePredictor.ToolTip"));
-            this.comboDriftTimePredictor.SelectedIndexChanged += new System.EventHandler(this.comboDriftTime_SelectedIndexChanged);
-            // 
-            // textSpectralLibraryDriftTimesResolvingPower
-            // 
-            resources.ApplyResources(this.textSpectralLibraryDriftTimesResolvingPower, "textSpectralLibraryDriftTimesResolvingPower");
-            this.textSpectralLibraryDriftTimesResolvingPower.Name = "textSpectralLibraryDriftTimesResolvingPower";
-            this.helpTip.SetToolTip(this.textSpectralLibraryDriftTimesResolvingPower, resources.GetString("textSpectralLibraryDriftTimesResolvingPower.ToolTip"));
-            // 
-            // cbUseSpectralLibraryDriftTimes
-            // 
-            resources.ApplyResources(this.cbUseSpectralLibraryDriftTimes, "cbUseSpectralLibraryDriftTimes");
-            this.cbUseSpectralLibraryDriftTimes.Name = "cbUseSpectralLibraryDriftTimes";
-            this.helpTip.SetToolTip(this.cbUseSpectralLibraryDriftTimes, resources.GetString("cbUseSpectralLibraryDriftTimes.ToolTip"));
-            this.cbUseSpectralLibraryDriftTimes.UseVisualStyleBackColor = true;
-            this.cbUseSpectralLibraryDriftTimes.CheckedChanged += new System.EventHandler(this.cbUseSpectralLibraryDriftTimes_CheckChanged);
-            // 
             // comboBoxPeptideUniquenessConstraint
             // 
             resources.ApplyResources(this.comboBoxPeptideUniquenessConstraint, "comboBoxPeptideUniquenessConstraint");
@@ -452,18 +419,6 @@ namespace pwiz.Skyline.SettingsUI
             resources.GetString("comboBoxPeptideUniquenessConstraint.Items3")});
             this.comboBoxPeptideUniquenessConstraint.Name = "comboBoxPeptideUniquenessConstraint";
             this.helpTip.SetToolTip(this.comboBoxPeptideUniquenessConstraint, resources.GetString("comboBoxPeptideUniquenessConstraint.ToolTip"));
-            // 
-            // textSpectralLibraryDriftTimesWidthAtDtMax
-            // 
-            resources.ApplyResources(this.textSpectralLibraryDriftTimesWidthAtDtMax, "textSpectralLibraryDriftTimesWidthAtDtMax");
-            this.textSpectralLibraryDriftTimesWidthAtDtMax.Name = "textSpectralLibraryDriftTimesWidthAtDtMax";
-            this.helpTip.SetToolTip(this.textSpectralLibraryDriftTimesWidthAtDtMax, resources.GetString("textSpectralLibraryDriftTimesWidthAtDtMax.ToolTip"));
-            // 
-            // textSpectralLibraryDriftTimesWidthAtDt0
-            // 
-            resources.ApplyResources(this.textSpectralLibraryDriftTimesWidthAtDt0, "textSpectralLibraryDriftTimesWidthAtDt0");
-            this.textSpectralLibraryDriftTimesWidthAtDt0.Name = "textSpectralLibraryDriftTimesWidthAtDt0";
-            this.helpTip.SetToolTip(this.textSpectralLibraryDriftTimesWidthAtDt0, resources.GetString("textSpectralLibraryDriftTimesWidthAtDt0.ToolTip"));
             // 
             // btnFilter
             // 
@@ -598,16 +553,6 @@ namespace pwiz.Skyline.SettingsUI
             // tabPrediction
             // 
             resources.ApplyResources(this.tabPrediction, "tabPrediction");
-            this.tabPrediction.Controls.Add(this.textSpectralLibraryDriftTimesWidthAtDtMax);
-            this.tabPrediction.Controls.Add(this.textSpectralLibraryDriftTimesWidthAtDt0);
-            this.tabPrediction.Controls.Add(this.labelWidthDtMax);
-            this.tabPrediction.Controls.Add(this.labelWidthDtZero);
-            this.tabPrediction.Controls.Add(this.cbLinear);
-            this.tabPrediction.Controls.Add(this.textSpectralLibraryDriftTimesResolvingPower);
-            this.tabPrediction.Controls.Add(this.cbUseSpectralLibraryDriftTimes);
-            this.tabPrediction.Controls.Add(this.labelResolvingPower);
-            this.tabPrediction.Controls.Add(this.comboDriftTimePredictor);
-            this.tabPrediction.Controls.Add(this.label19);
             this.tabPrediction.Controls.Add(this.btnUpdateCalculator);
             this.tabPrediction.Controls.Add(this.label14);
             this.tabPrediction.Controls.Add(this.textMeasureRTWindow);
@@ -618,38 +563,6 @@ namespace pwiz.Skyline.SettingsUI
             this.tabPrediction.Name = "tabPrediction";
             this.helpTip.SetToolTip(this.tabPrediction, resources.GetString("tabPrediction.ToolTip"));
             this.tabPrediction.UseVisualStyleBackColor = true;
-            // 
-            // labelWidthDtMax
-            // 
-            resources.ApplyResources(this.labelWidthDtMax, "labelWidthDtMax");
-            this.labelWidthDtMax.Name = "labelWidthDtMax";
-            this.helpTip.SetToolTip(this.labelWidthDtMax, resources.GetString("labelWidthDtMax.ToolTip"));
-            // 
-            // labelWidthDtZero
-            // 
-            resources.ApplyResources(this.labelWidthDtZero, "labelWidthDtZero");
-            this.labelWidthDtZero.Name = "labelWidthDtZero";
-            this.helpTip.SetToolTip(this.labelWidthDtZero, resources.GetString("labelWidthDtZero.ToolTip"));
-            // 
-            // cbLinear
-            // 
-            resources.ApplyResources(this.cbLinear, "cbLinear");
-            this.cbLinear.Name = "cbLinear";
-            this.helpTip.SetToolTip(this.cbLinear, resources.GetString("cbLinear.ToolTip"));
-            this.cbLinear.UseVisualStyleBackColor = true;
-            this.cbLinear.CheckedChanged += new System.EventHandler(this.cbLinear_CheckedChanged);
-            // 
-            // labelResolvingPower
-            // 
-            resources.ApplyResources(this.labelResolvingPower, "labelResolvingPower");
-            this.labelResolvingPower.Name = "labelResolvingPower";
-            this.helpTip.SetToolTip(this.labelResolvingPower, resources.GetString("labelResolvingPower.ToolTip"));
-            // 
-            // label19
-            // 
-            resources.ApplyResources(this.label19, "label19");
-            this.label19.Name = "label19";
-            this.helpTip.SetToolTip(this.label19, resources.GetString("label19.ToolTip"));
             // 
             // label14
             // 
@@ -1108,11 +1021,6 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.TabPage tabIntegration;
         private System.Windows.Forms.ComboBox comboPeakScoringModel;
         private System.Windows.Forms.Label label36;
-        private System.Windows.Forms.ComboBox comboDriftTimePredictor;
-        private System.Windows.Forms.Label label19;
-        private System.Windows.Forms.TextBox textSpectralLibraryDriftTimesResolvingPower;
-        private System.Windows.Forms.CheckBox cbUseSpectralLibraryDriftTimes;
-        private System.Windows.Forms.Label labelResolvingPower;
         private System.Windows.Forms.TabPage tabQuantification;
         private System.Windows.Forms.ComboBox comboWeighting;
         private System.Windows.Forms.Label lblRegressionWeighting;
@@ -1126,11 +1034,6 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Label lblQuantUnits;
         private System.Windows.Forms.Label labelPeptideUniquenessConstraint;
         private System.Windows.Forms.ComboBox comboBoxPeptideUniquenessConstraint;
-        private System.Windows.Forms.CheckBox cbLinear;
-        private System.Windows.Forms.TextBox textSpectralLibraryDriftTimesWidthAtDtMax;
-        private System.Windows.Forms.TextBox textSpectralLibraryDriftTimesWidthAtDt0;
-        private System.Windows.Forms.Label labelWidthDtMax;
-        private System.Windows.Forms.Label labelWidthDtZero;
         private System.Windows.Forms.Button btnFilter;
         private System.Windows.Forms.Label lblCaclulateLodBy;
         private System.Windows.Forms.Label lblMaxLoqCvPct;

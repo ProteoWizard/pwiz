@@ -1023,12 +1023,12 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            if (newdoc.Settings.TransitionSettings.IonMobility.IonMobilityPredictor != null &&
-                newdoc.Settings.TransitionSettings.IonMobility.IonMobilityPredictor.MeasuredMobilityIons != null &&
-                newdoc.Settings.TransitionSettings.IonMobility.IonMobilityPredictor.MeasuredMobilityIons.Any())
+            if (newdoc.Settings.TransitionSettings.IonMobility.IonMobilityCalibration != null &&
+                newdoc.Settings.TransitionSettings.IonMobility.IonMobilityCalibration.MeasuredMobilityIons != null &&
+                newdoc.Settings.TransitionSettings.IonMobility.IonMobilityCalibration.MeasuredMobilityIons.Any())
             {
                 var mapped = new Dictionary<LibKey, IonMobilityAndCCS>();
-                foreach (var item in newdoc.Settings.TransitionSettings.IonMobility.IonMobilityPredictor.MeasuredMobilityIons)
+                foreach (var item in newdoc.Settings.TransitionSettings.IonMobility.IonMobilityCalibration.MeasuredMobilityIons)
                 {
                     LibKey smallMolKey;
                     if (precursorMap.TryGetValue(item.Key, out smallMolKey))
@@ -1036,8 +1036,8 @@ namespace pwiz.Skyline.Model
                         mapped.Add(smallMolKey, item.Value);
                     }
                 }
-                var newpredictorDt = newdoc.Settings.TransitionSettings.IonMobility.IonMobilityPredictor.ChangeMeasuredIonMobilityValues(mapped);
-                var newpredictor = newdoc.Settings.TransitionSettings.IonMobility.ChangeIonMobilityPredictor(newpredictorDt);
+                var newpredictorDt = newdoc.Settings.TransitionSettings.IonMobility.IonMobilityCalibration.ChangeMeasuredIonMobilityValues(mapped);
+                var newpredictor = newdoc.Settings.TransitionSettings.IonMobility.ChangeIonMobilityLookup(newpredictorDt);
                 var newSettings = newdoc.Settings.ChangeTransitionSettings(newdoc.Settings.TransitionSettings.ChangeIonMobility(newpredictor));
                 newdoc = newdoc.ChangeSettings(newSettings);
             }

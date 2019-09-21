@@ -211,9 +211,9 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             RunUI(() => SkylineWindow.SaveDocument());
 
             {
-                var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-                RunUI(() => peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Prediction);
-                var driftPredictor = ShowDialog<EditDriftTimePredictorDlg>(peptideSettingsUI.AddDriftTimePredictor);
+                var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+                RunUI(() => transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.IonMobility);
+                var driftPredictor = ShowDialog<EditIonMobilityCalibrationDlg>(transitionSettingsUI.AddDriftTimePredictor);
                 const string predictorName = "BSA";
                 RunUI(() =>
                 {
@@ -222,24 +222,12 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                     driftPredictor.SetOffsetHighEnergySpectraCheckbox(true);
                     driftPredictor.GetDriftTimesFromResults();
                 });
-                PauseForScreenShot("Edit predictor form", 18);
+                PauseForScreenShot("Edit ion mobility form", 18);
 
                 OkDialog(driftPredictor, () => driftPredictor.OkDialog());
 
-                PauseForScreenShot("Peptide Settings - Prediction", 19);
+                PauseForScreenShot("Transition Settings - Ion Mobility", 19);
 
-                RunUI(() =>
-                {
-                    Assert.IsTrue(peptideSettingsUI.IsUseMeasuredRT);
-                    Assert.AreEqual(6, peptideSettingsUI.TimeWindow);
-                    Assert.AreEqual(predictorName, peptideSettingsUI.SelectedDriftTimePredictor);
-                });
-
-                OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
-            }
-
-            {
-                var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
                 RunUI(() =>
                 {
                     transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.FullScan;

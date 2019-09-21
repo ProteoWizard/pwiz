@@ -94,7 +94,7 @@ namespace pwiz.SkylineTestData.Results
                 document = document.ChangeSettings(document.Settings.ChangePeptidePrediction(prediction => new PeptidePrediction(null)));
 
                 // Verify ability to extract predictions from raw data
-                var newPred = document.Settings.TransitionSettings.IonMobility.IonMobilityPredictor.ChangeMeasuredIonMobilityValuesFromResults(
+                var newPred = document.Settings.TransitionSettings.IonMobility.IonMobilityCalibration.ChangeMeasuredIonMobilityValuesFromResults(
                         document, docContainer.DocumentFilePath, true);
                 var result = newPred.MeasuredMobilityIons;
                 Assert.AreEqual(1, result.Count);
@@ -112,11 +112,11 @@ namespace pwiz.SkylineTestData.Results
                 document =
                     document.ChangeSettings(
                         document.Settings.ChangePeptidePrediction(prediction => new PeptidePrediction(null)).
-                            ChangeTransitionSettings(p => p.ChangeIonMobility(p.IonMobility.ChangeIonMobilityPredictor(
-                                new IonMobilityPredictor("test", revised, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, 40, 0, 0)))));
-                newPred = document.Settings.TransitionSettings.IonMobility.ChangeIonMobilityPredictor(
-                    document.Settings.TransitionSettings.IonMobility.IonMobilityPredictor.ChangeMeasuredIonMobilityValuesFromResults(
-                        document, docContainer.DocumentFilePath, true)).IonMobilityPredictor;
+                            ChangeTransitionSettings(p => p.ChangeIonMobility(p.IonMobility.ChangeIonMobilityLookup(
+                                new IonMobilityCalibration("test", revised, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, 40, 0, 0)))));
+                newPred = document.Settings.TransitionSettings.IonMobility.ChangeIonMobilityLookup(
+                    document.Settings.TransitionSettings.IonMobility.IonMobilityCalibration.ChangeMeasuredIonMobilityValuesFromResults(
+                        document, docContainer.DocumentFilePath, true)).IonMobilityCalibration;
                 result = newPred.MeasuredMobilityIons;
                 Assert.AreEqual(2, result.Count);
                 Assert.AreEqual(expectedDT, result[libKey].IonMobility.Mobility.Value, .001);

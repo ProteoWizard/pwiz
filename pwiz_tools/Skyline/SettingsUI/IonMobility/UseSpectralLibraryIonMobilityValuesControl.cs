@@ -39,13 +39,13 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         {
             IonMobility = documentContainer.Document.Settings.TransitionSettings.IonMobility;
 
-            var imsWindowCalc = IonMobility.LibraryIonMobilityWindowWidthCalculator;
+            var imsWindowCalc = IonMobility.SpectralLibraryIonMobilityWindowWidthCalculator;
             var resolvingPower = imsWindowCalc?.ResolvingPower ?? 0;
-            if ((defaultState ?? IonMobility.UseLibraryIonMobilityValues) && resolvingPower == 0)
+            if ((defaultState ?? IonMobility.UseSpectralLibraryIonMobilityValues) && resolvingPower == 0)
             {
                 resolvingPower = 30; // Arbitrarily chosen non-zero value
             }
-            cbUseSpectralLibraryIonMobilityValues.Checked = textSpectralLibraryIonMobilityValuesResolvingPower.Enabled = defaultState ?? IonMobility.UseLibraryIonMobilityValues;
+            cbUseSpectralLibraryIonMobilityValues.Checked = textSpectralLibraryIonMobilityValuesResolvingPower.Enabled = defaultState ?? IonMobility.UseSpectralLibraryIonMobilityValues;
             if (imsWindowCalc != null)
             {
                 cbLinear.Checked = imsWindowCalc.PeakWidthMode == IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.linear_range;
@@ -90,13 +90,13 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                         return null;
                     if (!helper.ValidateDecimalTextBox(textSpectralLibraryIonMobilityWindowWidthAtDtMax, out widthAtDtMax))
                         return null;
-                    var errmsg = EditDriftTimePredictorDlg.ValidateWidth(widthAtDt0);
+                    var errmsg = EditIonMobilityCalibrationDlg.ValidateWidth(widthAtDt0);
                     if (errmsg != null)
                     {
                         helper.ShowTextBoxError(textSpectralLibraryIonMobilityWindowWidthAtDt0, errmsg);
                         return null;
                     }
-                    errmsg = EditDriftTimePredictorDlg.ValidateWidth(widthAtDtMax);
+                    errmsg = EditIonMobilityCalibrationDlg.ValidateWidth(widthAtDtMax);
                     if (errmsg != null)
                     {
                         helper.ShowTextBoxError(textSpectralLibraryIonMobilityWindowWidthAtDtMax, errmsg);
@@ -108,7 +108,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 {
                     if (!helper.ValidateDecimalTextBox(textSpectralLibraryIonMobilityValuesResolvingPower, out resolvingPower))
                         return null;
-                    var errmsg = EditDriftTimePredictorDlg.ValidateResolvingPower(resolvingPower);
+                    var errmsg = EditIonMobilityCalibrationDlg.ValidateResolvingPower(resolvingPower);
                     if (errmsg != null)
                     {
                         helper.ShowTextBoxError(textSpectralLibraryIonMobilityValuesResolvingPower, errmsg);
@@ -119,7 +119,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 libraryDriftTimeWindowWidthCalculator = new IonMobilityWindowWidthCalculator(peakWidthType, resolvingPower, widthAtDt0, widthAtDtMax);
             }
 
-            return IonMobility.ChangeLibraryDriftTimesWindowWidthCalculator(libraryDriftTimeWindowWidthCalculator).ChangeUseLibraryIonMobilityValues(useLibraryDriftTime);
+            return IonMobility.ChangeSpectralLibraryIonMobilityWindowWidthCalculator(libraryDriftTimeWindowWidthCalculator).ChangeUseSpectralLibraryIonMobilityValues(useLibraryDriftTime);
         }
 
         private void UpdateLibraryDriftPeakWidthControls()

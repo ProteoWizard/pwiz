@@ -342,7 +342,7 @@ to occur in combination on any peptide instance.</value>
   <data name="&gt;&gt;comboBackgroundProteome.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDtMax.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Location" type="System.Drawing.Point, System.Drawing">
     <value>279, 310</value>
   </data>
   <data name="&gt;&gt;listStandardTypes.Parent" xml:space="preserve">
@@ -481,7 +481,7 @@ in peak area ratios calculated for other types.</value>
   <data name="label2.ToolTip" xml:space="preserve">
     <value />
   </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDt0.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Parent" xml:space="preserve">
     <value>tabPrediction</value>
   </data>
   <data name="textExcludeAAs.TabIndex" type="System.Int32, mscorlib">
@@ -624,8 +624,8 @@ molecules, with no impact on structure.</value>
   <data name="textSpectralLibraryDriftTimesResolvingPower.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>
   </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDtMax.Name" xml:space="preserve">
-    <value>textSpectralLibraryDriftTimesWidthAtDtMax</value>
+  <data name="&gt;&gt;textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Name" xml:space="preserve">
+    <value>textSpectralLibraryIonMobilitiesWindowWidthAtDtMax</value>
   </data>
   <data name="&gt;&gt;label19.Name" xml:space="preserve">
     <value>label19</value>
@@ -996,7 +996,7 @@ this filter</value>
     <value>The maximum number of neutral loss events allowed
 to occur in combination on any fragment instance.</value>
   </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDt0.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>
   </data>
   <data name="textPeptideCount.ToolTip" xml:space="preserve">
@@ -1020,7 +1020,7 @@ to occur in combination on any fragment instance.</value>
   <data name="btnEditExlusions.ToolTip" xml:space="preserve">
     <value>Edit the list of available peptide exclusions</value>
   </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDtMax.Type" xml:space="preserve">
+  <data name="&gt;&gt;textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblMaxLoqCv.Parent" xml:space="preserve">
@@ -1142,7 +1142,7 @@ same values for ranking.</value>
   <data name="&gt;&gt;cbAutoSelect.Name" xml:space="preserve">
     <value>cbAutoSelect</value>
   </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDt0.TabIndex" type="System.Int32, mscorlib">
+  <data name="textSpectralLibraryIonMobilitiesWindowWidthAtDt0.TabIndex" type="System.Int32, mscorlib">
     <value>15</value>
   </data>
   <data name="label13.Location" type="System.Drawing.Point, System.Drawing">
@@ -1163,7 +1163,7 @@ same values for ranking.</value>
   <data name="tabFilter.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
   </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDt0.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Location" type="System.Drawing.Point, System.Drawing">
     <value>137, 310</value>
   </data>
   <data name="&gt;&gt;btnFilter.Type" xml:space="preserve">
@@ -1507,7 +1507,7 @@ times from a peptide specific hydrophobicity score.</value>
   <data name="tabPrediction.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDt0.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textSpectralLibraryIonMobilitiesWindowWidthAtDt0.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="&gt;&gt;comboDriftTimePredictor.Parent" xml:space="preserve">
@@ -1707,8 +1707,8 @@ the lower limit of quantification (LOQ)</value>
   <data name="tabPrediction.Size" type="System.Drawing.Size, System.Drawing">
     <value>363, 460</value>
   </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDt0.Name" xml:space="preserve">
-    <value>textSpectralLibraryDriftTimesWidthAtDt0</value>
+  <data name="&gt;&gt;textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Name" xml:space="preserve">
+    <value>textSpectralLibraryIonMobilitiesWindowWidthAtDt0</value>
   </data>
   <data name="label17.Size" type="System.Drawing.Size, System.Drawing">
     <value>98, 13</value>
@@ -1819,7 +1819,7 @@ to predict retention times for scheduling of future peptide measurements.</value
   <data name="lblMaxLoqCvPct.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDt0.ToolTip" xml:space="preserve">
+  <data name="textSpectralLibraryIonMobilitiesWindowWidthAtDt0.ToolTip" xml:space="preserve">
     <value>Determines matching tolerance for ion mobility in spectral libraries, where: 
 imMax = maximum measured ion mobility
 W0 = width at ion mobility zero
@@ -2042,7 +2042,7 @@ structure of the peptide.</value>
   <data name="&gt;&gt;textMaxNeutralLosses.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDtMax.ToolTip" xml:space="preserve">
+  <data name="textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.ToolTip" xml:space="preserve">
     <value>Determines matching tolerance for ion mobility in spectral libraries, where: 
 imMax = maximum measured ion mobility
 W0 = width at ion mobility zero
@@ -2360,7 +2360,7 @@ preceding or following cleavage sites. e.g. RR, KK, RK, KR for trypsin</value>
   <data name="comboWeighting.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 130</value>
   </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDtMax.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Parent" xml:space="preserve">
     <value>tabPrediction</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
@@ -2369,7 +2369,7 @@ preceding or following cleavage sites. e.g. RR, KK, RK, KR for trypsin</value>
   <data name="btnEditStaticMods.Location" type="System.Drawing.Point, System.Drawing">
     <value>211, 36</value>
   </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDtMax.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>
   </data>
   <data name="textMinLength.Size" type="System.Drawing.Size, System.Drawing">
@@ -2720,7 +2720,7 @@ preceding or following cleavage sites. e.g. RR, KK, RK, KR for trypsin</value>
   <data name="&gt;&gt;textExcludeAAs.Name" xml:space="preserve">
     <value>textExcludeAAs</value>
   </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDt0.Type" xml:space="preserve">
+  <data name="&gt;&gt;textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="comboQuantMsLevel.Size" type="System.Drawing.Size, System.Drawing">
@@ -2800,7 +2800,7 @@ used in scheduling future peptide measurements.</value>
   <data name="label14.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDtMax.TabIndex" type="System.Int32, mscorlib">
+  <data name="textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.TabIndex" type="System.Int32, mscorlib">
     <value>17</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -2980,7 +2980,7 @@ W = 2T/R</value>
   <data name="&gt;&gt;comboMissedCleavages.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDtMax.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="label9.Text" xml:space="preserve">

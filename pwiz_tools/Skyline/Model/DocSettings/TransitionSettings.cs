@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             Prediction = prediction;
             Filter = filter;
-            IonMobility = ionMobility ?? TransitionIonMobility.EMPTY;
+            IonMobility = ionMobility;
             Libraries = libraries;
             Integration = integration;
             Instrument = instrument;
@@ -135,10 +135,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return ChangeProp(ImClone(this), im => im.IonMobility = prop);
         }
-
-
-
-
+        
         #endregion
 
         #region Implementation of IXmlSerializable
@@ -196,6 +193,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 // Read child elements.
                 Prediction = reader.DeserializeElement<TransitionPrediction>();
                 Filter = reader.DeserializeElement<TransitionFilter>();
+                IonMobility = reader.DeserializeElement<TransitionIonMobility>() ?? TransitionIonMobility.EMPTY;
                 Libraries = reader.DeserializeElement<TransitionLibraries>();
                 Integration = reader.DeserializeElement<TransitionIntegration>();
                 Instrument = reader.DeserializeElement<TransitionInstrument>();
@@ -226,6 +224,8 @@ namespace pwiz.Skyline.Model.DocSettings
             // Write child elements
             writer.WriteElement(Prediction);
             writer.WriteElement(Filter);
+            if (IonMobility != null) // Will be null if writing backward compatible doc formats
+                writer.WriteElement(IonMobility);
             writer.WriteElement(Libraries);
             writer.WriteElement(Integration);
             writer.WriteElement(Instrument);
@@ -3107,42 +3107,47 @@ namespace pwiz.Skyline.Model.DocSettings
     [XmlRoot("transition_ion_mobility")]
     public sealed class TransitionIonMobility : Immutable, IValidating, IXmlSerializable, IAuditLogComparable
     {
-        public static TransitionIonMobility EMPTY = new TransitionIonMobility(IonMobilityPredictor.EMPTY, false, IonMobilityWindowWidthCalculator.EMPTY);
+        public static TransitionIonMobility EMPTY = new TransitionIonMobility(IonMobilityCalibration.EMPTY, false, IonMobilityWindowWidthCalculator.EMPTY);
 
-        public TransitionIonMobility(IonMobilityPredictor ionMobilityPredictor, bool useLibraryIonMobilityValues, IonMobilityWindowWidthCalculator libraryIonMobilityWindowWidthCalculator)
+        public TransitionIonMobility(IonMobilityCalibration ionMobilityCalibration, bool useSpectralLibraryIonMobilityValues, IonMobilityWindowWidthCalculator spectralLibraryIonMobilityWindowWidthCalculator)
         {
-            IonMobilityPredictor = ionMobilityPredictor;
-            UseLibraryIonMobilityValues = useLibraryIonMobilityValues;
-            LibraryIonMobilityWindowWidthCalculator = libraryIonMobilityWindowWidthCalculator;
+            IonMobilityCalibration = ionMobilityCalibration;
+            UseSpectralLibraryIonMobilityValues = useSpectralLibraryIonMobilityValues;
+            SpectralLibraryIonMobilityWindowWidthCalculator = spectralLibraryIonMobilityWindowWidthCalculator;
 
             Validate();
         }        
        
         [Track]
-        public IonMobilityPredictor IonMobilityPredictor { get; private set; }
+        public IonMobilityCalibration IonMobilityCalibration { get; private set; }
 
         [Track]
-        public bool UseLibraryIonMobilityValues { get; private set; }
+        public bool UseSpectralLibraryIonMobilityValues { get; private set; }
 
         [TrackChildren(ignoreName: true)]
-        public IonMobilityWindowWidthCalculator LibraryIonMobilityWindowWidthCalculator { get; private set; }
+        public IonMobilityWindowWidthCalculator SpectralLibraryIonMobilityWindowWidthCalculator { get; private set; }
 
         #region Property change methods
-        public TransitionIonMobility ChangeUseLibraryIonMobilityValues(bool prop)
+        public TransitionIonMobility ChangeUseSpectralLibraryIonMobilityValues(bool prop)
         {
-            return ChangeProp(ImClone(this), im => im.UseLibraryIonMobilityValues = prop);
+            return ChangeProp(ImClone(this), im => im.UseSpectralLibraryIonMobilityValues = prop);
         }
 
-        public TransitionIonMobility ChangeLibraryDriftTimesWindowWidthCalculator(IonMobilityWindowWidthCalculator prop)
+        public TransitionIonMobility ChangeSpectralLibraryIonMobilityWindowWidthCalculator(IonMobilityWindowWidthCalculator prop)
         {
-            return ChangeProp(ImClone(this), im => im.LibraryIonMobilityWindowWidthCalculator = prop);
+            return ChangeProp(ImClone(this), im => im.SpectralLibraryIonMobilityWindowWidthCalculator = prop);
         }
 
-        public TransitionIonMobility ChangeIonMobilityPredictor(IonMobilityPredictor prop)
+        public TransitionIonMobility ChangeIonMobilityLookup(IonMobilityCalibration prop)
         {
-            return ChangeProp(ImClone(this), im => im.IonMobilityPredictor = prop);
+            return ChangeProp(ImClone(this), im => im.IonMobilityCalibration = prop);
         }
         #endregion
+
+        public bool IsEmpty
+        {
+            get { return Equals(EMPTY); }
+        }
 
         #region object overrides
 
@@ -3150,9 +3155,9 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Equals(other.IonMobilityPredictor, IonMobilityPredictor) &&
-                   other.UseLibraryIonMobilityValues.Equals(UseLibraryIonMobilityValues) &&
-                   other.LibraryIonMobilityWindowWidthCalculator.Equals(LibraryIonMobilityWindowWidthCalculator);
+            return Equals(other.IonMobilityCalibration, IonMobilityCalibration) &&
+                   other.UseSpectralLibraryIonMobilityValues.Equals(UseSpectralLibraryIonMobilityValues) &&
+                   other.SpectralLibraryIonMobilityWindowWidthCalculator.Equals(SpectralLibraryIonMobilityWindowWidthCalculator);
         }
 
         public override bool Equals(object obj)
@@ -3167,26 +3172,42 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             unchecked
             {
-                int result = (IonMobilityPredictor != null ? IonMobilityPredictor.GetHashCode() : 0);
-                result = (result * 397) ^ UseLibraryIonMobilityValues.GetHashCode();
-                result = (result * 397) ^ (LibraryIonMobilityWindowWidthCalculator != null ? LibraryIonMobilityWindowWidthCalculator.GetHashCode() : 0);
+                int result = (IonMobilityCalibration != null ? IonMobilityCalibration.GetHashCode() : 0);
+                result = (result * 397) ^ UseSpectralLibraryIonMobilityValues.GetHashCode();
+                result = (result * 397) ^ (SpectralLibraryIonMobilityWindowWidthCalculator != null ? SpectralLibraryIonMobilityWindowWidthCalculator.GetHashCode() : 0);
                 return result;
             }
         }
 
         public object GetDefaultObject(ObjectInfo<object> info)
         {
-            return TransitionIonMobility.EMPTY;
+            return EMPTY;
         }
 
         #endregion
+
+        #region Implementation of IXmlSerializable
+
+        private enum EL
+        {
+            transition_ion_mobility,
+            measured_ion_mobility
+        }
+
+        /// <summary>
+        /// For serialization
+        /// </summary>
+        private TransitionIonMobility()
+        {
+        }
+
         public void Validate()
         {
-            if (UseLibraryIonMobilityValues)
+            if (UseSpectralLibraryIonMobilityValues)
             {
-                if (LibraryIonMobilityWindowWidthCalculator == null)
-                    LibraryIonMobilityWindowWidthCalculator = IonMobilityWindowWidthCalculator.EMPTY;
-                var errmsg = LibraryIonMobilityWindowWidthCalculator.Validate();
+                if (SpectralLibraryIonMobilityWindowWidthCalculator == null)
+                    SpectralLibraryIonMobilityWindowWidthCalculator = IonMobilityWindowWidthCalculator.EMPTY;
+                var errmsg = SpectralLibraryIonMobilityWindowWidthCalculator.Validate();
                 if (errmsg != null)
                 {
                     throw new InvalidDataException(errmsg);
@@ -3198,16 +3219,47 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return null;
         }
+        public static TransitionIonMobility Deserialize(XmlReader reader)
+        {
+            return reader.Name.Equals(EL.transition_ion_mobility.ToString()) ? reader.Deserialize(new TransitionIonMobility()) : EMPTY; // Before v19_2 this info was in PeptideSettings
+        }
+
 
         public void ReadXml(XmlReader reader)
         {
-            throw new NotImplementedException();
+            var name = reader.Name;
+            SpectralLibraryIonMobilityWindowWidthCalculator = new IonMobilityWindowWidthCalculator(reader, false, true); // Just reads attributes, does not advance reader
+
+            // Consume start tag
+            reader.ReadStartElement();
+
+            if (reader.Name.Equals(name)) // Make sure we haven't stepped off the end
+            {
+                // Read all measured ion mobilities
+                IonMobilityCalibration = IonMobilityCalibration.Deserialize(reader);
+                reader.Read(); // Consume end tag
+            }
+
+            Validate();
         }
 
         public void WriteXml(XmlWriter writer)
         {
-            throw new NotImplementedException();
-        }
+            // Write attributes
+            SpectralLibraryIonMobilityWindowWidthCalculator.WriteXML(writer, false, true);
 
+            // Write all measured ion mobilities
+            if (IonMobilityCalibration != null && !IonMobilityCalibration.IsEmpty)
+            {
+                foreach (var im in IonMobilityCalibration.MeasuredMobilityIons)
+                {
+                    writer.WriteStartElement(EL.measured_ion_mobility);
+                    var mdt = new MeasuredIonMobility(im.Key.Target, im.Key.Adduct, im.Value);
+                    mdt.WriteXml(writer);
+                    writer.WriteEndElement();
+                }
+            }
+        }
+        #endregion
     }
 }

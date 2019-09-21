@@ -1480,6 +1480,323 @@ selection must be done by manual document editing.</value>
   <data name="&gt;&gt;tabFilter.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Location" type="System.Drawing.Point, System.Drawing">
+    <value>243, 132</value>
+  </data>
+  <data name="textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 20</value>
+  </data>
+  <data name="textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.TabIndex" type="System.Int32, mscorlib">
+    <value>28</value>
+  </data>
+  <data name="textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.ToolTip" xml:space="preserve">
+    <value>Determines matching tolerance for ion mobility in spectral libraries, where: 
+imMax = maximum measured ion mobility
+W0 = width at ion mobility zero
+Wmax = width at imMax
+The width "W" of the ion mobility matching window centered at any ion mobility "M" is
+W = (W0 + M*(Wmax-W0)/imMax)
+</value>
+  </data>
+  <data name="&gt;&gt;textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Name" xml:space="preserve">
+    <value>textSpectralLibraryIonMobilitiesWindowWidthAtDtMax</value>
+  </data>
+  <data name="&gt;&gt;textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Parent" xml:space="preserve">
+    <value>tabIonMobility</value>
+  </data>
+  <data name="&gt;&gt;textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Location" type="System.Drawing.Point, System.Drawing">
+    <value>134, 132</value>
+  </data>
+  <data name="textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 20</value>
+  </data>
+  <data name="textSpectralLibraryIonMobilitiesWindowWidthAtDt0.TabIndex" type="System.Int32, mscorlib">
+    <value>26</value>
+  </data>
+  <data name="textSpectralLibraryIonMobilitiesWindowWidthAtDt0.ToolTip" xml:space="preserve">
+    <value>Determines matching tolerance for ion mobility in spectral libraries, where: 
+imMax = maximum measured ion mobility
+W0 = width at ion mobility zero
+Wmax = width at imMax
+The width "W" of the ion mobility matching window centered at any ion mobility "M" is
+W = (W0 + M*(Wmax-W0)/imMax)
+</value>
+  </data>
+  <data name="&gt;&gt;textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Name" xml:space="preserve">
+    <value>textSpectralLibraryIonMobilitiesWindowWidthAtDt0</value>
+  </data>
+  <data name="&gt;&gt;textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Parent" xml:space="preserve">
+    <value>tabIonMobility</value>
+  </data>
+  <data name="&gt;&gt;textSpectralLibraryIonMobilitiesWindowWidthAtDt0.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="labelWidthDtMax.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelWidthDtMax.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelWidthDtMax.Location" type="System.Drawing.Point, System.Drawing">
+    <value>240, 116</value>
+  </data>
+  <data name="labelWidthDtMax.Size" type="System.Drawing.Size, System.Drawing">
+    <value>83, 13</value>
+  </data>
+  <data name="labelWidthDtMax.TabIndex" type="System.Int32, mscorlib">
+    <value>27</value>
+  </data>
+  <data name="labelWidthDtMax.Text" xml:space="preserve">
+    <value>Width at imMa&amp;x:</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtMax.Name" xml:space="preserve">
+    <value>labelWidthDtMax</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtMax.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtMax.Parent" xml:space="preserve">
+    <value>tabIonMobility</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtMax.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="labelWidthDtZero.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelWidthDtZero.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelWidthDtZero.Location" type="System.Drawing.Point, System.Drawing">
+    <value>131, 116</value>
+  </data>
+  <data name="labelWidthDtZero.Size" type="System.Drawing.Size, System.Drawing">
+    <value>69, 13</value>
+  </data>
+  <data name="labelWidthDtZero.TabIndex" type="System.Int32, mscorlib">
+    <value>25</value>
+  </data>
+  <data name="labelWidthDtZero.Text" xml:space="preserve">
+    <value>Width at im&amp;0:</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtZero.Name" xml:space="preserve">
+    <value>labelWidthDtZero</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtZero.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtZero.Parent" xml:space="preserve">
+    <value>tabIonMobility</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtZero.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="cbLinear.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbLinear.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbLinear.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 159</value>
+  </data>
+  <data name="cbLinear.Size" type="System.Drawing.Size, System.Drawing">
+    <value>110, 17</value>
+  </data>
+  <data name="cbLinear.TabIndex" type="System.Int32, mscorlib">
+    <value>24</value>
+  </data>
+  <data name="cbLinear.Text" xml:space="preserve">
+    <value>&amp;Linear peak width</value>
+  </data>
+  <data name="&gt;&gt;cbLinear.Name" xml:space="preserve">
+    <value>cbLinear</value>
+  </data>
+  <data name="&gt;&gt;cbLinear.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbLinear.Parent" xml:space="preserve">
+    <value>tabIonMobility</value>
+  </data>
+  <data name="&gt;&gt;cbLinear.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="textSpectralLibraryDriftTimesResolvingPower.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 132</value>
+  </data>
+  <data name="textSpectralLibraryDriftTimesResolvingPower.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 20</value>
+  </data>
+  <data name="textSpectralLibraryDriftTimesResolvingPower.TabIndex" type="System.Int32, mscorlib">
+    <value>23</value>
+  </data>
+  <data name="textSpectralLibraryDriftTimesResolvingPower.ToolTip" xml:space="preserve">
+    <value>Determines matching tolerance for ion mobility in spectral libraries (for example, drift time): 
+For resolving power "R" at drift time "T", the width "W" of the drift time matching window centered at T is
+W = 2T/R</value>
+  </data>
+  <data name="&gt;&gt;textSpectralLibraryDriftTimesResolvingPower.Name" xml:space="preserve">
+    <value>textSpectralLibraryDriftTimesResolvingPower</value>
+  </data>
+  <data name="&gt;&gt;textSpectralLibraryDriftTimesResolvingPower.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textSpectralLibraryDriftTimesResolvingPower.Parent" xml:space="preserve">
+    <value>tabIonMobility</value>
+  </data>
+  <data name="&gt;&gt;textSpectralLibraryDriftTimesResolvingPower.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="cbUseSpectralLibraryIonMobilities.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbUseSpectralLibraryIonMobilities.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbUseSpectralLibraryIonMobilities.Location" type="System.Drawing.Point, System.Drawing">
+    <value>28, 84</value>
+  </data>
+  <data name="cbUseSpectralLibraryIonMobilities.Size" type="System.Drawing.Size, System.Drawing">
+    <value>270, 17</value>
+  </data>
+  <data name="cbUseSpectralLibraryIonMobilities.TabIndex" type="System.Int32, mscorlib">
+    <value>21</value>
+  </data>
+  <data name="cbUseSpectralLibraryIonMobilities.Text" xml:space="preserve">
+    <value>Use &amp;spectral library ion mobility values when present</value>
+  </data>
+  <data name="cbUseSpectralLibraryIonMobilities.ToolTip" xml:space="preserve">
+    <value>If checked, then ion mobility values in any loaded spectral libraries will be used in chromatogram extraction.</value>
+  </data>
+  <data name="&gt;&gt;cbUseSpectralLibraryIonMobilities.Name" xml:space="preserve">
+    <value>cbUseSpectralLibraryIonMobilities</value>
+  </data>
+  <data name="&gt;&gt;cbUseSpectralLibraryIonMobilities.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbUseSpectralLibraryIonMobilities.Parent" xml:space="preserve">
+    <value>tabIonMobility</value>
+  </data>
+  <data name="&gt;&gt;cbUseSpectralLibraryIonMobilities.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="labelResolvingPower.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelResolvingPower.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelResolvingPower.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 114</value>
+  </data>
+  <data name="labelResolvingPower.Size" type="System.Drawing.Size, System.Drawing">
+    <value>89, 13</value>
+  </data>
+  <data name="labelResolvingPower.TabIndex" type="System.Int32, mscorlib">
+    <value>22</value>
+  </data>
+  <data name="labelResolvingPower.Text" xml:space="preserve">
+    <value>Resolving &amp;power:</value>
+  </data>
+  <data name="&gt;&gt;labelResolvingPower.Name" xml:space="preserve">
+    <value>labelResolvingPower</value>
+  </data>
+  <data name="&gt;&gt;labelResolvingPower.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelResolvingPower.Parent" xml:space="preserve">
+    <value>tabIonMobility</value>
+  </data>
+  <data name="&gt;&gt;labelResolvingPower.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="comboDriftTimePredictor.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 37</value>
+  </data>
+  <data name="comboDriftTimePredictor.Size" type="System.Drawing.Size, System.Drawing">
+    <value>169, 21</value>
+  </data>
+  <data name="comboDriftTimePredictor.TabIndex" type="System.Int32, mscorlib">
+    <value>19</value>
+  </data>
+  <data name="comboDriftTimePredictor.ToolTip" xml:space="preserve">
+    <value>Specifies a set of linear equations that may be used to predict drift times in conjunction with an ion mobility library</value>
+  </data>
+  <data name="&gt;&gt;comboDriftTimePredictor.Name" xml:space="preserve">
+    <value>comboDriftTimePredictor</value>
+  </data>
+  <data name="&gt;&gt;comboDriftTimePredictor.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboDriftTimePredictor.Parent" xml:space="preserve">
+    <value>tabIonMobility</value>
+  </data>
+  <data name="&gt;&gt;comboDriftTimePredictor.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="label23.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label23.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label23.Location" type="System.Drawing.Point, System.Drawing">
+    <value>22, 22</value>
+  </data>
+  <data name="label23.Size" type="System.Drawing.Size, System.Drawing">
+    <value>84, 13</value>
+  </data>
+  <data name="label23.TabIndex" type="System.Int32, mscorlib">
+    <value>18</value>
+  </data>
+  <data name="label23.Text" xml:space="preserve">
+    <value>&amp;Ion mobility filter:</value>
+  </data>
+  <data name="&gt;&gt;label23.Name" xml:space="preserve">
+    <value>label23</value>
+  </data>
+  <data name="&gt;&gt;label23.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label23.Parent" xml:space="preserve">
+    <value>tabIonMobility</value>
+  </data>
+  <data name="&gt;&gt;label23.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
+  <data name="tabIonMobility.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabIonMobility.Size" type="System.Drawing.Size, System.Drawing">
+    <value>363, 489</value>
+  </data>
+  <data name="tabIonMobility.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="tabIonMobility.Text" xml:space="preserve">
+    <value>Ion Mobility</value>
+  </data>
+  <data name="&gt;&gt;tabIonMobility.Name" xml:space="preserve">
+    <value>tabIonMobility</value>
+  </data>
+  <data name="&gt;&gt;tabIonMobility.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabIonMobility.Parent" xml:space="preserve">
+    <value>tabControl1</value>
+  </data>
+  <data name="&gt;&gt;tabIonMobility.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
   <data name="label9.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -1867,7 +2184,7 @@ whenever peptides are matched to library spectrum.</value>
     <value>tabControl1</value>
   </data>
   <data name="&gt;&gt;tabLibrary.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="textMaxInclusions.Location" type="System.Drawing.Point, System.Drawing">
     <value>189, 185</value>
@@ -2432,7 +2749,7 @@ with predicted transition m/z values.
     <value>tabControl1</value>
   </data>
   <data name="&gt;&gt;tabInstrument.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="tabFullScan.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -2459,7 +2776,7 @@ with predicted transition m/z values.
     <value>tabControl1</value>
   </data>
   <data name="&gt;&gt;tabFullScan.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="tabControl1.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 12</value>

@@ -73,17 +73,17 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             this.groupBoxUseSpectralLibraryIonMolbilityInfo.Name = "groupBoxUseSpectralLibraryIonMolbilityInfo";
             this.groupBoxUseSpectralLibraryIonMolbilityInfo.TabStop = false;
             // 
-            // textSpectralLibraryDriftTimesWidthAtDtMax
+            // textSpectralLibraryIonMobilitiesWindowWidthAtDtMax
             // 
             resources.ApplyResources(this.textSpectralLibraryIonMobilityWindowWidthAtDtMax, "textSpectralLibraryIonMobilityWindowWidthAtDtMax");
             this.textSpectralLibraryIonMobilityWindowWidthAtDtMax.Name = "textSpectralLibraryIonMobilityWindowWidthAtDtMax";
-            this.toolTip.SetToolTip(this.textSpectralLibraryIonMobilityWindowWidthAtDtMax, resources.GetString("textSpectralLibraryDriftTimesWidthAtDtMax.ToolTip"));
+            this.toolTip.SetToolTip(this.textSpectralLibraryIonMobilityWindowWidthAtDtMax, resources.GetString("textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.ToolTip"));
             // 
-            // textSpectralLibraryDriftTimesWidthAtDt0
+            // textSpectralLibraryIonMobilitiesWindowWidthAtDt0
             // 
             resources.ApplyResources(this.textSpectralLibraryIonMobilityWindowWidthAtDt0, "textSpectralLibraryIonMobilityWindowWidthAtDt0");
             this.textSpectralLibraryIonMobilityWindowWidthAtDt0.Name = "textSpectralLibraryIonMobilityWindowWidthAtDt0";
-            this.toolTip.SetToolTip(this.textSpectralLibraryIonMobilityWindowWidthAtDt0, resources.GetString("textSpectralLibraryDriftTimesWidthAtDt0.ToolTip"));
+            this.toolTip.SetToolTip(this.textSpectralLibraryIonMobilityWindowWidthAtDt0, resources.GetString("textSpectralLibraryIonMobilitiesWindowWidthAtDt0.ToolTip"));
             // 
             // labelWidthDtMax
             // 

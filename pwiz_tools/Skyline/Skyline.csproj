@@ -1522,11 +1522,11 @@
       <DependentUpon>FormulaBox.cs</DependentUpon>
     </Compile>
     <Compile Include="SettingsUI\IonMobility\ChargeRegressionTable.cs" />
-    <Compile Include="SettingsUI\IonMobility\EditDriftTimePredictorDlg.cs">
+    <Compile Include="SettingsUI\IonMobility\EditIonMobilityCalibrationDlg.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="SettingsUI\IonMobility\EditDriftTimePredictorDlg.designer.cs">
-      <DependentUpon>EditDriftTimePredictorDlg.cs</DependentUpon>
+    <Compile Include="SettingsUI\IonMobility\EditIonMobilityCalibrationDlg.designer.cs">
+      <DependentUpon>EditIonMobilityCalibrationDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="SettingsUI\EditOptimizationLibraryDlg.cs">
       <SubType>Form</SubType>
@@ -3075,19 +3075,19 @@
     <EmbeddedResource Include="SettingsUI\FormulaBox.zh-CHS.resx">
       <DependentUpon>FormulaBox.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\IonMobility\EditDriftTimePredictorDlg.ja.resx">
-      <DependentUpon>EditDriftTimePredictorDlg.cs</DependentUpon>
+    <EmbeddedResource Include="SettingsUI\IonMobility\EditIonMobilityCalibrationDlg.ja.resx">
+      <DependentUpon>EditIonMobilityCalibrationDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\IonMobility\EditDriftTimePredictorDlg.zh-CHS.resx">
-      <DependentUpon>EditDriftTimePredictorDlg.cs</DependentUpon>
+    <EmbeddedResource Include="SettingsUI\IonMobility\EditIonMobilityCalibrationDlg.zh-CHS.resx">
+      <DependentUpon>EditIonMobilityCalibrationDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\FormulaBox.resx">
       <DependentUpon>FormulaBox.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\IonMobility\EditDriftTimePredictorDlg.resx">
-      <DependentUpon>EditDriftTimePredictorDlg.cs</DependentUpon>
+    <EmbeddedResource Include="SettingsUI\IonMobility\EditIonMobilityCalibrationDlg.resx">
+      <DependentUpon>EditIonMobilityCalibrationDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditEnzymeDlg.ja.resx">
