@@ -1033,6 +1033,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Serial Number.
+        /// </summary>
+        public static string InstrumentSerialNumber {
+            get {
+                return ResourceManager.GetString("InstrumentSerialNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Intensities.
         /// </summary>
         public static string Intensities {
@@ -2856,6 +2865,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string SampleDilutionFactor {
             get {
                 return ResourceManager.GetString("SampleDilutionFactor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sample Id.
+        /// </summary>
+        public static string SampleId {
+            get {
+                return ResourceManager.GetString("SampleId", resourceCulture);
             }
         }
         
