@@ -235,7 +235,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
         /// <returns>Predictions from Prosit</returns>
         public TSkylineOutput PredictBatches(PredictionService.PredictionServiceClient predictionClient, IProgressMonitor progressMonitor, SrmSettings settings, IList<TSkylineInputRow> inputs)
         {
-            IProgressStatus progressStatus = new ProgressStatus(PrositResources.PrositModel_BatchPredict_Constructing_Prosit_Inputs);
+            IProgressStatus progressStatus = new ProgressStatus(PrositResources.PrositModel_BatchPredict_Constructing_Prosit_inputs);
             progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete(0));
             
             inputs = inputs.Distinct().ToArray();

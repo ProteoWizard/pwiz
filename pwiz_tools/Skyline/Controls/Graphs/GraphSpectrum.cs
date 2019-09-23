@@ -39,6 +39,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Crawdad;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -844,11 +845,11 @@ namespace pwiz.Skyline.Controls.Graphs
                                     var dotp = PrositHelpers.CalculateSpectrumDotp(spectrumInfoR, mirrorSpectrumInfoR,
                                         settings.TransitionSettings.Libraries.IonMatchTolerance);
 
-                                    // TODO: change this format?
-                                    GraphPane.Title.Text = string.Format(PrositResources.GraphSpectrum_UpdateUI_,
-                                        GraphItem.LibraryName,
-                                        mirrorGraphItem.LibraryName, GraphItem.Title, dotp.ToString(@"0.0000",
-                                            LocalizationHelper.CurrentUICulture));
+                                    GraphPane.Title.Text = TextUtil.LineSeparate(
+                                        string.Format(PrositResources.GraphSpectrum_UpdateUI__0__vs___1_,
+                                            GraphItem.LibraryName, mirrorGraphItem.LibraryName),
+                                        GraphItem.Title,
+                                        string.Format(@"dotp: {0:0.0000}", dotp));
                                 }
 
                                 _graphHelper.ZoomSpectrumToSettings(DocumentUI, selection.Precursor);

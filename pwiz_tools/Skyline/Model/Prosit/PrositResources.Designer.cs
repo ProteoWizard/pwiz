@@ -61,7 +61,7 @@ namespace pwiz.Skyline.Model.Prosit {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Some Prosit settings are not set. Would you like to set them now?.
+        ///   Looks up a localized string similar to Prosit is not properly configured. Would you like to change Prosit settings now?.
         /// </summary>
         internal static string BuildLibraryDlg_dataSourceFilesRadioButton_CheckedChanged_Some_Prosit_settings_are_not_set__Would_you_like_to_set_them_now_ {
             get {
@@ -71,18 +71,16 @@ namespace pwiz.Skyline.Model.Prosit {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} vs {1}
-        ///{2}
-        ///dotp: {3}.
+        ///   Looks up a localized string similar to {0} vs. {1}.
         /// </summary>
-        internal static string GraphSpectrum_UpdateUI_ {
+        internal static string GraphSpectrum_UpdateUI__0__vs___1_ {
             get {
-                return ResourceManager.GetString("GraphSpectrum_UpdateUI_", resourceCulture);
+                return ResourceManager.GetString("GraphSpectrum_UpdateUI__0__vs___1_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Some Prosit settings are not set..
+        ///   Looks up a localized string similar to Prosit is not properly configured..
         /// </summary>
         internal static string GraphSpectrum_UpdateUI_Some_Prosit_settings_are_not_set_ {
             get {
@@ -100,11 +98,11 @@ namespace pwiz.Skyline.Model.Prosit {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Constructing Prosit Inputs.
+        ///   Looks up a localized string similar to Constructing Prosit inputs.
         /// </summary>
-        internal static string PrositModel_BatchPredict_Constructing_Prosit_Inputs {
+        internal static string PrositModel_BatchPredict_Constructing_Prosit_inputs {
             get {
-                return ResourceManager.GetString("PrositModel_BatchPredict_Constructing_Prosit_Inputs", resourceCulture);
+                return ResourceManager.GetString("PrositModel_BatchPredict_Constructing_Prosit_inputs", resourceCulture);
             }
         }
         

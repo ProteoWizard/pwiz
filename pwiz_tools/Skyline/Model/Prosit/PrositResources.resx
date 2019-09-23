@@ -107,8 +107,8 @@
   <data name="PrositUnsupportedModificationException_PrositUnsupportedModificationException_Modifcation___0___at_index___1___in___2___is_not_supported_by_Prosit" xml:space="preserve">
     <value>Modifcation '{0}' at index '{1}' in '{2}' is not supported by Prosit</value>
   </data>
-  <data name="PrositModel_BatchPredict_Constructing_Prosit_Inputs" xml:space="preserve">
-    <value>Constructing Prosit Inputs</value>
+  <data name="PrositModel_BatchPredict_Constructing_Prosit_inputs" xml:space="preserve">
+    <value>Constructing Prosit inputs</value>
   </data>
   <data name="PrositModel_BatchPredict_Requesting_predictions_from_Prosit" xml:space="preserve">
     <value>Requesting predictions from Prosit</value>
@@ -128,18 +128,16 @@
   <data name="ToolOptionsUI_UpdateServerStatus_Server_unavailable" xml:space="preserve">
     <value>Server unavailable</value>
   </data>
-  <data name="GraphSpectrum_UpdateUI_" xml:space="preserve">
-    <value>{0} vs {1}
-{2}
-dotp: {3}</value>
-  </data>
   <data name="PrositSmallMoleculeException_PrositSmallMoleculeException_Prosit_only_supports_peptides____0___is_a_small_molecule_" xml:space="preserve">
     <value>Prosit only supports peptides. '{0}' is a small molecule.</value>
   </data>
   <data name="BuildLibraryDlg_dataSourceFilesRadioButton_CheckedChanged_Some_Prosit_settings_are_not_set__Would_you_like_to_set_them_now_" xml:space="preserve">
-    <value>Some Prosit settings are not set. Would you like to set them now?</value>
+    <value>Prosit is not properly configured. Would you like to change Prosit settings now?</value>
   </data>
   <data name="GraphSpectrum_UpdateUI_Some_Prosit_settings_are_not_set_" xml:space="preserve">
-    <value>Some Prosit settings are not set.</value>
+    <value>Prosit is not properly configured.</value>
+  </data>
+  <data name="GraphSpectrum_UpdateUI__0__vs___1_" xml:space="preserve">
+    <value>{0} vs. {1}</value>
   </data>
 </root>
