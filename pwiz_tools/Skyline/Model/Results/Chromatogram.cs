@@ -796,14 +796,8 @@ namespace pwiz.Skyline.Model.Results
                 writer.WriteAttribute(ATTR.id, GetOrdinalSaveId(i++));
                 writer.WriteAttribute(ATTR.file_path, fileInfo.FilePath);
                 writer.WriteAttribute(ATTR.sample_name, fileInfo.FilePath.GetSampleOrFileName());
-                if (!string.IsNullOrEmpty(fileInfo.SampleId))
-                {
-                    writer.WriteAttribute(ATTR.sample_id, fileInfo.SampleId);
-                }
-                if (!string.IsNullOrEmpty(fileInfo.InstrumentSerialNumber))
-                {
-                    writer.WriteAttribute(ATTR.instrument_serial_number, fileInfo.InstrumentSerialNumber);
-                }
+                writer.WriteAttributeIfString(ATTR.sample_id, fileInfo.SampleId);
+                writer.WriteAttributeIfString(ATTR.instrument_serial_number, fileInfo.InstrumentSerialNumber);
                 if (fileInfo.RunStartTime != null)
                 {
                     writer.WriteAttribute(ATTR.acquired_time, XmlConvert.ToString((DateTime) fileInfo.RunStartTime, @"yyyy-MM-ddTHH:mm:ss"));
