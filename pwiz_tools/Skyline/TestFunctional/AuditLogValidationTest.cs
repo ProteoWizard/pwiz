@@ -93,7 +93,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.Fail("Unexpected exception type when opening document with entries out of order audit log.");
             }
             //close the dialog
-            RunUI(() => messageDialog.ClickOk());
+            OkDialog(messageDialog, messageDialog.ClickOk);
             WaitForDocumentLoaded();
         }
 

@@ -57,20 +57,13 @@ namespace pwiz.Skyline.Model.AuditLog
         /// <returns>True if this or any nested exception is of <see cref="AuditLogException"> AuditLogException </see> type.</returns>
         public static bool IsAuditLogInvolved(Exception ex)
         {
-            var isAuditLogException = false;
-
             do      //traverse the nested exception chain to look for AuditLogException
             {
-                if (ex.GetType() == typeof(AuditLogException))
-                {
-                    isAuditLogException = true;
-                }
-
+                if (ex is AuditLogException) return true;
                 ex = ex.InnerException;
-
             } while (ex != null);
 
-            return isAuditLogException;
+            return false;
         }
 
         /// <summary>
@@ -204,8 +197,7 @@ namespace pwiz.Skyline.Model.AuditLog
                     string msg = string.Format(
                         AuditLogStrings.AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing,
                         entry.LogIndex, entry.TimeStampUTC, logIndex, time);
-                    Exception e = new AuditLogException(msg);
-                    throw e;
+                    throw new AuditLogException(msg);
                 }
                 time = entry.TimeStampUTC;
                 logIndex = entry.LogIndex;
@@ -267,12 +259,11 @@ namespace pwiz.Skyline.Model.AuditLog
             catch(Exception ex)
             {
 
-                var newEx = new AuditLogException(
+                throw new AuditLogException(
                     string.Format(
                         AuditLogStrings.AuditLogList_ReadFromFile_An_exception_occured_while_reading_the_audit_log,
                         fileName),
                     ex);
-                throw newEx;
             }
         }
 
@@ -325,13 +316,13 @@ namespace pwiz.Skyline.Model.AuditLog
             // We can't just always ignore non-existent hashes, otherwise people could just delete the hash elements
             // and get Skyline to successfully load the audit log
             var modifiedEntries =
-                result.AuditLogEntries.Enumerate().Where(entry => !entry.Hash.SkylAndActualHashesEqual());
+                result.AuditLogEntries.Enumerate().Where(entry => !entry.Hash.SkylAndActualHashesEqual()).ToArray();
 
-            if (docFormat != null && (!result.RootHash.SkylAndActualHashesEqual() || modifiedEntries.Count() > 0))
+            if (docFormat != null && (!result.RootHash.SkylAndActualHashesEqual() || modifiedEntries.Length > 0))
             {
                 throw new AuditLogException(
                     AuditLogStrings.AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified +
-                    string.Join(Environment.NewLine, modifiedEntries.Select(entry => entry.UndoRedo.ToString())));
+                    TextUtil.LineSeparate(modifiedEntries.Select(entry => entry.UndoRedo.ToString())));
             }
 
             reader.ReadEndElement();
@@ -521,8 +512,6 @@ namespace pwiz.Skyline.Model.AuditLog
             SkylineVersion = _skylineVersion;
 
             DocumentType = docType == SrmDocument.DOCUMENT_TYPE.none ? SrmDocument.DOCUMENT_TYPE.proteomic : docType;
-
-           // User = _user;
 
             Assume.IsTrue(timeStampUTC.Kind == DateTimeKind.Utc); // We only deal in UTC
             TimeStampUTC = timeStampUTC;
