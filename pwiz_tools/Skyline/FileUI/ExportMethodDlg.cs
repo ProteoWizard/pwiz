@@ -93,6 +93,7 @@ namespace pwiz.Skyline.FileUI
             // Init dialog values from settings.
             ExportStrategy = Helpers.ParseEnum(Settings.Default.ExportMethodStrategy, ExportStrategy.Single);
 
+            SortByMz = Settings.Default.ExportSortByMz;
             IgnoreProteins = Equals(ExportStrategy, ExportStrategy.Buckets) || Settings.Default.ExportIgnoreProteins;
 
             // Start with method type as Standard until after instrument type is set
@@ -419,6 +420,12 @@ namespace pwiz.Skyline.FileUI
             {
                 _exportProperties.OptimizeStepCount = value;
             }
+        }
+
+        public bool SortByMz
+        {
+            get { return _exportProperties.SortByMz; }
+            set { _exportProperties.SortByMz = cbSortByMz.Checked = value; }
         }
 
         public bool IgnoreProteins
@@ -979,6 +986,7 @@ namespace pwiz.Skyline.FileUI
             // Successfully completed dialog.  Store the values in settings.
             Settings.Default.ExportInstrumentType = _instrumentType;
             Settings.Default.ExportMethodStrategy = ExportStrategy.ToString();
+            Settings.Default.ExportSortByMz = SortByMz;
             Settings.Default.ExportIgnoreProteins = IgnoreProteins;
             if (IsFullScanInstrument)
             {
@@ -1048,6 +1056,7 @@ namespace pwiz.Skyline.FileUI
                 _exportProperties.ExportStrategy = ExportStrategy.Buckets;
             // ReSharper restore ConvertIfStatementToConditionalTernaryExpression
 
+            _exportProperties.SortByMz = cbSortByMz.Checked;
             _exportProperties.IgnoreProteins = cbIgnoreProteins.Checked;
             _exportProperties.FullScans = _document.Settings.TransitionSettings.FullScan.IsEnabledMsMs;
             _exportProperties.AddEnergyRamp = panelThermoColumns.Visible && cbEnergyRamp.Checked;

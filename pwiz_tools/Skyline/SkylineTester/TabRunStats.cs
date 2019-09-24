@@ -111,23 +111,13 @@ namespace SkylineTester
             var testDictionary = new Dictionary<string, TestData>();
 
             var startTest = new Regex(@"\r\n\[\d\d:\d\d\] +(\d+).(\d+) +(\S+) +\((\w\w)\) ", RegexOptions.Compiled);
-            var endTest = new Regex(@" \d+ failures, ([\.\d]+)/([\.\d]+) MB, (\d+) sec\.\r\n", RegexOptions.Compiled);
-            var endTestHandles = new Regex(@" \d+ failures, ([\.\d]+)/([\.\d]+) MB, ([\d]+)/([\d]+) handles, (\d+) sec\.\r\n", RegexOptions.Compiled);
-            int durationIndex = 3;
+            var endTest = new Regex(@" \d+ failures, .* (\d+) sec\.\r\n", RegexOptions.Compiled);
 
             for (var startMatch = startTest.Match(log); startMatch.Success; startMatch = startMatch.NextMatch())
             {
                 var name = startMatch.Groups[3].Value;
                 var endMatch = endTest.Match(log, startMatch.Index);
-                if (!endMatch.Success)
-                {
-                    if (ReferenceEquals(endTest, endTestHandles))
-                        break;
-                    endTest = endTestHandles;
-                    endMatch = endTest.Match(log, startMatch.Index);
-                    durationIndex = 5;
-                }
-                var duration = endMatch.Groups[durationIndex].Value;
+                var duration = endMatch.Groups[1].Value;
 
                 TestData testData;
                 if (!testDictionary.TryGetValue(name, out testData))
