@@ -9851,7 +9851,7 @@ Would you like to remove some or all of the prefix or suffix to shorten the name
   </data>
   <data name="PasteDlg_btnTransitionListHelp_Click_Supported_values_for__0__are___1_" xml:space="preserve">
     <value>Supported values for {0} are: {1}</value>
-    <comment>{1} is a comma seprated list of supported ion mobility units</comment>
+    <comment>{1} is a comma separated list of supported ion mobility units</comment>
   </data>
   <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_value__0_" xml:space="preserve">
     <value>Invalid ion mobility value {0}</value>

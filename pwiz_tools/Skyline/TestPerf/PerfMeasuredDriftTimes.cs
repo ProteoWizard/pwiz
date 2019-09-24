@@ -77,7 +77,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 RunUI(() =>
                 {
                     driftTimePredictorDlg.SetOffsetHighEnergySpectraCheckbox(true);
-                    driftTimePredictorDlg.GetDriftTimesFromResults();
+                    driftTimePredictorDlg.GetIonMobilitiesFromResults();
                     driftTimePredictorDlg.OkDialog(true); // Force overwrite if a named predictor already exists
                 });
                 WaitForClosedForm(driftTimePredictorDlg);

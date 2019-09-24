@@ -345,6 +345,15 @@
   <data name="TransitionSettings_Instrument" xml:space="preserve">
     <value>Instrument</value>
   </data>
+  <data name="TransitionSettings_IonMobility" xml:space="preserve">
+    <value>Ion Mobility</value>
+  </data>
+  <data name="TransitionLIonMobility_IonMobilityCalibration" xml:space="preserve">
+    <value>Ion mobility calibration</value>
+  </data>
+  <data name="TransitionLIonMobility_UseSpectralLibraryIonMobilityValues" xml:space="preserve">
+    <value>Use spectral library ion mobility values</value>
+  </data>
   <data name="TransitionLibraries_IonCount" xml:space="preserve">
     <value>Product ions</value>
   </data>
@@ -890,6 +899,9 @@
   <data name="IonMobilityPredictor_IonMobilityRows" xml:space="preserve">
     <value>Measured ion mobilities</value>
   </data>
+  <data name="IonMobilityCalibration_IonMobilityCalibrationItems" xml:space="preserve">
+    <value>Measured ion mobilities</value>
+  </data>
   <data name="IonMobilityAndCCS_HighEnergyIonMobilityValueOffset" xml:space="preserve">
     <value>Offset ion mobility values for high energy spectra</value>
   </data>
@@ -899,8 +911,17 @@
   <data name="IonMobilityRow_Adduct" xml:space="preserve">
     <value>Adduct</value>
   </data>
+  <data name="IonMobilityCalibrationItem_Charge" xml:space="preserve">
+    <value>Charge</value>
+  </data>
   <data name="IonMobilityRow_Sequence" xml:space="preserve">
     <value>Modified Sequence</value>
+  </data>
+  <data name="IonMobilityCalibrationItem_Target" xml:space="preserve">
+    <value>Target</value>
+  </data>
+  <data name="IonMobilityCalibrationItem_Adduct" xml:space="preserve">
+    <value>Adduct</value>
   </data>
   <data name="IonMobilityValue_Mobility" xml:space="preserve">
     <value>Ion Mobility</value>
@@ -1198,6 +1219,12 @@
   </data>
   <data name="TransitionGroupDocNode_LabelType" xml:space="preserve">
     <value>Isotope label type</value>
+  </data>
+  <data name="TransitionIonMobility_IonMobilityCalibration" xml:space="preserve">
+    <value>Ion mobility calibration</value>
+  </data>
+  <data name="TransitionIonMobility_UseSpectralLibraryIonMobilityValues" xml:space="preserve">
+    <value>Use spectral library ion mobility values</value>
   </data>
   <data name="UniquePeptideSettings_ProteinPeptideSelections" xml:space="preserve">
     <value>Unique peptides</value>

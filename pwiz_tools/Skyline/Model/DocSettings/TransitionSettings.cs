@@ -246,6 +246,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return Equals(obj.Prediction, Prediction) &&
                    Equals(obj.Filter, Filter) &&
                    Equals(obj.Libraries, Libraries) &&
+                   Equals(obj.IonMobility, IonMobility) &&
                    Equals(obj.Integration, Integration) &&
                    Equals(obj.Instrument, Instrument) &&
                    Equals(obj.FullScan, FullScan);
@@ -266,6 +267,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 int result = Prediction.GetHashCode();
                 result = (result * 397) ^ Filter.GetHashCode();
                 result = (result * 397) ^ Libraries.GetHashCode();
+                result = (result * 397) ^ IonMobility.GetHashCode();
                 result = (result * 397) ^ Integration.GetHashCode();
                 result = (result * 397) ^ Instrument.GetHashCode();
                 result = (result * 397) ^ FullScan.GetHashCode();
@@ -3138,7 +3140,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.SpectralLibraryIonMobilityWindowWidthCalculator = prop);
         }
 
-        public TransitionIonMobility ChangeIonMobilityLookup(IonMobilityCalibration prop)
+        public TransitionIonMobility ChangeIonMobilityCalibration(IonMobilityCalibration prop)
         {
             return ChangeProp(ImClone(this), im => im.IonMobilityCalibration = prop);
         }
@@ -3238,6 +3240,10 @@ namespace pwiz.Skyline.Model.DocSettings
                 // Read all measured ion mobilities
                 IonMobilityCalibration = IonMobilityCalibration.Deserialize(reader);
                 reader.Read(); // Consume end tag
+            }
+            else
+            {
+                IonMobilityCalibration = IonMobilityCalibration.EMPTY;
             }
 
             Validate();

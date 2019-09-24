@@ -78,13 +78,13 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             loadStopwatch.Start();
 
             // Enable use of drift times in spectral library
-            var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             bool useDriftTimes = true;
             RunUI(() =>
             {
                 // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-                transitionSettingsUI.IsUseSpectralLibraryDriftTimes = useDriftTimes;
-                transitionSettingsUI.SpectralLibraryDriftTimeResolvingPower = 50;
+                transitionSettingsUI.IsUseSpectralLibraryIonMobilities = useDriftTimes;
+                transitionSettingsUI.SpectralLibraryIonMobilityResolvingPower = 50;
             });
             OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
 

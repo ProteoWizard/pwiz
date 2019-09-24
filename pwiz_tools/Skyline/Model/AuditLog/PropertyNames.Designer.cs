@@ -1510,6 +1510,42 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Measured ion mobilities.
+        /// </summary>
+        public static string IonMobilityCalibration_IonMobilityCalibrationItems {
+            get {
+                return ResourceManager.GetString("IonMobilityCalibration_IonMobilityCalibrationItems", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Adduct.
+        /// </summary>
+        public static string IonMobilityCalibrationItem_Adduct {
+            get {
+                return ResourceManager.GetString("IonMobilityCalibrationItem_Adduct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Charge.
+        /// </summary>
+        public static string IonMobilityCalibrationItem_Charge {
+            get {
+                return ResourceManager.GetString("IonMobilityCalibrationItem_Charge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target.
+        /// </summary>
+        public static string IonMobilityCalibrationItem_Target {
+            get {
+                return ResourceManager.GetString("IonMobilityCalibrationItem_Target", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Conversion parameters.
         /// </summary>
         public static string IonMobilityPredictor_ChargeRegressionLines {
@@ -3697,6 +3733,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ion mobility calibration.
+        /// </summary>
+        public static string TransitionIonMobility_IonMobilityCalibration {
+            get {
+                return ResourceManager.GetString("TransitionIonMobility_IonMobilityCalibration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use spectral library ion mobility values.
+        /// </summary>
+        public static string TransitionIonMobility_UseSpectralLibraryIonMobilityValues {
+            get {
+                return ResourceManager.GetString("TransitionIonMobility_UseSpectralLibraryIonMobilityValues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Product ions.
         /// </summary>
         public static string TransitionLibraries_IonCount {
@@ -3738,6 +3792,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string TransitionLibraries_PickMostIntenseIons {
             get {
                 return ResourceManager.GetString("TransitionLibraries_PickMostIntenseIons", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion mobility calibration.
+        /// </summary>
+        public static string TransitionLIonMobility_IonMobilityCalibration {
+            get {
+                return ResourceManager.GetString("TransitionLIonMobility_IonMobilityCalibration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use spectral library ion mobility values.
+        /// </summary>
+        public static string TransitionLIonMobility_UseSpectralLibraryIonMobilityValues {
+            get {
+                return ResourceManager.GetString("TransitionLIonMobility_UseSpectralLibraryIonMobilityValues", resourceCulture);
             }
         }
         
@@ -3837,6 +3909,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string TransitionSettings_Instrument {
             get {
                 return ResourceManager.GetString("TransitionSettings_Instrument", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion Mobility.
+        /// </summary>
+        public static string TransitionSettings_IonMobility {
+            get {
+                return ResourceManager.GetString("TransitionSettings_IonMobility", resourceCulture);
             }
         }
         

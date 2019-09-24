@@ -213,14 +213,14 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             {
                 var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
                 RunUI(() => transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.IonMobility);
-                var driftPredictor = ShowDialog<EditIonMobilityCalibrationDlg>(transitionSettingsUI.AddDriftTimePredictor);
+                var driftPredictor = ShowDialog<EditIonMobilityCalibrationDlg>(transitionSettingsUI.AddIonMobilityCalibration);
                 const string predictorName = "BSA";
                 RunUI(() =>
                 {
                     driftPredictor.SetPredictorName(predictorName);
                     driftPredictor.SetResolvingPower(50);
                     driftPredictor.SetOffsetHighEnergySpectraCheckbox(true);
-                    driftPredictor.GetDriftTimesFromResults();
+                    driftPredictor.GetIonMobilitiesFromResults();
                 });
                 PauseForScreenShot("Edit ion mobility form", 18);
 

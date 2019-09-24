@@ -645,9 +645,9 @@ namespace pwiz.Skyline.Model.DocSettings
                 reader.ReadEndElement();                
             }
 
-            if (obsoleteUseLibraryDriftTimes.HasValue || obsoleteDriftTimePredictor != null || !obsoleteLibraryIonMobilityWindowWidthCalculator.IsEmpty)
+            if ((obsoleteUseLibraryDriftTimes.HasValue && obsoleteUseLibraryDriftTimes.Value) || obsoleteDriftTimePredictor != null || !obsoleteLibraryIonMobilityWindowWidthCalculator.IsEmpty)
             {
-                ObsoleteIonMobilityValues = new TransitionIonMobility(obsoleteDriftTimePredictor?.IonMobilityCalibration, obsoleteUseLibraryDriftTimes??false, obsoleteLibraryIonMobilityWindowWidthCalculator);
+                ObsoleteIonMobilityValues = new TransitionIonMobility(obsoleteDriftTimePredictor?.IonMobilityCalibration??IonMobilityCalibration.EMPTY, obsoleteUseLibraryDriftTimes??false, obsoleteLibraryIonMobilityWindowWidthCalculator);
             }
 
             DoValidate();

@@ -112,9 +112,9 @@ namespace pwiz.SkylineTestData.Results
                 document =
                     document.ChangeSettings(
                         document.Settings.ChangePeptidePrediction(prediction => new PeptidePrediction(null)).
-                            ChangeTransitionSettings(p => p.ChangeIonMobility(p.IonMobility.ChangeIonMobilityLookup(
+                            ChangeTransitionSettings(p => p.ChangeIonMobility(p.IonMobility.ChangeIonMobilityCalibration(
                                 new IonMobilityCalibration("test", revised, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, 40, 0, 0)))));
-                newPred = document.Settings.TransitionSettings.IonMobility.ChangeIonMobilityLookup(
+                newPred = document.Settings.TransitionSettings.IonMobility.ChangeIonMobilityCalibration(
                     document.Settings.TransitionSettings.IonMobility.IonMobilityCalibration.ChangeMeasuredIonMobilityValuesFromResults(
                         document, docContainer.DocumentFilePath, true)).IonMobilityCalibration;
                 result = newPred.MeasuredMobilityIons;

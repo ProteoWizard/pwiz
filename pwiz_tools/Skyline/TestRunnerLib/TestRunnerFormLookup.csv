@@ -50,7 +50,7 @@ EditCoVDlg,TestOptimization
 EditCustomMoleculeDlg,TestEditCustomMoleculeDlg
 EditCustomThemeDlg, TestEditCustomTheme
 EditDPDlg,TestEditDialogs
-EditDriftTimePredictorDlg,TestIonMobility
+EditIonMobilityCalibrationDlg,TestIonMobility
 EditEnzymeDlg,TestEditSettingsTypes
 EditExclusionDlg,TestEditDialogs
 EditFragmentLossDlg,TestNeutralLoss

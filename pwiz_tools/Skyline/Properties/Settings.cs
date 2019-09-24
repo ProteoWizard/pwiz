@@ -837,7 +837,7 @@ namespace pwiz.Skyline.Properties
             }
         }
         
-        public IonMobilityCalibration GetDriftTimePredictorByName(string name)
+        public IonMobilityCalibration GetIonMobilityCalibrationByName(string name)
         {
             // Null return is valid for this list, and means no ion mobility
             // calculation should be applied.

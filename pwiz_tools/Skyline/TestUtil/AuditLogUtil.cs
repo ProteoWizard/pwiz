@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -97,6 +98,9 @@ namespace pwiz.SkylineTestUtil
 
                 if (ExpectedAllInfo.Length != entry.AllInfo.Count)
                 {
+                    for (var i = 0; i < Math.Min(ExpectedAllInfo.Length, entry.AllInfo.Count); ++i)
+                        Assert.AreEqual(ExpectedAllInfo[i], entry.AllInfo[i]);
+
                     Assert.Fail("Expected: " +
                                 string.Join(",\n", ExpectedAllInfo.Select(l => l.ToString())) +
                                 "\nActual: " + string.Join(",\n", entry.AllInfo.Select(l => l.ToString())));

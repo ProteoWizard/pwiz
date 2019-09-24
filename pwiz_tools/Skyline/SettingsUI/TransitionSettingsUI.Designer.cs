@@ -125,10 +125,10 @@
             this.labelWidthDtMax = new System.Windows.Forms.Label();
             this.labelWidthDtZero = new System.Windows.Forms.Label();
             this.cbLinear = new System.Windows.Forms.CheckBox();
-            this.textSpectralLibraryDriftTimesResolvingPower = new System.Windows.Forms.TextBox();
+            this.textSpectralLibraryIonMobilityResolvingPower = new System.Windows.Forms.TextBox();
             this.cbUseSpectralLibraryIonMobilities = new System.Windows.Forms.CheckBox();
             this.labelResolvingPower = new System.Windows.Forms.Label();
-            this.comboDriftTimePredictor = new System.Windows.Forms.ComboBox();
+            this.comboIonMobilityCalibration = new System.Windows.Forms.ComboBox();
             this.label23 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl1.SuspendLayout();
@@ -785,10 +785,10 @@
             this.tabIonMobility.Controls.Add(this.labelWidthDtMax);
             this.tabIonMobility.Controls.Add(this.labelWidthDtZero);
             this.tabIonMobility.Controls.Add(this.cbLinear);
-            this.tabIonMobility.Controls.Add(this.textSpectralLibraryDriftTimesResolvingPower);
+            this.tabIonMobility.Controls.Add(this.textSpectralLibraryIonMobilityResolvingPower);
             this.tabIonMobility.Controls.Add(this.cbUseSpectralLibraryIonMobilities);
             this.tabIonMobility.Controls.Add(this.labelResolvingPower);
-            this.tabIonMobility.Controls.Add(this.comboDriftTimePredictor);
+            this.tabIonMobility.Controls.Add(this.comboIonMobilityCalibration);
             this.tabIonMobility.Controls.Add(this.label23);
             resources.ApplyResources(this.tabIonMobility, "tabIonMobility");
             this.tabIonMobility.Name = "tabIonMobility";
@@ -824,9 +824,9 @@
             // 
             // textSpectralLibraryDriftTimesResolvingPower
             // 
-            resources.ApplyResources(this.textSpectralLibraryDriftTimesResolvingPower, "textSpectralLibraryDriftTimesResolvingPower");
-            this.textSpectralLibraryDriftTimesResolvingPower.Name = "textSpectralLibraryDriftTimesResolvingPower";
-            this.helpTip.SetToolTip(this.textSpectralLibraryDriftTimesResolvingPower, resources.GetString("textSpectralLibraryDriftTimesResolvingPower.ToolTip"));
+            resources.ApplyResources(this.textSpectralLibraryIonMobilityResolvingPower, "textSpectralLibraryIonMobilityResolvingPower");
+            this.textSpectralLibraryIonMobilityResolvingPower.Name = "textSpectralLibraryIonMobilityResolvingPower";
+            this.helpTip.SetToolTip(this.textSpectralLibraryIonMobilityResolvingPower, resources.GetString("textSpectralLibraryDriftTimesResolvingPower.ToolTip"));
             // 
             // cbUseSpectralLibraryDriftTimes
             // 
@@ -843,12 +843,12 @@
             // 
             // comboDriftTimePredictor
             // 
-            this.comboDriftTimePredictor.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboDriftTimePredictor.FormattingEnabled = true;
-            resources.ApplyResources(this.comboDriftTimePredictor, "comboDriftTimePredictor");
-            this.comboDriftTimePredictor.Name = "comboDriftTimePredictor";
-            this.helpTip.SetToolTip(this.comboDriftTimePredictor, resources.GetString("comboDriftTimePredictor.ToolTip"));
-            this.comboDriftTimePredictor.SelectedIndexChanged += new System.EventHandler(this.comboDriftTime_SelectedIndexChanged);
+            this.comboIonMobilityCalibration.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboIonMobilityCalibration.FormattingEnabled = true;
+            resources.ApplyResources(this.comboIonMobilityCalibration, "comboIonMobilityCalibration");
+            this.comboIonMobilityCalibration.Name = "comboIonMobilityCalibration";
+            this.helpTip.SetToolTip(this.comboIonMobilityCalibration, resources.GetString("comboDriftTimePredictor.ToolTip"));
+            this.comboIonMobilityCalibration.SelectedIndexChanged += new System.EventHandler(this.comboIonMobilityCalibration_SelectedIndexChanged);
             // 
             // label23
             // 
@@ -991,10 +991,10 @@
         private System.Windows.Forms.Label labelWidthDtMax;
         private System.Windows.Forms.Label labelWidthDtZero;
         private System.Windows.Forms.CheckBox cbLinear;
-        private System.Windows.Forms.TextBox textSpectralLibraryDriftTimesResolvingPower;
+        private System.Windows.Forms.TextBox textSpectralLibraryIonMobilityResolvingPower;
         private System.Windows.Forms.CheckBox cbUseSpectralLibraryIonMobilities;
         private System.Windows.Forms.Label labelResolvingPower;
-        private System.Windows.Forms.ComboBox comboDriftTimePredictor;
+        private System.Windows.Forms.ComboBox comboIonMobilityCalibration;
         private System.Windows.Forms.Label label23;
     }
 }

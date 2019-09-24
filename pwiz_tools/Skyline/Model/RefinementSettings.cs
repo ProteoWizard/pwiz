@@ -1037,7 +1037,7 @@ namespace pwiz.Skyline.Model
                     }
                 }
                 var newpredictorDt = newdoc.Settings.TransitionSettings.IonMobility.IonMobilityCalibration.ChangeMeasuredIonMobilityValues(mapped);
-                var newpredictor = newdoc.Settings.TransitionSettings.IonMobility.ChangeIonMobilityLookup(newpredictorDt);
+                var newpredictor = newdoc.Settings.TransitionSettings.IonMobility.ChangeIonMobilityCalibration(newpredictorDt);
                 var newSettings = newdoc.Settings.ChangeTransitionSettings(newdoc.Settings.TransitionSettings.ChangeIonMobility(newpredictor));
                 newdoc = newdoc.ChangeSettings(newSettings);
             }

@@ -1630,30 +1630,30 @@ W = (W0 + M*(Wmax-W0)/imMax)
   <data name="&gt;&gt;cbLinear.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
-  <data name="textSpectralLibraryDriftTimesResolvingPower.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="textSpectralLibraryIonMobilityResolvingPower.Location" type="System.Drawing.Point, System.Drawing">
     <value>25, 132</value>
   </data>
-  <data name="textSpectralLibraryDriftTimesResolvingPower.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="textSpectralLibraryIonMobilityResolvingPower.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>
   </data>
-  <data name="textSpectralLibraryDriftTimesResolvingPower.TabIndex" type="System.Int32, mscorlib">
+  <data name="textSpectralLibraryIonMobilityResolvingPower.TabIndex" type="System.Int32, mscorlib">
     <value>23</value>
   </data>
-  <data name="textSpectralLibraryDriftTimesResolvingPower.ToolTip" xml:space="preserve">
+  <data name="textSpectralLibraryIonMobilityResolvingPower.ToolTip" xml:space="preserve">
     <value>Determines matching tolerance for ion mobility in spectral libraries (for example, drift time): 
 For resolving power "R" at drift time "T", the width "W" of the drift time matching window centered at T is
 W = 2T/R</value>
   </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesResolvingPower.Name" xml:space="preserve">
-    <value>textSpectralLibraryDriftTimesResolvingPower</value>
+  <data name="&gt;&gt;textSpectralLibraryIonMobilityResolvingPower.Name" xml:space="preserve">
+    <value>textSpectralLibraryIonMobilityResolvingPower</value>
   </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesResolvingPower.Type" xml:space="preserve">
+  <data name="&gt;&gt;textSpectralLibraryIonMobilityResolvingPower.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesResolvingPower.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textSpectralLibraryIonMobilityResolvingPower.Parent" xml:space="preserve">
     <value>tabIonMobility</value>
   </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesResolvingPower.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textSpectralLibraryIonMobilityResolvingPower.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="cbUseSpectralLibraryIonMobilities.AutoSize" type="System.Boolean, mscorlib">
@@ -1719,28 +1719,28 @@ W = 2T/R</value>
   <data name="&gt;&gt;labelResolvingPower.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
-  <data name="comboDriftTimePredictor.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="comboIonMobilityCalibration.Location" type="System.Drawing.Point, System.Drawing">
     <value>25, 37</value>
   </data>
-  <data name="comboDriftTimePredictor.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="comboIonMobilityCalibration.Size" type="System.Drawing.Size, System.Drawing">
     <value>169, 21</value>
   </data>
-  <data name="comboDriftTimePredictor.TabIndex" type="System.Int32, mscorlib">
+  <data name="comboIonMobilityCalibration.TabIndex" type="System.Int32, mscorlib">
     <value>19</value>
   </data>
-  <data name="comboDriftTimePredictor.ToolTip" xml:space="preserve">
+  <data name="comboIonMobilityCalibration.ToolTip" xml:space="preserve">
     <value>Specifies a set of linear equations that may be used to predict drift times in conjunction with an ion mobility library</value>
   </data>
-  <data name="&gt;&gt;comboDriftTimePredictor.Name" xml:space="preserve">
-    <value>comboDriftTimePredictor</value>
+  <data name="&gt;&gt;comboIonMobilityCalibration.Name" xml:space="preserve">
+    <value>comboIonMobilityCalibration</value>
   </data>
-  <data name="&gt;&gt;comboDriftTimePredictor.Type" xml:space="preserve">
+  <data name="&gt;&gt;comboIonMobilityCalibration.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;comboDriftTimePredictor.Parent" xml:space="preserve">
+  <data name="&gt;&gt;comboIonMobilityCalibration.Parent" xml:space="preserve">
     <value>tabIonMobility</value>
   </data>
-  <data name="&gt;&gt;comboDriftTimePredictor.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;comboIonMobilityCalibration.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
   <data name="label23.AutoSize" type="System.Boolean, mscorlib">

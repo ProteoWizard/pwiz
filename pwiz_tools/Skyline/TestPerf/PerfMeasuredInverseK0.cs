@@ -70,13 +70,13 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
 
             // Simulate user picking Add from the ion mobility Predictor combo control
-            var driftTimePredictorDlg = ShowDialog<EditIonMobilityCalibrationDlg>(transitionSettingsDlg.AddDriftTimePredictor);
+            var driftTimePredictorDlg = ShowDialog<EditIonMobilityCalibrationDlg>(transitionSettingsDlg.AddIonMobilityCalibration);
             RunUI(() =>
             {
                 driftTimePredictorDlg.SetOffsetHighEnergySpectraCheckbox(true);
                 driftTimePredictorDlg.SetPredictorName("test_tims");
                 driftTimePredictorDlg.SetResolvingPower(40);
-                driftTimePredictorDlg.GetDriftTimesFromResults();
+                driftTimePredictorDlg.GetIonMobilitiesFromResults();
                 driftTimePredictorDlg.OkDialog(true); // Force overwrite if a named predictor already exists
             });
             WaitForClosedForm(driftTimePredictorDlg);

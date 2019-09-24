@@ -143,8 +143,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             RunUI(() =>
             {
                 // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-                transitionSettingsUI.IsUseSpectralLibraryDriftTimes = useDriftTimes;
-                transitionSettingsUI.SpectralLibraryDriftTimeResolvingPower = 50;
+                transitionSettingsUI.IsUseSpectralLibraryIonMobilities = useDriftTimes;
+                transitionSettingsUI.SpectralLibraryIonMobilityResolvingPower = 50;
             });
             OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
 
@@ -246,12 +246,12 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
 
                 // Simulate user picking Edit Current from the Drift Time Predictor combo control
-                var driftTimePredictorDlg = ShowDialog<EditIonMobilityCalibrationDlg>(transitionsSettingsDlg.AddDriftTimePredictor);
+                var driftTimePredictorDlg = ShowDialog<EditIonMobilityCalibrationDlg>(transitionsSettingsDlg.AddIonMobilityCalibration);
                 RunUI(() =>
                 {
                     driftTimePredictorDlg.SetPredictorName("test");
                     driftTimePredictorDlg.SetResolvingPower(50);
-                    driftTimePredictorDlg.GetDriftTimesFromResults();
+                    driftTimePredictorDlg.GetIonMobilitiesFromResults();
                     driftTimePredictorDlg.OkDialog();
                 });
                 WaitForClosedForm(driftTimePredictorDlg);
@@ -404,8 +404,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             RunUI(() =>
             {
                 // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-                transitionSettingsUI2.IsUseSpectralLibraryDriftTimes = useDriftTimes;
-                transitionSettingsUI2.SpectralLibraryDriftTimeResolvingPower = 40;
+                transitionSettingsUI2.IsUseSpectralLibraryIonMobilities = useDriftTimes;
+                transitionSettingsUI2.SpectralLibraryIonMobilityResolvingPower = 40;
             });
             OkDialog(transitionSettingsUI2, transitionSettingsUI2.OkDialog);
             var docReimport = WaitForDocumentChangeLoaded(docResolvingPower);

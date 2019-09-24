@@ -87,21 +87,21 @@ namespace TestPerf
             var area = document.MoleculePrecursorPairs.First().NodeGroup.Results.First().First().AreaMs1;
 
             // Locate drift peaks
-            var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            RunUI(() => transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Prediction);
-            var driftPredictor = ShowDialog<EditIonMobilityCalibrationDlg>(transitionSettingsUI.AddDriftTimePredictor);
+            var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+            RunUI(() => transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.IonMobility);
+            var calibrationDlg = ShowDialog<EditIonMobilityCalibrationDlg>(transitionSettingsUI.AddIonMobilityCalibration);
             const string predictorName = "Sulfa";
             RunUI(() =>
             {
-                driftPredictor.SetPredictorName(predictorName);
-                driftPredictor.SetResolvingPower(50);
-                driftPredictor.GetDriftTimesFromResults();
+                calibrationDlg.SetPredictorName(predictorName);
+                calibrationDlg.SetResolvingPower(50);
+                calibrationDlg.GetIonMobilitiesFromResults();
             });
-            OkDialog(driftPredictor, () => driftPredictor.OkDialog());
+            OkDialog(calibrationDlg, () => calibrationDlg.OkDialog());
 
             RunUI(() =>
             {
-                Assert.AreEqual(predictorName, transitionSettingsUI.SelectedDriftTimePredictor);
+                Assert.AreEqual(predictorName, transitionSettingsUI.SelectedIonMobilityCalibration);
             });
             OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
 

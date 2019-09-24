@@ -904,7 +904,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     nodeGroup.ExplicitValues.CollisionalCrossSectionSqA,
                     ExplicitTransitionValues.Get(nodeTran).IonMobilityHighEnergyOffset ?? 0);
                 // Now get the resolving power
-                if (TransitionSettings.IonMobility.IonMobilityCalibration != null)
+                if (TransitionSettings.IonMobility.IonMobilityCalibration != null && !TransitionSettings.IonMobility.IonMobilityCalibration.IsEmpty)
                 {
                     windowIM = TransitionSettings.IonMobility.IonMobilityCalibration.WindowWidthCalculator.WidthAt(result.IonMobility.Mobility.Value, ionMobilityMax);
                 }
@@ -1821,7 +1821,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 // Move ion mobility information from TransitionSettings to PeptideSettings for backward compatibility
                 var peptideSettings = PeptideSettings.ChangePrediction(
                     PeptideSettings.Prediction.ChangeObsoleteIonMobilityValues(TransitionSettings.IonMobility));
-                settings = settings.ChangePeptideSettings(peptideSettings).ChangeTransitionSettings(TransitionSettings.ChangeIonMobility(null));
+                settings = settings.ChangePeptideSettings(peptideSettings).ChangeTransitionSettings(TransitionSettings.ChangeIonMobility(TransitionIonMobility.EMPTY));
             }
 
             return settings;
