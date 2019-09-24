@@ -49,16 +49,12 @@ namespace pwiz.SkylineTestFunctional
             var documentFile = TestFilesDir.GetTestPath(@"AuditLogValidationTest/MethodEditClean.sky");
             WaitForCondition(() => File.Exists(documentFile));
 
-            //checking if the library files exist where we expect them.
-            WaitForCondition(() => File.Exists(TestFilesDir.GetTestPath(@"AuditLogValidationTest/yeast_cmp_20.hlf")));
-            WaitForCondition(() => File.Exists(TestFilesDir.GetTestPath(@"AuditLogValidationTest/yeast_cmp_20.slc")));
-
             try
             {
                 ShowDialog<MessageDlg>(() => SkylineWindow.OpenFile(documentFile), 200);
                 Assert.Fail("Failed to open a well-formed document with normal audit log.");
             }
-            catch (AssertFailedException e)
+            catch (AssertFailedException)
             {
                 //nothing to do, this is an expected outcome of the normal test run.
             }
@@ -93,7 +89,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => dialogMessage = messageDialog.Message);
             if (reTest.Match(dialogMessage).Value == String.Empty)
             {
-                Console.Write("Error message: " + dialogMessage);
+                Console.Write(@"Error message: " + dialogMessage);
                 Assert.Fail("Unexpected exception type when opening document with entries out of order audit log.");
             }
             //close the dialog
