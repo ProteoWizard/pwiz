@@ -370,6 +370,7 @@
     <None Include="AreaCVHistogramTest.zip" />
     <None Include="AssayLibraryImportTest.zip" />
     <None Include="AuditLogSavingTest.zip" />
+    <None Include="AuditLogValidationTest.zip" />
     <None Include="BackgroundProteomeTest.zip" />
     <None Include="BatchCalibrationTest.zip" />
     <None Include="CalibrationScenariosTest.zip" />

@@ -48,6 +48,11 @@ namespace pwiz.SkylineTestFunctional
             // - valid audit log file - opens cleanly
             var documentFile = TestFilesDir.GetTestPath(@"AuditLogValidationTest/MethodEditClean.sky");
             WaitForCondition(() => File.Exists(documentFile));
+
+            //checking if the library files exist where we expect them.
+            WaitForCondition(() => File.Exists(TestFilesDir.GetTestPath(@"AuditLogValidationTest/yeast_cmp_20.hlf")));
+            WaitForCondition(() => File.Exists(TestFilesDir.GetTestPath(@"AuditLogValidationTest/yeast_cmp_20.slc")));
+
             try
             {
                 ShowDialog<MessageDlg>(() => SkylineWindow.OpenFile(documentFile), 200);
