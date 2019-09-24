@@ -106,7 +106,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             double meanPlusSd = blankPeakAreas.Mean();
             if (sdMultiple != 0)
             {
-                meanPlusSd = blankPeakAreas.StandardDeviation() * sdMultiple;
+                meanPlusSd += blankPeakAreas.StandardDeviation() * sdMultiple;
             }
             if (double.IsNaN(meanPlusSd) || double.IsInfinity(meanPlusSd))
             {
