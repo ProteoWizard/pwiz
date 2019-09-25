@@ -525,8 +525,41 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
+            // If explicit retention time is in use, show that instead of predicted since it overrides
+            if (RetentionExplicit != null)
+            {
+                var time = RetentionExplicit.RetentionTime;
+                if (GraphChromatogram.ShowRT != ShowRTChrom.none)
+                {
+                    // Create temporary label to calculate positions
+                    AddRetentionTimeAnnotation(graphPane,
+                        g,
+                        annotations,
+                        ptTop,
+                        Resources.ChromGraphItem_AddAnnotations_Explicit,
+                        GraphObjType.predicted_rt_window,
+                        COLOR_RETENTION_TIME,
+                        ScaleRetentionTime(time));
+                }
+                // Draw background for retention time window
+                if ((RetentionExplicit.RetentionTimeWindow??0) > 0.0)
+                {
+                    var halfwin = RetentionExplicit.RetentionTimeWindow??0 / 2.0;
+                    double x1 = ScaleRetentionTime(time - halfwin).DisplayTime;
+                    double x2 = ScaleRetentionTime(time + halfwin).DisplayTime;
+                    BoxObj box = new BoxObj(x1, 0, x2 - x1, 1,
+                        COLOR_RETENTION_WINDOW, COLOR_RETENTION_WINDOW)
+                    {
+                        Location = { CoordinateFrame = CoordType.XScaleYChartFraction },
+                        IsClippedToChartRect = true,
+                        ZOrder = ZOrder.F_BehindGrid
+                    };
+                    annotations.Add(box);
+                }
+            }
+
             // Draw retention time indicator, if set
-            if (RetentionPrediction.HasValue)
+            else if (RetentionPrediction.HasValue)
             {
                 double time = RetentionPrediction.Value;
 
@@ -557,19 +590,6 @@ namespace pwiz.Skyline.Controls.Graphs
                                      };
                     annotations.Add(box);
                 }
-            }
-
-            if (RetentionExplicit != null && GraphChromatogram.ShowRT != ShowRTChrom.none)
-            {
-                // Create temporary label to calculate positions
-                AddRetentionTimeAnnotation(graphPane,
-                                            g,
-                                            annotations,
-                                            ptTop,
-                                            Resources.ChromGraphItem_AddAnnotations_Explicit,
-                                            GraphObjType.predicted_rt_window,
-                                            COLOR_RETENTION_TIME,
-                                            ScaleRetentionTime(RetentionExplicit.RetentionTime));
             }
 
             for (int i = 0, len = Chromatogram.NumPeaks; i < len; i++)

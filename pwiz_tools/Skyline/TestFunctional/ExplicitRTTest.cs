@@ -24,7 +24,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 using System.IO;
-using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Util;
 
 
