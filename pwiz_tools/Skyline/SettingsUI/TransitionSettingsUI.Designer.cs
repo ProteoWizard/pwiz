@@ -812,11 +812,13 @@ namespace pwiz.Skyline.SettingsUI
             // 
             resources.ApplyResources(this.labelWidthDtMax, "labelWidthDtMax");
             this.labelWidthDtMax.Name = "labelWidthDtMax";
+            this.helpTip.SetToolTip(this.labelWidthDtMax, resources.GetString("labelWidthDtMax.ToolTip"));
             // 
             // labelWidthDtZero
             // 
             resources.ApplyResources(this.labelWidthDtZero, "labelWidthDtZero");
             this.labelWidthDtZero.Name = "labelWidthDtZero";
+            this.helpTip.SetToolTip(this.labelWidthDtZero, resources.GetString("labelWidthDtZero.ToolTip"));
             // 
             // cbLinear
             // 
