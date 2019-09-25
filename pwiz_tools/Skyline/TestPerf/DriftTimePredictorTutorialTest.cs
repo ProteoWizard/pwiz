@@ -226,7 +226,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
 
                 OkDialog(driftPredictor, () => driftPredictor.OkDialog());
 
-                PauseForScreenShot("Transition Settings - Ion Mobility", 19);
+                PauseForScreenShot<TransitionSettingsUI.IonMobilityTab>("Transition Settings - Ion Mobility", 19);
 
                 RunUI(() =>
                 {

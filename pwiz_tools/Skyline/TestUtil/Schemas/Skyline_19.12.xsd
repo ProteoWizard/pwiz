@@ -391,7 +391,7 @@
           <xs:attribute name="spectral_library_resolving_power" type="xs:double" default="0.0" />
           <xs:attribute name="spectral_library_width_at_ion_mobility_zero" type="xs:double" default="0.0" />
           <xs:attribute name="spectral_library_width_at_ion_mobility_max" type="xs:double" default="0.0" />
-          <xs:attribute name="use_spectral_library_ion_mobility" type="xs:boolean">
+          <xs:attribute name="use_spectral_library_ion_mobility_values" type="xs:boolean">
             <xs:annotation>
               <xs:documentation>
                 If true, ion mobility (drift time, inverse reduced ion mobility, etc.) values found in spectral libraries will be used in chromatogram extraction.  Defaults to false.

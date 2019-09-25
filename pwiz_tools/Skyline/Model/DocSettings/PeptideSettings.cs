@@ -669,8 +669,8 @@ namespace pwiz.Skyline.Model.DocSettings
             // Write child elements
             if (RetentionTime != null)
                 writer.WriteElement(RetentionTime);
-            // Writing backward compatible format
-            ObsoleteIonMobilityValues?.IonMobilityCalibration?.WriteXml(writer, true);
+            // Writing backward compatible format?
+            ObsoleteIonMobilityValues?.IonMobilityCalibration?.WriteXml(writer, true, true);
         }
 
         #endregion

@@ -3196,6 +3196,11 @@ namespace pwiz.Skyline.Model.DocSettings
             measured_ion_mobility
         }
 
+        private enum ATTR
+        {
+            use_spectral_library_ion_mobility_values
+        }
+
         /// <summary>
         /// For serialization
         /// </summary>
@@ -3230,8 +3235,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public void ReadXml(XmlReader reader)
         {
             var name = reader.Name;
+            UseSpectralLibraryIonMobilityValues = reader.GetBoolAttribute(ATTR.use_spectral_library_ion_mobility_values, false);
             SpectralLibraryIonMobilityWindowWidthCalculator = new IonMobilityWindowWidthCalculator(reader, false, true); // Just reads attributes, does not advance reader
-
             // Consume start tag
             reader.ReadStartElement();
 
@@ -3252,18 +3257,13 @@ namespace pwiz.Skyline.Model.DocSettings
         public void WriteXml(XmlWriter writer)
         {
             // Write attributes
+            writer.WriteAttribute(ATTR.use_spectral_library_ion_mobility_values, UseSpectralLibraryIonMobilityValues);
             SpectralLibraryIonMobilityWindowWidthCalculator.WriteXML(writer, false, true);
 
             // Write all measured ion mobilities
             if (IonMobilityCalibration != null && !IonMobilityCalibration.IsEmpty)
             {
-                foreach (var im in IonMobilityCalibration.MeasuredMobilityIons)
-                {
-                    writer.WriteStartElement(EL.measured_ion_mobility);
-                    var mdt = new MeasuredIonMobility(im.Key.Target, im.Key.Adduct, im.Value);
-                    mdt.WriteXml(writer);
-                    writer.WriteEndElement();
-                }
+                IonMobilityCalibration.WriteXml(writer, false, true);
             }
         }
         #endregion

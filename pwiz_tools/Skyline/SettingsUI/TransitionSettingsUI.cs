@@ -167,8 +167,8 @@ namespace pwiz.Skyline.SettingsUI
 
             // Initialize ion mobility filter settings
             _driverIM = new SettingsListComboDriver<IonMobilityCalibration>(comboIonMobilityCalibration, Settings.Default.DriftTimePredictorList);
-            string selDT = (IonMobility.IonMobilityCalibration == null ? null : IonMobility.IonMobilityCalibration.Name);
-            _driverIM.LoadList(selDT);
+            string selIM = (IonMobility.IonMobilityCalibration == null || IonMobility.IonMobilityCalibration .IsEmpty? null : IonMobility.IonMobilityCalibration.Name);
+            _driverIM.LoadList(selIM);
             cbUseSpectralLibraryIonMobilities.Checked = textSpectralLibraryIonMobilityResolvingPower.Enabled = IonMobility.UseSpectralLibraryIonMobilityValues;
             var imsWindowCalc = IonMobility.SpectralLibraryIonMobilityWindowWidthCalculator;
             if (imsWindowCalc != null)

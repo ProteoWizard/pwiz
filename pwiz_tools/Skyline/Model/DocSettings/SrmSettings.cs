@@ -883,7 +883,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     nodeGroup.ExplicitValues.CollisionalCrossSectionSqA,
                     ExplicitTransitionValues.Get(nodeTran).IonMobilityHighEnergyOffset ?? 0);
                 // Now get the resolving power
-                if (TransitionSettings.IonMobility.IonMobilityCalibration != null)
+                if (!TransitionSettings.IonMobility.IonMobilityCalibration.IsEmpty)
                 {
                     windowIM = TransitionSettings.IonMobility.IonMobilityCalibration.WindowWidthCalculator.WidthAt(result.IonMobility.Mobility.Value, ionMobilityMax);
                 }
@@ -904,7 +904,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     nodeGroup.ExplicitValues.CollisionalCrossSectionSqA,
                     ExplicitTransitionValues.Get(nodeTran).IonMobilityHighEnergyOffset ?? 0);
                 // Now get the resolving power
-                if (TransitionSettings.IonMobility.IonMobilityCalibration != null && !TransitionSettings.IonMobility.IonMobilityCalibration.IsEmpty)
+                if (!TransitionSettings.IonMobility.IonMobilityCalibration.IsEmpty)
                 {
                     windowIM = TransitionSettings.IonMobility.IonMobilityCalibration.WindowWidthCalculator.WidthAt(result.IonMobility.Mobility.Value, ionMobilityMax);
                 }
@@ -940,7 +940,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 var chargedPeptide = new LibKey(typedSequence.ModifiedSequence, typedSequence.Adduct);
 
-                if (TransitionSettings.IonMobility.IonMobilityCalibration != null)
+                if (!TransitionSettings.IonMobility.IonMobilityCalibration.IsEmpty)
                 {
                     var result = TransitionSettings.IonMobility.IonMobilityCalibration.GetIonMobilityInfo(chargedPeptide, ionMobilityFunctionsProvider, ionMobilityMax, out ionMobilityWindow);
                     if (result != null && result.IonMobility.HasValue)
@@ -1521,7 +1521,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     defSet.IsolationSchemeList.SetValue(TransitionSettings.FullScan.IsolationScheme);
                 }
             }
-            if (TransitionSettings.IonMobility.IonMobilityCalibration != null && !TransitionSettings.IonMobility.IonMobilityCalibration.IsEmpty)
+            if (!TransitionSettings.IonMobility.IonMobilityCalibration.IsEmpty)
             {
                 if (!defSet.DriftTimePredictorList.Contains(TransitionSettings.IonMobility.IonMobilityCalibration))
                     defSet.DriftTimePredictorList.SetValue(TransitionSettings.IonMobility.IonMobilityCalibration);
