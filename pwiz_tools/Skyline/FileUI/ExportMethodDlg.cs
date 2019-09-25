@@ -62,7 +62,7 @@ namespace pwiz.Skyline.FileUI
         {
             InitializeComponent();
 
-            _exportProperties = new ExportDlgProperties(this, _cancellationTokenSource);
+            _exportProperties = new ExportDlgProperties(this, _cancellationTokenSource.Token);
 
             _document = document;
             _fileType = fileType;
@@ -1962,12 +1962,12 @@ namespace pwiz.Skyline.FileUI
     public class ExportDlgProperties : ExportProperties, IProgressMonitor
     {
         private readonly ExportMethodDlg _dialog;
-        private readonly CancellationTokenSource _cancellation;
+        private readonly CancellationToken _cancellation;
 
-        public ExportDlgProperties(ExportMethodDlg dialog, CancellationTokenSource cancellationTokenSource)
+        public ExportDlgProperties(ExportMethodDlg dialog, CancellationToken cancellationToken)
         {
             _dialog = dialog;
-            _cancellation = cancellationTokenSource;
+            _cancellation = cancellationToken;
         }
 
         public bool ShowMessages { get; set; }
