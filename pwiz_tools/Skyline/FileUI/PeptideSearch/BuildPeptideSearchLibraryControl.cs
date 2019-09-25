@@ -569,12 +569,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             WorkflowType = workflowType;
             grpWorkflow.Hide();
-            var offset = grpWorkflow.Height + (lblStandardPeptides.Top - listSearchFiles.Bottom);
-            listSearchFiles.Height += offset;
-            lblStandardPeptides.Top += offset;
-            comboStandards.Top += offset;
-            cbIncludeAmbiguousMatches.Top += offset;
-            cbFilterForDocumentPeptides.Top += offset;
         }
 
         private void radioButtonLibrary_CheckedChanged(object sender, EventArgs e)
