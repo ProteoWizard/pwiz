@@ -31,7 +31,6 @@ using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;

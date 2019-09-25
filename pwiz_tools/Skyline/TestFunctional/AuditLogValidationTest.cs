@@ -19,13 +19,10 @@
 
 
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
-using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.SkylineTestUtil;
 
