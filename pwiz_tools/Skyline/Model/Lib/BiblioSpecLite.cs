@@ -1434,7 +1434,7 @@ namespace pwiz.Skyline.Model.Lib
                         return array;
                     });
                 var nonEmptyTimesDict = timesDict
-                    .Where(kvp => kvp.Value.Length > 0)
+                    .Where(kvp => kvp.Value.Any(v => !v.IsEmpty))
                     .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
                 ionMobilities = new LibraryIonMobilityInfo(source.FilePath, nonEmptyTimesDict);
                 return true;
