@@ -362,6 +362,7 @@ namespace pwiz.Skyline
 
                     // Make sure settings lists contain correct values for
                     // this document.
+                    // ReSharper disable once PossibleNullReferenceException
                     document.Settings.UpdateLists(path);
                 }
                 catch (Exception x)
@@ -407,9 +408,11 @@ namespace pwiz.Skyline
             // Once user has opened an existing document, stop reminding them to set a default UI mode
             if (string.IsNullOrEmpty(Settings.Default.UIMode))
             {
+                // ReSharper disable PossibleNullReferenceException
                 var mode = document.DocumentType == SrmDocument.DOCUMENT_TYPE.none
                     ? SrmDocument.DOCUMENT_TYPE.proteomic
                     : document.DocumentType;
+                // ReSharper restore PossibleNullReferenceException
                 Settings.Default.UIMode = mode.ToString();
             }
             
