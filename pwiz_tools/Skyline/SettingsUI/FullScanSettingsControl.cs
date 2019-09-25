@@ -880,7 +880,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private void InitializeUseSpectralLibraryIonMobilityUI()
         {
-            useSpectralLibraryIonMobilityValuesControl.InitializeSettings(_documentContainer);
+            useSpectralLibraryIonMobilityValuesControl.InitializeSettings(_documentContainer, groupBoxMS1.Width);
         }
 
         public void ModifyOptionsForImportPeptideSearchWizard(ImportPeptideSearchDlg.Workflow workflow)
@@ -963,8 +963,8 @@ namespace pwiz.Skyline.SettingsUI
             if (settings.PeptideSettings.Libraries.HasAnyLibraryIonMobilities())
             {
                 useSpectralLibraryIonMobilityValuesControl.Top = groupBoxRetentionTimeToKeep.Bottom + sepMS1FromMS2;
-                useSpectralLibraryIonMobilityValuesControl.InitializeSettings(_documentContainer, true);
-                useSpectralLibraryIonMobilityValuesControl.Width = groupBoxMS1.Width;
+                useSpectralLibraryIonMobilityValuesControl.InitializeSettings(_documentContainer, groupBoxMS1.Width, true);
+                useSpectralLibraryIonMobilityValuesControl.Left = groupBoxMS1.Left;
                 var adjustedHeight = useSpectralLibraryIonMobilityValuesControl.Bottom + label1.Height; // Add control height plus a margin
                 MinimumSize = new Size(MinimumSize.Width, adjustedHeight);
                 Height = adjustedHeight;

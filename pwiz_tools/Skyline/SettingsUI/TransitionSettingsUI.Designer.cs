@@ -1,4 +1,6 @@
-﻿namespace pwiz.Skyline.SettingsUI
+﻿using System;
+
+namespace pwiz.Skyline.SettingsUI
 {
     partial class TransitionSettingsUI
     {
@@ -820,7 +822,9 @@
             // 
             resources.ApplyResources(this.cbLinear, "cbLinear");
             this.cbLinear.Name = "cbLinear";
+            this.helpTip.SetToolTip(this.cbLinear, resources.GetString("cbLinear.ToolTip"));
             this.cbLinear.UseVisualStyleBackColor = true;
+            this.cbLinear.CheckedChanged += new System.EventHandler(this.cbLinear_CheckedChanged);
             // 
             // textSpectralLibraryDriftTimesResolvingPower
             // 

@@ -35,7 +35,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             InitializeComponent();
         }
 
-        public void InitializeSettings(IModifyDocumentContainer documentContainer, bool? defaultState = null)
+        public void InitializeSettings(IModifyDocumentContainer documentContainer, int ctrlWidth, bool? defaultState = null)
         {
             IonMobility = documentContainer.Document.Settings.TransitionSettings.IonMobility;
 
@@ -65,6 +65,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 }                
             }
 
+            groupBoxUseSpectralLibraryIonMolbilityInfo.Width = ctrlWidth;
             UpdateLibraryDriftPeakWidthControls();
 
         }
