@@ -362,7 +362,7 @@ namespace pwiz.Skyline
 
                     // Make sure settings lists contain correct values for
                     // this document.
-                    document.Settings.UpdateLists(path);
+                    document?.Settings.UpdateLists(path);
                 }
                 catch (Exception x)
                 {
@@ -407,10 +407,15 @@ namespace pwiz.Skyline
             // Once user has opened an existing document, stop reminding them to set a default UI mode
             if (string.IsNullOrEmpty(Settings.Default.UIMode))
             {
-                var mode = document.DocumentType == SrmDocument.DOCUMENT_TYPE.none
-                    ? SrmDocument.DOCUMENT_TYPE.proteomic
-                    : document.DocumentType;
-                Settings.Default.UIMode = mode.ToString();
+                if (document == null)
+                    return false;
+                else
+                {
+                    var mode = document?.DocumentType == SrmDocument.DOCUMENT_TYPE.none
+                        ? SrmDocument.DOCUMENT_TYPE.proteomic
+                        : document?.DocumentType;
+                    Settings.Default.UIMode = mode.ToString();
+                }
             }
             
             return true;
