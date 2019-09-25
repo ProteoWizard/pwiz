@@ -2757,5 +2757,17 @@ namespace pwiz.Skyline.Properties {
                 this["ShowQcTraceName"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ExportSortByMz {
+            get {
+                return ((bool)(this["ExportSortByMz"]));
+            }
+            set {
+                this["ExportSortByMz"] = value;
+            }
+        }
     }
 }
