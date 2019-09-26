@@ -416,7 +416,7 @@
   <data name="removed_peak_from" xml:space="preserve">
     <value>繰り返し測定「{1}」にある{0}からピークが削除されました</value>
   </data>
-  <data name="removed_peaks">
+  <data name="removed_peaks" xml:space="preserve">
     <value>{1}個のノードから{0}個のピークが削除されました。</value>
   </data>
   <data name="removed_all_peaks_from" xml:space="preserve">
@@ -632,9 +632,6 @@
   <data name="modified_outside_of_skyline" xml:space="preserve">
     <value>ドキュメントがSkyline外で変更されました
 ：{0}</value>
-  </data>
-  <data name="AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing" xml:space="preserve">
-    <value>監査ログが壊れています。監査ログエントリのタイムスタンプとインデックスの値が小さくなるはずです。</value>
   </data>
   <data name="test_only" xml:space="preserve">
     <value>{0}</value>

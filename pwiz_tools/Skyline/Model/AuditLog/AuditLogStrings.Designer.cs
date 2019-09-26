@@ -268,6 +268,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error when loading document&apos;s audit log: {0}..
+        /// </summary>
+        public static string AuditLogException_Error_when_loading_document_audit_log__0 {
+            get {
+                return ResourceManager.GetString("AuditLogException_Error_when_loading_document_audit_log__0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Clear audit log.
         /// </summary>
         public static string AuditLogForm__clearLogButton_Click_Clear_audit_log {
@@ -392,7 +401,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Audit log is corrupted. Audit log entry time stamps and indices should be decreasing.
+        ///   Looks up a localized string similar to Audit log is corrupted. Audit log entry time stamps and indices should be in order. Entry number {0} timestamp {1:G} occurs before entry number {2} timestamp {3:G}..
         /// </summary>
         public static string AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing {
             get {
