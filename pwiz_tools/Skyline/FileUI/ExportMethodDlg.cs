@@ -56,12 +56,13 @@ namespace pwiz.Skyline.FileUI
 
         private readonly ExportDlgProperties _exportProperties;
 
-        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        private CancellationTokenSource _cancellationTokenSource;
 
         public ExportMethodDlg(SrmDocument document, ExportFileType fileType)
         {
             InitializeComponent();
 
+            _cancellationTokenSource = new CancellationTokenSource();
             _exportProperties = new ExportDlgProperties(this, _cancellationTokenSource.Token);
 
             _document = document;
@@ -1654,6 +1655,12 @@ namespace pwiz.Skyline.FileUI
                 return;
             }
 
+            if (radioSingle.Checked)
+            {
+                labelMethodNum.Text = 1.ToString();
+                return;
+            }
+
             labelMethodNum.Text = @"...";
 
             _recalcMethodCountStatus = RecalcMethodCountStatus.running;
@@ -1683,7 +1690,7 @@ namespace pwiz.Skyline.FileUI
             }
 
             int? methodCount = null;
-            if (exporter != null)
+            if (exporter != null && exporter.MemoryOutput != null)
                 methodCount = exporter.MemoryOutput.Count;
             // Switch back to the UI thread to update the form
             try
