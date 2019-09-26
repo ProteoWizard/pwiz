@@ -273,7 +273,7 @@ namespace pwiz.Skyline.Model.AuditLog
             if (reader.HasAttributes)
             {
                 var docFormatString = reader.GetAttribute(ATTR.format_version);
-                if (double.TryParse(docFormatString, out var format))
+                if (double.TryParse(docFormatString, NumberStyles.Float, CultureInfo.InvariantCulture, out var format))
                     docFormat = new DocumentFormat(format);
             }
 
