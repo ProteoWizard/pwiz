@@ -20,6 +20,7 @@ using System;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI.Irt
@@ -28,35 +29,30 @@ namespace pwiz.Skyline.SettingsUI.Irt
     {
         private readonly int _peptideCount;
 
-        public AddIrtStandardsDlg(int peptideCount)
+        public AddIrtStandardsDlg(int peptideCount, bool peptidesExcluded)
         {
             _peptideCount = peptideCount;
 
             InitializeComponent();
 
-            labelMessage.Text = string.Format(labelMessage.Text, peptideCount);
+            labelMessage.Text = string.Format(!peptidesExcluded ? labelMessage.Text : Resources.AddIrtStandardsDlg_AddIrtStandardsDlg_MessagePeptidesExcluded, peptideCount);
         }
 
         public int StandardCount
         {
-            get
-            {
-                int count;
-                if (int.TryParse(textPeptideCount.Text, out count))
-                    return count;
-                return 0;
-            }
-
-            set { textPeptideCount.Text = value.ToString(LocalizationHelper.CurrentCulture); }
+            get => int.TryParse(textPeptideCount.Text, out var count) ? count : 0;
+            set => textPeptideCount.Text = value.ToString(LocalizationHelper.CurrentCulture);
         }
 
         public void OkDialog()
         {
             var helper = new MessageBoxHelper(this);
 
-            int standardCount;
-            if (!helper.ValidateNumberTextBox(textPeptideCount, CalibrateIrtDlg.MIN_STANDARD_PEPTIDES, _peptideCount, out standardCount))
+            if (!helper.ValidateNumberTextBox(textPeptideCount, CalibrateIrtDlg.MIN_STANDARD_PEPTIDES, _peptideCount, out _))
+            {
+                DialogResult = DialogResult.None;
                 return;
+            }
 
             DialogResult = DialogResult.OK;
         }
