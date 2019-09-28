@@ -63,7 +63,7 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat VERSION_4_22 = new DocumentFormat(4.22); // Moves explicit CE, explicit ion mobility high energy offset etc to transition instead of peptide level
         public static readonly DocumentFormat VERSION_19_1 = new DocumentFormat(19.1); // Release format
         public static readonly DocumentFormat VERSION_19_11 = new DocumentFormat(19.11); // Annotation expressions
-        public static readonly DocumentFormat VERSION_19_12 = new DocumentFormat(19.12); // Ion mobility calibration moved from peptide settings to transition settings
+        public static readonly DocumentFormat VERSION_19_12 = new DocumentFormat(19.12); // Adds sample_id and serial_number, and Ion mobility calibration moved from peptide settings to transition settings
         public static readonly DocumentFormat CURRENT = VERSION_19_12;
 
         private readonly double _versionNumber;

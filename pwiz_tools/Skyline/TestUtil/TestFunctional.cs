@@ -143,14 +143,18 @@ namespace pwiz.SkylineTestUtil
             test();
         }
 
-        protected static TDlg ShowDialog<TDlg>(Action act) where TDlg : Form
+        protected static TDlg ShowDialog<TDlg>(Action act, int millis = -1) where TDlg : Form
         {
             var existingDialog = FindOpenForm<TDlg>();
             if (existingDialog != null)
                 Assert.IsNull(existingDialog, typeof(TDlg) + " is already open");
 
             SkylineBeginInvoke(act);
-            TDlg dlg = WaitForOpenForm<TDlg>();
+            TDlg dlg;
+            if (millis == -1)
+                dlg = WaitForOpenForm<TDlg>();
+            else
+                dlg = WaitForOpenForm<TDlg>(millis);
             Assert.IsNotNull(dlg);
             return dlg;
         }

@@ -549,6 +549,8 @@
                 <xs:attribute name="modified_time" type="xs:dateTime"/>
                 <xs:attribute name="explicit_global_standard_area" type="xs:double"/>
                 <xs:attribute name="tic_area" type="xs:double" />
+                <xs:attribute name="sample_id" type="xs:string" />
+                <xs:attribute name="instrument_serial_number" type="xs:string" />
                 <xs:attribute name="ion_mobility_type" type="xs:string" use="optional"/>
               </xs:complexType>
             </xs:element>
