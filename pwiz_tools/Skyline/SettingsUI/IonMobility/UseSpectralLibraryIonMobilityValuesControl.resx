@@ -131,11 +131,6 @@
   <data name="textSpectralLibraryIonMobilityValuesResolvingPower.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name="textSpectralLibraryIonMobilityValuesResolvingPower.ToolTip" xml:space="preserve">
-    <value>Determines matching tolerance for ion mobility in spectral libraries (for example, drift time): 
-For resolving power "R" at drift time "T", the width "W" of the drift time matching window centered at T is
-W = 2T/R</value>
-  </data>
   <data name="&gt;&gt;textSpectralLibraryIonMobilityValuesResolvingPower.Name" xml:space="preserve">
     <value>textSpectralLibraryIonMobilityValuesResolvingPower</value>
   </data>
@@ -167,9 +162,6 @@ W = 2T/R</value>
   <data name="cbUseSpectralLibraryIonMobilityValues.Text" xml:space="preserve">
     <value>Use &amp;spectral library ion mobility values when present</value>
   </data>
-  <data name="cbUseSpectralLibraryIonMobilityValues.ToolTip" xml:space="preserve">
-    <value>If checked, then ion mobility values in any loaded spectral libraries will be used in chromatogram extraction.</value>
-  </data>
   <data name="&gt;&gt;cbUseSpectralLibraryIonMobilityValues.Name" xml:space="preserve">
     <value>cbUseSpectralLibraryIonMobilityValues</value>
   </data>
@@ -182,9 +174,6 @@ W = 2T/R</value>
   <data name="&gt;&gt;cbUseSpectralLibraryIonMobilityValues.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
-  <data name="groupBoxUseSpectralLibraryIonMolbilityInfo.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Left, Right</value>
-  </data>
   <data name="textSpectralLibraryIonMobilityWindowWidthAtDtMax.Location" type="System.Drawing.Point, System.Drawing">
     <value>263, 76</value>
   </data>
@@ -193,14 +182,6 @@ W = 2T/R</value>
   </data>
   <data name="textSpectralLibraryIonMobilityWindowWidthAtDtMax.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
-  </data>
-  <data name="textSpectralLibraryIonMobilityWindowWidthAtDtMax.ToolTip" xml:space="preserve">
-    <value>>Determines matching tolerance for ion mobility in spectral libraries, where: 
-imMax = maximum measured ion mobility
-W0 = width at ion mobility zero
-Wmax = width at imMax
-The width "W" of the ion mobility matching window centered at any ion mobility "M" is
-W = (W0 + M*(Wmax-W0)/imMax)</value>
   </data>
   <data name="&gt;&gt;textSpectralLibraryIonMobilityWindowWidthAtDtMax.Name" xml:space="preserve">
     <value>textSpectralLibraryIonMobilityWindowWidthAtDtMax</value>
@@ -223,14 +204,6 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
   <data name="textSpectralLibraryIonMobilityWindowWidthAtDt0.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
-  <data name="textSpectralLibraryIonMobilityWindowWidthAtDt0.ToolTip" xml:space="preserve">
-    <value>Determines matching tolerance for ion mobility in spectral libraries, where: 
-imMax = maximum measured ion mobility
-W0 = width at ion mobility zero
-Wmax = width at imMax
-The width "W" of the ion mobility matching window centered at any ion mobility "M" is
-W = (W0 + M*(Wmax-W0)/imMax)</value>
-  </data>
   <data name="&gt;&gt;textSpectralLibraryIonMobilityWindowWidthAtDt0.Name" xml:space="preserve">
     <value>textSpectralLibraryIonMobilityWindowWidthAtDt0</value>
   </data>
@@ -242,6 +215,42 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
   </data>
   <data name="&gt;&gt;textSpectralLibraryIonMobilityWindowWidthAtDt0.ZOrder" xml:space="preserve">
     <value>1</value>
+  </data>
+  <data name="cbLinear.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbLinear.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbLinear.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 100</value>
+  </data>
+  <data name="cbLinear.Size" type="System.Drawing.Size, System.Drawing">
+    <value>110, 17</value>
+  </data>
+  <data name="cbLinear.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="cbLinear.Text" xml:space="preserve">
+    <value>&amp;Linear peak width</value>
+  </data>
+  <data name="cbLinear.ToolTip" xml:space="preserve">
+    <value>When checked, ion mobility window width varies linearly across the range im0 to imMax.</value>
+  </data>
+  <data name="&gt;&gt;cbLinear.Name" xml:space="preserve">
+    <value>cbLinear</value>
+  </data>
+  <data name="&gt;&gt;cbLinear.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbLinear.Parent" xml:space="preserve">
+    <value>groupBoxUseSpectralLibraryIonMolbilityInfo</value>
+  </data>
+  <data name="&gt;&gt;cbLinear.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="groupBoxUseSpectralLibraryIonMolbilityInfo.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
   </data>
   <data name="labelWidthIMMax.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -303,39 +312,6 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
   <data name="&gt;&gt;labelWidthIMZero.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
-  <data name="cbLinear.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="cbLinear.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="cbLinear.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 100</value>
-  </data>
-  <data name="cbLinear.Size" type="System.Drawing.Size, System.Drawing">
-    <value>110, 17</value>
-  </data>
-  <data name="cbLinear.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
-  </data>
-  <data name="cbLinear.Text" xml:space="preserve">
-    <value>&amp;Linear peak width</value>
-  </data>
-  <data name="cbLinear.ToolTip" xml:space="preserve">
-    <value>When checked, ion mobility window width varies linearly across the range im0 to imMax.</value>
-  </data>
-  <data name="&gt;&gt;cbLinear.Name" xml:space="preserve">
-    <value>cbLinear</value>
-  </data>
-  <data name="&gt;&gt;cbLinear.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cbLinear.Parent" xml:space="preserve">
-    <value>groupBoxUseSpectralLibraryIonMolbilityInfo</value>
-  </data>
-  <data name="&gt;&gt;cbLinear.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
   <data name="labelResolvingPower.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -376,7 +352,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>0, 0, 0, 0</value>
   </data>
   <data name="groupBoxUseSpectralLibraryIonMolbilityInfo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>372, 133</value>
+    <value>304, 133</value>
   </data>
   <data name="groupBoxUseSpectralLibraryIonMolbilityInfo.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>

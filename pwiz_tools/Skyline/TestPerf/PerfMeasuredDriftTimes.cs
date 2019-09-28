@@ -70,7 +70,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             {
                 // Verify ability to extract predictions from raw data
                 var transitionSettingsDlg = ShowDialog<TransitionSettingsUI>(
-                    () => SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Prediction));
+                    () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
 
                 // Simulate user picking Edit Current from the Drift Time Predictor combo control
                 var driftTimePredictorDlg = ShowDialog<EditIonMobilityCalibrationDlg>(transitionSettingsDlg.EditIonMobilityLookup);
@@ -142,7 +142,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
             // Simulate user picking Edit Current from the Drift Time Predictor combo control, and messing with all the measured drift time values
             var transitionSettingsDlg2 = ShowDialog<TransitionSettingsUI>(
-                () => SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Prediction));
+                () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
             var driftTimePredictorDlg2 = ShowDialog<EditIonMobilityCalibrationDlg>(transitionSettingsDlg2.EditIonMobilityLookup);
             RunUI(() =>
             {

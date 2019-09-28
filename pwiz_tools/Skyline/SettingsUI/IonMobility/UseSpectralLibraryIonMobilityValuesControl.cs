@@ -24,6 +24,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.SettingsUI.IonMobility
 {
@@ -35,7 +36,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             InitializeComponent();
         }
 
-        public void InitializeSettings(IModifyDocumentContainer documentContainer, int ctrlWidth, bool? defaultState = null)
+        public void InitializeSettings(IModifyDocumentContainer documentContainer, int groupBoxWidth=0, bool? defaultState = null)
         {
             IonMobility = documentContainer.Document.Settings.TransitionSettings.IonMobility;
 
@@ -65,10 +66,17 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 }                
             }
 
-            groupBoxUseSpectralLibraryIonMolbilityInfo.Width = ctrlWidth;
-            UpdateLibraryDriftPeakWidthControls();
-
+            if (groupBoxWidth > 0)
+            {
+                groupBoxUseSpectralLibraryIonMolbilityInfo.Width = groupBoxWidth; // As in peptide search wizard
+            }
+            else
+            {
+                groupBoxUseSpectralLibraryIonMolbilityInfo.Text = Resources.UseSpectralLibraryIonMobilityValuesControl_InitializeSettings_Spectral_library_ion_mobility_values; // As in Transition Settings UI tab
+            }
+            UpdateLibraryIonMobilityPeakWidthControls();
         }
+
         public TransitionIonMobility IonMobility { get; set;} 
 
         public TransitionIonMobility ValidateNewSettings(bool showMessages)
@@ -120,10 +128,10 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 libraryDriftTimeWindowWidthCalculator = new IonMobilityWindowWidthCalculator(peakWidthType, resolvingPower, widthAtDt0, widthAtDtMax);
             }
 
-            return IonMobility.ChangeSpectralLibraryIonMobilityWindowWidthCalculator(libraryDriftTimeWindowWidthCalculator).ChangeUseSpectralLibraryIonMobilityValues(useLibraryDriftTime);
+            return new TransitionIonMobility(IonMobility.IonMobilityCalibration, useLibraryDriftTime, libraryDriftTimeWindowWidthCalculator);
         }
 
-        private void UpdateLibraryDriftPeakWidthControls()
+        private void UpdateLibraryIonMobilityPeakWidthControls()
         {
             // Linear peak width vs Resolving Power
             labelResolvingPower.Visible = !cbLinear.Checked;
@@ -154,45 +162,35 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         private void cbLinear_CheckedChanged(object sender, EventArgs e)
         {
-            UpdateLibraryDriftPeakWidthControls();
+            UpdateLibraryIonMobilityPeakWidthControls();
         }
 
         #region for testing
 
-        public void SetUseSpectralLibraryDriftTimes(bool state)
+        public bool IsUseSpectralLibraryIonMobilityValues
         {
-            cbUseSpectralLibraryIonMobilityValues.Checked = state;
-            UpdateLibraryDriftPeakWidthControls();
+            get { return cbUseSpectralLibraryIonMobilityValues.Checked; }
+            set {
+                cbUseSpectralLibraryIonMobilityValues.Checked = value;
+                UpdateLibraryIonMobilityPeakWidthControls(); 
+            }
+        }
+
+        public double? SpectralLibraryIonMobilityResolvingPower
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(textSpectralLibraryIonMobilityValuesResolvingPower.Text))
+                    return null;
+                return Convert.ToDouble(textSpectralLibraryIonMobilityValuesResolvingPower.Text);
+            }
+            set { textSpectralLibraryIonMobilityValuesResolvingPower.Text = value.HasValue ? value.ToString() : string.Empty; }
         }
 
         public void SetResolvingPowerText(string rp)
         {
             textSpectralLibraryIonMobilityValuesResolvingPower.Text = rp;
-            UpdateLibraryDriftPeakWidthControls();
-        }
-
-        public void SetResolvingPower(double rp)
-        {
-            textSpectralLibraryIonMobilityValuesResolvingPower.Text = rp.ToString(LocalizationHelper.CurrentCulture);
-            UpdateLibraryDriftPeakWidthControls();
-        }
-
-        public void SetWidthAtDtZero(double width)
-        {
-            textSpectralLibraryIonMobilityWindowWidthAtDt0.Text = width.ToString(LocalizationHelper.CurrentCulture);
-            UpdateLibraryDriftPeakWidthControls();
-        }
-
-        public void SetWidthAtDtMax(double width)
-        {
-            textSpectralLibraryIonMobilityWindowWidthAtDtMax.Text = width.ToString(LocalizationHelper.CurrentCulture);
-            UpdateLibraryDriftPeakWidthControls();
-        }
-
-        public void SetLinearRangeCheckboxState(bool checkedState)
-        {
-            cbLinear.Checked = checkedState;
-            UpdateLibraryDriftPeakWidthControls();
+            UpdateLibraryIonMobilityPeakWidthControls();
         }
 
         #endregion

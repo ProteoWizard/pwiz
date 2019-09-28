@@ -35,29 +35,45 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.textSpectralLibraryIonMobilityValuesResolvingPower = new System.Windows.Forms.TextBox();
             this.cbUseSpectralLibraryIonMobilityValues = new System.Windows.Forms.CheckBox();
-            this.groupBoxUseSpectralLibraryIonMolbilityInfo = new System.Windows.Forms.GroupBox();
             this.textSpectralLibraryIonMobilityWindowWidthAtDtMax = new System.Windows.Forms.TextBox();
             this.textSpectralLibraryIonMobilityWindowWidthAtDt0 = new System.Windows.Forms.TextBox();
+            this.cbLinear = new System.Windows.Forms.CheckBox();
+            this.groupBoxUseSpectralLibraryIonMolbilityInfo = new System.Windows.Forms.GroupBox();
             this.labelWidthIMMax = new System.Windows.Forms.Label();
             this.labelWidthIMZero = new System.Windows.Forms.Label();
-            this.cbLinear = new System.Windows.Forms.CheckBox();
             this.labelResolvingPower = new System.Windows.Forms.Label();
             this.groupBoxUseSpectralLibraryIonMolbilityInfo.SuspendLayout();
             this.SuspendLayout();
             // 
-            // textSpectralLibraryDriftTimesResolvingPower
+            // textSpectralLibraryIonMobilityValuesResolvingPower
             // 
             resources.ApplyResources(this.textSpectralLibraryIonMobilityValuesResolvingPower, "textSpectralLibraryIonMobilityValuesResolvingPower");
             this.textSpectralLibraryIonMobilityValuesResolvingPower.Name = "textSpectralLibraryIonMobilityValuesResolvingPower";
-            this.toolTip.SetToolTip(this.textSpectralLibraryIonMobilityValuesResolvingPower, resources.GetString("textSpectralLibraryDriftTimesResolvingPower.ToolTip"));
             // 
-            // cbUseSpectralLibraryDriftTimes
+            // cbUseSpectralLibraryIonMobilityValues
             // 
             resources.ApplyResources(this.cbUseSpectralLibraryIonMobilityValues, "cbUseSpectralLibraryIonMobilityValues");
             this.cbUseSpectralLibraryIonMobilityValues.Name = "cbUseSpectralLibraryIonMobilityValues";
-            this.toolTip.SetToolTip(this.cbUseSpectralLibraryIonMobilityValues, resources.GetString("cbUseSpectralLibraryDriftTimes.ToolTip"));
             this.cbUseSpectralLibraryIonMobilityValues.UseVisualStyleBackColor = true;
             this.cbUseSpectralLibraryIonMobilityValues.CheckedChanged += new System.EventHandler(this.cbUseSpectralLibraryIonMobilityValues_CheckChanged);
+            // 
+            // textSpectralLibraryIonMobilityWindowWidthAtDtMax
+            // 
+            resources.ApplyResources(this.textSpectralLibraryIonMobilityWindowWidthAtDtMax, "textSpectralLibraryIonMobilityWindowWidthAtDtMax");
+            this.textSpectralLibraryIonMobilityWindowWidthAtDtMax.Name = "textSpectralLibraryIonMobilityWindowWidthAtDtMax";
+            // 
+            // textSpectralLibraryIonMobilityWindowWidthAtDt0
+            // 
+            resources.ApplyResources(this.textSpectralLibraryIonMobilityWindowWidthAtDt0, "textSpectralLibraryIonMobilityWindowWidthAtDt0");
+            this.textSpectralLibraryIonMobilityWindowWidthAtDt0.Name = "textSpectralLibraryIonMobilityWindowWidthAtDt0";
+            // 
+            // cbLinear
+            // 
+            resources.ApplyResources(this.cbLinear, "cbLinear");
+            this.cbLinear.Name = "cbLinear";
+            this.toolTip.SetToolTip(this.cbLinear, resources.GetString("cbLinear.ToolTip"));
+            this.cbLinear.UseVisualStyleBackColor = true;
+            this.cbLinear.CheckedChanged += new System.EventHandler(this.cbLinear_CheckedChanged);
             // 
             // groupBoxUseSpectralLibraryIonMolbilityInfo
             // 
@@ -73,35 +89,15 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             this.groupBoxUseSpectralLibraryIonMolbilityInfo.Name = "groupBoxUseSpectralLibraryIonMolbilityInfo";
             this.groupBoxUseSpectralLibraryIonMolbilityInfo.TabStop = false;
             // 
-            // textSpectralLibraryIonMobilitiesWindowWidthAtDtMax
-            // 
-            resources.ApplyResources(this.textSpectralLibraryIonMobilityWindowWidthAtDtMax, "textSpectralLibraryIonMobilityWindowWidthAtDtMax");
-            this.textSpectralLibraryIonMobilityWindowWidthAtDtMax.Name = "textSpectralLibraryIonMobilityWindowWidthAtDtMax";
-            this.toolTip.SetToolTip(this.textSpectralLibraryIonMobilityWindowWidthAtDtMax, resources.GetString("textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.ToolTip"));
-            // 
-            // textSpectralLibraryIonMobilitiesWindowWidthAtDt0
-            // 
-            resources.ApplyResources(this.textSpectralLibraryIonMobilityWindowWidthAtDt0, "textSpectralLibraryIonMobilityWindowWidthAtDt0");
-            this.textSpectralLibraryIonMobilityWindowWidthAtDt0.Name = "textSpectralLibraryIonMobilityWindowWidthAtDt0";
-            this.toolTip.SetToolTip(this.textSpectralLibraryIonMobilityWindowWidthAtDt0, resources.GetString("textSpectralLibraryIonMobilitiesWindowWidthAtDt0.ToolTip"));
-            // 
-            // labelWidthDtMax
+            // labelWidthIMMax
             // 
             resources.ApplyResources(this.labelWidthIMMax, "labelWidthIMMax");
             this.labelWidthIMMax.Name = "labelWidthIMMax";
             // 
-            // labelWidthDtZero
+            // labelWidthIMZero
             // 
             resources.ApplyResources(this.labelWidthIMZero, "labelWidthIMZero");
             this.labelWidthIMZero.Name = "labelWidthIMZero";
-            // 
-            // cbLinear
-            // 
-            resources.ApplyResources(this.cbLinear, "cbLinear");
-            this.cbLinear.Name = "cbLinear";
-            this.toolTip.SetToolTip(this.cbLinear, resources.GetString("cbLinear.ToolTip"));
-            this.cbLinear.UseVisualStyleBackColor = true;
-            this.cbLinear.CheckedChanged += new System.EventHandler(this.cbLinear_CheckedChanged);
             // 
             // labelResolvingPower
             // 

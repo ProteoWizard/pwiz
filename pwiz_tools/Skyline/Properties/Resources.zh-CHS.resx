@@ -10000,9 +10000,6 @@
   <data name="Columns_Columns_Missing_column___0__" xml:space="preserve">
     <value>缺失列“{0}”</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_OkDialog_An_ion_mobility_predictor_with_the_name__0__already_exists_" xml:space="preserve">
-    <value>名称为 {0} 的离子迁移预测器已存在。</value>
-  </data>
   <data name="EditDriftTimePredictorDlg_EditDriftTimePredictorDlg_Molecule" xml:space="preserve">
     <value>分子</value>
   </data>

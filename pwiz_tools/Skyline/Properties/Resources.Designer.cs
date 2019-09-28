@@ -8659,12 +8659,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An ion mobility predictor with the name {0} already exists..
+        ///   Looks up a localized string similar to An ion mobility calibration with the name {0} already exists..
         /// </summary>
-        public static string EditDriftTimePredictorDlg_OkDialog_An_ion_mobility_predictor_with_the_name__0__already_exists_ {
+        public static string EditDriftTimePredictorDlg_OkDialog_An_ion_mobility_calibration_with_the_name__0__already_exists_ {
             get {
-                return ResourceManager.GetString("EditDriftTimePredictorDlg_OkDialog_An_ion_mobility_predictor_with_the_name__0__al" +
-                        "ready_exists_", resourceCulture);
+                return ResourceManager.GetString("EditDriftTimePredictorDlg_OkDialog_An_ion_mobility_calibration_with_the_name__0__" +
+                        "already_exists_", resourceCulture);
             }
         }
         
@@ -31173,6 +31173,16 @@ namespace pwiz.Skyline.Properties {
         public static string UpgradeManager_updateCheck_Complete_Upgrading__0_ {
             get {
                 return ResourceManager.GetString("UpgradeManager_updateCheck_Complete_Upgrading__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Spectral library ion mobility values.
+        /// </summary>
+        public static string UseSpectralLibraryIonMobilityValuesControl_InitializeSettings_Spectral_library_ion_mobility_values {
+            get {
+                return ResourceManager.GetString("UseSpectralLibraryIonMobilityValuesControl_InitializeSettings_Spectral_library_io" +
+                        "n_mobility_values", resourceCulture);
             }
         }
         

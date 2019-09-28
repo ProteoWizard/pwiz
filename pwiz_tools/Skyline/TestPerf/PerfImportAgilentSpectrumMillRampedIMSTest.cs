@@ -138,16 +138,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             Stopwatch loadStopwatch = new Stopwatch();
             loadStopwatch.Start();
 
-            // Enable use of drift times in spectral library
-            var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
-            RunUI(() =>
-            {
-                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-                transitionSettingsUI.IsUseSpectralLibraryIonMobilities = useDriftTimes;
-                transitionSettingsUI.SpectralLibraryIonMobilityResolvingPower = 50;
-            });
-            OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
-
             // Launch import peptide search wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
             var basename = _testCase==1 ? "40minG_WBP_wide_z2-3_mid_BSA_5pmol_01" : "09_BSAtrypticdigest_5uL_IMQTOF_AltFramesdtramp_dAJS009";
@@ -213,6 +203,13 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             // Modifications are already set up, so that page should get skipped.
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new []{2,3,4,5});
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.tof);
+            Assert.IsTrue(importPeptideSearchDlg.FullScanSettingsControl.UseSpectralLibraryIonMobilityValuesControl.Visible); // Ion mobility controls should be visible
+            // Enable use of drift times in spectral library
+            RunUI(() =>
+            {
+                importPeptideSearchDlg.FullScanSettingsControl.UseSpectralLibraryIonMobilityValuesControl.IsUseSpectralLibraryIonMobilityValues = useDriftTimes;
+                importPeptideSearchDlg.FullScanSettingsControl.UseSpectralLibraryIonMobilityValuesControl.SpectralLibraryIonMobilityResolvingPower = 50;
+            });
             RunUI(() => importPeptideSearchDlg.ClickNextButton()); // Accept the full scan settings
 
             // We're on the "Import FASTA" page of the wizard.

@@ -31,7 +31,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
@@ -169,26 +168,9 @@ namespace pwiz.Skyline.SettingsUI
             _driverIM = new SettingsListComboDriver<IonMobilityCalibration>(comboIonMobilityCalibration, Settings.Default.DriftTimePredictorList);
             string selIM = (IonMobility.IonMobilityCalibration == null || IonMobility.IonMobilityCalibration .IsEmpty? null : IonMobility.IonMobilityCalibration.Name);
             _driverIM.LoadList(selIM);
-            cbUseSpectralLibraryIonMobilities.Checked = textSpectralLibraryIonMobilityResolvingPower.Enabled = IonMobility.UseSpectralLibraryIonMobilityValues;
-            var imsWindowCalc = IonMobility.SpectralLibraryIonMobilityWindowWidthCalculator;
-            if (imsWindowCalc != null)
-            {
-                cbLinear.Checked = imsWindowCalc.PeakWidthMode == IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.linear_range;
-                if (cbLinear.Checked)
-                {
-                    textSpectralLibraryIonMobilityResolvingPower.Text = string.Empty;
-                    textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Text = imsWindowCalc.PeakWidthAtIonMobilityValueZero.ToString(LocalizationHelper.CurrentCulture);
-                    textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Text = imsWindowCalc.PeakWidthAtIonMobilityValueMax.ToString(LocalizationHelper.CurrentCulture);
-                }
-                else
-                {
-                    textSpectralLibraryIonMobilityResolvingPower.Text = imsWindowCalc.ResolvingPower != 0
-                        ? imsWindowCalc.ResolvingPower.ToString(LocalizationHelper.CurrentCulture)
-                        : string.Empty;
-                    textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Text = string.Empty;
-                    textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Text = string.Empty;
-                }
-            }
+            spectralLibraryIonMobilityValuesControl.InitializeSettings(_parent);
+            spectralLibraryIonMobilityValuesControl.Top = _driverIM.Combo.Bottom + 20;
+            spectralLibraryIonMobilityValuesControl.Left = _driverIM.Combo.Left;
 
             // Initialize full-scan settings
             FullScanSettingsControl = new FullScanSettingsControl(_parent)
@@ -213,8 +195,6 @@ namespace pwiz.Skyline.SettingsUI
                 tabControlPeptidesSmallMols.SelectedIndex = 0;
             else if (ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules)
                 tabControlPeptidesSmallMols.SelectedIndex = 1;
-
-            UpdateLibraryDriftPeakWidthControls();
 
             DoIsolationSchemeChanged();
         }
@@ -641,50 +621,11 @@ namespace pwiz.Skyline.SettingsUI
             IonMobilityCalibration ionMobilityCalibration =
                 Settings.Default.GetIonMobilityCalibrationByName(nameDt);
 
-            bool useSpectralLibraryIonMobility = cbUseSpectralLibraryIonMobilities.Checked;
+            var imSettings = spectralLibraryIonMobilityValuesControl.ValidateNewSettings(true);
+            if (imSettings == null)
+                return;
 
-            var libraryDriftTimeWindowWidthCalculator = IonMobilityWindowWidthCalculator.EMPTY;
-            if (useSpectralLibraryIonMobility)
-            {
-                double resolvingPower = 0;
-                double widthAtDt0 = 0;
-                double widthAtDtMax = 0;
-                IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType peakWidthType;
-                if (cbLinear.Checked)
-                {
-                    if (!helper.ValidateDecimalTextBox(textSpectralLibraryIonMobilitiesWindowWidthAtDt0, out widthAtDt0))
-                        return;
-                    if (!helper.ValidateDecimalTextBox(textSpectralLibraryIonMobilitiesWindowWidthAtDtMax, out widthAtDtMax))
-                        return;
-                    var errmsg = EditIonMobilityCalibrationDlg.ValidateWidth(widthAtDt0);
-                    if (errmsg != null)
-                    {
-                        helper.ShowTextBoxError(textSpectralLibraryIonMobilitiesWindowWidthAtDt0, errmsg);
-                        return;
-                    }
-                    errmsg = EditIonMobilityCalibrationDlg.ValidateWidth(widthAtDtMax);
-                    if (errmsg != null)
-                    {
-                        helper.ShowTextBoxError(textSpectralLibraryIonMobilitiesWindowWidthAtDtMax, errmsg);
-                        return;
-                    }
-                    peakWidthType = IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.linear_range;
-                }
-                else
-                {
-                    if (!helper.ValidateDecimalTextBox(textSpectralLibraryIonMobilityResolvingPower, out resolvingPower))
-                        return;
-                    var errmsg = EditIonMobilityCalibrationDlg.ValidateResolvingPower(resolvingPower);
-                    if (errmsg != null)
-                    {
-                        helper.ShowTextBoxError(textSpectralLibraryIonMobilityResolvingPower, errmsg);
-                        return;
-                    }
-                    peakWidthType = IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power;
-                }
-                libraryDriftTimeWindowWidthCalculator = new IonMobilityWindowWidthCalculator(peakWidthType, resolvingPower, widthAtDt0, widthAtDtMax);
-            }
-            var ionMobility = new TransitionIonMobility(ionMobilityCalibration??IonMobilityCalibration.EMPTY, useSpectralLibraryIonMobility, libraryDriftTimeWindowWidthCalculator);
+            var ionMobility = imSettings.ChangeIonMobilityCalibration(ionMobilityCalibration);
             Helpers.AssignIfEquals(ref ionMobility, IonMobility);
 
             TransitionSettings settings = new TransitionSettings(prediction,
@@ -1347,52 +1288,16 @@ namespace pwiz.Skyline.SettingsUI
             _driverIM.EditCurrent();
         }
 
-        private void cbUseSpectralLibraryDriftTimes_CheckChanged(object sender, EventArgs e)
-        {
-            bool enable = cbUseSpectralLibraryIonMobilities.Checked;
-            labelResolvingPower.Enabled =
-                textSpectralLibraryIonMobilityResolvingPower.Enabled = enable;
-            labelWidthDtZero.Enabled =
-                textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Enabled = enable;
-            labelWidthDtMax.Enabled =
-                textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Enabled = enable;
-            cbLinear.Enabled = enable;
-            // If disabling the text box, and it has content, make sure it is
-            // valid content.  Otherwise, clear the current content, which
-            // is always valid, if the measured drift time values will not be used.
-            CleanupDriftInfoText(enable, textSpectralLibraryIonMobilityResolvingPower);
-            CleanupDriftInfoText(enable, textSpectralLibraryIonMobilitiesWindowWidthAtDt0);
-            CleanupDriftInfoText(enable, textSpectralLibraryIonMobilitiesWindowWidthAtDtMax);
-        }
-
-        private void CleanupDriftInfoText(bool enable, TextBox textBox)
-        {
-            if (!enable && !string.IsNullOrEmpty(textBox.Text))
-            {
-                double value;
-                if (!double.TryParse(textBox.Text, out value) || value <= 0)
-                {
-                    textBox.Text = string.Empty;
-                }
-            }
-        }
-
         public bool IsUseSpectralLibraryIonMobilities
         {
-            get { return cbUseSpectralLibraryIonMobilities.Checked; }
-            set { cbUseSpectralLibraryIonMobilities.Checked = value; }
+            get { return spectralLibraryIonMobilityValuesControl.IsUseSpectralLibraryIonMobilityValues;  }
+            set { spectralLibraryIonMobilityValuesControl.IsUseSpectralLibraryIonMobilityValues = value; }
         }
 
         public double? SpectralLibraryIonMobilityResolvingPower
         {
-            get
-            {
-
-                if (string.IsNullOrEmpty(textSpectralLibraryIonMobilityResolvingPower.Text))
-                    return null;
-                return Convert.ToDouble(textSpectralLibraryIonMobilityResolvingPower.Text);
-            }
-            set { textSpectralLibraryIonMobilityResolvingPower.Text = value.HasValue ? value.ToString() : string.Empty; }
+            get { return spectralLibraryIonMobilityValuesControl.SpectralLibraryIonMobilityResolvingPower; }
+            set { spectralLibraryIonMobilityValuesControl.SpectralLibraryIonMobilityResolvingPower = value; }
         }
 
         public string SelectedIonMobilityCalibration
@@ -1400,59 +1305,6 @@ namespace pwiz.Skyline.SettingsUI
             get { return _driverIM.Combo.SelectedItem.ToString(); }
             set { _driverIM.Combo.SelectedItem = value; }
         }
-
-        private void UpdateLibraryDriftPeakWidthControls()
-        {
-            // Linear peak width vs Resolving Power
-            labelResolvingPower.Visible = !cbLinear.Checked;
-            textSpectralLibraryIonMobilityResolvingPower.Visible = !cbLinear.Checked;
-            labelWidthDtZero.Visible = cbLinear.Checked;
-            labelWidthDtMax.Visible = cbLinear.Checked;
-            textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Visible = cbLinear.Checked;
-            textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Visible = cbLinear.Checked;
-
-            cbLinear.Enabled = cbUseSpectralLibraryIonMobilities.Checked;
-            labelResolvingPower.Enabled = cbUseSpectralLibraryIonMobilities.Checked;
-            textSpectralLibraryIonMobilityResolvingPower.Enabled = cbUseSpectralLibraryIonMobilities.Checked;
-            labelWidthDtZero.Enabled = cbUseSpectralLibraryIonMobilities.Checked;
-            labelWidthDtMax.Enabled = cbUseSpectralLibraryIonMobilities.Checked;
-            textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Enabled = cbUseSpectralLibraryIonMobilities.Checked;
-            textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Enabled = cbUseSpectralLibraryIonMobilities.Checked;
-
-
-            if (labelWidthDtZero.Location.X > labelResolvingPower.Location.X)
-            {
-                var dX = labelWidthDtZero.Location.X - labelResolvingPower.Location.X;
-                labelWidthDtZero.Location = new Point(labelWidthDtZero.Location.X - dX, labelWidthDtZero.Location.Y);
-                labelWidthDtMax.Location = new Point(labelWidthDtMax.Location.X - dX, labelWidthDtMax.Location.Y);
-                textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Location = new Point(textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Location.X - dX, textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Location.Y);
-                textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Location = new Point(textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Location.X - dX, textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Location.Y);
-            }
-        }
-
-        private void cbLinear_CheckedChanged(object sender, EventArgs e)
-        {
-            UpdateLibraryDriftPeakWidthControls();
-        }
-
-        public void SetWidthAtDtZero(double width)
-        {
-            textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Text = width.ToString(LocalizationHelper.CurrentCulture);
-            UpdateLibraryDriftPeakWidthControls();
-        }
-
-        public void SetWidthAtDtMax(double width)
-        {
-            textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Text = width.ToString(LocalizationHelper.CurrentCulture);
-            UpdateLibraryDriftPeakWidthControls();
-        }
-
-        public void SetLinearRangeCheckboxState(bool checkedState)
-        {
-            cbLinear.Checked = checkedState;
-            UpdateLibraryDriftPeakWidthControls();
-        }
-
 
     }
 }

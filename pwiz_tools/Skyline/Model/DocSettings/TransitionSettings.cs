@@ -3120,7 +3120,7 @@ namespace pwiz.Skyline.Model.DocSettings
             Validate();
         }        
        
-        [Track]
+        [TrackChildren]
         public IonMobilityCalibration IonMobilityCalibration { get; private set; }
 
         [Track]

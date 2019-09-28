@@ -1759,7 +1759,7 @@ W = 2T/R</value>
     <value>18</value>
   </data>
   <data name="label23.Text" xml:space="preserve">
-    <value>&amp;Ion mobility filter:</value>
+    <value>&amp;Ion mobility calibration:</value>
   </data>
   <data name="&gt;&gt;label23.Name" xml:space="preserve">
     <value>label23</value>

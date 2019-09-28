@@ -168,14 +168,15 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             // Modifications are already set up, so that page should get skipped.
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new []{2,3,4,5});
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.tof);
-            RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.UseSpectralLibraryIonMobilityValuesControl.SetUseSpectralLibraryDriftTimes(true));
+            Assert.IsTrue(importPeptideSearchDlg.FullScanSettingsControl.UseSpectralLibraryIonMobilityValuesControl.Visible);
+            RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.UseSpectralLibraryIonMobilityValuesControl.IsUseSpectralLibraryIonMobilityValues = true);
 
             // Verify error handling in ion mobility control
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.UseSpectralLibraryIonMobilityValuesControl.SetResolvingPowerText("fish"));
             var errDlg = ShowDialog<MessageDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
             RunUI(() => errDlg.OkDialog());
 
-            RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.UseSpectralLibraryIonMobilityValuesControl.SetResolvingPower(40));
+            RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.UseSpectralLibraryIonMobilityValuesControl.SpectralLibraryIonMobilityResolvingPower = 40);
 
             RunUI(() => importPeptideSearchDlg.ClickNextButton()); // Accept the full scan settings
             // We're on the "Import FASTA" page of the wizard.

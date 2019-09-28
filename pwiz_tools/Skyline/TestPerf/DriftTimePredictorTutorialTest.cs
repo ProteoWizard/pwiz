@@ -59,7 +59,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             const string dataRoot = "http://skyline.ms/tutorials/data-drift/";
             TestFilesZipPaths = new[]
             {
-                @"http://skyline.ms/tutorials/DriftTimePrediction.zip",
+                @"http://skyline.ms/tutorials/IMSFiltering.zip",
                 @"TestPerf\DriftTimePredictorViews.zip",
                 dataRoot + BSA_Frag + EXT_ZIP,
                 dataRoot + Yeast_BSA + EXT_ZIP,
@@ -76,7 +76,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
 
         protected override void DoTest()
         {
-            string skyFile = TestFilesDirs[0].GetTestPath(@"DriftTimePrediction\BSA-Training.sky");
+            string skyFile = TestFilesDirs[0].GetTestPath(@"IMSFiltering\BSA-Training.sky");
             RunUI(() => SkylineWindow.OpenFile(skyFile));
 
             var document = WaitForDocumentLoaded(240*1000); // 4 minutes
@@ -234,9 +234,21 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                     transitionSettingsUI.SetRetentionTimeFilter(RetentionTimeFilterType.scheduling_windows, 3);
                 });
 
-                PauseForScreenShot("Transition Settings - Full-Scan", 20);
+                PauseForScreenShot("Transition Settings - Full-Scan", 19);
 
                 OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
+
+                var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+                RunUI(() => peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Prediction);
+                PauseForScreenShot("Peptide Settings - Prediction", 20);
+                RunUI(() =>
+                {
+                    Assert.IsTrue(peptideSettingsUI.IsUseMeasuredRT);
+                    Assert.AreEqual(6, peptideSettingsUI.TimeWindow);
+                });
+
+                OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+
             }
 
             using (new WaitDocumentChange(1, true, 1000 * 60 * 60 * 5))

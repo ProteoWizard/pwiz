@@ -32,8 +32,11 @@ namespace pwiz.Skyline.SettingsUI
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TransitionSettingsUI));
-            this.btnCancel = new System.Windows.Forms.Button();
+            this.helpTip = new System.Windows.Forms.ToolTip(this.components);
+            this.contextMenuStripPrecursorAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.contextMenuStripFragmentAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.btnOk = new System.Windows.Forms.Button();
+            this.btnCancel = new System.Windows.Forms.Button();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabGeneral = new System.Windows.Forms.TabPage();
             this.comboCompensationVoltage = new System.Windows.Forms.ComboBox();
@@ -82,6 +85,10 @@ namespace pwiz.Skyline.SettingsUI
             this.textExclusionWindow = new System.Windows.Forms.TextBox();
             this.cbAutoSelect = new System.Windows.Forms.CheckBox();
             this.lbPrecursorMzWindow = new System.Windows.Forms.Label();
+            this.tabIonMobility = new System.Windows.Forms.TabPage();
+            this.spectralLibraryIonMobilityValuesControl = new pwiz.Skyline.SettingsUI.IonMobility.UseSpectralLibraryIonMobilityValuesControl();
+            this.comboIonMobilityCalibration = new System.Windows.Forms.ComboBox();
+            this.label23 = new System.Windows.Forms.Label();
             this.tabLibrary = new System.Windows.Forms.TabPage();
             this.label9 = new System.Windows.Forms.Label();
             this.panelPick = new System.Windows.Forms.Panel();
@@ -118,20 +125,6 @@ namespace pwiz.Skyline.SettingsUI
             this.textMaxMz = new System.Windows.Forms.TextBox();
             this.textMinMz = new System.Windows.Forms.TextBox();
             this.tabFullScan = new System.Windows.Forms.TabPage();
-            this.helpTip = new System.Windows.Forms.ToolTip(this.components);
-            this.contextMenuStripPrecursorAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.contextMenuStripFragmentAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.tabIonMobility = new System.Windows.Forms.TabPage();
-            this.textSpectralLibraryIonMobilitiesWindowWidthAtDtMax = new System.Windows.Forms.TextBox();
-            this.textSpectralLibraryIonMobilitiesWindowWidthAtDt0 = new System.Windows.Forms.TextBox();
-            this.labelWidthDtMax = new System.Windows.Forms.Label();
-            this.labelWidthDtZero = new System.Windows.Forms.Label();
-            this.cbLinear = new System.Windows.Forms.CheckBox();
-            this.textSpectralLibraryIonMobilityResolvingPower = new System.Windows.Forms.TextBox();
-            this.cbUseSpectralLibraryIonMobilities = new System.Windows.Forms.CheckBox();
-            this.labelResolvingPower = new System.Windows.Forms.Label();
-            this.comboIonMobilityCalibration = new System.Windows.Forms.ComboBox();
-            this.label23 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabGeneral.SuspendLayout();
@@ -140,18 +133,27 @@ namespace pwiz.Skyline.SettingsUI
             this.tabPage1.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.tabPage2.SuspendLayout();
+            this.tabIonMobility.SuspendLayout();
             this.tabLibrary.SuspendLayout();
             this.panelPick.SuspendLayout();
             this.tabInstrument.SuspendLayout();
-            this.tabIonMobility.SuspendLayout();
             this.SuspendLayout();
             // 
-            // btnCancel
+            // helpTip
             // 
-            resources.ApplyResources(this.btnCancel, "btnCancel");
-            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Name = "btnCancel";
-            this.btnCancel.UseVisualStyleBackColor = true;
+            this.helpTip.AutoPopDelay = 32767;
+            this.helpTip.InitialDelay = 500;
+            this.helpTip.ReshowDelay = 100;
+            // 
+            // contextMenuStripPrecursorAdduct
+            // 
+            this.contextMenuStripPrecursorAdduct.Name = "contextMenuStripPrecursorAdduct";
+            resources.ApplyResources(this.contextMenuStripPrecursorAdduct, "contextMenuStripPrecursorAdduct");
+            // 
+            // contextMenuStripFragmentAdduct
+            // 
+            this.contextMenuStripFragmentAdduct.Name = "contextMenuStripFragmentAdduct";
+            resources.ApplyResources(this.contextMenuStripFragmentAdduct, "contextMenuStripFragmentAdduct");
             // 
             // btnOk
             // 
@@ -159,6 +161,13 @@ namespace pwiz.Skyline.SettingsUI
             this.btnOk.Name = "btnOk";
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
+            // 
+            // btnCancel
+            // 
+            resources.ApplyResources(this.btnCancel, "btnCancel");
+            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.btnCancel.Name = "btnCancel";
+            this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // tabControl1
             // 
@@ -524,6 +533,34 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.lbPrecursorMzWindow, "lbPrecursorMzWindow");
             this.lbPrecursorMzWindow.Name = "lbPrecursorMzWindow";
             // 
+            // tabIonMobility
+            // 
+            this.tabIonMobility.Controls.Add(this.spectralLibraryIonMobilityValuesControl);
+            this.tabIonMobility.Controls.Add(this.comboIonMobilityCalibration);
+            this.tabIonMobility.Controls.Add(this.label23);
+            resources.ApplyResources(this.tabIonMobility, "tabIonMobility");
+            this.tabIonMobility.Name = "tabIonMobility";
+            this.tabIonMobility.UseVisualStyleBackColor = true;
+            // 
+            // useSpectralLibraryIonMobilityValuesControl
+            // 
+            this.spectralLibraryIonMobilityValuesControl.IonMobility = null;
+            resources.ApplyResources(this.spectralLibraryIonMobilityValuesControl, "spectralLibraryIonMobilityValuesControl");
+            this.spectralLibraryIonMobilityValuesControl.Name = "spectralLibraryIonMobilityValuesControl";
+            // 
+            // comboIonMobilityCalibration
+            // 
+            this.comboIonMobilityCalibration.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboIonMobilityCalibration.FormattingEnabled = true;
+            resources.ApplyResources(this.comboIonMobilityCalibration, "comboIonMobilityCalibration");
+            this.comboIonMobilityCalibration.Name = "comboIonMobilityCalibration";
+            this.comboIonMobilityCalibration.SelectedIndexChanged += new System.EventHandler(this.comboIonMobilityCalibration_SelectedIndexChanged);
+            // 
+            // label23
+            // 
+            resources.ApplyResources(this.label23, "label23");
+            this.label23.Name = "label23";
+            // 
             // tabLibrary
             // 
             this.tabLibrary.Controls.Add(this.label9);
@@ -764,103 +801,6 @@ namespace pwiz.Skyline.SettingsUI
             this.tabFullScan.Name = "tabFullScan";
             this.tabFullScan.UseVisualStyleBackColor = true;
             // 
-            // helpTip
-            // 
-            this.helpTip.AutoPopDelay = 32767;
-            this.helpTip.InitialDelay = 500;
-            this.helpTip.ReshowDelay = 100;
-            // 
-            // contextMenuStripPrecursorAdduct
-            // 
-            this.contextMenuStripPrecursorAdduct.Name = "contextMenuStripPrecursorAdduct";
-            resources.ApplyResources(this.contextMenuStripPrecursorAdduct, "contextMenuStripPrecursorAdduct");
-            // 
-            // contextMenuStripFragmentAdduct
-            // 
-            this.contextMenuStripFragmentAdduct.Name = "contextMenuStripFragmentAdduct";
-            resources.ApplyResources(this.contextMenuStripFragmentAdduct, "contextMenuStripFragmentAdduct");
-            // 
-            // tabIonMobility
-            // 
-            this.tabIonMobility.Controls.Add(this.textSpectralLibraryIonMobilitiesWindowWidthAtDtMax);
-            this.tabIonMobility.Controls.Add(this.textSpectralLibraryIonMobilitiesWindowWidthAtDt0);
-            this.tabIonMobility.Controls.Add(this.labelWidthDtMax);
-            this.tabIonMobility.Controls.Add(this.labelWidthDtZero);
-            this.tabIonMobility.Controls.Add(this.cbLinear);
-            this.tabIonMobility.Controls.Add(this.textSpectralLibraryIonMobilityResolvingPower);
-            this.tabIonMobility.Controls.Add(this.cbUseSpectralLibraryIonMobilities);
-            this.tabIonMobility.Controls.Add(this.labelResolvingPower);
-            this.tabIonMobility.Controls.Add(this.comboIonMobilityCalibration);
-            this.tabIonMobility.Controls.Add(this.label23);
-            resources.ApplyResources(this.tabIonMobility, "tabIonMobility");
-            this.tabIonMobility.Name = "tabIonMobility";
-            this.tabIonMobility.UseVisualStyleBackColor = true;
-            // 
-            // textSpectralLibraryIonMobilitiesWindowWidthAtDtMax
-            // 
-            resources.ApplyResources(this.textSpectralLibraryIonMobilitiesWindowWidthAtDtMax, "textSpectralLibraryIonMobilitiesWindowWidthAtDtMax");
-            this.textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.Name = "textSpectralLibraryIonMobilitiesWindowWidthAtDtMax";
-            this.helpTip.SetToolTip(this.textSpectralLibraryIonMobilitiesWindowWidthAtDtMax, resources.GetString("textSpectralLibraryIonMobilitiesWindowWidthAtDtMax.ToolTip"));
-            // 
-            // textSpectralLibraryIonMobilitiesWindowWidthAtDt0
-            // 
-            resources.ApplyResources(this.textSpectralLibraryIonMobilitiesWindowWidthAtDt0, "textSpectralLibraryIonMobilitiesWindowWidthAtDt0");
-            this.textSpectralLibraryIonMobilitiesWindowWidthAtDt0.Name = "textSpectralLibraryIonMobilitiesWindowWidthAtDt0";
-            this.helpTip.SetToolTip(this.textSpectralLibraryIonMobilitiesWindowWidthAtDt0, resources.GetString("textSpectralLibraryIonMobilitiesWindowWidthAtDt0.ToolTip"));
-            // 
-            // labelWidthDtMax
-            // 
-            resources.ApplyResources(this.labelWidthDtMax, "labelWidthDtMax");
-            this.labelWidthDtMax.Name = "labelWidthDtMax";
-            this.helpTip.SetToolTip(this.labelWidthDtMax, resources.GetString("labelWidthDtMax.ToolTip"));
-            // 
-            // labelWidthDtZero
-            // 
-            resources.ApplyResources(this.labelWidthDtZero, "labelWidthDtZero");
-            this.labelWidthDtZero.Name = "labelWidthDtZero";
-            this.helpTip.SetToolTip(this.labelWidthDtZero, resources.GetString("labelWidthDtZero.ToolTip"));
-            // 
-            // cbLinear
-            // 
-            resources.ApplyResources(this.cbLinear, "cbLinear");
-            this.cbLinear.Name = "cbLinear";
-            this.helpTip.SetToolTip(this.cbLinear, resources.GetString("cbLinear.ToolTip"));
-            this.cbLinear.UseVisualStyleBackColor = true;
-            this.cbLinear.CheckedChanged += new System.EventHandler(this.cbLinear_CheckedChanged);
-            // 
-            // textSpectralLibraryDriftTimesResolvingPower
-            // 
-            resources.ApplyResources(this.textSpectralLibraryIonMobilityResolvingPower, "textSpectralLibraryIonMobilityResolvingPower");
-            this.textSpectralLibraryIonMobilityResolvingPower.Name = "textSpectralLibraryIonMobilityResolvingPower";
-            this.helpTip.SetToolTip(this.textSpectralLibraryIonMobilityResolvingPower, resources.GetString("textSpectralLibraryDriftTimesResolvingPower.ToolTip"));
-            // 
-            // cbUseSpectralLibraryDriftTimes
-            // 
-            resources.ApplyResources(this.cbUseSpectralLibraryIonMobilities, "cbUseSpectralLibraryIonMobilities");
-            this.cbUseSpectralLibraryIonMobilities.Name = "cbUseSpectralLibraryIonMobilities";
-            this.helpTip.SetToolTip(this.cbUseSpectralLibraryIonMobilities, resources.GetString("cbUseSpectralLibraryDriftTimes.ToolTip"));
-            this.cbUseSpectralLibraryIonMobilities.UseVisualStyleBackColor = true;
-            this.cbUseSpectralLibraryIonMobilities.CheckedChanged += new System.EventHandler(this.cbUseSpectralLibraryDriftTimes_CheckChanged);
-            // 
-            // labelResolvingPower
-            // 
-            resources.ApplyResources(this.labelResolvingPower, "labelResolvingPower");
-            this.labelResolvingPower.Name = "labelResolvingPower";
-            // 
-            // comboDriftTimePredictor
-            // 
-            this.comboIonMobilityCalibration.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboIonMobilityCalibration.FormattingEnabled = true;
-            resources.ApplyResources(this.comboIonMobilityCalibration, "comboIonMobilityCalibration");
-            this.comboIonMobilityCalibration.Name = "comboIonMobilityCalibration";
-            this.helpTip.SetToolTip(this.comboIonMobilityCalibration, resources.GetString("comboDriftTimePredictor.ToolTip"));
-            this.comboIonMobilityCalibration.SelectedIndexChanged += new System.EventHandler(this.comboIonMobilityCalibration_SelectedIndexChanged);
-            // 
-            // label23
-            // 
-            resources.ApplyResources(this.label23, "label23");
-            this.label23.Name = "label23";
-            // 
             // TransitionSettingsUI
             // 
             this.AcceptButton = this.btnOk;
@@ -888,14 +828,14 @@ namespace pwiz.Skyline.SettingsUI
             this.groupBox1.PerformLayout();
             this.tabPage2.ResumeLayout(false);
             this.tabPage2.PerformLayout();
+            this.tabIonMobility.ResumeLayout(false);
+            this.tabIonMobility.PerformLayout();
             this.tabLibrary.ResumeLayout(false);
             this.tabLibrary.PerformLayout();
             this.panelPick.ResumeLayout(false);
             this.panelPick.PerformLayout();
             this.tabInstrument.ResumeLayout(false);
             this.tabInstrument.PerformLayout();
-            this.tabIonMobility.ResumeLayout(false);
-            this.tabIonMobility.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -992,15 +932,8 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Label label22;
         private System.Windows.Forms.TextBox textMinIonCount;
         private System.Windows.Forms.TabPage tabIonMobility;
-        private System.Windows.Forms.TextBox textSpectralLibraryIonMobilitiesWindowWidthAtDtMax;
-        private System.Windows.Forms.TextBox textSpectralLibraryIonMobilitiesWindowWidthAtDt0;
-        private System.Windows.Forms.Label labelWidthDtMax;
-        private System.Windows.Forms.Label labelWidthDtZero;
-        private System.Windows.Forms.CheckBox cbLinear;
-        private System.Windows.Forms.TextBox textSpectralLibraryIonMobilityResolvingPower;
-        private System.Windows.Forms.CheckBox cbUseSpectralLibraryIonMobilities;
-        private System.Windows.Forms.Label labelResolvingPower;
         private System.Windows.Forms.ComboBox comboIonMobilityCalibration;
         private System.Windows.Forms.Label label23;
+        private IonMobility.UseSpectralLibraryIonMobilityValuesControl spectralLibraryIonMobilityValuesControl;
     }
 }

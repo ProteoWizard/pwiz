@@ -10000,8 +10000,8 @@ Recognized isotopes include: {2}</value>
   <data name="Columns_Columns_Missing_column___0__" xml:space="preserve">
     <value>Missing column '{0}'</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_OkDialog_An_ion_mobility_predictor_with_the_name__0__already_exists_" xml:space="preserve">
-    <value>An ion mobility predictor with the name {0} already exists.</value>
+  <data name="EditDriftTimePredictorDlg_OkDialog_An_ion_mobility_calibration_with_the_name__0__already_exists_" xml:space="preserve">
+    <value>An ion mobility calibration with the name {0} already exists.</value>
   </data>
   <data name="EditDriftTimePredictorDlg_EditDriftTimePredictorDlg_Molecule" xml:space="preserve">
     <value>Molecule</value>
@@ -10606,5 +10606,8 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="DocumentAnnotationUpdater_UpdateAnnotations_Updating_calculated_annotations" xml:space="preserve">
     <value>Updating calculated annotations</value>
+  </data>
+  <data name="UseSpectralLibraryIonMobilityValuesControl_InitializeSettings_Spectral_library_ion_mobility_values" xml:space="preserve">
+    <value>Spectral library ion mobility values</value>
   </data>
 </root>
