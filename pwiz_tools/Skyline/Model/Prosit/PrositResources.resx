@@ -114,7 +114,7 @@
     <value>Requesting predictions from Prosit</value>
   </data>
   <data name="PrositIntensityModel_PrositIntensityModel_Intensity_model__0__does_not_exist" xml:space="preserve">
-    <value>Intensity model {0} does not exist</value>
+    <value>Intensity model '{0}' does not exist</value>
   </data>
   <data name="ToolOptionsUI_ToolOptionsUI_Server_online" xml:space="preserve">
     <value>Server online</value>
@@ -139,5 +139,11 @@
   </data>
   <data name="GraphSpectrum_UpdateUI__0__vs___1_" xml:space="preserve">
     <value>{0} vs. {1}</value>
+  </data>
+  <data name="PrositRetentionTimeModel_PrositRetentionTimeModel_Retention_time_model___0___does_not_exist" xml:space="preserve">
+    <value>Retention time model '{0}' does not exist</value>
+  </data>
+  <data name="PrositPredictingException_PrositPredictingException_Making_predictions___" xml:space="preserve">
+    <value>Making predictions...</value>
   </data>
 </root>

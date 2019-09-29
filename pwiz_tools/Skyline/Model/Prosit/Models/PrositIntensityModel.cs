@@ -48,13 +48,13 @@ namespace pwiz.Skyline.Model.Prosit.Models
         private PrositIntensityModel(string model)
         {
             if (!Models.Contains(model))
-                throw new PrositException(string.Format(
+                throw new PrositNotConfiguredException(string.Format(
                     PrositResources.PrositIntensityModel_PrositIntensityModel_Intensity_model__0__does_not_exist,
                     model));
 
             Model = model;
         }
-
+        
         private static List<PrositIntensityModel> _instances;
 
         public static PrositIntensityModel GetInstance(string model)
@@ -79,6 +79,23 @@ namespace pwiz.Skyline.Model.Prosit.Models
 
         public override string Signature => SIGNATURE;
         public override string Model { get; protected set; }
+
+        private bool Equals(PrositIntensityModel other)
+        {
+            return string.Equals(Model, other.Model);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return obj is PrositIntensityModel other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return (Model != null ? Model.GetHashCode() : 0);
+        }
 
         public static IEnumerable<string> Models
         {

@@ -89,7 +89,7 @@ namespace pwiz.Skyline.Model.Prosit {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Intensity model {0} does not exist.
+        ///   Looks up a localized string similar to Intensity model &apos;{0}&apos; does not exist.
         /// </summary>
         internal static string PrositIntensityModel_PrositIntensityModel_Intensity_model__0__does_not_exist {
             get {
@@ -136,11 +136,30 @@ namespace pwiz.Skyline.Model.Prosit {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Making predictions....
+        /// </summary>
+        internal static string PrositPredictingException_PrositPredictingException_Making_predictions___ {
+            get {
+                return ResourceManager.GetString("PrositPredictingException_PrositPredictingException_Making_predictions___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No Prosit server set.
         /// </summary>
         internal static string PrositPredictionClient_Current_No_Prosit_server_set {
             get {
                 return ResourceManager.GetString("PrositPredictionClient_Current_No_Prosit_server_set", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retention time model &apos;{0}&apos; does not exist.
+        /// </summary>
+        internal static string PrositRetentionTimeModel_PrositRetentionTimeModel_Retention_time_model___0___does_not_exist {
+            get {
+                return ResourceManager.GetString("PrositRetentionTimeModel_PrositRetentionTimeModel_Retention_time_model___0___does" +
+                        "_not_exist", resourceCulture);
             }
         }
         

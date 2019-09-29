@@ -271,6 +271,9 @@ namespace pwiz.Skyline.SettingsUI
 
                     try
                     {
+                        CheckPrositSettings();
+                        // Still construct the library builder, otherwise a user might configure Prosit
+                        // incorrectly, causing the build to silently fail
                         Builder = new PrositLibraryBuilder(doc, name, outputPath, () => true, standard,
                             peptidesPerPrecursor, precursors, NCE);
                     }
@@ -743,18 +746,25 @@ namespace pwiz.Skyline.SettingsUI
                 ceCombo.Visible = true;
                 ceLabel.Visible = true;
 
-                if (!PrositHelpers.PrositSettingsValid)
-                {
-                    using (var dlg = new AlertDlg(PrositResources.BuildLibraryDlg_dataSourceFilesRadioButton_CheckedChanged_Some_Prosit_settings_are_not_set__Would_you_like_to_set_them_now_, MessageBoxButtons.YesNo))
-                    {
-                        dlg.ShowDialog(this);
-                        if (dlg.DialogResult == DialogResult.Yes)
-                            _skylineWindow.ShowToolOptionsUI(dlg, ToolOptionsUI.TABS.Prosit);
-                    }
-                }
+                CheckPrositSettings();
             }
 
             btnNext.Text = dataSourceFilesRadioButton.Checked ? Resources.BuildLibraryDlg_btnPrevious_Click__Next__ : Resources.BuildLibraryDlg_OkWizardPage_Finish;
+        }
+
+        private bool CheckPrositSettings()
+        {
+            if (!PrositHelpers.PrositSettingsValid)
+            {
+                using (var dlg = new AlertDlg(PrositResources.BuildLibraryDlg_dataSourceFilesRadioButton_CheckedChanged_Some_Prosit_settings_are_not_set__Would_you_like_to_set_them_now_, MessageBoxButtons.YesNo))
+                {
+                    dlg.ShowDialog(this);
+                    if (dlg.DialogResult == DialogResult.Yes)
+                        _skylineWindow.ShowToolOptionsUI(dlg, ToolOptionsUI.TABS.Prosit);
+                }
+            }
+
+            return PrositHelpers.PrositSettingsValid;
         }
 
         private void prositInfoSettingsBtn_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

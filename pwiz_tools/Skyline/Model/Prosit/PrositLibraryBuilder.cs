@@ -21,6 +21,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Irt;
@@ -29,6 +31,7 @@ using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Prosit.Communication;
 using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using Tensorflow.Serving;
 
 namespace pwiz.Skyline.Model.Prosit
@@ -63,9 +66,9 @@ namespace pwiz.Skyline.Model.Prosit
         public bool BuildLibrary(IProgressMonitor progress)
         {
             // Predict fragment intensities
-            var ms = _intensityModel.PredictBatches(_prositClient, progress, _document.Settings,
+            PrositMS2Spectra ms = _intensityModel.PredictBatches(_prositClient, progress, _document.Settings,
                 _peptides.Zip(_precursors,
-                    (pep, prec) => new PeptidePrecursorPair(pep, prec, _nce)).ToArray());
+                    (pep, prec) => new PeptidePrecursorPair(pep, prec, _nce)).ToArray(), CancellationToken.None);
 
             var specMzInfo = ms.Spectra.Select(m => m.SpecMzInfo).ToList();
 
@@ -74,7 +77,7 @@ namespace pwiz.Skyline.Model.Prosit
                 new SystemLinqExtensionMethods.FuncEqualityComparer<PrositRetentionTimeModel.PeptideDocNodeWrapper>(
                     (p1, p2) => p1.Node.ModifiedSequence == p2.Node.ModifiedSequence)).ToArray();
             var iRTMap = _rtModel.PredictBatches(_prositClient, progress, _document.Settings,
-                distinctPeps);
+                distinctPeps, CancellationToken.None);
 
             for (var i = 0; i < specMzInfo.Count; ++i)
             {

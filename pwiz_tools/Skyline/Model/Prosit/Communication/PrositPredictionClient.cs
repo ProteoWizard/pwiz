@@ -29,26 +29,38 @@ namespace pwiz.Skyline.Model.Prosit.Communication
     /// </summary>
     public class PrositPredictionClient : PredictionService.PredictionServiceClient
     {
-        private static PredictionService.PredictionServiceClient _debugPredictionClient;
+        private static PredictionService.PredictionServiceClient _predictionClient;
+        // Need to keep track of this, since the server is not public in the prediction client.
+        // Also don't want it on the PrositPrediction client, since 'Current' needs to work
+        // for fake prediction client etc too
+        private static string _server;
 
         public static PredictionService.PredictionServiceClient Current
         {
             get
             {
-                if (_debugPredictionClient != null)
-                    return _debugPredictionClient;
+                if (DebugClient != null)
+                    return DebugClient;
 
-                if (string.IsNullOrEmpty(Settings.Default.PrositServer))
+                var selectedServer = Settings.Default.PrositServer;
+                if (_predictionClient != null && _server == selectedServer)
+                    return _predictionClient;
+
+                if (string.IsNullOrEmpty(selectedServer))
                     throw new PrositException(PrositResources.PrositPredictionClient_Current_No_Prosit_server_set);
 
-                return new PrositPredictionClient(Settings.Default.PrositServer);
+                _server = selectedServer;
+                return _predictionClient = new PrositPredictionClient(_server);
             }
-            set { _debugPredictionClient = value; }
+            set { _predictionClient = value; }
         }
 
         public PrositPredictionClient(string server)
             : base(new Channel(server, ChannelCredentials.Insecure))
         {
         }
+        
+        // For testing
+        public static PredictionService.PredictionServiceClient DebugClient { get; set; }
     }
 }

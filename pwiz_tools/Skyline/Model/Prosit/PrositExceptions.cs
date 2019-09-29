@@ -26,7 +26,7 @@ namespace pwiz.Skyline.Model.Prosit
     /// </summary>
     public class PrositException : Exception
     {
-        public PrositException(string message) : base(message)
+        public PrositException(string message, Exception inner = null) : base(message, inner)
         {
         }
     }
@@ -64,6 +64,25 @@ namespace pwiz.Skyline.Model.Prosit
     {
         public PrositSmallMoleculeException(Target target)
             : base(string.Format(PrositResources.PrositSmallMoleculeException_PrositSmallMoleculeException_Prosit_only_supports_peptides____0___is_a_small_molecule_, target.Molecule.Name))
+        {
+        }
+    }
+
+    public class PrositNotConfiguredException : PrositException
+    {
+        public PrositNotConfiguredException() : this(PrositResources
+            .GraphSpectrum_UpdateUI_Some_Prosit_settings_are_not_set_)
+        {
+        }
+
+        public PrositNotConfiguredException(string message) : base(message)
+        {
+        }
+    }
+
+    public class PrositPredictingException : PrositException
+    {
+        public PrositPredictingException() : base(PrositResources.PrositPredictingException_PrositPredictingException_Making_predictions___)
         {
         }
     }

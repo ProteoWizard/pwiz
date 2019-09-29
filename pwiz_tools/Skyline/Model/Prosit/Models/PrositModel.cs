@@ -21,12 +21,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Google.Protobuf.Collections;
 using Grpc.Core;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Prosit.Communication;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using Tensorflow;
 using Tensorflow.Serving;
 using Settings = pwiz.Skyline.Properties.Settings;
@@ -129,15 +133,18 @@ namespace pwiz.Skyline.Model.Prosit.Models
         /// <param name="predictionClient">Client to use for prediction</param>
         /// <param name="settings">Settings to use for constructing </param>
         /// <param name="inputs">The precursors (and other info) to make predictions for</param>
+        /// <param name="token">Token for cancelling prediction</param>
         /// <returns>Predictions from Prosit</returns>
-        public TSkylineOutput Predict(PredictionService.PredictionServiceClient predictionClient, SrmSettings settings, IList<TSkylineInputRow> inputs)
+        public TSkylineOutput Predict(PredictionService.PredictionServiceClient predictionClient,
+            SrmSettings settings, IList<TSkylineInputRow> inputs, CancellationToken token)
         {
             inputs = inputs.Distinct().ToArray();
 
             var validSkylineInputs = new List<TSkylineInputRow>(inputs.Count);
             var prositInputs = new List<TPrositInputRow>(inputs.Count);
 
-            foreach (var singleInput in inputs) {
+            foreach (var singleInput in inputs)
+            {
                 var input = CreatePrositInputRow(settings, singleInput, out _);
                 if (input != null)
                 {
@@ -147,9 +154,9 @@ namespace pwiz.Skyline.Model.Prosit.Models
             }
 
             var prositIn = CreatePrositInput(prositInputs);
-            return CreateSkylineOutput(settings, validSkylineInputs, Predict(predictionClient, prositIn));
+            var prediction = Predict(predictionClient, prositIn, token);
+            return CreateSkylineOutput(settings, validSkylineInputs, prediction);
         }
-
 
         // Variables for remembering the previous prediction request and its outcome.
         // Uses lock since the PrositModel classes are intended to be used as singletons
@@ -158,7 +165,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
         private SrmSettings _cachedSettings;
         private TSkylineInputRow _cachedInput;
         private TSkylineOutput _cachedOutput;
-        
+
         /// <summary>
         /// Makes prediction for a single precursor. The result is cached and
         /// if the same prediction is requested, the cached result is returned. This
@@ -168,9 +175,10 @@ namespace pwiz.Skyline.Model.Prosit.Models
         /// <param name="predictionClient">Client to use for prediction</param>
         /// <param name="settings">Settings to use for creating inputs and outputs</param>
         /// <param name="input">Precursor and other information</param>
+        /// <param name="token">Token for cancelling prediction</param>
         /// <returns>Prediction from Prosit</returns>
         public TSkylineOutput PredictSingle(PredictionService.PredictionServiceClient predictionClient,
-            SrmSettings settings, TSkylineInputRow input)
+            SrmSettings settings, TSkylineInputRow input, CancellationToken token)
         {
             lock (_cacheLock)
             {
@@ -185,7 +193,8 @@ namespace pwiz.Skyline.Model.Prosit.Models
                 throw exception;
 
             var prositIn = CreatePrositInput(new[] { prositInputRow });
-            var output = CreateSkylineOutput(settings, new[] { input }, Predict(predictionClient, prositIn));
+            var prediction = Predict(predictionClient, prositIn, token);
+            var output = CreateSkylineOutput(settings, new[] { input }, prediction);
 
             lock (_cacheLock)
             {
@@ -204,8 +213,9 @@ namespace pwiz.Skyline.Model.Prosit.Models
         /// </summary>
         /// <param name="predictionClient">Client to use for prediction</param>
         /// <param name="inputData">Input data, consisting tensors to send for prediction</param>
+        /// <param name="token">Token for cancelling prediction</param>
         /// <returns>Predicted tensors from Prosit</returns>
-        private TPrositOut Predict(PredictionService.PredictionServiceClient predictionClient, TPrositIn inputData)
+        private TPrositOut Predict(PredictionService.PredictionServiceClient predictionClient, TPrositIn inputData, CancellationToken token)
         {
             var predictRequest = new PredictRequest();
             predictRequest.ModelSpec = new ModelSpec { Name = Model /*, SignatureName = model.Signature*/ };
@@ -217,11 +227,11 @@ namespace pwiz.Skyline.Model.Prosit.Models
                     inputs[kvp.Key] = kvp.Value;
 
                 // Make prediction
-                var predictResponse = predictionClient.Predict(predictRequest);
+                var predictResponse = predictionClient.Predict(predictRequest, cancellationToken: token);
                 return CreatePrositOutput(predictResponse.Outputs);
             }
             catch (RpcException ex) {
-                throw new PrositException(ex.Message);
+                throw new PrositException(ex.Message, ex);
             }
         }
 
@@ -232,12 +242,15 @@ namespace pwiz.Skyline.Model.Prosit.Models
         /// <param name="progressMonitor">Monitor to show progress in UI</param>
         /// <param name="settings">Settings to use for constructing inputs and outputs</param>
         /// <param name="inputs">List of inputs to predict</param>
+        /// <param name="token">Token for cancelling prediction</param>
         /// <returns>Predictions from Prosit</returns>
-        public TSkylineOutput PredictBatches(PredictionService.PredictionServiceClient predictionClient, IProgressMonitor progressMonitor, SrmSettings settings, IList<TSkylineInputRow> inputs)
+        public TSkylineOutput PredictBatches(PredictionService.PredictionServiceClient predictionClient,
+            IProgressMonitor progressMonitor, SrmSettings settings, IList<TSkylineInputRow> inputs, CancellationToken token)
         {
-            IProgressStatus progressStatus = new ProgressStatus(PrositResources.PrositModel_BatchPredict_Constructing_Prosit_inputs);
+            IProgressStatus progressStatus =
+                new ProgressStatus(PrositResources.PrositModel_BatchPredict_Constructing_Prosit_inputs);
             progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete(0));
-            
+
             inputs = inputs.Distinct().ToArray();
 
             var processed = 0;
@@ -261,7 +274,8 @@ namespace pwiz.Skyline.Model.Prosit.Models
                     foreach (var singleInput in batch)
                     {
                         var input = CreatePrositInputRow(settings, singleInput, out _);
-                        if (input != null) {
+                        if (input != null)
+                        {
                             batchInputs.Add(input);
                             validSkylineInputs.Add(singleInput);
                         }
@@ -274,7 +288,8 @@ namespace pwiz.Skyline.Model.Prosit.Models
 
                         // ReSharper disable AccessToModifiedClosure
                         processed += batch.Length;
-                        progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete(100 * processed / totalCount));
+                        progressMonitor.UpdateProgress(progressStatus =
+                            progressStatus.ChangePercentComplete(100 * processed / totalCount));
                         // ReSharper enable AccessToModifiedClosure
                     }
                 });
@@ -282,18 +297,21 @@ namespace pwiz.Skyline.Model.Prosit.Models
             processed = 0;
             totalCount = inputsList.Sum(pi => pi.InputRows.Count);
 
-            progressStatus = new ProgressStatus(PrositResources.PrositModel_BatchPredict_Requesting_predictions_from_Prosit);
+            progressStatus =
+                new ProgressStatus(PrositResources.PrositModel_BatchPredict_Requesting_predictions_from_Prosit);
             progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete(0));
 
             // Make predictions batch by batch in sequence and merge the outputs
             var prositOutputAll = new TPrositOut();
             foreach (var prositIn in inputsList)
             {
-                var prositOutput = Predict(predictionClient, prositIn);
+                var prositOutput = Predict(predictionClient, prositIn, token);
+                // TODO: break?
                 prositOutputAll = prositOutputAll.MergeOutputs(prositOutput);
 
                 processed += prositIn.InputRows.Count;
-                progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete(100 * processed / totalCount));
+                progressMonitor.UpdateProgress(progressStatus =
+                    progressStatus.ChangePercentComplete(100 * processed / totalCount));
             }
 
             return CreateSkylineOutput(settings, validInputsList.SelectMany(i => i).ToArray(), prositOutputAll);
@@ -302,6 +320,115 @@ namespace pwiz.Skyline.Model.Prosit.Models
 
     public class PrositHelpers
     {
+        public class PrositRequest
+        {
+            private CancellationTokenSource _tokenSource = new CancellationTokenSource();
+            private Action _updateCallback;
+
+            public PrositRequest(PredictionService.PredictionServiceClient client, PrositIntensityModel intensityModel,
+                PrositRetentionTimeModel rtModel, SrmSettings settings, TransitionGroupDocNode precursor,
+                PeptideDocNode peptide, int nce, Action updateCallback)
+            {
+                Client = client;
+                IntensityModel = intensityModel;
+                RTModel = rtModel;
+                Settings = settings;
+                Precursor = precursor;
+                Peptide = peptide;
+                NCE = nce;
+                _updateCallback = updateCallback;
+            }
+
+            public PrositRequest(SrmSettings settings, TransitionGroupDocNode precursor, PeptideDocNode peptide, Action updateCallback) :
+                this(PrositPredictionClient.Current, PrositIntensityModel.Instance, PrositRetentionTimeModel.Instance,
+                    settings, precursor, peptide, Properties.Settings.Default.PrositNCE, updateCallback)
+            {
+            }
+
+            public PrositRequest Predict()
+            {
+                ActionUtil.RunAsync(() =>
+                {
+                    try
+                    {
+                        var prositClient = PrositPredictionClient.Current;
+                        var massSpectrum = PrositIntensityModel.Instance.PredictSingle(prositClient,
+                            Settings,
+                            new PeptidePrecursorPair(Peptide, Precursor,
+                                NCE), _tokenSource.Token);
+                        var iRT = PrositRetentionTimeModel.Instance.PredictSingle(prositClient,
+                            Settings,
+                            Peptide, _tokenSource.Token);
+                        Spectrum = new SpectrumDisplayInfo(
+                            new SpectrumInfoProsit(massSpectrum, Precursor,
+                                NCE),
+                            // ReSharper disable once AssignNullToNotNullAttribute
+                            iRT[Peptide]);
+                    }
+                    catch (PrositException ex)
+                    {
+                        Exception = ex;
+
+                        // Ignore, UpdateUI is already working on a new request,
+                        // so don't even update UI
+                        if (ex.InnerException is RpcException rpcEx && rpcEx.StatusCode == StatusCode.Cancelled)
+                            return;
+                    }
+
+                    _updateCallback.Invoke();
+                });
+                return this;
+            }
+
+            public void Cancel()
+            {
+                _tokenSource.Cancel();
+            }
+
+            // Output variables
+            public SpectrumDisplayInfo Spectrum { get; private set; }
+    
+            public PrositException Exception { get; private set; }
+
+            public PredictionService.PredictionServiceClient Client { get; private set; }
+            public PrositIntensityModel IntensityModel { get; private set; }
+            public PrositRetentionTimeModel RTModel { get; private set; }
+            public SrmSettings Settings { get; private set; }
+            public TransitionGroupDocNode Precursor { get; private set; }
+            public PeptideDocNode Peptide { get; private set; }
+            public int NCE { get; private set; }
+
+            protected bool Equals(PrositRequest other)
+            {
+                return ReferenceEquals(Client, other.Client) && ReferenceEquals(IntensityModel, other.IntensityModel) &&
+                       ReferenceEquals(RTModel, other.RTModel) && ReferenceEquals(Settings, other.Settings) &&
+                       ReferenceEquals(Precursor, other.Precursor) && ReferenceEquals(Peptide, other.Peptide) && NCE == other.NCE;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != GetType()) return false;
+                return Equals((PrositRequest)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = (Client != null ? Client.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (IntensityModel != null ? IntensityModel.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (RTModel != null ? RTModel.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (Settings != null ? Settings.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (Precursor != null ? Precursor.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (Peptide != null ? Peptide.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ NCE;
+                    return hashCode;
+                }
+            }
+        }
+
         public static bool PrositSettingsValid
         {
             get
@@ -319,7 +446,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
         /// <param name="spectrum1">First spectrum</param>
         /// <param name="spectrum2">Second spectrum</param>
         /// <param name="mzTolerance">Tolerance for considering two mzs the same</param>
-        public static double CalculateSpectrumDotp(LibraryRankedSpectrumInfo spectrum1, LibraryRankedSpectrumInfo spectrum2, double mzTolerance)
+        public static double CalculateSpectrumDotpMzMatch(LibraryRankedSpectrumInfo spectrum1, LibraryRankedSpectrumInfo spectrum2, double mzTolerance)
         {
             var matched1 = spectrum1.PeaksMatched.ToArray();
             var matched2 = spectrum2.PeaksMatched.ToArray();
@@ -357,6 +484,20 @@ namespace pwiz.Skyline.Model.Prosit.Models
             return new Statistics(intensities1All).NormalizedContrastAngleSqrt(
                 new Statistics(intensities2All));
         }
+
+        /*public static double CalculateSpectrumDotpIonMatch(LibraryRankedSpectrumInfo spectrum1,
+            LibraryRankedSpectrumInfo spectrum2)
+        {
+            var matched1 = spectrum1.PeaksMatched.ToArray();
+            var matched2 = spectrum2.PeaksMatched.ToArray();
+            var intensities1All = new List<double>(matched1.Length + matched2.Length);
+            var intensities2All = new List<double>(matched1.Length + matched2.Length);
+
+            foreach (var match1 in matched1)
+            {
+                var other = matched2.Where(m => m.MatchedIons.Intersect())
+            }
+        }*/
 
         /// <summary>
         /// ReLU activation for spectra

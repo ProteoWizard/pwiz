@@ -5696,7 +5696,7 @@ namespace pwiz.Skyline
             if (node == null)
                 return null;
             return PrositRetentionTimeModel.Instance?.PredictSingle(PrositPredictionClient.Current, Document.Settings,
-                node)[node];
+                node, CancellationToken.None)[node];
         }
 
         private void mirrorMenuItem_Click(object sender, EventArgs e)

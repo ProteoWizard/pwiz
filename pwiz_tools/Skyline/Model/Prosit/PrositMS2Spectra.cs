@@ -53,7 +53,7 @@ namespace pwiz.Skyline.Model.Prosit
             var precursor = peptidePrecursorPair.NodeGroup;
             var peptide = peptidePrecursorPair.NodePep;
 
-            var calc = settings.GetFragmentCalc(labelTypeOverride ?? precursor.LabelType, peptide.ExplicitMods);
+            var calc = settings.GetFragmentCalc(IsotopeLabelType.light, peptide.ExplicitMods);
             var ionTable = calc.GetFragmentIonMasses(peptide.Target); // TODO: get mods and pass them as explicit mods above?
             var ions = ionTable.GetLength(1);
 

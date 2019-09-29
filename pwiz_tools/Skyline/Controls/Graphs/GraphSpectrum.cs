@@ -26,7 +26,6 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
 using pwiz.MSGraph;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -593,6 +592,10 @@ namespace pwiz.Skyline.Controls.Graphs
             public TransitionDocNode Transition { get; private set; }
         }
 
+        
+
+        private PrositHelpers.PrositRequest _prositRequest;
+
         public void UpdateUI(bool selectionChanged = true)
         {
             // Only worry about updates, if the graph is visible
@@ -621,9 +624,7 @@ namespace pwiz.Skyline.Controls.Graphs
             try
             {
                 if (Settings.Default.Prosit && !PrositHelpers.PrositSettingsValid)
-                {
-                    throw new PrositException(PrositResources.GraphSpectrum_UpdateUI_Some_Prosit_settings_are_not_set_);
-                }
+                    throw new PrositNotConfiguredException();
 
                 if (selection.Precursor == null || (!selection.Precursor.HasLibInfo && !libraries.HasMidasLibrary &&
                                                     !Settings.Default.Prosit))
@@ -640,32 +641,37 @@ namespace pwiz.Skyline.Controls.Graphs
                         // Need this to make sure we still update the toolbar if the prosit prediction throws
                         Exception prositEx = null;
                         SpectrumDisplayInfo spectrum = null;
-                        SpectrumDisplayInfo prositSpectrum = null;
                         PrositSpectrum = null;
 
                         if (Settings.Default.Prosit)
                         {
                             try
                             {
-                                var prositClient = PrositPredictionClient.Current;
-                                var massSpectrum = PrositIntensityModel.Instance.PredictSingle(prositClient,
-                                    DocumentUI.Settings,
-                                    new PeptidePrecursorPair(selection.Peptide, selection.Precursor,
-                                        Settings.Default.PrositNCE));
-                                var iRT = PrositRetentionTimeModel.Instance.PredictSingle(prositClient,
-                                    DocumentUI.Settings,
-                                    selection.Peptide);
-                                prositSpectrum = new SpectrumDisplayInfo(
-                                    new SpectrumInfoProsit(massSpectrum, selection.Precursor,
-                                        Settings.Default.PrositNCE),
-                                    // ReSharper disable once AssignNullToNotNullAttribute
-                                    iRT[selection.Peptide]);
+                                var prositRequest = new PrositHelpers.PrositRequest(PrositPredictionClient.Current, PrositIntensityModel.Instance,
+                                    PrositRetentionTimeModel.Instance,
+                                    DocumentUI.Settings, selection.Precursor, selection.Peptide,
+                                    Settings.Default.PrositNCE, () => Invoke((Action)(() => UpdateUI())));
 
-                                PrositSpectrum = prositSpectrum;
+                                if (_prositRequest == null || !_prositRequest.Equals(prositRequest))
+                                {
+                                    // Cancel old request
+                                    _prositRequest?.Cancel();
+                                    _prositRequest = prositRequest.Predict();
+                                    throw new PrositPredictingException();
+                                }
+                                else if (_prositRequest.Spectrum == null)
+                                {
+                                    // Rethrow the exception caused by Prosit, otherwise
+                                    // we are still predicting
+                                    throw _prositRequest.Exception ?? new PrositPredictingException();
+                                }
+                                
+                                PrositSpectrum = _prositRequest.Spectrum;
+                                // _prositRequest = null;
                                 if (!ShouldShowMirrorPlot)
                                 {
-                                    spectrum = prositSpectrum;
-                                    _spectra = new[] {prositSpectrum};
+                                    spectrum = PrositSpectrum;
+                                    _spectra = new[] { PrositSpectrum };
                                 }
 
                             }
@@ -788,7 +794,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                 if (ShouldShowMirrorPlot)
                                 {
                                     if (Settings.Default.Prosit)
-                                        mirrorSpectrum = prositSpectrum;
+                                        mirrorSpectrum = PrositSpectrum;
                                 }
                                 else
                                 {
@@ -842,7 +848,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                                     _graphHelper.AddSpectrum(mirrorGraphItem, false);
                                     
-                                    var dotp = PrositHelpers.CalculateSpectrumDotp(spectrumInfoR, mirrorSpectrumInfoR,
+                                    var dotp = PrositHelpers.CalculateSpectrumDotpMzMatch(spectrumInfoR, mirrorSpectrumInfoR,
                                         settings.TransitionSettings.Libraries.IonMatchTolerance);
 
                                     GraphPane.Title.Text = TextUtil.LineSeparate(

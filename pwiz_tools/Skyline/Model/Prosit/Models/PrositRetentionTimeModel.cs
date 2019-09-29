@@ -45,8 +45,8 @@ namespace pwiz.Skyline.Model.Prosit.Models
         private PrositRetentionTimeModel(string model)
         {
             if (!Models.Contains(model))
-                throw new PrositException(string.Format(
-                    PrositResources.PrositIntensityModel_PrositIntensityModel_Intensity_model__0__does_not_exist,
+                throw new PrositNotConfiguredException(string.Format(
+                    PrositResources.PrositRetentionTimeModel_PrositRetentionTimeModel_Retention_time_model___0___does_not_exist,
                     model));
 
             Model = model;
@@ -76,6 +76,23 @@ namespace pwiz.Skyline.Model.Prosit.Models
 
         public override string Signature => SIGNATURE;
         public override string Model { get; protected set; }
+
+        private bool Equals(PrositRetentionTimeModel other)
+        {
+            return string.Equals(Model, other.Model);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return obj is PrositRetentionTimeModel other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return (Model != null ? Model.GetHashCode() : 0);
+        }
 
         public static IEnumerable<string> Models
         {
