@@ -10682,6 +10682,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Caused by ---&gt;.
+        /// </summary>
+        public static string ExceptionDialog_Caused_by_____ {
+            get {
+                return ResourceManager.GetString("ExceptionDialog_Caused_by_____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap ExistingQuant_thumb {
