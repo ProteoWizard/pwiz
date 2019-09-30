@@ -23,6 +23,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
@@ -1532,97 +1533,78 @@ namespace pwiz.SkylineTestData
                     Resources.CommandArgs_ParseRegexArgument_Error__Regular_expression___0___for__1__cannot_be_parsed_,
                     "*", "--import-filename-pattern"), msg);
 
-            // Test: Import a single file, apply a file name regex
-            RunCommand("--in=" + docPath,
-                "--import-file=" + rawPath.GetFilePath(),
-                "--import-filename-pattern=\\d{6}_Mix\\d",
-                "--out=" + outPath);
+            var log = new StringBuilder();
+            var commandLine = new CommandLine(new CommandStatusWriter(new StringWriter(log)));
 
-            var doc = ResultsUtil.DeserializeDocument(outPath);
-            Assert.IsTrue(doc.Settings.HasResults);
-            Assert.AreEqual(1, doc.Settings.MeasuredResults.Chromatograms.Count);
-            Assert.IsTrue(doc.MeasuredResults.ContainsChromatogram(rawPath.GetFileNameWithoutExtension()));
-            FileEx.SafeDelete(outPath);
+            IList<KeyValuePair<string, MsDataFileUri[]>> dataSourceList = DataSourceUtil.GetDataSources(testFilesDir.FullPath).ToArray();
+            IList<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths = new List<KeyValuePair<string, MsDataFileUri[]>>(dataSourceList);
 
-            // Test: Import a single file, apply a file name regex that will not match
-            var pattern = "QC*";
-            msg = RunCommand("--in=" + docPath,
-                "--import-file=" + rawPath.GetFilePath(),
-                "--import-filename-pattern=" + pattern,
-                "--out=" + outPath);
+            // Regex 1 - nothing should match
+            var pattern = "QC.*";
+            commandLine.ApplyFileAndSampleNameRegex(new Regex(pattern), null, ref listNamedPaths);
+            Assert.AreEqual(0, listNamedPaths.Count);
             CheckRunCommandOutputContains(
                 string.Format(
                     Resources.CommandLine_ApplyFileNameRegex_File_name___0___does_not_match_the_pattern___1____Ignoring__2_,
-                    rawPath.GetFileName(), pattern, rawPath), msg);
+                    rawPath.GetFileName(), pattern, rawPath), log.ToString());
             CheckRunCommandOutputContains(
-                string.Format(Resources.CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_file_name_pattern___0___, pattern), msg);
-            Assert.IsFalse(File.Exists(outPath));
+                   string.Format(Resources.CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_file_name_pattern___0___, pattern), log.ToString());
 
-            // Test: Import all files and sub-folders; Nothing should match the given regex
-            msg = RunCommand("--in=" + docPath,
-                "--import-all=" + testFilesDir.FullPath,
-                "--import-filename-pattern="+pattern,
-                "--import-warn-on-failure",
-                "--out=" + outPath);
-            Assert.IsFalse(File.Exists(outPath));
-            CheckRunCommandOutputContains(
-                string.Format(Resources.CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_file_name_pattern___0___, pattern), msg);
+            // Regex 2
+            log.Clear();
+            pattern = "\\d{6}_Mix\\d";
+            listNamedPaths = new List<KeyValuePair<string, MsDataFileUri[]>>(dataSourceList);
+            commandLine.ApplyFileAndSampleNameRegex(new Regex(pattern), null, ref listNamedPaths);
+            Assert.AreEqual(4, listNamedPaths.Count);
+            var expected = new[]
+            {
+                "160109_Mix1_calcurve_070",
+                "160109_Mix1_calcurve_073",
+                "160109_Mix1_calcurve_071",
+                "160109_Mix1_calcurve_074"
+            }.ToList();
+            expected.Sort();
+            var actual = listNamedPaths.Select(p => p.Key).ToList();
+            actual.Sort();
+            AssertEx.AreEqualDeep(expected, actual);
+            
+            // Regex 3
+            log.Clear();
+            listNamedPaths = new List<KeyValuePair<string, MsDataFileUri[]>>(dataSourceList);
+            pattern = @"REP\d{1}_01";
+            commandLine.ApplyFileAndSampleNameRegex(new Regex(pattern), null, ref listNamedPaths);
+            Assert.AreEqual(2, listNamedPaths.Count);
+            expected = new[]
+            {
+                "REP01",
+                "REP02"
+            }.ToList();
+            expected.Sort();
+            actual = listNamedPaths.Select(p => p.Key).ToList(); // Key is the replicate name; this will be directory name in this case
+            actual.Sort();
+            AssertEx.AreEqualDeep(expected, actual);
+            expected = new[]
+            {
+                "CE_Vantage_15mTorr_0001_REP1_01" + extRaw,
+                "CE_Vantage_15mTorr_0001_REP2_01" + extRaw
+            }.ToList();
+            expected.Sort();
+            actual = listNamedPaths.Select(p => p.Value[0].GetFileName()).ToList(); // Filenames for the replicates
+            actual.Sort();
+            AssertEx.AreEqualDeep(expected, actual);
 
-            // Test: Import all files and sub-folders. Only two files should get imported:
-            // Replicate "REP01" -> REP01\CE_Vantage_15mTorr_0001_REP1_01.raw|mzML
-            // Replicate "REP02" -> REP02\CE_Vantage_15mTorr_0001_REP2_01.raw|mzML
-            var regex = @"REP\d{1}_01";
-            msg = RunCommand("--in=" + docPath,
-                "--import-all=" + testFilesDir.FullPath,
-                "--import-filename-pattern=" + regex,
-                "--import-warn-on-failure",
-                "--out=" + outPath);
-            doc = ResultsUtil.DeserializeDocument(outPath);
-            Assert.AreEqual(2, doc.Settings.MeasuredResults.Chromatograms.Count);
-            Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("REP01")); // Imported from the "REP01" folder
-            Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("REP02")); // Imported from the "REP02" folder
 
-            ChromatogramSet chromatogramSet;
-            int index;
-            doc.Settings.MeasuredResults.TryGetChromatogramSet("REP01", out chromatogramSet, out index);
-            Assert.IsNotNull(chromatogramSet);
-            Assert.IsTrue(chromatogramSet.MSDataFilePaths.Count() == 1);
-            Assert.IsTrue(chromatogramSet.MSDataFilePaths.Contains(
-                new MsDataFilePath(testFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_01" +
-                                                            extRaw))));
-
-            doc.Settings.MeasuredResults.TryGetChromatogramSet("REP02", out chromatogramSet, out index);
-            Assert.IsNotNull(chromatogramSet);
-            Assert.IsTrue(chromatogramSet.MSDataFilePaths.Count() == 1);
-            Assert.IsTrue(chromatogramSet.MSDataFilePaths.Contains(
-                new MsDataFilePath(testFilesDir.GetTestPath(@"REP02\CE_Vantage_15mTorr_0001_REP2_01" +
-                                                            extRaw))));
-
-            var pathIgnored1 = MsDataFileUri.Parse(testFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_02" + extRaw));
-            var pathIgnored2 = MsDataFileUri.Parse(testFilesDir.GetTestPath(@"REP02\CE_Vantage_15mTorr_0001_REP2_02" + extRaw));
-            CheckRunCommandOutputContains(
-                string.Format(
-                    Resources.CommandLine_ApplyFileNameRegex_File_name___0___does_not_match_the_pattern___1____Ignoring__2_,
-                    pathIgnored1.GetFileName(), regex, pathIgnored1), msg);
-            CheckRunCommandOutputContains(
-                string.Format(
-                    Resources.CommandLine_ApplyFileNameRegex_File_name___0___does_not_match_the_pattern___1____Ignoring__2_,
-                    pathIgnored2.GetFileName(), regex, pathIgnored2), msg);
-
-            FileEx.SafeDelete(outPath);
-
-            // Test: Import all files and sub-folders, apply a sample name regex.  Nothing should be imported since none of the files
-            // in the test directory have sample names.  Only multi-injection .wiff files can have sample names.  
-            msg = RunCommand("--in=" + docPath,
-                "--import-all=" + testFilesDir.FullPath,
-                "--import-samplename-pattern=" + regex,
-                "--out=" + outPath);
+            // Apply a sample name regex.  Nothing should match since none of the files
+            // in the test directory have sample names.  Only multi-injection .wiff files can have sample names. 
+            log.Clear();
+            listNamedPaths = new List<KeyValuePair<string, MsDataFileUri[]>>(dataSourceList);
+            commandLine.ApplyFileAndSampleNameRegex(null, new Regex(pattern), ref listNamedPaths);
+            Assert.AreEqual(0, listNamedPaths.Count);
             CheckRunCommandOutputContains(
                 string.Format(
                     Resources.CommandLine_ApplySampleNameRegex_File___0___does_not_have_a_sample__Cannot_apply_sample_name_pattern__Ignoring_,
-                    rawPath), msg);
-            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_sample_name_pattern___0___, regex), msg);
-            Assert.IsFalse(File.Exists(outPath));
+                    rawPath), log.ToString());
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_sample_name_pattern___0___, pattern), log.ToString());
         }
 
         [TestMethod]
@@ -1652,58 +1634,41 @@ namespace pwiz.SkylineTestData
                     Resources.CommandArgs_ParseRegexArgument_Error__Regular_expression___0___for__1__cannot_be_parsed_,
                     "*", "--import-samplename-pattern"), msg);
 
-            // Test: Import a single file and apply a regex filter on the sample name
-            var regex = "rfp9_.*";
-            msg = RunCommand("--in=" + docPath,
-                    "--import-file=" + rawPath,
-                    "--import-samplename-pattern="+regex,
-                    "--out=" + outPath);
+            var log = new StringBuilder();
+            var commandLine = new CommandLine(new CommandStatusWriter(new StringWriter(log)));
+            IList<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths = DataSourceUtil.GetDataSources(testFilesDir.FullPath).ToArray();
 
-            var doc = ResultsUtil.DeserializeDocument(outPath);
-            Assert.AreEqual(2, doc.MeasuredResults.Chromatograms.Count);
-            Assert.IsTrue(doc.MeasuredResults.ContainsChromatogram(sampleNames[1]));
-            Assert.IsTrue(doc.MeasuredResults.ContainsChromatogram(sampleNames[3]));
-
-            // Sample "blank" should not match
-            var sampleFile = sampleFiles1.First(file => file.GetSampleName().Equals(sampleNames[0]));
-            CheckRunCommandOutputContains(
-                string.Format(
-                    Resources.CommandLine_ApplySampleNameRegex_Sample_name___0___does_not_match_the_pattern___1____Ignoring__2_,
-                    sampleFile.GetSampleName(), regex, sampleFile), msg);
-
-            // Sample "test" should not match
-            sampleFile = sampleFiles1.First(file => file.GetSampleName().Equals(sampleNames[2]));
-            CheckRunCommandOutputContains(
-                string.Format(
-                    Resources.CommandLine_ApplySampleNameRegex_Sample_name___0___does_not_match_the_pattern___1____Ignoring__2_,
-                    sampleFile.GetSampleName(), regex, sampleFile), msg);
-
-            FileEx.SafeDelete(outPath);
-
-            // Test: Import all files in the folder and apply regex filters on file and sample names.
-            // Samples "blank" and "test" from one of the files (051309_digestion_copy.wiff) should be imported
-            regex = "blank|test";
+            // Apply regex filters on file and sample names. There are two files in the folder (051309_digestion.wiff and 051309_digestion_copy.wiff)
+            // Samples "blank" and "test" from only one of the files (051309_digestion_copy.wiff) should be selected
+            var sampleRegex = "blank|test";
             var fileregex = ".*_copy";
-            msg = RunCommand("--in=" + docPath,
-                "--import-all-files=" + testFilesDir.FullPath,
-                "--import-samplename-pattern=" + regex,
-                "--import-filename-pattern="+fileregex,
-                "--out=" + outPath);
-            doc = ResultsUtil.DeserializeDocument(outPath);
-            Assert.AreEqual(2, doc.MeasuredResults.Chromatograms.Count);
-            Assert.IsTrue(doc.MeasuredResults.ContainsChromatogram(sampleNames[0])); // replicate "blank"
-            Assert.IsTrue(doc.MeasuredResults.ContainsChromatogram(sampleNames[2])); // replicate "test"
-            doc.MeasuredResults.TryGetChromatogramSet(sampleNames[0], out var chromatSet, out _);
-            Assert.IsNotNull(chromatSet);
-            Assert.AreEqual(1, chromatSet.MSDataFilePaths.Count());
-            Assert.IsTrue(chromatSet.MSDataFilePaths.Contains(sampleFiles2[0]));
+            commandLine.ApplyFileAndSampleNameRegex(new Regex(fileregex), new Regex(sampleRegex), ref listNamedPaths);
+            Assert.AreEqual(2, listNamedPaths.Count);
+            var expected = new[]
+            {
+                sampleNames[0],
+                sampleNames[2]
+            }.ToList();
+            expected.Sort();
+            var actual = listNamedPaths.Select(p => p.Key).ToList();
+            actual.Sort();
+            AssertEx.AreEqualDeep(expected, actual);
+            expected = new[]
+            {
+                sampleFiles2[0].ToString(),
+                sampleFiles2[2].ToString()
+            }.ToList();
+            expected.Sort();
+            actual = listNamedPaths.Select(p => p.Value[0].ToString()).ToList();
+            actual.Sort();
+            AssertEx.AreEqualDeep(expected, actual);
             foreach (var msDataFileUri in sampleFiles1)
             {
                 // First file, 051309_digestion.wiff, should not have matched the file name regex 
                 CheckRunCommandOutputContains(
                     string.Format(
                         Resources.CommandLine_ApplyFileNameRegex_File_name___0___does_not_match_the_pattern___1____Ignoring__2_,
-                        msDataFileUri.GetFileName(), fileregex, msDataFileUri), msg);
+                        msDataFileUri.GetFileName(), fileregex, msDataFileUri), log.ToString());
             }
         }
         

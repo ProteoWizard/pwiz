@@ -80,6 +80,26 @@ namespace pwiz.SkylineTestData
                 Assert.IsTrue(doc.Settings.HasResults);
                 Assert.AreEqual(SAMPLE_NAMES.Count, doc.Settings.MeasuredResults.Chromatograms.Count);
             }
+
+            // Test importing results from two .wiff files with different file names but same sample names.
+            // Make a copy of the wiff file, rename it and import it. The document should contain 8 replicates. 
+            // From the 1st file: "blank", "rfp9_after_h_1", "test", "rfp9_before_h_1"
+            // From the 2nd file: "blank2", "rfp9_after_h_12", "test2", "rfp9_before_h_12"
+            var wiffCopy = Path.Combine(testFilesDir.FullPath,
+                Path.GetFileNameWithoutExtension(rawPath) + "_copy.wiff");
+            File.Copy(rawPath, wiffCopy);
+            Assert.IsTrue(File.Exists(wiffCopy));
+            var msg = RunCommand("--in=" + docPath,
+                "--import-file=" + wiffCopy,
+                "--save");
+            CheckDocument(docPath, new[] { rawPath, wiffCopy }, 2);
+            foreach (var sample in SAMPLE_NAMES)
+            {
+                CheckRunCommandOutputContains(
+                    string.Format(
+                        Resources.CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_,
+                        sample, sample + "2"), msg);
+            }
         }
 
         /// <summary>
@@ -116,81 +136,6 @@ namespace pwiz.SkylineTestData
             }
         }
 
-        /// <summary>
-        /// Tests importing results from two .wiff files with different file names but same sample names.
-        /// </summary>
-        [TestMethod]
-        public void TestWiffCommandLineImportSameSampleName()
-        {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_PATH);
-            string docPath = testFilesDir.GetTestPath(DOC_NAME);
-            string rawPath = testFilesDir.GetTestPath(WIFF_NAME);
-
-            RunCommand("--in=" + docPath,
-                "--import-file=" + rawPath,
-                "--save");
-            CheckDocument(docPath, new[] { rawPath }, 1);
-
-            // Make a copy of the file, rename it and import it. The document should contain 8 replicates. 
-            // From the 1st file: "blank", "rfp9_after_h_1", "test", "rfp9_before_h_1"
-            // From the 2nd file: "blank2", "rfp9_after_h_12", "test2", "rfp9_before_h_12"
-            var wiffCopy = Path.Combine(testFilesDir.FullPath,
-                Path.GetFileNameWithoutExtension(rawPath) + "_copy.wiff");
-            File.Copy(rawPath, wiffCopy);
-            Assert.IsTrue(File.Exists(wiffCopy));
-            var msg = RunCommand("--in=" + docPath,
-                "--import-file=" + wiffCopy,
-                "--save");
-            CheckDocument(docPath, new[] { rawPath, wiffCopy }, 2);
-            foreach (var sample in SAMPLE_NAMES)
-            {
-                CheckRunCommandOutputContains(
-                    string.Format(
-                        Resources.CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_,
-                        sample, sample+"2"), msg);
-            }          
-        }
-
-        /// <summary>
-        /// Tests importing results from wiff files in a directory where each file has multiple samples,
-        /// and sample names are the same.
-        /// </summary>
-        [TestMethod]
-        public void TestWiffsInDirCommandLineImport()
-        {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_PATH);
-            var docPath = testFilesDir.GetTestPath(DOC_NAME);
-            var testDir = testFilesDir.FullPath;
-            var rawPath = testFilesDir.GetTestPath(WIFF_NAME);
-            var rawPath2 = Path.Combine(testDir, Path.GetFileNameWithoutExtension(rawPath) + "_copy.wiff");
-            var rawPath3 = Path.Combine(testDir, Path.GetFileNameWithoutExtension(rawPath) + "_copy2.wiff");
-
-            File.Copy(rawPath, rawPath2);
-            Assert.IsTrue(File.Exists(rawPath2));
-            File.Copy(rawPath, rawPath3);
-            Assert.IsTrue(File.Exists(rawPath2));
-            RunCommand("--in=" + docPath,
-                "--import-all=" + testDir,
-                "--save");
-            var doc = ResultsUtil.DeserializeDocument(docPath);
-            Assert.IsTrue(doc.Settings.HasResults);
-            Assert.AreEqual(SAMPLE_NAMES.Count * 3, doc.Settings.MeasuredResults.Chromatograms.Count);
-
-            // Each file has samples named: "blank", "rfp9_after_h_1", "test", "rfp9_before_h_1"
-            // After the import we should have 3 replicates per sample name.
-            // From the 1st file: "blank", "rfp9_after_h_1", "test", "rfp9_before_h_1"
-            // From the 2nd file: "blank2", "rfp9_after_h_12", "test2", "rfp9_before_h_12"
-            // From the 3rd file: "blank3", "rfp9_after_h_13", "test3", "rfp9_before_h_13"
-            var expectedReplicates = new List<string>();
-            expectedReplicates.AddRange(SAMPLE_NAMES);
-            expectedReplicates.AddRange(SAMPLE_NAMES.Select(sample => sample + "2"));
-            expectedReplicates.AddRange(SAMPLE_NAMES.Select(sample => sample + "3"));
-            expectedReplicates.Sort();
-            var docReplicates = doc.MeasuredResults.Chromatograms.Select(chrom => chrom.Name).ToList();
-            docReplicates.Sort();
-            Assert.IsTrue(expectedReplicates.SequenceEqual(docReplicates));
-        }
-
         private static void CheckDocument(string docPath, string[] rawPaths, int importCount)
         {
             var doc = ResultsUtil.DeserializeDocument(docPath);
@@ -219,7 +164,7 @@ namespace pwiz.SkylineTestData
         private static void CheckRunCommandOutputContains(string expectedMessage, string actualMessage)
         {
             Assert.IsTrue(actualMessage.Contains(expectedMessage),
-                string.Format("Expected RunCommand result message containing \n\"{0}\",\ngot\n\"{1}\"\ninstead.", expectedMessage, actualMessage));
+                string.Format("Expected RunCommand result message that contains \n\"{0}\",\ngot\n\"{1}\"\ninstead.", expectedMessage, actualMessage));
         }
     }
 }
