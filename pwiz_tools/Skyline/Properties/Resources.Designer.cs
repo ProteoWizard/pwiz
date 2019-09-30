@@ -8145,24 +8145,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Drift Time Predictor:.
-        /// </summary>
-        public static string DriftTimePredictorList_Label_Drift_Time_Predictor_ {
-            get {
-                return ResourceManager.GetString("DriftTimePredictorList_Label_Drift_Time_Predictor_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Edit Drift Time Predictors.
-        /// </summary>
-        public static string DriftTimePredictorList_Title_Edit_Drift_Time_Predictors {
-            get {
-                return ResourceManager.GetString("DriftTimePredictorList_Title_Edit_Drift_Time_Predictors", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Peak width must be non-negative..
         /// </summary>
         public static string DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_ {
@@ -8649,16 +8631,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A drift time predictor with the name {0} already exists..
-        /// </summary>
-        public static string EditDriftTimePredictorDlg_OkDialog_A_drift_time_predictor_with_the_name__0__already_exists_ {
-            get {
-                return ResourceManager.GetString("EditDriftTimePredictorDlg_OkDialog_A_drift_time_predictor_with_the_name__0__alrea" +
-                        "dy_exists_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to An ion mobility calibration with the name {0} already exists..
         /// </summary>
         public static string EditDriftTimePredictorDlg_OkDialog_An_ion_mobility_calibration_with_the_name__0__already_exists_ {
@@ -8674,16 +8646,6 @@ namespace pwiz.Skyline.Properties {
         public static string EditDriftTimePredictorDlg_OkDialog_Do_you_want_to_change_it_ {
             get {
                 return ResourceManager.GetString("EditDriftTimePredictorDlg_OkDialog_Do_you_want_to_change_it_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Drift time prediction requires an ion mobility library..
-        /// </summary>
-        public static string EditDriftTimePredictorDlg_OkDialog_Drift_time_prediction_requires_an_ion_mobility_library_ {
-            get {
-                return ResourceManager.GetString("EditDriftTimePredictorDlg_OkDialog_Drift_time_prediction_requires_an_ion_mobility" +
-                        "_library_", resourceCulture);
             }
         }
         
@@ -14354,6 +14316,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ion Mobility Calibration:.
+        /// </summary>
+        public static string IonMobilityCalibrationList_Label_Ion_Mobility_Calibration_ {
+            get {
+                return ResourceManager.GetString("IonMobilityCalibrationList_Label_Ion_Mobility_Calibration_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit Ion Mobility Calibrations.
+        /// </summary>
+        public static string IonMobilityCalibrationList_Title_Edit_Ion_Mobility_Calibrations {
+            get {
+                return ResourceManager.GetString("IonMobilityCalibrationList_Title_Edit_Ion_Mobility_Calibrations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Ion Mobility Library Files.
         /// </summary>
         public static string IonMobilityDb_FILTER_IONMOBILITYLIBRARY_Ion_Mobility_Library_Files {
@@ -14454,15 +14434,6 @@ namespace pwiz.Skyline.Properties {
         public static string IonMobilityFilter_IonMobilityUnitsString_Drift_Time__ms_ {
             get {
                 return ResourceManager.GetString("IonMobilityFilter_IonMobilityUnitsString_Drift_Time__ms_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The drift time predictors:.
-        /// </summary>
-        public static string IonMobilityLibraryList_AcceptList_The_drift_time_predictors_ {
-            get {
-                return ResourceManager.GetString("IonMobilityLibraryList_AcceptList_The_drift_time_predictors_", resourceCulture);
             }
         }
         

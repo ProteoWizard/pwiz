@@ -72,7 +72,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 var transitionSettingsDlg = ShowDialog<TransitionSettingsUI>(
                     () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
 
-                // Simulate user picking Edit Current from the Drift Time Predictor combo control
+                // Simulate user picking Edit Current from the Ion Mobility Calibration combo control
                 var driftTimePredictorDlg = ShowDialog<EditIonMobilityCalibrationDlg>(transitionSettingsDlg.EditIonMobilityLookup);
                 RunUI(() =>
                 {
@@ -140,7 +140,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
             // And finally verify ability to reimport with altered drift filter (would formerly fail on an erroneous Assume)
 
-            // Simulate user picking Edit Current from the Drift Time Predictor combo control, and messing with all the measured drift time values
+            // Simulate user picking Edit Current from the Ion Mobility Calibration  combo control, and messing with all the measured drift time values
             var transitionSettingsDlg2 = ShowDialog<TransitionSettingsUI>(
                 () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
             var driftTimePredictorDlg2 = ShowDialog<EditIonMobilityCalibrationDlg>(transitionSettingsDlg2.EditIonMobilityLookup);

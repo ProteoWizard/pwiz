@@ -242,7 +242,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 var transitionsSettingsDlg = ShowDialog<TransitionSettingsUI>(
                     () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
 
-                // Simulate user picking Edit Current from the Drift Time Predictor combo control
+                // Simulate user picking Edit Current from theIon Mobility Calibration combo control
                 var driftTimePredictorDlg = ShowDialog<EditIonMobilityCalibrationDlg>(transitionsSettingsDlg.AddIonMobilityCalibration);
                 RunUI(() =>
                 {

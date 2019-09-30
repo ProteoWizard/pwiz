@@ -842,25 +842,25 @@ namespace pwiz.Skyline.Properties
             // EMPTY return is valid for this list, and means no ion mobility
             // calculation should be applied.
             IonMobilityCalibration ionMobilityCalibration;
-            if (DriftTimePredictorList.TryGetValue(name, out ionMobilityCalibration))
+            if (IonMobilityCalibrationList.TryGetValue(name, out ionMobilityCalibration))
             {
-                if (ionMobilityCalibration.GetKey() == DriftTimePredictorList.GetDefault().GetKey())
+                if (ionMobilityCalibration.GetKey() == IonMobilityCalibrationList.GetDefault().GetKey())
                     ionMobilityCalibration = IonMobilityCalibration.EMPTY;
             }
-            return ionMobilityCalibration;
+            return ionMobilityCalibration?? IonMobilityCalibration.EMPTY;
         }
 
         [UserScopedSettingAttribute]
-        public DriftTimePredictorList DriftTimePredictorList
+        public IonMobilityCalibrationList IonMobilityCalibrationList
         {
             get
             {
-                DriftTimePredictorList list = (DriftTimePredictorList)this[typeof(DriftTimePredictorList).Name];
+                IonMobilityCalibrationList list = (IonMobilityCalibrationList)this[typeof(IonMobilityCalibrationList).Name];
                 if (list == null)
                 {
-                    list = new DriftTimePredictorList();
+                    list = new IonMobilityCalibrationList();
                     list.AddDefaults();
-                    DriftTimePredictorList = list;
+                    IonMobilityCalibrationList = list;
                 }
                 else
                 {
@@ -870,7 +870,7 @@ namespace pwiz.Skyline.Properties
             }
             set
             {
-                this[typeof(DriftTimePredictorList).Name] = value;
+                this[typeof(IonMobilityCalibrationList).Name] = value;
             }
         }
         
@@ -2234,12 +2234,8 @@ namespace pwiz.Skyline.Properties
         public override int ExcludeDefaults { get { return 1; } }
     }
 
-    public sealed class DriftTimePredictorList : SettingsList<IonMobilityCalibration> 
+    public sealed class IonMobilityCalibrationList : SettingsList<IonMobilityCalibration> 
     {
-        // N.B. the use of the terms "Predictor" and "DriftTime" in DriftTimePredictorList and IonMobilityPredictor are
-        // historical and are now misnomers (it's a lookup, not a prediction, and its not just drift time) but we
-        // retain them for backward compatibility in audit logs
-
         private static readonly IonMobilityCalibration NONE =
             new IonMobilityCalibration(ELEMENT_NONE, null, 0, 0, 0, 0);
 
@@ -2284,9 +2280,9 @@ namespace pwiz.Skyline.Properties
             return (IonMobilityCalibration)item.ChangeName(string.Empty);
         }
 
-        public override string Title { get { return Resources.DriftTimePredictorList_Title_Edit_Drift_Time_Predictors; } }
+        public override string Title { get { return Resources.IonMobilityCalibrationList_Title_Edit_Ion_Mobility_Calibrations; } }
 
-        public override string Label { get { return Resources.DriftTimePredictorList_Label_Drift_Time_Predictor_; } }
+        public override string Label { get { return Resources.IonMobilityCalibrationList_Label_Ion_Mobility_Calibration_; } }
 
         public override int ExcludeDefaults { get { return 1; } }
     }

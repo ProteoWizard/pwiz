@@ -673,8 +673,7 @@ namespace TestRunner
             int perfPass = pass; // For nightly tests, we'll run perf tests just once per language, and only in one language (dynamically chosen for coverage) if english and french (along with any others) are both enabled
             bool needsPerfTestPass2Warning = asNightly && testList.Any(t => t.IsPerfTest); // No perf tests, no warning
             var perfTestsOneLanguageOnly = asNightly && perftests && languages.Any(l => l.StartsWith("en")) && languages.Any(l => l.StartsWith("fr"));
-            bool flip = true;
-
+            
             for (; pass < passEnd; pass++)
             {
                 if (testList.Count == 0)

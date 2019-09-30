@@ -165,7 +165,7 @@ namespace pwiz.Skyline.SettingsUI
                 textMaxTime.Text = Instrument.MaxTime.Value.ToString(LocalizationHelper.CurrentCulture);
 
             // Initialize ion mobility filter settings
-            _driverIM = new SettingsListComboDriver<IonMobilityCalibration>(comboIonMobilityCalibration, Settings.Default.DriftTimePredictorList);
+            _driverIM = new SettingsListComboDriver<IonMobilityCalibration>(comboIonMobilityCalibration, Settings.Default.IonMobilityCalibrationList);
             string selIM = (IonMobility.IonMobilityCalibration == null || IonMobility.IonMobilityCalibration .IsEmpty? null : IonMobility.IonMobilityCalibration.Name);
             _driverIM.LoadList(selIM);
             spectralLibraryIonMobilityValuesControl.InitializeSettings(_parent);

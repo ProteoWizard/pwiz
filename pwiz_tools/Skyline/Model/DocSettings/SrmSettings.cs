@@ -862,7 +862,7 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         /// <summary>
-        /// Get ion mobility for the charged peptide from explicitly set values, or our drift time predictor, or,
+        /// Get ion mobility for the charged peptide from explicitly set values, or our ion mobiliy calibration, or,
         /// failing that, from the provided spectral library if it has bare ion mobility values.
         /// If no ion mobility info is available, returns a new zero'd out ion mobility info object.
         /// </summary>
@@ -1523,8 +1523,8 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             if (!TransitionSettings.IonMobility.IonMobilityCalibration.IsEmpty)
             {
-                if (!defSet.DriftTimePredictorList.Contains(TransitionSettings.IonMobility.IonMobilityCalibration))
-                    defSet.DriftTimePredictorList.SetValue(TransitionSettings.IonMobility.IonMobilityCalibration);
+                if (!defSet.IonMobilityCalibrationList.Contains(TransitionSettings.IonMobility.IonMobilityCalibration))
+                    defSet.IonMobilityCalibrationList.SetValue(TransitionSettings.IonMobility.IonMobilityCalibration);
             }
             foreach (var annotationDef in DataSettings.AnnotationDefs)
             {

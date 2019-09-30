@@ -40,7 +40,7 @@ namespace pwiz.SkylineTestData.Results
     /// Run it three ways - 
     /// without IMS filter
     /// with measured drift time data from a spectral lib
-    /// with collisional cross section data with a drift time predictor
+    /// with collisional cross section data with a ion mobility calibration
     /// 
     /// Actually it's an mz5 file of the midsection in a larger Waters file
     /// but it still tests the ion mobility code.
