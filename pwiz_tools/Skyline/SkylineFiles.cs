@@ -312,7 +312,16 @@ namespace pwiz.Skyline
                             skylineDocumentHash = reader.Stream.Done();
                         }
 
-                        document = document.ReadAuditLog(path, skylineDocumentHash, AskForLogEntry);
+                        try
+                        {
+                            document = document.ReadAuditLog(path, skylineDocumentHash, AskForLogEntry);
+                        }
+                        catch (Exception e)
+                        {
+                            throw new AuditLogException(
+                                string.Format(AuditLogStrings.AuditLogException_Error_when_loading_document_audit_log__0, path), e);
+
+                        }
                     });
 
                     if (longWaitDlg.IsCanceled)
@@ -321,11 +330,22 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                exception = x;
-                // Was that even a Skyline file?
-                if (!SrmDocument.IsSkylineFile(path, out var explained))
+                var ex = x;
+                if (AuditLogException.IsAuditLogInvolved(x))
                 {
-                    exception = new IOException(explained); // Offer a more helpful explanation than that from the failed XML parser
+                    MessageDlg.ShowWithException(parentWindow ?? this, 
+                        AuditLogException.GetMultiLevelMessage(x),
+                        x);
+                }
+                else
+                {
+                    exception = x;
+                    // Was that even a Skyline file?
+                    if (!SrmDocument.IsSkylineFile(path, out var explained))
+                    {
+                        exception = new IOException(
+                            explained); // Offer a more helpful explanation than that from the failed XML parser
+                    }
                 }
             }
 
@@ -342,6 +362,7 @@ namespace pwiz.Skyline
 
                     // Make sure settings lists contain correct values for
                     // this document.
+                    // ReSharper disable once PossibleNullReferenceException
                     document.Settings.UpdateLists(path);
                 }
                 catch (Exception x)
@@ -387,9 +408,11 @@ namespace pwiz.Skyline
             // Once user has opened an existing document, stop reminding them to set a default UI mode
             if (string.IsNullOrEmpty(Settings.Default.UIMode))
             {
+                // ReSharper disable PossibleNullReferenceException
                 var mode = document.DocumentType == SrmDocument.DOCUMENT_TYPE.none
                     ? SrmDocument.DOCUMENT_TYPE.proteomic
                     : document.DocumentType;
+                // ReSharper restore PossibleNullReferenceException
                 Settings.Default.UIMode = mode.ToString();
             }
             
@@ -1636,6 +1659,7 @@ namespace pwiz.Skyline
             selectPath = null;
             using (var enumGroupsCurrent = docCurrent.MoleculeGroups.GetEnumerator())
             {
+                // ReSharper disable once PossibleNullReferenceException
                 foreach (PeptideGroupDocNode nodePepGroup in docNew.MoleculeGroups)
                 {
                     if (enumGroupsCurrent.MoveNext() &&
@@ -1656,8 +1680,10 @@ namespace pwiz.Skyline
                 if (matcher != null)
                 {
                     var pepModsNew = matcher.GetDocModifications(docNew);
+                    // ReSharper disable PossibleNullReferenceException
                     docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideModifications(mods => pepModsNew));
                     docNew.Settings.UpdateDefaultModifications(false);
+                    // ReSharper restore PossibleNullReferenceException
                 }
 
                 return docNew;

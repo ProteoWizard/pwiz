@@ -729,5 +729,7 @@ greater peak area.</value>
   </data>
   <data name="_import_samplename_pattern" xml:space="preserve">
     <value>A regular expression that is applied to sample names (e.g. in a multi-injection .wiff file) to select the ones that will be imported.</value>
+  <data name="_exp_order_by_mz" xml:space="preserve">
+    <value>Order exported method by m/z values in ascending order (precursor m/z, then product m/z when applicable) for optimized quadrupole switching.</value>
   </data>
 </root>

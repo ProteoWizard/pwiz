@@ -1332,6 +1332,8 @@ namespace pwiz.Skyline
             (c, p) => c.ExportOptimizeType = p.IsValue(OPT_CE) ? OPT_CE : OPT_DP);
         public static readonly Argument ARG_EXP_SCHEDULING_REPLICATE = new DocArgument(@"exp-scheduling-replicate", NAME_VALUE,
             (c, p) => c.SchedulingReplicate = p.Value);
+        public static readonly Argument ARG_EXP_ORDER_BY_MZ = new DocArgument(@"exp-order-by-mz",
+            (c, p) => c.SortByMz = true);
         public static readonly Argument ARG_EXP_IGNORE_PROTEINS = new DocArgument(@"exp-ignore-proteins",
             (c, p) => c.IgnoreProteins = true);
         public static readonly Argument ARG_EXP_PRIMARY_COUNT = new DocArgument(@"exp-primary-count", INT_VALUE,
@@ -1344,7 +1346,7 @@ namespace pwiz.Skyline
         private static readonly ArgumentGroup GROUP_EXP_GENERAL = new ArgumentGroup(
             () => CommandArgUsage.CommandArgs_GROUP_EXP_GENERAL_Method_and_transition_list_options, false,
             ARG_EXP_FILE, ARG_EXP_STRATEGY, ARG_EXP_METHOD_TYPE, ARG_EXP_MAX_TRANS,
-            ARG_EXP_OPTIMIZING, ARG_EXP_SCHEDULING_REPLICATE, ARG_EXP_IGNORE_PROTEINS,
+            ARG_EXP_OPTIMIZING, ARG_EXP_SCHEDULING_REPLICATE, ARG_EXP_ORDER_BY_MZ, ARG_EXP_IGNORE_PROTEINS,
             ARG_EXP_PRIMARY_COUNT, ARG_EXP_POLARITY); // {LeftColumnWidth = 34};
 
         // Instrument specific arguments
@@ -1423,6 +1425,8 @@ namespace pwiz.Skyline
         
         public string SchedulingReplicate { get; private set; }
 
+        public bool SortByMz { get; private set; }
+
         public bool IgnoreProteins { get; private set; }
 
         private int _primaryTransitionCount;
@@ -1483,6 +1487,7 @@ namespace pwiz.Skyline
                     UseSlens = UseSlens,
                     DwellTime = DwellTime,
                     ExportStrategy = ExportStrategy,
+                    SortByMz = SortByMz,
                     IgnoreProteins = IgnoreProteins,
                     MaxTransitions = MaxTransitionsPerInjection,
                     MethodType = ExportMethodType,
@@ -1619,6 +1624,7 @@ namespace pwiz.Skyline
             ReplicateFile = new List<MsDataFileUri>();
             SearchResultsFiles = new List<string>();
             ExcludeFeatures = new List<IPeakFeatureCalculator>();
+            SharedFileType = ShareType.DEFAULT;
 
             ImportBeforeDate = null;
             ImportOnOrAfterDate = null;

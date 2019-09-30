@@ -10628,4 +10628,13 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="CommandLine_ApplySampleNameRegex_Sample_name___0___does_not_match_the_pattern___1____Ignoring__2_" xml:space="preserve">
     <value>Sample name '{0}' does not match the pattern '{1}'. Ignoring {2}</value>
 </data>
+  <data name="SkylineWindow_MarkQuantitative_Mark_transitions_quantitative" xml:space="preserve">
+    <value>Mark transitions quantitative</value>
+  </data>
+  <data name="SkylineWindow_MarkQuantitative_Mark_transitions_non_quantitative" xml:space="preserve">
+    <value>Mark transitions non-quantitative</value>
+  </data>
+  <data name="ExceptionDialog_Caused_by_____" xml:space="preserve">
+    <value>Caused by ---&gt;</value>
+  </data>
 </root>

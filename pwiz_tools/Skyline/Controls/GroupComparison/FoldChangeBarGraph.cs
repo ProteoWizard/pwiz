@@ -191,6 +191,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 {
                     label += @" (" + row.IsotopeLabelType.Title + @")";
                 }
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
                 if (showGroup && !Equals(row.Group, default(GroupIdentifier)))
                 {
                     label += @" " + row.Group;

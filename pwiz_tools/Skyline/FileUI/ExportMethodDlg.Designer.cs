@@ -75,6 +75,8 @@
             this.labelPolarityFilter = new System.Windows.Forms.Label();
             this.panelTuneColumns = new System.Windows.Forms.Panel();
             this.cbWriteCoV = new System.Windows.Forms.CheckBox();
+            this.cbSortByMz = new System.Windows.Forms.CheckBox();
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.panelThermoColumns.SuspendLayout();
             this.panelAbSciexTOF.SuspendLayout();
             this.panelTriggered.SuspendLayout();
@@ -384,12 +386,19 @@
             this.cbWriteCoV.Name = "cbWriteCoV";
             this.cbWriteCoV.UseVisualStyleBackColor = true;
             // 
+            // cbSortByMz
+            // 
+            resources.ApplyResources(this.cbSortByMz, "cbSortByMz");
+            this.cbSortByMz.Name = "cbSortByMz";
+            this.cbSortByMz.UseVisualStyleBackColor = true;
+            // 
             // ExportMethodDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.cbSortByMz);
             this.Controls.Add(this.cbWriteCoV);
             this.Controls.Add(this.panelTuneColumns);
             this.Controls.Add(this.labelPolarityFilter);
@@ -429,6 +438,7 @@
             this.Name = "ExportMethodDlg";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.panelThermoColumns.ResumeLayout(false);
             this.panelThermoColumns.PerformLayout();
             this.panelAbSciexTOF.ResumeLayout(false);
@@ -495,5 +505,6 @@
         private System.Windows.Forms.Panel panelTuneColumns;
         private System.Windows.Forms.CheckBox cbTune3;
         private System.Windows.Forms.CheckBox cbWriteCoV;
+        private System.Windows.Forms.CheckBox cbSortByMz;
     }
 }

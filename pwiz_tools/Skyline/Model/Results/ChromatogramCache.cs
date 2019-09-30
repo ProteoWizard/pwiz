@@ -701,7 +701,7 @@ namespace pwiz.Skyline.Model.Results
             var formatVersion = cacheHeader.formatVersion;
             CacheFormat cacheFormat = CacheFormat.FromCacheHeader(cacheHeader);
             raw = new RawData(cacheFormat);
-            if (formatVersion > FORMAT_VERSION_CACHE_8)
+            if (formatVersion > CacheFormatVersion.Eight)
             {
                 raw.LocationScanIds = cacheHeader.locationScanIds;
             }
@@ -723,13 +723,31 @@ namespace pwiz.Skyline.Model.Results
                 int lenPath = cachedFileStruct.lenPath;
                 var filePathBuffer = new byte[lenPath];
                 ReadComplete(stream, filePathBuffer, lenPath);
-                string filePathString = formatVersion > FORMAT_VERSION_CACHE_6
+                string filePathString = formatVersion > CacheFormatVersion.Six
                                       ? Encoding.UTF8.GetString(filePathBuffer, 0, lenPath)
                                       : Encoding.Default.GetString(filePathBuffer, 0, lenPath); // Backward compatibility
                 var filePath = MsDataFileUri.Parse(filePathString);
 
+                string sampleId = null;
+                int lenSampleId = cachedFileStruct.lenSampleId;
+                if (formatVersion > CacheFormatVersion.Thirteen && lenSampleId > 0)
+                {
+                    byte[] sampleIdBuffer = new byte[lenSampleId];
+                    ReadComplete(stream, sampleIdBuffer, lenSampleId);
+                    sampleId = Encoding.UTF8.GetString(sampleIdBuffer, 0, lenSampleId);
+                }
+
+                string serialNumber = null;
+                int lenSerialNumber = cachedFileStruct.lenSerialNumber;
+                if (formatVersion > CacheFormatVersion.Thirteen && lenSerialNumber > 0)
+                {
+                    byte[] serialNumberBuffer = new byte[lenSerialNumber];
+                    ReadComplete(stream, serialNumberBuffer, lenSerialNumber);
+                    serialNumber = Encoding.UTF8.GetString(serialNumberBuffer, 0, lenSerialNumber);
+                }
+
                 string instrumentInfoStr = null;
-                if (formatVersion > FORMAT_VERSION_CACHE_3)
+                if (formatVersion > CacheFormatVersion.Three)
                 {
                     int lenInstrumentInfo = cachedFileStruct.lenInstrumentInfo;
                     byte[] instrumentInfoBuffer = new byte[lenInstrumentInfo];
@@ -750,6 +768,8 @@ namespace pwiz.Skyline.Model.Results
                                                              cachedFileStruct.locationScanIds,
                                                              cachedFileStruct.ticArea == 0 ? (float?) null : cachedFileStruct.ticArea,
                                                              ChromCachedFile.IonMobilityUnitsFromFlags(cachedFileStruct.flags),
+                                                             sampleId,
+                                                             serialNumber,
                                                              instrumentInfoList);
             }
 
@@ -771,7 +791,7 @@ namespace pwiz.Skyline.Model.Results
                     chromGroupHeader => chromGroupHeader.ChangeChargeToNegative());
             }
 
-            if (formatVersion > FORMAT_VERSION_CACHE_4)
+            if (formatVersion > CacheFormatVersion.Four)
             {
                 // Read textId bytes (sequence, or custom ion id)
                 raw.TextIdBytes = new byte[cacheHeader.numTextIdBytes];
@@ -782,7 +802,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 raw.TextIdBytes = null;
             }
-            if (formatVersion > FORMAT_VERSION_CACHE_4 && cacheHeader.numScoreTypes > 0)
+            if (formatVersion > CacheFormatVersion.Four && cacheHeader.numScoreTypes > 0)
             {
                 // Read scores
                 raw.ScoreTypes = new Type[cacheHeader.numScoreTypes];
@@ -968,6 +988,8 @@ namespace pwiz.Skyline.Model.Results
                 var filePathBytes = Encoding.UTF8.GetBytes(cachedFile.FilePath.ToString());
                 var instrumentInfoBytes =
                     Encoding.UTF8.GetBytes(InstrumentInfoUtil.GetInstrumentInfoString(cachedFile.InstrumentInfoList));
+                var sampleIdBytes = Encoding.UTF8.GetBytes(cachedFile.SampleId ?? string.Empty);
+                var serialNumberBytes = Encoding.UTF8.GetBytes(cachedFile.InstrumentSerialNumber ?? string.Empty);
                 var cachedFileStruct = new CachedFileHeaderStruct
                 {
                     modified = cachedFile.FileWriteTime.ToBinary(),
@@ -979,11 +1001,15 @@ namespace pwiz.Skyline.Model.Results
                     maxIntensity = cachedFile.MaxIntensity,
                     sizeScanIds = cachedFile.SizeScanIds,
                     locationScanIds = cachedFile.LocationScanIds,
-                    ticArea = cachedFile.TicArea.GetValueOrDefault()
+                    ticArea = cachedFile.TicArea.GetValueOrDefault(),
+                    lenSampleId = sampleIdBytes.Length,
+                    lenSerialNumber = serialNumberBytes.Length,
                 };
                 cachedFileSerializer.WriteItems(outStream, new []{cachedFileStruct});
                 // Write variable length buffers
                 outStream.Write(filePathBytes, 0, filePathBytes.Length);
+                outStream.Write(sampleIdBytes, 0, sampleIdBytes.Length);
+                outStream.Write(serialNumberBytes, 0, serialNumberBytes.Length);
                 outStream.Write(instrumentInfoBytes, 0, instrumentInfoBytes.Length);
             }
 
@@ -1204,6 +1230,7 @@ namespace pwiz.Skyline.Model.Results
                 // Copy the cache, if moving to a new location
                 using (FileSaver fs = new FileSaver(cachePathOpt))
                 {
+                    // ReSharper disable once AssignNullToNotNullAttribute
                     File.Copy(CachePath, fs.SafeName, true);
                     fs.Commit(ReadStream);
                 }

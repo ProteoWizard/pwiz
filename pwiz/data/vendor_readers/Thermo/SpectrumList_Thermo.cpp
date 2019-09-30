@@ -38,7 +38,7 @@ namespace {
     std::vector<double> getMultiFillTimes(const string& multiFill)
     {
         std::vector<double> fillTimes;
-        if (multiFill.empty())
+        if (multiFill.empty() || bal::trim_copy(multiFill).empty())
         {
             // This parameter is not specified, return an empty set of fill times
             return fillTimes;
@@ -424,7 +424,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
 
         if (scanInfo->hasMultiplePrecursors())
         {
-            vector<double> isolationWidths = raw->getIsolationWidths(ie.scan);
+            vector<double> isolationWidths = scanInfo->getIsolationWidths();
             if (precursorCount != (long) isolationWidths.size())
             {
                 throw runtime_error("precursor count does not match isolation width count");
@@ -448,6 +448,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                 precursor.isolationWindow.set(MS_isolation_window_target_m_z, isolationMz, MS_m_z);
                 precursor.isolationWindow.set(MS_isolation_window_lower_offset, isolationWidth, MS_m_z);
                 precursor.isolationWindow.set(MS_isolation_window_upper_offset, isolationWidth, MS_m_z);
+
+                int msLevel = !scanInfo->isSPS() || i == 0 ? 1 : 2;
+                precursor.userParams.push_back(UserParam("ms level", lexical_cast<string>(msLevel)));
 
                 ActivationType activationType = scanInfo->activationType();
                 if (activationType == ActivationType_Unknown)

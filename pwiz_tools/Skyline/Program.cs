@@ -313,6 +313,7 @@ namespace pwiz.Skyline
             }
 
             MainWindow = null;
+            SystemEvents.DisplaySettingsChanged -= SystemEventsOnDisplaySettingsChanged;
             return EXIT_CODE_SUCCESS;
         }
 
@@ -544,10 +545,19 @@ namespace pwiz.Skyline
 
         private static void ReportExceptionUI(Exception exception, StackTrace stackTrace)
         {
-            using (var reportForm = new ReportErrorDlg(exception, stackTrace))
+            try
             {
-                reportForm.ShowDialog(MainWindow);
-            }         
+                using (var reportForm = new ReportErrorDlg(exception, stackTrace))
+                {
+                    reportForm.ShowDialog(MainWindow);
+                }
+            }
+            catch (Exception e2)
+            {
+                // We had an error trying to bring up the ReportErrorDlg.
+                // Skyline is going to shut down, but we want to preserve the original exception.
+                throw new AggregateException(exception, e2);
+            }
         }
 
         public static void AddTestException(Exception exception)
