@@ -48,7 +48,7 @@ namespace pwiz.SkylineTestFunctional
 
             try
             {
-                ShowDialog<MessageDlg>(() => SkylineWindow.OpenFile(documentFile), 200);
+                ShowDialog<MessageDlg>(() => SkylineWindow.OpenFile(documentFile), 3000);
                 Assert.Fail("Failed to open a well-formed document with normal audit log.");
             }
             catch (AssertFailedException)
@@ -80,7 +80,7 @@ namespace pwiz.SkylineTestFunctional
 
             var documentFile = TestFilesDir.GetTestPath(fileName);
             //if no dialog is opened the method will fail on timeout
-            var messageDialog = ShowDialog<MessageDlg>(() => SkylineWindow.OpenFile(documentFile), 200);
+            var messageDialog = ShowDialog<MessageDlg>(() => SkylineWindow.OpenFile(documentFile), 3000);
             //making sure we get the expected error message
             string dialogMessage = "(none)";
             RunUI(() => dialogMessage = messageDialog.Message);
