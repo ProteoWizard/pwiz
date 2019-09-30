@@ -109,7 +109,7 @@
     <value>P-value adjusted for the multiple comparisons within this group comparison across the multiple peptides or proteins. The adjustment is done using the Benjamini-Hochberg procedure.</value>
   </data>
   <data name="Accuracy">
-    <value>Ratio of the Analyte Concentration (specified on the Replicate) to the Calculated Concentraion</value>
+    <value>Ratio of Calculated Concentration the Analyte Concentration (specified on the Replicate)</value>
   </data>
   <data name="AcquiredTime">
     <value>Last time and date at which the mass spectrometer began acquiring this
@@ -129,6 +129,12 @@ in the document.</value>
     <value>The ratio of the Area of this transition to its corresponding transition in the
 first internal standard label type, before version 0.7 this was always light/heavy, and
 appeared on the heavy transitions.</value>
+  </data>
+  <data name="AttributeAreaProportion">
+    <value>The ratio of the normalized area to the sum of the normalized areas of all of the other peptides or molecules in the document that have the same Attribute Area Proportion.</value>
+  </data>
+  <data name="AttributeGroupId">
+    <value>Affects the grouping of peptides or molecules in the calculation of Attribute Area Proportion.</value>
   </data>
   <data name="AutoSelectMolecules">
     <value>If true, then Skyline will automatically add or remove molecules from the Molecule List based on the current settings.</value>
@@ -166,7 +172,8 @@ integration boundaries and the chromatogram for the transition peak.</value>
     <value>Lower limit of quantification calculated using the subset of external standard replicates that have the same Batch Name as this replicate.</value>
   </data>
   <data name="BatchName">
-    <value>Name of the batch that this replicate belongs to. The calibration curve for a particular replicate will be </value>
+    <value>Name of the batch that this replicate belongs to. The calibration curve for a particular replicate
+will be calculated using the subset of external standards with the same batch name.</value>
   </data>
   <data name="BeginPos">
     <value>The position of the first (N-terminal) amino acid of the peptide within its
@@ -183,7 +190,7 @@ maximum intensity for the precursor.</value>
   <data name="CalculatedConcentration">
     <value>The concentration of the analyte is calculated by either:
     1. Using the calibration curve (if the Peptide Settings > Quantification has a Regression Fit specified)
-    2. Using the ratio to internal standard (or surrogate) and multiplying by the Internal Standard Concetration</value>
+    2. Using the ratio to internal standard (or surrogate) and multiplying by the Internal Standard Concentration</value>
   </data>
   <data name="CalibrationCurve">
     <value>Calibration Curve that was calculated using Replicates whose Sample Type was "Standard" and that had an "Analyte Concentration" specified.</value>
@@ -645,7 +652,7 @@ modified on disk</value>
     <value>The name of the molecule list.</value>
   </data>
   <data name="MoleculeListNote">
-    <value>A free text not associated with the molecule list.</value>
+    <value>A free text note associated with the molecule list.</value>
   </data>
   <data name="MoleculeList">
     <value>A grouping of molecules in a Skyline document.</value>
@@ -794,8 +801,14 @@ Edit menu</value>
   <data name="Precursor">
     <value>Precursor</value>
   </data>
+  <data name="PrecursorAccuracy">
+    <value>Ratio of the Precursor Calculated Concentration to the Precursor Concentration specified on the Precursor.</value>
+  </data>
   <data name="PrecursorAdduct">
     <value>The adduct which is applied to the molecule to make the precursor.</value>
+  </data>
+  <data name="PrecursorCalculatedConcentration">
+    <value>The concentration of the Precursor Result calculated using the isotopolog response curve.</value>
   </data>
   <data name="PrecursorCharge">
     <value>
@@ -803,9 +816,7 @@ Edit menu</value>
     </value>
   </data>
   <data name="PrecursorConcentration">
-    <value>
-      The concentration at which this precursor was spiked into the sample.
-    </value>
+    <value>The concentration at which this precursor was spiked into the sample. This is used for generating Isotopolog Response Curves.</value>
   </data>
   <data name="PrecursorIonFormula">
     <value>The formula of the precursor ion.</value>
@@ -819,6 +830,11 @@ Edit menu</value>
   </data>
   <data name="PrecursorNeutralFormula">
     <value>The formula of the precursor ion. This is deprecated and "PrecursorIonFomula" should be used instead.</value>
+  </data>
+  <data name="PrecursorNormalizedArea">
+    <value>The normalized area of the Precursor Result.
+This is equal to the Total Area of the Precursor Result normalized according to the Normalization Method of the Peptide.
+If the Peptide Normalization Method is "None" or ratio to a label, then the Precursor Normalized Area will be equal to the Precursor Total Area.</value>
   </data>
   <data name="PrecursorMz">
     <value>The mass to charge ratio (m/z) of the precursor ion.</value>
@@ -834,6 +850,9 @@ the Edit menu</value>
     <value>The ratio of transitions for which a peak was measured to the
 total number of transitions in the peptide. Peak indicators in the peptide tree view
 correspond to green = 1.0 (all transitions integrated), orange >= 0.5, red &lt; 0.5.</value>
+  </data>
+  <data name="PrecursorQuantification">
+    <value>Values related to using the isotopolog response curve to quantify the precursor result.</value>
   </data>
   <data name="PrecursorReplicateNote">
     <value>A free text note associated with a result set of the precursor
@@ -981,7 +1000,8 @@ measured.</value>
     <value>Replicate</value>
   </data>
   <data name="ReplicateCalibrationCurve">
-    <value>The calibration curve made using the Precursor Concentrations and a single replicate.</value>
+    <value>The calibration curve made using the replicates that have the same Batch Name as this replicate.
+If the Precursor Concentration is specified on any of the Precursors in this Peptide then the Calibration Curve will be an isotopolog response curve.</value>
   </data>
   <data name="ReplicateCount">
     <value>Number of replicates that had valid intensities and contributed to the result.</value>

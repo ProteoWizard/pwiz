@@ -89,6 +89,13 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return ChangeProp(ImClone(this), im => im.Lookup = string.IsNullOrEmpty(lookup) ? null : lookup);
         }
+
+        public AnnotationExpression Expression { get; private set; }
+
+        public AnnotationDef ChangeExpression(AnnotationExpression expression)
+        {
+            return ChangeProp(ImClone(this), im => im.Expression = expression);
+        }
         public Type ValueType
         {
             get
@@ -188,6 +195,7 @@ namespace pwiz.Skyline.Model.DocSettings
         private enum El
         {
             value,
+            expression,
         }
 
         public static AnnotationDef Deserialize(XmlReader reader)
@@ -211,9 +219,20 @@ namespace pwiz.Skyline.Model.DocSettings
             else
             {
                 reader.Read();
-                while (reader.IsStartElement(El.value))
+                while (true)
                 {
-                    items.Add(reader.ReadElementString());
+                    if (reader.IsStartElement(El.value))
+                    {
+                        items.Add(reader.ReadElementString());
+                    }
+                    else if (reader.IsStartElement(El.expression))
+                    {
+                        Expression = reader.DeserializeElement<AnnotationExpression>();
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
                 reader.ReadEndElement();
             }
@@ -233,6 +252,11 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 writer.WriteElementString(El.value, value);
             }
+
+            if (Expression != null)
+            {
+                writer.WriteElement(Expression);
+            }
         }
 
 
@@ -243,7 +267,8 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return base.Equals(other) && Equals(other.AnnotationTargets, AnnotationTargets) &&
-                   other.Type == Type && ArrayUtil.EqualsDeep(other.Items, Items) && Equals(other.Lookup, Lookup);
+                   other.Type == Type && ArrayUtil.EqualsDeep(other.Items, Items) && Equals(other.Lookup, Lookup) &&
+                   Equals(other.Expression, Expression);
         }
 
         public override bool Equals(object obj)
@@ -262,6 +287,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result * 397) ^ Type.GetHashCode();
                 result = (result * 397) ^ Items.GetHashCodeDeep();
                 result = (result * 397) ^ (Lookup == null ? 0 : Lookup.GetHashCode());
+                result = (result * 397) ^ (Expression == null ? 0 : Expression.GetHashCode());
                 return result;
             }
         }

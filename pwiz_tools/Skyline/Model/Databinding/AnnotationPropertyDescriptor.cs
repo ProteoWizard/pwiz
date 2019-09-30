@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Databinding.Entities;
@@ -30,11 +31,13 @@ namespace pwiz.Skyline.Model.Databinding
     public class AnnotationPropertyDescriptor : PropertyDescriptor
     {
         private bool _isValid;
-        
+        private CachedValue<AnnotationDef> _annotationDef;
+       
         public AnnotationPropertyDescriptor(SkylineDataSchema dataSchema, AnnotationDef annotationDef, bool isValid) 
             : this(dataSchema, annotationDef, GetAttributes(annotationDef))
         {
             _isValid = isValid;
+            _annotationDef = CachedValue.Create(dataSchema, () => FindAnnotationDef(annotationDef));
         }
 
         protected AnnotationPropertyDescriptor(SkylineDataSchema dataSchema, AnnotationDef annotationDef,
@@ -42,12 +45,15 @@ namespace pwiz.Skyline.Model.Databinding
             : base(AnnotationDef.ANNOTATION_PREFIX + annotationDef.Name, attributes)
         {
             SkylineDataSchema = dataSchema;
-            AnnotationDef = annotationDef;
+            _annotationDef = CachedValue.Create(dataSchema, () => FindAnnotationDef(annotationDef));
             _isValid = true;
         }
 
         public SkylineDataSchema SkylineDataSchema { get; private set; }
-        public AnnotationDef AnnotationDef { get; private set; }
+        public AnnotationDef AnnotationDef
+        {
+            get { return _annotationDef.Value; }
+        }
         public override bool CanResetValue(object component)
         {
             return null != GetValue(component);
@@ -60,6 +66,7 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 return null;
             }
+
             return skylineDocNode.GetAnnotation(AnnotationDef);
         }
 
@@ -93,7 +100,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         public override bool IsReadOnly
         {
-            get { return !_isValid; }
+            get { return !_isValid || null != AnnotationDef.Expression; }
         }
 
         public override Type PropertyType
@@ -117,6 +124,12 @@ namespace pwiz.Skyline.Model.Databinding
                 attributes.Add(new DataGridViewColumnTypeAttribute(typeof(AnnotationValueListDataGridViewColumn)));
             }
             return attributes.ToArray();
+        }
+
+        private AnnotationDef FindAnnotationDef(AnnotationDef annotationDef)
+        {
+            return SkylineDataSchema.Document.Settings.DataSettings.AnnotationDefs
+                       .FirstOrDefault(def => def.Name == annotationDef.Name) ?? annotationDef;
         }
     }
 }

@@ -144,7 +144,7 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
   size_t find(const string& id) const
   {
     map<string, size_t>::const_iterator it = idToIndex_.find(id);
-    return it != idToIndex_.end() ? it->second : size();
+    return it != idToIndex_.end() ? it->second : checkNativeIdFindResult(size(), id);
   }
   
   size_t findNative(const string& nativeID) const

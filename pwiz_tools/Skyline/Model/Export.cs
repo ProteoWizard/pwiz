@@ -1152,7 +1152,7 @@ namespace pwiz.Skyline.Model
                 {
                     int compoundStep = ++_compoundCounts[compound]/MAX_COMPOUND_NAME + 1;
                     if (compoundStep > 1)
-                        compound += '.' + compoundStep;
+                        compound += '.' + compoundStep.ToString(CultureInfo);
                 }
             }
             writer.WriteDsvField(compound, FieldSeparator);
@@ -2463,6 +2463,7 @@ namespace pwiz.Skyline.Model
         {
             try
             {
+                // ReSharper disable once PossibleNullReferenceException
                 return proc.MainModule.ModuleName;
             }
             catch

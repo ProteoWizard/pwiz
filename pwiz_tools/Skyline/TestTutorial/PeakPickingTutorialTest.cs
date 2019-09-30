@@ -150,7 +150,9 @@ namespace pwiz.SkylineTestTutorial
             });
             WaitForClosedForm(importResultsNameDlg);
             WaitForClosedForm(importResultsDlg);
-            WaitForCondition(5 * 60 * 1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);    // 5 minutes
+            WaitForConditionUI(5 * 60 * 1000, () => 
+                SkylineWindow.DocumentUI.Settings.HasResults &&
+                SkylineWindow.DocumentUI.Settings.MeasuredResults.IsLoaded);    // 5 minutes
             RestoreViewOnScreen(5);
             const string peptideSeqHighlight = "LPDGNGIELCR";
             RunUI(() =>
@@ -466,7 +468,7 @@ namespace pwiz.SkylineTestTutorial
 
             findResultsForm = FormUtil.OpenForms.OfType<FindResultsForm>().FirstOrDefault();
             Assert.IsNotNull(findResultsForm);
-            Assert.AreEqual(34 + (TestSmallMolecules ? 1 : 0), findResultsForm.ItemCount);
+            Assert.AreEqual(34, findResultsForm.ItemCount);
         }
 
         private void ValidateCoefficients(EditPeakScoringModelDlg editDlgFromSrm, int coeffIndex)

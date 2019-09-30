@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
@@ -34,12 +35,14 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.SkylineTestTutorial
 {
@@ -50,14 +53,11 @@ namespace pwiz.SkylineTestTutorial
     public class Ms1FullScanFilteringTutorial : AbstractFunctionalTest
     {
         [TestMethod, MinidumpLeakThreshold(15)]
-        [Timeout(36000000)]  // These can take a long time in code coverage mode
+        [Timeout(60*60*1000)]  // These can take a long time in code coverage mode (1 hour)
         public void TestMs1Tutorial()
         {
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
-
-            // Lest we get "To export a scheduled method, you must first choose a retention time predictor in Peptide Settings / Prediction, or import results for all peptides in the document."
-            TestSmallMolecules = false;
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/MS1Filtering-2_5.pdf";
 
@@ -120,10 +120,13 @@ namespace pwiz.SkylineTestTutorial
             return TestFilesDirs[0].GetTestPath(folderMs1Filtering + '\\' + path);
         }
 
+        private string PathsMessage(string message, IEnumerable<string> paths)
+        {
+            return TextUtil.LineSeparate(message, TextUtil.LineSeparate(paths));
+        }
+
         protected override void DoTest()
         {
-            TestSmallMolecules = false; // The presence of the extra test node without any results is incompatible with what's being tested here.
-
             // Clean-up before running the test
             RunUI(() => SkylineWindow.ModifyDocument("Set default settings",
                             d => d.ChangeSettings(SrmSettingsList.GetDefault())));
@@ -151,17 +154,32 @@ namespace pwiz.SkylineTestTutorial
                     GetTestPath("100803_0001_MCF7_TiB_L.group.xml"),  // Not L10N
                     GetTestPath("100803_0005b_MCF7_TiTip3.group.xml")  // Not L10N
                 };
+            foreach (var searchFile in searchFiles)
+                Assert.IsTrue(File.Exists(searchFile), string.Format("File {0} does not exist.", searchFile));
+
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library empty page", 3);
 
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
-                            ImportPeptideSearchDlg.Pages.spectra_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchFiles);
+
+                // Sanity check here, because of failure getting both files for results import below
+                var searchNames = importPeptideSearchDlg.BuildPepSearchLibControl.SearchFilenames;
+                Assert.AreEqual(searchFiles.Length, searchNames.Length,
+                    PathsMessage("Unexpected search files found.", searchNames));
+                var builder = importPeptideSearchDlg.BuildPepSearchLibControl.ImportPeptideSearch.GetLibBuilder(
+                    SkylineWindow.DocumentUI, SkylineWindow.DocumentFilePath, false);
+                Assert.IsTrue(ArrayUtil.EqualsDeep(searchFiles, builder.InputFiles),
+                    PathsMessage("Unexpected BlibBuild input files.", builder.InputFiles));
+                importPeptideSearchDlg.BuildPepSearchLibControl.DebugMode = true;
             });
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library populated page", 4);
 
-            var ambiguousDlg = ShowDialog<MessageDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+            WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
+            var ambiguousDlg = ShowDialog<MessageDlg>(() => importPeptideSearchDlg.ClickNextButton());
+            RunUI(() => AssertEx.Contains(ambiguousDlg.Message,
+                Resources.BiblioSpecLiteBuilder_AmbiguousMatches_The_library_built_successfully__Spectra_matching_the_following_peptides_had_multiple_ambiguous_peptide_matches_and_were_excluded_));
             OkDialog(ambiguousDlg, ambiguousDlg.OkDialog);
 
             // Verify document library was built
@@ -170,12 +188,63 @@ namespace pwiz.SkylineTestTutorial
             Assert.IsTrue(File.Exists(docLibPath) && File.Exists(redundantDocLibPath));
             var librarySettings = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
             Assert.IsTrue(librarySettings.HasDocumentLibrary);
+            // Verify input paths sent to BlibBuild
+            string buildArgs = importPeptideSearchDlg.BuildPepSearchLibControl.LastBuildCommandArgs;
+            string buildOutput = importPeptideSearchDlg.BuildPepSearchLibControl.LastBuildOutput;
+            var argLines = buildArgs.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+            var dirCommon = PathEx.GetCommonRoot(searchFiles);
+            var searchLines = searchFiles.Select(f => PathEx.RemovePrefix(f, dirCommon)).ToArray();
+            Assert.IsTrue(ArrayUtil.EqualsDeep(searchLines, argLines.Skip(1).ToArray()), buildArgs);
+
+            // Verify resulting .blib file contains the expected files
+            var docLib = librarySettings.Libraries[0];
+            int expectedFileCount = searchFiles.Length;
+            int expectedRedundantSpectra = 813; // 446 with TiTip only
+            int expectedSpectra = 552; // 428 with TiTip3 only
+            if (expectedFileCount != docLib.FileCount)
+            {
+                var searchFileNames = searchFiles.Select(Path.GetFileName).ToArray();
+                using (var blibDbRedundant = BlibDb.OpenBlibDb(redundantDocLibPath))
+                {
+                    VerifyLib(searchFileNames, expectedRedundantSpectra, blibDbRedundant.GetIdFilePaths(), blibDbRedundant.GetSpectraCount(),
+                        "redunant library", buildArgs, buildOutput);
+                }
+                using (var blibDb = BlibDb.OpenBlibDb(docLibPath))
+                {
+                    VerifyLib(searchFileNames, expectedSpectra, blibDb.GetIdFilePaths(), blibDb.GetSpectraCount(),
+                        "SQLite library", buildArgs, buildOutput);
+                }
+                VerifyLib(searchFileNames, expectedSpectra, docLib.LibraryDetails.DataFiles.Select(d => d.IdFilePath).ToArray(), docLib.SpectrumCount,
+                    "in memory", buildArgs, buildOutput);
+            }
 
             // We're on the "Extract Chromatograms" page of the wizard.
             // All the test results files are in the same directory as the 
             // document file, so all the files should be found, and we should
             // just be able to move to the next page.
-            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
+            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page &&
+                                     importPeptideSearchDlg.ImportResultsControl.FoundResultsFiles.Count > 0 &&
+                                     importPeptideSearchDlg.IsNextButtonEnabled);
+
+            // Wait for extra for both source files in the list
+            TryWaitForConditionUI(10*1000, () => importPeptideSearchDlg.ImportResultsControl.FoundResultsFiles.Count == searchFiles.Length);
+
+            RunUI(() =>
+            {
+                // Check for missing files
+                var missingFiles = importPeptideSearchDlg.ImportResultsControl.MissingResultsFiles.ToArray();
+                Assert.AreEqual(0, missingFiles.Length,
+                    PathsMessage("Unexpected missing file found.", missingFiles));
+                // Check for expected results files
+                var resultsNames = importPeptideSearchDlg.ImportResultsControl.FoundResultsFiles.Select(f => f.Name).ToArray();
+                Assert.AreEqual(searchFiles.Length, importPeptideSearchDlg.ImportResultsControl.FoundResultsFiles.Count,
+                    PathsMessage("Unexpected results files found.", resultsNames));
+                // Check for expected common prefix
+                var commonPrefix = ImportResultsDlg.GetCommonPrefix(resultsNames);
+                Assert.IsFalse(string.IsNullOrEmpty(commonPrefix),
+                    PathsMessage("File names do not have a common prefix.", resultsNames));
+                Assert.AreEqual("100803_000", commonPrefix);
+            });
             PauseForScreenShot<ImportPeptideSearchDlg.ChromatogramsPage>("Import Peptide Search - Extract Chromatograms page", 5);
 
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
@@ -531,16 +600,19 @@ namespace pwiz.SkylineTestTutorial
                 dlg.TimeWindow = 10;
                 dlg.OkDialog();
             });
-            WaitForDocumentChangeLoaded(doc);
+            doc = WaitForDocumentChangeLoaded(doc);
 
             // Now deviating from the tutorial script for a moment to make sure we can choose a Scheduled export method.
+            // CONSIDER: This refinement seems to be a no-op. Not sure why it is here.
             RunDlg<RefineDlg>(SkylineWindow.ShowRefineDlg, dlg =>
             {
-                dlg.MinPeptides = 1; // Not L10N
+                dlg.MinPeptides = 1; // This would get rid of proteins with no peptides (none exist)
                 const double minPeakFoundRatio = 0.1;
-                dlg.MinPeakFoundRatio = minPeakFoundRatio;
-                dlg.OkDialog();
+                dlg.MinPeakFoundRatio = minPeakFoundRatio; // This would get rid of undetected transitions (none exist)
+                dlg.OkDialog(); // Will not change the document or add an Undo entry
             });
+            // Nothing should have changed on the UI thread
+            RunUI(() => Assert.AreSame(doc, SkylineWindow.DocumentUI));
 
             // Ready to export, although we will just cancel out of the dialog.
             var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
@@ -552,8 +624,30 @@ namespace pwiz.SkylineTestTutorial
             });
             WaitForClosedForm(exportMethodDlg);
 
+            // Because this was showing up in the nightly test failures
+            WaitForConditionUI(() => exportMethodDlg.IsDisposed);
+
             RunUI(() => SkylineWindow.SaveDocument());
             RunUI(SkylineWindow.NewDocument);
+        }
+
+        private void VerifyLib(string[] expectedPaths, int expectedSpectra, string[] foundPaths, int foundSpectra,
+            string sourceMessage, string buildArgs, string buildOutput)
+        {
+            if (!ArrayUtil.EqualsDeep(expectedPaths, foundPaths) || expectedSpectra != foundSpectra)
+            {
+                Assert.Fail(TextUtil.LineSeparate(string.Format("Unexpected library state in {0}", sourceMessage),
+                    "Expected:",
+                    string.Format("{0} spectra", expectedSpectra),
+                    TextUtil.LineSeparate(expectedPaths),
+                    "Found:",
+                    string.Format("{0} spectra", foundSpectra),
+                    TextUtil.LineSeparate(foundPaths),
+                    "Command:",
+                    buildArgs,
+                    "Output:",
+                    buildOutput));
+            }
         }
 
         private void ZoomSingle(int index, double startTime, double endTime, double? y = null)

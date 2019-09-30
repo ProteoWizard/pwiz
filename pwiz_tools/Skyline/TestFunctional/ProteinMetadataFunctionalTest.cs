@@ -27,7 +27,6 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.EditUI;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
@@ -90,16 +89,16 @@ namespace pwiz.SkylineTestFunctional
                         RunUI(() => SkylineWindow.sortProteinsByNameToolStripMenuItem_Click(null, null));
                         break;
                     case ProteinMetadataManager.ProteinDisplayMode.ByAccession:
-                        expectedTopName = TestSmallMolecules ? "ZZZTESTINGNONPROTEOMICMOLECULEGROUP" : "YFL038C";
+                        expectedTopName = "YFL038C";
                         RunUI(() => SkylineWindow.sortProteinsByAccessionToolStripMenuItem_Click(null, null));
                         break;
                     case ProteinMetadataManager.ProteinDisplayMode.ByPreferredName:
                         RunUI(() => SkylineWindow.sortProteinsByPreferredNameToolStripMenuItem_Click(null, null));
-                        expectedTopName = TestSmallMolecules ? "ZZZTESTINGNONPROTEOMICMOLECULEGROUP" : "YAL016W";
+                        expectedTopName = "YAL016W";
                         break;
                     case ProteinMetadataManager.ProteinDisplayMode.ByGene:
                         RunUI(() => SkylineWindow.sortProteinsByGeneToolStripMenuItem_Click(null, null));
-                        expectedTopName = TestSmallMolecules ? "ZZZTESTINGNONPROTEOMICMOLECULEGROUP" : "YGL234W";
+                        expectedTopName = "YGL234W";
                         break;
                 }
                 var actualTopName = WaitForDocumentLoaded().MoleculeGroups.First().Name.ToUpperInvariant();
@@ -192,7 +191,7 @@ namespace pwiz.SkylineTestFunctional
                 sequenceTree.CommitEditBox(false);
             });
             doc = WaitForDocumentChange(doc);
-            var nodeText = SkylineWindow.SequenceTree.GetSequenceNodes().Last(n => !SrmDocument.IsSpecialNonProteomicTestDocNode(n.DocNode)).Text;
+            var nodeText = SkylineWindow.SequenceTree.GetSequenceNodes().Last().Text;
             var failsafe = String.Format(Resources.PeptideGroupTreeNode_ProteinModalDisplayText__name___0__, badname);  // As in PeptideGroupTreeNode.cs
             Assert.AreEqual(failsafe, nodeText);
 

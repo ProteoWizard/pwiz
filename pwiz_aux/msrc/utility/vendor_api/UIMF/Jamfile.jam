@@ -26,15 +26,29 @@ import path ;
 
 path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/UIMF ;
 
+rule uimf-dll-location
+{
+    if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
+        $(API_PATH) &&
+       [ path.exists $(API_PATH)\\UIMFLibrary.dll ]
+    {
+        return $(API_PATH) ;
+    }
+}
 
 if [ modules.peek : NT ]
 {
 
+.dll-location = [ uimf-dll-location ] ;
+if $(.dll-location)
+{
+    .hasDLLs = true ;
+}
+
 rule vendor-api-requirements ( properties * )
 {
     local result ;
-    local dll_location = [ uimf-dll-location $(API_PATH) : $(properties) ] ;
-    if $(dll_location)
+    if <toolset>msvc in $(properties) && $(.hasDLLs) && ! [ without-binary-msdata ]
     {
         result += <source>UIMFReader.cpp ;
         result += <using-clr>true ; # requires hacked msvc.jam
@@ -46,8 +60,7 @@ rule vendor-api-requirements ( properties * )
 rule vendor-api-usage-requirements ( properties * )
 {
     local result ;
-    local dll_location = [ uimf-dll-location $(API_PATH) : $(properties) ] ;
-    if $(dll_location)
+    if <toolset>msvc in $(properties) && $(.hasDLLs) && ! [ without-binary-msdata ]
     {
         # HACK: <link>shared isn't being passed in properties like I'd expect, so I also check the command-line
         if <link>shared in $(properties) || "link=shared" in [ modules.peek : ARGV ]
@@ -61,7 +74,7 @@ rule vendor-api-usage-requirements ( properties * )
             result += <library>$(PWIZ_LIBRARIES_PATH)/SQLite//sqlite3pp ;
         }
 
-        result += <assembly>$(dll_location)/UIMFLibrary.dll ;
+        result += <assembly>$(.dll-location)/UIMFLibrary.dll ;
         if ( [ MATCH (x64) : $(PLATFORM) ] )
         {
             result += <assembly-dependency>$(PWIZ_LIBRARIES_PATH)/SQLite/x64/System.Data.SQLite.dll ;
@@ -73,16 +86,6 @@ rule vendor-api-usage-requirements ( properties * )
 
     }
     return $(result) ;
-}
-
-rule msvc-uimf-requirement ( properties * )
-{
-    # Must be msvc
-    if ! <toolset>msvc in $(properties) { return <build>no ; }
-
-    # If msvc 9.0, can't build
-    if ( <toolset-msvc:version>9.0 in $(properties) || 9.0express in $(properties:G=) )
-    { return <build>no ; }
 }
 
 lib pwiz_vendor_api_uimf
@@ -101,11 +104,11 @@ lib pwiz_vendor_api_uimf
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
         <toolset>msvc:<cxxflags>/wd4564 # warning C4564: method 'GetIntensityBlockForDemultiplexing' of class 'UIMFLibrary::DataReader' defines unsupported default parameter 'numFramesToSum'
         <conditional>@vendor-api-requirements
-        <conditional>@msvc-uimf-requirement
+        <conditional>@msvc-dotnet-requirement
     : # default-build
     : # usage-requirements
         <conditional>@vendor-api-usage-requirements
-        <conditional>@msvc-uimf-requirement
+        <conditional>@msvc-dotnet-requirement
     ;
 
 
@@ -120,10 +123,9 @@ explicit UIMFReaderTest ;
 rule install-requirements ( properties * )
 {
     local result ;
-    local dll_location = [ uimf-dll-location $(API_PATH) : $(properties) ] ;
-    if $(dll_location)
+    if <toolset>msvc in $(properties) && $(.hasDLLs) && ! [ without-binary-msdata ]
     {
-        result += <source>$(dll_location)\\UIMFLibrary.dll ;
+        result += <source>$(.dll-location)\\UIMFLibrary.dll ;
 
         if ( [ MATCH (x64) : $(PLATFORM) ] )
         {

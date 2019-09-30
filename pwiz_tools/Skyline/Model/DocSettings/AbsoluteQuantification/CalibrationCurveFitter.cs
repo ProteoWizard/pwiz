@@ -550,8 +550,8 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public bool HasInternalStandardConcentration()
         {
-            return (PeptideQuantifier.NormalizationMethod is NormalizationMethod.RatioToLabel 
-                || PeptideQuantifier.NormalizationMethod is NormalizationMethod.RatioToSurrogate)
+            return (PeptideQuantifier.NormalizationMethod is NormalizationMethod.RatioToLabel
+                    || PeptideQuantifier.NormalizationMethod is NormalizationMethod.RatioToSurrogate)
                    && PeptideQuantifier.PeptideDocNode.InternalStandardConcentration.HasValue;
         }
 
@@ -578,6 +578,24 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 result = result.ChangeUnits(SrmSettings.PeptideSettings.Quantification.Units);
             }
             return result;
+        }
+
+        public QuantificationResult GetPrecursorQuantificationResult(int replicateIndex, TransitionGroupDocNode transitionGroupDocNode)
+        {
+            QuantificationResult result = new QuantificationResult();
+            var calibrationPoint = new CalibrationPoint(replicateIndex, transitionGroupDocNode.LabelType);
+            CalibrationCurve calibrationCurve = GetCalibrationCurve();
+            result = result.ChangeNormalizedArea(GetNormalizedPeakArea(calibrationPoint));
+            if (HasExternalStandards() || HasInternalStandardConcentration())
+            {
+                double? calculatedConcentration = GetCalculatedConcentration(calibrationCurve, calibrationPoint);
+                result = result.ChangeCalculatedConcentration(calculatedConcentration);
+                double? expectedConcentration = transitionGroupDocNode.PrecursorConcentration;
+                result = result.ChangeAccuracy(calculatedConcentration / expectedConcentration);
+                result = result.ChangeUnits(SrmSettings.PeptideSettings.Quantification.Units);
+            }
+            return result;
+
         }
 
         public static String AppendUnits(String title, String units)

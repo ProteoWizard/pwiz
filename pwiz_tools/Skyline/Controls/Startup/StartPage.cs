@@ -104,32 +104,40 @@ namespace pwiz.Skyline.Controls.Startup
             PositionButtonsModeUI();
 
             // Setup to manage and interact with mode selector buttons in UI
-            GetModeUIHelper().SetModeUIToolStripButtons(toolStripButtonModeUI, modeUIButtonClick);
-            GetModeUIHelper().SetButtonImageForModeUI(GetModeUIHelper().ModeUI);
-            // Update the menu structure for this mode
-            if (Program.MainWindow != null)
-            {
-                Program.MainWindow.SetUIMode(GetModeUIHelper().ModeUI);
-            }
+            SetModeUIToolStripButtons(toolStripButtonModeUI, true);
         }
 
         /// <summary>
-        /// Handler for the buttons that allow user to switch between proteomic, small mol, or mixed UI display.
-        /// Between the two buttons there are three states A/B/Both - we enforce that at least one is always checked.
+        /// Handler for the toolbar button dropdown that allow user to switch between proteomic, small mol, or mixed UI display.
         /// </summary>
-        private void modeUIButtonClick(object sender, EventArgs e)
+        public override void SetUIMode(SrmDocument.DOCUMENT_TYPE mode)
         {
+            base.SetUIMode(mode);
+
             PopulateWizardPanel(); // Update wizards for new UI mode
             PopulateTutorialPanel(); // Update tutorial order for new UI mode
-            GetModeUIHelper().OnLoad(this); // Reprocess any needed translations
-        }
 
+            GetModeUIHelper().OnLoad(this); // Reprocess any needed translations
+
+            // Update the menu structure for this mode
+            if (Program.MainWindow != null)
+            {
+                Program.MainWindow.SetUIMode(ModeUI);
+            }
+        }
 
         protected override void OnHandleCreated(EventArgs e)
         {
             UpgradeManager.CheckForUpdateAsync(this);
 
             base.OnHandleCreated(e);
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+
+            EnsureUIModeSet();
         }
 
         public StartupAction Action { get; private set; }
@@ -237,7 +245,7 @@ namespace pwiz.Skyline.Controls.Startup
             flowLayoutPanelWizard.Controls.Clear();
             foreach (var box in wizardBoxPanels)
             {
-                if (GetModeUIHelper().ModeUI != SrmDocument.DOCUMENT_TYPE.small_molecules || !box.IsProteomicOnly)
+                if (ModeUI != SrmDocument.DOCUMENT_TYPE.small_molecules || !box.IsProteomicOnly)
                 {
                     flowLayoutPanelWizard.Controls.Add(box);
                     if (box.IsProteomicOnly)
@@ -498,10 +506,10 @@ namespace pwiz.Skyline.Controls.Startup
 
             Control previousBox = null;
             // For small molecule mode, lead with small molecule tutorials
-            var tutorialBoxPanels = GetModeUIHelper().ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules
+            var tutorialBoxPanels = ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules
                 ? tutorialSmallMoleculeBoxPanels.ToList()
                 : tutorialProteomicBoxPanels.ToList();
-            tutorialBoxPanels.AddRange(GetModeUIHelper().ModeUI != SrmDocument.DOCUMENT_TYPE.small_molecules
+            tutorialBoxPanels.AddRange(ModeUI != SrmDocument.DOCUMENT_TYPE.small_molecules
                 ? tutorialSmallMoleculeBoxPanels
                 : tutorialProteomicBoxPanels);
             tutorialBoxPanels.AddRange(tutorialAdvancedBoxPanels);
@@ -646,7 +654,7 @@ namespace pwiz.Skyline.Controls.Startup
             Settings.Default.ShowStartupForm = checkBoxShowStartup.Checked;
             if (DialogResult.Cancel == DialogResult)
             {
-                Settings.Default.Save();
+                Settings.Default.SaveWithoutExceptions();
             }
         }
 
@@ -738,12 +746,6 @@ namespace pwiz.Skyline.Controls.Startup
                 TutorialLinkResources.LibraryExplorer_pdf,
                 string.Empty
                 );
-        }
-
-        public void ModeUIButtonClick(SrmDocument.DOCUMENT_TYPE mode)
-        {
-            GetModeUIHelper().ModeUIButtonClick(mode);
-            modeUIButtonClick(null, null);
         }
     }
 }

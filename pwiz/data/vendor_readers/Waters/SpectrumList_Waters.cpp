@@ -66,7 +66,7 @@ PWIZ_API_DECL size_t SpectrumList_Waters::find(const string& id) const
 {
     map<string, size_t>::const_iterator scanItr = idToIndexMap_.find(id);
     if (scanItr == idToIndexMap_.end())
-        return size_;
+        return checkNativeIdFindResult(size_, id);
     return scanItr->second;
 }
 

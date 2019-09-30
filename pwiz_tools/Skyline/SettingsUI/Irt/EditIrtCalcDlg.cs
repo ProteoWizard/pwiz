@@ -292,7 +292,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
                 if (_originalPeptides.Any(p => !p.Target.IsProteomic))
                 {
-                    GetModeUIHelper().ModeUI = _originalPeptides.Any(p => p.Target.IsProteomic) ? SrmDocument.DOCUMENT_TYPE.mixed : SrmDocument.DOCUMENT_TYPE.small_molecules;
+                    GetModeUIHelper().ModeUI = _originalPeptides.Any(p => p.Target.IsProteomic)
+                        ? SrmDocument.DOCUMENT_TYPE.mixed
+                        : SrmDocument.DOCUMENT_TYPE.small_molecules;
                 }
             }
             catch (DatabaseOpeningException e)
@@ -891,7 +893,10 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 {
                     if (library != null)
                     {
+                        // (ReSharper 2019.1 seems not to notice the check that's already here)
+                        // ReSharper disable PossibleNullReferenceException
                         foreach (var pooledStream in library.ReadStreams)
+                        // ReSharper restore PossibleNullReferenceException
                             pooledStream.CloseStream();
                     }
                 }

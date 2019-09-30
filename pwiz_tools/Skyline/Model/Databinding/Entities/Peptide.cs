@@ -181,7 +181,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [DataGridViewColumnType(typeof(StandardTypeDataGridViewColumn))]
-        [Importable]
         public StandardType StandardType
         {
             get
@@ -506,9 +505,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        [Importable]
+        public string AttributeGroupId
+        {
+            get { return DocNode.AttributeGroupId; }
+            set
+            {
+                ChangeDocNode(EditDescription.SetColumn(nameof(AttributeGroupId), value), docNode=>docNode.ChangeAttributeGroupId(value));
+            }
+        }
+
         protected override NodeRef NodeRefPrototype
         {
             get { return MoleculeRef.PROTOTYPE; }
+        }
+
+        protected override Type SkylineDocNodeType
+        {
+            get { return typeof(Peptide); }
         }
     }
 }
