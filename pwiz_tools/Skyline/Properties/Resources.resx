@@ -10613,4 +10613,7 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="ExceptionDialog_Caused_by_____" xml:space="preserve">
     <value>Caused by ---&gt;</value>
   </data>
+  <data name="AbstractSpectrumGraphItem_AddAnnotations_" xml:space="preserve">
+    <value>score = {0:F06}</value>
+  </data>
 </root>

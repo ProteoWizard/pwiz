@@ -1033,7 +1033,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Serial Number.
+        ///   Looks up a localized string similar to Instrument Serial Number.
         /// </summary>
         public static string InstrumentSerialNumber {
             get {
@@ -1272,6 +1272,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string LibraryName {
             get {
                 return ResourceManager.GetString("LibraryName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library Probability Score.
+        /// </summary>
+        public static string LibraryProbabilityScore {
+            get {
+                return ResourceManager.GetString("LibraryProbabilityScore", resourceCulture);
             }
         }
         

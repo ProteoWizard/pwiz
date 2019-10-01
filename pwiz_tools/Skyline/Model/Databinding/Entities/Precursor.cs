@@ -460,6 +460,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return GetLibraryScore(2); }
         }
 
+        [Format(NullValue = TextUtil.EXCEL_NA)]
+        public double? LibraryProbabilityScore
+        {
+            get { return (DocNode.LibInfo as BiblioSpecSpectrumHeaderInfo)?.Score; }
+        }
+
         public bool IsDecoy { get { return DocNode.IsDecoy; } }
 
         [Format(NullValue = TextUtil.EXCEL_NA)]
