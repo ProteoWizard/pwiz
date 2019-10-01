@@ -176,7 +176,11 @@ namespace pwiz.Skyline.Controls.Startup
                 {
                     Caption = Resources.SkylineStartup_SkylineStartup_Blank_Document,
                     Icon = Resources.WizardBlankDocument,
-                    EventAction = () => DoAction(skylineWindow => true),
+                    EventAction = () => DoAction(skylineWindow =>
+                    {
+                        skylineWindow.NewDocument(true);
+                        return true;
+                    }),
                     BackColor = _darkHoverColor,
                 },
                 new ActionBoxControl

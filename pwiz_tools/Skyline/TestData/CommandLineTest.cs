@@ -103,6 +103,22 @@ namespace pwiz.SkylineTestData
         }
 
         [TestMethod]
+        public void ConsoleShareZipTest()
+        {
+            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            string outPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky.zip");
+
+            RunCommand("--in=" + docPath,
+                       "--share-zip=" + outPath);
+
+            Assert.IsTrue(File.Exists(outPath));
+
+            var outFilesDir = new TestFilesDir(TestContext, outPath);
+            Assert.IsTrue(File.Exists(outFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky")));
+        }
+
+        [TestMethod]
         public void ConsoleRemoveResultsTest()
         {
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
@@ -656,6 +672,39 @@ namespace pwiz.SkylineTestData
                 Console.WriteLine("Failed to write Agilent method: {0}", output);   // Not L10N
 // ReSharper restore LocalizableElement
                 Assert.IsTrue(success);
+            }
+
+            // Test order by m/z
+            var mzOrderOut = commandFilesDir.GetTestPath("export-order-by-mz.txt");
+            var cmd2 = new[] {"--in=" + docPath2,
+                "--exp-translist-instrument=Thermo",
+                "--exp-order-by-mz",
+                "--exp-file=" + mzOrderOut};
+            output = RunCommand(cmd2);
+
+            //check for success
+            Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "export-order-by-mz.txt")));
+            using (var reader = new StreamReader(mzOrderOut))
+            {
+                double prevPrecursor = 0;
+                double prevProduct = 0;
+                while (!reader.EndOfStream)
+                {
+                    var line = reader.ReadLine();
+                    Assert.IsNotNull(line);
+                    var values = line.Split(',');
+                    Assert.IsTrue(values.Length >= 2);
+                    Assert.IsTrue(double.TryParse(values[0], NumberStyles.Any, CultureInfo.InvariantCulture, out var precursor));
+                    Assert.IsTrue(double.TryParse(values[1], NumberStyles.Any, CultureInfo.InvariantCulture, out var product));
+                    Assert.IsTrue(prevPrecursor <= precursor);
+                    if (prevPrecursor != precursor)
+                    {
+                        prevProduct = 0;
+                    }
+                    Assert.IsTrue(prevProduct <= product);
+                    prevPrecursor = precursor;
+                    prevProduct = product;
+                }
             }
         }
 

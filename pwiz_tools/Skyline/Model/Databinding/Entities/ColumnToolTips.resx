@@ -1269,6 +1269,9 @@ higher than the other extent.</value>
   <data name="InChiKey" xml:space="preserve">
     <value>Standardized molecular identifier</value>
   </data>
+  <data name="KEGG" xml:space="preserve">
+    <value>Standardized molecular identifier</value>
+  </data>
   <data name="SMILES" xml:space="preserve">
     <value>Standardized molecular identifier</value>
   </data>
@@ -1313,5 +1316,11 @@ higher than the other extent.</value>
   </data>
   <data name="AuditLogDetailRowId">
     <value>Id of the detailed message</value>
+  </data>
+  <data name="SampleId" xml:space="preserve">
+    <value>A free text identifier for referring to a sample (which may be shared among multiple files). Read from the "sample id" attribute in an imported result file</value>
+  </data>
+  <data name="InstrumentSerialNumber" xml:space="preserve">
+    <value>The instrument serial number read from an imported result file</value>
   </data>
 </root>
