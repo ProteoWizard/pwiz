@@ -6028,12 +6028,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: Failed attempting to change the transiton filter settings..
+        ///   Looks up a localized string similar to Error: Failed attempting to change the transition filter settings..
         /// </summary>
-        public static string CommandLine_SetFilterSettings_Error__Failed_attempting_to_change_the_transiton_filter_settings_ {
+        public static string CommandLine_SetFilterSettings_Error__Failed_attempting_to_change_the_transition_filter_settings_ {
             get {
-                return ResourceManager.GetString("CommandLine_SetFilterSettings_Error__Failed_attempting_to_change_the_transiton_fi" +
-                        "lter_settings_", resourceCulture);
+                return ResourceManager.GetString("CommandLine_SetFilterSettings_Error__Failed_attempting_to_change_the_transition_f" +
+                        "ilter_settings_", resourceCulture);
             }
         }
         
@@ -6193,12 +6193,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: Failed attempting to change the transiton prediction settings..
+        ///   Looks up a localized string similar to Error: Failed attempting to change the transition prediction settings..
         /// </summary>
-        public static string CommandLine_SetPredictTranSettings_Error__Failed_attempting_to_change_the_transiton_prediction_settings_ {
+        public static string CommandLine_SetPredictTranSettings_Error__Failed_attempting_to_change_the_transition_prediction_settings_ {
             get {
                 return ResourceManager.GetString("CommandLine_SetPredictTranSettings_Error__Failed_attempting_to_change_the_transit" +
-                        "on_prediction_settings_", resourceCulture);
+                        "ion_prediction_settings_", resourceCulture);
             }
         }
         

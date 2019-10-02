@@ -703,7 +703,7 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                _out.WriteLine(Resources.CommandLine_SetPredictTranSettings_Error__Failed_attempting_to_change_the_transiton_prediction_settings_);
+                _out.WriteLine(Resources.CommandLine_SetPredictTranSettings_Error__Failed_attempting_to_change_the_transition_prediction_settings_);
                 _out.WriteLine(x.Message);
                 return false;
             }
@@ -727,7 +727,7 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                _out.WriteLine(Resources.CommandLine_SetFilterSettings_Error__Failed_attempting_to_change_the_transiton_filter_settings_);
+                _out.WriteLine(Resources.CommandLine_SetFilterSettings_Error__Failed_attempting_to_change_the_transition_filter_settings_);
                 _out.WriteLine(x.Message);
                 return false;
             }

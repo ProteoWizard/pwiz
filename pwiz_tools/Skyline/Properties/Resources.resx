@@ -10637,11 +10637,12 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="ExceptionDialog_Caused_by_____" xml:space="preserve">
     <value>Caused by ---&gt;</value>
   </data>
-  <data name="CommandLine_SetPredictTranSettings_Error__Failed_attempting_to_change_the_transiton_prediction_settings_" xml:space="preserve">
-    <value>Error: Failed attempting to change the transiton prediction settings.</value>
+  <data name="CommandLine_SetPredictTranSettings_Error__Failed_attempting_to_change_the_transition_prediction_settings_" xml:space="preserve">
+    <value>Error: Failed attempting to change the transition prediction settings.</value>
   </data>
-  <data name="CommandLine_SetFilterSettings_Error__Failed_attempting_to_change_the_transiton_filter_settings_" xml:space="preserve">
-    <value>Error: Failed attempting to change the transiton filter settings.</value>
+  <data name="CommandLine_SetFilterSettings_Error__Failed_attempting_to_change_the_transition_filter_settings_" xml:space="preserve">
+    <value>Error: Failed attempting to change the transition filter settings.</value>
+  </data>
   <data name="AbstractSpectrumGraphItem_AddAnnotations_" xml:space="preserve">
     <value>score = {0:F06}</value>
   </data>
