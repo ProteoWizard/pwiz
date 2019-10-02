@@ -5940,6 +5940,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Failed attempting to change the transiton filter settings..
+        /// </summary>
+        public static string CommandLine_SetFilterSettings_Error__Failed_attempting_to_change_the_transiton_filter_settings_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetFilterSettings_Error__Failed_attempting_to_change_the_transiton_fi" +
+                        "lter_settings_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Changing full-scan extraction to +/- {0} minutes from MS/MS IDs..
         /// </summary>
         public static string CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_from_MS_MS_IDs_ {
@@ -6091,6 +6101,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandLine_SetLibrary_Error__The_library_you_are_trying_to_add_conflicts_with_a_" +
                         "library_already_in_the_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Failed attempting to change the transiton prediction settings..
+        /// </summary>
+        public static string CommandLine_SetPredictTranSettings_Error__Failed_attempting_to_change_the_transiton_prediction_settings_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetPredictTranSettings_Error__Failed_attempting_to_change_the_transit" +
+                        "on_prediction_settings_", resourceCulture);
             }
         }
         
