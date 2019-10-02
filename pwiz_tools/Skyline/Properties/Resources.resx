@@ -10642,5 +10642,7 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="CommandLine_SetFilterSettings_Error__Failed_attempting_to_change_the_transiton_filter_settings_" xml:space="preserve">
     <value>Error: Failed attempting to change the transiton filter settings.</value>
+  <data name="AbstractSpectrumGraphItem_AddAnnotations_" xml:space="preserve">
+    <value>score = {0:F06}</value>
   </data>
 </root>
