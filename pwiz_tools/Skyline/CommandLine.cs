@@ -175,9 +175,9 @@ namespace pwiz.Skyline
                     if (ProcessDocument(commandArgs))
                         PerformExportOperations(commandArgs);
 
-                    // CONSIDER: Need to use new argument
                     // Save any settings list changes made by opening the document
-                    // Settings.Default.Save();
+                    if (commandArgs.SaveSettings)
+                        SaveSettings();
                 }
             }
             finally
@@ -189,6 +189,11 @@ namespace pwiz.Skyline
 
         private bool ProcessDocument(CommandArgs commandArgs)
         {
+            if (commandArgs.PredictTranSettings)
+            {
+                if (!SetPredictTranSettings(commandArgs))
+                    return false;
+            }
             if (commandArgs.FilterSettings)
             {
                 if (!SetFilterSettings(commandArgs))
@@ -678,6 +683,32 @@ namespace pwiz.Skyline
                 _doc = AuditLogList.ToggleAuditLogging(_doc, false);
         }
 
+        private bool SetPredictTranSettings(CommandArgs commandArgs)
+        {
+            try
+            {
+                ModifyDocumentWithLogging(doc => doc.ChangeSettings(doc.Settings.ChangeTransitionPrediction(p =>
+                {
+                    if (commandArgs.PredictCEName != null)
+                        p = p.ChangeCollisionEnergy(Settings.Default.GetCollisionEnergyByName(commandArgs.PredictCEName));
+                    if (commandArgs.PredictDPName != null)
+                        p = p.ChangeDeclusteringPotential(Settings.Default.GetDeclusterPotentialByName(commandArgs.PredictDPName));
+                    if (commandArgs.PredictCoVName != null)
+                        p = p.ChangeCompensationVoltage(Settings.Default.GetCompensationVoltageByName(commandArgs.PredictCoVName));
+                    if (commandArgs.PredictOpimizationLibraryName != null)
+                        p = p.ChangeOptimizationLibrary(Settings.Default.GetOptimizationLibraryByName(commandArgs.PredictOpimizationLibraryName));
+                    return p;
+                })), AuditLogEntry.SettingsLogFunction);
+                return true;
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine(Resources.CommandLine_SetPredictTranSettings_Error__Failed_attempting_to_change_the_transiton_prediction_settings_);
+                _out.WriteLine(x.Message);
+                return false;
+            }
+        }
+
         private bool SetFilterSettings(CommandArgs commandArgs)
         {
             try
@@ -696,7 +727,7 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Error__Failed_attempting_to_change_the_transiton_full_scan_settings_);
+                _out.WriteLine(Resources.CommandLine_SetFilterSettings_Error__Failed_attempting_to_change_the_transiton_filter_settings_);
                 _out.WriteLine(x.Message);
                 return false;
             }
