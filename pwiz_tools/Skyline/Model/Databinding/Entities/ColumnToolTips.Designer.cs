@@ -1319,6 +1319,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The probability score assigned to this match in the input files used to build the spectral library..
+        /// </summary>
+        public static string LibraryProbabilityScore {
+            get {
+                return ResourceManager.GetString("LibraryProbabilityScore", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The rank based on LibraryIntensity of this transition among all transitions
         ///allowed by the transition Filter settings, shown in the user interface as “(rank #)”..
         /// </summary>
