@@ -143,14 +143,18 @@ namespace pwiz.SkylineTestUtil
             test();
         }
 
-        protected static TDlg ShowDialog<TDlg>(Action act) where TDlg : Form
+        protected static TDlg ShowDialog<TDlg>(Action act, int millis = -1) where TDlg : Form
         {
             var existingDialog = FindOpenForm<TDlg>();
             if (existingDialog != null)
                 Assert.IsNull(existingDialog, typeof(TDlg) + " is already open");
 
             SkylineBeginInvoke(act);
-            TDlg dlg = WaitForOpenForm<TDlg>();
+            TDlg dlg;
+            if (millis == -1)
+                dlg = WaitForOpenForm<TDlg>();
+            else
+                dlg = WaitForOpenForm<TDlg>(millis);
             Assert.IsNotNull(dlg);
             return dlg;
         }
@@ -899,7 +903,6 @@ namespace pwiz.SkylineTestUtil
                 if (_isPauseForScreenShots)
                 {
                     Program.PauseSeconds = -1;
-                    TestSmallMolecules = false; // Extra test node will mess up the pretty pictures
                 }
             }
         }
@@ -1259,7 +1262,6 @@ namespace pwiz.SkylineTestUtil
                     @"Timeout {0} seconds exceeded in WaitForSkyline", waitCycles * SLEEP_INTERVAL / 1000);
                 }
                 Settings.Default.Reset();
-                Settings.Default.TestSmallMolecules = TestSmallMolecules;
                 Settings.Default.ImportResultsAutoCloseWindow = true;
                 Settings.Default.ImportResultsSimultaneousFiles = (int)MultiFileLoader.ImportResultsSimultaneousFileOptions.many;    // use maximum threads for multiple file import
                 BeginAuditLogging();

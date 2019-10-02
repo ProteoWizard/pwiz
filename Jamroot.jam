@@ -361,8 +361,6 @@ project pwiz
         <variant>debug,<toolset>gcc:<cxxflags>"-include pwiz/utility/misc/Exception.hpp"
         <variant>debug,<toolset>darwin:<cxxflags>"-include pwiz/utility/misc/Exception.hpp"
 
-        <toolset>msvc,<debug-symbols>on:<preserve-test-targets>off # save space on debug builds by deleting test artifacts which run successfully
-
         <conditional>@msvc-runtime-dlls
 
         $(TEAMCITY_TEST_DECORATION)
@@ -859,7 +857,8 @@ rule msvc-dotnet-requirement ( properties * )
     # require VS 2013 because of .NET Framework version
     if ! ( <toolset-msvc:version>12.0 in $(properties) ||
            <toolset-msvc:version>14.0 in $(properties) ||
-           <toolset-msvc:version>14.1 in $(properties) )
+           <toolset-msvc:version>14.1 in $(properties) ||
+           <toolset-msvc:version>14.2 in $(properties) )
     { return <build>no ; }
 }
 

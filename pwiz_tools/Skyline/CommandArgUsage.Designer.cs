@@ -250,6 +250,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Order exported method by m/z values in ascending order (precursor m/z, then product m/z when applicable) for optimized quadrupole switching..
+        /// </summary>
+        internal static string _exp_order_by_mz {
+            get {
+                return ResourceManager.GetString("_exp_order_by_mz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Controls export behavior for documents with both positive and negative transitions. Allows for output of only positive or only negative transitions, or creates separate outputs for each polarity. Defaults to all, and is ignored for single polarity documents..
         /// </summary>
         internal static string _exp_polarity {
@@ -484,6 +493,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A regular expression that is applied to file names to select the ones that will be imported..
+        /// </summary>
+        internal static string _import_filename_pattern {
+            get {
+                return ResourceManager.GetString("_import_filename_pattern", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Waters lockmass correction m/z for negative ion scans..
         /// </summary>
         internal static string _import_lockmass_negative {
@@ -561,6 +579,15 @@ namespace pwiz.Skyline {
         internal static string _import_replicate_name {
             get {
                 return ResourceManager.GetString("_import_replicate_name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A regular expression that is applied to sample names (e.g. in a multi-injection .wiff file) to select the ones that will be imported..
+        /// </summary>
+        internal static string _import_samplename_pattern {
+            get {
+                return ResourceManager.GetString("_import_samplename_pattern", resourceCulture);
             }
         }
         
@@ -823,6 +850,15 @@ namespace pwiz.Skyline {
         internal static string _refine_max_peptide_peak_rank {
             get {
                 return ResourceManager.GetString("_refine_max_peptide_peak_rank", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Only the precursor charge state with the maximum peak area will be retained..
+        /// </summary>
+        internal static string _refine_max_precursor_only {
+            get {
+                return ResourceManager.GetString("_refine_max_precursor_only", resourceCulture);
             }
         }
         

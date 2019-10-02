@@ -7,6 +7,8 @@
 #ifndef REGEXP_DWA20011023_H
 #define REGEXP_DWA20011023_H
 
+#include "config.h"
+
 #define NSUBEXP  10
 typedef struct regexp {
     char const * startp[ NSUBEXP ];

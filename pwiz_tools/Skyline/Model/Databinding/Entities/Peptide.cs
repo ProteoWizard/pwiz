@@ -181,7 +181,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [DataGridViewColumnType(typeof(StandardTypeDataGridViewColumn))]
-        [Importable]
         public StandardType StandardType
         {
             get
@@ -483,6 +482,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return IsSmallMolecule() ? DocNode.CustomMolecule.AccessionNumbers.GetSMILES() ?? string.Empty : string.Empty; }
         }
 
+        [Hidden(InUiMode = UiModes.PROTEOMIC)]
+        public string KEGG
+        {
+            get { return IsSmallMolecule() ? DocNode.CustomMolecule.AccessionNumbers.GetKEGG() ?? string.Empty : string.Empty; }
+        }
+
         [Importable]
         public bool AutoSelectPrecursors
         {
@@ -519,6 +524,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         protected override NodeRef NodeRefPrototype
         {
             get { return MoleculeRef.PROTOTYPE; }
+        }
+
+        protected override Type SkylineDocNodeType
+        {
+            get { return typeof(Peptide); }
         }
     }
 }

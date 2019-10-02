@@ -42,9 +42,9 @@ namespace pwiz.SkylineTestData
             // First check a few refinements which should not change the document
             var refineSettings = new RefinementSettings();
             Assert.AreSame(document, refineSettings.Refine(document));
-            refineSettings.MinPeptidesPerProtein = (TestSmallMolecules ? 1 : 3); // That magic small molecule node has just one child
+            refineSettings.MinPeptidesPerProtein = 3;
             Assert.AreSame(document, refineSettings.Refine(document));
-            refineSettings.MinTransitionsPepPrecursor = (TestSmallMolecules ? 1 : 2);
+            refineSettings.MinTransitionsPepPrecursor = 2;
             Assert.AreSame(document, refineSettings.Refine(document));
 
             // Remove the protein with only 3 peptides
@@ -91,7 +91,7 @@ namespace pwiz.SkylineTestData
             var document = InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.none);
 
             // First check a few refinements which should not change the document
-            var refineSettings = new RefinementSettings {RTRegressionThreshold = 0.3};
+            var refineSettings = new RefinementSettings { RTRegressionThreshold = 0.3 };
             Assert.AreSame(document, refineSettings.Refine(document));
             refineSettings.RTRegressionThreshold = null;
             refineSettings.DotProductThreshold = Statistics.AngleToNormalizedContrastAngle(0.1);    // Convert form original cos(angle) dot-product
@@ -112,7 +112,7 @@ namespace pwiz.SkylineTestData
             // First three children should be unchanged
             for (int i = 0; i < 3; i++)
                 Assert.AreSame(document.Children[i], docRefined.Children[i]);
-            var nodePepGroupRefined = (PeptideGroupDocNode) docRefined.Children[3];
+            var nodePepGroupRefined = (PeptideGroupDocNode)docRefined.Children[3];
             Assert.AreEqual(1, nodePepGroupRefined.MoleculeCount);
             Assert.AreEqual(1, nodePepGroupRefined.TransitionGroupCount);
             Assert.AreEqual(5, nodePepGroupRefined.TransitionCount);
@@ -190,14 +190,14 @@ namespace pwiz.SkylineTestData
                     new StaticMod("13C R", "R", ModTerminus.C, null, LabelAtoms.C13, null, null),
                 }));
             var docPrepareAdd = docRefineMaxPeaks.ChangeSettings(settingsNew);
-            refineSettings = new RefinementSettings {RefineLabelType = IsotopeLabelType.heavy, AddLabelType = true};
+            refineSettings = new RefinementSettings { RefineLabelType = IsotopeLabelType.heavy, AddLabelType = true };
             var docHeavy = refineSettings.Refine(docPrepareAdd);
-            Assert.AreEqual(docRefineMaxPeaks.PeptideTransitionCount*2, docHeavy.PeptideTransitionCount);
+            Assert.AreEqual(docRefineMaxPeaks.PeptideTransitionCount * 2, docHeavy.PeptideTransitionCount);
             // Verify that the precursors were added with the right transitions
             foreach (var nodePep in docHeavy.Peptides)
             {
                 Assert.AreEqual(2, nodePep.Children.Count);
-                var lightGroup = (TransitionGroupDocNode) nodePep.Children[0];
+                var lightGroup = (TransitionGroupDocNode)nodePep.Children[0];
                 Assert.AreEqual(IsotopeLabelType.light, lightGroup.TransitionGroup.LabelType);
                 var heavyGroup = (TransitionGroupDocNode)nodePep.Children[1];
                 Assert.AreEqual(IsotopeLabelType.heavy, heavyGroup.TransitionGroup.LabelType);
@@ -206,11 +206,41 @@ namespace pwiz.SkylineTestData
                 Assert.AreEqual(lightGroup.Children.Count, heavyGroup.Children.Count);
                 for (int i = 0; i < lightGroup.Children.Count; i++)
                 {
-                    var lightTran = (TransitionDocNode) lightGroup.Children[i];
-                    var heavyTran = (TransitionDocNode) heavyGroup.Children[i];
+                    var lightTran = (TransitionDocNode)lightGroup.Children[i];
+                    var heavyTran = (TransitionDocNode)heavyGroup.Children[i];
                     Assert.AreEqual(lightTran.Transition.FragmentIonName, heavyTran.Transition.FragmentIonName);
                 }
             }
+            // Pick only the precursors with the max peak area
+            document = InitRefineDocumentIprg();
+            refineSettings = new RefinementSettings { MaxPrecursorPeakOnly = true };
+            var docRefineMaxPrecursorPeakOnly = refineSettings.Refine(document);
+            VerifyPrecursorOnlyNodeCounts(docRefineMaxPrecursorPeakOnly, 4, 12);
+            VerifyChargeCounts(docRefineMaxPrecursorPeakOnly, 2, 2);
+
+            // Pick only the precursors with the max peak area, do not ignore standard types
+            document = InitRefineDocumentSprg();
+            docRefineMaxPrecursorPeakOnly = refineSettings.Refine(document);
+            VerifyPrecursorOnlyNodeCounts(docRefineMaxPrecursorPeakOnly, 3, 27);
+            VerifyChargeCounts(docRefineMaxPrecursorPeakOnly, 1, 2);
+        }
+
+        private void VerifyPrecursorOnlyNodeCounts(SrmDocument doc, int peptides, int transitions)
+        {
+            Assert.AreEqual(peptides, doc.PeptideCount);
+            Assert.AreEqual(doc.PeptideCount, doc.PeptideTransitionGroupCount);
+            Assert.AreEqual(transitions, doc.PeptideTransitionCount);
+        }
+
+        private void VerifyChargeCounts(SrmDocument doc, int charge2, int charge3)
+        {
+            var chargeCounts =
+                (from g in doc.PeptideTransitionGroups
+                    group g by g.TransitionGroup.PrecursorAdduct.Unlabeled
+                    into gc
+                    select new { Adduct = gc.Key.Unlabeled.AdductCharge, Count = gc.Count() }).ToArray();
+            Assert.IsTrue(chargeCounts.Contains((x) => x.Adduct == 2 && x.Count == charge2));
+            Assert.IsTrue(chargeCounts.Contains((x) => x.Adduct == 3 && x.Count == charge3));
         }
 
         [TestMethod]
@@ -251,6 +281,22 @@ namespace pwiz.SkylineTestData
             AssertEx.IsDocumentState(converted, null, 4, 36, 38, 334);
             return converted;
 
+        }
+
+        private SrmDocument InitRefineDocumentIprg()
+        {
+            TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"TestData\Refine.zip");
+            var doc = ResultsUtil.DeserializeDocument(testFilesDir.GetTestPath("iPRG 2015 Study-mini.sky"));
+            AssertEx.IsDocumentState(doc, null, 1, 4, 6, 18);
+            return doc;
+        }
+
+        private SrmDocument InitRefineDocumentSprg()
+        {
+            TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"TestData\Refine.zip");
+            var doc = ResultsUtil.DeserializeDocument(testFilesDir.GetTestPath("sprg_all_charges-mini.sky"));
+            AssertEx.IsDocumentState(doc, null, 1, 3, 6, 54);
+            return doc;
         }
     }
 }

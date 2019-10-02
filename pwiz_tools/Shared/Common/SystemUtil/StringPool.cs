@@ -30,6 +30,10 @@ namespace pwiz.Common.SystemUtil
 
         public string GetString(string s)
         {
+            if (s == null)
+            {
+                return null;
+            }
             string result;
             if (_dictionary.TryGetValue(s, out result))
             {

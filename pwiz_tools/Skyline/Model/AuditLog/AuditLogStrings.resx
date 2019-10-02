@@ -416,7 +416,7 @@
   <data name="removed_peak_from" xml:space="preserve">
     <value>Removed peak from {0} in replicate "{1}"</value>
   </data>
-  <data name="removed_peaks">
+  <data name="removed_peaks" xml:space="preserve">
     <value>Removed {0} peaks from {1} nodes</value>
   </data>
   <data name="removed_all_peaks_from" xml:space="preserve">
@@ -633,7 +633,7 @@
     <value>The document was modified outside of Skyline: {0}</value>
   </data>
   <data name="AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing" xml:space="preserve">
-    <value>Audit log is corrupted. Audit log entry time stamps and indices should be decreasing</value>
+    <value>Audit log is corrupted. Audit log entry time stamps and indices should be in order. Entry number {0} timestamp {1:G} occurs before entry number {2} timestamp {3:G}.</value>
   </data>
   <data name="test_only" xml:space="preserve">
     <value>{0}</value>
@@ -655,5 +655,8 @@
 Deleting, renaming or moving the audit log file will prevent this error from occuring. You can also send the audit log to the Skyline team to have them attempt to manually fix the file.
 
 For reference, the audit log is located here: "{0}"</value>
+  </data>
+  <data name="AuditLogException_Error_when_loading_document_audit_log__0" xml:space="preserve">
+    <value>Error when loading document's audit log: {0}.</value>
   </data>
 </root>

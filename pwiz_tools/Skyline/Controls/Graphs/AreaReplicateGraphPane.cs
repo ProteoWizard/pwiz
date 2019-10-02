@@ -311,7 +311,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             var graphType = AreaGraphController.GraphDisplayType;
             var expectedValue = IsExpectedVisible ? ExpectedVisible : AreaExpectedValue.none;
-            var replicateGroupOp = ReplicateGroupOp.FromCurrentSettings(document.Settings);
+            var replicateGroupOp = ReplicateGroupOp.FromCurrentSettings(document);
             var graphData = IsMultiSelect  ? 
                 new AreaGraphData(document,
                     peptidePaths,

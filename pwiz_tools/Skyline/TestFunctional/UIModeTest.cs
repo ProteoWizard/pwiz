@@ -67,9 +67,6 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            // This test makes hard assumptions about the content of the document, so don't alter it with our small molecule test node
-            TestSmallMolecules = false;
-
             var startPage =_showStartPage ? WaitForOpenForm<StartPage>() : null;
             var modeDlg = WaitForOpenForm<NoModeUIDlg>(); // Expect a dialog asking user to select a default UI mode
             RunUI(() =>

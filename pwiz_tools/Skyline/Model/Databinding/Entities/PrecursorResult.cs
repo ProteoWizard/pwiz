@@ -218,7 +218,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             else if (Equals(annotationDef.Name, MProphetResultsHandler.MAnnotationName))
                 return DetectionZScore;
 
-            return ChromInfo.Annotations.GetAnnotation(annotationDef);
+            return DataSchema.AnnotationCalculator.GetAnnotation(annotationDef, this, ChromInfo.Annotations);
         }
 
         public override string ToString()
@@ -248,12 +248,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
         private QuantificationResult GetQuantification()
         {
-            if (!Precursor.PrecursorConcentration.HasValue)
+            var calibrationCurveFitter = PeptideResult.GetCalibrationCurveFitter();
+            if (!calibrationCurveFitter.IsotopologResponseCurve)
             {
                 return null;
             }
-
-            var calibrationCurveFitter = PeptideResult.GetCalibrationCurveFitter();
             return calibrationCurveFitter.GetPrecursorQuantificationResult(GetResultFile().Replicate.ReplicateIndex,
                 Precursor.DocNode);
         }

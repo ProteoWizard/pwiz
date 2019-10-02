@@ -218,8 +218,6 @@ namespace pwiz.SkylineTestData.Results
 
         public void DoThermoRatioTest(RefinementSettings.ConvertToSmallMoleculesMode smallMoleculesTestMode)
         {
-            TestSmallMolecules = false;  // We do this explicitly
-
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath;
             SrmDocument doc = InitThermoDocument(testFilesDir, out docPath);
@@ -255,6 +253,10 @@ namespace pwiz.SkylineTestData.Results
                 Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
                 docContainer.AssertComplete();
                 docResults = docContainer.Document;
+
+                Assert.IsTrue(docResults.MeasuredResults.CachedFileInfos.All(fi => fi.InstrumentSerialNumber == "TQU00490"));
+                Assert.IsTrue(docResults.MeasuredResults.CachedFileInfos.All(fi => fi.SampleId == "10 fmol/ul peptides in 3% ACN/0.1% Formic Acid"));
+
                 // Make sure all groups have at least 5 transitions (of 6) with ratios
                 int ratioGroupMissingCount = 0;
                 foreach (var nodeGroup in docResults.MoleculeTransitionGroups)

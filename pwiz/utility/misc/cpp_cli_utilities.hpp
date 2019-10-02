@@ -43,6 +43,10 @@
 #pragma managed
 #include "BinaryData.hpp"
 
+#ifdef __cplusplus_cli
+//#define PWIZ_MANAGED_PASSTHROUGH
+#endif
+
 namespace pwiz {
 namespace util {
 
