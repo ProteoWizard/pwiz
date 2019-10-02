@@ -405,7 +405,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
 
         public override bool TryGetLibInfo(LibKey key, out SpectrumHeaderInfo libInfo)
         {
-            libInfo = Contains(key) ? new BiblioSpecSpectrumHeaderInfo(Name, 1) : null;
+            libInfo = Contains(key) ? new BiblioSpecSpectrumHeaderInfo(Name, 1, null, null) : null;
             return libInfo != null;
         }
 

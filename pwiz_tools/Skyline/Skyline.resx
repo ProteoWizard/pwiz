@@ -407,6 +407,12 @@
   <data name="ranksContextMenuItem.Text" xml:space="preserve">
     <value>Ranks</value>
   </data>
+  <data name="scoreContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>193, 22</value>
+  </data>
+  <data name="scoreContextMenuItem.Text" xml:space="preserve">
+    <value>Score</value>
+  </data>
   <data name="ionMzValuesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
   </data>
@@ -3780,6 +3786,12 @@ first occurrence of any peptide.</value>
     <value>ranksContextMenuItem</value>
   </data>
   <data name="&gt;&gt;ranksContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;scoreContextMenuItem.Name" xml:space="preserve">
+    <value>scoreContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;scoreContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;ionMzValuesContextMenuItem.Name" xml:space="preserve">
