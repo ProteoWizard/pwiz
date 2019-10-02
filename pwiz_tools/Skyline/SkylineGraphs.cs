@@ -1082,6 +1082,12 @@ namespace pwiz.Skyline
             UpdateSpectrumGraph(false);
         }
 
+        private void scoresContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowLibraryScores = !Settings.Default.ShowLibraryScores;
+            UpdateSpectrumGraph(false);
+        }
+
         private void ionMzValuesContextMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ShowIonMz = !Settings.Default.ShowIonMz;
@@ -1155,6 +1161,8 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
             ranksContextMenuItem.Checked = set.ShowRanks;
             menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
+            scoreContextMenuItem.Checked = set.ShowLibraryScores;
+            menuStrip.Items.Insert(iInsert++, scoreContextMenuItem);
             ionMzValuesContextMenuItem.Checked = set.ShowIonMz;
             menuStrip.Items.Insert(iInsert++, ionMzValuesContextMenuItem);
             observedMzValuesContextMenuItem.Checked = set.ShowObservedMz;
