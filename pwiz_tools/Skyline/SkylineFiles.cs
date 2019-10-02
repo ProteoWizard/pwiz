@@ -1943,7 +1943,7 @@ namespace pwiz.Skyline
             // if there are any
             if (errorList.Any())
             {
-                using (var errorDlg = new ImportTransitionListErrorDlg(errorList, isDocumentSame, false))
+                using (var errorDlg = new ImportTransitionListErrorDlg(errorList, isDocumentSame))
                 {
                     if (errorDlg.ShowDialog(this) == DialogResult.Cancel || isDocumentSame)
                     {

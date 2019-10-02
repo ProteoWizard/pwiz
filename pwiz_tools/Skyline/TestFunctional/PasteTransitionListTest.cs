@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System.Drawing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Windows.Forms;
 using pwiz.Skyline.FileUI;

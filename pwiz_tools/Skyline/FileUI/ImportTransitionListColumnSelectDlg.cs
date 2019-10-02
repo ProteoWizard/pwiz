@@ -23,7 +23,6 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.Collections;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -307,7 +306,7 @@ namespace pwiz.Skyline.FileUI
                 out testErrorList, out testPeptideGroups);
             if (testErrorList.Any())
             {
-                using (var dlg = new ImportTransitionListErrorDlg(testErrorList, true, false))
+                using (var dlg = new ImportTransitionListErrorDlg(testErrorList, true))
                 {
                     dlg.ShowDialog(this);
                 }

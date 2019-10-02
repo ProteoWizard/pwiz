@@ -154,7 +154,7 @@
 
         private System.Windows.Forms.Label labelErrors;
         private System.Windows.Forms.Button buttonCancel;
-        public System.Windows.Forms.Button buttonOk;
+        private System.Windows.Forms.Button buttonOk;
         private Controls.DataGridViewEx dataGridViewErrors;
         private System.Windows.Forms.BindingSource bindingSourceGrid;
         private System.Windows.Forms.CheckBox cbShowText;

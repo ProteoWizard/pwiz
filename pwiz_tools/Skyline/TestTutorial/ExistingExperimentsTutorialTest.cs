@@ -262,12 +262,12 @@ namespace pwiz.SkylineTestTutorial
                 SetExcelFileClipboardText(filePath, "Simple", 6, false);
                 clipboardSaveText = ClipboardEx.GetText();
             });
-
+            // We expect this to fail due to instrument settings rather than format issues eg "The product m/z 1519.78 is out of range for the instrument settings, in the peptide sequence YEVQGEVFTKPQLWP. Check the Instrument tab in the Transition Settings."
             {
                 var transitionSelectdgl = ShowDialog<ImportTransitionListColumnSelectDlg>(SkylineWindow.Paste);
                 var messageDlg = ShowDialog<ImportTransitionListErrorDlg>(transitionSelectdgl.AcceptButton.PerformClick);
                 PauseForScreenShot<ImportTransitionListErrorDlg>("Error message form (expected)", 18);
-                OkDialog(messageDlg, messageDlg.CancelDialog);
+                OkDialog(messageDlg, messageDlg.AcceptButton.PerformClick);
 
                 // Restore the clipboard text after pausing
                 ClipboardEx.SetText(clipboardSaveText);

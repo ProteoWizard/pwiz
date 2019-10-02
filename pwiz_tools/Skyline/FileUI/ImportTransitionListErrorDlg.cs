@@ -29,10 +29,9 @@ namespace pwiz.Skyline.FileUI
 {
     public partial class ImportTransitionListErrorDlg : FormEx
     {
-        public ImportTransitionListErrorDlg(List<TransitionImportErrorInfo> errorList, bool isErrorAll, bool showCancelButton)
+        public ImportTransitionListErrorDlg(List<TransitionImportErrorInfo> errorList, bool isErrorAll)
         {
             InitializeComponent();
-            buttonCancel.Visible = showCancelButton;
             SimpleGridViewDriver<TransitionImportErrorInfo> compareGridViewDriver = new ImportErrorGridViewDriver(dataGridViewErrors,
                 bindingSourceGrid, new SortableBindingList<TransitionImportErrorInfo>());
             ErrorList = errorList;
