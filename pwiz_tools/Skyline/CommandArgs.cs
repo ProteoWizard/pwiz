@@ -1637,6 +1637,7 @@ namespace pwiz.Skyline
             ReplicateFile = new List<MsDataFileUri>();
             SearchResultsFiles = new List<string>();
             ExcludeFeatures = new List<IPeakFeatureCalculator>();
+            SharedFileType = ShareType.DEFAULT;
 
             ImportBeforeDate = null;
             ImportOnOrAfterDate = null;

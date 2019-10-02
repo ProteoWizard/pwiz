@@ -103,6 +103,22 @@ namespace pwiz.SkylineTestData
         }
 
         [TestMethod]
+        public void ConsoleShareZipTest()
+        {
+            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            string outPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky.zip");
+
+            RunCommand("--in=" + docPath,
+                       "--share-zip=" + outPath);
+
+            Assert.IsTrue(File.Exists(outPath));
+
+            var outFilesDir = new TestFilesDir(TestContext, outPath);
+            Assert.IsTrue(File.Exists(outFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky")));
+        }
+
+        [TestMethod]
         public void ConsoleRemoveResultsTest()
         {
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);

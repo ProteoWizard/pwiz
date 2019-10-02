@@ -10610,6 +10610,9 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="SkylineWindow_MarkQuantitative_Mark_transitions_non_quantitative" xml:space="preserve">
     <value>Mark transitions non-quantitative</value>
   </data>
+  <data name="ExceptionDialog_Caused_by_____" xml:space="preserve">
+    <value>Caused by ---&gt;</value>
+  </data>
   <data name="CommandLine_SetPredictTranSettings_Error__Failed_attempting_to_change_the_transiton_prediction_settings_" xml:space="preserve">
     <value>Error: Failed attempting to change the transiton prediction settings.</value>
   </data>
