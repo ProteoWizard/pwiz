@@ -724,6 +724,12 @@ greater peak area.</value>
   <data name="_refine_max_precursor_only" xml:space="preserve">
     <value>Only the precursor charge state with the maximum peak area will be retained.</value>
   </data>
+  <data name="_import_filename_pattern" xml:space="preserve">
+    <value>A regular expression that is applied to file names to select the ones that will be imported.</value>
+  </data>
+  <data name="_import_samplename_pattern" xml:space="preserve">
+    <value>A regular expression that is applied to sample names (e.g. in a multi-injection .wiff file) to select the ones that will be imported.</value>
+  </data>
   <data name="_exp_order_by_mz" xml:space="preserve">
     <value>Order exported method by m/z values in ascending order (precursor m/z, then product m/z when applicable) for optimized quadrupole switching.</value>
   </data>

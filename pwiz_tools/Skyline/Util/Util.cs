@@ -1630,6 +1630,24 @@ namespace pwiz.Skyline.Util
             return 0;
         }
 
+        public static List<string> EnsureUniqueNames(List<string> names, HashSet<string> reservedNames = null)
+        {
+            var setUsedNames = reservedNames ?? new HashSet<string>();
+            var result = new List<string>();
+            for (int i = 0; i < names.Count; i++)
+            {
+                string baseName = names[i];
+                // Make sure the next name added is unique
+                string name = (baseName.Length != 0 ? baseName : @"1");
+                for (int suffix = 2; setUsedNames.Contains(name); suffix++)
+                    name = baseName + suffix;
+                result.Add(name);
+                // Add this name to the used set
+                setUsedNames.Add(name);
+            }
+            return result;
+        }
+
         /// <summary>
         /// Count the number of lines in the file specified.
         /// </summary>
@@ -1876,7 +1894,7 @@ namespace pwiz.Skyline.Util
 
         public static string NullableDoubleToString(double? d)
         {
-            return d.HasValue ? d.Value.ToString(LocalizationHelper.CurrentCulture) : string.Empty;
+            return d.HasValue ? d.Value.ToString(LocalizationHelper.CurrentCulture) : String.Empty;
         }
     }
 
