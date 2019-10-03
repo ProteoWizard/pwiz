@@ -37,6 +37,7 @@ using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestTutorial
@@ -266,8 +267,12 @@ namespace pwiz.SkylineTestTutorial
             {
                 var transitionSelectdgl = ShowDialog<ImportTransitionListColumnSelectDlg>(SkylineWindow.Paste);
                 var messageDlg = ShowDialog<ImportTransitionListErrorDlg>(transitionSelectdgl.AcceptButton.PerformClick);
+                AssertEx.AreComparableStrings(TextUtil.SpaceSeparate(Resources.MassListRowReader_CalcTransitionExplanations_The_product_m_z__0__is_out_of_range_for_the_instrument_settings__in_the_peptide_sequence__1_,
+                        Resources.MassListRowReader_CalcPrecursorExplanations_Check_the_Instrument_tab_in_the_Transition_Settings),
+                    messageDlg.ErrorList[0].ErrorMessage,
+                    2);
                 PauseForScreenShot<ImportTransitionListErrorDlg>("Error message form (expected)", 18);
-                OkDialog(messageDlg, messageDlg.AcceptButton.PerformClick);
+                OkDialog(messageDlg, messageDlg.CancelDialog);
 
                 // Restore the clipboard text after pausing
                 ClipboardEx.SetText(clipboardSaveText);

@@ -136,6 +136,11 @@ namespace pwiz.Skyline.FileUI
             }
 
             var columns = Importer._rowReader.Indices;
+
+            // It's not unusual to see lines like "744.8 858.39 10 APR.AGLCQTFVYGGCR.y7.light 105 40" where protein, peptide, and label are all stuck together,
+            // so that all three lay claim to a single column. In such cases, prioritize peptide.
+            columns = columns.PrioritizePeptideColumn();
+
             SetComboBoxText(columns.DecoyColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy);
             SetComboBoxText(columns.IrtColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT);
             SetComboBoxText(columns.LabelTypeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);

@@ -1746,6 +1746,30 @@ namespace pwiz.Skyline.Model
         /// A column specifying a spectral library intensity for the transition
         /// </summary>
         public int LibraryColumn { get; set; }
+
+        /// <summary>
+        /// It's not unusual for a single column to hold a few fields worth of info, as in
+        /// "744.8 858.39 10 APR.AGLCQTFVYGGCR.y7.light 105 40" where protein, peptide, and label are all stuck together,
+        /// so that all three lay claim to a single column. In such cases, prioritize peptide.
+        /// </summary>
+        public PeptideColumnIndices PrioritizePeptideColumn()
+        {
+            var result = this;
+            if (PeptideColumn != -1)
+            {
+                if (ProteinColumn == PeptideColumn)
+                {
+                    result = (PeptideColumnIndices)result.MemberwiseClone();
+                    result.ProteinColumn = -1;
+                }
+                if (LabelTypeColumn == PeptideColumn)
+                {
+                    result = (PeptideColumnIndices)result.MemberwiseClone();
+                    result.LabelTypeColumn = -1;
+                }
+            }
+            return result;
+        }
     }
 
     /// <summary>
