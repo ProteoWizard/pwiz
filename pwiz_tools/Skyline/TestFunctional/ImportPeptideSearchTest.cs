@@ -630,7 +630,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     Assert.Fail("precursor {0} not in score dictionary", nodeTranGroup.PrecursorMz);
                 }
-                Assert.IsTrue(Math.Abs(knownPrecursor.Item2 - bibliospecInfo.Score.GetValueOrDefault()) < 0.000001);
+                Assert.AreEqual(knownPrecursor.Item2, bibliospecInfo.Score.GetValueOrDefault(), 0.000001);
             }
 
             RunUI(() => SkylineWindow.SaveDocument());
