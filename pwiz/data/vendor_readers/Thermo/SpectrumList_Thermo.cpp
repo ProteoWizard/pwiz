@@ -449,7 +449,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                 precursor.isolationWindow.set(MS_isolation_window_lower_offset, isolationWidth, MS_m_z);
                 precursor.isolationWindow.set(MS_isolation_window_upper_offset, isolationWidth, MS_m_z);
 
-                int msLevel = scanInfo->isSPS() && i == 0 ? 1 : 2;
+                int msLevel = !scanInfo->isSPS() || i == 0 ? 1 : 2;
                 precursor.userParams.push_back(UserParam("ms level", lexical_cast<string>(msLevel)));
 
                 ActivationType activationType = scanInfo->activationType();

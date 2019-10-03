@@ -96,7 +96,7 @@ namespace TestRunnerLib
 
         public static bool WriteMiniDumps
         {
-            get { return true; }
+            get { return false; }
         }
 
         public RunTests(

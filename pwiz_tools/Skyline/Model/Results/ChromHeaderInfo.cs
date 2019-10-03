@@ -1397,8 +1397,9 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public ChromCachedFile(MsDataFileUri filePath, FlagValues flags, DateTime fileWriteTime, DateTime? runStartTime,
-                               float maxRT, float maxIntensity, eIonMobilityUnits ionMobilityUnits, IEnumerable<MsInstrumentConfigInfo> instrumentInfoList)
-            : this(filePath, flags, fileWriteTime, runStartTime, maxRT, maxIntensity, 0, 0, default(float?), ionMobilityUnits, instrumentInfoList)
+                               float maxRT, float maxIntensity, eIonMobilityUnits ionMobilityUnits, string sampleId, string serialNumber,
+                               IEnumerable<MsInstrumentConfigInfo> instrumentInfoList)
+            : this(filePath, flags, fileWriteTime, runStartTime, maxRT, maxIntensity, 0, 0, default(float?), ionMobilityUnits, sampleId, serialNumber, instrumentInfoList)
         {
         }
 
@@ -1412,6 +1413,8 @@ namespace pwiz.Skyline.Model.Results
                                long locationScanIds,
                                float? ticArea,
                                eIonMobilityUnits ionMobilityUnits,
+                               string sampleId,
+                               string instrumentSerialNumber,
                                IEnumerable<MsInstrumentConfigInfo> instrumentInfoList)
         {
             FilePath = filePath;
@@ -1423,6 +1426,8 @@ namespace pwiz.Skyline.Model.Results
             SizeScanIds = sizeScanIds;
             LocationScanIds = locationScanIds;
             TicArea = ticArea;
+            SampleId = sampleId;
+            InstrumentSerialNumber = instrumentSerialNumber;
             InstrumentInfoList = ImmutableList.ValueOf(instrumentInfoList) ?? ImmutableList<MsInstrumentConfigInfo>.EMPTY;
         }
 
@@ -1437,6 +1442,8 @@ namespace pwiz.Skyline.Model.Results
         public ImmutableList<MsInstrumentConfigInfo> InstrumentInfoList { get; private set; }
         public float? TicArea { get; private set; }
         public eIonMobilityUnits IonMobilityUnits { get { return IonMobilityUnitsFromFlags(Flags); } }
+        public string SampleId { get; private set; }
+        public string InstrumentSerialNumber { get; private set; }
 
         public bool IsCurrent
         {
@@ -1466,6 +1473,16 @@ namespace pwiz.Skyline.Model.Results
         public ChromCachedFile ChangeFilePath(MsDataFileUri filePath)
         {
             return ChangeProp(ImClone(this), im => im.FilePath = filePath);
+        }
+
+        public ChromCachedFile ChangeSampleId(string sampleId)
+        {
+            return ChangeProp(ImClone(this), im => im.SampleId = sampleId);
+        }
+
+        public ChromCachedFile ChangeSerialNumber(string serialNumber)
+        {
+            return ChangeProp(ImClone(this), im => im.InstrumentSerialNumber = serialNumber);
         }
     }
 

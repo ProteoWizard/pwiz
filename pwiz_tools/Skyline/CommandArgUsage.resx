@@ -724,4 +724,31 @@ greater peak area.</value>
   <data name="_refine_max_precursor_only" xml:space="preserve">
     <value>Only the precursor charge state with the maximum peak area will be retained.</value>
   </data>
+  <data name="_import_filename_pattern" xml:space="preserve">
+    <value>A regular expression that is applied to file names to select the ones that will be imported.</value>
+  </data>
+  <data name="_import_samplename_pattern" xml:space="preserve">
+    <value>A regular expression that is applied to sample names (e.g. in a multi-injection .wiff file) to select the ones that will be imported.</value>
+  </data>
+  <data name="_exp_order_by_mz" xml:space="preserve">
+    <value>Order exported method by m/z values in ascending order (precursor m/z, then product m/z when applicable) for optimized quadrupole switching.</value>
+  </data>
+  <data name="_tran_predict_ce" xml:space="preserve">
+    <value>Changes the transition settings collision energy prediction setting to one of the previously defined options.</value>
+  </data>
+  <data name="_tran_predict_cov" xml:space="preserve">
+    <value>Changes the transition settings compensation voltage prediction setting to one of the previously defined options.</value>
+  </data>
+  <data name="_tran_predict_dp" xml:space="preserve">
+    <value>Changes the transition settings declustering potential prediction setting to one of the previously defined options.</value>
+  </data>
+  <data name="_tran_predict_optdb" xml:space="preserve">
+    <value>Changes the transition settings optimization library used in predicting instrument parameters to one of the previously defined options.</value>
+  </data>
+  <data name="_version" xml:space="preserve">
+    <value>Emits version information for the running installation</value>
+  </data>
+  <data name="_save_settings" xml:space="preserve">
+    <value>Causes settings changes to the global environment, e.g. added reports, libraries, enzymes, etc. to be saved to the program configuration file.</value>
+  </data>
 </root>

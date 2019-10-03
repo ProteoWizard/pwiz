@@ -26,6 +26,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Web;
+using System.Xml.Serialization;
 using pwiz.Common.DataBinding.Documentation;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
@@ -116,6 +117,7 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_IN = new DocArgument(@"in", PATH_TO_DOCUMENT,
             (c, p) => c.SkylineFile = p.ValueFullPath);
         public static readonly Argument ARG_SAVE = new DocArgument(@"save", (c, p) => c.Saving = true);
+        public static readonly Argument ARG_SAVE_SETTINGS = new DocArgument(@"save-settings", (c, p) => c.SaveSettings = true);
         public static readonly Argument ARG_OUT = new DocArgument(@"out", PATH_TO_DOCUMENT,
             (c, p) => c.SaveFile = p.ValueFullPath);
         public static readonly Argument ARG_SHARE_ZIP = new DocArgument(@"share-zip", () => GetPathToFile(SrmDocumentSharing.EXT_SKY_ZIP),
@@ -156,13 +158,20 @@ namespace pwiz.Skyline
             (c, p) => c.Usage(p.Value)) {OptionalValue = true};
         public const string ARG_VALUE_ASCII = "ascii";
         public const string ARG_VALUE_NO_BORDERS = "no-borders";
+        public static readonly Argument ARG_VERSION = new Argument(@"version", (c, p) => c.Version());
 
         private static readonly ArgumentGroup GROUP_GENERAL_IO = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_GENERAL_IO_General_input_output, true,
-            ARG_IN, ARG_SAVE, ARG_OUT, ARG_SHARE_ZIP, ARG_SHARE_TYPE, ARG_BATCH, ARG_DIR, ARG_TIMESTAMP, ARG_MEMSTAMP,
-            ARG_LOG_FILE, ARG_HELP)
+            ARG_IN, ARG_SAVE, ARG_SAVE_SETTINGS, ARG_OUT, ARG_SHARE_ZIP, ARG_SHARE_TYPE, ARG_BATCH, ARG_DIR, ARG_TIMESTAMP, ARG_MEMSTAMP,
+            ARG_LOG_FILE, ARG_HELP, ARG_VERSION)
         {
             Validate = c => c.ValidateGeneralArgs()
         };
+
+        private void Version()
+        {
+            UsageShown = true;  // Keep from showing the full usage table
+            _out.WriteLine(Install.ProgramNameAndVersion);
+        }
 
         private bool ValidateGeneralArgs()
         {
@@ -191,6 +200,7 @@ namespace pwiz.Skyline
             get { return !String.IsNullOrEmpty(SaveFile) || _saving; }
             set { _saving = value; }
         }
+        public bool SaveSettings { get; private set; }
 
         // For sharing zip file
         public bool SharingZipFile { get; private set; }
@@ -214,6 +224,10 @@ namespace pwiz.Skyline
             (c, p) => c.ImportSourceDirectory = p.ValueFullPath);
         public static readonly Argument ARG_IMPORT_NAMING_PATTERN = new DocArgument(@"import-naming-pattern", REGEX_VALUE,
             (c, p) => c.ParseImportNamingPattern(p));
+        public static readonly Argument ARG_IMPORT_FILENAME_PATTERN = new DocArgument(@"import-filename-pattern", REGEX_VALUE,
+            (c, p) => c.ParseImportFileNamePattern(p));
+        public static readonly Argument ARG_IMPORT_SAMPLENAME_PATTERN = new DocArgument(@"import-samplename-pattern", REGEX_VALUE,
+            (c, p) => c.ParseImportSampleNamePattern(p));
         public static readonly Argument ARG_IMPORT_BEFORE = new DocArgument(@"import-before", DATE_VALUE,
             (c, p) => c.ImportBeforeDate = p.ValueDate);
         public static readonly Argument ARG_IMPORT_ON_OR_AFTER = new DocArgument(@"import-on-or-after", DATE_VALUE,
@@ -240,9 +254,9 @@ namespace pwiz.Skyline
 
         private static readonly ArgumentGroup GROUP_IMPORT = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_IMPORT_Importing_results_replicates, false,
             ARG_IMPORT_FILE, ARG_IMPORT_REPLICATE_NAME, ARG_IMPORT_OPTIMIZING, ARG_IMPORT_APPEND, ARG_IMPORT_ALL,
-            ARG_IMPORT_ALL_FILES, ARG_IMPORT_NAMING_PATTERN, ARG_IMPORT_BEFORE, ARG_IMPORT_ON_OR_AFTER, ARG_IMPORT_NO_JOIN,
-            ARG_IMPORT_PROCESS_COUNT, ARG_IMPORT_THREADS, ARG_IMPORT_WARN_ON_FAILURE, ARG_IMPORT_LOCKMASS_POSITIVE,
-            ARG_IMPORT_LOCKMASS_NEGATIVE, ARG_IMPORT_LOCKMASS_TOLERANCE);
+            ARG_IMPORT_ALL_FILES, ARG_IMPORT_NAMING_PATTERN, ARG_IMPORT_FILENAME_PATTERN, ARG_IMPORT_SAMPLENAME_PATTERN,
+            ARG_IMPORT_BEFORE, ARG_IMPORT_ON_OR_AFTER, ARG_IMPORT_NO_JOIN, ARG_IMPORT_PROCESS_COUNT, ARG_IMPORT_THREADS,
+            ARG_IMPORT_WARN_ON_FAILURE, ARG_IMPORT_LOCKMASS_POSITIVE, ARG_IMPORT_LOCKMASS_NEGATIVE, ARG_IMPORT_LOCKMASS_TOLERANCE);
 
         public static readonly Argument ARG_REMOVE_BEFORE = new DocArgument(@"remove-before", DATE_VALUE,
             (c, p) => c.SetRemoveBefore(p.ValueDate));
@@ -287,6 +301,8 @@ namespace pwiz.Skyline
         public bool ImportRecursive { get; private set; }
         public string ImportSourceDirectory { get; private set; }
         public Regex ImportNamingPattern { get; private set; }
+        public Regex ImportFileNamePattern { get; private set; }
+        public Regex ImportSampleNamePattern { get; private set; }
         public bool ImportWarnOnFailure { get; private set; }
         public bool RemovingResults { get; private set; }
         public DateTime? RemoveBeforeDate { get; private set; }
@@ -335,6 +351,32 @@ namespace pwiz.Skyline
                 return false;
             }
 
+            return true;
+        }
+
+        private bool ParseImportFileNamePattern(NameValuePair pair)
+        {
+            return ParseRegexArgument(pair, r => ImportFileNamePattern = r);
+        }
+
+        private bool ParseImportSampleNamePattern(NameValuePair pair)
+        {
+            return ParseRegexArgument(pair, r => ImportSampleNamePattern = r);
+        }
+
+        private bool ParseRegexArgument(NameValuePair pair, Action<Regex> assign)
+        {
+            var regexText = pair.Value;
+            try
+            {
+                assign(new Regex(regexText));
+            }
+            catch (Exception e)
+            {
+                WriteLine(Resources.CommandArgs_ParseRegexArgument_Error__Regular_expression___0___for__1__cannot_be_parsed_, regexText, pair.Match.ArgumentText);
+                WriteLine(e.Message);
+                return false;
+            }
             return true;
         }
 
@@ -944,34 +986,51 @@ namespace pwiz.Skyline
 
         // For adjusting transition filter and full-scan settings
         public static readonly Argument ARG_TRAN_PRECURSOR_ION_CHARGES = new DocArgument(@"tran-precursor-ion-charges", INT_LIST_VALUE,
-            (c, p) => c.FilterPrecursorCharges = ParseIonCharges(p, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE));
+                (c, p) => c.FilterPrecursorCharges = ParseIonCharges(p, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE))
+            { WrapValue = true };
         public static readonly Argument ARG_TRAN_FRAGMENT_ION_CHARGES = new DocArgument(@"tran-product-ion-charges", INT_LIST_VALUE,
-            (c, p) => c.FilterProductCharges = ParseIonCharges(p, Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE));
+                (c, p) => c.FilterProductCharges = ParseIonCharges(p, Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE))
+            { WrapValue = true };
         public static readonly Argument ARG_TRAN_FRAGMENT_ION_TYPES = new DocArgument(@"tran-product-ion-types", ION_TYPE_LIST_VALUE,
             (c, p) => c.FilterProductTypes = ParseIonTypes(p)) { WrapValue = true };
+        public static readonly Argument ARG_TRAN_PREDICT_CE = new DocArgument(@"tran-predict-ce", GetDisplayNames(Settings.Default.CollisionEnergyList),
+            (c, p) => c.PredictCEName = p.Value) { WrapValue = true };
+        public static readonly Argument ARG_TRAN_PREDICT_DP = new DocArgument(@"tran-predict-dp", GetDisplayNames(Settings.Default.DeclusterPotentialList),
+            (c, p) => c.PredictDPName = p.Value) { WrapValue = true };
+        public static readonly Argument ARG_TRAN_PREDICT_COV = new DocArgument(@"tran-predict-cov", GetDisplayNames(Settings.Default.CompensationVoltageList),
+            (c, p) => c.PredictCoVName = p.Value) { WrapValue = true };
+        public static readonly Argument ARG_TRAN_PREDICT_OPTDB = new DocArgument(@"tran-predict-optdb", GetDisplayNames(Settings.Default.OptimizationLibraryList),
+            (c, p) => c.PredictOpimizationLibraryName = p.Value) { WrapValue = true };
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_RES = new DocArgument(@"full-scan-precursor-res", RP_VALUE,
-            (c, p) => c.FullScanPrecursorRes = p.ValueDouble);
+            (c, p) => c.FullScanPrecursorRes = p.ValueDouble) { WrapValue = true };
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_RES_MZ = new DocArgument(@"full-scan-precursor-res-mz", MZ_VALUE,
-            (c, p) => c.FullScanPrecursorResMz = p.ValueDouble);
+            (c, p) => c.FullScanPrecursorResMz = p.ValueDouble) { WrapValue = true };
         public static readonly Argument ARG_FULL_SCAN_PRODUCT_RES = new DocArgument(@"full-scan-product-res", RP_VALUE,
-            (c, p) => c.FullScanProductRes = p.ValueDouble);
+            (c, p) => c.FullScanProductRes = p.ValueDouble) { WrapValue = true };
         public static readonly Argument ARG_FULL_SCAN_PRODUCT_RES_MZ = new DocArgument(@"full-scan-product-res-mz", MZ_VALUE,
-            (c, p) => c.FullScanProductResMz = p.ValueDouble);
+            (c, p) => c.FullScanProductResMz = p.ValueDouble) { WrapValue = true };
         public static readonly Argument ARG_FULL_SCAN_RT_FILTER_TOLERANCE = new DocArgument(@"full-scan-rt-filter-tolerance", MINUTES_VALUE,
-            (c, p) => c.FullScanRetentionTimeFilterLength = p.ValueDouble);
+            (c, p) => c.FullScanRetentionTimeFilterLength = p.ValueDouble) { WrapValue = true };
 
         private static readonly ArgumentGroup GROUP_SETTINGS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_SETTINGS_Document_Settings, false,
             ARG_TRAN_PRECURSOR_ION_CHARGES, ARG_TRAN_FRAGMENT_ION_CHARGES, ARG_TRAN_FRAGMENT_ION_TYPES,
+            ARG_TRAN_PREDICT_CE, ARG_TRAN_PREDICT_DP, ARG_TRAN_PREDICT_COV, ARG_TRAN_PREDICT_OPTDB,
             ARG_FULL_SCAN_PRECURSOR_RES, ARG_FULL_SCAN_PRECURSOR_RES_MZ,
             ARG_FULL_SCAN_PRODUCT_RES, ARG_FULL_SCAN_PRODUCT_RES_MZ,
             ARG_FULL_SCAN_RT_FILTER_TOLERANCE)
-        {
+        {            
+            LeftColumnWidth = 34,
             Dependencies =
             {
                 {ARG_FULL_SCAN_PRECURSOR_RES_MZ, ARG_FULL_SCAN_PRECURSOR_RES},
                 {ARG_FULL_SCAN_PRODUCT_RES_MZ, ARG_FULL_SCAN_PRODUCT_RES},
             }
         };
+
+        public static string[] GetDisplayNames<TItem>(SettingsListBase<TItem> list) where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            return list.Select(list.GetDisplayName).ToArray();
+        }
 
         private static Adduct[] ParseIonCharges(NameValuePair p, int min, int max)
         {
@@ -1008,6 +1067,21 @@ namespace pwiz.Skyline
                 return (FilterPrecursorCharges != null ||
                         FilterProductCharges != null ||
                         FilterProductTypes != null);
+            }
+        }
+        public string PredictCEName { get; private set; }
+        public string PredictDPName { get; private set; }
+        public string PredictCoVName { get; private set; }
+        public string PredictOpimizationLibraryName { get; private set; }
+
+        public bool PredictTranSettings
+        {
+            get
+            {
+                return (PredictCEName != null ||
+                        PredictDPName != null ||
+                        PredictCoVName != null ||
+                        PredictOpimizationLibraryName != null);
             }
         }
         public double? FullScanPrecursorRes { get; private set; }
@@ -1300,6 +1374,8 @@ namespace pwiz.Skyline
             (c, p) => c.ExportOptimizeType = p.IsValue(OPT_CE) ? OPT_CE : OPT_DP);
         public static readonly Argument ARG_EXP_SCHEDULING_REPLICATE = new DocArgument(@"exp-scheduling-replicate", NAME_VALUE,
             (c, p) => c.SchedulingReplicate = p.Value);
+        public static readonly Argument ARG_EXP_ORDER_BY_MZ = new DocArgument(@"exp-order-by-mz",
+            (c, p) => c.SortByMz = true);
         public static readonly Argument ARG_EXP_IGNORE_PROTEINS = new DocArgument(@"exp-ignore-proteins",
             (c, p) => c.IgnoreProteins = true);
         public static readonly Argument ARG_EXP_PRIMARY_COUNT = new DocArgument(@"exp-primary-count", INT_VALUE,
@@ -1312,7 +1388,7 @@ namespace pwiz.Skyline
         private static readonly ArgumentGroup GROUP_EXP_GENERAL = new ArgumentGroup(
             () => CommandArgUsage.CommandArgs_GROUP_EXP_GENERAL_Method_and_transition_list_options, false,
             ARG_EXP_FILE, ARG_EXP_STRATEGY, ARG_EXP_METHOD_TYPE, ARG_EXP_MAX_TRANS,
-            ARG_EXP_OPTIMIZING, ARG_EXP_SCHEDULING_REPLICATE, ARG_EXP_IGNORE_PROTEINS,
+            ARG_EXP_OPTIMIZING, ARG_EXP_SCHEDULING_REPLICATE, ARG_EXP_ORDER_BY_MZ, ARG_EXP_IGNORE_PROTEINS,
             ARG_EXP_PRIMARY_COUNT, ARG_EXP_POLARITY); // {LeftColumnWidth = 34};
 
         // Instrument specific arguments
@@ -1391,6 +1467,8 @@ namespace pwiz.Skyline
         
         public string SchedulingReplicate { get; private set; }
 
+        public bool SortByMz { get; private set; }
+
         public bool IgnoreProteins { get; private set; }
 
         private int _primaryTransitionCount;
@@ -1451,6 +1529,7 @@ namespace pwiz.Skyline
                     UseSlens = UseSlens,
                     DwellTime = DwellTime,
                     ExportStrategy = ExportStrategy,
+                    SortByMz = SortByMz,
                     IgnoreProteins = IgnoreProteins,
                     MaxTransitions = MaxTransitionsPerInjection,
                     MethodType = ExportMethodType,
@@ -1552,11 +1631,14 @@ namespace pwiz.Skyline
 
         public bool Usage(string formatType = null)
         {
-            if (formatType == ARG_VALUE_ASCII)
-                CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;  // Use invariant culture for ascii output
-            UsageShown = true;
-            foreach (var block in UsageBlocks)
-                _out.Write(block.ToString(_usageWidth, formatType));
+            if (!UsageShown)    // Avoid showing again
+            {
+                if (formatType == ARG_VALUE_ASCII)
+                    CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;  // Use invariant culture for ascii output
+                UsageShown = true;
+                foreach (var block in UsageBlocks)
+                    _out.Write(block.ToString(_usageWidth, formatType));
+            }
             return false;   // End argument processing
         }
 
@@ -1587,6 +1669,7 @@ namespace pwiz.Skyline
             ReplicateFile = new List<MsDataFileUri>();
             SearchResultsFiles = new List<string>();
             ExcludeFeatures = new List<IPeakFeatureCalculator>();
+            SharedFileType = ShareType.DEFAULT;
 
             ImportBeforeDate = null;
             ImportOnOrAfterDate = null;

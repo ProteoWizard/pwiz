@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 new ChromCachedFile(chromFileInfo.FilePath, chromCacheFile.Flags, chromCacheFile.FileWriteTime,
                     chromCacheFile.RunStartTime, chromCacheFile.MaxRetentionTime, chromCacheFile.MaxIntensity,
-                    chromCacheFile.IonMobilityUnits,
+                    chromCacheFile.IonMobilityUnits, null, null,
                     chromCacheFile.InstrumentInfoList),
             };
             var cache = new ChromatogramCache(@"cachePath", rawData, stream);

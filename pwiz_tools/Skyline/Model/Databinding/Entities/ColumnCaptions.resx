@@ -517,6 +517,9 @@
   <data name="LibraryName">
     <value>Library Name</value>
   </data>
+  <data name="LibraryProbabilityScore">
+    <value>Library Probability Score</value>
+  </data>
   <data name="LibraryRank">
     <value>Library Rank</value>
   </data>
@@ -1186,5 +1189,11 @@
   </data>
   <data name="UTCTime">
     <value>UTC Time</value>
+  </data>
+  <data name="SampleId" xml:space="preserve">
+    <value>Sample Id</value>
+  </data>
+  <data name="InstrumentSerialNumber" xml:space="preserve">
+    <value>Instrument Serial Number</value>
   </data>
 </root>

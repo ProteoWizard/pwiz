@@ -80,6 +80,7 @@ namespace pwiz.Skyline
             this.charge4ContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator12 = new System.Windows.Forms.ToolStripSeparator();
             this.ranksContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.scoreContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ionMzValuesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.observedMzValuesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.duplicatesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -782,6 +783,7 @@ namespace pwiz.Skyline
             this.chargesContextMenuItem,
             this.toolStripSeparator12,
             this.ranksContextMenuItem,
+            this.scoreContextMenuItem,
             this.ionMzValuesContextMenuItem,
             this.observedMzValuesContextMenuItem,
             this.duplicatesContextMenuItem,
@@ -902,6 +904,13 @@ namespace pwiz.Skyline
             this.ranksContextMenuItem.Name = "ranksContextMenuItem";
             resources.ApplyResources(this.ranksContextMenuItem, "ranksContextMenuItem");
             this.ranksContextMenuItem.Click += new System.EventHandler(this.ranksMenuItem_Click);
+            // 
+            // scoreContextMenuItem
+            // 
+            this.scoreContextMenuItem.CheckOnClick = true;
+            this.scoreContextMenuItem.Name = "scoreContextMenuItem";
+            resources.ApplyResources(this.scoreContextMenuItem, "scoreContextMenuItem");
+            this.scoreContextMenuItem.Click += new System.EventHandler(this.scoresContextMenuItem_Click);
             // 
             // ionMzValuesContextMenuItem
             // 
@@ -4824,6 +4833,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem mixedToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toggleQuantitativeContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem markTransitionsQuantitativeContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem scoreContextMenuItem;
     }
 }
 
