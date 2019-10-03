@@ -52,6 +52,7 @@ namespace pwiz.Skyline.SettingsUI
         public bool IsInSelectedIndexChangedEvent { get; private set; }
         public ComboBox Combo { get; private set; }
         public SettingsListBase<TItem> List { get; private set; }
+        public int SelectedIndexLast { get { return _selectedIndexLast; } }
 
         public event EventHandler<EditItemEventArgs> EditItemEvent;
 

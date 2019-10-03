@@ -69,6 +69,8 @@ namespace pwiz.Skyline.SettingsUI
         private readonly MessageBoxHelper _helper;
         private readonly IDocumentUIContainer _documentUiContainer;
 
+        private readonly SettingsListComboDriver<IrtStandard> _driverStandards;
+
         public BuildLibraryDlg(IDocumentUIContainer documentContainer)
         {
             InitializeComponent();
@@ -93,8 +95,8 @@ namespace pwiz.Skyline.SettingsUI
 
             _helper = new MessageBoxHelper(this);
 
-            foreach (var standard in IrtStandard.ALL)
-                comboStandards.Items.Add(standard);
+            _driverStandards = new SettingsListComboDriver<IrtStandard>(comboStandards, Settings.Default.IrtStandardList);
+            _driverStandards.LoadList(IrtStandard.EMPTY.GetKey());
         }
 
         public ILibraryBuilder Builder { get { return _builder;  } }
@@ -227,7 +229,7 @@ namespace pwiz.Skyline.SettingsUI
                                   KeepRedundant = LibraryKeepRedundant,
                                   CutOffScore = cutOffScore,
                                   Id = Helpers.MakeId(textName.Text),
-                                  IrtStandard = comboStandards.SelectedItem as IrtStandard,
+                                  IrtStandard = _driverStandards.SelectedItem,
                                   PreferEmbeddedSpectra = PreferEmbeddedSpectra
                               };
             }
@@ -646,10 +648,31 @@ namespace pwiz.Skyline.SettingsUI
 
         public IrtStandard IrtStandard
         {
-            get { return comboStandards.SelectedItem as IrtStandard ?? IrtStandard.EMPTY; }
-            set { comboStandards.SelectedIndex = comboStandards.Items.IndexOf(value); }
+            get { return _driverStandards.SelectedItem; }
+            set
+            {
+                var index = 0;
+                if (value != null)
+                {
+                    for (var i = 0; i < comboStandards.Items.Count; i++)
+                    {
+                        if (comboStandards.Items[i].ToString().Equals(value.GetKey()))
+                        {
+                            index = i;
+                            break;
+                        }
+                    }
+                }
+                comboStandards.SelectedIndex = index;
+                _driverStandards.SelectedIndexChangedEvent(null, null);
+            }
         }
 
         public bool? PreferEmbeddedSpectra { get; set; }
+
+        private void comboStandards_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _driverStandards.SelectedIndexChangedEvent(sender, e);
+        }
     }
 }
