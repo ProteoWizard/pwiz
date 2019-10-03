@@ -216,7 +216,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var text = new TextObj(
                     string.Format(LocalizationHelper.CurrentCulture, Resources.AbstractSpectrumGraphItem_AddAnnotations_, SpectrumInfo.Score),
-                    0, 0, CoordType.ChartFraction, AlignH.Left, AlignV.Top)
+                    0.01, 0, CoordType.ChartFraction, AlignH.Left, AlignV.Top)
                 {
                     IsClippedToChartRect = true,
                     ZOrder = ZOrder.E_BehindCurves,
