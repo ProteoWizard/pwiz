@@ -851,10 +851,6 @@ namespace pwiz.Skyline.Properties
                     list.AddDefaults();
                     IrtStandardList = list;
                 }
-                else
-                {
-                    list.EnsureDefault();
-                }
                 return list;
             }
             set => this[typeof(IrtStandardList).Name] = value;
@@ -2201,20 +2197,6 @@ namespace pwiz.Skyline.Properties
         public override IEnumerable<IrtStandard> GetDefaults(int revisionIndex)
         {
             return IrtStandard.ALL;
-        }
-
-        public void EnsureDefault()
-        {
-            // Make sure the default calculators are present.
-            var defaultStandards = GetDefaults().ToArray();
-            int len = defaultStandards.Length;
-            if (Count < len || !ArrayUtil.ReferencesEqual(defaultStandards, this.Take(len).ToArray()))
-            {
-                foreach (var standard in defaultStandards)
-                    Remove(standard);
-                foreach (var calc in defaultStandards.Reverse())
-                    Insert(0, calc);
-            }
         }
 
         public override string Title => Resources.IrtStandardList_Title_Edit_iRT_Standards;

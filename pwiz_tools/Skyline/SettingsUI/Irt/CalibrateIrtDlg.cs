@@ -529,7 +529,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
                 var removedValues = new List<Tuple<double, double>>();
 
-                foreach (var standard in IrtStandard.ALL.Where(standard => !ReferenceEquals(standard, IrtStandard.EMPTY)))
+                foreach (var standard in Settings.Default.IrtStandardList.Where(standard => !ReferenceEquals(standard, IrtStandard.EMPTY)))
                 {
                     var pepMatches = new List<Tuple<DbIrtPeptide, PeptideDocNode>>();
                     foreach (var pep in standard.Peptides)
