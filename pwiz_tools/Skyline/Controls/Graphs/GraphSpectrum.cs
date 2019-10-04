@@ -32,7 +32,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Prosit;
-using pwiz.Skyline.Model.Prosit.Communication;
 using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Crawdad;
@@ -647,10 +646,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         {
                             try
                             {
-                                var prositRequest = new PrositHelpers.PrositRequest(PrositPredictionClient.Current, PrositIntensityModel.Instance,
-                                    PrositRetentionTimeModel.Instance,
-                                    DocumentUI.Settings, selection.Precursor, selection.Peptide,
-                                    Settings.Default.PrositNCE, () => Invoke((Action)(() => UpdateUI())));
+                                var prositRequest = new PrositHelpers.PrositRequest(
+                                    DocumentUI.Settings, selection.Peptide, selection.Precursor, () => Invoke((Action)(() => UpdateUI())));
 
                                 if (_prositRequest == null || !_prositRequest.Equals(prositRequest))
                                 {

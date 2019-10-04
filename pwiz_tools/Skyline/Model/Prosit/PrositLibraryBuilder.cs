@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Irt;
@@ -31,7 +30,6 @@ using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Prosit.Communication;
 using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 using Tensorflow.Serving;
 
 namespace pwiz.Skyline.Model.Prosit

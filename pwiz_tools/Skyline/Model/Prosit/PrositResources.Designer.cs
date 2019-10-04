@@ -202,6 +202,15 @@ namespace pwiz.Skyline.Model.Prosit {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Querying server....
+        /// </summary>
+        internal static string ToolOptionsUI_UpdateServerStatus_Querying_server___ {
+            get {
+                return ResourceManager.GetString("ToolOptionsUI_UpdateServerStatus_Querying_server___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Server unavailable.
         /// </summary>
         internal static string ToolOptionsUI_UpdateServerStatus_Server_unavailable {

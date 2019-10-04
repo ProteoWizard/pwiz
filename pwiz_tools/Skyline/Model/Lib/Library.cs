@@ -2347,7 +2347,7 @@ namespace pwiz.Skyline.Model.Lib
         public SpectrumInfoProsit(PrositMS2Spectra ms2Spectrum, TransitionGroupDocNode precursor, int nce) : base(
             IsotopeLabelType.light, true)
         {
-            _peaksInfo = ms2Spectrum.GetSpectrum(precursor).SpectrumPeaks;
+            _peaksInfo = ms2Spectrum?.GetSpectrum(precursor).SpectrumPeaks;
             Precursor = precursor;
             NCE = nce;
         }

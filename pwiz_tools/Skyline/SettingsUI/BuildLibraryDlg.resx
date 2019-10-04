@@ -305,10 +305,10 @@ library will be created.</value>
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;iRTPeptidesLabel.Parent" xml:space="preserve">
-    <value>panelFilesProperties</value>
+    <value>panelFilesPrositProperties</value>
   </data>
   <data name="&gt;&gt;iRTPeptidesLabel.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>4</value>
   </data>
   <data name="panelProperties.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -320,7 +320,7 @@ library will be created.</value>
     <value>NoControl</value>
   </data>
   <data name="ceLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>23, 203</value>
+    <value>6, 69</value>
   </data>
   <data name="ceLabel.Size" type="System.Drawing.Size, System.Drawing">
     <value>32, 13</value>
@@ -341,13 +341,13 @@ library will be created.</value>
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;ceLabel.Parent" xml:space="preserve">
-    <value>panelProperties</value>
+    <value>panelFilesPrositProperties</value>
   </data>
   <data name="&gt;&gt;ceLabel.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>0</value>
   </data>
   <data name="ceCombo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>23, 219</value>
+    <value>6, 85</value>
   </data>
   <data name="ceCombo.Size" type="System.Drawing.Size, System.Drawing">
     <value>122, 21</value>
@@ -365,11 +365,12 @@ library will be created.</value>
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;ceCombo.Parent" xml:space="preserve">
-    <value>panelProperties</value>
+    <value>panelFilesPrositProperties</value>
   </data>
   <data name="&gt;&gt;ceCombo.ZOrder" xml:space="preserve">
-    <value>8</value>
-  </data>  <data name="actionLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="actionLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="actionLabel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
@@ -382,7 +383,7 @@ library will be created.</value>
     <value>40, 13</value>
   </data>
   <data name="actionLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>19</value>
+    <value>12</value>
   </data>
   <data name="actionLabel.Text" xml:space="preserve">
     <value>&amp;Action:</value>
@@ -394,7 +395,7 @@ library will be created.</value>
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;actionLabel.Parent" xml:space="preserve">
-    <value>panelFilesProperties</value>
+    <value>panelFilesProps</value>
   </data>
   <data name="&gt;&gt;actionLabel.ZOrder" xml:space="preserve">
     <value>0</value>
@@ -415,7 +416,7 @@ library will be created.</value>
     <value>121, 21</value>
   </data>
   <data name="comboAction.TabIndex" type="System.Int32, mscorlib">
-    <value>20</value>
+    <value>13</value>
   </data>
   <data name="comboAction.ToolTip" xml:space="preserve">
     <value>Choose to create a new library or append to an
@@ -429,7 +430,7 @@ of the redundant library data.</value>
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboAction.Parent" xml:space="preserve">
-    <value>panelFilesProperties</value>
+    <value>panelFilesProps</value>
   </data>
   <data name="&gt;&gt;comboAction.ZOrder" xml:space="preserve">
     <value>1</value>
@@ -447,7 +448,7 @@ of the redundant library data.</value>
     <value>158, 17</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.TabIndex" type="System.Int32, mscorlib">
-    <value>25</value>
+    <value>18</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.Text" xml:space="preserve">
     <value>Include ambiguous &amp;matches</value>
@@ -459,7 +460,7 @@ of the redundant library data.</value>
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbIncludeAmbiguousMatches.Parent" xml:space="preserve">
-    <value>panelFilesProperties</value>
+    <value>panelFilesProps</value>
   </data>
   <data name="&gt;&gt;cbIncludeAmbiguousMatches.ZOrder" xml:space="preserve">
     <value>2</value>
@@ -477,7 +478,7 @@ of the redundant library data.</value>
     <value>132, 17</value>
   </data>
   <data name="cbKeepRedundant.TabIndex" type="System.Int32, mscorlib">
-    <value>21</value>
+    <value>14</value>
   </data>
   <data name="cbKeepRedundant.Text" xml:space="preserve">
     <value>&amp;Keep redundant library</value>
@@ -493,7 +494,7 @@ you can append more spectra in the future.</value>
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbKeepRedundant.Parent" xml:space="preserve">
-    <value>panelFilesProperties</value>
+    <value>panelFilesProps</value>
   </data>
   <data name="&gt;&gt;cbKeepRedundant.ZOrder" xml:space="preserve">
     <value>3</value>
@@ -511,7 +512,7 @@ you can append more spectra in the future.</value>
     <value>156, 17</value>
   </data>
   <data name="cbFilter.TabIndex" type="System.Int32, mscorlib">
-    <value>24</value>
+    <value>17</value>
   </data>
   <data name="cbFilter.Text" xml:space="preserve">
     <value>&amp;Filter for document peptides</value>
@@ -523,7 +524,7 @@ you can append more spectra in the future.</value>
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbFilter.Parent" xml:space="preserve">
-    <value>panelFilesProperties</value>
+    <value>panelFilesProps</value>
   </data>
   <data name="&gt;&gt;cbFilter.ZOrder" xml:space="preserve">
     <value>4</value>
@@ -535,7 +536,7 @@ you can append more spectra in the future.</value>
     <value>100, 20</value>
   </data>
   <data name="textCutoff.TabIndex" type="System.Int32, mscorlib">
-    <value>23</value>
+    <value>16</value>
   </data>
   <data name="textCutoff.ToolTip" xml:space="preserve">
     <value>A score from 1.0 - 0, with 1.0 most likely to be correct,
@@ -553,7 +554,7 @@ For SEQUEST SQT this is 1 - the maximum FDR.</value>
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textCutoff.Parent" xml:space="preserve">
-    <value>panelFilesProperties</value>
+    <value>panelFilesProps</value>
   </data>
   <data name="&gt;&gt;textCutoff.ZOrder" xml:space="preserve">
     <value>5</value>
@@ -568,7 +569,7 @@ For SEQUEST SQT this is 1 - the maximum FDR.</value>
     <value>70, 13</value>
   </data>
   <data name="label6.TabIndex" type="System.Int32, mscorlib">
-    <value>22</value>
+    <value>15</value>
   </data>
   <data name="label6.Text" xml:space="preserve">
     <value>&amp;Cut-off score:</value>
@@ -580,10 +581,34 @@ For SEQUEST SQT this is 1 - the maximum FDR.</value>
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label6.Parent" xml:space="preserve">
-    <value>panelFilesProperties</value>
+    <value>panelFilesProps</value>
   </data>
   <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
     <value>6</value>
+  </data>
+  <data name="panelFilesProps.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="panelFilesProps.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="panelFilesProps.Size" type="System.Drawing.Size, System.Drawing">
+    <value>366, 129</value>
+  </data>
+  <data name="panelFilesProps.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="&gt;&gt;panelFilesProps.Name" xml:space="preserve">
+    <value>panelFilesProps</value>
+  </data>
+  <data name="&gt;&gt;panelFilesProps.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelFilesProps.Parent" xml:space="preserve">
+    <value>panelFilesPrositProperties</value>
+  </data>
+  <data name="&gt;&gt;panelFilesProps.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
   <data name="comboStandards.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 148</value>
@@ -601,30 +626,30 @@ For SEQUEST SQT this is 1 - the maximum FDR.</value>
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboStandards.Parent" xml:space="preserve">
-    <value>panelFilesProperties</value>
+    <value>panelFilesPrositProperties</value>
   </data>
   <data name="&gt;&gt;comboStandards.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>3</value>
   </data>
-  <data name="panelFilesProperties.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="panelFilesPrositProperties.Location" type="System.Drawing.Point, System.Drawing">
     <value>18, 196</value>
   </data>
-  <data name="panelFilesProperties.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="panelFilesPrositProperties.Size" type="System.Drawing.Size, System.Drawing">
     <value>366, 178</value>
   </data>
-  <data name="panelFilesProperties.TabIndex" type="System.Int32, mscorlib">
+  <data name="panelFilesPrositProperties.TabIndex" type="System.Int32, mscorlib">
     <value>15</value>
   </data>
-  <data name="&gt;&gt;panelFilesProperties.Name" xml:space="preserve">
-    <value>panelFilesProperties</value>
+  <data name="&gt;&gt;panelFilesPrositProperties.Name" xml:space="preserve">
+    <value>panelFilesPrositProperties</value>
   </data>
-  <data name="&gt;&gt;panelFilesProperties.Type" xml:space="preserve">
+  <data name="&gt;&gt;panelFilesPrositProperties.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;panelFilesProperties.Parent" xml:space="preserve">
+  <data name="&gt;&gt;panelFilesPrositProperties.Parent" xml:space="preserve">
     <value>panelProperties</value>
   </data>
-  <data name="&gt;&gt;panelFilesProperties.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;panelFilesPrositProperties.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="prositInfoSettingsBtn.AutoSize" type="System.Boolean, mscorlib">

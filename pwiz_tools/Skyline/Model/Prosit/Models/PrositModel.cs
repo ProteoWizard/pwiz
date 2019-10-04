@@ -322,12 +322,12 @@ namespace pwiz.Skyline.Model.Prosit.Models
     {
         public class PrositRequest
         {
-            private CancellationTokenSource _tokenSource = new CancellationTokenSource();
-            private Action _updateCallback;
+            protected CancellationTokenSource _tokenSource = new CancellationTokenSource();
+            protected Action _updateCallback;
 
-            public PrositRequest(PredictionService.PredictionServiceClient client, PrositIntensityModel intensityModel,
-                PrositRetentionTimeModel rtModel, SrmSettings settings, TransitionGroupDocNode precursor,
-                PeptideDocNode peptide, int nce, Action updateCallback)
+            public PrositRequest(PrositPredictionClient client, PrositIntensityModel intensityModel,
+                PrositRetentionTimeModel rtModel, SrmSettings settings,
+                PeptideDocNode peptide, TransitionGroupDocNode precursor, int nce, Action updateCallback)
             {
                 Client = client;
                 IntensityModel = intensityModel;
@@ -339,24 +339,23 @@ namespace pwiz.Skyline.Model.Prosit.Models
                 _updateCallback = updateCallback;
             }
 
-            public PrositRequest(SrmSettings settings, TransitionGroupDocNode precursor, PeptideDocNode peptide, Action updateCallback) :
+            public PrositRequest(SrmSettings settings, PeptideDocNode peptide, TransitionGroupDocNode precursor, Action updateCallback) :
                 this(PrositPredictionClient.Current, PrositIntensityModel.Instance, PrositRetentionTimeModel.Instance,
-                    settings, precursor, peptide, Properties.Settings.Default.PrositNCE, updateCallback)
+                    settings, peptide, precursor, Properties.Settings.Default.PrositNCE, updateCallback)
             {
             }
 
-            public PrositRequest Predict()
+            public virtual PrositRequest Predict()
             {
                 ActionUtil.RunAsync(() =>
                 {
                     try
                     {
-                        var prositClient = PrositPredictionClient.Current;
-                        var massSpectrum = PrositIntensityModel.Instance.PredictSingle(prositClient,
+                        var massSpectrum = IntensityModel.PredictSingle(Client,
                             Settings,
                             new PeptidePrecursorPair(Peptide, Precursor,
                                 NCE), _tokenSource.Token);
-                        var iRT = PrositRetentionTimeModel.Instance.PredictSingle(prositClient,
+                        var iRT = RTModel.PredictSingle(Client,
                             Settings,
                             Peptide, _tokenSource.Token);
                         Spectrum = new SpectrumDisplayInfo(
@@ -386,23 +385,24 @@ namespace pwiz.Skyline.Model.Prosit.Models
             }
 
             // Output variables
-            public SpectrumDisplayInfo Spectrum { get; private set; }
+            public SpectrumDisplayInfo Spectrum { get; protected set; }
     
-            public PrositException Exception { get; private set; }
+            public PrositException Exception { get; protected set; }
 
-            public PredictionService.PredictionServiceClient Client { get; private set; }
-            public PrositIntensityModel IntensityModel { get; private set; }
-            public PrositRetentionTimeModel RTModel { get; private set; }
-            public SrmSettings Settings { get; private set; }
-            public TransitionGroupDocNode Precursor { get; private set; }
-            public PeptideDocNode Peptide { get; private set; }
-            public int NCE { get; private set; }
+            public PrositPredictionClient Client { get; protected set; }
+            public PrositIntensityModel IntensityModel { get; protected set; }
+            public PrositRetentionTimeModel RTModel { get; protected set; }
+            public SrmSettings Settings { get; protected set; }
+            public TransitionGroupDocNode Precursor { get; protected set; }
+            public PeptideDocNode Peptide { get; protected set; }
+            public int NCE { get; protected set; }
 
             protected bool Equals(PrositRequest other)
             {
-                return ReferenceEquals(Client, other.Client) && ReferenceEquals(IntensityModel, other.IntensityModel) &&
+                return Client.Server == other.Client.Server && ReferenceEquals(IntensityModel, other.IntensityModel) &&
                        ReferenceEquals(RTModel, other.RTModel) && ReferenceEquals(Settings, other.Settings) &&
-                       ReferenceEquals(Precursor, other.Precursor) && ReferenceEquals(Peptide, other.Peptide) && NCE == other.NCE;
+                       ReferenceEquals(Precursor, other.Precursor) && ReferenceEquals(Peptide, other.Peptide) &&
+                       NCE == other.NCE;
             }
 
             public override bool Equals(object obj)
@@ -569,7 +569,8 @@ namespace pwiz.Skyline.Model.Prosit.Models
                     if (mod.MonoisotopicMass == 0.0)
                         continue;
 
-                    if (!PrositConstants.MODIFICATIONS.TryGetValue(mod.StaticMod.Name, out var prositAAMod)) {
+                    var staticMod = UniMod.FindMatchingStaticMod(mod.StaticMod, true) ?? mod.StaticMod;
+                    if (!PrositConstants.MODIFICATIONS.TryGetValue(staticMod.Name, out var prositAAMod)) {
                         exception = new PrositUnsupportedModificationException(peptide.ModifiedTarget,
                             mod.StaticMod,
                             mod.IndexAA);

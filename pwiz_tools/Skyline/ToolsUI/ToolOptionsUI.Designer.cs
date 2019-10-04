@@ -270,6 +270,7 @@ namespace pwiz.Skyline.ToolsUI
             this.iRTModelCombo.FormattingEnabled = true;
             resources.ApplyResources(this.iRTModelCombo, "iRTModelCombo");
             this.iRTModelCombo.Name = "iRTModelCombo";
+            this.iRTModelCombo.SelectedIndexChanged += new System.EventHandler(this.iRTModelCombo_SelectedIndexChanged);
             // 
             // label2
             // 
@@ -282,6 +283,7 @@ namespace pwiz.Skyline.ToolsUI
             this.intensityModelCombo.FormattingEnabled = true;
             resources.ApplyResources(this.intensityModelCombo, "intensityModelCombo");
             this.intensityModelCombo.Name = "intensityModelCombo";
+            this.intensityModelCombo.SelectedIndexChanged += new System.EventHandler(this.intensityModelCombo_SelectedIndexChanged);
             // 
             // prositServerLabel
             // 

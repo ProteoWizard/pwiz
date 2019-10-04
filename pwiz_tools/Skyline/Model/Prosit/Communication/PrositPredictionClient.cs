@@ -29,38 +29,54 @@ namespace pwiz.Skyline.Model.Prosit.Communication
     /// </summary>
     public class PrositPredictionClient : PredictionService.PredictionServiceClient
     {
-        private static PredictionService.PredictionServiceClient _predictionClient;
-        // Need to keep track of this, since the server is not public in the prediction client.
-        // Also don't want it on the PrositPrediction client, since 'Current' needs to work
-        // for fake prediction client etc too
-        private static string _server;
+        private static PrositPredictionClient _predictionClient;
 
-        public static PredictionService.PredictionServiceClient Current
+        public static PrositPredictionClient Current
         {
             get
             {
-                if (DebugClient != null)
-                    return DebugClient;
+                if (FakeClient != null)
+                    return FakeClient;
 
                 var selectedServer = Settings.Default.PrositServer;
-                if (_predictionClient != null && _server == selectedServer)
+                if (_predictionClient != null && _predictionClient.Server == selectedServer)
                     return _predictionClient;
 
                 if (string.IsNullOrEmpty(selectedServer))
                     throw new PrositException(PrositResources.PrositPredictionClient_Current_No_Prosit_server_set);
 
-                _server = selectedServer;
-                return _predictionClient = new PrositPredictionClient(_server);
+                return _predictionClient = new PrositPredictionClient(selectedServer);
             }
-            set { _predictionClient = value; }
         }
 
-        public PrositPredictionClient(string server)
+        /// <summary>
+        /// Public static wrapper for creating clients
+        /// </summary>
+        /// <param name="server">Server to construct client for</param>
+        /// <returns>A client for making predictions with the given server</returns>
+        public static PrositPredictionClient CreateClient(string server)
+        {
+            if (FakeClient != null)
+                return FakeClient;
+
+            return Current?.Server == server
+                ? Current
+                : new PrositPredictionClient(server);
+        }
+
+        protected PrositPredictionClient(string server)
             : base(new Channel(server, ChannelCredentials.Insecure))
         {
+            Server = server;
         }
+
+        protected PrositPredictionClient()
+        { }
+
+        public string Server { get; }
         
-        // For testing
-        public static PredictionService.PredictionServiceClient DebugClient { get; set; }
+        // For faking predictions, usually without an actual server but instead
+        // a set of cached predictions
+        public static PrositPredictionClient FakeClient { get; set; }
     }
 }

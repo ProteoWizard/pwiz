@@ -3749,7 +3749,7 @@ namespace pwiz.Skyline
 
         public void ShowToolOptionsUI()
         {
-            using (var dlg = new ToolOptionsUI())
+            using (var dlg = new ToolOptionsUI(_documentUI.Settings))
             {
                 dlg.ShowDialog(this);
             }
@@ -3757,7 +3757,7 @@ namespace pwiz.Skyline
 
         public void ShowToolOptionsUI(IWin32Window owner, ToolOptionsUI.TABS tab)
         {
-            using (var dlg = new ToolOptionsUI())
+            using (var dlg = new ToolOptionsUI(_documentUI.Settings))
             {
                 dlg.NavigateToTab(tab);
                 dlg.ShowDialog(owner);

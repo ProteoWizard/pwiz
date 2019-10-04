@@ -319,25 +319,21 @@ namespace pwiz.Skyline
                     }
                 }
 
-                bool enable = settingsNew.PeptideSettings.Libraries.HasLibraries || Settings.Default.Prosit;
-                if (enable)
+                UpdateIonTypesMenuItemsVisibility();
+                if (!graphsToolStripMenuItem.Enabled)
                 {
-                    UpdateIonTypesMenuItemsVisibility();
-                }
-                if (graphsToolStripMenuItem.Enabled != enable)
-                {
-                    graphsToolStripMenuItem.Enabled = enable;
-                    ionTypesMenuItem.Enabled = enable;
-                    chargesMenuItem.Enabled = enable;
-                    ranksMenuItem.Enabled = enable;
+                    graphsToolStripMenuItem.Enabled = true;
+                    ionTypesMenuItem.Enabled = true;
+                    chargesMenuItem.Enabled = true;
+                    ranksMenuItem.Enabled = true;
 
                     if (!deserialized)
                     {
                         layoutLock.EnsureLocked();
-                        ShowGraphSpectrum(enable && Settings.Default.ShowSpectra);
+                        ShowGraphSpectrum(Settings.Default.ShowSpectra);
                     }
                 }
-                enable = settingsNew.HasResults;
+                var enable = settingsNew.HasResults;
                 bool enableSchedule = IsRetentionTimeGraphTypeEnabled(GraphTypeSummary.schedule);
                 bool enableRunToRun = IsRetentionTimeGraphTypeEnabled(GraphTypeSummary.run_to_run_regression);
                 if (replicateComparisonMenuItem.Enabled != enable ||

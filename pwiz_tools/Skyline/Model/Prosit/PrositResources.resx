@@ -146,4 +146,7 @@
   <data name="PrositPredictingException_PrositPredictingException_Making_predictions___" xml:space="preserve">
     <value>Making predictions...</value>
   </data>
+  <data name="ToolOptionsUI_UpdateServerStatus_Querying_server___" xml:space="preserve">
+    <value>Querying server...</value>
+  </data>
 </root>

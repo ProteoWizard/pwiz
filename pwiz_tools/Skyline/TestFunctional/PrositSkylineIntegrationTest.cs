@@ -50,6 +50,49 @@ namespace pwiz.SkylineTestFunctional
     {
         private bool RecordData { get { return false; } }
 
+
+        public static PrositQuery PING_QUERY = new PrositIntensityQuery(
+            new[]
+            {
+                new PrositIntensityInput("PING", 0.3200f, 1)
+            },
+            new[]
+            {
+                new[]
+                {
+                    00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
+                    00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
+                    00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
+                    00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
+                    00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
+                    00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
+                    00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
+                    00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
+                    00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
+                    00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
+                    00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
+                    00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
+                    00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
+                    00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
+                    00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
+                    00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
+                    00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
+                    00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
+                    00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
+                    00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
+                    00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
+                    00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
+                    00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
+                    00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
+                    00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
+                    00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
+                    00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
+                    00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
+                    00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
+                }
+            }
+        );
+
         private static List<PrositQuery> QUERIES = new List<PrositQuery>(new PrositQuery[] {
             new PrositIntensityQuery(
                 new[] {
@@ -1187,7 +1230,7 @@ namespace pwiz.SkylineTestFunctional
 
             PrositConstants.CACHE_PREV_PREDICTION = false;
 
-            PrositPredictionClient.DebugClient = RecordData
+            PrositPredictionClient.FakeClient = RecordData
                 ? new FakePrositPredictionClient(PrositConstants.DEV_PROSIT_SERVER)
                 : new FakePrositPredictionClient(QUERIES);
 
@@ -1199,12 +1242,10 @@ namespace pwiz.SkylineTestFunctional
             TestLivePrositMirrorPlots();
             Settings.Default.Prosit = false; // Disable Prosit to avoid that last query after building the library
             TestPrositLibraryBuild();
-            Settings.Default.Prosit = true; // Re-enable Prosit
             TestInvalidPepSequences(); // Do this at the end, otherwise it messes with the order of nodes
             var expected = RecordData ? 0 : QUERIES.Count;
             Assert.AreEqual(expected, ((FakePrositPredictionClient)PrositPredictionClient.Current).QueryIndex);
-            PrositPredictionClient.Current = null;
-            Settings.Default.Prosit = false;
+            PrositPredictionClient.FakeClient = null;
             PrositConstants.CACHE_PREV_PREDICTION = true;
             if (RecordData)
                 Console.WriteLine(@"});");
@@ -1279,7 +1320,8 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentChange(doc);*/
 
             SelectNodeBySeq(seq);
-
+            Settings.Default.Prosit = true;
+            RunUI(SkylineWindow.UpdateGraphPanes);
             // Add first precursor
             /*RunDlg<PopupPickList>(SkylineWindow.ShowPickChildrenInTest, dlg =>
             {
@@ -1289,12 +1331,16 @@ namespace pwiz.SkylineTestFunctional
 
             WaitForConditionUI(() => SkylineWindow.SelectedNode.Nodes.Count == 1);*/
             WaitForGraphs();
-            WaitForConditionUI(() => SkylineWindow.GraphSpectrum.GraphException != null);
+            WaitForConditionUI(() =>
+                SkylineWindow.GraphSpectrum.GraphException != null &&
+                !(SkylineWindow.GraphSpectrum.GraphException is PrositPredictingException));
 
             RunUI(() =>
             {
                 Assert.IsInstanceOfType(SkylineWindow.GraphSpectrum.GraphException, expectedException);
             });
+
+            Settings.Default.Prosit = false;
         }
 
         public void TestPrositLibraryBuild()
@@ -1313,11 +1359,12 @@ namespace pwiz.SkylineTestFunctional
             Settings.Default.PrositServer = null;
 
             var alert = ShowDialog<AlertDlg>(() => { buildLibrary.Prosit = true; });
-            RunDlg<ToolOptionsUI>(() => alert.ClickYes(), dlg =>
-            {
-                dlg.PrositServerCombo = server;
-                dlg.DialogResult = DialogResult.OK;
-            });
+            RunUI(() => alert.ClickYes());
+            var toolOptions = WaitForOpenForm<ToolOptionsUI>();
+            RunUI(() => { toolOptions.PrositServerCombo = server; });
+            WaitForConditionUI(() => toolOptions.PrositServerStatus == ToolOptionsUI.ServerStatus.AVAILABLE);
+            RunUI(() => toolOptions.DialogResult = DialogResult.OK);
+            WaitForClosedForm(toolOptions);
             WaitForClosedForm(alert);
 
             RunUI(() =>
@@ -1330,14 +1377,14 @@ namespace pwiz.SkylineTestFunctional
 
                 buildLibrary.LibraryName = "Prosit";
                 buildLibrary.LibraryPath = outBlib;
-                // buildLibrary.IrtStandard = IrtStandard.BIOGNOSYS_11; // TODO: fix this? exception in unit test but not in real run
+                // buildLibrary.IrtStandard = IrtStandard.BIOGNOSYS_11;
             });
 
             // Other tests do this too, but why?
             OkDialog(buildLibrary, buildLibrary.OkWizardPage);
 
             // Wait for library build
-            Assert.IsTrue(WaitForCondition(() =>
+            Assert.IsTrue(WaitForConditionUI(() =>
                 peptideSettings.AvailableLibraries.Contains("Prosit")));
             // Select new library
             RunUI(() => peptideSettings.PickedLibraries =
@@ -1401,17 +1448,21 @@ namespace pwiz.SkylineTestFunctional
             Settings.Default.Prosit = true;
 
             // For now just set all Prosit settings
-            RunDlg<ToolOptionsUI>(() => SkylineWindow.ShowToolOptionsUI(ToolOptionsUI.TABS.Prosit),
-                dlg =>
-                {
-                    // Also set ip, otherwise we will keep getting exceptions about the server not being set,
-                    // although we are using the fake test client
-                    dlg.PrositServerCombo = PrositConstants.DEV_PROSIT_SERVER;
-                    dlg.PrositIntensityModelCombo = "intensity_2";
-                    dlg.PrositRetentionTimeModelCombo = "iRT";
-                    dlg.CECombo = 28;
-                    dlg.DialogResult = DialogResult.OK;
-                });
+            var toolOptions = ShowDialog<ToolOptionsUI>(() => SkylineWindow.ShowToolOptionsUI(ToolOptionsUI.TABS.Prosit));
+
+            RunUI(() =>
+            {
+                // Also set ip, otherwise we will keep getting exceptions about the server not being set,
+                // although we are using the fake test client
+                toolOptions.PrositServerCombo = PrositConstants.DEV_PROSIT_SERVER;
+                toolOptions.PrositIntensityModelCombo = "intensity_2";
+                toolOptions.PrositRetentionTimeModelCombo = "iRT";
+                toolOptions.CECombo = 28;
+            });
+
+            WaitForConditionUI(() => toolOptions.PrositServerStatus == ToolOptionsUI.ServerStatus.AVAILABLE);
+            RunUI(() => toolOptions.DialogResult = DialogResult.OK);
+            WaitForClosedForm(toolOptions);
 
             Assert.AreEqual(PrositConstants.DEV_PROSIT_SERVER, Settings.Default.PrositServer);
             Assert.AreEqual("intensity_2", Settings.Default.PrositIntensityModel);
@@ -1870,16 +1921,15 @@ namespace pwiz.SkylineTestFunctional
     /// predictions. For logging, it needs to be constructed with a server address.
     /// For returning cached predictions, a queue of expected queries should be passed in.
     /// </summary>
-    public class FakePrositPredictionClient : PredictionService.PredictionServiceClient
+    public class FakePrositPredictionClient : PrositPredictionClient
     {
         private List<PrositQuery> _expectedQueries;
 
         public FakePrositPredictionClient(string server) :
-            base(new Channel(server, ChannelCredentials.Insecure))
+            base(server)
         {
             QueryIndex = 0;
         }
-
 
         public FakePrositPredictionClient(List<PrositQuery> expectedQueries)
         {
@@ -1891,6 +1941,17 @@ namespace pwiz.SkylineTestFunctional
 
         public override PredictResponse Predict(PredictRequest request, CallOptions options)
         {
+            try
+            {
+                PrositSkylineIntegrationTest.PING_QUERY.AssertMatchesQuery(request);
+                // If this is a ping request, silently return and don't log
+                return PrositSkylineIntegrationTest.PING_QUERY.Response;
+            }
+            catch(AssertFailedException)
+            {
+                // ignored
+            }
+
             // Logging mode
             if (_expectedQueries == null)
             {
