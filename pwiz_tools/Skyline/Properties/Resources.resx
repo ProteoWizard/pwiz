@@ -10634,6 +10634,12 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="SkylineWindow_MarkQuantitative_Mark_transitions_non_quantitative" xml:space="preserve">
     <value>Mark transitions non-quantitative</value>
   </data>
+  <data name="ExportMethodDlg_comboOptimizing_SelectedIndexChanged_Optimizing_for__0__will_produce_an_additional__1__transitions_per_transition_" xml:space="preserve">
+    <value>Optimizing for {0} will produce an additional {1} transitions per transition.</value>
+  </data>
+  <data name="ExportMethodDlg_comboOptimizing_SelectedIndexChanged_Export_a_method_with_extra_transitions_for_finding_an_optimal_value_" xml:space="preserve">
+    <value>Export a method with extra transitions for finding an optimal value.</value>
+  </data>
   <data name="ExceptionDialog_Caused_by_____" xml:space="preserve">
     <value>Caused by ---&gt;</value>
   </data>
