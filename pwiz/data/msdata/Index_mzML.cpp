@@ -354,11 +354,11 @@ void Index_mzML::Impl::readIndex() const
 
     string::size_type indexIndexOffset = buffer.find("<indexListOffset>");
     if (indexIndexOffset == string::npos)
-        throw runtime_error("Index_mzML::readIndex()] <indexListOffset> not found."); 
+        throw index_error("Index_mzML::readIndex()] <indexListOffset> not found.");
 
     is_->seekg(-bufferSize + static_cast<int>(indexIndexOffset), std::ios::end);
     if (!*is_)
-        throw runtime_error("Index_mzML::readIndex()] Error seeking to <indexListOffset>."); 
+        throw index_error("Index_mzML::readIndex()] Error seeking to <indexListOffset>.");
     
     // read <indexListOffset>
 
@@ -366,13 +366,13 @@ void Index_mzML::Impl::readIndex() const
     HandlerIndexListOffset handlerIndexListOffset(indexListOffset);
     SAXParser::parse(*is_, handlerIndexListOffset);
     if (indexListOffset == 0)
-        throw runtime_error("Index_mzML::readIndex()] Error parsing <indexListOffset>."); 
+        throw index_error("Index_mzML::readIndex()] Error parsing <indexListOffset>.");
 
     // read <index>
 
     is_->seekg(offset_to_position(indexListOffset));
     if (!*is_) 
-        throw runtime_error("[Index_mzML::readIndex()] Error seeking to <index>.");
+        throw index_error("[Index_mzML::readIndex()] Error seeking to <index>.");
 
     HandlerIndexList handlerIndexList(schemaVersion_,
                                       spectrumCount_, spectrumIndex_, legacyIdRefToNativeId_,
