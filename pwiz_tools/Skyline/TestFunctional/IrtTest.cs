@@ -76,8 +76,6 @@ namespace pwiz.SkylineTestFunctional
                     irtDlg1.CreateDatabase(databasePath);
                 });
 
-            var calibratePeptides = new List<MeasuredPeptide>();
-
             /*
              * Check several error handling cases
              * Check the peptide choosing algorithm for sanity (correct # peptides)
@@ -115,7 +113,7 @@ namespace pwiz.SkylineTestFunctional
                 int j = i;
                 RunUI(() =>
                           {
-                              calibratePeptides = calibrateDlg.Recalculate(SkylineWindow.Document, j);
+                              var calibratePeptides = calibrateDlg.Recalculate(SkylineWindow.Document, j);
                               Assert.AreEqual(calibratePeptides.Count, j);
                               Assert.IsNull(FindOpenForm<MessageDlg>());
                           });
@@ -127,6 +125,7 @@ namespace pwiz.SkylineTestFunctional
                           //After closing this dialog, there should be 3 iRT values below 0
                           //and 3 above 100
                           calibrateDlg.SetFixedPoints(3, 7);
+                          calibrateDlg.StandardName = "Document1";
 
                           calibrateDlg.OkDialog();
                       });
@@ -197,12 +196,10 @@ namespace pwiz.SkylineTestFunctional
             // Recalibrate
             const int shift = 100;
             const int skew = 10;
-            RunDlg<RecalibrateIrtDlg>(irtDlg1.Calibrate, recalDlg =>
+            RunDlg<CalibrateIrtDlg>(irtDlg1.Calibrate, recalDlg =>
             {
-                recalDlg.MinIrt = standard[1].RetentionTime + shift;
-                recalDlg.MaxIrt = standard[standard.Length - 1].RetentionTime*skew + shift;
-                recalDlg.FixedPoint1 = standard[1].Sequence;
-                recalDlg.FixedPoint2 = standard[standard.Length - 1].Sequence;
+                recalDlg.SetIrtRange(standard[1].RetentionTime + shift, standard[standard.Length - 1].RetentionTime * skew + shift);
+                recalDlg.SetFixedPoints(1, standard.Length - 1);
                 recalDlg.OkDialog();
             });
             RunUI(() =>
@@ -213,12 +210,10 @@ namespace pwiz.SkylineTestFunctional
                                     irtDlg1.StandardPeptides.Skip(i).First().Irt);
                 }
             });
-            RunDlg<RecalibrateIrtDlg>(irtDlg1.Calibrate, recalDlg =>
+            RunDlg<CalibrateIrtDlg>(irtDlg1.Calibrate, recalDlg =>
             {
-                recalDlg.FixedPoint1 = standard[2].Sequence;
-                recalDlg.FixedPoint2 = standard[standard.Length - 2].Sequence;
-                recalDlg.MinIrt = standard[2].RetentionTime;
-                recalDlg.MaxIrt = standard[standard.Length - 2].RetentionTime;
+                recalDlg.SetIrtRange(standard[2].RetentionTime, standard[standard.Length - 2].RetentionTime);
+                recalDlg.SetFixedPoints(2, standard.Length - 2);
                 recalDlg.OkDialog();
             });
 
@@ -388,6 +383,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 //Get 11 peptides from the document (all of them) and go back to calculator dialog
                 calibrateDlg2.Recalculate(SkylineWindow.Document, 11);
+                calibrateDlg2.StandardName = "Document2";
                 calibrateDlg2.OkDialog();
             });
 
