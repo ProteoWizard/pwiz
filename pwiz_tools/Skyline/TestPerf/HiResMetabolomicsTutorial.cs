@@ -200,6 +200,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                     // Full Scan Settings
                     transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.FullScan;
                     transitionSettingsUI.PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;
+                    transitionSettingsUI.Peaks = 2;
                     transitionSettingsUI.PrecursorMassAnalyzer = FullScanMassAnalyzerType.orbitrap;
                     transitionSettingsUI.PrecursorRes = 70000;
                     transitionSettingsUI.PrecursorResMz = 200;
@@ -237,11 +238,9 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
 
                 var expectedTransCount = new Dictionary<string, int[]>
                 {
-                    // transition groups, heavy transition groups, tranistions, heavy transitions
-                    {"ID31609_01_E749_4745_091517", new[] {3, 3, 3, 10, 9}},
-                    {"ID31627_01_E749_4745_091517", new[] {4, 4, 3, 12, 9}},
-                    {"ID31624_01_E749_4745_091517", new[] {4, 4, 3, 12, 9}},
-                    {"ID31653_01_E749_4745_091517", new[] {4, 4, 3, 12, 9}},
+                    // peptides, transition groups, heavy transition groups, tranistions, heavy transitions
+                    {"default", new[] {4, 4, 3, 8, 6}}, // Most have these values
+                    {"ID31609_01_E749_4745_091517", new[] {4, 4, 3, 7, 6}},
 
                 };
                 var msg = "";
@@ -249,7 +248,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                 {
                     int[] transitions;
                     if (!expectedTransCount.TryGetValue(chromatogramSet.Name, out transitions))
-                        transitions = new[] {  4, 4, 3, 11, 9 }; // Most have this value
+                        transitions = expectedTransCount["default"];
                     try
                     {
                         AssertResult.IsDocumentResultsState(docResults, chromatogramSet.Name, transitions[0], transitions[1], transitions[2], transitions[3], transitions[4]);
@@ -308,7 +307,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                         if (row.Cells[0].Value.ToString().StartsWith("NIST"))
                         {
                             row.Cells[1].Value = SampleType.STANDARD;
-                            row.Cells[2].Value = 2838.0;
+                            row.Cells[2].Value = 1.0;
                         }
                         else if (row.Cells[0].Value.ToString().StartsWith("GW"))
                         {
@@ -333,16 +332,12 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                 {
                     var gridView = documentGrid3.DataGridView;
                     var methods = ((DataGridViewComboBoxCell) gridView.Rows[0].Cells[6]).Items;
-                    var ratioToHeavy = ((Tuple<String, NormalizationMethod>)methods[3]).Item2;
                     var ratioToSurrogateHeavyDHA = ((Tuple<String, NormalizationMethod>)methods[6]).Item2;
-                    gridView.Rows[0].Cells[5].Value = 1.0;
-                    gridView.Rows[0].Cells[6].Value = ratioToHeavy; 
-                    gridView.Rows[1].Cells[5].Value = .0192;
+                    gridView.Rows[0].Cells[5].Value = 2838.0;
+                    gridView.Rows[1].Cells[5].Value = 54.0;
                     gridView.Rows[1].Cells[6].Value = ratioToSurrogateHeavyDHA;
-                    gridView.Rows[2].Cells[5].Value = .3467;
-                    gridView.Rows[2].Cells[6].Value = ratioToHeavy;
-                    gridView.Rows[3].Cells[5].Value = .0416;
-                    gridView.Rows[3].Cells[6].Value = ratioToHeavy;
+                    gridView.Rows[2].Cells[5].Value = 984.0;
+                    gridView.Rows[3].Cells[5].Value = 118.0;
                 });
 
                 PauseForScreenShot<DocumentGridForm>("Document Grid - peptide quant again", 11);

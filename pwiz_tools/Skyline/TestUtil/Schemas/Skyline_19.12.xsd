@@ -1038,6 +1038,8 @@
                 <xs:extension base="spectrum_header_info_type">
                   <xs:attribute name="count_measured" type="xs:nonNegativeInteger"
                       use="required"/>
+                  <xs:attribute name="score" type="xs:double"/>
+                  <xs:attribute name="score_type" type="xs:string"/>
                 </xs:extension>
               </xs:complexContent>
             </xs:complexType>
