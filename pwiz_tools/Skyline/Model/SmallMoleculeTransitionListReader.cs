@@ -117,6 +117,58 @@ namespace pwiz.Skyline.Model
             var hasAnyMoleculeFormula = Rows.Any(row => !string.IsNullOrEmpty(GetCellTrimmed(row, INDEX_MOLECULE_FORMULA)));
             var hasAnyMoleculeCharge = Rows.Any(row => !string.IsNullOrEmpty(GetCellTrimmed(row, INDEX_PRECURSOR_CHARGE)));
             var hasAnyMoleculeAdduct = Rows.Any(row => !string.IsNullOrEmpty(GetCellTrimmed(row, INDEX_PRECURSOR_ADDUCT)));
+
+            // Rearrange mz-only lists if necessary such that lowest mz for any given group+molecule+charge appears before its heavy siblings, so we can work out from there on isotopes
+            if (hasAnyMoleculeMz && !hasAnyMoleculeFormula)
+            {
+                var visited = new HashSet<Row>();
+                for (var r = 0; r < Rows.Count; r++)
+                {
+                    var row = Rows[r];
+                    if (!visited.Contains(row))
+                    {
+                        visited.Add(row);
+                        var group = GetCellTrimmed(row, INDEX_MOLECULE_GROUP) ?? string.Empty;
+                        var name = GetCellTrimmed(row, INDEX_MOLECULE_NAME) ?? string.Empty;
+                        if (row.GetCellAsDouble(INDEX_PRECURSOR_MZ, out var mzParsed))
+                        {
+                            var smallestMzRow = r;
+                            var smallestMz = mzParsed;
+                            var z = GetCellTrimmed(row, INDEX_PRECURSOR_CHARGE) ??
+                                    GetCellTrimmed(row, INDEX_PRECURSOR_ADDUCT) ?? string.Empty;
+                            for (var r2 = r + 1; r2 < Rows.Count; r2++)
+                            {
+                                var row2 = Rows[r2];
+                                if (!visited.Contains(row2))
+                                {
+                                    if (group.Equals(GetCellTrimmed(row2, INDEX_MOLECULE_GROUP) ?? string.Empty) &&
+                                        name.Equals(GetCellTrimmed(row2, INDEX_MOLECULE_NAME) ?? string.Empty) &&
+                                        z.Equals(GetCellTrimmed(row2, INDEX_PRECURSOR_CHARGE) ??
+                                                 GetCellTrimmed(row2, INDEX_PRECURSOR_ADDUCT) ?? string.Empty))
+                                    {
+                                        visited.Add(row2);
+                                        if (row2.GetCellAsDouble(INDEX_PRECURSOR_MZ, out var mzParsed2) &&
+                                            mzParsed2 < smallestMz)
+                                        {
+                                            smallestMzRow = r2;
+                                            smallestMz = mzParsed2;
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (smallestMzRow != r)
+                            {
+                                // Reorder the list such that the smallest mz appears before its siblings
+                                var rowSmallestMz = Rows[smallestMzRow];
+                                Rows.RemoveAt(smallestMzRow);
+                                Rows.Insert(r, rowSmallestMz);
+                            }
+                        }
+                    }
+                }
+            }
+
             foreach (var row in Rows)
             {
                 if ((hasAnyMoleculeMz && RowHasDistinctProductValue(row, INDEX_PRODUCT_MZ, INDEX_PRECURSOR_MZ)) ||
