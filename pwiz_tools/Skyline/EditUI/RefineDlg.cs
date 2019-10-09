@@ -122,7 +122,7 @@ namespace pwiz.Skyline.EditUI
                 comboTransitions.SelectedIndex = 0;
 
                 var maxTrans = document.PeptideTransitionGroups.Max(g => g.TransitionCount);
-                for (int i = 2; i < maxTrans; i++)
+                for (int i = 1; i <= maxTrans; i++)
                 {
                     comboTransitions.Items.Add(i);
                 }
@@ -545,7 +545,9 @@ namespace pwiz.Skyline.EditUI
 
         private AreaCVTransitions GetTransitionFromIdx(int idx)
         {
-            if (idx > 1)
+            if (idx == comboTransitions.Items.Count - 1)
+                return AreaCVTransitions.all;
+            if (idx > 2)
                 return (AreaCVTransitions) idx;
 
             var transition = AreaCVTransitions.all;
@@ -555,6 +557,9 @@ namespace pwiz.Skyline.EditUI
                     transition = AreaCVTransitions.all;
                     break;
                 case 1:
+                    transition = AreaCVTransitions.best;
+                    break;
+                case 2:
                     transition = AreaCVTransitions.best;
                     break;
             }

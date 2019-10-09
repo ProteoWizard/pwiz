@@ -4331,7 +4331,7 @@ namespace pwiz.Skyline
                 if (areaCVCountTransitionsToolStripMenuItem.DropDownItems.Count == 0)
                 {
                     var maxTransCount = Document.PeptideTransitionGroups.Max(g => g.TransitionCount);
-                    for (int i = 2; i < maxTransCount; i++)
+                    for (int i = 1; i <= maxTransCount; i++)
                     {
                         var tmp = new ToolStripMenuItem(i.ToString(), null,
                             areaCVCountTransitionsToolStripMenuItem_Click)
@@ -4441,7 +4441,7 @@ namespace pwiz.Skyline
             for (int i = 0; i < areaCVCountTransitionsToolStripMenuItem.DropDownItems.Count; i++)
             {
                 ((ToolStripMenuItem) areaCVCountTransitionsToolStripMenuItem.DropDownItems[i]).Checked =
-                    selectedCount - 2 == i;
+                    selectedCount - 1 == i;
             }
             areaCVPrecursorsToolStripMenuItem.Checked = AreaGraphController.AreaCVMsLevel == AreaCVMsLevel.precursors;
             areaCVProductsToolStripMenuItem.Checked = AreaGraphController.AreaCVMsLevel == AreaCVMsLevel.products;
@@ -4455,7 +4455,7 @@ namespace pwiz.Skyline
         private void areaCVCountTransitionsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var item = (ToolStripMenuItem)sender;
-            int selectedIdx = ((ToolStripMenuItem) item.OwnerItem).DropDownItems.IndexOf(item) + 2;
+            int selectedIdx = ((ToolStripMenuItem) item.OwnerItem).DropDownItems.IndexOf(item) + 1;
             SetAreaCVTransitions((AreaCVTransitions) selectedIdx);
         }
 
