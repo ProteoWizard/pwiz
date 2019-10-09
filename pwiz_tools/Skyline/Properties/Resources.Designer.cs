@@ -15037,6 +15037,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to iRT standards.
+        /// </summary>
+        public static string IrtDb_MakeDocumentXml_iRT_standards {
+            get {
+                return ResourceManager.GetString("IrtDb_MakeDocumentXml_iRT_standards", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to iRT Standards.
         /// </summary>
         public static string IrtStandardList_Label_iRT_Standards {

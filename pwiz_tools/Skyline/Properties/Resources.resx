@@ -10790,4 +10790,7 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="CalibrateIrtDlg_ShowGraph_New_iRT" xml:space="preserve">
     <value>New iRT</value>
   </data>
+  <data name="IrtDb_MakeDocumentXml_iRT_standards" xml:space="preserve">
+    <value>iRT standards</value>
+  </data>
 </root>
