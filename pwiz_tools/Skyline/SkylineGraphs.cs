@@ -716,6 +716,10 @@ namespace pwiz.Skyline
             }
             if (persistentString.StartsWith(typeof(GraphChromatogram).ToString()))
             {
+                if (_listGraphChrom.Count >= MAX_GRAPH_CHROM)
+                {
+                    return null;
+                }
                 string name = GraphChromatogram.GetTabText(persistentString);
                 var settings = DocumentUI.Settings;
                 if (settings.HasResults)
