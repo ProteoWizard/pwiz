@@ -230,12 +230,12 @@ namespace pwiz.Skyline.Controls.Graphs
         public void ChangeChromatogram(string name)
         {
             NameSet = name;
-
-            // TODO(bspratt) - figure out what operations are needed to get window to repaint with correct chromatogram
+            _arrayChromInfo = null;
+//            // TODO(bspratt) - figure out what operations are needed to get window to repaint with correct chromatogram
             UpdateUI();
-            Activate();
-            Show();
-            Focus();
+//            Activate();
+//            Show();
+//            Focus();
         }
 
         public int CurveCount { get { return GraphPanes.Sum(pane=>GetCurves(pane).Count()); } }
