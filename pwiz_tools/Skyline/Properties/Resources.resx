@@ -10649,6 +10649,9 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="AbstractSpectrumGraphItem_AddAnnotations_" xml:space="preserve">
     <value>score = {0:F06}</value>
   </data>
+  <data name="ToolInstallUI_InstallZipFromWeb_The_server_returned_an_invalid_response__It_might_be_down_for_maintenance__Please_check_the_Tool_Store_on_the_skyline_ms_website_" xml:space="preserve">
+    <value>The server returned an invalid response. It might be down for maintenance. Please check the Tool Store on the skyline.ms website.</value>
+  </data>
   <data name="IrtStandardList_Title_Edit_iRT_Standards" xml:space="preserve">
     <value>Edit iRT Standards</value>
   </data>

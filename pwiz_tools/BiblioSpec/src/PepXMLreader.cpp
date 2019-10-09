@@ -238,7 +238,8 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            scanNumber = getIntRequiredAttrValue("start_scan", attr);
            if (lookUpBy_ == NAME_ID) {
                spectrumName = getRequiredAttrValue("spectrumNativeID", attr);
-           } else if (psms_.empty() && !(spectrumName = getAttrValue("spectrumNativeID", attr)).empty()) {
+           } else if (psms_.empty() && analysisType_ != INTER_PROPHET_ANALYSIS &&
+                      !(spectrumName = getAttrValue("spectrumNativeID", attr)).empty()) {
                // if the file has spectrumNativeIDs, use those for spectrum lookups
                lookUpBy_ = NAME_ID;
            }
