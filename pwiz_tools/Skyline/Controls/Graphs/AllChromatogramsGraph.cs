@@ -436,6 +436,10 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             // Match each file status with a progress control.
             bool first = true;
+            var width = flowFileStatus.Width - 2 -
+                        (flowFileStatus.VerticalScroll.Visible
+                            ? SystemInformation.VerticalScrollBarWidth
+                            : 0);
             foreach (var loadingStatus in status.ProgressList)
             {
                 var filePath = loadingStatus.FilePath;
@@ -447,6 +451,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 progressControl = new FileProgressControl
                 {
                     Number = flowFileStatus.Controls.Count + 1,
+                    Width = width,
+                    Selected = first,
+                    BackColor = SystemColors.Control,
                     FilePath = filePath
                 };
                 progressControl.SetToolTip(toolTip1, filePath.GetFilePath());
@@ -458,21 +465,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 progressControl.ShowGraph += (sender, args) => ShowGraph();
                 progressControl.ShowLog += (sender, args) => ShowLog();
                 flowFileStatus.Controls.Add(progressControl);
-                progressControl.BackColor = SystemColors.Control;
-                
-                if (first)
-                {
-                    first = false;
-                    progressControl.Selected = true;
-                }
-            }
-
-            foreach (FileProgressControl progressControl in flowFileStatus.Controls)
-            {
-                progressControl.Width = flowFileStatus.Width - 2 -
-                                        (flowFileStatus.VerticalScroll.Visible
-                                            ? SystemInformation.VerticalScrollBarWidth
-                                            : 0);
+                first = false;
             }
         }
 
