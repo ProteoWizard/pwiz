@@ -25,6 +25,7 @@ using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -53,6 +54,12 @@ namespace pwiz.SkylineTestFunctional
         }
 
         protected override void DoTest()
+        {
+//            RunIrtTest();
+            RunCalibrationTest();
+        }
+
+        private void RunIrtTest()
         {
             const int numStandardPeps = 11;
             const int numLibraryPeps = 18;
@@ -697,6 +704,65 @@ namespace pwiz.SkylineTestFunctional
 
             // Make sure no message boxes are left open
             Assert.IsNull(FindOpenForm<MessageDlg>());
+        }
+
+        private void RunCalibrationTest()
+        {
+            var testFilesDir = new TestFilesDir(TestContext, TestFilesZip);
+
+            RunUI(() => SkylineWindow.OpenFile(testFilesDir.GetTestPath("RePLiCal data for Skyline team - Pierce.sky")));
+            var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            var editIrtCalcDlg = ShowDialog<EditIrtCalcDlg>(peptideSettingsDlg.AddCalculator);
+            var calibrateIrtDlg = ShowDialog<CalibrateIrtDlg>(editIrtCalcDlg.Calibrate);
+            RunUI(() =>
+            {
+                calibrateIrtDlg.StandardName = "Test standard";
+                var regressionOptions = calibrateIrtDlg.RegressionOptions;
+                Assert.AreEqual(3, regressionOptions.Length);
+                Assert.IsTrue(regressionOptions[0].Name.Equals(Resources.RegressionOption_All_Fixed_points) && regressionOptions[0].IsFixedPoint);
+                Assert.IsTrue(regressionOptions.Select(opt => opt.Name).Contains(IrtStandard.REPLICAL.Name));
+                Assert.IsTrue(regressionOptions.Select(opt => opt.Name).Contains(IrtStandard.PIERCE.Name));
+                Assert.IsTrue(ReferenceEquals(calibrateIrtDlg.SelectedRegressionOption, regressionOptions[0]));
+            });
+            RunDlg<MessageDlg>(() => calibrateIrtDlg.GraphRegression(), false);
+            RunDlg<MessageDlg>(() => calibrateIrtDlg.GraphIrts(), false);
+            var addIrtDlg = ShowDialog<AddIrtStandardsDlg>(calibrateIrtDlg.UseResults);
+            RunDlg<MessageDlg>(() => addIrtDlg.OkDialog(), false); // try empty textbox
+            RunUI(() => addIrtDlg.StandardCount = CalibrateIrtDlg.MIN_STANDARD_PEPTIDES - 1);
+            RunDlg<MessageDlg>(() => addIrtDlg.OkDialog(), false); // try below minimum
+            RunUI(() => addIrtDlg.StandardCount = SkylineWindow.Document.PeptideCount + 1);
+            RunDlg<MessageDlg>(() => addIrtDlg.OkDialog(), false); // try above maximum
+            RunUI(() => addIrtDlg.StandardCount = 10);
+            OkDialog(addIrtDlg, addIrtDlg.OkDialog);
+            RunUI(() => Assert.AreEqual(10, calibrateIrtDlg.StandardPeptideCount));
+            RunDlg<GraphRegression>(() => calibrateIrtDlg.GraphRegression(), false, dlg =>
+            {
+                Assert.AreEqual(1, dlg.RegressionGraphDatas.Count);
+                Assert.AreEqual(2, dlg.RegressionGraphDatas.First().RegularPoints.Count);
+                dlg.CloseDialog();
+            });
+            RunDlg<GraphRegression>(() => calibrateIrtDlg.GraphIrts(), false, dlg =>
+            {
+                Assert.AreEqual(1, dlg.RegressionGraphDatas.Count);
+                Assert.AreEqual(10, dlg.RegressionGraphDatas.First().RegularPoints.Count);
+                dlg.CloseDialog();
+            });
+            RunDlg<AddIrtStandardsDlg>(() =>
+                    calibrateIrtDlg.SelectedRegressionOption = calibrateIrtDlg.RegressionOptions.First(opt => opt.Name.Equals(IrtStandard.PIERCE.Name)),
+                false, dlg =>
+                {
+                    dlg.StandardCount = 10;
+                    dlg.OkDialog();
+                });
+            RunUI(() =>
+            {
+                Assert.AreEqual(10, calibrateIrtDlg.StandardPeptideCount);
+                calibrateIrtDlg.SelectedRegressionOption = calibrateIrtDlg.RegressionOptions.First(opt => opt.Name.Equals(IrtStandard.REPLICAL.Name));
+                Assert.AreEqual(15, calibrateIrtDlg.StandardPeptideCount);
+            });
+            OkDialog(calibrateIrtDlg, calibrateIrtDlg.OkDialog);
+            OkDialog(editIrtCalcDlg, editIrtCalcDlg.CancelDialog);
+            OkDialog(peptideSettingsDlg, peptideSettingsDlg.CancelDialog);
         }
 
         private SrmDocument VerifyIrtStandards(SrmDocument docBefore, bool expectStandards)
