@@ -10700,20 +10700,11 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="AddIrtStandardsDlg_AddIrtStandardsDlg_MessagePeptidesExcluded" xml:space="preserve">
     <value>The current document contains {0} peptides not in this standard with measured retention times. It is suggested that you use a small number of peptides that can be easily measured in a single injection for an iRT standard. Choose a number of peptides below to have Skyline select automatically from the current document.</value>
   </data>
-  <data name="CalibrateIrtDlg_UpdateControls_" xml:space="preserve">
-    <value>iRT =</value>
+  <data name="CalibrateIrtDlg_UpdateControls_iRT" xml:space="preserve">
+    <value>iRT</value>
   </data>
-  <data name="CalibrateIrtDlg_UpdateControls___0_F04___" xml:space="preserve">
-    <value> {0:F04} *</value>
-  </data>
-  <data name="CalibrateIrtDlg_UpdateControls__RT" xml:space="preserve">
-    <value> RT</value>
-  </data>
-  <data name="CalibrateIrtDlg_UpdateControls___0___1_F04_" xml:space="preserve">
-    <value> {0} {1:F04}</value>
-  </data>
-  <data name="CalibrateIrtDlg_UpdateControls__0" xml:space="preserve">
-    <value> 0</value>
+  <data name="CalibrateIrtDlg_UpdateControls_RT" xml:space="preserve">
+    <value>RT</value>
   </data>
   <data name="CalibrateIrtDlg_ShowGraph_Old_iRT" xml:space="preserve">
     <value>Old iRT</value>
@@ -10769,20 +10760,11 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="AddIrtStandardsDlg_AddIrtStandardsDlg_MessagePeptidesExcluded" xml:space="preserve">
     <value>The current document contains {0} peptides not in this standard with measured retention times. It is suggested that you use a small number of peptides that can be easily measured in a single injection for an iRT standard. Choose a number of peptides below to have Skyline select automatically from the current document.</value>
   </data>
-  <data name="CalibrateIrtDlg_UpdateControls_" xml:space="preserve">
-    <value>iRT =</value>
+  <data name="CalibrateIrtDlg_UpdateControls_iRT" xml:space="preserve">
+    <value>iRT</value>
   </data>
-  <data name="CalibrateIrtDlg_UpdateControls___0_F04___" xml:space="preserve">
-    <value> {0:F04} *</value>
-  </data>
-  <data name="CalibrateIrtDlg_UpdateControls__RT" xml:space="preserve">
-    <value> RT</value>
-  </data>
-  <data name="CalibrateIrtDlg_UpdateControls___0___1_F04_" xml:space="preserve">
-    <value> {0} {1:F04}</value>
-  </data>
-  <data name="CalibrateIrtDlg_UpdateControls__0" xml:space="preserve">
-    <value> 0</value>
+  <data name="CalibrateIrtDlg_UpdateControls_RT" xml:space="preserve">
+    <value>RT</value>
   </data>
   <data name="CalibrateIrtDlg_ShowGraph_Old_iRT" xml:space="preserve">
     <value>Old iRT</value>

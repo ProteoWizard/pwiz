@@ -3158,47 +3158,20 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to iRT =.
+        ///   Looks up a localized string similar to iRT.
         /// </summary>
-        public static string CalibrateIrtDlg_UpdateControls_ {
+        public static string CalibrateIrtDlg_UpdateControls_iRT {
             get {
-                return ResourceManager.GetString("CalibrateIrtDlg_UpdateControls_", resourceCulture);
+                return ResourceManager.GetString("CalibrateIrtDlg_UpdateControls_iRT", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to  {0} {1:F04}.
+        ///   Looks up a localized string similar to RT.
         /// </summary>
-        public static string CalibrateIrtDlg_UpdateControls___0___1_F04_ {
+        public static string CalibrateIrtDlg_UpdateControls_RT {
             get {
-                return ResourceManager.GetString("CalibrateIrtDlg_UpdateControls___0___1_F04_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to  {0:F04} *.
-        /// </summary>
-        public static string CalibrateIrtDlg_UpdateControls___0_F04___ {
-            get {
-                return ResourceManager.GetString("CalibrateIrtDlg_UpdateControls___0_F04___", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to  0.
-        /// </summary>
-        public static string CalibrateIrtDlg_UpdateControls__0 {
-            get {
-                return ResourceManager.GetString("CalibrateIrtDlg_UpdateControls__0", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to  RT.
-        /// </summary>
-        public static string CalibrateIrtDlg_UpdateControls__RT {
-            get {
-                return ResourceManager.GetString("CalibrateIrtDlg_UpdateControls__RT", resourceCulture);
+                return ResourceManager.GetString("CalibrateIrtDlg_UpdateControls_RT", resourceCulture);
             }
         }
         

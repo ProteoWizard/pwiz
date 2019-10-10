@@ -338,25 +338,31 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 return;
             }
             var equationSb = new StringBuilder();
-            equationSb.Append(Resources.CalibrateIrtDlg_UpdateControls_);
-            if (line.Slope != 0 || line.Intercept != 0)
+            equationSb.Append(Resources.CalibrateIrtDlg_UpdateControls_iRT);
+            equationSb.Append(@" =");
+            var roundedSlope = Math.Round(line.Slope, 4);
+            var roundedIntercept = Math.Round(line.Intercept, 4);
+            if (roundedSlope != 0 || roundedIntercept != 0)
             {
-                if (line.Slope != 0)
+                if (roundedSlope != 0)
                 {
-                    if (line.Slope != 1)
+                    if (roundedSlope != 1)
                     {
-                        equationSb.Append(string.Format(Resources.CalibrateIrtDlg_UpdateControls___0_F04___, line.Slope));
+                        equationSb.Append(string.Format(@" {0:F04} *", roundedSlope));
                     }
-                    equationSb.Append(Resources.CalibrateIrtDlg_UpdateControls__RT);
+                    equationSb.Append(' ');
+                    equationSb.Append(Resources.CalibrateIrtDlg_UpdateControls_RT);
                 }
-                if (line.Intercept != 0)
+                if (roundedIntercept != 0)
                 {
-                    equationSb.Append(string.Format(Resources.CalibrateIrtDlg_UpdateControls___0___1_F04_, line.Intercept > 0 ? '+' : '-', Math.Abs(line.Intercept)));
+                    equationSb.Append(roundedSlope != 0
+                        ? string.Format(@" {0} {1:F04}", roundedIntercept >= 0 ? '+' : '-', Math.Abs(roundedIntercept))
+                        : string.Format(@" {0:F04}", roundedIntercept));
                 }
             }
             else
             {
-                equationSb.Append(Resources.CalibrateIrtDlg_UpdateControls__0);
+                equationSb.Append(string.Format(@" {0:F04}", 0));
             }
             lblEquation.Text = equationSb.ToString();
             if (!IsRecalibration)
@@ -393,6 +399,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
         }
 
         private void btnGraph_Click(object sender, EventArgs e)
+        {
+            GraphRegression();
+        }
+
+        public void GraphRegression()
         {
             double[] xValues, yValues;
             Dictionary<int, string> tooltips;
@@ -447,6 +458,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
         }
 
         private void btnGraphIrts_Click(object sender, EventArgs e)
+        {
+            GraphIrts();
+        }
+
+        public void GraphIrts()
         {
             if (!TryGetLine(true, out var regressionLine))
             {
@@ -504,7 +520,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             }
         }
 
-        private class RegressionOption
+        public class RegressionOption
         {
             public string Name { get; }
             public List<Tuple<DbIrtPeptide, PeptideDocNode>> MatchedPeptides { get; }
@@ -725,6 +741,14 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             get { return textName.Text; }
             set { textName.Text = value; }
+        }
+
+        public RegressionOption[] RegressionOptions => comboRegression.Items.Cast<RegressionOption>().ToArray();
+
+        public RegressionOption SelectedRegressionOption
+        {
+            get => comboRegression.SelectedItem as RegressionOption;
+            set => comboRegression.SelectedItem = value;
         }
 
         public List<StandardPeptide> Recalculate(SrmDocument document, int peptideCount)
