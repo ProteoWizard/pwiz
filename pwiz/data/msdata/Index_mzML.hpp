@@ -36,6 +36,12 @@ namespace msdata {
 
 struct SpectrumIdentityFromXML; // forward ref
 
+class index_error : public std::runtime_error
+{
+    public:
+    index_error(const char* msg) : runtime_error(msg) {}
+};
+
 struct PWIZ_API_DECL Index_mzML
 {
     Index_mzML(boost::shared_ptr<std::istream> is, const MSData& msd);

@@ -151,7 +151,7 @@ namespace pwiz.Skyline.Model.Lib
             writer.WriteAttribute(ATTR.count_measured, SpectrumCount);
             if (Score.HasValue)
             {
-                writer.WriteAttribute(ATTR.score, Score);
+                writer.WriteAttribute(ATTR.score, Score.Value);
                 writer.WriteAttribute(ATTR.score_type, ScoreType);
             }
         }
