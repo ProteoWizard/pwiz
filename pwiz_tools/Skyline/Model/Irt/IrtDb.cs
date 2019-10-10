@@ -201,8 +201,11 @@ namespace pwiz.Skyline.Model.Irt
         private IrtDb Load(IProgressMonitor loadMonitor, ProgressStatus status, out IList<DbIrtPeptide> dbPeptides)
         {
             var rawPeptides = dbPeptides = GetPeptides();
-            var result = ChangeProp(ImClone(this), im => im.LoadPeptides(rawPeptides));
-            result = ChangeProp(ImClone(result), im => im.DocumentXml = GetDocumentXml());
+            var result = ChangeProp(ImClone(this), im =>
+            {
+                im.LoadPeptides(rawPeptides);
+                im.DocumentXml = GetDocumentXml();
+            });
             // Not really possible to show progress, unless we switch to raw reading
             if (loadMonitor != null)
                 loadMonitor.UpdateProgress(status.ChangePercentComplete(100));
@@ -430,10 +433,10 @@ namespace pwiz.Skyline.Model.Irt
             }
         }
 
-        public IrtDb MakeDocumentXml(SrmDocument doc, string oldXml)
+        public string GenerateDocumentXml(SrmDocument doc, string oldXml)
         {
             if (doc == null)
-                return this;
+                return null;
 
             // Minimize document to only the peptides we need
             var minimalPeptides = StandardPeptides.ToHashSet();
@@ -484,7 +487,7 @@ namespace pwiz.Skyline.Model.Irt
                     peptides.Add((PeptideDocNode)nodePep.ChangeChildren(precursors));
             }
             if (peptides.Count == 0)
-                return this;
+                return null;
 
             peptides.Sort((nodePep1, nodePep2) => nodePep1.ModifiedTarget.CompareTo(nodePep2.ModifiedTarget));
             doc = (SrmDocument)doc.ChangeChildren(new[] { new PeptideGroupDocNode(new PeptideGroup(), Resources.IrtDb_MakeDocumentXml_iRT_standards, string.Empty, peptides.ToArray()) });
@@ -494,13 +497,19 @@ namespace pwiz.Skyline.Model.Irt
             doc = doc.ChangeMeasuredResults(null);
             doc = doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(libs => libs.ChangeLibraries(new List<LibrarySpec>(), new List<Library>())));
 
-            string documentXml;
             using (var writer = new StringWriter())
             using (var writer2 = new XmlTextWriter(writer))
             {
                 doc.Serialize(writer2, null, SkylineVersion.CURRENT, null);
-                documentXml = writer.ToString();
+                return writer.ToString();
             }
+        }
+
+        public IrtDb SetDocumentXml(SrmDocument doc, string oldXml)
+        {
+            var documentXml = GenerateDocumentXml(doc, oldXml);
+            if (string.IsNullOrEmpty(documentXml))
+                return this;
 
             using (var session = OpenWriteSession())
             using (var transaction = session.BeginTransaction())

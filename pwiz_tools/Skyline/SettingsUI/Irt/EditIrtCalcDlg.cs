@@ -431,7 +431,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     {
                         var db = IrtDb.CreateIrtDb(fileSaver.SafeName);
                         db = db.AddPeptides(null, AllPeptides.ToArray());
-                        db.MakeDocumentXml(Program.ActiveDocumentUI, _originalDocumentXml);
+                        db.SetDocumentXml(Program.ActiveDocumentUI, _originalDocumentXml);
                         fileSaver.Commit();
                     }
                 }
