@@ -3338,10 +3338,10 @@ namespace pwiz.Skyline
 
         private void ShowPeptideSettingsUI(IWin32Window parent, PeptideSettingsUI.TABS? tab)
         {
-            using (PeptideSettingsUI ps = new PeptideSettingsUI(this, _libraryManager, tab ))
+            using (PeptideSettingsUI ps = new PeptideSettingsUI(this, _libraryManager, tab))
             {
-                var oldStandard = RCalcIrtStandard();
-                
+                var oldStandard = RCalcIrt.IrtPeptides(Document).ToHashSet();
+
                 if (ps.ShowDialog(parent) == DialogResult.OK)
                 {
                     if (ps.IsShowLibraryExplorer)
@@ -3351,10 +3351,7 @@ namespace pwiz.Skyline
                             OwnedForms[libraryExpIndex].Activate();
                     }
 
-                    HashSet<Target> missingPeptides;
-                    var newStandard = RCalcIrtStandard(out missingPeptides);
-                    if (!ReferenceEquals(oldStandard, newStandard))
-                        AddStandardsToDocument(newStandard, missingPeptides);
+                    HandleStandardsChanged(oldStandard);
                 }
             }
 
@@ -3363,26 +3360,52 @@ namespace pwiz.Skyline
             UpdateGraphPanes();
         }
 
-        private void AddStandardsToDocument(IrtStandard standard, ICollection<Target> missingPeptides)
+        private void HandleStandardsChanged(ICollection<Target> oldStandard)
         {
-            var standardDocReader = standard.DocumentReader;
-            if (standardDocReader == null)
+            var calc = RCalcIrt.Calculator(Document);
+            if (calc == null)
+                return;
+            calc = calc.Initialize(null) as RCalcIrt;
+            if (calc == null)
+                return;
+            var newStandard = calc.GetStandardPeptides().ToArray();
+            if (newStandard.Length == 0 || newStandard.Length == oldStandard.Count && newStandard.All(oldStandard.Contains))
+            {
+                // Standard peptides have not changed
+                return;
+            }
+            
+            // Determine which peptides are in the standard, but not in the document
+            var missingPeptides = newStandard.Except(Document.Peptides.Select(pep => pep.Peptide.Target)).ToHashSet();
+            if (missingPeptides.Count == 0)
                 return;
 
-            // Check if document already has the standards
-            var docPeptides = Document.Peptides.Select(nodePep => nodePep.Peptide.Target);
-            var standardPeptides = standard.Peptides.Select(pep => pep.Target).Except(missingPeptides);
-            if (!standardPeptides.Except(docPeptides).Any())
-                return;
+            if (!string.IsNullOrEmpty(calc.DocumentXml))
+            {
+                using (var reader = new StringReader(calc.DocumentXml))
+                {
+                    AddStandardsToDocument(reader, missingPeptides);
+                }
+            }
+            else
+            {
+                using (var reader = IrtStandard.WhichStandard(newStandard).DocumentReader)
+                {
+                    if (reader != null)
+                        AddStandardsToDocument(reader, missingPeptides);
+                }
+            }
+        }
 
+        private void AddStandardsToDocument(TextReader reader, ICollection<Target> missingPeptides)
+        {
             using (var dlg = new AddIrtStandardsToDocumentDlg())
             {
                 if (dlg.ShowDialog(this) == DialogResult.Yes)
                 {
                     ModifyDocument(Resources.SkylineWindow_AddStandardsToDocument_Add_standard_peptides, doc =>
                     {
-                        IdentityPath firstAdded, nextAdd;
-                        doc = doc.ImportDocumentXml(standardDocReader,
+                        doc = doc.ImportDocumentXml(reader,
                                                     string.Empty,
                                                     MeasuredResults.MergeAction.remove,
                                                     false,
@@ -3390,13 +3413,13 @@ namespace pwiz.Skyline
                                                     Settings.Default.StaticModList,
                                                     Settings.Default.HeavyModList,
                                                     doc.Children.Any() ? new IdentityPath(doc.Children.First().Id) : null,
-                                                    out firstAdded,
-                                                    out nextAdd,
+                                                    out var firstAdded,
+                                                    out _,
                                                     false);
 
                         var standardPepGroup = doc.PeptideGroups.First(nodePepGroup => new IdentityPath(nodePepGroup.Id).Equals(firstAdded));
                         var pepList = new List<DocNode>();
-                        foreach (var nodePep in standardPepGroup.Peptides.Where(pep => !missingPeptides.Contains(pep.ModifiedTarget)))
+                        foreach (var nodePep in standardPepGroup.Peptides.Where(pep => missingPeptides.Contains(pep.ModifiedTarget)))
                         {
                             var tranGroupList = new List<DocNode>();
                             foreach (TransitionGroupDocNode nodeTranGroup in nodePep.Children)
@@ -3412,19 +3435,6 @@ namespace pwiz.Skyline
                     }, dlg.FormSettings.EntryCreator.Create);
                 }
             }
-        }
-
-        private IrtStandard RCalcIrtStandard()
-        {
-            HashSet<Target> missingPeptides;
-            return RCalcIrtStandard(out missingPeptides);
-        }
-
-        private IrtStandard RCalcIrtStandard(out HashSet<Target> missingPeptides)
-        {
-            missingPeptides = new HashSet<Target>();
-            var calcPeptides = RCalcIrt.IrtPeptides(Document).ToArray();
-            return calcPeptides.Any() ? IrtStandard.WhichStandard(calcPeptides, out missingPeptides) : IrtStandard.EMPTY;
         }
 
         private void transitionSettingsMenuItem_Click(object sender, EventArgs e)
