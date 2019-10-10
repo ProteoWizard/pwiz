@@ -271,7 +271,7 @@ namespace pwiz.SkylineTestData
             TestFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineRefine.zip");
             DocumentPath = InitRefineDocument("SRM_mini_single_replicate.sky", 1, 4, 37, 40, 338);
             output = Run(CommandArgs.ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF.GetArgumentTextWithValue(cvCutoff));
-            AssertEx.Contains(output, "The document does not contain enough replicates to use consistency settings.");
+            AssertEx.Contains(output, "The document must contain at least 2 replicates to refine based on consistency.");
         }
 
         //        [TestMethod]

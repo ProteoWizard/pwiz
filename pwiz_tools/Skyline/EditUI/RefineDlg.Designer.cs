@@ -84,6 +84,7 @@
             this.labelNormalize = new System.Windows.Forms.Label();
             this.labelCV = new System.Windows.Forms.Label();
             this.textCVCutoff = new System.Windows.Forms.TextBox();
+            this.groupPeakArea = new System.Windows.Forms.GroupBox();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabDocument.SuspendLayout();
@@ -93,6 +94,7 @@
             this.tabConsistency.SuspendLayout();
             this.groupDetection.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownDetections)).BeginInit();
+            this.groupPeakArea.SuspendLayout();
             this.SuspendLayout();
             // 
             // helpTip
@@ -400,12 +402,8 @@
             // 
             // tabConsistency
             // 
-            this.tabConsistency.Controls.Add(this.labelPercent);
-            this.tabConsistency.Controls.Add(this.comboNormalizeTo);
+            this.tabConsistency.Controls.Add(this.groupPeakArea);
             this.tabConsistency.Controls.Add(this.groupDetection);
-            this.tabConsistency.Controls.Add(this.labelNormalize);
-            this.tabConsistency.Controls.Add(this.labelCV);
-            this.tabConsistency.Controls.Add(this.textCVCutoff);
             resources.ApplyResources(this.tabConsistency, "tabConsistency");
             this.tabConsistency.Name = "tabConsistency";
             this.tabConsistency.UseVisualStyleBackColor = true;
@@ -473,6 +471,17 @@
             resources.ApplyResources(this.textCVCutoff, "textCVCutoff");
             this.textCVCutoff.Name = "textCVCutoff";
             // 
+            // groupPeakArea
+            // 
+            this.groupPeakArea.Controls.Add(this.labelCV);
+            this.groupPeakArea.Controls.Add(this.labelPercent);
+            this.groupPeakArea.Controls.Add(this.textCVCutoff);
+            this.groupPeakArea.Controls.Add(this.comboNormalizeTo);
+            this.groupPeakArea.Controls.Add(this.labelNormalize);
+            resources.ApplyResources(this.groupPeakArea, "groupPeakArea");
+            this.groupPeakArea.Name = "groupPeakArea";
+            this.groupPeakArea.TabStop = false;
+            // 
             // RefineDlg
             // 
             this.AcceptButton = this.btnOK;
@@ -498,10 +507,11 @@
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.tabConsistency.ResumeLayout(false);
-            this.tabConsistency.PerformLayout();
             this.groupDetection.ResumeLayout(false);
             this.groupDetection.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownDetections)).EndInit();
+            this.groupPeakArea.ResumeLayout(false);
+            this.groupPeakArea.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -562,5 +572,6 @@
         private System.Windows.Forms.TextBox textCVCutoff;
         private System.Windows.Forms.Label labelPercent;
         private System.Windows.Forms.NumericUpDown numericUpDownDetections;
+        private System.Windows.Forms.GroupBox groupPeakArea;
     }
 }

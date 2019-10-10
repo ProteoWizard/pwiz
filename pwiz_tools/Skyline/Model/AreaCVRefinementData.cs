@@ -138,16 +138,22 @@ namespace pwiz.Skyline.Model
             }).OrderBy(d => d.CV));
         }
 
-        public SrmDocument RemoveAboveCVCuttoff(SrmDocument document)
+        public SrmDocument RemoveAboveCVCutoff(SrmDocument document)
         {
-            var cutoff = _settings.CVCutoff / 100.0;
+            var filterByCutoff = Data;
 
-            var ids = new HashSet<int>(Data.Where(d => d.CV < cutoff)
+            if (!double.IsNaN(_settings.CVCutoff))
+            {
+                var cutoff = _settings.CVCutoff / 100.0;
+
+                filterByCutoff = Data.Where(d => d.CV < cutoff).ToList();
+            }
+
+            var ids = new HashSet<int>(filterByCutoff
                 .SelectMany(d => d.PeptideAnnotationPairs)
                 .Select(pair => pair.TransitionGroup.Id.GlobalIndex));
-
             var setRemove = IndicesToRemove(document, ids);
-            
+
             return (SrmDocument)document.RemoveAll(setRemove, null, (int)SrmDocument.Level.Molecules);
         }
 

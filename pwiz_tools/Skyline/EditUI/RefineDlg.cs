@@ -112,9 +112,9 @@ namespace pwiz.Skyline.EditUI
 
                 var hasGlobalStandard = _document.Settings.HasGlobalStandardArea;
                 if (hasGlobalStandard)
-                    comboNormalizeTo.Items.Add(Resources.AreaCVToolbar_UpdateUI_Global_standards);
-                comboNormalizeTo.Items.Add(Resources.AreaCVToolbar_UpdateUI_Medians);
-                comboNormalizeTo.Items.Add(Resources.AreaCVToolbar_UpdateUI_None);
+                    comboNormalizeTo.Items.Add(Resources.RefineDlg_NormalizationMethod_Global_standards);
+                comboNormalizeTo.Items.Add(Resources.RefineDlg_NormalizationMethod_Medians);
+                comboNormalizeTo.Items.Add(Resources.RefineDlg_NormalizationMethod_None);
                 comboNormalizeTo.SelectedIndex = comboNormalizeTo.Items.Count - 1;
             }
 
@@ -230,11 +230,12 @@ namespace pwiz.Skyline.EditUI
             get
             {
                 var selected = comboNormalizeTo.SelectedItem.ToString();
-                if (Equals(selected, @"None"))
+                
+                if (Equals(selected, Resources.RefineDlg_NormalizationMethod_None))
                     return AreaCVNormalizationMethod.none;
-                else if (Equals(selected, @"Medians"))
+                else if (Equals(selected, Resources.RefineDlg_NormalizationMethod_Medians))
                     return AreaCVNormalizationMethod.medians;
-                else if (Equals(selected, @"Global standards"))
+                else if (Equals(selected, Resources.RefineDlg_NormalizationMethod_Global_standards))
                     return AreaCVNormalizationMethod.global_standards;
                 else
                     return AreaCVNormalizationMethod.ratio;
@@ -243,11 +244,11 @@ namespace pwiz.Skyline.EditUI
             {
                 if (!Equals(value, AreaCVNormalizationMethod.ratio))
                     if (value == AreaCVNormalizationMethod.global_standards)
-                        comboNormalizeTo.SelectedItem = @"Global standards";
+                        comboNormalizeTo.SelectedItem = Resources.RefineDlg_NormalizationMethod_Global_standards;
                     else if (value == AreaCVNormalizationMethod.medians)
-                        comboNormalizeTo.SelectedItem = @"Medians";
+                        comboNormalizeTo.SelectedItem = Resources.RefineDlg_NormalizationMethod_Medians;
                     else
-                        comboNormalizeTo.SelectedItem = @"None";
+                        comboNormalizeTo.SelectedItem = Resources.RefineDlg_NormalizationMethod_None;
             }
         }
 
@@ -257,8 +258,8 @@ namespace pwiz.Skyline.EditUI
             {
                 if (comboNormalizeTo.Items.Count == 0) return null;
                 string cvRefineTypeName = comboNormalizeTo.SelectedItem.ToString();
-                if (string.IsNullOrEmpty(cvRefineTypeName) || Equals(cvRefineTypeName, @"None")
-                    || Equals(cvRefineTypeName, @"Medians") || Equals(cvRefineTypeName, @"Global standards"))
+                if (string.IsNullOrEmpty(cvRefineTypeName) || Equals(cvRefineTypeName, Resources.RefineDlg_NormalizationMethod_None)
+                    || Equals(cvRefineTypeName, Resources.RefineDlg_NormalizationMethod_Medians) || Equals(cvRefineTypeName, Resources.RefineDlg_NormalizationMethod_Global_standards))
                     return null;
                 cvRefineTypeName = char.ToLowerInvariant(cvRefineTypeName[0]) + cvRefineTypeName.Substring(1);
                 var typedMods = _settings.PeptideSettings.Modifications.GetModificationsByName(cvRefineTypeName);

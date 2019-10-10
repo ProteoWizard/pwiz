@@ -1336,6 +1336,39 @@ exceed this threshold.</value>
   <data name="&gt;&gt;tabResults.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="labelCV.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelCV.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelCV.Location" type="System.Drawing.Point, System.Drawing">
+    <value>30, 25</value>
+  </data>
+  <data name="labelCV.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
+  </data>
+  <data name="labelCV.Size" type="System.Drawing.Size, System.Drawing">
+    <value>54, 13</value>
+  </data>
+  <data name="labelCV.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="labelCV.Text" xml:space="preserve">
+    <value>CV cutoff:</value>
+  </data>
+  <data name="&gt;&gt;labelCV.Name" xml:space="preserve">
+    <value>labelCV</value>
+  </data>
+  <data name="&gt;&gt;labelCV.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelCV.Parent" xml:space="preserve">
+    <value>groupPeakArea</value>
+  </data>
+  <data name="&gt;&gt;labelCV.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="labelPercent.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -1343,7 +1376,7 @@ exceed this threshold.</value>
     <value>NoControl</value>
   </data>
   <data name="labelPercent.Location" type="System.Drawing.Point, System.Drawing">
-    <value>91, 43</value>
+    <value>99, 43</value>
   </data>
   <data name="labelPercent.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
@@ -1364,13 +1397,37 @@ exceed this threshold.</value>
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelPercent.Parent" xml:space="preserve">
-    <value>tabConsistency</value>
+    <value>groupPeakArea</value>
   </data>
   <data name="&gt;&gt;labelPercent.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
+  </data>
+  <data name="textCVCutoff.Location" type="System.Drawing.Point, System.Drawing">
+    <value>33, 41</value>
+  </data>
+  <data name="textCVCutoff.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="textCVCutoff.Size" type="System.Drawing.Size, System.Drawing">
+    <value>65, 20</value>
+  </data>
+  <data name="textCVCutoff.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;textCVCutoff.Name" xml:space="preserve">
+    <value>textCVCutoff</value>
+  </data>
+  <data name="&gt;&gt;textCVCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textCVCutoff.Parent" xml:space="preserve">
+    <value>groupPeakArea</value>
+  </data>
+  <data name="&gt;&gt;textCVCutoff.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
   <data name="comboNormalizeTo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>206, 41</value>
+    <value>181, 41</value>
   </data>
   <data name="comboNormalizeTo.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1388,10 +1445,67 @@ exceed this threshold.</value>
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboNormalizeTo.Parent" xml:space="preserve">
-    <value>tabConsistency</value>
+    <value>groupPeakArea</value>
   </data>
   <data name="&gt;&gt;comboNormalizeTo.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
+  </data>
+  <data name="labelNormalize.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelNormalize.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelNormalize.Location" type="System.Drawing.Point, System.Drawing">
+    <value>177, 25</value>
+  </data>
+  <data name="labelNormalize.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
+  </data>
+  <data name="labelNormalize.Size" type="System.Drawing.Size, System.Drawing">
+    <value>68, 13</value>
+  </data>
+  <data name="labelNormalize.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="labelNormalize.Text" xml:space="preserve">
+    <value>Normalize to:</value>
+  </data>
+  <data name="&gt;&gt;labelNormalize.Name" xml:space="preserve">
+    <value>labelNormalize</value>
+  </data>
+  <data name="&gt;&gt;labelNormalize.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelNormalize.Parent" xml:space="preserve">
+    <value>groupPeakArea</value>
+  </data>
+  <data name="&gt;&gt;labelNormalize.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="groupPeakArea.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 28</value>
+  </data>
+  <data name="groupPeakArea.Size" type="System.Drawing.Size, System.Drawing">
+    <value>332, 80</value>
+  </data>
+  <data name="groupPeakArea.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="groupPeakArea.Text" xml:space="preserve">
+    <value>Peak Areas</value>
+  </data>
+  <data name="&gt;&gt;groupPeakArea.Name" xml:space="preserve">
+    <value>groupPeakArea</value>
+  </data>
+  <data name="&gt;&gt;groupPeakArea.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupPeakArea.Parent" xml:space="preserve">
+    <value>tabConsistency</value>
+  </data>
+  <data name="&gt;&gt;groupPeakArea.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="numericUpDownDetections.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -1547,7 +1661,7 @@ exceed this threshold.</value>
     <value>4</value>
   </data>
   <data name="groupDetection.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 88</value>
+    <value>25, 135</value>
   </data>
   <data name="groupDetection.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1574,97 +1688,7 @@ exceed this threshold.</value>
     <value>tabConsistency</value>
   </data>
   <data name="&gt;&gt;groupDetection.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="labelNormalize.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelNormalize.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelNormalize.Location" type="System.Drawing.Point, System.Drawing">
-    <value>203, 25</value>
-  </data>
-  <data name="labelNormalize.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 0, 2, 0</value>
-  </data>
-  <data name="labelNormalize.Size" type="System.Drawing.Size, System.Drawing">
-    <value>68, 13</value>
-  </data>
-  <data name="labelNormalize.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="labelNormalize.Text" xml:space="preserve">
-    <value>Normalize to:</value>
-  </data>
-  <data name="&gt;&gt;labelNormalize.Name" xml:space="preserve">
-    <value>labelNormalize</value>
-  </data>
-  <data name="&gt;&gt;labelNormalize.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelNormalize.Parent" xml:space="preserve">
-    <value>tabConsistency</value>
-  </data>
-  <data name="&gt;&gt;labelNormalize.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="labelCV.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelCV.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelCV.Location" type="System.Drawing.Point, System.Drawing">
-    <value>22, 25</value>
-  </data>
-  <data name="labelCV.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 0, 2, 0</value>
-  </data>
-  <data name="labelCV.Size" type="System.Drawing.Size, System.Drawing">
-    <value>54, 13</value>
-  </data>
-  <data name="labelCV.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="labelCV.Text" xml:space="preserve">
-    <value>CV cutoff:</value>
-  </data>
-  <data name="&gt;&gt;labelCV.Name" xml:space="preserve">
-    <value>labelCV</value>
-  </data>
-  <data name="&gt;&gt;labelCV.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelCV.Parent" xml:space="preserve">
-    <value>tabConsistency</value>
-  </data>
-  <data name="&gt;&gt;labelCV.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="textCVCutoff.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 41</value>
-  </data>
-  <data name="textCVCutoff.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="textCVCutoff.Size" type="System.Drawing.Size, System.Drawing">
-    <value>65, 20</value>
-  </data>
-  <data name="textCVCutoff.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
-  </data>
-  <data name="&gt;&gt;textCVCutoff.Name" xml:space="preserve">
-    <value>textCVCutoff</value>
-  </data>
-  <data name="&gt;&gt;textCVCutoff.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textCVCutoff.Parent" xml:space="preserve">
-    <value>tabConsistency</value>
-  </data>
-  <data name="&gt;&gt;textCVCutoff.ZOrder" xml:space="preserve">
-    <value>5</value>
   </data>
   <data name="tabConsistency.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>

@@ -314,26 +314,27 @@ namespace pwiz.Skyline.Model
                 listPepGroups = listPepGroupsFiltered;                
             }
             var refined = (SrmDocument)document.ChangeChildrenChecked(listPepGroups.ToArray(), true);
-            if (CVCutoff.HasValue)
+            if (CVCutoff.HasValue || QValueCutoff.HasValue)
             {
-                if (document.MeasuredResults.Chromatograms.Count < 2)
+                if (!document.Settings.HasResults || document.MeasuredResults.Chromatograms.Count < 2)
                 {
                     throw new Exception(
-                        @"The document does not contain enough replicates to use consistency settings.");
+                        Resources.RefinementSettings_Refine_The_document_must_contain_at_least_2_replicates_to_refine_based_on_consistency_);
                 }
 
-            if (document.Settings.HasResults)
                 if (NormalizationMethod == AreaCVNormalizationMethod.global_standards &&
                     !document.Settings.HasGlobalStandardArea)
                 {
                     // error
-                    throw new Exception(@"The document does not have a global standard type.");
+                    throw new Exception(Resources.RefinementSettings_Refine_The_document_does_not_have_a_global_standard_to_normalize_by_);
                 }
+
+                double cvcutoff = CVCutoff.HasValue ? CVCutoff.Value : double.NaN;
                 double qvalue = QValueCutoff.HasValue ? QValueCutoff.Value : double.NaN;
                 int minDetections = MinimumDetections.HasValue ? MinimumDetections.Value : -1;
                 int ratioIndex = GetLabelIndex(NormalizationLabelType, document);
-                var data = new AreaCVRefinementData(refined, new AreaCVRefinementSettings(CVCutoff.Value, qvalue, minDetections, NormalizationMethod, ratioIndex));
-                refined = data.RemoveAboveCVCuttoff(refined);
+                var data = new AreaCVRefinementData(refined, new AreaCVRefinementSettings(cvcutoff, qvalue, minDetections, NormalizationMethod, ratioIndex));
+                refined = data.RemoveAboveCVCutoff(refined);
             }
 
             return refined;
@@ -349,7 +350,7 @@ namespace pwiz.Skyline.Model
                 if (idx == -1)
                 {
                     // error
-                    throw new Exception(@"The document does not contain the given reference type.");
+                    throw new Exception(Resources.RefinementSettings_GetLabelIndex_The_document_does_not_contain_the_given_reference_type_);
                 }
                 return idx;
             }
