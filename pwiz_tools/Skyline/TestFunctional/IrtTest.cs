@@ -55,7 +55,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-//            RunIrtTest();
+            RunIrtTest();
             RunCalibrationTest();
         }
 
