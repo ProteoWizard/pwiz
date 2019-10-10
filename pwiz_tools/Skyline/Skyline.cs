@@ -3353,7 +3353,7 @@ namespace pwiz.Skyline
 
                     HashSet<Target> missingPeptides;
                     var newStandard = RCalcIrtStandard(out missingPeptides);
-                    if (oldStandard != newStandard)
+                    if (!ReferenceEquals(oldStandard, newStandard))
                         AddStandardsToDocument(newStandard, missingPeptides);
                 }
             }
