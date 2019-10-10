@@ -25890,6 +25890,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Mark transitions non-quantitative.
+        /// </summary>
+        public static string SkylineWindow_MarkQuantitative_Mark_transitions_non_quantitative {
+            get {
+                return ResourceManager.GetString("SkylineWindow_MarkQuantitative_Mark_transitions_non_quantitative", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mark transitions quantitative.
+        /// </summary>
+        public static string SkylineWindow_MarkQuantitative_Mark_transitions_quantitative {
+            get {
+                return ResourceManager.GetString("SkylineWindow_MarkQuantitative_Mark_transitions_quantitative", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failure attempting to modify the document..
         /// </summary>
         public static string SkylineWindow_ModifyDocument_Failure_attempting_to_modify_the_document {

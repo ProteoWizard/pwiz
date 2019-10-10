@@ -1215,6 +1215,7 @@ namespace pwiz.Skyline.Model.Lib
                 return null;
             }
             int fileId = _librarySourceFiles[iFile].Id;
+            bool anySequenceMatch = false;
             foreach (var item in LibraryEntriesWithSequences(peptideSequences))
             {
                 ExplicitPeakBounds peakBoundaries;
@@ -1222,6 +1223,19 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     return peakBoundaries;
                 }
+
+                if (item.PeakBoundariesByFileId.Any())
+                {
+                    // If the library has peak boundaries for this sequence in some other file, assume
+                    // that the peptide was just not found in this file.
+                    anySequenceMatch = true;
+                }
+            }
+
+            if (anySequenceMatch)
+            {
+                // If the library has 
+                return ExplicitPeakBounds.EMPTY;
             }
             return null;
         }
