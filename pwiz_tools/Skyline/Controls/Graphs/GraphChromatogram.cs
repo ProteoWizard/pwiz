@@ -231,11 +231,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             NameSet = name;
             _arrayChromInfo = null;
-//            // TODO(bspratt) - figure out what operations are needed to get window to repaint with correct chromatogram
             UpdateUI();
-//            Activate();
-//            Show();
-//            Focus();
         }
 
         public int CurveCount { get { return GraphPanes.Sum(pane=>GetCurves(pane).Count()); } }
@@ -658,7 +654,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>
         /// Returns the file path for the selected file of the groups.
         /// </summary>
-        private MsDataFileUri FilePath
+        public MsDataFileUri FilePath
         {
             get
             {

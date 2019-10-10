@@ -2551,6 +2551,9 @@ namespace pwiz.Skyline
                     // List is too long, re-purpose least recently used
                     graphChrom = _listGraphChrom[0];
                     graphChrom.ChangeChromatogram(name);
+                    graphChrom.Activate();
+                    graphChrom.Visible = true;
+                    graphChrom.Focus();
                 }
                 else
                 {
@@ -3032,6 +3035,14 @@ namespace pwiz.Skyline
             {
                 graphChromatogram.Hide();
             }
+        }
+
+        /// <summary>
+        /// For testing purposes 
+        /// </summary>
+        public void CloseAllChromatograms()
+        {
+            closeAllChromatogramsMenuItem_Click(null, null);
         }
 
         #endregion
