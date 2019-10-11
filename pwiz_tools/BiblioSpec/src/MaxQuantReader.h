@@ -204,7 +204,7 @@ private:
     map<string, MaxQuantModification> modBank_;   // full mod name -> delta mass
     map< MaxQuantModification::MAXQUANT_MOD_POSITION, vector<const MaxQuantModification*> > fixedModBank_;
     vector<MaxQuantLabels> labelBank_;
-    vector<double> K0_; // optionally parsed from evidence.txt
+    vector<double> inverseK0_; // optionally parsed from evidence.txt
     vector<double> CCS_; // optionally parsed from evidence.txt
 
     void initTargetColumns();

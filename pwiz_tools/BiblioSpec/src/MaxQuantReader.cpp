@@ -373,13 +373,13 @@ void MaxQuantReader::initEvidence()
         getline(evidence, line);
         boost::split(columns, line, boost::is_any_of("\t"));
         int col = 0;
-        int colK0 = -1;
+        int colInvK0 = -1;
         int colCCS = -1;
         for (vector<string>::iterator it = columns.begin(); it != columns.end(); ++it)
         {
-            if (*it == "K0")
+            if ((*it == "K0") || (*it == "1/K0")) // Column name changed to the more correct "1/K0" sometime between July and October 2019
             {
-                colK0 = col;
+                colInvK0 = col;
             }
             else if (*it == "CCS")
             {
@@ -387,9 +387,9 @@ void MaxQuantReader::initEvidence()
             }
             col++;
         }
-        if (colK0 < 0 && colCCS < 0)
+        if (colInvK0 < 0 && colCCS < 0)
         {
-            Verbosity::comment(V_DETAIL, "Did not find any ion mobility date in evidence.txt file.");
+            Verbosity::comment(V_DETAIL, "Did not find any ion mobility data in evidence.txt file.");
             return; // This file doesn't have what we're interested in
         }
 
@@ -399,8 +399,8 @@ void MaxQuantReader::initEvidence()
             if (line.size() == 0)
                 break;
             boost::split(columns, line, boost::is_any_of("\t"));
-            if (colK0 >= 0)
-                K0_.push_back(boost::lexical_cast<double>(columns[colK0]));
+            if (colInvK0 >= 0)
+                inverseK0_.push_back(boost::lexical_cast<double>(columns[colInvK0]));
             /* Some versions of MaxQuant are known to emit incorrect CCS values. Until we figure out how to tell them apart, best to just ignore. (bspratt July 2019)
             if (colCCS >= 0)
                 CCS_.push_back(boost::lexical_cast<double>(columns[colCCS]));
@@ -663,9 +663,9 @@ void MaxQuantReader::storeLine(MaxQuantLine& entry)
     curMaxQuantPSM_->charge = entry.charge;
     if (entry.evidenceID >= 0) // look for ion mobility info from evidence.txt file
     {
-        if (K0_.size() > entry.evidenceID)
+        if (inverseK0_.size() > entry.evidenceID)
         {
-            curMaxQuantPSM_->ionMobility = K0_[entry.evidenceID];
+            curMaxQuantPSM_->ionMobility = inverseK0_[entry.evidenceID];
             if (curMaxQuantPSM_->ionMobility != 0)
             {
                 curMaxQuantPSM_->ionMobilityType = IONMOBILITY_INVERSEREDUCED_VSECPERCM2;
