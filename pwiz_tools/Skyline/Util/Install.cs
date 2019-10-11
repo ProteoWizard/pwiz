@@ -18,7 +18,9 @@
  */
 using System;
 using System.Deployment.Application;
+using System.Diagnostics;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace pwiz.Skyline.Util
 {
@@ -82,13 +84,28 @@ namespace pwiz.Skyline.Util
 
         private static string GetVersion()
         {
+            // mostly copied from System.Windows.Forms.Application.ProductVersion reference source
             try
             {
-                if (!string.IsNullOrEmpty(Properties.Settings.Default.InstalledVersion))
+                string productVersion = null;
+
+                Assembly entryAssembly = Assembly.GetEntryAssembly();
+                if (entryAssembly != null)
                 {
-                    return Properties.Settings.Default.InstalledVersion;
+                    // custom attribute
+                    object[] attrs = entryAssembly.GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false);
+                    if (attrs != null && attrs.Length > 0)
+                    {
+                        productVersion = ((AssemblyInformationalVersionAttribute)attrs[0]).InformationalVersion;
+                    }
+                    else
+                    {
+                        // win32 version info
+                        productVersion = FileVersionInfo.GetVersionInfo(entryAssembly.Location).ProductVersion?.Trim();
+                    }
                 }
-                return ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
+
+                return productVersion ?? string.Empty;
             }
             catch (Exception)
             {
@@ -124,10 +141,10 @@ namespace pwiz.Skyline.Util
         {
             get
             {
-                return string.Format(@"{0}{1} {2}",
-                                     Program.Name,
-                                     (Is64Bit ? @" (64-bit)" : string.Empty),
-                                    (IsDeveloperInstall ? string.Empty : Version));
+                return string.Format(@"{0} ({1}-bit{2}) {3}",
+                                     Program.Name, (Is64Bit ? @"64" : @"32"),
+                                    (IsDeveloperInstall ? @" : developer build" : string.Empty),
+                                     Regex.Replace(Version, @"(\d+\.\d+\.\d+\.\d+)-(\S+)", "$1 ($2)"));
             } 
         }
     }
