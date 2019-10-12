@@ -33,8 +33,8 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     local year_2digit = [ MATCH "[0-9][0-9]([0-9][0-9])" : $(ymd) ] ;
 
     constant SKYLINE_YEAR : 19 ;
-    constant SKYLINE_ORDINAL : 1 ;
-    constant SKYLINE_BRANCH : 0 ;
+    constant SKYLINE_ORDINAL : 1 ; # A count of official releases made so far this year
+    constant SKYLINE_BRANCH : 1 ; # 0 - release, 1 - daily, 9 - feature complete daily
 
     # when releasing a patch for a previous year, the day-of-year component will be incremented by 365 for each year difference
     # (figuring out leap year here seems like overkill)
@@ -52,8 +52,8 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
 
     # generate AssemblyInfo.cs for executables
     generate-skyline-AssemblyInfo.cs "Skyline" : "Targeted Mass Spec Environment" : "Properties/AssemblyInfo.cs" ;
-    generate-skyline-AssemblyInfo.cs "SkylineCmd" : "Command-line access to Skyline Targeted Mass Spec Environment" : "SkylineCmd/Properties/AssemblyInfo.cs" ;
-    #generate-skyline-AssemblyInfo.cs "SkylineRunner" : "Command-line access to Skyline Targeted Mass Spec Environment" : "SkylineRunner/Properties/AssemblyInfo.cs" ;
+    generate-skyline-AssemblyInfo.cs "SkylineCmd" : "Command-line access to Skyline" : "SkylineCmd/Properties/AssemblyInfo.cs" ;
+    #generate-skyline-AssemblyInfo.cs "SkylineRunner" : "Command-line access to Skyline" : "SkylineRunner/Properties/AssemblyInfo.cs" ;
     generate-skyline-AssemblyInfo.cs "TestRunner" : "Command-line testing tool" : "TestRunner/Properties/AssemblyInfo.cs" ;
     generate-skyline-AssemblyInfo.cs "SkylineTester" : "Testing GUI" : "SkylineTester/Properties/AssemblyInfo.cs" ;
     generate-skyline-AssemblyInfo.cs "SkylineNightly" : "Nightly Test Runner" : "SkylineNightly/Properties/AssemblyInfo.cs" ;
