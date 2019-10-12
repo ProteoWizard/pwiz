@@ -94,6 +94,8 @@ namespace pwiz.Skyline.Util
                 {
                     // custom attribute
                     object[] attrs = entryAssembly.GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false);
+                    // Play it safe with a null check no matter what ReSharper thinks
+                    // ReSharper disable once ConditionIsAlwaysTrueOrFalse
                     if (attrs != null && attrs.Length > 0)
                     {
                         productVersion = ((AssemblyInformationalVersionAttribute)attrs[0]).InformationalVersion;
