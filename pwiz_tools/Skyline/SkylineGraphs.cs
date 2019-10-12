@@ -1170,10 +1170,7 @@ namespace pwiz.Skyline
                 prositLibMatchItem.Checked = Settings.Default.Prosit;
                 menuStrip.Items.Insert(iInsert++, prositLibMatchItem);
                 mirrorMenuItem.Checked = Settings.Default.LibMatchMirror;
-                // TODO: check if prosit is available here, otherwise if there is just a single
-                // spec lib, mirror plots wont be possible
-                if (GraphSpectrum.SelectionHasLibInfo)
-                    menuStrip.Items.Insert(iInsert++, mirrorMenuItem);
+                menuStrip.Items.Insert(iInsert++, mirrorMenuItem);
                 menuStrip.Items.Insert(iInsert++, toolStripSeparator61);
             }
 

@@ -53,7 +53,7 @@ namespace pwiz.Skyline.ToolsUI
 
         // For Prosit pinging
         private readonly SrmSettings _settingsNoMod;
-        private readonly PeptidePrecursorPair _pingInput;
+        private readonly PrositIntensityModel.PeptidePrecursorNCE _pingInput;
         public ToolOptionsUI(SrmSettings settings)
         {
             InitializeComponent();
@@ -72,7 +72,7 @@ namespace pwiz.Skyline.ToolsUI
             var peptide = new PeptideDocNode(pingPep);
             var precursor = new TransitionGroupDocNode(new TransitionGroup(pingPep, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light),
                 new TransitionDocNode[0]);
-            _pingInput = new PeptidePrecursorPair(peptide, precursor, 32);
+            _pingInput = new PrositIntensityModel.PeptidePrecursorNCE(peptide, precursor, 32);
             _settingsNoMod = settings.ChangePeptideModifications(
                 pm => new PeptideModifications(new StaticMod[0], new TypedModifications[0]));
 
@@ -100,10 +100,17 @@ namespace pwiz.Skyline.ToolsUI
 
             var iModels = PrositIntensityModel.Models.ToArray();
             var rtModels = PrositRetentionTimeModel.Models.ToArray();
-            var servers = new[] { PrositConstants.DEV_PROSIT_SERVER };
+            var servers = new[] { PrositResources.ToolOptionsUI_ToolOptionsUI_None, PrositConstants.DEV_PROSIT_SERVER };
+
+            prositServerCombo.Items.AddRange(servers);
             intensityModelCombo.Items.AddRange(iModels);
             iRTModelCombo.Items.AddRange(rtModels);
-            prositServerCombo.Items.AddRange(servers);
+            
+            prositServerStatusLabel.Text = string.Empty;
+            if (servers.Contains(Settings.Default.PrositServer))
+                prositServerCombo.SelectedItem = Settings.Default.PrositServer;
+            else
+                prositServerCombo.SelectedIndex = 0;
 
             if (iModels.Contains(Settings.Default.PrositIntensityModel))
                 intensityModelCombo.SelectedItem = Settings.Default.PrositIntensityModel;
@@ -114,12 +121,6 @@ namespace pwiz.Skyline.ToolsUI
                 Enumerable.Range(PrositConstants.MIN_NCE, PrositConstants.MAX_NCE - PrositConstants.MIN_NCE + 1).Select(c => (object) c)
                     .ToArray());
             ceCombo.SelectedItem = Settings.Default.PrositNCE;
-
-            prositServerStatusLabel.Text = string.Empty;
-            if (servers.Contains(Settings.Default.PrositServer))
-            {
-                prositServerCombo.SelectedItem = Settings.Default.PrositServer;
-            }
         }
 
         private class PrositPingRequest : PrositHelpers.PrositRequest
@@ -130,23 +131,11 @@ namespace pwiz.Skyline.ToolsUI
                 null, null, settings, peptide, precursor, nce, updateCallback)
             {
                 Client = PrositPredictionClient.CreateClient(server);
-                IgnoreEx(() => IntensityModel = PrositIntensityModel.GetInstance(ms2Model));
-                IgnoreEx(() => RTModel = PrositRetentionTimeModel.GetInstance(rtModel));
+                IntensityModel = PrositIntensityModel.GetInstance(ms2Model);
+                RTModel = PrositRetentionTimeModel.GetInstance(rtModel);
 
                 if (IntensityModel == null && RTModel == null)
                     throw new PrositNotConfiguredException();
-            }
-
-            private void IgnoreEx(Action act)
-            {
-                try
-                {
-                    act();
-                }
-                catch
-                {
-                    // ignored
-                }
             }
 
             public override PrositHelpers.PrositRequest Predict()
@@ -160,24 +149,23 @@ namespace pwiz.Skyline.ToolsUI
                         try
                         {
                             ms = IntensityModel.PredictSingle(Client, Settings,
-                                new PeptidePrecursorPair(Peptide, Precursor, NCE), _tokenSource.Token);
-                        }
-                        catch(PrositException ex)
-                        {
-                            // Pass up cancel. And if the RTModel is null, we also can't proceed
-                            if (ex.InnerException is RpcException rpcEx && rpcEx.StatusCode == StatusCode.Cancelled ||
-                                RTModel == null)
-                                throw;
+                                new PrositIntensityModel.PeptidePrecursorNCE(Peptide, Precursor, NCE), _tokenSource.Token);
 
                             iRTMap = RTModel.PredictSingle(Client,
                                 Settings,
                                 Peptide, _tokenSource.Token);
                         }
+                        catch(PrositException ex)
+                        {
+                            // Pass up cancel. And if the RTModel is null, we also can't proceed
+                            if (ex.InnerException is RpcException rpcEx && rpcEx.StatusCode == StatusCode.Cancelled)
+                                throw;
+                        }
 
                         var spectrumInfo = ms == null ? null : new SpectrumInfoProsit(ms, Precursor, NCE);
                         var irt = iRTMap?[Peptide];
                         Spectrum = new SpectrumDisplayInfo(
-                            spectrumInfo, irt);
+                            spectrumInfo, Precursor, irt);
                     }
                     catch (PrositException ex)
                     {
@@ -204,7 +192,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public enum ServerStatus
         {
-            UNAVAILABLE, QUERYING, AVAILABLE, 
+            UNAVAILABLE, QUERYING, AVAILABLE, SELECT_SERVER, SELECT_MODEL
         }
 
         public ServerStatus PrositServerStatus { get; private set; }
@@ -227,6 +215,14 @@ namespace pwiz.Skyline.ToolsUI
                     prositServerStatusLabel.Text = PrositResources.ToolOptionsUI_ToolOptionsUI_Server_online;
                     prositServerStatusLabel.ForeColor = Color.Green;
                     break;
+                case ServerStatus.SELECT_SERVER:
+                    prositServerStatusLabel.Text = PrositResources.ToolOptionsUI_SetServerStatus_Select_a_server;
+                    prositServerStatusLabel.ForeColor = Color.Red;
+                    break;
+                case ServerStatus.SELECT_MODEL:
+                    prositServerStatusLabel.Text = PrositResources.ToolOptionsUI_SetServerStatus_Select_both_models;
+                    prositServerStatusLabel.ForeColor = Color.Red;
+                    break;
             }
 
             PrositServerStatus = status;
@@ -239,6 +235,19 @@ namespace pwiz.Skyline.ToolsUI
 
             try
             {
+                if (prositServerCombo.SelectedIndex == 0)
+                {
+                    _pingRequest?.Cancel();
+                    SetServerStatus(ServerStatus.SELECT_SERVER);
+                    return;
+                }
+                else if (PrositIntensityModelCombo == null || PrositRetentionTimeModelCombo == null)
+                {
+                    _pingRequest?.Cancel();
+                    SetServerStatus(ServerStatus.SELECT_MODEL);
+                    return;
+                }
+
                 var pr = new PrositPingRequest(PrositServerCombo, PrositIntensityModelCombo,
                     PrositRetentionTimeModelCombo,
                     _settingsNoMod, _pingInput.NodePep, _pingInput.NodeGroup, _pingInput.NCE.Value,
@@ -309,7 +318,7 @@ namespace pwiz.Skyline.ToolsUI
 
                 Settings.Default.PrositIntensityModel = (string) intensityModelCombo.SelectedItem;
                 Settings.Default.PrositRetentionTimeModel = (string)iRTModelCombo.SelectedItem;
-                Settings.Default.PrositServer = (string) prositServerCombo.SelectedItem;
+                Settings.Default.PrositServer = prositServerCombo.SelectedIndex == 0 ? null : (string) prositServerCombo.SelectedItem;
                 Settings.Default.PrositNCE = (int) ceCombo.SelectedItem;
             }
             base.OnClosed(e);
@@ -460,6 +469,11 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         private void iRTModelCombo_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateServerStatus();
+        }
+
+        private void ToolOptionsUI_Shown(object sender, EventArgs e)
         {
             UpdateServerStatus();
         }

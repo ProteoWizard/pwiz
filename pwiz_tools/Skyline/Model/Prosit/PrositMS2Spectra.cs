@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Model.Prosit
 {
     public class PrositMS2Spectra
     {
-        public PrositMS2Spectra(SrmSettings settings, IList<PeptidePrecursorPair> peptidePrecursorPairs, PrositIntensityModel.PrositIntensityOutput prositIntensityOutput)
+        public PrositMS2Spectra(SrmSettings settings, IList<PrositIntensityModel.PeptidePrecursorNCE> peptidePrecursorPairs, PrositIntensityModel.PrositIntensityOutput prositIntensityOutput)
         {
             Spectra = new PrositMS2Spectrum[peptidePrecursorPairs.Count];
             for (int i = 0; i < peptidePrecursorPairs.Count; ++i)
@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Model.Prosit
 
         public PrositMS2Spectrum GetSpectrum(TransitionGroupDocNode precursor)
         {
-            return Spectra.FirstOrDefault(s => s.PeptidePrecursorPair.NodeGroup.EqualsId(precursor));
+            return Spectra.FirstOrDefault(s => s.PeptidePrecursorNCE.NodeGroup.EqualsId(precursor));
         }
 
         public PrositMS2Spectrum[] Spectra { get; private set; }
@@ -46,12 +46,12 @@ namespace pwiz.Skyline.Model.Prosit
 
     public class PrositMS2Spectrum : IEquatable<PrositMS2Spectrum>
     {
-        public PrositMS2Spectrum(SrmSettings settings, PeptidePrecursorPair peptidePrecursorPair,
+        public PrositMS2Spectrum(SrmSettings settings, PrositIntensityModel.PeptidePrecursorNCE peptidePrecursorNCE,
             int precursorIndex, PrositIntensityModel.PrositIntensityOutput prositIntensityOutput, IsotopeLabelType labelTypeOverride = null)
         {
-            PeptidePrecursorPair = peptidePrecursorPair;
-            var precursor = peptidePrecursorPair.NodeGroup;
-            var peptide = peptidePrecursorPair.NodePep;
+            PeptidePrecursorNCE = peptidePrecursorNCE;
+            var precursor = peptidePrecursorNCE.NodeGroup;
+            var peptide = peptidePrecursorNCE.NodePep;
 
             var calc = settings.GetFragmentCalc(IsotopeLabelType.light, peptide.ExplicitMods);
             var ionTable = calc.GetFragmentIonMasses(peptide.Target); // TODO: get mods and pass them as explicit mods above?
@@ -80,7 +80,7 @@ namespace pwiz.Skyline.Model.Prosit
 
         public bool Equals(PrositMS2Spectrum other)
         {
-            return other != null && PeptidePrecursorPair.Equals(other.PeptidePrecursorPair) &&
+            return other != null && PeptidePrecursorNCE.Equals(other.PeptidePrecursorNCE) &&
                    ArrayUtil.EqualsDeep(SpectrumPeaks.Peaks, other.SpectrumPeaks.Peaks);
         }
 
@@ -95,7 +95,7 @@ namespace pwiz.Skyline.Model.Prosit
             for (var c = 0; c < PrositConstants.IONS_PER_RESIDUE / 2; ++c)
             {
                 // Not a possible charge
-                if (PeptidePrecursorPair.NodeGroup.PrecursorCharge <= c)
+                if (PeptidePrecursorNCE.NodeGroup.PrecursorCharge <= c)
                     break;
 
                 result.Add(new SpectrumPeaksInfo.MI
@@ -108,15 +108,15 @@ namespace pwiz.Skyline.Model.Prosit
             return result;
         }
 
-        public PeptidePrecursorPair PeptidePrecursorPair { get; private set; }
+        public PrositIntensityModel.PeptidePrecursorNCE PeptidePrecursorNCE { get; private set; }
         public SpectrumPeaksInfo SpectrumPeaks { get; private set; }
 
         public SpectrumMzInfo SpecMzInfo
         {
             get
             {
-                var peptide = PeptidePrecursorPair.NodePep;
-                var precursor = PeptidePrecursorPair.NodeGroup;
+                var peptide = PeptidePrecursorNCE.NodePep;
+                var precursor = PeptidePrecursorNCE.NodeGroup;
                 SpectrumMzInfo info = new SpectrumMzInfo();
                 info.SpectrumPeaks = SpectrumPeaks;
                 info.IonMobility = IonMobilityAndCCS.EMPTY;

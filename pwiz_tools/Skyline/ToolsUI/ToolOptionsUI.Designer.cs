@@ -38,18 +38,6 @@ namespace pwiz.Skyline.ToolsUI
             this.listBoxRemoteAccounts = new System.Windows.Forms.ListBox();
             this.lblChorusAccounts = new System.Windows.Forms.Label();
             this.btnEditChorusAccountList = new System.Windows.Forms.Button();
-            this.tabLanguage = new System.Windows.Forms.TabPage();
-            this.labelDisplayLanguage = new System.Windows.Forms.Label();
-            this.listBoxLanguages = new System.Windows.Forms.ListBox();
-            this.tabMisc = new System.Windows.Forms.TabPage();
-            this.btnResetSettings = new System.Windows.Forms.Button();
-            this.comboCompactFormatOption = new System.Windows.Forms.ComboBox();
-            this.lblCompactDocumentFormat = new System.Windows.Forms.Label();
-            this.checkBoxShowWizard = new System.Windows.Forms.CheckBox();
-            this.tabDisplay = new System.Windows.Forms.TabPage();
-            this.comboColorScheme = new System.Windows.Forms.ComboBox();
-            this.label1 = new System.Windows.Forms.Label();
-            this.powerOfTenCheckBox = new System.Windows.Forms.CheckBox();
             this.tabProsit = new System.Windows.Forms.TabPage();
             this.ceLabel = new System.Windows.Forms.Label();
             this.ceCombo = new System.Windows.Forms.ComboBox();
@@ -62,17 +50,29 @@ namespace pwiz.Skyline.ToolsUI
             this.prositServerCombo = new System.Windows.Forms.ComboBox();
             this.prositDescrLabel = new System.Windows.Forms.LinkLabel();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.tabLanguage = new System.Windows.Forms.TabPage();
+            this.labelDisplayLanguage = new System.Windows.Forms.Label();
+            this.listBoxLanguages = new System.Windows.Forms.ListBox();
+            this.tabMisc = new System.Windows.Forms.TabPage();
+            this.btnResetSettings = new System.Windows.Forms.Button();
+            this.comboCompactFormatOption = new System.Windows.Forms.ComboBox();
+            this.lblCompactDocumentFormat = new System.Windows.Forms.Label();
+            this.checkBoxShowWizard = new System.Windows.Forms.CheckBox();
+            this.tabDisplay = new System.Windows.Forms.TabPage();
+            this.comboColorScheme = new System.Windows.Forms.ComboBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.powerOfTenCheckBox = new System.Windows.Forms.CheckBox();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl.SuspendLayout();
             this.tabPanorama.SuspendLayout();
             this.tabRemote.SuspendLayout();
+            this.tabProsit.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.tabLanguage.SuspendLayout();
             this.tabMisc.SuspendLayout();
             this.tabDisplay.SuspendLayout();
-            this.tabProsit.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
             // tabControl
@@ -340,20 +340,21 @@ namespace pwiz.Skyline.ToolsUI
             this.MinimizeBox = false;
             this.Name = "ToolOptionsUI";
             this.ShowInTaskbar = false;
+            this.Shown += new System.EventHandler(this.ToolOptionsUI_Shown);
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.tabControl.ResumeLayout(false);
             this.tabPanorama.ResumeLayout(false);
             this.tabPanorama.PerformLayout();
             this.tabRemote.ResumeLayout(false);
             this.tabRemote.PerformLayout();
+            this.tabProsit.ResumeLayout(false);
+            this.tabProsit.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.tabLanguage.ResumeLayout(false);
             this.tabMisc.ResumeLayout(false);
             this.tabMisc.PerformLayout();
             this.tabDisplay.ResumeLayout(false);
             this.tabDisplay.PerformLayout();
-            this.tabProsit.ResumeLayout(false);
-            this.tabProsit.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
 
         }

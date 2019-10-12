@@ -486,12 +486,6 @@
   <data name="addIRTDatabaseContextMenuItem.Text" xml:space="preserve">
     <value>Add iRT &amp;Database...</value>
   </data>
-  <data name="addPrositToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>383, 46</value>
-  </data>
-  <data name="addPrositToolStripMenuItem.Text" xml:space="preserve">
-    <value>Add &amp;Prosit...</value>
-  </data>
   <data name="contextMenuAdd.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 70</value>
   </data>
@@ -779,12 +773,6 @@
   </data>
   <data name="&gt;&gt;columnLibraryIrt.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;addPrositToolStripMenuItem.Name" xml:space="preserve">
-    <value>addPrositToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;addPrositToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditIrtCalcDlg</value>

@@ -149,4 +149,16 @@
   <data name="ToolOptionsUI_UpdateServerStatus_Querying_server___" xml:space="preserve">
     <value>Querying server...</value>
   </data>
+  <data name="ToolOptionsUI_ToolOptionsUI_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="ToolOptionsUI_SetServerStatus_Select_a_server" xml:space="preserve">
+    <value>Select a server</value>
+  </data>
+  <data name="ToolOptionsUI_SetServerStatus_Select_both_models" xml:space="preserve">
+    <value>Select both models</value>
+  </data>
+  <data name="GraphSpectrum_UpdateUI_No_spectral_library_match" xml:space="preserve">
+    <value>No spectral library match</value>
+  </data>
 </root>

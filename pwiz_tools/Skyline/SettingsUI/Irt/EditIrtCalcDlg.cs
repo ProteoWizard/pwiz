@@ -921,17 +921,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 }
             }
 
-            public void AddProsit()
-            {
-                /*var ps = new PrositService(...); // Get from settings
-                var iRTMap = ps.PredictiRTs(Program.ActiveDocumentUI.Settings, Program.ActiveDocumentUI.Peptides.ToArray());
-                var iRTAverages = RCalcIrt.ProcessRetentionTimes(new NopProgressMonitor(),
-                    new[] { new PrositIRTProvider(Program.ActiveDocumentUI.Settings, iRTMap, "Prosit Calc", ps) }, 1,
-                    IrtStandard.CIRT_SHORT.Peptides.ToArray(),
-                    iRTMap.Select(kvp => new DbIrtPeptide(kvp.Key.ModifiedTarget, kvp.Value, false, null)).ToArray());
-                AddToLibrary(iRTAverages);*/
-            }
-
             public void AddIrtDatabase()
             {
                 var irtCalcs = Settings.Default.RTScoreCalculatorList.Where(calc => calc is RCalcIrt).Cast<RCalcIrt>();
@@ -1337,11 +1326,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     LibraryPeptideList.Remove(libraryPeptide);
                 }
             }
-        }
-
-        private void addPrositToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            _gridViewLibraryDriver.AddProsit();
         }
     }
 }

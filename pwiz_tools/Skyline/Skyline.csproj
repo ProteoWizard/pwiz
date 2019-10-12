@@ -339,6 +339,7 @@
     <Compile Include="Controls\ImageListBox.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Controls\PrositUIHelpers.cs" />
     <Compile Include="Controls\TargetColumn.cs" />
     <Compile Include="FileUI\ExportAnnotationsDlg.cs">
       <SubType>Form</SubType>

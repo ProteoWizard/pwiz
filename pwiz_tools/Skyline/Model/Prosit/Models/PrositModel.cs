@@ -306,7 +306,6 @@ namespace pwiz.Skyline.Model.Prosit.Models
             foreach (var prositIn in inputsList)
             {
                 var prositOutput = Predict(predictionClient, prositIn, token);
-                // TODO: break?
                 prositOutputAll = prositOutputAll.MergeOutputs(prositOutput);
 
                 processed += prositIn.InputRows.Count;
@@ -351,10 +350,11 @@ namespace pwiz.Skyline.Model.Prosit.Models
                 {
                     try
                     {
+                        var skyIn = new PrositIntensityModel.PeptidePrecursorNCE(Peptide,
+                            Precursor, NCE);
                         var massSpectrum = IntensityModel.PredictSingle(Client,
-                            Settings,
-                            new PeptidePrecursorPair(Peptide, Precursor,
-                                NCE), _tokenSource.Token);
+                            Settings, skyIn,
+                            _tokenSource.Token);
                         var iRT = RTModel.PredictSingle(Client,
                             Settings,
                             Peptide, _tokenSource.Token);
@@ -362,6 +362,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
                             new SpectrumInfoProsit(massSpectrum, Precursor,
                                 NCE),
                             // ReSharper disable once AssignNullToNotNullAttribute
+                            Precursor,
                             iRT[Peptide]);
                     }
                     catch (PrositException ex)
@@ -543,10 +544,10 @@ namespace pwiz.Skyline.Model.Prosit.Models
         /// slows down constructing inputs (for larger data sets with unknown mods (and aa's)significantly,
         /// which is why PrositExceptions (only) are set as an output parameter and null is returned.
         /// </summary>
-        public static int[] EncodeSequence(SrmSettings settings, PeptideDocNode peptide, IsotopeLabelType label, out PrositException exception)
+        public static int[] EncodeSequence(SrmSettings settings, ISequenceContainer peptide, IsotopeLabelType label, out PrositException exception)
         {
-            if (!peptide.IsProteomic)
-                throw new PrositSmallMoleculeException(peptide.Target);
+            if (!peptide.Target.IsProteomic)
+                throw new PrositSmallMoleculeException(peptide.ModifiedTarget);
 
             var sequence = peptide.Target.Sequence;
             if (sequence.Length > PrositConstants.PEPTIDE_SEQ_LEN) {

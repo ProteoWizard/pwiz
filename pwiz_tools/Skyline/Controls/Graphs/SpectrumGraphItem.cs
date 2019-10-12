@@ -52,30 +52,31 @@ namespace pwiz.Skyline.Controls.Graphs
             return ((TransitionNode != null) && (predictedMz == TransitionNode.Mz));
         }
 
+        public static string GetTitle(TransitionGroupDocNode transitionGroupDocNode, IsotopeLabelType labelType)
+        {
+            string libraryNamePrefix = string.Empty;
+            //if (!string.IsNullOrEmpty(libraryNamePrefix))
+            //    libraryNamePrefix += @" - ";
+
+            TransitionGroup transitionGroup = transitionGroupDocNode.TransitionGroup;
+            string sequence = transitionGroup.Peptide.IsCustomMolecule
+                ? transitionGroupDocNode.CustomMolecule.DisplayName
+                : transitionGroup.Peptide.Target.Sequence;
+            var charge = transitionGroup.PrecursorAdduct.ToString(); // Something like "2" or "-3" for protonation, or "[M+Na]" for small molecules
+            if (transitionGroup.Peptide.IsCustomMolecule)
+            {
+                return labelType.IsLight
+                    ? string.Format(@"{0}{1}{2}", libraryNamePrefix, transitionGroup.Peptide.CustomMolecule.DisplayName, charge)
+                    : string.Format(@"{0}{1}{2} ({3})", libraryNamePrefix, sequence, charge, labelType);
+            }
+            return labelType.IsLight
+                ? string.Format(Resources.SpectrumGraphItem_Title__0__1__Charge__2__, libraryNamePrefix, sequence, charge)
+                : string.Format(Resources.SpectrumGraphItem_Title__0__1__Charge__2__3__, libraryNamePrefix, sequence, charge, labelType);
+        }
+
         public override string Title
         {
-            get
-            {
-                string libraryNamePrefix = string.Empty;
-                //if (!string.IsNullOrEmpty(libraryNamePrefix))
-                //    libraryNamePrefix += @" - ";
-
-                TransitionGroup transitionGroup = TransitionGroupNode.TransitionGroup;
-                string sequence = transitionGroup.Peptide.IsCustomMolecule
-                    ? TransitionGroupNode.CustomMolecule.DisplayName
-                    : transitionGroup.Peptide.Target.Sequence;
-                var charge = transitionGroup.PrecursorAdduct.ToString(); // Something like "2" or "-3" for protonation, or "[M+Na]" for small molecules
-                var labelType = SpectrumInfo.LabelType;
-                if (transitionGroup.Peptide.IsCustomMolecule)
-                {
-                    return labelType.IsLight
-                        ? string.Format(@"{0}{1}{2}", libraryNamePrefix, transitionGroup.Peptide.CustomMolecule.DisplayName, charge)
-                        : string.Format(@"{0}{1}{2} ({3})", libraryNamePrefix, sequence, charge, labelType);
-                }
-                return labelType.IsLight
-                    ? string.Format(Resources.SpectrumGraphItem_Title__0__1__Charge__2__, libraryNamePrefix, sequence, charge)
-                    : string.Format(Resources.SpectrumGraphItem_Title__0__1__Charge__2__3__, libraryNamePrefix, sequence, charge, labelType);
-            }
+            get { return GetTitle(TransitionGroupNode, SpectrumInfo.LabelType); }
         }
     }
     

@@ -27,7 +27,6 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
@@ -35,7 +34,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
-    public class PeptideDocNode : DocNodeParent
+    public class PeptideDocNode : DocNodeParent, ISequenceContainer
     {
         public static readonly StandardType STANDARD_TYPE_IRT = StandardType.IRT;
         public static readonly StandardType STANDARD_TYPE_QC = StandardType.QC;
@@ -1946,34 +1945,16 @@ namespace pwiz.Skyline.Model
         #endregion
     }
 
-    public class PeptidePrecursorPair : SkylineInputRow
+    public class PeptidePrecursorPair
     {
-        public PeptidePrecursorPair(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, int? nce = null)
+        public PeptidePrecursorPair(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
         {
             NodePep = nodePep;
             NodeGroup = nodeGroup;
-            NCE = nce;
         }
 
         public PeptideDocNode NodePep { get; private set; }
         public TransitionGroupDocNode NodeGroup { get; private set; }
-        public int? NCE { get; private set; }
-
-        public PeptidePrecursorPair WithNCE(int nce)
-        {
-            return new PeptidePrecursorPair(NodePep, NodeGroup, nce);
-        }
-
-        public override bool Equals(SkylineInputRow other)
-        {
-            if (other == null)
-                return false;
-            if (!(other is PeptidePrecursorPair peptidePrecursorPair))
-                return false;
-            return ReferenceEquals(NodePep, peptidePrecursorPair.NodePep)
-                   && ReferenceEquals(NodeGroup, peptidePrecursorPair.NodeGroup)
-                   && NCE == peptidePrecursorPair.NCE;
-        }
     }
 
     public class ExplicitRetentionTimeInfo : IAuditLogComparable

@@ -3369,6 +3369,27 @@ namespace pwiz.Skyline
             UpdateGraphPanes();
         }
 
+        public static List<PrositIntensityModel.PeptidePrecursorNCE> ReadStandardPeptides(IrtStandard standard)
+        {
+            var standardDocReader = standard.DocumentReader;
+            if (standardDocReader == null)
+                return null;
+
+            var ser = new XmlSerializer(typeof(SrmDocument));
+            var docImport = (SrmDocument)ser.Deserialize(standardDocReader);
+            var peps = docImport.Peptides.ToList();
+            var precs = peps.Select(p => p.TransitionGroups.First());
+            /*for (var i = 0; i < peps.Count; i++)
+            {
+                var modSeq = ModifiedSequence.GetModifiedSequence(docImport.Settings, peps[i], IsotopeLabelType.light);
+                peps[i] = peps[i].ChangeExplicitMods(new ExplicitMods(peps[i].Peptide,
+                    modSeq.ExplicitMods.Select(m => m.ExplicitMod).ToArray(),
+                    new TypedExplicitModifications[0]));
+            }*/
+            return Enumerable.Zip(peps, precs,
+                (pep, prec) => new PrositIntensityModel.PeptidePrecursorNCE(pep, prec)).ToList();
+        }
+
         private void AddStandardsToDocument(IrtStandard standard, ICollection<Target> missingPeptides)
         {
             var standardDocReader = standard.DocumentReader;
@@ -5682,6 +5703,10 @@ namespace pwiz.Skyline
         private void prositLibMatchItem_Click(object sender, EventArgs e)
         {
             prositLibMatchItem.Checked = !prositLibMatchItem.Checked;
+
+            if (prositLibMatchItem.Checked)
+                PrositUIHelpers.CheckPrositSettings(this, this);
+
             _graphSpectrumSettings.Prosit = prositLibMatchItem.Checked;
         }
 

@@ -51,7 +51,7 @@ namespace pwiz.SkylineTestFunctional
         private bool RecordData { get { return false; } }
 
 
-        public static PrositQuery PING_QUERY = new PrositIntensityQuery(
+        public static PrositQuery PING_QUERY_MS2 = new PrositIntensityQuery(
             new[]
             {
                 new PrositIntensityInput("PING", 0.3200f, 1)
@@ -92,6 +92,13 @@ namespace pwiz.SkylineTestFunctional
                 }
             }
         );
+
+        public static PrositQuery PING_QUERY_IRT = new PrositRetentionTimeQuery(
+            new[]
+            {
+                "PING"
+            },
+            new[] {0.0f});
 
         private static List<PrositQuery> QUERIES = new List<PrositQuery>(new PrositQuery[] {
             new PrositIntensityQuery(
@@ -1403,7 +1410,7 @@ namespace pwiz.SkylineTestFunctional
             // Extract spectrum and rt info from the library and store it a way that
             // allows us to verify the spectra easily
             var spectrumDisplayInfos = new SpectrumDisplayInfo[precursorCount];
-            var peptidesRepeat = new PeptidePrecursorPair[precursorCount];
+            var peptidesRepeat = new PrositIntensityModel.PeptidePrecursorNCE[precursorCount];
             var peptides = SkylineWindow.Document.Peptides.ToArray();
             var idx = 0;
             var noMatchCount = 0;
@@ -1421,10 +1428,10 @@ namespace pwiz.SkylineTestFunctional
                     }
                     else
                     {
-                        spectrumDisplayInfos[idx] = new SpectrumDisplayInfo(spectra[0], spectra[0].RetentionTime);
+                        spectrumDisplayInfos[idx] = new SpectrumDisplayInfo(spectra[0], precursors[j], spectra[0].RetentionTime);
                     }
 
-                    peptidesRepeat[idx++] = new PeptidePrecursorPair(peptides[i], precursors[j]);
+                    peptidesRepeat[idx++] = new PrositIntensityModel.PeptidePrecursorNCE(peptides[i], precursors[j]);
                 }
             }
 
@@ -1510,7 +1517,7 @@ namespace pwiz.SkylineTestFunctional
                 WaitForPrositSpectrum(selection.Precursor, baseCE + i);
 
                 if (!RecordData)
-                    AssertIntensityAndIRTSpectrumCorrect((PeptidePrecursorPair)selection, client.QueryIndex);
+                    AssertIntensityAndIRTSpectrumCorrect((PrositIntensityModel.PeptidePrecursorNCE)selection, client.QueryIndex);
 
                 RunUI(() =>
                 {
@@ -1527,7 +1534,7 @@ namespace pwiz.SkylineTestFunctional
                 WaitForPrositSpectrum(selection.Precursor, baseCE + i + 1);
 
                 if (!RecordData)
-                    AssertIntensityAndIRTSpectrumCorrect((PeptidePrecursorPair)selection, client.QueryIndex);
+                    AssertIntensityAndIRTSpectrumCorrect((PrositIntensityModel.PeptidePrecursorNCE)selection, client.QueryIndex);
             }
         }
 
@@ -1544,7 +1551,7 @@ namespace pwiz.SkylineTestFunctional
             return new PeptidePrecursorPair(pep, precursor);
         }*/
 
-        public void AssertIntensityAndIRTSpectrumCorrect(PeptidePrecursorPair pair, int index)
+        public void AssertIntensityAndIRTSpectrumCorrect(PrositIntensityModel.PeptidePrecursorNCE peptidePrecursorNCE, int index)
         {
             // We are interested in the queries just processed
             index -= 2;
@@ -1559,7 +1566,7 @@ namespace pwiz.SkylineTestFunctional
             // Get queries and make sure they match the actual spectra
             var intensityQuery = QUERIES.ElementAt(index) as PrositIntensityQuery;
             Assert.IsNotNull(intensityQuery);
-            intensityQuery.AssertMatchesSpectrum(pair, spectrumDisplayInfo);
+            intensityQuery.AssertMatchesSpectrum(peptidePrecursorNCE, spectrumDisplayInfo);
 
             var rtQuery = QUERIES.ElementAt(index + 1) as PrositRetentionTimeQuery;
             Assert.IsNotNull(rtQuery);
@@ -1572,7 +1579,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 if (!SkylineWindow.GraphSpectrum.HasSpectrum)
                     return false;
-                var info = SkylineWindow.GraphSpectrum.PrositSpectrum.SpectrumInfo as SpectrumInfoProsit;
+                var info = SkylineWindow.GraphSpectrum.PrositSpectrum?.SpectrumInfo as SpectrumInfoProsit;
                 if (info == null)
                     return false;
                 return ReferenceEquals(info.Precursor, precursor) && info.NCE == nce;
@@ -1602,7 +1609,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => Assert.AreNotSame(SkylineWindow.SelectedSpectrum, SkylineWindow.GraphSpectrum.PrositSpectrum));
 
                 if (!RecordData)
-                    AssertIntensityAndIRTSpectrumCorrect((PeptidePrecursorPair)selection, client.QueryIndex);
+                    AssertIntensityAndIRTSpectrumCorrect((PrositIntensityModel.PeptidePrecursorNCE)selection, client.QueryIndex);
             }
         }
     }
@@ -1776,19 +1783,19 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.AreEqualDeep(_inputs.Select(i => i.PrecursorCharge).ToArray(), PrositHelpers.DecodeCharges(charges));
         }
 
-        public void AssertMatchesSpectra(PeptidePrecursorPair[] pairs, SpectrumDisplayInfo[] spectrumDisplayInfos)
+        public void AssertMatchesSpectra(PrositIntensityModel.PeptidePrecursorNCE[] peptidePrecursorNCEs, SpectrumDisplayInfo[] spectrumDisplayInfos)
         {
             for (int i = 0; i < _inputs.Length; ++i)
                 if (spectrumDisplayInfos[i] != null)
-                    AssertMatchesSpectrum(pairs[i], _inputs[i], _spectra[i], spectrumDisplayInfos[i]);
+                    AssertMatchesSpectrum(peptidePrecursorNCEs[i], _inputs[i], _spectra[i], spectrumDisplayInfos[i]);
         }
 
-        public void AssertMatchesSpectrum(PeptidePrecursorPair pair, SpectrumDisplayInfo spectrumDisplayInfo)
+        public void AssertMatchesSpectrum(PrositIntensityModel.PeptidePrecursorNCE peptidePrecursorNCE, SpectrumDisplayInfo spectrumDisplayInfo)
         {
-            AssertMatchesSpectrum(pair, _inputs[0], _spectra[0], spectrumDisplayInfo);
+            AssertMatchesSpectrum(peptidePrecursorNCE, _inputs[0], _spectra[0], spectrumDisplayInfo);
         }
 
-        public static void AssertMatchesSpectrum(PeptidePrecursorPair pair, PrositIntensityInput input, float[] spectrum, SpectrumDisplayInfo spectrumDisplayInfo)
+        public static void AssertMatchesSpectrum(PrositIntensityModel.PeptidePrecursorNCE peptidePrecursorNCE, PrositIntensityInput input, float[] spectrum, SpectrumDisplayInfo spectrumDisplayInfo)
         {
             Assert.IsNotNull(spectrumDisplayInfo);
             Assert.AreEqual(spectrumDisplayInfo.Name, "Prosit");
@@ -1813,7 +1820,7 @@ namespace pwiz.SkylineTestFunctional
 
             var fakePrositOutput = new PrositIntensityModel.PrositIntensityOutput(fakePrositOutputTensors);
             var ms2Spectrum = new PrositMS2Spectrum(Program.MainWindow.Document.Settings,
-                pair.WithNCE((int) (input.NormalizedCollisionEnergy * 100.0f)), 0, fakePrositOutput,
+                peptidePrecursorNCE.WithNCE((int) (input.NormalizedCollisionEnergy * 100.0f)), 0, fakePrositOutput,
                 spectrumDisplayInfo.SpectrumInfo is SpectrumInfoLibrary ? IsotopeLabelType.light : null);
 
             // Compare the spectra
@@ -1943,13 +1950,23 @@ namespace pwiz.SkylineTestFunctional
         {
             try
             {
-                PrositSkylineIntegrationTest.PING_QUERY.AssertMatchesQuery(request);
-                // If this is a ping request, silently return and don't log
-                return PrositSkylineIntegrationTest.PING_QUERY.Response;
+                PrositSkylineIntegrationTest.PING_QUERY_MS2.AssertMatchesQuery(request);
+                // If this is a ping ms2 request, silently return and don't log
+                return PrositSkylineIntegrationTest.PING_QUERY_MS2.Response;
             }
             catch(AssertFailedException)
             {
-                // ignored
+                try
+                {
+                    PrositSkylineIntegrationTest.PING_QUERY_IRT.AssertMatchesQuery(request);
+                    // If this is a ping irt request, silently return and don't log
+                    return PrositSkylineIntegrationTest.PING_QUERY_IRT.Response;
+                }
+                catch
+                {
+                    // ignore
+                }
+
             }
 
             // Logging mode

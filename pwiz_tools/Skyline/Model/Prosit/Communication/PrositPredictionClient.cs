@@ -59,8 +59,8 @@ namespace pwiz.Skyline.Model.Prosit.Communication
             if (FakeClient != null)
                 return FakeClient;
 
-            return Current?.Server == server
-                ? Current
+            return _predictionClient?.Server == server
+                ? _predictionClient
                 : new PrositPredictionClient(server);
         }
 

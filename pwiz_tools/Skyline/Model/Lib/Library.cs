@@ -2342,6 +2342,8 @@ namespace pwiz.Skyline.Model.Lib
 
     public class SpectrumInfoProsit : SpectrumInfo
     {
+        public static readonly string NAME = @"Prosit";
+
         private SpectrumPeaksInfo _peaksInfo;
 
         public SpectrumInfoProsit(PrositMS2Spectra ms2Spectrum, TransitionGroupDocNode precursor, int nce) : base(
@@ -2354,7 +2356,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override string Name
         {
-            get { return @"Prosit"; }
+            get { return NAME; }
         }
 
         public override SpectrumPeaksInfo SpectrumPeaksInfo

@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
     /// </summary>
     public sealed class PrositIntensityModel : PrositModel<PrositIntensityModel.PrositIntensityInput.PrositPrecursorInput,
         PrositIntensityModel.PrositIntensityInput,
-        PeptidePrecursorPair,
+        PrositIntensityModel.PeptidePrecursorNCE,
         PrositIntensityModel.PrositIntensityOutput.PrositPrecursorOutput,
         PrositIntensityModel.PrositIntensityOutput,
         PrositMS2Spectra>
@@ -106,7 +106,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
             }
         }
 
-        public override PrositIntensityInput.PrositPrecursorInput CreatePrositInputRow(SrmSettings settings, PeptidePrecursorPair skylineInput, out PrositException exception)
+        public override PrositIntensityInput.PrositPrecursorInput CreatePrositInputRow(SrmSettings settings, PeptidePrecursorNCE skylineInput, out PrositException exception)
         {
             var peptideSequence = PrositHelpers.EncodeSequence(settings, skylineInput.NodePep, IsotopeLabelType.light, out exception);
             if (peptideSequence == null) // equivalently, exception != null
@@ -127,9 +127,39 @@ namespace pwiz.Skyline.Model.Prosit.Models
             return new PrositIntensityOutput(prositOutputData);
         }
 
-        public override PrositMS2Spectra CreateSkylineOutput(SrmSettings settings, IList<PeptidePrecursorPair> skylineInputs, PrositIntensityOutput prositOutput)
+        public override PrositMS2Spectra CreateSkylineOutput(SrmSettings settings, IList<PeptidePrecursorNCE> skylineInputs, PrositIntensityOutput prositOutput)
         {
             return new PrositMS2Spectra(settings, skylineInputs, prositOutput);
+        }
+
+        public class PeptidePrecursorNCE : SkylineInputRow
+        {
+            public PeptidePrecursorNCE(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, int? nce = null)
+            {
+                NodePep = nodePep;
+                NodeGroup = nodeGroup;
+                NCE = nce;
+            }
+
+            public PeptideDocNode NodePep { get; private set; }
+            public TransitionGroupDocNode NodeGroup { get; private set; }
+            public int? NCE { get; private set; }
+
+            public PeptidePrecursorNCE WithNCE(int nce)
+            {
+                return new PeptidePrecursorNCE(NodePep, NodeGroup, nce);
+            }
+
+            public override bool Equals(SkylineInputRow other)
+            {
+                if (other == null)
+                    return false;
+                if (!(other is PeptidePrecursorNCE peptidePrecursorPair))
+                    return false;
+                return ReferenceEquals(NodePep, peptidePrecursorPair.NodePep)
+                       && ReferenceEquals(NodeGroup, peptidePrecursorPair.NodeGroup)
+                       && NCE == peptidePrecursorPair.NCE;
+            }
         }
 
         /// <summary>

@@ -30,7 +30,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Prosit;
-using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
@@ -92,11 +91,6 @@ namespace pwiz.Skyline.SettingsUI
             _actionComboPos = comboAction.Location;
             _iRTLabelPos = iRTPeptidesLabel.Location;
             _iRTComboPos = comboStandards.Location;
-
-            // Remove once irt combo box is used by Prosit
-            ceLabel.Location = _actionLabelPos;
-            ceCombo.Location = _actionComboPos;
-            // ---
 
             panelFiles.Visible = false;
             textName.Focus();
@@ -263,37 +257,12 @@ namespace pwiz.Skyline.SettingsUI
                         index += groups.Length;
                     }
                     
-                    IrtStandard standard = null;
                     try
                     {
-                        var rtRegr =
-                            _documentUiContainer.DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime;
-                        if (rtRegr != null)
-                        {
-                            if (rtRegr.Calculator is RCalcIrt calc)
-                            {
-                                IrtDb.GetIrtDb(calc.DatabasePath, null, out var irtStandards);
-                                // TODO: name and path shouldn't matter
-                                standard = new IrtStandard(
-                                    string.Format(@"{0}-iRT-Standards",
-                                        Path.GetFileNameWithoutExtension(_documentUiContainer.DocumentFilePath)),
-                                    _documentUiContainer.DocumentFilePath, irtStandards.Where(p => p.Standard));
-                            }
-
-                            // TODO: check if those peptides are also in the document?
-                        }
-                    }
-                    catch
-                    {
-                        // TODO: ignore?
-                    }
-
-                    try
-                    {
-                        CheckPrositSettings();
+                        PrositUIHelpers.CheckPrositSettings(this, _skylineWindow);
                         // Still construct the library builder, otherwise a user might configure Prosit
                         // incorrectly, causing the build to silently fail
-                        Builder = new PrositLibraryBuilder(doc, name, outputPath, () => true, standard,
+                        Builder = new PrositLibraryBuilder(doc, name, outputPath, () => true, IrtStandard,
                             peptidesPerPrecursor, precursors, NCE);
                     }
                     catch (Exception ex)
@@ -760,10 +729,6 @@ namespace pwiz.Skyline.SettingsUI
             ceCombo.Visible = !useFiles;
             ceLabel.Visible = !useFiles;
 
-            // Remove once irt combo box is used by Prosit
-            iRTPeptidesLabel.Visible = useFiles;
-            comboStandards.Visible = useFiles;
-            // ---
 
             if (useFiles)
             {
@@ -775,23 +740,10 @@ namespace pwiz.Skyline.SettingsUI
                 iRTPeptidesLabel.Location = _actionLabelPos;
                 comboStandards.Location = _actionComboPos;
 
-                CheckPrositSettings();
+                PrositUIHelpers.CheckPrositSettings(this, _skylineWindow);
             }
 
             btnNext.Text = dataSourceFilesRadioButton.Checked ? Resources.BuildLibraryDlg_btnPrevious_Click__Next__ : Resources.BuildLibraryDlg_OkWizardPage_Finish;
-        }
-
-        private void CheckPrositSettings()
-        {
-            if (!PrositHelpers.PrositSettingsValid)
-            {
-                using (var dlg = new AlertDlg(PrositResources.BuildLibraryDlg_dataSourceFilesRadioButton_CheckedChanged_Some_Prosit_settings_are_not_set__Would_you_like_to_set_them_now_, MessageBoxButtons.YesNo))
-                {
-                    dlg.ShowDialog(this);
-                    if (dlg.DialogResult == DialogResult.Yes)
-                        _skylineWindow.ShowToolOptionsUI(dlg, ToolOptionsUI.TABS.Prosit);
-                }
-            }
         }
 
         private void prositInfoSettingsBtn_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

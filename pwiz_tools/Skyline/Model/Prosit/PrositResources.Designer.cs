@@ -80,6 +80,15 @@ namespace pwiz.Skyline.Model.Prosit {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No spectral library match.
+        /// </summary>
+        internal static string GraphSpectrum_UpdateUI_No_spectral_library_match {
+            get {
+                return ResourceManager.GetString("GraphSpectrum_UpdateUI_No_spectral_library_match", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Prosit is not properly configured..
         /// </summary>
         internal static string GraphSpectrum_UpdateUI_Some_Prosit_settings_are_not_set_ {
@@ -180,6 +189,33 @@ namespace pwiz.Skyline.Model.Prosit {
             get {
                 return ResourceManager.GetString("PrositUnsupportedModificationException_PrositUnsupportedModificationException_Mod" +
                         "ifcation___0___at_index___1___in___2___is_not_supported_by_Prosit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select a server.
+        /// </summary>
+        internal static string ToolOptionsUI_SetServerStatus_Select_a_server {
+            get {
+                return ResourceManager.GetString("ToolOptionsUI_SetServerStatus_Select_a_server", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select both models.
+        /// </summary>
+        internal static string ToolOptionsUI_SetServerStatus_Select_both_models {
+            get {
+                return ResourceManager.GetString("ToolOptionsUI_SetServerStatus_Select_both_models", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        internal static string ToolOptionsUI_ToolOptionsUI_None {
+            get {
+                return ResourceManager.GetString("ToolOptionsUI_ToolOptionsUI_None", resourceCulture);
             }
         }
         
