@@ -25515,7 +25515,7 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("SkylineWindow_ImportMassListIntensities_Creating_Spectral_Library", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Data columns not found in first line..
         /// </summary>
