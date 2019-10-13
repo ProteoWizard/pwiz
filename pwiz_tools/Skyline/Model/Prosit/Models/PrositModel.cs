@@ -388,7 +388,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
             // Output variables
             public SpectrumDisplayInfo Spectrum { get; protected set; }
     
-            public PrositException Exception { get; protected set; }
+            public Exception Exception { get; protected set; }
 
             public PrositPredictionClient Client { get; protected set; }
             public PrositIntensityModel IntensityModel { get; protected set; }

@@ -968,13 +968,14 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (Settings.Default.ShowLibraryChromatograms)
                             chromatogramData = spectrum?.LoadChromatogramData();
 
+                        if (spectrum != null)
+                            GraphItem = MakeGraphItem(spectrum, selection, settings);
+
                         if (null == chromatogramData)
                         {
-                            _graphHelper.ResetForSpectrum(new[] {selection.Precursor.TransitionGroup});
-
                             if (spectrum != null)
                             {
-                                GraphItem = MakeGraphItem(spectrum, selection, settings);
+                                _graphHelper.ResetForSpectrum(new[] { selection.Precursor.TransitionGroup });
                                 // Don't refresh here, it will be refreshed on zoom
                                 _graphHelper.AddSpectrum(GraphItem, false);
                             }
@@ -1058,9 +1059,8 @@ namespace pwiz.Skyline.Controls.Graphs
                                 !Settings.Default.LockYAxis;
                             available = true;
                         }
-
-
-                        if (spectrumChanged)
+                        
+                        if (spectrumChanged && chromatogramData == null)
                         {
                             _nodeGroup = selection.Precursor;
                             ZoomSpectrumToSettings();

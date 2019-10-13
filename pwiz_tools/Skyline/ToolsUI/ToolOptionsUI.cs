@@ -108,11 +108,17 @@ namespace pwiz.Skyline.ToolsUI
             
             prositServerStatusLabel.Text = string.Empty;
             if (servers.Contains(Settings.Default.PrositServer))
+            {
                 prositServerCombo.SelectedItem = Settings.Default.PrositServer;
-            else if (Settings.Default.PrositServer != null)
+            }
+            else if (!string.IsNullOrEmpty(Settings.Default.PrositServer))
             {
                 prositServerCombo.Items.Add(Settings.Default.PrositServer);
                 prositServerCombo.SelectedItem = Settings.Default.PrositServer;
+            }
+            else
+            {
+                prositServerCombo.SelectedIndex = 0;
             }
 
             if (iModels.Contains(Settings.Default.PrositIntensityModel))
@@ -147,30 +153,19 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     try
                     {
-                        PrositMS2Spectra ms = null;
-                        Dictionary<PeptideDocNode, double> iRTMap = null;
-                        try
-                        {
-                            ms = IntensityModel.PredictSingle(Client, Settings,
-                                new PrositIntensityModel.PeptidePrecursorNCE(Peptide, Precursor, NCE), _tokenSource.Token);
+                        var ms = IntensityModel.PredictSingle(Client, Settings,
+                            new PrositIntensityModel.PeptidePrecursorNCE(Peptide, Precursor, NCE), _tokenSource.Token);
 
-                            iRTMap = RTModel.PredictSingle(Client,
-                                Settings,
-                                Peptide, _tokenSource.Token);
-                        }
-                        catch(PrositException ex)
-                        {
-                            // Pass up cancel. And if the RTModel is null, we also can't proceed
-                            if (ex.InnerException is RpcException rpcEx && rpcEx.StatusCode == StatusCode.Cancelled)
-                                throw;
-                        }
+                        var iRTMap = RTModel.PredictSingle(Client,
+                            Settings,
+                            Peptide, _tokenSource.Token);
 
-                        var spectrumInfo = ms == null ? null : new SpectrumInfoProsit(ms, Precursor, NCE);
-                        var irt = iRTMap?[Peptide];
+                        var spectrumInfo = new SpectrumInfoProsit(ms, Precursor, NCE);
+                        var irt = iRTMap[Peptide];
                         Spectrum = new SpectrumDisplayInfo(
                             spectrumInfo, Precursor, irt);
                     }
-                    catch (PrositException ex)
+                    catch (Exception ex)
                     {
                         Exception = ex;
 
