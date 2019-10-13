@@ -3365,7 +3365,7 @@ namespace pwiz.Skyline
             // Explorer's spectrum graph pane.
             UpdateGraphPanes();
         }
-
+        public static List<PrositIntensityModel.PeptidePrecursorNCE> ReadStandardPeptides(IrtStandard standard)
         {
             var standardDocReader = standard.DocumentReader;
             if (standardDocReader == null)
@@ -3384,7 +3384,9 @@ namespace pwiz.Skyline
             }*/
             return Enumerable.Zip(peps, precs,
                 (pep, prec) => new PrositIntensityModel.PeptidePrecursorNCE(pep, prec)).ToList();
-        }        private void HandleStandardsChanged(ICollection<Target> oldStandard)        {
+        }
+
+        private void HandleStandardsChanged(ICollection<Target> oldStandard)        {
             var calc = RCalcIrt.Calculator(Document);
             if (calc == null)
                 return;

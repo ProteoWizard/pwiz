@@ -612,8 +612,6 @@ namespace pwiz.Skyline.Controls.Graphs
             public TransitionDocNode Transition { get; private set; }
         }
 
-        
-
         private PrositHelpers.PrositRequest _prositRequest;
 
         private SpectrumDisplayInfo UpdatePrositPrediction(SpectrumNodeSelection selection)
@@ -924,7 +922,6 @@ namespace pwiz.Skyline.Controls.Graphs
                             }
                         }
 
-                        // TODO: is this very performance intensive or is it okay if we reload the spectra frequently?
                         var loadFromLib = libraries.HasLibraries && libraries.IsLoaded &&
                                           (!Settings.Default.Prosit ||
                                            Settings.Default.LibMatchMirror);
@@ -942,13 +939,13 @@ namespace pwiz.Skyline.Controls.Graphs
                             throw;
                         }
 
-                        if (prositEx != null && (SelectedSpectrum == null || !Settings.Default.LibMatchMirror))
+                        if (prositEx != null && !Settings.Default.LibMatchMirror)
                             throw prositEx;
 
                         if (!Settings.Default.Prosit || ShouldShowMirrorPlot)
                             spectrum = SelectedSpectrum;
                         
-                        if (prositEx is PrositPredictingException && _mirrorSpectrum != null)
+                        if (prositEx is PrositPredictingException && DisplayedMirrorSpectrum != null)
                         {
                             var libraryStr = _spectrum == null
                                 ? _mirrorSpectrum.Name
@@ -1034,11 +1031,18 @@ namespace pwiz.Skyline.Controls.Graphs
                             }
                             else if (prositEx != null)
                             {
-                                GraphPane.Title.Text = TextUtil.LineSeparate(
-                                    string.Format(PrositResources.GraphSpectrum_UpdateUI__0__vs___1_,
-                                        GraphItem.LibraryName, SpectrumInfoProsit.NAME),
-                                    GraphItem.Title,
-                                    prositEx.Message);
+                                if (DisplayedSpectrum != null)
+                                {
+                                    GraphPane.Title.Text = TextUtil.LineSeparate(
+                                        string.Format(PrositResources.GraphSpectrum_UpdateUI__0__vs___1_,
+                                            GraphItem.LibraryName, SpectrumInfoProsit.NAME),
+                                        GraphItem.Title,
+                                        prositEx.Message);
+                                }
+                                else
+                                {
+                                    throw prositEx;
+                                }
                             }
                             
                             _graphHelper.ZoomSpectrumToSettings(DocumentUI, selection.Precursor);

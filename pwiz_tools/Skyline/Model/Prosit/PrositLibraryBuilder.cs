@@ -73,29 +73,32 @@ namespace pwiz.Skyline.Model.Prosit
                 // Align Prosit iRTs with iRT standard
                 var standardPeptidesToAdd = SkylineWindow.ReadStandardPeptides(IrtStandard);
 
-                // Get iRTs
-                var standardIRTMap = _rtModel.Predict(_prositClient, _document.Settings,
-                    standardPeptidesToAdd.Select(p => (PrositRetentionTimeModel.PeptideDocNodeWrapper) p.NodePep).ToArray(),
-                    CancellationToken.None);
-
-                var original = standardIRTMap.ToDictionary(p => p.Key.ModifiedTarget, p => p.Value);
-                var target = IrtStandard.Peptides.ToDictionary(p => p.ModifiedTarget, p => p.Irt);
-
-                var aligned = AlignedRetentionTimes.AlignLibraryRetentionTimes(target, original, 0.0, RegressionMethodRT.linear,
-                    CancellationToken.None);
-                regr = aligned.Regression;
-
-                // Get spectra
-                var standardMS = _intensityModel.PredictBatches(_prositClient, progress, _document.Settings,
-                    standardPeptidesToAdd.Select(p => p.WithNCE(_nce)).ToArray(),
-                    CancellationToken.None);
-                
-                // Merge iRT and MS2 into SpecMzInfos
-                standardSpectra = standardMS.Spectra.Select(m => m.SpecMzInfo).ToList();
-                for (var i = 0; i < standardSpectra.Count; ++i)
+                if (standardPeptidesToAdd != null && standardPeptidesToAdd.Count > 0)
                 {
-                    if (standardIRTMap.TryGetValue(standardMS.Spectra[i].PeptidePrecursorNCE.NodePep, out var iRT))
-                        standardSpectra[i].RetentionTime = iRT;
+                    // Get iRTs
+                    var standardIRTMap = _rtModel.Predict(_prositClient, _document.Settings,
+                        standardPeptidesToAdd.Select(p => (PrositRetentionTimeModel.PeptideDocNodeWrapper)p.NodePep).ToArray(),
+                        CancellationToken.None);
+
+                    var original = standardIRTMap.ToDictionary(p => p.Key.ModifiedTarget, p => p.Value);
+                    var target = IrtStandard.Peptides.ToDictionary(p => p.ModifiedTarget, p => p.Irt);
+
+                    var aligned = AlignedRetentionTimes.AlignLibraryRetentionTimes(target, original, 0.0, RegressionMethodRT.linear,
+                        CancellationToken.None);
+                    regr = aligned.Regression;
+
+                    // Get spectra
+                    var standardMS = _intensityModel.PredictBatches(_prositClient, progress, _document.Settings,
+                        standardPeptidesToAdd.Select(p => p.WithNCE(_nce)).ToArray(),
+                        CancellationToken.None);
+
+                    // Merge iRT and MS2 into SpecMzInfos
+                    standardSpectra = standardMS.Spectra.Select(m => m.SpecMzInfo).ToList();
+                    for (var i = 0; i < standardSpectra.Count; ++i)
+                    {
+                        if (standardIRTMap.TryGetValue(standardMS.Spectra[i].PeptidePrecursorNCE.NodePep, out var iRT))
+                            standardSpectra[i].RetentionTime = iRT;
+                    }
                 }
             }
 

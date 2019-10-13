@@ -109,8 +109,11 @@ namespace pwiz.Skyline.ToolsUI
             prositServerStatusLabel.Text = string.Empty;
             if (servers.Contains(Settings.Default.PrositServer))
                 prositServerCombo.SelectedItem = Settings.Default.PrositServer;
-            else
-                prositServerCombo.SelectedIndex = 0;
+            else if (Settings.Default.PrositServer != null)
+            {
+                prositServerCombo.Items.Add(Settings.Default.PrositServer);
+                prositServerCombo.SelectedItem = Settings.Default.PrositServer;
+            }
 
             if (iModels.Contains(Settings.Default.PrositIntensityModel))
                 intensityModelCombo.SelectedItem = Settings.Default.PrositIntensityModel;
