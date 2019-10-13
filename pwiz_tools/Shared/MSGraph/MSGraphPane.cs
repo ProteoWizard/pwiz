@@ -72,6 +72,7 @@ namespace pwiz.MSGraph
         public bool LockYAxisAtZero
         {
             get { return LockYAxisMinAtZero; }
+            set { LockYAxisMinAtZero = value; }
         }
 
         protected MSGraphItemType _currentItemType;
