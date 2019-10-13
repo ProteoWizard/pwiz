@@ -690,13 +690,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 showAdducts,
                 types,
                 rankAdducts,
-                rankTypes);
+                rankTypes,
+                null);
             return new SpectrumGraphItem(selection.Precursor, selection.Transition, spectrumInfoR,
                 spectrum.Name)
             {
                 ShowTypes = types,
                 ShowCharges = charges,
                 ShowRanks = Settings.Default.ShowRanks,
+                ShowScores = Settings.Default.ShowLibraryScores,
                 ShowMz = Settings.Default.ShowIonMz,
                 ShowObservedMz = Settings.Default.ShowObservedMz,
                 ShowDuplicates = Settings.Default.ShowDuplicateIons,

@@ -485,6 +485,9 @@ ion in the matching library spectrum.</value>
     <value>The name of a MS/MS spectral library, if a MS/MS spectral library
 spectrum is associated with the precursor ion.</value>
   </data>
+  <data name="LibraryProbabilityScore">
+    <value>The probability score assigned to this match in the input files used to build the spectral library.</value>
+  </data>
   <data name="LibraryRank">
     <value>The rank based on LibraryIntensity of this transition among all transitions
 allowed by the transition Filter settings, shown in the user interface as “(rank #)”.</value>

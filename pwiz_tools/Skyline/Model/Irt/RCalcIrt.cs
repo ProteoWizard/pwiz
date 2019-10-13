@@ -237,6 +237,8 @@ namespace pwiz.Skyline.Model.Irt
             return _database.GetPeptides();
         }
 
+        public string DocumentXml => _database.DocumentXml;
+
         public static ProcessedIrtAverages ProcessRetentionTimes(IProgressMonitor monitor,
             IEnumerable<IRetentionTimeProvider> providers, int countProviders,
             DbIrtPeptide[] standardPeptideList, DbIrtPeptide[] items)
@@ -290,12 +292,16 @@ namespace pwiz.Skyline.Model.Irt
             }
         }
 
-        public static IEnumerable<Target> IrtPeptides(SrmDocument document)
+        public static RCalcIrt Calculator(SrmDocument document)
         {
             if (!document.Settings.HasRTPrediction)
-                yield break;
+                return null;
+            return document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator as RCalcIrt;
+        }
 
-            var calc = document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator as RCalcIrt;
+        public static IEnumerable<Target> IrtPeptides(SrmDocument document)
+        {
+            var calc = Calculator(document);
             if (calc == null)
                 yield break;
 

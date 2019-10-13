@@ -468,6 +468,12 @@ namespace pwiz.MSGraph
                 TextObj text = obj as TextObj;
                 if (text != null)
                 {
+                    if (text.Location.CoordinateFrame == CoordType.ChartFraction &&
+                        text.Location.AlignH == AlignH.Left && text.Location.AlignV == AlignV.Top)
+                    {
+                        GraphObjList.Add(text);
+                        continue;
+                    }
                     if (isXChartFractionObject(text) && (text.Location.X < XAxis.Scale.Min || text.Location.X > XAxis.Scale.Max))
                         continue;
 

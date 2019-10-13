@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Irt
 {
-    public class IrtStandard : IAuditLogObject
+    public class IrtStandard : XmlNamedElement
     {
         public static readonly IrtStandard EMPTY = new IrtStandard(AuditLogStrings.None, null, new DbIrtPeptide[0]);
 
@@ -329,19 +328,17 @@ namespace pwiz.Skyline.Model.Irt
             return percentile;
         }
 
-        public IrtStandard(string name, string skyFile, IEnumerable<DbIrtPeptide> peptides)
+        public IrtStandard(string name, string skyFile, IEnumerable<DbIrtPeptide> peptides) : base(name)
         {
-            Name = name;
             Peptides = ImmutableList.ValueOf(peptides);
             _resourceSkyFile = skyFile;
         }
 
         private readonly string _resourceSkyFile;
-        public string Name { get; private set; }
         public ImmutableList<DbIrtPeptide> Peptides { get; private set; }
 
-        public string AuditLogText { get { return Equals(this, EMPTY) ? LogMessage.NONE : Name; } }
-        public bool IsName { get { return !Equals(this, EMPTY); } } // So EMPTY logs as None (unquoted) rather than "None"
+        public override string AuditLogText { get { return Equals(this, EMPTY) ? LogMessage.NONE : Name; } }
+        public override bool IsName { get { return !Equals(this, EMPTY); } } // So EMPTY logs as None (unquoted) rather than "None"
 
         public TextReader DocumentReader
         {
@@ -457,11 +454,15 @@ namespace pwiz.Skyline.Model.Irt
             return new DbIrtPeptide(new Target(sequence), time, true, TimeSource.peak);
         }
 
-        public static IrtStandard WhichStandard(ICollection<Target> peptides, out HashSet<Target> missingPeptides)
+        public static IrtStandard WhichStandard(IEnumerable<Target> peptides)
         {
-            var standard = ALL.FirstOrDefault(s => s.ContainsAll(peptides.Select(p => new DbIrtPeptide(p, 0, true, TimeSource.peak)).ToList(), null)) ?? EMPTY;
-            missingPeptides = new HashSet<Target>(standard.Peptides.Where(s => !peptides.Any(p => p.Equals(s.Target))).Select(s => s.Target));
-            return standard;
+            var list = peptides.Select(p => new DbIrtPeptide(p, 0, true, TimeSource.peak)).ToList();
+            return ALL.FirstOrDefault(s => s.ContainsAll(list, null)) ?? EMPTY;
+        }
+
+        public IrtStandard ChangePeptides(IEnumerable<DbIrtPeptide> peptides)
+        {
+            return ChangeProp(ImClone(this), im => im.Peptides = ImmutableList.ValueOf(peptides));
         }
 
         public override string ToString()
