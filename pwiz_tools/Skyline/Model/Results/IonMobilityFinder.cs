@@ -112,7 +112,7 @@ namespace pwiz.Skyline.Model.Results
                     if (!ProcessFile(fp))
                         return null; // User cancelled
                 }
-                // Find ion mobilitiess based on MS1 data
+                // Find ion mobilities based on MS1 data
                 foreach (var dt in _ms1IonMobilities)
                 {
                     // Choose the ion mobility which gave the largest signal

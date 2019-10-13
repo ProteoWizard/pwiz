@@ -768,7 +768,7 @@ namespace pwiz.ProteowizardWrapper
                     }
                     return returnSpectrum;
                 }
-                using (var spectrum = SpectrumList.spectrum(spectrumIndex, true))
+                var spectrum = GetCachedSpectrum(spectrumIndex, true);
                 {
                     return GetSpectrum(spectrum, spectrumIndex);
                 }
@@ -929,9 +929,31 @@ namespace pwiz.ProteowizardWrapper
             return maxIonMobility;
         }
 
+        /// <summary>
+        /// Highly probable that we'll look at the same scan several times for different metadata
+        /// </summary>
+        private int _lastScanIndex = -1;
+        private DetailLevel _lastDetailLevel;
+        private Spectrum _lastSpectrum;
+        private Spectrum GetCachedSpectrum(int scanIndex, DetailLevel detailLevel)
+        {
+            if (scanIndex != _lastScanIndex || detailLevel > _lastDetailLevel)
+            {
+                _lastScanIndex = scanIndex;
+                _lastDetailLevel = detailLevel;
+                _lastSpectrum?.Dispose();
+               _lastSpectrum = SpectrumList.spectrum(_lastScanIndex, _lastDetailLevel);
+            }
+            return _lastSpectrum;
+        }
+        private Spectrum GetCachedSpectrum(int scanIndex, bool getBinaryData)
+        {
+            return GetCachedSpectrum(scanIndex, getBinaryData ? DetailLevel.FullData : DetailLevel.FullMetadata);
+        }
+
         public MsDataSpectrum GetSrmSpectrum(int scanIndex)
         {
-            using (var spectrum = SpectrumList.spectrum(scanIndex, true))
+            var spectrum = GetCachedSpectrum(scanIndex, true);
             {
                 return GetSpectrum(IsSrmSpectrum(spectrum) ? spectrum : null, scanIndex);
             }
@@ -944,7 +966,7 @@ namespace pwiz.ProteowizardWrapper
 
         public bool IsCentroided(int scanIndex)
         {
-            using (var spectrum = SpectrumList.spectrum(scanIndex, false))
+            var spectrum = GetCachedSpectrum(scanIndex, false);
             {
                 return IsCentroided(spectrum);
             }
@@ -965,7 +987,7 @@ namespace pwiz.ProteowizardWrapper
 
         public bool IsSrmSpectrum(int scanIndex)
         {
-            using (var spectrum = SpectrumList.spectrum(scanIndex, false))
+            var spectrum = GetCachedSpectrum(scanIndex, false);
             {
                 return IsSrmSpectrum(spectrum);
             }
@@ -978,7 +1000,7 @@ namespace pwiz.ProteowizardWrapper
 
         public int GetMsLevel(int scanIndex)
         {
-            using (var spectrum = SpectrumList.spectrum(scanIndex, _detailMsLevel))
+            var spectrum = GetCachedSpectrum(scanIndex, _detailMsLevel);
             {
                 int? level = GetMsLevel(spectrum);
                 if (level.HasValue || _detailMsLevel == DetailLevel.FullMetadata)
@@ -1008,7 +1030,7 @@ namespace pwiz.ProteowizardWrapper
 
         public IonMobilityValue GetIonMobility(int scanIndex)
         {
-            using (var spectrum = SpectrumList.spectrum(scanIndex, _detailIonMobility))
+            var spectrum = GetCachedSpectrum(scanIndex, _detailIonMobility);
             {
                 var ionMobility = GetIonMobility(spectrum);
                 if ((ionMobility != null && ionMobility.HasValue) || _detailIonMobility >= DetailLevel.FullMetadata)
@@ -1071,7 +1093,7 @@ namespace pwiz.ProteowizardWrapper
 
         public double? GetStartTime(int scanIndex)
         {
-            using (var spectrum = SpectrumList.spectrum(scanIndex, _detailStartTime))
+            var spectrum = GetCachedSpectrum(scanIndex, _detailStartTime);
             {
                 double? startTime = GetStartTime(spectrum);
                 if (startTime.HasValue || _detailStartTime >= DetailLevel.FullMetadata)
@@ -1099,7 +1121,7 @@ namespace pwiz.ProteowizardWrapper
 
         public MsTimeAndPrecursors GetInstantTimeAndPrecursors(int scanIndex)
         {
-            using (var spectrum = SpectrumList.spectrum(scanIndex, DetailLevel.InstantMetadata))
+            var spectrum = GetCachedSpectrum(scanIndex, DetailLevel.InstantMetadata);
             {
                 return new MsTimeAndPrecursors
                 {
@@ -1111,7 +1133,7 @@ namespace pwiz.ProteowizardWrapper
 
         public MsPrecursor[] GetPrecursors(int scanIndex)
         {
-            using (var spectrum = SpectrumList.spectrum(scanIndex, false))
+            var spectrum = GetCachedSpectrum(scanIndex, false);
             {
                 return GetPrecursors(spectrum);
             }
@@ -1128,7 +1150,7 @@ namespace pwiz.ProteowizardWrapper
 
         public IDictionary<int, IList<MsPrecursor>> GetPrecursorsByMsLevel(int scanIndex)
         {
-            using (var spectrum = SpectrumList.spectrum(scanIndex, false))
+            var spectrum = GetCachedSpectrum(scanIndex, false);
             {
                 return GetPrecursorsByMsLevel(spectrum);
             }
@@ -1216,6 +1238,8 @@ namespace pwiz.ProteowizardWrapper
 
         public void Dispose()
         {
+            _lastSpectrum?.Dispose();
+            _lastScanIndex = -1;
             if (_spectrumList != null)
                 _spectrumList.Dispose();
             _spectrumList = null;

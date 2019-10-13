@@ -938,6 +938,12 @@ namespace pwiz.Skyline.Model.Results
                         if (!_filter.EnabledMsMs && msLevel != 1)
                             continue;
 
+                        var ionMobility = _lookaheadContext.GetIonMobility(i);
+                        if (ionMobility.HasValue && _filter.IsOutsideIonMobilityRange(ionMobility))
+                        {
+                            continue;
+                        }
+
                         // Skip quickly through the chromatographic lead-in and tail when possible 
                         if (msLevel > 1 || !_filter.IsFilteringFullGradientMs1) // We need all MS1 for TIC and BPC
                         {
@@ -1269,11 +1275,10 @@ namespace pwiz.Skyline.Model.Results
                 return _lookAheadIndex;
             }
 
-            private bool NextSpectrumIsIonMobilityScanForCurrentRetentionTime(MsDataSpectrum nextSpectrum)
+            private bool NextSpectrumIsIonMobilityScanForCurrentRetentionTime(IonMobilityValue nextIM)
             {
-                bool result = ((_rt ?? 0) == (nextSpectrum.RetentionTime ?? -1)) &&
-                              IonMobilityValue.IsExpectedValueOrdering(_previousIonMobilityValue, nextSpectrum.IonMobility);
-                _previousIonMobilityValue = nextSpectrum.IonMobility;
+                bool result = IonMobilityValue.IsExpectedValueOrdering(_previousIonMobilityValue, nextIM);
+                _previousIonMobilityValue = nextIM;
                 return result;
             }
 
@@ -1304,7 +1309,7 @@ namespace pwiz.Skyline.Model.Results
                 while (_lookAheadIndex++ < _lenSpectra)
                 {
                     _rt = dataSpectrum.RetentionTime;
-                    if (_rt.HasValue && dataSpectrum.Mzs.Length != 0 && !_filter.IsOutsideIonMobilityRange(dataSpectrum.IonMobility))
+                    if (_rt.HasValue && dataSpectrum.Mzs.Length != 0)
                     {
                         spectrumList.Add(dataSpectrum);
                         rtTotal += dataSpectrum.RetentionTime.Value;
@@ -1314,14 +1319,35 @@ namespace pwiz.Skyline.Model.Results
                     if (!_filter.IsAgilentMse && !dataSpectrum.IonMobility.HasValue)
                         break;
 
+                    // Quickly skip over spectra with correct RT but uninteresting IM
+                    var usefulRtAndIm = false;
+                    while (_lookAheadIndex < _lenSpectra)
+                    {
+                        var nextRT = _dataFile.GetStartTime(_lookAheadIndex);
+                        if ((_rt ?? 0) != (nextRT ?? -1))
+                            break;
+                        var nextIM = _dataFile.GetIonMobility(_lookAheadIndex);
+                        if (!NextSpectrumIsIonMobilityScanForCurrentRetentionTime(nextIM))
+                            break;
+                        usefulRtAndIm = !_filter.IsOutsideIonMobilityRange(nextIM);
+                        if (usefulRtAndIm)
+                            break;
+                        _lookAheadIndex++; // Keep looking for useful IM ranges within this RT
+                    }
+
+                    if (!(usefulRtAndIm || _filter.IsAgilentMse))
+                    {
+                        _lookAheadDataSpectrum = null; // No reason to read spectra at this time
+                        break;
+                    }
+
                     if (_lookAheadIndex < _lenSpectra)
                     {
                         dataSpectrum = _lookAheadDataSpectrum = _dataFile.GetSpectrum(_lookAheadIndex);
                         // Reasons to keep adding to the list:
                         //   Retention time hasn't changed but ion mobility has changed, or
                         //   Agilent ramped-CE data - MS2 scans get averaged
-                        if (!(NextSpectrumIsIonMobilityScanForCurrentRetentionTime(dataSpectrum) ||
-                              NextSpectrumIsAgilentMse(dataSpectrum, listLevel, startCE)))
+                        if (!(usefulRtAndIm || NextSpectrumIsAgilentMse(dataSpectrum, listLevel, startCE)))
                             break;
                     }
                 }

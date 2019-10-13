@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
@@ -59,10 +60,10 @@ namespace pwiz.Skyline.Model.Results
         private readonly double? _maxTime;  // Copied from _instrument.MaxTime
         private double _minFilterPairsRT; // Min of range of RT filter values across FilterPairs 
         private double _maxFilterPairsRT; // Max of range of RT filter values across FilterPairs
-        private double _minFilterPairsIM; // Min of range of IonMobility filter values across FilterPairs 
-        private double _maxFilterPairsIM; // Max of range of IonMobility filter values across FilterPairs
+        private List<Tuple<double,double>> _rangeFilterPairsIM; // List of active ranges of IonMobility filter values across FilterPairs 
         private readonly SpectrumFilterPair[] _filterMzValues;
         private readonly Dictionary<double,SpectrumFilterPair[]> _filterMzValuesFAIMSDict; // FAIMS chromatogram extraction is a special case for non-contiguous scans
+//        private readonly Dictionary<double, Dictionary<double, bool>> _filterMobilityPrecursors; // TODO map showing which IM by Mz windows are useful and not useful
         private readonly SpectrumFilterPair[] _filterRTValues;
         private readonly ChromKey[] _productChromKeys;
         private int _retentionTimeIndex;
@@ -83,7 +84,7 @@ namespace pwiz.Skyline.Model.Results
 
         public IEnumerable<SpectrumFilterPair> FilterPairs { get { return _filterMzValues; } }
 
-        public SpectrumFilter(SrmDocument document, MsDataFileUri msDataFileUri, IFilterInstrumentInfo instrumentInfo,
+        public SpectrumFilter(SrmDocument document, MsDataFileUri msDataFileUri, IFilterInstrumentInfo instrumentInfo, 
             double? maxObservedIonMobilityValue = null,
             IRetentionTimePredictor retentionTimePredictor = null, bool firstPass = false, GlobalChromatogramExtractor gce = null)
         {
@@ -399,8 +400,7 @@ namespace pwiz.Skyline.Model.Results
         {
             _maxFilterPairsRT = double.MaxValue;
             _minFilterPairsRT = double.MinValue;
-            _maxFilterPairsIM = double.MaxValue;
-            _minFilterPairsIM = double.MinValue;
+            _rangeFilterPairsIM = new List<Tuple<double, double>>();
             if (FilterPairs != null)
             {
                 double? maxRT = null;
@@ -423,25 +423,32 @@ namespace pwiz.Skyline.Model.Results
                 if (minRT.HasValue && !IsMseData()) // For MSe data, just start from the beginning lest we drop in mid-cycle
                     _minFilterPairsRT = minRT.Value;
 
-                double? maxIM = null;
-                double? minIM = null;
-                foreach (var fp in FilterPairs)
+                // Create a sorted list of active ion mobility windows. When windows overlap, combine them into a single window.
+                foreach (var fp in FilterPairs.Where(fp=>fp.MaxIonMobilityValue.HasValue && fp.MinIonMobilityValue.HasValue))
                 {
-                    if (!fp.MaxIonMobilityValue.HasValue || !fp.MinIonMobilityValue.HasValue)
+                    var imLow = fp.MinIonMobilityValue.Value;
+                    var imHigh = fp.MaxIonMobilityValue.Value;
+                    foreach (var offset in fp.Ms2ProductFilters.Select(fp2 => fp2.HighEnergyIonMobilityValueOffset))
                     {
-                        maxIM = null;
-                        minIM = null;
-                        break;
+                        imLow = Math.Min(imLow, imLow + offset);
+                        imHigh = Math.Max(imHigh, imHigh + offset);
                     }
-                    if (fp.MaxIonMobilityValue.Value > (maxIM ?? double.MinValue))
-                        maxIM = fp.MaxIonMobilityValue.Value;
-                    if (fp.MinIonMobilityValue.Value < (minIM ?? double.MaxValue))
-                        minIM = fp.MinIonMobilityValue.Value;
+                    _rangeFilterPairsIM.Add(new Tuple<double, double>(imLow, imHigh));
                 }
-                if (maxIM.HasValue)
-                    _maxFilterPairsIM = maxIM.Value;
-                if (minIM.HasValue)
-                    _minFilterPairsIM = minIM.Value;
+                _rangeFilterPairsIM.Sort((x, y) => x.Item1.CompareTo(y.Item1));
+                for (var i = 0; i < _rangeFilterPairsIM.Count-1;)
+                {
+                    if (_rangeFilterPairsIM[i].Item2 >= _rangeFilterPairsIM[i + 1].Item1)
+                    {
+                        // Ranges overlap, combine them
+                        _rangeFilterPairsIM[i] = new Tuple<double,double>(_rangeFilterPairsIM[i].Item1, _rangeFilterPairsIM[i + 1].Item2);
+                        _rangeFilterPairsIM.RemoveAt(i+1);
+                    }
+                    else
+                    {
+                        i++;
+                    }
+                }
             }
         }
 
@@ -454,14 +461,6 @@ namespace pwiz.Skyline.Model.Results
                 !x.MaxTime.HasValue ? 1 :
                 !y.MaxTime.HasValue ? -1 :
                 x.MaxTime.Value.CompareTo(y.MaxTime.Value);
-        }
-
-        /// <summary>
-        /// Compare filter pairs by minimum ion mobility range.
-        /// </summary>
-        public static int CompareByIM(SpectrumFilterPair x, SpectrumFilterPair y)
-        {
-            return Nullable.Compare(x.MinIonMobilityValue, y.MinIonMobilityValue);
         }
 
         public bool IsFirstPass { get; private set; }
@@ -517,14 +516,25 @@ namespace pwiz.Skyline.Model.Results
 
         public bool IsOutsideIonMobilityRange(IonMobilityValue imCheck)
         {
-            if (!imCheck.HasValue || imCheck.Mobility.Value == 0) // Consider these both as meaning "unknown"
+            var imCheckMobility = imCheck.Mobility ?? 0.0;  // Consider empty or zero as meaning "unknown"
+            if (imCheckMobility == 0.0 || _rangeFilterPairsIM == null || _rangeFilterPairsIM.Count==0)
                 return false; // Can't reject an as-yet-unknown value
-            return ((imCheck.Mobility.Value < _minFilterPairsIM || _maxFilterPairsIM < imCheck.Mobility.Value));
-        }
-
-        public bool HasIonMobilityRange
-        {
-            get { return _minFilterPairsIM != Double.MinValue; }
+            // Use binary search to find position in (sorted!) list
+            var index = CollectionUtil.BinarySearch(_rangeFilterPairsIM, r => r.Item1.CompareTo(imCheckMobility), true);
+            if (index < 0)
+            {
+                index = ~index; // No exact match with any window lower bound - this is the index of the first window whose LB is greater than imCheck
+                index = Math.Max(0, index - 1); // Start in the window below that
+            }
+            while (index < _rangeFilterPairsIM.Count)
+            {
+                var imWindow = _rangeFilterPairsIM[index++];
+                if (imCheckMobility < imWindow.Item1)
+                    return true;  // Not in any window
+                if (imCheckMobility >= imWindow.Item1 && imCheckMobility <= imWindow.Item2)
+                    return false; // Not outside the range
+            }
+            return true; // Not in any window
         }
 
         public bool IsMseData()
@@ -783,7 +793,9 @@ namespace pwiz.Skyline.Model.Results
                             {
                                 // We may encounter multiple window groups that include our mz and 1/K0 range, use the one whose mz,1/K0 boundbox we are most centered on
                                 var distanceMz = isoWin.IsolationMz.Value - filterPair.Q1;
-                                var distanceIM = imWinCenter - (filterPair.MinIonMobilityValue.Value + filterPair.MaxIonMobilityValue.Value) * .5;
+                                var distanceIM = filterPair.MinIonMobilityValue.HasValue ? // Do we actually have ion mobility information?
+                                    imWinCenter - (filterPair.MinIonMobilityValue.Value + filterPair.MaxIonMobilityValue.Value) * .5 :
+                                    0;
                                 var distanceToCenter = Math.Sqrt(distanceMz * distanceMz + distanceIM * distanceIM);
                                 if (_filterPairBestDiaPasefDistanceAndWindowGroupDictionary.TryGetValue(filterPair, out var bestDistanceAndWindowGroup))
                                 {
