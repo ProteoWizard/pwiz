@@ -69,6 +69,11 @@ namespace pwiz.MSGraph
         public bool LockYAxisMinAtZero { get; set; }
         public bool LockYAxisMaxAtZero { get; set; }
 
+        public bool LockYAxisAtZero
+        {
+            get { return LockYAxisMinAtZero; }
+        }
+
         protected MSGraphItemType _currentItemType;
         public MSGraphItemType CurrentItemType
         {
