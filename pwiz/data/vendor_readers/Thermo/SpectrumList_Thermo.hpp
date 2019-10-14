@@ -95,11 +95,18 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListIonMobilityBase
 
     vector<IndexEntry> index_;
     map<string, size_t> idToIndexMap_;
+    int maxMsLevel_; // determines which ms levels to keep in precursorCache
 
     void createIndex();
 
-    /// a cache mapping spectrum indices to SpectrumPtrs
-    struct CacheEntry { CacheEntry(size_t i, SpectrumPtr s) : index(i), spectrum(s) {}; size_t index; SpectrumPtr spectrum; };
+    /// a cache mapping spectrum indices to copies of the binary data (we have to keep copies because downstream filters could modify the data)
+    typedef pair<std::vector<double>, std::vector<double>> PrecursorBinaryData;
+    struct CacheEntry
+    {
+        CacheEntry(size_t i, const PrecursorBinaryData& b) : index(i), binaryData(b) {};
+        size_t index;
+        PrecursorBinaryData binaryData;
+    };
     typedef MemoryMRUCache<CacheEntry, BOOST_MULTI_INDEX_MEMBER(CacheEntry, size_t, index) > CacheType;
     mutable CacheType precursorCache_;
 

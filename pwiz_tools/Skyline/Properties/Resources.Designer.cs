@@ -339,6 +339,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to score = {0:F06}.
+        /// </summary>
+        public static string AbstractSpectrumGraphItem_AddAnnotations_ {
+            get {
+                return ResourceManager.GetString("AbstractSpectrumGraphItem_AddAnnotations_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to rank {0}.
         /// </summary>
         public static string AbstractSpectrumGraphItem_GetLabel_rank__0__ {
@@ -622,6 +631,15 @@ namespace pwiz.Skyline.Properties {
         public static string AddIrtsResultsDlg_dataGridView_CellContentClick_Measured {
             get {
                 return ResourceManager.GetString("AddIrtsResultsDlg_dataGridView_CellContentClick_Measured", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The current document contains {0} peptides not in this standard with measured retention times. It is suggested that you use a small number of peptides that can be easily measured in a single injection for an iRT standard. Choose a number of peptides below to have Skyline select automatically from the current document..
+        /// </summary>
+        public static string AddIrtStandardsDlg_AddIrtStandardsDlg_MessagePeptidesExcluded {
+            get {
+                return ResourceManager.GetString("AddIrtStandardsDlg_AddIrtStandardsDlg_MessagePeptidesExcluded", resourceCulture);
             }
         }
         
@@ -2990,6 +3008,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Linear equation calculation.
+        /// </summary>
+        public static string CalibrateIrtDlg_btnGraph_Click_Linear_equation_calculation {
+            get {
+                return ResourceManager.GetString("CalibrateIrtDlg_btnGraph_Click_Linear_equation_calculation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calibrated iRT values.
+        /// </summary>
+        public static string CalibrateIrtDlg_btnGraphIrts_Click_Calibrated_iRT_values {
+            get {
+                return ResourceManager.GetString("CalibrateIrtDlg_btnGraphIrts_Click_Calibrated_iRT_values", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to All of these peptides are known CiRT peptides. Would you like to use the predefined iRT values?.
         /// </summary>
         public static string CalibrateIrtDlg_OkDialog_All_of_these_peptides_are_known_CiRT_peptides__Would_you_like_to_use_the_predefined_iRT_values_ {
@@ -3000,11 +3036,142 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The iRT standard {0} already exists..
+        /// </summary>
+        public static string CalibrateIrtDlg_OkDialog_The_iRT_standard__0__already_exists_ {
+            get {
+                return ResourceManager.GetString("CalibrateIrtDlg_OkDialog_The_iRT_standard__0__already_exists_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document contains results for {0} peptide(s) not in this standard, which is less than the minimum requirement of {1} to calibrate a standard..
+        /// </summary>
+        public static string CalibrateIrtDlg_SetCalibrationPeptides_The_document_contains_results_for__0__peptide_s__not_in_this_standard__which_is_less_than_the_minimum_requirement_of__1__to_calibrate_a_standard_ {
+            get {
+                return ResourceManager.GetString("CalibrateIrtDlg_SetCalibrationPeptides_The_document_contains_results_for__0__pept" +
+                        "ide_s__not_in_this_standard__which_is_less_than_the_minimum_requirement_of__1__t" +
+                        "o_calibrate_a_standard_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document only contains results for {0} peptide(s) not in this standard. It is recommended to use at least {1} peptides to calibrate a standard. Are you sure you wish to continue?.
+        /// </summary>
+        public static string CalibrateIrtDlg_SetCalibrationPeptides_The_document_only_contains_results_for__0__peptide_s__not_in_this_standard__It_is_recommended_to_use_at_least__1__peptides_to_calibrate_a_standard__Are_you_sure_you_wish_to_continue_ {
+            get {
+                return ResourceManager.GetString("CalibrateIrtDlg_SetCalibrationPeptides_The_document_only_contains_results_for__0_" +
+                        "_peptide_s__not_in_this_standard__It_is_recommended_to_use_at_least__1__peptides" +
+                        "_to_calibrate_a_standard__Are_you_sure_you_wish_to_continue_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to iRT.
+        /// </summary>
+        public static string CalibrateIrtDlg_ShowGraph_iRT {
+            get {
+                return ResourceManager.GetString("CalibrateIrtDlg_ShowGraph_iRT", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Measured.
+        /// </summary>
+        public static string CalibrateIrtDlg_ShowGraph_Measured {
+            get {
+                return ResourceManager.GetString("CalibrateIrtDlg_ShowGraph_Measured", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to New iRT.
+        /// </summary>
+        public static string CalibrateIrtDlg_ShowGraph_New_iRT {
+            get {
+                return ResourceManager.GetString("CalibrateIrtDlg_ShowGraph_New_iRT", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Old iRT.
+        /// </summary>
+        public static string CalibrateIrtDlg_ShowGraph_Old_iRT {
+            get {
+                return ResourceManager.GetString("CalibrateIrtDlg_ShowGraph_Old_iRT", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} peptides.
+        /// </summary>
+        public static string CalibrateIrtDlg_StandardsChanged__0__peptides {
+            get {
+                return ResourceManager.GetString("CalibrateIrtDlg_StandardsChanged__0__peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 1 peptide.
+        /// </summary>
+        public static string CalibrateIrtDlg_StandardsChanged__1_peptide {
+            get {
+                return ResourceManager.GetString("CalibrateIrtDlg_StandardsChanged__1_peptide", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid fixed point peptides..
+        /// </summary>
+        public static string CalibrateIrtDlg_TryGetLine_Invalid_fixed_point_peptides_ {
+            get {
+                return ResourceManager.GetString("CalibrateIrtDlg_TryGetLine_Invalid_fixed_point_peptides_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum fixed point peptide must have a greater measured retention time than the minimum fixed point peptide..
+        /// </summary>
+        public static string CalibrateIrtDlg_TryGetLine_Maximum_fixed_point_peptide_must_have_a_greater_measured_retention_time_than_the_minimum_fixed_point_peptide_ {
+            get {
+                return ResourceManager.GetString("CalibrateIrtDlg_TryGetLine_Maximum_fixed_point_peptide_must_have_a_greater_measur" +
+                        "ed_retention_time_than_the_minimum_fixed_point_peptide_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Standard calibration peptides are required..
+        /// </summary>
+        public static string CalibrateIrtDlg_TryGetLine_Standard_calibration_peptides_are_required_ {
+            get {
+                return ResourceManager.GetString("CalibrateIrtDlg_TryGetLine_Standard_calibration_peptides_are_required_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The standard must have two fixed points..
         /// </summary>
-        public static string CalibrateIrtDlg_OkDialog_The_standard_must_have_two_fixed_points {
+        public static string CalibrateIrtDlg_TryGetLine_The_standard_must_have_two_fixed_points {
             get {
-                return ResourceManager.GetString("CalibrateIrtDlg_OkDialog_The_standard_must_have_two_fixed_points", resourceCulture);
+                return ResourceManager.GetString("CalibrateIrtDlg_TryGetLine_The_standard_must_have_two_fixed_points", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to iRT.
+        /// </summary>
+        public static string CalibrateIrtDlg_UpdateControls_iRT {
+            get {
+                return ResourceManager.GetString("CalibrateIrtDlg_UpdateControls_iRT", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to RT.
+        /// </summary>
+        public static string CalibrateIrtDlg_UpdateControls_RT {
+            get {
+                return ResourceManager.GetString("CalibrateIrtDlg_UpdateControls_RT", resourceCulture);
             }
         }
         
@@ -4476,6 +4643,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Regular expression &apos;{0}&apos; for {1} cannot be parsed..
+        /// </summary>
+        public static string CommandArgs_ParseRegexArgument_Error__Regular_expression___0___for__1__cannot_be_parsed_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_ParseRegexArgument_Error__Regular_expression___0___for__1__cannot_be_" +
+                        "parsed_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The primary transition count {0} must be between {1} and {2}..
         /// </summary>
         public static string CommandArgs_PrimaryTransitionCount_The_primary_transition_count__0__must_be_between__1__and__2__ {
@@ -4552,6 +4729,36 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No files match the file name pattern &apos;{0}&apos;..
+        /// </summary>
+        public static string CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_file_name_pattern___0___ {
+            get {
+                return ResourceManager.GetString("CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_file_name_pattern___0_" +
+                        "__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No files match the sample name pattern &apos;{0}&apos;..
+        /// </summary>
+        public static string CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_sample_name_pattern___0___ {
+            get {
+                return ResourceManager.GetString("CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_sample_name_pattern___" +
+                        "0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File name &apos;{0}&apos; does not match the pattern &apos;{1}&apos;. Ignoring {2}.
+        /// </summary>
+        public static string CommandLine_ApplyFileNameRegex_File_name___0___does_not_match_the_pattern___1____Ignoring__2_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ApplyFileNameRegex_File_name___0___does_not_match_the_pattern___1____" +
+                        "Ignoring__2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: {0} does not match the regular expression..
         /// </summary>
         public static string CommandLine_ApplyNamingPattern_Error___0__does_not_match_the_regular_expression_ {
@@ -4577,6 +4784,26 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandLine_ApplyNamingPattern_Error__Match_to_regular_expression_is_empty_for__0" +
                         "__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File &apos;{0}&apos; does not have a sample. Cannot apply sample name pattern. Ignoring..
+        /// </summary>
+        public static string CommandLine_ApplySampleNameRegex_File___0___does_not_have_a_sample__Cannot_apply_sample_name_pattern__Ignoring_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ApplySampleNameRegex_File___0___does_not_have_a_sample__Cannot_apply_" +
+                        "sample_name_pattern__Ignoring_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sample name &apos;{0}&apos; does not match the pattern &apos;{1}&apos;. Ignoring {2}.
+        /// </summary>
+        public static string CommandLine_ApplySampleNameRegex_Sample_name___0___does_not_match_the_pattern___1____Ignoring__2_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ApplySampleNameRegex_Sample_name___0___does_not_match_the_pattern___1" +
+                        "____Ignoring__2_", resourceCulture);
             }
         }
         
@@ -5188,6 +5415,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No replicates left to import..
+        /// </summary>
+        public static string CommandLine_ImportResults_No_replicates_left_to_import_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportResults_No_replicates_left_to_import_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} -&gt; {1}  Note: The file has already been imported. Ignoring....
         /// </summary>
         public static string CommandLine_ImportResultsFile__0______1___Note__The_file_has_already_been_imported__Ignoring___ {
@@ -5672,6 +5908,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Replicate &apos;{0}&apos; already exists in the document, using &apos;{1}&apos; instead..
+        /// </summary>
+        public static string CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_ {
+            get {
+                return ResourceManager.GetString("CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_docume" +
+                        "nt__using___1___instead_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: The Skyline file {0} does not exist..
         /// </summary>
         public static string CommandLine_OpenSkyFile_Error__The_Skyline_file__0__does_not_exist_ {
@@ -5940,6 +6186,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Failed attempting to change the transition filter settings..
+        /// </summary>
+        public static string CommandLine_SetFilterSettings_Error__Failed_attempting_to_change_the_transition_filter_settings_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetFilterSettings_Error__Failed_attempting_to_change_the_transition_f" +
+                        "ilter_settings_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Changing full-scan extraction to +/- {0} minutes from MS/MS IDs..
         /// </summary>
         public static string CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_from_MS_MS_IDs_ {
@@ -6091,6 +6347,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandLine_SetLibrary_Error__The_library_you_are_trying_to_add_conflicts_with_a_" +
                         "library_already_in_the_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Failed attempting to change the transition prediction settings..
+        /// </summary>
+        public static string CommandLine_SetPredictTranSettings_Error__Failed_attempting_to_change_the_transition_prediction_settings_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetPredictTranSettings_Error__Failed_attempting_to_change_the_transit" +
+                        "ion_prediction_settings_", resourceCulture);
             }
         }
         
@@ -9099,17 +9365,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The list of standard peptides must contain only recognized iRT-C18 standards to switch to a predefined set of iRT-C18 standards..
-        /// </summary>
-        public static string EditIrtCalcDlg_comboStandards_SelectedIndexChanged_The_list_of_standard_peptides_must_contain_only_recognized_iRT_C18_standards_to_switch_to_a_predefined_set_of_iRT_C18_standards_ {
-            get {
-                return ResourceManager.GetString("EditIrtCalcDlg_comboStandards_SelectedIndexChanged_The_list_of_standard_peptides_" +
-                        "must_contain_only_recognized_iRT_C18_standards_to_switch_to_a_predefined_set_of_" +
-                        "iRT_C18_standards_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The file {0} could not be created..
         /// </summary>
         public static string EditIrtCalcDlg_CreateDatabase_The_file__0__could_not_be_created {
@@ -10682,6 +10937,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Caused by ---&gt;.
+        /// </summary>
+        public static string ExceptionDialog_Caused_by_____ {
+            get {
+                return ResourceManager.GetString("ExceptionDialog_Caused_by_____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap ExistingQuant_thumb {
@@ -10921,6 +11185,26 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ExportMethodDlg_comboInstrument_SelectedIndexChanged_Export_of_DIA_isolation_list" +
                         "s_is_not_yet_supported_for__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Export a method with extra transitions for finding an optimal value..
+        /// </summary>
+        public static string ExportMethodDlg_comboOptimizing_SelectedIndexChanged_Export_a_method_with_extra_transitions_for_finding_an_optimal_value_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_comboOptimizing_SelectedIndexChanged_Export_a_method_with_extra_t" +
+                        "ransitions_for_finding_an_optimal_value_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optimizing for {0} will produce an additional {1} transitions per transition..
+        /// </summary>
+        public static string ExportMethodDlg_comboOptimizing_SelectedIndexChanged_Optimizing_for__0__will_produce_an_additional__1__transitions_per_transition_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_comboOptimizing_SelectedIndexChanged_Optimizing_for__0__will_prod" +
+                        "uce_an_additional__1__transitions_per_transition_", resourceCulture);
             }
         }
         
@@ -14722,6 +15006,33 @@ namespace pwiz.Skyline.Properties {
         public static string IrtDb_GetIrtDb_You_do_not_have_privileges_to_access_the_file__0_ {
             get {
                 return ResourceManager.GetString("IrtDb_GetIrtDb_You_do_not_have_privileges_to_access_the_file__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to iRT standards.
+        /// </summary>
+        public static string IrtDb_MakeDocumentXml_iRT_standards {
+            get {
+                return ResourceManager.GetString("IrtDb_MakeDocumentXml_iRT_standards", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to iRT Standards.
+        /// </summary>
+        public static string IrtStandardList_Label_iRT_Standards {
+            get {
+                return ResourceManager.GetString("IrtStandardList_Label_iRT_Standards", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit iRT Standards.
+        /// </summary>
+        public static string IrtStandardList_Title_Edit_iRT_Standards {
+            get {
+                return ResourceManager.GetString("IrtStandardList_Title_Edit_iRT_Standards", resourceCulture);
             }
         }
         
@@ -22166,6 +22477,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Fixed points.
+        /// </summary>
+        public static string RegressionOption_All_Fixed_points {
+            get {
+                return ResourceManager.GetString("RegressionOption_All_Fixed_points", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} Score.
         /// </summary>
         public static string RegressionUnconversion_CalculatorScoreFormat {
@@ -28989,6 +29309,17 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ToolInstaller_UnpackZipTool_Tool_Uses_R_and_specifies_Packages_without_an__0__fil" +
                         "e_in_the_tool_inf_directory_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server returned an invalid response. It might be down for maintenance. Please check the Tool Store on the skyline.ms website..
+        /// </summary>
+        public static string ToolInstallUI_InstallZipFromWeb_The_server_returned_an_invalid_response__It_might_be_down_for_maintenance__Please_check_the_Tool_Store_on_the_skyline_ms_website_ {
+            get {
+                return ResourceManager.GetString("ToolInstallUI_InstallZipFromWeb_The_server_returned_an_invalid_response__It_might" +
+                        "_be_down_for_maintenance__Please_check_the_Tool_Store_on_the_skyline_ms_website_" +
+                        "", resourceCulture);
             }
         }
         

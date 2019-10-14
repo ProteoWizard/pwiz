@@ -25,6 +25,7 @@ using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -54,6 +55,12 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            RunIrtTest();
+            RunCalibrationTest();
+        }
+
+        private void RunIrtTest()
+        {
             const int numStandardPeps = 11;
             const int numLibraryPeps = 18;
             const string irtCalc = "iRT-C18";
@@ -75,8 +82,6 @@ namespace pwiz.SkylineTestFunctional
                     irtDlg1.CalcName = irtCalc;
                     irtDlg1.CreateDatabase(databasePath);
                 });
-
-            var calibratePeptides = new List<MeasuredPeptide>();
 
             /*
              * Check several error handling cases
@@ -115,7 +120,7 @@ namespace pwiz.SkylineTestFunctional
                 int j = i;
                 RunUI(() =>
                           {
-                              calibratePeptides = calibrateDlg.Recalculate(SkylineWindow.Document, j);
+                              var calibratePeptides = calibrateDlg.Recalculate(SkylineWindow.Document, j);
                               Assert.AreEqual(calibratePeptides.Count, j);
                               Assert.IsNull(FindOpenForm<MessageDlg>());
                           });
@@ -127,6 +132,7 @@ namespace pwiz.SkylineTestFunctional
                           //After closing this dialog, there should be 3 iRT values below 0
                           //and 3 above 100
                           calibrateDlg.SetFixedPoints(3, 7);
+                          calibrateDlg.StandardName = "Document1";
 
                           calibrateDlg.OkDialog();
                       });
@@ -197,12 +203,10 @@ namespace pwiz.SkylineTestFunctional
             // Recalibrate
             const int shift = 100;
             const int skew = 10;
-            RunDlg<RecalibrateIrtDlg>(irtDlg1.Calibrate, recalDlg =>
+            RunDlg<CalibrateIrtDlg>(irtDlg1.Calibrate, recalDlg =>
             {
-                recalDlg.MinIrt = standard[1].RetentionTime + shift;
-                recalDlg.MaxIrt = standard[standard.Length - 1].RetentionTime*skew + shift;
-                recalDlg.FixedPoint1 = standard[1].Sequence;
-                recalDlg.FixedPoint2 = standard[standard.Length - 1].Sequence;
+                recalDlg.SetIrtRange(standard[1].RetentionTime + shift, standard[standard.Length - 1].RetentionTime * skew + shift);
+                recalDlg.SetFixedPoints(1, standard.Length - 1);
                 recalDlg.OkDialog();
             });
             RunUI(() =>
@@ -213,12 +217,10 @@ namespace pwiz.SkylineTestFunctional
                                     irtDlg1.StandardPeptides.Skip(i).First().Irt);
                 }
             });
-            RunDlg<RecalibrateIrtDlg>(irtDlg1.Calibrate, recalDlg =>
+            RunDlg<CalibrateIrtDlg>(irtDlg1.Calibrate, recalDlg =>
             {
-                recalDlg.FixedPoint1 = standard[2].Sequence;
-                recalDlg.FixedPoint2 = standard[standard.Length - 2].Sequence;
-                recalDlg.MinIrt = standard[2].RetentionTime;
-                recalDlg.MaxIrt = standard[standard.Length - 2].RetentionTime;
+                recalDlg.SetIrtRange(standard[2].RetentionTime, standard[standard.Length - 2].RetentionTime);
+                recalDlg.SetFixedPoints(2, standard.Length - 2);
                 recalDlg.OkDialog();
             });
 
@@ -388,6 +390,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 //Get 11 peptides from the document (all of them) and go back to calculator dialog
                 calibrateDlg2.Recalculate(SkylineWindow.Document, 11);
+                calibrateDlg2.StandardName = "Document2";
                 calibrateDlg2.OkDialog();
             });
 
@@ -701,6 +704,101 @@ namespace pwiz.SkylineTestFunctional
 
             // Make sure no message boxes are left open
             Assert.IsNull(FindOpenForm<MessageDlg>());
+        }
+
+        private void RunCalibrationTest()
+        {
+            var testFilesDir = new TestFilesDir(TestContext, TestFilesZip);
+
+            RunUI(() => SkylineWindow.OpenFile(testFilesDir.GetTestPath("RePLiCal data for Skyline team - Pierce.sky")));
+            var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            var editIrtCalcDlg = ShowDialog<EditIrtCalcDlg>(peptideSettingsDlg.AddCalculator);
+
+            var calcPath = testFilesDir.GetTestPath("calibration_test_calculator.irtdb");
+            const string calcName = "Calibration test calculator";
+            RunUI(() =>
+            {
+                editIrtCalcDlg.CalcName = calcName;
+                editIrtCalcDlg.CreateDatabase(calcPath);
+            });
+
+            var calibrateIrtDlg = ShowDialog<CalibrateIrtDlg>(editIrtCalcDlg.Calibrate);
+            RunUI(() =>
+            {
+                calibrateIrtDlg.StandardName = "Test standard";
+                var regressionOptions = calibrateIrtDlg.RegressionOptions;
+                Assert.AreEqual(3, regressionOptions.Length);
+                Assert.IsTrue(regressionOptions[0].Name.Equals(Resources.RegressionOption_All_Fixed_points) && regressionOptions[0].IsFixedPoint);
+                Assert.IsTrue(regressionOptions.Select(opt => opt.Name).Contains(IrtStandard.REPLICAL.Name));
+                Assert.IsTrue(regressionOptions.Select(opt => opt.Name).Contains(IrtStandard.PIERCE.Name));
+                Assert.IsTrue(ReferenceEquals(calibrateIrtDlg.SelectedRegressionOption, regressionOptions[0]));
+            });
+            RunDlg<MessageDlg>(() => calibrateIrtDlg.GraphRegression(), false);
+            RunDlg<MessageDlg>(() => calibrateIrtDlg.GraphIrts(), false);
+            var addIrtDlg = ShowDialog<AddIrtStandardsDlg>(calibrateIrtDlg.UseResults);
+            RunDlg<MessageDlg>(() => addIrtDlg.OkDialog(), false); // try empty textbox
+            RunUI(() => addIrtDlg.StandardCount = CalibrateIrtDlg.MIN_STANDARD_PEPTIDES - 1);
+            RunDlg<MessageDlg>(() => addIrtDlg.OkDialog(), false); // try below minimum
+            RunUI(() => addIrtDlg.StandardCount = SkylineWindow.Document.PeptideCount + 1);
+            RunDlg<MessageDlg>(() => addIrtDlg.OkDialog(), false); // try above maximum
+            RunUI(() => addIrtDlg.StandardCount = 10);
+            OkDialog(addIrtDlg, addIrtDlg.OkDialog);
+            RunUI(() => Assert.AreEqual(10, calibrateIrtDlg.StandardPeptideCount));
+            RunDlg<GraphRegression>(() => calibrateIrtDlg.GraphRegression(), false, dlg =>
+            {
+                Assert.AreEqual(1, dlg.RegressionGraphDatas.Count);
+                Assert.AreEqual(2, dlg.RegressionGraphDatas.First().RegularPoints.Count);
+                dlg.CloseDialog();
+            });
+            RunDlg<GraphRegression>(() => calibrateIrtDlg.GraphIrts(), false, dlg =>
+            {
+                Assert.AreEqual(1, dlg.RegressionGraphDatas.Count);
+                Assert.AreEqual(10, dlg.RegressionGraphDatas.First().RegularPoints.Count);
+                dlg.CloseDialog();
+            });
+            RunDlg<AddIrtStandardsDlg>(() =>
+                    calibrateIrtDlg.SelectedRegressionOption = calibrateIrtDlg.RegressionOptions.First(opt => opt.Name.Equals(IrtStandard.PIERCE.Name)),
+                false, dlg =>
+                {
+                    dlg.StandardCount = 10;
+                    dlg.OkDialog();
+                });
+            var standardPeptides = new List<Target>();
+            RunUI(() =>
+            {
+                Assert.AreEqual(10, calibrateIrtDlg.StandardPeptideCount);
+                calibrateIrtDlg.SelectedRegressionOption = calibrateIrtDlg.RegressionOptions.First(opt => opt.Name.Equals(IrtStandard.REPLICAL.Name));
+                Assert.AreEqual(15, calibrateIrtDlg.StandardPeptideCount);
+                standardPeptides.AddRange(calibrateIrtDlg.StandardPeptideList.Select(pep => pep.Target));
+            });
+            OkDialog(calibrateIrtDlg, calibrateIrtDlg.OkDialog);
+            OkDialog(editIrtCalcDlg, editIrtCalcDlg.OkDialog);
+            OkDialog(peptideSettingsDlg, peptideSettingsDlg.OkDialog);
+
+            RunUI(() =>
+            {
+                Assert.IsTrue(SkylineWindow.SaveDocument());
+                SkylineWindow.NewDocument();
+            });
+            // The created irtdb should have document XML for the standard peptides
+            var irtDb = IrtDb.GetIrtDb(calcPath, null);
+            Assert.IsFalse(string.IsNullOrEmpty(irtDb.DocumentXml));
+            // Set RT regression to None
+            RunDlg<PeptideSettingsUI>(() => SkylineWindow.ShowPeptideSettingsUI(), true, dlg =>
+            {
+                dlg.ChooseRegression(Resources.SettingsList_ELEMENT_NONE_None);
+                dlg.OkDialog();
+            });
+            // Change to the RT regression using the calculator with document XML for prompt to add standards to document
+            var peptideSettingsDlg2 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            RunUI(() => peptideSettingsDlg2.ChooseRegression(calcName));
+            var addStandardsDlg = ShowDialog<AddIrtStandardsToDocumentDlg>(peptideSettingsDlg2.OkDialog);
+            RunUI(() => addStandardsDlg.NumTransitions = 3);
+            OkDialog(addStandardsDlg, addStandardsDlg.BtnYesClick);
+            WaitForCondition(() => SkylineWindow.Document.PeptideCount == standardPeptides.Count);
+            Assert.AreEqual(standardPeptides.Count, SkylineWindow.Document.PeptideCount);
+            Assert.IsTrue(SkylineWindow.Document.Peptides.All(pep => standardPeptides.Contains(pep.Target)));
+            RunUI(() => SkylineWindow.NewDocument(true));
         }
 
         private SrmDocument VerifyIrtStandards(SrmDocument docBefore, bool expectStandards)

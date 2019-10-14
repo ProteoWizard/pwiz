@@ -416,7 +416,7 @@
   <data name="removed_peak_from" xml:space="preserve">
     <value>从复制“{1}”中删除了{0}的峰值</value>
   </data>
-  <data name="removed_peaks">
+  <data name="removed_peaks" xml:space="preserve">
     <value>已从 {1} 个节点中删除 {0} 个峰</value>
   </data>
   <data name="removed_all_peaks_from" xml:space="preserve">
@@ -631,9 +631,6 @@
   </data>
   <data name="modified_outside_of_skyline" xml:space="preserve">
     <value>该文档在 Skyline 之外进行了修改：{0}</value>
-  </data>
-  <data name="AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing" xml:space="preserve">
-    <value>审计日志已损坏。审计日志条目时间戳和索引应该减少</value>
   </data>
   <data name="test_only" xml:space="preserve">
     <value>{0}</value>

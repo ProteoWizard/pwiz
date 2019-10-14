@@ -42,6 +42,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 {
     public partial class BuildPeptideSearchLibraryControl : UserControl
     {
+        private readonly SettingsListComboDriver<IrtStandard> _driverStandards;
+
         public BuildPeptideSearchLibraryControl(IModifyDocumentContainer documentContainer, ImportPeptideSearch importPeptideSearch, LibraryManager libraryManager)
         {
             DocumentContainer = documentContainer;
@@ -55,8 +57,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (DocumentContainer.Document.PeptideCount == 0)
                 cbFilterForDocumentPeptides.Hide();
 
-            foreach (var standard in IrtStandard.ALL)
-                comboStandards.Items.Add(standard);
+            _driverStandards = new SettingsListComboDriver<IrtStandard>(comboStandards, Settings.Default.IrtStandardList);
+            _driverStandards.LoadList(IrtStandard.EMPTY.GetKey());
         }
 
         public BuildPeptideSearchLibrarySettings BuildLibrarySettings
@@ -138,21 +140,23 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public IrtStandard IrtStandards
         {
-            get { return comboStandards.SelectedItem as IrtStandard ?? IrtStandard.EMPTY; }
+            get { return _driverStandards.SelectedItem; }
             set
             {
-                if (value == null)
-                    comboStandards.SelectedIndex = 0;
-
-                for (var i = 0; i < comboStandards.Items.Count; i++)
+                var index = 0;
+                if (value != null)
                 {
-                    if (comboStandards.Items[i] == value)
+                    for (var i = 0; i < comboStandards.Items.Count; i++)
                     {
-                        comboStandards.SelectedIndex = i;
-                        return;
+                        if (comboStandards.Items[i].ToString().Equals(value.GetKey()))
+                        {
+                            index = i;
+                            break;
+                        }
                     }
                 }
-                comboStandards.SelectedIndex = 0;
+                comboStandards.SelectedIndex = index;
+                _driverStandards.SelectedIndexChangedEvent(null, null);
             }
         }
 
@@ -374,9 +378,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (!LoadPeptideSearchLibrary(docLibSpec))
                 return false;
 
-            var selectedIrtStandard = comboStandards.SelectedItem as IrtStandard;
+            var selectedIrtStandard = _driverStandards.SelectedItem;
             var addedIrts = false;
-            if (selectedIrtStandard != null && selectedIrtStandard != IrtStandard.EMPTY)
+            if (selectedIrtStandard != null && !selectedIrtStandard.Name.Equals(IrtStandard.EMPTY.Name))
                 addedIrts = AddIrtLibraryTable(docLibSpec.FilePath, selectedIrtStandard);
 
             var docNew = ImportPeptideSearch.AddDocumentSpectralLibrary(DocumentContainer.Document, docLibSpec);
@@ -577,12 +581,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             WorkflowType = workflowType;
             grpWorkflow.Hide();
-            var offset = grpWorkflow.Height + (lblStandardPeptides.Top - listSearchFiles.Bottom);
-            listSearchFiles.Height += offset;
-            lblStandardPeptides.Top += offset;
-            comboStandards.Top += offset;
-            cbIncludeAmbiguousMatches.Top += offset;
-            cbFilterForDocumentPeptides.Top += offset;
         }
 
         private void radioButtonLibrary_CheckedChanged(object sender, EventArgs e)
@@ -649,6 +647,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void tbxLibraryPath_TextChanged(object sender, EventArgs e)
         {
             FireInputFilesChanged();
+        }
+
+        private void comboStandards_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _driverStandards.SelectedIndexChangedEvent(sender, e);
         }
     }
 }
