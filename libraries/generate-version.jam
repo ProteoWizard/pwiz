@@ -146,7 +146,11 @@ if ! --incremental in [ modules.peek : ARGV ] || --force-generate-version in [ m
     local year = [ MATCH "([0-9][0-9][0-9][0-9])" : [ modules.peek : JAMDATE ] ] ;
     local AssemblyCopyright = "Copyright © $(AssemblyCompany) $(year)" ;
 
-    if ! --official in [ modules.peek : ARGV ]
+    if --automated in [ modules.peek : ARGV ]
+    {
+        last-commit-hash = "$(last-commit-hash) (automated build)" ;
+    }
+    else if ! --official in [ modules.peek : ARGV ]
     {
         last-commit-hash = "$(last-commit-hash) (developer build)" ;
     }

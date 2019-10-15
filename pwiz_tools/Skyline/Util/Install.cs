@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Deployment.Application;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -41,6 +40,7 @@ namespace pwiz.Skyline.Util
         }
 
         private static bool IsDeveloperInstall { get; set; }
+        private static bool IsAutomatedBuild { get; set; }
 
         public static bool Is64Bit
         {
@@ -97,6 +97,11 @@ namespace pwiz.Skyline.Util
                             IsDeveloperInstall = true;
                             productVersion = productVersion.Replace(@"(developer build)", "").Trim();
                         }
+                        else if (productVersion.Contains(@"(automated build)"))
+                        {
+                            IsAutomatedBuild = true;
+                            productVersion = productVersion.Replace(@"(automated build)", "").Trim();
+                        }
                     }
                     else
                     {
@@ -141,9 +146,10 @@ namespace pwiz.Skyline.Util
         {
             get
             {
-                return string.Format(@"{0} ({1}-bit{2}) {3}",
+                return string.Format(@"{0} ({1}-bit{2}{3}) {4}",
                                      Program.Name, (Is64Bit ? @"64" : @"32"),
                                     (IsDeveloperInstall ? @" : developer build" : string.Empty),
+                                    (IsAutomatedBuild ? @" : automated build" : string.Empty),
                                      Regex.Replace(Version, @"(\d+\.\d+\.\d+\.\d+)-(\S+)", "$1 ($2)"));
             } 
         }
