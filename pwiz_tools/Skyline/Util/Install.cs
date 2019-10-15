@@ -40,14 +40,7 @@ namespace pwiz.Skyline.Util
             }
         }
 
-        private static bool IsDeveloperInstall
-        {
-            get
-            {
-                return string.IsNullOrEmpty(Properties.Settings.Default.InstalledVersion)
-                       && !ApplicationDeployment.IsNetworkDeployed;
-            }
-        }
+        private static bool IsDeveloperInstall { get; set; }
 
         public static bool Is64Bit
         {
@@ -99,6 +92,11 @@ namespace pwiz.Skyline.Util
                     if (attrs != null && attrs.Length > 0)
                     {
                         productVersion = ((AssemblyInformationalVersionAttribute)attrs[0]).InformationalVersion;
+                        if (productVersion.Contains(@"(developer build)"))
+                        {
+                            IsDeveloperInstall = true;
+                            productVersion = productVersion.Replace(@"(developer build)", "").Trim();
+                        }
                     }
                     else
                     {
