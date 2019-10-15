@@ -779,7 +779,7 @@ namespace pwiz.Skyline.Model.Results
                     : spectra;
                 var imWinCenter = is_diaPASEF ? (spectra[indexFirst].IonMobility.Mobility.Value+spectra[indexLast - 1].IonMobility.Mobility.Value)*.5 : 0;
 
-                foreach (var isoWin in GetIsolationWindows(spectra[0].GetPrecursorsByMsLevel(1)))
+                foreach (var isoWin in GetIsolationWindows(selectedSpectra[0].GetPrecursorsByMsLevel(1)))
                 {
                     foreach (var filterPair in FindFilterPairs(isoWin, _acquisitionMethod, ignoreIso))
                     {
