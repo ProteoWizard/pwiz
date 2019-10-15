@@ -933,16 +933,12 @@ namespace pwiz.Skyline.Model.Results
                     }
                     else
                     {
+                        var ionMobility = _filter.HasIonMobilityFilters ? _lookaheadContext.GetIonMobility(i) : null ; // Read this first to take advantage of cache behavior
+
                         // If MS/MS filtering is not enabled, skip anything that is not a MS1 scan
                         var msLevel = _lookaheadContext.GetMsLevel(i);
                         if (!_filter.EnabledMsMs && msLevel != 1)
                             continue;
-
-                        var ionMobility = _lookaheadContext.GetIonMobility(i);
-                        if (ionMobility.HasValue && _filter.IsOutsideIonMobilityRange(ionMobility))
-                        {
-                            continue;
-                        }
 
                         // Skip quickly through the chromatographic lead-in and tail when possible 
                         if (msLevel > 1 || !_filter.IsFilteringFullGradientMs1) // We need all MS1 for TIC and BPC
@@ -964,6 +960,12 @@ namespace pwiz.Skyline.Model.Results
                             {
                                 continue;
                             }
+                        }
+
+                        // Ignore uninteresting ion mobility ranges
+                        if (ionMobility != null && ionMobility.HasValue && _filter.IsOutsideIonMobilityRange(ionMobility))
+                        {
+                            continue;
                         }
 
                         // Inexpensive checks are complete, now actually get the spectrum data
@@ -1275,13 +1277,6 @@ namespace pwiz.Skyline.Model.Results
                 return _lookAheadIndex;
             }
 
-            private bool NextSpectrumIsIonMobilityScanForCurrentRetentionTime(IonMobilityValue nextIM)
-            {
-                bool result = IonMobilityValue.IsExpectedValueOrdering(_previousIonMobilityValue, nextIM);
-                _previousIonMobilityValue = nextIM;
-                return result;
-            }
-
             private bool NextSpectrumIsAgilentMse(MsDataSpectrum nextSpectrum, int listLevel, double startCE)
             {
                 // Average runs of MS/MS scans until the start CE is seen again
@@ -1300,63 +1295,101 @@ namespace pwiz.Skyline.Model.Results
             public MsDataSpectrum[] Lookahead(MsDataSpectrum dataSpectrum, out double? rt)
             {
                 var spectrumList = new List<MsDataSpectrum>();
-                int listLevel = dataSpectrum.Level;
-                double startCE = GetPrecursorCollisionEnergy(dataSpectrum);
-                _previousIonMobilityValue = IonMobilityValue.EMPTY;
+                double? rtReported = null;
                 double rtTotal = 0;
-                double? rtFirst = null;
-                _lookAheadDataSpectrum = null;
-                while (_lookAheadIndex++ < _lenSpectra)
+
+                if (dataSpectrum.IonMobility.HasValue)
                 {
-                    _rt = dataSpectrum.RetentionTime;
-                    if (_rt.HasValue && dataSpectrum.Mzs.Length != 0)
+                    // IM data - gather spectra at this RT ignoring any with uninteresting IM values
+                    _previousIonMobilityValue = IonMobilityValue.EMPTY;
+                    _lookAheadDataSpectrum = null;
+                    while (_lookAheadIndex++ < _lenSpectra)
                     {
-                        spectrumList.Add(dataSpectrum);
-                        rtTotal += dataSpectrum.RetentionTime.Value;
-                        if (!rtFirst.HasValue)
-                            rtFirst = dataSpectrum.RetentionTime;
-                    }
-                    if (!_filter.IsAgilentMse && !dataSpectrum.IonMobility.HasValue)
-                        break;
+                        _rt = dataSpectrum.RetentionTime;
+                        if (_rt.HasValue && dataSpectrum.Mzs.Length != 0)
+                        {
+                            spectrumList.Add(dataSpectrum);
+                            if (!rtReported.HasValue)
+                                rtReported = dataSpectrum.RetentionTime;
+                        }
+                        if (!dataSpectrum.IonMobility.HasValue)
+                            break;
 
-                    // Quickly skip over spectra with correct RT but uninteresting IM
-                    var usefulRtAndIm = false;
-                    while (_lookAheadIndex < _lenSpectra)
-                    {
-                        var nextRT = _dataFile.GetStartTime(_lookAheadIndex);
-                        if ((_rt ?? 0) != (nextRT ?? -1))
-                            break;
-                        var nextIM = _dataFile.GetIonMobility(_lookAheadIndex);
-                        if (!NextSpectrumIsIonMobilityScanForCurrentRetentionTime(nextIM))
-                            break;
-                        usefulRtAndIm = !_filter.IsOutsideIonMobilityRange(nextIM);
-                        if (usefulRtAndIm)
-                            break;
-                        _lookAheadIndex++; // Keep looking for useful IM ranges within this RT
-                    }
+                        // Advance to next spectrum with correct RT and in-range IM
+                        var foundUsefulSpectrum = false;
+                        while (_lookAheadIndex < _lenSpectra)
+                        {
+                            var nextIM = _dataFile.GetIonMobility(_lookAheadIndex); // Get this before RT to take advantage of cache behavior
+                            var nextRT = _dataFile.GetStartTime(_lookAheadIndex);
+                            if ((_rt ?? 0) != (nextRT ?? -1))
+                                break; // We've left the RT range, done here
+                            if (IsNextSpectrumIonMobilityForCurrentRT(nextIM))
+                            {
+                                foundUsefulSpectrum = true;
+                                break; // This spectrum has interesting RT and IM, go add to list
+                            }
+                            _lookAheadIndex++; // Keep looking for useful IM ranges within this RT
+                        }
 
-                    if (!(usefulRtAndIm || _filter.IsAgilentMse))
-                    {
-                        _lookAheadDataSpectrum = null; // No reason to read spectra at this time
-                        break;
-                    }
-
-                    if (_lookAheadIndex < _lenSpectra)
-                    {
-                        dataSpectrum = _lookAheadDataSpectrum = _dataFile.GetSpectrum(_lookAheadIndex);
-                        // Reasons to keep adding to the list:
-                        //   Retention time hasn't changed but ion mobility has changed, or
-                        //   Agilent ramped-CE data - MS2 scans get averaged
-                        if (!(usefulRtAndIm || NextSpectrumIsAgilentMse(dataSpectrum, listLevel, startCE)))
+                        if (!foundUsefulSpectrum)
+                        {
+                            _lookAheadDataSpectrum = null; // Ran off end of current RT
                             break;
+                        }
+
+                        if (_lookAheadIndex < _lenSpectra)
+                        {
+                            dataSpectrum = _lookAheadDataSpectrum = _dataFile.GetSpectrum(_lookAheadIndex); // Add this to the list
+                        }
                     }
                 }
+                else if (_filter.IsAgilentMse)
+                {
+                    // Agilent ramped-CE data - MS2 scans get averaged
+                    var startCE = GetPrecursorCollisionEnergy(dataSpectrum);
+                    var listLevel = dataSpectrum.Level;
+                    while (_lookAheadIndex++ < _lenSpectra)
+                    {
+                        _rt = dataSpectrum.RetentionTime;
+                        if (_rt.HasValue && dataSpectrum.Mzs.Length != 0)
+                        {
+                            spectrumList.Add(dataSpectrum);
+                            rtTotal += dataSpectrum.RetentionTime.Value;
+                        }
+                        if (_lookAheadIndex < _lenSpectra)
+                        {
+                            dataSpectrum = _lookAheadDataSpectrum = _dataFile.GetSpectrum(_lookAheadIndex);
+                            if (!NextSpectrumIsAgilentMse(dataSpectrum, listLevel, startCE))
+                                break;
+                        }
+                    }
+                    if (spectrumList.Count > 0)
+                        rtReported = rtTotal / spectrumList.Count;
+                }
+                else
+                {
+                    // No need to search forward, this isn't IMS or Agilent ramped-CE data
+                    rtReported = dataSpectrum.RetentionTime;
+                    if (rtReported.HasValue && dataSpectrum.Mzs.Length != 0)
+                    {
+                        spectrumList.Add(dataSpectrum);
+                    }
+                }
+
                 if (spectrumList.Any()) // Should have at least one non-empty scan at this ion mobility
-                    _rt = _filter.IsAgilentMse ? (rtTotal / spectrumList.Count) : rtFirst;
+                    _rt = rtReported;
                 else
                     _rt = null;
-                rt = _rt;
+                rt = _rt; // Set return value
                 return spectrumList.ToArray();
+            }
+
+            private bool IsNextSpectrumIonMobilityForCurrentRT(IonMobilityValue nextIM)
+            {
+                var isUsefulNextSpectrum = IonMobilityValue.IsExpectedValueOrdering(_previousIonMobilityValue, nextIM) && 
+                                           !_filter.IsOutsideIonMobilityRange(nextIM);
+                _previousIonMobilityValue = nextIM;
+                return isUsefulNextSpectrum;
             }
 
             private static double GetPrecursorCollisionEnergy(MsDataSpectrum dataSpectrum)

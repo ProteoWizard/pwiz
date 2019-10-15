@@ -256,6 +256,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
             result->set(MS_total_ion_current, spectrum->getTIC());
         }
 
+        if (detailLevel == DetailLevel_InstantMetadata)
+            return result;
+
         if (spectrum->isIonMobilitySpectrum())
         {
             scan.set(MS_inverse_reduced_ion_mobility, spectrum->oneOverK0(), MS_Vs_cm_2);
@@ -266,14 +269,12 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
             }
         }
 
+        if (detailLevel == DetailLevel_FastMetadata)
+            return result;
 
         // Enumerating merged scan numbers is not instant.
-        if (config_.combineIonMobilitySpectra)
-        {
-            if (detailLevel <= DetailLevel_FastMetadata)
-                return result;
             IntegerSet scanNumbers = spectrum->getMergedScanNumbers();
-            if (scanNumbers.size() < 100)
+        if (config_.combineIonMobilitySpectra && scanNumbers.size() < 100)
             {
                 using namespace boost::spirit::karma;
                 auto frameScanPair = compassDataPtr_->getFrameScanPair(si.scan);
@@ -302,14 +303,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
                 result->scanList.set(MS_sum_of_spectra);
             }
             else
-            {
                 result->scanList.set(MS_no_combination);
-            }
-        }
-        else
-        {
-            result->scanList.set(MS_no_combination);
-        }
 
         //sd.set(MS_lowest_observed_m_z, minObservedMz);
         //sd.set(MS_highest_observed_m_z, maxObservedMz);
@@ -388,8 +382,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
             if (precursor.selectedIons.size() > 0 || !precursor.isolationWindow.empty())
                 result->precursors.push_back(precursor);
         }
-        if (detailLevel <= DetailLevel_FastMetadata)
-            return result;
 
         if (detailLevel == DetailLevel_FullData)
         {

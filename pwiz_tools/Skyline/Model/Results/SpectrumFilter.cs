@@ -134,7 +134,7 @@ namespace pwiz.Skyline.Model.Results
                     /*
                      Leaving this here in case we ever decide to fall back to our own BPC+TIC extraction in cases where data
                      file doesn't have them ready to go, as in mzXML
-                    if (!firstPass && _isIonMobilityFiltered)
+                    if (!firstPass && !_isIonMobilityFiltered)
                     {
                         var key = TIC_KEY;
                         dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, dictPrecursorMzToFilter.Count,
@@ -433,7 +433,7 @@ namespace pwiz.Skyline.Model.Results
                         imLow = Math.Min(imLow, imLow + offset);
                         imHigh = Math.Max(imHigh, imHigh + offset);
                     }
-                    _rangeFilterPairsIM.Add(new Tuple<double, double>(imLow, imHigh));
+                    _rangeFilterPairsIM.Add(Tuple.Create(imLow, imHigh));
                 }
                 _rangeFilterPairsIM.Sort((x, y) => x.Item1.CompareTo(y.Item1));
                 for (var i = 0; i < _rangeFilterPairsIM.Count-1;)
@@ -441,13 +441,20 @@ namespace pwiz.Skyline.Model.Results
                     if (_rangeFilterPairsIM[i].Item2 >= _rangeFilterPairsIM[i + 1].Item1)
                     {
                         // Ranges overlap, combine them
-                        _rangeFilterPairsIM[i] = new Tuple<double,double>(_rangeFilterPairsIM[i].Item1, _rangeFilterPairsIM[i + 1].Item2);
+                        _rangeFilterPairsIM[i] = Tuple.Create(_rangeFilterPairsIM[i].Item1, _rangeFilterPairsIM[i + 1].Item2);
                         _rangeFilterPairsIM.RemoveAt(i+1);
                     }
                     else
                     {
                         i++;
                     }
+                }
+
+                HasIonMobilityFilters = _rangeFilterPairsIM.Count > 0;
+                if (HasIonMobilityFilters)
+                {
+                    _lowEndFilterPairsIM = _rangeFilterPairsIM[0].Item1;
+                    _highEndFilterPairsIM = _rangeFilterPairsIM.Last().Item2;
                 }
             }
         }
@@ -514,27 +521,36 @@ namespace pwiz.Skyline.Model.Results
             return ((rtCheck.Value < _minFilterPairsRT || _maxFilterPairsRT < rtCheck.Value));
         }
 
+        public bool HasIonMobilityFilters { get; private set; }
+
+        private int _indexFilterPairsIM;
+        private double _lowEndFilterPairsIM, _highEndFilterPairsIM;
+
         public bool IsOutsideIonMobilityRange(IonMobilityValue imCheck)
         {
+            if (!HasIonMobilityFilters)
+                return false; // No range to be outside of
             var imCheckMobility = imCheck.Mobility ?? 0.0;  // Consider empty or zero as meaning "unknown"
-            if (imCheckMobility == 0.0 || _rangeFilterPairsIM == null || _rangeFilterPairsIM.Count==0)
+            if (imCheckMobility == 0.0)
                 return false; // Can't reject an as-yet-unknown value
-            // Use binary search to find position in (sorted!) list
-            var index = CollectionUtil.BinarySearch(_rangeFilterPairsIM, r => r.Item1.CompareTo(imCheckMobility), true);
-            if (index < 0)
+            if (_indexFilterPairsIM  >= 0 && 
+                imCheckMobility >= _rangeFilterPairsIM[_indexFilterPairsIM].Item1 && imCheckMobility <= _rangeFilterPairsIM[_indexFilterPairsIM].Item2)
+                return false; // Found in same window as previous
+            else if (_indexFilterPairsIM < 0 &&
+                     imCheckMobility > _rangeFilterPairsIM[~_indexFilterPairsIM - 1].Item2 && imCheckMobility < _rangeFilterPairsIM[~_indexFilterPairsIM].Item1)
+                return false; // Fell between same two windows as previous
+            else if (imCheckMobility < _lowEndFilterPairsIM || imCheckMobility > _highEndFilterPairsIM)
+                return true;
+            // Locate position, if any, of window in sorted list which contains imCheckMobility.
+            // Will return negative index iff imCheckMobility is between windows.
+            _indexFilterPairsIM = CollectionUtil.BinarySearch(_rangeFilterPairsIM, r =>
             {
-                index = ~index; // No exact match with any window lower bound - this is the index of the first window whose LB is greater than imCheck
-                index = Math.Max(0, index - 1); // Start in the window below that
-            }
-            while (index < _rangeFilterPairsIM.Count)
-            {
-                var imWindow = _rangeFilterPairsIM[index++];
-                if (imCheckMobility < imWindow.Item1)
-                    return true;  // Not in any window
-                if (imCheckMobility >= imWindow.Item1 && imCheckMobility <= imWindow.Item2)
-                    return false; // Not outside the range
-            }
-            return true; // Not in any window
+                var val = r.Item1.CompareTo(imCheckMobility);
+                if (val >= 0)
+                    return val; // imCheckMobility is less than or equal to lower bound of this window
+                return imCheckMobility <= r.Item2 ? 0 : -1;   // imCheckMobility is within window (0), or greater than upper bound bound of this window (-1)
+            }, true);
+            return _indexFilterPairsIM < 0; // A value < 0 means not found in any window
         }
 
         public bool IsMseData()
