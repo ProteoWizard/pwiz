@@ -182,7 +182,7 @@ namespace TestPerf
 
         private void TestRefinementQvalue()
         {
-            var graphStates = new[] { (3, 9791, 10343, 61383), (3, 8658, 9185, 54526) };
+            var graphStates = new[] { (3, 9791, 10343, 61383), (3, 8658, 9185, 54526) , (3, 9395, 10426, 61914) };
 
             // Verify refinement statistics are same as graph statistics
             RunUI(SkylineWindow.Undo);
@@ -239,6 +239,20 @@ namespace TestPerf
             refineDocState = (doc.PeptideGroupCount, doc.PeptideCount, doc.PeptideTransitionGroupCount,
                 doc.PeptideTransitionCount);
             Assert.AreEqual(graphStates[1], refineDocState);
+            RunUI(SkylineWindow.Undo);
+
+            // Verify refinement with only Q-value works.
+            refineDlg = ShowDialog<RefineDlg>(() => SkylineWindow.ShowRefineDlg());
+            RunUI(() =>
+            {
+                refineDlg.QValueCutoff = 0.01;
+                refineDlg.MinimumDetections = 3;
+            });
+            OkDialog(refineDlg, refineDlg.OkDialog);
+            doc = SkylineWindow.Document;
+            refineDocState = (doc.PeptideGroupCount, doc.PeptideCount, doc.PeptideTransitionGroupCount,
+                doc.PeptideTransitionCount);
+            Assert.AreEqual(graphStates[2], refineDocState);
             RunUI(SkylineWindow.Undo);
         }
 
