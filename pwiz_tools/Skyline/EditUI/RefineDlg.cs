@@ -95,9 +95,9 @@ namespace pwiz.Skyline.EditUI
                 numericUpDownDetections.Enabled = textQVal.Enabled;
                 if (numericUpDownDetections.Enabled)
                 {
-                    numericUpDownDetections.Minimum = 2;
+                    numericUpDownDetections.Minimum = 1;
                     numericUpDownDetections.Maximum = _document.MeasuredResults.Chromatograms.Count;
-                    numericUpDownDetections.Value = 2;
+                    numericUpDownDetections.Value = 1;
                 }
 
                 var mods = _document.Settings.PeptideSettings.Modifications;

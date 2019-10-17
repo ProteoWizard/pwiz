@@ -1580,13 +1580,14 @@ exceed this threshold.</value>
     <value>2, 0, 2, 0</value>
   </data>
   <data name="labelDetections.Size" type="System.Drawing.Size, System.Drawing">
-    <value>61, 13</value>
+    <value>65, 13</value>
   </data>
   <data name="labelDetections.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
   <data name="labelDetections.Text" xml:space="preserve">
-    <value>Detections:</value>
+    <value>Detected in:
+</value>
   </data>
   <data name="&gt;&gt;labelDetections.Name" xml:space="preserve">
     <value>labelDetections</value>
