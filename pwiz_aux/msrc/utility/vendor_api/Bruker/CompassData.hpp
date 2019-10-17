@@ -29,6 +29,7 @@
 #include "pwiz/utility/misc/BinaryData.hpp"
 #include "pwiz/utility/misc/automation_vector.h"
 #include "pwiz/utility/misc/IntegerSet.hpp"
+#include "pwiz/utility/chemistry/MzMobilityWindow.hpp"
 #include <string>
 #include <vector>
 #include <boost/smart_ptr.hpp>
@@ -260,7 +261,8 @@ struct PWIZ_API_DECL CompassData
     static Ptr create(const std::string& rawpath, bool combineIonMobilitySpectra = false,
                       msdata::detail::Bruker::Reader_Bruker_Format format = msdata::detail::Bruker::Reader_Bruker_Format_Unknown, 
                       int preferOnlyMsLevel = 0, // when nonzero, caller only wants spectra at this ms level
-                      bool allowMsMsWithoutPrecursor = true); // when false, PASEF MS2 specta without precursor info will be excluded
+                      bool allowMsMsWithoutPrecursor = true, // when false, PASEF MS2 specta without precursor info will be excluded
+                      const std::vector<chemistry::MzMobilityWindow>& isolationMzFilter = std::vector<chemistry::MzMobilityWindow>()); // when non-empty, only scans from precursors matching one of the included m/zs (i.e. within a precursor isolation window) will be enumerated
 
     virtual ~CompassData() {}
 

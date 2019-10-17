@@ -63,6 +63,7 @@ Reader::Config::Config(const Config& rhs)
     iterationListenerRegistry = rhs.iterationListenerRegistry;
     preferOnlyMsLevel = rhs.preferOnlyMsLevel;
     allowMsMsWithoutPrecursor = rhs.allowMsMsWithoutPrecursor;
+    isolationMzAndMobilityFilter = rhs.isolationMzAndMobilityFilter;
 }
 
 // default implementation; most Readers don't need to worry about multi-run input files

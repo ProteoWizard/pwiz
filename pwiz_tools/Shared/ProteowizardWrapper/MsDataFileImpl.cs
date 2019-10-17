@@ -144,7 +144,8 @@ namespace pwiz.ProteowizardWrapper
                     acceptZeroLengthSpectra = acceptZeroLengthSpectra,
                     ignoreZeroIntensityPoints = ignoreZeroIntensityPoints,
                     preferOnlyMsLevel = preferOnlyMsLevel,
-                    allowMsMsWithoutPrecursor = false
+                    allowMsMsWithoutPrecursor = false,
+                    //isolationMzAndMobilityFilter = new List<MzMobilityWindow> { new MzMobilityWindow(895.9496, 1.12, 0.055)}
                 };
                 _lockmassParameters = lockmassParameters;
                 FULL_READER_LIST.read(path, _msDataFile, sampleIndex, _config);
