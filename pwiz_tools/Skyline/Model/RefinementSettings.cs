@@ -474,13 +474,21 @@ namespace pwiz.Skyline.Model
                 int countPeps = listPeptides.Count;
                 var listAreaIndexes = new List<PepAreaSortInfo>();
                 var internalStandardTypes = document.Settings.PeptideSettings.Modifications.InternalStandardTypes;
+                var unrankedPeptides = new List<PeptideDocNode>();
                 for (int i = 0; i < countPeps; i++)
                 {
                     var nodePep = listPeptides[i];
                     // Only peptides with children can possible be ranked by area
                     // Those without should be removed by this operation
                     if (nodePep.Children.Count == 0)
-                        continue;                    
+                        continue;     
+                    if (nodePep.GlobalStandardType != null 
+                        || nodePep.TransitionGroups.All(tranGroup=>internalStandardTypes.Contains(tranGroup.LabelType)))
+                    {
+                        // Peptides which are internal standards get added back no matter what
+                        unrankedPeptides.Add(nodePep);
+                        continue;
+                    }
                     int bestResultIndex = (UseBestResult ? nodePep.BestResult : -1);
                     var sortInfo = new PepAreaSortInfo(nodePep, internalStandardTypes, bestResultIndex, listAreaIndexes.Count);
                     listAreaIndexes.Add(sortInfo);
@@ -499,6 +507,7 @@ namespace pwiz.Skyline.Model
 
                 // Add back all peptides with low enough rank.
                 listPeptides.Clear();
+                listPeptides.AddRange(unrankedPeptides);
                 foreach (var areaIndex in arrayAreaIndexes)
                 {
                     if (areaIndex.Area == 0 || areaIndex.Rank > MaxPepPeakRank.Value)
