@@ -218,7 +218,7 @@ namespace pwiz.Skyline.EditUI
             if (!string.IsNullOrEmpty(textMaxPepPeakRank.Text))
             {
                 int maxVal;
-                if (!helper.ValidateNumberTextBox(textMaxPepPeakRank, 1, 10, out maxVal))
+                if (!helper.ValidateNumberTextBox(textMaxPepPeakRank, 1, 20, out maxVal))
                     return;
                 maxPepPeakRank = maxVal;
             }
@@ -227,7 +227,7 @@ namespace pwiz.Skyline.EditUI
             if (!string.IsNullOrEmpty(textMaxPeakRank.Text))
             {
                 int maxVal;
-                if (!helper.ValidateNumberTextBox(textMaxPeakRank, 1, 10, out maxVal))
+                if (!helper.ValidateNumberTextBox(textMaxPeakRank, 1, 20, out maxVal))
                     return;
                 maxPeakRank = maxVal;
             }
