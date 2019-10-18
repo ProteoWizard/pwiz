@@ -97,6 +97,42 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Global Standards.
+        /// </summary>
+        public static string AreaCVNormalizationMethod_global_standards {
+            get {
+                return ResourceManager.GetString("AreaCVNormalizationMethod_global_standards", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Medians.
+        /// </summary>
+        public static string AreaCVNormalizationMethod_medians {
+            get {
+                return ResourceManager.GetString("AreaCVNormalizationMethod_medians", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        public static string AreaCVNormalizationMethod_none {
+            get {
+                return ResourceManager.GetString("AreaCVNormalizationMethod_none", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ratio.
+        /// </summary>
+        public static string AreaCVNormalizationMethod_ratio {
+            get {
+                return ResourceManager.GetString("AreaCVNormalizationMethod_ratio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Bilinear.
         /// </summary>
         public static string BilinearFit_bilinear {

@@ -20,7 +20,7 @@ namespace pwiz.Skyline.Util
             return PeptidesAndTransitionGroups.Get(graphSummary.StateProvider.SelectedNodes, graphSummary.ResultsIndex, int.MaxValue);
         }
 
-        public static void CreateAndShowFindResults(ZedGraphControl sender, GraphSummary graphSummary, SrmDocument document, AreaCVGraphData.CVData data)
+        public static void CreateAndShowFindResults(ZedGraphControl sender, GraphSummary graphSummary, SrmDocument document, CVData data)
         {
             var peptideAnnotationPairs = data.PeptideAnnotationPairs.ToList();
             var results = new List<FindResult>(peptideAnnotationPairs.Count);
