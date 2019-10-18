@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.IO;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
@@ -79,7 +80,7 @@ namespace pwiz.Skyline.Model.Results
                 SampleHelp.GetCentroidMs2(url));
         }
 
-        public abstract MsDataFileImpl OpenMsDataFile(bool simAsSpectra, int preferOnlyMsLevel);
+        public abstract MsDataFileImpl OpenMsDataFile(bool simAsSpectra, int preferOnlyMsLevel, IEnumerable<MsDataFileImpl.PrecursorMzAndIonMobilityWindow> precursorMzAndIonMobilityWindows);
         public int CompareTo(object obj)
         {
             if (obj == null)
@@ -267,11 +268,11 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public override MsDataFileImpl OpenMsDataFile(bool simAsSpectra, int preferOnlyMsLevel)
+        public override MsDataFileImpl OpenMsDataFile(bool simAsSpectra, int preferOnlyMsLevel, IEnumerable<MsDataFileImpl.PrecursorMzAndIonMobilityWindow> precursorMzAndIonMobilityWindows)
         {
             return new MsDataFileImpl(FilePath, Math.Max(SampleIndex, 0), LockMassParameters, simAsSpectra,
                 requireVendorCentroidedMS1: CentroidMs1, requireVendorCentroidedMS2: CentroidMs2,
-                ignoreZeroIntensityPoints: true, preferOnlyMsLevel: preferOnlyMsLevel);
+                ignoreZeroIntensityPoints: true, preferOnlyMsLevel: preferOnlyMsLevel, precursorMzAndIonMobilityWindows:precursorMzAndIonMobilityWindows);
         }
     }
 }
