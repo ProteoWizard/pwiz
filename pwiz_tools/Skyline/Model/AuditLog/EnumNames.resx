@@ -516,4 +516,16 @@
   <data name="PeptideUniquenessConstraint_species" xml:space="preserve">
     <value>species</value>
   </data>
+  <data name="AreaCVNormalizationMethod_global_standards" xml:space="preserve">
+    <value>Global Standards</value>
+  </data>
+  <data name="AreaCVNormalizationMethod_medians" xml:space="preserve">
+    <value>Medians</value>
+  </data>
+  <data name="AreaCVNormalizationMethod_none" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="AreaCVNormalizationMethod_ratio" xml:space="preserve">
+    <value>Ratio</value>
+  </data>
 </root>

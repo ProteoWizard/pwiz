@@ -3199,6 +3199,9 @@ Are you sure you want to continue?</value>
   <data name="RTReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_retention_time_graph" xml:space="preserve">
     <value>Select a peptide to see the retention time graph</value>
   </data>
+  <data name="EditIrtCalcDlg_comboStandards_SelectedIndexChanged_The_list_of_standard_peptides_must_contain_only_recognized_iRT_C18_standards_to_switch_to_a_predefined_set_of_iRT_C18_standards_" xml:space="preserve">
+    <value>The list of standard peptides must contain only recognized iRT-C18 standards to switch to a predefined set of iRT-C18 standards.</value>
+  </data>
   <data name="ExportMethodDlg_SetMethodType_Standard" xml:space="preserve">
     <value>Standard</value>
   </data>
@@ -10624,12 +10627,30 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="CommandLine_ApplySampleNameRegex_Sample_name___0___does_not_match_the_pattern___1____Ignoring__2_" xml:space="preserve">
     <value>Sample name '{0}' does not match the pattern '{1}'. Ignoring {2}</value>
-</data>
+  </data>
   <data name="SkylineWindow_MarkQuantitative_Mark_transitions_quantitative" xml:space="preserve">
     <value>Mark transitions quantitative</value>
   </data>
   <data name="SkylineWindow_MarkQuantitative_Mark_transitions_non_quantitative" xml:space="preserve">
     <value>Mark transitions non-quantitative</value>
+  </data>
+  <data name="RefinementSettings_Refine_The_document_must_contain_at_least_2_replicates_to_refine_based_on_consistency_" xml:space="preserve">
+    <value>The document must contain at least 2 replicates to refine based on consistency.</value>
+  </data>
+  <data name="RefinementSettings_Refine_The_document_does_not_have_a_global_standard_to_normalize_by_" xml:space="preserve">
+    <value>The document does not have a global standard to normalize by.</value>
+  </data>
+  <data name="RefinementSettings_GetLabelIndex_The_document_does_not_contain_the_given_reference_type_" xml:space="preserve">
+    <value>The document does not contain the given reference type.</value>
+  </data>
+  <data name="RefineDlg_NormalizationMethod_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="RefineDlg_NormalizationMethod_Medians" xml:space="preserve">
+    <value>Medians</value>
+  </data>
+  <data name="RefineDlg_NormalizationMethod_Global_standards" xml:space="preserve">
+    <value>Global standards</value>
   </data>
   <data name="ExportMethodDlg_comboOptimizing_SelectedIndexChanged_Optimizing_for__0__will_produce_an_additional__1__transitions_per_transition_" xml:space="preserve">
     <value>Optimizing for {0} will produce an additional {1} transitions per transition.</value>

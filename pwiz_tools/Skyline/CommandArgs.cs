@@ -30,8 +30,10 @@ using System.Xml.Serialization;
 using pwiz.Common.DataBinding.Documentation;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -678,6 +680,27 @@ namespace pwiz.Skyline
             (c, p) => c.Refinement.IdotProductThreshold = p.ValueDouble);
         public static readonly Argument ARG_REFINE_USE_BEST_RESULT = new RefineArgument(@"refine-use-best-result",
             (c, p) => c.Refinement.UseBestResult = true);
+        // Refinement consistency tab
+        public static readonly Argument ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF = new RefineArgument(@"refine-cv-remove-above-cutoff", NUM_VALUE,
+            (c,p) => c.Refinement.CVCutoff = p.ValueDouble);
+        public static readonly Argument ARG_REFINE_CV_GLOBAL_NORMALIZE = new RefineArgument(@"refine-cv-global-normalize",
+            new[] { NormalizationMethod.GLOBAL_STANDARDS.Name, NormalizationMethod.EQUALIZE_MEDIANS.Name },
+            (c, p) =>
+            {
+                c.Refinement.NormalizationMethod = p.Value.Equals(NormalizationMethod.GLOBAL_STANDARDS.Name)
+                    ? AreaCVNormalizationMethod.global_standards
+                    : AreaCVNormalizationMethod.medians;
+            }) { WrapValue = true };
+        public static readonly Argument ARG_REFINE_CV_REFERENCE_NORMALIZE = new RefineArgument(@"refine-cv-reference-normalize", LABEL_VALUE,
+            (c, p) =>
+            {
+                c.Refinement.NormalizationMethod = AreaCVNormalizationMethod.ratio;
+                c.RefinementCvLabelTypeName = p.Value;
+            }) { WrapValue = true };
+        public static readonly Argument ARG_REFINE_QVALUE_CUTOFF = new RefineArgument(@"refine-qvalue-cutoff", NUM_VALUE,
+            (c, p) => c.Refinement.QValueCutoff = p.ValueDouble);
+        public static readonly Argument ARG_REFINE_MINIMUM_DETECTIONS = new RefineArgument(@"refine-minimum-detections", INT_VALUE,
+            (c, p) => c.Refinement.MinimumDetections = p.ValueInt);
 
         private static readonly ArgumentGroup GROUP_REFINEMENT = new ArgumentGroup(
             () => CommandArgUsage.CommandArgs_GROUP_REFINEMENT, false,
@@ -692,10 +715,14 @@ namespace pwiz.Skyline
             ARG_REFINE_MAX_PEAK_RANK, ARG_REFINE_MAX_PRECURSOR_PEAK_ONLY,
             ARG_REFINE_PREFER_LARGER_PRODUCTS, ARG_REFINE_MISSING_RESULTS,
             ARG_REFINE_MIN_TIME_CORRELATION, ARG_REFINE_MIN_DOTP, ARG_REFINE_MIN_IDOTP,
-            ARG_REFINE_USE_BEST_RESULT);
+            ARG_REFINE_USE_BEST_RESULT,
+            ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF, ARG_REFINE_CV_GLOBAL_NORMALIZE, ARG_REFINE_CV_REFERENCE_NORMALIZE,
+            ARG_REFINE_QVALUE_CUTOFF, ARG_REFINE_MINIMUM_DETECTIONS);
+        
 
         public RefinementSettings Refinement { get; private set; }
         public string RefinementLabelTypeName { get; private set; }   // Must store as string until document is instantiated
+        public string RefinementCvLabelTypeName { get; private set; }   // Must store as string until document is instantiated
 
 
         // For exporting reports

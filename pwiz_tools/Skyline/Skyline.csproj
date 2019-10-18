@@ -338,6 +338,8 @@
     <Compile Include="Controls\DocumentChangeLogEntryDlg.Designer.cs">
       <DependentUpon>DocumentChangeLogEntryDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\AreaCVGraphData.cs" />
+    <Compile Include="Model\AreaCVRefinementData.cs" />
     <Compile Include="Model\AuditLog\AuditLogObject.cs" />
     <Compile Include="Model\AuditLog\AuditLogToStringHelper.cs" />
     <Compile Include="Model\AuditLog\BlockHash.cs" />
@@ -576,7 +578,6 @@
     <Compile Include="Controls\FindResultsForm.Designer.cs">
       <DependentUpon>FindResultsForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Controls\Graphs\AreaCVGraphData.cs" />
     <Compile Include="Controls\Graphs\AreaCVHistogram2DGraphPane.cs" />
     <Compile Include="Controls\Graphs\AreaCVHistogramGraphPane.cs" />
     <Compile Include="Controls\Graphs\AreaCVToolbarProperties.cs">
