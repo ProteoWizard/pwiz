@@ -43,8 +43,9 @@ namespace pwiz.SkylineTestFunctional
 
             // First, populate the iRT database with any set of standards from the results
             var addStandardsDlg = ShowDialog<AddIrtStandardsDlg>(calibrateDlg.UseResults);
-            RunUI(()=>addStandardsDlg.StandardCount = 10);
+            RunUI(() => addStandardsDlg.StandardCount = 10);
             OkDialog(addStandardsDlg, addStandardsDlg.OkDialog);
+            RunUI(() => calibrateDlg.StandardName = "Document");
             OkDialog(calibrateDlg, calibrateDlg.OkDialog);
             var addIrtPeptidesDlg = ShowDialog<AddIrtPeptidesDlg>(irtCalc.AddResults);
             OkDialog(addIrtPeptidesDlg, addIrtPeptidesDlg.OkDialog);
