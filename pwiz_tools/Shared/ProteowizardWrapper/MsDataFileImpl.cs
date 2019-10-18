@@ -161,7 +161,10 @@ namespace pwiz.ProteowizardWrapper
                     ignoreZeroIntensityPoints = ignoreZeroIntensityPoints,
                     preferOnlyMsLevel = preferOnlyMsLevel,
                     allowMsMsWithoutPrecursor = false,
-                    isolationMzAndMobilityFilter = precursorMzAndIonMobilityWindows?.Select(w => new MzMobilityWindow(w.MZ, w.IonMobility??0 , (w.IonMobilityWindow??0)/2)).ToList()
+                    isolationMzAndMobilityFilter = precursorMzAndIonMobilityWindows?.Select(w => 
+                        w.IonMobility.HasValue ? 
+                            new MzMobilityWindow(w.MZ, w.IonMobility.Value , (w.IonMobilityWindow??0)/2): 
+                            new MzMobilityWindow(w.MZ)).ToList()
                 };
                 _lockmassParameters = lockmassParameters;
                 FULL_READER_LIST.read(path, _msDataFile, sampleIndex, _config);
