@@ -55,6 +55,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         private DbIrtPeptide[] _originalPeptides;
         private DbIrtPeptide[] _originalKnownPeptides;
+        private string _originalDocumentXml;
         private readonly StandardGridViewDriver _gridViewStandardDriver;
         private readonly LibraryGridViewDriver _gridViewLibraryDriver;
 
@@ -293,7 +294,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             try
             {
                 IList<DbIrtPeptide> dbPeptides;
-                IrtDb.GetIrtDb(path, null, out dbPeptides); // TODO: LongWaitDlg
+                var db = IrtDb.GetIrtDb(path, null, out dbPeptides); // TODO: LongWaitDlg
 
                 LoadStandard(dbPeptides);
                 LoadLibrary(dbPeptides);
@@ -301,6 +302,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 // Clone all of the peptides to use for comparison in OkDialog
                 _originalPeptides = dbPeptides.Select(p => new DbIrtPeptide(p)).ToArray();
                 _originalKnownPeptides = _originalPeptides.Where(p => IrtStandard.AnyContains(p, IRT_TOLERANCE)).ToArray();
+                _originalDocumentXml = db.DocumentXml;
 
                 textDatabase.Text = path;
 
@@ -425,10 +427,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 if (DatabaseChanged)
                 {
-                    using (FileSaver fileSaver = new FileSaver(path))
+                    using (var fileSaver = new FileSaver(path))
                     {
-                        IrtDb db = IrtDb.CreateIrtDb(fileSaver.SafeName);
-                        db.AddPeptides(null, AllPeptides.ToArray());
+                        var db = IrtDb.CreateIrtDb(fileSaver.SafeName);
+                        db = db.AddPeptides(null, AllPeptides.ToArray());
+                        db.SetDocumentXml(Program.ActiveDocumentUI, _originalDocumentXml);
                         fileSaver.Commit();
                     }
                 }

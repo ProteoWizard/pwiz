@@ -454,11 +454,10 @@ namespace pwiz.Skyline.Model.Irt
             return new DbIrtPeptide(new Target(sequence), time, true, TimeSource.peak);
         }
 
-        public static IrtStandard WhichStandard(ICollection<Target> peptides, out HashSet<Target> missingPeptides)
+        public static IrtStandard WhichStandard(IEnumerable<Target> peptides)
         {
-            var standard = ALL.FirstOrDefault(s => s.ContainsAll(peptides.Select(p => new DbIrtPeptide(p, 0, true, TimeSource.peak)).ToList(), null)) ?? EMPTY;
-            missingPeptides = new HashSet<Target>(standard.Peptides.Where(s => !peptides.Any(p => p.Equals(s.Target))).Select(s => s.Target));
-            return standard;
+            var list = peptides.Select(p => new DbIrtPeptide(p, 0, true, TimeSource.peak)).ToList();
+            return ALL.FirstOrDefault(s => s.ContainsAll(list, null)) ?? EMPTY;
         }
 
         public IrtStandard ChangePeptides(IEnumerable<DbIrtPeptide> peptides)
