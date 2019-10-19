@@ -1841,6 +1841,7 @@ namespace pwiz.Skyline
                 {
                     modelAndFeatures = CreateScoringModel(commandArgs.ReintegratModelName,
                         commandArgs.ExcludeFeatures,
+                        commandArgs.IsLegacyModel,
                         commandArgs.IsDecoyModel,
                         commandArgs.IsSecondBestModel,
                         commandArgs.IsLogTraining,
@@ -1885,30 +1886,19 @@ namespace pwiz.Skyline
         }
 
         private ModelAndFeatures CreateScoringModel(string modelName, IList<IPeakFeatureCalculator> excludeFeatures,
-            bool decoys, bool secondBest, bool log, int? modelIterationCount)
+            bool legacy, bool decoys, bool secondBest, bool log, int? modelIterationCount)
         {
             _out.WriteLine(Resources.CommandLine_CreateScoringModel_Creating_scoring_model__0_, modelName);
 
             try
             {
                 // Create new scoring model using the default calculators.
-                var calcs = MProphetPeakScoringModel.GetDefaultCalculators(_doc);
-                if (excludeFeatures.Count > 0)
-                {
-                    if (excludeFeatures.Count == 1)
-                        _out.WriteLine(Resources.CommandLine_CreateScoringModel_Excluding_feature_score___0__, excludeFeatures.First().Name);
-                    else
-                    {
-                        _out.WriteLine(Resources.CommandLine_CreateScoringModel_Excluding_feature_scores_);
-                        foreach (var featureCalculator in excludeFeatures)
-                            _out.WriteLine(@"    " + featureCalculator.Name);
-                    }
-                    // Excluding any requested by the caller
-                    calcs = calcs.Where(c => excludeFeatures.All(c2 => c.GetType() != c2.GetType())).ToArray();
-                }
-                var scoringModel = new MProphetPeakScoringModel(modelName, null as LinearModelParams, calcs, decoys, secondBest);
+                var scoringModel = CreateUntrainedScoringModel(modelName, excludeFeatures, legacy, decoys, secondBest);
+                if (scoringModel == null)
+                    return null;
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(String.Empty));
-                var targetDecoyGenerator = new TargetDecoyGenerator(scoringModel, _doc.GetPeakFeatures(calcs, progressMonitor));
+                var targetDecoyGenerator = new TargetDecoyGenerator(scoringModel,
+                    _doc.GetPeakFeatures(scoringModel.PeakFeatureCalculators, progressMonitor));
 
                 // Get scores for target and decoy groups.
                 List<IList<float[]>> targetTransitionGroups;
@@ -1936,7 +1926,7 @@ namespace pwiz.Skyline
 
                 // Train the model.
                 string documentPath = log ? DocContainer.DocumentFilePath : null;
-                scoringModel = (MProphetPeakScoringModel)scoringModel.Train(targetTransitionGroups,
+                scoringModel = (PeakScoringModelSpec) scoringModel.Train(targetTransitionGroups,
                     decoyTransitionGroups, targetDecoyGenerator, initialParams, modelIterationCount, secondBest, true, progressMonitor, documentPath);
 
                 Settings.Default.PeakScoringModelList.SetValue(scoringModel);
@@ -1960,6 +1950,39 @@ namespace pwiz.Skyline
                 _out.WriteLine(x);
                 return null;
             }
+        }
+
+        private PeakScoringModelSpec CreateUntrainedScoringModel(string modelName, IList<IPeakFeatureCalculator> excludeFeatures, bool legacy, bool decoys,
+            bool secondBest)
+        {
+            if (legacy)
+            {
+                if (excludeFeatures.Count > 0)
+                {
+                    _out.WriteLine(Resources.CommandLine_CreateUntrainedScoringModel_Error__Excluding_feature_scores_is_not_permitted_with_the_default_Skyline_model_);
+                    return null;
+                }
+                return new LegacyScoringModel(modelName, LegacyScoringModel.DEFAULT_PARAMS, decoys, secondBest);
+            }
+
+            var calcs = MProphetPeakScoringModel.GetDefaultCalculators(_doc);
+            if (excludeFeatures.Count > 0)
+            {
+                if (excludeFeatures.Count == 1)
+                    _out.WriteLine(Resources.CommandLine_CreateScoringModel_Excluding_feature_score___0__,
+                        excludeFeatures.First().Name);
+                else
+                {
+                    _out.WriteLine(Resources.CommandLine_CreateScoringModel_Excluding_feature_scores_);
+                    foreach (var featureCalculator in excludeFeatures)
+                        _out.WriteLine(@"    " + featureCalculator.Name);
+                }
+
+                // Excluding any requested by the caller
+                calcs = calcs.Where(c => excludeFeatures.All(c2 => c.GetType() != c2.GetType())).ToArray();
+            }
+
+            return new MProphetPeakScoringModel(modelName, (LinearModelParams) null, calcs, decoys, secondBest);
         }
 
         private bool Reintegrate(ModelAndFeatures modelAndFeatures, bool isOverwritePeaks, bool logTraining)

@@ -766,4 +766,7 @@ greater peak area.</value>
   <data name="_save_settings" xml:space="preserve">
     <value>Causes settings changes to the global environment, e.g. added reports, libraries, enzymes, etc. to be saved to the program configuration file.</value>
   </data>
+  <data name="_reintegrate_model_type" xml:space="preserve">
+    <value>The type of peak scoring model to train to produce z scores and q values. (dafault mProphet)</value>
+  </data>
 </root>

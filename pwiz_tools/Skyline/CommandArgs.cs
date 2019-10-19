@@ -565,6 +565,11 @@ namespace pwiz.Skyline
                 if (!c.IsSecondBestModel)
                     c.IsDecoyModel = true;
             });
+        public const string ARG_VALUE_MODEL_MPROPHET = "mProphet";
+        public const string ARG_VALUE_MODEL_SKYLINE = "Skyline";
+        private static readonly Argument ARG_REINTEGRATE_MODEL_TYPE = new DocArgument(@"reintegrate-model-type",
+            new[] { ARG_VALUE_MODEL_MPROPHET, ARG_VALUE_MODEL_SKYLINE },
+            (c, p) => c.IsLegacyModel = ARG_VALUE_MODEL_SKYLINE.Equals(p.Value)) {WrapValue = true};
         private static readonly Argument ARG_REINTEGRATE_MODEL_ITERATION_COUNT = new DocArgument(@"reintegrate-model-iteration-count", INT_VALUE,
             (c, p) => c.ReintegrateModelIterationCount = p.ValueInt) {InternalUse = true};
         private static readonly Argument ARG_REINTEGRATE_MODEL_SECOND_BEST = new DocArgument(@"reintegrate-model-second-best",
@@ -584,13 +589,14 @@ namespace pwiz.Skyline
             { WrapValue = true };
 
         private static readonly ArgumentGroup GROUP_REINTEGRATE = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_REINTEGRATE_Reintegrate_with_advanced_peak_picking_models, false,
-            ARG_REINTEGRATE_MODEL_NAME, ARG_REINTEGRATE_CREATE_MODEL, ARG_REINTEGRATE_MODEL_ITERATION_COUNT,
+            ARG_REINTEGRATE_MODEL_NAME, ARG_REINTEGRATE_CREATE_MODEL, ARG_REINTEGRATE_MODEL_TYPE, ARG_REINTEGRATE_MODEL_ITERATION_COUNT,
             ARG_REINTEGRATE_MODEL_SECOND_BEST, ARG_REINTEGRATE_MODEL_BOTH, ARG_REINTEGRATE_OVERWRITE_PEAKS,
             ARG_REINTEGRATE_LOG_TRAINING, ARG_REINTEGRATE_EXCLUDE_FEATURE)
         {
             Dependencies =
             {
                 { ARG_REINTEGRATE_CREATE_MODEL , ARG_REINTEGRATE_MODEL_NAME },
+                { ARG_REINTEGRATE_MODEL_TYPE , ARG_REINTEGRATE_CREATE_MODEL },
                 { ARG_REINTEGRATE_OVERWRITE_PEAKS , ARG_REINTEGRATE_MODEL_NAME },
                 { ARG_REINTEGRATE_MODEL_SECOND_BEST, ARG_REINTEGRATE_CREATE_MODEL},
                 { ARG_REINTEGRATE_MODEL_BOTH, ARG_REINTEGRATE_CREATE_MODEL},
@@ -605,6 +611,7 @@ namespace pwiz.Skyline
         public bool IsSecondBestModel { get; private set; }
         public bool IsDecoyModel { get; private set; }
         public bool IsLogTraining { get; private set; }
+        public bool IsLegacyModel { get; private set; }
         public List<IPeakFeatureCalculator> ExcludeFeatures { get; private set; }
 
         public bool Reintegrating { get { return !string.IsNullOrEmpty(ReintegratModelName); } }

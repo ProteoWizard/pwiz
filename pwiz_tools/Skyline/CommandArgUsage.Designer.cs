@@ -1109,6 +1109,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The type of peak scoring model to train to produce z scores and q values. (dafault mProphet).
+        /// </summary>
+        internal static string _reintegrate_model_type {
+            get {
+                return ResourceManager.GetString("_reintegrate_model_type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Existing manually integrated peaks will be overwritten with peaks chosen by the reintegration model. (requires --reintegrate-model-name).
         /// </summary>
         internal static string _reintegrate_overwrite_peaks {
