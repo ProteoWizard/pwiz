@@ -1443,6 +1443,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Emits version information for the ProteoWizard data reader, testing that it is installed correctly and can be loaded..
+        /// </summary>
+        internal static string _version_pwiz {
+            get {
+                return ResourceManager.GetString("_version_pwiz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Applies To.
         /// </summary>
         internal static string CommandArgGroup_ToString_Applies_To {

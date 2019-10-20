@@ -161,10 +161,11 @@ namespace pwiz.Skyline
         public const string ARG_VALUE_ASCII = "ascii";
         public const string ARG_VALUE_NO_BORDERS = "no-borders";
         public static readonly Argument ARG_VERSION = new Argument(@"version", (c, p) => c.Version());
+        public static readonly Argument ARG_VERSION_PWIZ = new Argument(@"version-pwiz", (c, p) => c.VersionPwiz());
 
         private static readonly ArgumentGroup GROUP_GENERAL_IO = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_GENERAL_IO_General_input_output, true,
             ARG_IN, ARG_SAVE, ARG_SAVE_SETTINGS, ARG_OUT, ARG_SHARE_ZIP, ARG_SHARE_TYPE, ARG_BATCH, ARG_DIR, ARG_TIMESTAMP, ARG_MEMSTAMP,
-            ARG_LOG_FILE, ARG_HELP, ARG_VERSION)
+            ARG_LOG_FILE, ARG_HELP, ARG_VERSION, ARG_VERSION_PWIZ)
         {
             Validate = c => c.ValidateGeneralArgs()
         };
@@ -173,6 +174,11 @@ namespace pwiz.Skyline
         {
             UsageShown = true;  // Keep from showing the full usage table
             _out.WriteLine(Install.ProgramNameAndVersion);
+        }
+        private void VersionPwiz()
+        {
+            UsageShown = true;  // Keep from showing the full usage table
+            _out.WriteLine(@"ProteoWizard MSData {0} ({1})", MsDataFileImpl.InstalledVersion, Install.GitHash);
         }
 
         private bool ValidateGeneralArgs()
