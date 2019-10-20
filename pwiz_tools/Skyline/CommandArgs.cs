@@ -60,6 +60,7 @@ namespace pwiz.Skyline
         private static readonly Func<string> DATE_VALUE = () => CommandArgUsage.CommandArgs_DATE_VALUE;
         private static readonly Func<string> INT_VALUE = () => CommandArgUsage.CommandArgs_INT_VALUE;
         private static readonly Func<string> NUM_VALUE = () => CommandArgUsage.CommandArgs_NUM_VALUE;
+        private static readonly Func<string> NUM_LIST_VALUE = () => "<number list>";
         private static readonly Func<string> NAME_VALUE = () => CommandArgUsage.CommandArgs_NAME_VALUE;
         private static readonly Func<string> FEATURE_NAME_VALUE = () => CommandArgUsage.CommandArgs_FEATURE_NAME_VALUE;
         private static readonly Func<string> REPORT_NAME_VALUE = () => CommandArgUsage.CommandArgs_REPORT_NAME_VALUE;
@@ -557,7 +558,7 @@ namespace pwiz.Skyline
 
         // For reintegration
         private static readonly Argument ARG_REINTEGRATE_MODEL_NAME = new DocArgument(@"reintegrate-model-name", NAME_VALUE,
-            (c, p) => c.ReintegratModelName = p.Value);
+            (c, p) => c.ReintegrateModelName = p.Value);
         private static readonly Argument ARG_REINTEGRATE_CREATE_MODEL = new DocArgument(@"reintegrate-create-model",
             (c, p) =>
             {
@@ -565,11 +566,12 @@ namespace pwiz.Skyline
                 if (!c.IsSecondBestModel)
                     c.IsDecoyModel = true;
             });
-        public const string ARG_VALUE_MODEL_MPROPHET = "mProphet";
-        public const string ARG_VALUE_MODEL_SKYLINE = "Skyline";
         private static readonly Argument ARG_REINTEGRATE_MODEL_TYPE = new DocArgument(@"reintegrate-model-type",
-            new[] { ARG_VALUE_MODEL_MPROPHET, ARG_VALUE_MODEL_SKYLINE },
-            (c, p) => c.IsLegacyModel = ARG_VALUE_MODEL_SKYLINE.Equals(p.Value)) {WrapValue = true};
+            Helpers.GetEnumValues<ScoringModelType>().Select(p => p.ToString()).ToArray(),
+            (c, p) => c.ReintegrateModelType = (ScoringModelType)Enum.Parse(typeof(ScoringModelType), p.Value, true)) {WrapValue = true};
+        private static readonly Argument ARG_REINTEGRATE_MODEL_CUTOFFS = new DocArgument(@"reintegrate-model-cutoffs", NUM_LIST_VALUE,
+                (c, p) => c.ReintegrateModelCutoffs = c.ParseNumberList(p))
+            { InternalUse = true };
         private static readonly Argument ARG_REINTEGRATE_MODEL_ITERATION_COUNT = new DocArgument(@"reintegrate-model-iteration-count", INT_VALUE,
             (c, p) => c.ReintegrateModelIterationCount = p.ValueInt) {InternalUse = true};
         private static readonly Argument ARG_REINTEGRATE_MODEL_SECOND_BEST = new DocArgument(@"reintegrate-model-second-best",
@@ -590,31 +592,96 @@ namespace pwiz.Skyline
 
         private static readonly ArgumentGroup GROUP_REINTEGRATE = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_REINTEGRATE_Reintegrate_with_advanced_peak_picking_models, false,
             ARG_REINTEGRATE_MODEL_NAME, ARG_REINTEGRATE_CREATE_MODEL, ARG_REINTEGRATE_MODEL_TYPE, ARG_REINTEGRATE_MODEL_ITERATION_COUNT,
-            ARG_REINTEGRATE_MODEL_SECOND_BEST, ARG_REINTEGRATE_MODEL_BOTH, ARG_REINTEGRATE_OVERWRITE_PEAKS,
+            ARG_REINTEGRATE_MODEL_CUTOFFS, ARG_REINTEGRATE_MODEL_SECOND_BEST, ARG_REINTEGRATE_MODEL_BOTH, ARG_REINTEGRATE_OVERWRITE_PEAKS,
             ARG_REINTEGRATE_LOG_TRAINING, ARG_REINTEGRATE_EXCLUDE_FEATURE)
         {
             Dependencies =
             {
                 { ARG_REINTEGRATE_CREATE_MODEL , ARG_REINTEGRATE_MODEL_NAME },
                 { ARG_REINTEGRATE_MODEL_TYPE , ARG_REINTEGRATE_CREATE_MODEL },
+                { ARG_REINTEGRATE_MODEL_CUTOFFS , ARG_REINTEGRATE_CREATE_MODEL },
                 { ARG_REINTEGRATE_OVERWRITE_PEAKS , ARG_REINTEGRATE_MODEL_NAME },
                 { ARG_REINTEGRATE_MODEL_SECOND_BEST, ARG_REINTEGRATE_CREATE_MODEL},
                 { ARG_REINTEGRATE_MODEL_BOTH, ARG_REINTEGRATE_CREATE_MODEL},
                 { ARG_REINTEGRATE_EXCLUDE_FEATURE, ARG_REINTEGRATE_CREATE_MODEL },
-            }
+            },
+            Validate = c => c.ValidateReintegrateArgs()
         };
 
-        public string ReintegratModelName { get; private set; }
+        private bool ValidateReintegrateArgs()
+        {
+            if (ReintegrateModelType != ScoringModelType.mProphet && ExcludeFeatures.Count > 0)
+            {
+                WriteLine(Resources.CommandLine_CreateUntrainedScoringModel_Error__Excluding_feature_scores_is_not_permitted_with_the_default_Skyline_model_);
+                return false;
+            }
+
+            if (ReintegrateModelCutoffs != null)
+            {
+                if (ReintegrateModelType == ScoringModelType.Skyline)
+                {
+                    WriteLine("Error: Model cutoffs cannot be applied in calibrating the Skyline default model.");
+                    return false;
+                }
+
+                double maxCutoff = MProphetPeakScoringModel.DEFAULT_CUTOFFS[0];
+                if (MonotonicallyDecreasing(ReintegrateModelCutoffs, maxCutoff))
+                {
+                    WriteLine("Error: Model cutoffs ({0}) must be in decreasing order greater than zero and less than {1}.", string.Join(
+                        CultureInfo.CurrentCulture.TextInfo.ListSeparator, ReintegrateModelCutoffs.Select(c => c.ToString(CultureInfo.CurrentCulture))), maxCutoff);
+                }
+            }
+
+            return true;
+        }
+
+        private bool MonotonicallyDecreasing(List<double> values, double maxValue)
+        {
+            double? lastValue = null;
+            foreach (var value in values)
+            {
+                if (value > maxValue || (lastValue.HasValue && value >= lastValue.Value))
+                    return false;
+                lastValue = value;
+            }
+
+            return true;
+        }
+
+        public enum ScoringModelType
+        {
+            mProphet, // Full mProphet model (default)
+            Skyline,  // Skyline default model with coefficients scaled to estimate unit normal distribution from decoys
+            SkylineML // Skyline Machine Learning - essentially mProphet model with default set of features
+        }
+
+        public string ReintegrateModelName { get; private set; }
+        public List<double> ReintegrateModelCutoffs { get; private set; }
         public int? ReintegrateModelIterationCount { get; private set; }
         public bool IsOverwritePeaks { get; private set; }
         public bool IsCreateScoringModel { get; private set; }
         public bool IsSecondBestModel { get; private set; }
         public bool IsDecoyModel { get; private set; }
         public bool IsLogTraining { get; private set; }
-        public bool IsLegacyModel { get; private set; }
+        public ScoringModelType ReintegrateModelType { get; private set; }
         public List<IPeakFeatureCalculator> ExcludeFeatures { get; private set; }
 
-        public bool Reintegrating { get { return !string.IsNullOrEmpty(ReintegratModelName); } }
+        public bool Reintegrating { get { return !string.IsNullOrEmpty(ReintegrateModelName); } }
+
+
+        private List<double> ParseNumberList(NameValuePair pair)
+        {
+            try
+            {
+                return pair.Value.Split(new[] {CultureInfo.CurrentCulture.TextInfo.ListSeparator},
+                        StringSplitOptions.RemoveEmptyEntries)
+                    .Select(double.Parse).ToList();
+            }
+            catch (Exception)
+            {
+                throw new ValueInvalidNumberListException(pair.Match, pair.Value);
+            }
+        }
 
         private bool ParseReintegrateExcludeFeature(NameValuePair pair)
         {
@@ -2409,6 +2476,14 @@ namespace pwiz.Skyline
         {
             public ValueInvalidIntException(Argument arg, string value)
                 : base(string.Format(Resources.ValueInvalidIntException_ValueInvalidIntException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_integer_, value, arg.ArgumentText))
+            {
+            }
+        }
+
+        public class ValueInvalidNumberListException : UsageException
+        {
+            public ValueInvalidNumberListException(Argument arg, string value)
+                : base(string.Format("The value {0} is not valid for the argument {1} which requires a list of decimal numbers.", value, arg.ArgumentText))
             {
             }
         }
