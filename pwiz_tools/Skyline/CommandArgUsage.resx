@@ -769,4 +769,7 @@ greater peak area.</value>
   <data name="_reintegrate_model_type" xml:space="preserve">
     <value>The type of peak scoring model to train to produce z scores and q values. (dafault mProphet) Skyline - simply scales coefficients of the default Skyline model to estimate a unit normal distribution from the decoys. SkylineML - uses the mProphet machine learning algorithm to train a model using only the default set of feature scores.</value>
   </data>
+  <data name="_version_pwiz" xml:space="preserve">
+    <value>Emits version information for the ProteoWizard data reader, testing that it is installed correctly and can be loaded.</value>
+  </data>
 </root>

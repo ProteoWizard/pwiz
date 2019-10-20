@@ -28,6 +28,7 @@ using pwiz.CLI.msdata;
 using pwiz.CLI.analysis;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
+using Version = pwiz.CLI.msdata.Version;
 
 namespace pwiz.ProteowizardWrapper
 {
@@ -43,6 +44,15 @@ namespace pwiz.ProteowizardWrapper
     public class MsDataFileImpl : IDisposable
     {
         private static readonly ReaderList FULL_READER_LIST = ReaderList.FullReaderList;
+
+        public static string InstalledVersion
+        {
+            get
+            {
+                var test = new MSData();
+                return Version.ToString();
+            }
+        }
 
         // By default this creates dummy non-functional performance timers.
         // Place "MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = false;" in 
