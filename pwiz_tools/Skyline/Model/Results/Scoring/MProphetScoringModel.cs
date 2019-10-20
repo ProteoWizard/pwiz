@@ -122,7 +122,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             // Intensity, retention time, library dotp
             new MQuestIntensityCalc(),
             new MQuestRetentionTimePredictionCalc(), 
-            new MQuestRetentionTimeSquaredPredictionCalc(), // somewhat redundant with RT prediction and can lead to strange effects with a positive coefficient and large deltas
+            // new MQuestRetentionTimeSquaredPredictionCalc(), // somewhat redundant with RT prediction and can lead to strange effects with a positive coefficient and large deltas
             new MQuestIntensityCorrelationCalc(), 
 
             // Shape-based and related calculators
