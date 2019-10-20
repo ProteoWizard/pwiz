@@ -1845,6 +1845,7 @@ namespace pwiz.Skyline
                         commandArgs.IsDecoyModel,
                         commandArgs.IsSecondBestModel,
                         commandArgs.IsLogTraining,
+                        commandArgs.ReintegrateModelCutoffs,
                         commandArgs.ReintegrateModelIterationCount);
 
                     if (modelAndFeatures == null)
@@ -1886,7 +1887,8 @@ namespace pwiz.Skyline
         }
 
         private ModelAndFeatures CreateScoringModel(string modelName, CommandArgs.ScoringModelType modelType,
-            IList<IPeakFeatureCalculator> excludeFeatures, bool decoys, bool secondBest, bool log, int? modelIterationCount)
+            IList<IPeakFeatureCalculator> excludeFeatures, bool decoys, bool secondBest, bool log,
+            IList<double> modelCutoffs, int? modelIterationCount)
         {
             _out.WriteLine(Resources.CommandLine_CreateScoringModel_Creating_scoring_model__0_, modelName);
 
@@ -1927,7 +1929,7 @@ namespace pwiz.Skyline
                 // Train the model.
                 string documentPath = log ? DocContainer.DocumentFilePath : null;
                 scoringModel = (PeakScoringModelSpec) scoringModel.Train(targetTransitionGroups,
-                    decoyTransitionGroups, targetDecoyGenerator, initialParams, null, modelIterationCount, secondBest, true, progressMonitor, documentPath);
+                    decoyTransitionGroups, targetDecoyGenerator, initialParams, modelCutoffs, modelIterationCount, secondBest, true, progressMonitor, documentPath);
 
                 Settings.Default.PeakScoringModelList.SetValue(scoringModel);
 
