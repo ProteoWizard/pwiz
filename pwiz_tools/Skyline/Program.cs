@@ -466,6 +466,12 @@ namespace pwiz.Skyline
 
                 // Add handler for non-UI thread exceptions. 
                 AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+
+                if (Settings.Default.SettingsUpgradeRequired)
+                {
+                    Settings.Default.Upgrade();
+                    Settings.Default.Save();
+                }
             }
         }
 
