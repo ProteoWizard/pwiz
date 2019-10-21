@@ -663,24 +663,24 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             private static List<MeasuredPeptide> FindBestPeptides(SrmDocument doc, int peptideCount, ICollection<PeptideDocNode> exclude)
             {
-                var docPeptides = new List<MeasuredPeptide>();
-                var cirtPeptides = new List<MeasuredPeptide>();
+                var docPeptides = new List<Tuple<MeasuredPeptide, PeptideDocNode>>();
+                var cirtPeptides = new List<Tuple<MeasuredPeptide, PeptideDocNode>>();
                 foreach (var pep in doc.Molecules)
                 {
                     if (pep.PercentileMeasuredRetentionTime.HasValue && !pep.IsDecoy && (exclude == null || !exclude.Contains(pep)))
                     {
                         var seq = doc.Settings.GetModifiedSequence(pep);
                         var time = pep.PercentileMeasuredRetentionTime.Value;
-                        var measuredPeptide = new MeasuredPeptide(seq, time);
+                        var tuple = new Tuple<MeasuredPeptide, PeptideDocNode>(new MeasuredPeptide(seq, time), pep);
                         if (!IrtStandard.CIRT.Contains(seq))
-                            docPeptides.Add(measuredPeptide);
+                            docPeptides.Add(tuple);
                         else
-                            cirtPeptides.Add(measuredPeptide);
+                            cirtPeptides.Add(tuple);
                     }
                 }
 
                 if (cirtPeptides.Count >= peptideCount)
-                    return IrtPeptidePicker.Filter(cirtPeptides, peptideCount).ToList();
+                    return IrtPeptidePicker.Filter(cirtPeptides.Select(pep => pep.Item1), peptideCount).ToList();
 
                 docPeptides.AddRange(cirtPeptides);
                 return FindEvenlySpacedPeptides(doc, docPeptides, peptideCount);
@@ -696,13 +696,10 @@ namespace pwiz.Skyline.SettingsUI.Irt
             /// <param name="doc">Document containing the peptides to choose from</param>
             /// <param name="docPeptides">Peptides to choose from</param>
             /// <param name="peptideCount">The number of peptides desired</param>
-            private static List<MeasuredPeptide> FindEvenlySpacedPeptides(SrmDocument doc, List<MeasuredPeptide> docPeptides, int peptideCount)
+            private static List<MeasuredPeptide> FindEvenlySpacedPeptides(SrmDocument doc, List<Tuple<MeasuredPeptide, PeptideDocNode>> docPeptides, int peptideCount)
             {
-                if (docPeptides.Count == peptideCount)
-                {
-                    docPeptides.Sort((x, y) => x.RetentionTime.CompareTo(y.RetentionTime));
-                    return docPeptides;
-                }
+                if (docPeptides.Count <= peptideCount)
+                    return docPeptides.Select(pep => pep.Item1).OrderBy(pep => pep.RetentionTime).ToList();
 
                 var model = doc.Settings.PeptideSettings.Integration.PeakScoringModel;
                 if (model == null || !model.IsTrained)
@@ -711,10 +708,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 var resultsHandler = new MProphetResultsHandler(doc, model);
                 resultsHandler.ScoreFeatures(null, true);
 
-                var docTargets = docPeptides.ToDictionary(pep => pep.Target, pep => pep);
-                var docNodePeps = doc.Molecules.Where(nodePep => docTargets.ContainsKey(nodePep.ModifiedTarget)).ToArray();
-                var scoredPeptides = new List<ScoredPeptide>(docNodePeps.Length);
-                foreach (var nodePep in docNodePeps)
+                var scoredPeptides = new Dictionary<Target, ScoredPeptide>();
+                foreach (var (pep, nodePep) in docPeptides)
                 {
                     var allStats = doc.MeasuredResults.MSDataFileInfos
                         .Select(info => resultsHandler.GetPeakFeatureStatistics(nodePep.Id.GlobalIndex, info.FileId.GlobalIndex))
@@ -726,15 +721,16 @@ namespace pwiz.Skyline.SettingsUI.Irt
                             ? allStats.Select(stats => stats.QValue.Value).Max()
                             : -allStats.Select(stats => stats.BestScore).Min();
                     }
-                    scoredPeptides.Add(new ScoredPeptide(docTargets[nodePep.ModifiedTarget], value));
+                    if (!scoredPeptides.TryGetValue(pep.Target, out var existing) || value < existing.Score)
+                        scoredPeptides[pep.Target] = new ScoredPeptide(pep, value);
                 }
 
-                var retentionTimes = scoredPeptides.Select(pep => pep.Peptide.RetentionTime).OrderBy(rt => rt).ToArray();
+                var retentionTimes = scoredPeptides.Select(pep => pep.Value.Peptide.RetentionTime).OrderBy(rt => rt).ToArray();
                 var minRt = retentionTimes.First();
                 var maxRt = retentionTimes.Last();
                 var rtRange = maxRt - minRt;
 
-                var buckets = PeptideBucket.BucketPeptides(scoredPeptides, new[]
+                var buckets = PeptideBucket.BucketPeptides(scoredPeptides.Values, new[]
                 {
                     minRt + rtRange * 1 / 8,
                     minRt + rtRange * 2 / 8,
@@ -747,7 +743,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 var midBuckets = buckets.Skip(1).Take(buckets.Length - 2).ToArray();
 
                 var bestPeptides = new List<MeasuredPeptide>();
-                while (bestPeptides.Count < peptideCount)
+                while (bestPeptides.Count < peptideCount && buckets.Any(bucket => !bucket.Empty))
                 {
                     bestPeptides.AddRange(PeptideBucket.Pop(endBuckets, endBuckets.Length, true).Take(Math.Min(endBuckets.Length, peptideCount - bestPeptides.Count)));
                     bestPeptides.AddRange(PeptideBucket.Pop(midBuckets, midBuckets.Length, false).Take(Math.Min(midBuckets.Length, peptideCount - bestPeptides.Count)));
@@ -964,7 +960,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         private readonly double _maxRetentionTime;
         private readonly List<ScoredPeptide> _peptides;
 
-        private bool Empty => _peptides.Count == 0;
+        public bool Empty => _peptides.Count == 0;
 
         private PeptideBucket(double maxRetentionTime)
         {
