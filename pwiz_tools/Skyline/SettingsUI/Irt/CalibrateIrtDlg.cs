@@ -32,6 +32,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -682,7 +683,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     return IrtPeptidePicker.Filter(cirtPeptides, peptideCount).ToList();
 
                 docPeptides.AddRange(cirtPeptides);
-                return FindEvenlySpacedPeptides(docPeptides, peptideCount);
+                return FindEvenlySpacedPeptides(doc, docPeptides, peptideCount);
             }
 
             /// <summary>
@@ -692,46 +693,67 @@ namespace pwiz.Skyline.SettingsUI.Irt
             /// 
             /// The returned list is guaranteed to be sorted by retention time.
             /// </summary>
+            /// <param name="doc">Document containing the peptides to choose from</param>
             /// <param name="docPeptides">Peptides to choose from</param>
             /// <param name="peptideCount">The number of peptides desired</param>
-            private static List<MeasuredPeptide> FindEvenlySpacedPeptides(List<MeasuredPeptide> docPeptides, int peptideCount)
+            private static List<MeasuredPeptide> FindEvenlySpacedPeptides(SrmDocument doc, List<MeasuredPeptide> docPeptides, int peptideCount)
             {
-                docPeptides.Sort((x, y) => x.RetentionTime.CompareTo(y.RetentionTime));
                 if (docPeptides.Count == peptideCount)
-                    return docPeptides;
-
-                var minRT = docPeptides.First().RetentionTime;
-                var maxRT = docPeptides.Last().RetentionTime;
-
-                /*
-                 * This algorithm will pick the closest peptide to each "target RT" as defined
-                 * by the "length of the gradient" (Last peptide's RT - First peptide's RT) and
-                 * the number of peptides asked for.
-                 * 
-                 * It does this by considering peptides 3 at a time: (prev, current, next) triplets.
-                 * When the pointer has shifted so that the "current" peptide is closer than
-                 * either of its neighbors, then that peptide is added to the standard and removed
-                 * from the search list.
-                 */
-                List<MeasuredPeptide> standardPeptides = new List<MeasuredPeptide>();
-                double gradientLength = maxRT - minRT;
-                for (int i = 0; i < peptideCount; i++)
                 {
-                    double targetRT = minRT + i * (gradientLength / (peptideCount - 1));
-                    for (int j = 0; j < docPeptides.Count; j++)
-                    {
-                        if (j + 1 > docPeptides.Count - 1 ||
-                                Math.Abs(docPeptides[j].RetentionTime - targetRT) <
-                                Math.Abs(docPeptides[j + 1].RetentionTime - targetRT))
-                        {
-                            standardPeptides.Add(docPeptides[j]);
-                            docPeptides.RemoveAt(j);
-                            break;
-                        }
-                    }
+                    docPeptides.Sort((x, y) => x.RetentionTime.CompareTo(y.RetentionTime));
+                    return docPeptides;
                 }
 
-                return standardPeptides;
+                var model = doc.Settings.PeptideSettings.Integration.PeakScoringModel;
+                if (model == null || !model.IsTrained)
+                    model = LegacyScoringModel.DEFAULT_MODEL;
+
+                var resultsHandler = new MProphetResultsHandler(doc, model);
+                resultsHandler.ScoreFeatures(null, true);
+
+                var docTargets = docPeptides.ToDictionary(pep => pep.Target, pep => pep);
+                var docNodePeps = doc.Molecules.Where(nodePep => docTargets.ContainsKey(nodePep.ModifiedTarget)).ToArray();
+                var scoredPeptides = new List<ScoredPeptide>(docNodePeps.Length);
+                foreach (var nodePep in docNodePeps)
+                {
+                    var allStats = doc.MeasuredResults.MSDataFileInfos
+                        .Select(info => resultsHandler.GetPeakFeatureStatistics(nodePep.Id.GlobalIndex, info.FileId.GlobalIndex))
+                        .Where(stats => stats != null).ToArray();
+                    var value = float.MaxValue;
+                    if (allStats.Length > 0)
+                    {
+                        value = model is MProphetPeakScoringModel
+                            ? allStats.Select(stats => stats.QValue.Value).Max()
+                            : -allStats.Select(stats => stats.BestScore).Min();
+                    }
+                    scoredPeptides.Add(new ScoredPeptide(docTargets[nodePep.ModifiedTarget], value));
+                }
+
+                var retentionTimes = scoredPeptides.Select(pep => pep.Peptide.RetentionTime).OrderBy(rt => rt).ToArray();
+                var minRt = retentionTimes.First();
+                var maxRt = retentionTimes.Last();
+                var rtRange = maxRt - minRt;
+
+                var buckets = PeptideBucket.BucketPeptides(scoredPeptides, new[]
+                {
+                    minRt + rtRange * 1 / 8,
+                    minRt + rtRange * 2 / 8,
+                    minRt + rtRange * 4 / 8,
+                    minRt + rtRange * 6 / 8,
+                    minRt + rtRange * 7 / 8,
+                    double.MaxValue
+                });
+                var endBuckets = new[] {buckets.First(), buckets.Last()};
+                var midBuckets = buckets.Skip(1).Take(buckets.Length - 2).ToArray();
+
+                var bestPeptides = new List<MeasuredPeptide>();
+                while (bestPeptides.Count < peptideCount)
+                {
+                    bestPeptides.AddRange(PeptideBucket.Pop(endBuckets, endBuckets.Length, true).Take(Math.Min(endBuckets.Length, peptideCount - bestPeptides.Count)));
+                    bestPeptides.AddRange(PeptideBucket.Pop(midBuckets, midBuckets.Length, false).Take(Math.Min(midBuckets.Length, peptideCount - bestPeptides.Count)));
+                }
+                bestPeptides.Sort((x, y) => x.RetentionTime.CompareTo(y.RetentionTime));
+                return bestPeptides;
             }
         }
 
@@ -923,5 +945,77 @@ namespace pwiz.Skyline.SettingsUI.Irt
     public class StandardPeptide : MeasuredPeptide
     {
         public double Irt { get; set; }
+    }
+
+    public class ScoredPeptide
+    {
+        public MeasuredPeptide Peptide { get; }
+        public float Score { get; }
+
+        public ScoredPeptide(MeasuredPeptide peptide, float score)
+        {
+            Peptide = peptide;
+            Score = score;
+        }
+    }
+
+    public class PeptideBucket
+    {
+        private readonly double _maxRetentionTime;
+        private readonly List<ScoredPeptide> _peptides;
+
+        private bool Empty => _peptides.Count == 0;
+
+        private PeptideBucket(double maxRetentionTime)
+        {
+            _maxRetentionTime = maxRetentionTime;
+            _peptides = new List<ScoredPeptide>();
+        }
+
+        public float? Peek()
+        {
+            return !Empty ? (float?) _peptides.First().Score : null;
+        }
+
+        public MeasuredPeptide Pop()
+        {
+            if (Empty)
+                return null;
+            var pep = _peptides.First().Peptide;
+            _peptides.RemoveAt(0);
+            return pep;
+        }
+
+        public static PeptideBucket[] BucketPeptides(IEnumerable<ScoredPeptide> peptides, double[] rtBoundaries)
+        {
+            var buckets = rtBoundaries.OrderBy(x => x).Select(boundary => new PeptideBucket(boundary)).ToArray();
+            var curBucketIdx = 0;
+            var curBucket = buckets[0];
+            foreach (var pep in peptides.OrderBy(pep => pep.Peptide.RetentionTime))
+            {
+                if (pep.Peptide.RetentionTime > curBucket._maxRetentionTime)
+                    curBucket = buckets[++curBucketIdx];
+                curBucket._peptides.Add(pep);
+            }
+            buckets.ForEach(bucket => bucket._peptides.Sort((x, y) => x.Score.CompareTo(y.Score)));
+            return buckets;
+        }
+
+        public static IEnumerable<MeasuredPeptide> Pop(PeptideBucket[] buckets, int num, bool limitOne)
+        {
+            var popped = 0;
+            while (popped < num)
+            {
+                var validBuckets = buckets.Where(bucket => !bucket.Empty).OrderBy(bucket => bucket.Peek().Value).ToArray();
+                foreach (var bucket in validBuckets)
+                {
+                    yield return bucket.Pop();
+                    if (++popped == num)
+                        yield break;
+                }
+                if (validBuckets.Length == 0 || limitOne)
+                    yield break;
+            }
+        }
     }
 }
