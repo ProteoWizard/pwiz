@@ -139,7 +139,6 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm(calibrateDlg);
 
             //Now check that the peptides were passed to the EditIrtCalcDlg
-            PauseTest();
             RunUI(() =>
                       {
                           Assert.AreEqual(numStandardPeps, irtDlg1.StandardPeptideCount);
