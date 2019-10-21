@@ -10616,4 +10616,7 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="ExceptionDialog_Caused_by_____" xml:space="preserve">
     <value>Caused by ---&gt;</value>
   </data>
+  <data name="FileStreamManager_GetTempFileName_Failed_attempting_to_create_a_temporary_file_in_the_folder__0__with_the_following_error_" xml:space="preserve">
+    <value>Failed attempting to create a temporary file in the folder {0} with the following error:</value>
+  </data>
 </root>

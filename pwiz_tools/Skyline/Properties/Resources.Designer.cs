@@ -12309,6 +12309,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed attempting to create a temporary file in the folder {0} with the following error:.
+        /// </summary>
+        public static string FileStreamManager_GetTempFileName_Failed_attempting_to_create_a_temporary_file_in_the_folder__0__with_the_following_error_ {
+            get {
+                return ResourceManager.GetString("FileStreamManager_GetTempFileName_Failed_attempting_to_create_a_temporary_file_in" +
+                        "_the_folder__0__with_the_following_error_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Win32 Error: {0}.
         /// </summary>
         public static string FileStreamManager_GetTempFileName_Win32_Error__0__ {
@@ -13170,20 +13180,20 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Scan Number:.
-        /// </summary>
-        public static string GraphFullScan_CreateGraph_Scan_Number_ {
-            get {
-                return ResourceManager.GetString("GraphFullScan_CreateGraph_Scan_Number_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to IM Scan Range:.
         /// </summary>
         public static string GraphFullScan_CreateGraph_IM_Scan_Range_ {
             get {
                 return ResourceManager.GetString("GraphFullScan_CreateGraph_IM_Scan_Range_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Scan Number:.
+        /// </summary>
+        public static string GraphFullScan_CreateGraph_Scan_Number_ {
+            get {
+                return ResourceManager.GetString("GraphFullScan_CreateGraph_Scan_Number_", resourceCulture);
             }
         }
         

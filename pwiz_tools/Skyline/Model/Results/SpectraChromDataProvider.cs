@@ -547,7 +547,7 @@ namespace pwiz.Skyline.Model.Results
             if (_chromGroups != null)
                 _chromGroups.Dispose();
 
-            _chromGroups = new ChromGroups(chromatogramRequestOrder, _collectors.ChromKeys, (float) MaxRetentionTime.GetValueOrDefault(), _spectra.SpectrumCount, _cachePath);
+            _chromGroups = new ChromGroups(chromatogramRequestOrder, _collectors.ChromKeys, (float) MaxRetentionTime.GetValueOrDefault(), _spectra.CycleCount, _cachePath);
             _blockWriter = new BlockWriter(_chromGroups);
 
             if (!_collectors.IsRunningAsync)
@@ -693,6 +693,7 @@ namespace pwiz.Skyline.Model.Results
             private MsDataFileImpl _dataFile;
             private LookaheadContext _lookaheadContext;
             private readonly int _countSpectra;
+            private readonly int _countCycles;
             private readonly ChromatogramLoadingStatus.TransitionData _allChromData;
             private Exception _exception;
 
@@ -719,6 +720,7 @@ namespace pwiz.Skyline.Model.Results
                 
                 _lookaheadContext = new LookaheadContext(_filter, _dataFile);
                 _countSpectra = dataFile.SpectrumCount;
+                _countCycles = dataFile.GetTotalIonCurrent().Length;
 
                 HasSrmSpectra = dataFile.HasSrmSpectra;
                 
@@ -881,6 +883,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             public int SpectrumCount { get { return _countSpectra; } }
+            public int CycleCount { get { return _countCycles; } }
 
             /// <summary>
             /// Method for asynchronous reading of spectra
