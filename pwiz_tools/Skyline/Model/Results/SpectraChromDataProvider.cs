@@ -720,7 +720,17 @@ namespace pwiz.Skyline.Model.Results
                 
                 _lookaheadContext = new LookaheadContext(_filter, _dataFile);
                 _countSpectra = dataFile.SpectrumCount;
-                _countCycles = dataFile.GetTotalIonCurrent().Length;
+                // Use the TIC chromatogram if possible, because spectrum count can be massive for data files with IMS
+                double[] tic = null;
+                try
+                {
+                    tic = dataFile.GetTotalIonCurrent();
+                }
+                catch (Exception)
+                {
+                    // Ignore and use _countSpectra
+                }
+                _countCycles = tic != null ? tic.Length : _countSpectra;
 
                 HasSrmSpectra = dataFile.HasSrmSpectra;
                 
