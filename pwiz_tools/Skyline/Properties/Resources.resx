@@ -10796,4 +10796,7 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="IrtDb_MakeDocumentXml_iRT_standards" xml:space="preserve">
     <value>iRT standards</value>
   </data>
+  <data name="CalibrationGridViewDriver_FindEvenlySpacedPeptides_Calculating_scores" xml:space="preserve">
+    <value>Calculating scores</value>
+  </data>
 </root>

@@ -3197,6 +3197,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Calculating scores.
+        /// </summary>
+        public static string CalibrationGridViewDriver_FindEvenlySpacedPeptides_Calculating_scores {
+            get {
+                return ResourceManager.GetString("CalibrationGridViewDriver_FindEvenlySpacedPeptides_Calculating_scores", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Standard peptides must exist in the database..
         /// </summary>
         public static string ChangeIrtPeptidesDlg_OkDialog_Standard_peptides_must_exist_in_the_database {

@@ -619,9 +619,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         private class CalibrationGridViewDriver : PeptideGridViewDriver<StandardPeptide>
         {
+            private readonly CalibrateIrtDlg _parent;
+
             public CalibrationGridViewDriver(CalibrateIrtDlg parent, DataGridViewEx gridView, BindingSource bindingSource,
                 SortableBindingList<StandardPeptide> items) : base(gridView, bindingSource, items)
             {
+                _parent = parent;
                 GridView.CellValueChanged += parent.StandardsChanged;
                 Items.ListChanged += parent.StandardsChanged;
             }
@@ -663,7 +666,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 Items.ResetBindings();
             }
 
-            private static List<MeasuredPeptide> FindBestPeptides(SrmDocument doc, int peptideCount, ICollection<PeptideDocNode> exclude)
+            private List<MeasuredPeptide> FindBestPeptides(SrmDocument doc, int peptideCount, ICollection<PeptideDocNode> exclude)
             {
                 var docPeptides = new List<Tuple<MeasuredPeptide, PeptideDocNode>>();
                 var cirtPeptides = new List<Tuple<MeasuredPeptide, PeptideDocNode>>();
@@ -698,7 +701,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             /// <param name="doc">Document containing the peptides to choose from</param>
             /// <param name="docPeptides">Peptides to choose from</param>
             /// <param name="peptideCount">The number of peptides desired</param>
-            private static List<MeasuredPeptide> FindEvenlySpacedPeptides(SrmDocument doc, List<Tuple<MeasuredPeptide, PeptideDocNode>> docPeptides, int peptideCount)
+            private List<MeasuredPeptide> FindEvenlySpacedPeptides(SrmDocument doc, List<Tuple<MeasuredPeptide, PeptideDocNode>> docPeptides, int peptideCount)
             {
                 if (docPeptides.Count <= peptideCount)
                     return docPeptides.Select(pep => pep.Item1).OrderBy(pep => pep.RetentionTime).ToList();
@@ -708,9 +711,14 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     model = LegacyScoringModel.DEFAULT_MODEL;
 
                 var resultsHandler = new MProphetResultsHandler(doc, model);
-                resultsHandler.ScoreFeatures(null, true);
+                using (var longWaitDlg = new LongWaitDlg {Text = Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Calculating_scores})
+                {
+                    longWaitDlg.PerformWork(_parent, 1000, pm => resultsHandler.ScoreFeatures(pm, true));
+                    if (longWaitDlg.IsCanceled)
+                        return new List<MeasuredPeptide>();
+                }
 
-                var scoredPeptides = new Dictionary<Target, ScoredPeptide>();
+                var scoredPeptidesDict = new Dictionary<Target, ScoredPeptide>();
                 foreach (var (pep, nodePep) in docPeptides)
                 {
                     var allStats = doc.MeasuredResults.MSDataFileInfos
@@ -723,16 +731,16 @@ namespace pwiz.Skyline.SettingsUI.Irt
                             ? allStats.Select(stats => stats.QValue.Value).Max()
                             : -allStats.Select(stats => stats.BestScore).Min();
                     }
-                    if (!scoredPeptides.TryGetValue(pep.Target, out var existing) || value < existing.Score)
-                        scoredPeptides[pep.Target] = new ScoredPeptide(pep, value);
+                    if (!scoredPeptidesDict.TryGetValue(pep.Target, out var existing) || value < existing.Score)
+                        scoredPeptidesDict[pep.Target] = new ScoredPeptide(pep, value);
                 }
 
-                var retentionTimes = scoredPeptides.Select(pep => pep.Value.Peptide.RetentionTime).OrderBy(rt => rt).ToArray();
-                var minRt = retentionTimes.First();
-                var maxRt = retentionTimes.Last();
+                var scoredPeptides = scoredPeptidesDict.Values.OrderBy(pep => pep.Peptide.RetentionTime).ToArray();
+                var minRt = scoredPeptides.First().Peptide.RetentionTime;
+                var maxRt = scoredPeptides.Last().Peptide.RetentionTime;
                 var rtRange = maxRt - minRt;
 
-                var buckets = PeptideBucket.BucketPeptides(scoredPeptides.Values, new[]
+                var buckets = PeptideBucket.BucketPeptides(scoredPeptides, new[]
                 {
                     minRt + rtRange * 1 / 8,
                     minRt + rtRange * 2 / 8,
@@ -984,12 +992,13 @@ namespace pwiz.Skyline.SettingsUI.Irt
             return pep;
         }
 
-        public static PeptideBucket[] BucketPeptides(IEnumerable<ScoredPeptide> peptides, double[] rtBoundaries)
+        public static PeptideBucket[] BucketPeptides(IEnumerable<ScoredPeptide> peptides, IEnumerable<double> rtBoundaries)
         {
+            // peptides must be sorted by retention time (low to high)
             var buckets = rtBoundaries.OrderBy(x => x).Select(boundary => new PeptideBucket(boundary)).ToArray();
             var curBucketIdx = 0;
             var curBucket = buckets[0];
-            foreach (var pep in peptides.OrderBy(pep => pep.Peptide.RetentionTime))
+            foreach (var pep in peptides)
             {
                 if (pep.Peptide.RetentionTime > curBucket._maxRetentionTime)
                     curBucket = buckets[++curBucketIdx];
@@ -1001,6 +1010,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         public static IEnumerable<MeasuredPeptide> Pop(PeptideBucket[] buckets, int num, bool limitOne)
         {
+            // buckets must be sorted by score (best to worst)
             var popped = 0;
             while (popped < num)
             {
