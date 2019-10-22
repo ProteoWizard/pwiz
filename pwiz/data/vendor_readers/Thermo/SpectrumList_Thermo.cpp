@@ -645,18 +645,18 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                 result->set(MS_highest_observed_m_z, massList->mzArray.back(), MS_m_z);
             }
 
-            if (getBinaryData || msLevel == 1)
+            if (getBinaryData || msLevel < maxMsLevel_)
             {
                 result->swapMZIntensityArrays(massList->mzArray, massList->intensityArray, MS_number_of_detector_counts);
             }
         }
 
-        if (msLevel == 1 && detailLevel >= DetailLevel_FullMetadata)
+        if (msLevel < maxMsLevel_ && detailLevel >= DetailLevel_FullMetadata)
         {
-            // insert MS1s (no precursor) into cache
+            // insert into cache if there is a higher ms level
             // NB: even FullMetadata level will have binary arrays (because they have to be retrieved to get defaultArrayLength)
             boost::lock_guard<boost::mutex> lock(readMutex);
-            precursorCache_.insert(CacheEntry(index, result));
+            precursorCache_.insert(CacheEntry(index, make_pair(result->getMZArray()->data, result->getIntensityArray()->data)));
         }
 
         return result;
@@ -748,6 +748,7 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
                         // the +3 offset is because MSOrder_NeutralLoss == -3
                         ++spectraByMSOrder[msOrder+3];
                         ++spectraByScanType[scanType];
+                        maxMsLevel_ = max(maxMsLevel_, msOrder+3);
 
                         switch (scanType)
                         {
@@ -857,21 +858,25 @@ PWIZ_API_DECL size_t SpectrumList_Thermo::findPrecursorSpectrumIndex(RawFile* ra
 
 PWIZ_API_DECL double SpectrumList_Thermo::getPrecursorIntensity(int precursorSpectrumIndex, double isolationMz, double isolationHalfWidth, const pwiz::util::IntegerSet& msLevelsToCentroid) const
 {
-    SpectrumPtr precursorSpectrum;
+    const PrecursorBinaryData* precursorBinaryData = nullptr;
 
     {
         boost::lock_guard<boost::mutex> lock(readMutex);
         auto findItr = precursorCache_.find(precursorSpectrumIndex);
         if (findItr != precursorCache_.end())
-            precursorSpectrum = findItr->spectrum;
+            precursorBinaryData = &findItr->binaryData;
     }
 
     // CONSIDER: is it worth it to keep separate caches for centroid and profile spectra?
-    if (!precursorSpectrum)
-        precursorSpectrum = spectrum(precursorSpectrumIndex, true, msLevelsToCentroid);
+    if (!precursorBinaryData)
+    {
+        spectrum(precursorSpectrumIndex, true, msLevelsToCentroid);
+        precursorBinaryData = &precursorCache_.find(precursorSpectrumIndex)->binaryData;
+    }
 
-    const auto& mz = precursorSpectrum->getMZArray()->data;
-    const auto& intensity = precursorSpectrum->getIntensityArray()->data;
+
+    const auto& mz = precursorBinaryData->first;
+    const auto& intensity = precursorBinaryData->second;
 
     auto mzItr = lower_bound(mz.begin(), mz.end(), isolationMz - isolationHalfWidth);
 

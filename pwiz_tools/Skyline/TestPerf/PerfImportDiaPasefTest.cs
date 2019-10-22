@@ -20,6 +20,7 @@
 
 using System;
 using System.Diagnostics;
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
@@ -43,9 +44,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         [Timeout(6000000)]  // Initial download can take a long time
         public void BrukerDiaPasefImportTest()
         {
-             RunPerfTests = true; // Uncomment this to force test to run in IDE TODO re-comment this
+            // RunPerfTests = true; // Uncomment this to force test to run in IDE TODO re-comment this
             Log.AddMemoryAppender();
-            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfImportBrukerDiaPasef.zip";
+            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfImportBrukerDiaPasef_v2.zip";
             TestFilesPersistent = new[] { ".d" }; // List of file basenames that we'd like to unzip alongside parent zipFile, and (re)use in place
 
             MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = false; // Turn on performance measurement
@@ -65,11 +66,18 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             // Load a .sky with mising .skyd, forcing re-import with existing parameters
             // This simplifies the test code since we have six different PASEF modes to deal with here
             string skyfile = TestFilesDir.GetTestPath("snipped.sky");
+            
+            // Update the paths to the .d files mentioned in the skyline doc
+            string text = File.ReadAllText(skyfile);
+            text = text.Replace(@"PerfImportBrukerDiaPasef", TestFilesDir.PersistentFilesDir);
+            File.WriteAllText(skyfile, text);
+
             Stopwatch loadStopwatch = new Stopwatch();
             loadStopwatch.Start();
             var doc = SkylineWindow.Document;
             RunUI(() =>
             {
+                Settings.Default.ImportResultsSimultaneousFiles = (int) MultiFileLoader.ImportResultsSimultaneousFileOptions.one_at_a_time; // This actually runs faster than option "many" - why?
                 SkylineWindow.OpenFile(skyfile);
             });
 
@@ -94,7 +102,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     }
                 }
             }
-            Assert.AreEqual(205249.594, maxHeight, 1); 
+            Assert.AreEqual(219215.40625, maxHeight, 1); 
 
             // Does CCS show up in reports?
             TestReports(doc1);
@@ -122,23 +130,22 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             CheckFieldByName(documentGrid, "PrecursorResult.IonMobilityUnits", row, IonMobilityValue.GetUnitsString(eIonMobilityUnits.inverse_K0_Vsec_per_cm2), msg);
             CheckFieldByName(documentGrid, "PrecursorResult.IonMobilityWindow", row, 0.12, msg);
             CheckFieldByName(documentGrid, "PrecursorResult.CollisionalCrossSection", row, 666.9175, msg);
-
             EnableDocumentGridColumns(documentGrid,
                 Resources.ReportSpecList_GetDefaults_Peptide_RT_Results,
                 doc1.PeptideCount * doc1.MeasuredResults.Chromatograms.Count, null);
             foreach (var rt in new[] {
-                14.36,14.33,14.35,14.33,14.33,14.33,14.15,14.1,14.15,14.12,14.1,14.12,14.64,14.6,14.63,14.6,14.61,
-                14.61,14.76,14.69,14.75,14.72,14.73,14.72,14.06,14.51,14.06,14.06,14.04,14.03,14.44,14.4,14.43,14.42,
-                14.42,14.43,14.37,14.36,14.36,14.36,14.35,14.35,14.31,14.27,14.31,14.3,14.28,14.28,14.5,14.47,14.48,
-                14.48,14.47,14.48,14.7,14.65,14.69,14.66,14.66,14.67,14.38,14.36,14.36,14.36,14.35,14.35,14.25,14.24,
-                14.25,14.24,14.22,14.23,14.38,14.32,14.37,14.36,14.35,14.35,14.54,14.49,14.51,14.51,14.5,14.51,14.24,
-                14.22,14.24,14.24,14.22,14.23,14.81,14.77,14.81,14.78,14.78,14.79,14.64,14.6,14.63,14.63,14.61,14.62,
-                14.5,14.49,14.48,14.48,14.47,14.46,14.53,14.47,14.52,14.51,14.5,14.49,14.68,14.65,14.67,14.66,14.65,
-                14.66,14.47,14.41,14.46,14.45,14.43,14.44,14.45,14.42,14.44,14.42,14.42,14.43,14.24,14.22,14.24,14.24,
-                14.25,14.25,14.48,14.43,14.48,14.46,14.45,14.44,14.2,14.14,14.19,14.18,14.17,14.17,14.39,14.35,14.38,
-                14.36,14.35,14.36,14.89,14.87,14.88,14.87,14.86,14.85,14.23,14.2,14.22,14.21,14.2,14.21,14.21,14.18,
-                14.19,14.18,14.19,14.18,14.11,14.09,14.11,14.09,14.08,14.08,14.73,14.68,14.72,14.69,14.69,14.71,14.65,
-                14.6,14.64,14.6,14.61,14.61,14.13,14.09,14.12,14.12,14.1,14.1,14.23,14.19,14.23,14.21,14.2,14.2
+                14.98, 14.33, 14.35, 14.34, 14.33, 14.33, 14.03, 14.1, 14.15, 14.12, 14.11, 14.11, 14.65, 14.6, 14.63, 14.61, 14.61, 
+                14.61, 14.27, 14.69, 14.75, 14.74, 14.72, 14.73, 14.06, 14.51, 14.06, 14.04, 14.03, 14.03, 14.09, 14.4, 14.43, 14.43, 
+                14.42, 14.43, 14.37, 14.36, 14.36, 14.37, 14.35, 14.35, 14.79, 14.27, 14.31, 14.31, 14.29, 14.28, 14.49, 14.47, 14.48, 
+                14.49, 14.47, 14.48, 14.12, 14.65, 14.69, 14.67, 14.67, 14.67, 14.38, 14.36, 14.36, 14.34, 14.34, 14.35, 14.93, 14.24, 
+                14.25, 14.25, 14.22, 14.23, 14.92, 14.32, 14.37, 14.36, 14.35, 14.35, 14.62, 14.49, 14.51, 14.52, 14.5, 14.5, 14.01, 14.22, 
+                14.24, 14.25, 14.22, 14.23, 14.81, 14.77, 14.81, 14.78, 14.78, 14.78, 14.65, 14.6, 14.63, 14.61, 14.61, 14.61, 14.78, 14.49, 
+                14.48, 14.46, 14.46, 14.47, 14.52, 14.47, 14.52, 14.49, 14.49, 14.49, 14.68, 14.65, 14.67, 14.65, 14.65, 14.65, 14.94, 14.41, 
+                14.46, 14.45, 14.45, 14.45, 14.45, 14.42, 14.44, 14.43, 14.42, 14.43, 14.98, 14.22, 14.24, 14.24, 14.25, 14.25, 14.48, 14.43, 
+                14.48, 14.46, 14.45, 14.44, 14.2, 14.14, 14.19, 14.16, 14.16, 14.17, 14.38, 14.35, 14.38, 14.34, 14.34, 14.36, 14.9, 14.87, 14.88, 
+                14.86, 14.86, 14.85, 14.02, 14.2, 14.22, 14.22, 14.21, 14.21, 14.21, 14.18, 14.19, 14.19, 14.18, 14.18, 14.42, 14.09, 14.11, 14.09, 
+                14.09, 14.1, 14.04, 14.68, 14.72, 14.7, 14.71, 14.71, 14.91, 14.6, 14.64, 14.61, 14.62, 14.61, 14.12, 14.09, 14.12, 14.1, 14.1, 
+                14.1, 14.24, 14.19, 14.23, 14.21, 14.2, 14.2
             })
             {
                 CheckFieldByName(documentGrid, "PeptideRetentionTime", row++, rt, msg);

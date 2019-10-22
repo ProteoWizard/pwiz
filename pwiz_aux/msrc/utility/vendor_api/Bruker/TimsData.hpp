@@ -62,6 +62,7 @@ struct DiaPasefIsolationInfo
     double isolationMz;
     double isolationWidth;
     double collisionEnergy;
+    int numScans;
 };
 
 struct PWIZ_API_DECL TimsFrame
@@ -226,7 +227,8 @@ typedef boost::shared_ptr<TimsSpectrum> TimsSpectrumPtr;
 
 struct PWIZ_API_DECL TimsDataImpl : public CompassData
 {
-    TimsDataImpl(const std::string& rawpath, bool combineIonMobilitySpectra, int preferOnlyMsLevel = 0, bool allowMsMsWithoutPrecursor = true);
+    TimsDataImpl(const std::string& rawpath, bool combineIonMobilitySpectra, int preferOnlyMsLevel = 0, bool allowMsMsWithoutPrecursor = true,
+                 const std::vector<chemistry::MzMobilityWindow>& isolationMzFilter = std::vector<chemistry::MzMobilityWindow>());
     virtual ~TimsDataImpl() {}
 
     /// returns true if the source has MS spectra
@@ -280,7 +282,6 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
 
     private:
     std::string tdfFilepath_;
-    TimsBinaryDataPtr tdfStoragePtr_;
     boost::container::flat_map<size_t, TimsFramePtr> frames_;
     std::vector<TimsSpectrumPtr> spectra_;
     std::string acquisitionSoftware_;
@@ -295,6 +296,7 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     bool hasPASEFData_;
     int preferOnlyMsLevel_; // when nonzero, caller only wants spectra at this ms level
     bool allowMsMsWithoutPrecursor_; // when false, PASEF MS2 specta without precursor info will be excluded
+    vector<chemistry::MzMobilityWindow> isolationMzFilter_; // when non-empty, only scans from precursors matching one of the included m/zs (i.e. within a precursor isolation window) will be enumerated
     ChromatogramPtr tic_, bpc_;
 
     int64_t currentFrameId_; // used for cacheing frame contents
@@ -302,6 +304,7 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     protected:
     friend struct TimsFrame;
     friend struct TimsSpectrum;
+    TimsBinaryDataPtr tdfStoragePtr_;
     TimsBinaryData& tdfStorage_;
 
     ///

@@ -111,8 +111,16 @@ void manglePwizSoftware(MSData& msd)
 
     pwizSoftware->id = "current pwiz";
 
-    BOOST_FOREACH(DataProcessingPtr& dp, msd.dataProcessingPtrs)
-        BOOST_FOREACH(ProcessingMethod& pm, dp->processingMethods)
+    msd.dataProcessingPtrs = msd.allDataProcessingPtrs();
+    msd.dataProcessingPtrs.resize(1);
+
+    SpectrumListBase* sl = dynamic_cast<SpectrumListBase*>(msd.run.spectrumListPtr.get());
+    ChromatogramListBase* cl = dynamic_cast<ChromatogramListBase*>(msd.run.chromatogramListPtr.get());
+    if (sl && !msd.dataProcessingPtrs.empty()) sl->setDataProcessingPtr(msd.dataProcessingPtrs[0]);
+    if (cl && !msd.dataProcessingPtrs.empty()) cl->setDataProcessingPtr(msd.dataProcessingPtrs[0]);
+
+    for (DataProcessingPtr& dp : msd.dataProcessingPtrs)
+        for (ProcessingMethod& pm : dp->processingMethods)
             pm.softwarePtr = pwizSoftware;
 
     for (vector<size_t>::reverse_iterator itr = oldPwizSoftwarePtrs.rbegin();
@@ -140,14 +148,13 @@ void calculateSourceFileChecksums(vector<SourceFilePtr>& sourceFiles)
 }
 
 
-void hackInMemoryMSData(const string& sourceName, MSData& msd, const string& newSourceName = "")
+void hackInMemoryMSData(const string& sourceName, MSData& msd, const ReaderTestConfig& config, const string& newSourceName = "")
 {
     // remove metadata ptrs appended on read
     vector<SourceFilePtr>& sfs = msd.fileDescription.sourceFilePtrs;
     if (!sfs.empty()) sfs.erase(sfs.end()-1);
 
     mangleSourceFileLocations(sourceName, sfs, newSourceName);
-    manglePwizSoftware(msd);
 
     // if given a new source name, use it for the run id
     if (!newSourceName.empty())
@@ -155,6 +162,11 @@ void hackInMemoryMSData(const string& sourceName, MSData& msd, const string& new
         bal::replace_all(msd.id, sourceName, newSourceName);
         bal::replace_all(msd.run.id, sourceName, newSourceName);
     }
+
+    if (config.thresholdCount > 0)
+        pwiz::analysis::SpectrumListFactory::wrap(msd, "threshold count " + lexical_cast<string>(config.thresholdCount) + " most-intense");
+
+    manglePwizSoftware(msd);
 
     // set current DataProcessing to the original conversion
     // NOTE: this only works for vendor readers that use a single dataProcessing element
@@ -264,19 +276,14 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
 
         calculateSourceFileChecksums(msd.fileDescription.sourceFilePtrs);
         mangleSourceFileLocations(sourceName, msd.fileDescription.sourceFilePtrs);
+        config.wrap(msd);
         manglePwizSoftware(msd);
-
-        if (config.peakPicking)
-            pwiz::analysis::SpectrumListFactory::wrap(msd, "peakPicking true 1-");
-
-        if (config.indexRange)
-            pwiz::analysis::SpectrumListFactory::wrap(msd, "index " + lexical_cast<string>(config.indexRange.get().first) + "-" + lexical_cast<string>(config.indexRange.get().second));
 
         if (os_) TextWriter(*os_,0)(msd);
 
         bfs::path targetResultFilename = parentPath / config.resultFilename(msd.run.id + ".mzML");
         MSDataFile targetResult(targetResultFilename.string());
-        hackInMemoryMSData(sourceName, targetResult);
+        hackInMemoryMSData(sourceName, targetResult, config);
 
         // test for 1:1 equality with the target mzML
         Diff<MSData, DiffConfig> diff(msd, targetResult);
@@ -440,20 +447,15 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
 
             calculateSourceFileChecksums(msd.fileDescription.sourceFilePtrs);
             mangleSourceFileLocations(sourceNameAsPath.string(), msd.fileDescription.sourceFilePtrs, newSourceName.string());
+            config.wrap(msd);
             manglePwizSoftware(msd);
-
-            if (config.peakPicking)
-                pwiz::analysis::SpectrumListFactory::wrap(msd, "peakPicking true 1-");
-
-            if (config.indexRange)
-                pwiz::analysis::SpectrumListFactory::wrap(msd, "index " + lexical_cast<string>(config.indexRange.get().first) + "-" + lexical_cast<string>(config.indexRange.get().second));
 
             if (os_) TextWriter(*os_, 0)(msd);
 
             bfs::path::string_type targetResultFilename = (parentPath / config.resultFilename(msd.run.id + ".mzML")).native();
             bal::replace_all(targetResultFilename, unicodeTestString, L"");
             MSDataFile targetResult(bfs::path(targetResultFilename).string());
-            hackInMemoryMSData(sourceNameAsPath.string(), targetResult, newSourceName.string());
+            hackInMemoryMSData(sourceNameAsPath.string(), targetResult, config, newSourceName.string());
 
             // test for 1:1 equality with the target mzML
             Diff<MSData, DiffConfig> diff(msd, targetResult);
@@ -535,7 +537,7 @@ void generate(const Reader& reader, const string& rawpath, const bfs::path& pare
     reader.read(rawpath, "dummy", msds, readerConfig);
     MSDataFile::WriteConfig writeConfig;
     writeConfig.indexed = false;
-    writeConfig.binaryDataEncoderConfig.precision = BinaryDataEncoder::Precision_32;
+    writeConfig.binaryDataEncoderConfig.precision = config.doublePrecision ? BinaryDataEncoder::Precision_64 : BinaryDataEncoder::Precision_32;
     writeConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
     if (os_) *os_ << "Writing mzML(s) for " << rawpath << endl;
     for (size_t i=0; i < msds.size(); ++i)
@@ -543,11 +545,7 @@ void generate(const Reader& reader, const string& rawpath, const bfs::path& pare
         bfs::path outputFilename = parentPath / config.resultFilename(msds[i]->run.id + ".mzML");
         calculateSourceFileChecksums(msds[i]->fileDescription.sourceFilePtrs);
 
-        if (config.peakPicking)
-            pwiz::analysis::SpectrumListFactory::wrap(*msds[i], "peakPicking true 1-");
-
-        if (config.indexRange)
-            pwiz::analysis::SpectrumListFactory::wrap(*msds[i], "index " + lexical_cast<string>(config.indexRange.get().first) + "-" + lexical_cast<string>(config.indexRange.get().second));
+        config.wrap(*msds[i]);
 
         MSDataFile::write(*msds[i], outputFilename.string(), writeConfig);
     }
@@ -611,7 +609,25 @@ string ReaderTestConfig::resultFilename(const string& baseFilename) const
     if (preferOnlyMsLevel) bal::replace_all(result, ".mzML", "-ms" + lexical_cast<string>(preferOnlyMsLevel) + ".mzML");
     if (!allowMsMsWithoutPrecursor) bal::replace_all(result, ".mzML", "-noMsMsWithoutPrecursor.mzML");
     if (peakPicking) bal::replace_all(result, ".mzML", "-centroid.mzML");
+    if (!isolationMzAndMobilityFilter.empty()) bal::replace_all(result, ".mzML", "-mzMobilityFilter.mzML");
+    //if (thresholdCount > 0) bal::replace_all(result, ".mzML", "-top" + lexical_cast<string>(thresholdCount) + ".mzML");
     return result;
+}
+
+PWIZ_API_DECL
+void ReaderTestConfig::wrap(MSData& msd) const
+{
+    using pwiz::analysis::SpectrumListFactory;
+    if (peakPicking) SpectrumListFactory::wrap(msd, "peakPicking true 1-");
+    if (indexRange) SpectrumListFactory::wrap(msd, "index " + lexical_cast<string>(indexRange.get().first) + "-" + lexical_cast<string>(indexRange.get().second));
+    if (thresholdCount > 0)
+    {
+        SpectrumListFactory::wrap(msd, "threshold count " + lexical_cast<string>(thresholdCount) + " most-intense");
+
+        // remove processingMethod added by thresholding
+        msd.dataProcessingPtrs = msd.allDataProcessingPtrs();
+        msd.dataProcessingPtrs[0]->processingMethods.pop_back();
+    }
 }
 
 
@@ -675,7 +691,7 @@ int testReader(const Reader& reader, const vector<string>& args, bool testAccept
                 }
                 catch (exception& e)
                 {
-                    cerr << "Error testing on " << rawpath << " (" << config.resultFilename("config.mzML") << "): " << e.what() << endl;
+                    cerr << "Error testing on " << rawpath << " (" << config.resultFilename("config.mzML") + (config.thresholdCount > 0 ? "-threshold-top3" : "") << "): " << e.what() << endl;
                     ++failedTests;
                 }
 
@@ -710,6 +726,13 @@ int testReader(const Reader& reader, const vector<string>& args, bool testAccept
 
     if (failedTests > 0)
         throw runtime_error("failed " + lexical_cast<string>(failedTests) + " of " + lexical_cast<string>(totalTests) + " tests");
+
+    if (!generateMzML && config.thresholdCount == 0)
+    {
+        ReaderTestConfig newConfig = config;
+        newConfig.thresholdCount = 3;
+        return testReader(reader, args, testAcceptOnly, requireUnicodeSupport, isPathTestable, newConfig);
+    }
 
     return 0;
 }

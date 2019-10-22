@@ -106,6 +106,21 @@ namespace pwiz.ProteowizardWrapper
         public const string TIC = "TIC";
         public const string BPC = "BPC";
 
+        public class PrecursorMzAndIonMobilityWindow
+        {
+            public PrecursorMzAndIonMobilityWindow(double mz, double? ccs, double? ionMobility, double? ionMobilityWindow)
+            {
+                MZ = mz;
+                CCS = ccs;
+                IonMobility = ionMobility;
+                IonMobilityWindow = ionMobilityWindow;
+            }
+
+            public double MZ { get; }
+            public double? CCS { get; }  // TODO: make this useful on vendor side
+            public double? IonMobility { get; }
+            public double? IonMobilityWindow { get; }
+        }
 
         public static bool? IsNegativeChargeIdNullable(string id)
         {
@@ -127,7 +142,8 @@ namespace pwiz.ProteowizardWrapper
             bool simAsSpectra = false, bool srmAsSpectra = false, bool acceptZeroLengthSpectra = true,
             bool requireVendorCentroidedMS1 = false, bool requireVendorCentroidedMS2 = false,
             bool ignoreZeroIntensityPoints = false, 
-            int preferOnlyMsLevel = 0)
+            int preferOnlyMsLevel = 0,
+            IEnumerable<PrecursorMzAndIonMobilityWindow> precursorMzAndIonMobilityWindows = null)
         {
             // see note above on enabling performance measurement
             _perf = PerfUtilFactory.CreatePerfUtil(@"MsDataFileImpl " +
@@ -144,7 +160,11 @@ namespace pwiz.ProteowizardWrapper
                     acceptZeroLengthSpectra = acceptZeroLengthSpectra,
                     ignoreZeroIntensityPoints = ignoreZeroIntensityPoints,
                     preferOnlyMsLevel = preferOnlyMsLevel,
-                    allowMsMsWithoutPrecursor = false
+                    allowMsMsWithoutPrecursor = false,
+                    isolationMzAndMobilityFilter = precursorMzAndIonMobilityWindows?.Select(w => 
+                        w.IonMobility.HasValue ? 
+                            new MzMobilityWindow(w.MZ, w.IonMobility.Value , (w.IonMobilityWindow??0)/2): 
+                            new MzMobilityWindow(w.MZ)).ToList()
                 };
                 _lockmassParameters = lockmassParameters;
                 FULL_READER_LIST.read(path, _msDataFile, sampleIndex, _config);
