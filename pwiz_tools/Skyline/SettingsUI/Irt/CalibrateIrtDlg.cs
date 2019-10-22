@@ -540,10 +540,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 yield return new RegressionOption(Resources.RegressionOption_All_Fixed_points, null, null);
 
-                var docPeptides = document.Peptides.Where(nodePep => nodePep.PercentileMeasuredRetentionTime.HasValue && !nodePep.IsDecoy)
-                    .ToDictionary(nodePep => nodePep.ModifiedTarget, nodePep => nodePep); // TODO duplicate peptides?
-
-                var removedValues = new List<Tuple<double, double>>();
+                var docPeptides = new Dictionary<Target, PeptideDocNode>();
+                foreach (var nodePep in document.Peptides.Where(nodePep => nodePep.PercentileMeasuredRetentionTime.HasValue && !nodePep.IsDecoy))
+                {
+                    if (!docPeptides.ContainsKey(nodePep.ModifiedTarget))
+                        docPeptides[nodePep.ModifiedTarget] = nodePep;
+                }
 
                 foreach (var standard in Settings.Default.IrtStandardList.Where(standard => !ReferenceEquals(standard, IrtStandard.EMPTY)))
                 {
@@ -558,7 +560,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     if (RCalcIrt.TryGetRegressionLine(
                         pepMatches.Select(pep => (double) pep.Item2.PercentileMeasuredRetentionTime.Value).ToList(),
                         pepMatches.Select(pep => pep.Item1.Irt).ToList(),
-                        RCalcIrt.MinStandardCount(standard.Peptides.Count), out var regressionLine, removedValues))
+                        RCalcIrt.MinStandardCount(standard.Peptides.Count), out var regressionLine))
                     {
                         yield return new RegressionOption(standard.Name, pepMatches, regressionLine);
                     }
