@@ -49,7 +49,10 @@ namespace pwiz.ProteowizardWrapper
         {
             get
             {
+                // Forces pwiz_data_cli.dll to be loaded with all its dependencies
+                // Throws and exception if the DLL load failes
                 var test = new MSData();
+                // Return the version string once the load succeeds
                 return Version.ToString();
             }
         }

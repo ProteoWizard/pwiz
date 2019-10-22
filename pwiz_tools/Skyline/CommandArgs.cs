@@ -60,7 +60,7 @@ namespace pwiz.Skyline
         private static readonly Func<string> DATE_VALUE = () => CommandArgUsage.CommandArgs_DATE_VALUE;
         private static readonly Func<string> INT_VALUE = () => CommandArgUsage.CommandArgs_INT_VALUE;
         private static readonly Func<string> NUM_VALUE = () => CommandArgUsage.CommandArgs_NUM_VALUE;
-        private static readonly Func<string> NUM_LIST_VALUE = () => "<number list>";
+        private static readonly Func<string> NUM_LIST_VALUE = () => CommandArgUsage.CommandArgs_NUM_LIST_VALUE;
         private static readonly Func<string> NAME_VALUE = () => CommandArgUsage.CommandArgs_NAME_VALUE;
         private static readonly Func<string> FEATURE_NAME_VALUE = () => CommandArgUsage.CommandArgs_FEATURE_NAME_VALUE;
         private static readonly Func<string> REPORT_NAME_VALUE = () => CommandArgUsage.CommandArgs_REPORT_NAME_VALUE;
@@ -162,11 +162,10 @@ namespace pwiz.Skyline
         public const string ARG_VALUE_ASCII = "ascii";
         public const string ARG_VALUE_NO_BORDERS = "no-borders";
         public static readonly Argument ARG_VERSION = new Argument(@"version", (c, p) => c.Version());
-        public static readonly Argument ARG_VERSION_PWIZ = new Argument(@"version-pwiz", (c, p) => c.VersionPwiz());
 
         private static readonly ArgumentGroup GROUP_GENERAL_IO = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_GENERAL_IO_General_input_output, true,
             ARG_IN, ARG_SAVE, ARG_SAVE_SETTINGS, ARG_OUT, ARG_SHARE_ZIP, ARG_SHARE_TYPE, ARG_BATCH, ARG_DIR, ARG_TIMESTAMP, ARG_MEMSTAMP,
-            ARG_LOG_FILE, ARG_HELP, ARG_VERSION, ARG_VERSION_PWIZ)
+            ARG_LOG_FILE, ARG_HELP, ARG_VERSION)
         {
             Validate = c => c.ValidateGeneralArgs()
         };
@@ -175,11 +174,12 @@ namespace pwiz.Skyline
         {
             UsageShown = true;  // Keep from showing the full usage table
             _out.WriteLine(Install.ProgramNameAndVersion);
+            VersionPwiz();
         }
         private void VersionPwiz()
         {
             UsageShown = true;  // Keep from showing the full usage table
-            _out.WriteLine(@"ProteoWizard MSData {0} ({1})", MsDataFileImpl.InstalledVersion, Install.GitHash);
+            _out.WriteLine(@"    ProteoWizard MSData {0}", MsDataFileImpl.InstalledVersion);
         }
 
         private bool ValidateGeneralArgs()
@@ -626,14 +626,14 @@ namespace pwiz.Skyline
             {
                 if (ReintegrateModelType == ScoringModelType.Skyline)
                 {
-                    WriteLine("Error: Model cutoffs cannot be applied in calibrating the Skyline default model.");
+                    WriteLine(Resources.CommandArgs_ValidateReintegrateArgs_Error__Model_cutoffs_cannot_be_applied_in_calibrating_the_Skyline_default_model_);
                     return false;
                 }
 
                 double maxCutoff = MProphetPeakScoringModel.DEFAULT_CUTOFFS[0];
                 if (MonotonicallyDecreasing(ReintegrateModelCutoffs, maxCutoff))
                 {
-                    WriteLine("Error: Model cutoffs ({0}) must be in decreasing order greater than zero and less than {1}.", string.Join(
+                    WriteLine(Resources.CommandArgs_ValidateReintegrateArgs_Error__Model_cutoffs___0___must_be_in_decreasing_order_greater_than_zero_and_less_than__1__, string.Join(
                         CultureInfo.CurrentCulture.TextInfo.ListSeparator, ReintegrateModelCutoffs.Select(c => c.ToString(CultureInfo.CurrentCulture))), maxCutoff);
                 }
             }
@@ -2489,7 +2489,7 @@ namespace pwiz.Skyline
         public class ValueInvalidNumberListException : UsageException
         {
             public ValueInvalidNumberListException(Argument arg, string value)
-                : base(string.Format("The value {0} is not valid for the argument {1} which requires a list of decimal numbers.", value, arg.ArgumentText))
+                : base(string.Format(Resources.ValueInvalidNumberListException_ValueInvalidNumberListException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_list_of_decimal_numbers_, value, arg.ArgumentText))
             {
             }
         }
