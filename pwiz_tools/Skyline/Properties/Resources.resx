@@ -1622,9 +1622,6 @@
   <data name="XmlElementHelper_Deserialize_Deserialize" xml:space="preserve">
     <value>Deserialize</value>
   </data>
-  <data name="CalibrateIrtDlg_OkDialog_All_of_these_peptides_are_known_CiRT_peptides__Would_you_like_to_use_the_predefined_iRT_values_" xml:space="preserve">
-    <value>All of these peptides are known CiRT peptides. Would you like to use the predefined iRT values?</value>
-  </data>
   <data name="ConfigureToolsDlg_unpackZipTool_Failed_to_process_file_0_The_tool_described_failed_to_import" xml:space="preserve">
     <value>Failed to process file {0}. The tool described failed to import.</value>
   </data>
@@ -10798,5 +10795,8 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="CalibrationGridViewDriver_FindEvenlySpacedPeptides_Calculating_scores" xml:space="preserve">
     <value>Calculating scores</value>
+  </data>
+  <data name="CalibrationGridViewDriver_FindEvenlySpacedPeptides_This_document_contains__0__CiRT_peptides__Would_you_like_to_use__1__of_them_as_your_iRT_standards_" xml:space="preserve">
+    <value>This document contains {0} CiRT peptides. Would you like to use {1} of them as your iRT standards?</value>
   </data>
 </root>
