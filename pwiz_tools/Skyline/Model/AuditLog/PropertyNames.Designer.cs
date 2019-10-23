@@ -2662,6 +2662,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Remove above cv cutoff.
+        /// </summary>
+        public static string RefinementSettings_CVCutoff {
+            get {
+                return ResourceManager.GetString("RefinementSettings_CVCutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Min dotp.
         /// </summary>
         public static string RefinementSettings_DotProductThreshold {
@@ -2725,6 +2734,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Minimum Detections.
+        /// </summary>
+        public static string RefinementSettings_MinimumDetections {
+            get {
+                return ResourceManager.GetString("RefinementSettings_MinimumDetections", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Min peak found ratio.
         /// </summary>
         public static string RefinementSettings_MinPeakFoundRatio {
@@ -2752,11 +2770,38 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Normalization to standard type.
+        /// </summary>
+        public static string RefinementSettings_NormalizationLabelType {
+            get {
+                return ResourceManager.GetString("RefinementSettings_NormalizationLabelType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Normalization method.
+        /// </summary>
+        public static string RefinementSettings_NormalizationMethod {
+            get {
+                return ResourceManager.GetString("RefinementSettings_NormalizationMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Prefer larger product ions.
         /// </summary>
         public static string RefinementSettings_PreferLargeIons {
             get {
                 return ResourceManager.GetString("RefinementSettings_PreferLargeIons", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove above qvalue cutoff.
+        /// </summary>
+        public static string RefinementSettings_QValueCutoff {
+            get {
+                return ResourceManager.GetString("RefinementSettings_QValueCutoff", resourceCulture);
             }
         }
         

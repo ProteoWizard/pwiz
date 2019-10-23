@@ -163,6 +163,7 @@ namespace pwiz.SkylineTestTutorial
                 var calibrateDlg = ShowDialog<CalibrateIrtDlg>(editIrtCalc1.Calibrate);
                 RunUI(() =>
                 {
+                    calibrateDlg.StandardName = "Document";
                     calibrateDlg.UseResults();
                     Assert.AreEqual(11, calibrateDlg.StandardPeptideCount);
                     calibrateDlg.SetFixedPoints(1, 10);

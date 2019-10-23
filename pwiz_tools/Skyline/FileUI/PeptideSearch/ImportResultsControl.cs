@@ -72,7 +72,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             var result = new List<ImportPeptideSearch.FoundResultsFile>();
             // Enforce uniqueness in names (might be constructed from list of files a.raw, a.mzML)
-            var names = ImportResultsDlg.EnsureUniqueNames(files.Select(f => f.Name).ToList());
+            var names = Helpers.EnsureUniqueNames(files.Select(f => f.Name).ToList());
             for (var i = 0; i < files.Count; i++)
             {
                 result.Add(new ImportPeptideSearch.FoundResultsFile(names[i], files[i].Path));

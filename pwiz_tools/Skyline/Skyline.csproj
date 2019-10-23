@@ -338,6 +338,8 @@
     <Compile Include="Controls\DocumentChangeLogEntryDlg.Designer.cs">
       <DependentUpon>DocumentChangeLogEntryDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\AreaCVGraphData.cs" />
+    <Compile Include="Model\AreaCVRefinementData.cs" />
     <Compile Include="Model\AuditLog\AuditLogObject.cs" />
     <Compile Include="Model\AuditLog\AuditLogToStringHelper.cs" />
     <Compile Include="Model\AuditLog\BlockHash.cs" />
@@ -576,7 +578,6 @@
     <Compile Include="Controls\FindResultsForm.Designer.cs">
       <DependentUpon>FindResultsForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Controls\Graphs\AreaCVGraphData.cs" />
     <Compile Include="Controls\Graphs\AreaCVHistogram2DGraphPane.cs" />
     <Compile Include="Controls\Graphs\AreaCVHistogramGraphPane.cs" />
     <Compile Include="Controls\Graphs\AreaCVToolbarProperties.cs">
@@ -718,12 +719,6 @@
     <Compile Include="Controls\Graphs\UniquePrefixGenerator.cs" />
     <Compile Include="Model\GroupComparison\GroupIdentifier.cs" />
     <Compile Include="Controls\GroupComparison\GroupComparisonViewContext.cs" />
-    <Compile Include="Controls\GroupComparison\MsStatsLogoForm.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Controls\GroupComparison\MsStatsLogoForm.Designer.cs">
-      <DependentUpon>MsStatsLogoForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="Controls\ImmediateWindow.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1671,12 +1666,6 @@
     <Compile Include="SettingsUI\Irt\ChangeIrtPeptidesDlg.Designer.cs">
       <DependentUpon>ChangeIrtPeptidesDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="SettingsUI\Irt\RecalibrateIrtDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SettingsUI\Irt\RecalibrateIrtDlg.Designer.cs">
-      <DependentUpon>RecalibrateIrtDlg.cs</DependentUpon>
-    </Compile>
     <Compile Include="SettingsUI\Irt\EditIrtCalcDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2117,15 +2106,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\FoldChangeVolcanoPlot.zh-CHS.resx">
       <DependentUpon>FoldChangeVolcanoPlot.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Controls\GroupComparison\MsStatsLogoForm.ja.resx">
-      <DependentUpon>MsStatsLogoForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Controls\GroupComparison\MsStatsLogoForm.resx">
-      <DependentUpon>MsStatsLogoForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Controls\GroupComparison\MsStatsLogoForm.zh-CHS.resx">
-      <DependentUpon>MsStatsLogoForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Lists\ListDesigner.ja.resx">
       <DependentUpon>ListDesigner.cs</DependentUpon>
@@ -3285,12 +3265,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\EditIrtCalcDlg.zh-CHS.resx">
       <DependentUpon>EditIrtCalcDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\Irt\RecalibrateIrtDlg.ja.resx">
-      <DependentUpon>RecalibrateIrtDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\Irt\RecalibrateIrtDlg.zh-CHS.resx">
-      <DependentUpon>RecalibrateIrtDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Optimization\AddOptimizationLibraryDlg.ja.resx">
       <DependentUpon>AddOptimizationLibraryDlg.cs</DependentUpon>
@@ -4747,10 +4721,6 @@
     <EmbeddedResource Include="Resources\FragmentLib.bmp" />
     <EmbeddedResource Include="SettingsUI\Irt\ChangeIrtPeptidesDlg.resx">
       <DependentUpon>ChangeIrtPeptidesDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\Irt\RecalibrateIrtDlg.resx">
-      <DependentUpon>RecalibrateIrtDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\EditIrtCalcDlg.resx">

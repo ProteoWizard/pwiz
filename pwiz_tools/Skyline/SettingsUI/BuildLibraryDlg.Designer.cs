@@ -163,6 +163,7 @@
             this.comboStandards.FormattingEnabled = true;
             resources.ApplyResources(this.comboStandards, "comboStandards");
             this.comboStandards.Name = "comboStandards";
+            this.comboStandards.SelectedIndexChanged += new System.EventHandler(this.comboStandards_SelectedIndexChanged);
             // 
             // cbIncludeAmbiguousMatches
             // 

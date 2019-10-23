@@ -542,6 +542,8 @@ namespace pwiz.Skyline.Model.Lib
             {
                 return null;
             }
+
+            bool anyMatch = false;
             foreach (var entry in LibraryEntriesWithSequences(peptideSequences))
             {
                 FileData fileData;
@@ -549,6 +551,16 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     return fileData.PeakBounds;
                 }
+
+                if (entry.FileDatas.Any())
+                {
+                    anyMatch = true;
+                }
+            }
+
+            if (anyMatch)
+            {
+                return ExplicitPeakBounds.EMPTY;
             }
             return null;
         }

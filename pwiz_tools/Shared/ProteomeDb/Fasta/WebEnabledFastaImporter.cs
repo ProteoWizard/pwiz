@@ -1305,6 +1305,10 @@ namespace pwiz.ProteomeDatabase.Fasta
                                 return URL_TOO_LONG; // Probably asked for too many at once, caller will go into batch reduction mode
                         }
                     }
+                    else if (ex.Status == WebExceptionStatus.ConnectionClosed && searchType == UNIPROTKB_TAG) // Uniprot just drops the connection on too-large searches as of Sept 2019
+                    {
+                        return URL_TOO_LONG; // Probably asked for too many at once, caller will go into batch reduction mode
+                    }
                     caught = true;
                 }
                 catch

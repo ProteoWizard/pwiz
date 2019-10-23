@@ -113,7 +113,7 @@ namespace pwiz.Skyline.Util
             }
         }
 
-        public class ModeUIAwareFormHelper // Assists in adapting the UI from its traditional proteomic language to small molecule language
+        public class ModeUIAwareFormHelper : IDisposable // Assists in adapting the UI from its traditional proteomic language to small molecule language
         {
             public static ModeUIAwareFormHelper DEFAULT = new ModeUIAwareFormHelper(null);
 
@@ -153,6 +153,15 @@ namespace pwiz.Skyline.Util
             }
 
             #endregion
+
+            public void Dispose()
+            {
+                if (_modeUIToolBarDropDownButton != null)
+                {
+                    _modeUIToolBarDropDownButton.DropDown.Dispose();
+                    _modeUIToolBarDropDownButton = null;
+                }
+            }
 
             public void SetModeUIToolStripButtons(ToolStripDropDownButton modeUIToolBarDropDownButton, Action<SrmDocument.DOCUMENT_TYPE> handler)
             {
