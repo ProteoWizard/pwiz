@@ -129,6 +129,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
       tdfStoragePtr_(new TimsBinaryData(rawpath)),
       tdfStorage_(*tdfStoragePtr_)
 {
+    tims_set_num_threads(8);
     sqlite::database db(tdfFilepath_);
 
     double mzAcqRangeLower = 0, mzAcqRangeUpper = 0;
@@ -340,12 +341,12 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                 auto& frame = findItr->second;
 
                 int scanBegin = row.get<int>(++idx);
-                int scanEnd = row.get<int>(++idx);
+                int scanEnd = row.get<int>(++idx); // scan end in DiaFrameMsMsInfo is inclusive same as pwiz;
 
                 info.isolationMz = row.get<double>(++idx);
                 info.isolationWidth = row.get<double>(++idx);
                 info.collisionEnergy = row.get<double>(++idx);
-                info.numScans = scanEnd - scanBegin;
+                info.numScans = 1 + scanEnd - scanBegin;
 
                 if (!isolationMzFilter_.empty())
                 {
@@ -362,15 +363,23 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                         auto scanNumUpperBoundItr = scanNumberByOneOverK0.upper_bound(mzMobilityWindow.mobilityBounds.get().first); if (scanNumUpperBoundItr != scanNumberByOneOverK0.begin()) --scanNumUpperBoundItr;
                         scanBegin = scanNumLowerBoundItr->second;
                         scanEnd = scanNumUpperBoundItr->second;
-                        info.numScans = scanEnd - scanBegin;
+                        info.numScans = 1 + scanEnd - scanBegin;
                     }
                 }
 
                 frame->windowGroup_ = row.get<int>(++idx);
                 frame->diaPasefIsolationInfoByScanNumber_[scanBegin] = info;
             }
+
+            for (const auto& kvp : frames_)
+            {
+                const auto& frame = kvp.second;
+                frame->diaPasefIsolationInfoByScanNumber_.rbegin()->second.numScans--; // the last ScanNumEnd for each DIA window seems to be exclusive rather than inclusive
+            }
         }
     }
+
+    bool isDiaPasef = db.has_table("DiaFrameMsMsInfo");
 
     // when combining ion mobility spectra, spectra array is filled after querying PASEF info
     if (combineIonMobilitySpectra)
@@ -384,6 +393,13 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                 for (const auto& precursor : frame->pasef_precursor_info_)
                 {
                     spectra_.emplace_back(boost::make_shared<TimsSpectrumCombinedPASEF>(frame, precursor->scanBegin, precursor->scanEnd, *precursor));
+                }
+            }
+            else if (isDiaPasef && frame->msLevel_ > 1)
+            {
+                for (const auto& info : frame->diaPasefIsolationInfoByScanNumber_)
+                {
+                    spectra_.emplace_back(boost::make_shared<TimsSpectrumCombinedPASEF>(frame, info.first, info.first + info.second.numScans - 1, TimsSpectrum::empty_));
                 }
             }
             else // MS1 or non-PASEF MS2
@@ -413,7 +429,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
             }
             else // MS2
             {
-                if (db.has_table("DiaFrameMsMsInfo"))
+                if (isDiaPasef)
                 {
                     for (const auto& info : frame->diaPasefIsolationInfoByScanNumber_)
                     {
@@ -682,7 +698,7 @@ void TimsSpectrum::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, p
     storage.scanNumToOneOverK0(frame_.frameId_, mzIndicesAsDoubles, mobilities);
     
     // sort an array of indices by m/z; these indices are used to reorder all 3 arrays
-    vector<int> indices(mz.size());
+    /*vector<int> indices(mz.size());
     for (int i = 0; i < mz.size(); ++i)
         indices[i] = i;
     std::sort(indices.begin(), indices.end(), SortByOther<double>(mz));
@@ -695,16 +711,16 @@ void TimsSpectrum::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, p
     }
     swap(mzTmp, mz);
     swap(intensityTmp, intensities);
-    swap(mobilityTmp, mobilities);
+    swap(mobilityTmp, mobilities);*/
 
     // add jitter to identical m/z values (which come from different mobility bins)
-    for (size_t i = 1; i < mz.size(); ++i)
+    /*for (size_t i = 1; i < mz.size(); ++i)
         if (mz[i - 1] == mz[i])
         {
             size_t start_i = i - 1;
             for (; i < mz.size() && mz[start_i] == mz[i]; ++i)
                 mz[i] += 1e-8 * (i-start_i);
-        }
+        }*/
 }
 
 size_t TimsSpectrum::getCombinedSpectrumDataSize() const

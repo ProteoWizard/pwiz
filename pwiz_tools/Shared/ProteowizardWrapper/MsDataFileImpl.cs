@@ -161,10 +161,11 @@ namespace pwiz.ProteowizardWrapper
                     ignoreZeroIntensityPoints = ignoreZeroIntensityPoints,
                     preferOnlyMsLevel = preferOnlyMsLevel,
                     allowMsMsWithoutPrecursor = false,
-                    isolationMzAndMobilityFilter = precursorMzAndIonMobilityWindows?.Select(w => 
+                    combineIonMobilitySpectra = true,
+                    /*isolationMzAndMobilityFilter = precursorMzAndIonMobilityWindows?.Select(w => 
                         w.IonMobility.HasValue ? 
                             new MzMobilityWindow(w.MZ, w.IonMobility.Value , (w.IonMobilityWindow??0)/2): 
-                            new MzMobilityWindow(w.MZ)).ToList()
+                            new MzMobilityWindow(w.MZ)).ToList()*/ // disabled until bug with diagonalSWATH fixed
                 };
                 _lockmassParameters = lockmassParameters;
                 FULL_READER_LIST.read(path, _msDataFile, sampleIndex, _config);
@@ -795,6 +796,27 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
+        private double[] GetIonMobilityArray(Spectrum s)
+        {
+            CLI.util.BinaryData data = null;
+            switch (IonMobilityUnits)
+            {
+                case eIonMobilityUnits.drift_time_msec:
+                    data = s.getArrayByCVID(CVID.MS_mean_drift_time_array)?.data ??
+                           s.getArrayByCVID(CVID.MS_raw_ion_mobility_array)?.data;
+                    break;
+                case eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
+                    data = s.getArrayByCVID(CVID.MS_mean_inverse_reduced_ion_mobility_array)?.data ??
+                           s.getArrayByCVID(CVID.MS_raw_inverse_reduced_ion_mobility_array)?.data;
+                    break;
+                default:
+                    break;
+                    //throw new InvalidDataException(string.Format(@"mobility type {0} does not support ion mobility arrays", IonMobilityUnits));
+            }
+
+            return data?.Storage();
+        }
+
         private MsDataSpectrum GetSpectrum(Spectrum spectrum, int spectrumIndex)
         {
             if (spectrum == null)
@@ -803,7 +825,8 @@ namespace pwiz.ProteowizardWrapper
                 {
                     Centroided = true,
                     Mzs = new double[0],
-                    Intensities = new double[0]
+                    Intensities = new double[0],
+                    IonMobilities = null
                 };
             }
             string idText = spectrum.id;
@@ -833,6 +856,7 @@ namespace pwiz.ProteowizardWrapper
             {
                 msDataSpectrum.Mzs = new double[0];
                 msDataSpectrum.Intensities = new double[0];
+                msDataSpectrum.IonMobilities = null;
             }
             else
             {
@@ -840,6 +864,7 @@ namespace pwiz.ProteowizardWrapper
                 {
                     msDataSpectrum.Mzs = ToArray(spectrum.getMZArray());
                     msDataSpectrum.Intensities = ToArray(spectrum.getIntensityArray());
+                    msDataSpectrum.IonMobilities = GetIonMobilityArray(spectrum);
 
                     if (msDataSpectrum.Level == 1 && _config.simAsSpectra &&
                             spectrum.scanList.scans[0].scanWindows.Count > 0)
@@ -962,7 +987,7 @@ namespace pwiz.ProteowizardWrapper
                 _lastScanIndex = scanIndex;
                 _lastDetailLevel = detailLevel;
                 _lastSpectrum?.Dispose();
-               _lastSpectrum = SpectrumList.spectrum(_lastScanIndex, _lastDetailLevel);
+                _lastSpectrum = SpectrumList.spectrum(_lastScanIndex, _lastDetailLevel);
             }
             return _lastSpectrum;
         }
@@ -1048,7 +1073,7 @@ namespace pwiz.ProteowizardWrapper
             get { return _detailIonMobility <= DetailLevel.FastMetadata; }
         }
 
-        public IonMobilityValue GetIonMobility(int scanIndex)
+        public IonMobilityValue GetIonMobility(int scanIndex) // for non-combined-mode IMS
         {
             var spectrum = GetCachedSpectrum(scanIndex, _detailIonMobility);
             {
@@ -1065,7 +1090,7 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
-        private IonMobilityValue GetIonMobility(Spectrum spectrum)
+        private IonMobilityValue GetIonMobility(Spectrum spectrum) // for non-combined-mode IMS
         {
             if (IonMobilityUnits == eIonMobilityUnits.none || spectrum.scanList.scans.Count == 0)
                 return IonMobilityValue.EMPTY;
@@ -1421,7 +1446,7 @@ namespace pwiz.ProteowizardWrapper
         public int Level { get; set; }
         public int Index { get; set; } // index into parent file, if any
         public double? RetentionTime { get; set; }
-        public IonMobilityValue IonMobility { get { return _ionMobility ?? IonMobilityValue.EMPTY; } set { _ionMobility = value; } }
+        public IonMobilityValue IonMobility { get { return _ionMobility ?? IonMobilityValue.EMPTY; } set { _ionMobility = value; } } // for non-combined-mode IMS
 
         public IList<MsPrecursor> GetPrecursorsByMsLevel(int level)
         {
@@ -1457,6 +1482,7 @@ namespace pwiz.ProteowizardWrapper
         public bool NegativeCharge { get; set; } // True if negative ion mode
         public double[] Mzs { get; set; }
         public double[] Intensities { get; set; }
+        public double[] IonMobilities { get; set; } // for combined-mode IMS (may be null)
         public int WindowGroup { get; set; } // For Bruker diaPASEF
 
         public static int WatersFunctionNumberFromId(string id)
