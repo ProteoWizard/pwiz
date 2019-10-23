@@ -216,17 +216,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         double rt = row.get<double>(++idx);
         IonPolarity polarity = row.get<string>(++idx) == "+" ? IonPolarity_Positive : IonPolarity_Negative;
         int scanMode = row.get<int>(++idx);
-        int msmsType = row.get<int>(++idx);
-
-        int msLevel;
-        switch (msmsType)
-        {
-            case 0: msLevel = 1; break; // MS1
-            case 2: msLevel = 2; break; // MRM
-            case 8: msLevel = 2; break; // PASEF
-            case 9: msLevel = 2; break; // DIA
-            default: throw runtime_error("Unhandled msmsType: " + lexical_cast<string>(msmsType));
-        }
+        MsMsType msmsType = (MsMsType) row.get<int>(++idx);
 
         double bpi = row.get<double>(++idx);
         double tic = row.get<double>(++idx);
@@ -250,7 +240,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         optional<double> collisionEnergy(row.get<optional<double> >(++idx));
 
         TimsFramePtr frame = boost::make_shared<TimsFrame>(*this, frameId,
-                                         msLevel, rt,
+                                         msmsType, rt,
                                          mzAcqRangeLower, mzAcqRangeUpper,
                                          tic, bpi,
                                          polarity, scanMode, numScans,
@@ -328,7 +318,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                               pasefIsolationMzFilter +
                               "ORDER BY Frame, ScanNumBegin";
             sqlite::query q(db, querySql.c_str());
-            DiaPasefIsolationInfo info; int counter = 0;
+            DiaPasefIsolationInfo info;
             for (sqlite::query::iterator itr = q.begin(); itr != q.end(); ++itr)
             {
                 sqlite::query::rows row = *itr;
@@ -572,7 +562,7 @@ const ::timsdata::FrameProxy& TimsDataImpl::readFrame(
 }
 
 TimsFrame::TimsFrame(TimsDataImpl& timsDataImpl, int64_t frameId,
-                     int msLevel, double rt,
+                     MsMsType msmsType, double rt,
                      double startMz, double endMz,
                      double tic, double bpi,
                      IonPolarity polarity, int scanMode, int numScans,
@@ -580,13 +570,22 @@ TimsFrame::TimsFrame(TimsDataImpl& timsDataImpl, int64_t frameId,
                      const optional<double>& precursorMz,
                      const optional<double>& isolationWidth,
                      const optional<int>& precursorCharge)
-    : frameId_(frameId), msLevel_(msLevel), rt_(rt), parentId_(parentId), tic_(tic), bpi_(bpi),
+    : frameId_(frameId), msmsType_(msmsType), rt_(rt), parentId_(parentId), tic_(tic), bpi_(bpi),
       numScans_(numScans),
       polarity_(polarity), scanRange_(startMz, endMz),
       precursorMz_(precursorMz), scanMode_(scanMode),
       isolationWidth_(isolationWidth), chargeState_(precursorCharge),
       timsDataImpl_(timsDataImpl), oneOverK0_(numScans)
 {
+    switch (msmsType_)
+    {
+        case MsMsType::MS1: msLevel_ = 1; break; // MS1
+        case MsMsType::MRM: msLevel_ = 2; break; // MRM
+        case MsMsType::DDA_PASEF: msLevel_ = 2; break; // PASEF
+        case MsMsType::DIA_PASEF: msLevel_ = 2; break; // DIA
+        default: throw runtime_error("Unhandled msmsType: " + lexical_cast<string>((int) msmsType_));
+    }
+
     vector<double> scanNumbers(numScans);
     for(int i=1; i <= numScans; ++i)
         scanNumbers[i-1] = i;
@@ -646,7 +645,16 @@ double TimsSpectrum::oneOverK0() const
         return avgOneOverK0[0];
     }
     else if (!isCombinedScans())
+    {
         return frame_.oneOverK0_[scanBegin_];
+    }
+    else if (frame_.msmsType_ == MsMsType::DIA_PASEF)
+    {
+        vector<double> avgScanNumber(1, (scanEnd() - scanBegin_) / 2);
+        vector<double> avgOneOverK0(1);
+        frame_.timsDataImpl_.tdfStorage_.scanNumToOneOverK0(frame_.frameId_, avgScanNumber, avgOneOverK0);
+        return avgOneOverK0[0];
+    }
     else
         return 0; // no mobility value for non-PASEF merged spectra
 }

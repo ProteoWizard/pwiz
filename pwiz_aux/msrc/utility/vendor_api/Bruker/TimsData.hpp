@@ -65,12 +65,20 @@ struct DiaPasefIsolationInfo
     int numScans;
 };
 
+enum class MsMsType
+{
+    MS1 = 0,
+    MRM =2,
+    DDA_PASEF = 8,
+    DIA_PASEF = 9
+};
+
 struct PWIZ_API_DECL TimsFrame
 {
 
 
     TimsFrame(TimsDataImpl& timsDataImpl, int64_t frameId,
-              int msLevel, double rt,
+              MsMsType msmsType, double rt,
               double startMz, double endMz,
               double tic, double bpi,
               IonPolarity polarity, int scanMode, int numScans,
@@ -86,6 +94,7 @@ struct PWIZ_API_DECL TimsFrame
     friend struct TimsSpectrum;
     friend struct TimsDataImpl;
     int64_t frameId_;
+    MsMsType msmsType_;
     int msLevel_;
     double rt_;
     optional<uint64_t> parentId_;
