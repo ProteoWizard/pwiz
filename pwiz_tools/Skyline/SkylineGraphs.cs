@@ -4693,16 +4693,9 @@ namespace pwiz.Skyline
             // Remove everything not in the set
             ModifyDocument(Resources.SkylineWindow_RemoveAboveCVCutoff_Remove_peptides_above_CV_cutoff, doc =>
             {
-                var setRemove = new HashSet<int>();
-                foreach (var nodeMolecule in doc.Molecules)
-                {
-                    if (nodeMolecule.GlobalStandardType != null)
-                        continue;
-                    foreach (var nodeGroup in nodeMolecule.TransitionGroups.Where(n => !ids.Contains(n.Id.GlobalIndex)))
-                        setRemove.Add(nodeGroup.Id.GlobalIndex);
-                    nodeCount = setRemove.Count;
-                }
-                return (SrmDocument)doc.RemoveAll(setRemove, (int) SrmDocument.Level.TransitionGroups, (int) SrmDocument.Level.Molecules);
+                var setRemove = AreaCVRefinementData.IndicesToRemove(doc, ids);
+                nodeCount = setRemove.Count;
+                return (SrmDocument)doc.RemoveAll(setRemove, null, (int) SrmDocument.Level.Molecules);
             }, docPair => AuditLogEntry.CreateSimpleEntry(nodeCount == 1 ? MessageType.removed_peptide_above_cutoff : MessageType.removed_peptides_above_cutoff, docPair.OldDocumentType,
                 nodeCount, Settings.Default.AreaCVCVCutoff * AreaGraphController.GetAreaCVFactorToPercentage()));
         }

@@ -379,7 +379,7 @@ namespace pwiz.Skyline.SettingsUI
                             {
                                 MessageDlg.Show(TopMostApplicationForm, buildState.ExtraMessage);
                             }
-                            if (buildState.IrtStandard != null && buildState.IrtStandard != IrtStandard.EMPTY && AddIrts(buildState))
+                            if (buildState.IrtStandard != null && !buildState.IrtStandard.Name.Equals(IrtStandard.EMPTY.Name) && AddIrts(buildState))
                             {
                                 AddRetentionTimePredictor(buildState);
                             }

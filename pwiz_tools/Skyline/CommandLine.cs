@@ -444,21 +444,48 @@ namespace pwiz.Skyline
         {
             if (commandArgs.RefinementLabelTypeName != null)
             {
-                var mods = _doc.Settings.PeptideSettings.Modifications;
-                var typeMods = mods.GetModificationsByName(commandArgs.RefinementLabelTypeName);
-                if (typeMods == null)
-                {
-                    _out.WriteLine(Resources.CommandLine_RefineDocument_Error__The_label_type___0___was_not_found_in_the_document_);
-                    _out.WriteLine(Resources.CommandLine_RefineDocument_Choose_one_of__0_, string.Join(@", ", mods.GetModificationTypes().Select(t => t.Name)));
+                var labelType = GetLabelTypeHelper(commandArgs.RefinementLabelTypeName);
+                if (labelType != null)
+                    commandArgs.Refinement.RefineLabelType = labelType;
+                else
                     return false;
-                }
+            }
 
-                commandArgs.Refinement.RefineLabelType = typeMods.LabelType;
+            if (commandArgs.RefinementCvLabelTypeName != null)
+            {
+                var labelType = GetLabelTypeHelper(commandArgs.RefinementCvLabelTypeName);
+                if (labelType != null)
+                    commandArgs.Refinement.NormalizationLabelType = labelType;
+                else
+                    return false;
             }
 
             _out.WriteLine(Resources.CommandLine_RefineDocument_Refining_document___);
-            ModifyDocumentWithLogging(doc => commandArgs.Refinement.Refine(doc), commandArgs.Refinement.EntryCreator.Create);
-            return true;
+            try
+            {
+                ModifyDocumentWithLogging(doc => commandArgs.Refinement.Refine(doc),
+                    commandArgs.Refinement.EntryCreator.Create);
+                return true;
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine(x.Message);
+                return false;
+            }
+        }
+
+        private IsotopeLabelType GetLabelTypeHelper(string label)
+        {
+            var mods = _doc.Settings.PeptideSettings.Modifications;
+            var typeMods = mods.GetModificationsByName(label);
+            if (typeMods == null)
+            {
+                _out.WriteLine(Resources.CommandLine_RefineDocument_Error__The_label_type___0___was_not_found_in_the_document_);
+                _out.WriteLine(Resources.CommandLine_RefineDocument_Choose_one_of__0_, string.Join(@", ", mods.GetModificationTypes().Select(t => t.Name)));
+                return null;
+            }
+
+            return typeMods.LabelType;
         }
 
         private HashSet<AuditLogEntry> GetSeenAuditLogEntries()

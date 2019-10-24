@@ -456,24 +456,6 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
-        /// Adds all children to a map by their <see cref="Identity"/> itself,
-        /// and not the <see cref="Identity.GlobalIndex"/>.  Callers should be
-        /// sure that the <see cref="Identity"/> subclass provides a useful
-        /// implementation of <see cref="object.GetHashCode"/>, otherwise this
-        /// will result in a map with one value, since by default all <see cref="Identity"/>
-        /// objects are considered content equal.
-        /// 
-        /// This method is used when picking children where distinct new
-        /// <see cref="Identity"/> objects are created, but should not replace
-        /// existing objects with the same identity.
-        /// </summary>
-        /// <returns>A map of children by their <see cref="Identity"/> values</returns>
-        public Dictionary<Identity, DocNode> CreateIdContentToChildMap()
-        {
-            return Children.ToDictionary(child => child.Id);
-        }
-        
-        /// <summary>
         /// Returns the DocNodes that are in an IdentityPath.
         /// </summary>
         public DocNode[] ToNodeArray(IdentityPath identityPath)
