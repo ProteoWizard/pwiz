@@ -18,6 +18,7 @@
  */
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -55,13 +56,21 @@ namespace pwiz.SkylineTestFunctional
             var transitionSettings = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             RunUI(()=>
             {
-                //transitionSettings.PrecursorCharges = "3";
                 transitionSettings.FragmentTypes = "p";
                 transitionSettings.MaxMz = 2000;
             });
             OkDialog(transitionSettings, transitionSettings.OkDialog);
             SetClipboardText("EEQYN[+1444.5]STYR+++");
             RunUI(SkylineWindow.Paste);
+            VerifyTransitionMzs(SkylineWindow.Document);
+            var saveFileName = TestContext.GetTestPath("ChargedLossesTest.sky");
+            RunUI(()=>SkylineWindow.SaveDocument(saveFileName));
+            RunUI(()=>SkylineWindow.OpenFile(saveFileName));
+            VerifyTransitionMzs(SkylineWindow.Document);
+        }
+
+        private void VerifyTransitionMzs(SrmDocument document)
+        {
             var transitionGroup = SkylineWindow.Document.Peptides.First().TransitionGroups.First();
             Assert.AreEqual(3, transitionGroup.PrecursorCharge);
             Assert.AreEqual(878.6867, transitionGroup.PrecursorMz, .01);
@@ -75,8 +84,6 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(secondLossTransition);
             Assert.AreEqual(1, secondLossTransition.Transition.Charge);
             Assert.AreEqual(1392.5926, secondLossTransition.Mz, .01);
-            var saveFileName = TestContext.GetTestPath("ChargedLossesTest.sky");
-            RunUI(()=>SkylineWindow.SaveDocument(saveFileName));
         }
     }
 }

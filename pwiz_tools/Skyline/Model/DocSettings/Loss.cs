@@ -266,9 +266,15 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public string ToString(MassType massType)
         {
-            return Formula != null ?
+            string str = Formula != null ?
                 string.Format(@"{0:F04} - {1}", GetMass(massType), Formula) :
                 string.Format(@"{0:F04}", GetMass(massType));
+            if (Charge != 0)
+            {
+                str += Transition.GetChargeIndicator(Adduct.FromCharge(Charge, Adduct.ADDUCT_TYPE.charge_only));
+            }
+
+            return str;
         }
 
         #endregion
