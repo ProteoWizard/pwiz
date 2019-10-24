@@ -1791,6 +1791,18 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool TestSmallMolecules {
+            get {
+                return ((bool)(this["TestSmallMolecules"]));
+            }
+            set {
+                this["TestSmallMolecules"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool AllowMultiplePeptideSelection {
             get {
@@ -2779,6 +2791,18 @@ namespace pwiz.Skyline.Properties {
             }
             set {
                 this["ShowLibraryScores"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string DisplayModification {
+            get {
+                return ((string)(this["DisplayModification"]));
+            }
+            set {
+                this["DisplayModification"] = value;
             }
         }
     }

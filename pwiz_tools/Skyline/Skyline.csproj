@@ -324,6 +324,7 @@
     <Compile Include="Controls\ImageListBox.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Controls\SeqNode\PeptideFormatter.cs" />
     <Compile Include="Controls\TargetColumn.cs" />
     <Compile Include="FileUI\ExportAnnotationsDlg.cs">
       <SubType>Form</SubType>
@@ -426,6 +427,7 @@
     <Compile Include="Model\Lib\LibraryKey.cs" />
     <Compile Include="Model\Lists\ListExceptionDetail.cs" />
     <Compile Include="Model\MassModification.cs" />
+    <Compile Include="Model\DisplayModificationOption.cs" />
     <Compile Include="Model\Optimization\OptimizationDictionary.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteAccountList.cs" />
     <Compile Include="Model\Results\RemoteApi\Chorus\ChorusUrl.cs" />

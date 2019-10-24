@@ -17,10 +17,12 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Net;
+using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -196,6 +198,49 @@ namespace pwiz.Skyline.Util
         public int Position { get; set; }
         public int Width { get; set; }
         public bool IsPlainText { get; set; }
+
+        public static IEnumerable<TextSequence> Coalesce(IEnumerable<TextSequence> sequences)
+        {
+            TextSequence lastSequence = null;
+            StringBuilder stringBuilder = new StringBuilder();
+
+            foreach (var textSequence in sequences)
+            {
+                if (lastSequence == null)
+                {
+                    lastSequence = textSequence;
+                    continue;
+                }
+
+                if (Equals(lastSequence.Color, textSequence.Color) &&
+                    ReferenceEquals(lastSequence.Font, textSequence.Font))
+                {
+                    stringBuilder.Append(textSequence.Text);
+                    continue;
+                }
+
+                yield return new TextSequence
+                {
+                    Text = lastSequence.Text + stringBuilder,
+                    Font = lastSequence.Font,
+                    Color = lastSequence.Color,
+                    IsPlainText = lastSequence.IsPlainText
+                };
+                stringBuilder.Clear();
+                lastSequence = textSequence;
+            }
+
+            if (lastSequence != null)
+            {
+                yield return new TextSequence
+                {
+                    Text = lastSequence.Text + stringBuilder,
+                    Font = lastSequence.Font,
+                    Color = lastSequence.Color,
+                    IsPlainText = lastSequence.IsPlainText
+                };
+            }
+        }
     }
 
     /// <summary>
