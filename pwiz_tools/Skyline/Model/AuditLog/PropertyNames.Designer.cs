@@ -1033,6 +1033,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Charge.
+        /// </summary>
+        public static string FragmentLoss_Charge {
+            get {
+                return ResourceManager.GetString("FragmentLoss_Charge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Neutral loss chemical formula.
         /// </summary>
         public static string FragmentLoss_Formula {
