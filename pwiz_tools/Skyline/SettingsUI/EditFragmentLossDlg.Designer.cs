@@ -33,6 +33,9 @@
             this.btnOk = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.comboIncludeLoss = new System.Windows.Forms.ComboBox();
+            this.lblCharge = new System.Windows.Forms.Label();
+            this.tbxCharge = new System.Windows.Forms.TextBox();
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -61,12 +64,24 @@
             resources.ApplyResources(this.comboIncludeLoss, "comboIncludeLoss");
             this.comboIncludeLoss.Name = "comboIncludeLoss";
             // 
+            // lblCharge
+            // 
+            resources.ApplyResources(this.lblCharge, "lblCharge");
+            this.lblCharge.Name = "lblCharge";
+            // 
+            // tbxCharge
+            // 
+            resources.ApplyResources(this.tbxCharge, "tbxCharge");
+            this.tbxCharge.Name = "tbxCharge";
+            // 
             // EditFragmentLossDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.tbxCharge);
+            this.Controls.Add(this.lblCharge);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.comboIncludeLoss);
             this.Controls.Add(this.btnCancel);
@@ -76,6 +91,7 @@
             this.MinimizeBox = false;
             this.Name = "EditFragmentLossDlg";
             this.ShowInTaskbar = false;
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -87,5 +103,7 @@
         private System.Windows.Forms.Button btnOk;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ComboBox comboIncludeLoss;
+        private System.Windows.Forms.Label lblCharge;
+        private System.Windows.Forms.TextBox tbxCharge;
     }
 }

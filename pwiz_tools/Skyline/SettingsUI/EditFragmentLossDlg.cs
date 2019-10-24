@@ -54,6 +54,7 @@ namespace pwiz.Skyline.SettingsUI
             comboIncludeLoss.Items.Add(LossInclusion.Library.GetLocalizedString());
             comboIncludeLoss.Items.Add(LossInclusion.Always.GetLocalizedString());
             comboIncludeLoss.SelectedIndex = _libraryInclusionIndex;
+            tbxCharge.Text = 0.ToString();
         }
 
         public FragmentLoss Loss
@@ -67,6 +68,7 @@ namespace pwiz.Skyline.SettingsUI
                     _formulaBox.Formula = string.Empty;
                     _formulaBox.MonoMass = null;
                     _formulaBox.AverageMass = null;
+                    tbxCharge.Text = 0.ToString();
                     comboIncludeLoss.SelectedIndex = _libraryInclusionIndex;
                 }
                 else
@@ -83,6 +85,7 @@ namespace pwiz.Skyline.SettingsUI
                             _loss.AverageMass : (double?)null);
                     }
                     Inclusion = _loss.Inclusion;
+                    tbxCharge.Text = _loss.Charge.ToString();
                 }
             }
         }
@@ -139,6 +142,14 @@ namespace pwiz.Skyline.SettingsUI
 
             // Make sure the new loss does not already exist.
             var loss = new FragmentLoss(formulaLoss, monoLoss, avgLoss, Inclusion);
+            int charge;
+            if (!helper.ValidateNumberTextBox(tbxCharge, -Transition.MAX_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE,
+                out charge))
+            {
+                return;
+            }
+
+            loss = loss.ChangeCharge(charge);
             if (_existing.Contains(loss))
             {
                 MessageDlg.Show(this, string.Format(Resources.EditFragmentLossDlg_OkDialog_The_loss__0__already_exists, loss));

@@ -161,6 +161,7 @@
     <Compile Include="CalibrationScenariosTest.cs" />
     <Compile Include="CalibrationTest.cs" />
     <Compile Include="CancelExportReportTest.cs" />
+    <Compile Include="ChargedLossesTest.cs" />
     <Compile Include="ChorusFunctionalTest.cs" />
     <Compile Include="ChromDataSetMatchingTest.cs" />
     <Compile Include="ChromGraphTransformTest.cs" />
