@@ -44,7 +44,7 @@
 #include "BinaryData.hpp"
 
 #ifdef __cplusplus_cli
-//#define PWIZ_MANAGED_PASSTHROUGH
+#define PWIZ_MANAGED_PASSTHROUGH
 #endif
 
 namespace pwiz {
