@@ -675,10 +675,7 @@ double TimsSpectrum::oneOverK0() const
     }
     else if (frame_.msmsType_ == MsMsType::DIA_PASEF)
     {
-        vector<double> avgScanNumber(1, (scanEnd() - scanBegin_) / 2);
-        vector<double> avgOneOverK0(1);
-        frame_.timsDataImpl_.tdfStorage_.scanNumToOneOverK0(frame_.frameId_, avgScanNumber, avgOneOverK0);
-        return avgOneOverK0[0];
+        return (frame_.oneOverK0_[scanBegin_] + frame_.oneOverK0_[scanEnd()]) / 2;
     }
     else
         return 0; // no mobility value for non-PASEF merged spectra
