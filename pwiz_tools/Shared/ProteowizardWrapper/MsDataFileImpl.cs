@@ -56,7 +56,7 @@ namespace pwiz.ProteowizardWrapper
 
         // Cached disposable objects
         private MSData _msDataFile;
-        private readonly ReaderConfig _config;
+        private ReaderConfig _config;
         private SpectrumList _spectrumList;
         private ChromatogramList _chromatogramList;
         private bool _providesConversionCCStoIonMobility;
@@ -152,6 +152,7 @@ namespace pwiz.ProteowizardWrapper
             using (_perf.CreateTimer(@"open"))
             {
                 FilePath = path;
+                SampleIndex = sampleIndex;
                 _msDataFile = new MSData();
                 _config = new ReaderConfig
                 {
@@ -172,6 +173,32 @@ namespace pwiz.ProteowizardWrapper
                 _requireVendorCentroidedMS1 = requireVendorCentroidedMS1;
                 _requireVendorCentroidedMS2 = requireVendorCentroidedMS2;
             }
+        }
+
+        public void Reindex(bool simAsSpectra = false, bool srmAsSpectra = false, bool acceptZeroLengthSpectra = true,
+                            bool ignoreZeroIntensityPoints = false,
+                            int preferOnlyMsLevel = 0,
+                            IEnumerable<PrecursorMzAndIonMobilityWindow> precursorMzAndIonMobilityWindows = null)
+        {
+            _msDataFile = new MSData();
+            _config = new ReaderConfig
+            {
+                simAsSpectra = simAsSpectra,
+                srmAsSpectra = srmAsSpectra,
+                acceptZeroLengthSpectra = acceptZeroLengthSpectra,
+                ignoreZeroIntensityPoints = ignoreZeroIntensityPoints,
+                preferOnlyMsLevel = preferOnlyMsLevel,
+                allowMsMsWithoutPrecursor = false,
+                combineIonMobilitySpectra = true,
+                /*isolationMzAndMobilityFilter = precursorMzAndIonMobilityWindows?.Select(w => 
+                    w.IonMobility.HasValue ? 
+                        new MzMobilityWindow(w.MZ, w.IonMobility.Value , (w.IonMobilityWindow??0)/2): 
+                        new MzMobilityWindow(w.MZ)).ToList()*/ // disabled until bug with diagonalSWATH fixed
+            };
+            _spectrumList = null;
+            _ionMobilitySpectrumList = null;
+            _chromatogramList = null;
+            FULL_READER_LIST.read(FilePath, _msDataFile, SampleIndex, _config);
         }
 
         /// <summary>
@@ -1300,6 +1327,7 @@ namespace pwiz.ProteowizardWrapper
         }
 
         public string FilePath { get; private set; }
+        public int SampleIndex { get; private set; }
     }
 
     public sealed class MsDataConfigInfo
