@@ -8213,6 +8213,51 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Full Name.
+        /// </summary>
+        public static string DisplayModificationOption_FULL_NAME_Full_Name {
+            get {
+                return ResourceManager.GetString("DisplayModificationOption_FULL_NAME_Full_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mass Difference.
+        /// </summary>
+        public static string DisplayModificationOption_MASS_DELTA_Mass_Difference {
+            get {
+                return ResourceManager.GetString("DisplayModificationOption_MASS_DELTA_Mass_Difference", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not Shown.
+        /// </summary>
+        public static string DisplayModificationOption_NOT_SHOWN_Not_Shown {
+            get {
+                return ResourceManager.GetString("DisplayModificationOption_NOT_SHOWN_Not_Shown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Three Letter Code.
+        /// </summary>
+        public static string DisplayModificationOption_THREE_LETTER_CODE_Three_Letter_Code {
+            get {
+                return ResourceManager.GetString("DisplayModificationOption_THREE_LETTER_CODE_Three_Letter_Code", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unimod ID.
+        /// </summary>
+        public static string DisplayModificationOption_UNIMOD_ID_Unimod_ID {
+            get {
+                return ResourceManager.GetString("DisplayModificationOption_UNIMOD_ID_Unimod_ID", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Index {0} exceeds length {1}.
         /// </summary>
         public static string DocNodeParent_GetPathTo_Index__0__exceeds_length__1__ {
