@@ -18,10 +18,12 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using NHibernate;
 using pwiz.Common.Controls;
@@ -54,11 +56,14 @@ namespace pwiz.Skyline.FileUI
 
         private readonly ExportDlgProperties _exportProperties;
 
+        private CancellationTokenSource _cancellationTokenSource;
+
         public ExportMethodDlg(SrmDocument document, ExportFileType fileType)
         {
             InitializeComponent();
 
-            _exportProperties = new ExportDlgProperties(this);
+            _cancellationTokenSource = new CancellationTokenSource();
+            _exportProperties = new ExportDlgProperties(this, _cancellationTokenSource.Token);
 
             _document = document;
             _fileType = fileType;
@@ -230,6 +235,13 @@ namespace pwiz.Skyline.FileUI
             CalcMethodCount();
 
             base.OnHandleCreated(e);
+        }
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            _cancellationTokenSource.Cancel();
+
+            base.OnClosing(e);
         }
 
         public string InstrumentType
@@ -1643,6 +1655,12 @@ namespace pwiz.Skyline.FileUI
                 return;
             }
 
+            if (radioSingle.Checked)
+            {
+                labelMethodNum.Text = 1.ToString();
+                return;
+            }
+
             labelMethodNum.Text = @"...";
 
             _recalcMethodCountStatus = RecalcMethodCountStatus.running;
@@ -1672,12 +1690,12 @@ namespace pwiz.Skyline.FileUI
             }
 
             int? methodCount = null;
-            if (exporter != null)
+            if (exporter != null && exporter.MemoryOutput != null)
                 methodCount = exporter.MemoryOutput.Count;
             // Switch back to the UI thread to update the form
             try
             {
-                if (IsHandleCreated && !IsDisposed)
+                if (!_cancellationTokenSource.IsCancellationRequested)
                     Invoke(new Action<int?>(UpdateMethodCount), methodCount);
             }
 // ReSharper disable EmptyGeneralCatchClause
@@ -1834,6 +1852,31 @@ namespace pwiz.Skyline.FileUI
             CalcMethodCount();
             panelSciexTune.Visible = comboOptimizing.SelectedItem.ToString().Equals(ExportOptimize.COV);
             UpdateThermoFaimsCvControl();
+
+            // Set the tooltip
+            var tooltip = Resources.ExportMethodDlg_comboOptimizing_SelectedIndexChanged_Export_a_method_with_extra_transitions_for_finding_an_optimal_value_;
+            int? stepCount = null;
+            if (comboOptimizing.SelectedItem.ToString().Equals(ExportOptimize.CE))
+            {
+                stepCount = _document.Settings.TransitionSettings.Prediction.CollisionEnergy.StepCount;
+            }
+            else if (comboOptimizing.SelectedItem.ToString().Equals(ExportOptimize.DP))
+            {
+                stepCount = _document.Settings.TransitionSettings.Prediction.DeclusteringPotential.StepCount;
+            }
+            else if (comboOptimizing.SelectedItem.ToString().Equals(ExportOptimize.COV))
+            {
+                stepCount = _document.Settings.TransitionSettings.Prediction.CompensationVoltage.StepCount;
+            }
+
+            if (stepCount.HasValue)
+            {
+                tooltip = TextUtil.LineSeparate(tooltip,
+                    string.Format(
+                        Resources.ExportMethodDlg_comboOptimizing_SelectedIndexChanged_Optimizing_for__0__will_produce_an_additional__1__transitions_per_transition_,
+                        comboOptimizing.SelectedItem, stepCount * 2));
+            }
+            helpTip.SetToolTip(comboOptimizing, tooltip);
         }
 
         private void cbIgnoreProteins_CheckedChanged(object sender, EventArgs e)
@@ -1948,13 +1991,15 @@ namespace pwiz.Skyline.FileUI
         #endregion
     }
 
-    public class ExportDlgProperties : ExportProperties
+    public class ExportDlgProperties : ExportProperties, IProgressMonitor
     {
         private readonly ExportMethodDlg _dialog;
+        private readonly CancellationToken _cancellation;
 
-        public ExportDlgProperties(ExportMethodDlg dialog)
+        public ExportDlgProperties(ExportMethodDlg dialog, CancellationToken cancellationToken)
         {
             _dialog = dialog;
+            _cancellation = cancellationToken;
         }
 
         public bool ShowMessages { get; set; }
@@ -1963,7 +2008,7 @@ namespace pwiz.Skyline.FileUI
         {
             if (!ShowMessages)
             {
-                performExport(new SilentProgressMonitor());
+                performExport(this);
                 return;
             }
 
@@ -1984,6 +2029,21 @@ namespace pwiz.Skyline.FileUI
                                                                    x.Message), x);
                 }
             }
+        }
+
+        public bool IsCanceled
+        {
+            get { return _cancellation.IsCancellationRequested; }
+        }
+
+        public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+        {
+            return UpdateProgressResponse.normal;
+        }
+
+        public bool HasUI
+        {
+            get { return false; }
         }
     }
 }

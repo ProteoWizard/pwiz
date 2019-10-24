@@ -154,6 +154,7 @@
     <Compile Include="AssociateProteinsDlgTest.cs" />
     <Compile Include="AuditLogSavingTest.cs" />
     <Compile Include="AuditLogTest.cs" />
+    <Compile Include="AuditLogValidationTest.cs" />
     <Compile Include="AutoSelectTest.cs" />
     <Compile Include="BackgroundEventThreadsTest.cs" />
     <Compile Include="BatchCalibrationTest.cs" />
@@ -370,6 +371,7 @@
     <None Include="AreaCVHistogramTest.zip" />
     <None Include="AssayLibraryImportTest.zip" />
     <None Include="AuditLogSavingTest.zip" />
+    <None Include="AuditLogValidationTest.zip" />
     <None Include="BackgroundProteomeTest.zip" />
     <None Include="BatchCalibrationTest.zip" />
     <None Include="CalibrationScenariosTest.zip" />

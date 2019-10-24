@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd" id="Hela_QC_PASEF_Slot1-first-6-frames" version="1.1.0">
   <cvList count="2">
-    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.26" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
+    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.30" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
     <cv id="UO" fullName="Unit Ontology" version="09:04:2014" URI="https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/unit.obo"/>
   </cvList>
   <fileDescription>
@@ -34,7 +34,7 @@
     <software id="micrOTOFcontrol" version="5.0.2.528-10700-vc110">
       <cvParam cvRef="MS" accession="MS:1000726" name="micrOTOFcontrol" value=""/>
     </software>
-    <software id="pwiz_Reader_Bruker" version="3.0.19140">
+    <software id="pwiz_Reader_Bruker" version="3.0.19269">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -158,23 +158,23 @@
           </precursor>
         </precursorList>
         <binaryDataArrayList count="3">
-          <binaryDataArray encodedLength="352">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="972">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000514" name="m/z array" value="" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-            <binary>eJyV0DFIQmEYheEGIRysoVochEicgiZxaPQIDW2BUXNRiyQFTUHmYEs0JNT5lkKERAhbGoRKq0s0uDRURENZDoHZ0CAIgfXB/YcLJdHwLO/4LjWtsH9xAbftNSR8SewNJuGObiIaTOMmRCQiRGaamFsl3DtEKqOtQFwXbXfHxMYJ8aoqp0ShZAuViRmHLYfyP73/wXtGjBnLKqvaavicmDLW1ZF6Ub0XRN4iBi6JXTV7RaxUiP17IvZATD4Snidi1Jg3tn9hqY8OfNWfxjvIqeKzLV4nDt8If4vo/9KvqmUEugQTDp/dAlef4MArSA8JmgFBPSjoiQhqcUE1K7DygsZIDt9CswQn</binary>
+            <binary>eJwl0n0sFHAcx3FFcc40T+HQCSdNmadcKw8/On+UpBoiE5Os8tCDh+Qxs3OtY3f8tGpdjE3EVuQpCZG0LosUxYg7z4ZiHiuur9/vr9f2+eP7/uc7MMPxf56WiLhR39N58znIdkQoGXATI7Y4QLX7mBgZ9h7pceCJUR+/lNUqzUWNorHO8og8lBZ9IOPPTozk7KzFF2oYfSm4yvFlYrQQO/J1dhdGm1OrljJtjNacJt/Y6mIkUTiodOthVGNxUpmlj9Gdbuq2Tn5zEpgh8s7IBcWCOrkEZEm9/BvAKdeVj71gzQw1PM1hcAKs8FzKngVvLVB5T5aJf8drXRbBD7l1xHyXemJQSOL8KriPeZu4VEd9G5ZEzNFMJga+plpGpBAXtVKJLU1U4ZU0YoBeOtGildpRdbRwA8wLdiaGMFyI1rXUtVBXYruGGzH3FTU4HBFdhxQ+ygYYtcralRhgTs57ol/LvSpNcCX+TJgueD5G9o4N7q0sj+Ns7dI4jjXYlhBP7G1267PduiNkCpzAZrsfXGewo7Jkyh309dlhGg9q9Xc+LQY1yi81VG91vvGKZ0Ebz3nBNUOMODqZDbpGGA3emCvxBhu9L8ulYJ1SW6kM3J3NCpwE5VwjYubvWPU50EcSR9w8+LlxEZT2Ux/wu4gX7bqJtkNUPm9/9Bqo78jfswmODlMrhVnEFK6AeHyUqie6S6z/J+tSNoZumZx42neUaKw0RpyuoEYUuGUwQPsTiKhYpn4qcic+9PYghq9Tp6I2RnXBUjsvDS4YO0Q1Z+epnDLB6BEWDseD7gbcBBU2RjoLF0RyMPmZ1bl1kOtkwlCAynLqxmPtRhVTjHoG1KLVwYIsBjHSXp2IkwS+CrD5V0JqqBlGE4XTsX7mGJkxms7etIA/j2Td/wmW5Rl4NFli5FnzsqHICrpFMUHGNhhVbzdkpjhiFFWmGnb4EEZxHYPXN8bz0X9mNLwE</binary>
           </binaryDataArray>
-          <binaryDataArray encodedLength="388">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="416">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
-            <binary>eJwt0TFIQlEUxvHTHuhg0FDU4ODQICHoUJDvvqGhwZwbHEIcHBKEGhoeCBFREBpNDhIOTiIREU1vimhqCAmRqCYHB2lyiOh/vWf48Z0j53rPe0/k0hNZzYp8kk94ww/uUEAVddi5HHMb5BF2UMYW1nCuZ0vYNMwhoH5HG69mNh8e+CJN6hj5Rdo+DUO9Sy6SRfxxJuW5OupLUEGLesVIcOJLOEf/TX/ImZC5R70rb9x9N9jDrd0bU3Z/0P33df8k/Qjb1C3yWJ/jFB/o6DsYI4MzDPCLdeP+h3cTjKiXscBuF+SQ3xpkGgV0mauRCfR1N/t8S8btdo8r3UfIJmJ63wueca29nY8Y1yd1bh5xz50t6/Pl9LtO0Mva7/IPa5pftw==</binary>
+            <binary>eJxdkzlOQ0EMhn2ElJQUiIKKAgENYCIIayAJJGEngFiEKMJSIZBGFBQUiCO8I3CEOQJHeEdB4M+RnDSfvOT3zO95In+/lv5DxuCRMe8Z04FRT4g79G0Sb1F3HecE9RXibeI1WCe/SrwMm3Gu0Fdck4fSgIfkd4mfo/7IJ/EjfDOOvtBPvXw39m6of1C/MOY7eIpOLeYF3Un0Kk/o8v+fL+NsMjaYX9Iv+K3deC+9jfdTmDaIfR/rcAHO0If/yfeF/zIO56Dnp+jzfbEPgZlzSRu67jEx85R+9f3gm17F8/i7qbwaC/wqzo3f9/Sj038wluiI74Xz9PrkL8n7+8W3wf6Y475lfEz+ft0fJb8Dq0P326cP5lasu355FutSi3ppES4NzeUdu1+DPfv3Og+nYV1/AaRycFY=</binary>
           </binaryDataArray>
-          <binaryDataArray arrayLength="123" encodedLength="328">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray arrayLength="123" encodedLength="500">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1003006" name="mean inverse reduced ion mobility array" value="" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <binary>eJxd0D1Kg0EUheHSILiB4ApMcAXCxV5IaRcXEAi4gYArCOIGFLGe+UZIIXaCXUpLsRIsBRs75ZlxGovh+7nnvOfcmWxKxGWOu90S6/MSx7MSr1clHm6H+r64GGJ2kONr2v6ZObTboyEmf37a1XiI04+mWd/nmD+l2LtJkd5TvL3kOuc7/M6Vxd8zf3ZahqzPZa7Mx1WqnNFzY+pyfdK6ytk/a/kysOX1vuZ0mHiyMLuORi4/Pr3Td9QLSz4Or472oMfBoMXg0wdTFpZeOPL0wOHFxMawj364OBi0fL77ff5n85k7tP1OutZTlrvvO/4C9dnsTQ==</binary>
+            <binary>eJyFkk8ow2EcxuewMpJycHAwy2EHGcrKAd+UlR0QyUFycpFJXFYW0hK57LASBw7acnBS48LFgSW17OJPLEkima3l9zalOH289V6c3n5/vs/zeZ7v67uPj5wOK9lL9ObcVUqWVnriQ11KziKz7y19SiLOqOfVryTmSsVDg0oC2TlvsFW/794PjzY2K3nuDL757UpuzpsC2z79H3Oc6Fo2x9amW4nP8Ed3bWH5sL9eycRA5rasQ8/vFB9fZqqVhBJfx5NFS2rLkzHXpyWp/O7lwbcl4ZLC3VGNnsdv+mr+wu7UXPibOduT6Ycfm85BrpDHW8hUaM71bOXqdc7645mq+3CctGlOesmNbeSjDt0redLjpYtPDTo/OeAmn9kv8+jBCR+54DT10CEv/vCjz2nukb7gIj88+NIj+0AfHjjQhQM/+oGTXHDRFzzkow948IUTbjjYD/3BCw8c6OLHd/N+/seNH/Oc6Jr3xNTlmVzce3OPvy5eAEg=</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </spectrum>
@@ -264,23 +264,23 @@
           </precursor>
         </precursorList>
         <binaryDataArrayList count="3">
-          <binaryDataArray encodedLength="312">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="628">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000514" name="m/z array" value="" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-            <binary>eJxjmnLMeavABefbEq+cHcV/OLes/+98KoDD5Xg/h8tPfl6XA/4CLspCwi5KE8VdmEUkXO5e0nDxnqzpEiGi67Im2NCFYaqhS+pVU5cYSXuXoqv2LrMjHF1UIgJd3s0IdFG5EeoScjPU5S0UT4qJcvl1O9ll0dx0F16ZLJcYIF4DxN5HslzM5+S53ADiyrl5LieBOGtensvqO3kuv4G47x6QL5fv4nMn3+XAxR4XsUe9Lrc/9rqwf+p1qWHqc/mW3+dyoXiSy76SGS5Xrs50+Vm6xOVp2RKXyq1LXFYAsdL2JS4Ap51lOw==</binary>
+            <binary>eJyL6J9p0nCpwuFG1tx5YkxVDvmh2inSzrUOC2ZtUHrBVO8wM7C97cPXegf+U2VOklyNDiw8d+7/EGx0sDjMIvl/YaNDQQXn3++cTQ7R1YUxLklNDnqxB81UPjU53OMUyG9ganb4t4dvQrRUq4NKY09gplGrw/dZP9i7F7U6vFSYWVaq1ebgX6r6Zb5Rm4OBG+ekNbvaHLQnVDVrP253mPBjn/e6X+0OE89mJglrdzjkvN1TwKLd5fDQx/qorHGXg7ecQAHL7i6HP0f3tGkB6RluspNsgbThPDkwbVB10WySd7fD1n2TXeurexx0oib6bPnc4+DoPHVSo3OvQ1uWXGc3kH7ivLJ+KpCuPvMivjOi1yH+UMadtsu9Dq8/u/+aBaS/vNWVWA+ktcuU1XcC6fdzhF3PAmldI+mYqbd7Hc5NSc2ZD6TPfPy09yKQroy8aHH2ca9D80+N3s7fvQ6rZnr/M5810SH7+rNtTnsmOiyLOBFivW+iw5pUsYsOQFrs87Fa/wMTHaZMcd727+xEB6cLPJ8q/SY5mClIbJnON9kh4jxL2y6ryQ7pfX8V9/dNcSh78nD5HSC9Zp2A0PppUxz0th37tQVIfy+f6vAESAMAAY3c5Q==</binary>
           </binaryDataArray>
-          <binaryDataArray encodedLength="196">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="204">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
-            <binary>eJxjYJByZmBY4cjAcMmJgUEFiFuAOACI5wHxNCDeAMSHgJgDyt4BVKsDpBcA8T0gLgDiDiBmAJozC6pnHRD3AXEPEEcAcQIQNwHxFSCeA8QpQLwGqi8DiB2AZu6C2rkIqgekfwIQxwDxDaB8jRMEcwDt8QDSy6BuvQOyG+r2ECAWALkfqH4BEFdAzTJxAgDkaiqG</binary>
+            <binary>eJxdkEEOgjAQRec4hrXGBZuRqAmgAgJqYAPxInM0joaxbxalm5ff9v/fjshv6Vflvw6BOgTaGdacF4FLC5/sv/B90Kd4X47kXNAd/hH9gA2cyNv0LD3knvn9Et7w8V7zf5BjnFu/6bvDHf43Pfi0i3u8X3iXeX+KrmLKDHP85PlczeegaJ8785YMJnAPPZ9+u+oKYlgwgw==</binary>
           </binaryDataArray>
-          <binaryDataArray arrayLength="58" encodedLength="208">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray arrayLength="58" encodedLength="340">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1003006" name="mean inverse reduced ion mobility array" value="" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <binary>eJy7cHO5fXfrCjAW1Ftu/yV+mf2RouVgtuaf5fav+VbaT36zwt5zxkp761Mr7LMClts7G64EizfKrbBnPr7MfuWSZWA1ILydG6LHOHkFWB2IBumDyYH0g/CFmxBzQGaA7C7fvhxs1uPlK8D2wtggs0BqQfbfclhhLzt1OZgGuRFkLkgc5ja/pmVg+0Dmg9gg+0BuA5kNAJ8NbOE=</binary>
+            <binary>eJzLnV37xfL3F/uDjwziNwp8hdMH2jZJHHr6xV55z5Lqf6e/2Ced0a+LePcFLs646YFQ6/8v9uoaSsl3Fb/a31r8LmOS7Ff7Nd7b5DiNv9p7uplmuUt+tRd33OLL++qLffit8xEaal/h6t337tW5wPzV/vnX9rgHN77YXzfPFZ965QvcHBhtOk3rftlDhD0N554GpfF8hZsH48PsQ9cHsx9G50L9C9MPcwfM32lFUy6++/YF7i4fjm9pf0S+wv2LLg5zF8xcmP9Tjog4SXN8tT+qr7pq8acvcD4sHGHuhalHD7cfamdOe174AvcfzP0wcZj/YOEGczcAntrtbA==</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </spectrum>
@@ -369,23 +369,23 @@
           </precursor>
         </precursorList>
         <binaryDataArrayList count="3">
-          <binaryDataArray encodedLength="76">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="140">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000514" name="m/z array" value="" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-            <binary>eJzzYSp1Mfgw2WXp1LkuvQnLXC4fWO+i3rzRZRcQyxhvckkw2+QSZr7JpR2In7ptcgEADcAVcQ==</binary>
+            <binary>eJzzs+lq9VzQ5xDuGPmLtW6SA6ds4sItmyY7rFv2Y7bgmSkO3zMdAqV+THVYJdl6K8VgmkNj5w7HciDdJl5bn+w2zaH7bcCf00Ca/c2Z7a+ANN8qv7sfgLQO89QFdzymOQAAVzws+g==</binary>
           </binaryDataArray>
-          <binaryDataArray encodedLength="60">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="64">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
-            <binary>eJxjYNjgyMDQ4cTAsAJIzwLSfUD8AMhWAOJtQPYtIC4BYhMgvuQEAPRsCic=</binary>
+            <binary>eJxjYAABMwcwxRAIpU0htEMwhD4AE7eB0ipQ8TCoumgI3eAHpd2g4lEOAIhlCaA=</binary>
           </binaryDataArray>
-          <binaryDataArray arrayLength="12" encodedLength="56">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray arrayLength="12" encodedLength="96">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1003006" name="mean inverse reduced ion mobility array" value="" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <binary>eJzT3rbJXhuIHf0h9K/mzfafdTaBMYh9d/Im+2O/IPwK/S32AE07GLI=</binary>
+            <binary>eJxzvbM06mjYN3tXKN0vP1nvhSeC36n81KK+4Jv9jZP6OfNcETRMfIniuaXVQd/sY1+c3BYRj5D3j/769V3rN3sAsXE0Ig==</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </spectrum>
@@ -475,23 +475,23 @@
           </precursor>
         </precursorList>
         <binaryDataArrayList count="3">
-          <binaryDataArray encodedLength="92">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="176">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000514" name="m/z array" value="" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-            <binary>eJzzvHLPebofg0vnJVWXWz7NLotkF7v4XVnswrR+iUvPliUur4GY69YSl/qnS1xErZe6LAbibYWrXazCN7kAAFKdG8U=</binary>
+            <binary>eJwBeACH/1lmaS+J2ntABjj60dIJgEAEJ7kRUbqEQDnGz0SbaZBAY5SONLRjlEAhtaPMiXqUQNbLQ0PglZRA10CPhpGWlEBsrvNXnZaUQBn1cU9Bm5RABihz2q+clEASOJGsYqeUQODR5G10p5RABnkdzjZulUA+J0k350qWQDT/N8I=</binary>
           </binaryDataArray>
-          <binaryDataArray encodedLength="68">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="76">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
-            <binary>eJxjYDjmxMDwC4hfODIwrADSDEB8CYhtgLgNiGOA2ASIJwCxgiMEGwBxgxMAcSUKzw==</binary>
+            <binary>eJxjYACCAxEOIIrBIR5CM9hC6VAo7QCVj4LQDe4Q+kAAlO8Npd2g6oOgtAoarQalAxwA2twLXA==</binary>
           </binaryDataArray>
-          <binaryDataArray arrayLength="15" encodedLength="64">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray arrayLength="15" encodedLength="108">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1003006" name="mean inverse reduced ion mobility array" value="" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <binary>eJxb8GmNveO8tfZXNqyzL/+6DkzDMIhvkLPO/tmjtfZTDqxFkeNduN4eACawIis=</binary>
+            <binary>eJzrz2flCZn31X4C70rpE5u/2uurPquRuvbVnjOe7cW6ewg+Og2Tvxi0+X/r2a/2cgyi52P2fLV/XLSwXGgHbn1y3MeXKH75ag8Ax247WQ==</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </spectrum>
@@ -581,23 +581,23 @@
           </precursor>
         </precursorList>
         <binaryDataArrayList count="3">
-          <binaryDataArray encodedLength="300">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="596">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000514" name="m/z array" value="" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-            <binary>eJxbvnKysxf/emeFV5edH8+56Xxy3hfnqXxMLiYXOVxWBnC6fJPkcgmYIOCy4YKAC5OQhIvZFGkXvW0qLn2TNV1+X9ZycZTQcfkdYuxiOtXURfeeqQtDlIOL7KwAl8i5AS5tYUEuHDdDXR7OSnZpvZPqwjI33eUTEMfIZLl4y2a5XInJcrkxJ8+lci4Ez7mb5xLAn+/CJJXv8lc+3+WdQr7Llq58l8WKxS6VXmUucQnVLh8f9bpYfe510bXrc8kuXeIyG4hPAbFG2RKXCCBm27bEJRWImSU3ugAAksNYkg==</binary>
+            <binary>eJx7IFB8zaS0yOGy/lrjlw9LHZ70nuJyqa1y2KSoEDPHuNrhiFOd+M3JdQ6G9W8WXHJscLiyfW+FmlSjw+cH64VFtRodYh8yHrVzbnR4mvePmUuoyUHm0HwmMakmB7V99YYOTM0OipVrNrUVNTskT3XYfHRai8OCFb5nCo1aHQJ8y/Lqo1odZAsS9DmaWx2O/l4TNz+rzYFjkse8ZZvaHL4Fy0w4urvNYc7e93/suTscNjAvXOAs3OVQwTNRZDWQntuYveuCV5fDPQF+RsXdXQ6z4iYJxxT3OEQ+SVo2YXePQ6vtwaoFn3sc1n+uNt0HpNuy5Dq7nXsd2HiP5KwE0oKGCwpmefc6vP7s/mvW5V6HL291JdYD6V5XfTBdUPC/Z/PtXgfD7yYfXj4EqlMWcHJ43OtwLsRp4n8gze+afkz2Sa/DnkuX6sM+9jokf3mVYJLS5yCrXC/kf7LPoerF/2PcOf0Odn3vleL2THSIqAswT9830eHhwaXrjx6f6BDa7p29tm+Kg2/07aDNQDqYI8dqJ5BuedvPeRRIr1FV/ngKSEcEmJ45MG2Kw2a/5XPPAOm06l3pCsrTHAB7gM6U</binary>
           </binaryDataArray>
-          <binaryDataArray encodedLength="184">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="196">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
-            <binary>eJwtzqEOgVEYBuDvIgRBcAmCIAj8EwTBBfzBBQiCKAmCmWAmmCSZCS7DTDDJdZiZ6MEJz97tfOec94u4ZxEHys2IavZ348GKFjuzqdywZ8GMBi9GnDm5V5IVhuSsWXJhQJFnejtJXW1q9NMeW1knKDDn7bwrj999uNJjnPrz9Oe3q/Pb+wMn0yjy</binary>
+            <binary>eJxdkEsOg0AMQ3OYXoFFV0RFovQLLVAJKnGWOdocDQrPlYbZWI4TJx6z3/v6CqHf0A7wMkUfwWnD+EavmMvQX9RbOL6ufnRjLuIXavoG9CP1Aq57nuCNfvYE+WuePmM+TLu9TZrLLuCZ/gec//COOro5/ISfcuXgFfyA+l/tu+PLHcqvXLrzn4v7lv+eARTCLio=</binary>
           </binaryDataArray>
-          <binaryDataArray arrayLength="55" encodedLength="184">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray arrayLength="55" encodedLength="300">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1003006" name="mean inverse reduced ion mobility array" value="" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <binary>eJzbzr3cvlFuhf2RouX2s4JX2gvqLbe3PrXC3jgZIla+fbl9d+sKsNiFmxA+TD1IHMQG6Xm8fIW97NTlYDZIDfPxZfZZAcvBYiB9IHnNP8vB5oLUgPSDsLPhSrA8SD2IBomB1MHkQRgmfssBovdLPMRskB6/pmVgd4DkQOpA4rEvl4ExAEleaOQ=</binary>
+            <binary>eJwznaZ1v+zhF3v3vXt1LjB/tU86o18X8e6Lff/B757FWl/tD7Rtkjj09Iu9p5tplrvkV/uGc0+D0ngQ6tKKplx89+2L/cFHBvEbBb7C1eXOrv1i+Rshj24+TD1MHGaPD8e3tD8iX+2P6quuWvzpC1wcZs7zr+1xD258sRd33OLL++oLXB3MPph+xk0PhFr/f4G7F2YOzH4YHX7rfISGGsK9MPNhfJg6mHno+mE0uvqUIyJO0hwIe5X3LKn+dxrhbpg9P9TOnPa8gAgPmD6YeTD1fhkyC7XvImgAc5PwHw==</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </spectrum>
@@ -686,23 +686,23 @@
           </precursor>
         </precursorList>
         <binaryDataArrayList count="3">
-          <binaryDataArray encodedLength="56">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="100">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000514" name="m/z array" value="" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-            <binary>eJz7OtfCZUJKtctGg/kugi+Xuey+vNqFV22Ti6r5JpdK900uAPVlDhg=</binary>
+            <binary>eJwBQAC//+Gge5O+E4dA/RlX/ZFsj0AW7tUtFuaTQCrsuisi3ZRAmtGGbnd6lUDU+L+VwUSWQAwHTJLkRpZAHM7qEe9IlkAp2yAE</binary>
           </binaryDataArray>
-          <binaryDataArray encodedLength="44">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="52">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
-            <binary>eJxjYDjgxMCwCIh/AbGCIwNDAJA+AKSnAWkZJwBtQgZN</binary>
+            <binary>eJxjYACBCAcw5RACpeMhNIMKlPaC0hYQ+kAQhG5wdgAAo2QGBw==</binary>
           </binaryDataArray>
-          <binaryDataArray arrayLength="8" encodedLength="52">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray arrayLength="8" encodedLength="88">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1003006" name="mean inverse reduced ion mobility array" value="" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <binary>eJw79muTvbDsZnvtbZvs+ws32f9q3my/lGuTvdsyiBgAA/4PVg==</binary>
+            <binary>eJyLfXFyW0T8N3sxD7G4Rcnf7F3vLI06GvbN/lh/0RtDv2/2ncpPLeoLvtk3tnssDXH8Zm92WOnciRKEOgAneiEK</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </spectrum>
@@ -792,23 +792,23 @@
           </precursor>
         </precursorList>
         <binaryDataArrayList count="3">
-          <binaryDataArray encodedLength="28">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="44">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000514" name="m/z array" value="" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-            <binary>eJyra4lxCWGe48L7bIkLAB2/BLU=</binary>
+            <binary>eJz7Vn9zS/+EbodDk7tasxomO1yU0p1+cM4UBwCu3Azu</binary>
           </binaryDataArray>
-          <binaryDataArray encodedLength="24">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="32">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
-            <binary>eJxjYPBxYmBYBMQNTgALrgI1</binary>
+            <binary>eJxjYACCBk8HEMXgEAKhGQIcABwiAm4=</binary>
           </binaryDataArray>
-          <binaryDataArray arrayLength="3" encodedLength="28">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray arrayLength="3" encodedLength="44">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1003006" name="mean inverse reduced ion mobility array" value="" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <binary>eJz7IrLW/l31WnuDnHX2ACkGBdM=</binary>
+            <binary>eJyrqphWN2/RV3uGk9q7a9d/tb8YtPl/69mv9gCksg3l</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </spectrum>
@@ -898,23 +898,23 @@
           </precursor>
         </precursorList>
         <binaryDataArrayList count="3">
-          <binaryDataArray encodedLength="284">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="572">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000514" name="m/z array" value="" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-            <binary>eJybpPDTqba/wLmzqtDZ8/hi5xd8653nSu9xfjD5hjOP7DdnyYW/nE8Jcbmcn6rhEq6i7XJeWNflwhU9l2XXDVwahUxdJl0xdTkrYuaSMtXM5f9DSxe767YuR6fbubBKu7moRAS6nJsS6KJyI9SlAIiDJcNcOuTjXSbHJLtEzEx2YZmb7nIlJsvFfE6eSzsQa8zNc6kEYp+7eS5zgNhMJt/l0sx8F/+CZjD+8KDNRfxxu0vuo14X9k+9LrOE+lyOhsxwiZ8yw+VU6RIX0ZsbXABsx1fa</binary>
+            <binary>eJwBoAFf/pJtP08SJF9A/dkAp+8RbkDf8CYoUS9uQNCASRHpeHRAjJdxBN3hdUByhWSfc4N3QDE8QvJ7EntAEs7qiaHDfkCfODcVI1R/QLvoVTZZQoFA4f7H1bkShUAcACbcimSFQHr02+V5ooVAZREoCJrahUAxcmLO9BqGQPcflRpQooZASoWQOpK6hkBsXGWUmcKGQFLcPois0oZATnIA6j88h0CSlY/N57qHQLKOJZH40odAzHIMrmDDiEBs7bxwBCuKQLt6P8uZMopASx4QcAS7ikAFvbj1DbuKQEXLcGUqw4pAeIcA+PDji0CC2ppokmuMQDfbYfUqc4xAhT3BeqDzjEARMaBwmkuNQF/CaNyG041AFoJX65DTjUDgFzoJpdONQPTtLRiv041AkKmxfKnbjUBwcP+Ms9uNQLYyR72G441ApCATRTrzjUAfKpLiCW6QQOvVkuIJbpBAoCyt9h3ckEBsNkngYvyQQJTI565NvJFArGUW0UC+kUDumxxPU8KRQEHSSJyYCpNAuDRM14sSk0BTCGw6uY6UQBR0OKUiG5ZAmi3EpQ==</binary>
           </binaryDataArray>
-          <binaryDataArray encodedLength="172">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="188">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
-            <binary>eJxjYFBxYmAwcGQA05uA+BAQ7wHiY0B8DYgLgPgFVP4EkPYB0iuAdA6QVgBiHSBeBMQNUHNWgGggjgHiFCC+5ATRGwHED4DyIkB6ARDvgOoRgOq/AsQhUPE1QDwBiC8A1e9whKgHueMHkC3rzMDQB2Q3AXEHFE+Amn/AEQC5yifb</binary>
+            <binary>eJxdkEsOgzAMRH0aboBoEYgoKpWgH5WKNohtL5KjcJQcjYo8LxJvnsaxZ6yI/MtfjBxVRKo2X7jQd5EBHVb2nrBN9+WMHtAl+oFmzvfkzPRf6T3ygVfmb/DO3prl8i4NfYtWf5fl2DTfq9+Yznu94w1rWGX++h9d5PaLDBM5mjtlVF+9/2R2W7cnhQ==</binary>
           </binaryDataArray>
-          <binaryDataArray arrayLength="52" encodedLength="172">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray arrayLength="52" encodedLength="288">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1003006" name="mean inverse reduced ion mobility array" value="" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <binary>eJzbzr3c/pbDCjAW1Ftuf6Roub1x8gowbpRbYR/7chmYvR2oDsS2PrUCjEFislOXg3H59uX2K5csA+sHsZmPLwPzv8QjMMj87tYV9pPfrLDX/APRd+EmRC3IbBD78XKIfSBzsgIgGCQGwiA7/ZoQ5sLkQW4E6QfRILsBYJRh4A==</binary>
+            <binary>eJwznaZ1v+zhF/uUIyJO0hxf4fSBtk0Sh55+sU86o18X8e6LfcO5p0FpPF/htPvevToXmL/a+2XILNS+i5A3hZoHE/d0M81yl/wKp2Hqjuqrrlr86QucTiuacvHdty/2181zxade+QK3Hyb+/Gt73IMbCHnlPUuq/53GpGHuP/jIIH6jwFf7W4vfZUyS/WrPuOmBUOt/hH25s2u/WP5GmAtzN0zch+Nb2h8RhP9g7hF33OLL+wpBw9TBaJg/f6idOe15AdO96Pph4QizH8aH+RsAYuDcKw==</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </spectrum>
@@ -1003,23 +1003,23 @@
           </precursor>
         </precursorList>
         <binaryDataArrayList count="3">
-          <binaryDataArray encodedLength="116">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="228">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000514" name="m/z array" value="" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-            <binary>eJw7cUnHxXO6vsuacBOXdJ9YF1nlbJfsJVUuGf87XZiuzXQxLp3nIjp1nssCtU0uqeoQ3G6+yeW96yaX62GbXMIjN7n0p29yqZM45rIy6LQLAClRIeU=</binary>
+            <binary>eJwBoABf/1fldPpYmoVAy5YtHunyhUClsh6O9YqGQCz2U+eMqYtArSNKk2NkjUCahmdejVSPQF1oi/vsP5FA+KHzO8A6k0DdkTtips6TQJlqD6ai0pNAJ9RiBdRElkAy10ea7ESWQP6CSJrsRJZADqpO3fBGlkDZpcHjvUiWQLK7LuvaSpZAbRUX2ipLlkBw2url8UyWQI08oLwPw5hA48ZjEVVqmUDwXVHW</binary>
           </binaryDataArray>
-          <binaryDataArray encodedLength="80">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="92">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
-            <binary>eJxjYJjnxMAwCYgXAPEtIJ4CxK+AmAWIDRwZGFyAtAUQOwDxDiB/DpBeAhWbAMQSUP0pQKzhBABdeA41</binary>
+            <binary>eJxjYACCA8EOIIrBIQhCM4RA+dEQugEq7hAL5TtA1alB+R5QvjuUhvHNofJQ8xtC0NTB7HNGtb/BByru6gAADMUPng==</binary>
           </binaryDataArray>
-          <binaryDataArray arrayLength="20" encodedLength="88">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray arrayLength="20" encodedLength="148">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1003006" name="mean inverse reduced ion mobility array" value="" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <binary>eJxbm7jZ/rPOJnvtbZvsj/3aZH938ib7T7e22Lstg4iDaB3eLfYVNyBqQGKTT2y2/9W8GSwGwjB1IHkAuA4pzQ==</binary>
+            <binary>eJzrvqc83zTnm/2Nk/o581y/2bveWRp1NOybfeyLk9si4r/ZL1E8t7Q66Ju9/Utdp7jZ3+zNDiudO1GCUA/jz+M8VrS08Zv92WM/ufijEebA1G06cidOqPKbfafyU4v6AoQ6GI1uHkw/AOt0VZU=</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </spectrum>
@@ -1109,23 +1109,23 @@
           </precursor>
         </precursorList>
         <binaryDataArrayList count="3">
-          <binaryDataArray encodedLength="68">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="124">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000514" name="m/z array" value="" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-            <binary>eJwBKADX/0TTZUQQ8YtERYuZRB1zoUTO8KJELrSkRPzEpEQN5qRE8fWkRHcFpUSKzxPX</binary>
+            <binary>eJwBUACv/1dAuX5ouoxAckNK+iF+kUDVUBiYaDGTQODDZJdjLpRAp+MvxxlelEBvNy61hZaUQHm5VnmfmJRA0Rotl8GclED/+1Ybvp6UQJ1dtOOuoJRA4lIm5w==</binary>
           </binaryDataArray>
           <binaryDataArray encodedLength="48">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
-            <binary>eJxjYEhwYmBYA8QXHBkYcqB0A5DeAcQZQHwCzAcAqA0Ikg==</binary>
+            <binary>eJxjYAABHwcw1RAKoRmsoHxfVD5DAJQOh9IweUu4PAAFLQZg</binary>
           </binaryDataArray>
-          <binaryDataArray arrayLength="10" encodedLength="52">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray arrayLength="10" encodedLength="92">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1003006" name="mean inverse reduced ion mobility array" value="" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <binary>eJxTu7zOvqkPgt3N19r/XLvGfsqBtfYGOevs31WvhYsBAJVjE/U=</binary>
+            <binary>eJybM3HHlpRbX+0XC/U7XLiIoGe0LnrzYtlX+8O+IZL7p361f1y0sFxox1f7i0Gb/7ee/WrPcFJ7d+16THUAYgAudw==</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </spectrum>
@@ -1215,23 +1215,23 @@
           </precursor>
         </precursorList>
         <binaryDataArrayList count="3">
-          <binaryDataArray encodedLength="264">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="524">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000514" name="m/z array" value="" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-            <binary>eJzbL9jtfJx3knParAfOr6a/dC6b+8qZe8E352PnOVyYmLlcuqaquLzequLSGKTm8nWyhovTNR2XnFBdF7MQQ5f9kWYu32/YubTOdHdRuRHqwnEz1OVnWKTLjzkxLmLzY1y+RSe7zL2f7vJbJsNljUwWGN+Yk+divybPZc7dPJcK2XwXeaYCl3jBNpdAn26XM497XZZ/6HXp+tTrcvlbr8sVpj4XcaE+l1lAfAyI+UNmuMwuXQLG7WVLXBS+LXEBAD5zUyQ=</binary>
+            <binary>eJyT6Xz1zDyp0GHbvYVXdjgWOXguqdjjI1zjILXS3/mvUa3DnZea59YF1zqYikRFMF6pc7j2dfPRH5KNDoeFlrokODQ6RBZEuW2c1OJwZu/t8L3TWhxMotKlAk61OOz+Kb28TqjV4b30bucTs1odDCcerl27qtXhKLvluTatNofOhpLL5qfbHE4sWXhD7na7gyvzrKUGnzscvOUEClh2dzncE+BnVATSz/vuq9/X6nawXVTNOn9yt0N9vcbOR0B6uuPMo3XZPQ4HDgWt/fy7x2GORGj2fOZehyfOK+unOvc61M5eBaZff3b/Netyr8Mrkex77Vd7HQoK/vdsvt3roCRzlXn9416HF/0nnjgz9DlsPP7pvfahCQ5B73frdmVOdMgr5+2v3DPRgXH33nci+yY6CC5mdQsE0lZ8P7JuAenlSRzlUQcmOnhuD7zhdGiiw7vZMv7BQNp5Fs+ZCCB9bKntw0auyQ6+0beDNvdNcZBkvwOmH5ttv3EBSMu9NGE9Mm+KAwDHs7nc</binary>
           </binaryDataArray>
-          <binaryDataArray encodedLength="164">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="176">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
-            <binary>eJxjYPBwYmCYAsRXgLgFiBcB8RIgZnJmYCgB0jscGRi6gPQNIB0BpBuA+BhU7Q4oPQOINwDlbYC0ABBPAGIDIP+WE8SMGiDWAeI2INYHmtsBlOuA2hXiBDH3AVCsAkivgNrxA8jvg7IdHCHiJlBxBaibVzgCAOHZJRQ=</binary>
+            <binary>eJxjYAABTwcw1RAEpaOgdACEdgiB8qG0QwKU7wehGcyh4oFQvjWU9obSUHMORKCayxCOxg+G0mZQcXco3wlKQ93HoAa1LxrVHQ3+UNoVah/U3AepUH2GUDoQzV9eaO61gdJQ8xhCUf3BYA81PxBNXANVfYMbqnoGF6g4zB+mDgAcSyVt</binary>
           </binaryDataArray>
-          <binaryDataArray arrayLength="48" encodedLength="180">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray arrayLength="48" encodedLength="300">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1003006" name="mean inverse reduced ion mobility array" value="" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <binary>eJw7UrTcfvKbFfa3HFbYy05dbq/5Z7n9du7l9n5Ny8D8x8tXgMWMk1fYx75cZt/dugKMQezy7cvtv8QvA6tvlFsB5oPMEdRbDsafSlfaOxuuBItnBSwH61u5ZJk98/FlYHmQGSAapgdkBgiD5EH2g9hHgO4D4Qs3Ie4E0SA+yCwQDQDkYFnl</binary>
+            <binary>eJxLOqNfF/Hui/2txe8yJsl+tU85IuIkzfHV/qi+6qrFn77YM256INT6/4u96TSt+2UPv9j/UDtz2vPCF7i8D8e3tD8iX+HqGs49DUrj+WrvlyGzUPvuF/uDjwziNwp8hdMw8bSiKRfffftir7xnSfW/0wjz3ffu1bnA/BUuD3PPgbZNEoeefoHTn5/MNNun99U+/Nb5CA01hHpxxy2+vK8Q9l43zxWfeuWL/fOv7XEPbiD0w9wB46PbA3MHjIbph/kfJp4EDT8YnTu79ovlb0R4wvgweZi7YHwAtVbSog==</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </spectrum>
@@ -1320,23 +1320,23 @@
           </precursor>
         </precursorList>
         <binaryDataArrayList count="3">
-          <binaryDataArray encodedLength="68">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="124">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000514" name="m/z array" value="" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-            <binary>eJybOmO/czVPnIumY69LxfnJLuGKi1zmOm508fy60YVJfZOLqvkmlx8tm1wAVbMQ+Q==</binary>
+            <binary>eJwBUACv/1InVZYS83dA/KVqao/Bi0Cn24QfJaiRQGcFdfnueZJAQE8f6ipElEC4+v6oMyiWQOm1+xWpPpZAlqPTT+BElkAMB0yS5EaWQOkeJ/aeUJZAHQsmgw==</binary>
           </binaryDataArray>
-          <binaryDataArray encodedLength="52">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="60">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
-            <binary>eJxjYGhwYmBwAWIPIN4CxPeAOAGI5wExtzMDgwOQTnECAI0bBuE=</binary>
+            <binary>eJxjYACBAAcw1eABoRk8ofwwCH0gGiruA+UHQ+iERKg4VF+DjwMAS7MJBw==</binary>
           </binaryDataArray>
-          <binaryDataArray arrayLength="10" encodedLength="64">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray arrayLength="10" encodedLength="112">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1003006" name="mean inverse reduced ion mobility array" value="" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <binary>eJxzW7bZfm3iZnth2c32919ttq/Q3wLmL+XaZP+rebO9Du8W+4obm+wBgjUS0g==</binary>
+            <binary>eJwzO6x07kTJN/vue8rzTXO+2Yt5iMUtSv5mr6Av/Dq69pu9f/TXr+9aEfKN7R5LQxy/2XcqP7WoL/hmP4/zWNHSxm/2Z4/95OKP/mYPAEFLKBo=</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </spectrum>
@@ -1426,23 +1426,23 @@
           </precursor>
         </precursorList>
         <binaryDataArrayList count="3">
-          <binaryDataArray encodedLength="44">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="84">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000514" name="m/z array" value="" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-            <binary>eJwzmsjtUnNd3yVWqsFlxulmlwvy813Ob14CxgCnAgzk</binary>
+            <binary>eJx7YjPHT62o0WFmxKTi979aHcx3Gk72Zp7g8EKl90dR5QSH2LWHfv18PNnBatKFx5XTpjiw2V0E0wAeEBzY</binary>
           </binaryDataArray>
-          <binaryDataArray encodedLength="36">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="44">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
-            <binary>eJxjYJjnxMCwBoi7gHgTEItA+Q5OAE8mBVU=</binary>
+            <binary>eJxjYACCA8EOIIqhIRRCOwRC6TCouBOqPIOHAwDAZAav</binary>
           </binaryDataArray>
-          <binaryDataArray arrayLength="7" encodedLength="48">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray arrayLength="7" encodedLength="84">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1003006" name="mean inverse reduced ion mobility array" value="" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <binary>eJx79mit/ZQDa+19L6yxX9q9xv4ZkG+Qs87eknWdPQDqjw6A</binary>
+            <binary>eJyTYxA9H7Pnq/3jooXlQju+2m9Jfj+Fc9ZX+9lqJjNLJn61l4PKXwza/L/17Ff7pD3MSssPfLUHABDuHHk=</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </spectrum>
@@ -1532,23 +1532,23 @@
           </precursor>
         </precursorList>
         <binaryDataArrayList count="3">
-          <binaryDataArray encodedLength="204">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="416">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000514" name="m/z array" value="" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-            <binary>eJzrlXjvXHNOwIU3WMZldZi2i+Y1PZdQEX0XsxBDlxogzrxh6pJVZunCIG7lsnOGlcuiqTYuyy57uBRKerkITPdyUYkIdNlzI9SF42aoCytDuEuudJbLGpkslxtz8lw05kJwJRCfBOKGRXkuv+/kufjcheA5QLxDP99lRVC+y8R7xS7xgm0uP0uXuGiULXFpB2IAaMY9WQ==</binary>
+            <binary>eJxbWvtrteDjWoeVUv015yWbHKyq+lYkdjU7HHrPHHo1q9XhV8ozkaO3Wh3e9F1c3/Wo1eEou+W5Nq02h4w27qp+IL3y82wN3t1tDpFNXS5n9dodwjq28zxwanfg2CgiLx7c7pBcne2wZVK7Q9fK0h0lUp0OG9rCRfWcOx06rL6xPwrqdMh5u6eARbvL4QFvcrX47i6HewL8jIpAOvjy0YUMD7ocZLk7luY69zo8cV5ZPxVIv/7s/mvW5V6HB+JWnEuBdGW+NZj+8lZXYj2Q1i5TVt8JpM++D+QIuNLrcG5Kas78270OE1ZurFkJpDUZN4PpgoL/PZuBNPft43zfn/Y6/N07jTP0Va9D69Nu0UvVfQ4bj396r31ogkN631/F/X1THFre9nMeBdKPzbbfuACkAbmRmAw=</binary>
           </binaryDataArray>
-          <binaryDataArray encodedLength="144">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="152">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
-            <binary>eJxjYJjgxMAQAcR3gDgFiBOA2MCRgaENSNsA8S4g5gHiH0CxFUB6DxBvALJrgPQiIJ4HxC5AHAAUUwDiTUD2EiAuAOJtQAwyXwOIG6DmJgCxBJDdAsQznCDsA44QdSC2B9ReDScAxXYbZw==</binary>
+            <binary>eJxdjjsKgDAQRPcwYiHWYmdEJIqiwfgpvIxH82iieQnENI+dmZ2syPsW9UEGx+uEI7pn6ngbfO2oDuaaXAU3dHwpmGf2Vvosekcugwm5HZ+8TOyhh/tbaOJ7JYcNPd63sS7lr8/rPXs6/PMAVIYcpQ==</binary>
           </binaryDataArray>
-          <binaryDataArray arrayLength="39" encodedLength="152">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray arrayLength="39" encodedLength="256">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1003006" name="mean inverse reduced ion mobility array" value="" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <binary>eJwr377c/pbDCvtyIO1suNJe889y+5VLltl3t66wl5263D4rAMIX1IPIN8qtAKsBiYP4IH0gddu5l9szH19mP/nNCnu/pmX2j5dD9H+JX2Z/4eZysD6QGEgdSA/IDJCZMLUgfSCx2JfLwGpBGAASe0jR</binary>
+            <binary>eJxLK5py8d23L/YpR0ScpDm+2qdB+eG3zkdoqH21Z9z0QKj1/xf76+a54lOvfLE/+MggfqPAV/uj+qqrFn/6Yi/uuMWX9xVC/kDbJolDTxH63ffu1bnAjDAHph4mD7MPZp7pNK37ZQ+/2D//2h734MYX+1uL32VMkv1q/0PtzGnPC1/sfTi+pf0RQdivvGdJ9b/TX+xzZ9d+sfz9BW4fTB3MPJg9MHfA3IluLsw+mDq/DJmF2ncR5sJoAAD8qyw=</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </spectrum>
@@ -1557,34 +1557,34 @@
       <chromatogram index="0" id="TIC" defaultArrayLength="5">
         <cvParam cvRef="MS" accession="MS:1000235" name="total ion current chromatogram" value=""/>
         <binaryDataArrayList count="2">
-          <binaryDataArray encodedLength="40">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="60">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000595" name="time array" value="" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
-            <binary>eJxby5jo2syc6BrEmuiqyp7o+pMj0RUAPn8F9w==</binary>
+            <binary>eJxbpR+x1FRhjUO/97H8AiCtt6nZbxWQXhV/af0TIH1lf5eCvOIaBwBpkxHt</binary>
           </binaryDataArray>
-          <binaryDataArray encodedLength="40">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="48">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
-            <binary>eJybIMrhqRDM49lw9p3HA6aXHgcOxnoAAExaCHs=</binary>
+            <binary>eJxjYGBg2MSk6AikGFK6IPSGm7JgOkYBQlvs4HYEAHoaBmQ=</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
       <chromatogram index="1" id="BPC" defaultArrayLength="5">
         <cvParam cvRef="MS" accession="MS:1000628" name="basepeak chromatogram" value=""/>
         <binaryDataArrayList count="2">
-          <binaryDataArray encodedLength="40">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="60">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000595" name="time array" value="" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
-            <binary>eJxby5jo2syc6BrEmuiqyp7o+pMj0RUAPn8F9w==</binary>
+            <binary>eJxbpR+x1FRhjUO/97H8AiCtt6nZbxWQXhV/af0TIH1lf5eCvOIaBwBpkxHt</binary>
           </binaryDataArray>
-          <binaryDataArray encodedLength="40">
-            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+          <binaryDataArray encodedLength="44">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
-            <binary>eJxjUFjqwuDg5MLAwO7C0PDKmaGh0xkALSwFFA==</binary>
+            <binary>eJxjYACCJVMcQBSDRweEftAAoQNqIbRBoQMAeEgGFw==</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>

@@ -103,6 +103,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.comboStandards.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboStandards.FormattingEnabled = true;
             this.comboStandards.Name = "comboStandards";
+            this.comboStandards.SelectedIndexChanged += new System.EventHandler(this.comboStandards_SelectedIndexChanged);
             // 
             // cbIncludeAmbiguousMatches
             // 

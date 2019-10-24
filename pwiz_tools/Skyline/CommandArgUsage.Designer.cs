@@ -493,6 +493,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A regular expression that is applied to file names to select the ones that will be imported..
+        /// </summary>
+        internal static string _import_filename_pattern {
+            get {
+                return ResourceManager.GetString("_import_filename_pattern", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Waters lockmass correction m/z for negative ion scans..
         /// </summary>
         internal static string _import_lockmass_negative {
@@ -570,6 +579,15 @@ namespace pwiz.Skyline {
         internal static string _import_replicate_name {
             get {
                 return ResourceManager.GetString("_import_replicate_name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A regular expression that is applied to sample names (e.g. in a multi-injection .wiff file) to select the ones that will be imported..
+        /// </summary>
+        internal static string _import_samplename_pattern {
+            get {
+                return ResourceManager.GetString("_import_samplename_pattern", resourceCulture);
             }
         }
         
@@ -802,6 +820,33 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Areas used in CV calculations are normalized as specified. (default no normalization).
+        /// </summary>
+        internal static string _refine_cv_global_normalize {
+            get {
+                return ResourceManager.GetString("_refine_cv_global_normalize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Areas used in CV calculations are normalized to a reference type, e.g. &quot;heavy&quot;..
+        /// </summary>
+        internal static string _refine_cv_reference_normalize {
+            get {
+                return ResourceManager.GetString("_refine_cv_reference_normalize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All target precursors with peak area CV above the cutoff will be removed..
+        /// </summary>
+        internal static string _refine_cv_remove_above_cutoff {
+            get {
+                return ResourceManager.GetString("_refine_cv_remove_above_cutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Precursors of the specified isotope label type will be removed (default) or added if --refine-add-label-type is also used..
         /// </summary>
         internal static string _refine_label_type {
@@ -924,6 +969,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to All target precursors with less than the specified number of replicates with detection q value below the --refine-qvalue-cutoff are removed..
+        /// </summary>
+        internal static string _refine_minimum_detections {
+            get {
+                return ResourceManager.GetString("_refine_minimum_detections", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to All targets that do not correspond to a library match will be removed..
         /// </summary>
         internal static string _refine_missing_library {
@@ -950,6 +1004,15 @@ namespace pwiz.Skyline {
         internal static string _refine_prefer_larger_products {
             get {
                 return ResourceManager.GetString("_refine_prefer_larger_products", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All target precursors with a maximum detection q value above the cutoff will be removed. If --refine-minimum-detections is used then at least the specified number of replicates must have a detection q value below the cutoff..
+        /// </summary>
+        internal static string _refine_qvalue_cutoff {
+            get {
+                return ResourceManager.GetString("_refine_qvalue_cutoff", resourceCulture);
             }
         }
         
@@ -1136,6 +1199,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Causes settings changes to the global environment, e.g. added reports, libraries, enzymes, etc. to be saved to the program configuration file..
+        /// </summary>
+        internal static string _save_settings {
+            get {
+                return ResourceManager.GetString("_save_settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Specifies the type, &apos;minimal&apos; or &apos;complete&apos;, of archive to share when --share-zip is specified. Minimal is the default attempting to reduce the size of the archive to the minimum necessary to represent the targets in the document while &apos;complete&apos; maintains full fidelity of all project files..
         /// </summary>
         internal static string _share_type {
@@ -1299,6 +1371,42 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Changes the transition settings collision energy prediction setting to one of the previously defined options..
+        /// </summary>
+        internal static string _tran_predict_ce {
+            get {
+                return ResourceManager.GetString("_tran_predict_ce", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Changes the transition settings compensation voltage prediction setting to one of the previously defined options..
+        /// </summary>
+        internal static string _tran_predict_cov {
+            get {
+                return ResourceManager.GetString("_tran_predict_cov", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Changes the transition settings declustering potential prediction setting to one of the previously defined options..
+        /// </summary>
+        internal static string _tran_predict_dp {
+            get {
+                return ResourceManager.GetString("_tran_predict_dp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Changes the transition settings optimization library used in predicting instrument parameters to one of the previously defined options..
+        /// </summary>
+        internal static string _tran_predict_optdb {
+            get {
+                return ResourceManager.GetString("_tran_predict_optdb", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A comma-separated list of product ion charge states to apply to peptide fragments to generate product ion transitions. Changes the transition filter settings for the open document..
         /// </summary>
         internal static string _tran_product_ion_charges {
@@ -1313,6 +1421,15 @@ namespace pwiz.Skyline {
         internal static string _tran_product_ion_types {
             get {
                 return ResourceManager.GetString("_tran_product_ion_types", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Emits version information for the running installation.
+        /// </summary>
+        internal static string _version {
+            get {
+                return ResourceManager.GetString("_version", resourceCulture);
             }
         }
         
