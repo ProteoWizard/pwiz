@@ -340,21 +340,45 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
 
                 if (!isolationMzFilter_.empty())
                 {
+                    // swap values for min/max below
+                    int filteredScanEnd = scanBegin;
+                    int filteredScanBegin = scanEnd;
+
                     double isolationHalfWidth = info.isolationWidth / 2;
                     double isolationLowerBound = info.isolationMz - isolationHalfWidth;
                     double isolationUpperBound = info.isolationMz + isolationHalfWidth;
+
+                    // the scan range is set to the superset of all mobility filters that match the frame
                     for (const auto& mzMobilityWindow : isolationMzFilter_)
                     {
-                        if (!mzMobilityWindow.mobilityBounds || mzMobilityWindow.mz < isolationLowerBound || mzMobilityWindow.mz > isolationUpperBound)
+                        if (mzMobilityWindow.mz < isolationLowerBound || mzMobilityWindow.mz > isolationUpperBound)
                             continue;
+
+                        // if any matching m/z filter has no mobility filter, then all scans must be included
+                        if (!mzMobilityWindow.mobilityBounds)
+                        {
+                            filteredScanBegin = scanBegin;
+                            filteredScanEnd = scanEnd;
+                            break;
+                        }
 
                         // 1/k0 is inverse to scan number (lowest scan number is highest 1/k0)
                         auto scanNumLowerBoundItr = scanNumberByOneOverK0.upper_bound(mzMobilityWindow.mobilityBounds.get().second); --scanNumLowerBoundItr;
                         auto scanNumUpperBoundItr = scanNumberByOneOverK0.upper_bound(mzMobilityWindow.mobilityBounds.get().first); if (scanNumUpperBoundItr != scanNumberByOneOverK0.begin()) --scanNumUpperBoundItr;
-                        scanBegin = scanNumLowerBoundItr->second;
-                        scanEnd = scanNumUpperBoundItr->second;
-                        info.numScans = 1 + scanEnd - scanBegin;
+                        filteredScanBegin = min(filteredScanBegin, scanNumLowerBoundItr->second);
+                        filteredScanEnd = max(filteredScanEnd, scanNumUpperBoundItr->second);
+                        /*cout << "Filtering frame " << frame->frameId_ << " for m/z " << mzMobilityWindow.mz <<
+                                " and 1/k0 [" << mzMobilityWindow.mobilityBounds.get().second << "," << mzMobilityWindow.mobilityBounds.get().first << "]" <<
+                                " (scans [" << scanBegin << "," << scanEnd << "])\n";*/
                     }
+
+                    // if no mobility filters matched, the frame will be filtered out (windowGroup remains unset)
+                    if (filteredScanBegin > filteredScanEnd)
+                        continue;
+
+                    scanBegin = filteredScanBegin;
+                    scanEnd = filteredScanEnd;
+                    info.numScans = 1 + scanEnd - scanBegin;
                 }
 
                 frame->windowGroup_ = row.get<int>(++idx);
@@ -364,7 +388,8 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
             for (const auto& kvp : frames_)
             {
                 const auto& frame = kvp.second;
-                frame->diaPasefIsolationInfoByScanNumber_.rbegin()->second.numScans--; // the last ScanNumEnd for each DIA window seems to be exclusive rather than inclusive
+                if (frame->windowGroup_) // if windowGroup is unset for DIA, the frame is filtered out
+                    frame->diaPasefIsolationInfoByScanNumber_.rbegin()->second.numScans--; // the last ScanNumEnd for each DIA window seems to be exclusive rather than inclusive
             }
         }
     }
