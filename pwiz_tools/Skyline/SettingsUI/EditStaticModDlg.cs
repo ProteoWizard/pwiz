@@ -659,17 +659,17 @@ namespace pwiz.Skyline.SettingsUI
 
         public void EditLoss()
         {
-            var lossEdit = (FragmentLoss) this.listLosses.SelectedItem;
-            var listLosses = new List<FragmentLoss>(Losses);
-            listLosses.Remove(lossEdit);
+            var lossEdit = (FragmentLoss) listLosses.SelectedItem;
+            var listFragmentLosses = new List<FragmentLoss>(Losses);
+            listFragmentLosses.Remove(lossEdit);
 
-            using (var dlg = new EditFragmentLossDlg(listLosses) { Loss = lossEdit })
+            using (var dlg = new EditFragmentLossDlg(listFragmentLosses) { Loss = lossEdit })
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    listLosses.Add(dlg.Loss);
-                    Losses = listLosses;
-                    this.listLosses.SelectedItem = dlg.Loss;
+                    listFragmentLosses.Add(dlg.Loss);
+                    Losses = listFragmentLosses;
+                    listLosses.SelectedItem = dlg.Loss;
                 }
             }
         }
