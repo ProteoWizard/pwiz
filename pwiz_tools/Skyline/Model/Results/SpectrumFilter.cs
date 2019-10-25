@@ -743,7 +743,8 @@ namespace pwiz.Skyline.Model.Results
                 yield break;
 
             // All filter pairs have a shot at filtering the MS1 scans
-            bool isSimSpectra = IsSimSpectrum(spectra.First(), spectra);
+            var firstSpectrum = spectra.First();
+            bool isSimSpectra = IsSimSpectrum(firstSpectrum, spectra);
             SpectrumFilterPair[] filterPairs;
             if (isSimSpectra)
             {
@@ -751,10 +752,10 @@ namespace pwiz.Skyline.Model.Results
             }
             else
             {
-                if (_filterMzValuesFAIMSDict != null && spectra.First().IonMobility.HasValue)
+                if (_filterMzValuesFAIMSDict != null && firstSpectrum.IonMobility.HasValue)
                 {
                     // For FAIMS use only filters that match the CV
-                    if (!_filterMzValuesFAIMSDict.TryGetValue(spectra.First().IonMobility.Mobility.Value, out filterPairs))
+                    if (!_filterMzValuesFAIMSDict.TryGetValue(firstSpectrum.IonMobility.Mobility.Value, out filterPairs))
                     {
                         yield break;
                     }
@@ -764,10 +765,14 @@ namespace pwiz.Skyline.Model.Results
                     filterPairs = _filterMzValues;
                 }
             }
+            bool orderedByMz = firstSpectrum.IonMobilities == null; // 3D spectra may come ordered by ion mobility
             foreach (var filterPair in filterPairs)
             {
                 if (!filterPair.ContainsRetentionTime(retentionTime.Value))
                     continue;
+
+                EnsureMzOrdered(spectra, ref orderedByMz);  // CONSIDER: Move this to a 3rd spectrum processing thread? This keeps it off the spectrum retrieval thread
+
                 var filteredSrmSpectrum = filterPair.FilterQ1SpectrumList(spectra, isSimSpectra);
                 if (filteredSrmSpectrum != null)
                     yield return filteredSrmSpectrum;
@@ -798,7 +803,7 @@ namespace pwiz.Skyline.Model.Results
                     if (pasefAwareFilter.PreFilter(filterPair, isoWin, firstSpectrum))
                         continue;
 
-                    EnsureMzOrdered(spectra, ref orderedByMz);  // TODO: Move this elsewhere
+                    EnsureMzOrdered(spectra, ref orderedByMz);  // CONSIDER: Move this to a 3rd spectrum processing thread? This keeps it off the spectrum retrieval thread
 
                     // This line does the bulk of the work of pulling chromatogram points from spectra
                     var filteredSrmSpectrum = filterPair.FilterQ3SpectrumList(spectra, UseDriftTimeHighEnergyOffset());
