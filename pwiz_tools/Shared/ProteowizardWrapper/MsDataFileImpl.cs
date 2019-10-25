@@ -70,11 +70,7 @@ namespace pwiz.ProteowizardWrapper
         private readonly bool _requireVendorCentroidedMS1;
         private readonly bool _requireVendorCentroidedMS2;
 
-        private DetailLevel _detailMsLevel = DetailLevel.InstantMetadata;
-
-        private DetailLevel _detailStartTime = DetailLevel.InstantMetadata;
-
-        private DetailLevel _detailIonMobility = DetailLevel.InstantMetadata;
+        private DetailLevel _detailFastMetaData = DetailLevel.InstantMetadata;
 
         private static double[] ToArray(BinaryDataArray binaryDataArray)
         {
@@ -163,10 +159,10 @@ namespace pwiz.ProteowizardWrapper
                     preferOnlyMsLevel = preferOnlyMsLevel,
                     allowMsMsWithoutPrecursor = false,
                     combineIonMobilitySpectra = true,
-                    /*isolationMzAndMobilityFilter = precursorMzAndIonMobilityWindows?.Select(w => 
-                        w.IonMobility.HasValue ? 
-                            new MzMobilityWindow(w.MZ, w.IonMobility.Value , (w.IonMobilityWindow??0)/2): 
-                            new MzMobilityWindow(w.MZ)).ToList()*/ // disabled until bug with diagonalSWATH fixed
+//                    isolationMzAndMobilityFilter = precursorMzAndIonMobilityWindows?.Select(w => 
+//                        w.IonMobility.HasValue ? 
+//                            new MzMobilityWindow(w.MZ, w.IonMobility.Value , (w.IonMobilityWindow??0)/2): 
+//                            new MzMobilityWindow(w.MZ)).ToList() // disabled until bug with diagonalSWATH fixed
                 };
                 _lockmassParameters = lockmassParameters;
                 FULL_READER_LIST.read(path, _msDataFile, sampleIndex, _config);
@@ -836,9 +832,8 @@ namespace pwiz.ProteowizardWrapper
                     data = s.getArrayByCVID(CVID.MS_mean_inverse_reduced_ion_mobility_array)?.data ??
                            s.getArrayByCVID(CVID.MS_raw_inverse_reduced_ion_mobility_array)?.data;
                     break;
-                default:
-                    break;
-                    //throw new InvalidDataException(string.Format(@"mobility type {0} does not support ion mobility arrays", IonMobilityUnits));
+//                default:
+//                    throw new InvalidDataException(string.Format(@"mobility type {0} does not support ion mobility arrays", IonMobilityUnits));
             }
 
             return data?.Storage();
@@ -892,6 +887,13 @@ namespace pwiz.ProteowizardWrapper
                     msDataSpectrum.Mzs = ToArray(spectrum.getMZArray());
                     msDataSpectrum.Intensities = ToArray(spectrum.getIntensityArray());
                     msDataSpectrum.IonMobilities = GetIonMobilityArray(spectrum);
+                    if (msDataSpectrum.IonMobilities != null)
+                    {
+                        double upper = msDataSpectrum.IonMobilities.First();
+                        double lower = msDataSpectrum.IonMobilities.Last();
+                        msDataSpectrum.MinIonMobility = Math.Min(upper, lower);
+                        msDataSpectrum.MaxIonMobility = Math.Max(upper, lower);
+                    }
 
                     if (msDataSpectrum.Level == 1 && _config.simAsSpectra &&
                             spectrum.scanList.scans[0].scanWindows.Count > 0)
@@ -1070,21 +1072,25 @@ namespace pwiz.ProteowizardWrapper
             return spectrum.hasCVParam(CVID.MS_SRM_spectrum);
         }
 
+        public TVal GetMetaDataValue<TVal>(int scanIndex, Func<Spectrum, TVal> getValue, Func<TVal, bool> isUsableValue,
+            Func<TVal, TVal> returnValue)
+        {
+            var spectrum = GetCachedSpectrum(scanIndex, _detailFastMetaData);
+            TVal val = getValue(spectrum);
+            if (isUsableValue(val) || _detailFastMetaData >= DetailLevel.FullMetadata)
+                return returnValue(val);
+
+            // If level is not found with faster metadata methods, try the slower ones.
+            if (_detailFastMetaData == DetailLevel.InstantMetadata)
+                _detailFastMetaData = DetailLevel.FastMetadata;
+            else if (_detailFastMetaData == DetailLevel.FastMetadata)
+                _detailFastMetaData = DetailLevel.FullMetadata;
+            return GetMetaDataValue(scanIndex, getValue, isUsableValue, returnValue);
+        }
+
         public int GetMsLevel(int scanIndex)
         {
-            var spectrum = GetCachedSpectrum(scanIndex, _detailMsLevel);
-            {
-                int? level = GetMsLevel(spectrum);
-                if (level.HasValue || _detailMsLevel == DetailLevel.FullMetadata)
-                    return level ?? 0;
-
-                // If level is not found with faster metadata methods, try the slower ones.
-                if (_detailMsLevel == DetailLevel.InstantMetadata)
-                    _detailMsLevel = DetailLevel.FastMetadata;
-                else if (_detailMsLevel == DetailLevel.FastMetadata)
-                    _detailMsLevel = DetailLevel.FullMetadata;
-                return GetMsLevel(scanIndex);
-            }
+            return (int) GetMetaDataValue(scanIndex, GetMsLevel, v => v.HasValue, v => v ?? 0);
         }
 
         private static int? GetMsLevel(Spectrum spectrum)
@@ -1095,26 +1101,9 @@ namespace pwiz.ProteowizardWrapper
             return (int) param.value;
         }
 
-        public bool GetIonMobilityIsInexpensive
-        {
-            get { return _detailIonMobility <= DetailLevel.FastMetadata; }
-        }
-
         public IonMobilityValue GetIonMobility(int scanIndex) // for non-combined-mode IMS
         {
-            var spectrum = GetCachedSpectrum(scanIndex, _detailIonMobility);
-            {
-                var ionMobility = GetIonMobility(spectrum);
-                if ((ionMobility != null && ionMobility.HasValue) || _detailIonMobility >= DetailLevel.FullMetadata)
-                    return ionMobility;
-
-                // If level is not found with faster metadata methods, try the slower ones.
-                if (_detailIonMobility == DetailLevel.InstantMetadata)
-                    _detailIonMobility = DetailLevel.FastMetadata;
-                else if (_detailIonMobility == DetailLevel.FastMetadata)
-                    _detailIonMobility = DetailLevel.FullMetadata;
-                return GetIonMobility(scanIndex);
-            }
+            return GetMetaDataValue(scanIndex, GetIonMobility, v => v != null && v.HasValue, v => v);
         }
 
         private IonMobilityValue GetIonMobility(Spectrum spectrum) // for non-combined-mode IMS
@@ -1165,19 +1154,7 @@ namespace pwiz.ProteowizardWrapper
 
         public double? GetStartTime(int scanIndex)
         {
-            var spectrum = GetCachedSpectrum(scanIndex, _detailStartTime);
-            {
-                double? startTime = GetStartTime(spectrum);
-                if (startTime.HasValue || _detailStartTime >= DetailLevel.FullMetadata)
-                    return startTime ?? 0;
-
-                // If level is not found with faster metadata methods, try the slower ones.
-                if (_detailStartTime == DetailLevel.InstantMetadata)
-                    _detailStartTime = DetailLevel.FastMetadata;
-                else if (_detailStartTime == DetailLevel.FastMetadata)
-                    _detailStartTime = DetailLevel.FullMetadata;
-                return GetStartTime(scanIndex);
-            }
+            return GetMetaDataValue(scanIndex, GetStartTime, v => v.HasValue, v => v ?? 0);
         }
 
         private static double? GetStartTime(Spectrum spectrum)
@@ -1191,24 +1168,11 @@ namespace pwiz.ProteowizardWrapper
             return param.timeInSeconds() / 60;
         }
 
-        public MsTimeAndPrecursors GetInstantTimeAndPrecursors(int scanIndex)
-        {
-            var spectrum = GetCachedSpectrum(scanIndex, DetailLevel.InstantMetadata);
-            {
-                return new MsTimeAndPrecursors
-                {
-                    Precursors = GetPrecursors(spectrum),
-                    RetentionTime = GetStartTime(spectrum)
-                };
-            }
-        }
-
         public MsPrecursor[] GetPrecursors(int scanIndex)
         {
-            var spectrum = GetCachedSpectrum(scanIndex, false);
-            {
-                return GetPrecursors(spectrum);
-            }
+            if (GetMsLevel(scanIndex) < 2)
+                return MsDataSpectrum.NO_PRECURSORS;
+            return GetMetaDataValue(scanIndex, GetPrecursors, v => v.Length > 0, v => v);
         }
 
         private MsPrecursor[] GetPrecursors(Spectrum spectrum)
@@ -1216,7 +1180,7 @@ namespace pwiz.ProteowizardWrapper
             // return precursors with highest ms level
             var precursorsByMsLevel = GetPrecursorsByMsLevel(spectrum);
             if (precursorsByMsLevel.Count == 0)
-                return new MsPrecursor[0];
+                return MsDataSpectrum.NO_PRECURSORS;
             return precursorsByMsLevel[precursorsByMsLevel.Keys.Max()].ToArray();
         }
 
@@ -1461,20 +1425,24 @@ namespace pwiz.ProteowizardWrapper
         }
     }
 
-    public sealed class MsTimeAndPrecursors
-    {
-        public double? RetentionTime { get; set; }
-        public MsPrecursor[] Precursors { get; set; }
-    }
-
     public sealed class MsDataSpectrum
     {
+        public static readonly MsPrecursor[] NO_PRECURSORS = new MsPrecursor[0];
+
         private IonMobilityValue _ionMobility;
         public string Id { get; set; }
         public int Level { get; set; }
         public int Index { get; set; } // index into parent file, if any
         public double? RetentionTime { get; set; }
-        public IonMobilityValue IonMobility { get { return _ionMobility ?? IonMobilityValue.EMPTY; } set { _ionMobility = value; } } // for non-combined-mode IMS
+
+        /// <summary>
+        /// For non-combined-mode IMS
+        /// </summary>
+        public IonMobilityValue IonMobility
+        {
+            get { return _ionMobility ?? IonMobilityValue.EMPTY; }
+            set { _ionMobility = value; }
+        }
 
         public IList<MsPrecursor> GetPrecursorsByMsLevel(int level)
         {
@@ -1495,9 +1463,11 @@ namespace pwiz.ProteowizardWrapper
             {
                 if ((PrecursorsByMsLevel?.Count ?? 0) == 0)
                 {
-                    return new MsPrecursor[0];
+                    return NO_PRECURSORS;
                 }
 
+                // Disable ReSharper warning about NRE which can't happen with above logic
+                // ReSharper disable once PossibleNullReferenceException
                 return GetPrecursorsByMsLevel(PrecursorsByMsLevel.Keys.Max()).ToArray();
             }
             set
@@ -1511,6 +1481,8 @@ namespace pwiz.ProteowizardWrapper
         public double[] Mzs { get; set; }
         public double[] Intensities { get; set; }
         public double[] IonMobilities { get; set; } // for combined-mode IMS (may be null)
+        public double? MinIonMobility { get; set; }
+        public double? MaxIonMobility { get; set; }
         public int WindowGroup { get; set; } // For Bruker diaPASEF
 
         public static int WatersFunctionNumberFromId(string id)

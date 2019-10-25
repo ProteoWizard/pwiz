@@ -934,6 +934,26 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
+        /// Use when you have more than just one other array to sort. Otherwise, consider using Linq
+        /// </summary>
+        public static void Sort<TItem>(TItem[] array, params TItem[][] secondaryArrays)
+        {
+            int[] sortIndexes;
+            Sort(array, out sortIndexes);
+            int len = array.Length;
+            var buffer = new TItem[len];
+            foreach (var secondaryArray in secondaryArrays)
+            {
+                if (secondaryArray == null)
+                    continue;
+
+                Array.Copy(secondaryArray, buffer, len);
+                for (int i = 0; i < len; i++)
+                    secondaryArray[i] = buffer[sortIndexes[i]];
+            }
+        }
+
+        /// <summary>
         /// Apply the ordering gotten from the sorting of an array (see Sort method above)
         /// to a new array.
         /// </summary>

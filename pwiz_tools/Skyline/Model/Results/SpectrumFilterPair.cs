@@ -106,6 +106,8 @@ namespace pwiz.Skyline.Model.Results
         public double? MaxTime { get; private set; }
         public double? MinIonMobilityValue { get; set; }
         public double? MaxIonMobilityValue { get; set; }
+        public int? BestWindowGroup { get; private set; }
+        public double? BestWindowGroupDistance { get; private set; }
         private IonMobilityFilter IonMobilityInfo { get; set; }
         private SpectrumProductFilter[] Ms1ProductFilters { get; set; }
         private SpectrumProductFilter[] SimProductFilters { get; set; }
@@ -243,7 +245,8 @@ namespace pwiz.Skyline.Model.Results
                 spectrumCount++;
 
                 // Filter on ion mobility, if any - gross check before we look at individual fragment high energy offsets
-                if (!ContainsIonMobilityValue(spectrum.IonMobility, maxIonMobilityHighEnergyOffset) &&
+                if (spectrum.IonMobilities == null &&   // Not for 3D spectra
+                    !ContainsIonMobilityValue(spectrum.IonMobility, maxIonMobilityHighEnergyOffset) &&
                     !ContainsIonMobilityValue(spectrum.IonMobility, minIonMobilityHighEnergyOffset))
                 {
                     if (specIndex > specIndexFirst && specIndexFirst > 0)
@@ -265,6 +268,7 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 var intensityArray = spectrum.Intensities;
+                var imsArray = spectrum.IonMobilities;
 
                 // Search for matching peaks for each Q3 filter
                 // Use binary search to get to the first m/z value to be considered more quickly
@@ -274,9 +278,12 @@ namespace pwiz.Skyline.Model.Results
                 int iPeak = 0;
                 for (int targetIndex = 0; targetIndex < targetCount; targetIndex++)
                 {
-                    // If fragments have individual high energy ion mobility offsets, recheck
                     var productFilter = productFilters[targetIndex];
-                    if (productFilter.HighEnergyIonMobilityValueOffset != 0 &&
+                    // If fragments have individual high energy ion mobility offsets, recheck
+                    // but only if there is no IonMobilities array. Otherwise IMS filtering is
+                    // performed during extraction
+                    if (spectrum.IonMobilities == null &&
+                        productFilter.HighEnergyIonMobilityValueOffset != 0 &&
                         !ContainsIonMobilityValue(spectrum.IonMobility, productFilter.HighEnergyIonMobilityValueOffset))
                     {
                         continue;
@@ -309,6 +316,10 @@ namespace pwiz.Skyline.Model.Results
                     {
                         double mz = mzArray[iNext];
                         double intensity = intensityArray[iNext];
+
+                        // Avoid adding points that are not within the allowed ion mobility range
+                        if (imsArray != null && !ContainsIonMobilityValue(imsArray[iNext], productFilter.HighEnergyIonMobilityValueOffset))
+                            continue;
                     
                         if (Extractor == ChromExtractor.summed)
                             totalIntensity += intensity;
@@ -526,10 +537,13 @@ namespace pwiz.Skyline.Model.Results
 
         public bool ContainsIonMobilityValue(IonMobilityValue ionMobility, double highEnergyOffset)
         {
-            if (!ionMobility.HasValue)
-                return true; // It doesn't NOT have the ion mobility, since there isn't one
-            return (!MinIonMobilityValue.HasValue || MinIonMobilityValue.Value+highEnergyOffset <= ionMobility.Mobility) &&
-                (!MaxIonMobilityValue.HasValue || MaxIonMobilityValue.Value+highEnergyOffset >= ionMobility.Mobility);
+            return !ionMobility.HasValue || ContainsIonMobilityValue(ionMobility.Mobility.Value, highEnergyOffset);
+        }
+
+        public bool ContainsIonMobilityValue(double ionMobilityValue, double highEnergyOffset)
+        {
+            return (!MinIonMobilityValue.HasValue || MinIonMobilityValue.Value + highEnergyOffset <= ionMobilityValue) &&
+                   (!MaxIonMobilityValue.HasValue || MaxIonMobilityValue.Value + highEnergyOffset >= ionMobilityValue);
         }
 
         public IonMobilityFilter GetIonMobilityWindow()
@@ -545,6 +559,23 @@ namespace pwiz.Skyline.Model.Results
             {
                 return IonMobilityFilter.EMPTY;
             }
+        }
+
+        public bool UpdateBestWindowGroup(int windowGroup, double distance)
+        {
+            if (BestWindowGroup.HasValue)
+            {
+                // Already have a best value and this is it
+                if (BestWindowGroup.Value == windowGroup)
+                    return true;
+                // Not it and the distance is not closer
+                if (BestWindowGroupDistance.Value <= distance)
+                    return false;
+            }
+            // This becomes the best window group
+            BestWindowGroup = windowGroup;
+            BestWindowGroupDistance = distance;
+            return true;
         }
 
         public bool MatchesDdaPrecursor(SignedMz precursorMz)

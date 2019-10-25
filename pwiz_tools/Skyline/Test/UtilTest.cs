@@ -209,5 +209,28 @@ namespace pwiz.SkylineTest
         {
             Assert.IsFalse(ParallelEx.SINGLE_THREADED);
         }
+
+        [TestMethod]
+        public void ArrayUtilSortTest()
+        {
+            var arrayBase = new[] {4, 2, 1, 3, 5};
+            int[] array2 = new int[arrayBase.Length];
+            int[] array3 = new int[arrayBase.Length];
+            int[] array4 = new int[arrayBase.Length];
+            for (int i = 0; i < arrayBase.Length; i++)
+            {
+                array2[i] = arrayBase[i];
+                array3[i] = arrayBase[i];
+                array4[i] = arrayBase[i];
+            }
+            int[] sortIndexes;
+            ArrayUtil.Sort(arrayBase, out sortIndexes);
+            AssertEx.AreEqualDeep(new[] {2, 1, 3, 0, 4}, sortIndexes);
+            ArrayUtil.Sort(array2, array3, array4);
+            AssertEx.AreEqualDeep(arrayBase, array2);
+            AssertEx.AreEqualDeep(arrayBase, array3);
+            AssertEx.AreEqualDeep(arrayBase, array4);
+        }
+
     }
 }

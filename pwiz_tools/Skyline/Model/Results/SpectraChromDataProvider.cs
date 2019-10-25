@@ -946,7 +946,12 @@ namespace pwiz.Skyline.Model.Results
                     }
                     else
                     {
-                        var ionMobility = _filter.HasIonMobilityFilters ? _lookaheadContext.GetIonMobility(i) : null ; // Read this first to take advantage of cache behavior
+                        // CONSIDER: This showed up as 10% in diaPASEF profiling because it requires FullMetaData
+                        // It no longer provides any benefit in that case, because of the use of combined 3D spectra
+                        // Before reinstating this filter, we need a way of deciding whether it will be of any use
+                        // by querying the MsDataFile, did it succeed in producing combined spectra. Otherwise,
+                        // this is a costly operation with little benefit.
+//                        var ionMobility = _filter.HasIonMobilityFilters ? _lookaheadContext.GetIonMobility(i) : null ; // Read this first to take advantage of cache behavior
 
                         // If MS/MS filtering is not enabled, skip anything that is not a MS1 scan
                         var msLevel = _lookaheadContext.GetMsLevel(i);
@@ -958,8 +963,7 @@ namespace pwiz.Skyline.Model.Results
                         {
                             // Only do these checks if we can get the information instantly. Otherwise,
                             // this will slow down processing in more complex cases.
-                            var timeAndPrecursors = _lookaheadContext.GetInstantTimeAndPrecursors(i);
-                            double? rtCheck = timeAndPrecursors.RetentionTime;
+                            double? rtCheck = _lookaheadContext.GetRetentionTime(i);
                             if (_filter.IsOutsideRetentionTimeRange(rtCheck))
                             {
                                 // Leave an update cue for the chromatogram painter then move on
@@ -968,7 +972,7 @@ namespace pwiz.Skyline.Model.Results
                                 continue;
                             }
 
-                            var precursors = timeAndPrecursors.Precursors;
+                            var precursors = _lookaheadContext.GetPrecursors(i);
                             if (msLevel > 1 && precursors.Any() && !_filter.HasProductFilterPairs(rtCheck, precursors))
                             {
                                 continue;
@@ -976,10 +980,10 @@ namespace pwiz.Skyline.Model.Results
                         }
 
                         // Ignore uninteresting ion mobility ranges
-                        if (ionMobility != null && ionMobility.HasValue && _filter.IsOutsideIonMobilityRange(ionMobility))
-                        {
-                            continue;
-                        }
+//                        if (ionMobility != null && ionMobility.HasValue && _filter.IsOutsideIonMobilityRange(ionMobility))
+//                        {
+//                            continue;
+//                        }
 
                         // Inexpensive checks are complete, now actually get the spectrum data
                         var nextSpectrum = _lookaheadContext.GetSpectrum(i);
@@ -1256,16 +1260,12 @@ namespace pwiz.Skyline.Model.Results
                     return _dataFile.GetStartTime(index);  // Returns 0 if retrieval is too expensive
             }
 
-            public MsTimeAndPrecursors GetInstantTimeAndPrecursors(int index)
+            public MsPrecursor[] GetPrecursors(int index)
             {
                 if (index == _lookAheadIndex && _lookAheadDataSpectrum != null)
-                    return new MsTimeAndPrecursors
-                    {
-                        Precursors = _lookAheadDataSpectrum.Precursors,
-                        RetentionTime = _lookAheadDataSpectrum.RetentionTime
-                    };
+                    return _lookAheadDataSpectrum.Precursors;
                 else
-                    return _dataFile.GetInstantTimeAndPrecursors(index);
+                    return _dataFile.GetPrecursors(index);
             }
 
             public MsDataSpectrum GetSpectrum(int index)
@@ -1336,6 +1336,10 @@ namespace pwiz.Skyline.Model.Results
                             var nextRT = _dataFile.GetStartTime(_lookAheadIndex);
                             if ((_rt ?? 0) != (nextRT ?? -1))
                                 break; // We've left the RT range, done here
+                            var nextPrecursors = _dataFile.GetPrecursors(_lookAheadIndex);
+                            // Allow a lack of precursors in subsequent spectra, but not new and different precursors
+                            if (nextPrecursors.Length > 0 && !ArrayUtil.EqualsDeep(nextPrecursors, dataSpectrum.Precursors))
+                                break; // Different isolation
                             if (IsNextSpectrumIonMobilityForCurrentRT(nextIM))
                             {
                                 foundUsefulSpectrum = true;
