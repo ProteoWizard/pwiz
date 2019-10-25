@@ -1337,8 +1337,8 @@ namespace pwiz.Skyline.Model.Results
                             if ((_rt ?? 0) != (nextRT ?? -1))
                                 break; // We've left the RT range, done here
                             var nextPrecursors = _dataFile.GetPrecursors(_lookAheadIndex);
-                            // Allow a lack of precursors in subsequent spectra, but not new and different precursors
-                            if (nextPrecursors.Length > 0 && !ArrayUtil.EqualsDeep(nextPrecursors, dataSpectrum.Precursors))
+                            // Unless doing All-Ions pay attention to changes in precursor isolation
+                            if (!_filter.IsAllIons && !ArrayUtil.EqualsDeep(nextPrecursors, dataSpectrum.Precursors))
                                 break; // Different isolation
                             if (IsNextSpectrumIonMobilityForCurrentRT(nextIM))
                             {

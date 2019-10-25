@@ -158,7 +158,7 @@ namespace pwiz.ProteowizardWrapper
                     ignoreZeroIntensityPoints = ignoreZeroIntensityPoints,
                     preferOnlyMsLevel = preferOnlyMsLevel,
                     allowMsMsWithoutPrecursor = false,
-                    combineIonMobilitySpectra = true,
+                    combineIonMobilitySpectra = path.EndsWith(@".d") && File.Exists(Path.Combine(path, "analysis.tdf")) // Currently only supported with Bruker TDF files
 //                    isolationMzAndMobilityFilter = precursorMzAndIonMobilityWindows?.Select(w => 
 //                        w.IonMobility.HasValue ? 
 //                            new MzMobilityWindow(w.MZ, w.IonMobility.Value , (w.IonMobilityWindow??0)/2): 
@@ -889,10 +889,15 @@ namespace pwiz.ProteowizardWrapper
                     msDataSpectrum.IonMobilities = GetIonMobilityArray(spectrum);
                     if (msDataSpectrum.IonMobilities != null)
                     {
-                        double upper = msDataSpectrum.IonMobilities.First();
-                        double lower = msDataSpectrum.IonMobilities.Last();
-                        msDataSpectrum.MinIonMobility = Math.Min(upper, lower);
-                        msDataSpectrum.MaxIonMobility = Math.Max(upper, lower);
+                        // One more linear walk should be fine, given how much copying and walking gets done
+                        double min = double.MaxValue, max = double.MinValue;
+                        foreach (var ionMobility in msDataSpectrum.IonMobilities)
+                        {
+                            min = Math.Min(min, ionMobility);
+                            max = Math.Max(max, ionMobility);
+                        }
+                        msDataSpectrum.MinIonMobility = min;
+                        msDataSpectrum.MaxIonMobility = max;
                     }
 
                     if (msDataSpectrum.Level == 1 && _config.simAsSpectra &&

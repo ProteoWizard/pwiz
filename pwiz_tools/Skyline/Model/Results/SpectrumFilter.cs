@@ -595,6 +595,14 @@ namespace pwiz.Skyline.Model.Results
         public bool IsSharedTime { get { return _isSharedTime; } }
         public bool IsAgilentMse { get { return _isAgilentMse; } }
 
+        public bool IsAllIons
+        {
+            get
+            {
+                return _acquisitionMethod == FullScanAcquisitionMethod.DIA &&
+                       _fullScan.IsolationScheme.IsAllIons;
+            }
+        }
 
         public bool ContainsTime(double time)
         {
