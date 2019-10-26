@@ -1332,14 +1332,16 @@ namespace pwiz.Skyline.Model.Results
                         var foundUsefulSpectrum = false;
                         while (_lookAheadIndex < _lenSpectra)
                         {
-                            var nextIM = _dataFile.GetIonMobility(_lookAheadIndex); // Get this before RT to take advantage of cache behavior
                             var nextRT = _dataFile.GetStartTime(_lookAheadIndex);
                             if ((_rt ?? 0) != (nextRT ?? -1))
                                 break; // We've left the RT range, done here
                             var nextPrecursors = _dataFile.GetPrecursors(_lookAheadIndex);
                             // Unless doing All-Ions pay attention to changes in precursor isolation
-                            if (!_filter.IsAllIons && !ArrayUtil.EqualsDeep(nextPrecursors, dataSpectrum.Precursors))
+                            // Neither do we ever expect to see a transition in MS1 without an RT change
+                            // So, ignore the case when nextPrecursors are empty
+                            if (!_filter.IsAllIons && nextPrecursors.Length > 0 && !ArrayUtil.EqualsDeep(nextPrecursors, dataSpectrum.Precursors))
                                 break; // Different isolation
+                            var nextIM = _dataFile.GetIonMobility(_lookAheadIndex);
                             if (IsNextSpectrumIonMobilityForCurrentRT(nextIM))
                             {
                                 foundUsefulSpectrum = true;
