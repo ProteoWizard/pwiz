@@ -109,7 +109,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public double MonoisotopicMass { get; private set; }
         [Track]
         public double AverageMass { get; private set; }
-        [Track]
+        [Track(defaultValues: typeof(DefaultValuesZero))]
         public int Charge { get; private set; }
 
         public double GetMass(MassType massType)
