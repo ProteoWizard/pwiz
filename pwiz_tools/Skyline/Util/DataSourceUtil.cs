@@ -41,7 +41,6 @@ namespace pwiz.Skyline.Util
         public const string EXT_MZ5 = ".mz5";
         public const string EXT_XML = ".xml";
         public const string EXT_UIMF = ".uimf";
-        public const string EXT_CHORUSRESPONSE = ".chorusresponse";
         public const string EXT_WATERS_RAW = ".raw";
         public const string EXT_AGILENT_BRUKER_RAW = ".d";
 
@@ -126,14 +125,6 @@ namespace pwiz.Skyline.Util
                 case EXT_MZML: return TYPE_MZML;
                 case EXT_MZ5: return TYPE_MZ5;
                 case EXT_XML: return GetSourceTypeFromXML(fileInfo.FullName);
-                case EXT_CHORUSRESPONSE:
-                {
-                    if (Settings.Default.EnableChorus)
-                    {
-                        return TYPE_CHORUSRESPONSE;
-                    }
-                    return UNKNOWN_TYPE;
-                }
                 case EXT_UIMF: return TYPE_UIMF;
                 default: return UNKNOWN_TYPE;
             }
