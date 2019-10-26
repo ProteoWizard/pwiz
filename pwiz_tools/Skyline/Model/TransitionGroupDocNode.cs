@@ -245,7 +245,7 @@ namespace pwiz.Skyline.Model
         /// </summary>
         [TrackChildren]
         public ExplicitTransitionGroupValues ExplicitValues { get; private set; }
-        [Track]
+        [Track(defaultValues: typeof(DefaultValuesNull))]
         public double? PrecursorConcentration { get; private set; }
 
         public Peptide Peptide { get { return TransitionGroup.Peptide; } }
