@@ -1168,21 +1168,6 @@ namespace pwiz.Skyline.Properties
         }
 
         [UserScopedSetting]
-        public bool EnableChorus
-        {
-            get
-            {
-                var value = this[@"EnableChorus"];
-                if (value == null)
-                {
-                    return false;
-                }
-                return (bool) value;
-            }
-            set { this[@"EnableChorus"] = value; }
-        }
-
-        [UserScopedSetting]
         public CalibrationCurveOptions CalibrationCurveOptions
         {
             get { 
