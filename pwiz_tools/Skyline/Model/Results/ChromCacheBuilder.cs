@@ -182,7 +182,7 @@ namespace pwiz.Skyline.Model.Results
                 ChromDataProvider provider = null;
                 try
                 {
-                    if (dataFilePathRecalc == null && !RemoteChromDataProvider.IsRemoteChromFile(dataFilePath))
+                    if (dataFilePathRecalc == null)
                     {
                         // Always use SIM as spectra, if any full-scan chromatogram extraction is enabled
                         var fullScan = _document.Settings.TransitionSettings.FullScan;
@@ -229,15 +229,6 @@ namespace pwiz.Skyline.Model.Results
                             allChromData.MaxRetentionTime = (float) (provider.MaxRetentionTime ?? 0);
                             allChromData.MaxRetentionTimeKnown = provider.MaxRetentionTime.HasValue;
                         }
-                    }
-                    else if (ChorusResponseChromDataProvider.IsChorusResponse(dataFilePath))
-                    {
-                        provider = new ChorusResponseChromDataProvider(_document, fileInfo, _status, 0, 100, _loader);
-                    }
-                    else if (RemoteChromDataProvider.IsRemoteChromFile(dataFilePath))
-                    {
-                        provider = new RemoteChromDataProvider(_document, _retentionTimePredictor, fileInfo, _status, 0,
-                            100, _loader);
                     }
                     else if (ChromatogramDataProvider.HasChromatogramData(inFile))
                     {
