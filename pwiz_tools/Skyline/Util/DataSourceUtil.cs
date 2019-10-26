@@ -41,7 +41,6 @@ namespace pwiz.Skyline.Util
         public const string EXT_MZ5 = ".mz5";
         public const string EXT_XML = ".xml";
         public const string EXT_UIMF = ".uimf";
-        public const string EXT_CHORUSRESPONSE = ".chorusresponse";
         public const string EXT_WATERS_RAW = ".raw";
         public const string EXT_AGILENT_BRUKER_RAW = ".d";
 
