@@ -37,7 +37,6 @@ using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
-using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -318,14 +317,7 @@ namespace pwiz.Skyline
 
         private void ParseImportFile(NameValuePair pair)
         {
-            if (pair.Value.StartsWith(ChorusUrl.ChorusUrlPrefix))
-            {
-                ReplicateFile.Add(MsDataFileUri.Parse(pair.Value));
-            }
-            else
-            {
-                ReplicateFile.Add(new MsDataFilePath(pair.ValueFullPath));
-            }
+            ReplicateFile.Add(new MsDataFilePath(pair.ValueFullPath));
         }
 
         private bool ParseImportNamingPattern(NameValuePair pair)

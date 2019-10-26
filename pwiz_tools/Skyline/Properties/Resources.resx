@@ -3355,9 +3355,6 @@ Are you sure you want to continue?</value>
   <data name="ComparePeakBoundaries_ComputeMatches_Documents_have_different_number_of_transition_groups___0__vs__1__" xml:space="preserve">
     <value>Documents have different number of transition groups, {0} vs {1}.</value>
   </data>
-  <data name="OpenDataSourceDialog_EnsureChorusAccount_No_Chorus_acounts_have_been_specified" xml:space="preserve">
-    <value>No Chorus acounts have been specified</value>
-  </data>
   <data name="CommandLineTest_ConsolePathCoverage_successfully_" xml:space="preserve">
     <value>successfully.</value>
     <comment>Context: something finished "successfully".</comment>
@@ -10035,9 +10032,6 @@ Recognized isotopes include: {2}</value>
   </data>
   <data name="OpenDataSourceDialog_OpenDataSourceDialog_Remote_Accounts" xml:space="preserve">
     <value>Remote Accounts</value>
-  </data>
-  <data name="Chorus_Label_Chorus" xml:space="preserve">
-    <value>Chorus</value>
   </data>
   <data name="Unifi_Label_Unifi" xml:space="preserve">
     <value>Unifi</value>

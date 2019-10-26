@@ -26,7 +26,6 @@ using pwiz.Common.Collections;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Results.RemoteApi;
-using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
 using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -105,46 +104,12 @@ namespace pwiz.Skyline.ToolsUI
                 return false;
             }
             var account = GetRemoteAccount();
-            var chorusAccount = account as ChorusAccount;
-            if (chorusAccount != null)
-            {
-                return TestChorusAccount(chorusAccount);
-            }
             var unifiAccount = account as UnifiAccount;
             if (unifiAccount != null)
             {
                 return TestUnifiAccount(unifiAccount);
             }
             return true;
-        }
-
-        private bool TestChorusAccount(ChorusAccount chorusAccount)
-        {
-            using (ChorusSession chorusSession = new ChorusSession(chorusAccount))
-            {
-                try
-                {
-                    CookieContainer cookieContainer = new CookieContainer();
-                    try
-                    {
-                        chorusSession.Login(chorusAccount, cookieContainer);
-                        MessageDlg.Show(this, Resources.EditChorusAccountDlg_TestSettings_Settings_are_correct);
-                        return true;
-                    }
-                    catch (RemoteServerException chorusException)
-                    {
-                        MessageDlg.ShowException(this, chorusException);
-                        textPassword.Focus();
-                        return false;
-                    }
-                }
-                catch (Exception x)
-                {
-                    MessageDlg.ShowWithException(this, Resources.EditChorusAccountDlg_TestSettings_Error_connecting_to_server__ + x.Message, x);
-                    textServerURL.Focus();
-                    return false;
-                }
-            }
         }
 
         private bool TestUnifiAccount(UnifiAccount unifiAccount)
@@ -293,20 +258,6 @@ namespace pwiz.Skyline.ToolsUI
         private void comboAccountType_SelectedIndexChanged(object sender, EventArgs e)
         {
             groupBoxUnifi.Visible = RemoteAccountType.UNIFI.Equals(AccountType);
-            if (AccountType == RemoteAccountType.CHORUS)
-            {
-                if (textServerURL.Text == UnifiAccount.DEFAULT.ServerUrl)
-                {
-                    textServerURL.Text = ChorusAccount.DEFAULT_SERVER;
-                }
-            }
-            if (AccountType == RemoteAccountType.UNIFI)
-            {
-                if (textServerURL.Text == ChorusAccount.DEFAULT_SERVER)
-                {
-                    textServerURL.Text = UnifiAccount.DEFAULT.ServerUrl;
-                }
-            }
         }
     }
 }

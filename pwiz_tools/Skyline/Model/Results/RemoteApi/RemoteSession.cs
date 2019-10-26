@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
 using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
@@ -160,11 +159,6 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
         public static RemoteSession CreateSession(RemoteAccount remoteAccount)
         {
-            var chorusAccount = remoteAccount as ChorusAccount;
-            if (chorusAccount != null)
-            {
-                return new ChorusSession(chorusAccount);
-            }
             var unifiAccount = remoteAccount as UnifiAccount;
             if (unifiAccount != null)
             {

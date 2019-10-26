@@ -138,18 +138,18 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         // ReSharper disable InconsistentNaming
-        public enum TABS { Panorama, Chorus, Language, Miscellaneous, Display }
+        public enum TABS { Panorama, Remote, Language, Miscellaneous, Display }
         // ReSharper restore InconsistentNaming
 
         public class PanoramaTab : IFormView { }
-        public class ChorusTab : IFormView { }
+        public class RemoteTab : IFormView { }
         public class LanguageTab : IFormView { }
         public class MiscellaneousTab : IFormView { }
         public class DisplayTab : IFormView { }
 
         private static readonly IFormView[] TAB_PAGES =
         {
-            new PanoramaTab(), new ChorusTab(), new LanguageTab(), new MiscellaneousTab(), new DisplayTab(),
+            new PanoramaTab(), new RemoteTab(), new LanguageTab(), new MiscellaneousTab(), new DisplayTab(),
         };
 
         #region Functional testing support

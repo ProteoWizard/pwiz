@@ -3103,14 +3103,6 @@ namespace pwiz.Skyline
         }
 
 
-        private void chorusRequestToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            using (var dlg = new ExportChorusRequestDlg(DocumentUI, Path.GetFileNameWithoutExtension(DocumentFilePath)))
-            {
-                dlg.ShowDialog(this);
-            }
-        }
-
         private void exportAnnotationsMenuItem_Click(object sender, EventArgs e)
         {
             ShowExportAnnotationsDlg();
