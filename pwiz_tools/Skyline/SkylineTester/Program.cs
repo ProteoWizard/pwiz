@@ -41,6 +41,7 @@ namespace SkylineTester
             if (Settings.Default.SettingsUpgradeRequired)
             {
                 Settings.Default.Upgrade();
+                Settings.Default.SettingsUpgradeRequired = false;
                 Settings.Default.Save();
             }
 
