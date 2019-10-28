@@ -30,7 +30,6 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Results.RemoteApi;
-using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
@@ -936,12 +935,6 @@ namespace pwiz.Skyline.Model.Results
             {
                 FileWriteTime = remoteUrl.ModifiedTime;
                 filePath = remoteUrl.ChangeModifiedTime(null);
-            }
-            var chorusUrl = filePath as ChorusUrl;
-            if (chorusUrl != null)
-            {
-                RunStartTime = chorusUrl.RunStartTime;
-                filePath = chorusUrl.ChangeRunStartTime(null);
             }
             FilePath = filePath;
             InstrumentInfoList = new MsInstrumentConfigInfo[0];
