@@ -3670,6 +3670,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Precursor concentration.
+        /// </summary>
+        public static string TransitionGroupDocNode_PrecursorConcentration {
+            get {
+                return ResourceManager.GetString("TransitionGroupDocNode_PrecursorConcentration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Dynamic min product m/z.
         /// </summary>
         public static string TransitionInstrument_IsDynamicMin {
