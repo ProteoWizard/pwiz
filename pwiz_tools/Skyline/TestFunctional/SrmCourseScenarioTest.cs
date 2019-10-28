@@ -170,13 +170,13 @@ namespace pwiz.SkylineTestFunctional
 
             matchedUserSetGroups = new[]
             {
-                new UserSetCount(UserSet.FALSE, 274),
-                new UserSetCount(UserSet.REINTEGRATED, 10),
+                new UserSetCount(UserSet.FALSE, 272),
+                new UserSetCount(UserSet.REINTEGRATED, 12),
             };
             matchedUserSetTrans = new[]
             {
-                new UserSetCount(UserSet.FALSE, 1202),
-                new UserSetCount(UserSet.REINTEGRATED, 46),
+                new UserSetCount(UserSet.FALSE, 1192),
+                new UserSetCount(UserSet.REINTEGRATED, 56),
             };
 
             VerifyUserSets(documentRescore, matchedUserSetGroups, matchedUserSetTrans, true);
