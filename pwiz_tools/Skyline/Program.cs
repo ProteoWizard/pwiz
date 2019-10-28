@@ -115,7 +115,7 @@ namespace pwiz.Skyline
                 return 1;
             }
 
-            SecurityProtocolInitializer.Initialize(); // Enable highest available security level for HTTPS connections, esp. Chorus
+            SecurityProtocolInitializer.Initialize(); // Enable highest available security level for HTTPS connections
 
             CommonFormEx.TestMode = FunctionalTest;
             CommonFormEx.Offscreen = SkylineOffscreen;
