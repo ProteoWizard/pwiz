@@ -248,7 +248,7 @@ namespace pwiz.Skyline.Model.Irt
             if (matchedStandard != null)
             {
                 var dummyDoc = new SrmDocument(SrmSettingsList.GetDefault());
-                using (var reader = matchedStandard.DocumentReader)
+                using (var reader = matchedStandard.GetDocumentReader())
                 {
                     if (reader != null)
                     {

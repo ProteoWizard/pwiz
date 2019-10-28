@@ -3389,7 +3389,7 @@ namespace pwiz.Skyline
             }
             else
             {
-                using (var reader = IrtStandard.WhichStandard(newStandard).DocumentReader)
+                using (var reader = IrtStandard.WhichStandard(newStandard).GetDocumentReader())
                 {
                     if (reader != null)
                         AddStandardsToDocument(reader, missingPeptides);
