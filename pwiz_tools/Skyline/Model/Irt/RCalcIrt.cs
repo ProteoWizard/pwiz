@@ -263,6 +263,7 @@ namespace pwiz.Skyline.Model.Irt
                             out _,
                             out _,
                             false);
+                        standardPeptideList = standardPeptideList.Select(pep => new DbIrtPeptide(pep)).ToArray();
                         foreach (var dummyPep in dummyDoc.Molecules.Where(pep => pep.HasExplicitMods))
                         {
                             var standardPepIdx = standardPeptideList.IndexOf(pep => dummyPep.ModifiedTarget.Equals(pep.ModifiedTarget));
