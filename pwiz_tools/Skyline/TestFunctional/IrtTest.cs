@@ -713,6 +713,15 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.OpenFile(testFilesDir.GetTestPath("RePLiCal data for Skyline team - Pierce.sky")));
             var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             var editIrtCalcDlg = ShowDialog<EditIrtCalcDlg>(peptideSettingsDlg.AddCalculator);
+
+            var calcPath = testFilesDir.GetTestPath("calibration_test_calculator.irtdb");
+            const string calcName = "Calibration test calculator";
+            RunUI(() =>
+            {
+                editIrtCalcDlg.CalcName = calcName;
+                editIrtCalcDlg.CreateDatabase(calcPath);
+            });
+
             var calibrateIrtDlg = ShowDialog<CalibrateIrtDlg>(editIrtCalcDlg.Calibrate);
             RunUI(() =>
             {
@@ -754,15 +763,42 @@ namespace pwiz.SkylineTestFunctional
                     dlg.StandardCount = 10;
                     dlg.OkDialog();
                 });
+            var standardPeptides = new List<Target>();
             RunUI(() =>
             {
                 Assert.AreEqual(10, calibrateIrtDlg.StandardPeptideCount);
                 calibrateIrtDlg.SelectedRegressionOption = calibrateIrtDlg.RegressionOptions.First(opt => opt.Name.Equals(IrtStandard.REPLICAL.Name));
                 Assert.AreEqual(15, calibrateIrtDlg.StandardPeptideCount);
+                standardPeptides.AddRange(calibrateIrtDlg.StandardPeptideList.Select(pep => pep.Target));
             });
             OkDialog(calibrateIrtDlg, calibrateIrtDlg.OkDialog);
-            OkDialog(editIrtCalcDlg, editIrtCalcDlg.CancelDialog);
-            OkDialog(peptideSettingsDlg, peptideSettingsDlg.CancelDialog);
+            OkDialog(editIrtCalcDlg, editIrtCalcDlg.OkDialog);
+            OkDialog(peptideSettingsDlg, peptideSettingsDlg.OkDialog);
+
+            RunUI(() =>
+            {
+                Assert.IsTrue(SkylineWindow.SaveDocument());
+                SkylineWindow.NewDocument();
+            });
+            // The created irtdb should have document XML for the standard peptides
+            var irtDb = IrtDb.GetIrtDb(calcPath, null);
+            Assert.IsFalse(string.IsNullOrEmpty(irtDb.DocumentXml));
+            // Set RT regression to None
+            RunDlg<PeptideSettingsUI>(() => SkylineWindow.ShowPeptideSettingsUI(), true, dlg =>
+            {
+                dlg.ChooseRegression(Resources.SettingsList_ELEMENT_NONE_None);
+                dlg.OkDialog();
+            });
+            // Change to the RT regression using the calculator with document XML for prompt to add standards to document
+            var peptideSettingsDlg2 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            RunUI(() => peptideSettingsDlg2.ChooseRegression(calcName));
+            var addStandardsDlg = ShowDialog<AddIrtStandardsToDocumentDlg>(peptideSettingsDlg2.OkDialog);
+            RunUI(() => addStandardsDlg.NumTransitions = 3);
+            OkDialog(addStandardsDlg, addStandardsDlg.BtnYesClick);
+            WaitForCondition(() => SkylineWindow.Document.PeptideCount == standardPeptides.Count);
+            Assert.AreEqual(standardPeptides.Count, SkylineWindow.Document.PeptideCount);
+            Assert.IsTrue(SkylineWindow.Document.Peptides.All(pep => standardPeptides.Contains(pep.Target)));
+            RunUI(() => SkylineWindow.NewDocument(true));
         }
 
         private SrmDocument VerifyIrtStandards(SrmDocument docBefore, bool expectStandards)
