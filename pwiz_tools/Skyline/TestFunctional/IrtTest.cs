@@ -798,7 +798,123 @@ namespace pwiz.SkylineTestFunctional
             WaitForCondition(() => SkylineWindow.Document.PeptideCount == standardPeptides.Count);
             Assert.AreEqual(standardPeptides.Count, SkylineWindow.Document.PeptideCount);
             Assert.IsTrue(SkylineWindow.Document.Peptides.All(pep => standardPeptides.Contains(pep.Target)));
-            RunUI(() => SkylineWindow.NewDocument(true));
+
+            // CiRT calibration test (use predefined values)
+            RunUI(() => SkylineWindow.OpenFile(testFilesDir.GetTestPath("Bruker_diaPASEF_HYE-cirtonly.sky")));
+            var peptideSettingsDlg3 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            var editIrtCalcDlg2 = ShowDialog<EditIrtCalcDlg>(peptideSettingsDlg3.AddCalculator);
+            var calibrateIrtDlg2 = ShowDialog<CalibrateIrtDlg>(editIrtCalcDlg2.Calibrate);
+            RunUI(() =>
+            {
+                calibrateIrtDlg2.StandardName = "CiRT test standard 1";
+                var regressionOptions = calibrateIrtDlg2.RegressionOptions;
+                Assert.AreEqual(2, regressionOptions.Length);
+                Assert.IsTrue(regressionOptions[0].Name.Equals(Resources.RegressionOption_All_Fixed_points));
+                Assert.IsTrue(regressionOptions[1].Name.Equals(IrtStandard.CIRT_SHORT.Name));
+                Assert.IsTrue(ReferenceEquals(calibrateIrtDlg2.SelectedRegressionOption, regressionOptions[0]));
+            });
+            var addIrtDlg2 = ShowDialog<AddIrtStandardsDlg>(calibrateIrtDlg2.UseResults);
+            RunUI(() => addIrtDlg2.StandardCount = 10);
+
+            // found CiRT peptides, ask user if they want to use them, click yes
+            var cirtDlg = ShowDialog<MultiButtonMsgDlg>(addIrtDlg2.OkDialog);
+            OkDialog(cirtDlg, cirtDlg.BtnYesClick);
+            WaitForClosedForm(cirtDlg);
+            // ask user if they want to use predefined values, click yes
+            var cirtPredefinedDlg = WaitForOpenForm<MultiButtonMsgDlg>();
+            OkDialog(cirtPredefinedDlg, cirtPredefinedDlg.BtnYesClick);
+            var predefinedIrts = IrtStandard.CIRT.Peptides.ToDictionary(pep => pep.ModifiedTarget, pep => pep.Irt);
+            RunUI(() =>
+            {
+                Assert.AreEqual(Resources.CalibrationGridViewDriver_CiRT_option_name, calibrateIrtDlg2.SelectedRegressionOption.Name);
+                Assert.AreEqual(10, calibrateIrtDlg2.StandardPeptideCount);
+                foreach (var pep in calibrateIrtDlg2.StandardPeptideList)
+                {
+                    Assert.IsTrue(predefinedIrts.ContainsKey(pep.Target));
+                    Assert.AreEqual(predefinedIrts[pep.Target], pep.Irt);
+                }
+            });
+            RunDlg<GraphRegression>(() => calibrateIrtDlg2.GraphRegression(), false, dlg =>
+            {
+                Assert.AreEqual(1, dlg.RegressionGraphDatas.Count);
+                var data = dlg.RegressionGraphDatas.First();
+                Assert.AreEqual(72, data.RegularPoints.Count);
+                Assert.AreEqual(0, data.MissingPoints.Count);
+                Assert.AreEqual(0, data.OutlierPoints.Count);
+                Assert.IsTrue(data.R >= RCalcIrt.MIN_IRT_TO_TIME_CORRELATION);
+                dlg.CloseDialog();
+            });
+            RunDlg<GraphRegression>(() => calibrateIrtDlg2.GraphIrts(), false, dlg =>
+            {
+                Assert.AreEqual(1, dlg.RegressionGraphDatas.Count);
+                Assert.AreEqual(10, dlg.RegressionGraphDatas.First().RegularPoints.Count);
+                dlg.CloseDialog();
+            });
+            OkDialog(calibrateIrtDlg2, calibrateIrtDlg2.OkDialog);
+            RunUI(() =>
+            {
+                Assert.AreEqual(10, editIrtCalcDlg2.StandardPeptideCount);
+                foreach (var pep in editIrtCalcDlg2.StandardPeptides)
+                {
+                    Assert.IsTrue(predefinedIrts.ContainsKey(pep.ModifiedTarget));
+                    Assert.AreEqual(predefinedIrts[pep.ModifiedTarget], pep.Irt);
+                }
+            });
+
+            // CiRT calibration test (don't use predefined values)
+            var calibrateIrtDlg3 = ShowDialog<CalibrateIrtDlg>(editIrtCalcDlg2.Calibrate);
+            RunUI(() => calibrateIrtDlg3.StandardName = "CiRT test standard 2");
+            var addIrtDlg3 = ShowDialog<AddIrtStandardsDlg>(calibrateIrtDlg3.UseResults);
+            RunUI(() => addIrtDlg3.StandardCount = 10);
+
+            // found CiRT peptides, ask user if they want to use them, click yes
+            var cirtDlg2 = ShowDialog<MultiButtonMsgDlg>(addIrtDlg3.OkDialog);
+            OkDialog(cirtDlg2, cirtDlg2.BtnYesClick);
+            WaitForClosedForm(cirtDlg2);
+            // ask user if they want to use predefined values, click no
+            var cirtPredefinedDlg2 = WaitForOpenForm<MultiButtonMsgDlg>();
+            OkDialog(cirtPredefinedDlg2, cirtPredefinedDlg2.Btn1Click);
+            var cirtIrts = new Dictionary<Target, double>();
+            RunUI(() =>
+            {
+                Assert.AreEqual(Resources.CalibrationGridViewDriver_CiRT_option_name, calibrateIrtDlg3.SelectedRegressionOption.Name);
+                Assert.AreEqual(10, calibrateIrtDlg3.StandardPeptideCount);
+                foreach (var pep in calibrateIrtDlg3.StandardPeptideList)
+                {
+                    Assert.IsTrue(predefinedIrts.ContainsKey(pep.Target));
+                    var expectedIrt = calibrateIrtDlg3.SelectedRegressionOption.RegressionLine.GetY(pep.RetentionTime);
+                    cirtIrts[pep.Target] = expectedIrt;
+                    Assert.AreEqual(expectedIrt, pep.Irt);
+                }
+            });
+            RunDlg<GraphRegression>(() => calibrateIrtDlg3.GraphRegression(), false, dlg =>
+            {
+                Assert.AreEqual(1, dlg.RegressionGraphDatas.Count);
+                var data = dlg.RegressionGraphDatas.First();
+                Assert.AreEqual(72, data.RegularPoints.Count);
+                Assert.AreEqual(0, data.MissingPoints.Count);
+                Assert.AreEqual(0, data.OutlierPoints.Count);
+                Assert.IsTrue(data.R >= RCalcIrt.MIN_IRT_TO_TIME_CORRELATION);
+                dlg.CloseDialog();
+            });
+            RunDlg<GraphRegression>(() => calibrateIrtDlg3.GraphIrts(), false, dlg =>
+            {
+                Assert.AreEqual(1, dlg.RegressionGraphDatas.Count);
+                Assert.AreEqual(10, dlg.RegressionGraphDatas.First().RegularPoints.Count);
+                dlg.CloseDialog();
+            });
+            OkDialog(calibrateIrtDlg3, calibrateIrtDlg3.OkDialog);
+            RunUI(() =>
+            {
+                Assert.AreEqual(10, editIrtCalcDlg2.StandardPeptideCount);
+                foreach (var pep in editIrtCalcDlg2.StandardPeptides)
+                {
+                    Assert.IsTrue(predefinedIrts.ContainsKey(pep.ModifiedTarget));
+                    Assert.AreEqual(cirtIrts[pep.Target], pep.Irt);
+                }
+            });
+            OkDialog(editIrtCalcDlg2, editIrtCalcDlg2.CancelDialog);
+            OkDialog(peptideSettingsDlg3, peptideSettingsDlg3.CancelDialog);
         }
 
         private SrmDocument VerifyIrtStandards(SrmDocument docBefore, bool expectStandards)
