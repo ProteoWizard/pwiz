@@ -256,14 +256,13 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
             result->set(MS_total_ion_current, spectrum->getTIC());
         }
 
-        if (spectrum->isIonMobilitySpectrum())
+        double oneOverK0 = spectrum->oneOverK0();
+        if (oneOverK0 > 0)
         {
-            scan.set(MS_inverse_reduced_ion_mobility, spectrum->oneOverK0(), MS_Vs_cm_2);
+            scan.set(MS_inverse_reduced_ion_mobility, oneOverK0, MS_Vs_cm_2);
             int windowGroup = spectrum->getWindowGroup();
             if (windowGroup > 0)
-            {
                 scan.userParams.push_back(UserParam("windowGroup", lexical_cast<string>(windowGroup))); // diaPASEF data
-            }
         }
 
         if (detailLevel == DetailLevel_InstantMetadata)
@@ -349,33 +348,36 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
 
         // Enumerating merged scan numbers is not instant.
         IntegerSet scanNumbers = spectrum->getMergedScanNumbers();
-        if (config_.combineIonMobilitySpectra && scanNumbers.size() < 100)
+        if (config_.combineIonMobilitySpectra)
         {
-            using namespace boost::spirit::karma;
-            auto frameScanPair = compassDataPtr_->getFrameScanPair(si.scan);
-            generate(std::back_insert_iterator<std::string>(scan.spectrumID),
-                     "frame=" << int_ << " scan=" << int_,
-                     frameScanPair.first, *scanNumbers.begin());
-
-            vector<Scan>& scans = result->scanList.scans;
-            scans.reserve(scanNumbers.size());
-            for (auto itr = ++scanNumbers.begin(); itr != scanNumbers.end(); ++itr)
-            {
-                scans.push_back(Scan());
-                scans.back().instrumentConfigurationPtr = msd_.run.defaultInstrumentConfigurationPtr;
-                generate(std::back_insert_iterator<std::string>(scans.back().spectrumID),
-                         "frame=" << int_ << " scan=" << int_,
-                         frameScanPair.first, *itr);
-
-                // CONSIDER: do we need this? all scan times will be the same and it's rather verbose
-                //if (scanTime > 0)
-                //    scans.back().set(MS_scan_start_time, scanTime, UO_second);
-
-                // CONSIDER: do we need this? all scan ranges will be the same and it's very verbose!
-                //if (scanRange.first > 0 && scanRange.second > 0)
-                //    scans.back().scanWindows.push_back(ScanWindow(scanRange.first, scanRange.second, MS_m_z));
-            }
             result->scanList.set(MS_sum_of_spectra);
+            if (scanNumbers.size() < 100)
+            {
+                using namespace boost::spirit::karma;
+                auto frameScanPair = compassDataPtr_->getFrameScanPair(si.scan);
+                generate(std::back_insert_iterator<std::string>(scan.spectrumID),
+                         "frame=" << int_ << " scan=" << int_,
+                         frameScanPair.first, *scanNumbers.begin());
+
+                vector<Scan>& scans = result->scanList.scans;
+                scans.reserve(scanNumbers.size());
+                for (auto itr = ++scanNumbers.begin(); itr != scanNumbers.end(); ++itr)
+                {
+                    scans.push_back(Scan());
+                    scans.back().instrumentConfigurationPtr = msd_.run.defaultInstrumentConfigurationPtr;
+                    generate(std::back_insert_iterator<std::string>(scans.back().spectrumID),
+                             "frame=" << int_ << " scan=" << int_,
+                             frameScanPair.first, *itr);
+
+                    // CONSIDER: do we need this? all scan times will be the same and it's rather verbose
+                    //if (scanTime > 0)
+                    //    scans.back().set(MS_scan_start_time, scanTime, UO_second);
+
+                    // CONSIDER: do we need this? all scan ranges will be the same and it's very verbose!
+                    //if (scanRange.first > 0 && scanRange.second > 0)
+                    //    scans.back().scanWindows.push_back(ScanWindow(scanRange.first, scanRange.second, MS_m_z));
+                }
+            }
         }
         else
             result->scanList.set(MS_no_combination);
@@ -393,6 +395,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
             {
                 auto& mz = result->getMZArray()->data;
                 auto& intensity = result->getIntensityArray()->data;
+
+                result->set(MS_centroid_spectrum); // TIMS is always centroided
 
                 BinaryDataArrayPtr mobility(new BinaryDataArray);
                 result->binaryDataArrayPtrs.push_back(mobility);
@@ -434,6 +438,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
             if (config_.combineIonMobilitySpectra)
             {
                 result->defaultArrayLength = spectrum->getCombinedSpectrumDataSize();
+                result->set(MS_centroid_spectrum); // TIMS is always centroided
             }
             else
             {

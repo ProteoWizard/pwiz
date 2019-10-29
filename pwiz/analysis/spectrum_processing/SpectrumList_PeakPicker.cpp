@@ -217,7 +217,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, bool g
 
     bool isCentroided = s->hasCVParam(MS_centroid_spectrum);
     vector<CVParam>& cvParams = s->cvParams;
-    vector<CVParam>::iterator itr;
+    vector<CVParam>::iterator itr = cvParams.end();
 
     // return non-profile spectra as-is
     // (could have been acquired as centroid, or vendor may have done the centroiding)
@@ -275,7 +275,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, bool g
         boost::range::remove(s->paramGroupPtrs, specRepParamGroup);
     }
 
-    *itr = MS_centroid_spectrum;
+    if (itr != cvParams.end())
+        *itr = MS_centroid_spectrum;
 
     try
     {

@@ -673,12 +673,10 @@ double TimsSpectrum::oneOverK0() const
     {
         return frame_.oneOverK0_[scanBegin_];
     }
-    else if (frame_.msmsType_ == MsMsType::DIA_PASEF)
+    else
     {
         return (frame_.oneOverK0_[scanBegin_] + frame_.oneOverK0_[scanEnd()]) / 2;
     }
-    else
-        return 0; // no mobility value for non-PASEF merged spectra
 }
 
 namespace {
