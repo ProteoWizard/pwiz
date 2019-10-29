@@ -10733,4 +10733,10 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="CalibrationGridViewDriver_FindEvenlySpacedPeptides_This_document_contains__0__CiRT_peptides__Would_you_like_to_use__1__of_them_as_your_iRT_standards_" xml:space="preserve">
     <value>This document contains {0} CiRT peptides. Would you like to use {1} of them as your iRT standards?</value>
   </data>
+  <data name="CalibrationGridViewDriver_FindEvenlySpacedPeptides_Would_you_like_to_use_the_predefined_iRT_values_" xml:space="preserve">
+    <value>Would you like to use the predefined iRT values?</value>
+  </data>
+  <data name="CalibrationGridViewDriver_CiRT_option_name" xml:space="preserve">
+    <value>CiRT (discovered)</value>
+  </data>
 </root>

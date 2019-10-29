@@ -728,7 +728,7 @@ namespace pwiz.SkylineTestFunctional
                 calibrateIrtDlg.StandardName = "Test standard";
                 var regressionOptions = calibrateIrtDlg.RegressionOptions;
                 Assert.AreEqual(3, regressionOptions.Length);
-                Assert.IsTrue(regressionOptions[0].Name.Equals(Resources.RegressionOption_All_Fixed_points) && regressionOptions[0].IsFixedPoint);
+                Assert.IsTrue(regressionOptions[0].Name.Equals(Resources.RegressionOption_All_Fixed_points));
                 Assert.IsTrue(regressionOptions.Select(opt => opt.Name).Contains(IrtStandard.REPLICAL.Name));
                 Assert.IsTrue(regressionOptions.Select(opt => opt.Name).Contains(IrtStandard.PIERCE.Name));
                 Assert.IsTrue(ReferenceEquals(calibrateIrtDlg.SelectedRegressionOption, regressionOptions[0]));

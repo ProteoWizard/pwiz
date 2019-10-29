@@ -83,13 +83,13 @@
             // 
             resources.ApplyResources(this.textMaxIrt, "textMaxIrt");
             this.textMaxIrt.Name = "textMaxIrt";
-            this.textMaxIrt.TextChanged += new System.EventHandler(this.UpdateControls);
+            this.textMaxIrt.TextChanged += new System.EventHandler(this.UpdateEquation);
             // 
             // textMinIrt
             // 
             resources.ApplyResources(this.textMinIrt, "textMinIrt");
             this.textMinIrt.Name = "textMinIrt";
-            this.textMinIrt.TextChanged += new System.EventHandler(this.UpdateControls);
+            this.textMinIrt.TextChanged += new System.EventHandler(this.UpdateEquation);
             // 
             // btnOk
             // 
@@ -224,7 +224,7 @@
             this.comboMaxPeptide.FormattingEnabled = true;
             resources.ApplyResources(this.comboMaxPeptide, "comboMaxPeptide");
             this.comboMaxPeptide.Name = "comboMaxPeptide";
-            this.comboMaxPeptide.SelectedIndexChanged += new System.EventHandler(this.UpdateControls);
+            this.comboMaxPeptide.SelectedIndexChanged += new System.EventHandler(this.UpdateEquation);
             // 
             // label6
             // 
@@ -237,7 +237,7 @@
             this.comboMinPeptide.FormattingEnabled = true;
             resources.ApplyResources(this.comboMinPeptide, "comboMinPeptide");
             this.comboMinPeptide.Name = "comboMinPeptide";
-            this.comboMinPeptide.SelectedIndexChanged += new System.EventHandler(this.UpdateControls);
+            this.comboMinPeptide.SelectedIndexChanged += new System.EventHandler(this.UpdateEquation);
             // 
             // label5
             // 
