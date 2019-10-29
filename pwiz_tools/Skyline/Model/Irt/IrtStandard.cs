@@ -340,19 +340,16 @@ namespace pwiz.Skyline.Model.Irt
         public override string AuditLogText { get { return Equals(this, EMPTY) ? LogMessage.NONE : Name; } }
         public override bool IsName { get { return !Equals(this, EMPTY); } } // So EMPTY logs as None (unquoted) rather than "None"
 
-        public TextReader DocumentReader
+        public TextReader GetDocumentReader()
         {
-            get
+            try
             {
-                try
-                {
-                    var stream = typeof(IrtStandard).Assembly.GetManifestResourceStream(typeof(IrtStandard), @"StandardsDocuments." + _resourceSkyFile);
-                    return stream != null ? new StreamReader(stream) : null;
-                }
-                catch (Exception)
-                {
-                    return null;
-                }
+                var stream = typeof(IrtStandard).Assembly.GetManifestResourceStream(typeof(IrtStandard), @"StandardsDocuments." + _resourceSkyFile);
+                return stream != null ? new StreamReader(stream) : null;
+            }
+            catch (Exception)
+            {
+                return null;
             }
         }
 

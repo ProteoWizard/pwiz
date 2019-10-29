@@ -10727,6 +10727,18 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="IrtDb_MakeDocumentXml_iRT_standards" xml:space="preserve">
     <value>iRT standards</value>
   </data>
+  <data name="CommandLine_CreateUntrainedScoringModel_Error__Excluding_feature_scores_is_not_permitted_with_the_default_Skyline_model_" xml:space="preserve">
+    <value>Error: Excluding feature scores is not permitted with the default Skyline model.</value>
+  </data>
+  <data name="CommandArgs_ValidateReintegrateArgs_Error__Model_cutoffs_cannot_be_applied_in_calibrating_the_Skyline_default_model_" xml:space="preserve">
+    <value>Error: Model cutoffs cannot be applied in calibrating the Skyline default model.</value>
+  </data>
+  <data name="CommandArgs_ValidateReintegrateArgs_Error__Model_cutoffs___0___must_be_in_decreasing_order_greater_than_zero_and_less_than__1__" xml:space="preserve">
+    <value>Error: Model cutoffs ({0}) must be in decreasing order greater than zero and less than {1}.</value>
+  </data>
+  <data name="ValueInvalidNumberListException_ValueInvalidNumberListException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_list_of_decimal_numbers_" xml:space="preserve">
+    <value>The value {0} is not valid for the argument {1} which requires a list of decimal numbers.</value>
+  </data>
   <data name="CalibrationGridViewDriver_FindEvenlySpacedPeptides_Calculating_scores" xml:space="preserve">
     <value>Calculating scores</value>
   </data>
