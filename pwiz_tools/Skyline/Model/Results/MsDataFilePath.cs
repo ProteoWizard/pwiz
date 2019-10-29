@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.IO;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
-using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
 using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
 
 namespace pwiz.Skyline.Model.Results
@@ -64,10 +63,6 @@ namespace pwiz.Skyline.Model.Results
 
         public static MsDataFileUri Parse(string url)
         {
-            if (url.StartsWith(ChorusUrl.ChorusUrlPrefix))
-            {
-                return new ChorusUrl(url);
-            }
             if (url.StartsWith(UnifiUrl.UrlPrefix))
             {
                 return new UnifiUrl(url);

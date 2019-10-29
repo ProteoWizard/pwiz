@@ -1174,12 +1174,12 @@ namespace pwiz.Skyline.Model.Lib
 
     public sealed class LibraryRetentionTimes : IRetentionTimeProvider
     {
-        private readonly IDictionary<Target, Tuple<TimeSource, double[]>> _dictPeptideRetentionTimes;
+        private readonly TargetMap<Tuple<TimeSource, double[]>> _dictPeptideRetentionTimes;
 
         public LibraryRetentionTimes(string path, IDictionary<Target, Tuple<TimeSource, double[]>> dictPeptideRetentionTimes)
         {
             Name = path;
-            _dictPeptideRetentionTimes = dictPeptideRetentionTimes;
+            _dictPeptideRetentionTimes = new TargetMap<Tuple<TimeSource, double[]>>(dictPeptideRetentionTimes);
             if (_dictPeptideRetentionTimes.Count == 0)
             {
                 MinRt = MaxRt = 0;

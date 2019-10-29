@@ -971,12 +971,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
             private sealed class IrtRetentionTimeProvider : IRetentionTimeProvider
             {
                 private readonly string _name;
-                private readonly Dictionary<Target, DbIrtPeptide> _dictSequenceToPeptide;
+                private readonly TargetMap<DbIrtPeptide> _dictSequenceToPeptide;
 
                 public IrtRetentionTimeProvider(string name, IrtDb irtDb)
                 {
                     _name = name;
-                    _dictSequenceToPeptide = irtDb.GetPeptides().ToDictionary(peptide => peptide.ModifiedTarget);
+                    _dictSequenceToPeptide = new TargetMap<DbIrtPeptide>(irtDb.GetPeptides().ToDictionary(peptide => peptide.ModifiedTarget));
                 }
 
                 public string Name
