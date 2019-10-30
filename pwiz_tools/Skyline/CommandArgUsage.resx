@@ -766,4 +766,10 @@ greater peak area.</value>
   <data name="_save_settings" xml:space="preserve">
     <value>Causes settings changes to the global environment, e.g. added reports, libraries, enzymes, etc. to be saved to the program configuration file.</value>
   </data>
+  <data name="_reintegrate_model_type" xml:space="preserve">
+    <value>The type of peak scoring model to train to produce z scores and q values. (dafault mProphet) Skyline - simply scales coefficients of the default Skyline model to estimate a unit normal distribution from the decoys. SkylineML - uses the mProphet machine learning algorithm to train a model using only the default set of feature scores.</value>
+  </data>
+  <data name="CommandArgs_NUM_LIST_VALUE" xml:space="preserve">
+    <value>&lt;number list&gt;</value>
+  </data>
 </root>

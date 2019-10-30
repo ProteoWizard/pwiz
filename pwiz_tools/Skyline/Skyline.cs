@@ -248,7 +248,6 @@ namespace pwiz.Skyline
 
             var defaultUIMode = Settings.Default.UIMode;
             NewDocument(); // Side effect: initializes Settings.Default.UIMode to proteomic if no previous value
-            chorusRequestToolStripMenuItem.Visible = Settings.Default.EnableChorus;
 
             // Set UI mode to user default (proteomic/molecule/mixed)
             SrmDocument.DOCUMENT_TYPE defaultModeUI;
@@ -3388,7 +3387,7 @@ namespace pwiz.Skyline
             }
             else
             {
-                using (var reader = IrtStandard.WhichStandard(newStandard).DocumentReader)
+                using (var reader = IrtStandard.WhichStandard(newStandard).GetDocumentReader())
                 {
                     if (reader != null)
                         AddStandardsToDocument(reader, missingPeptides);
