@@ -695,7 +695,7 @@ namespace {
     };
 }
 
-void TimsSpectrum::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities) const
+void TimsSpectrum::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities, bool sortAndJitter) const
 {
     auto& storage = frame_.timsDataImpl_.tdfStorage_;
     
@@ -706,17 +706,19 @@ void TimsSpectrum::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, p
     for (int i = 0; i <= range; ++i)
     {
         auto mzIndices = frameProxy.getScanX(i);
-        for (size_t i = 0; i < mzIndices.size(); ++i)
-            mzIndicesAsDoubles.push_back(mzIndices[i]);
+        for (size_t j = 0; j < mzIndices.size(); ++j)
+            mzIndicesAsDoubles.push_back(mzIndices[j]);
     }
     storage.indexToMz(frame_.frameId_, mzIndicesAsDoubles, mz);
 
-    intensities.reserve(frameProxy.getTotalNbrPeaks());
+    //vector<double> intensitiesTmp;
+    intensities.resize(frameProxy.getTotalNbrPeaks());
+    double* itr = &intensities[0];
     for (int i = 0; i <= range; ++i)
     {
         auto intensityCounts = frameProxy.getScanY(i);
-        for (size_t i = 0; i < intensityCounts.size(); ++i)
-            intensities.push_back(intensityCounts[i]);
+        for (size_t j = 0; j < intensityCounts.size(); ++j, ++itr)
+            *itr = intensityCounts[j];
     }
 
     mzIndicesAsDoubles.clear();
@@ -725,8 +727,11 @@ void TimsSpectrum::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, p
             mzIndicesAsDoubles.push_back(scanBegin_ + i);
     storage.scanNumToOneOverK0(frame_.frameId_, mzIndicesAsDoubles, mobilities);
     
+    if (!sortAndJitter)
+        return;
+
     // sort an array of indices by m/z; these indices are used to reorder all 3 arrays
-    /*vector<int> indices(mz.size());
+    vector<int> indices(mz.size());
     for (int i = 0; i < mz.size(); ++i)
         indices[i] = i;
     std::sort(indices.begin(), indices.end(), SortByOther<double>(mz));
@@ -739,16 +744,16 @@ void TimsSpectrum::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, p
     }
     swap(mzTmp, mz);
     swap(intensityTmp, intensities);
-    swap(mobilityTmp, mobilities);*/
+    swap(mobilityTmp, mobilities);
 
     // add jitter to identical m/z values (which come from different mobility bins)
-    /*for (size_t i = 1; i < mz.size(); ++i)
+    for (size_t i = 1; i < mz.size(); ++i)
         if (mz[i - 1] == mz[i])
         {
             size_t start_i = i - 1;
             for (; i < mz.size() && mz[start_i] == mz[i]; ++i)
                 mz[i] += 1e-8 * (i-start_i);
-        }*/
+        }
 }
 
 size_t TimsSpectrum::getCombinedSpectrumDataSize() const

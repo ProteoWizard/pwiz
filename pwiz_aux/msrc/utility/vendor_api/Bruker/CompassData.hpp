@@ -210,7 +210,7 @@ struct PWIZ_API_DECL MSSpectrum
     virtual double oneOverK0() const { return 0.0; }
 	virtual int getWindowGroup() const { return 0; } // for diaPASEF data
 
-    virtual void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities) const { }
+    virtual void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities, bool sortAndJitter) const { }
     virtual size_t getCombinedSpectrumDataSize() const { return 0; }
     virtual pwiz::util::IntegerSet getMergedScanNumbers() const { return pwiz::util::IntegerSet(); }
 

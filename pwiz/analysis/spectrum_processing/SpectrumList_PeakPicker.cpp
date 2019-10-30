@@ -227,8 +227,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, bool g
         itr = boost::range::remove_if(cvParams, CVParamIs(MS_profile_spectrum));
         if (itr != cvParams.end())
             cvParams.erase(itr);
-        else
-            this->warn_once("[SpectrumList_PeakPicker]: one or more spectra are already centroided, no processing needed");
+        // TODO: make this a log item instead
+        //else
+        //    this->warn_once("[SpectrumList_PeakPicker]: one or more spectra are already centroided, no processing needed");
         return s;
     }
 

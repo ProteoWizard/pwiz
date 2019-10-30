@@ -404,7 +404,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
                 arrayType.units = MS_Vs_cm_2;
                 mobility->cvParams.emplace_back(arrayType);
 
-                spectrum->getCombinedSpectrumData(mz, intensity, mobility->data);
+                spectrum->getCombinedSpectrumData(mz, intensity, mobility->data, config_.sortAndJitter);
                 result->defaultArrayLength = mz.size();
             }
             else

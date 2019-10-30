@@ -34,7 +34,7 @@
     <software id="micrOTOFcontrol" version="5.0.71.422-9346-vc110">
       <cvParam cvRef="MS" accession="MS:1000726" name="micrOTOFcontrol" value=""/>
     </software>
-    <software id="pwiz_Reader_Bruker" version="3.0.19269">
+    <software id="pwiz_Reader_Bruker" version="3.0.20001">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -78,10 +78,12 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="148.0"/>
         <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="10513.0"/>
+        <cvParam cvRef="MS" accession="MS:1000127" name="centroid spectrum" value=""/>
         <scanList count="1">
-          <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
+          <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.399379845325" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
+            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.507645737168" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="100.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -134,10 +136,12 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="3657.0"/>
         <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1.68258e07"/>
+        <cvParam cvRef="MS" accession="MS:1000127" name="centroid spectrum" value=""/>
         <scanList count="1">
-          <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
+          <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.797358858948" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
+            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.507645737168" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="100.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>

@@ -139,6 +139,7 @@ namespace pwiz.ProteowizardWrapper
             bool requireVendorCentroidedMS1 = false, bool requireVendorCentroidedMS2 = false,
             bool ignoreZeroIntensityPoints = false, 
             int preferOnlyMsLevel = 0,
+            bool combineIonMobilitySpectra = true,
             IEnumerable<PrecursorMzAndIonMobilityWindow> precursorMzAndIonMobilityWindows = null)
         {
             // see note above on enabling performance measurement
@@ -158,7 +159,7 @@ namespace pwiz.ProteowizardWrapper
                     ignoreZeroIntensityPoints = ignoreZeroIntensityPoints,
                     preferOnlyMsLevel = preferOnlyMsLevel,
                     allowMsMsWithoutPrecursor = false,
-                    combineIonMobilitySpectra = path.EndsWith(@".d") && File.Exists(Path.Combine(path, "analysis.tdf")) // Currently only supported with Bruker TDF files
+                    combineIonMobilitySpectra = combineIonMobilitySpectra && CanCombineIonMobilitySpectra(path)
 //                    isolationMzAndMobilityFilter = precursorMzAndIonMobilityWindows?.Select(w => 
 //                        w.IonMobility.HasValue ? 
 //                            new MzMobilityWindow(w.MZ, w.IonMobility.Value , (w.IonMobilityWindow??0)/2): 
@@ -174,6 +175,7 @@ namespace pwiz.ProteowizardWrapper
         public void Reindex(bool simAsSpectra = false, bool srmAsSpectra = false, bool acceptZeroLengthSpectra = true,
                             bool ignoreZeroIntensityPoints = false,
                             int preferOnlyMsLevel = 0,
+                            bool combineIonMobilitySpectra = true,
                             IEnumerable<PrecursorMzAndIonMobilityWindow> precursorMzAndIonMobilityWindows = null)
         {
             _msDataFile = new MSData();
@@ -185,7 +187,7 @@ namespace pwiz.ProteowizardWrapper
                 ignoreZeroIntensityPoints = ignoreZeroIntensityPoints,
                 preferOnlyMsLevel = preferOnlyMsLevel,
                 allowMsMsWithoutPrecursor = false,
-                combineIonMobilitySpectra = true,
+                combineIonMobilitySpectra = combineIonMobilitySpectra && CanCombineIonMobilitySpectra(FilePath)
                 /*isolationMzAndMobilityFilter = precursorMzAndIonMobilityWindows?.Select(w => 
                     w.IonMobility.HasValue ? 
                         new MzMobilityWindow(w.MZ, w.IonMobility.Value , (w.IonMobilityWindow??0)/2): 
@@ -591,6 +593,13 @@ namespace pwiz.ProteowizardWrapper
         {
             return GetMaxIonMobilityInList();
         }
+
+        public bool CanCombineIonMobilitySpectra(string sourcePath)
+        {
+            return sourcePath.EndsWith(@".d") && File.Exists(Path.Combine(sourcePath, @"analysis.tdf")); // currently only Bruker TDF
+        }
+
+        public bool HasCombinedIonMobilitySpectra => _config.combineIonMobilitySpectra;
 
         /// <summary>
         /// Gets the value of the MS_sample_name CV param of first sample in the MSData object, or null if there is no sample information.
