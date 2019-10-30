@@ -37,7 +37,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public enum AreaCVNormalizationMethod { global_standards, medians, none, ratio }
 
-    public enum AreaCVTransitions { all, best }
+    public enum AreaCVTransitions { all, best, count }
 
     public enum AreaCVMsLevel { precursors, products }
 
@@ -103,6 +103,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public static string GroupByAnnotation { get; set; }
 
         public static int MinimumDetections = 2;
+
+        public static int AreaCVTransitionsCount { get; set; }
 
         public GraphSummary GraphSummary { get; set; }
 

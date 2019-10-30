@@ -1433,4 +1433,13 @@
   <data name="RefinementSettings_NormalizationMethod" xml:space="preserve">
     <value>Normalization method</value>
   </data>
+  <data name="RefinementSettings_CountTransitions" xml:space="preserve">
+    <value>Transitions count</value>
+  </data>
+  <data name="RefinementSettings_Transitions" xml:space="preserve">
+    <value>Transitions</value>
+  </data>
+  <data name="RefinementSettings_MSLevel" xml:space="preserve">
+    <value>MS level</value>
+  </data>
 </root>

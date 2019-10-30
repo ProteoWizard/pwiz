@@ -116,6 +116,31 @@ namespace pwiz.Skyline.EditUI
                 comboNormalizeTo.Items.Add(Resources.RefineDlg_NormalizationMethod_Medians);
                 comboNormalizeTo.Items.Add(Resources.RefineDlg_NormalizationMethod_None);
                 comboNormalizeTo.SelectedIndex = comboNormalizeTo.Items.Count - 1;
+
+                comboTransitions.Items.Add(Resources.RefineDlg_RefineDlg_all);
+                comboTransitions.Items.Add(Resources.RefineDlg_RefineDlg_best);
+                comboTransitions.SelectedIndex = 0;
+
+                var maxTrans = document.PeptideTransitionGroups.Max(g => g.TransitionCount);
+                for (int i = 1; i <= maxTrans; i++)
+                {
+                    comboTransitions.Items.Add(i);
+                }
+
+                if (document.PeptideTransitions.Any(t => t.IsMs1))
+                {
+                    comboTransType.Items.Add("Precursors");
+                    comboTransType.SelectedIndex = comboTransType.Items.Count - 1;
+                }
+
+                if (document.PeptideTransitions.Any(t => !t.IsMs1))
+                {
+                    comboTransType.Items.Add("Products");
+                    comboTransType.SelectedIndex = comboTransType.Items.Count - 1;
+                }
+
+                if (comboTransType.Items.Count == 1)
+                    comboTransType.Enabled = false;
             }
 
             if (settings.PeptideSettings.Libraries.HasLibraries)
@@ -209,6 +234,27 @@ namespace pwiz.Skyline.EditUI
             set { textCVCutoff.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
+        public AreaCVTransitions Transition
+        {
+            get { return GetTransitionFromIdx(comboTransitions.SelectedIndex); }
+            set { SetTransitionIdx(value); }
+        }
+
+        public int TransitionCount
+        {
+            get { return comboTransitions.SelectedIndex - 1; }
+            set { comboTransitions.SelectedIndex = value + 1; }
+        }
+
+        public AreaCVMsLevel MSLevel
+        {
+            get
+            {
+                return (AreaCVMsLevel) Enum.Parse(typeof(AreaCVMsLevel), comboTransType.SelectedItem.ToString(), true);
+            }
+            set { comboTransType.SelectedItem = value.ToString(); }
+        }
+
         public double QValueCutoff
         {
             get
@@ -249,6 +295,18 @@ namespace pwiz.Skyline.EditUI
                         comboNormalizeTo.SelectedItem = Resources.RefineDlg_NormalizationMethod_Medians;
                     else
                         comboNormalizeTo.SelectedItem = Resources.RefineDlg_NormalizationMethod_None;
+            }
+        }
+
+        public void SetTransitionIdx(AreaCVTransitions transitions)
+        {
+            if (transitions == AreaCVTransitions.all)
+            {
+                comboTransitions.SelectedIndex = 0;
+            }
+            else if (transitions == AreaCVTransitions.best)
+            {
+                comboTransitions.SelectedIndex = 1;
             }
         }
 
@@ -427,6 +485,16 @@ namespace pwiz.Skyline.EditUI
 
             IsotopeLabelType referenceType = CVRefineLabelType;
 
+            var transitionsSelection = GetTransitionFromIdx(comboTransitions.SelectedIndex);
+            int? numTransitions = null;
+            if (transitionsSelection == AreaCVTransitions.count)
+            {
+                numTransitions = comboTransitions.SelectedIndex - 1;
+            }
+
+            var selectedMs = comboTransType.SelectedItem.ToString();
+            var msLevel = (AreaCVMsLevel) Enum.Parse(typeof(AreaCVMsLevel), selectedMs, true);
+
             RefinementSettings = new RefinementSettings
                                      {
                                          MinPeptidesPerProtein = minPeptidesPerProtein,
@@ -454,11 +522,38 @@ namespace pwiz.Skyline.EditUI
                                          QValueCutoff = qvalueCutoff,
                                          MinimumDetections =  minimumDetections,
                                          NormalizationMethod = normMethod,
-                                         NormalizationLabelType = referenceType
+                                         NormalizationLabelType = referenceType,
+                                         Transitions = transitionsSelection,
+                                         CountTransitions = numTransitions,
+                                         MSLevel = msLevel
                                      };
 
             DialogResult = DialogResult.OK;
             Close();
+        }
+
+        private AreaCVTransitions GetTransitionFromIdx(int idx)
+        {
+            if (idx == comboTransitions.Items.Count - 1)
+                return AreaCVTransitions.all;
+            if (idx > 2)
+                return AreaCVTransitions.count;
+
+            var transition = AreaCVTransitions.all;
+            switch (idx)
+            {
+                case 0:
+                    transition = AreaCVTransitions.all;
+                    break;
+                case 1:
+                    transition = AreaCVTransitions.best;
+                    break;
+                case 2:
+                    transition = AreaCVTransitions.best;
+                    break;
+            }
+
+            return transition;
         }
 
         private bool CanAddLabelType(IsotopeLabelType labelType)

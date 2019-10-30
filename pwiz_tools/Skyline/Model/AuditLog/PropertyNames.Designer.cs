@@ -2662,6 +2662,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Transitions count.
+        /// </summary>
+        public static string RefinementSettings_CountTransitions {
+            get {
+                return ResourceManager.GetString("RefinementSettings_CountTransitions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Remove above cv cutoff.
         /// </summary>
         public static string RefinementSettings_CVCutoff {
@@ -2770,6 +2779,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to MS level.
+        /// </summary>
+        public static string RefinementSettings_MSLevel {
+            get {
+                return ResourceManager.GetString("RefinementSettings_MSLevel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Normalization to standard type.
         /// </summary>
         public static string RefinementSettings_NormalizationLabelType {
@@ -2865,6 +2883,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string RefinementSettings_RTRegressionThreshold {
             get {
                 return ResourceManager.GetString("RefinementSettings_RTRegressionThreshold", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transitions.
+        /// </summary>
+        public static string RefinementSettings_Transitions {
+            get {
+                return ResourceManager.GetString("RefinementSettings_Transitions", resourceCulture);
             }
         }
         
