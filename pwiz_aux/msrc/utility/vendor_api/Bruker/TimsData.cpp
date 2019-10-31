@@ -199,7 +199,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
 
     std::string querySelect =
         "SELECT f.Id, Time, Polarity, ScanMode, MsMsType, MaxIntensity, SummedIntensities, NumScans, NumPeaks, "
-        "Parent, TriggerMass, IsolationWidth, PrecursorCharge, CollisionEnergy "
+        "Parent, TriggerMass, IsolationWidth, PrecursorCharge, CollisionEnergy, TimsCalibration-1 "
         "FROM Frames f "
         "LEFT JOIN FrameMsMsInfo info ON f.Id=info.Frame " +
         queryMsFilter + 
@@ -207,6 +207,8 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
     sqlite::query q(db, querySelect.c_str());
 
     int maxNumScans = 0;
+    vector<TimsFramePtr> representativeFrameByCalibrationIndex; // the first frame for each calibration index
+    vector<map<double, int>> scanNumberByOneOverK0ByCalibrationIndex;
 
     for (sqlite::query::iterator itr = q.begin(); itr != q.end(); ++itr)
     {
@@ -239,25 +241,44 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         optional<int> precursorCharge(row.get<optional<int> >(++idx));
         optional<double> collisionEnergy(row.get<optional<double> >(++idx));
 
+        int calibrationIndex = row.get<int>(++idx);
+        bool newCalibrationIndex = oneOverK0ByScanNumberByCalibration_.size() <= calibrationIndex;
+        if (newCalibrationIndex)
+        {
+            oneOverK0ByScanNumberByCalibration_.resize(calibrationIndex + 1);
+            representativeFrameByCalibrationIndex.resize(calibrationIndex + 1);
+            scanNumberByOneOverK0ByCalibrationIndex.resize(calibrationIndex + 1);
+        }
+
         TimsFramePtr frame = boost::make_shared<TimsFrame>(*this, frameId,
                                          msmsType, rt,
                                          mzAcqRangeLower, mzAcqRangeUpper,
                                          tic, bpi,
                                          polarity, scanMode, numScans,
                                          parentId, precursorMz,
-                                         isolationWidth, precursorCharge);
+                                         isolationWidth, precursorCharge,
+                                         calibrationIndex, oneOverK0ByScanNumberByCalibration_[calibrationIndex]);
         frames_[frameId] = frame;
+
+        if (newCalibrationIndex)
+            representativeFrameByCalibrationIndex[calibrationIndex] = frame;
     }
 
+    if (frames_.empty())
+        return;
 
-    map<double, int> scanNumberByOneOverK0;
-    vector<double> oneOverK0Filters;
+    // pre-cache scan number to 1/k0 mapping for each calibration (and also the inverse, for 1/k0 filtering, which is why it has to be done here instead of on-demand)
     vector<double> scanNumbers(maxNumScans);
-    for (int i = 1; i <= maxNumScans; ++i)
-        scanNumbers[i - 1] = i;
-    tdfStorage_.scanNumToOneOverK0(2, scanNumbers, oneOverK0Filters);
-    for (int i = 0; i < scanNumbers.size(); ++i)
-        scanNumberByOneOverK0[oneOverK0Filters[i]] = scanNumbers[i];
+    for (int i = 0; i <= maxNumScans; ++i)
+        scanNumbers[i] = i;
+    for (size_t i = 0; i < oneOverK0ByScanNumberByCalibration_.size(); ++i)
+    {
+        vector<double>& oneOverK0 = oneOverK0ByScanNumberByCalibration_[i];
+        tdfStorage_.scanNumToOneOverK0(representativeFrameByCalibrationIndex[i]->frameId_, scanNumbers, oneOverK0);
+
+        for (int j = 0; j < scanNumbers.size(); ++j)
+            scanNumberByOneOverK0ByCalibrationIndex[i][oneOverK0[j]] = scanNumbers[j];
+    }
 
     string pasefIsolationMzFilter;
     if (!isolationMzFilter_.empty())
@@ -404,6 +425,8 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                             filteredScanEnd = scanEnd;
                             break;
                         }
+
+                        const map<double, int>& scanNumberByOneOverK0 = scanNumberByOneOverK0ByCalibrationIndex[frame->calibrationIndex_];
 
                         // 1/k0 is inverse to scan number (lowest scan number is highest 1/k0)
                         auto scanNumLowerBoundItr = scanNumberByOneOverK0.upper_bound(mzMobilityWindow.mobilityBounds.get().second); --scanNumLowerBoundItr;
@@ -637,13 +660,17 @@ TimsFrame::TimsFrame(TimsDataImpl& timsDataImpl, int64_t frameId,
                      const optional<uint64_t>& parentId,
                      const optional<double>& precursorMz,
                      const optional<double>& isolationWidth,
-                     const optional<int>& precursorCharge)
+                     const optional<int>& precursorCharge,
+                     int calibrationIndex,
+                     const vector<double>& oneOverK0)
     : frameId_(frameId), msmsType_(msmsType), rt_(rt), parentId_(parentId), tic_(tic), bpi_(bpi),
       numScans_(numScans),
       polarity_(polarity), scanRange_(startMz, endMz),
       precursorMz_(precursorMz), scanMode_(scanMode),
       isolationWidth_(isolationWidth), chargeState_(precursorCharge),
-      timsDataImpl_(timsDataImpl), oneOverK0_(numScans)
+      calibrationIndex_(calibrationIndex),
+      timsDataImpl_(timsDataImpl),
+      oneOverK0_(oneOverK0)
 {
     switch (msmsType_)
     {
@@ -653,11 +680,6 @@ TimsFrame::TimsFrame(TimsDataImpl& timsDataImpl, int64_t frameId,
         case MsMsType::DIA_PASEF: msLevel_ = 2; break; // DIA
         default: throw runtime_error("Unhandled msmsType: " + lexical_cast<string>((int) msmsType_));
     }
-
-    vector<double> scanNumbers(numScans);
-    for(int i=1; i <= numScans; ++i)
-        scanNumbers[i-1] = i;
-    timsDataImpl_.tdfStorage_.scanNumToOneOverK0(frameId, scanNumbers, oneOverK0_);
 }
 
 const PasefPrecursorInfo TimsSpectrum::empty_;
@@ -690,7 +712,7 @@ void TimsSpectrum::getLineData(automation_vector<double>& mz, automation_vector<
     double *inten = &intensities[0];
     for (size_t i = 0; i < count;)
     {
-       *m++ = scanMZs[i];
+        *m++ = scanMZs[i];
         *inten++ = intensityCounts[i++];
     }
 }
@@ -754,22 +776,24 @@ void TimsSpectrum::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, p
     }
     storage.indexToMz(frame_.frameId_, mzIndicesAsDoubles, mz);
 
-    //vector<double> intensitiesTmp;
     intensities.resize(frameProxy.getTotalNbrPeaks());
+    mobilities.resize(intensities.size());
     double* itr = &intensities[0];
+    double* itr2 = &mobilities[0];
     for (int i = 0; i <= range; ++i)
     {
         auto intensityCounts = frameProxy.getScanY(i);
-        for (size_t j = 0; j < intensityCounts.size(); ++j, ++itr)
+        for (size_t j = 0; j < intensityCounts.size(); ++j, ++itr, ++itr2)
+        {
             *itr = intensityCounts[j];
+            *itr2 = frame_.oneOverK0_[scanBegin_ + i];
+            /*if (*itr2 < 0.0001 || *itr2 > 2)
+                throw runtime_error("bad 1/k0 value at i=" + lexical_cast<string>(i) +
+                                    " j=" + lexical_cast<string>(j) +
+                                    " scanBegin_=" + lexical_cast<string>(scanBegin_));*/
+        }
     }
 
-    mzIndicesAsDoubles.clear();
-    for (int i = 0; i < frameProxy.getNbrScans(); ++i)
-        for (int j = 0; j < frameProxy.getNbrPeaks(i); ++j)
-            mzIndicesAsDoubles.push_back(scanBegin_ + i);
-    storage.scanNumToOneOverK0(frame_.frameId_, mzIndicesAsDoubles, mobilities);
-    
     if (!sortAndJitter)
         return;
 

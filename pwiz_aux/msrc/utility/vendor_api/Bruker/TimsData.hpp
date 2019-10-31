@@ -85,7 +85,9 @@ struct PWIZ_API_DECL TimsFrame
               const optional<uint64_t>& parentId,
               const optional<double>& precursorMz,
               const optional<double>& isolationWidth,
-              const optional<int>& precursorCharge);
+              const optional<int>& precursorCharge,
+              int calibrationIndex,
+              const vector<double>& oneOverK0);
 
     int64_t frameId() const { return frameId_; }
     int numScans() const { return numScans_; }
@@ -111,6 +113,7 @@ struct PWIZ_API_DECL TimsFrame
 
     optional<double> precursorMz_;
     int scanMode_;
+    int calibrationIndex_;
 
     map<int, size_t> scanIndexByScanNumber_; // for frame/scan -> index calculation with support for missing scans (e.g. allowMsMsWithoutPrecursor == false)
 
@@ -118,7 +121,7 @@ struct PWIZ_API_DECL TimsFrame
     map<int, DiaPasefIsolationInfo> diaPasefIsolationInfoByScanNumber_; // only the first scan number of each window is stored, so use lower_bound() to find the info for a given scan number
 
     TimsDataImpl & timsDataImpl_;
-    vector<double> oneOverK0_; // access by (scan number - 1)
+    const vector<double>& oneOverK0_;
 };
 
 typedef boost::shared_ptr<TimsFrame> TimsFramePtr;
@@ -306,6 +309,7 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     int preferOnlyMsLevel_; // when nonzero, caller only wants spectra at this ms level
     bool allowMsMsWithoutPrecursor_; // when false, PASEF MS2 specta without precursor info will be excluded
     vector<chemistry::MzMobilityWindow> isolationMzFilter_; // when non-empty, only scans from precursors matching one of the included m/zs (i.e. within a precursor isolation window) will be enumerated
+    vector<vector<double>> oneOverK0ByScanNumberByCalibration_;
     ChromatogramPtr tic_, bpc_;
 
     int64_t currentFrameId_; // used for cacheing frame contents
