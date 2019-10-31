@@ -29,12 +29,14 @@ namespace pwiz.Skyline.Model
 {
     public class MultiFileLoader
     {
-        private const int MAX_PARALLEL_LOAD_FILES = 8;
+        public const int MAX_PARALLEL_LOAD_FILES = 12;
 
         private readonly QueueWorker<LoadInfo> _worker;
         private readonly Dictionary<MsDataFileUri, int> _loadingPaths;
         private readonly bool _synchronousMode;
-        private int _threadCount;
+        private int? _threadCount;
+        private int? _threadCountPreferred;
+        private ImportResultsSimultaneousFileOptions _simultaneousFileOptions;
 
         private readonly object _statusLock;
         private MultiProgressStatus _status;
@@ -44,7 +46,6 @@ namespace pwiz.Skyline.Model
             _worker = new QueueWorker<LoadInfo>(null, LoadFile);
             _loadingPaths = new Dictionary<MsDataFileUri, int>();
             _synchronousMode = synchronousMode;
-            _threadCount = 1;
             _statusLock = new object();
             ResetStatus();
         }
@@ -87,31 +88,70 @@ namespace pwiz.Skyline.Model
 
         public void InitializeThreadCount(int? loadingThreads)
         {
-            if (ParallelEx.SINGLE_THREADED)
+            lock (this)
             {
-                loadingThreads = 1; // Makes debugging easier.
+                _threadCount = null;
+                _threadCountPreferred = loadingThreads;
+                _simultaneousFileOptions = (ImportResultsSimultaneousFileOptions)Settings.Default.ImportResultsSimultaneousFiles;
             }
+        }
 
-            if (loadingThreads.HasValue)
-                _threadCount = loadingThreads.Value;
-            else
+        public static int GetOptimalThreadCount(int? loadingThreads, int? fileCount,
+            ImportResultsSimultaneousFileOptions simultaneousFileOptions)
+        {
+            if (ParallelEx.SINGLE_THREADED)
+                return 1; // Makes debugging easier.
+
+            return GetOptimalThreadCount(loadingThreads, fileCount, Environment.ProcessorCount,
+                simultaneousFileOptions);
+        }
+
+        public static int GetOptimalThreadCount(int? loadingThreads, int? fileCount, int processorCount, ImportResultsSimultaneousFileOptions simultaneousFileOptions)
+        {
+            if (!loadingThreads.HasValue)
             {
-                switch ((ImportResultsSimultaneousFileOptions)Settings.Default.ImportResultsSimultaneousFiles)
+                switch (simultaneousFileOptions)
                 {
                     case ImportResultsSimultaneousFileOptions.one_at_a_time:
-                        _threadCount = 1;
+                        loadingThreads = 1;
                         break;
 
                     case ImportResultsSimultaneousFileOptions.several: // Several is 1/4 logical processors (i.e. 2 for an i7)
-                        _threadCount = Math.Max(2, Environment.ProcessorCount / 4); // Min of 2, because you really expect more than 1
+                        loadingThreads = Math.Max(2, processorCount / 4); // Min of 2, because you really expect more than 1
                         break;
 
                     case ImportResultsSimultaneousFileOptions.many: // Many is 1/2 logical processors (i.e. 4 for an i7)
-                        _threadCount = Math.Max(2, Environment.ProcessorCount / 2); // Min of 2, because you really expect more than 1
+                        loadingThreads = Math.Max(2, processorCount / 2); // Min of 2, because you really expect more than 1
                         break;
                 }
-                _threadCount = Math.Min(MAX_PARALLEL_LOAD_FILES, _threadCount);
+                loadingThreads = Math.Min(MAX_PARALLEL_LOAD_FILES, loadingThreads.Value);
+                loadingThreads = GetBalancedThreadCount(loadingThreads.Value, fileCount);
             }
+
+            return loadingThreads.Value;
+        }
+
+        private static int GetBalancedThreadCount(int loadingThreads, int? fileCount)
+        {
+            // If we know the file count, and the number of threads is greater than 2
+            // attempt to optimize load balancing
+            if (loadingThreads < 3 || !fileCount.HasValue)
+                return loadingThreads;
+
+            int files = fileCount.Value;
+            int fullCycles = files / loadingThreads;
+            int remainder = files % loadingThreads;
+            // While there is a remainder (i.e. files do not divide evenly into the avaliable threads)
+            // and reducing the thread count by 1 would not increase the full
+            while (remainder > 0)
+            {
+                int reducedThreads = loadingThreads - 1;
+                if (fullCycles != fileCount.Value / reducedThreads && fileCount.Value % reducedThreads != 0)
+                    break;
+                loadingThreads = reducedThreads;
+                remainder = fileCount.Value % loadingThreads;
+            }
+            return loadingThreads;
         }
 
         /// <summary>
@@ -125,9 +165,6 @@ namespace pwiz.Skyline.Model
             MultiFileLoadMonitor loadMonitor,
             Action<ChromatogramCache, IProgressStatus> complete)
         {
-            // This may be called on multiple background loader threads simultaneously, but QueueWorker can handle it.
-            _worker.RunAsync(_threadCount, @"Load file");
-
             lock (this)
             {
                 // Find non-duplicate paths to load.
@@ -144,6 +181,13 @@ namespace pwiz.Skyline.Model
 
                 if (uniqueLoadList.Count == 0)
                     return;
+
+                if (!_threadCount.HasValue)
+                {
+                    _threadCount = GetOptimalThreadCount(_threadCountPreferred, uniqueLoadList.Count,
+                        _simultaneousFileOptions);
+                }
+                _worker.RunAsync(_threadCount.Value, @"Load file");
 
                 // Add new paths to queue.
                 foreach (var loadItem in uniqueLoadList)
