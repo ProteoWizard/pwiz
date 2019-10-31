@@ -690,7 +690,7 @@ namespace pwiz.Skyline.SettingsUI
                                                                           types,
                                                                           rankCharges,
                                                                           rankTypes,
-                                                                          spectrumInfo.SpectrumHeaderInfo is BiblioSpecSpectrumHeaderInfo bibliospecInfo ? bibliospecInfo.Score : null);
+                                                                          (spectrumInfo?.SpectrumHeaderInfo as BiblioSpecSpectrumHeaderInfo)?.Score);
                         LibraryChromGroup libraryChromGroup = null;
                         if (spectrumInfo != null && _showChromatograms)
                         {
