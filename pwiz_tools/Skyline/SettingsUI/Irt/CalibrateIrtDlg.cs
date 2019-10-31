@@ -548,7 +548,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             public RegressionLine RegressionLine { get; }
             public List<Tuple<DbIrtPeptide, PeptideDocNode>> MatchedRegressionPeptides { get; }
             public List<StandardPeptide> StandardPeptides { get; }
-            public bool AllowEditEquation { get; }
+            public bool AllowEditEquation => RegressionLine == null;
             public bool AllowEditGrid { get; }
 
             public int MatchedPeptideCount => MatchedRegressionPeptides?.Count ?? 0;
@@ -566,7 +566,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 RegressionLine = regressionLine;
                 MatchedRegressionPeptides = matchedRegressionPeptides;
                 StandardPeptides = standardPeptides;
-                AllowEditEquation = allowEditEquation;
                 AllowEditGrid = allowEditGrid;
             }
 
@@ -588,7 +587,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     {
                         if (docPeptides.TryGetValue(pep.GetNormalizedModifiedSequence(), out var nodePep))
                         {
-                            pepMatches.Add(new Tuple<DbIrtPeptide, PeptideDocNode>(pep, nodePep));
+                            pepMatches.Add(Tuple.Create(pep, nodePep));
                         }
                     }
                     if (RCalcIrt.TryGetRegressionLine(
@@ -642,7 +641,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 {
                     var seq = document.Settings.GetModifiedSequence(pep);
                     var time = pep.PercentileMeasuredRetentionTime.Value;
-                    docPeptides.Add(new Tuple<MeasuredPeptide, PeptideDocNode>(new MeasuredPeptide(seq, time), pep));
+                    docPeptides.Add(Tuple.Create(new MeasuredPeptide(seq, time), pep));
                 }
                 var bestPeptides = FindEvenlySpacedPeptides(document, docPeptides, peptideCount, out var cirt);
                 if (bestPeptides == null)
@@ -756,7 +755,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 {
                     for (var i = scoredCirtPeptides.Count - 1; i >= 0; i--)
                     {
-                        if (removedValues.FirstOrDefault(tuple => tuple.Item1.Equals(rts[i]) && tuple.Item2.Equals(irts[i])) != null)
+                        if (removedValues.Contains(Tuple.Create(rts[i], irts[i])))
                             scoredCirtPeptides.RemoveAt(i);
                     }
                     // If we have enough CiRT peptides (after removing outliers) and each bucket contains at least one, prompt to use CiRT peptides
@@ -808,7 +807,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 if (cirtRegression != null)
                 {
                     var matchedPeptides = scoredCirtPeptides.Select(pep =>
-                        new Tuple<DbIrtPeptide, PeptideDocNode>(
+                        Tuple.Create(
                             new DbIrtPeptide(pep.Peptide.Target, cirtPeptidesAll[pep.Peptide.Target], true, TimeSource.peak),
                             pep.NodePep)).ToList();
                     var standardPeptides = bestPeptides.Select(pep => new StandardPeptide
