@@ -251,12 +251,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
             var targetResolver = TargetResolver.MakeTargetResolver(document);
             _gridViewDriver.TargetResolver = targetResolver;
 
-            var peptides = document.Molecules.Where(nodePep => nodePep.SchedulingTime.HasValue).ToArray();
-            var count = peptides.Length;
+            var docTargets = document.Molecules.Where(nodePep => nodePep.SchedulingTime.HasValue).Select(nodePep => nodePep.ModifiedTarget).Distinct().ToArray();
+            var count = docTargets.Length;
             if (exclude != null && exclude.Count > 0)
             {
-                peptides = peptides.Where(nodePep => !exclude.Contains(nodePep.ModifiedTarget)).ToArray();
-                count = peptides.Length;
+                docTargets = docTargets.Where(target => !exclude.Contains(target)).ToArray();
+                count = docTargets.Length;
                 if (count < MIN_STANDARD_PEPTIDES)
                 {
                     MessageDlg.Show(this,
@@ -693,8 +693,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
             private List<MeasuredPeptide> FindEvenlySpacedPeptides(SrmDocument doc, IReadOnlyCollection<Tuple<MeasuredPeptide, PeptideDocNode>> docPeptides, int peptideCount, out RegressionOption cirt)
             {
                 cirt = null;
-                if (docPeptides.Count <= peptideCount)
-                    return docPeptides.Select(pep => pep.Item1).OrderBy(pep => pep.RetentionTime).ToList();
 
                 var model = doc.Settings.PeptideSettings.Integration.PeakScoringModel;
                 if (model == null || !model.IsTrained)
