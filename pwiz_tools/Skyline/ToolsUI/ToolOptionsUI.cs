@@ -32,6 +32,7 @@ using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Prosit;
 using pwiz.Skyline.Model.Prosit.Communication;
+using pwiz.Skyline.Model.Prosit.Config;
 using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Serialization;
@@ -99,27 +100,12 @@ namespace pwiz.Skyline.ToolsUI
 
             var iModels = PrositIntensityModel.Models.ToArray();
             var rtModels = PrositRetentionTimeModel.Models.ToArray();
-            var servers = new[] { PrositResources.ToolOptionsUI_ToolOptionsUI_None, PrositConstants.DEV_PROSIT_SERVER };
 
-            prositServerCombo.Items.AddRange(servers);
+            tbxPrositServer.Text = PrositConfig.GetPrositConfig().Server;
             intensityModelCombo.Items.AddRange(iModels);
             iRTModelCombo.Items.AddRange(rtModels);
             
             prositServerStatusLabel.Text = string.Empty;
-            if (servers.Contains(Settings.Default.PrositServer))
-            {
-                prositServerCombo.SelectedItem = Settings.Default.PrositServer;
-            }
-            else if (!string.IsNullOrEmpty(Settings.Default.PrositServer))
-            {
-                prositServerCombo.Items.Add(Settings.Default.PrositServer);
-                prositServerCombo.SelectedItem = Settings.Default.PrositServer;
-            }
-            else
-            {
-                prositServerCombo.SelectedIndex = 0;
-            }
-
             if (iModels.Contains(Settings.Default.PrositIntensityModel))
                 intensityModelCombo.SelectedItem = Settings.Default.PrositIntensityModel;
             if (rtModels.Contains(Settings.Default.PrositRetentionTimeModel))
@@ -133,12 +119,11 @@ namespace pwiz.Skyline.ToolsUI
 
         private class PrositPingRequest : PrositHelpers.PrositRequest
         {
-            public PrositPingRequest(string server,
-                string ms2Model, string rtModel, SrmSettings settings,
+            public PrositPingRequest(string ms2Model, string rtModel, SrmSettings settings,
                 PeptideDocNode peptide, TransitionGroupDocNode precursor, int nce, Action updateCallback) : base(null,
                 null, null, settings, peptide, precursor, nce, updateCallback)
             {
-                Client = PrositPredictionClient.CreateClient(server);
+                Client = PrositPredictionClient.CreateClient(PrositConfig.GetPrositConfig());
                 IntensityModel = PrositIntensityModel.GetInstance(ms2Model);
                 RTModel = PrositRetentionTimeModel.GetInstance(rtModel);
 
@@ -232,20 +217,14 @@ namespace pwiz.Skyline.ToolsUI
 
             try
             {
-                if (prositServerCombo.SelectedIndex == 0)
-                {
-                    _pingRequest?.Cancel();
-                    SetServerStatus(ServerStatus.SELECT_SERVER);
-                    return;
-                }
-                else if (PrositIntensityModelCombo == null || PrositRetentionTimeModelCombo == null)
+                if (PrositIntensityModelCombo == null || PrositRetentionTimeModelCombo == null)
                 {
                     _pingRequest?.Cancel();
                     SetServerStatus(ServerStatus.SELECT_MODEL);
                     return;
                 }
 
-                var pr = new PrositPingRequest(PrositServerCombo, PrositIntensityModelCombo,
+                var pr = new PrositPingRequest(PrositIntensityModelCombo,
                     PrositRetentionTimeModelCombo,
                     _settingsNoMod, _pingInput.NodePep, _pingInput.NodeGroup, _pingInput.NCE.Value,
                     () => { Invoke((Action) UpdateServerStatus); });
@@ -315,7 +294,6 @@ namespace pwiz.Skyline.ToolsUI
 
                 Settings.Default.PrositIntensityModel = (string) intensityModelCombo.SelectedItem;
                 Settings.Default.PrositRetentionTimeModel = (string)iRTModelCombo.SelectedItem;
-                Settings.Default.PrositServer = prositServerCombo.SelectedIndex == 0 ? null : (string) prositServerCombo.SelectedItem;
                 Settings.Default.PrositNCE = (int) ceCombo.SelectedItem;
             }
             base.OnClosed(e);
@@ -386,12 +364,6 @@ namespace pwiz.Skyline.ToolsUI
             set { powerOfTenCheckBox.Checked = value; }
         }
 
-        public string PrositServerCombo
-        {
-            get { return (string) prositServerCombo.SelectedItem; }
-            set { prositServerCombo.SelectedItem = value; }
-        }
-
         public string PrositIntensityModelCombo
         {
             get { return (string)intensityModelCombo.SelectedItem; }
@@ -448,11 +420,6 @@ namespace pwiz.Skyline.ToolsUI
             {
                 Settings.Default.Reset();
             }
-        }
-
-        private void serverCombo_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            UpdateServerStatus();
         }
 
         private void prositDescrLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

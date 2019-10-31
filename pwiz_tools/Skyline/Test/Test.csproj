@@ -190,6 +190,7 @@
     <Compile Include="PeakBoundaryTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PropertySettingsTest.cs" />
+    <Compile Include="PrositConfigTest.cs" />
     <Compile Include="Proteome\ProteomeDbTest.cs" />
     <Compile Include="PublishDocAddSubfolderTest.cs" />
     <Compile Include="Quantification\CalibrationCurveFitterTest.cs" />
