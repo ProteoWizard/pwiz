@@ -108,7 +108,21 @@ namespace pwiz.Skyline.Model.Results
             _isProcessedScans = dataFile.IsMzWiffXml;
 
             UpdatePercentComplete();
-            _maxIonMobilityValue = dataFile.GetMaxIonMobility(); // Needed for linear range ion mobility window width calculations
+
+            // Go get the maximum observed ion mobility value, if needed for linear range window width calculation
+            var libraryIonMobilityInfo = _document.Settings.PeptideSettings.Prediction.UseLibraryIonMobilityValues
+                ? _document.Settings.GetIonMobilities(new MsDataFilePath(dataFile.FilePath)) 
+                : null;
+            // In cases where IM window is linear relative to max IM in file, we have to go look that up.
+            var getMaxIonMobility =
+                (_document.Settings.PeptideSettings.Prediction.IonMobilityPredictor != null && 
+                 _document.Settings.PeptideSettings.Prediction.IonMobilityPredictor.WindowWidthCalculator.PeakWidthMode ==
+                 IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.linear_range)
+                || (libraryIonMobilityInfo != null &&
+                    _document.Settings.PeptideSettings.Prediction.LibraryIonMobilityWindowWidthCalculator.PeakWidthMode ==
+                    IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.linear_range);
+
+            _maxIonMobilityValue = getMaxIonMobility ? dataFile.GetMaxIonMobility() : 0;
 
             // Create the filter responsible for chromatogram extraction
             bool firstPass = (_retentionTimePredictor != null);
