@@ -2618,13 +2618,8 @@ namespace pwiz.Skyline
             graphChrom.ChangedPeakBounds += graphChromatogram_ChangedPeakBounds;
             graphChrom.PickedSpectrum += graphChromatogram_PickedSpectrum;
             graphChrom.ZoomAll += graphChromatogram_ZoomAll;
-            AddGraphChromToList(graphChrom);
-            return graphChrom;
-        }
-
-        private void AddGraphChromToList(GraphChromatogram graphChrom)
-        {
             _listGraphChrom.Add(graphChrom);
+            return graphChrom;
         }
 
         private void DestroyGraphChrom(GraphChromatogram graphChrom)
@@ -3031,18 +3026,15 @@ namespace pwiz.Skyline
 
         private void closeAllChromatogramsMenuItem_Click(object sender, EventArgs e)
         {
+            CloseAllChromatograms();
+        }
+
+        public void CloseAllChromatograms()
+        {
             foreach (var graphChromatogram in _listGraphChrom)
             {
                 graphChromatogram.Hide();
             }
-        }
-
-        /// <summary>
-        /// For testing purposes 
-        /// </summary>
-        public void CloseAllChromatograms()
-        {
-            closeAllChromatogramsMenuItem_Click(null, null);
         }
 
         #endregion
