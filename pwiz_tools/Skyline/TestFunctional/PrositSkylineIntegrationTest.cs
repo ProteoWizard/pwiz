@@ -1369,7 +1369,6 @@ namespace pwiz.SkylineTestFunctional
             var alert = ShowDialog<AlertDlg>(() => { buildLibrary.Prosit = true; });
             RunUI(() => alert.ClickYes());
             var toolOptions = WaitForOpenForm<ToolOptionsUI>();
-            RunUI(() => { toolOptions.PrositServerCombo = server; });
             WaitForConditionUI(() => toolOptions.PrositServerStatus == ToolOptionsUI.ServerStatus.AVAILABLE);
             RunUI(() => toolOptions.DialogResult = DialogResult.OK);
             WaitForClosedForm(toolOptions);
