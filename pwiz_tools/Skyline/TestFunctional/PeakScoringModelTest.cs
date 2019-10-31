@@ -58,16 +58,16 @@ namespace pwiz.SkylineTestFunctional
         private readonly string[] SCORES_AND_WEIGHTS =
         {
             "-14.1764344689507",
-            "True|0.1532|5.7%;False||;False||;True|3.4162|5.3%;True|2.8635|14.0%;True|-0.4625|22.4%;True|0.2158|5.8%;False||;False||;True|3.8557|11.6%;True|10.0079|48.3%;True|0.3344|-23.7%;True|0.2500|6.2%;True|0.2602|8.8%;True|-2.1446|-4.3%;False||;False||;False||;False||;",
-            "True|1.2068|37.4%;False||;False||;False||;True|3.9818|16.5%;True|-0.0006|0.0%;False||;False||;False||;True|5.0931|10.7%;True|10.7984|39.6%;True|0.0049|-0.3%;True|0.1525|3.1%;True|-0.3205|-9.1%;True|1.8797|2.1%;False||;False||;False||;False||;",
-            "-18.261630721963",
+            "True|0.1532|5.7%;False||;True|3.4162|5.3%;True|2.8635|14.0%;True|-0.4625|22.4%;True|0.2158|5.8%;False||;False||;True|3.8557|11.6%;True|10.0079|48.3%;True|0.3344|-23.7%;True|0.2500|6.2%;True|0.2602|8.8%;True|-2.1446|-4.3%;False||;False||;False||;False||;",
+            "True|0.5479|19.8%;False||;True|4.0247|6.1%;False||;True|-0.4378|26.3%;True|0.2784|6.2%;False||;False||;True|4.6641|13.6%;True|10.8428|55.4%;True|0.3545|-29.2%;True|0.3185|7.3%;True|-0.0349|-1.2%;True|-2.1477|-4.2%;False||;False||;False||;False||;",
+            "-14.8785512519375",
             "-9.37936231171802",
             "True|0.9834|74.8%;True|0.9834|15.7%;False||;True|2.9503|9.5%;False||;False||;False||;",
             "-11.6384433459567",
             "True|1.1144|79.9%;True|1.1144|18.5%;False||;True|3.3433|1.6%;False||;False||;False||;",
             "True|0.8633|31.5%;True|2.0177|3.5%;True|6.2170|27.4%;False||;False||;False||;True|7.5352|31.7%;True|-0.1277|5.8%;False||;False||;",
-            "True|0.5479|19.8%;False||;False||;True|4.0247|6.1%;False||;True|-0.4378|26.3%;True|0.2784|6.2%;False||;False||;True|4.6641|13.6%;True|10.8428|55.4%;True|0.3545|-29.2%;True|0.3185|7.3%;True|-0.0349|-1.2%;True|-2.1477|-4.2%;False||;False||;False||;False||;",
-            "True|0.5322|;False|-1.0352|;False||;False||;True|1.4744|;True|0.0430|;True|0.0477|;False|-0.2740|;False||;True|2.0096|;True|7.7726|;True|-0.0566|;True|0.4751|;True|0.5000|;True|0.5000|;False||;False||;False||;False||;False||;False||;False||;False||;",
+            "True|0.5479|19.8%;False||;True|4.0247|6.1%;False||;True|-0.4378|26.3%;True|0.2784|6.2%;False||;False||;True|4.6641|13.6%;True|10.8428|55.4%;True|0.3545|-29.2%;True|0.3185|7.3%;True|-0.0349|-1.2%;True|-2.1477|-4.2%;False||;False||;False||;False||;",
+            "True|0.5322|;False|-1.0352|;False||;True|1.4744|;True|0.0430|;True|0.0477|;False|-0.2740|;False||;True|2.0096|;True|7.7726|;True|-0.0566|;True|0.4751|;True|0.5000|;True|0.5000|;False||;False||;False||;False||;False||;False||;False||;False||;",
         };
 
         protected override void DoTest()
@@ -313,7 +313,7 @@ namespace pwiz.SkylineTestFunctional
         protected void TestIncompatibleDataSet()
         {
             // Define an incompatible model
-            var weights = new[] {0.5322, -1.0352, double.NaN, double.NaN, 1.4744, 0.0430, 0.0477, -0.2740, double.NaN, 
+            var weights = new[] {0.5322, -1.0352, /* double.NaN, */ double.NaN, 1.4744, 0.0430, 0.0477, -0.2740, double.NaN, 
                                  2.0096, 7.7726, -0.0566, 0.4751, 0.5, 0.5, double.NaN, double.NaN, 
                                  double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN};
             var parameters = new LinearModelParams(weights, -2.5);
@@ -338,7 +338,7 @@ namespace pwiz.SkylineTestFunctional
                 editDlgTemp.TrainModelClick();
                 // Cell values go back to the standard trained model after we train and enable calculators, 
                 // despite having been loaded with weird values
-                editDlgTemp.SetChecked(3, true);
+                editDlgTemp.SetChecked(2, true);
                 editDlgTemp.TrainModelClick();
                 VerifyCellValues(editDlgTemp, SCORES_AND_WEIGHTS[1], 1.0, false);
                 editDlgTemp.CancelDialog();
@@ -365,8 +365,8 @@ namespace pwiz.SkylineTestFunctional
                 // Find missing scores
                 editDlgTemp.PeakScoringModelName = "missing_scores";
                 editDlgTemp.TrainModelClick();
-                editDlgTemp.PeakCalculatorsGrid.SelectRow(3);
-                editDlgTemp.FindMissingValues(3);
+                editDlgTemp.PeakCalculatorsGrid.SelectRow(2);   // Retention times
+                editDlgTemp.FindMissingValues(2);
                 editDlgTemp.OkDialog();
             });
             var missingPeptides = new List<string> { "LGGNEQVTR", "IPVDSIYSPVLK", "YFNDGDIVEGTIVK", 
@@ -391,16 +391,16 @@ namespace pwiz.SkylineTestFunctional
             RunEditPeakScoringDlg("missing_scores", editDlgTemp =>
             {
                 // No missing values for these scores any more
-                Assert.IsTrue(editDlgTemp.IsActiveCell(3, 0));
+                Assert.IsTrue(editDlgTemp.IsActiveCell(2, 0));
+                Assert.IsTrue(editDlgTemp.IsActiveCell(8, 0));
                 Assert.IsTrue(editDlgTemp.IsActiveCell(9, 0));
                 Assert.IsTrue(editDlgTemp.IsActiveCell(10, 0));
-                Assert.IsTrue(editDlgTemp.IsActiveCell(11, 0));
                
                 // But they aren't automatically enabled
-                Assert.IsFalse(editDlgTemp.PeakCalculatorsGrid.Items[3].IsEnabled);
+                Assert.IsFalse(editDlgTemp.PeakCalculatorsGrid.Items[2].IsEnabled);
+                Assert.IsFalse(editDlgTemp.PeakCalculatorsGrid.Items[8].IsEnabled);
                 Assert.IsFalse(editDlgTemp.PeakCalculatorsGrid.Items[9].IsEnabled);
                 Assert.IsFalse(editDlgTemp.PeakCalculatorsGrid.Items[10].IsEnabled);
-                Assert.IsFalse(editDlgTemp.PeakCalculatorsGrid.Items[11].IsEnabled);
                 editDlgTemp.SetChecked(10, true);
                 editDlgTemp.TrainModelClick();
                 editDlgTemp.OkDialog();

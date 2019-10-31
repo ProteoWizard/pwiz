@@ -41,7 +41,7 @@ namespace pwiz.SkylineTestFunctional
         private static readonly Type[] RT_TYPES = 
         { 
             typeof(MQuestRetentionTimePredictionCalc), 
-            typeof(MQuestRetentionTimeSquaredPredictionCalc)
+//            typeof(MQuestRetentionTimeSquaredPredictionCalc) // somewhat redundant with RT prediction and can lead to strange effects with a positive coefficient and large deltas
         };
 
         private static readonly Type[] ANALYTE_TYPES = 

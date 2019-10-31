@@ -178,7 +178,9 @@
             "Release Branch",
             "Trunk with Stress Tests",
             "Integration",
-            "Release Branch with Perf Tests"});
+            "Release Branch with Perf Tests",
+            "Integration with Perf Tests"
+            });
             this.comboBoxOptions.Location = new System.Drawing.Point(102, 174);
             this.comboBoxOptions.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.comboBoxOptions.Name = "comboBoxOptions";
@@ -217,6 +219,7 @@
             "Trunk with Stress Tests",
             "Integration",
             "Release Branch with Perf Tests",
+            "Integration with Perf Tests",
             "None"});
             this.comboBoxOptions2.Location = new System.Drawing.Point(102, 212);
             this.comboBoxOptions2.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);

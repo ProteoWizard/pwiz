@@ -468,6 +468,50 @@ namespace pwiz.SkylineTestFunctional
             RunUI(SkylineWindow.Undo);
         }
 
+        private void TestRefinement()
+        {
+            var graphStates = new [] { (48, 3, 4, 36), (48, 10, 11, 76) };
+
+            // Verify cv cutoff refinement works
+            var doc = SkylineWindow.Document; // tmp
+            var refineDlg = ShowDialog<RefineDlg>(() => SkylineWindow.ShowRefineDlg());
+            RunUI(() => { refineDlg.CVCutoff = 20; });
+            OkDialog(refineDlg, refineDlg.OkDialog);
+            doc = SkylineWindow.Document;
+            var refineDocState = (doc.PeptideGroupCount, doc.PeptideCount, doc.PeptideTransitionGroupCount,
+                doc.PeptideTransitionCount);
+            Assert.AreEqual(graphStates[0], refineDocState);
+            RunUI(SkylineWindow.Undo);
+
+            // Normalize to global standards
+            refineDlg = ShowDialog<RefineDlg>(() => SkylineWindow.ShowRefineDlg());
+            RunUI(() =>
+            {
+                refineDlg.CVCutoff = 20;
+                refineDlg.NormalizationMethod = AreaCVNormalizationMethod.global_standards;
+            });
+            OkDialog(refineDlg, refineDlg.OkDialog);
+            doc = SkylineWindow.Document;
+            refineDocState = (doc.PeptideGroupCount, doc.PeptideCount, doc.PeptideTransitionGroupCount,
+                doc.PeptideTransitionCount);
+            Assert.AreEqual(graphStates[0], refineDocState);
+            RunUI(SkylineWindow.Undo);
+
+            // Normalize to medians
+            refineDlg = ShowDialog<RefineDlg>(() => SkylineWindow.ShowRefineDlg());
+            RunUI(() =>
+            {
+                refineDlg.CVCutoff = 20;
+                refineDlg.NormalizationMethod = AreaCVNormalizationMethod.medians;
+            });
+            OkDialog(refineDlg, () => refineDlg.OkDialog());
+            doc = SkylineWindow.Document;
+            refineDocState = (doc.PeptideGroupCount, doc.PeptideCount, doc.PeptideTransitionGroupCount,
+                doc.PeptideTransitionCount);
+            Assert.AreEqual(graphStates[1], refineDocState);
+            RunUI(SkylineWindow.Undo);
+        }
+
         private string[][] GetExpected(string[] foundText)
         {
             return foundText.Select(t => new[] {t, PeptideAnnotationPairFinder.GetDisplayText(0.14, "D102")}).ToArray();

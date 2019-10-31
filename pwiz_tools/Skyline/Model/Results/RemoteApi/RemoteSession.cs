@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
 using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
@@ -60,7 +59,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
         public abstract IEnumerable<RemoteItem> ListContents(MsDataFileUri parentUrl);
 
-        public abstract bool AsyncFetchContents(RemoteUrl chorusUrl, out RemoteServerException remoteException);
+        public abstract bool AsyncFetchContents(RemoteUrl remoteUrl, out RemoteServerException remoteException);
 
         protected bool AsyncFetch<T>(Uri requestUri, Func<Uri, T> fetcher, out RemoteServerException remoteException)
         {
@@ -127,7 +126,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 if (null == remoteException)
                 {
                     remoteException = new RemoteServerException(
-                        Resources.ChorusSession_FetchContents_There_was_an_error_communicating_with_the_server__
+                        Resources.RemoteSession_FetchContents_There_was_an_error_communicating_with_the_server__
                         + exception.Message, exception);
                 }
                 lock (_lock)
@@ -160,11 +159,6 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
         public static RemoteSession CreateSession(RemoteAccount remoteAccount)
         {
-            var chorusAccount = remoteAccount as ChorusAccount;
-            if (chorusAccount != null)
-            {
-                return new ChorusSession(chorusAccount);
-            }
             var unifiAccount = remoteAccount as UnifiAccount;
             if (unifiAccount != null)
             {
@@ -173,7 +167,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             throw new ArgumentException();
         }
 
-        public abstract void RetryFetchContents(RemoteUrl chorusUrl);
+        public abstract void RetryFetchContents(RemoteUrl remoteUrl);
 
         protected class RemoteResponse
         {

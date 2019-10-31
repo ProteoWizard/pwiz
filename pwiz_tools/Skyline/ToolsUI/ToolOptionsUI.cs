@@ -35,7 +35,7 @@ namespace pwiz.Skyline.ToolsUI
     public partial class ToolOptionsUI : FormEx
     {
         private readonly SettingsListBoxDriver<Server> _driverServers;
-        private readonly SettingsListBoxDriver<RemoteAccount> _driverChorusAccounts;
+        private readonly SettingsListBoxDriver<RemoteAccount> _driverRemoteAccounts;
         private readonly SettingsListComboDriver<ColorScheme> _driverColorSchemes;
 
         public ToolOptionsUI()
@@ -47,8 +47,8 @@ namespace pwiz.Skyline.ToolsUI
 
             _driverServers = new SettingsListBoxDriver<Server>(listboxServers, Settings.Default.ServerList);
             _driverServers.LoadList();
-            _driverChorusAccounts = new SettingsListBoxDriver<RemoteAccount>(listBoxRemoteAccounts, Settings.Default.RemoteAccountList);
-            _driverChorusAccounts.LoadList();
+            _driverRemoteAccounts = new SettingsListBoxDriver<RemoteAccount>(listBoxRemoteAccounts, Settings.Default.RemoteAccountList);
+            _driverRemoteAccounts.LoadList();
             _driverColorSchemes = new SettingsListComboDriver<ColorScheme>(comboColorScheme, Settings.Default.ColorSchemes, true);
             _driverColorSchemes.LoadList(Settings.Default.CurrentColorScheme);
 
@@ -85,14 +85,14 @@ namespace pwiz.Skyline.ToolsUI
             _driverServers.EditList();
         }
 
-        private void btnEditChorusAccountList_Click(object sender, EventArgs e)
+        private void btnEditRemoteAccountList_Click(object sender, EventArgs e)
         {
-            EditChorusAccounts();
+            EditRemoteAccounts();
         }
 
-        public void EditChorusAccounts()
+        public void EditRemoteAccounts()
         {
-            _driverChorusAccounts.EditList();
+            _driverRemoteAccounts.EditList();
         }
 
         protected override void OnClosed(EventArgs e)
@@ -138,18 +138,18 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         // ReSharper disable InconsistentNaming
-        public enum TABS { Panorama, Chorus, Language, Miscellaneous, Display }
+        public enum TABS { Panorama, Remote, Language, Miscellaneous, Display }
         // ReSharper restore InconsistentNaming
 
         public class PanoramaTab : IFormView { }
-        public class ChorusTab : IFormView { }
+        public class RemoteTab : IFormView { }
         public class LanguageTab : IFormView { }
         public class MiscellaneousTab : IFormView { }
         public class DisplayTab : IFormView { }
 
         private static readonly IFormView[] TAB_PAGES =
         {
-            new PanoramaTab(), new ChorusTab(), new LanguageTab(), new MiscellaneousTab(), new DisplayTab(),
+            new PanoramaTab(), new RemoteTab(), new LanguageTab(), new MiscellaneousTab(), new DisplayTab(),
         };
 
         #region Functional testing support
