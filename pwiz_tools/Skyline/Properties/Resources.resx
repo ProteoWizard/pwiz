@@ -10748,4 +10748,10 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="ValueInvalidNumberListException_ValueInvalidNumberListException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_list_of_decimal_numbers_" xml:space="preserve">
     <value>The value {0} is not valid for the argument {1} which requires a list of decimal numbers.</value>
   </data>
+  <data name="RefineDlg_RefineDlg_Precursors" xml:space="preserve">
+    <value>Precursors</value>
+  </data>
+  <data name="RefineDlg_RefineDlg_Products" xml:space="preserve">
+    <value>Products</value>
+  </data>
 </root>

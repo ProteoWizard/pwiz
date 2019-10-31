@@ -129,13 +129,13 @@ namespace pwiz.Skyline.EditUI
 
                 if (document.PeptideTransitions.Any(t => t.IsMs1))
                 {
-                    comboTransType.Items.Add("Precursors");
+                    comboTransType.Items.Add(Resources.RefineDlg_RefineDlg_Precursors);
                     comboTransType.SelectedIndex = comboTransType.Items.Count - 1;
                 }
 
                 if (document.PeptideTransitions.Any(t => !t.IsMs1))
                 {
-                    comboTransType.Items.Add("Products");
+                    comboTransType.Items.Add(Resources.RefineDlg_RefineDlg_Products);
                     comboTransType.SelectedIndex = comboTransType.Items.Count - 1;
                 }
 
