@@ -312,6 +312,20 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         }
         else // DiaPasef
         {
+            // Check for all-ions data: no variation in IsolationMz, IsolationWidth
+            bool allIonsCombine = false;
+            if (combineIonMobilitySpectra)
+            {
+                sqlite::query qCount(db, "SELECT Count(DISTINCT IsolationMz) from DiaFrameMsMsWindows");
+                int numIsolationMz = qCount.begin()->get<int>(0);
+                if (numIsolationMz == 1)
+                {
+                    sqlite::query qCount2(db, "SELECT Count(DISTINCT IsolationWidth) from DiaFrameMsMsWindows");
+                    int numIsolationWidth = qCount2.begin()->get<int>(0);
+                    allIonsCombine = numIsolationWidth == 1;
+                }
+            }
+
             string querySql = "SELECT Frame, ScanNumBegin, ScanNumEnd, IsolationMz, IsolationWidth, CollisionEnergy, f.WindowGroup "
                               "FROM DiaFrameMsMsInfo f "
                               "JOIN DiaFrameMsMsWindows w ON w.WindowGroup=f.WindowGroup " +
@@ -319,23 +333,52 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                               "ORDER BY Frame, ScanNumBegin";
             sqlite::query q(db, querySql.c_str());
             DiaPasefIsolationInfo info;
-            for (sqlite::query::iterator itr = q.begin(); itr != q.end(); ++itr)
+            for (sqlite::query::iterator itr = q.begin(); itr != q.end();)
             {
                 sqlite::query::rows row = *itr;
-                int idx = -1;
-                int64_t frameId = row.get<sqlite3_int64>(++idx);
+                const int colFrameId = 0;
+                const int colScanBegin = 1;
+                const int colScanEnd = 2;;
+                const int colIsolationMz = 3;
+                const int colIsolationWidth = 4;
+                const int colCE = 5;
+                const int colWindowGroup = 6;
+
+                int64_t frameId = row.get<sqlite3_int64>(colFrameId);
 
                 auto findItr = frames_.find(frameId);
                 if (findItr == frames_.end()) // numPeaks == 0, but sometimes still shows up in PasefFrameMsMsInfo!?
                     continue;
                 auto& frame = findItr->second;
 
-                int scanBegin = row.get<int>(++idx);
-                int scanEnd = row.get<int>(++idx); // scan end in DiaFrameMsMsInfo is inclusive same as pwiz;
+                int scanBegin = row.get<int>(colScanBegin);
+                int scanEnd = row.get<int>(colScanEnd); // scan end in DiaFrameMsMsInfo is inclusive same as pwiz;
 
-                info.isolationMz = row.get<double>(++idx);
-                info.isolationWidth = row.get<double>(++idx);
-                info.collisionEnergy = row.get<double>(++idx);
+                info.isolationMz = row.get<double>(colIsolationMz);
+                info.isolationWidth = row.get<double>(colIsolationWidth);
+                int windowGroup = row.get<int>(colWindowGroup);
+                if (allIonsCombine)
+                {
+                    // Locate end of window
+                    while (++itr != q.end())
+                    {
+                        row = *itr;
+                        if (frameId == row.get<sqlite3_int64>(colFrameId))
+                        {
+                            scanEnd = row.get<int>(colScanEnd);
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    info.collisionEnergy = row.get<double>(colCE);
+                    ++itr;
+                }
+
                 info.numScans = 1 + scanEnd - scanBegin;
 
                 if (!isolationMzFilter_.empty())
@@ -381,7 +424,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                     info.numScans = 1 + scanEnd - scanBegin;
                 }
 
-                frame->windowGroup_ = row.get<int>(++idx);
+                frame->windowGroup_ = windowGroup; 
                 frame->diaPasefIsolationInfoByScanNumber_[scanBegin] = info;
             }
 

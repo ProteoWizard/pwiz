@@ -880,13 +880,13 @@ namespace pwiz.ProteowizardWrapper
                     spectrum.index, spectrumIndex)); 
             }
 
+            bool expectIonMobilityValue = IonMobilityUnits != eIonMobilityUnits.none;
             var msDataSpectrum = new MsDataSpectrum
             {
                 Id = id.abbreviate(idText),
                 Level = GetMsLevel(spectrum) ?? 0,
                 Index = spectrum.index,
                 RetentionTime = GetStartTime(spectrum),
-                IonMobility = GetIonMobility(spectrum),
                 PrecursorsByMsLevel = GetPrecursorsByMsLevel(spectrum),
                 Centroided = IsCentroided(spectrum),
                 NegativeCharge = NegativePolarity(spectrum)
@@ -901,6 +901,10 @@ namespace pwiz.ProteowizardWrapper
                 msDataSpectrum.Mzs = new double[0];
                 msDataSpectrum.Intensities = new double[0];
                 msDataSpectrum.IonMobilities = null;
+                if (expectIonMobilityValue)
+                {
+                    msDataSpectrum.IonMobility = GetIonMobility(spectrum);
+                }
             }
             else
             {
@@ -920,6 +924,10 @@ namespace pwiz.ProteowizardWrapper
                         }
                         msDataSpectrum.MinIonMobility = min;
                         msDataSpectrum.MaxIonMobility = max;
+                    }
+                    else if (expectIonMobilityValue)
+                    {
+                        msDataSpectrum.IonMobility = GetIonMobility(spectrum);
                     }
 
                     if (msDataSpectrum.Level == 1 && _config.simAsSpectra &&
@@ -1002,9 +1010,11 @@ namespace pwiz.ProteowizardWrapper
             double? maxIonMobility = null;
             for (var i = 0; i < IonMobilitySpectrumList.size(); i++)
             {
-                using (var spectrum = IonMobilitySpectrumList.spectrum(i, false))
+                using (var spectrum = IonMobilitySpectrumList.spectrum(i, true))
                 {
-                    var ionMobility = GetIonMobility(spectrum);
+                    var ionMobilities = GetIonMobilityArray(spectrum);
+                    var ionMobility = 
+                        ionMobilities != null ? IonMobilityValue.GetIonMobilityValue(ionMobilities.Max(), IonMobilityUnits) : GetIonMobility(spectrum);
                     if (!ionMobility.HasValue)
                     {
                         // Assume that if first few regular scans are without IM info, they are all without IM info
@@ -1016,6 +1026,10 @@ namespace pwiz.ProteowizardWrapper
                     if (!maxIonMobility.HasValue)
                     {
                         maxIonMobility = ionMobility.Mobility;
+                        if (ionMobilities != null)
+                        {
+                            break; // 3-array representation, we've seen the range in one go
+                        }
                     }
                     else if (Math.Abs(ionMobility.Mobility??0) < Math.Abs(maxIonMobility.Value))
                     {

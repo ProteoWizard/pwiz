@@ -246,7 +246,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 }
             }
             Assert.IsTrue(errmsg.Length == 0, errmsg);
-            Assert.AreEqual(1093425, maxHeight, 1); 
+            Assert.AreEqual(1093421, maxHeight, 1); 
 
             // Does CCS show up in reports?
             TestReports(doc1);
