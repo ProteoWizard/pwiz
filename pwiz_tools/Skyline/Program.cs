@@ -115,7 +115,7 @@ namespace pwiz.Skyline
                 return 1;
             }
 
-            SecurityProtocolInitializer.Initialize(); // Enable highest available security level for HTTPS connections, esp. Chorus
+            SecurityProtocolInitializer.Initialize(); // Enable highest available security level for HTTPS connections
 
             CommonFormEx.TestMode = FunctionalTest;
             CommonFormEx.Offscreen = SkylineOffscreen;
@@ -466,6 +466,13 @@ namespace pwiz.Skyline
 
                 // Add handler for non-UI thread exceptions. 
                 AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+
+                if (Settings.Default.SettingsUpgradeRequired)
+                {
+                    Settings.Default.Upgrade();
+                    Settings.Default.SettingsUpgradeRequired = false;
+                    Settings.Default.Save();
+                }
             }
         }
 

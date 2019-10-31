@@ -73,6 +73,15 @@ namespace pwiz.Skyline.Util
             get { return VersionPart(3); }
         }
 
+        public static string GitHash
+        {
+            get
+            {
+                var parts = Version.Split('-');
+                return parts.Length > 1 ? parts[1] : string.Empty;
+            }
+        }
+
         private static string _version;
 
         private static string GetVersion()
@@ -125,7 +134,7 @@ namespace pwiz.Skyline.Util
 
         private static int VersionPart(int index)
         {
-            string[] versionParts = Version.Split('.');
+            string[] versionParts = Version.Split('-')[0].Split('.');
             return (versionParts.Length > index ? Convert.ToInt32(versionParts[index]) : 0);
         }
 
