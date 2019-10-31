@@ -83,7 +83,13 @@ namespace pwiz.ProteowizardWrapper
         private readonly bool _requireVendorCentroidedMS1;
         private readonly bool _requireVendorCentroidedMS2;
 
-        private DetailLevel _detailFastMetaData = DetailLevel.InstantMetadata;
+        private DetailLevel _detailMsLevel = DetailLevel.InstantMetadata;
+
+        private DetailLevel _detailStartTime = DetailLevel.InstantMetadata;
+
+        private DetailLevel _detailIonMobility = DetailLevel.InstantMetadata;
+
+        private DetailLevel _detailLevelPrecursors = DetailLevel.InstantMetadata;
 
         private static double[] ToArray(BinaryDataArray binaryDataArray)
         {
@@ -1114,24 +1120,21 @@ namespace pwiz.ProteowizardWrapper
         }
 
         public TVal GetMetaDataValue<TVal>(int scanIndex, Func<Spectrum, TVal> getValue, Func<TVal, bool> isUsableValue,
-            Func<TVal, TVal> returnValue)
+            Func<TVal, TVal> returnValue, ref DetailLevel detailLevel)
         {
-            var spectrum = GetCachedSpectrum(scanIndex, _detailFastMetaData);
+            var spectrum = GetCachedSpectrum(scanIndex, detailLevel);
             TVal val = getValue(spectrum);
-            if (isUsableValue(val) || _detailFastMetaData >= DetailLevel.FullMetadata)
+            if (isUsableValue(val) || detailLevel >= DetailLevel.FullMetadata)
                 return returnValue(val);
-
             // If level is not found with faster metadata methods, try the slower ones.
-            if (_detailFastMetaData == DetailLevel.InstantMetadata)
-                _detailFastMetaData = DetailLevel.FastMetadata;
-            else if (_detailFastMetaData == DetailLevel.FastMetadata)
-                _detailFastMetaData = DetailLevel.FullMetadata;
-            return GetMetaDataValue(scanIndex, getValue, isUsableValue, returnValue);
+            if (detailLevel < DetailLevel.FullMetadata)
+                detailLevel++;
+            return GetMetaDataValue(scanIndex, getValue, isUsableValue, returnValue, ref detailLevel);
         }
 
         public int GetMsLevel(int scanIndex)
         {
-            return (int) GetMetaDataValue(scanIndex, GetMsLevel, v => v.HasValue, v => v ?? 0);
+            return (int) GetMetaDataValue(scanIndex, GetMsLevel, v => v.HasValue, v => v ?? 0, ref _detailMsLevel);
         }
 
         private static int? GetMsLevel(Spectrum spectrum)
@@ -1144,7 +1147,7 @@ namespace pwiz.ProteowizardWrapper
 
         public IonMobilityValue GetIonMobility(int scanIndex) // for non-combined-mode IMS
         {
-            return GetMetaDataValue(scanIndex, GetIonMobility, v => v != null && v.HasValue, v => v);
+            return GetMetaDataValue(scanIndex, GetIonMobility, v => v != null && v.HasValue, v => v, ref _detailIonMobility);
         }
 
         private IonMobilityValue GetIonMobility(Spectrum spectrum) // for non-combined-mode IMS
@@ -1195,7 +1198,7 @@ namespace pwiz.ProteowizardWrapper
 
         public double? GetStartTime(int scanIndex)
         {
-            return GetMetaDataValue(scanIndex, GetStartTime, v => v.HasValue, v => v ?? 0);
+            return GetMetaDataValue(scanIndex, GetStartTime, v => v.HasValue, v => v ?? 0, ref _detailStartTime);
         }
 
         private static double? GetStartTime(Spectrum spectrum)
@@ -1213,7 +1216,7 @@ namespace pwiz.ProteowizardWrapper
         {
             if (GetMsLevel(scanIndex) < 2)
                 return MsDataSpectrum.NO_PRECURSORS;
-            return GetMetaDataValue(scanIndex, GetPrecursors, v => v.Length > 0, v => v);
+            return GetMetaDataValue(scanIndex, GetPrecursors, v => v.Length > 0, v => v, ref _detailLevelPrecursors);
         }
 
         private MsPrecursor[] GetPrecursors(Spectrum spectrum)
