@@ -922,7 +922,7 @@ namespace pwiz.Skyline.Model.Results
                                     _dataFile.GetSpectrumId(i)));
                         }
                         var precursors = nextSpectrum.Precursors;
-                        if (precursors.Length < 1 || !precursors[0].PrecursorMz.HasValue)
+                        if (precursors.Count < 1 || !precursors[0].PrecursorMz.HasValue)
                         {
                             throw new InvalidDataException(
                                 string.Format(Resources.SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_precursor_mz,
@@ -1332,7 +1332,7 @@ namespace pwiz.Skyline.Model.Results
 
             private static double GetPrecursorCollisionEnergy(MsDataSpectrum dataSpectrum)
             {
-                return dataSpectrum.Precursors.Length > 0
+                return dataSpectrum.Precursors.Count > 0
                     ? dataSpectrum.Precursors[0].PrecursorCollisionEnergy ?? 0
                     : 0;
             }

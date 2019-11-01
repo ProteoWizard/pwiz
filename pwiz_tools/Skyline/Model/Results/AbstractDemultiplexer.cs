@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Properties;
 
@@ -424,20 +425,18 @@ namespace pwiz.Skyline.Model.Results
             returnSpectra = new MsDataSpectrum[deconvIndices.Length];
             for (int deconvSpecIndex = 0; deconvSpecIndex < deconvIndices.Length; ++deconvSpecIndex)
             {
+                var deconvRegion = _isoMapper.GetDeconvRegion(deconvIndices[deconvSpecIndex]);
                 var deconvSpec = new MsDataSpectrum
                 {
                     Intensities = deconvIntensities[deconvSpecIndex],
                     Mzs = deconvMzs[deconvSpecIndex],
-                    Precursors = new MsPrecursor[1]
-                };
-                var deconvRegion = _isoMapper.GetDeconvRegion(deconvIndices[deconvSpecIndex]);
-                var precursor = new MsPrecursor
+                    Precursors = ImmutableList.Singleton(new MsPrecursor
                     {
-                        PrecursorMz = new SignedMz(deconvRegion.CenterMz, originalSpectrum.NegativeCharge) ,
-                        IsolationWindowLower =  deconvRegion.Width/2.0,
-                        IsolationWindowUpper =  deconvRegion.Width/2.0
-                    };
-                deconvSpec.Precursors[0] = precursor;
+                        PrecursorMz = new SignedMz(deconvRegion.CenterMz, originalSpectrum.NegativeCharge),
+                        IsolationWindowLower = deconvRegion.Width / 2.0,
+                        IsolationWindowUpper = deconvRegion.Width / 2.0
+                    })
+                };
                 deconvSpec.Centroided = originalSpectrum.Centroided;
                 deconvSpec.Level = originalSpectrum.Level;
                 deconvSpec.RetentionTime = originalSpectrum.RetentionTime;
