@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
@@ -440,6 +441,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         (flowFileStatus.VerticalScroll.Visible
                             ? SystemInformation.VerticalScrollBarWidth
                             : 0);
+            List<FileProgressControl> controlsToAdd = new List<FileProgressControl>();
             foreach (var loadingStatus in status.ProgressList)
             {
                 var filePath = loadingStatus.FilePath;
@@ -464,9 +466,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 progressControl.Cancel += (sender, args) => Cancel(thisLoadingStatus);
                 progressControl.ShowGraph += (sender, args) => ShowGraph();
                 progressControl.ShowLog += (sender, args) => ShowLog();
-                flowFileStatus.Controls.Add(progressControl);
+                controlsToAdd.Add(progressControl);
                 first = false;
             }
+
+            flowFileStatus.Controls.AddRange(controlsToAdd.ToArray());
         }
 
         private void CancelMissingFiles(MultiProgressStatus status)
