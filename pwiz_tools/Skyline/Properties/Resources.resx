@@ -10742,4 +10742,13 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="ValueInvalidNumberListException_ValueInvalidNumberListException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_list_of_decimal_numbers_" xml:space="preserve">
     <value>The value {0} is not valid for the argument {1} which requires a list of decimal numbers.</value>
   </data>
+  <data name="EditIrtCalcDlg_ChangeStandardPeptides_Removed_peptides_on_iRT_standard_protein" xml:space="preserve">
+    <value>Removed peptides on iRT standard protein</value>
+  </data>
+  <data name="ChangeIrtPeptidesDlg_OkDialog_The_following_peptides_were_removed_" xml:space="preserve">
+    <value>The following peptides were removed:</value>
+  </data>
+  <data name="ChangeIrtPeptidesDlg_OkDialog_Would_you_like_to_remove_them_from_the_document_" xml:space="preserve">
+    <value>Would you like to remove them from the document?</value>
+  </data>
 </root>
