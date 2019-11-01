@@ -95,6 +95,8 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListIonMobilityBase
     mutable map<string, size_t> idToIndexMap_;
     mutable boost::container::flat_map<double, vector<pair<int, int> > > scanTimeToFunctionAndBlockMap_;
 
+    void getCombinedSpectrumData(int function, int block, BinaryData<double>& mz, BinaryData<double>& intensity, BinaryData<double>& driftTime) const;
+
     void initializeCoefficients() const;
     double calibrate(const double &mz) const;
     mutable vector<double> calibrationCoefficients_;
