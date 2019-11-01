@@ -22264,6 +22264,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Precursors.
+        /// </summary>
+        public static string RefineDlg_RefineDlg_Precursors {
+            get {
+                return ResourceManager.GetString("RefineDlg_RefineDlg_Precursors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Products.
+        /// </summary>
+        public static string RefineDlg_RefineDlg_Products {
+            get {
+                return ResourceManager.GetString("RefineDlg_RefineDlg_Products", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Do you want to continue?.
         /// </summary>
         public static string RefineListDlg_OkDialog_Do_you_want_to_continue {
