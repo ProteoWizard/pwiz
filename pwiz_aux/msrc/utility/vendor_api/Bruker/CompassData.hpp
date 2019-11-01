@@ -255,6 +255,14 @@ struct PWIZ_API_DECL Chromatogram
 typedef boost::shared_ptr<Chromatogram> ChromatogramPtr;
 
 
+struct FrameScanRange
+{
+    int frame;
+    int scanStart;
+    int scanEnd;
+};
+
+
 struct PWIZ_API_DECL CompassData
 {
     typedef boost::shared_ptr<CompassData> Ptr;
@@ -278,8 +286,9 @@ struct PWIZ_API_DECL CompassData
     /// returns the number of spectra available from the MS source
     virtual size_t getMSSpectrumCount() const = 0;
 
-    /// converts a one-dimensional, one-based scan number to a one-based frame number and one-based scan number within the frame (only for TDF data)
-    virtual std::pair<size_t, size_t> getFrameScanPair(int scan) const;
+    /// converts a one-dimensional, one-based scan number to a one-based frame number and one-based scan number range within the frame (only for TDF data);
+    /// for non-combined IMS data, scanStart and scanEnd will be the same
+    virtual FrameScanRange getFrameScanPair(int scan) const;
 
     /// converts a one-based frame number and one-based scan number to a one-dimensional, one-based scan index (only for TDF data)
     virtual size_t getSpectrumIndex(int frame, int scan) const;

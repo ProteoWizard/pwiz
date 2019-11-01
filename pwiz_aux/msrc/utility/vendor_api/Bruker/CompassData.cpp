@@ -785,7 +785,7 @@ PWIZ_API_DECL CompassDataPtr CompassData::create(const string& rawpath, bool com
 #endif // PWIZ_READER_BRUKER_WITH_COMPASSXTRACT
 
 
-PWIZ_API_DECL pair<size_t, size_t> CompassData::getFrameScanPair(int scanIndex) const
+PWIZ_API_DECL FrameScanRange CompassData::getFrameScanPair(int scanIndex) const
 {
     throw runtime_error("[getFrameScanPair()] only supported for TDF data");
 }

@@ -258,7 +258,7 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     /// returns a spectrum from the MS source
     virtual MSSpectrumPtr getMSSpectrum(int scan, DetailLevel detailLevel = DetailLevel_FullMetadata) const;
 
-    virtual std::pair<size_t, size_t> getFrameScanPair(int scan) const;
+    virtual FrameScanRange getFrameScanPair(int scan) const;
     virtual size_t getSpectrumIndex(int frame, int scan) const;
 
     /// returns the number of sources available from the LC system
@@ -280,7 +280,7 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     virtual ChromatogramPtr getBPC() const;
 
     virtual std::string getOperatorName() const;
-    virtual std::string getAnalysisName() const ;
+    virtual std::string getAnalysisName() const;
     virtual boost::local_time::local_date_time getAnalysisDateTime() const;
     virtual std::string getSampleName() const;
     virtual std::string getMethodName() const;
