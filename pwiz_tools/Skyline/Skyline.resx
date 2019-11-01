@@ -1860,12 +1860,6 @@
   <data name="mProphetFeaturesMenuItem.Text" xml:space="preserve">
     <value>m&amp;Prophet Features...</value>
   </data>
-  <data name="chorusRequestToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>183, 22</value>
-  </data>
-  <data name="chorusRequestToolStripMenuItem.Text" xml:space="preserve">
-    <value>Chorus Request...</value>
-  </data>
   <data name="exportAnnotationsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
   </data>
@@ -5136,12 +5130,6 @@ first occurrence of any peptide.</value>
     <value>mProphetFeaturesMenuItem</value>
   </data>
   <data name="&gt;&gt;mProphetFeaturesMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;chorusRequestToolStripMenuItem.Name" xml:space="preserve">
-    <value>chorusRequestToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;chorusRequestToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;exportAnnotationsMenuItem.Name" xml:space="preserve">
