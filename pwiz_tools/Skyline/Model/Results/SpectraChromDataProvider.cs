@@ -827,7 +827,7 @@ namespace pwiz.Skyline.Model.Results
 
                 if (_runningAsync)
                 {
-                    // Just in case the Read thread is waiting to add a spectrum to a full pending list
+                    // Just in case the Read or Sort thread is waiting to add a spectrum to a full pending list
                     SpectrumInfo info;
                     _pendingInfoList.TryTake(out info);
                     if (_unprocessedInfoList != null)
@@ -894,9 +894,10 @@ namespace pwiz.Skyline.Model.Results
             private void SetException(Exception exception)
             {
                 _exception = exception;
-                _pendingInfoList.Add(SpectrumInfo.LAST);
                 if (_unprocessedInfoList != null)
                     _unprocessedInfoList.Add(SpectrumInfo.LAST);
+                else
+                    _pendingInfoList.Add(SpectrumInfo.LAST);
             }
 
             public bool NextSpectrum()
@@ -940,8 +941,9 @@ namespace pwiz.Skyline.Model.Results
                     }
 
                     // If the spectrum contains an IMS array, then it needs to be ordered
+                    // Once the sorter thread is created, all spectra must go through it
                     var spectrum = nextInfo.DataSpectrum;
-                    if (spectrum?.IonMobilities == null || !_runningAsync)
+                    if (_unprocessedInfoList == null && (spectrum?.IonMobilities == null || !_runningAsync))
                     {
                         // If not running async order before adding to the list
                         if (spectrum?.IonMobilities != null)
@@ -981,6 +983,7 @@ namespace pwiz.Skyline.Model.Results
                     ArrayUtil.Sort(spectrum.Mzs, spectrum.Intensities, spectrum.IonMobilities);
                     _pendingInfoList.Add(nextInfo);
                 }
+                _pendingInfoList.Add(nextInfo); // Add the last spectrum to end the Spectrum reader thread
             }
 
             private SpectrumInfo ReadSpectrum(ref int i)
