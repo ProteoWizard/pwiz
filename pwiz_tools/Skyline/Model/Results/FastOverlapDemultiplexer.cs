@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
 
 namespace pwiz.Skyline.Model.Results
@@ -42,7 +43,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public MsDataSpectrum[] GetDeconvolvedSpectra(int index, MsDataSpectrum originalSpectrum)
         {
-            if (originalSpectrum.Precursors.Length != 1)
+            if (originalSpectrum.Precursors.Count != 1)
             {
                 return new[] {originalSpectrum};
             }
@@ -108,15 +109,9 @@ namespace pwiz.Skyline.Model.Results
             }
 
             MsDataSpectrum lowerSpectrum = MakeDeconvSpectrum(originalSpectrum, lowerPeaks);
-            lowerSpectrum.Precursors = new[]
-            {
-                MakeMsPrecursor(lowerMz, middlePrecursorMz.Value)
-            };
+            lowerSpectrum.Precursors = ImmutableList.Singleton(MakeMsPrecursor(lowerMz, middlePrecursorMz.Value));
             MsDataSpectrum upperSpectrum = MakeDeconvSpectrum(originalSpectrum, upperPeaks);
-            upperSpectrum.Precursors = new[]
-            {
-                MakeMsPrecursor(middlePrecursorMz.Value, upperMz)
-            };
+            upperSpectrum.Precursors = ImmutableList.Singleton(MakeMsPrecursor(middlePrecursorMz.Value, upperMz));
             return new[] {lowerSpectrum, upperSpectrum};
         }
 
