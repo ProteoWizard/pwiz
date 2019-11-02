@@ -357,7 +357,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
                 auto frameScanPair = compassDataPtr_->getFrameScanPair(si.scan);
                 generate(std::back_insert_iterator<std::string>(scan.spectrumID),
                          "frame=" << int_ << " scan=" << int_,
-                         frameScanPair.first, *scanNumbers.begin());
+                         frameScanPair.frame, *scanNumbers.begin());
 
                 vector<Scan>& scans = result->scanList.scans;
                 scans.reserve(scanNumbers.size());
@@ -367,7 +367,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
                     scans.back().instrumentConfigurationPtr = msd_.run.defaultInstrumentConfigurationPtr;
                     generate(std::back_insert_iterator<std::string>(scans.back().spectrumID),
                              "frame=" << int_ << " scan=" << int_,
-                             frameScanPair.first, *itr);
+                             frameScanPair.frame, *itr);
 
                     // CONSIDER: do we need this? all scan times will be the same and it's rather verbose
                     //if (scanTime > 0)
@@ -675,14 +675,14 @@ PWIZ_API_DECL void SpectrumList_Bruker::createIndex()
             if (config_.combineIonMobilitySpectra)
             {
                 generate(sink,
-                         "merged=" << int_,
-                         si.index);
+                         "merged=" << int_ << " frame=" << int_ << " scanStart=" << int_ << " scanEnd=" << int_,
+                         si.index, frameScanPair.frame, frameScanPair.scanStart, frameScanPair.scanEnd);
                 idToIndexTempMap[si.id] = si.index;
             }
             else // not inserting into idToIndexTempMap (instead uses on-the-fly logic in find())
                 generate(sink,
                          "frame=" << int_ << " scan=" << int_,
-                         frameScanPair.first, frameScanPair.second);
+                         frameScanPair.frame, frameScanPair.scanStart);
         }
     }
     else if (format_ != Reader_Bruker_Format_U2)

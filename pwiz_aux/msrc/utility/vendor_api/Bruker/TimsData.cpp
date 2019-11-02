@@ -129,7 +129,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
       tdfStoragePtr_(new TimsBinaryData(rawpath)),
       tdfStorage_(*tdfStoragePtr_)
 {
-    tims_set_num_threads(8);
+    tims_set_num_threads(4);
     sqlite::database db(tdfFilepath_);
 
     double mzAcqRangeLower = 0, mzAcqRangeUpper = 0;
@@ -589,10 +589,10 @@ bool TimsDataImpl::hasPASEFData() const { return hasPASEFData_; }
 size_t TimsDataImpl::getMSSpectrumCount() const { return spectra_.size(); }
 MSSpectrumPtr TimsDataImpl::getMSSpectrum(int scan, DetailLevel detailLevel) const { return spectra_[scan - 1]; }
 
-pair<size_t, size_t> TimsDataImpl::getFrameScanPair(int scan) const
+FrameScanRange TimsDataImpl::getFrameScanPair(int scan) const
 {
     const auto& s = spectra_[scan - 1];
-    return make_pair(s->frame_.frameId(), s->scanBegin()+1);
+    return FrameScanRange { (int) s->frame_.frameId(), s->scanBegin() + 1, s->scanEnd() + 1 };
 }
 
 size_t TimsDataImpl::getSpectrumIndex(int frame, int scan) const
