@@ -476,7 +476,9 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
                     serializer_mz5.write(targetResultFilename_mz5, msd);
                     serializer_mz5.read(targetResultFilename_mz5, msd_mz5);
 
-                    Diff<MSData, DiffConfig> diff_mz5(msd, msd_mz5);
+                    DiffConfig diffConfig_mz5;
+                    diffConfig_mz5.ignoreExtraBinaryDataArrays = true;
+                    Diff<MSData, DiffConfig> diff_mz5(msd, msd_mz5, diffConfig_mz5);
                     if (diff_mz5) cerr << headDiff(diff_mz5, 5000) << endl;
                     unit_assert(!diff_mz5);
                 }

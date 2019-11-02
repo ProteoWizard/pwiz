@@ -258,11 +258,16 @@ struct PWIZ_API_DECL Frame
 {
     virtual int getFrameIndex() const = 0;
     virtual TimeRange getDriftTimeRange() const = 0;
+    virtual MassRange getMzRange() const = 0;
     virtual double getRetentionTime() const = 0;
+    virtual double getTic() const = 0;
     virtual int getDriftBinsPresent() const = 0;
     virtual const std::vector<short>& getNonEmptyDriftBins() const = 0;
     virtual DriftScanPtr getScan(int driftBinIndex) const = 0;
     virtual DriftScanPtr getTotalScan() const = 0;
+
+    virtual void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities) const = 0;
+    virtual size_t getCombinedSpectrumDataSize() const = 0;
 
     virtual ~Frame() {}
 };
