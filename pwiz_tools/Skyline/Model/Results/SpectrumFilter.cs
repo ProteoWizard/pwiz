@@ -101,6 +101,7 @@ namespace pwiz.Skyline.Model.Results
             var dictPrecursorMzToFilter = new SortedDictionary<PrecursorTextId, SpectrumFilterPair>(comparer);
 
             // If we're using bare measured ion mobility values from spectral libraries, go get those now
+            // TODO: Should be queried out of the libraries as needed, as with RT not bulk copied all at once
             var libraryIonMobilityInfo = document.Settings.PeptideSettings.Prediction.UseLibraryIonMobilityValues
                 ? document.Settings.GetIonMobilities(msDataFileUri)
                 : null;
@@ -769,8 +770,6 @@ namespace pwiz.Skyline.Model.Results
                 if (!filterPair.ContainsRetentionTime(retentionTime.Value))
                     continue;
 
-                EnsureMzOrdered(spectra, ref orderedByMz);  // CONSIDER: Move this to a 3rd spectrum processing thread? This keeps it off the spectrum retrieval thread
-
                 var filteredSrmSpectrum = filterPair.FilterQ1SpectrumList(spectra, isSimSpectra);
                 if (filteredSrmSpectrum != null)
                     yield return filteredSrmSpectrum;
@@ -801,8 +800,6 @@ namespace pwiz.Skyline.Model.Results
                     if (pasefAwareFilter.PreFilter(filterPair, isoWin, firstSpectrum))
                         continue;
 
-                    EnsureMzOrdered(spectra, ref orderedByMz);  // CONSIDER: Move this to a 3rd spectrum processing thread? This keeps it off the spectrum retrieval thread
-
                     // This line does the bulk of the work of pulling chromatogram points from spectra
                     var filteredSrmSpectrum = filterPair.FilterQ3SpectrumList(spectra, UseDriftTimeHighEnergyOffset());
 
@@ -816,15 +813,6 @@ namespace pwiz.Skyline.Model.Results
             {
                 yield return accumulatedSpectrum;
             }
-        }
-
-        private void EnsureMzOrdered(MsDataSpectrum[] selectedSpectra, ref bool orderedByMz)
-        {
-            if (orderedByMz)
-                return;
-            foreach (var selectedSpectrum in selectedSpectra)
-                ArrayUtil.Sort(selectedSpectrum.Mzs, selectedSpectrum.Intensities, selectedSpectrum.IonMobilities);
-            orderedByMz = true;
         }
 
         private class DiaPasefAwareFilter
@@ -863,6 +851,10 @@ namespace pwiz.Skyline.Model.Results
             {
                 if (!_isDiaPasef)
                     return false;
+
+                // If this window group has been tested before, then filter if it is not the best group
+                if (filterPair.IsKnownWindowGroup(_windowGroup))
+                    return !filterPair.IsBestWindowGroup(_windowGroup);
 
                 // We may encounter multiple window groups that include our mz and 1/K0 range, use the one whose mz,1/K0 boundbox we are most centered on
                 var distanceMz = isoWin.IsolationMz.Value - filterPair.Q1;

@@ -26,13 +26,16 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
     public sealed class SpectrumFilterPair : IComparable<SpectrumFilterPair>
     {
         private static readonly SpectrumProductFilter[] EMPTY_FILTERS = new SpectrumProductFilter[0];
-
+        private readonly bool _filterByTime;
+        private readonly double _maxTime;
+        private readonly double _minTime;
         public SpectrumFilterPair(PrecursorTextId precursorTextId, Color peptideColor, int id, double? minTime, double? maxTime,
             bool highAccQ1, bool highAccQ3)
         {
@@ -41,8 +44,18 @@ namespace pwiz.Skyline.Model.Results
             PeptideColor = peptideColor;
             Q1 = precursorTextId.PrecursorMz;
             Extractor = precursorTextId.Extractor;
-            MinTime = minTime;
-            MaxTime = maxTime;
+
+            if (minTime.HasValue && maxTime.HasValue)
+            {
+                _filterByTime = true;
+                _minTime = minTime.Value;
+                _maxTime = maxTime.Value;
+            }
+            else
+            {
+                // If not min and max, then it should be neither. Asymmetric limits not supported.
+                Assume.IsTrue(!minTime.HasValue && !maxTime.HasValue);
+            }
             IonMobilityInfo = precursorTextId.IonMobility;
             MinIonMobilityValue = IonMobilityInfo.IsEmpty ? null : IonMobilityInfo.IonMobility.Mobility - (IonMobilityInfo.IonMobilityExtractionWindowWidth??0)/2;
             MaxIonMobilityValue = IonMobilityInfo.IsEmpty ? null : MinIonMobilityValue + (IonMobilityInfo.IonMobilityExtractionWindowWidth ?? 0);
@@ -65,12 +78,13 @@ namespace pwiz.Skyline.Model.Results
         public Target ModifiedSequence { get; private set; }
         public Color PeptideColor { get; private set; }
         public SignedMz Q1 { get; private set; }
-        public double? MinTime { get; private set; }
-        public double? MaxTime { get; private set; }
+        public double? MinTime { get { return _filterByTime ? _minTime : (double?) null; } }
+        public double? MaxTime { get { return _filterByTime ? _maxTime : (double?) null; } }
         public double? MinIonMobilityValue { get; set; }
         public double? MaxIonMobilityValue { get; set; }
         public int? BestWindowGroup { get; private set; }
         public double? BestWindowGroupDistance { get; private set; }
+        public IList<int> OtherWindowGroups { get; private set; }
         private IonMobilityFilter IonMobilityInfo { get; set; }
         private SpectrumProductFilter[] Ms1ProductFilters { get; set; }
         private SpectrumProductFilter[] SimProductFilters { get; set; }
@@ -346,8 +360,7 @@ namespace pwiz.Skyline.Model.Results
 
         public bool ContainsRetentionTime(double retentionTime)
         {
-            return (!MinTime.HasValue || MinTime.Value <= retentionTime) &&
-                (!MaxTime.HasValue || MaxTime.Value >= retentionTime);
+            return !_filterByTime || (_minTime <= retentionTime && retentionTime <= _maxTime);
         }
 
         public IEnumerable<int> ProductFilterIds
@@ -429,6 +442,17 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public bool IsKnownWindowGroup(int windowGroup)
+        {
+            return windowGroup == BestWindowGroup ||
+                   (OtherWindowGroups != null && OtherWindowGroups.Contains(windowGroup));
+        }
+
+        public bool IsBestWindowGroup(int windowGroup)
+        {
+            return windowGroup == BestWindowGroup;
+        }
+
         public bool UpdateBestWindowGroup(int windowGroup, double distance)
         {
             if (BestWindowGroup.HasValue)
@@ -441,6 +465,20 @@ namespace pwiz.Skyline.Model.Results
                     return false;
             }
             // This becomes the best window group
+            if (BestWindowGroup.HasValue)
+            {
+                // Save any previously seen window groups, providing for most likely cases:
+                // 1. No other possible window groups
+                // 2. 1 other possible window group
+                if (OtherWindowGroups == null)
+                    OtherWindowGroups = new[] {BestWindowGroup.Value};
+                else
+                {
+                    if (OtherWindowGroups.Count == 1)
+                        OtherWindowGroups = new List<int>(OtherWindowGroups);
+                    OtherWindowGroups.Add(BestWindowGroup.Value);
+                }
+            }
             BestWindowGroup = windowGroup;
             BestWindowGroupDistance = distance;
             return true;

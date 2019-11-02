@@ -76,7 +76,8 @@ namespace pwiz.Skyline.Model.Results
                 var dictNameToIndex = new Dictionary<string, int>();
                 var dictIdToIndex = new Dictionary<int, int>();
                 _setFiles = new HashSet<MsDataFileUri>();
-                for (int i = 0; i < _chromatograms.Count; i++)
+                int count = _chromatograms.Count;
+                for (int i = 0; i < count; i++)
                 {
                     var set = _chromatograms[i];
                     dictNameToIndex.Add(set.Name, i);
@@ -89,12 +90,21 @@ namespace pwiz.Skyline.Model.Results
                 _countUnloaded = _chromatograms.Count(c => !c.IsLoaded);
                 HasGlobalStandardArea = MSDataFileInfos.Any(chromFileInfo =>
                     chromFileInfo.ExplicitGlobalStandardArea.HasValue);
+
+                // Pre-allocate empty arrays in case they are needed
+                EmptyPeptideResults = new Results<PeptideChromInfo>(new ChromInfoList<PeptideChromInfo>[count]);
+                EmptyTransitionGroupResults = new Results<TransitionGroupChromInfo>(new ChromInfoList<TransitionGroupChromInfo>[count]);
+                EmptyTransitionResults = new Results<TransitionChromInfo>(new ChromInfoList<TransitionChromInfo>[count]);
             }
         }
 
         public IDictionary<int, int> IdToIndexDictionary { get { return _dictIdToIndex; } }
 
         public bool IsTimeNormalArea { get; private set; }
+
+        public Results<PeptideChromInfo> EmptyPeptideResults { get; private set; }
+        public Results<TransitionGroupChromInfo> EmptyTransitionGroupResults { get; private set; }
+        public Results<TransitionChromInfo> EmptyTransitionResults { get; private set; }
 
         public CacheFormatVersion? CacheVersion
         {
