@@ -83,11 +83,16 @@ struct FrameImpl : public Frame
 
     virtual int getFrameIndex() const;
     virtual TimeRange getDriftTimeRange() const;
+    virtual MassRange getMzRange() const;
     virtual double getRetentionTime() const;
+    virtual double getTic() const;
     virtual int getDriftBinsPresent() const;
     virtual const std::vector<short>& getNonEmptyDriftBins() const;
     virtual DriftScanPtr getScan(int driftBinIndex) const;
     virtual DriftScanPtr getTotalScan() const;
+
+    virtual void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities) const;
+    virtual size_t getCombinedSpectrumDataSize() const;
 
     private:
     int frameIndex_;
@@ -414,9 +419,19 @@ TimeRange FrameImpl::getDriftTimeRange() const
     try {return managedRangeToNative<TimeRange>(frameInfo_->DriftTimeRange);} CATCH_AND_FORWARD
 }
 
+MassRange FrameImpl::getMzRange() const
+{
+    try { return managedRangeToNative<MassRange>(frameInfo_->MzRange); } CATCH_AND_FORWARD
+}
+
 double FrameImpl::getRetentionTime() const
 {
     try {return frameInfo_->AcqTimeRange->Min;} CATCH_AND_FORWARD
+}
+
+double FrameImpl::getTic() const
+{
+    try {return frameInfo_->Tic;} CATCH_AND_FORWARD
 }
 
 int FrameImpl::getDriftBinsPresent() const { return numDriftBins_; }
@@ -435,7 +450,7 @@ DriftScanPtr FrameImpl::getScan(int driftBinIndex) const
         MIDAC::IMidacSpecDataMs^ specData = (MIDAC::IMidacSpecDataMs^) specData_;
         imsReader_->FrameMs(frameIndex_ + 1, driftBinIndex, MIDAC::MidacSpecFormat::ZeroBounded, true, (MIDAC::IMidacSpecDataMs^%) specData);
         if (Object::ReferenceEquals(specData, nullptr))
-            throw gcnew System::Exception(ToSystemString("null spectrum returned for frame ") + frameIndex_ + " and drift bin " + driftBinIndex);;
+            throw gcnew System::Exception(ToSystemString("null spectrum returned for frame ") + frameIndex_ + " and drift bin " + driftBinIndex);
         specData_ = specData;
         return DriftScanPtr(new DriftScanImpl(specData_));
     }
@@ -446,11 +461,83 @@ DriftScanPtr FrameImpl::getTotalScan() const
 {
     try
     {
-        MIDAC::IMidacSpecDataMs^ specData = imsReader_->ProfileTotalFrameMs(MIDAC::MidacSpecFormat::ZeroBounded, frameIndex_+ 1);
+        MIDAC::IMidacSpecDataMs^ specData = imsReader_->ProfileTotalFrameMs(MIDAC::MidacSpecFormat::ZeroTrimmed, frameIndex_+ 1);
         if (Object::ReferenceEquals(specData, nullptr))
             throw gcnew System::Exception(ToSystemString("null spectrum returned for total scan of frame ") + frameIndex_);
         specData_ = specData;
         return DriftScanPtr(new DriftScanImpl(specData_));
+    }
+    CATCH_AND_FORWARD
+}
+
+void FrameImpl::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities) const
+{
+    try
+    {
+        const auto& nonEmptyDriftBins = getNonEmptyDriftBins();
+
+        mz.clear();
+        intensities.clear();
+        mobilities.clear();
+        if (nonEmptyDriftBins.empty())
+            return;
+
+        MIDAC::IMidacSpecDataMs^ specData = (MIDAC::IMidacSpecDataMs^) specData_;
+
+        int expectedNonZeroPoints = 0;
+        for (size_t i = 0; i < nonEmptyDriftBins.size(); ++i)
+        {
+            imsReader_->FrameMs(frameIndex_ + 1, nonEmptyDriftBins[i], MIDAC::MidacSpecFormat::Metadata, true, (MIDAC::IMidacSpecDataMs^%) specData);
+            expectedNonZeroPoints += specData->NonZeroPoints;
+        }
+
+        auto mzArray = gcnew cli::array<double>(expectedNonZeroPoints);
+        auto intensityArray = gcnew cli::array<double>(expectedNonZeroPoints);
+        auto mobilityArray = gcnew cli::array<double>(expectedNonZeroPoints);
+        int lastNonZeroIndex = 0;
+
+        for (size_t i = 0; i < nonEmptyDriftBins.size(); ++i)
+        {
+            imsReader_->FrameMs(frameIndex_ + 1, nonEmptyDriftBins[i], MIDAC::MidacSpecFormat::ZeroTrimmed, true, (MIDAC::IMidacSpecDataMs^%) specData);
+            if (Object::ReferenceEquals(specData, nullptr))
+                throw gcnew System::Exception(ToSystemString("null spectrum returned for frame ") + frameIndex_ + " and drift bin " + nonEmptyDriftBins[i]);
+
+            double driftTime = specData->DriftTimeRanges->Length > 0 ? specData->DriftTimeRanges[0]->Min : 0;
+            for (int j = 0, end = specData->XArray->Length; j < end; ++j)
+            {
+                if (specData->YArray[j] == 0)
+                    continue;
+                mzArray[lastNonZeroIndex] = specData->XArray[j];
+                intensityArray[lastNonZeroIndex] = specData->YArray[j];
+                mobilityArray[lastNonZeroIndex] = driftTime;
+                ++lastNonZeroIndex;
+            }
+        }
+        ToBinaryData(mzArray, mz);
+        ToBinaryData(intensityArray, intensities);
+        ToBinaryData(mobilityArray, mobilities);
+    }
+    CATCH_AND_FORWARD
+}
+
+size_t FrameImpl::getCombinedSpectrumDataSize() const
+{
+    try
+    {
+        const auto& nonEmptyDriftBins = getNonEmptyDriftBins();
+
+        if (nonEmptyDriftBins.empty())
+            return 0;
+
+        MIDAC::IMidacSpecDataMs^ specData = (MIDAC::IMidacSpecDataMs^) specData_;
+
+        int expectedNonZeroPoints = 0;
+        for (size_t i = 0; i < nonEmptyDriftBins.size(); ++i)
+        {
+            imsReader_->FrameMs(frameIndex_ + 1, nonEmptyDriftBins[i], MIDAC::MidacSpecFormat::Metadata, true, (MIDAC::IMidacSpecDataMs^%) specData);
+            expectedNonZeroPoints += specData->NonZeroPoints;
+        }
+        return expectedNonZeroPoints;
     }
     CATCH_AND_FORWARD
 }
