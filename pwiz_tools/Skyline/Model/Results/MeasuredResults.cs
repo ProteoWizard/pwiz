@@ -1607,23 +1607,26 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
-            private void FinishCacheBuild(ChromatogramCache cache, IProgressStatus status)
+            private void FinishCacheBuild(IList<FileLoadCompletionAccumulator.Completion> buildCompletions)
             {
-                if (status.IsError)
-                {
-                    Fail(status);
+                foreach (var completion in buildCompletions.Where(c => c.Status.IsError))
+                    Fail(completion.Status);
+
+                if (buildCompletions.All(c => c.Status.IsError))
                     return;
-                }
 
                 var results = _resultsClone;
-                if (cache != null && EnsurePathsMatch(cache))
+                var cachesToAdd = buildCompletions
+                    .Where(c => c.Cache != null && c.Status.IsComplete && EnsurePathsMatch(c.Cache))
+                    .Select(c => c.Cache).ToArray();
+                if (cachesToAdd.Length > 0)
                 {
                     // Add this to the list of partial caches
                     results = ImClone(results); // Clone because many files may come through here
                     var listPartialCaches = new List<ChromatogramCache>();
                     if (results._listPartialCaches != null)
                         listPartialCaches.AddRange(results._listPartialCaches);
-                    listPartialCaches.Add(EnsureOptimalMemoryUse(cache));
+                    listPartialCaches.AddRange(cachesToAdd.Select(EnsureOptimalMemoryUse));
                     results.SetClonedCacheState(null, listPartialCaches);
                 }
 
