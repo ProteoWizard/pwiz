@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -34,7 +35,6 @@ namespace pwiz.Skyline.Model
         private readonly QueueWorker<LoadInfo> _worker;
         private readonly Dictionary<MsDataFileUri, int> _loadingPaths;
         private readonly bool _synchronousMode;
-        private int? _threadCount;
         private int? _threadCountPreferred;
         private ImportResultsSimultaneousFileOptions _simultaneousFileOptions;
 
@@ -90,7 +90,6 @@ namespace pwiz.Skyline.Model
         {
             lock (this)
             {
-                _threadCount = null;
                 _threadCountPreferred = loadingThreads;
                 _simultaneousFileOptions = (ImportResultsSimultaneousFileOptions)Settings.Default.ImportResultsSimultaneousFiles;
             }
@@ -155,7 +154,7 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
-        /// Add the given file to the queue of files to load.
+        /// Add the given files to the queue of files to load.
         /// </summary>
         public void Load(
             IList<DataFileReplicates> loadList,
@@ -163,7 +162,7 @@ namespace pwiz.Skyline.Model
             string documentFilePath,
             ChromatogramCache cacheRecalc,
             MultiFileLoadMonitor loadMonitor,
-            Action<ChromatogramCache, IProgressStatus> complete)
+            Action<IList<FileLoadCompletionAccumulator.Completion>> complete)
         {
             lock (this)
             {
@@ -182,12 +181,10 @@ namespace pwiz.Skyline.Model
                 if (uniqueLoadList.Count == 0)
                     return;
 
-                if (!_threadCount.HasValue)
-                {
-                    _threadCount = GetOptimalThreadCount(_threadCountPreferred, uniqueLoadList.Count,
-                        _simultaneousFileOptions);
-                }
-                _worker.RunAsync(_threadCount.Value, @"Load file");
+                int threadCount = GetOptimalThreadCount(_threadCountPreferred, uniqueLoadList.Count, _simultaneousFileOptions);
+                _worker.RunAsync(threadCount, @"Load file");
+
+                var accumulator = new FileLoadCompletionAccumulator(complete, threadCount, uniqueLoadList.Count);
 
                 // Add new paths to queue.
                 foreach (var loadItem in uniqueLoadList)
@@ -206,7 +203,7 @@ namespace pwiz.Skyline.Model
                         CacheRecalc = cacheRecalc,
                         Status = loadingStatus,
                         LoadMonitor = new SingleFileLoadMonitor(loadMonitor, loadItem.DataFile),
-                        Complete = complete
+                        Complete = accumulator.Complete
                     });
                 }
             }
@@ -302,6 +299,79 @@ namespace pwiz.Skyline.Model
             var loadingStatus = loadInfo.Status as ChromatogramLoadingStatus;
             if (loadingStatus != null)
                 loadingStatus.Transitions.Flush();
+        }
+    }
+
+    public class FileLoadCompletionAccumulator
+    {
+        public class Completion
+        {
+            public Completion(ChromatogramCache cache, IProgressStatus status)
+            {
+                Cache = cache;
+                Status = status;
+            }
+
+            public ChromatogramCache Cache { get; private set; }
+            public IProgressStatus Status { get; private set; }
+        }
+
+        private readonly QueueWorker<Completion> _completionWorker;
+        private readonly Action<IList<Completion>> _complete;
+        private readonly int _threadCount;
+        private readonly int _loadingCount;
+        private int _completedCount;
+        private int _consumedCount;
+        private List<Completion> _accumulatedCompletions;
+
+        public FileLoadCompletionAccumulator(Action<IList<Completion>> complete, int threadCount, int loadingCount)
+        {
+            _complete = complete;
+            _threadCount = threadCount;
+            _loadingCount = loadingCount;
+            // If there are multiple threads or even multiple files make committing
+            // completed caches asynchronous to the loading process. With multiple
+            // threads this will also commit only every time all threads complete a
+            // file.
+            if (_threadCount > 1 && _loadingCount > 1)
+            {
+                _completionWorker = new QueueWorker<Completion>(null, ConsumeCompletion);
+                _completionWorker.RunAsync(1, @"Commit loaded files");
+                _accumulatedCompletions = new List<Completion>();
+            }
+        }
+
+        private void ConsumeCompletion(Completion completion, int threadIndex)
+        {
+            _consumedCount++;
+            _accumulatedCompletions.Add(completion);
+            if (_consumedCount == _loadingCount || _accumulatedCompletions.Count == _threadCount)
+            {
+                _complete(_accumulatedCompletions);
+                _accumulatedCompletions.Clear();
+            }
+            // Report errors and cancellations as soon as possible
+            else if (!completion.Status.IsComplete)
+            {
+                _complete(new SingletonList<Completion>(completion));
+                // Add an empty completion, which will be ignored during batch
+                _accumulatedCompletions[_accumulatedCompletions.Count - 1] = new Completion(null, new ProgressStatus());
+            }
+        }
+
+        public void Complete(ChromatogramCache cache, IProgressStatus status)
+        {
+            var completedCount = Interlocked.Increment(ref _completedCount);
+            var completion = new Completion(cache, status);
+            if (_completionWorker == null)
+                _complete(new SingletonList<Completion>(completion));
+            else
+            {
+                _completionWorker.Add(completion);
+
+                if (completedCount == _loadingCount)
+                    _completionWorker.DoneAdding();
+            }
         }
     }
 
