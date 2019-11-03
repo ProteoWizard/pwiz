@@ -933,7 +933,7 @@ namespace pwiz.Skyline.Model.Results
             return (_isWatersMse || _isAgilentMse) && _mseLevel > 1;
         }
 
-        public bool HasProductFilterPairs(double? retentionTime, MsPrecursor[] precursors)
+        public bool HasProductFilterPairs(double? retentionTime, IList<MsPrecursor> precursors)
         {
             if (!EnabledMsMs || !retentionTime.HasValue || !precursors.Any())
                 return false;

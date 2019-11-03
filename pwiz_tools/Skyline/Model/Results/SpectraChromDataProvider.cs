@@ -1004,7 +1004,7 @@ namespace pwiz.Skyline.Model.Results
                                     _dataFile.GetSpectrumId(i)));
                         }
                         var precursors = nextSpectrum.Precursors;
-                        if (precursors.Length < 1 || !precursors[0].PrecursorMz.HasValue)
+                        if (precursors.Count < 1 || !precursors[0].PrecursorMz.HasValue)
                         {
                             throw new InvalidDataException(
                                 string.Format(Resources.SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_precursor_mz,
@@ -1332,7 +1332,7 @@ namespace pwiz.Skyline.Model.Results
                     return _dataFile.GetStartTime(index);  // Returns 0 if retrieval is too expensive
             }
 
-            public MsPrecursor[] GetPrecursors(int index)
+            public IList<MsPrecursor> GetPrecursors(int index)
             {
                 if (index == _lookAheadIndex && _lookAheadDataSpectrum != null)
                     return _lookAheadDataSpectrum.Precursors;
@@ -1416,7 +1416,7 @@ namespace pwiz.Skyline.Model.Results
                                 // Neither do we ever expect to see a transition in MS1 without an RT change
                                 // So, ignore the case when nextPrecursors are empty
                                 var nextPrecursors = _dataFile.GetPrecursors(_lookAheadIndex);
-                                if (nextPrecursors.Length > 0 && !ArrayUtil.EqualsDeep(nextPrecursors, dataSpectrum.Precursors))
+                                if (nextPrecursors.Count > 0 && !ArrayUtil.EqualsDeep(nextPrecursors, dataSpectrum.Precursors))
                                     break; // Different isolation
                             }
                             if (IsNextSpectrumIonMobilityForCurrentRT(nextIM))
@@ -1490,7 +1490,7 @@ namespace pwiz.Skyline.Model.Results
 
             private static double GetPrecursorCollisionEnergy(MsDataSpectrum dataSpectrum)
             {
-                return dataSpectrum.Precursors.Length > 0
+                return dataSpectrum.Precursors.Count > 0
                     ? dataSpectrum.Precursors[0].PrecursorCollisionEnergy ?? 0
                     : 0;
             }
