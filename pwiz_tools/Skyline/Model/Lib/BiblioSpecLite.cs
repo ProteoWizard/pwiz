@@ -132,6 +132,7 @@ namespace pwiz.Skyline.Model.Lib
         private PooledSqliteConnection _sqliteConnectionRedundant;
 
         private BiblioLiteSourceInfo[] _librarySourceFiles;
+        private bool _anyExplicitPeakBounds;
 
         public static string GetLibraryCachePath(string libraryPath)
         {
@@ -1026,6 +1027,7 @@ namespace pwiz.Skyline.Model.Lib
                         var driftTimesByFileId = IndexedIonMobilities.Read(stream);
                         ImmutableSortedList<int, ExplicitPeakBounds> peakBoundaries =
                             ReadPeakBoundaries(stream);
+                        _anyExplicitPeakBounds = _anyExplicitPeakBounds || peakBoundaries.Count > 0;
                         libraryEntries[i] = new BiblioLiteSpectrumInfo(key, copies, numPeaks, id,
                             retentionTimesByFileId, driftTimesByFileId, peakBoundaries, score, scoreType);
                     }
@@ -1298,6 +1300,10 @@ namespace pwiz.Skyline.Model.Lib
 
         public override ExplicitPeakBounds GetExplicitPeakBounds(MsDataFileUri filePath, IEnumerable<Target> peptideSequences)
         {
+            if (!_anyExplicitPeakBounds)
+            {
+                return null;
+            }
             int iFile = FindSource(filePath);
             if (iFile < 0)
             {
