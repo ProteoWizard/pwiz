@@ -18,7 +18,6 @@
  */
 using System.Collections.Generic;
 using System.Windows.Forms;
-using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
 using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
@@ -58,7 +57,6 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             return new IXmlElementHelper<RemoteAccount>[]
             {
                 new XmlElementHelper<UnifiAccount>(),
-                new XmlElementHelper<ChorusAccount>(),
             };
         }
     }
