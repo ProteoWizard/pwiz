@@ -8999,12 +8999,6 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="FastaImporter_Import_Error_at_or_around_line__0____1_" xml:space="preserve">
     <value>Error at or around line {0}: {1}</value>
   </data>
-  <data name="BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_trying_to_add_iRTs_to_the_library_" xml:space="preserve">
-    <value>An error occurred trying to add iRTs to the library.</value>
-  </data>
-  <data name="BuildPeptideSearchLibraryControl_AddIrtLibraryTable_Adding_iRTs_to_Library" xml:space="preserve">
-    <value>Adding iRTs to Library</value>
-  </data>
   <data name="Peptide_StandardType_iRT_standards_can_only_be_changed_by_modifying_the_iRT_calculator" xml:space="preserve">
     <value>iRT standards can only be changed by modifying the iRT calculator</value>
   </data>
@@ -9161,11 +9155,8 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Attempted" xml:space="preserve">
     <value>Regression Attempted</value>
   </data>
-  <data name="LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_Adding_iRTs_to_library" xml:space="preserve">
-    <value>Adding iRTs to library</value>
-  </data>
-  <data name="LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_An_error_occurred_trying_to_add_iRTs_to_the_library_" xml:space="preserve">
-    <value>An error occurred trying to add iRTs to the library.</value>
+  <data name="LibraryBuildNotificationHandler_AddIrts_Processing_retention_times" xml:space="preserve">
+    <value>Processing retention times</value>
   </data>
   <data name="RegressionGraphPane_RegressionGraphPane__0___at__1__points_minimum_" xml:space="preserve">
     <value>{0} (at {1} points minimum)</value>
@@ -10786,5 +10777,20 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="CalibrateIrtDlg_UseResults_The_document_contains_results_for__0__peptides_not_in_this_standard__but_using_fewer_than__1__standard_peptides_is_not_recommended__Are_you_sure_you_want_to_continue_" xml:space="preserve">
     <value>The document contains results for {0} peptides not in this standard, but using fewer than {1} standard peptides is not recommended. Are you sure you want to continue?</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_AddIrts__0__distinct_CiRT_peptides_were_found__How_many_would_you_like_to_use_as_iRT_standards_" xml:space="preserve">
+    <value>{0} distinct CiRT peptides were found. How many would you like to use as iRT standards?</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_AddIrts_Loading_library" xml:space="preserve">
+    <value>Loading library</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_AddIrts_Adding_iRTs_to_library" xml:space="preserve">
+    <value>Adding iRTs to library</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_AddIrts_An_error_occurred_trying_to_add_iRTs_to_the_library_" xml:space="preserve">
+    <value>An error occurred trying to add iRTs to the library.</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_AddIrts_Loading_retention_time_providers" xml:space="preserve">
+    <value>Loading retention time providers</value>
   </data>
 </root>

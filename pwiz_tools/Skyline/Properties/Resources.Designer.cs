@@ -2835,25 +2835,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Adding iRTs to Library.
-        /// </summary>
-        public static string BuildPeptideSearchLibraryControl_AddIrtLibraryTable_Adding_iRTs_to_Library {
-            get {
-                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_AddIrtLibraryTable_Adding_iRTs_to_Library", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to An error occurred trying to add iRTs to the library..
-        /// </summary>
-        public static string BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_trying_to_add_iRTs_to_the_library_ {
-            get {
-                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_trying_to_a" +
-                        "dd_iRTs_to_the_library_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to An error occurred while processing retention times..
         /// </summary>
         public static string BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_while_processing_retention_times_ {
@@ -15538,32 +15519,68 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Add retention time predictor.
+        ///   Looks up a localized string similar to {0} distinct CiRT peptides were found. How many would you like to use as iRT standards?.
         /// </summary>
-        public static string LibraryBuildNotificationHandler_AddRetentionTimePredictor_Add_retention_time_predictor {
+        public static string LibraryBuildNotificationHandler_AddIrts__0__distinct_CiRT_peptides_were_found__How_many_would_you_like_to_use_as_iRT_standards_ {
             get {
-                return ResourceManager.GetString("LibraryBuildNotificationHandler_AddRetentionTimePredictor_Add_retention_time_pred" +
-                        "ictor", resourceCulture);
+                return ResourceManager.GetString("LibraryBuildNotificationHandler_AddIrts__0__distinct_CiRT_peptides_were_found__Ho" +
+                        "w_many_would_you_like_to_use_as_iRT_standards_", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Adding iRTs to library.
         /// </summary>
-        public static string LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_Adding_iRTs_to_library {
+        public static string LibraryBuildNotificationHandler_AddIrts_Adding_iRTs_to_library {
             get {
-                return ResourceManager.GetString("LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_Adding_iRTs_to_libra" +
-                        "ry", resourceCulture);
+                return ResourceManager.GetString("LibraryBuildNotificationHandler_AddIrts_Adding_iRTs_to_library", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to An error occurred trying to add iRTs to the library..
         /// </summary>
-        public static string LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_An_error_occurred_trying_to_add_iRTs_to_the_library_ {
+        public static string LibraryBuildNotificationHandler_AddIrts_An_error_occurred_trying_to_add_iRTs_to_the_library_ {
             get {
-                return ResourceManager.GetString("LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_An_error_occurred_tr" +
-                        "ying_to_add_iRTs_to_the_library_", resourceCulture);
+                return ResourceManager.GetString("LibraryBuildNotificationHandler_AddIrts_An_error_occurred_trying_to_add_iRTs_to_t" +
+                        "he_library_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Loading library.
+        /// </summary>
+        public static string LibraryBuildNotificationHandler_AddIrts_Loading_library {
+            get {
+                return ResourceManager.GetString("LibraryBuildNotificationHandler_AddIrts_Loading_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Loading retention time providers.
+        /// </summary>
+        public static string LibraryBuildNotificationHandler_AddIrts_Loading_retention_time_providers {
+            get {
+                return ResourceManager.GetString("LibraryBuildNotificationHandler_AddIrts_Loading_retention_time_providers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Processing retention times.
+        /// </summary>
+        public static string LibraryBuildNotificationHandler_AddIrts_Processing_retention_times {
+            get {
+                return ResourceManager.GetString("LibraryBuildNotificationHandler_AddIrts_Processing_retention_times", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add retention time predictor.
+        /// </summary>
+        public static string LibraryBuildNotificationHandler_AddRetentionTimePredictor_Add_retention_time_predictor {
+            get {
+                return ResourceManager.GetString("LibraryBuildNotificationHandler_AddRetentionTimePredictor_Add_retention_time_pred" +
+                        "ictor", resourceCulture);
             }
         }
         
