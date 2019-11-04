@@ -27,7 +27,9 @@ using pwiz.CLI.data;
 using pwiz.CLI.msdata;
 using pwiz.CLI.analysis;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using Version = pwiz.CLI.msdata.Version;
 
 namespace pwiz.ProteowizardWrapper
 {
@@ -43,6 +45,18 @@ namespace pwiz.ProteowizardWrapper
     public class MsDataFileImpl : IDisposable
     {
         private static readonly ReaderList FULL_READER_LIST = ReaderList.FullReaderList;
+
+        public static string InstalledVersion
+        {
+            get
+            {
+                // Forces pwiz_data_cli.dll to be loaded with all its dependencies
+                // Throws and exception if the DLL load failes
+                var test = new MSData();
+                // Return the version string once the load succeeds
+                return Version.ToString();
+            }
+        }
 
         // By default this creates dummy non-functional performance timers.
         // Place "MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = false;" in 
@@ -819,7 +833,7 @@ namespace pwiz.ProteowizardWrapper
                     if (msDataSpectrum.Level == 1 && _config.simAsSpectra &&
                             spectrum.scanList.scans[0].scanWindows.Count > 0)
                     {
-                        msDataSpectrum.Precursors = GetMs1Precursors(spectrum);
+                        msDataSpectrum.Precursors = ImmutableList.ValueOf(GetMs1Precursors(spectrum));
                     }
 
                     return msDataSpectrum;
@@ -1098,7 +1112,7 @@ namespace pwiz.ProteowizardWrapper
             {
                 return new MsTimeAndPrecursors
                 {
-                    Precursors = GetPrecursors(spectrum),
+                    Precursors = ImmutableList.ValueOf(GetPrecursors(spectrum)),
                     RetentionTime = GetStartTime(spectrum)
                 };
             }
@@ -1121,7 +1135,7 @@ namespace pwiz.ProteowizardWrapper
             return precursorsByMsLevel[precursorsByMsLevel.Keys.Max()].ToArray();
         }
 
-        public IDictionary<int, IList<MsPrecursor>> GetPrecursorsByMsLevel(int scanIndex)
+        public IDictionary<int, ImmutableList<MsPrecursor>> GetPrecursorsByMsLevel(int scanIndex)
         {
             using (var spectrum = SpectrumList.spectrum(scanIndex, false))
             {
@@ -1129,47 +1143,52 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
-        private static IDictionary<int, IList<MsPrecursor>> GetPrecursorsByMsLevel(Spectrum spectrum)
+        private static IDictionary<int, ImmutableList<MsPrecursor>> GetPrecursorsByMsLevel(Spectrum spectrum)
         {
             bool negativePolarity = NegativePolarity(spectrum);
-            var result = new Dictionary<int, IList<MsPrecursor>>();
-            foreach(var p in spectrum.precursors)
+            var result = new Dictionary<int, ImmutableList<MsPrecursor>>();
+            foreach(var group in spectrum.precursors.GroupBy(GetMsLevel))
             {
-                var msLevelParam = p.userParam("ms level");
-                int msLevel = msLevelParam.empty() ? 1 : (int) msLevelParam.value;
-                var msPrecursor = new MsPrecursor()
-                {
-                    PrecursorMz = GetPrecursorMz(p, negativePolarity),
-                    PrecursorCollisionEnergy = GetPrecursorCollisionEnergy(p),
-                    IsolationWindowTargetMz = GetSignedMz(GetIsolationWindowValue(p, CVID.MS_isolation_window_target_m_z), negativePolarity),
-                    IsolationWindowLower = GetIsolationWindowValue(p, CVID.MS_isolation_window_lower_offset),
-                    IsolationWindowUpper = GetIsolationWindowValue(p, CVID.MS_isolation_window_upper_offset),
-                };
-
-                if (!result.ContainsKey(msLevel))
-                    result[msLevel] = new List<MsPrecursor>() {msPrecursor};
-                else
-                    result[msLevel].Add(msPrecursor);
+                int msLevel = group.Key;
+                var precursorsAtLevel = ImmutableList.ValueOf(group.Select(p =>
+                    new MsPrecursor()
+                    {
+                        PrecursorMz = GetPrecursorMz(p, negativePolarity),
+                        PrecursorCollisionEnergy = GetPrecursorCollisionEnergy(p),
+                        IsolationWindowTargetMz =
+                            GetSignedMz(GetIsolationWindowValue(p, CVID.MS_isolation_window_target_m_z),
+                                negativePolarity),
+                        IsolationWindowLower = GetIsolationWindowValue(p, CVID.MS_isolation_window_lower_offset),
+                        IsolationWindowUpper = GetIsolationWindowValue(p, CVID.MS_isolation_window_upper_offset),
+                    }));
+                result.Add(msLevel, precursorsAtLevel);
             }
 
             return result;
         }
 
-        private static MsPrecursor[] GetMs1Precursors(Spectrum spectrum)
+        private static int GetMsLevel(Precursor precursor)
+        {
+            var msLevelParam = precursor.userParam("ms level");
+            return msLevelParam.empty() ? 1 : (int)msLevelParam.value;
+
+        }
+
+        private static IEnumerable<MsPrecursor> GetMs1Precursors(Spectrum spectrum)
         {
             bool negativePolarity = NegativePolarity(spectrum);
             return spectrum.scanList.scans[0].scanWindows.Select(s =>
+            {
+                double windowStart = s.cvParam(CVID.MS_scan_window_lower_limit).value;
+                double windowEnd = s.cvParam(CVID.MS_scan_window_upper_limit).value;
+                double isolationWidth = (windowEnd - windowStart) / 2;
+                return new MsPrecursor
                 {
-                    double windowStart = s.cvParam(CVID.MS_scan_window_lower_limit).value;
-                    double windowEnd = s.cvParam(CVID.MS_scan_window_upper_limit).value;
-                    double isolationWidth = (windowEnd - windowStart) / 2;
-                    return new MsPrecursor
-                        {
-                            IsolationWindowTargetMz = new SignedMz(windowStart + isolationWidth, negativePolarity),
-                            IsolationWindowLower = isolationWidth,
-                            IsolationWindowUpper = isolationWidth
-                        };
-                }).ToArray();
+                    IsolationWindowTargetMz = new SignedMz(windowStart + isolationWidth, negativePolarity),
+                    IsolationWindowLower = isolationWidth,
+                    IsolationWindowUpper = isolationWidth
+                };
+            });
         }
 
         private static SignedMz? GetPrecursorMz(Precursor precursor, bool negativePolarity)
@@ -1362,7 +1381,7 @@ namespace pwiz.ProteowizardWrapper
     public sealed class MsTimeAndPrecursors
     {
         public double? RetentionTime { get; set; }
-        public MsPrecursor[] Precursors { get; set; }
+        public ImmutableList<MsPrecursor> Precursors { get; set; }
     }
 
     public sealed class MsDataSpectrum
@@ -1374,33 +1393,33 @@ namespace pwiz.ProteowizardWrapper
         public double? RetentionTime { get; set; }
         public IonMobilityValue IonMobility { get { return _ionMobility ?? IonMobilityValue.EMPTY; } set { _ionMobility = value; } }
 
-        public IList<MsPrecursor> GetPrecursorsByMsLevel(int level)
+        public ImmutableList<MsPrecursor> GetPrecursorsByMsLevel(int level)
         {
-            IList<MsPrecursor> precursors;
+            ImmutableList<MsPrecursor> precursors;
             if (PrecursorsByMsLevel != null && PrecursorsByMsLevel.TryGetValue(level, out precursors))
             {
                 return precursors;
             }
 
-            return new MsPrecursor[0];
+            return ImmutableList<MsPrecursor>.EMPTY;
         }
 
-        public IDictionary<int, IList<MsPrecursor>> PrecursorsByMsLevel { get; set; }
+        public IDictionary<int, ImmutableList<MsPrecursor>> PrecursorsByMsLevel { get; set; }
 
-        public MsPrecursor[] Precursors
+        public ImmutableList<MsPrecursor> Precursors
         {
             get
             {
                 if ((PrecursorsByMsLevel?.Count ?? 0) == 0)
                 {
-                    return new MsPrecursor[0];
+                    return ImmutableList.Empty<MsPrecursor>();
                 }
 
-                return GetPrecursorsByMsLevel(PrecursorsByMsLevel.Keys.Max()).ToArray();
+                return GetPrecursorsByMsLevel(PrecursorsByMsLevel.Keys.Max());
             }
             set
             {
-                PrecursorsByMsLevel = new Dictionary<int, IList<MsPrecursor>>{{1, value}};
+                PrecursorsByMsLevel = new Dictionary<int, ImmutableList<MsPrecursor>>{{1, ImmutableList.ValueOf(value)}};
             }
         }
 

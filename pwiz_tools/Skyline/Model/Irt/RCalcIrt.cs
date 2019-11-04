@@ -24,6 +24,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -237,10 +238,44 @@ namespace pwiz.Skyline.Model.Irt
             return _database.GetPeptides();
         }
 
+        public string DocumentXml => _database.DocumentXml;
+
         public static ProcessedIrtAverages ProcessRetentionTimes(IProgressMonitor monitor,
             IEnumerable<IRetentionTimeProvider> providers, int countProviders,
             DbIrtPeptide[] standardPeptideList, DbIrtPeptide[] items)
         {
+            var matchedStandard = IrtStandard.WhichStandard(standardPeptideList.Select(pep => pep.ModifiedTarget));
+            if (matchedStandard != null)
+            {
+                var dummyDoc = new SrmDocument(SrmSettingsList.GetDefault());
+                using (var reader = matchedStandard.GetDocumentReader())
+                {
+                    if (reader != null)
+                    {
+                        dummyDoc = dummyDoc.ImportDocumentXml(reader,
+                            string.Empty,
+                            MeasuredResults.MergeAction.remove,
+                            false,
+                            null,
+                            Settings.Default.StaticModList,
+                            Settings.Default.HeavyModList,
+                            null,
+                            out _,
+                            out _,
+                            false);
+                        standardPeptideList = standardPeptideList.Select(pep => new DbIrtPeptide(pep)).ToArray();
+                        foreach (var dummyPep in dummyDoc.Molecules.Where(pep => pep.HasExplicitMods))
+                        {
+                            var standardPepIdx = standardPeptideList.IndexOf(pep => dummyPep.ModifiedTarget.Equals(pep.ModifiedTarget));
+                            standardPeptideList[standardPepIdx] = new DbIrtPeptide(standardPeptideList[standardPepIdx])
+                            {
+                                ModifiedTarget = dummyDoc.Settings.GetModifiedSequence(dummyPep.ModifiedTarget, IsotopeLabelType.heavy, dummyPep.ExplicitMods)
+                            };
+                        }
+                    }
+                }
+            }
+
             IProgressStatus status = new ProgressStatus(Resources.LibraryGridViewDriver_ProcessRetentionTimes_Adding_retention_times);
             var dictProviderData = new List<KeyValuePair<string, RetentionTimeProviderData>>();
             var dictPeptideAverages = new Dictionary<Target, IrtPeptideAverages>();
@@ -290,12 +325,16 @@ namespace pwiz.Skyline.Model.Irt
             }
         }
 
-        public static IEnumerable<Target> IrtPeptides(SrmDocument document)
+        public static RCalcIrt Calculator(SrmDocument document)
         {
             if (!document.Settings.HasRTPrediction)
-                yield break;
+                return null;
+            return document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator as RCalcIrt;
+        }
 
-            var calc = document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator as RCalcIrt;
+        public static IEnumerable<Target> IrtPeptides(SrmDocument document)
+        {
+            var calc = Calculator(document);
             if (calc == null)
                 yield break;
 
@@ -652,16 +691,16 @@ namespace pwiz.Skyline.Model.Irt
 
     public sealed class CurrentCalculator : RetentionScoreCalculatorSpec
     {
-        private readonly Dictionary<Target, double> _dictStandards;
-        private readonly Dictionary<Target, double> _dictLibrary;
+        private readonly TargetMap<double> _dictStandards;
+        private readonly TargetMap<double> _dictLibrary;
 
         private readonly double _unknownScore;
 
         public CurrentCalculator(IEnumerable<DbIrtPeptide> standardPeptides, IEnumerable<DbIrtPeptide> libraryPeptides)
             : base(NAME_INTERNAL)
         {
-            _dictStandards = standardPeptides.ToDictionary(p => p.ModifiedTarget, p => p.Irt);
-            _dictLibrary = libraryPeptides.ToDictionary(p => p.ModifiedTarget, p => p.Irt);
+            _dictStandards = new TargetMap<double>(standardPeptides.Select(pep => new KeyValuePair<Target, double>(pep.ModifiedTarget, pep.Irt)));
+            _dictLibrary = new TargetMap<double>(libraryPeptides.Select(pep => new KeyValuePair<Target, double>(pep.ModifiedTarget, pep.Irt)));
             var minStandard = _dictStandards.Values.Min();
             var minLibrary = _dictLibrary.Values.Min();
 

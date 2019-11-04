@@ -102,9 +102,9 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
             }
         }
 
-        public override void RetryFetchContents(RemoteUrl chorusUrl)
+        public override void RetryFetchContents(RemoteUrl remoteUrl)
         {
-            var unifiUrl = (UnifiUrl) chorusUrl;
+            var unifiUrl = (UnifiUrl) remoteUrl;
             RetryFetch(GetRootContentsUrl(), GetFolders);
             RetryFetch(GetFileContentsUrl(unifiUrl), GetFiles);
         }

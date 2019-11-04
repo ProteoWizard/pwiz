@@ -21,12 +21,10 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Results.RemoteApi.GeneratedCode;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -722,7 +720,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public bool HasProductFilterPairs(double? retentionTime, MsPrecursor[] precursors)
+        public bool HasProductFilterPairs(double? retentionTime, IList<MsPrecursor> precursors)
         {
             if (!EnabledMsMs || !retentionTime.HasValue || !precursors.Any())
                 return false;
@@ -1032,117 +1030,6 @@ namespace pwiz.Skyline.Model.Results
         private static int CompareMz(SignedMz mz1, SignedMz mz2, double window)
         {
             return mz1.CompareTolerant(mz2, 0.5 * window);
-        }
-
-        public ChromatogramRequestDocument ToChromatogramRequestDocument()
-        {
-            var document = new ChromatogramRequestDocument
-            {
-                MaxMz = _instrument.MaxMz,
-                MinMz = _instrument.MinMz,
-                MzMatchTolerance = _instrument.MzMatchTolerance,
-            };
-            if (_minTime.HasValue)
-            {
-                document.MinTime = _minTime.Value;
-                document.MinTimeSpecified = true;
-            }
-            if (_maxTime.HasValue)
-            {
-                document.MaxTime = _maxTime.Value;
-                document.MaxTimeSpecified = true;
-            }
-            if (_acquisitionMethod == FullScanAcquisitionMethod.DIA)
-                    document.Ms2FullScanAcquisitionMethod = Ms2FullScanAcquisitionMethod.DIA;
-            else if (_acquisitionMethod == FullScanAcquisitionMethod.None)
-            {
-                document.Ms2FullScanAcquisitionMethod = Ms2FullScanAcquisitionMethod.None;
-            }
-            else if (_acquisitionMethod == FullScanAcquisitionMethod.Targeted)
-            {
-                document.Ms2FullScanAcquisitionMethod = Ms2FullScanAcquisitionMethod.Targeted;
-            }
-
-            if (null != _filterMzValues)
-            {
-                var chromatogramGroups = new List<ChromatogramRequestDocumentChromatogramGroup>();
-                var sources = new HashSet<RemoteApi.GeneratedCode.ChromSource>();
-                if (EnabledMs)
-                {
-                    sources.Add(RemoteApi.GeneratedCode.ChromSource.Ms1);
-                }
-                if (EnabledMsMs)
-                {
-                    sources.Add(RemoteApi.GeneratedCode.ChromSource.Ms2);
-                }
-                foreach (var filterPair in _filterMzValues)
-                {
-                    foreach (var chromatogramGroup in filterPair.ToChromatogramRequestDocumentChromatogramGroups())
-                    {
-                        if (chromatogramGroup.PrecursorMz == 0 || sources.Contains(chromatogramGroup.Source))
-                        {
-                            chromatogramGroups.Add(chromatogramGroup);
-                        }
-                    }
-                }
-                document.ChromatogramGroup = chromatogramGroups.ToArray();
-            }
-            var isolationScheme = _fullScan.IsolationScheme;
-            if (null != _fullScan.IsolationScheme)
-            {
-                document.IsolationScheme = new ChromatogramRequestDocumentIsolationScheme();
-                if (_fullScan.IsolationScheme.PrecursorFilter.HasValue)
-                {
-                    document.IsolationScheme.PrecursorFilter = _fullScan.IsolationScheme.PrecursorFilter.Value;
-                    document.IsolationScheme.PrecursorFilterSpecified = true;
-                }
-                if (isolationScheme.PrecursorRightFilter.HasValue)
-                {
-                    document.IsolationScheme.PrecursorRightFilter = isolationScheme.PrecursorRightFilter.Value;
-                    document.IsolationScheme.PrecursorRightFilterSpecified = true;
-                }
-                if (null != isolationScheme.SpecialHandling)
-                {
-                    document.IsolationScheme.SpecialHandling = isolationScheme.SpecialHandling;
-                }
-                if (isolationScheme.WindowsPerScan.HasValue)
-                {
-                    document.IsolationScheme.WindowsPerScan = isolationScheme.WindowsPerScan.Value;
-                    document.IsolationScheme.WindowsPerScanSpecified = true;
-                }
-                document.IsolationScheme.IsolationWindow =
-                    isolationScheme.PrespecifiedIsolationWindows.Select(
-                        isolationWindow =>
-                        {
-                            var result = new ChromatogramRequestDocumentIsolationSchemeIsolationWindow
-                            {
-                                Start = isolationWindow.Start,
-                                End = isolationWindow.End,
-                            };
-                            if (isolationWindow.Target.HasValue)
-                            {
-                                result.Target = isolationWindow.Target.Value;
-                            }
-                            if (isolationWindow.StartMargin.HasValue)
-                            {
-                                result.StartMargin = isolationWindow.StartMargin.Value;
-                            }
-                            if (isolationWindow.EndMargin.HasValue)
-                            {
-                                result.EndMargin = isolationWindow.EndMargin.Value;
-                            }
-                            return result;
-                        }).ToArray();
-            }
-            return document;
-        }
-
-        public string ToChromatogramRequestDocumentXml()
-        {
-            var xmlSerializer = new XmlSerializer(typeof(ChromatogramRequestDocument));
-            StringWriter stringWriter = new StringWriter();
-            xmlSerializer.Serialize(stringWriter, ToChromatogramRequestDocument());
-            return stringWriter.ToString();
         }
 
     }

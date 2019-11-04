@@ -268,7 +268,7 @@ namespace pwiz.Skyline.SettingsUI
                 longWaitDlg.PerformWork(this, 800, progressMonitor => 
                 {
                     _peakScoringModel = peakScoringModel.Train(targetTransitionGroups, decoyTransitionGroups, _targetDecoyGenerator, initialParams,
-                        null, secondBestCheckBox.Checked, true, progressMonitor);
+                        null, null, secondBestCheckBox.Checked, true, progressMonitor);
                 });
                 if (longWaitDlg.IsCanceled)
                     return;
