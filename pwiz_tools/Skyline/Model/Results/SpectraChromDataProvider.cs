@@ -1032,7 +1032,7 @@ namespace pwiz.Skyline.Model.Results
                             continue;
 
                         // Skip quickly through the chromatographic lead-in and tail when possible 
-                        if (msLevel > 1 || !_filter.IsFilteringFullGradientMs1) // We need all MS1 for TIC and BPC
+                        if (msLevel > 1 || (_filter.HasRangeRT && !_filter.IsFilteringFullGradientMs1)) // We need all MS1 for TIC and BPC
                         {
                             // Only do these checks if we can get the information instantly. Otherwise,
                             // this will slow down processing in more complex cases.
@@ -1045,10 +1045,13 @@ namespace pwiz.Skyline.Model.Results
                                 continue;
                             }
 
-                            var precursors = _lookaheadContext.GetPrecursors(i, 1);
-                            if (msLevel > 1 && precursors.Any() && !_filter.HasProductFilterPairs(rtCheck, precursors))
+                            if (msLevel > 1)
                             {
-                                continue;
+                                var precursors = _lookaheadContext.GetPrecursors(i, 1);
+                                if (precursors.Any() && !_filter.HasProductFilterPairs(rtCheck, precursors))
+                                {
+                                    continue;
+                                }
                             }
                         }
 
