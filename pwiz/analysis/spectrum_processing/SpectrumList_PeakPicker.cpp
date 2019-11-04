@@ -234,13 +234,18 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, bool g
 
     // is this declared as profile?
     bool isProfile = s->hasCVParam(MS_profile_spectrum);
+    bool hasSpectrumRepresentationCVParam = true;
     ParamGroupPtr specRepParamGroup;
     if (!isProfile)
     {
         this->warn_once("[SpectrumList_PeakPicker]: one or more spectra have undeclared profile/centroid status, assuming profile data and that peakpicking is needed");
         itr = std::find(cvParams.begin(), cvParams.end(), MS_spectrum_representation); // this should be there if nothing else
-        if (itr == cvParams.end() && !s->hasCVParam(MS_spectrum_representation))
-            this->warn_once("[SpectrumList_PeakPicker]: spectrum representation cvParam is missing completely");
+        if (itr == cvParams.end())
+        {
+            hasSpectrumRepresentationCVParam = false;
+            if (!s->hasCVParam(MS_spectrum_representation))
+                this->warn_once("[SpectrumList_PeakPicker]: spectrum representation cvParam is missing completely");
+        }
     }
     else
     {
@@ -248,6 +253,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, bool g
         if (itr == cvParams.end())
         {
             // we know spectrum is profile, so find it in paramGroups; specRepParamGroup does double duty here as a "found" boolean
+            hasSpectrumRepresentationCVParam = false;
             for (const auto& pg : s->paramGroupPtrs)
             {
                 if (!pg) continue;
@@ -255,6 +261,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, bool g
                 if (itr != pg->cvParams.end())
                 {
                     specRepParamGroup = pg;
+                    hasSpectrumRepresentationCVParam = true;
                     break;
                 }
             }
@@ -272,10 +279,12 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, bool g
     {
         s->cvParams.insert(s->cvParams.end(), specRepParamGroup->cvParams.begin(), specRepParamGroup->cvParams.end());
         itr = std::find(cvParams.begin(), cvParams.end(), MS_profile_spectrum);
+        hasSpectrumRepresentationCVParam = itr != cvParams.end();
         boost::range::remove(s->paramGroupPtrs, specRepParamGroup);
     }
 
-    *itr = MS_centroid_spectrum;
+    if (hasSpectrumRepresentationCVParam)
+        *itr = MS_centroid_spectrum;
 
     try
     {
