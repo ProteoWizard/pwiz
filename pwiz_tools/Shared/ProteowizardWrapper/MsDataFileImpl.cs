@@ -1165,28 +1165,21 @@ namespace pwiz.ProteowizardWrapper
             return param.timeInSeconds() / 60;
         }
 
-        public IList<MsPrecursor> GetPrecursors(int scanIndex)
+        public IList<MsPrecursor> GetPrecursors(int scanIndex, int level)
         {
             if (GetMsLevel(scanIndex) < 2)
                 return ImmutableList.Empty<MsPrecursor>();
-            return GetMetaDataValue(scanIndex, GetPrecursors, v => v.Count > 0, v => v, ref _detailLevelPrecursors);
+            return GetMetaDataValue(scanIndex, s => GetPrecursors(s, level), v => v.Count > 0, v => v, ref _detailLevelPrecursors);
         }
 
-        private IList<MsPrecursor> GetPrecursors(Spectrum spectrum)
+        private IList<MsPrecursor> GetPrecursors(Spectrum spectrum, int level)
         {
             // return precursors with highest ms level
             var precursorsByMsLevel = GetPrecursorsByMsLevel(spectrum);
-            if (precursorsByMsLevel.Count == 0)
+            ImmutableList<MsPrecursor> precursors;
+            if (!precursorsByMsLevel.TryGetValue(level, out precursors))
                 return ImmutableList.Empty<MsPrecursor>();
-            return precursorsByMsLevel[precursorsByMsLevel.Keys.Max()].ToArray();
-        }
-
-        public IDictionary<int, ImmutableList<MsPrecursor>> GetPrecursorsByMsLevel(int scanIndex)
-        {
-            var spectrum = GetCachedSpectrum(scanIndex, false);
-            {
-                return GetPrecursorsByMsLevel(spectrum);
-            }
+            return precursors;
         }
 
         private static IDictionary<int, ImmutableList<MsPrecursor>> GetPrecursorsByMsLevel(Spectrum spectrum)

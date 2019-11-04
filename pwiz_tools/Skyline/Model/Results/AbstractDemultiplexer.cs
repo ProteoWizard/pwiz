@@ -114,7 +114,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
                 var scanNumber = _msMsSpectra[i];
-                IList<MsPrecursor> precs = _file.GetPrecursors(scanNumber);
+                IList<MsPrecursor> precs = _file.GetPrecursors(scanNumber, 1);
                 _isoMapper.Add(precs, _filter);
                 if (!nIsoWindowsPerScan.HasValue)
                 {

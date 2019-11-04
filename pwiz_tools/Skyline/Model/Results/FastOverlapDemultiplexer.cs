@@ -206,7 +206,7 @@ namespace pwiz.Skyline.Model.Results
             IList<MsPrecursor> precursors;
             if (!_precursorsByScanIndex.TryGetValue(scanIndex, out precursors))
             {
-                precursors = _dataFile.GetPrecursors(scanIndex);
+                precursors = _dataFile.GetPrecursors(scanIndex, 1);
                 _precursorsByScanIndex[scanIndex] = precursors;
             }
             return precursors;

@@ -1044,7 +1044,7 @@ namespace pwiz.Skyline.Model.Results
                                 continue;
                             }
 
-                            var precursors = _lookaheadContext.GetPrecursors(i);
+                            var precursors = _lookaheadContext.GetPrecursors(i, 1);
                             if (msLevel > 1 && precursors.Any() && !_filter.HasProductFilterPairs(rtCheck, precursors))
                             {
                                 continue;
@@ -1332,12 +1332,12 @@ namespace pwiz.Skyline.Model.Results
                     return _dataFile.GetStartTime(index);  // Returns 0 if retrieval is too expensive
             }
 
-            public IList<MsPrecursor> GetPrecursors(int index)
+            public IList<MsPrecursor> GetPrecursors(int index, int level)
             {
                 if (index == _lookAheadIndex && _lookAheadDataSpectrum != null)
-                    return _lookAheadDataSpectrum.Precursors;
+                    return _lookAheadDataSpectrum.GetPrecursorsByMsLevel(level);
                 else
-                    return _dataFile.GetPrecursors(index);
+                    return _dataFile.GetPrecursors(index, level);
             }
 
             public MsDataSpectrum GetSpectrum(int index)
@@ -1415,7 +1415,7 @@ namespace pwiz.Skyline.Model.Results
                                 // Unless doing All-Ions pay attention to changes in precursor isolation
                                 // Neither do we ever expect to see a transition in MS1 without an RT change
                                 // So, ignore the case when nextPrecursors are empty
-                                var nextPrecursors = _dataFile.GetPrecursors(_lookAheadIndex);
+                                var nextPrecursors = _dataFile.GetPrecursors(_lookAheadIndex, 1);
                                 if (nextPrecursors.Count > 0 && !ArrayUtil.EqualsDeep(nextPrecursors, dataSpectrum.Precursors))
                                     break; // Different isolation
                             }
