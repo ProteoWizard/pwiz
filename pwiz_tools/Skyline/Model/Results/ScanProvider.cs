@@ -195,12 +195,8 @@ namespace pwiz.Skyline.Model.Results
                 }
                 else
                 {
-                    _dataFile = DataFilePath.OpenMsDataFile(true, 0, combineIonMobilitySpectra ?? true, null);
+                    _dataFile = DataFilePath.OpenMsDataFile(true, 0, combineIonMobilitySpectra ?? true);
                 }
-            }
-            else if (combineIonMobilitySpectra.HasValue && _dataFile.HasCombinedIonMobilitySpectra != combineIonMobilitySpectra)
-            {
-                _dataFile.Reindex(combineIonMobilitySpectra: combineIonMobilitySpectra.Value);
             }
             return _dataFile;
         }
