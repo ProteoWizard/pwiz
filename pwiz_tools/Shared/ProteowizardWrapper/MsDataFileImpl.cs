@@ -145,10 +145,12 @@ namespace pwiz.ProteowizardWrapper
             int preferOnlyMsLevel = 0,
             bool combineIonMobilitySpectra = true)
         {
+            combineIonMobilitySpectra &= CanCombineIonMobilitySpectra(path);
+
             // see note above on enabling performance measurement
             _perf = PerfUtilFactory.CreatePerfUtil(@"MsDataFileImpl " +
-                string.Format(@"{0},sampleIndex:{1},lockmassCorrection:{2},simAsSpectra:{3},srmAsSpectra:{4},acceptZeroLengthSpectra:{5},requireVendorCentroidedMS1:{6},requireVendorCentroidedMS2:{7},preferOnlyMsLevel:{8}",
-                path, sampleIndex, !(lockmassParameters == null || lockmassParameters.IsEmpty), simAsSpectra, srmAsSpectra, acceptZeroLengthSpectra, requireVendorCentroidedMS1, requireVendorCentroidedMS2, preferOnlyMsLevel));
+                string.Format(@"{0},sampleIndex:{1},lockmassCorrection:{2},simAsSpectra:{3},srmAsSpectra:{4},acceptZeroLengthSpectra:{5},requireVendorCentroidedMS1:{6},requireVendorCentroidedMS2:{7},preferOnlyMsLevel:{8},combineIonMobilitySpectra:{9}",
+                path, sampleIndex, !(lockmassParameters == null || lockmassParameters.IsEmpty), simAsSpectra, srmAsSpectra, acceptZeroLengthSpectra, requireVendorCentroidedMS1, requireVendorCentroidedMS2, preferOnlyMsLevel, combineIonMobilitySpectra));
             using (_perf.CreateTimer(@"open"))
             {
                 FilePath = path;
@@ -162,7 +164,7 @@ namespace pwiz.ProteowizardWrapper
                     ignoreZeroIntensityPoints = ignoreZeroIntensityPoints,
                     preferOnlyMsLevel = preferOnlyMsLevel,
                     allowMsMsWithoutPrecursor = false,
-                    combineIonMobilitySpectra = combineIonMobilitySpectra && CanCombineIonMobilitySpectra(path)
+                    combineIonMobilitySpectra = combineIonMobilitySpectra
                 };
                 _lockmassParameters = lockmassParameters;
                 FULL_READER_LIST.read(path, _msDataFile, sampleIndex, _config);
