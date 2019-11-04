@@ -1176,34 +1176,52 @@ namespace pwiz.ProteowizardWrapper
         {
             // return precursors with highest ms level
             var precursorsByMsLevel = GetPrecursorsByMsLevel(spectrum);
-            ImmutableList<MsPrecursor> precursors;
-            if (!precursorsByMsLevel.TryGetValue(level, out precursors))
+            if (level > precursorsByMsLevel.Count)
                 return ImmutableList.Empty<MsPrecursor>();
-            return precursors;
+            return precursorsByMsLevel[level - 1];
         }
 
-        private static IDictionary<int, ImmutableList<MsPrecursor>> GetPrecursorsByMsLevel(Spectrum spectrum)
+        private static ImmutableList<ImmutableList<MsPrecursor>> GetPrecursorsByMsLevel(Spectrum spectrum)
         {
             bool negativePolarity = NegativePolarity(spectrum);
-            var result = new Dictionary<int, ImmutableList<MsPrecursor>>();
-            foreach(var group in spectrum.precursors.GroupBy(GetMsLevel))
+            int count = spectrum.precursors.Count;
+            if (count == 0)
+                return ImmutableList<ImmutableList<MsPrecursor>>.EMPTY;
+            // Most MS/MS spectra will have a single MS1 precursor
+            else if (spectrum.precursors.Count == 1 && GetMsLevel(spectrum.precursors[0]) == 1)
+            {
+                var msPrecursor = CreatePrecursor(spectrum.precursors[0], negativePolarity);
+                return ImmutableList.Singleton(ImmutableList.Singleton(msPrecursor));
+            }
+            return ImmutableList.ValueOf(GetPrecursorsByMsLevel(spectrum.precursors, negativePolarity));
+        }
+
+        private static IEnumerable<ImmutableList<MsPrecursor>> GetPrecursorsByMsLevel(PrecursorList precursors, bool negativePolarity)
+        {
+            int level = 0;
+            foreach (var group in precursors.GroupBy(GetMsLevel).OrderBy(g => g.Key))
             {
                 int msLevel = group.Key;
-                var precursorsAtLevel = ImmutableList.ValueOf(group.Select(p =>
-                    new MsPrecursor()
-                    {
-                        PrecursorMz = GetPrecursorMz(p, negativePolarity),
-                        PrecursorCollisionEnergy = GetPrecursorCollisionEnergy(p),
-                        IsolationWindowTargetMz =
-                            GetSignedMz(GetIsolationWindowValue(p, CVID.MS_isolation_window_target_m_z),
-                                negativePolarity),
-                        IsolationWindowLower = GetIsolationWindowValue(p, CVID.MS_isolation_window_lower_offset),
-                        IsolationWindowUpper = GetIsolationWindowValue(p, CVID.MS_isolation_window_upper_offset),
-                    }));
-                result.Add(msLevel, precursorsAtLevel);
-            }
+                while (++level < msLevel)
+                    yield return ImmutableList<MsPrecursor>.EMPTY;
 
-            return result;
+                yield return ImmutableList.ValueOf(group.Select(p =>
+                    CreatePrecursor(p, negativePolarity)));
+            }
+        }
+
+        private static MsPrecursor CreatePrecursor(Precursor p, bool negativePolarity)
+        {
+            return new MsPrecursor
+            {
+                PrecursorMz = GetPrecursorMz(p, negativePolarity),
+                PrecursorCollisionEnergy = GetPrecursorCollisionEnergy(p),
+                IsolationWindowTargetMz =
+                    GetSignedMz(GetIsolationWindowValue(p, CVID.MS_isolation_window_target_m_z),
+                        negativePolarity),
+                IsolationWindowLower = GetIsolationWindowValue(p, CVID.MS_isolation_window_lower_offset),
+                IsolationWindowUpper = GetIsolationWindowValue(p, CVID.MS_isolation_window_upper_offset),
+            };
         }
 
         private static int GetMsLevel(Precursor precursor)
@@ -1439,31 +1457,25 @@ namespace pwiz.ProteowizardWrapper
 
         public ImmutableList<MsPrecursor> GetPrecursorsByMsLevel(int level)
         {
-            ImmutableList<MsPrecursor> precursors;
-            if (PrecursorsByMsLevel != null && PrecursorsByMsLevel.TryGetValue(level, out precursors))
-            {
-                return precursors;
-            }
-
-            return ImmutableList<MsPrecursor>.EMPTY;
+            if (PrecursorsByMsLevel == null || level > PrecursorsByMsLevel.Count)
+                return ImmutableList<MsPrecursor>.EMPTY;
+            return PrecursorsByMsLevel[level - 1];
         }
 
-        public IDictionary<int, ImmutableList<MsPrecursor>> PrecursorsByMsLevel { get; set; }
+        public ImmutableList<ImmutableList<MsPrecursor>> PrecursorsByMsLevel { get; set; }
 
         public ImmutableList<MsPrecursor> Precursors
         {
             get
             {
                 if (PrecursorsByMsLevel == null || PrecursorsByMsLevel.Count == 0)
-                {
-                    return ImmutableList.Empty<MsPrecursor>();
-                }
+                    return ImmutableList<MsPrecursor>.EMPTY;
 
-                return GetPrecursorsByMsLevel(PrecursorsByMsLevel.Keys.Max());
+                return GetPrecursorsByMsLevel(PrecursorsByMsLevel.Count);
             }
             set
             {
-                PrecursorsByMsLevel = new Dictionary<int, ImmutableList<MsPrecursor>>{{1, ImmutableList.ValueOf(value)}};
+                PrecursorsByMsLevel = ImmutableList.Singleton(ImmutableList.ValueOf(value));
             }
         }
 
