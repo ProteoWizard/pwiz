@@ -46,7 +46,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             
             comboProteins.Items.Add(new ComboBoxProtein(null));
             comboProteins.Items.AddRange(proteins.Select(protein => new ComboBoxProtein(protein))
-                .Where(protein => protein.PeptideStrings.Length > 0).ToArray());
+                .Where(protein => protein.PeptideStrings(TargetResolver).Any()).ToArray());
             comboProteins.SelectedIndex = 0;
             if (comboProteins.Items.Count == 1)
                 comboProteins.Enabled = false;
@@ -54,7 +54,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             Peptides = irtPeptides.Where(peptide => peptide.Standard).ToArray();
         }
 
-        public TargetResolver TargetResolver { get; private set; }
+        public TargetResolver TargetResolver { get; }
 
         public IList<DbIrtPeptide> Peptides
         {
@@ -81,21 +81,20 @@ namespace pwiz.Skyline.SettingsUI.Irt
         }
 
         public IEnumerable<PeptideGroupDocNode> Proteins => comboProteins.Items.Cast<ComboBoxProtein>()
-            .Where(obj => obj.IsProtein).Select(protein => protein.Protein);
+            .Where(obj => obj.IsNotNull).Select(protein => protein.Protein);
 
         public PeptideGroupDocNode SelectedProtein
         {
             get
             {
-                var protein = (ComboBoxProtein) comboProteins.SelectedItem;
-                return protein.IsProtein ? protein.Protein : null;
+                return ((ComboBoxProtein) comboProteins.SelectedItem).Protein;
             }
             set
             {
                 for (var i = 0; i < comboProteins.Items.Count; i++)
                 {
                     var protein = (ComboBoxProtein) comboProteins.Items[i];
-                    if (!protein.IsProtein)
+                    if (!protein.IsNotNull)
                     {
                         if (value == null)
                         {
@@ -155,9 +154,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             ReplacementProtein = null;
             var selected = (ComboBoxProtein) comboProteins.SelectedItem;
-            if (selected.IsProtein)
+            if (selected.IsNotNull)
             {
-                var removedPeptides = selected.RemovedPeptides(textPeptides.Lines).ToArray();
+                var removedPeptides = selected.RemovedPeptides(TargetResolver, textPeptides.Lines).ToArray();
                 if (removedPeptides.Any())
                 {
                     switch (MultiButtonMsgDlg.Show(this, TextUtil.LineSeparate(
@@ -167,7 +166,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true))
                     {
                         case DialogResult.Yes:
-                            ReplacementProtein = selected.RemovePeptides(textPeptides.Lines);
+                            ReplacementProtein = selected.RemovePeptides(TargetResolver, textPeptides.Lines);
                             break;
                         case DialogResult.No:
                             break;
@@ -189,36 +188,43 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         private void comboProteins_SelectedIndexChanged(object sender, EventArgs e)
         {
-            PeptideLines = ((ComboBoxProtein) comboProteins.SelectedItem).PeptideStrings;
+            PeptideLines = ((ComboBoxProtein) comboProteins.SelectedItem).PeptideStrings(TargetResolver).ToArray();
         }
 
         private class ComboBoxProtein
         {
             public PeptideGroupDocNode Protein { get; }
 
-            public bool IsProtein => Protein != null;
+            public bool IsNotNull => Protein != null;
 
             public ComboBoxProtein(PeptideGroupDocNode protein)
             {
                 Protein = protein;
             }
 
-            public string[] PeptideStrings => Protein?.Molecules.Select(pep => pep.ModifiedSequenceDisplay).ToArray() ?? new string[0];
-
-            public IEnumerable<PeptideDocNode> RemovedPeptides(IEnumerable<string> pepLines)
+            public IEnumerable<string> PeptideStrings(TargetResolver targetResolver)
             {
-                var textTargets = new TargetMap<bool>(pepLines.Select(line => line.Trim())
+                return Protein?.Molecules.Select(pep => targetResolver.FormatTarget(pep.ModifiedTarget)) ?? new string[0];
+            }
+
+            private static TargetMap<bool> TextTargets(TargetResolver targetResolver, IEnumerable<string> pepLines)
+            {
+                return new TargetMap<bool>(pepLines.Select(line => line.Trim())
                     .Where(line => !string.IsNullOrEmpty(line))
-                    .Select(line => new KeyValuePair<Target, bool>(new Target(line), true)));
+                    .Select(line => new KeyValuePair<Target, bool>(targetResolver.ResolveTarget(line), true)));
+            }
+
+            public IEnumerable<PeptideDocNode> RemovedPeptides(TargetResolver targetResolver, IEnumerable<string> pepLines)
+            {
+                var textTargets = TextTargets(targetResolver, pepLines);
                 return Protein.Molecules.Where(nodePep => !textTargets.ContainsKey(nodePep.ModifiedTarget));
             }
 
-            public PeptideGroupDocNode RemovePeptides(IEnumerable<string> pepLines)
+            public PeptideGroupDocNode RemovePeptides(TargetResolver targetResolver, IEnumerable<string> pepLines)
             {
-                var removed = RemovedPeptides(pepLines).Select(nodePep => nodePep.Id).ToHashSet();
-                return !removed.Any()
-                    ? Protein
-                    : (PeptideGroupDocNode) Protein.ChangeChildren(Protein.Children.Where(node => !removed.Contains(node.Id)).ToList());
+                var textTargets = TextTargets(targetResolver, pepLines);
+                return (PeptideGroupDocNode) Protein.ChangeChildren(Protein.Molecules
+                    .Where(molecule => textTargets.ContainsKey(molecule.ModifiedTarget)).Cast<DocNode>().ToList());
             }
 
             public override string ToString()

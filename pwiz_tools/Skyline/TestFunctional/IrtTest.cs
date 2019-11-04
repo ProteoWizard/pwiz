@@ -233,7 +233,7 @@ namespace pwiz.SkylineTestFunctional
                 foreach (var protein in changeDlg.Proteins)
                 {
                     changeDlg.SelectedProtein = protein;
-                    Assert.IsTrue(ArrayUtil.EqualsDeep(protein.Molecules.Select(pep => pep.ModifiedSequenceDisplay).ToArray(), changeDlg.PeptideLines));
+                    CollectionAssert.AreEqual(protein.Molecules.Select(pep => pep.ModifiedSequenceDisplay).ToArray(), changeDlg.PeptideLines);
                 }
                 changeDlg.SelectedProtein = null;
                 Assert.IsTrue(string.IsNullOrEmpty(changeDlg.PeptidesText));
