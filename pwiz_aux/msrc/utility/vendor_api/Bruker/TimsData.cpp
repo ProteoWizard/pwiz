@@ -268,7 +268,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         return;
 
     // pre-cache scan number to 1/k0 mapping for each calibration (and also the inverse, for 1/k0 filtering, which is why it has to be done here instead of on-demand)
-    vector<double> scanNumbers(maxNumScans);
+    vector<double> scanNumbers(maxNumScans+1);
     for (int i = 0; i <= maxNumScans; ++i)
         scanNumbers[i] = i;
     for (size_t i = 0; i < oneOverK0ByScanNumberByCalibration_.size(); ++i)
