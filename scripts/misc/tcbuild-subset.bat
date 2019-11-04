@@ -18,12 +18,6 @@ REM # Extract subset tarball
 
 set EXIT=0
 
-REM # call clean
-echo ##teamcity[progressMessage 'Cleaning project...']
-call clean.bat
-set EXIT=%ERRORLEVEL%
-if %EXIT% NEQ 0 set ERROR_TEXT=Error performing clean & goto error
-
 REM # the -p1 argument overrides bjam's default behavior of merging stderr into stdout
 REM # the --abbreviate-paths argument abbreviates paths like .../ftr1-value/ftr2-value/...
 
