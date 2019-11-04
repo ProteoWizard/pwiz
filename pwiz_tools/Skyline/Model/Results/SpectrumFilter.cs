@@ -100,25 +100,38 @@ namespace pwiz.Skyline.Model.Results
             var comparer = PrecursorTextId.PrecursorTextIdComparerInstance;
             var dictPrecursorMzToFilter = new SortedDictionary<PrecursorTextId, SpectrumFilterPair>(comparer);
 
+            var moleculesThisPass = (retentionTimePredictor == null || !firstPass
+                ? document.Molecules
+                : document.Molecules.Where(p => retentionTimePredictor.IsFirstPassPeptide(p))).ToArray();
+            
             // If we're using bare measured ion mobility values from spectral libraries, go get those now
-            // TODO: Should be queried out of the libraries as needed, as with RT not bulk copied all at once
+            // TODO(bspratt): Should be queried out of the libraries as needed, as with RT not bulk copied all at once
             var libraryIonMobilityInfo = document.Settings.PeptideSettings.Prediction.UseLibraryIonMobilityValues
-                ? document.Settings.GetIonMobilities(msDataFileUri)
+                ? document.Settings.GetIonMobilities(moleculesThisPass.SelectMany(
+                    node => node.TransitionGroups.Select(nodeGroup => nodeGroup.GetLibKey(node))).ToArray(), msDataFileUri)
                 : null;
             var ionMobilityMax = maxObservedIonMobilityValue ?? 0;
 
             // TIC and Base peak are meaningless with FAIMS, where we can't know the actual overall ion counts -also can't reliably share times with any ion mobility scheme
             if (instrumentInfo != null && instrumentInfo.IonMobilityUnits != eIonMobilityUnits.none)
             {
-                foreach (var pair in document.MoleculePrecursorPairs)
+                if (libraryIonMobilityInfo != null && !libraryIonMobilityInfo.IsEmpty)
                 {
-                    double windowIM;
-                    var ionMobility = document.Settings.GetIonMobility(
-                        pair.NodePep, pair.NodeGroup, null, libraryIonMobilityInfo, _ionMobilityFunctionsProvider, ionMobilityMax, out windowIM);
-                    _isIonMobilityFiltered = ionMobility.HasIonMobilityValue;
-                    if (_isIonMobilityFiltered)
+                    _isIonMobilityFiltered = true;
+                }
+                else
+                {
+                    foreach (var pair in moleculesThisPass.SelectMany(
+                        node => node.TransitionGroups.Select(nodeGroup => new PeptidePrecursorPair(node, nodeGroup))))
                     {
-                        break;
+                        double windowIM;
+                        var ionMobility = document.Settings.GetIonMobility(
+                            pair.NodePep, pair.NodeGroup, null, libraryIonMobilityInfo, _ionMobilityFunctionsProvider, ionMobilityMax, out windowIM);
+                        _isIonMobilityFiltered = ionMobility.HasIonMobilityValue;
+                        if (_isIonMobilityFiltered)
+                        {
+                            break;
+                        }
                     }
                 }
             }
@@ -173,11 +186,8 @@ namespace pwiz.Skyline.Model.Results
                 _isSharedTime = !canSchedule && !_isIonMobilityFiltered;
 
                 int filterCount = 0;
-                foreach (var nodePep in document.Molecules)
+                foreach (var nodePep in moleculesThisPass)
                 {
-                    if (firstPass && !retentionTimePredictor.IsFirstPassPeptide(nodePep))
-                        continue;
-
                     foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                     {
                         if (nodeGroup.Children.Count == 0)

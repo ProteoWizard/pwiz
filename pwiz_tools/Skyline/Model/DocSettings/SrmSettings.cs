@@ -1240,11 +1240,11 @@ namespace pwiz.Skyline.Model.DocSettings
             return GetRetentionTimes(new MsDataFilePath(name));
         }
 
-        public LibraryIonMobilityInfo GetIonMobilities(MsDataFileUri filePath)
+        public LibraryIonMobilityInfo GetIonMobilities(LibKey[] targetIons, MsDataFileUri filePath)
         {
             var libraries = PeptideSettings.Libraries;
             LibraryIonMobilityInfo ionMobilities;
-            if (libraries.TryGetDriftTimeInfos(filePath, out ionMobilities))
+            if (libraries.TryGetDriftTimeInfos(targetIons, filePath, out ionMobilities))
                 return ionMobilities;
             return null;
         }

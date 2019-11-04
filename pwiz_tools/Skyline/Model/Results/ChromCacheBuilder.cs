@@ -323,7 +323,7 @@ namespace pwiz.Skyline.Model.Results
             if (fullScan.IsEnabled && fullScan.IsEnabledMsMs)
             {
                 var libraryIonMobilityInfo = _document.Settings.PeptideSettings.Prediction.UseLibraryIonMobilityValues
-                    ? _document.Settings.GetIonMobilities(dataFilePath) // N.B. Make sure this doesn't ever  actually open the file, that would miss the pre-filtering point
+                    ? _document.Settings.GetIonMobilities(_document.MoleculeLibKeys.ToArray(), dataFilePath) // N.B. Make sure this doesn't ever  actually open the file, that would miss the pre-filtering point
                     : null;
                 precursorIonMobility = new List<MsDataFileImpl.PrecursorMzAndIonMobilityWindow>();
                 // In cases where IM window is linear relative to max IM in file, we'd have to open the file to see it, which misses the point. Rare, anyway.
