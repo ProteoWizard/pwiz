@@ -154,15 +154,16 @@ namespace pwiz.ProteowizardWrapper
                 FilePath = path;
                 SampleIndex = sampleIndex;
                 _msDataFile = new MSData();
+                bool canCombine = CanCombineIonMobilitySpectra(path);
                 _config = new ReaderConfig
                 {
                     simAsSpectra = simAsSpectra,
                     srmAsSpectra = srmAsSpectra,
                     acceptZeroLengthSpectra = acceptZeroLengthSpectra,
                     ignoreZeroIntensityPoints = ignoreZeroIntensityPoints,
-                    preferOnlyMsLevel = preferOnlyMsLevel,
+                    preferOnlyMsLevel = canCombine ? 0 : preferOnlyMsLevel, // TODO: Support ms level preference in Bruker PASEF data
                     allowMsMsWithoutPrecursor = false,
-                    combineIonMobilitySpectra = combineIonMobilitySpectra && CanCombineIonMobilitySpectra(path)
+                    combineIonMobilitySpectra = combineIonMobilitySpectra && canCombine
                 };
                 _lockmassParameters = lockmassParameters;
                 FULL_READER_LIST.read(path, _msDataFile, sampleIndex, _config);
