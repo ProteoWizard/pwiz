@@ -76,7 +76,8 @@ namespace pwiz.Skyline.Model.Results
                 var dictNameToIndex = new Dictionary<string, int>();
                 var dictIdToIndex = new Dictionary<int, int>();
                 _setFiles = new HashSet<MsDataFileUri>();
-                for (int i = 0; i < _chromatograms.Count; i++)
+                int count = _chromatograms.Count;
+                for (int i = 0; i < count; i++)
                 {
                     var set = _chromatograms[i];
                     dictNameToIndex.Add(set.Name, i);
@@ -89,12 +90,21 @@ namespace pwiz.Skyline.Model.Results
                 _countUnloaded = _chromatograms.Count(c => !c.IsLoaded);
                 HasGlobalStandardArea = MSDataFileInfos.Any(chromFileInfo =>
                     chromFileInfo.ExplicitGlobalStandardArea.HasValue);
+
+                // Pre-allocate empty arrays in case they are needed
+                EmptyPeptideResults = new Results<PeptideChromInfo>(new ChromInfoList<PeptideChromInfo>[count]);
+                EmptyTransitionGroupResults = new Results<TransitionGroupChromInfo>(new ChromInfoList<TransitionGroupChromInfo>[count]);
+                EmptyTransitionResults = new Results<TransitionChromInfo>(new ChromInfoList<TransitionChromInfo>[count]);
             }
         }
 
         public IDictionary<int, int> IdToIndexDictionary { get { return _dictIdToIndex; } }
 
         public bool IsTimeNormalArea { get; private set; }
+
+        public Results<PeptideChromInfo> EmptyPeptideResults { get; private set; }
+        public Results<TransitionGroupChromInfo> EmptyTransitionGroupResults { get; private set; }
+        public Results<TransitionChromInfo> EmptyTransitionResults { get; private set; }
 
         public CacheFormatVersion? CacheVersion
         {
@@ -1610,23 +1620,26 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
-            private void FinishCacheBuild(ChromatogramCache cache, IProgressStatus status)
+            private void FinishCacheBuild(IList<FileLoadCompletionAccumulator.Completion> buildCompletions)
             {
-                if (status.IsError)
-                {
-                    Fail(status);
+                foreach (var completion in buildCompletions.Where(c => c.Status.IsError))
+                    Fail(completion.Status);
+
+                if (buildCompletions.All(c => c.Status.IsError))
                     return;
-                }
 
                 var results = _resultsClone;
-                if (cache != null && EnsurePathsMatch(cache))
+                var cachesToAdd = buildCompletions
+                    .Where(c => c.Cache != null && c.Status.IsComplete && EnsurePathsMatch(c.Cache))
+                    .Select(c => c.Cache).ToArray();
+                if (cachesToAdd.Length > 0)
                 {
                     // Add this to the list of partial caches
                     results = ImClone(results); // Clone because many files may come through here
                     var listPartialCaches = new List<ChromatogramCache>();
                     if (results._listPartialCaches != null)
                         listPartialCaches.AddRange(results._listPartialCaches);
-                    listPartialCaches.Add(EnsureOptimalMemoryUse(cache));
+                    listPartialCaches.AddRange(cachesToAdd.Select(EnsureOptimalMemoryUse));
                     results.SetClonedCacheState(null, listPartialCaches);
                 }
 
