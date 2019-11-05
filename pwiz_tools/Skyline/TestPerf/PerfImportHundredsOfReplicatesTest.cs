@@ -27,7 +27,7 @@ namespace TestPerf
     [TestClass]
     public class PerfImportHundredsOfReplicatesTest : AbstractFunctionalTest
     {
-        const int REPLICATE_COUNT_TO_TEST = 500;
+        const int REPLICATE_COUNT_TO_TEST = 1500;
         [TestMethod]
         [Timeout(TestTimeout.Infinite)]
         public void TestImportHundredsOfReplicates()
