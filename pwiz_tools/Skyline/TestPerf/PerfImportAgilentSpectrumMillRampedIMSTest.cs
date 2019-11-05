@@ -310,7 +310,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             }
 
             LibraryIonMobilityInfo libraryIonMobilityInfo;
-            doc1.Settings.PeptideSettings.Libraries.Libraries.First().TryGetIonMobilityInfos(0, out libraryIonMobilityInfo);
+            doc1.Settings.PeptideSettings.Libraries.Libraries.First().TryGetIonMobilityInfos(doc1.MoleculeLibKeys.ToArray(), 0, out libraryIonMobilityInfo);
             if (driftInfoExplicitDT == null)
             {
                 driftInfoExplicitDT = libraryIonMobilityInfo;

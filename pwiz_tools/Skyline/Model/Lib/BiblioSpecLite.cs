@@ -1501,42 +1501,95 @@ namespace pwiz.Skyline.Model.Lib
             if (i != -1 && j != -1)
             {
                 ionMobilities = _libraryEntries[i].IonMobilitiesByFileId.GetIonMobilityInfo(_librarySourceFiles[j].Id);
-                return true;
+                return ionMobilities != null;
             }
 
             return base.TryGetIonMobilityInfos(key, filePath, out ionMobilities);
         }
 
-        public override bool TryGetIonMobilityInfos(MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
+        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
         {
-            return TryGetIonMobilityInfos(FindSource(filePath), out ionMobilities);
+            return TryGetIonMobilityInfos(targetIons, FindSource(filePath), out ionMobilities);
         }
 
-        public override bool TryGetIonMobilityInfos(int fileIndex, out LibraryIonMobilityInfo ionMobilities)
+        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, int fileIndex, out LibraryIonMobilityInfo ionMobilities)
         {
             if (fileIndex >= 0 && fileIndex < _librarySourceFiles.Length)
             {
+                ILookup<LibKey, IonMobilityAndCCS[]> timesLookup;
                 var source = _librarySourceFiles[fileIndex];
-                ILookup<LibKey, IonMobilityAndCCS[]> timesLookup = _libraryEntries.ToLookup(
-                    entry => entry.Key,
-                    entry => entry.IonMobilitiesByFileId.GetIonMobilityInfo(source.Id));
-                var timesDict = timesLookup.ToDictionary(
+                if (targetIons != null)
+                {
+                    if (!targetIons.Any())
+                    {
+                        ionMobilities = null;
+                        return true; // return value false means "that's not a proper file index"'
+                    }
+
+                    timesLookup = targetIons.SelectMany(target => _libraryEntries.ItemsMatching(target, true)).ToLookup(
+                        entry => entry.Key,
+                        entry => entry.IonMobilitiesByFileId.GetIonMobilityInfo(source.Id));
+                }
+                else
+                {
+                    timesLookup = _libraryEntries.ToLookup(
+                        entry => entry.Key,
+                        entry => entry.IonMobilitiesByFileId.GetIonMobilityInfo(source.Id));
+                }
+                var timesDict = timesLookup.Where(tl => !tl.IsNullOrEmpty() && tl.Any(i => i != null)).ToDictionary(
                     grouping => grouping.Key,
                     grouping =>
                     {
-                        var array = grouping.SelectMany(values => values).ToArray();
+                        var array = grouping.SelectMany(values => values).Where(v => v != null && !v.IsEmpty).ToArray();
                         Array.Sort(array);
                         return array;
                     });
                 var nonEmptyTimesDict = timesDict
                     .Where(kvp => kvp.Value.Length > 0)
                     .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-                ionMobilities = new LibraryIonMobilityInfo(source.FilePath, nonEmptyTimesDict);
+                ionMobilities = nonEmptyTimesDict.Any() ? new LibraryIonMobilityInfo(source.FilePath, nonEmptyTimesDict) : null;
+                return true;  // return value false means "that's not a proper file index"'
+            }
+
+            return base.TryGetIonMobilityInfos(targetIons, fileIndex, out ionMobilities);
+        }
+
+        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, out LibraryIonMobilityInfo ionMobilities)
+        {
+            if (targetIons != null && targetIons.Length > 0)
+            {
+                var timesDict = new Dictionary<LibKey, IonMobilityAndCCS[]>();
+                foreach (var target in targetIons)
+                {
+                    foreach (var matchedItem in _libraryEntries.ItemsMatching(target, true))
+                    {
+                        var matchedTarget = matchedItem.Key;
+                        var match = matchedItem.IonMobilitiesByFileId.AllValuesSorted;
+                        if (timesDict.TryGetValue(matchedTarget, out var mobilities))
+                        {
+                            var newMobilities = match.Concat(mobilities).ToArray();
+                            Array.Sort(newMobilities);
+                            timesDict[matchedTarget] = newMobilities;
+                        }
+                        else
+                        {
+                            timesDict[matchedTarget] = match;
+                        }
+                    }
+                }
+                if (!timesDict.Values.Any(v => v.Any()))
+                {
+                    ionMobilities = null;
+                    return false;
+                }
+                ionMobilities = new LibraryIonMobilityInfo(FilePath, timesDict);
                 return true;
             }
 
-            return base.TryGetIonMobilityInfos(fileIndex, out ionMobilities);
+            return base.TryGetIonMobilityInfos(targetIons, out ionMobilities);
         }
+
+
 
         /// <summary>
         /// Reads all retention times for a specified source file into a dictionary by
@@ -2307,14 +2360,23 @@ namespace pwiz.Skyline.Model.Lib
             _ionMobilityById = ImmutableSortedList.FromValues(timesById);
         }
 
+        public IonMobilityAndCCS[] AllValuesSorted
+        {
+            get
+            {
+                var val = _ionMobilityById.Values.SelectMany(i => i).ToArray();
+                Array.Sort(val);
+                return val;
+            }
+        }
+
         public IonMobilityAndCCS[] GetIonMobilityInfo(int id)
         {
-            IonMobilityAndCCS[] times;
-            if (null == _ionMobilityById || !_ionMobilityById.TryGetValue(id, out times))
+            if (null == _ionMobilityById || !_ionMobilityById.TryGetValue(id, out var times))
             {
-                return new IonMobilityAndCCS[0];
+                return null;
             }
-            return times.ToArray();
+            return times;
         }
 
         public void Write(Stream stream)
