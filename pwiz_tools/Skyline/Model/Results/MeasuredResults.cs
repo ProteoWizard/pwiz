@@ -653,7 +653,7 @@ namespace pwiz.Skyline.Model.Results
             IList<ChromatogramGroupInfo> listChrom = EMPTY_GROUP_INFOS;
             foreach (var cache in CachesEx)
             {
-                if (cache.CachedFiles.Count == 1)
+                if (_cacheFinal == null && cache.CachedFiles.Count == 1)
                 {
                     // If the cache has only one file in it, it's likely to be a temporary one.
                     // Skip the cache if it does not contain any files of interest.
