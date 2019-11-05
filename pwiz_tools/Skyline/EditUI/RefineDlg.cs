@@ -492,8 +492,12 @@ namespace pwiz.Skyline.EditUI
                 numTransitions = comboTransitions.SelectedIndex - 1;
             }
 
-            var selectedMs = comboTransType.SelectedItem.ToString();
-            var msLevel = (AreaCVMsLevel) Enum.Parse(typeof(AreaCVMsLevel), selectedMs, true);
+            var msLevel = AreaCVMsLevel.products;
+            if (comboTransitions.Items.Count > 0)
+            {
+                var selectedMs = comboTransType.SelectedItem.ToString();
+                msLevel = (AreaCVMsLevel) Enum.Parse(typeof(AreaCVMsLevel), selectedMs, true);
+            }
 
             RefinementSettings = new RefinementSettings
                                      {
