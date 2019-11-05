@@ -34,7 +34,7 @@
     <software id="micrOTOFcontrol" version="5.0.2.528-10700-vc110">
       <cvParam cvRef="MS" accession="MS:1000726" name="micrOTOFcontrol" value=""/>
     </software>
-    <software id="pwiz_Reader_Bruker" version="3.0.19269">
+    <software id="pwiz_Reader_Bruker" version="3.0.19304">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -72,16 +72,18 @@
   </dataProcessingList>
   <run id="Hela_QC_PASEF_Slot1-first-6-frames" defaultInstrumentConfigurationRef="IC1" startTimeStamp="2017-09-27T01:05:30Z" defaultSourceFileRef="Hela_QC_PASEF_Slot1-first-6-frames.d_x005c_Analysis.tdf">
     <spectrumList count="1" defaultDataProcessingRef="pwiz_Reader_Bruker_conversion">
-      <spectrum index="0" id="merged=0" defaultArrayLength="1391">
+      <spectrum index="0" id="merged=0 frame=6 scanStart=1 scanEnd=100" defaultArrayLength="1391">
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="22754.0"/>
         <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="2.3340182e07"/>
+        <cvParam cvRef="MS" accession="MS:1000127" name="centroid spectrum" value=""/>
         <scanList count="1">
-          <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
+          <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3600.674356643713" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
+            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.58380207594" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="100.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>

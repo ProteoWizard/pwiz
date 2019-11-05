@@ -460,7 +460,7 @@ namespace pwiz.Skyline.Model.Results
 
         private readonly IList<ChromKey> _chromKeys;
         private readonly float _maxRetentionTime;
-        private readonly int _spectrumCount;
+        private readonly int _cycleCount;
         private readonly string _cachePath;
         private readonly SpillFile[] _spillFiles;
         private readonly int[] _idToGroupId;
@@ -471,13 +471,13 @@ namespace pwiz.Skyline.Model.Results
             IList<IList<int>> chromatogramRequestOrder,
             IList<ChromKey> chromKeys,
             float maxRetentionTime,
-            int spectrumCount,
+            int cycleCount,
             string cachePath)
         {
             RequestOrder = chromatogramRequestOrder;
             _chromKeys = chromKeys;
             _maxRetentionTime = maxRetentionTime;
-            _spectrumCount = spectrumCount;
+            _cycleCount = cycleCount;
             _cachePath = cachePath;
             if (RequestOrder == null)
                 return;
@@ -574,7 +574,7 @@ namespace pwiz.Skyline.Model.Results
         public Stream GetFileStream(int chromIndex)
         {
             int groupIndex = GetGroupIndex(chromIndex);
-            return _spillFiles[groupIndex].CreateFileStream(_cachePath);
+            return _spillFiles[groupIndex].CreateFileStream(_cachePath, groupIndex);
         }
 
         /// <summary>
@@ -642,7 +642,7 @@ namespace pwiz.Skyline.Model.Results
         private long GetMaxSize(int groupIndex)
         {
             int recordSize = sizeof(float) + sizeof(float) + sizeof(float) + sizeof(int); // time, intensity, mass error, scan index
-            return _spectrumCount * RequestOrder[groupIndex].Count * recordSize;
+            return _cycleCount * RequestOrder[groupIndex].Count * recordSize;
         }
 
         /// <summary>
@@ -666,14 +666,14 @@ namespace pwiz.Skyline.Model.Results
         {
             if (!minTime.HasValue || !maxTime.HasValue)
             {
-                return _spectrumCount;
+                return _cycleCount;
             }
             double duration = maxTime.Value - minTime.Value;
             if (duration >= _maxRetentionTime || duration <= 0)
             {
-                return _spectrumCount;
+                return _cycleCount;
             }
-            return (int)Math.Ceiling(duration * _spectrumCount / _maxRetentionTime);
+            return (int)Math.Ceiling(duration * _cycleCount / _maxRetentionTime);
         }
 
         /// <summary>
@@ -688,7 +688,7 @@ namespace pwiz.Skyline.Model.Results
             public BufferedStream Stream { get; private set; }
             public float MaxTime { get; set; }
             
-            public BufferedStream CreateFileStream(string cachePath)
+            public BufferedStream CreateFileStream(string cachePath, int groupIndex)
             {
                 if (Stream == null)
                 {
@@ -697,7 +697,7 @@ namespace pwiz.Skyline.Model.Results
                     var xicDir = GetSpillDirectory(cachePath);
                     Helpers.Try<Exception>(() =>
                     {
-                        string fileName = FileStreamManager.Default.GetTempFileName(xicDir, @"xic");
+                        string fileName = FileStreamManager.Default.GetTempFileName(xicDir, string.Format(@"{0:X03}", groupIndex & 0xFFF));    // Need uniquifying groupId because GetTempFileName is limited to 65,535 files with the same prefix in a folder
                         // Create the FileStream with a buffer size of 1 so that it never buffers, and therefore
                         // never tries to FlushWrite in its finalizer (errors thrown in finalizers can kill Skyline)
                         _fileStream = File.Create(fileName, 1, FileOptions.DeleteOnClose);
