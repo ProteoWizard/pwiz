@@ -124,8 +124,12 @@ namespace TestRunner
                 return listDelta.Average();
             }
 
+            public static string[] MutedLeakTestNames =  {"TestMs1Tutorial"};
+
             public string GetLeakMessage(LeakTracking leakThresholds, string testName)
             {
+                if (MutedLeakTestNames.Contains(testName))
+                    return null;
                 if (ManagedMemory >= leakThresholds.ManagedMemory)
                     return string.Format("!!! {0} LEAKED {1:0.#} Managed bytes\r\n", testName, ManagedMemory);
                 if (HeapMemory >= leakThresholds.HeapMemory)
@@ -189,7 +193,7 @@ namespace TestRunner
                 "loop=0;repeat=1;pause=0;random=off;offscreen=on;multi=1;wait=off;internet=off;" +
                 "maxsecondspertest=-1;" +
                 "demo=off;showformnames=off;showpages=off;status=off;buildcheck=0;screenshotlist;" +
-                "quality=off;pass0=off;pass1=off;" +
+                "quality=off;pass0=off;pass1=off;pass2=on;" +
                 "perftests=off;" +
                 "runsmallmoleculeversions=off;" +
                 "recordauditlogs=off;" +
@@ -393,6 +397,7 @@ namespace TestRunner
             bool qualityMode = commandLineArgs.ArgAsBool("quality");
             bool pass0 = commandLineArgs.ArgAsBool("pass0");
             bool pass1 = commandLineArgs.ArgAsBool("pass1");
+            bool pass2 = commandLineArgs.ArgAsBool("pass2");
             int timeoutMultiplier = (int) commandLineArgs.ArgAsLong("multi");
             int pauseSeconds = (int) commandLineArgs.ArgAsLong("pause");
             var formList = commandLineArgs.ArgAsString("form");
@@ -566,81 +571,86 @@ namespace TestRunner
                 var maxDeltas = new LeakTracking();
                 int maxIterationCount = 0;
 
-                for (int testNumber = 0; testNumber < testList.Count; testNumber++)
-                {
-                    var test = testList[testNumber];
-                    bool failed = false;
+                int pass1LoopCount = 0;
+                if (!pass2 && loopCount <= 0)
+                    pass1LoopCount = int.MaxValue;
 
-                    if (test.IsPerfTest)
+                for (int pass1Count = 0; pass1Count <= pass1LoopCount; ++pass1Count)
+                    for (int testNumber = 0; testNumber < testList.Count; testNumber++)
                     {
-                        // These are generally too lengthy to run multiple times, so not a good fit for pass 1
-                        if (!warnedPass1PerfTest)
-                        {
-                            warnedPass1PerfTest = true;
-                            runTests.Log("# Skipping perf tests for pass 1 leak checks.\r\n");
-                        }
-                        continue;  
-                    }
+                        var test = testList[testNumber];
+                        bool failed = false;
 
-                    if (failed)
-                        continue;
-
-                    // Run test repeatedly until we can confidently assess the leak status.
-                    var listValues = new List<LeakTracking>();
-                    LeakTracking? minDeltas = null;
-                    int? passedIndex = null;
-                    for (int i = 0; i < GetLeakCheckIterations(test); i++)
-                    {
-                        // Run the test in the next language.
-                        runTests.Language =
-                            new CultureInfo(qualityLanguages[i%qualityLanguages.Length]);
-                        if (!runTests.Run(test, 1, testNumber, dmpDir))
+                        if (test.IsPerfTest)
                         {
-                            failed = true;
-                            removeList.Add(test);
-                            break;
+                            // These are generally too lengthy to run multiple times, so not a good fit for pass 1
+                            if (!warnedPass1PerfTest)
+                            {
+                                warnedPass1PerfTest = true;
+                                runTests.Log("# Skipping perf tests for pass 1 leak checks.\r\n");
+                            }
+                            continue;  
                         }
 
-                        // Run linear regression on memory size samples.
-                        listValues.Add(new LeakTracking(runTests));
-                        if (listValues.Count <= LeakTrailingDeltas)
+                        if (failed)
                             continue;
 
-                        // Stop accumulating points if all leak minimal values are below the threshold values.
-                        var lastDeltas = LeakTracking.MeanDeltas(listValues);
-                        minDeltas = minDeltas.HasValue ? minDeltas.Value.Min(lastDeltas) : lastDeltas;
-                        if (minDeltas.Value.BelowThresholds(LeakThresholds))
+                        // Run test repeatedly until we can confidently assess the leak status.
+                        var listValues = new List<LeakTracking>();
+                        LeakTracking? minDeltas = null;
+                        int? passedIndex = null;
+                        for (int i = 0; i < GetLeakCheckIterations(test); i++)
                         {
-                            passedIndex = passedIndex ?? i;
-
-                            if (!IsFixedLeakIterations)
+                            // Run the test in the next language.
+                            runTests.Language =
+                                new CultureInfo(qualityLanguages[i%qualityLanguages.Length]);
+                            if (!runTests.Run(test, 1, testNumber, dmpDir))
+                            {
+                                failed = true;
+                                removeList.Add(test);
                                 break;
+                            }
+
+                            // Run linear regression on memory size samples.
+                            listValues.Add(new LeakTracking(runTests));
+                            if (listValues.Count <= LeakTrailingDeltas)
+                                continue;
+
+                            // Stop accumulating points if all leak minimal values are below the threshold values.
+                            var lastDeltas = LeakTracking.MeanDeltas(listValues);
+                            minDeltas = minDeltas.HasValue ? minDeltas.Value.Min(lastDeltas) : lastDeltas;
+                            if (minDeltas.Value.BelowThresholds(LeakThresholds))
+                            {
+                                passedIndex = passedIndex ?? i;
+
+                                if (!IsFixedLeakIterations)
+                                    break;
+                            }
+
+                            // Remove the oldest point unless this is the last iteration
+                            // So that the report below will be based on the set that just
+                            // failed the leak check
+                            if (!passedIndex.HasValue || i < LeakCheckIterations - 1)
+                            {
+                                listValues.RemoveAt(0);
+                            }
                         }
 
-                        // Remove the oldest point unless this is the last iteration
-                        // So that the report below will be based on the set that just
-                        // failed the leak check
-                        if (!passedIndex.HasValue || i < LeakCheckIterations - 1)
+                        if (failed)
+                            continue;
+
+                        string leakMessage = minDeltas.Value.GetLeakMessage(LeakThresholds, test.TestMethod.Name);
+                        int iterationCount = passedIndex + 1 ?? LeakCheckIterations;
+                        if (leakMessage != null)
                         {
-                            listValues.RemoveAt(0);
+                            runTests.Log(leakMessage);
+                            removeList.Add(test);
                         }
+                        runTests.Log(minDeltas.Value.GetLogMessage(test.TestMethod.Name, iterationCount));
+
+                        maxDeltas = maxDeltas.Max(minDeltas.Value);
+                        maxIterationCount = Math.Max(maxIterationCount, iterationCount);
                     }
-
-                    if (failed)
-                        continue;
-
-                    string leakMessage = minDeltas.Value.GetLeakMessage(LeakThresholds, test.TestMethod.Name);
-                    int iterationCount = passedIndex + 1 ?? LeakCheckIterations;
-                    if (leakMessage != null)
-                    {
-                        runTests.Log(leakMessage);
-                        removeList.Add(test);
-                    }
-                    runTests.Log(minDeltas.Value.GetLogMessage(test.TestMethod.Name, iterationCount));
-
-                    maxDeltas = maxDeltas.Max(minDeltas.Value);
-                    maxIterationCount = Math.Max(maxIterationCount, iterationCount);
-                }
 
                 runTests.Log(maxDeltas.GetLogMessage("MaximumLeaks", maxIterationCount));
                 foreach (var removeTest in removeList)
@@ -663,6 +673,9 @@ namespace TestRunner
             {
                 passEnd = int.MaxValue;
             }
+
+            if (!pass2)
+                return runTests.FailureCount == 0;
 
             if (pass == 2 && pass < passEnd && testList.Count > 0)
             {
