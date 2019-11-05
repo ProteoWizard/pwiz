@@ -859,7 +859,8 @@ namespace pwiz.Skyline.Model
                     { @"msec", eIonMobilityUnits.drift_time_msec },
                     { @"Vsec/cm2", eIonMobilityUnits.inverse_K0_Vsec_per_cm2 },
                     { @"Vsec/cm^2", eIonMobilityUnits.inverse_K0_Vsec_per_cm2 },
-                    { @"1/K0", eIonMobilityUnits.inverse_K0_Vsec_per_cm2 }
+                    { @"1/K0", eIonMobilityUnits.inverse_K0_Vsec_per_cm2 },
+                    { string.Empty, eIonMobilityUnits.none }
                 }).ToDictionary(x => x.Key, x=> x.Value);
 
         private bool _hasAnyMoleculeMz;

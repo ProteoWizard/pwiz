@@ -208,7 +208,7 @@ namespace pwiz.SkylineTestData.Results
                             docContainer.AssertComplete();
 
                             document2 = docContainer.Document;
-                            var im = document2.Settings.GetIonMobilities(new MsDataFilePath(mz5Path));
+                            var im = document2.Settings.GetIonMobilities(document2.MoleculeLibKeys.ToArray(), new MsDataFilePath(mz5Path));
                             var pep = document2.Molecules.First();
                             foreach (TransitionGroupDocNode nodeGroup in pep.Children)
                             {
