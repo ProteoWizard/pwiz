@@ -81,6 +81,7 @@ namespace pwiz.Skyline.Model.Results
         private static readonly PrecursorTextId BPC_KEY = new PrecursorTextId(SignedMz.ZERO, null, null, ChromExtractor.base_peak);
 
         public IEnumerable<SpectrumFilterPair> FilterPairs { get { return _filterMzValues; } }
+        public bool HasRangeRT { get; private set; }
 
         public SpectrumFilter(SrmDocument document, MsDataFileUri msDataFileUri, IFilterInstrumentInfo instrumentInfo, 
             double? maxObservedIonMobilityValue = null,
@@ -409,6 +410,7 @@ namespace pwiz.Skyline.Model.Results
         {
             _maxFilterPairsRT = double.MaxValue;
             _minFilterPairsRT = double.MinValue;
+            HasRangeRT = false;
             _rangeFilterPairsIM = new List<Tuple<double, double>>();
             if (FilterPairs != null)
             {
@@ -428,7 +430,11 @@ namespace pwiz.Skyline.Model.Results
                         minRT = fp.MinTime.Value;
                 }
                 if (maxRT.HasValue)
+                {
                     _maxFilterPairsRT = maxRT.Value;
+                    HasRangeRT = true;
+                }
+
                 if (minRT.HasValue && !IsMseData()) // For MSe data, just start from the beginning lest we drop in mid-cycle
                     _minFilterPairsRT = minRT.Value;
 
