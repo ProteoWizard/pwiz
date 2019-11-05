@@ -29,14 +29,21 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditFragmentLossDlg));
-            this.btnCancel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
+            this.btnCancel = new System.Windows.Forms.Button();
+            this.tbxCharge = new System.Windows.Forms.TextBox();
+            this.lblCharge = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.comboIncludeLoss = new System.Windows.Forms.ComboBox();
-            this.lblCharge = new System.Windows.Forms.Label();
-            this.tbxCharge = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.SuspendLayout();
+            // 
+            // btnOk
+            // 
+            resources.ApplyResources(this.btnOk, "btnOk");
+            this.btnOk.Name = "btnOk";
+            this.btnOk.UseVisualStyleBackColor = true;
+            this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
             // btnCancel
             // 
@@ -45,12 +52,15 @@
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
-            // btnOk
+            // tbxCharge
             // 
-            resources.ApplyResources(this.btnOk, "btnOk");
-            this.btnOk.Name = "btnOk";
-            this.btnOk.UseVisualStyleBackColor = true;
-            this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
+            resources.ApplyResources(this.tbxCharge, "tbxCharge");
+            this.tbxCharge.Name = "tbxCharge";
+            // 
+            // lblCharge
+            // 
+            resources.ApplyResources(this.lblCharge, "lblCharge");
+            this.lblCharge.Name = "lblCharge";
             // 
             // label1
             // 
@@ -63,16 +73,6 @@
             this.comboIncludeLoss.FormattingEnabled = true;
             resources.ApplyResources(this.comboIncludeLoss, "comboIncludeLoss");
             this.comboIncludeLoss.Name = "comboIncludeLoss";
-            // 
-            // lblCharge
-            // 
-            resources.ApplyResources(this.lblCharge, "lblCharge");
-            this.lblCharge.Name = "lblCharge";
-            // 
-            // tbxCharge
-            // 
-            resources.ApplyResources(this.tbxCharge, "tbxCharge");
-            this.tbxCharge.Name = "tbxCharge";
             // 
             // EditFragmentLossDlg
             // 
