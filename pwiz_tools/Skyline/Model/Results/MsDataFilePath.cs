@@ -74,7 +74,7 @@ namespace pwiz.Skyline.Model.Results
                 SampleHelp.GetCentroidMs2(url));
         }
 
-        public abstract MsDataFileImpl OpenMsDataFile(bool simAsSpectra, int preferOnlyMsLevel);
+        public abstract MsDataFileImpl OpenMsDataFile(bool simAsSpectra, int preferOnlyMsLevel, bool combineIonMobilitySpectra);
         public int CompareTo(object obj)
         {
             if (obj == null)
@@ -262,11 +262,12 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public override MsDataFileImpl OpenMsDataFile(bool simAsSpectra, int preferOnlyMsLevel)
+        public override MsDataFileImpl OpenMsDataFile(bool simAsSpectra, int preferOnlyMsLevel, bool combineIonMobilitySpectra)
         {
             return new MsDataFileImpl(FilePath, Math.Max(SampleIndex, 0), LockMassParameters, simAsSpectra,
                 requireVendorCentroidedMS1: CentroidMs1, requireVendorCentroidedMS2: CentroidMs2,
-                ignoreZeroIntensityPoints: true, preferOnlyMsLevel: preferOnlyMsLevel);
+                ignoreZeroIntensityPoints: true, preferOnlyMsLevel: preferOnlyMsLevel,
+                combineIonMobilitySpectra: combineIonMobilitySpectra);
         }
     }
 }

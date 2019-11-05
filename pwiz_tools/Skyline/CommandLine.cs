@@ -1228,6 +1228,15 @@ namespace pwiz.Skyline
 
             DocContainer.SetDocument(_doc, DocContainer.Document, true);
 
+            // If this has not already been designated a multi-process import, and no specific
+            // number of threads has been chosen, then choose dynamically based on the computer
+            // specs as many as make sense.
+            if (!Program.MultiProcImport && DocContainer.ChromatogramManager.LoadingThreads == 0)
+            {
+                DocContainer.ChromatogramManager.LoadingThreads = MultiFileLoader.GetOptimalThreadCount(null,
+                    namesAndFilePaths.Length, MultiFileLoader.ImportResultsSimultaneousFileOptions.many);
+            }
+
             // Add files to import list
             _out.WriteLine();
             for (int i = 0; i < namesAndFilePaths.Length; i++)
