@@ -142,6 +142,7 @@
     <Compile Include="PerfDecoysMatchTest.cs" />
     <Compile Include="PerfElectronIonizationAllIonsTest.cs" />
     <Compile Include="PerfImportAgilentSpectrumMillRampedIMSTest.cs" />
+    <Compile Include="PerfImportDiaPasefTest.cs" />
     <Compile Include="PerfImportPasefMascotTest.cs" />
     <Compile Include="PerfImportResultsAgilentIMSTest.cs" />
     <Compile Include="PerfImportResultsAgilentSpectrumMillIMSTest.cs" />

@@ -1109,6 +1109,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The type of peak scoring model to train to produce z scores and q values. (dafault mProphet) Skyline - simply scales coefficients of the default Skyline model to estimate a unit normal distribution from the decoys. SkylineML - uses the mProphet machine learning algorithm to train a model using only the default set of feature scores..
+        /// </summary>
+        internal static string _reintegrate_model_type {
+            get {
+                return ResourceManager.GetString("_reintegrate_model_type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Existing manually integrated peaks will be overwritten with peaks chosen by the reintegration model. (requires --reintegrate-model-name).
         /// </summary>
         internal static string _reintegrate_overwrite_peaks {
@@ -1784,6 +1793,15 @@ namespace pwiz.Skyline {
         internal static string CommandArgs_NAME_VALUE {
             get {
                 return ResourceManager.GetString("CommandArgs_NAME_VALUE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;number list&gt;.
+        /// </summary>
+        internal static string CommandArgs_NUM_LIST_VALUE {
+            get {
+                return ResourceManager.GetString("CommandArgs_NUM_LIST_VALUE", resourceCulture);
             }
         }
         
