@@ -41,24 +41,16 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            //testing scenarios:
+            // Testing scenarios:
             // - valid audit log file - opens cleanly
             var documentFile = TestFilesDir.GetTestPath(@"AuditLogValidationTest/MethodEditClean.sky");
             WaitForCondition(() => File.Exists(documentFile));
 
-            try
-            {
-                ShowDialog<MessageDlg>(() => SkylineWindow.OpenFile(documentFile), 3000);
-                Assert.Fail("Failed to open a well-formed document with normal audit log.");
-            }
-            catch (AssertFailedException)
-            {
-                //nothing to do, this is an expected outcome of the normal test run.
-            }
+            RunUI(() => SkylineWindow.OpenFile(documentFile)); // Should execute without any problems
 
             // - audit log with modified content - expect message dialog to appear
             // - audit log with modified entry hashes - expect exception
-            foreach(string fileName in new[] { @"AuditLogValidationTest/MethodEditContentMod.sky", @"AuditLogValidationTest/MethodEditEntryHashMod.sky" })
+            foreach (string fileName in new[] { @"AuditLogValidationTest/MethodEditContentMod.sky", @"AuditLogValidationTest/MethodEditEntryHashMod.sky" })
             {
                 TestInvalidFile(fileName, AuditLogStrings
                     .AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified);
@@ -73,23 +65,23 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestInvalidFile(string fileName, string expectedMessage)
         {
-            //replace print formats with regex and compile the testing regex.
+            // Replace print formats with regex and compile the testing regex.
             expectedMessage = new Regex(@"\{[0-9]+\}").Replace(expectedMessage, @"[0-9]+");
             expectedMessage = new Regex(@"\{[0-9]+:G\}").Replace(expectedMessage, ".*");
             Regex reTest = new Regex(expectedMessage);
 
             var documentFile = TestFilesDir.GetTestPath(fileName);
-            //if no dialog is opened the method will fail on timeout
-            var messageDialog = ShowDialog<MessageDlg>(() => SkylineWindow.OpenFile(documentFile), 3000);
-            //making sure we get the expected error message
+            // If no dialog is opened the method will fail on timeout.
+            var messageDialog = ShowDialog<MessageDlg>(() => SkylineWindow.OpenFile(documentFile));
+            // Making sure we get the expected error message
             string dialogMessage = "(none)";
             RunUI(() => dialogMessage = messageDialog.Message);
             if (reTest.Match(dialogMessage).Value == String.Empty)
             {
                 Console.Write(@"Error message: " + dialogMessage);
-                Assert.Fail("Unexpected exception type when opening document with entries out of order audit log.");
+                Assert.Fail(@"Unexpected exception type. Expecting: '" + expectedMessage + "'");
             }
-            //close the dialog
+            // Close the dialog
             OkDialog(messageDialog, messageDialog.ClickOk);
             WaitForDocumentLoaded();
         }
