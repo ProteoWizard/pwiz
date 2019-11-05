@@ -1819,8 +1819,6 @@ namespace pwiz.Skyline
 
         private bool ParseArgsInternal(IEnumerable<string> args)
         {
-            ImportThreads = 1;  // CONSIDER: Why here?
-
             _seenArguments.Clear();
 
             foreach (string s in args)

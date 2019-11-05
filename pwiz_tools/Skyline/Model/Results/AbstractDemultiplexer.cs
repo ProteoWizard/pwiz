@@ -114,11 +114,11 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
                 var scanNumber = _msMsSpectra[i];
-                MsPrecursor[] precs = _file.GetPrecursors(scanNumber);
+                IList<MsPrecursor> precs = _file.GetPrecursors(scanNumber, 1);
                 _isoMapper.Add(precs, _filter);
                 if (!nIsoWindowsPerScan.HasValue)
                 {
-                    nIsoWindowsPerScan = precs.Length;
+                    nIsoWindowsPerScan = precs.Count;
                 }
             }
             if (!nIsoWindowsPerScan.HasValue)

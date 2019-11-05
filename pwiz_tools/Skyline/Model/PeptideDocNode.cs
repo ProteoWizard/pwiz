@@ -910,7 +910,7 @@ namespace pwiz.Skyline.Model
                     diff.DiffTransitions || diff.DiffTransitionProps ||
                     diff.DiffResults)
                 {
-                    IList<DocNode> childrenNew = new List<DocNode>();
+                    IList<DocNode> childrenNew = new List<DocNode>(nodeResult.Children.Count);
 
                     // Enumerate the nodes making necessary changes.
                     foreach (TransitionGroupDocNode nodeGroup in nodeResult.Children)
@@ -1123,6 +1123,13 @@ namespace pwiz.Skyline.Model
                 if (!HasResults)
                     return this;
                 return ChangeResults(null);
+            }
+            else if (!settingsNew.MeasuredResults.Chromatograms.Any(c => c.IsLoaded) &&
+                     (!HasResults || Results.All(r => r.IsEmpty)))
+            {
+                if (HasResults && Results.Count == settingsNew.MeasuredResults.Chromatograms.Count)
+                    return this;
+                return ChangeResults(settingsNew.MeasuredResults.EmptyPeptideResults);
             }
 
             var transitionGroupKeys = new HashSet<Tuple<IsotopeLabelType, Adduct>>();

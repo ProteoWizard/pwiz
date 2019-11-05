@@ -143,7 +143,12 @@ namespace pwiz.Skyline.Model.Results
                 var scanIdText = _msDataFileScanIds.GetMsDataFileSpectrumId(internalScanIndex);
                 dataFileSpectrumStartIndex = GetDataFile().GetSpectrumIndex(scanIdText);
                 if (dataFileSpectrumStartIndex == -1)
-                    throw new IOException(string.Format(Resources.ScanProvider_GetScans_The_scan_ID__0__was_not_found_in_the_file__1__, scanIdText, DataFilePath.GetFileName()));
+                {
+                    // try without combining ion mobility (if it's turned on)
+                    dataFileSpectrumStartIndex = GetDataFile(false).GetSpectrumIndex(scanIdText);
+                    if (dataFileSpectrumStartIndex == -1)
+                        throw new IOException(string.Format(Resources.ScanProvider_GetScans_The_scan_ID__0__was_not_found_in_the_file__1__, scanIdText, DataFilePath.GetFileName()));
+                }
             }
             var currentSpectrum = GetDataFile().GetSpectrum(dataFileSpectrumStartIndex);
             spectra.Add(currentSpectrum);
@@ -166,7 +171,7 @@ namespace pwiz.Skyline.Model.Results
             return spectra.ToArray();
         }
 
-        private MsDataFileImpl GetDataFile()
+        private MsDataFileImpl GetDataFile(bool? combineIonMobilitySpectra = null)
         {
             if (_dataFile == null)
             {
@@ -184,12 +189,13 @@ namespace pwiz.Skyline.Model.Results
                         sampleIndex = 0;
                     // Full-scan extraction always uses SIM as spectra
                     _dataFile = new MsDataFileImpl(dataFilePath, sampleIndex, lockMassParameters, true,
+                        combineIonMobilitySpectra: combineIonMobilitySpectra ?? true,
                         requireVendorCentroidedMS1: DataFilePath.GetCentroidMs1(),
                         requireVendorCentroidedMS2: DataFilePath.GetCentroidMs2());
                 }
                 else
                 {
-                    _dataFile = DataFilePath.OpenMsDataFile(true, 0);
+                    _dataFile = DataFilePath.OpenMsDataFile(true, 0, combineIonMobilitySpectra ?? true);
                 }
             }
             return _dataFile;
