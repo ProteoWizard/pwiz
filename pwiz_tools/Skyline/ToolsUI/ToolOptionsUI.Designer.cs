@@ -36,8 +36,8 @@ namespace pwiz.Skyline.ToolsUI
             this.btnEditServers = new System.Windows.Forms.Button();
             this.tabRemote = new System.Windows.Forms.TabPage();
             this.listBoxRemoteAccounts = new System.Windows.Forms.ListBox();
-            this.lblChorusAccounts = new System.Windows.Forms.Label();
-            this.btnEditChorusAccountList = new System.Windows.Forms.Button();
+            this.lblRemoteAccounts = new System.Windows.Forms.Label();
+            this.btnEditRemoteAccountList = new System.Windows.Forms.Button();
             this.tabLanguage = new System.Windows.Forms.TabPage();
             this.labelDisplayLanguage = new System.Windows.Forms.Label();
             this.listBoxLanguages = new System.Windows.Forms.ListBox();
@@ -52,6 +52,7 @@ namespace pwiz.Skyline.ToolsUI
             this.powerOfTenCheckBox = new System.Windows.Forms.CheckBox();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl.SuspendLayout();
             this.tabPanorama.SuspendLayout();
             this.tabRemote.SuspendLayout();
@@ -102,8 +103,8 @@ namespace pwiz.Skyline.ToolsUI
             // tabRemote
             // 
             this.tabRemote.Controls.Add(this.listBoxRemoteAccounts);
-            this.tabRemote.Controls.Add(this.lblChorusAccounts);
-            this.tabRemote.Controls.Add(this.btnEditChorusAccountList);
+            this.tabRemote.Controls.Add(this.lblRemoteAccounts);
+            this.tabRemote.Controls.Add(this.btnEditRemoteAccountList);
             resources.ApplyResources(this.tabRemote, "tabRemote");
             this.tabRemote.Name = "tabRemote";
             this.tabRemote.UseVisualStyleBackColor = true;
@@ -115,17 +116,17 @@ namespace pwiz.Skyline.ToolsUI
             this.listBoxRemoteAccounts.Name = "listBoxRemoteAccounts";
             this.listBoxRemoteAccounts.SelectionMode = System.Windows.Forms.SelectionMode.None;
             // 
-            // lblChorusAccounts
+            // lblRemoteAccounts
             // 
-            resources.ApplyResources(this.lblChorusAccounts, "lblChorusAccounts");
-            this.lblChorusAccounts.Name = "lblChorusAccounts";
+            resources.ApplyResources(this.lblRemoteAccounts, "lblRemoteAccounts");
+            this.lblRemoteAccounts.Name = "lblRemoteAccounts";
             // 
-            // btnEditChorusAccountList
+            // btnEditRemoteAccountList
             // 
-            resources.ApplyResources(this.btnEditChorusAccountList, "btnEditChorusAccountList");
-            this.btnEditChorusAccountList.Name = "btnEditChorusAccountList";
-            this.btnEditChorusAccountList.UseVisualStyleBackColor = true;
-            this.btnEditChorusAccountList.Click += new System.EventHandler(this.btnEditChorusAccountList_Click);
+            resources.ApplyResources(this.btnEditRemoteAccountList, "btnEditRemoteAccountList");
+            this.btnEditRemoteAccountList.Name = "btnEditRemoteAccountList";
+            this.btnEditRemoteAccountList.UseVisualStyleBackColor = true;
+            this.btnEditRemoteAccountList.Click += new System.EventHandler(this.btnEditRemoteAccountList_Click);
             // 
             // tabLanguage
             // 
@@ -236,6 +237,7 @@ namespace pwiz.Skyline.ToolsUI
             this.MinimizeBox = false;
             this.Name = "ToolOptionsUI";
             this.ShowInTaskbar = false;
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.tabControl.ResumeLayout(false);
             this.tabPanorama.ResumeLayout(false);
             this.tabPanorama.PerformLayout();
@@ -265,8 +267,8 @@ namespace pwiz.Skyline.ToolsUI
         private System.Windows.Forms.Label labelDisplayLanguage;
         private System.Windows.Forms.TabPage tabRemote;
         private System.Windows.Forms.ListBox listBoxRemoteAccounts;
-        private System.Windows.Forms.Label lblChorusAccounts;
-        private System.Windows.Forms.Button btnEditChorusAccountList;
+        private System.Windows.Forms.Label lblRemoteAccounts;
+        private System.Windows.Forms.Button btnEditRemoteAccountList;
         private System.Windows.Forms.CheckBox checkBoxShowWizard;
         private System.Windows.Forms.TabPage tabDisplay;
         private System.Windows.Forms.CheckBox powerOfTenCheckBox;

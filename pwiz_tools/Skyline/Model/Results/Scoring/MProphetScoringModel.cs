@@ -122,7 +122,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             // Intensity, retention time, library dotp
             new MQuestIntensityCalc(),
             new MQuestRetentionTimePredictionCalc(), 
-            new MQuestRetentionTimeSquaredPredictionCalc(),
+            // new MQuestRetentionTimeSquaredPredictionCalc(), // somewhat redundant with RT prediction and can lead to strange effects with a positive coefficient and large deltas
             new MQuestIntensityCorrelationCalc(), 
 
             // Shape-based and related calculators
@@ -171,6 +171,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
             _peakFeatureCalculators = MakeReadOnly(peakFeatureCalculators);
         }
 
+        public static readonly IList<double> DEFAULT_CUTOFFS = new[] {0.15, 0.02, 0.01};
+
         /// <summary>
         /// Train the model by iterative calculating weights to separate target and decoy transition groups.
         /// </summary>
@@ -178,6 +180,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <param name="decoysIn">Decoy transition groups.</param>
         /// <param name="targetDecoyGenerator">Target decoy generator used to calculate contribution percentages</param>
         /// <param name="initParameters">Initial model parameters (weights and bias)</param>
+        /// <param name="cutoffs">A list of q value cutoffs used in the training</param>
         /// <param name="iterations">Optional specific number of iterations to use in training</param>
         /// <param name="includeSecondBest">Include the second best peaks in the targets as decoys?</param>
         /// <param name="preTrain">Use a pre-trained model to bootstrap the learning.</param>
@@ -188,12 +191,15 @@ namespace pwiz.Skyline.Model.Results.Scoring
                                                 IList<IList<float[]>> decoysIn,
                                                 TargetDecoyGenerator targetDecoyGenerator,
                                                 LinearModelParams initParameters,
+                                                IList<double> cutoffs,
                                                 int? iterations = null,
                                                 bool includeSecondBest = false,
                                                 bool preTrain = true,
                                                 IProgressMonitor progressMonitor = null,
                                                 string documentPath = null)
         {
+            if (cutoffs == null)
+                cutoffs = DEFAULT_CUTOFFS;
             if (initParameters == null)
                 initParameters = new LinearModelParams(_peakFeatureCalculators.Count);
             return ChangeProp(ImClone(this), im =>
@@ -210,17 +216,20 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 // Iteratively refine the weights through multiple iterations.
                 var calcWeights = new double[initParameters.Weights.Count];
                 Array.Copy(initParameters.Weights.ToArray(), calcWeights, initParameters.Weights.Count);
-                double qValueCutoff = 0.01; // First iteration cut-off - if not pretraining, just start at 0.01
+                int lastCutoffIndex = cutoffs.Count - 1;
+                int firstCutoffIndex = Math.Min(1, lastCutoffIndex);
+                double qValueCutoff;
                 // Start with scores calculated from the initial weights
                 if (!preTrain)
                 {
+                    qValueCutoff = 0.01; // First iteration cut-off - if not pretraining, just start at 0.01
                     targetTransitionGroups.ScorePeaks(calcWeights);
                     decoyTransitionGroups.ScorePeaks(calcWeights);
                 }
                 // Bootstrap from the pre-trained legacy model
                 else
                 {
-                    qValueCutoff = 0.15;
+                    qValueCutoff = cutoffs[0];
                     var preTrainedWeights = new double[initParameters.Weights.Count];
                     for (int i = 0; i < preTrainedWeights.Length; ++i)
                     {
@@ -246,6 +255,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 double decoyMean = 0;
                 double decoyStdev = 0;
                 bool colinearWarning = false;
+                int cutoffIndex = firstCutoffIndex;
                 int iterationCount = iterations ?? MAX_ITERATIONS;
                 int truePeaksCount = 0;
                 var lastWeights = new double[calcWeights.Length];
@@ -279,10 +289,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
                             .ChangePercentComplete(percentComplete);
                     }
 
-                    if (qValueCutoff > 0.02)
+                    if (qValueCutoff > cutoffs[firstCutoffIndex])
                     {
                         // Tighten the q value cut-off for "truth" to 2% FDR
-                        qValueCutoff = 0.02;
+                        qValueCutoff = cutoffs[firstCutoffIndex];
                         // And allow the true peaks count to go down in the next iteration
                         // Though it rarely will
                         truePeaksCountNew = 0;
@@ -291,11 +301,14 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     // and go to full iteration count without progressing
                     else if (truePeaksCountNew <= truePeaksCount)
                     {
+                        // Advance looking for a smaller cutoff
+                        while (cutoffIndex < cutoffs.Count && cutoffs[cutoffIndex] >= qValueCutoff)
+                            cutoffIndex++;
                         // The model has leveled off enough to begin losing discriminant value
-                        if (qValueCutoff > 0.01)
+                        if (cutoffIndex < cutoffs.Count)
                         {
                             // Tighten the q value cut-off for "truth" to 1% FDR
-                            qValueCutoff = 0.01;
+                            qValueCutoff = cutoffs[cutoffIndex];
                             // And allow the true peaks count to go down in the next iteration
                             truePeaksCountNew = 0;
                         }

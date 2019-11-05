@@ -724,6 +724,21 @@ greater peak area.</value>
   <data name="_refine_max_precursor_only" xml:space="preserve">
     <value>Only the precursor charge state with the maximum peak area will be retained.</value>
   </data>
+  <data name="_refine_cv_remove_above_cutoff" xml:space="preserve">
+    <value>All target precursors with peak area CV above the cutoff will be removed.</value>
+  </data>
+  <data name="_refine_cv_global_normalize" xml:space="preserve">
+    <value>Areas used in CV calculations are normalized as specified. (default no normalization)</value>
+  </data>
+  <data name="_refine_cv_reference_normalize" xml:space="preserve">
+    <value>Areas used in CV calculations are normalized to a reference type, e.g. "heavy".</value>
+  </data>
+  <data name="_refine_qvalue_cutoff" xml:space="preserve">
+    <value>All target precursors with a maximum detection q value above the cutoff will be removed. If --refine-minimum-detections is used then at least the specified number of replicates must have a detection q value below the cutoff.</value>
+  </data>
+  <data name="_refine_minimum_detections" xml:space="preserve">
+    <value>All target precursors with less than the specified number of replicates with detection q value below the --refine-qvalue-cutoff are removed.</value>
+  </data>
   <data name="_import_filename_pattern" xml:space="preserve">
     <value>A regular expression that is applied to file names to select the ones that will be imported.</value>
   </data>
@@ -750,5 +765,11 @@ greater peak area.</value>
   </data>
   <data name="_save_settings" xml:space="preserve">
     <value>Causes settings changes to the global environment, e.g. added reports, libraries, enzymes, etc. to be saved to the program configuration file.</value>
+  </data>
+  <data name="_reintegrate_model_type" xml:space="preserve">
+    <value>The type of peak scoring model to train to produce z scores and q values. (dafault mProphet) Skyline - simply scales coefficients of the default Skyline model to estimate a unit normal distribution from the decoys. SkylineML - uses the mProphet machine learning algorithm to train a model using only the default set of feature scores.</value>
+  </data>
+  <data name="CommandArgs_NUM_LIST_VALUE" xml:space="preserve">
+    <value>&lt;number list&gt;</value>
   </data>
 </root>
