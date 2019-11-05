@@ -361,7 +361,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             set
             {
                 eIonMobilityUnits eValue;
-                if (SmallMoleculeTransitionListReader.IonMobilityUnitsSynonyms.TryGetValue(value.Trim(), out eValue))
+                if (SmallMoleculeTransitionListReader.IonMobilityUnitsSynonyms.TryGetValue(string.IsNullOrEmpty(value) ? string.Empty : value.Trim(), out eValue))
                     ChangeDocNode(EditColumnDescription(nameof(ExplicitIonMobilityUnits), eValue),
                         docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobility(docNode.ExplicitValues.IonMobility, eValue)));
             }

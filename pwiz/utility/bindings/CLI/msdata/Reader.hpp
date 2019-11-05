@@ -41,6 +41,23 @@ using namespace System::Collections::Generic;
 
 public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(MSDataList, pwiz::msdata::MSDataPtr, MSData, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
 
+
+/// <summary>
+/// a window specifying an m/z and optionally a range of ion mobility values
+/// </summary>
+public ref class MzMobilityWindow
+{
+    public:
+
+    MzMobilityWindow(double mz) : mz(mz) {}
+    MzMobilityWindow(double mz, System::Tuple<double, double>^ mobilityBounds) : mz(mz), mobilityBounds(mobilityBounds) {}
+    MzMobilityWindow(double mz, double mobility, double mobilityTolerance) : MzMobilityWindow(mz, gcnew System::Tuple<double, double>(mobility - mobilityTolerance, mobility + mobilityTolerance)) {}
+
+    double mz;
+    System::Tuple<double, double>^ mobilityBounds;
+};
+
+
 /// <summary>
 /// configuration struct for readers
 /// </summary>
@@ -75,6 +92,9 @@ public ref class ReaderConfig
 
     /// when true, MS2 spectra without precursor/isolation information will be included in the output (currently only affects Bruker PASEF data)
     bool allowMsMsWithoutPrecursor;
+
+    /// when non-empty, only MS2 scans from precursors matching one of the included m/z, and optionally mobility, (i.e. within a precursor isolation window) will be enumerated (currently only affects Bruker PASEF data)
+    System::Collections::Generic::IList<MzMobilityWindow^>^ isolationMzAndMobilityFilter;
 
     ReaderConfig()
     : simAsSpectra(false)
