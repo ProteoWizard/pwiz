@@ -32,7 +32,6 @@ namespace TestPerf
         [Timeout(TestTimeout.Infinite)]
         public void TestImportHundredsOfReplicates()
         {
-            RunPerfTests = true;
             TestFilesZip = @"TestPerf\PerfImportHundredsOfReplicatesTest.zip";
             RunFunctionalTest();
         }
