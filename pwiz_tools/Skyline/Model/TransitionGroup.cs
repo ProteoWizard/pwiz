@@ -350,10 +350,6 @@ namespace pwiz.Skyline.Model
 
                 foreach (var adduct in adducts)
                 {
-                    // Precursor charge can never be lower than product ion charge.
-                    if (Math.Abs(PrecursorAdduct.AdductCharge) < Math.Abs(adduct.AdductCharge))
-                        continue;
-
                     int start = 0, end = 0;
                     if (pick != TransitionLibraryPick.all)
                     {
@@ -372,6 +368,10 @@ namespace pwiz.Skyline.Model
                         Assume.IsTrue(massH.IsMonoIsotopic() == calcPredict.MassType.IsMonoisotopic());
                         foreach (var losses in CalcTransitionLosses(type, i, massType, potentialLosses))
                         {
+                            // Precursor charge can never be lower than product ion charge.
+                            if (!adduct.IsValidProductAdduct(PrecursorAdduct, losses))
+                                continue;
+
                             double ionMz = SequenceMassCalc.GetMZ(Transition.CalcMass(massH, losses), adduct);
 
                             // Make sure the fragment m/z value falls within the valid instrument range.
@@ -489,6 +489,20 @@ namespace pwiz.Skyline.Model
 
             foreach (var losses in CalcTransitionLosses(IonType.precursor, 0, massType, potentialLosses))
             {
+                Adduct productAdduct;
+                if (losses == null)
+                {
+                    productAdduct = PrecursorAdduct;
+                }
+                else
+                {
+                    productAdduct = losses.GetProductAdduct(PrecursorAdduct);
+                    if (productAdduct == null)
+                    {
+                        continue;
+                    }
+                }
+
                 double ionMz = IsProteomic ? 
                     SequenceMassCalc.GetMZ(Transition.CalcMass(precursorMassPredict, losses), PrecursorAdduct) :
                     PrecursorAdduct.MzFromNeutralMass(CustomMolecule.GetMass(massTypeIon), massTypeIon);
@@ -505,7 +519,7 @@ namespace pwiz.Skyline.Model
                                 continue;
                             var isotopeDistInfo = new TransitionIsotopeDistInfo(
                                 isotopeDist.GetRankI(i), isotopeDist.GetProportionI(i));
-                            yield return CreateTransitionNode(i, precursorMS1Mass, isotopeDistInfo, null, transitionRanks);
+                            yield return CreateTransitionNode(i, precursorMS1Mass, isotopeDistInfo, null, transitionRanks, productAdduct);
                         }
                         continue;
                     }
@@ -527,7 +541,7 @@ namespace pwiz.Skyline.Model
                                                     PrecursorAdduct, losses))
                 {
                     yield return CreateTransitionNode(0, precursorMassPredict, null, losses,
-                                                      precursorIsProduct ? transitionRanks : null);
+                                                      precursorIsProduct ? transitionRanks : null, productAdduct);
                 }
             }            
         }
@@ -648,9 +662,9 @@ namespace pwiz.Skyline.Model
         }
 
         private TransitionDocNode CreateTransitionNode(int massIndex, TypedMass precursorMassH, TransitionIsotopeDistInfo isotopeDistInfo,
-            TransitionLosses losses, IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks, CustomMolecule customMolecule = null)
+            TransitionLosses losses, IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks, Adduct productAdduct, CustomMolecule customMolecule = null)
         {
-            Transition transition = new Transition(this, massIndex, customMolecule);
+            Transition transition = new Transition(this, massIndex, productAdduct, customMolecule);
             var quantInfo = TransitionDocNode.TransitionQuantInfo.GetLibTransitionQuantInfo(transition, losses,
                 Transition.CalcMass(precursorMassH, losses), transitionRanks).ChangeIsotopeDistInfo(isotopeDistInfo);
             var transitionDocNode = new TransitionDocNode(transition, losses, precursorMassH, quantInfo, ExplicitTransitionValues.EMPTY);

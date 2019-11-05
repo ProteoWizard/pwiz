@@ -8956,11 +8956,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Neutral loss &amp;chemical formula:.
+        ///   Looks up a localized string similar to Loss &amp;chemical formula:.
         /// </summary>
-        public static string EditFragmentLossDlg_EditFragmentLossDlg_Neutral_loss__chemical_formula_ {
+        public static string EditFragmentLossDlg_EditFragmentLossDlg_Loss__chemical_formula_ {
             get {
-                return ResourceManager.GetString("EditFragmentLossDlg_EditFragmentLossDlg_Neutral_loss__chemical_formula_", resourceCulture);
+                return ResourceManager.GetString("EditFragmentLossDlg_EditFragmentLossDlg_Loss__chemical_formula_", resourceCulture);
             }
         }
         
