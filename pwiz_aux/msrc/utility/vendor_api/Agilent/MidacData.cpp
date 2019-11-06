@@ -491,31 +491,35 @@ void FrameImpl::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz
             expectedNonZeroPoints += specData->NonZeroPoints;
         }
 
-        auto mzArray = gcnew cli::array<double>(expectedNonZeroPoints);
-        auto intensityArray = gcnew cli::array<double>(expectedNonZeroPoints);
-        auto mobilityArray = gcnew cli::array<double>(expectedNonZeroPoints);
+        auto mzArray = gcnew cli::array<double>(3*expectedNonZeroPoints + 2); // handle worst case scenario for preserving zeros adjacent to nonzeros ie 0,1,0,0,1,0,0,1,0,0,1,0
+        auto intensityArray = gcnew cli::array<double>(3*expectedNonZeroPoints + 2);
+        auto mobilityArray = gcnew cli::array<double>(3*expectedNonZeroPoints + 2);
         int lastNonZeroIndex = 0;
 
         for (size_t i = 0; i < nonEmptyDriftBins.size(); ++i)
         {
-            imsReader_->FrameMs(frameIndex_ + 1, nonEmptyDriftBins[i], MIDAC::MidacSpecFormat::ZeroTrimmed, true, (MIDAC::IMidacSpecDataMs^%) specData);
+            imsReader_->FrameMs(frameIndex_ + 1, nonEmptyDriftBins[i], MIDAC::MidacSpecFormat::ZeroBounded, true, (MIDAC::IMidacSpecDataMs^%) specData);
             if (Object::ReferenceEquals(specData, nullptr))
                 throw gcnew System::Exception(ToSystemString("null spectrum returned for frame ") + frameIndex_ + " and drift bin " + nonEmptyDriftBins[i]);
 
             double driftTime = specData->DriftTimeRanges->Length > 0 ? specData->DriftTimeRanges[0]->Min : 0;
+            double previousIntensity = 0;
+
             for (int j = 0, end = specData->XArray->Length; j < end; ++j)
             {
-                if (specData->YArray[j] == 0)
+                double intensity = specData->YArray[j];
+                // Don't save zero intensity points unless they are start or end of a run of zeros
+                if (intensity == 0 && previousIntensity == 0 && j + 1 < end && specData->YArray[j + 1] == 0)
                     continue;
                 mzArray[lastNonZeroIndex] = specData->XArray[j];
-                intensityArray[lastNonZeroIndex] = specData->YArray[j];
+                intensityArray[lastNonZeroIndex] = previousIntensity = intensity;
                 mobilityArray[lastNonZeroIndex] = driftTime;
                 ++lastNonZeroIndex;
             }
         }
-        ToBinaryData(mzArray, mz);
-        ToBinaryData(intensityArray, intensities);
-        ToBinaryData(mobilityArray, mobilities);
+        ToBinaryData(mzArray, 0, mz, 0, lastNonZeroIndex);
+        ToBinaryData(intensityArray, 0, intensities, 0, lastNonZeroIndex);
+        ToBinaryData(mobilityArray, 0, mobilities, 0, lastNonZeroIndex);
     }
     CATCH_AND_FORWARD
 }
