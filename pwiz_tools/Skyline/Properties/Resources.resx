@@ -144,7 +144,7 @@
   <data name="MQuestReferenceShapeCalc_MQuestReferenceShapeCalc_Reference_shape" xml:space="preserve">
     <value>Reference shape</value>
   </data>
-  <data name="EditChorusAccountDlg_ValidateValues_There_is_already_an_account_defined_for_the_user__0__on_the_server__1_" xml:space="preserve">
+  <data name="EditRemoteAccountDlg_ValidateValues_There_is_already_an_account_defined_for_the_user__0__on_the_server__1_" xml:space="preserve">
     <value>There is already an account defined for the user {0} on the server {1}</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
@@ -289,7 +289,7 @@
   <data name="ViewLibraryDlg_AddAllPeptides_All_library_peptides_already_exist_in_the_current_document" xml:space="preserve">
     <value>All library peptides already exist in the current document.</value>
   </data>
-  <data name="EditChorusAccountDlg_ValidateValues_Server_URL_must_start_with_https____or_http___" xml:space="preserve">
+  <data name="EditRemoteAccountDlg_ValidateValues_Server_URL_must_start_with_https____or_http___" xml:space="preserve">
     <value>Server URL must start with https:// or http://</value>
   </data>
   <data name="PythonInstaller_InstallPip_Unknown_error_installing_pip_" xml:space="preserve">
@@ -721,7 +721,7 @@
   <data name="LibraryExplorer_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\StartPage\LibraryExplorer_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="EditChorusAccountDlg_ValidateValues_Username_cannot_be_blank" xml:space="preserve">
+  <data name="EditRemoteAccountDlg_ValidateValues_Username_cannot_be_blank" xml:space="preserve">
     <value>Username cannot be blank</value>
   </data>
   <data name="XHunterLibrary_Load_Invalid_precursor_charge_found_File_may_be_corrupted" xml:space="preserve">
@@ -1135,9 +1135,6 @@
   </data>
   <data name="MeasuredRetentionTime_Validate_Measured_retention_times_must_be_positive_values" xml:space="preserve">
     <value>Measured retention times must be positive values.</value>
-  </data>
-  <data name="ChorusSession_TOP_LEVEL_ITEMS_Shared_Projects" xml:space="preserve">
-    <value>Shared Projects</value>
   </data>
   <data name="DisplayGraphsTypeExtension_LOCALIZED_VALUES_Row" xml:space="preserve">
     <value>Row</value>
@@ -1833,9 +1830,6 @@
   <data name="SkylineStartup_SaveFileDlg_Please_save_a_new_file_to_work_with_" xml:space="preserve">
     <value>Please save a new file to work with.</value>
   </data>
-  <data name="ChorusAccountList_Label_Chorus_Accounts" xml:space="preserve">
-    <value>Chorus Accounts</value>
-  </data>
   <data name="TransitionFilter_ValidateCharges__0__cannot_be_empty" xml:space="preserve">
     <value>{0} cannot be empty.</value>
   </data>
@@ -2051,9 +2045,6 @@
   </data>
   <data name="ChromatogramExporter_Export_Bad_chromatogram_data_for_charge__0__state_of_peptide__1_" xml:space="preserve">
     <value>Bad chromatogram data for charge {0} state of peptide {1}</value>
-  </data>
-  <data name="ChorusSession_TOP_LEVEL_ITEMS_Shared_Files" xml:space="preserve">
-    <value>Shared Files</value>
   </data>
   <data name="UndoRedoList_GetLabelText_Redo__0__Actions" xml:space="preserve">
     <value>Redo {0} Actions</value>
@@ -2573,8 +2564,8 @@ Are you sure you want to continue?</value>
   <data name="ConfigureToolsDlg_AddFromWeb_Contacting_the_server" xml:space="preserve">
     <value>Contacting the server</value>
   </data>
-  <data name="EditFragmentLossDlg_EditFragmentLossDlg_Neutral_loss__chemical_formula_" xml:space="preserve">
-    <value>Neutral loss &amp;chemical formula:</value>
+  <data name="EditFragmentLossDlg_EditFragmentLossDlg_Loss__chemical_formula_" xml:space="preserve">
+    <value>Loss &amp;chemical formula:</value>
   </data>
   <data name="EditDPDlg_UseCurrentData_Insufficient_data_found_to_calculate_a_new_regression" xml:space="preserve">
     <value>Insufficient data found to calculate a new regression.</value>
@@ -2627,7 +2618,7 @@ Are you sure you want to continue?</value>
   <data name="IonMobilityLibraryList_Label_Ion_Mobility_Libraries_" xml:space="preserve">
     <value>Ion Mobility Libraries:</value>
   </data>
-  <data name="EditChorusAccountDlg_TestSettings_Error_connecting_to_server__" xml:space="preserve">
+  <data name="EditRemoteAccountDlg_TestSettings_Error_connecting_to_server__" xml:space="preserve">
     <value>Error connecting to server: </value>
   </data>
   <data name="AddOptimizationDlg_OkDialog_The_file__0__does_not_exist_" xml:space="preserve">
@@ -2765,9 +2756,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="TransitionFullScan_ValidateRes_Unexpected_resolving_power_mz_value_for__0__" xml:space="preserve">
     <value>Unexpected resolving power m/z value for {0}</value>
-  </data>
-  <data name="OpenDataSourceDialog_EnsureChorusAccount_Press_Add_to_use_specify_an_existing_Chorus_account" xml:space="preserve">
-    <value>Press Add to use specify an existing Chorus account</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_Loading_Library" xml:space="preserve">
     <value>Loading Library</value>
@@ -3196,6 +3184,9 @@ Are you sure you want to continue?</value>
   <data name="RTReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_retention_time_graph" xml:space="preserve">
     <value>Select a peptide to see the retention time graph</value>
   </data>
+  <data name="EditIrtCalcDlg_comboStandards_SelectedIndexChanged_The_list_of_standard_peptides_must_contain_only_recognized_iRT_C18_standards_to_switch_to_a_predefined_set_of_iRT_C18_standards_" xml:space="preserve">
+    <value>The list of standard peptides must contain only recognized iRT-C18 standards to switch to a predefined set of iRT-C18 standards.</value>
+  </data>
   <data name="ExportMethodDlg_SetMethodType_Standard" xml:space="preserve">
     <value>Standard</value>
   </data>
@@ -3286,9 +3277,6 @@ Are you sure you want to continue?</value>
   <data name="MoleculeIrtLib" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\moleculeirtlib.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="ChorusSession_TOP_LEVEL_ITEMS_Public_Projects" xml:space="preserve">
-    <value>Public Projects</value>
-  </data>
   <data name="TransitionFilter_IonTypes_At_least_one_ion_type_is_required" xml:space="preserve">
     <value>At least one ion type is required.</value>
   </data>
@@ -3349,9 +3337,6 @@ Are you sure you want to continue?</value>
   <data name="ComparePeakBoundaries_ComputeMatches_Documents_have_different_number_of_transition_groups___0__vs__1__" xml:space="preserve">
     <value>Documents have different number of transition groups, {0} vs {1}.</value>
   </data>
-  <data name="OpenDataSourceDialog_EnsureChorusAccount_No_Chorus_acounts_have_been_specified" xml:space="preserve">
-    <value>No Chorus acounts have been specified</value>
-  </data>
   <data name="CommandLineTest_ConsolePathCoverage_successfully_" xml:space="preserve">
     <value>successfully.</value>
     <comment>Context: something finished "successfully".</comment>
@@ -3398,7 +3383,7 @@ Are you sure you want to continue?</value>
   <data name="SkylineWindow_ShowProgressErrorUI_Retry" xml:space="preserve">
     <value>Retry</value>
   </data>
-  <data name="EditChorusAccountDlg_TestSettings_Settings_are_correct" xml:space="preserve">
+  <data name="EditRemoteAccountDlg_TestSettings_Settings_are_correct" xml:space="preserve">
     <value>Settings are correct</value>
   </data>
   <data name="PersistedViews_MainGroup_Main" xml:space="preserve">
@@ -3636,7 +3621,7 @@ Are you sure you want to continue?</value>
   <data name="MinimizeResultsDlg_ChromCacheMinimizer_The_cache_file_has_not_been_loaded_yet" xml:space="preserve">
     <value>The cache file has not been loaded yet.</value>
   </data>
-  <data name="EditChorusAccountDlg_ValidateValues_Invalid_server_URL_" xml:space="preserve">
+  <data name="EditRemoteAccountDlg_ValidateValues_Invalid_server_URL_" xml:space="preserve">
     <value>Invalid server URL.</value>
   </data>
   <data name="LegacyScoringModel_DoValidate_Legacy_scoring_model_is_not_trained_" xml:space="preserve">
@@ -3816,9 +3801,6 @@ Are you sure you want to continue?</value>
   <data name="PasteDlg_AddFasta__0__is_not_a_capital_letter_that_corresponds_to_an_amino_acid" xml:space="preserve">
     <value>'{0}' is not a capital letter that corresponds to an amino acid.</value>
   </data>
-  <data name="ChorusSession_WrapWebException_An_error_occurred_communicating_with_the_server___The_server_returned_the_HTTP_error_response_code__0__but_the_error_message_could_not_be_parsed_" xml:space="preserve">
-    <value>An error occurred while communicating with the Chorus server.  The server returned the HTTP error response code {0} but the error message could not be parsed.</value>
-  </data>
   <data name="TransitionGroupChromInfoListCalculator_AddChromInfoList_Attempt_to_add_integration_information_for_missing_file" xml:space="preserve">
     <value>Attempt to add integration information for missing file.</value>
   </data>
@@ -3915,9 +3897,6 @@ Are you sure you want to continue?</value>
   <data name="Replicate" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Replicate.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="ChorusSession_TOP_LEVEL_ITEMS_Public_Files" xml:space="preserve">
-    <value>Public Files</value>
-  </data>
   <data name="MeasuredIonList_Label_Special_ion" xml:space="preserve">
     <value>&amp;Special ion:</value>
   </data>
@@ -3941,9 +3920,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="Library_ReadComplete_Data_truncation_in_library_header_File_may_be_corrupted" xml:space="preserve">
     <value>Data truncation in library header. File may be corrupted.</value>
-  </data>
-  <data name="ChorusAccountList_Title_Edit_Chorus_Accounts" xml:space="preserve">
-    <value>Edit Chorus Accounts</value>
   </data>
   <data name="CommandLine_ExportInstrumentFile_Error__The_current_document_contains_peptides_without_enough_information_to_rank_transitions_for_triggered_acquisition_" xml:space="preserve">
     <value>Error: The current document contains peptides without enough information to rank transitions for triggered acquisition.</value>
@@ -4434,9 +4410,6 @@ If you prefer you can choose to report anonymously.</value>
   </data>
   <data name="ScanProvider_GetScans_The_scan_ID__0__was_not_found_in_the_file__1__" xml:space="preserve">
     <value>The scan ID {0} was not found in the file {1}.</value>
-  </data>
-  <data name="OpenDataSourceDialog_EnsureChorusAccount_Add" xml:space="preserve">
-    <value>Add</value>
   </data>
   <data name="CommandLine_ImportTransitionList_Importing_transiton_list__0____" xml:space="preserve">
     <value>Importing transiton list {0}...</value>
@@ -5416,9 +5389,6 @@ If you prefer you can choose to report anonymously.</value>
   <data name="ImportResultsDlg_GetDataSourcePathsDir_Results_Directory" xml:space="preserve">
     <value>Results Directory</value>
   </data>
-  <data name="ChorusSession_WrapWebException_An_error_occurred_communicating_with_the_server___The_server_return_HTTP_error_response_code__0__" xml:space="preserve">
-    <value>An error occurred while communicating with the Chorus server.  The server returned the HTTP error response code {0}.</value>
-  </data>
   <data name="EditMeasuredIonDlg_EditMeasuredIonDlg_A_verage_mass_" xml:space="preserve">
     <value>A&amp;verage mass:</value>
   </data>
@@ -5578,9 +5548,6 @@ If you prefer you can choose to report anonymously.</value>
   </data>
   <data name="AbstractMSGraphItem_CustomizeXAxis_MZ" xml:space="preserve">
     <value>m/z</value>
-  </data>
-  <data name="OpenDataSourceDialog_OpenDataSourceDialog_Chorus_Project" xml:space="preserve">
-    <value>Chorus Project</value>
   </data>
   <data name="ToolDescription_RunTool_Support_for_the_GenePattern_version_of_QuaSAR_has_been_discontinued_" xml:space="preserve">
     <value>Support for the GenePattern version of QuaSAR has been discontinued.</value>
@@ -5916,9 +5883,6 @@ If you prefer you can choose to report anonymously.</value>
   <data name="MQuestReferenceShapeCalc_MQuestReferenceShapeCalc_mProphet_weighted_reference" xml:space="preserve">
     <value>mProphet weighted reference</value>
   </data>
-  <data name="ChorusSession_TOP_LEVEL_ITEMS_My_Files" xml:space="preserve">
-    <value>My Files</value>
-  </data>
   <data name="CommandLine_ExportInstrumentFile_Warning__Max_transitions_per_injection_must_be_set_to_some_value_between__0__and__1__for_export_strategies__protein__and__buckets__and_for_scheduled_methods__You_specified__3___Defaulting_to__2__" xml:space="preserve">
     <value>Warning: Max transitions per injection must be set to some value between {0} and {1} for export strategies "protein" and "buckets" and for scheduled methods. You specified {3}. Defaulting to {2}.</value>
   </data>
@@ -5999,9 +5963,6 @@ If you prefer you can choose to report anonymously.</value>
   </data>
   <data name="ImportDocResultsDlg_OkDialog_The_document_must_be_saved_before_results_may_be_imported" xml:space="preserve">
     <value>The document must be saved before results may be imported.</value>
-  </data>
-  <data name="ChorusSession_TOP_LEVEL_ITEMS_My_Experiments" xml:space="preserve">
-    <value>My Experiments</value>
   </data>
   <data name="SkylineWindow_IntegrateAll_Clear_integrate_all" xml:space="preserve">
     <value>Clear integrate all</value>
@@ -6432,9 +6393,6 @@ If you prefer you can choose to report anonymously.</value>
   <data name="SkylineWindow_removeEmptyProteinsMenuItem_Click_Remove_empty_proteins" xml:space="preserve">
     <value>Remove empty proteins</value>
   </data>
-  <data name="ChorusSession_Login_Unable_to_log_in___Username_or_password_is_incorrect_" xml:space="preserve">
-    <value>Unable to log in.  Username or password is incorrect.</value>
-  </data>
   <data name="MassListRowReader_CalcPrecursorExplanations_Check_the_isolation_scheme_in_the_full_scan_settings_" xml:space="preserve">
     <value>Check the isolation scheme in the full scan tab of the transition settings.</value>
   </data>
@@ -6565,9 +6523,6 @@ If you prefer you can choose to report anonymously.</value>
   <data name="MessageBoxHelper_ValidateAdductListTextBox__0__must_contain_a_comma_separated_list_of_adducts_or_integers_describing_charge_states_with_absolute_values_from__1__to__2__" xml:space="preserve">
     <value>{0} must contain a comma separated list of adducts or integers describing charge states with absolute values from {1} to {2}.</value>
   </data>
-  <data name="ChorusSession_TOP_LEVEL_ITEMS_Shared_Experiments" xml:space="preserve">
-    <value>Shared Experiments</value>
-  </data>
   <data name="SkylineWindow_ShowReintegrateDialog_Unexpected_document_change_during_operation_" xml:space="preserve">
     <value>Unexpected document change during operation.</value>
   </data>
@@ -6621,9 +6576,6 @@ If you prefer you can choose to report anonymously.</value>
   </data>
   <data name="TransitionFullScan_DoValidate_For_MS1_filtering_with_a_QIT_mass_analyzer_only_1_isotope_peak_is_supported" xml:space="preserve">
     <value>For MS1 filtering with a QIT mass analyzer only 1 isotope peak is supported.</value>
-  </data>
-  <data name="OpenDataSourceDialog_EnsureChorusAccount_Press_Register_to_register_for_an_account_on_the_Chorus_Project" xml:space="preserve">
-    <value>Press Register to register for an account on the Chorus Project</value>
   </data>
   <data name="RInstaller_InstallPackages_Unknown_error_installing_packages__Tool_Installation_Failed_" xml:space="preserve">
     <value>Unknown error installing packages. Tool Installation Failed.</value>
@@ -6848,7 +6800,7 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="RefineListDlg_OkDialog_The_sequence__0__is_not_a_valid_peptide" xml:space="preserve">
     <value>The sequence '{0}' is not a valid peptide.</value>
   </data>
-  <data name="ChorusSession_FetchContents_There_was_an_error_communicating_with_the_server__" xml:space="preserve">
+  <data name="RemoteSession_FetchContents_There_was_an_error_communicating_with_the_server__" xml:space="preserve">
     <value>There was an error communicating with the server: </value>
   </data>
   <data name="SkylineWindow_AddMolecule_Custom_molecules_cannot_be_added_to_a_peptide_list_" xml:space="preserve">
@@ -7168,9 +7120,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="XHunterLibrary_Load_Failed_loading_library__0__" xml:space="preserve">
     <value>Failed loading library '{0}'.</value>
   </data>
-  <data name="ChromatogramGeneratorTask_GetChromatogram_Unexpected_zero_length_chromatogram_returned_from_Chorus_" xml:space="preserve">
-    <value>Unexpected zero length chromatogram returned from Chorus.</value>
-  </data>
   <data name="TransitionFullScan_ValidateRes_Resolution_must_be_between__0__and__1__for_QIT_" xml:space="preserve">
     <value>Resolution must be between {0} and {1} for QIT.</value>
   </data>
@@ -7221,9 +7170,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="SettingsList_ELEMENT_NONE_None" xml:space="preserve">
     <value>None</value>
-  </data>
-  <data name="OpenDataSourceDialog_EnsureChorusAccount_Register" xml:space="preserve">
-    <value>Register</value>
   </data>
   <data name="SkylineWindow_ApplyPeak_No_results_found_for_the_precursor__0__in_the_file__1__" xml:space="preserve">
     <value>No results found for the precursor {0} in the file {1}.</value>
@@ -7408,9 +7354,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="MessageBoxHelper_ValidateSignedNumberTextBox_Value__0__must_be_between__1__and__2__or__3__and__4__" xml:space="preserve">
     <value>Value {0} must be between {1} and {2} or {3} and {4}.</value>
-  </data>
-  <data name="ChorusSession_TOP_LEVEL_ITEMS_My_Projects" xml:space="preserve">
-    <value>My Projects</value>
   </data>
   <data name="CommandLine_ExportChromatograms_Error__At_least_one_chromatogram_type_must_be_selected" xml:space="preserve">
     <value>Error: At least one chromatogram type must be selected</value>
@@ -7604,7 +7547,7 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="RInstaller_GetR_R_installation_complete_" xml:space="preserve">
     <value>R installation complete.</value>
   </data>
-  <data name="EditChorusAccountDlg_ValidateValues_Server_cannot_be_blank" xml:space="preserve">
+  <data name="EditRemoteAccountDlg_ValidateValues_Server_cannot_be_blank" xml:space="preserve">
     <value>Server cannot be blank</value>
   </data>
   <data name="AddPeakCompareDlg_OkDialog_Error_applying_imported_peak_boundaries___0_" xml:space="preserve">
@@ -8372,9 +8315,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="EditIrtCalcDlg_UpdateNumPeptides__0__Peptides" xml:space="preserve">
     <value>{0} Peptides</value>
-  </data>
-  <data name="ChorusSession_TOP_LEVEL_ITEMS_Public_Experiments" xml:space="preserve">
-    <value>Public Experiments</value>
   </data>
   <data name="TransitionTreeNode_RenderTip_Losses" xml:space="preserve">
     <value>Losses</value>
@@ -9275,6 +9215,9 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="GraphFullScan_CreateGraph_Scan_Number_" xml:space="preserve">
     <value>Scan Number:</value>
   </data>
+  <data name="GraphFullScan_CreateGraph_IM_Scan_Range_" xml:space="preserve">
+    <value>IM Scan Range:</value>
+  </data>
   <data name="FilterMidasLibraryDlg_OkDialog_You_must_enter_a_name_for_the_filtered_library_" xml:space="preserve">
     <value>You must enter a name for the filtered library.</value>
   </data>
@@ -10018,8 +9961,8 @@ Recognized isotopes include: {2}</value>
   <data name="UnifiUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__" xml:space="preserve">
     <value>Cannot find account for username {0} and server {1}.</value>
   </data>
-  <data name="OpenDataSourceDialog_EnsureRemoteAccount_No_remote_accounts_have_been_specified__If_you_have_an_existing_Unifi_or_Chorus_account_you_can_enter_your_login_information_now_" xml:space="preserve">
-    <value>No remote accounts have been specified. If you have an existing Unifi or Chorus account you can enter your login information now.</value>
+  <data name="OpenDataSourceDialog_EnsureRemoteAccount_No_remote_accounts_have_been_specified__If_you_have_an_existing_Unifi_account_you_can_enter_your_login_information_now_" xml:space="preserve">
+    <value>No remote accounts have been specified. If you have an existing Unifi account you can enter your login information now.</value>
   </data>
   <data name="RemoteAccountList_Title_Edit_Remote_Accounts" xml:space="preserve">
     <value>Edit Remote Accounts</value>
@@ -10029,9 +9972,6 @@ Recognized isotopes include: {2}</value>
   </data>
   <data name="OpenDataSourceDialog_OpenDataSourceDialog_Remote_Accounts" xml:space="preserve">
     <value>Remote Accounts</value>
-  </data>
-  <data name="Chorus_Label_Chorus" xml:space="preserve">
-    <value>Chorus</value>
   </data>
   <data name="Unifi_Label_Unifi" xml:space="preserve">
     <value>Unifi</value>
@@ -10621,12 +10561,30 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="CommandLine_ApplySampleNameRegex_Sample_name___0___does_not_match_the_pattern___1____Ignoring__2_" xml:space="preserve">
     <value>Sample name '{0}' does not match the pattern '{1}'. Ignoring {2}</value>
-</data>
+  </data>
   <data name="SkylineWindow_MarkQuantitative_Mark_transitions_quantitative" xml:space="preserve">
     <value>Mark transitions quantitative</value>
   </data>
   <data name="SkylineWindow_MarkQuantitative_Mark_transitions_non_quantitative" xml:space="preserve">
     <value>Mark transitions non-quantitative</value>
+  </data>
+  <data name="RefinementSettings_Refine_The_document_must_contain_at_least_2_replicates_to_refine_based_on_consistency_" xml:space="preserve">
+    <value>The document must contain at least 2 replicates to refine based on consistency.</value>
+  </data>
+  <data name="RefinementSettings_Refine_The_document_does_not_have_a_global_standard_to_normalize_by_" xml:space="preserve">
+    <value>The document does not have a global standard to normalize by.</value>
+  </data>
+  <data name="RefinementSettings_GetLabelIndex_The_document_does_not_contain_the_given_reference_type_" xml:space="preserve">
+    <value>The document does not contain the given reference type.</value>
+  </data>
+  <data name="RefineDlg_NormalizationMethod_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="RefineDlg_NormalizationMethod_Medians" xml:space="preserve">
+    <value>Medians</value>
+  </data>
+  <data name="RefineDlg_NormalizationMethod_Global_standards" xml:space="preserve">
+    <value>Global standards</value>
   </data>
   <data name="ExportMethodDlg_comboOptimizing_SelectedIndexChanged_Optimizing_for__0__will_produce_an_additional__1__transitions_per_transition_" xml:space="preserve">
     <value>Optimizing for {0} will produce an additional {1} transitions per transition.</value>
@@ -10777,5 +10735,29 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="IrtDb_MakeDocumentXml_iRT_standards" xml:space="preserve">
     <value>iRT standards</value>
+  </data>
+  <data name="CommandLine_CreateUntrainedScoringModel_Error__Excluding_feature_scores_is_not_permitted_with_the_default_Skyline_model_" xml:space="preserve">
+    <value>Error: Excluding feature scores is not permitted with the default Skyline model.</value>
+  </data>
+  <data name="CommandArgs_ValidateReintegrateArgs_Error__Model_cutoffs_cannot_be_applied_in_calibrating_the_Skyline_default_model_" xml:space="preserve">
+    <value>Error: Model cutoffs cannot be applied in calibrating the Skyline default model.</value>
+  </data>
+  <data name="CommandArgs_ValidateReintegrateArgs_Error__Model_cutoffs___0___must_be_in_decreasing_order_greater_than_zero_and_less_than__1__" xml:space="preserve">
+    <value>Error: Model cutoffs ({0}) must be in decreasing order greater than zero and less than {1}.</value>
+  </data>
+  <data name="ValueInvalidNumberListException_ValueInvalidNumberListException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_list_of_decimal_numbers_" xml:space="preserve">
+    <value>The value {0} is not valid for the argument {1} which requires a list of decimal numbers.</value>
+  </data>
+  <data name="FileStreamManager_GetTempFileName_Failed_attempting_to_create_a_temporary_file_in_the_folder__0__with_the_following_error_" xml:space="preserve">
+    <value>Failed attempting to create a temporary file in the folder {0} with the following error:</value>
+  </data>
+  <data name="EditIrtCalcDlg_ChangeStandardPeptides_Removed_peptides_on_iRT_standard_protein" xml:space="preserve">
+    <value>Removed peptides on iRT standard protein</value>
+  </data>
+  <data name="ChangeIrtPeptidesDlg_OkDialog_The_following_peptides_were_removed_" xml:space="preserve">
+    <value>The following peptides were removed:</value>
+  </data>
+  <data name="ChangeIrtPeptidesDlg_OkDialog_Would_you_like_to_remove_them_from_the_document_" xml:space="preserve">
+    <value>Would you like to remove them from the document?</value>
   </data>
 </root>

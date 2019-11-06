@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
@@ -45,6 +46,9 @@ namespace pwiz.Skyline.Controls.Graphs
         private DateTime _retryTime;
         private int _nextRetry;
         private ImportResultsRetryCountdownDlg _retryDlg;
+
+        private Dictionary<MsDataFileUri, FileProgressControl> _fileProgressControls =
+            new Dictionary<MsDataFileUri, FileProgressControl>();
 
         private const int RETRY_INTERVAL = 10;
         private const int RETRY_COUNTDOWN = 30;
@@ -436,6 +440,11 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             // Match each file status with a progress control.
             bool first = true;
+            var width = flowFileStatus.Width - 2 -
+                        (flowFileStatus.VerticalScroll.Visible
+                            ? SystemInformation.VerticalScrollBarWidth
+                            : 0);
+            List<FileProgressControl> controlsToAdd = new List<FileProgressControl>();
             foreach (var loadingStatus in status.ProgressList)
             {
                 var filePath = loadingStatus.FilePath;
@@ -446,7 +455,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Create a progress control for new file.
                 progressControl = new FileProgressControl
                 {
-                    Number = flowFileStatus.Controls.Count + 1,
+                    Number = flowFileStatus.Controls.Count + controlsToAdd.Count + 1,
+                    Width = width,
+                    Selected = first,
+                    BackColor = SystemColors.Control,
                     FilePath = filePath
                 };
                 progressControl.SetToolTip(toolTip1, filePath.GetFilePath());
@@ -457,41 +469,30 @@ namespace pwiz.Skyline.Controls.Graphs
                 progressControl.Cancel += (sender, args) => Cancel(thisLoadingStatus);
                 progressControl.ShowGraph += (sender, args) => ShowGraph();
                 progressControl.ShowLog += (sender, args) => ShowLog();
-                flowFileStatus.Controls.Add(progressControl);
-                progressControl.BackColor = SystemColors.Control;
-                
-                if (first)
-                {
-                    first = false;
-                    progressControl.Selected = true;
-                }
+                controlsToAdd.Add(progressControl);
+                first = false;
             }
 
-            foreach (FileProgressControl progressControl in flowFileStatus.Controls)
+            flowFileStatus.Controls.AddRange(controlsToAdd.ToArray());
+            foreach (var control in controlsToAdd)
             {
-                progressControl.Width = flowFileStatus.Width - 2 -
-                                        (flowFileStatus.VerticalScroll.Visible
-                                            ? SystemInformation.VerticalScrollBarWidth
-                                            : 0);
+                _fileProgressControls.Add(control.FilePath, control);
             }
         }
 
         private void CancelMissingFiles(MultiProgressStatus status)
         {
+            HashSet<MsDataFileUri> filesWithStatus = null;
             foreach (FileProgressControl progressControl in flowFileStatus.Controls)
             {
                 if (!progressControl.IsComplete && !progressControl.IsCanceled)
                 {
-                    bool found = false;
-                    foreach (var loadingStatus in status.ProgressList)
+                    if (filesWithStatus == null)
                     {
-                        if (progressControl.FilePath.Equals(loadingStatus.FilePath))
-                        {
-                            found = true;
-                            break;
-                        }
+                        filesWithStatus = new HashSet<MsDataFileUri>(status.ProgressList
+                            .Select(loadingStatus => loadingStatus.FilePath));
                     }
-                    if (!found)
+                    if (!filesWithStatus.Contains(progressControl.FilePath))
                         progressControl.IsCanceled = true;
                 }
             }
@@ -499,12 +500,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private FileProgressControl FindProgressControl(MsDataFileUri filePath)
         {
-            foreach (FileProgressControl fileProgressControl in flowFileStatus.Controls)
-            {
-                if (fileProgressControl.FilePath.Equals(filePath))
-                    return fileProgressControl;
-            }
-            return null;
+            FileProgressControl fileProgressControl;
+            _fileProgressControls.TryGetValue(filePath, out fileProgressControl);
+            return fileProgressControl;
         }
 
         private void Retry(ChromatogramLoadingStatus status)

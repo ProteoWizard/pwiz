@@ -27,7 +27,6 @@ using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -112,7 +111,7 @@ namespace pwiz.Skyline.Model.Results
                     if (!ProcessFile(fp))
                         return null; // User cancelled
                 }
-                // Find ion mobilitiess based on MS1 data
+                // Find ion mobilities based on MS1 data
                 foreach (var dt in _ms1IonMobilities)
                 {
                     // Choose the ion mobility which gave the largest signal
@@ -292,22 +291,11 @@ namespace pwiz.Skyline.Model.Results
                 return true; // Nothing to do at this ms level
             }
 
-            var chorusUrl = filePath as ChorusUrl;
-            IScanProvider scanProvider;
-            if (null == chorusUrl)
-            {
-                scanProvider = new ScanProvider(_documentFilePath,
-                    filePath,
-                    chromSource, times, transitions.ToArray(),
-                    _document.Settings.MeasuredResults,
-                    () => _document.Settings.MeasuredResults.LoadMSDataFileScanIds(filePath));
-            }
-            else
-            {
-                scanProvider = new ChorusScanProvider(_documentFilePath,
-                    chorusUrl,
-                    chromSource, times, transitions.ToArray());
-            }
+            IScanProvider scanProvider = new ScanProvider(_documentFilePath,
+                filePath,
+                chromSource, times, transitions.ToArray(),
+                _document.Settings.MeasuredResults,
+                () => _document.Settings.MeasuredResults.LoadMSDataFileScanIds(filePath));
 
             // Across all spectra at the peak retention time, find the one with max total 
             // intensity for the mz's of interest (ie the isotopic distribution) and note its ion mobility.

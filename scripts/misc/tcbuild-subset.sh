@@ -19,12 +19,6 @@ cd src_subset
 # Extract subset tarball
 tar -xf *-src-*.tar.bz2
 
-echo_info "Cleaning project..."
-if ! /bin/bash clean.sh; then
-	  echo_error "Error cleaning project!"
-	  exit 1 
-fi
-
 echo_info "Running quickbuild..."
 if ! /bin/bash quickbuild.sh --teamcity-test-decoration "$@"; then
 	  echo_error "Error running quickbuild! See full build log for details."

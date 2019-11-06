@@ -444,21 +444,48 @@ namespace pwiz.Skyline
         {
             if (commandArgs.RefinementLabelTypeName != null)
             {
-                var mods = _doc.Settings.PeptideSettings.Modifications;
-                var typeMods = mods.GetModificationsByName(commandArgs.RefinementLabelTypeName);
-                if (typeMods == null)
-                {
-                    _out.WriteLine(Resources.CommandLine_RefineDocument_Error__The_label_type___0___was_not_found_in_the_document_);
-                    _out.WriteLine(Resources.CommandLine_RefineDocument_Choose_one_of__0_, string.Join(@", ", mods.GetModificationTypes().Select(t => t.Name)));
+                var labelType = GetLabelTypeHelper(commandArgs.RefinementLabelTypeName);
+                if (labelType != null)
+                    commandArgs.Refinement.RefineLabelType = labelType;
+                else
                     return false;
-                }
+            }
 
-                commandArgs.Refinement.RefineLabelType = typeMods.LabelType;
+            if (commandArgs.RefinementCvLabelTypeName != null)
+            {
+                var labelType = GetLabelTypeHelper(commandArgs.RefinementCvLabelTypeName);
+                if (labelType != null)
+                    commandArgs.Refinement.NormalizationLabelType = labelType;
+                else
+                    return false;
             }
 
             _out.WriteLine(Resources.CommandLine_RefineDocument_Refining_document___);
-            ModifyDocumentWithLogging(doc => commandArgs.Refinement.Refine(doc), commandArgs.Refinement.EntryCreator.Create);
-            return true;
+            try
+            {
+                ModifyDocumentWithLogging(doc => commandArgs.Refinement.Refine(doc),
+                    commandArgs.Refinement.EntryCreator.Create);
+                return true;
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine(x.Message);
+                return false;
+            }
+        }
+
+        private IsotopeLabelType GetLabelTypeHelper(string label)
+        {
+            var mods = _doc.Settings.PeptideSettings.Modifications;
+            var typeMods = mods.GetModificationsByName(label);
+            if (typeMods == null)
+            {
+                _out.WriteLine(Resources.CommandLine_RefineDocument_Error__The_label_type___0___was_not_found_in_the_document_);
+                _out.WriteLine(Resources.CommandLine_RefineDocument_Choose_one_of__0_, string.Join(@", ", mods.GetModificationTypes().Select(t => t.Name)));
+                return null;
+            }
+
+            return typeMods.LabelType;
         }
 
         private HashSet<AuditLogEntry> GetSeenAuditLogEntries()
@@ -1201,6 +1228,15 @@ namespace pwiz.Skyline
 
             DocContainer.SetDocument(_doc, DocContainer.Document, true);
 
+            // If this has not already been designated a multi-process import, and no specific
+            // number of threads has been chosen, then choose dynamically based on the computer
+            // specs as many as make sense.
+            if (!Program.MultiProcImport && DocContainer.ChromatogramManager.LoadingThreads == 0)
+            {
+                DocContainer.ChromatogramManager.LoadingThreads = MultiFileLoader.GetOptimalThreadCount(null,
+                    namesAndFilePaths.Length, MultiFileLoader.ImportResultsSimultaneousFileOptions.many);
+            }
+
             // Add files to import list
             _out.WriteLine();
             for (int i = 0; i < namesAndFilePaths.Length; i++)
@@ -1812,11 +1848,13 @@ namespace pwiz.Skyline
                 ModelAndFeatures modelAndFeatures;
                 if (commandArgs.IsCreateScoringModel)
                 {
-                    modelAndFeatures = CreateScoringModel(commandArgs.ReintegratModelName,
+                    modelAndFeatures = CreateScoringModel(commandArgs.ReintegrateModelName,
+                        commandArgs.ReintegrateModelType,
                         commandArgs.ExcludeFeatures,
                         commandArgs.IsDecoyModel,
                         commandArgs.IsSecondBestModel,
                         commandArgs.IsLogTraining,
+                        commandArgs.ReintegrateModelCutoffs,
                         commandArgs.ReintegrateModelIterationCount);
 
                     if (modelAndFeatures == null)
@@ -1825,7 +1863,7 @@ namespace pwiz.Skyline
                 else
                 {
                     PeakScoringModelSpec scoringModel;
-                    if (!Settings.Default.PeakScoringModelList.TryGetValue(commandArgs.ReintegratModelName, out scoringModel))
+                    if (!Settings.Default.PeakScoringModelList.TryGetValue(commandArgs.ReintegrateModelName, out scoringModel))
                     {
                         _out.WriteLine(Resources.CommandLine_ReintegratePeaks_Error__Unknown_peak_scoring_model___0__);
                         return false;
@@ -1857,31 +1895,21 @@ namespace pwiz.Skyline
             }
         }
 
-        private ModelAndFeatures CreateScoringModel(string modelName, IList<IPeakFeatureCalculator> excludeFeatures,
-            bool decoys, bool secondBest, bool log, int? modelIterationCount)
+        private ModelAndFeatures CreateScoringModel(string modelName, CommandArgs.ScoringModelType modelType,
+            IList<IPeakFeatureCalculator> excludeFeatures, bool decoys, bool secondBest, bool log,
+            IList<double> modelCutoffs, int? modelIterationCount)
         {
             _out.WriteLine(Resources.CommandLine_CreateScoringModel_Creating_scoring_model__0_, modelName);
 
             try
             {
                 // Create new scoring model using the default calculators.
-                var calcs = MProphetPeakScoringModel.GetDefaultCalculators(_doc);
-                if (excludeFeatures.Count > 0)
-                {
-                    if (excludeFeatures.Count == 1)
-                        _out.WriteLine(Resources.CommandLine_CreateScoringModel_Excluding_feature_score___0__, excludeFeatures.First().Name);
-                    else
-                    {
-                        _out.WriteLine(Resources.CommandLine_CreateScoringModel_Excluding_feature_scores_);
-                        foreach (var featureCalculator in excludeFeatures)
-                            _out.WriteLine(@"    " + featureCalculator.Name);
-                    }
-                    // Excluding any requested by the caller
-                    calcs = calcs.Where(c => excludeFeatures.All(c2 => c.GetType() != c2.GetType())).ToArray();
-                }
-                var scoringModel = new MProphetPeakScoringModel(modelName, null as LinearModelParams, calcs, decoys, secondBest);
+                var scoringModel = CreateUntrainedScoringModel(modelName, modelType, excludeFeatures, decoys, secondBest);
+                if (scoringModel == null)
+                    return null;
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(String.Empty));
-                var targetDecoyGenerator = new TargetDecoyGenerator(scoringModel, _doc.GetPeakFeatures(calcs, progressMonitor));
+                var targetDecoyGenerator = new TargetDecoyGenerator(scoringModel,
+                    _doc.GetPeakFeatures(scoringModel.PeakFeatureCalculators, progressMonitor));
 
                 // Get scores for target and decoy groups.
                 List<IList<float[]>> targetTransitionGroups;
@@ -1909,8 +1937,8 @@ namespace pwiz.Skyline
 
                 // Train the model.
                 string documentPath = log ? DocContainer.DocumentFilePath : null;
-                scoringModel = (MProphetPeakScoringModel)scoringModel.Train(targetTransitionGroups,
-                    decoyTransitionGroups, targetDecoyGenerator, initialParams, modelIterationCount, secondBest, true, progressMonitor, documentPath);
+                scoringModel = (PeakScoringModelSpec) scoringModel.Train(targetTransitionGroups,
+                    decoyTransitionGroups, targetDecoyGenerator, initialParams, modelCutoffs, modelIterationCount, secondBest, true, progressMonitor, documentPath);
 
                 Settings.Default.PeakScoringModelList.SetValue(scoringModel);
 
@@ -1933,6 +1961,36 @@ namespace pwiz.Skyline
                 _out.WriteLine(x);
                 return null;
             }
+        }
+
+        private PeakScoringModelSpec CreateUntrainedScoringModel(string modelName, CommandArgs.ScoringModelType modelType,
+            IList<IPeakFeatureCalculator> excludeFeatures, bool decoys, bool secondBest)
+        {
+            if (modelType == CommandArgs.ScoringModelType.Skyline)
+            {
+                return new LegacyScoringModel(modelName, LegacyScoringModel.DEFAULT_PARAMS, decoys, secondBest);
+            }
+
+            var calcs = modelType == CommandArgs.ScoringModelType.SkylineML
+                ? LegacyScoringModel.AnalyteFeatureCalculators  // Assume unlabeled for now
+                : MProphetPeakScoringModel.GetDefaultCalculators(_doc);
+            if (excludeFeatures.Count > 0)
+            {
+                if (excludeFeatures.Count == 1)
+                    _out.WriteLine(Resources.CommandLine_CreateScoringModel_Excluding_feature_score___0__,
+                        excludeFeatures.First().Name);
+                else
+                {
+                    _out.WriteLine(Resources.CommandLine_CreateScoringModel_Excluding_feature_scores_);
+                    foreach (var featureCalculator in excludeFeatures)
+                        _out.WriteLine(@"    " + featureCalculator.Name);
+                }
+
+                // Excluding any requested by the caller
+                calcs = calcs.Where(c => excludeFeatures.All(c2 => c.GetType() != c2.GetType())).ToArray();
+            }
+
+            return new MProphetPeakScoringModel(modelName, (LinearModelParams) null, calcs, decoys, secondBest);
         }
 
         private bool Reintegrate(ModelAndFeatures modelAndFeatures, bool isOverwritePeaks, bool logTraining)

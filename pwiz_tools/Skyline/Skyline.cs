@@ -1,5 +1,4 @@
 ﻿/*
-/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -255,7 +254,6 @@ namespace pwiz.Skyline
 
             var defaultUIMode = Settings.Default.UIMode;
             NewDocument(); // Side effect: initializes Settings.Default.UIMode to proteomic if no previous value
-            chorusRequestToolStripMenuItem.Visible = Settings.Default.EnableChorus;
 
             // Set UI mode to user default (proteomic/molecule/mixed)
             SrmDocument.DOCUMENT_TYPE defaultModeUI;
@@ -3367,12 +3365,16 @@ namespace pwiz.Skyline
         }
         public static List<PrositIntensityModel.PeptidePrecursorNCE> ReadStandardPeptides(IrtStandard standard)
         {
-            var standardDocReader = standard.DocumentReader;
-            if (standardDocReader == null)
-                return null;
+            SrmDocument docImport;
+            using (var standardDocReader = standard.GetDocumentReader())
+            {
+                if (standardDocReader == null)
+                    return null;
 
-            var ser = new XmlSerializer(typeof(SrmDocument));
-            var docImport = (SrmDocument)ser.Deserialize(standardDocReader);
+                var ser = new XmlSerializer(typeof(SrmDocument));
+                docImport = (SrmDocument) ser.Deserialize(standardDocReader);
+            }
+
             var peps = docImport.Peptides.ToList();
             var precs = peps.Select(p => p.TransitionGroups.First());
             /*for (var i = 0; i < peps.Count; i++)
@@ -3414,7 +3416,7 @@ namespace pwiz.Skyline
             }
             else
             {
-                using (var reader = IrtStandard.WhichStandard(newStandard).DocumentReader)
+                using (var reader = IrtStandard.WhichStandard(newStandard).GetDocumentReader())
                 {
                     if (reader != null)
                         AddStandardsToDocument(reader, missingPeptides);
@@ -4863,11 +4865,12 @@ namespace pwiz.Skyline
                 SequenceTree.ResultsIndex = ComboResults.SelectedIndex;
 
                 // Make sure the graphs for the result set are visible.
-                if (GetGraphChrom(name) != null)
+                if (GetGraphChrom(name) != null || // Graph exists
+                    _listGraphChrom.Count >= MAX_GRAPH_CHROM) // Graph doesn't exist, presumably because there are more chromatograms than available graphs
                 {
                     bool focus = ComboResults.Focused;
 
-                    ShowGraphChrom(name, true);
+                    ShowGraphChrom(name, true); // Side effect - will close least recently used graph if more than MAX_GRAPH_CHROM open
 
                     if (focus)
                         // Keep focus on the combo box

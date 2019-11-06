@@ -3206,6 +3206,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The following peptides were removed:.
+        /// </summary>
+        public static string ChangeIrtPeptidesDlg_OkDialog_The_following_peptides_were_removed_ {
+            get {
+                return ResourceManager.GetString("ChangeIrtPeptidesDlg_OkDialog_The_following_peptides_were_removed_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The following sequences are not currently in the database:.
         /// </summary>
         public static string ChangeIrtPeptidesDlg_OkDialog_The_following_sequences_are_not_currently_in_the_database {
@@ -3221,6 +3230,15 @@ namespace pwiz.Skyline.Properties {
         public static string ChangeIrtPeptidesDlg_OkDialog_The_sequence__0__is_not_currently_in_the_database {
             get {
                 return ResourceManager.GetString("ChangeIrtPeptidesDlg_OkDialog_The_sequence__0__is_not_currently_in_the_database", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Would you like to remove them from the document?.
+        /// </summary>
+        public static string ChangeIrtPeptidesDlg_OkDialog_Would_you_like_to_remove_them_from_the_document_ {
+            get {
+                return ResourceManager.GetString("ChangeIrtPeptidesDlg_OkDialog_Would_you_like_to_remove_them_from_the_document_", resourceCulture);
             }
         }
         
@@ -3298,153 +3316,6 @@ namespace pwiz.Skyline.Properties {
         public static string ChooseSchedulingReplicatesDlg_btnOk_Click_You_must_choose_at_least_one_replicate {
             get {
                 return ResourceManager.GetString("ChooseSchedulingReplicatesDlg_btnOk_Click_You_must_choose_at_least_one_replicate", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Chorus.
-        /// </summary>
-        public static string Chorus_Label_Chorus {
-            get {
-                return ResourceManager.GetString("Chorus_Label_Chorus", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Chorus Accounts.
-        /// </summary>
-        public static string ChorusAccountList_Label_Chorus_Accounts {
-            get {
-                return ResourceManager.GetString("ChorusAccountList_Label_Chorus_Accounts", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Edit Chorus Accounts.
-        /// </summary>
-        public static string ChorusAccountList_Title_Edit_Chorus_Accounts {
-            get {
-                return ResourceManager.GetString("ChorusAccountList_Title_Edit_Chorus_Accounts", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to There was an error communicating with the server: .
-        /// </summary>
-        public static string ChorusSession_FetchContents_There_was_an_error_communicating_with_the_server__ {
-            get {
-                return ResourceManager.GetString("ChorusSession_FetchContents_There_was_an_error_communicating_with_the_server__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unable to log in.  Username or password is incorrect..
-        /// </summary>
-        public static string ChorusSession_Login_Unable_to_log_in___Username_or_password_is_incorrect_ {
-            get {
-                return ResourceManager.GetString("ChorusSession_Login_Unable_to_log_in___Username_or_password_is_incorrect_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to My Experiments.
-        /// </summary>
-        public static string ChorusSession_TOP_LEVEL_ITEMS_My_Experiments {
-            get {
-                return ResourceManager.GetString("ChorusSession_TOP_LEVEL_ITEMS_My_Experiments", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to My Files.
-        /// </summary>
-        public static string ChorusSession_TOP_LEVEL_ITEMS_My_Files {
-            get {
-                return ResourceManager.GetString("ChorusSession_TOP_LEVEL_ITEMS_My_Files", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to My Projects.
-        /// </summary>
-        public static string ChorusSession_TOP_LEVEL_ITEMS_My_Projects {
-            get {
-                return ResourceManager.GetString("ChorusSession_TOP_LEVEL_ITEMS_My_Projects", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Public Experiments.
-        /// </summary>
-        public static string ChorusSession_TOP_LEVEL_ITEMS_Public_Experiments {
-            get {
-                return ResourceManager.GetString("ChorusSession_TOP_LEVEL_ITEMS_Public_Experiments", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Public Files.
-        /// </summary>
-        public static string ChorusSession_TOP_LEVEL_ITEMS_Public_Files {
-            get {
-                return ResourceManager.GetString("ChorusSession_TOP_LEVEL_ITEMS_Public_Files", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Public Projects.
-        /// </summary>
-        public static string ChorusSession_TOP_LEVEL_ITEMS_Public_Projects {
-            get {
-                return ResourceManager.GetString("ChorusSession_TOP_LEVEL_ITEMS_Public_Projects", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Shared Experiments.
-        /// </summary>
-        public static string ChorusSession_TOP_LEVEL_ITEMS_Shared_Experiments {
-            get {
-                return ResourceManager.GetString("ChorusSession_TOP_LEVEL_ITEMS_Shared_Experiments", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Shared Files.
-        /// </summary>
-        public static string ChorusSession_TOP_LEVEL_ITEMS_Shared_Files {
-            get {
-                return ResourceManager.GetString("ChorusSession_TOP_LEVEL_ITEMS_Shared_Files", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Shared Projects.
-        /// </summary>
-        public static string ChorusSession_TOP_LEVEL_ITEMS_Shared_Projects {
-            get {
-                return ResourceManager.GetString("ChorusSession_TOP_LEVEL_ITEMS_Shared_Projects", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to An error occurred while communicating with the Chorus server.  The server returned the HTTP error response code {0}..
-        /// </summary>
-        public static string ChorusSession_WrapWebException_An_error_occurred_communicating_with_the_server___The_server_return_HTTP_error_response_code__0__ {
-            get {
-                return ResourceManager.GetString("ChorusSession_WrapWebException_An_error_occurred_communicating_with_the_server___" +
-                        "The_server_return_HTTP_error_response_code__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to An error occurred while communicating with the Chorus server.  The server returned the HTTP error response code {0} but the error message could not be parsed..
-        /// </summary>
-        public static string ChorusSession_WrapWebException_An_error_occurred_communicating_with_the_server___The_server_returned_the_HTTP_error_response_code__0__but_the_error_message_could_not_be_parsed_ {
-            get {
-                return ResourceManager.GetString("ChorusSession_WrapWebException_An_error_occurred_communicating_with_the_server___" +
-                        "The_server_returned_the_HTTP_error_response_code__0__but_the_error_message_could" +
-                        "_not_be_parsed_", resourceCulture);
             }
         }
         
@@ -3561,16 +3432,6 @@ namespace pwiz.Skyline.Properties {
         public static string ChromatogramExporter_GetExtractorName_Invalid_extractor_name_ {
             get {
                 return ResourceManager.GetString("ChromatogramExporter_GetExtractorName_Invalid_extractor_name_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unexpected zero length chromatogram returned from Chorus..
-        /// </summary>
-        public static string ChromatogramGeneratorTask_GetChromatogram_Unexpected_zero_length_chromatogram_returned_from_Chorus_ {
-            get {
-                return ResourceManager.GetString("ChromatogramGeneratorTask_GetChromatogram_Unexpected_zero_length_chromatogram_ret" +
-                        "urned_from_Chorus_", resourceCulture);
             }
         }
         
@@ -4692,6 +4553,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Model cutoffs ({0}) must be in decreasing order greater than zero and less than {1}..
+        /// </summary>
+        public static string CommandArgs_ValidateReintegrateArgs_Error__Model_cutoffs___0___must_be_in_decreasing_order_greater_than_zero_and_less_than__1__ {
+            get {
+                return ResourceManager.GetString("CommandArgs_ValidateReintegrateArgs_Error__Model_cutoffs___0___must_be_in_decreas" +
+                        "ing_order_greater_than_zero_and_less_than__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Model cutoffs cannot be applied in calibrating the Skyline default model..
+        /// </summary>
+        public static string CommandArgs_ValidateReintegrateArgs_Error__Model_cutoffs_cannot_be_applied_in_calibrating_the_Skyline_default_model_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_ValidateReintegrateArgs_Error__Model_cutoffs_cannot_be_applied_in_cal" +
+                        "ibrating_the_Skyline_default_model_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Warning: Use of the argument {0} requires the argument {1}.
         /// </summary>
         public static string CommandArgs_WarnArgRequirment_Warning__Use_of_the_argument__0__requires_the_argument__1_ {
@@ -4907,6 +4788,16 @@ namespace pwiz.Skyline.Properties {
         public static string CommandLine_CreateScoringModel_Excluding_feature_scores_ {
             get {
                 return ResourceManager.GetString("CommandLine_CreateScoringModel_Excluding_feature_scores_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Excluding feature scores is not permitted with the default Skyline model..
+        /// </summary>
+        public static string CommandLine_CreateUntrainedScoringModel_Error__Excluding_feature_scores_is_not_permitted_with_the_default_Skyline_model_ {
+            get {
+                return ResourceManager.GetString("CommandLine_CreateUntrainedScoringModel_Error__Excluding_feature_scores_is_not_pe" +
+                        "rmitted_with_the_default_Skyline_model_", resourceCulture);
             }
         }
         
@@ -8617,71 +8508,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error connecting to server: .
-        /// </summary>
-        public static string EditChorusAccountDlg_TestSettings_Error_connecting_to_server__ {
-            get {
-                return ResourceManager.GetString("EditChorusAccountDlg_TestSettings_Error_connecting_to_server__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Settings are correct.
-        /// </summary>
-        public static string EditChorusAccountDlg_TestSettings_Settings_are_correct {
-            get {
-                return ResourceManager.GetString("EditChorusAccountDlg_TestSettings_Settings_are_correct", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Invalid server URL..
-        /// </summary>
-        public static string EditChorusAccountDlg_ValidateValues_Invalid_server_URL_ {
-            get {
-                return ResourceManager.GetString("EditChorusAccountDlg_ValidateValues_Invalid_server_URL_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Server cannot be blank.
-        /// </summary>
-        public static string EditChorusAccountDlg_ValidateValues_Server_cannot_be_blank {
-            get {
-                return ResourceManager.GetString("EditChorusAccountDlg_ValidateValues_Server_cannot_be_blank", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Server URL must start with https:// or http://.
-        /// </summary>
-        public static string EditChorusAccountDlg_ValidateValues_Server_URL_must_start_with_https____or_http___ {
-            get {
-                return ResourceManager.GetString("EditChorusAccountDlg_ValidateValues_Server_URL_must_start_with_https____or_http__" +
-                        "_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to There is already an account defined for the user {0} on the server {1}.
-        /// </summary>
-        public static string EditChorusAccountDlg_ValidateValues_There_is_already_an_account_defined_for_the_user__0__on_the_server__1_ {
-            get {
-                return ResourceManager.GetString("EditChorusAccountDlg_ValidateValues_There_is_already_an_account_defined_for_the_u" +
-                        "ser__0__on_the_server__1_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Username cannot be blank.
-        /// </summary>
-        public static string EditChorusAccountDlg_ValidateValues_Username_cannot_be_blank {
-            get {
-                return ResourceManager.GetString("EditChorusAccountDlg_ValidateValues_Username_cannot_be_blank", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Maximum compensation voltage cannot be less than minimum compensation volatage..
         /// </summary>
         public static string EditCoVDlg_btnOk_Click_Maximum_compensation_voltage_cannot_be_less_than_minimum_compensation_volatage_ {
@@ -9103,11 +8929,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Neutral loss &amp;chemical formula:.
+        ///   Looks up a localized string similar to Loss &amp;chemical formula:.
         /// </summary>
-        public static string EditFragmentLossDlg_EditFragmentLossDlg_Neutral_loss__chemical_formula_ {
+        public static string EditFragmentLossDlg_EditFragmentLossDlg_Loss__chemical_formula_ {
             get {
-                return ResourceManager.GetString("EditFragmentLossDlg_EditFragmentLossDlg_Neutral_loss__chemical_formula_", resourceCulture);
+                return ResourceManager.GetString("EditFragmentLossDlg_EditFragmentLossDlg_Loss__chemical_formula_", resourceCulture);
             }
         }
         
@@ -9361,6 +9187,26 @@ namespace pwiz.Skyline.Properties {
         public static string EditIrtCalcDlg_btnCreateDb_Click_Create_iRT_Database {
             get {
                 return ResourceManager.GetString("EditIrtCalcDlg_btnCreateDb_Click_Create_iRT_Database", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed peptides on iRT standard protein.
+        /// </summary>
+        public static string EditIrtCalcDlg_ChangeStandardPeptides_Removed_peptides_on_iRT_standard_protein {
+            get {
+                return ResourceManager.GetString("EditIrtCalcDlg_ChangeStandardPeptides_Removed_peptides_on_iRT_standard_protein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The list of standard peptides must contain only recognized iRT-C18 standards to switch to a predefined set of iRT-C18 standards..
+        /// </summary>
+        public static string EditIrtCalcDlg_comboStandards_SelectedIndexChanged_The_list_of_standard_peptides_must_contain_only_recognized_iRT_C18_standards_to_switch_to_a_predefined_set_of_iRT_C18_standards_ {
+            get {
+                return ResourceManager.GetString("EditIrtCalcDlg_comboStandards_SelectedIndexChanged_The_list_of_standard_peptides_" +
+                        "must_contain_only_recognized_iRT_C18_standards_to_switch_to_a_predefined_set_of_" +
+                        "iRT_C18_standards_", resourceCulture);
             }
         }
         
@@ -10466,6 +10312,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error connecting to server: .
+        /// </summary>
+        public static string EditRemoteAccountDlg_TestSettings_Error_connecting_to_server__ {
+            get {
+                return ResourceManager.GetString("EditRemoteAccountDlg_TestSettings_Error_connecting_to_server__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Settings are correct.
+        /// </summary>
+        public static string EditRemoteAccountDlg_TestSettings_Settings_are_correct {
+            get {
+                return ResourceManager.GetString("EditRemoteAccountDlg_TestSettings_Settings_are_correct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occurred while trying to authenticate..
         /// </summary>
         public static string EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_ {
@@ -10482,6 +10346,53 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("EditRemoteAccountDlg_TestUnifiAccount_An_exception_occurred_while_trying_to_fetch" +
                         "_the_directory_listing_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid server URL..
+        /// </summary>
+        public static string EditRemoteAccountDlg_ValidateValues_Invalid_server_URL_ {
+            get {
+                return ResourceManager.GetString("EditRemoteAccountDlg_ValidateValues_Invalid_server_URL_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Server cannot be blank.
+        /// </summary>
+        public static string EditRemoteAccountDlg_ValidateValues_Server_cannot_be_blank {
+            get {
+                return ResourceManager.GetString("EditRemoteAccountDlg_ValidateValues_Server_cannot_be_blank", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Server URL must start with https:// or http://.
+        /// </summary>
+        public static string EditRemoteAccountDlg_ValidateValues_Server_URL_must_start_with_https____or_http___ {
+            get {
+                return ResourceManager.GetString("EditRemoteAccountDlg_ValidateValues_Server_URL_must_start_with_https____or_http__" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There is already an account defined for the user {0} on the server {1}.
+        /// </summary>
+        public static string EditRemoteAccountDlg_ValidateValues_There_is_already_an_account_defined_for_the_user__0__on_the_server__1_ {
+            get {
+                return ResourceManager.GetString("EditRemoteAccountDlg_ValidateValues_There_is_already_an_account_defined_for_the_u" +
+                        "ser__0__on_the_server__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Username cannot be blank.
+        /// </summary>
+        public static string EditRemoteAccountDlg_ValidateValues_Username_cannot_be_blank {
+            get {
+                return ResourceManager.GetString("EditRemoteAccountDlg_ValidateValues_Username_cannot_be_blank", resourceCulture);
             }
         }
         
@@ -12584,6 +12495,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed attempting to create a temporary file in the folder {0} with the following error:.
+        /// </summary>
+        public static string FileStreamManager_GetTempFileName_Failed_attempting_to_create_a_temporary_file_in_the_folder__0__with_the_following_error_ {
+            get {
+                return ResourceManager.GetString("FileStreamManager_GetTempFileName_Failed_attempting_to_create_a_temporary_file_in" +
+                        "_the_folder__0__with_the_following_error_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Win32 Error: {0}.
         /// </summary>
         public static string FileStreamManager_GetTempFileName_Win32_Error__0__ {
@@ -13441,6 +13362,15 @@ namespace pwiz.Skyline.Properties {
         public static string GraphFullScan_CreateGraph__0_____1_F2__min_ {
             get {
                 return ResourceManager.GetString("GraphFullScan_CreateGraph__0_____1_F2__min_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IM Scan Range:.
+        /// </summary>
+        public static string GraphFullScan_CreateGraph_IM_Scan_Range_ {
+            get {
+                return ResourceManager.GetString("GraphFullScan_CreateGraph_IM_Scan_Range_", resourceCulture);
             }
         }
         
@@ -18352,60 +18282,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Add.
+        ///   Looks up a localized string similar to No remote accounts have been specified. If you have an existing Unifi account you can enter your login information now..
         /// </summary>
-        public static string OpenDataSourceDialog_EnsureChorusAccount_Add {
-            get {
-                return ResourceManager.GetString("OpenDataSourceDialog_EnsureChorusAccount_Add", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to No Chorus acounts have been specified.
-        /// </summary>
-        public static string OpenDataSourceDialog_EnsureChorusAccount_No_Chorus_acounts_have_been_specified {
-            get {
-                return ResourceManager.GetString("OpenDataSourceDialog_EnsureChorusAccount_No_Chorus_acounts_have_been_specified", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Press Add to use specify an existing Chorus account.
-        /// </summary>
-        public static string OpenDataSourceDialog_EnsureChorusAccount_Press_Add_to_use_specify_an_existing_Chorus_account {
-            get {
-                return ResourceManager.GetString("OpenDataSourceDialog_EnsureChorusAccount_Press_Add_to_use_specify_an_existing_Cho" +
-                        "rus_account", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Press Register to register for an account on the Chorus Project.
-        /// </summary>
-        public static string OpenDataSourceDialog_EnsureChorusAccount_Press_Register_to_register_for_an_account_on_the_Chorus_Project {
-            get {
-                return ResourceManager.GetString("OpenDataSourceDialog_EnsureChorusAccount_Press_Register_to_register_for_an_accoun" +
-                        "t_on_the_Chorus_Project", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Register.
-        /// </summary>
-        public static string OpenDataSourceDialog_EnsureChorusAccount_Register {
-            get {
-                return ResourceManager.GetString("OpenDataSourceDialog_EnsureChorusAccount_Register", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to No remote accounts have been specified. If you have an existing Unifi or Chorus account you can enter your login information now..
-        /// </summary>
-        public static string OpenDataSourceDialog_EnsureRemoteAccount_No_remote_accounts_have_been_specified__If_you_have_an_existing_Unifi_or_Chorus_account_you_can_enter_your_login_information_now_ {
+        public static string OpenDataSourceDialog_EnsureRemoteAccount_No_remote_accounts_have_been_specified__If_you_have_an_existing_Unifi_account_you_can_enter_your_login_information_now_ {
             get {
                 return ResourceManager.GetString("OpenDataSourceDialog_EnsureRemoteAccount_No_remote_accounts_have_been_specified__" +
-                        "If_you_have_an_existing_Unifi_or_Chorus_account_you_can_enter_your_login_informa" +
-                        "tion_now_", resourceCulture);
+                        "If_you_have_an_existing_Unifi_account_you_can_enter_your_login_information_now_", resourceCulture);
             }
         }
         
@@ -18442,15 +18324,6 @@ namespace pwiz.Skyline.Properties {
         public static string OpenDataSourceDialog_OpenDataSourceDialog_Any_spectra_format {
             get {
                 return ResourceManager.GetString("OpenDataSourceDialog_OpenDataSourceDialog_Any_spectra_format", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Chorus Project.
-        /// </summary>
-        public static string OpenDataSourceDialog_OpenDataSourceDialog_Chorus_Project {
-            get {
-                return ResourceManager.GetString("OpenDataSourceDialog_OpenDataSourceDialog_Chorus_Project", resourceCulture);
             }
         }
         
@@ -22199,6 +22072,33 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Global standards.
+        /// </summary>
+        public static string RefineDlg_NormalizationMethod_Global_standards {
+            get {
+                return ResourceManager.GetString("RefineDlg_NormalizationMethod_Global_standards", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Medians.
+        /// </summary>
+        public static string RefineDlg_NormalizationMethod_Medians {
+            get {
+                return ResourceManager.GetString("RefineDlg_NormalizationMethod_Medians", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        public static string RefineDlg_NormalizationMethod_None {
+            get {
+                return ResourceManager.GetString("RefineDlg_NormalizationMethod_None", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} must be less than min peak found ratio..
         /// </summary>
         public static string RefineDlg_OkDialog__0__must_be_less_than_min_peak_found_ratio {
@@ -22345,6 +22245,36 @@ namespace pwiz.Skyline.Properties {
         public static string RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules {
             get {
                 return ResourceManager.GetString("RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document does not contain the given reference type..
+        /// </summary>
+        public static string RefinementSettings_GetLabelIndex_The_document_does_not_contain_the_given_reference_type_ {
+            get {
+                return ResourceManager.GetString("RefinementSettings_GetLabelIndex_The_document_does_not_contain_the_given_referenc" +
+                        "e_type_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document does not have a global standard to normalize by..
+        /// </summary>
+        public static string RefinementSettings_Refine_The_document_does_not_have_a_global_standard_to_normalize_by_ {
+            get {
+                return ResourceManager.GetString("RefinementSettings_Refine_The_document_does_not_have_a_global_standard_to_normali" +
+                        "ze_by_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document must contain at least 2 replicates to refine based on consistency..
+        /// </summary>
+        public static string RefinementSettings_Refine_The_document_must_contain_at_least_2_replicates_to_refine_based_on_consistency_ {
+            get {
+                return ResourceManager.GetString("RefinementSettings_Refine_The_document_must_contain_at_least_2_replicates_to_refi" +
+                        "ne_based_on_consistency_", resourceCulture);
             }
         }
         
@@ -22545,6 +22475,15 @@ namespace pwiz.Skyline.Properties {
         public static string RemoteAccountList_Title_Edit_Remote_Accounts {
             get {
                 return ResourceManager.GetString("RemoteAccountList_Title_Edit_Remote_Accounts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was an error communicating with the server: .
+        /// </summary>
+        public static string RemoteSession_FetchContents_There_was_an_error_communicating_with_the_server__ {
+            get {
+                return ResourceManager.GetString("RemoteSession_FetchContents_There_was_an_error_communicating_with_the_server__", resourceCulture);
             }
         }
         
@@ -31645,6 +31584,16 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("ValueInvalidIonTypeListException_ValueInvalidIonTypeListException_The_value___0__" +
                         "_is_not_valid_for_the_argument__1__which_requires_an_comma_separated_list_of_fra" +
                         "gment_ion_types__a__b__c__x__y__z__p__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The value {0} is not valid for the argument {1} which requires a list of decimal numbers..
+        /// </summary>
+        public static string ValueInvalidNumberListException_ValueInvalidNumberListException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_list_of_decimal_numbers_ {
+            get {
+                return ResourceManager.GetString("ValueInvalidNumberListException_ValueInvalidNumberListException_The_value__0__is_" +
+                        "not_valid_for_the_argument__1__which_requires_a_list_of_decimal_numbers_", resourceCulture);
             }
         }
         

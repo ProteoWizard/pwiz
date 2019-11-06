@@ -182,20 +182,21 @@ namespace pwiz.Skyline.Model.Results
                 ChromDataProvider provider = null;
                 try
                 {
-                    if (dataFilePathRecalc == null && !RemoteChromDataProvider.IsRemoteChromFile(dataFilePath))
+                    if (dataFilePathRecalc == null)
                     {
                         // Always use SIM as spectra, if any full-scan chromatogram extraction is enabled
                         var fullScan = _document.Settings.TransitionSettings.FullScan;
                         var enableSimSpectrum = fullScan.IsEnabled;
                         var preferOnlyMsLevel = fullScan.IsEnabled && !fullScan.IsEnabledMsMs ? 1 : 0; // If we don't want MS2, ask reader to totally skip it (not guaranteed)
-                        inFile = MSDataFilePath.OpenMsDataFile(enableSimSpectrum, preferOnlyMsLevel);
+//                        var precursorIonMobility = GetPrecursorMzAndIonMobilityWindows(fullScan, dataFilePath); // A list of [mz, (optionally) IM window] values for pre-filtering by pwiz (not guaranteed)
+                        inFile = MSDataFilePath.OpenMsDataFile(enableSimSpectrum, preferOnlyMsLevel, true);
                         // Preserve centroiding info as part of MsDataFileUri string in chromdata only if it will be used
                         // CONSIDER: Dangerously high knowledge of future control flow required for making this decision
                         if (!ChromatogramDataProvider.HasChromatogramData(inFile) && !inFile.HasSrmSpectra)
                             MSDataFilePath = dataFilePath = MSDataFilePath.ChangeCentroiding(centroidMS1, centroidMS2);
                     }
 
-                    // Check for cancelation
+                    // Check for cancellation
                     if (_loader.IsCanceled)
                     {
                         _loader.UpdateProgress(_status = _status.Cancel());
@@ -229,15 +230,6 @@ namespace pwiz.Skyline.Model.Results
                             allChromData.MaxRetentionTime = (float) (provider.MaxRetentionTime ?? 0);
                             allChromData.MaxRetentionTimeKnown = provider.MaxRetentionTime.HasValue;
                         }
-                    }
-                    else if (ChorusResponseChromDataProvider.IsChorusResponse(dataFilePath))
-                    {
-                        provider = new ChorusResponseChromDataProvider(_document, fileInfo, _status, 0, 100, _loader);
-                    }
-                    else if (RemoteChromDataProvider.IsRemoteChromFile(dataFilePath))
-                    {
-                        provider = new RemoteChromDataProvider(_document, _retentionTimePredictor, fileInfo, _status, 0,
-                            100, _loader);
                     }
                     else if (ChromatogramDataProvider.HasChromatogramData(inFile))
                     {
