@@ -237,7 +237,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             SetCalibrationPeptides(null);
         }
 
-        private bool SetCalibrationPeptides(ICollection<Target> exclude)
+        private bool SetCalibrationPeptides(RegressionOption regressionOption)
         {
             CheckDisposed();
             var document = Program.ActiveDocumentUI;
@@ -253,6 +253,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             var docTargets = document.Molecules.Where(nodePep => nodePep.SchedulingTime.HasValue).Select(nodePep => nodePep.ModifiedTarget).Distinct().ToArray();
             var count = docTargets.Length;
+            var exclude = regressionOption?.MatchedRegressionPeptides.Select(match => match.Item2.ModifiedTarget).ToHashSet();
             if (exclude != null && exclude.Count > 0)
             {
                 docTargets = docTargets.Where(target => !exclude.Contains(target)).ToArray();
@@ -288,7 +289,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 }
             }
 
-            _gridViewDriver.Recalculate(document, count, exclude);
+            _gridViewDriver.Recalculate(document, count, regressionOption?.RegressionLine, exclude);
             return true;
         }
 
@@ -362,17 +363,23 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 UpdateEquation(sender, e);
                 return;
             }
-            bindingSourceStandard.Clear();
-            if (SelectedRegressionOption.MatchedPeptideCount == 0)
+            if (SelectedRegressionOption.MatchedPeptideCount == 0) // fixed point
             {
+                bindingSourceStandard.Clear();
                 UpdateEquation(sender, e);
                 UpdatePeptideCount();
                 return;
             }
-            else if (!SetCalibrationPeptides(SelectedRegressionOption.MatchedRegressionPeptides.Select(match => match.Item2.ModifiedTarget).ToHashSet()))
+
+            var regressionPeptides = new TargetMap<bool>(SelectedRegressionOption.MatchedRegressionPeptides.Select(match =>
+                new KeyValuePair<Target, bool>(match.Item1.ModifiedTarget, true)));
+            if (StandardPeptideCount == 0 || StandardPeptideList.Any(pep => regressionPeptides.ContainsKey(pep.Target)))
             {
-                comboRegression.SelectedIndex = 0;
-                return;
+                if (!SetCalibrationPeptides(SelectedRegressionOption))
+                {
+                    comboRegression.SelectedIndex = 0;
+                    return;
+                }
             }
             UpdateEquation(sender, e);
         }
@@ -616,10 +623,15 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             private readonly CalibrateIrtDlg _parent;
 
+            private PeakScoringModelSpec _model;
+            private MProphetResultsHandler _mProphetResultsHandler;
+
             public CalibrationGridViewDriver(CalibrateIrtDlg parent, DataGridViewEx gridView, BindingSource bindingSource,
                 SortableBindingList<StandardPeptide> items) : base(gridView, bindingSource, items)
             {
                 _parent = parent;
+                _model = null;
+                _mProphetResultsHandler = null;
                 GridView.CellValueChanged += parent.StandardsChanged;
                 Items.ListChanged += parent.StandardsChanged;
             }
@@ -640,7 +652,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 SetPeptides(standardPeptidesNew);
             }
 
-            public List<StandardPeptide> Recalculate(SrmDocument document, int peptideCount, ICollection<Target> exclude)
+            public List<StandardPeptide> Recalculate(SrmDocument document, int peptideCount, RegressionLine regression, ICollection<Target> exclude)
             {
                 var docPeptides = new List<Tuple<MeasuredPeptide, PeptideDocNode>>();
                 foreach (var pep in document.Molecules.Where(pep => pep.PercentileMeasuredRetentionTime.HasValue && !pep.IsDecoy && (exclude == null || !exclude.Contains(pep.ModifiedTarget))))
@@ -649,10 +661,10 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     var time = pep.PercentileMeasuredRetentionTime.Value;
                     docPeptides.Add(Tuple.Create(new MeasuredPeptide(seq, time), pep));
                 }
-                var bestPeptides = FindEvenlySpacedPeptides(document, docPeptides, peptideCount, out var cirt);
+                var bestPeptides = FindEvenlySpacedPeptides(document, docPeptides, peptideCount, regression, out var cirt);
                 if (bestPeptides == null)
                     return null;
-                if (cirt == null)
+                if (regression != null || cirt == null)
                 {
                     SetPeptides(bestPeptides);
                 }
@@ -695,33 +707,41 @@ namespace pwiz.Skyline.SettingsUI.Irt
             /// <param name="doc">Document containing the peptides to choose from</param>
             /// <param name="docPeptides">Peptides to choose from</param>
             /// <param name="peptideCount">The number of peptides desired</param>
+            /// <param name="regression">The iRT regression line being used</param>
             /// <param name="cirt">If CiRT peptides are used, the regression to the known iRT values; otherwise null</param>
-            private List<MeasuredPeptide> FindEvenlySpacedPeptides(SrmDocument doc, IReadOnlyCollection<Tuple<MeasuredPeptide, PeptideDocNode>> docPeptides, int peptideCount, out RegressionOption cirt)
+            private List<MeasuredPeptide> FindEvenlySpacedPeptides(SrmDocument doc, IEnumerable<Tuple<MeasuredPeptide, PeptideDocNode>> docPeptides, int peptideCount,
+                RegressionLine regression, out RegressionOption cirt)
             {
                 cirt = null;
 
-                var model = doc.Settings.PeptideSettings.Integration.PeakScoringModel;
-                if (model == null || !model.IsTrained)
-                    model = LegacyScoringModel.DEFAULT_MODEL;
-
-                var resultsHandler = new MProphetResultsHandler(doc, model);
-                using (var longWaitDlg = new LongWaitDlg {Text = Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Calculating_scores})
+                if (_model == null)
                 {
-                    longWaitDlg.PerformWork(_parent, 1000, pm => resultsHandler.ScoreFeatures(pm, true));
-                    if (longWaitDlg.IsCanceled)
-                        return null;
+                    var model = doc.Settings.PeptideSettings.Integration.PeakScoringModel;
+                    if (model == null || !model.IsTrained)
+                        model = LegacyScoringModel.DEFAULT_MODEL;
+
+                    var resultsHandler = new MProphetResultsHandler(doc, model);
+                    using (var longWaitDlg = new LongWaitDlg { Text = Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Calculating_scores })
+                    {
+                        longWaitDlg.PerformWork(_parent, 1000, pm => resultsHandler.ScoreFeatures(pm, true));
+                        if (longWaitDlg.IsCanceled)
+                            return null;
+                    }
+
+                    _model = model;
+                    _mProphetResultsHandler = resultsHandler;
                 }
 
                 var scoredPeptidesDict = new Dictionary<Target, ScoredPeptide>();
                 foreach (var (pep, nodePep) in docPeptides)
                 {
                     var allStats = doc.MeasuredResults.MSDataFileInfos
-                        .Select(info => resultsHandler.GetPeakFeatureStatistics(nodePep.Id.GlobalIndex, info.FileId.GlobalIndex))
+                        .Select(info => _mProphetResultsHandler.GetPeakFeatureStatistics(nodePep.Id.GlobalIndex, info.FileId.GlobalIndex))
                         .Where(stats => stats != null).ToArray();
                     var value = float.MaxValue;
                     if (allStats.Length > 0)
                     {
-                        value = model is MProphetPeakScoringModel
+                        value = _model is MProphetPeakScoringModel
                             ? allStats.Select(stats => stats.QValue.Value).Max()
                             : -allStats.Select(stats => stats.BestScore).Min();
                     }
@@ -755,7 +775,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 RegressionLine cirtRegression = null;
                 var cirtUsePredefined = false;
 
-                if (RCalcIrt.TryGetRegressionLine(rts, irts, peptideCount, out var regression, removedValues))
+                if (RCalcIrt.TryGetRegressionLine(rts, irts, peptideCount, out var tryCirtRegression, removedValues))
                 {
                     for (var i = scoredCirtPeptides.Count - 1; i >= 0; i--)
                     {
@@ -771,26 +791,27 @@ namespace pwiz.Skyline.SettingsUI.Irt
                             rts.Count, peptideCount), MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true))
                         {
                             case DialogResult.Yes:
-                                cirtRegression = regression;
+                                cirtRegression = tryCirtRegression;
                                 buckets = cirtBuckets;
-                                switch (MultiButtonMsgDlg.Show(_parent,
-                                    Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Would_you_like_to_use_the_predefined_iRT_values_,
-                                    Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Predefined_values,
-                                    Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Calculate_from_regression,
-                                    true))
+                                if (regression == null)
                                 {
-                                    case DialogResult.Yes:
-                                        cirtUsePredefined = true;
-                                        break;
-                                    case DialogResult.No:
-                                        break;
-                                    case DialogResult.Cancel:
-                                        return null;
+                                    switch (MultiButtonMsgDlg.Show(_parent,
+                                        Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Would_you_like_to_use_the_predefined_iRT_values_,
+                                        Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Predefined_values,
+                                        Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Calculate_from_regression,
+                                        true))
+                                    {
+                                        case DialogResult.Yes:
+                                            cirtUsePredefined = true;
+                                            break;
+                                        case DialogResult.No:
+                                            break;
+                                        case DialogResult.Cancel:
+                                            return null;
+                                    }
                                 }
-
                                 break;
                             case DialogResult.No:
-                                cirtRegression = null;
                                 break;
                             case DialogResult.Cancel:
                                 return null;
@@ -819,7 +840,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                             pep.NodePep)).ToList();
                     var standardPeptides = bestPeptides.Select(pep => new StandardPeptide
                     {
-                        Irt = cirtUsePredefined ? cirtPeptidesAll[pep.Target] : cirtRegression.GetY(pep.RetentionTime),
+                        Irt = cirtUsePredefined ? cirtPeptidesAll[pep.Target] : (regression ?? cirtRegression).GetY(pep.RetentionTime),
                         RetentionTime = pep.RetentionTime,
                         Target = pep.Target
                     }).ToList();
@@ -849,7 +870,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         public List<StandardPeptide> Recalculate(SrmDocument document, int peptideCount)
         {
-            return _gridViewDriver.Recalculate(document, peptideCount, null) ?? new List<StandardPeptide>();
+            return _gridViewDriver.Recalculate(document, peptideCount, null, null) ?? new List<StandardPeptide>();
         }
 
         public void SetIrtRange(double min, double max)

@@ -10753,6 +10753,7 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="ChangeIrtPeptidesDlg_OkDialog_Would_you_like_to_remove_them_from_the_document_" xml:space="preserve">
     <value>Would you like to remove them from the document?</value>
+  </data>
   <data name="CalibrationGridViewDriver_FindEvenlySpacedPeptides_Calculating_scores" xml:space="preserve">
     <value>Calculating scores</value>
   </data>
