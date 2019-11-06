@@ -437,9 +437,10 @@ namespace pwiz.Skyline.Model
         /// </summary>
         /// <param name="group">The <see cref="TransitionGroup"/> which the transition represents</param>
         /// <param name="massIndex">Isotope mass shift</param>
+        /// <param name="productAdduct">Adduct on the transition</param>
         /// <param name="customMolecule">Non-null if this is a custom transition</param>
-        public Transition(TransitionGroup group, int massIndex, CustomMolecule customMolecule = null)
-            :this(group, IonType.precursor, group.Peptide.Length - 1, massIndex, group.PrecursorAdduct, null, customMolecule)
+        public Transition(TransitionGroup group, int massIndex, Adduct productAdduct, CustomMolecule customMolecule = null)
+            : this(group, IonType.precursor, group.Peptide.Length - 1, massIndex, productAdduct, null, customMolecule)
         {
         }
 

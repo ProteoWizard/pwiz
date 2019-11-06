@@ -500,6 +500,7 @@ namespace pwiz.Skyline.Model
                         neutralLoss.MonoisotopicMass = loss.Loss.MonoisotopicMass;
                         neutralLoss.AverageMass = loss.Loss.AverageMass;
                         neutralLoss.LossInclusion = DataValues.ToLossInclusion(loss.Loss.Inclusion);
+                        neutralLoss.Charge = loss.Loss.Charge;
                     }
                     else
                     {
