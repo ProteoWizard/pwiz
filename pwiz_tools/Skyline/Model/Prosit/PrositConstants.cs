@@ -32,6 +32,8 @@ namespace pwiz.Skyline.Model.Prosit
         public static readonly int MIN_NCE = 18;
         public static readonly int MAX_NCE = 39;
 
+        public static readonly string DEV_PROSIT_SERVER = @"...";
+
         public static bool CACHE_PREV_PREDICTION = true;
 
         public struct PrositAA

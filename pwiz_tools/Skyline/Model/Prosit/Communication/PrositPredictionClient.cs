@@ -17,7 +17,8 @@
  * limitations under the License.
  */
 
-using pwiz.Skyline.Model.Prosit.Config;
+using Grpc.Core;
+using pwiz.Skyline.Properties;
 using Tensorflow.Serving;
 
 namespace pwiz.Skyline.Model.Prosit.Communication
@@ -37,32 +38,36 @@ namespace pwiz.Skyline.Model.Prosit.Communication
                 if (FakeClient != null)
                     return FakeClient;
 
-                if (_predictionClient != null)
+                var selectedServer = Settings.Default.PrositServer;
+                if (_predictionClient != null && _predictionClient.Server == selectedServer)
                     return _predictionClient;
 
-                return _predictionClient = new PrositPredictionClient(PrositConfig.GetPrositConfig());
+                if (string.IsNullOrEmpty(selectedServer))
+                    throw new PrositException(PrositResources.PrositPredictionClient_Current_No_Prosit_server_set);
+
+                return _predictionClient = new PrositPredictionClient(selectedServer);
             }
         }
 
         /// <summary>
         /// Public static wrapper for creating clients
         /// </summary>
-        /// <param name="prositConfig">Configuration parameters</param>
+        /// <param name="server">Server to construct client for</param>
         /// <returns>A client for making predictions with the given server</returns>
-        public static PrositPredictionClient CreateClient(PrositConfig prositConfig)
+        public static PrositPredictionClient CreateClient(string server)
         {
             if (FakeClient != null)
                 return FakeClient;
 
-            return _predictionClient?.Server == prositConfig.Server
+            return _predictionClient?.Server == server
                 ? _predictionClient
-                : new PrositPredictionClient(prositConfig);
+                : new PrositPredictionClient(server);
         }
 
-        protected PrositPredictionClient(PrositConfig prositConfig)
-            : base(prositConfig.CreateChannel())
+        protected PrositPredictionClient(string server)
+            : base(new Channel(server, ChannelCredentials.Insecure))
         {
-            Server = prositConfig.Server;
+            Server = server;
         }
 
         protected PrositPredictionClient()

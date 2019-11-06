@@ -32,7 +32,6 @@ using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Prosit;
 using pwiz.Skyline.Model.Prosit.Communication;
-using pwiz.Skyline.Model.Prosit.Config;
 using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Serialization;
@@ -48,7 +47,7 @@ namespace pwiz.Skyline.ToolsUI
     public partial class ToolOptionsUI : FormEx
     {
         private readonly SettingsListBoxDriver<Server> _driverServers;
-        private readonly SettingsListBoxDriver<RemoteAccount> _driverRemoteAccounts;
+        private readonly SettingsListBoxDriver<RemoteAccount> _driverChorusAccounts;
         private readonly SettingsListComboDriver<ColorScheme> _driverColorSchemes;
 
         // For Prosit pinging
@@ -63,8 +62,8 @@ namespace pwiz.Skyline.ToolsUI
 
             _driverServers = new SettingsListBoxDriver<Server>(listboxServers, Settings.Default.ServerList);
             _driverServers.LoadList();
-            _driverRemoteAccounts = new SettingsListBoxDriver<RemoteAccount>(listBoxRemoteAccounts, Settings.Default.RemoteAccountList);
-            _driverRemoteAccounts.LoadList();
+            _driverChorusAccounts = new SettingsListBoxDriver<RemoteAccount>(listBoxRemoteAccounts, Settings.Default.RemoteAccountList);
+            _driverChorusAccounts.LoadList();
             _driverColorSchemes = new SettingsListComboDriver<ColorScheme>(comboColorScheme, Settings.Default.ColorSchemes, true);
             _driverColorSchemes.LoadList(Settings.Default.CurrentColorScheme);
 
@@ -100,12 +99,27 @@ namespace pwiz.Skyline.ToolsUI
 
             var iModels = PrositIntensityModel.Models.ToArray();
             var rtModels = PrositRetentionTimeModel.Models.ToArray();
+            var servers = new[] { PrositResources.ToolOptionsUI_ToolOptionsUI_None, PrositConstants.DEV_PROSIT_SERVER };
 
-            tbxPrositServer.Text = PrositConfig.GetPrositConfig().Server;
+            prositServerCombo.Items.AddRange(servers);
             intensityModelCombo.Items.AddRange(iModels);
             iRTModelCombo.Items.AddRange(rtModels);
             
             prositServerStatusLabel.Text = string.Empty;
+            if (servers.Contains(Settings.Default.PrositServer))
+            {
+                prositServerCombo.SelectedItem = Settings.Default.PrositServer;
+            }
+            else if (!string.IsNullOrEmpty(Settings.Default.PrositServer))
+            {
+                prositServerCombo.Items.Add(Settings.Default.PrositServer);
+                prositServerCombo.SelectedItem = Settings.Default.PrositServer;
+            }
+            else
+            {
+                prositServerCombo.SelectedIndex = 0;
+            }
+
             if (iModels.Contains(Settings.Default.PrositIntensityModel))
                 intensityModelCombo.SelectedItem = Settings.Default.PrositIntensityModel;
             if (rtModels.Contains(Settings.Default.PrositRetentionTimeModel))
@@ -119,11 +133,12 @@ namespace pwiz.Skyline.ToolsUI
 
         private class PrositPingRequest : PrositHelpers.PrositRequest
         {
-            public PrositPingRequest(string ms2Model, string rtModel, SrmSettings settings,
+            public PrositPingRequest(string server,
+                string ms2Model, string rtModel, SrmSettings settings,
                 PeptideDocNode peptide, TransitionGroupDocNode precursor, int nce, Action updateCallback) : base(null,
                 null, null, settings, peptide, precursor, nce, updateCallback)
             {
-                Client = PrositPredictionClient.CreateClient(PrositConfig.GetPrositConfig());
+                Client = PrositPredictionClient.CreateClient(server);
                 IntensityModel = PrositIntensityModel.GetInstance(ms2Model);
                 RTModel = PrositRetentionTimeModel.GetInstance(rtModel);
 
@@ -217,14 +232,20 @@ namespace pwiz.Skyline.ToolsUI
 
             try
             {
-                if (PrositIntensityModelCombo == null || PrositRetentionTimeModelCombo == null)
+                if (prositServerCombo.SelectedIndex == 0)
+                {
+                    _pingRequest?.Cancel();
+                    SetServerStatus(ServerStatus.SELECT_SERVER);
+                    return;
+                }
+                else if (PrositIntensityModelCombo == null || PrositRetentionTimeModelCombo == null)
                 {
                     _pingRequest?.Cancel();
                     SetServerStatus(ServerStatus.SELECT_MODEL);
                     return;
                 }
 
-                var pr = new PrositPingRequest(PrositIntensityModelCombo,
+                var pr = new PrositPingRequest(PrositServerCombo, PrositIntensityModelCombo,
                     PrositRetentionTimeModelCombo,
                     _settingsNoMod, _pingInput.NodePep, _pingInput.NodeGroup, _pingInput.NCE.Value,
                     () => { Invoke((Action) UpdateServerStatus); });
@@ -261,14 +282,14 @@ namespace pwiz.Skyline.ToolsUI
             _driverServers.EditList();
         }
 
-        private void btnEditRemoteAccountList_Click(object sender, EventArgs e)
+        private void btnEditChorusAccountList_Click(object sender, EventArgs e)
         {
-            EditRemoteAccounts();
+            EditChorusAccounts();
         }
 
-        public void EditRemoteAccounts()
+        public void EditChorusAccounts()
         {
-            _driverRemoteAccounts.EditList();
+            _driverChorusAccounts.EditList();
         }
 
         protected override void OnClosed(EventArgs e)
@@ -294,6 +315,7 @@ namespace pwiz.Skyline.ToolsUI
 
                 Settings.Default.PrositIntensityModel = (string) intensityModelCombo.SelectedItem;
                 Settings.Default.PrositRetentionTimeModel = (string)iRTModelCombo.SelectedItem;
+                Settings.Default.PrositServer = prositServerCombo.SelectedIndex == 0 ? null : (string) prositServerCombo.SelectedItem;
                 Settings.Default.PrositNCE = (int) ceCombo.SelectedItem;
             }
             base.OnClosed(e);
@@ -320,11 +342,11 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         // ReSharper disable InconsistentNaming
-        public enum TABS { Panorama, Remote, Prosit, Language, Miscellaneous, Display }
+        public enum TABS { Panorama, Chorus, Prosit, Language, Miscellaneous, Display }
         // ReSharper restore InconsistentNaming
 
         public class PanoramaTab : IFormView { }
-        public class RemoteTab : IFormView { }
+        public class ChorusTab : IFormView { }
         public class LanguageTab : IFormView { }
         public class MiscellaneousTab : IFormView { }
         public class DisplayTab : IFormView { }
@@ -332,7 +354,7 @@ namespace pwiz.Skyline.ToolsUI
 
         private static readonly IFormView[] TAB_PAGES =
         {
-            new PanoramaTab(), new RemoteTab(), new LanguageTab(), new MiscellaneousTab(), new DisplayTab(), new PrositTab()
+            new PanoramaTab(), new ChorusTab(), new LanguageTab(), new MiscellaneousTab(), new DisplayTab(), new PrositTab()
         };
 
         public void NavigateToTab(TABS tab)
@@ -362,6 +384,12 @@ namespace pwiz.Skyline.ToolsUI
         {
             get { return powerOfTenCheckBox.Checked; }
             set { powerOfTenCheckBox.Checked = value; }
+        }
+
+        public string PrositServerCombo
+        {
+            get { return (string) prositServerCombo.SelectedItem; }
+            set { prositServerCombo.SelectedItem = value; }
         }
 
         public string PrositIntensityModelCombo
@@ -420,6 +448,11 @@ namespace pwiz.Skyline.ToolsUI
             {
                 Settings.Default.Reset();
             }
+        }
+
+        private void serverCombo_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateServerStatus();
         }
 
         private void prositDescrLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
