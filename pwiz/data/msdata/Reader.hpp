@@ -26,6 +26,7 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/utility/misc/IterationListener.hpp"
+#include "pwiz/utility/chemistry/MzMobilityWindow.hpp"
 #include "MSData.hpp"
 #include <string>
 #include <stdexcept>
@@ -75,6 +76,12 @@ class PWIZ_API_DECL Reader
 
         /// when true, MS2 spectra without precursor/isolation information will be included in the output (currently only affects Bruker PASEF data)
         bool allowMsMsWithoutPrecursor;
+
+        /// temporary(?) variable to avoid needing to regenerate Bruker test data
+        bool sortAndJitter;
+
+        // when non-empty, only MS2 scans from precursors matching one of the included m/z, and optionally mobility, (i.e. within a precursor isolation window) will be enumerated (currently only affects Bruker PASEF data)
+        std::vector<chemistry::MzMobilityWindow> isolationMzAndMobilityFilter;
 
         Config();
         Config(const Config& rhs);

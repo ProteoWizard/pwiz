@@ -1067,11 +1067,18 @@ PWIZ_API_DECL size_t SpectrumList::findAbbreviated(const string& abbreviatedId, 
     // "1.1.123.2" splits to { 1, 1, 123, 2 }
     bal::split(abbreviatedTokens, abbreviatedId, bal::is_any_of(string(1, delimiter)));
 
-    if (empty()) return 0;
+    if (empty()) return size();
 
     // "sample=1 period=1 cycle=123 experiment=2" splits to { sample, 1, period, 1, cycle, 123, experiment, 2 }
     string firstId = spectrumIdentity(0).id;
     bal::split(actualTokens, firstId, bal::is_any_of(" ="));
+
+    if (actualTokens.size() != abbreviatedTokens.size() * 2)
+    {
+        // TODO log this since I assume Skyline devs/uers don't want to see it
+        //warn_once(("[SpectrumList::findAbbreviated] abbreviated id (" + abbreviatedId + ") has different number of terms from spectrum list (" + firstId + ")").c_str());
+        return size();
+    }
 
     string fullId(actualTokens[0] + "=" + abbreviatedTokens[0]);
     for (size_t i = 1; i < abbreviatedTokens.size(); ++i)
