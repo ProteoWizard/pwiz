@@ -342,7 +342,13 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         private void comboRegression_SelectedIndexChanged(object sender, EventArgs e)
         {
-            textMinIrt.Enabled = textMaxIrt.Enabled = comboMinPeptide.Enabled = comboMaxPeptide.Enabled = SelectedRegressionOption.AllowEditEquation;
+            labelMinIrt.Enabled = textMinIrt.Enabled = labelMaxIrt.Enabled = textMaxIrt.Enabled =
+                labelMinPeptide.Enabled = comboMinPeptide.Enabled = labelMaxPeptide.Enabled = comboMaxPeptide.Enabled =SelectedRegressionOption.AllowEditEquation;
+            if (!textMinIrt.Enabled)
+            {
+                textMinIrt.Clear();
+                textMaxIrt.Clear();
+            }
             if (IsRecalibration)
             {
                 UpdateEquation(sender, e);
@@ -769,7 +775,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
                                 buckets = cirtBuckets;
                                 switch (MultiButtonMsgDlg.Show(_parent,
                                     Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Would_you_like_to_use_the_predefined_iRT_values_,
-                                    MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true))
+                                    Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Predefined_values,
+                                    Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Calculate_from_regression,
+                                    true))
                                 {
                                     case DialogResult.Yes:
                                         cirtUsePredefined = true;
@@ -779,6 +787,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                                     case DialogResult.Cancel:
                                         return null;
                                 }
+
                                 break;
                             case DialogResult.No:
                                 cirtRegression = null;
