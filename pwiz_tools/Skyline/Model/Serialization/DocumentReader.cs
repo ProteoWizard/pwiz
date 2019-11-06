@@ -1361,7 +1361,7 @@ namespace pwiz.Skyline.Model.Serialization
             else if (isPrecursor)
             {
                 transition = new Transition(group, info.IonType, group.Peptide.Length - 1, info.MassIndex,
-                    group.PrecursorAdduct, info.DecoyMassShift);
+                    adduct.IsEmpty ? group.PrecursorAdduct : adduct, info.DecoyMassShift);
             }
             else
             {

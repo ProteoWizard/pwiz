@@ -89,6 +89,7 @@
             this.labelDetections = new System.Windows.Forms.Label();
             this.labelQVal = new System.Windows.Forms.Label();
             this.textQVal = new System.Windows.Forms.TextBox();
+            this.tabGroupComparison = new System.Windows.Forms.TabPage();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabDocument.SuspendLayout();
@@ -275,6 +276,7 @@
             this.tabControl1.Controls.Add(this.tabDocument);
             this.tabControl1.Controls.Add(this.tabResults);
             this.tabControl1.Controls.Add(this.tabConsistency);
+            this.tabControl1.Controls.Add(this.tabGroupComparison);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
             // 
@@ -514,6 +516,12 @@
             resources.ApplyResources(this.textQVal, "textQVal");
             this.textQVal.Name = "textQVal";
             // 
+            // tabGroupComparison
+            // 
+            resources.ApplyResources(this.tabGroupComparison, "tabGroupComparison");
+            this.tabGroupComparison.Name = "tabGroupComparison";
+            this.tabGroupComparison.UseVisualStyleBackColor = true;
+            // 
             // RefineDlg
             // 
             this.AcceptButton = this.btnOK;
@@ -609,5 +617,6 @@
         private System.Windows.Forms.ComboBox comboTransitions;
         private System.Windows.Forms.Label labelTransType;
         private System.Windows.Forms.ComboBox comboTransType;
+        private System.Windows.Forms.TabPage tabGroupComparison;
     }
 }
