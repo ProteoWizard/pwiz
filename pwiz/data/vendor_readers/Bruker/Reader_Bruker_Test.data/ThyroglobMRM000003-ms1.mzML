@@ -33,7 +33,7 @@
     <software id="micrOTOFcontrol" version="5.0.71.422-9346-vc110">
       <cvParam cvRef="MS" accession="MS:1000726" name="micrOTOFcontrol" value=""/>
     </software>
-    <software id="pwiz_Reader_Bruker" version="3.0.19269">
+    <software id="pwiz_Reader_Bruker" version="3.0.19304">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>

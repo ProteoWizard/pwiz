@@ -511,6 +511,15 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public IEnumerable<LibKey> MoleculeLibKeys
+        {
+            get
+            {
+                return Molecules.SelectMany(
+                    node => node.TransitionGroups.Select(nodeGroup => nodeGroup.GetLibKey(node)));
+            }
+        }
+
         /// <summary>
         /// Return a list of <see cref="TransitionDocNode"/> of any kind
         /// </summary>

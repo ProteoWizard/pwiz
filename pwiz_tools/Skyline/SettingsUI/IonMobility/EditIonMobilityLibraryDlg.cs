@@ -650,7 +650,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             for (int i = 0; i < fileCount.Value; i++)
             {
                 LibraryIonMobilityInfo ionMobilities;
-                if (library.TryGetIonMobilityInfos(i, out ionMobilities))
+                if (library.TryGetIonMobilityInfos(null, i, out ionMobilities))
                     yield return ionMobilities;
             }
         }

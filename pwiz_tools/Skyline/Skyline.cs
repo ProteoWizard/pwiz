@@ -4822,11 +4822,12 @@ namespace pwiz.Skyline
                 SequenceTree.ResultsIndex = ComboResults.SelectedIndex;
 
                 // Make sure the graphs for the result set are visible.
-                if (GetGraphChrom(name) != null)
+                if (GetGraphChrom(name) != null || // Graph exists
+                    _listGraphChrom.Count >= MAX_GRAPH_CHROM) // Graph doesn't exist, presumably because there are more chromatograms than available graphs
                 {
                     bool focus = ComboResults.Focused;
 
-                    ShowGraphChrom(name, true);
+                    ShowGraphChrom(name, true); // Side effect - will close least recently used graph if more than MAX_GRAPH_CHROM open
 
                     if (focus)
                         // Keep focus on the combo box

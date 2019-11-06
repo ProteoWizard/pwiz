@@ -3234,6 +3234,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The following peptides were removed:.
+        /// </summary>
+        public static string ChangeIrtPeptidesDlg_OkDialog_The_following_peptides_were_removed_ {
+            get {
+                return ResourceManager.GetString("ChangeIrtPeptidesDlg_OkDialog_The_following_peptides_were_removed_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The following sequences are not currently in the database:.
         /// </summary>
         public static string ChangeIrtPeptidesDlg_OkDialog_The_following_sequences_are_not_currently_in_the_database {
@@ -3249,6 +3258,15 @@ namespace pwiz.Skyline.Properties {
         public static string ChangeIrtPeptidesDlg_OkDialog_The_sequence__0__is_not_currently_in_the_database {
             get {
                 return ResourceManager.GetString("ChangeIrtPeptidesDlg_OkDialog_The_sequence__0__is_not_currently_in_the_database", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Would you like to remove them from the document?.
+        /// </summary>
+        public static string ChangeIrtPeptidesDlg_OkDialog_Would_you_like_to_remove_them_from_the_document_ {
+            get {
+                return ResourceManager.GetString("ChangeIrtPeptidesDlg_OkDialog_Would_you_like_to_remove_them_from_the_document_", resourceCulture);
             }
         }
         
@@ -8939,11 +8957,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Neutral loss &amp;chemical formula:.
+        ///   Looks up a localized string similar to Loss &amp;chemical formula:.
         /// </summary>
-        public static string EditFragmentLossDlg_EditFragmentLossDlg_Neutral_loss__chemical_formula_ {
+        public static string EditFragmentLossDlg_EditFragmentLossDlg_Loss__chemical_formula_ {
             get {
-                return ResourceManager.GetString("EditFragmentLossDlg_EditFragmentLossDlg_Neutral_loss__chemical_formula_", resourceCulture);
+                return ResourceManager.GetString("EditFragmentLossDlg_EditFragmentLossDlg_Loss__chemical_formula_", resourceCulture);
             }
         }
         
@@ -9197,6 +9215,15 @@ namespace pwiz.Skyline.Properties {
         public static string EditIrtCalcDlg_btnCreateDb_Click_Create_iRT_Database {
             get {
                 return ResourceManager.GetString("EditIrtCalcDlg_btnCreateDb_Click_Create_iRT_Database", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed peptides on iRT standard protein.
+        /// </summary>
+        public static string EditIrtCalcDlg_ChangeStandardPeptides_Removed_peptides_on_iRT_standard_protein {
+            get {
+                return ResourceManager.GetString("EditIrtCalcDlg_ChangeStandardPeptides_Removed_peptides_on_iRT_standard_protein", resourceCulture);
             }
         }
         
@@ -12496,6 +12523,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed attempting to create a temporary file in the folder {0} with the following error:.
+        /// </summary>
+        public static string FileStreamManager_GetTempFileName_Failed_attempting_to_create_a_temporary_file_in_the_folder__0__with_the_following_error_ {
+            get {
+                return ResourceManager.GetString("FileStreamManager_GetTempFileName_Failed_attempting_to_create_a_temporary_file_in" +
+                        "_the_folder__0__with_the_following_error_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Win32 Error: {0}.
         /// </summary>
         public static string FileStreamManager_GetTempFileName_Win32_Error__0__ {
@@ -13353,6 +13390,15 @@ namespace pwiz.Skyline.Properties {
         public static string GraphFullScan_CreateGraph__0_____1_F2__min_ {
             get {
                 return ResourceManager.GetString("GraphFullScan_CreateGraph__0_____1_F2__min_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IM Scan Range:.
+        /// </summary>
+        public static string GraphFullScan_CreateGraph_IM_Scan_Range_ {
+            get {
+                return ResourceManager.GetString("GraphFullScan_CreateGraph_IM_Scan_Range_", resourceCulture);
             }
         }
         

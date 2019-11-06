@@ -188,14 +188,15 @@ namespace pwiz.Skyline.Model.Results
                         var fullScan = _document.Settings.TransitionSettings.FullScan;
                         var enableSimSpectrum = fullScan.IsEnabled;
                         var preferOnlyMsLevel = fullScan.IsEnabled && !fullScan.IsEnabledMsMs ? 1 : 0; // If we don't want MS2, ask reader to totally skip it (not guaranteed)
-                        inFile = MSDataFilePath.OpenMsDataFile(enableSimSpectrum, preferOnlyMsLevel);
+//                        var precursorIonMobility = GetPrecursorMzAndIonMobilityWindows(fullScan, dataFilePath); // A list of [mz, (optionally) IM window] values for pre-filtering by pwiz (not guaranteed)
+                        inFile = MSDataFilePath.OpenMsDataFile(enableSimSpectrum, preferOnlyMsLevel, true);
                         // Preserve centroiding info as part of MsDataFileUri string in chromdata only if it will be used
                         // CONSIDER: Dangerously high knowledge of future control flow required for making this decision
                         if (!ChromatogramDataProvider.HasChromatogramData(inFile) && !inFile.HasSrmSpectra)
                             MSDataFilePath = dataFilePath = MSDataFilePath.ChangeCentroiding(centroidMS1, centroidMS2);
                     }
 
-                    // Check for cancelation
+                    // Check for cancellation
                     if (_loader.IsCanceled)
                     {
                         _loader.UpdateProgress(_status = _status.Cancel());
