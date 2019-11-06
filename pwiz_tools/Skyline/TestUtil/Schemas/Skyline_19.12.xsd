@@ -1673,6 +1673,7 @@
           <xs:attribute name="massdiff_monoisotopic" type="xs:double"/>
           <xs:attribute name="massdiff_average" type="xs:double"/>
           <xs:attribute name="inclusion" type="loss_inclusion_type"/>
+          <xs:attribute name="charge" type="xs:integer" />
         </xs:complexType>
       </xs:element>
     </xs:sequence>

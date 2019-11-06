@@ -964,7 +964,7 @@ namespace pwiz.Skyline.Model
 
                 if (diff.DiffTransitionProps)
                 {
-                    IList<DocNode> childrenNew = new List<DocNode>();
+                    IList<DocNode> childrenNew = new List<DocNode>(nodeResult.Children.Count);
 
                     // Enumerate the nodes making necessary changes.
                     foreach (TransitionDocNode nodeTransition in nodeResult.Children)
@@ -1121,9 +1121,13 @@ namespace pwiz.Skyline.Model
             else if (Children.Count == 0)
             {
                 // If no children, just use a null populated list of the right size.
-                int countResults = settingsNew.MeasuredResults.Chromatograms.Count;
-                var resultsNew = new ChromInfoList<TransitionGroupChromInfo>[countResults];
-                return ChangeResults(new Results<TransitionGroupChromInfo>(resultsNew));
+                return ChangeResults(settingsNew.MeasuredResults.EmptyTransitionGroupResults);
+            }
+            else if (!settingsNew.MeasuredResults.Chromatograms.Any(c => c.IsLoaded) &&
+                     (!HasResults || Results.All(r => r.IsEmpty)))
+            {
+                // If nothing is loaded yet and the old settings had no results then initialize to empty results
+                return UpdateResultsToEmpty(settingsNew.MeasuredResults);
             }
             else
             {
@@ -1399,9 +1403,9 @@ namespace pwiz.Skyline.Model
                                     {
                                         if (listTranInfo == null)
                                             listTranInfo = new List<TransitionChromInfo>(countGroupInfos) {firstChromInfo};
-                                    listTranInfo.Add(chromInfo);
+                                        listTranInfo.Add(chromInfo);
+                                    }
                                 }
-                            }
                             }
                             if (firstChromInfo == null)
                                 resultsCalc.AddTransitionChromInfo(iTran, null);
@@ -1415,6 +1419,20 @@ namespace pwiz.Skyline.Model
                 }
                 return resultsCalc.UpdateTransitionGroupNode(this);
             }
+        }
+
+        private TransitionGroupDocNode UpdateResultsToEmpty(MeasuredResults measuredResults)
+        {
+            // If the results are already empty at this level, then no need to change anything
+            if (HasResults && Results.Count == measuredResults.Chromatograms.Count && Results.All(r => r.IsEmpty))
+                return this;
+
+            IList<DocNode> childrenNew = new List<DocNode>(Children.Count);
+            foreach (TransitionDocNode nodeTransition in Children)
+                childrenNew.Add(nodeTransition.ChangeResults(measuredResults.EmptyTransitionResults));
+
+            var empty = measuredResults.EmptyTransitionGroupResults;
+            return (TransitionGroupDocNode) ChangeResults(empty).ChangeChildren(childrenNew);
         }
 
         /// <summary>

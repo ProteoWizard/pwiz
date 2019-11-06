@@ -23,6 +23,7 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using JetBrains.Annotations;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
@@ -108,6 +109,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public double MonoisotopicMass { get; private set; }
         [Track]
         public double AverageMass { get; private set; }
+        [Track(defaultValues: typeof(DefaultValuesZero))]
+        public int Charge { get; private set; }
 
         public double GetMass(MassType massType)
         {
@@ -138,6 +141,11 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.Inclusion = inclusion);
         }
 
+        public FragmentLoss ChangeCharge(int charge)
+        {
+            return ChangeProp(ImClone(this), im => im.Charge = charge);
+        }
+
         #endregion
 
         #region Implementation of IXmlSerializable
@@ -154,7 +162,8 @@ namespace pwiz.Skyline.Model.DocSettings
             formula,
             massdiff_monoisotopic,
             massdiff_average,
-            inclusion
+            inclusion,
+            charge
         }
 
         private void Validate()
@@ -184,6 +193,7 @@ namespace pwiz.Skyline.Model.DocSettings
             AverageMass = reader.GetNullableDoubleAttribute(ATTR.massdiff_average) ?? 0;
             Formula = reader.GetAttribute(ATTR.formula);
             Inclusion = reader.GetEnumAttribute(ATTR.inclusion, LossInclusion.Library);
+            Charge = reader.GetIntAttribute(ATTR.charge, 0);
 
             // Consume tag
             reader.Read();
@@ -198,6 +208,7 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttribute(ATTR.massdiff_monoisotopic, MonoisotopicMass);
             writer.WriteAttribute(ATTR.massdiff_average, AverageMass);
             writer.WriteAttribute(ATTR.inclusion, Inclusion, LossInclusion.Library);
+            writer.WriteAttribute(ATTR.charge, Charge, 0);
         }
 
         #endregion
@@ -209,7 +220,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 Formula = Formula,
                 MonoisotopicMass = MonoisotopicMass,
                 AverageMass = AverageMass,
-                LossInclusion = DataValues.ToLossInclusion(Inclusion)
+                LossInclusion = DataValues.ToLossInclusion(Inclusion),
+                Charge = Charge
             };
         }
 
@@ -220,9 +232,10 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return Equals(other.Formula, Formula) &&
-                other.MonoisotopicMass.Equals(MonoisotopicMass) &&
-                other.AverageMass.Equals(AverageMass) &&
-                other.Inclusion.Equals(Inclusion);
+                   other.MonoisotopicMass.Equals(MonoisotopicMass) &&
+                   other.AverageMass.Equals(AverageMass) &&
+                   other.Inclusion.Equals(Inclusion) &&
+                   other.Charge.Equals(Charge);
         }
 
         public override bool Equals(object obj)
@@ -241,6 +254,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result * 397) ^ MonoisotopicMass.GetHashCode();
                 result = (result * 397) ^ AverageMass.GetHashCode();
                 result = (result * 397) ^ Inclusion.GetHashCode();
+                result = (result * 397) ^ Charge.GetHashCode();
                 return result;
             }
         }
@@ -252,9 +266,15 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public string ToString(MassType massType)
         {
-            return Formula != null ?
+            string str = Formula != null ?
                 string.Format(@"{0:F04} - {1}", GetMass(massType), Formula) :
                 string.Format(@"{0:F04}", GetMass(massType));
+            if (Charge != 0)
+            {
+                str += Transition.GetChargeIndicator(Adduct.FromCharge(Charge, Adduct.ADDUCT_TYPE.charge_only));
+            }
+
+            return str;
         }
 
         #endregion
@@ -278,6 +298,29 @@ namespace pwiz.Skyline.Model.DocSettings
         public IList<TransitionLoss> Losses { get { return _losses; } }
         public MassType MassType { get; private set; }
         public double Mass { get; private set; }
+
+        public int TotalCharge
+        {
+            get { return _losses.Sum(loss => loss.Loss.Charge); }
+        }
+
+        [CanBeNull]
+        public Adduct GetProductAdduct(Adduct precursorAdduct)
+        {
+            var totalCharge = TotalCharge;
+            if (totalCharge == 0)
+            {
+                return precursorAdduct;
+            }
+
+            var newCharge = precursorAdduct.AdductCharge - totalCharge;
+            if (Math.Sign(newCharge) != Math.Sign(precursorAdduct.AdductCharge))
+            {
+                return null;
+            }
+
+            return precursorAdduct.ChangeCharge(newCharge);
+        }
 
         private static double CalcLossMass(IEnumerable<TransitionLoss> losses)
         {
@@ -353,7 +396,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     listLosses.Add(new TransitionLoss(null,
                         new FragmentLoss(loss.Formula, loss.MonoisotopicMass,
-                            loss.AverageMass, DataValues.FromLossInclusion(loss.LossInclusion)),
+                            loss.AverageMass, DataValues.FromLossInclusion(loss.LossInclusion))
+                            .ChangeCharge(loss.Charge),
                         massType));
                 }
                 else

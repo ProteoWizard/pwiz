@@ -229,6 +229,14 @@ namespace pwiz.SkylineTestFunctional
             var resetPeptides = irtDlg1.StandardPeptides.ToArray();
             RunDlg<ChangeIrtPeptidesDlg>(irtDlg1.ChangeStandardPeptides, changeDlg =>
             {
+                Assert.IsTrue(ArrayUtil.ReferencesEqual(SkylineWindow.DocumentUI.MoleculeGroups.ToArray(), changeDlg.Proteins.ToArray()));
+                foreach (var protein in changeDlg.Proteins)
+                {
+                    changeDlg.SelectedProtein = protein;
+                    CollectionAssert.AreEqual(protein.Molecules.Select(pep => pep.ModifiedSequenceDisplay).ToArray(), changeDlg.PeptideLines);
+                }
+                changeDlg.SelectedProtein = null;
+                Assert.IsTrue(string.IsNullOrEmpty(changeDlg.PeptidesText));
                 changeDlg.Peptides = changePeptides;
                 changeDlg.OkDialog();
             });
@@ -236,6 +244,7 @@ namespace pwiz.SkylineTestFunctional
                 irtDlg1.StandardPeptides.Select(p => p.Target).ToArray()));
             Assert.IsTrue(ArrayUtil.EqualsDeep(changePeptides.Select(p => p.Irt).ToArray(),
                 irtDlg1.StandardPeptides.Select(p => p.Irt).ToArray()));
+
             RunDlg<ChangeIrtPeptidesDlg>(irtDlg1.ChangeStandardPeptides, changeDlg =>
             {
                 changeDlg.Peptides = resetPeptides;

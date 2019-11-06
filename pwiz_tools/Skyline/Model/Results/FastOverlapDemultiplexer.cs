@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Model.Results
     {
         MsDataFileImpl _dataFile;
         MassTolerance _fragmentTolerance;
-        private Dictionary<int, MsPrecursor[]> _precursorsByScanIndex = new Dictionary<int, MsPrecursor[]>();
+        private Dictionary<int, IList<MsPrecursor>> _precursorsByScanIndex = new Dictionary<int, IList<MsPrecursor>>();
 
         public FastOverlapDemultiplexer(MsDataFileImpl demuxProcessedFile)
         {
@@ -185,7 +185,7 @@ namespace pwiz.Skyline.Model.Results
             foreach (var spectrumIndex in spectrumIndexes)
             {
                 var precursors = GetPrecursors(spectrumIndex);
-                if (precursors.Length != 1)
+                if (precursors.Count != 1)
                 {
                     continue;
                 }
@@ -201,12 +201,12 @@ namespace pwiz.Skyline.Model.Results
             return null;
         }
 
-        private MsPrecursor[] GetPrecursors(int scanIndex)
+        private IList<MsPrecursor> GetPrecursors(int scanIndex)
         {
-            MsPrecursor[] precursors;
+            IList<MsPrecursor> precursors;
             if (!_precursorsByScanIndex.TryGetValue(scanIndex, out precursors))
             {
-                precursors = _dataFile.GetPrecursors(scanIndex);
+                precursors = _dataFile.GetPrecursors(scanIndex, 1);
                 _precursorsByScanIndex[scanIndex] = precursors;
             }
             return precursors;

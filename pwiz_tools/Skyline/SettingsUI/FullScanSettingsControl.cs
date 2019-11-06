@@ -960,7 +960,7 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             // Ask about ion mobility filtering if any IM values in library
-            if (settings.PeptideSettings.Libraries.HasAnyLibraryIonMobilities())
+            if (settings.PeptideSettings.Libraries.HasAnyLibraryIonMobilities(null))
             {
                 useSpectralLibraryIonMobilityValuesControl.Top = groupBoxRetentionTimeToKeep.Bottom + sepMS1FromMS2;
                 useSpectralLibraryIonMobilityValuesControl.InitializeSettings(_documentContainer, true);

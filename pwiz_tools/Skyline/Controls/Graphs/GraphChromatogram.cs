@@ -220,6 +220,19 @@ namespace pwiz.Skyline.Controls.Graphs
             set { TabText = _nameChromatogramSet = value; }
         }
 
+
+        /// <summary>
+        /// We have to limit the number of chromatogram windows to conserve window handles - so when
+        /// a new one is desired, we simply update the contents of the oldest one. This preserves
+        /// layout, and while it may result in an out of order display it's at least easy to understand.
+        /// </summary>
+        public void ChangeChromatogram(string name)
+        {
+            NameSet = name;
+            _arrayChromInfo = null;
+            UpdateUI();
+        }
+
         public int CurveCount { get { return GraphPanes.Sum(pane=>GetCurves(pane).Count()); } }
 
         private SrmDocument DocumentUI { get { return _documentContainer.DocumentUI; } }
@@ -630,7 +643,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>
         /// Returns the file path for the selected file of the groups.
         /// </summary>
-        private MsDataFileUri FilePath
+        public MsDataFileUri FilePath
         {
             get
             {
