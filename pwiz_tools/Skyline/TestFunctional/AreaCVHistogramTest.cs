@@ -26,6 +26,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls;
 using pwiz.SkylineTestUtil;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
@@ -123,11 +124,13 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky"));
+            
 
             // Add a bunch of unmeasured precursors and transitions which should not impact the statistics
             // This once caused the CV graphs to fail to complete calculating
             AddUnmeasuredElements();
 
+            TestRefinement();
             TestHistogram<AreaCVHistogramGraphPane>(SkylineWindow.ShowPeakAreaCVHistogram, HISTOGRAM_DATA_START);
             TestHistogram<AreaCVHistogram2DGraphPane>(SkylineWindow.ShowPeakAreaCVHistogram2D, HISTOGRAM2D_DATA_START);
 
@@ -206,10 +209,8 @@ namespace pwiz.SkylineTestFunctional
                 itemCount = histogramInfo.Items;
                 SkylineWindow.RemoveAboveCVCutoff(graph);
             });
-
             int expectedBars = itemCount - GetItemsAboveCutoff(statsStartIndex);
             WaitForHistogramBarCount(histogramInfo, expectedBars);
-
             RunUI(SkylineWindow.Undo);
 
             WaitForHistogramBarCount(histogramInfo, itemCount);
@@ -309,6 +310,50 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.medians));
             WaitForGraphs();
             AssertDataCorrect(pane, statsStartIndex++);
+        }
+
+        private void TestRefinement()
+        {
+            var graphStates = new [] { (48, 3, 4, 36), (48, 10, 11, 76) };
+
+            // Verify cv cutoff refinement works
+            var doc = SkylineWindow.Document; // tmp
+            var refineDlg = ShowDialog<RefineDlg>(() => SkylineWindow.ShowRefineDlg());
+            RunUI(() => { refineDlg.CVCutoff = 20; });
+            OkDialog(refineDlg, refineDlg.OkDialog);
+            doc = SkylineWindow.Document;
+            var refineDocState = (doc.PeptideGroupCount, doc.PeptideCount, doc.PeptideTransitionGroupCount,
+                doc.PeptideTransitionCount);
+            Assert.AreEqual(graphStates[0], refineDocState);
+            RunUI(SkylineWindow.Undo);
+
+            // Normalize to global standards
+            refineDlg = ShowDialog<RefineDlg>(() => SkylineWindow.ShowRefineDlg());
+            RunUI(() =>
+            {
+                refineDlg.CVCutoff = 20;
+                refineDlg.NormalizationMethod = AreaCVNormalizationMethod.global_standards;
+            });
+            OkDialog(refineDlg, refineDlg.OkDialog);
+            doc = SkylineWindow.Document;
+            refineDocState = (doc.PeptideGroupCount, doc.PeptideCount, doc.PeptideTransitionGroupCount,
+                doc.PeptideTransitionCount);
+            Assert.AreEqual(graphStates[0], refineDocState);
+            RunUI(SkylineWindow.Undo);
+
+            // Normalize to medians
+            refineDlg = ShowDialog<RefineDlg>(() => SkylineWindow.ShowRefineDlg());
+            RunUI(() =>
+            {
+                refineDlg.CVCutoff = 20;
+                refineDlg.NormalizationMethod = AreaCVNormalizationMethod.medians;
+            });
+            OkDialog(refineDlg, () => refineDlg.OkDialog());
+            doc = SkylineWindow.Document;
+            refineDocState = (doc.PeptideGroupCount, doc.PeptideCount, doc.PeptideTransitionGroupCount,
+                doc.PeptideTransitionCount);
+            Assert.AreEqual(graphStates[1], refineDocState);
+            RunUI(SkylineWindow.Undo);
         }
 
         private string[][] GetExpected(string[] foundText)

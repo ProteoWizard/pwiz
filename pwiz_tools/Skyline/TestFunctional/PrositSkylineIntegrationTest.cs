@@ -1362,17 +1362,10 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() => { Assert.IsFalse(buildLibrary.Prosit); });
 
-            // Test dialog that warns you about Prosit not being set up
-            var server = Settings.Default.PrositServer;
-            Settings.Default.PrositServer = null;
-
-            var alert = ShowDialog<AlertDlg>(() => { buildLibrary.Prosit = true; });
-            RunUI(() => alert.ClickYes());
             var toolOptions = WaitForOpenForm<ToolOptionsUI>();
             WaitForConditionUI(() => toolOptions.PrositServerStatus == ToolOptionsUI.ServerStatus.AVAILABLE);
             RunUI(() => toolOptions.DialogResult = DialogResult.OK);
             WaitForClosedForm(toolOptions);
-            WaitForClosedForm(alert);
 
             RunUI(() =>
             {

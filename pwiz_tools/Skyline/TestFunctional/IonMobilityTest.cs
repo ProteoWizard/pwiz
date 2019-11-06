@@ -241,7 +241,7 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(editListUI, editListUI.OkDialog);
                 RunUI(() => peptideSettingsUI.PickedLibraries = new[] { libname });
 
-                // Check error cases for resolving power (caused unexpected excption)
+                // Check error cases for resolving power (caused unexpected exception)
                 RunUI(() =>
                 {
                     peptideSettingsUI.IsUseSpectralLibraryDriftTimes = true;

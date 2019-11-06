@@ -196,7 +196,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var errmsg = "";
 
             LibraryIonMobilityInfo libraryIonMobilityInfo;
-            doc1.Settings.PeptideSettings.Libraries.Libraries.First().TryGetIonMobilityInfos(0, out libraryIonMobilityInfo);
+            doc1.Settings.PeptideSettings.Libraries.Libraries.First().TryGetIonMobilityInfos(doc1.MoleculeLibKeys.ToArray(), 0, out libraryIonMobilityInfo);
             var driftInfoExplicitDT = libraryIonMobilityInfo;
             var instrumentInfo = new DataFileInstrumentInfo(new MsDataFileImpl(GetTestPath(nextFile)));
             var dictExplicitDT = driftInfoExplicitDT.GetIonMobilityDict();
@@ -246,11 +246,10 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 }
             }
             Assert.IsTrue(errmsg.Length == 0, errmsg);
-            Assert.AreEqual(1093425, maxHeight, 1); 
+            Assert.AreEqual(1093421, maxHeight, 1); 
 
             // Does CCS show up in reports?
             TestReports(doc1);
-
         }
 
         private void TestReports(SrmDocument doc1, string msg = null)

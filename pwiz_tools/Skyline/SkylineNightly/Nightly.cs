@@ -74,6 +74,7 @@ namespace SkylineNightly
         private static string LABKEY_RELEASE_URL = GetPostUrl("home/development/Release%20Branch");
         private static string LABKEY_RELEASE_PERF_URL = GetPostUrl("home/development/Release%20Branch%20Performance%20Tests");
         private static string LABKEY_INTEGRATION_URL = GetPostUrl("home/development/Integration");
+        private static string LABKEY_INTEGRATION_PERF_URL = GetPostUrl("home/development/Integration%20With%20Perf%20Tests");
         private static string LABKEY_HOME_URL = GetUrl("home", "project", "begin");
 
         private static string LABKEY_CSRF = @"X-LABKEY-CSRF";
@@ -153,7 +154,7 @@ namespace SkylineNightly
             }
         }
 
-        public enum RunMode { parse, post, trunk, perf, release, stress, integration, release_perf }
+        public enum RunMode { parse, post, trunk, perf, release, stress, integration, release_perf, integration_perf }
 
         private string SkylineTesterStoppedByUser = "SkylineTester stopped by user";
 
@@ -455,7 +456,7 @@ namespace SkylineNightly
             {
                 client.Credentials = new NetworkCredential(TEAM_CITY_USER_NAME, TEAM_CITY_USER_PASSWORD);
                 var isRelease = ((mode == RunMode.release) || (mode == RunMode.release_perf));
-                var isIntegration = mode == RunMode.integration;
+                var isIntegration = mode == RunMode.integration || mode == RunMode.integration_perf;
                 var branchType = (isRelease||isIntegration) ? "" : "?branch=master"; // TC has a config just for release branch, and another for integration branch, but main config builds pull requests, other branches etc
                 var buildType = isIntegration ? TEAM_CITY_BUILD_TYPE_64_INTEGRATION : isRelease ? TEAM_CITY_BUILD_TYPE_64_RELEASE : TEAM_CITY_BUILD_TYPE_64_MASTER;
 
@@ -579,7 +580,7 @@ namespace SkylineNightly
             }
             return isTrunk
                 ? (hasPerftests ? RunMode.perf : RunMode.trunk)
-                : (isIntegration ? RunMode.integration :  (hasPerftests ? RunMode.release_perf : RunMode.release));
+                : (isIntegration ? (hasPerftests ? RunMode.integration_perf : RunMode.integration) :  (hasPerftests ? RunMode.release_perf : RunMode.release));
         }
 
         private class TestLogLineProperties
@@ -794,6 +795,8 @@ namespace SkylineNightly
             // Post to server.
             if (mode == RunMode.integration)
                 url = LABKEY_INTEGRATION_URL;
+            else if (mode == RunMode.integration_perf)
+                url = LABKEY_INTEGRATION_PERF_URL;
             else if (mode == RunMode.release_perf)
                 url = LABKEY_RELEASE_PERF_URL;
             else if (mode == RunMode.release)

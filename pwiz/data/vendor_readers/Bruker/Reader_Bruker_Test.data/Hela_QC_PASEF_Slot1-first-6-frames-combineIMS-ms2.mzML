@@ -34,7 +34,7 @@
     <software id="micrOTOFcontrol" version="5.0.2.528-10700-vc110">
       <cvParam cvRef="MS" accession="MS:1000726" name="micrOTOFcontrol" value=""/>
     </software>
-    <software id="pwiz_Reader_Bruker" version="3.0.19269">
+    <software id="pwiz_Reader_Bruker" version="3.0.19304">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -72,12 +72,13 @@
   </dataProcessingList>
   <run id="Hela_QC_PASEF_Slot1-first-6-frames" defaultInstrumentConfigurationRef="IC1" startTimeStamp="2017-09-27T01:05:30Z" defaultSourceFileRef="Hela_QC_PASEF_Slot1-first-6-frames.d_x005c_Analysis.tdf">
     <spectrumList count="14" defaultDataProcessingRef="pwiz_Reader_Bruker_conversion">
-      <spectrum index="0" id="merged=0" defaultArrayLength="123">
+      <spectrum index="0" id="merged=0 frame=1 scanStart=230 scanEnd=254" defaultArrayLength="123">
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="1321.0"/>
         <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="5.57401e05"/>
+        <cvParam cvRef="MS" accession="MS:1000127" name="centroid spectrum" value=""/>
         <scanList count="25">
           <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan spectrumRef="frame=1 scan=229">
@@ -178,12 +179,13 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </spectrum>
-      <spectrum index="1" id="merged=1" defaultArrayLength="58">
+      <spectrum index="1" id="merged=1 frame=1 scanStart=298 scanEnd=322" defaultArrayLength="58">
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="1321.0"/>
         <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="5.57401e05"/>
+        <cvParam cvRef="MS" accession="MS:1000127" name="centroid spectrum" value=""/>
         <scanList count="25">
           <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan spectrumRef="frame=1 scan=297">
@@ -284,12 +286,13 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </spectrum>
-      <spectrum index="2" id="merged=2" defaultArrayLength="12">
+      <spectrum index="2" id="merged=2 frame=2 scanStart=211 scanEnd=235" defaultArrayLength="12">
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="777.0"/>
         <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="5.7477e05"/>
+        <cvParam cvRef="MS" accession="MS:1000127" name="centroid spectrum" value=""/>
         <scanList count="25">
           <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan spectrumRef="frame=2 scan=210">
@@ -389,12 +392,13 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </spectrum>
-      <spectrum index="3" id="merged=3" defaultArrayLength="15">
+      <spectrum index="3" id="merged=3 frame=2 scanStart=252 scanEnd=276" defaultArrayLength="15">
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="777.0"/>
         <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="5.7477e05"/>
+        <cvParam cvRef="MS" accession="MS:1000127" name="centroid spectrum" value=""/>
         <scanList count="25">
           <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan spectrumRef="frame=2 scan=251">
@@ -495,12 +499,13 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </spectrum>
-      <spectrum index="4" id="merged=4" defaultArrayLength="55">
+      <spectrum index="4" id="merged=4 frame=2 scanStart=298 scanEnd=322" defaultArrayLength="55">
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="777.0"/>
         <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="5.7477e05"/>
+        <cvParam cvRef="MS" accession="MS:1000127" name="centroid spectrum" value=""/>
         <scanList count="25">
           <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan spectrumRef="frame=2 scan=297">
@@ -601,12 +606,13 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </spectrum>
-      <spectrum index="5" id="merged=5" defaultArrayLength="8">
+      <spectrum index="5" id="merged=5 frame=3 scanStart=211 scanEnd=235" defaultArrayLength="8">
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="540.0"/>
         <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="4.89068e05"/>
+        <cvParam cvRef="MS" accession="MS:1000127" name="centroid spectrum" value=""/>
         <scanList count="25">
           <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan spectrumRef="frame=3 scan=210">
@@ -706,12 +712,13 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </spectrum>
-      <spectrum index="6" id="merged=6" defaultArrayLength="3">
+      <spectrum index="6" id="merged=6 frame=3 scanStart=252 scanEnd=276" defaultArrayLength="3">
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="540.0"/>
         <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="4.89068e05"/>
+        <cvParam cvRef="MS" accession="MS:1000127" name="centroid spectrum" value=""/>
         <scanList count="25">
           <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan spectrumRef="frame=3 scan=251">
@@ -812,12 +819,13 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </spectrum>
-      <spectrum index="7" id="merged=7" defaultArrayLength="52">
+      <spectrum index="7" id="merged=7 frame=3 scanStart=298 scanEnd=322" defaultArrayLength="52">
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="540.0"/>
         <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="4.89068e05"/>
+        <cvParam cvRef="MS" accession="MS:1000127" name="centroid spectrum" value=""/>
         <scanList count="25">
           <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan spectrumRef="frame=3 scan=297">
@@ -918,12 +926,13 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </spectrum>
-      <spectrum index="8" id="merged=8" defaultArrayLength="20">
+      <spectrum index="8" id="merged=8 frame=4 scanStart=211 scanEnd=235" defaultArrayLength="20">
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="469.0"/>
         <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="4.77207e05"/>
+        <cvParam cvRef="MS" accession="MS:1000127" name="centroid spectrum" value=""/>
         <scanList count="25">
           <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan spectrumRef="frame=4 scan=210">
@@ -1023,12 +1032,13 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </spectrum>
-      <spectrum index="9" id="merged=9" defaultArrayLength="10">
+      <spectrum index="9" id="merged=9 frame=4 scanStart=252 scanEnd=276" defaultArrayLength="10">
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="469.0"/>
         <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="4.77207e05"/>
+        <cvParam cvRef="MS" accession="MS:1000127" name="centroid spectrum" value=""/>
         <scanList count="25">
           <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan spectrumRef="frame=4 scan=251">
@@ -1129,12 +1139,13 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </spectrum>
-      <spectrum index="10" id="merged=10" defaultArrayLength="48">
+      <spectrum index="10" id="merged=10 frame=4 scanStart=298 scanEnd=322" defaultArrayLength="48">
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="469.0"/>
         <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="4.77207e05"/>
+        <cvParam cvRef="MS" accession="MS:1000127" name="centroid spectrum" value=""/>
         <scanList count="25">
           <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan spectrumRef="frame=4 scan=297">
@@ -1235,12 +1246,13 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </spectrum>
-      <spectrum index="11" id="merged=11" defaultArrayLength="10">
+      <spectrum index="11" id="merged=11 frame=5 scanStart=211 scanEnd=235" defaultArrayLength="10">
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="275.0"/>
         <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="2.27079e05"/>
+        <cvParam cvRef="MS" accession="MS:1000127" name="centroid spectrum" value=""/>
         <scanList count="25">
           <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan spectrumRef="frame=5 scan=210">
@@ -1340,12 +1352,13 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </spectrum>
-      <spectrum index="12" id="merged=12" defaultArrayLength="7">
+      <spectrum index="12" id="merged=12 frame=5 scanStart=252 scanEnd=276" defaultArrayLength="7">
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="275.0"/>
         <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="2.27079e05"/>
+        <cvParam cvRef="MS" accession="MS:1000127" name="centroid spectrum" value=""/>
         <scanList count="25">
           <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan spectrumRef="frame=5 scan=251">
@@ -1446,12 +1459,13 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </spectrum>
-      <spectrum index="13" id="merged=13" defaultArrayLength="39">
+      <spectrum index="13" id="merged=13 frame=5 scanStart=298 scanEnd=322" defaultArrayLength="39">
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="275.0"/>
         <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="2.27079e05"/>
+        <cvParam cvRef="MS" accession="MS:1000127" name="centroid spectrum" value=""/>
         <scanList count="25">
           <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan spectrumRef="frame=5 scan=297">

@@ -1008,8 +1008,11 @@ namespace pwiz.Skyline.Model.Results
                 cachedFileSerializer.WriteItems(outStream, new []{cachedFileStruct});
                 // Write variable length buffers
                 outStream.Write(filePathBytes, 0, filePathBytes.Length);
-                outStream.Write(sampleIdBytes, 0, sampleIdBytes.Length);
-                outStream.Write(serialNumberBytes, 0, serialNumberBytes.Length);
+                if (formatVersion >= CacheFormatVersion.Fourteen)
+                {
+                    outStream.Write(sampleIdBytes, 0, sampleIdBytes.Length);
+                    outStream.Write(serialNumberBytes, 0, serialNumberBytes.Length);
+                }
                 outStream.Write(instrumentInfoBytes, 0, instrumentInfoBytes.Length);
             }
 
@@ -1075,7 +1078,7 @@ namespace pwiz.Skyline.Model.Results
                     {
                         Buffer.BlockCopy(bytes, offset, scanIds[source], 0, sizeArrayScanIds);
                         offset += sizeArrayScanIds;
-        }
+                    }
                 }
             }
         }

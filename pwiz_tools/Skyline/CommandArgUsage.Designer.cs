@@ -820,6 +820,33 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Areas used in CV calculations are normalized as specified. (default no normalization).
+        /// </summary>
+        internal static string _refine_cv_global_normalize {
+            get {
+                return ResourceManager.GetString("_refine_cv_global_normalize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Areas used in CV calculations are normalized to a reference type, e.g. &quot;heavy&quot;..
+        /// </summary>
+        internal static string _refine_cv_reference_normalize {
+            get {
+                return ResourceManager.GetString("_refine_cv_reference_normalize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All target precursors with peak area CV above the cutoff will be removed..
+        /// </summary>
+        internal static string _refine_cv_remove_above_cutoff {
+            get {
+                return ResourceManager.GetString("_refine_cv_remove_above_cutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Precursors of the specified isotope label type will be removed (default) or added if --refine-add-label-type is also used..
         /// </summary>
         internal static string _refine_label_type {
@@ -942,6 +969,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to All target precursors with less than the specified number of replicates with detection q value below the --refine-qvalue-cutoff are removed..
+        /// </summary>
+        internal static string _refine_minimum_detections {
+            get {
+                return ResourceManager.GetString("_refine_minimum_detections", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to All targets that do not correspond to a library match will be removed..
         /// </summary>
         internal static string _refine_missing_library {
@@ -968,6 +1004,15 @@ namespace pwiz.Skyline {
         internal static string _refine_prefer_larger_products {
             get {
                 return ResourceManager.GetString("_refine_prefer_larger_products", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All target precursors with a maximum detection q value above the cutoff will be removed. If --refine-minimum-detections is used then at least the specified number of replicates must have a detection q value below the cutoff..
+        /// </summary>
+        internal static string _refine_qvalue_cutoff {
+            get {
+                return ResourceManager.GetString("_refine_qvalue_cutoff", resourceCulture);
             }
         }
         
@@ -1060,6 +1105,15 @@ namespace pwiz.Skyline {
         internal static string _reintegrate_model_second_best {
             get {
                 return ResourceManager.GetString("_reintegrate_model_second_best", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The type of peak scoring model to train to produce z scores and q values. (dafault mProphet) Skyline - simply scales coefficients of the default Skyline model to estimate a unit normal distribution from the decoys. SkylineML - uses the mProphet machine learning algorithm to train a model using only the default set of feature scores..
+        /// </summary>
+        internal static string _reintegrate_model_type {
+            get {
+                return ResourceManager.GetString("_reintegrate_model_type", resourceCulture);
             }
         }
         
@@ -1739,6 +1793,15 @@ namespace pwiz.Skyline {
         internal static string CommandArgs_NAME_VALUE {
             get {
                 return ResourceManager.GetString("CommandArgs_NAME_VALUE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;number list&gt;.
+        /// </summary>
+        internal static string CommandArgs_NUM_LIST_VALUE {
+            get {
+                return ResourceManager.GetString("CommandArgs_NUM_LIST_VALUE", resourceCulture);
             }
         }
         

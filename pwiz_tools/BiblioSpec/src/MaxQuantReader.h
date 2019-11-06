@@ -74,10 +74,11 @@ public:
     double pep;
     double score;
     int labelingState;
+    int evidenceID; // index into evidence.txt file for ion mobility info
     string masses;
     string intensities;
 
-    MaxQuantLine() : scanNumber(0), mz(0), charge(0), retentionTime(0), score(0), labelingState(-1) {}
+    MaxQuantLine() : scanNumber(0), mz(0), charge(0), retentionTime(0), score(0), labelingState(-1), evidenceID(-1) {}
 
     static void insertRawFile(MaxQuantLine& le, const string& value)
     {
@@ -122,6 +123,10 @@ public:
     static void insertLabelingState(MaxQuantLine& le, const string& value)
     {
         le.labelingState = (value.empty()) ? -1 : lexical_cast<int>(value);
+    }
+    static void insertEvidenceID(MaxQuantLine& le, const string& value)
+    {
+        le.evidenceID = (value.empty()) ? -1 : lexical_cast<int>(value);
     }
     static void insertMasses(MaxQuantLine& le, const string& value)
     {
@@ -199,6 +204,8 @@ private:
     map<string, MaxQuantModification> modBank_;   // full mod name -> delta mass
     map< MaxQuantModification::MAXQUANT_MOD_POSITION, vector<const MaxQuantModification*> > fixedModBank_;
     vector<MaxQuantLabels> labelBank_;
+    vector<double> inverseK0_; // optionally parsed from evidence.txt
+    vector<double> CCS_; // optionally parsed from evidence.txt
 
     void initTargetColumns();
     void initModifications();
@@ -213,6 +220,7 @@ private:
     SeqMod searchForMod(vector<string>& modNames, const string& modSequence, int& posOpenParen);
     static int getModPosition(const string& modSeq, int posOpenParen);
     vector<SeqMod> getFixedMods(char aa, int aaPosition, const vector<const MaxQuantModification*>& mods);
+    void initEvidence();  // optionally parse ion mobility info from evidence.txt
 
     const escaped_list_separator<char> separator_;
 };

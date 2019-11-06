@@ -81,6 +81,19 @@ static void copyReaderConfig(pwiz::msdata::Reader::Config& config, ReaderConfig^
     config.adjustUnknownTimeZonesToHostTimeZone = readerConfig->adjustUnknownTimeZonesToHostTimeZone;
     config.preferOnlyMsLevel = readerConfig->preferOnlyMsLevel;
     config.allowMsMsWithoutPrecursor = readerConfig->allowMsMsWithoutPrecursor;
+
+    if (readerConfig->isolationMzAndMobilityFilter != nullptr)
+        for each (MzMobilityWindow^ filter in readerConfig->isolationMzAndMobilityFilter)
+        {
+            double mz = filter->mz;
+            if (filter->mobilityBounds != nullptr)
+            {
+                double lb = filter->mobilityBounds->Item1, ub = filter->mobilityBounds->Item2;
+                config.isolationMzAndMobilityFilter.emplace_back(mz, std::make_pair(lb, ub));
+            }
+            else
+                config.isolationMzAndMobilityFilter.emplace_back(mz);
+        }
 }
 
 void Reader::read(System::String^ filename, System::String^ head, MSData^ result, int sampleIndex, ReaderConfig^ readerConfig)

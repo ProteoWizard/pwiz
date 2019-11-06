@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -29,12 +30,13 @@ namespace pwiz.Skyline.Model
 {
     public class MultiFileLoader
     {
-        private const int MAX_PARALLEL_LOAD_FILES = 8;
+        public const int MAX_PARALLEL_LOAD_FILES = 12;
 
         private readonly QueueWorker<LoadInfo> _worker;
         private readonly Dictionary<MsDataFileUri, int> _loadingPaths;
         private readonly bool _synchronousMode;
-        private int _threadCount;
+        private int? _threadCountPreferred;
+        private ImportResultsSimultaneousFileOptions _simultaneousFileOptions;
 
         private readonly object _statusLock;
         private MultiProgressStatus _status;
@@ -44,7 +46,6 @@ namespace pwiz.Skyline.Model
             _worker = new QueueWorker<LoadInfo>(null, LoadFile);
             _loadingPaths = new Dictionary<MsDataFileUri, int>();
             _synchronousMode = synchronousMode;
-            _threadCount = 1;
             _statusLock = new object();
             ResetStatus();
         }
@@ -87,35 +88,73 @@ namespace pwiz.Skyline.Model
 
         public void InitializeThreadCount(int? loadingThreads)
         {
-            if (ParallelEx.SINGLE_THREADED)
+            lock (this)
             {
-                loadingThreads = 1; // Makes debugging easier.
-            }
-
-            if (loadingThreads.HasValue)
-                _threadCount = loadingThreads.Value;
-            else
-            {
-                switch ((ImportResultsSimultaneousFileOptions)Settings.Default.ImportResultsSimultaneousFiles)
-                {
-                    case ImportResultsSimultaneousFileOptions.one_at_a_time:
-                        _threadCount = 1;
-                        break;
-
-                    case ImportResultsSimultaneousFileOptions.several: // Several is 1/4 logical processors (i.e. 2 for an i7)
-                        _threadCount = Math.Max(2, Environment.ProcessorCount / 4); // Min of 2, because you really expect more than 1
-                        break;
-
-                    case ImportResultsSimultaneousFileOptions.many: // Many is 1/2 logical processors (i.e. 4 for an i7)
-                        _threadCount = Math.Max(2, Environment.ProcessorCount / 2); // Min of 2, because you really expect more than 1
-                        break;
-                }
-                _threadCount = Math.Min(MAX_PARALLEL_LOAD_FILES, _threadCount);
+                _threadCountPreferred = loadingThreads;
+                _simultaneousFileOptions = (ImportResultsSimultaneousFileOptions)Settings.Default.ImportResultsSimultaneousFiles;
             }
         }
 
+        public static int GetOptimalThreadCount(int? loadingThreads, int? fileCount,
+            ImportResultsSimultaneousFileOptions simultaneousFileOptions)
+        {
+            if (ParallelEx.SINGLE_THREADED)
+                return 1; // Makes debugging easier.
+
+            return GetOptimalThreadCount(loadingThreads, fileCount, Environment.ProcessorCount,
+                simultaneousFileOptions);
+        }
+
+        public static int GetOptimalThreadCount(int? loadingThreads, int? fileCount, int processorCount, ImportResultsSimultaneousFileOptions simultaneousFileOptions)
+        {
+            if (!loadingThreads.HasValue)
+            {
+                switch (simultaneousFileOptions)
+                {
+                    case ImportResultsSimultaneousFileOptions.one_at_a_time:
+                        loadingThreads = 1;
+                        break;
+
+                    case ImportResultsSimultaneousFileOptions.several: // Several is 1/4 logical processors (i.e. 2 for an i7)
+                        loadingThreads = Math.Max(2, processorCount / 4); // Min of 2, because you really expect more than 1
+                        break;
+
+                    case ImportResultsSimultaneousFileOptions.many: // Many is 1/2 logical processors (i.e. 4 for an i7)
+                        loadingThreads = Math.Max(2, processorCount / 2); // Min of 2, because you really expect more than 1
+                        break;
+                }
+                loadingThreads = Math.Min(MAX_PARALLEL_LOAD_FILES, loadingThreads.Value);
+                loadingThreads = GetBalancedThreadCount(loadingThreads.Value, fileCount);
+            }
+
+            return loadingThreads.Value;
+        }
+
+        private static int GetBalancedThreadCount(int loadingThreads, int? fileCount)
+        {
+            // If we know the file count, and the number of threads is greater than 2
+            // attempt to optimize load balancing
+            if (loadingThreads < 3 || !fileCount.HasValue)
+                return loadingThreads;
+
+            int files = fileCount.Value;
+            int fullCycles = files / loadingThreads;
+            int remainder = files % loadingThreads;
+            // While there is a remainder (i.e. files do not divide evenly into the avaliable threads)
+            // and reducing the thread count by 1 would not increase the full
+            while (remainder > 0)
+            {
+                int reducedThreads = loadingThreads - 1;
+                if (fullCycles != fileCount.Value / reducedThreads && fileCount.Value % reducedThreads != 0)
+                    break;
+                loadingThreads = reducedThreads;
+                remainder = fileCount.Value % loadingThreads;
+            }
+            return loadingThreads;
+        }
+
         /// <summary>
-        /// Add the given file to the queue of files to load.
+        /// Add the given files to the queue of files to load.
         /// </summary>
         public void Load(
             IList<DataFileReplicates> loadList,
@@ -123,11 +162,8 @@ namespace pwiz.Skyline.Model
             string documentFilePath,
             ChromatogramCache cacheRecalc,
             MultiFileLoadMonitor loadMonitor,
-            Action<ChromatogramCache, IProgressStatus> complete)
+            Action<IList<FileLoadCompletionAccumulator.Completion>> complete)
         {
-            // This may be called on multiple background loader threads simultaneously, but QueueWorker can handle it.
-            _worker.RunAsync(_threadCount, @"Load file");
-
             lock (this)
             {
                 // Find non-duplicate paths to load.
@@ -144,6 +180,11 @@ namespace pwiz.Skyline.Model
 
                 if (uniqueLoadList.Count == 0)
                     return;
+
+                int threadCount = GetOptimalThreadCount(_threadCountPreferred, uniqueLoadList.Count, _simultaneousFileOptions);
+                _worker.RunAsync(threadCount, @"Load file");
+
+                var accumulator = new FileLoadCompletionAccumulator(complete, threadCount, uniqueLoadList.Count);
 
                 // Add new paths to queue.
                 foreach (var loadItem in uniqueLoadList)
@@ -162,7 +203,7 @@ namespace pwiz.Skyline.Model
                         CacheRecalc = cacheRecalc,
                         Status = loadingStatus,
                         LoadMonitor = new SingleFileLoadMonitor(loadMonitor, loadItem.DataFile),
-                        Complete = complete
+                        Complete = accumulator.Complete
                     });
                 }
             }
@@ -258,6 +299,79 @@ namespace pwiz.Skyline.Model
             var loadingStatus = loadInfo.Status as ChromatogramLoadingStatus;
             if (loadingStatus != null)
                 loadingStatus.Transitions.Flush();
+        }
+    }
+
+    public class FileLoadCompletionAccumulator
+    {
+        public class Completion
+        {
+            public Completion(ChromatogramCache cache, IProgressStatus status)
+            {
+                Cache = cache;
+                Status = status;
+            }
+
+            public ChromatogramCache Cache { get; private set; }
+            public IProgressStatus Status { get; private set; }
+        }
+
+        private readonly QueueWorker<Completion> _completionWorker;
+        private readonly Action<IList<Completion>> _complete;
+        private readonly int _threadCount;
+        private readonly int _loadingCount;
+        private int _completedCount;
+        private int _consumedCount;
+        private List<Completion> _accumulatedCompletions;
+
+        public FileLoadCompletionAccumulator(Action<IList<Completion>> complete, int threadCount, int loadingCount)
+        {
+            _complete = complete;
+            _threadCount = threadCount;
+            _loadingCount = loadingCount;
+            // If there are multiple threads or even multiple files make committing
+            // completed caches asynchronous to the loading process. With multiple
+            // threads this will also commit only every time all threads complete a
+            // file.
+            if (_threadCount > 1 && _loadingCount > 1)
+            {
+                _completionWorker = new QueueWorker<Completion>(null, ConsumeCompletion);
+                _completionWorker.RunAsync(1, @"Commit loaded files");
+                _accumulatedCompletions = new List<Completion>();
+            }
+        }
+
+        private void ConsumeCompletion(Completion completion, int threadIndex)
+        {
+            _consumedCount++;
+            _accumulatedCompletions.Add(completion);
+            if (_consumedCount == _loadingCount || _accumulatedCompletions.Count == _threadCount)
+            {
+                _complete(_accumulatedCompletions);
+                _accumulatedCompletions.Clear();
+            }
+            // Report errors and cancellations as soon as possible
+            else if (!completion.Status.IsComplete)
+            {
+                _complete(new SingletonList<Completion>(completion));
+                // Add an empty completion, which will be ignored during batch
+                _accumulatedCompletions[_accumulatedCompletions.Count - 1] = new Completion(null, new ProgressStatus());
+            }
+        }
+
+        public void Complete(ChromatogramCache cache, IProgressStatus status)
+        {
+            var completedCount = Interlocked.Increment(ref _completedCount);
+            var completion = new Completion(cache, status);
+            if (_completionWorker == null)
+                _complete(new SingletonList<Completion>(completion));
+            else
+            {
+                _completionWorker.Add(completion);
+
+                if (completedCount == _loadingCount)
+                    _completionWorker.DoneAdding();
+            }
         }
     }
 
