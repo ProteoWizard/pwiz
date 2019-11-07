@@ -90,7 +90,7 @@ namespace pwiz.Skyline.Model.Results
             if (_totalSteps == 0)
                 return measured;
 
-            using (_msDataFileScanHelper = new MsDataFileScanHelper(SetScans, HandleLoadScanException))
+            using (_msDataFileScanHelper = new MsDataFileScanHelper(SetScans, HandleLoadScanException, true))
             {
                 //
                 // Avoid opening and re-opening raw files - make these the outer loop
@@ -104,7 +104,7 @@ namespace pwiz.Skyline.Model.Results
                 if (_progressMonitor != null)
                 {
                     _progressStatus = new ProgressStatus(filepaths.First().GetFileName());
-                    _progressStatus = _progressStatus.UpdatePercentCompleteProgress(_progressMonitor, _currentStep, _totalSteps); // Make that inital lag seem less dismal to the user
+                    _progressStatus = _progressStatus.UpdatePercentCompleteProgress(_progressMonitor, _currentStep, _totalSteps); // Make that initial lag seem less dismal to the user
                 }
                 foreach (var fp in filepaths)
                 {
@@ -350,17 +350,23 @@ namespace pwiz.Skyline.Model.Results
             double maxHighEnergyDriftOffsetMsec = UseHighEnergyOffset ? 2 : 0; // CONSIDER(bspratt): user definable? or dynamically set by looking at scan to scan drift delta? Or resolving power?
             foreach (var scan in _msDataFileScanHelper.MsDataSpectra.Where(scan => scan != null))
             {
-                if (!scan.IonMobility.HasValue || !scan.Mzs.Any())
-                    continue;
-                if (ms1IonMobilityBest.HasValue &&
-                    (scan.IonMobility.Mobility <
-                     ms1IonMobilityBest.Mobility - maxHighEnergyDriftOffsetMsec ||
-                     scan.IonMobility.Mobility >
-                     ms1IonMobilityBest.Mobility + maxHighEnergyDriftOffsetMsec))
-                    continue;
+                var isThreeArrayFormat = scan.IonMobilities != null;
+                if (!isThreeArrayFormat)
+                {
+                    if (!scan.IonMobility.HasValue || !scan.Mzs.Any())
+                        continue;
+                    if (ms1IonMobilityBest.HasValue &&
+                        (scan.IonMobility.Mobility <
+                         ms1IonMobilityBest.Mobility - maxHighEnergyDriftOffsetMsec ||
+                         scan.IonMobility.Mobility >
+                         ms1IonMobilityBest.Mobility + maxHighEnergyDriftOffsetMsec))
+                        continue;
+                }
 
                 // Get the total intensity for all transitions of current msLevel
                 double totalIntensity = 0;
+                double ionMobilityAtMaxIntensity = 0;
+                double maxIntensity3D = 0;
                 foreach (var t in transitions)
                 {
                     Assume.IsTrue(t.ProductMz.IsNegative == scan.NegativeCharge);  // It would be strange if associated scan did not have same polarity
@@ -375,12 +381,18 @@ namespace pwiz.Skyline.Model.Results
                     {
                         if (scan.Mzs[i] > mzHigh)
                             break;
-                        totalIntensity += scan.Intensities[i];
+                        var intensity = scan.Intensities[i];
+                        totalIntensity += intensity;
+                        if (isThreeArrayFormat && intensity > maxIntensity3D)
+                        {
+                            ionMobilityAtMaxIntensity = scan.IonMobilities[i];
+                            maxIntensity3D = intensity;
+                        }
                     }
                 }
                 if (maxIntensity < totalIntensity)
                 {
-                    ionMobilityValue = scan.IonMobility;
+                    ionMobilityValue = isThreeArrayFormat ? IonMobilityValue.GetIonMobilityValue(ionMobilityAtMaxIntensity, _msDataFileScanHelper.ScanProvider.IonMobilityUnits) : scan.IonMobility;
                     maxIntensity = totalIntensity;
                 }
             }

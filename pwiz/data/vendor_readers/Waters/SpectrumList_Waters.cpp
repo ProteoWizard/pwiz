@@ -266,7 +266,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
                 return result;
 
             auto mobilityArray = boost::make_shared<BinaryDataArray>();
-            getCombinedSpectrumData(ie.function, ie.block, mzArray, intensityArray, mobilityArray->data);
+            getCombinedSpectrumData(ie.function, ie.block, mzArray, intensityArray, mobilityArray->data, config_.ignoreZeroIntensityPoints);
             result->defaultArrayLength = mzArray.size();
 
             result->swapMZIntensityArrays(mzArray, intensityArray, MS_number_of_detector_counts); // Donate mass and intensity buffers to result vectors
@@ -428,7 +428,7 @@ PWIZ_API_DECL pwiz::analysis::Spectrum3DPtr SpectrumList_Waters::spectrum3d(doub
     return result;
 }
 
-PWIZ_API_DECL void SpectrumList_Waters::getCombinedSpectrumData(int function, int block, BinaryData<double>& mz, BinaryData<double>& intensity, BinaryData<double>& driftTime) const
+PWIZ_API_DECL void SpectrumList_Waters::getCombinedSpectrumData(int function, int block, BinaryData<double>& mz, BinaryData<double>& intensity, BinaryData<double>& driftTime, bool ignoreZeroIntensityPoints) const
 {
     MassLynxRawScanReader& cdc = rawdata_->GetCompressedDataClusterForBlock(function, block);
     vector<float>& imsMasses = imsMasses_;
@@ -449,20 +449,24 @@ PWIZ_API_DECL void SpectrumList_Waters::getCombinedSpectrumData(int function, in
 
         cdc.ReadScan(function, block, scan, imsMasses, imsIntensities);
 
-        for (int i = 0, end = imsMasses.size(); i < end; ++i, ++mzItr, ++intensityItr, ++driftTimeItr, ++currentPoints)
+        for (int i = 0, end = imsMasses.size(); i < end; ++i)
         {
-            if (currentPoints >= mz.size())
+            if (ignoreZeroIntensityPoints && imsIntensities[i] == 0)
+                continue;
+            if (currentPoints >= totalPoints)
             {
-                mz.resize(currentPoints * 1.5);
-                intensity.resize(mz.size());
-                driftTime.resize(mz.size());
+                totalPoints = currentPoints * 1.5;
+                mz.resize(totalPoints);
+                intensity.resize(totalPoints);
+                driftTime.resize(totalPoints);
                 mzItr = &mz[currentPoints];
                 intensityItr = &intensity[currentPoints];
                 driftTimeItr = &driftTime[currentPoints];
             }
-            *mzItr = imsMasses[i];
-            *intensityItr = imsIntensities[i];
-            *driftTimeItr = dt;
+            *mzItr++ = imsMasses[i];
+            *intensityItr++ = imsIntensities[i];
+            *driftTimeItr++ = dt;
+            ++currentPoints;
         }
     }
     mz.resize(currentPoints);
