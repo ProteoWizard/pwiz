@@ -829,7 +829,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to tmp.
+        ///   Looks up a localized string similar to The MS level used in the CV calculations. Defaults to &quot;products&quot; which will usually have lower CVs than precursors in methods like PRM and DIA..
         /// </summary>
         internal static string _refine_cv_ms_level {
             get {
