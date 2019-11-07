@@ -167,7 +167,7 @@
             // 
             // colIrt
             // 
-            this.colIrt.DataPropertyName = "Irt";
+            this.colIrt.DataPropertyName = "IrtDisplay";
             dataGridViewCellStyle3.Format = "N2";
             this.colIrt.DefaultCellStyle = dataGridViewCellStyle3;
             this.colIrt.FillWeight = 78.08542F;

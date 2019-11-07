@@ -20,6 +20,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -968,6 +969,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
     public class StandardPeptide : MeasuredPeptide
     {
         public double Irt { get; set; }
+
+        public string IrtDisplay => !double.IsNaN(Irt) ? string.Format(CultureInfo.CurrentCulture, @"{0:N2}", Irt) : string.Empty;
 
         public StandardPeptide()
         {
