@@ -71,6 +71,9 @@ namespace TestRunner
             "TestMs1Tutorial"
         };
 
+        // These tests are allowed to fail the total memory leak threshold, and extra iterations are not done to stabilize a spiky total memory distribution
+        public static string[] MutedTotalMemoryLeakTestNames = { "TestMs1Tutorial" };
+
         private static int GetLeakCheckIterations(TestInfo test)
         {
             return IsFixedLeakIterations && LeakExceptionTests.Contains(test.TestMethod.Name)
@@ -96,9 +99,9 @@ namespace TestRunner
             public double TotalHandles { get; set; }
             public double UserGdiHandles { get; set; }
 
-            public bool BelowThresholds(LeakTracking leakThresholds)
+            public bool BelowThresholds(LeakTracking leakThresholds, string testName)
             {
-                return TotalMemory < leakThresholds.TotalMemory &&
+                return (TotalMemory < leakThresholds.TotalMemory || MutedTotalMemoryLeakTestNames.Contains(testName)) &&
                        HeapMemory < leakThresholds.HeapMemory &&
                        ManagedMemory < leakThresholds.ManagedMemory &&
                        TotalHandles < leakThresholds.TotalHandles &&
@@ -124,17 +127,13 @@ namespace TestRunner
                 return listDelta.Average();
             }
 
-            public static string[] MutedLeakTestNames =  {"TestMs1Tutorial"};
-
             public string GetLeakMessage(LeakTracking leakThresholds, string testName)
             {
-                if (MutedLeakTestNames.Contains(testName))
-                    return null;
                 if (ManagedMemory >= leakThresholds.ManagedMemory)
                     return string.Format("!!! {0} LEAKED {1:0.#} Managed bytes\r\n", testName, ManagedMemory);
                 if (HeapMemory >= leakThresholds.HeapMemory)
                     return string.Format("!!! {0} LEAKED {1:0.#} Heap bytes\r\n", testName, HeapMemory);
-                if (TotalMemory >= leakThresholds.TotalMemory)
+                if (TotalMemory >= leakThresholds.TotalMemory && !MutedTotalMemoryLeakTestNames.Contains(testName))
                     return string.Format("!!! {0} LEAKED {1:0.#} bytes\r\n", testName, TotalMemory);
                 if (UserGdiHandles >= leakThresholds.UserGdiHandles)
                     return string.Format("!!! {0} HANDLE-LEAKED {1:0.#} User+GDI\r\n", testName, UserGdiHandles);
@@ -619,7 +618,7 @@ namespace TestRunner
                             // Stop accumulating points if all leak minimal values are below the threshold values.
                             var lastDeltas = LeakTracking.MeanDeltas(listValues);
                             minDeltas = minDeltas.HasValue ? minDeltas.Value.Min(lastDeltas) : lastDeltas;
-                            if (minDeltas.Value.BelowThresholds(LeakThresholds))
+                            if (minDeltas.Value.BelowThresholds(LeakThresholds, test.TestMethod.Name))
                             {
                                 passedIndex = passedIndex ?? i;
 
