@@ -23,6 +23,7 @@ namespace pwiz.Skyline.Model.Lib
     public class ExplicitPeakBounds : Immutable
     {
         public const double UNKNOWN_SCORE = double.NaN;
+        public static readonly ExplicitPeakBounds EMPTY = new ExplicitPeakBounds(0, 0, UNKNOWN_SCORE);
 
         public ExplicitPeakBounds(double startTime, double endTime, double score)
         {
@@ -56,6 +57,11 @@ namespace pwiz.Skyline.Model.Lib
                 hashCode = (hashCode * 397) ^ Score.GetHashCode();
                 return hashCode;
             }
+        }
+
+        public bool IsEmpty
+        {
+            get { return StartTime == 0 && EndTime == 0; }
         }
     }
 }

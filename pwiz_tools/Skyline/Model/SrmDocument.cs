@@ -511,6 +511,15 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public IEnumerable<LibKey> MoleculeLibKeys
+        {
+            get
+            {
+                return Molecules.SelectMany(
+                    node => node.TransitionGroups.Select(nodeGroup => nodeGroup.GetLibKey(node)));
+            }
+        }
+
         /// <summary>
         /// Return a list of <see cref="TransitionDocNode"/> of any kind
         /// </summary>
@@ -2028,7 +2037,6 @@ namespace pwiz.Skyline.Model
             var fileName = Path.GetFileNameWithoutExtension(docPath) + AuditLogList.EXT;
             return Path.Combine(directory, fileName);
         }
-       
 
         public void SerializeToFile(string tempName, string displayName, SkylineVersion skylineVersion, IProgressMonitor progressMonitor)
         {
@@ -2038,14 +2046,7 @@ namespace pwiz.Skyline.Model
                 Formatting = Formatting.Indented
             })
             {
-                writer.WriteStartDocument();
-                writer.WriteStartElement(@"srm_settings");
-                SerializeToXmlWriter(writer, skylineVersion, progressMonitor, new ProgressStatus(Path.GetFileName(displayName)));
-                writer.WriteEndElement();
-                writer.WriteEndDocument();
-                writer.Flush();
-                var hashingStream = (HashingStream) writer.BaseStream;
-                hash = hashingStream.Done();
+                hash = Serialize(writer, displayName, skylineVersion, progressMonitor);
             }
 
             var auditLogPath = GetAuditLogPath(displayName);
@@ -2054,6 +2055,17 @@ namespace pwiz.Skyline.Model
                 AuditLog?.WriteToFile(auditLogPath, hash);
             else if (File.Exists(auditLogPath))
                 Helpers.TryTwice(() => File.Delete(auditLogPath));
+        }
+
+        public string Serialize(XmlTextWriter writer, string displayName, SkylineVersion skylineVersion, IProgressMonitor progressMonitor)
+        {
+            writer.WriteStartDocument();
+            writer.WriteStartElement(@"srm_settings");
+            SerializeToXmlWriter(writer, skylineVersion, progressMonitor, new ProgressStatus(Path.GetFileName(displayName)));
+            writer.WriteEndElement();
+            writer.WriteEndDocument();
+            writer.Flush();
+            return ((HashingStream) writer.BaseStream)?.Done();
         }
 
         public XmlSchema GetSchema()

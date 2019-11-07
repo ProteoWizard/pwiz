@@ -629,7 +629,7 @@ namespace pwiz.Skyline.SettingsUI
                 precursorIonContextMenuItem.Enabled = chargesContextMenuItem.Enabled
                     = toolStripSeparator1.Enabled = toolStripSeparator2.Enabled = charge1Button.Enabled = charge2Button.Enabled
                     = toolStripSeparator11.Enabled = toolStripSeparator12.Enabled = toolStripSeparator13.Enabled
-                    = ranksContextMenuItem.Enabled = ionMzValuesContextMenuItem.Enabled
+                    = ranksContextMenuItem.Enabled = scoreContextMenuItem.Enabled = ionMzValuesContextMenuItem.Enabled
                     = observedMzValuesContextMenuItem.Enabled = duplicatesContextMenuItem.Enabled
                     = isSequenceLibrary;
 
@@ -679,6 +679,7 @@ namespace pwiz.Skyline.SettingsUI
                         }
                         adducts.AddRange(showAdducts.Where(a => charges.Contains(Math.Abs(a.AdductCharge)) && !adducts.Contains(a))); // And the unranked charges as well
 
+                        var spectrumInfo = _selectedLibrary.GetSpectra(_peptides[index].Key, null, LibraryRedundancy.best).FirstOrDefault();
                         var spectrumInfoR = new LibraryRankedSpectrumInfo(spectrum,
                                                                           transitionGroupDocNode.TransitionGroup.LabelType,
                                                                           transitionGroupDocNode,
@@ -688,21 +689,19 @@ namespace pwiz.Skyline.SettingsUI
                                                                           adducts,
                                                                           types,
                                                                           rankCharges,
-                                                                          rankTypes);
+                                                                          rankTypes,
+                                                                          (spectrumInfo?.SpectrumHeaderInfo as BiblioSpecSpectrumHeaderInfo)?.Score);
                         LibraryChromGroup libraryChromGroup = null;
-                        if (_showChromatograms)
+                        if (spectrumInfo != null && _showChromatograms)
                         {
-                            var spectrumInfo = _selectedLibrary.GetSpectra(_peptides[index].Key, null, LibraryRedundancy.best).FirstOrDefault();
-                            if (null != spectrumInfo)
-                            {
-                                libraryChromGroup = _selectedLibrary.LoadChromatogramData(spectrumInfo.SpectrumKey);
-                            }
+                            libraryChromGroup = _selectedLibrary.LoadChromatogramData(spectrumInfo.SpectrumKey);
                         }
                         GraphItem = new ViewLibSpectrumGraphItem(spectrumInfoR, transitionGroupDocNode.TransitionGroup, _selectedLibrary, pepInfo.Key)
                         {
                             ShowTypes = types,
                             ShowCharges = charges,
                             ShowRanks = Settings.Default.ShowRanks,
+                            ShowScores = Settings.Default.ShowLibraryScores,
                             ShowMz = Settings.Default.ShowIonMz,
                             ShowObservedMz = Settings.Default.ShowObservedMz,
                             ShowDuplicates = Settings.Default.ShowDuplicateIons,
@@ -909,6 +908,8 @@ namespace pwiz.Skyline.SettingsUI
             menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
             ranksContextMenuItem.Checked = set.ShowRanks;
             menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
+            scoreContextMenuItem.Checked = set.ShowLibraryScores;
+            menuStrip.Items.Insert(iInsert++, scoreContextMenuItem);
             ionMzValuesContextMenuItem.Checked = set.ShowIonMz;
             menuStrip.Items.Insert(iInsert++, ionMzValuesContextMenuItem);
             observedMzValuesContextMenuItem.Checked = set.ShowObservedMz;
@@ -1192,6 +1193,12 @@ namespace pwiz.Skyline.SettingsUI
         private void ranksContextMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ShowRanks = !Settings.Default.ShowRanks;
+            UpdateUI();
+        }
+
+        private void scoreContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowLibraryScores = !Settings.Default.ShowLibraryScores;
             UpdateUI();
         }
 

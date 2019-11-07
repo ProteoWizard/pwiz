@@ -424,7 +424,7 @@ namespace pwiz.Skyline.Model.Lib
                         buildState.ExtraMessage = biblioSpecLiteBuilder.AmbiguousMatchesMessage;
                     }
                     if (biblioSpecLiteBuilder.IrtStandard != null &&
-                        biblioSpecLiteBuilder.IrtStandard != IrtStandard.EMPTY)
+                        !biblioSpecLiteBuilder.IrtStandard.Name.Equals(IrtStandard.EMPTY.Name))
                     {
                         buildState.IrtStandard = biblioSpecLiteBuilder.IrtStandard;
                     }
@@ -741,22 +741,33 @@ namespace pwiz.Skyline.Model.Lib
         public abstract bool TryGetIonMobilityInfos(LibKey key, MsDataFileUri filePath, out IonMobilityAndCCS[] ionMobilities);
 
         /// <summary>
-        /// Attempts to get ion mobility information for all of the
+        /// Attempts to get ion mobility information for selected
         /// (sequence, charge) pairs identified from a specific file.
         /// </summary>
+        /// <param name="targetIons">A list of sequence, charge pairs</param>
         /// <param name="filePath">A file for which the ion mobility information is requested</param>
         /// <param name="ionMobilities">A list of ion mobility info, if successful</param>
         /// <returns>True if ion mobility information was retrieved successfully</returns>
-        public abstract bool TryGetIonMobilityInfos(MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities);
+        public abstract bool TryGetIonMobilityInfos(LibKey[] targetIons, MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities);
 
         /// <summary>
         /// Attempts to get ion mobility information for all of the
         /// (sequence, charge) pairs identified from a specific file by index.
         /// </summary>
+        /// <param name="targetIons">A list of sequence, charge pairs</param>
         /// <param name="fileIndex">Index of a file for which the ion mobility information is requested</param>
         /// <param name="ionMobilities">A list of ion mobility info, if successful</param>
         /// <returns>True if ion mobility information was retrieved successfully</returns>
-        public abstract bool TryGetIonMobilityInfos(int fileIndex, out LibraryIonMobilityInfo ionMobilities);
+        public abstract bool TryGetIonMobilityInfos(LibKey[] targetIons, int fileIndex, out LibraryIonMobilityInfo ionMobilities);
+
+        /// <summary>
+        /// Attempts to get ion mobility information for all of the
+        /// (sequence, charge) pairs identified from all files.
+        /// </summary>
+        /// <param name="targetIons">A list of sequence, charge pairs</param>
+        /// <param name="ionMobilities">A list of ion mobility info, if successful</param>
+        /// <returns>True if ion mobility information was retrieved successfully</returns>
+        public abstract bool TryGetIonMobilityInfos(LibKey[] targetIons, out LibraryIonMobilityInfo ionMobilities);
 
         /// <summary>
         /// Gets all of the spectrum information for a particular (sequence, charge) pair.  This
@@ -1073,14 +1084,21 @@ namespace pwiz.Skyline.Model.Lib
             return false;
         }
 
-        public override bool TryGetIonMobilityInfos(MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
+        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
         {
             // By default, no ion mobility information is available
             ionMobilities = null;
             return false;
         }
 
-        public override bool TryGetIonMobilityInfos(int fileIndex, out LibraryIonMobilityInfo ionMobilities)
+        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, int fileIndex, out LibraryIonMobilityInfo ionMobilities)
+        {
+            // By default, no ion mobility information is available
+            ionMobilities = null;
+            return false;
+        }
+
+        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, out LibraryIonMobilityInfo ionMobilities)
         {
             // By default, no ion mobility information is available
             ionMobilities = null;
@@ -1174,12 +1192,12 @@ namespace pwiz.Skyline.Model.Lib
 
     public sealed class LibraryRetentionTimes : IRetentionTimeProvider
     {
-        private readonly IDictionary<Target, Tuple<TimeSource, double[]>> _dictPeptideRetentionTimes;
+        private readonly TargetMap<Tuple<TimeSource, double[]>> _dictPeptideRetentionTimes;
 
         public LibraryRetentionTimes(string path, IDictionary<Target, Tuple<TimeSource, double[]>> dictPeptideRetentionTimes)
         {
             Name = path;
-            _dictPeptideRetentionTimes = dictPeptideRetentionTimes;
+            _dictPeptideRetentionTimes = new TargetMap<Tuple<TimeSource, double[]>>(dictPeptideRetentionTimes);
             if (_dictPeptideRetentionTimes.Count == 0)
             {
                 MinRt = MaxRt = 0;
@@ -1308,6 +1326,8 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         public string Name { get; private set; }
+
+        public bool IsEmpty { get { return _dictChargedPeptideDriftTimeInfos == null || _dictChargedPeptideDriftTimeInfos.Count == 0;} }
 
         /// <summary>
         /// Return the median measured CCS for spectra that were identified with a

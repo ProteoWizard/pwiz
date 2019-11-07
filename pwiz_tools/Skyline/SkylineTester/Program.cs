@@ -23,6 +23,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
+using SkylineTester.Properties;
 
 namespace SkylineTester
 {
@@ -37,6 +38,13 @@ namespace SkylineTester
         [STAThread]
         static void Main(string[] args)
         {
+            if (Settings.Default.SettingsUpgradeRequired)
+            {
+                Settings.Default.Upgrade();
+                Settings.Default.SettingsUpgradeRequired = false;
+                Settings.Default.Save();
+            }
+
             // The SkylineTester installation puts SkylineTester one directory too high.
             var nestedDirectory = Path.Combine(
                 Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "",

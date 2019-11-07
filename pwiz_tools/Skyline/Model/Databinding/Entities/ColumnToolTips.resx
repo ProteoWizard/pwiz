@@ -485,6 +485,9 @@ ion in the matching library spectrum.</value>
     <value>The name of a MS/MS spectral library, if a MS/MS spectral library
 spectrum is associated with the precursor ion.</value>
   </data>
+  <data name="LibraryProbabilityScore">
+    <value>The probability score assigned to this match in the input files used to build the spectral library.</value>
+  </data>
   <data name="LibraryRank">
     <value>The rank based on LibraryIntensity of this transition among all transitions
 allowed by the transition Filter settings, shown in the user interface as “(rank #)”.</value>
@@ -1269,6 +1272,9 @@ higher than the other extent.</value>
   <data name="InChiKey" xml:space="preserve">
     <value>Standardized molecular identifier</value>
   </data>
+  <data name="KEGG" xml:space="preserve">
+    <value>Standardized molecular identifier</value>
+  </data>
   <data name="SMILES" xml:space="preserve">
     <value>Standardized molecular identifier</value>
   </data>
@@ -1313,5 +1319,11 @@ higher than the other extent.</value>
   </data>
   <data name="AuditLogDetailRowId">
     <value>Id of the detailed message</value>
+  </data>
+  <data name="SampleId" xml:space="preserve">
+    <value>A free text identifier for referring to a sample (which may be shared among multiple files). Read from the "sample id" attribute in an imported result file</value>
+  </data>
+  <data name="InstrumentSerialNumber" xml:space="preserve">
+    <value>The instrument serial number read from an imported result file</value>
   </data>
 </root>

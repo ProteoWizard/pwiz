@@ -40,10 +40,17 @@ namespace pwiz.Skyline.Model.Results
         public long locationScanIds;
         // Version 13 file header addition
         public float ticArea;
+        // Version 14 file header addition
+        public int lenSampleId;
+        public int lenSerialNumber;
 
         // ReSharper disable LocalizableElement
         public static int GetStructSize(CacheFormatVersion formatVersion)
         {
+            if (formatVersion >= CacheFormatVersion.Fourteen)
+            {
+                return 60;
+            }
             if (formatVersion >= CacheFormatVersion.Thirteen)
             {
                 return 52;

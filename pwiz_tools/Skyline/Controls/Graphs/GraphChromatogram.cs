@@ -33,7 +33,6 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
@@ -221,6 +220,19 @@ namespace pwiz.Skyline.Controls.Graphs
             set { TabText = _nameChromatogramSet = value; }
         }
 
+
+        /// <summary>
+        /// We have to limit the number of chromatogram windows to conserve window handles - so when
+        /// a new one is desired, we simply update the contents of the oldest one. This preserves
+        /// layout, and while it may result in an out of order display it's at least easy to understand.
+        /// </summary>
+        public void ChangeChromatogram(string name)
+        {
+            NameSet = name;
+            _arrayChromInfo = null;
+            UpdateUI();
+        }
+
         public int CurveCount { get { return GraphPanes.Sum(pane=>GetCurves(pane).Count()); } }
 
         private SrmDocument DocumentUI { get { return _documentContainer.DocumentUI; } }
@@ -331,21 +343,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     Id = graphItem.TransitionNode.Id
                 });
             }
-            IScanProvider scanProvider;
-            var chorusUrl = FilePath as ChorusUrl;
-            if (null == chorusUrl)
-            {
-                var measuredResults = DocumentUI.Settings.MeasuredResults;
-                scanProvider = new ScanProvider(_documentContainer.DocumentFilePath, FilePath,
-                    chromatogramGroupInfo.Source, chromatogramGroupInfo.Times, transitions.ToArray(),
-                    measuredResults,
-                    () => measuredResults.LoadMSDataFileScanIds(FilePath));
-            }
-            else
-            {
-                scanProvider = new ChorusScanProvider(_documentContainer.DocumentFilePath, chorusUrl, 
-                    chromatogramGroupInfo.Source, chromatogramGroupInfo.Times, transitions.ToArray());
-            }
+            var measuredResults = DocumentUI.Settings.MeasuredResults;
+            IScanProvider scanProvider = new ScanProvider(_documentContainer.DocumentFilePath, FilePath,
+                chromatogramGroupInfo.Source, chromatogramGroupInfo.Times, transitions.ToArray(),
+                measuredResults,
+                () => measuredResults.LoadMSDataFileScanIds(FilePath));
             var e = new ClickedChromatogramEventArgs(
                 scanProvider,
                 transitionIndex, 
@@ -641,7 +643,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>
         /// Returns the file path for the selected file of the groups.
         /// </summary>
-        private MsDataFileUri FilePath
+        public MsDataFileUri FilePath
         {
             get
             {

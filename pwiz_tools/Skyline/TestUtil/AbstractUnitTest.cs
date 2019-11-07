@@ -162,6 +162,11 @@ namespace pwiz.SkylineTestUtil
                             if (!Directory.Exists(targetFolder))
                                 Directory.CreateDirectory(targetFolder);
 
+                            bool downloadFromS3 = Environment.GetEnvironmentVariable("SKYLINE_DOWNLOAD_FROM_S3") == "1";
+                            string s3hostname = @"skyline-perftest.s3-us-west-2.amazonaws.com";
+                            if (downloadFromS3)
+                                zipPath = zipPath.Replace(@"skyline.gs.washington.edu", s3hostname).Replace(@"skyline.ms", s3hostname);
+
                             WebClient webClient = new WebClient();
                             using (var fs = new FileSaver(zipFilePath))
                             {
@@ -235,7 +240,7 @@ namespace pwiz.SkylineTestUtil
             // Stop profiler if we are profiling.  The unit test will start profiling explicitly when it wants to.
             DotTraceProfile.Stop(true);
 
-            SecurityProtocolInitializer.Initialize(); // Enable maximum available HTTPS security level, esp. for Chorus
+            SecurityProtocolInitializer.Initialize(); // Enable maximum available HTTPS security level
 
 //            var log = new Log<AbstractUnitTest>();
 //            log.Info(TestContext.TestName + " started");

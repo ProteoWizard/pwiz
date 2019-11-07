@@ -162,6 +162,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return GetLocator(); }
         }
 
+        public string SampleId
+        {
+            get { return ChromFileInfo.SampleId; }
+        }
+
+        public string InstrumentSerialNumber
+        {
+            get { return ChromFileInfo.InstrumentSerialNumber; }
+        }
+
         public override ElementRef GetElementRef()
         {
             var sibling = ResultFileRef.PROTOTYPE.ChangeParent(Replicate.GetElementRef());

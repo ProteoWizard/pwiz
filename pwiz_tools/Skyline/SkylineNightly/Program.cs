@@ -21,6 +21,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using SkylineNightly.Properties;
 
 namespace SkylineNightly
 {
@@ -48,6 +49,13 @@ namespace SkylineNightly
         [STAThread]
         static void Main(string[] args)
         {
+            if (Settings.Default.SettingsUpgradeRequired)
+            {
+                Settings.Default.Upgrade();
+                Settings.Default.SettingsUpgradeRequired = false;
+                Settings.Default.Save();
+            }
+
             if (args.Length == 0)
             {
                 Application.EnableVisualStyles();

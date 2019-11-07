@@ -411,7 +411,12 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
             end = Math.Max(i, 0);
-
+            if (end == start - 1)
+            {
+                // With some chromatograms with only one point in them, it is possible to end up with 
+                // end before start.
+                end = start;
+            }
             // Make sure the final time interval contains at least one time.
             if (start > end)
                 throw new InvalidOperationException(string.Format(Resources.ChromDataSet_GetExtents_The_time_interval__0__to__1__is_not_valid, start, end));
@@ -429,9 +434,12 @@ namespace pwiz.Skyline.Model.Results
 
             }
             var firstChromData = _listChromData.First();
-            var firstPeak = new ChromDataPeak(firstChromData, firstChromData.RawPeaks.First());
-            ChromDataPeakList chromDataPeakList = new ChromDataPeakList(firstPeak, _listChromData);
-            _listPeakSets.Add(chromDataPeakList);
+            if (firstChromData.RawPeaks.Any())
+            {
+                var firstPeak = new ChromDataPeak(firstChromData, firstChromData.RawPeaks.First());
+                ChromDataPeakList chromDataPeakList = new ChromDataPeakList(firstPeak, _listChromData);
+                _listPeakSets.Add(chromDataPeakList);
+            }
         }
         
         /// <summary>

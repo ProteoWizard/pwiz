@@ -17,14 +17,17 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -239,28 +242,114 @@ namespace pwiz.SkylineTestData
             IsResultsState(OutPath, 3, 3, 27, output, true);
         }
 
-//        [TestMethod]
-//        public void ConsoleRefineConvertToSmallMoleculesTest()
-//        {
-//            // Exercise the code that helps match heavy labeled ion formulas with unlabled
-//            Assert.AreEqual("C5H12NO2S", BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula("C5H9H'3NO2S"));
-//            Assert.IsNull(BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(""));
-//            Assert.IsNull(BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(null));
-//
-//            InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.formulas);
-//        }
-//
-//        [TestMethod]
-//        public void ConsoleRefineConvertToSmallMoleculeMassesTest()
-//        {
-//            InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.masses_only);
-//        }
-//
-//        [TestMethod]
-//        public void ConsoleRefineConvertToSmallMoleculeMassesAndNamesTest()
-//        {
-//            InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.masses_and_names);
-//        }
+        [TestMethod]
+        public void ConsoleRefineConsistencyTest()
+        {
+            string cvCutoff = 20.ToString();
+            var args = new List<string>
+            {
+                CommandArgs.ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF.GetArgumentTextWithValue(cvCutoff)
+            };
+            var parts = new List<string>
+            {
+                PropertyNames.RefinementSettings_CVCutoff
+            };
+            // Remove all elements above the cv cutoff
+            TestFilesDir = new TestFilesDir(TestContext, @"TestFunctional/AreaCVHistogramTest.zip");
+            DocumentPath = InitRefineDocument("Rat_plasma.sky", 48, 0, 125, 125, 721);
+            OutPath = Path.Combine(Path.GetDirectoryName(DocumentPath) ?? string.Empty, "test.sky");
+            var output = Run(args.ToArray());
+            AssertEx.Contains(output, parts.ToArray());
+            IsDocumentState(OutPath, 48, 0, 3, 0, 3, 18, output);
+
+            // Normalize to medians and remove all elements above the cv cutoff
+            args.Add(CommandArgs.ARG_REFINE_CV_GLOBAL_NORMALIZE.GetArgumentTextWithValue(NormalizationMethod.EQUALIZE_MEDIANS.Name));
+            output = Run(args.ToArray());
+            parts.Add(PropertyNames.RefinementSettings_NormalizationMethod);
+            AssertEx.Contains(output, parts.ToArray());
+            IsDocumentState(OutPath, 48, 0, 10, 0, 10, 58);
+
+            // Make sure error is recorded when peptide have only 1 replicate
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineRefine.zip");
+            DocumentPath = InitRefineDocument("SRM_mini_single_replicate.sky", 1, 4, 37, 40, 338);
+            output = Run(CommandArgs.ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF.GetArgumentTextWithValue(cvCutoff));
+            AssertEx.Contains(output, "The document must contain at least 2 replicates to refine based on consistency.");
+        }
+
+        //        [TestMethod]
+        //        public void ConsoleRefineConvertToSmallMoleculesTest()
+        //        {
+        //            // Exercise the code that helps match heavy labeled ion formulas with unlabled
+        //            Assert.AreEqual("C5H12NO2S", BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula("C5H9H'3NO2S"));
+        //            Assert.IsNull(BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(""));
+        //            Assert.IsNull(BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(null));
+        //
+        //            InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.formulas);
+        //        }
+        //
+        //        [TestMethod]
+        //        public void ConsoleRefineConvertToSmallMoleculeMassesTest()
+        //        {
+        //            InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.masses_only);
+        //        }
+        //
+        //        [TestMethod]
+        //        public void ConsoleRefineConvertToSmallMoleculeMassesAndNamesTest()
+        //        {
+        //            InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.masses_and_names);
+        //        }
+
+        [TestMethod]
+        public void ConsoleChangePredictTranSettingsTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineRefine.zip");
+            DocumentPath = InitRefineDocument("SRM_mini_single_replicate.sky");
+            OutPath = Path.Combine(Path.GetDirectoryName(DocumentPath) ?? string.Empty, "test.sky");
+
+            Run(CommandArgs.ARG_REMOVE_ALL.ArgumentText);   // Remove results
+
+            DocumentPath = OutPath;
+            OutPath = Path.Combine(Path.GetDirectoryName(DocumentPath) ?? string.Empty, "test2.sky");
+
+            // Valid changes
+            string output = Run(CommandArgs.ARG_TRAN_PREDICT_CE.GetArgumentTextWithValue("SCIEX"));
+            AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullCollisionEnergy, "Thermo", "SCIEX");
+            IsDocumentUnchanged(output);
+            output = Run(CommandArgs.ARG_TRAN_PREDICT_CE.GetArgumentTextWithValue(CollisionEnergyList.ELEMENT_NONE));
+            AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullCollisionEnergy, "Thermo", CollisionEnergyList.ELEMENT_NONE);
+            IsDocumentUnchanged(output);
+            output = Run(CommandArgs.ARG_TRAN_PREDICT_DP.GetArgumentTextWithValue("SCIEX"));
+            AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullDeclusteringPotential, DeclusterPotentialList.ELEMENT_NONE, "SCIEX");
+            IsDocumentUnchanged(output);
+            output = Run(CommandArgs.ARG_TRAN_PREDICT_COV.GetArgumentTextWithValue("SCIEX"));
+            AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullCompensationVoltage, CompensationVoltageList.ELEMENT_NONE, "SCIEX");
+            IsDocumentUnchanged(output);
+            // Only None is possible for optimization libraries without setting one up
+            output = Run(CommandArgs.ARG_TRAN_PREDICT_OPTDB.GetArgumentTextWithValue(OptimizationLibraryList.ELEMENT_NONE));
+            AssertEx.Contains(output, "test2", Resources.CommandLine_LogNewEntries_Document_unchanged);
+            IsDocumentUnchanged(output);
+
+            // Invalid changes
+            ValidateInvalidValue(CommandArgs.ARG_TRAN_PREDICT_CE, Settings.Default.CollisionEnergyList);
+            ValidateInvalidValue(CommandArgs.ARG_TRAN_PREDICT_DP, Settings.Default.DeclusterPotentialList);
+            ValidateInvalidValue(CommandArgs.ARG_TRAN_PREDICT_COV, Settings.Default.CompensationVoltageList);
+            ValidateInvalidValue(CommandArgs.ARG_TRAN_PREDICT_OPTDB, Settings.Default.OptimizationLibraryList);
+        }
+
+        private void ValidateInvalidValue<TItem>(CommandArgs.Argument arg, SettingsListBase<TItem> list) where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            const string NO_VALUE = "NO VALUE";
+            string expected = string.Format(
+                Resources.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
+                NO_VALUE, arg.ArgumentText, CommandArgs.GetDisplayNames(list));
+            expected = expected.Substring(0, expected.IndexOf(@"None, ", StringComparison.Ordinal) + 6);
+            AssertEx.ThrowsException<CommandArgs.ValueInvalidException>(() => Run(arg.GetArgumentTextWithValue(NO_VALUE)), expected);
+        }
+
+        private void IsDocumentUnchanged(string output)
+        {
+            IsDocumentState(OutPath, _initProt, _initList, _initPep, _initMol, _initPrec, _initTran, output);
+        }
 
         [TestMethod]
         public void ConsoleChangeFilterSettingsTest()

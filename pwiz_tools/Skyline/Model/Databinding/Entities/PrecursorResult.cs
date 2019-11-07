@@ -248,12 +248,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
         private QuantificationResult GetQuantification()
         {
-            if (!Precursor.PrecursorConcentration.HasValue)
+            var calibrationCurveFitter = PeptideResult.GetCalibrationCurveFitter();
+            if (!calibrationCurveFitter.IsotopologResponseCurve)
             {
                 return null;
             }
-
-            var calibrationCurveFitter = PeptideResult.GetCalibrationCurveFitter();
             return calibrationCurveFitter.GetPrecursorQuantificationResult(GetResultFile().Replicate.ReplicateIndex,
                 Precursor.DocNode);
         }

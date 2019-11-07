@@ -405,7 +405,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
 
         public override bool TryGetLibInfo(LibKey key, out SpectrumHeaderInfo libInfo)
         {
-            libInfo = Contains(key) ? new BiblioSpecSpectrumHeaderInfo(Name, 1) : null;
+            libInfo = Contains(key) ? new BiblioSpecSpectrumHeaderInfo(Name, 1, null, null) : null;
             return libInfo != null;
         }
 
@@ -489,13 +489,19 @@ namespace pwiz.Skyline.Model.Lib.Midas
             return false;
         }
 
-        public override bool TryGetIonMobilityInfos(MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
+        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
         {
             ionMobilities = null;
             return false;
         }
 
-        public override bool TryGetIonMobilityInfos(int fileIndex, out LibraryIonMobilityInfo ionMobilities)
+        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, int fileIndex, out LibraryIonMobilityInfo ionMobilities)
+        {
+            ionMobilities = null;
+            return false;
+        }
+
+        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, out LibraryIonMobilityInfo ionMobilities)
         {
             ionMobilities = null;
             return false;

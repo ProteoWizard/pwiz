@@ -24,6 +24,7 @@ using System.Text;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Model;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
@@ -205,9 +206,68 @@ namespace pwiz.SkylineTest
         /// Makes sure nobody accidentally checked in a change to <see cref="ParallelEx.SINGLE_THREADED"/>.
         /// </summary>
         [TestMethod]
-        public void TestParallelExNotSingleThreaded()
+        public void ParallelExNotSingleThreadedTest()
         {
             Assert.IsFalse(ParallelEx.SINGLE_THREADED);
         }
+
+        [TestMethod]
+        public void OptimalThreadCountTest()
+        {
+            // Just get out if ParallelEx.SINGLE_THREADED let the ParallelExNotSingleThreadedTest do the work
+            // of telling the developer. Too confusing to decypher why this test would be failing
+            if (ParallelEx.SINGLE_THREADED)
+                return;
+            // Make sure an explicit number of threads just returns that number of threads
+            Assert.AreEqual(4, MultiFileLoader.GetOptimalThreadCount(4, null, MultiFileLoader.ImportResultsSimultaneousFileOptions.one_at_a_time));
+            Assert.AreEqual(4, MultiFileLoader.GetOptimalThreadCount(4, null, MultiFileLoader.ImportResultsSimultaneousFileOptions.several));
+            Assert.AreEqual(4, MultiFileLoader.GetOptimalThreadCount(4, null, MultiFileLoader.ImportResultsSimultaneousFileOptions.many));
+
+            // i7 4-core
+            int processors = 8;
+            Assert.AreEqual(1, MultiFileLoader.GetOptimalThreadCount(null, 6, processors, MultiFileLoader.ImportResultsSimultaneousFileOptions.one_at_a_time));
+            Assert.AreEqual(processors/4, MultiFileLoader.GetOptimalThreadCount(null, 6, processors, MultiFileLoader.ImportResultsSimultaneousFileOptions.several));
+            Assert.AreEqual(processors/2, MultiFileLoader.GetOptimalThreadCount(null, null, processors, MultiFileLoader.ImportResultsSimultaneousFileOptions.many));
+            //   Load balancing 6 files into 2 cycles of 3
+            Assert.AreEqual(3, MultiFileLoader.GetOptimalThreadCount(null, 6, 8, MultiFileLoader.ImportResultsSimultaneousFileOptions.many));
+            // i7 6-core
+            processors = 12;
+            Assert.AreEqual(processors/4, MultiFileLoader.GetOptimalThreadCount(null, null, processors, MultiFileLoader.ImportResultsSimultaneousFileOptions.several));
+            Assert.AreEqual(processors/2, MultiFileLoader.GetOptimalThreadCount(null, null, processors, MultiFileLoader.ImportResultsSimultaneousFileOptions.many));
+            //   Load balancing 8 files into 2 cycles of 4
+            Assert.AreEqual(4, MultiFileLoader.GetOptimalThreadCount(null, 8, processors, MultiFileLoader.ImportResultsSimultaneousFileOptions.many));
+            // Xeon 24-core
+            processors = 48;
+            Assert.AreEqual(Math.Min(processors/4, MultiFileLoader.MAX_PARALLEL_LOAD_FILES),
+                MultiFileLoader.GetOptimalThreadCount(null, null, processors, MultiFileLoader.ImportResultsSimultaneousFileOptions.several));
+            Assert.AreEqual(Math.Min(processors/2, MultiFileLoader.MAX_PARALLEL_LOAD_FILES),
+                MultiFileLoader.GetOptimalThreadCount(null, null, processors, MultiFileLoader.ImportResultsSimultaneousFileOptions.many));
+            // Load balancing
+            Assert.AreEqual(MultiFileLoader.MAX_PARALLEL_LOAD_FILES/2 + 1,
+                MultiFileLoader.GetOptimalThreadCount(null, MultiFileLoader.MAX_PARALLEL_LOAD_FILES+2, processors, MultiFileLoader.ImportResultsSimultaneousFileOptions.many));
+        }
+
+        [TestMethod]
+        public void ArrayUtilSortTest()
+        {
+            var arrayBase = new[] {4, 2, 1, 3, 5};
+            int[] array2 = new int[arrayBase.Length];
+            int[] array3 = new int[arrayBase.Length];
+            int[] array4 = new int[arrayBase.Length];
+            for (int i = 0; i < arrayBase.Length; i++)
+            {
+                array2[i] = arrayBase[i];
+                array3[i] = arrayBase[i];
+                array4[i] = arrayBase[i];
+            }
+            int[] sortIndexes;
+            ArrayUtil.Sort(arrayBase, out sortIndexes);
+            AssertEx.AreEqualDeep(new[] {2, 1, 3, 0, 4}, sortIndexes);
+            ArrayUtil.Sort(array2, array3, array4);
+            AssertEx.AreEqualDeep(arrayBase, array2);
+            AssertEx.AreEqualDeep(arrayBase, array3);
+            AssertEx.AreEqualDeep(arrayBase, array4);
+        }
+
     }
 }
