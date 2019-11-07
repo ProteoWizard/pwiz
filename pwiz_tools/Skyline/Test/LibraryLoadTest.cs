@@ -202,6 +202,12 @@ namespace pwiz.SkylineTest
                 SpectrumPeaksInfo peaksInfo;
                 Assert.IsTrue(lib.TryLoadSpectrum(key, out peaksInfo));
                 Assert.IsTrue(peaksInfo.Peaks.Length >= minPeaks);
+                var infoNist = info as NistSpectrumHeaderInfo;
+                if (infoNist != null)
+                {
+                    Assert.AreEqual(80.51, infoNist.RT.Value);
+                }
+
                 if (fragmentAnnotations != null)
                 {
                     for (var p = 0; p < peaksInfo.Peaks.Length; p++)
@@ -254,7 +260,7 @@ namespace pwiz.SkylineTest
         public const string TEXT_LIB_YEAST_NIST1 =
             "Name: QQGPLEPTVGNSTAITEER/2\n" +
             "MW: 2028.012\n" +
-            "Comment: Spec=Consensus Pep=Tryptic Fullname=K.QQGPLEPTVGNSTAITEER.R/2 Mods=0 Parent=1014.006 Inst=it Mz_diff=0.264 Mz_exact=1014.0062 Mz_av=1014.596 Protein=\"gi|6319311|ref|NP_009394.1| Fun14p [Saccharomyces cerevisiae]; gi|349745|gb|AAC04950.1| Fun14p [Saccharomyces cerevisiae]; gi|45269305|gb|AAS56033.1| YAL008W [Saccharomyces cerevisiae]; gi|629999|pir||S43447 FUN14 protein - yeast (Saccharomyces cerevisiae); gi|731265|sp|P18411|YAA8_YEAST Hypothetical 22.1 kDa protein in SPO7-ERP2 intergenic region\" Pseq=1 Organism=\"yeast\" Se=5^M1:sc=51.65/0,td=49.4/0,sr=24.94/0,sd=49.4/0,bs=24.94,bd=49.4^X6:ex=2.9e-011/8e-006,td=1.77e+011/1.324e+011,sd=0/0,hs=57.85/5.033,bs=4.9e-012,b2=5.9e-012,bd=1.61e+011^O5:ex=2.69e-006/1.486e-005,td=1.86e+007/1.956e+008,pr=2.89e-010/1.772e-009,bs=9.33e-008,b2=1.11e-007,bd=5.36e+008^S1:sc=3.16/0,pb=0.9994/0,dc=0.45/0,ps=454.9/0,pr=1/0,bs=0.9994,bd=0.45^P4:sc=27.4/3,dc=18.9/2.5,ps=3.43/0.275,bs=0 Sample=8/cbs00174_001_01_cam,1,1/cbs00174_001_02_cam,1,1/cbs00174_01_06_cam,1,1/cbs00174_01_07_cam,0,1/cbs00174_01_10_cam,1,1/cbs00175_02_05_cam,0,1/cbs00175_02_06_cam,1,1/yeast_comp12vs12standscx_cam,1,1 Nreps=6/9 Missing=0.0630/0.0510 Parent_med=1014.21/0.34 Max2med_orig=629.5/170.9 Dotfull=0.861/0.032 Dot_cons=0.936/0.042 Unassign_all=0.086 Unassigned=0.017 Dotbest=0.94 Flags=0,0,2 Naa=19 DUScorr=10/2/2.9 Dottheory=0.93 Pfin=6.1e+013 Probcorr=20 Tfratio=1.7e+010 Pfract=0.17\n" +
+            "Comment: Spec=Consensus Pep=Tryptic Fullname=K.QQGPLEPTVGNSTAITEER.R/2 Mods=0 Parent=1014.006 Inst=it Mz_diff=0.264 Mz_exact=1014.0062 Mz_av=1014.596 Protein=\"gi|6319311|ref|NP_009394.1| Fun14p [Saccharomyces cerevisiae]; gi|349745|gb|AAC04950.1| Fun14p [Saccharomyces cerevisiae]; gi|45269305|gb|AAS56033.1| YAL008W [Saccharomyces cerevisiae]; gi|629999|pir||S43447 FUN14 protein - yeast (Saccharomyces cerevisiae); gi|731265|sp|P18411|YAA8_YEAST Hypothetical 22.1 kDa protein in SPO7-ERP2 intergenic region\" Pseq=1 Organism=\"yeast\" Se=5^M1:sc=51.65/0,td=49.4/0,sr=24.94/0,sd=49.4/0,bs=24.94,bd=49.4^X6:ex=2.9e-011/8e-006,td=1.77e+011/1.324e+011,sd=0/0,hs=57.85/5.033,bs=4.9e-012,b2=5.9e-012,bd=1.61e+011^O5:ex=2.69e-006/1.486e-005,td=1.86e+007/1.956e+008,pr=2.89e-010/1.772e-009,bs=9.33e-008,b2=1.11e-007,bd=5.36e+008^S1:sc=3.16/0,pb=0.9994/0,dc=0.45/0,ps=454.9/0,pr=1/0,bs=0.9994,bd=0.45^P4:sc=27.4/3,dc=18.9/2.5,ps=3.43/0.275,bs=0 Sample=8/cbs00174_001_01_cam,1,1/cbs00174_001_02_cam,1,1/cbs00174_01_06_cam,1,1/cbs00174_01_07_cam,0,1/cbs00174_01_10_cam,1,1/cbs00175_02_05_cam,0,1/cbs00175_02_06_cam,1,1/yeast_comp12vs12standscx_cam,1,1 Nreps=6/9 Missing=0.0630/0.0510 Parent_med=1014.21/0.34 Max2med_orig=629.5/170.9 Dotfull=0.861/0.032 Dot_cons=0.936/0.042 Unassign_all=0.086 Unassigned=0.017 Dotbest=0.94 Flags=0,0,2 Naa=19 DUScorr=10/2/2.9 Dottheory=0.93 Pfin=6.1e+013 Probcorr=20 Tfratio=1.7e+010 Pfract=0.17 RetentionTime=4830.6\n" +
             "Num peaks: 178\n" +
             "304.2\t205\t\"y2/0.04,b6-46^2/0.04 6/6 0.5\"\n" +
             "314.2\t39\t\"b3/0.06 4/4 0.1\"\n" +
@@ -438,7 +444,7 @@ namespace pwiz.SkylineTest
         public const string TEXT_LIB_YEAST_NIST2 =
             "Name: IPSAIHLQISNK/2\n" +
             "MW: 1321.772\n" +
-            "Comment: Spec=Consensus Pep=Tryptic Fullname=R.IPSAIHLQISNK.S/2 Mods=0 Parent=660.886 Inst=it Mz_diff=0.114 Mz_exact=660.8859 Mz_av=661.285 Protein=\"gi|171865|gb|AAC04947.1| Mdm10p: Mitochondria outer membrane protein [Saccharomyces cerevisiae]\" Pseq=2 Organism=\"yeast\" Se=3^X2:ex=0.14/0.14,td=1e+009/1e+009,sd=0/0,hs=37.2/18,bs=4.9e-010,b2=0.28,bd=2e+009^O1:ex=2.29e-006/0,td=2.19e+007/0,pr=2.89e-010/0,bs=2.29e-006,bd=2.19e+007^P1:sc=28.8/0,dc=21.2/0,ps=3.68/0,bs=0 Sample=4/cbs00174_001_01_cam,0,1/cbs00174_01_07_cam,1,1/cbs00175_02_01_cam,1,1/yeast_ffey1_none,0,1 Nreps=2/4 Missing=0.1592/0.0033 Parent_med=661.00/0.23 Max2med_orig=506.6/251.6 Dotfull=0.617/0.000 Dot_cons=0.857/0.002 Unassign_all=0.336 Unassigned=0.422 Dotbest=0.86 Flags=0,0,0 Naa=12 DUScorr=5.3/0.17/2.9 Dottheory=0.92 Pfin=1.9e+013 Probcorr=1 Tfratio=1e+009 Pfract=0\n" +
+            "Comment: Spec=Consensus Pep=Tryptic Fullname=R.IPSAIHLQISNK.S/2 Mods=0 Parent=660.886 Inst=it Mz_diff=0.114 Mz_exact=660.8859 Mz_av=661.285 Protein=\"gi|171865|gb|AAC04947.1| Mdm10p: Mitochondria outer membrane protein [Saccharomyces cerevisiae]\" Pseq=2 Organism=\"yeast\" Se=3^X2:ex=0.14/0.14,td=1e+009/1e+009,sd=0/0,hs=37.2/18,bs=4.9e-010,b2=0.28,bd=2e+009^O1:ex=2.29e-006/0,td=2.19e+007/0,pr=2.89e-010/0,bs=2.29e-006,bd=2.19e+007^P1:sc=28.8/0,dc=21.2/0,ps=3.68/0,bs=0 Sample=4/cbs00174_001_01_cam,0,1/cbs00174_01_07_cam,1,1/cbs00175_02_01_cam,1,1/yeast_ffey1_none,0,1 Nreps=2/4 Missing=0.1592/0.0033 Parent_med=661.00/0.23 Max2med_orig=506.6/251.6 Dotfull=0.617/0.000 Dot_cons=0.857/0.002 Unassign_all=0.336 Unassigned=0.422 Dotbest=0.86 Flags=0,0,0 Naa=12 DUScorr=5.3/0.17/2.9 Dottheory=0.92 Pfin=1.9e+013 Probcorr=1 Tfratio=1e+009 Pfract=0 RetentionTime=4830.6\n" +
             "Num peaks: 106\n" +
             "280.3\t213\t\"b3-18*/0.13 2/2 2.8\"\n" +
             "295.1\t270\t\"y5^2/-0.07 2/2 1.7\"\n" +
@@ -550,7 +556,7 @@ namespace pwiz.SkylineTest
         public const string TEXT_LIB_YEAST_NIST3 =
             "Name: NSTDIPLQDATETYR/2\n" +
             "MW: 1724.827\n" +
-            "Comment: Spec=Consensus Pep=Tryptic Fullname=R.NSTDIPLQDATETYR.Q/2 Mods=0 Parent=862.413 Inst=it Mz_diff=0.307 Mz_exact=862.4134 Mz_av=862.915 Protein=\"gi|171865|gb|AAC04947.1| Mdm10p: Mitochondria outer membrane protein [Saccharomyces cerevisiae]\" Pseq=2 Organism=\"yeast\" Se=3^X4:ex=3.95e-007/8.997e-006,td=2.05e+007/1.367e+007,sd=0/0,hs=45.25/3.475,bs=2e-008,b2=3.9e-007,bd=3.95e+007^O4:ex=2.195e-005/1.595e-005,td=2.29e+006/1.78e+007,pr=2.945e-009/2.577e-009,bs=6.97e-007,b2=2.05e-005,bd=7.17e+007^P4:sc=31.1/2.775,dc=21.45/2.2,ps=3.705/0.2425,bs=0 Sample=7/cbs00174_001_01_cam,0,1/cbs00174_01_06_cam,0,1/cbs00174_01_10_cam,1,1/cbs00175_02_01_cam,1,1/cbs00175_02_02_cam,0,1/cbs00175_02_05_cam,0,1/cbs00175_02_06_cam,2,2 Nreps=4/8 Missing=0.1111/0.0353 Parent_med=862.72/0.06 Max2med_orig=758.8/183.5 Dotfull=0.858/0.014 Dot_cons=0.913/0.024 Unassign_all=0.121 Unassigned=0.055 Dotbest=0.89 Flags=0,0,0 Naa=15 DUScorr=10/1.4/2.9 Dottheory=0.97 Pfin=9.3e+014 Probcorr=1 Tfratio=1.4e+010 Pfract=0\n" +
+            "Comment: Spec=Consensus Pep=Tryptic Fullname=R.NSTDIPLQDATETYR.Q/2 Mods=0 Parent=862.413 Inst=it Mz_diff=0.307 Mz_exact=862.4134 Mz_av=862.915 Protein=\"gi|171865|gb|AAC04947.1| Mdm10p: Mitochondria outer membrane protein [Saccharomyces cerevisiae]\" Pseq=2 Organism=\"yeast\" Se=3^X4:ex=3.95e-007/8.997e-006,td=2.05e+007/1.367e+007,sd=0/0,hs=45.25/3.475,bs=2e-008,b2=3.9e-007,bd=3.95e+007^O4:ex=2.195e-005/1.595e-005,td=2.29e+006/1.78e+007,pr=2.945e-009/2.577e-009,bs=6.97e-007,b2=2.05e-005,bd=7.17e+007^P4:sc=31.1/2.775,dc=21.45/2.2,ps=3.705/0.2425,bs=0 Sample=7/cbs00174_001_01_cam,0,1/cbs00174_01_06_cam,0,1/cbs00174_01_10_cam,1,1/cbs00175_02_01_cam,1,1/cbs00175_02_02_cam,0,1/cbs00175_02_05_cam,0,1/cbs00175_02_06_cam,2,2 Nreps=4/8 Missing=0.1111/0.0353 Parent_med=862.72/0.06 Max2med_orig=758.8/183.5 Dotfull=0.858/0.014 Dot_cons=0.913/0.024 Unassign_all=0.121 Unassigned=0.055 Dotbest=0.89 Flags=0,0,0 Naa=15 DUScorr=10/1.4/2.9 Dottheory=0.97 Pfin=9.3e+014 Probcorr=1 Tfratio=1.4e+010 Pfract=0 RetentionTime=4830.6\n" +
             "Num peaks: 150\n" +
             "268.2\t51\t\"? 4/4 0.2\"\n" +
             "285.2\t52\t\"y4^2/0.56,b3-18/0.08 4/4 0.2\"\n" +
@@ -706,6 +712,7 @@ namespace pwiz.SkylineTest
         public const string TEXT_LIB_YEAST_NIST4 =
             "Name: VLHNFLTTPSK/2\n" +
             "MW: 1257.708\n" +
+            "RetentionTime: 4830.6\n" + // 80.51 minutes
             "Comment: Spec=Consensus Pep=Tryptic Fullname=R.VLHNFLTTPSK.F/2 Mods=0 Parent=628.854 Inst=it Mz_diff=0.026 Mz_exact=628.8541 Mz_av=629.242 Protein=\"gi|171865|gb|AAC04947.1| Mdm10p: Mitochondria outer membrane protein [Saccharomyces cerevisiae]\" Pseq=4 Organism=\"yeast\" Se=3^X2:ex=0.017585/0.01742,td=759.3/710.7,sd=0/0,hs=27.45/5.15,bs=0.00017,b2=0.035,bd=1470^O1:ex=0.00966/0,td=5180/0,pr=1.87e-006/0,bs=0.00966,bd=5180^P1:sc=19.2/0,dc=12.3/0,ps=2.7/0,bs=0 Sample=1/cbs00174_001_01_cam,2,2 Nreps=2/5 Missing=0.2237/0.0377 Parent_med=628.88/0.08 Max2med_orig=110.1/36.0 Dotfull=0.693/0.000 Dot_cons=0.846/0.036 Unassign_all=0.331 Unassigned=0.238 Dotbest=0.88 Flags=0,0,0 Naa=11 DUScorr=10/0.17/1.7 Dottheory=0.95 Pfin=3.1e+007 Probcorr=1 Tfratio=1.2e+005 Pfract=0\n" +
             "Num peaks: 113\n" +
             "213.1\t283\t\"b2/-0.05 2/2 1.9\"\n" +
@@ -850,6 +857,7 @@ namespace pwiz.SkylineTest
             "Synon: N,N-Dihydroxyethylglycine\n" +
             "Synon: NSC 7342\n" +
             "Ion_mode: P\n" +
+            "RetentionTimeMins: 80.51\n" + // 4830.6 seconds
             "PrecursorMZ: 164.0917\n" +
             "Precursor_type: [M+H]+\n" +
             "Collision_energy: 23V\n" +

@@ -864,6 +864,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        [Track]
         public PeptideUniquenessConstraint PeptideUniqueness { get; private set; }
 
         #region Property change methods
@@ -2054,14 +2055,14 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// Retrieve library ion mobility info for this particular file, if any
         /// </summary>
-        private LibraryIonMobilityInfo GetLibraryDriftTimesForFilePath(MsDataFileUri filePath)
+        private LibraryIonMobilityInfo GetLibraryDriftTimesForFilePath(LibKey[] targetIons, MsDataFileUri filePath)
         {
             foreach (var lib in _libraries)
             {
                 // Only one of the available libraries may claim ownership of the file
                 // in question.
                 LibraryIonMobilityInfo ionMobilities;
-                if (lib != null && lib.TryGetIonMobilityInfos(filePath, out ionMobilities))
+                if (lib != null && lib.TryGetIonMobilityInfos(targetIons, filePath, out ionMobilities))
                 {
                     return ionMobilities; // Found a library for this file in particular
                 }
@@ -2072,18 +2073,15 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// Combine ion mobility info from all lib and sub-libs into a single dict
         /// </summary>
-        private Dictionary<LibKey, List<IonMobilityAndCCS>> GetAllLibraryIonMobilities()
+        private Dictionary<LibKey, List<IonMobilityAndCCS>> GetAllLibraryIonMobilities(LibKey[] targetIons)
         {
             var ionMobilitiesDict = new Dictionary<LibKey, List<IonMobilityAndCCS>>();
             foreach (var lib in _libraries.Where(l => l != null))
             {
                 // Get drift times for all files in each library
                 LibraryIonMobilityInfo ionMobilities;
-                for (int i = 0; lib.TryGetIonMobilityInfos(i, out ionMobilities); i++) // Returns false when i> internal list length
+                if (lib.TryGetIonMobilityInfos(targetIons, out ionMobilities) && ionMobilities != null) 
                 {
-                    if (ionMobilities == null)
-                        continue;
-
                     foreach (var dt in ionMobilities.GetIonMobilityDict())
                     {
                         List<IonMobilityAndCCS> listTimes;
@@ -2099,12 +2097,13 @@ namespace pwiz.Skyline.Model.DocSettings
             return ionMobilitiesDict;
         }
 
-        public bool HasAnyLibraryIonMobilities()
+        public bool HasAnyLibraryIonMobilities(IEnumerable<LibKey> targetIons)
         {
+            var targets = targetIons?.ToArray();
             foreach (var lib in _libraries.Where(l => l != null))
             {
                 // Get ION MOBILITIES for all files in each library
-                for (int i = 0; lib.TryGetIonMobilityInfos(i, out var ionMobilities); i++) // Returns false when i> internal list length
+                for (int i = 0; lib.TryGetIonMobilityInfos(targets, i, out var ionMobilities); i++) // Returns false when i> internal list length
                 {
                     if (ionMobilities != null  && ionMobilities.GetIonMobilityDict().Any())
                     {
@@ -2123,18 +2122,18 @@ namespace pwiz.Skyline.Model.DocSettings
         /// shared some kind of common interface so there is guaranteed consistent behavior around how we pick from
         /// other libraries when the ostensibly correct library doesn't have values we need
         /// </summary>
-        public bool TryGetDriftTimeInfos(MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
+        public bool TryGetDriftTimeInfos(LibKey[] targetIons, MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
         {
             Assume.IsTrue(IsLoaded);
             // Get driftimes from library for this file, if any
-            ionMobilities = GetLibraryDriftTimesForFilePath(filePath);
+            ionMobilities = GetLibraryDriftTimesForFilePath(targetIons, filePath);
             var resultDict = ionMobilities == null ?
                 new Dictionary<LibKey, IonMobilityAndCCS[]>() :
                 new Dictionary<LibKey, IonMobilityAndCCS[]>(ionMobilities.GetIonMobilityDict());
             // Note initial findings
             var foundDictKeys = new HashSet<LibKey>(resultDict.Keys); 
             // Look at all available libraries and sublibraries, use them to backfill any potentially missing drift time info 
-            foreach (var im in GetAllLibraryIonMobilities().Where(kvp => !foundDictKeys.Contains(kvp.Key)))
+            foreach (var im in GetAllLibraryIonMobilities(targetIons).Where(kvp => !foundDictKeys.Contains(kvp.Key)))
             {
                 resultDict.Add(im.Key, im.Value.ToArray());
             }

@@ -21,8 +21,10 @@ using System;
 using System.ComponentModel;
 using System.Linq;
 using pwiz.Common.Chemistry;
+using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
@@ -31,13 +33,16 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
+    [InvariantDisplayName(nameof(PrecursorResult))]
     [AnnotationTarget(AnnotationDef.AnnotationTarget.precursor_result)]
     public class PrecursorResult : Result
     {
         private readonly CachedValue<TransitionGroupChromInfo> _chromInfo;
+        private readonly CachedValue<QuantificationResult> _quantificationResult;
         public PrecursorResult(Precursor precursor, ResultFile file) : base(precursor, file)
         {
             _chromInfo = CachedValue.Create(DataSchema, ()=>GetResultFile().FindChromInfo(precursor.DocNode.Results));
+            _quantificationResult = CachedValue.Create(DataSchema, GetQuantification);
         }
 
         [HideWhen(AncestorOfType = typeof(Precursor))]
@@ -132,7 +137,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     return null;
                 }
-                return SrmDocument.GetCompensationVoltage(Precursor.Peptide.DocNode, Precursor.DocNode, ChromInfo.OptimizationStep, covRegression.TuneLevel);
+                return SrmDocument.GetCompensationVoltage(Precursor.Peptide.DocNode, Precursor.DocNode, null, ChromInfo.OptimizationStep, covRegression.TuneLevel);
             }
         }
 
@@ -161,6 +166,25 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public string IonMobilityUnits { get { return IonMobilityValue.GetUnitsString(ChromInfo.IonMobilityInfo.IonMobilityUnits); } }
 
+        [ChildDisplayName("Precursor{0}")]
+        public LinkValue<QuantificationResult> PrecursorQuantification
+        {
+            get
+            {
+                return new LinkValue<QuantificationResult>(_quantificationResult.Value, (sender, args) =>
+                {
+                    SkylineWindow skylineWindow = DataSchema.SkylineWindow;
+                    if (skylineWindow != null)
+                    {
+                        skylineWindow.ShowCalibrationForm();
+                        skylineWindow.SelectedResultsIndex = GetResultFile().Replicate.ReplicateIndex;
+                        skylineWindow.SelectedPath = Precursor.IdentityPath;
+                        Properties.Settings.Default.CalibrationCurveOptions.SingleBatch = true;
+                    }
+                });
+            }
+        }
+
 
         [InvariantDisplayName("PrecursorReplicateNote")]
         [Importable]
@@ -169,8 +193,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return ChromInfo.Annotations.Note; } 
             set
             {
-                ChangeChromInfo(
-                    EditDescription.SetColumn(@"PrecursorReplicateNote", value),
+                ChangeChromInfo(EditColumnDescription(nameof(Note), value),
                     chromInfo=>chromInfo.ChangeAnnotations(chromInfo.Annotations.ChangeNote(value)));
             }
         }
@@ -195,7 +218,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             else if (Equals(annotationDef.Name, MProphetResultsHandler.MAnnotationName))
                 return DetectionZScore;
 
-            return ChromInfo.Annotations.GetAnnotation(annotationDef);
+            return DataSchema.AnnotationCalculator.GetAnnotation(annotationDef, this, ChromInfo.Annotations);
         }
 
         public override string ToString()
@@ -223,5 +246,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             return !ChromInfo.RetentionTime.HasValue;
         }
+        private QuantificationResult GetQuantification()
+        {
+            var calibrationCurveFitter = PeptideResult.GetCalibrationCurveFitter();
+            if (!calibrationCurveFitter.IsotopologResponseCurve)
+            {
+                return null;
+            }
+            return calibrationCurveFitter.GetPrecursorQuantificationResult(GetResultFile().Replicate.ReplicateIndex,
+                Precursor.DocNode);
+        }
+
     }
 }

@@ -57,10 +57,7 @@ namespace pwiz.SkylineTestFunctional
             // 1. Document with no imported results gives error message
             ConfirmErrorOnOpen("ChromNoFiles.sky", Resources.SkylineWindow_ShowReintegrateDialog_The_document_must_have_imported_results_);
             // 2. Document with no peptides gives error message
-            var save = TestSmallMolecules;
-            TestSmallMolecules = false;  // Don't be adding nodes for this test
             ConfirmErrorOnOpen("ChromNoPeptides.sky", Resources.SkylineWindow_ShowReintegrateDialog_The_document_must_have_targets_in_order_to_reintegrate_chromatograms_);
-            TestSmallMolecules = save;
             // 3. Document with no trained model gives error message
             var documentNoModel = TestFilesDir.GetTestPath("ChromNoModel.sky");
             RunUI(() => SkylineWindow.OpenFile(documentNoModel));

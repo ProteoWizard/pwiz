@@ -117,6 +117,12 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AbsFoldChange">
+    <value>绝对倍数变化</value>
+  </data>
+  <data name="AbsLog2FoldChange">
+    <value>绝对 Log2 倍数变化</value>
+  </data>
   <data name="Accuracy">
     <value>准确性</value>
   </data>
@@ -125,6 +131,9 @@
   </data>
   <data name="AdjustedPValue">
     <value>已调整的 P 值</value>
+  </data>
+  <data name="AllInfoMessage">
+    <value>所有信息消息</value>
   </data>
   <data name="AnalyteConcentration">
     <value>分析物浓度</value>
@@ -138,17 +147,50 @@
   <data name="AreaRatio">
     <value>面积比</value>
   </data>
+  <data name="AuditLogRow">
+    <value>审计日志行</value>
+  </data>
+  <data name="AuditLogRowId">
+    <value>条目 Id</value>
+  </data>
+  <data name="AuditLogDetailRowId">
+    <value>详细 Id</value>
+  </data>
+  <data name="AutoSelectMolecules">
+    <value>自动选择分子</value>
+  </data>
+  <data name="AutoSelectPeptides">
+    <value>自动选择肽</value>
+  </data>
+  <data name="AutoSelectPrecursors">
+    <value>自动选择母离子</value>
+  </data>
+  <data name="AutoSelectTransitions">
+    <value>自动选择离子对</value>
+  </data>
   <data name="AverageMassErrorPPM">
-    <value>平均质量误差 PPM</value>
+    <value>平均质量误差PPM</value>
   </data>
   <data name="AverageMasses">
-    <value>平均质量</value>
+    <value>平均成群</value>
   </data>
   <data name="AverageMeasuredRetentionTime">
-    <value>平均检测到的保留时间</value>
+    <value>平均测量保留时间</value>
   </data>
   <data name="Background">
     <value>背景</value>
+  </data>
+  <data name="BatchFiguresOfMerit">
+    <value>批次品质因数</value>
+  </data>
+  <data name="BatchLimitOfDetection">
+    <value>批次检测限制</value>
+  </data>
+  <data name="BatchLimitOfQuantification">
+    <value>批次定量限制</value>
+  </data>
+  <data name="BatchName">
+    <value>批次名称</value>
   </data>
   <data name="BeginPos">
     <value>开始 Pos</value>
@@ -164,6 +206,9 @@
   </data>
   <data name="CalibrationCurve">
     <value>校准曲线</value>
+  </data>
+  <data name="CAS">
+    <value>CAS（化学文摘社）</value>
   </data>
   <data name="Chromatogram">
     <value>色谱图</value>
@@ -194,6 +239,9 @@
   </data>
   <data name="Coeluting">
     <value>共洗脱</value>
+  </data>
+  <data name="CollisionalCrossSection">
+    <value>碰撞横截面</value>
   </data>
   <data name="CollisionEnergy">
     <value>碰撞能量</value>
@@ -249,8 +297,29 @@
   <data name="DecoyMzShift">
     <value>诱饵 Mz 偏移</value>
   </data>
+  <data name="DetailReason">
+    <value>详细原因</value>
+  </data>
+  <data name="DetectionQValue">
+    <value>检测 Q 值</value>
+  </data>
+  <data name="DetectionZScore">
+    <value>检测 Z 得分</value>
+  </data>
   <data name="DegreesOfFreedom">
     <value>自由度</value>
+  </data>
+  <data name="Details">
+    <value>细节</value>
+  </data>
+  <data name="DriftTimeMS1">
+    <value>漂移时间 MS1</value>
+  </data>
+  <data name="DriftTimeFragment">
+    <value>漂移时间片段</value>
+  </data>
+  <data name="DriftTimeWindow">
+    <value>漂移时间窗口</value>
   </data>
   <data name="EndPos">
     <value>结束 Pos</value>
@@ -266,6 +335,48 @@
   </data>
   <data name="ExcludeFromCalibration">
     <value>从校准中排除</value>
+  </data>
+  <data name="ExplicitCollisionEnergy">
+    <value>明确碰撞能量</value>
+  </data>
+  <data name="ExplicitCompensationVoltage">
+    <value>明确的补偿电压</value>
+  </data>
+  <data name="ExplicitConeVoltage">
+    <value>明确的锥孔电压</value>
+  </data>
+  <data name="ExplicitDeclusteringPotential">
+    <value>明确的去簇电压</value>
+  </data>
+  <data name="ExplicitDriftTimeHighEnergyOffsetMsec">
+    <value>明确漂移时间高能偏置毫秒</value>
+  </data>
+  <data name="ExplicitCollisionalCrossSection">
+    <value>明确的碰撞横截面</value>
+  </data>
+  <data name="ExplicitDriftTimeMsec">
+    <value>明确的漂移时间毫秒</value>
+  </data>
+  <data name="ExplicitGlobalStandardArea">
+    <value>明确的全局标准面积</value>
+  </data>
+  <data name="ExplicitIonMobility">
+    <value>明示离子迁移</value>
+  </data>
+  <data name="ExplicitIonMobilityHighEnergyOffset">
+    <value>明示离子迁移高能偏置</value>
+  </data>
+  <data name="ExplicitIonMobilityUnits">
+    <value>明示离子迁移单位</value>
+  </data>
+  <data name="ExplicitRetentionTime">
+    <value>明确保留时间</value>
+  </data>
+  <data name="ExplicitRetentionTimeWindow">
+    <value>显式保留时间窗口</value>
+  </data>
+  <data name="ExplicitSLens">
+    <value>明确 SLens</value>
   </data>
   <data name="FiguresOfMerit">
     <value>品质因数</value>
@@ -310,8 +421,17 @@
   <data name="Height">
     <value>高度</value>
   </data>
+  <data name="HMDB">
+    <value>HMDB（人类代谢组学数据库）</value>
+  </data>
   <data name="Identified">
     <value>已确认的</value>
+  </data>
+  <data name="InChiKey">
+    <value>InChiKey（国际化合物标识键）</value>
+  </data>
+  <data name="InChI">
+    <value>InChI（国际化合物标识）</value>
   </data>
   <data name="Intensities">
     <value>强度</value>
@@ -332,10 +452,31 @@
     <value>内插质量误差</value>
   </data>
   <data name="InterpolatedNumberOfPoints">
-    <value>内插点数量</value>
+    <value>插值点数</value>
+  </data>
+  <data name="InterpolatedSpectrumIds">
+    <value>内插谱图 ID</value>
   </data>
   <data name="InterpolatedTimes">
     <value>内插时间</value>
+  </data>
+  <data name="IonMobilityFragment">
+    <value>离子迁移碎片</value>
+  </data>
+  <data name="IonMobilityMS1">
+    <value>离子迁移 MS1</value>
+  </data>
+  <data name="IonMobilityWindow">
+    <value>离子迁移窗口</value>
+  </data>
+  <data name="IonMobilityUnits">
+    <value>离子迁移单位</value>
+  </data>
+  <data name="IonName">
+    <value>离子名称</value>
+  </data>
+  <data name="IonFormula">
+    <value>离子公式</value>
   </data>
   <data name="IsDecoy">
     <value>是诱饵</value>
@@ -395,7 +536,10 @@
     <value>记录 2 文件夹更改</value>
   </data>
   <data name="Losses">
-    <value>丢失</value>
+    <value>损失</value>
+  </data>
+  <data name="LossFormulas">
+    <value>损失公式</value>
   </data>
   <data name="LossNeutralMass">
     <value>丢失中性质量</value>
@@ -481,16 +625,67 @@
   <data name="MissedCleavages">
     <value>遗漏的酶解位点数</value>
   </data>
-  <data name="ModifiedSequence">
-    <value>修饰序列</value>
+  <data name="ModifiedAreaProportion">
+    <value>修改面积比例</value>
   </data>
-  <data name="ModifiedSequenceAverageMasses"><value>修饰序列平均质量</value></data>
-  <data name="ModifiedSequenceFullNames"><value>修饰序列全名</value></data>
-  <data name="ModifiedSequenceMonoisotopicMasses"><value>修饰序列单一同位素质量</value></data>
-  <data name="ModifiedSequenceThreeLetterCodes"><value>修饰序列三字母代码</value></data>
-  <data name="ModifiedSequenceUnimodIds"><value>修饰序列 Unimod ID</value></data>
+  <data name="ModifiedSequence">
+    <value>修改序列</value>
+  </data>
+  <data name="ModifiedSequenceAverageMasses"><value>修改序列平均质量</value></data>
+  <data name="ModifiedSequenceFullNames"><value>修改序列全名</value></data>
+  <data name="ModifiedSequenceMonoisotopicMasses"><value>修饰的序列同位素质量</value></data>
+  <data name="ModifiedSequenceThreeLetterCodes"><value>修改序列三字母代码</value></data>
+  <data name="ModifiedSequenceUnimodIds"><value>修改序列单模式ID</value></data>
   <data name="ModifiedTime">
-    <value>修饰时间</value>
+    <value>修改时间</value>
+  </data>
+  <data name="Molecule">
+    <value>分子</value>
+  </data>
+  <data name="MoleculeListLocator">
+    <value>分子列表定位器</value>
+  </data>
+  <data name="MoleculeName">
+    <value>分子名称</value>
+  </data>
+  <data name="MoleculeFormula">
+    <value>分子式</value>
+  </data>
+  <data name="MoleculeList">
+    <value>分子列表</value>
+  </data>
+  <data name="MoleculeListName">
+    <value>分子列表名称</value>
+  </data>
+  <data name="MoleculeListNote">
+    <value>分子列表注释</value>
+  </data>
+  <data name="MoleculeLists">
+    <value>分子列表</value>
+  </data>
+  <data name="MoleculeLocator">
+    <value>分子定位器</value>
+  </data>
+  <data name="MoleculeNote">
+    <value>分子注释</value>
+  </data>
+  <data name="MoleculePeakFoundRatio">
+    <value>分子峰值发现比率</value>
+  </data>
+  <data name="MoleculeResult">
+    <value>分子结果</value>
+  </data>
+  <data name="MoleculeResultLocator">
+    <value>分子结果定位器</value>
+  </data>
+  <data name="MoleculeResults">
+    <value>分子结果</value>
+  </data>
+  <data name="MoleculeRetentionTime">
+    <value>分子保留时间</value>
+  </data>
+  <data name="Molecules">
+    <value>分子学</value>
   </data>
   <data name="MonoisotopicMasses"><value>单一同位素质量</value></data>
   <data name="MsLevel">
@@ -582,11 +777,20 @@
   <data name="Precursor">
     <value>母离子</value>
   </data>
+  <data name="PrecursorAdduct">
+    <value>母离子加合物</value>
+  </data>
   <data name="PrecursorCharge">
     <value>母离子电荷</value>
   </data>
   <data name="PrecursorConcentration">
     <value>母离子浓度</value>
+  </data>
+  <data name="PrecursorIonName">
+    <value>母离子名称</value>
+  </data>
+  <data name="PrecursorIonFormula">
+    <value>母离子公式</value>
   </data>
   <data name="PrecursorLocator">
     <value>母离子定位器</value>
@@ -594,17 +798,14 @@
   <data name="PrecursorMz">
     <value>母离子质荷比</value>
   </data>
+  <data name="PrecursorNeutralFormula">
+    <value>母离子中性分子式</value>
+  </data>
   <data name="PrecursorNeutralMass">
     <value>母离子中性质量</value>
   </data>
   <data name="PrecursorNote">
     <value>母离子注释</value>
-  </data>
-  <data name="DetectionQValue">
-    <value>检测 Q 值</value>
-  </data>
-  <data name="DetectionZScore">
-    <value>检测 Z 得分</value>
   </data>
   <data name="PrecursorPeakFoundRatio">
     <value>母离子峰值检出比</value>
@@ -636,14 +837,23 @@
   <data name="PreviousAa">
     <value>上一个 Aa</value>
   </data>
+  <data name="ProductAdduct">
+    <value>子离子加合物</value>
+  </data>
   <data name="ProductCharge">
     <value>子离子电荷</value>
   </data>
   <data name="ProductDecoyMzShift">
     <value>子离子诱饵质荷比偏移</value>
   </data>
+  <data name="ProductIonFormula">
+    <value>子离子公式</value>
+  </data>
   <data name="ProductMz">
     <value>子离子质荷比</value>
+  </data>
+  <data name="ProductNeutralFormula">
+    <value>子离子中性分子式</value>
   </data>
   <data name="ProductNeutralMass">
     <value>子离子中性质量</value>
@@ -720,8 +930,14 @@
   <data name="RawNumberOfPoints">
     <value>原始点数</value>
   </data>
+  <data name="RawSpectrumIds">
+    <value>原始谱图 ID</value>
+  </data>
   <data name="RawTimes">
     <value>原始时间</value>
+  </data>
+  <data name="Reason">
+    <value>原因</value>
   </data>
   <data name="Replicate">
     <value>重复测定</value>
@@ -795,8 +1011,17 @@
   <data name="SampleType">
     <value>样品类型</value>
   </data>
+  <data name="SkylineVersion">
+    <value>Skyline 版本</value>
+  </data>
   <data name="Slope">
     <value>斜率</value>
+  </data>
+  <data name="SMILES">
+    <value>SMILES（简化分子线性输入规范）</value>
+  </data>
+  <data name="SpectrumIds">
+    <value>谱图 ID</value>
   </data>
   <data name="StandardError">
     <value>标准错误</value>
@@ -843,6 +1068,9 @@
   <data name="StdevTotalAreaRatio">
     <value>总面积比标准偏差</value>
   </data>
+  <data name="SummaryMessage">
+    <value>总结消息</value>
+  </data>
   <data name="ThreeLetterCodes"><value>三字母代码</value></data>
   <data name="TicArea">
     <value>总离子电流面积</value>
@@ -850,8 +1078,14 @@
   <data name="TotalArea">
     <value>总面积</value>
   </data>
+  <data name="Time">
+    <value>时间</value>
+  </data>
   <data name="Times">
     <value>时间</value>
+  </data>
+  <data name="TimeStamp">
+    <value>时间戳</value>
   </data>
   <data name="TotalAreaFragment">
     <value>片段总面积</value>
@@ -916,173 +1150,20 @@
   <data name="TValue">
     <value>T 值</value>
   </data>
+  <data name="UndoRedoMessage">
+    <value>撤销恢复消息</value>
+  </data>
   <data name="UnimodIds"><value>Unimod ID</value></data>
+  <data name="User">
+    <value>用户</value>
+  </data>
   <data name="UserSetPeak">
     <value>用户设定峰</value>
   </data>
   <data name="UserSetTotal">
     <value>用户设定总数</value>
   </data>
-  <data name="Value">
-    <value>值</value>
-  </data>
-  <data name="IonName">
-    <value>离子名称</value>
-  </data>
-  <data name="IonFormula">
-    <value>离子公式</value>
-  </data>
-  <data name="PrecursorIonName">
-    <value>母离子名称</value>
-  </data>
-  <data name="PrecursorIonFormula">
-    <value>母离子公式</value>
-  </data>
-  <data name="ProductIonFormula">
-    <value>子离子公式</value>
-  </data>
-  <data name="ExplicitCollisionEnergy">
-    <value>明确碰撞能量</value>
-  </data>
-  <data name="ExplicitDriftTimeHighEnergyOffsetMsec">
-    <value>明确漂移时间高能偏置毫秒</value>
-  </data>
-  <data name="ExplicitCollisionalCrossSection">
-    <value>明确的碰撞横截面</value>
-  </data>
-  <data name="ExplicitDriftTimeMsec">
-    <value>明确的漂移时间毫秒</value>
-  </data>
-  <data name="ExplicitIonMobility">
-    <value>明示离子迁移</value>
-  </data>
-  <data name="ExplicitIonMobilityHighEnergyOffset">
-    <value>明示离子迁移高能偏置</value>
-  </data>
-  <data name="ExplicitIonMobilityUnits">
-    <value>明示离子迁移单位</value>
-  </data>
-  <data name="IonMobilityFragment">
-    <value>离子迁移碎片</value>
-  </data>
-  <data name="IonMobilityMS1">
-    <value>离子迁移 MS1</value>
-  </data>
-  <data name="IonMobilityWindow">
-    <value>离子迁移窗口</value>
-  </data>
-  <data name="IonMobilityUnits">
-    <value>离子迁移单位</value>
-  </data>
-  <data name="ExplicitGlobalStandardArea">
-    <value>明确的全局标准面积</value>
-  </data>
-  <data name="ExplicitRetentionTime">
-    <value>明确保留时间</value>
-  </data>
-  <data name="ExplicitRetentionTimeWindow">
-    <value>明确保留时间窗口</value>
-  </data>
-  <data name="ExplicitSLens">
-    <value>明确的 S-Lens</value>
-  </data>
-  <data name="ExplicitConeVoltage">
-    <value>明确的锥孔电压</value>
-  </data>
-  <data name="ExplicitDeclusteringPotential">
-    <value>明确的去簇电压</value>
-  </data>
-  <data name="ExplicitCompensationVoltage">
-    <value>明确的补偿电压</value>
-  </data>
-  <data name="PrecursorAdduct">
-    <value>母离子加合物</value>
-  </data>
-  <data name="PrecursorNeutralFormula">
-    <value>母离子中性分子式</value>
-  </data>
-  <data name="ProductAdduct">
-    <value>子离子加合物</value>
-  </data>
-  <data name="ProductNeutralFormula">
-    <value>子离子中性分子式</value>
-  </data>
-  <data name="MoleculeName">
-    <value>分子名称</value>
-  </data>
-  <data name="MoleculeFormula">
-    <value>分子式</value>
-  </data>
-  <data name="CollisionalCrossSection">
-    <value>碰撞横截面</value>
-  </data>
-  <data name="DriftTimeMS1">
-    <value>漂移时间 MS1</value>
-  </data>
-  <data name="DriftTimeFragment">
-    <value>漂移时间片段</value>
-  </data>
-  <data name="DriftTimeWindow">
-    <value>漂移时间窗口</value>
-  </data>
-  <data name="CAS">
-    <value>CAS（化学文摘社）</value>
-  </data>
-  <data name="InChiKey">
-    <value>InChiKey（国际化合物标识键）</value>
-  </data>
-  <data name="InChI">
-    <value>InChI（国际化合物标识）</value>
-  </data>
-  <data name="HMDB">
-    <value>HMDB（人类代谢组学数据库）</value>
-  </data>
-  <data name="SMILES">
-    <value>SMILES（简化分子线性输入规范）</value>
-  </data>
-  <data name="AbsFoldChange">
-    <value>绝对倍数变化</value>
-  </data>
-  <data name="AbsLog2FoldChange">
-    <value>绝对 Log2 倍数变化</value>
-  </data>
-  <data name="DocumentFormat">
-    <value>文档格式版本</value>
-  </data>
-  <data name="Reason">
-    <value>原因</value>
-  </data>
-  <data name="DetailReason">
-    <value>详细原因</value>
-  </data>
-  <data name="SkylineVersion">
-    <value>Skyline 版本</value>
-  </data>
-  <data name="TimeStamp">
-    <value>时间戳</value>
-  </data>
-  <data name="User">
-    <value>用户</value>
-  </data>
-  <data name="UndoRedoMessage">
-    <value>撤销恢复消息</value>
-  </data>
-  <data name="SummaryMessage">
-    <value>总结消息</value>
-  </data>
-  <data name="AllInfoMessage">
-    <value>所有信息消息</value>
-  </data>
-  <data name="Details">
-    <value>细节</value>
-  </data>
-  <data name="AuditLogRow">
-    <value>审计日志行</value>
-  </data>
-  <data name="AuditLogRowId">
-    <value>条目 Id</value>
-  </data>
-  <data name="AuditLogDetailRowId">
-    <value>详细 Id</value>
+  <data name="UTCTime">
+    <value>UTC 时间</value>
   </data>
 </root>

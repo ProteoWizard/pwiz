@@ -37,8 +37,8 @@ namespace AutoQC
         public const string WATERS = "Waters";
         public const string SCIEX = "SCIEX";
         public const string AGILENT = "Agilent";
-        //public const string BRUKER = "Bruker";
-        //public const string SCHIMADZU = "Schimadzu";
+        public const string BRUKER = "Bruker";
+        public const string SHIMADZU = "Shimadzu";
 
         public string SkylineFilePath { get; set; }
 

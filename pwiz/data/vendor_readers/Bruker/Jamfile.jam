@@ -147,12 +147,12 @@ rule warn-once ( message )
 
 rule test-requirements ( properties * )
 {
-    # decompress test data if available (on any platform)
+    # decompress test data if available (on any platform); only the raw data is used from the tarball; the mzMLs are checked into source control
     if ! $(.extract-once) && [ path.exists $(TEST_DATA_PATH).tar.bz2 ]
     {
         .extract-once = true ;
         import tar ;
-        tar.extract $(TEST_DATA_PATH).tar.bz2 : : : : check-last-file-only ;
+        tar.extract $(TEST_DATA_PATH).tar.bz2 : : : : <keep-old-files>true ; # <check-last-file-only>true TODO: restore check-last-file-only when tarball needs to be updated (and mzMLs are removed)
     }
     
     local result ;

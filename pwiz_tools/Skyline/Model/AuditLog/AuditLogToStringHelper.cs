@@ -17,7 +17,7 @@ namespace pwiz.Skyline.Model.AuditLog
             }
         };
 
-        private static string InvariantToString(object obj)
+        private static string InvariantToString(object obj, int? decimalPlaces)
         {
             if (Reflector.HasToString(obj))
             {
@@ -26,8 +26,16 @@ namespace pwiz.Skyline.Model.AuditLog
                 if (type == typeof(bool) || type == typeof(int))
                     return AuditLogParseHelper.GetParseString(ParseStringType.primitive, objStr);
                 else if (type == typeof(float) || type == typeof(double))
-                    return AuditLogParseHelper.GetParseString(ParseStringType.primitive, 
-                        string.Format(CultureInfo.InvariantCulture, @"{0:R}", obj));
+                {
+                    string format = @"R";
+                    if (decimalPlaces.HasValue)
+                        format = @"0." + new string('#', decimalPlaces.Value);
+
+                    string replacementText = string.Format(@"{{0:{0}}}", format);
+                    string decimalText = string.Format(CultureInfo.InvariantCulture, replacementText, obj);
+
+                    return AuditLogParseHelper.GetParseString(ParseStringType.primitive, decimalText);
+                }
                 else if (type.IsEnum)
                     return LogMessage.Quote(AuditLogParseHelper.GetParseString(ParseStringType.enum_fn, type.Name + '_' + objStr));
                 return LogMessage.Quote(objStr);
@@ -46,9 +54,9 @@ namespace pwiz.Skyline.Model.AuditLog
             }
         }
 
-        public static string ToString(object obj, Func<object, string> defaultToString)
+        public static string ToString(object obj, int? decimalPlaces, Func<object, string> defaultToString)
         {
-            return InvariantToString(obj) ??
+            return InvariantToString(obj, decimalPlaces) ??
                    KnownTypeToString(obj) ??
                    defaultToString(obj) ??
                    throw new AuditLogToStringException(obj);

@@ -54,7 +54,8 @@ class Serializer_mzXML::Impl
     {}
 
     void write(ostream& os, const MSData& msd,
-               const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const;
+               const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
+               bool useWorkerThreads) const;
 
     void read(shared_ptr<istream> is, MSData& msd) const;
 
@@ -325,8 +326,8 @@ void write_msInstruments(XMLWriter& xmlWriter, const MSData& msd,
 
 void write_processingOperation(XMLWriter& xmlWriter, const ProcessingMethod& pm, CVID action)
 {
-    CVParam actionParam = pm.cvParamChild(action);
-    if (!actionParam.empty() && actionParam != action)
+    vector<CVParam> actionParams = pm.cvParamChildren(action);
+    for (auto & actionParam : actionParams)
     {
         XMLWriter::Attributes attributes;
         attributes.add("name", actionParam.name());
@@ -341,9 +342,10 @@ void write_dataProcessing(XMLWriter& xmlWriter, const MSData& msd, const CVTrans
     {
         if (!dpPtr.get() || dpPtr->processingMethods.empty()) continue;
 
-        XMLWriter::Attributes attributes;
         BOOST_FOREACH(const ProcessingMethod& pm, dpPtr->processingMethods)
         {
+            XMLWriter::Attributes attributes;
+
             if (pm.hasCVParamChild(MS_peak_picking)) attributes.add("centroided", "1");
             if (pm.hasCVParamChild(MS_deisotoping)) attributes.add("deisotoped", "1");
             if (pm.hasCVParamChild(MS_charge_deconvolution)) attributes.add("chargeDeconvoluted", "1");
@@ -353,12 +355,9 @@ void write_dataProcessing(XMLWriter& xmlWriter, const MSData& msd, const CVTrans
                 if (!threshold.empty())
                     attributes.add("intensityCutoff", threshold.value);
             }
-        }
 
-        xmlWriter.startElement("dataProcessing", attributes);
+            xmlWriter.startElement("dataProcessing", attributes);
 
-        BOOST_FOREACH(const ProcessingMethod& pm, dpPtr->processingMethods)
-        {
             CVParam fileFormatConversion = pm.cvParamChild(MS_file_format_conversion);
 
             string softwareType = fileFormatConversion.empty() ? "processing" : "conversion";
@@ -366,11 +365,7 @@ void write_dataProcessing(XMLWriter& xmlWriter, const MSData& msd, const CVTrans
             if (pm.softwarePtr.get())
                 writeSoftware(xmlWriter, pm.softwarePtr, msd, cvTranslator, softwareType);
 
-            write_processingOperation(xmlWriter, pm, MS_file_format_conversion);
-            write_processingOperation(xmlWriter, pm, MS_peak_picking);
-            write_processingOperation(xmlWriter, pm, MS_deisotoping);
-            write_processingOperation(xmlWriter, pm, MS_charge_deconvolution);
-            write_processingOperation(xmlWriter, pm, MS_thresholding);
+            write_processingOperation(xmlWriter, pm, MS_data_transformation);
 
             xmlWriter.pushStyle(XMLWriter::StyleFlag_InlineInner);
             BOOST_FOREACH(const UserParam& param, pm.userParams)
@@ -380,9 +375,8 @@ void write_dataProcessing(XMLWriter& xmlWriter, const MSData& msd, const CVTrans
                 xmlWriter.endElement(); // comment
             }
             xmlWriter.popStyle();
+            xmlWriter.endElement(); // dataProcessing
         }
-
-        xmlWriter.endElement(); // dataProcessing
     }
 }
 
@@ -695,13 +689,14 @@ IndexEntry write_scan(XMLWriter& xmlWriter,
 void write_scans(XMLWriter& xmlWriter, const MSData& msd, 
                  const Serializer_mzXML::Config& config, vector<IndexEntry>& index,
                  const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
-                 map<InstrumentConfigurationPtr, int>& instrumentIndexByPtr)
+                 map<InstrumentConfigurationPtr, int>& instrumentIndexByPtr,
+                 bool useWorkerThreads)
 {
     SpectrumListPtr sl = msd.run.spectrumListPtr;
     if (!sl.get()) return;
 
     CVID defaultNativeIdFormat = id::getDefaultNativeIDFormat(msd);
-    SpectrumWorkerThreads spectrumWorkers(*sl);
+    SpectrumWorkerThreads spectrumWorkers(*sl, useWorkerThreads);
 
     for (size_t i=0; i<sl->size(); i++)
     {
@@ -763,7 +758,8 @@ void write_index(XMLWriter& xmlWriter, const vector<IndexEntry>& index)
 
 
 void Serializer_mzXML::Impl::write(ostream& os, const MSData& msd,
-    const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const
+    const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
+    bool useWorkerThreads) const
 {
     SHA1OutputObserver sha1OutputObserver;
     XMLWriter::Config config;
@@ -782,7 +778,7 @@ void Serializer_mzXML::Impl::write(ostream& os, const MSData& msd,
     write_msInstruments(xmlWriter, msd, cvTranslator_, instrumentIndexByPtr);
     write_dataProcessing(xmlWriter, msd, cvTranslator_);
     vector<IndexEntry> index;
-    write_scans(xmlWriter, msd, config_, index, iterationListenerRegistry, instrumentIndexByPtr);
+    write_scans(xmlWriter, msd, config_, index, iterationListenerRegistry, instrumentIndexByPtr, useWorkerThreads);
     xmlWriter.endElement(); // msRun 
 
     stream_offset indexOffset = xmlWriter.positionNext();
@@ -1385,9 +1381,10 @@ PWIZ_API_DECL Serializer_mzXML::Serializer_mzXML(const Config& config)
 
 
 PWIZ_API_DECL void Serializer_mzXML::write(ostream& os, const MSData& msd,
-   const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const
+    const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
+    bool useWorkerThreads) const
 {
-    return impl_->write(os, msd, iterationListenerRegistry);
+    return impl_->write(os, msd, iterationListenerRegistry, useWorkerThreads);
 }
 
 

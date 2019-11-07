@@ -28,6 +28,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
+    [InvariantDisplayName(nameof(TransitionResult))]
     [AnnotationTarget(AnnotationDef.AnnotationTarget.transition_result)]
     public class TransitionResult : Result
     {
@@ -98,7 +99,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return ChromInfo.Annotations.Note; }
             set
             {
-                ChangeChromInfo(EditDescription.SetColumn(@"TransitionReplicateNote", value),
+                ChangeChromInfo(EditColumnDescription(nameof(Note), value),
                     chromInfo=>chromInfo.ChangeAnnotations(chromInfo.Annotations.ChangeNote(value)));
             }
         }
@@ -111,7 +112,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public override object GetAnnotation(AnnotationDef annotationDef)
         {
-            return ChromInfo.Annotations.GetAnnotation(annotationDef);
+            return DataSchema.AnnotationCalculator.GetAnnotation(annotationDef, this, ChromInfo.Annotations);
         }
 
         [HideWhen(AncestorOfType = typeof(SkylineDocument))]

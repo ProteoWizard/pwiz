@@ -145,6 +145,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CommandLineNoJoinTest.cs" />
+    <Compile Include="CommandLineRefineTest.cs" />
     <Compile Include="CommandLineTest.cs" />
     <Compile Include="CommandLineImportTest.cs" />
     <Compile Include="CommandLineWiffTest.cs" />
@@ -225,6 +226,7 @@
     </None>
     <None Include="CommandLineImportTest.zip" />
     <None Include="CommandLineNoJoinTest.zip" />
+    <None Include="CommandLineRefine.zip" />
     <None Include="CommandLineTest.zip" />
     <None Include="CommandLineWiffTest.zip" />
     <None Include="ImportAllCmdLineTest.zip" />

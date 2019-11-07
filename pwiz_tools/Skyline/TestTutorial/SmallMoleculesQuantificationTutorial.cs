@@ -31,6 +31,7 @@ using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs.Calibration;
+using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -53,6 +54,10 @@ namespace pwiz.SkylineTestTutorial
         protected override bool UseRawFiles
         {
             get { return !ForceMzml && ExtensionTestContext.CanImportWatersRaw; }
+        }
+        protected override bool ShowStartPage
+        {
+            get { return true; }  // So we can point out the UI mode control
         }
 
         [TestMethod]
@@ -83,17 +88,20 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
+            // Setting the UI mode, p 2  
+            var startPage = WaitForOpenForm<StartPage>();
+            RunUI(() => startPage.SetUIMode(SrmDocument.DOCUMENT_TYPE.proteomic));
+            PauseForScreenShot<StartPage>("Start Window proteomic", 2);
+            RunUI(() => startPage.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules));
+            PauseForScreenShot<StartPage>("Start Window small molecule", 3);
+            RunUI(() => startPage.DoAction(skylineWindow => true));
+            WaitForOpenForm<SkylineWindow>();
+
             // Inserting a Transition List, p. 2
             {
                 var doc = SkylineWindow.Document;
 
                 var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-                RunUI(() =>
-                {
-                    pasteDlg.IsMolecule = false;  // Default peptide view
-                    pasteDlg.Size = new Size(800, 275);
-                });
-                PauseForScreenShot<PasteDlg>("Paste Dialog in peptide mode", 2);
 
                 RunUI(() =>
                 {
@@ -260,7 +268,6 @@ namespace pwiz.SkylineTestTutorial
                         peptideSettingsUI.QuantMsLevel = null; // All
                         peptideSettingsUI.QuantUnits = "uM";
                     });
-
                     PauseForScreenShot<PeptideSettingsUI.QuantificationTab>("Peptide Settings - Quantitation", 14);
                     OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
                 }

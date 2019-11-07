@@ -25,7 +25,6 @@
 #include <string>
 #include <boost/xpressive/xpressive_dynamic.hpp>
 
-using namespace std;
 
 namespace BiblioSpec {
 

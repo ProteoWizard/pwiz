@@ -547,7 +547,7 @@ namespace pwiz.Skyline.Model
                 rank.HasValue ?
                     new TransitionDocNode.TransitionQuantInfo(null,
                         new TransitionLibInfo(rank.Value, peak.Intensity), true) :
-                    TransitionDocNode.TransitionQuantInfo.DEFAULT, null);
+                    TransitionDocNode.TransitionQuantInfo.DEFAULT, ExplicitTransitionValues.EMPTY, null);
         }
 
         private string NoteIfAnnotationMzDisagrees(LibKey key, SpectrumPeaksInfo.MI peak)

@@ -504,4 +504,28 @@
   <data name="MzFragmentFinder__m_z__gt__precursor___plus__2" xml:space="preserve">
     <value>(m/z &gt; precursor) + 2</value>
   </data>
+  <data name="PeptideUniquenessConstraint_none" xml:space="preserve">
+    <value>none</value>
+  </data>
+  <data name="PeptideUniquenessConstraint_protein" xml:space="preserve">
+    <value>protein</value>
+  </data>
+  <data name="PeptideUniquenessConstraint_gene" xml:space="preserve">
+    <value>gene</value>
+  </data>
+  <data name="PeptideUniquenessConstraint_species" xml:space="preserve">
+    <value>species</value>
+  </data>
+  <data name="AreaCVNormalizationMethod_global_standards" xml:space="preserve">
+    <value>Global Standards</value>
+  </data>
+  <data name="AreaCVNormalizationMethod_medians" xml:space="preserve">
+    <value>Medians</value>
+  </data>
+  <data name="AreaCVNormalizationMethod_none" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="AreaCVNormalizationMethod_ratio" xml:space="preserve">
+    <value>Ratio</value>
+  </data>
 </root>

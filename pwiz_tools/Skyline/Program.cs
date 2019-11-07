@@ -67,7 +67,9 @@ namespace pwiz.Skyline
         
         // Parameters for testing.
         public static bool StressTest { get; set; }                 // Set true when doing stress testing (i.e. TestRunner).
+        public static bool UnitTest { get; set; }                   // Set to true by AbstractUnitTest and AbstractFunctionalTest
         public static bool FunctionalTest { get; set; }             // Set to true by AbstractFunctionalTest
+        public static string DefaultUiMode { get; set; }            // Set to avoid seeing NoModeUiDlg at the start of a test
         public static bool SkylineOffscreen { get; set; }           // Set true to move Skyline windows offscreen.
         public static bool DemoMode { get; set; }                   // Set to true in demo mode (main window is full screen and pauses at screenshots)
         public static bool NoVendorReaders { get; set; }            // Set true to avoid calling vendor readers.
@@ -113,7 +115,7 @@ namespace pwiz.Skyline
                 return 1;
             }
 
-            SecurityProtocolInitializer.Initialize(); // Enable highest available security level for HTTPS connections, esp. Chorus
+            SecurityProtocolInitializer.Initialize(); // Enable highest available security level for HTTPS connections
 
             CommonFormEx.TestMode = FunctionalTest;
             CommonFormEx.Offscreen = SkylineOffscreen;
@@ -134,8 +136,6 @@ namespace pwiz.Skyline
                     {
                         AttachConsole(-1);
                         textWriter = Console.Out;
-                        Console.WriteLine();
-                        Console.WriteLine();
                     }
                     var writer = new CommandStatusWriter(textWriter);
                     if (args[0].Equals(@"--ui", StringComparison.InvariantCultureIgnoreCase))
@@ -298,8 +298,8 @@ namespace pwiz.Skyline
                 // Position window offscreen for stress testing.
                 if (SkylineOffscreen)
                     FormEx.SetOffscreen(MainWindow);
-
-                SendAnalyticsHitAsync();
+                if (!UnitTest)  // Covers Unit and Functional tests
+                    SendAnalyticsHitAsync();
 
                 MainToolServiceName = Guid.NewGuid().ToString();
                 Application.Run(MainWindow);
@@ -313,6 +313,7 @@ namespace pwiz.Skyline
             }
 
             MainWindow = null;
+            SystemEvents.DisplaySettingsChanged -= SystemEventsOnDisplaySettingsChanged;
             return EXIT_CODE_SUCCESS;
         }
 
@@ -331,8 +332,9 @@ namespace pwiz.Skyline
 
         private static void SendAnalyticsHitAsync()
         {
-            if (!Install.Version.Equals(String.Empty) &&
-                Install.Type != Install.InstallType.developer)
+            if (!Install.Version.Equals(String.Empty) &&    // This is rarely true anymore with the strong versioning introduced in 19.1.1.309
+                !Install.IsDeveloperInstall &&
+                !Install.IsAutomatedBuild)  // Currently the only automated build we care about is the Docker Container which is command-line only
             {
                 ActionUtil.RunAsync(() =>
                 {
@@ -465,6 +467,13 @@ namespace pwiz.Skyline
 
                 // Add handler for non-UI thread exceptions. 
                 AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+
+                if (Settings.Default.SettingsUpgradeRequired)
+                {
+                    Settings.Default.Upgrade();
+                    Settings.Default.SettingsUpgradeRequired = false;
+                    Settings.Default.Save();
+                }
             }
         }
 
@@ -544,10 +553,19 @@ namespace pwiz.Skyline
 
         private static void ReportExceptionUI(Exception exception, StackTrace stackTrace)
         {
-            using (var reportForm = new ReportErrorDlg(exception, stackTrace))
+            try
             {
-                reportForm.ShowDialog(MainWindow);
-            }         
+                using (var reportForm = new ReportErrorDlg(exception, stackTrace))
+                {
+                    reportForm.ShowDialog(MainWindow);
+                }
+            }
+            catch (Exception e2)
+            {
+                // We had an error trying to bring up the ReportErrorDlg.
+                // Skyline is going to shut down, but we want to preserve the original exception.
+                throw new AggregateException(exception, e2);
+            }
         }
 
         public static void AddTestException(Exception exception)
@@ -562,6 +580,28 @@ namespace pwiz.Skyline
         public static StartPage StartWindow { get; private set; }
         public static SrmDocument ActiveDocument { get { return MainWindow != null ? MainWindow.Document : null; } }
         public static SrmDocument ActiveDocumentUI { get { return MainWindow != null ? MainWindow.DocumentUI : null; } }
+        
+        /// <summary>
+        /// Gets the current UI mode (proteomic / small molecule / mixed) as a function of  <see cref="Settings"/>
+        /// and the contents of the current document
+        /// </summary>
+        public static SrmDocument.DOCUMENT_TYPE ModeUI
+        {
+            get
+            {
+                SrmDocument.DOCUMENT_TYPE mode;
+                if (ActiveDocument != null)
+                {
+                    mode = MainWindow.ModeUI; // Document contents help determine UI mode
+                }
+                else if (!Enum.TryParse(Settings.Default.UIMode, out mode))
+                {
+                    mode = SrmDocument.DOCUMENT_TYPE.proteomic; // No saved setting, default to tradition
+                }
+
+                return mode;
+            }
+        }
 
         /// <summary>
         /// Shortcut to the application name stored in <see cref="Settings"/>

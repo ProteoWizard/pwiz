@@ -53,6 +53,7 @@
 #include "pwiz/utility/misc/random_access_compressed_ifstream.hpp"
 #include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
 #include <boost/locale/conversion.hpp>
+#include <boost/spirit/include/karma.hpp>
 //#include <boost/xpressive/xpressive.hpp>
 #include <iostream>
 
@@ -415,6 +416,12 @@ PWIZ_API_DECL void force_close_handles_to_filepath(const std::string& filepath, 
 }
 
 
+PWIZ_API_DECL void enable_utf8_path_operations()
+{
+    UTF8_BoostFilesystemPathImbuer::instance->imbue();
+}
+
+
 PWIZ_API_DECL int expand_pathmask(const bfs::path& pathmask,
                                   vector<bfs::path>& matchingPaths)
 {
@@ -543,6 +550,25 @@ PWIZ_API_DECL void copy_directory(const bfs::path& from, const bfs::path& to, bo
 
 using boost::uintmax_t;
 
+template <typename T>
+struct double3_policy : boost::spirit::karma::real_policies<T>
+{
+    // up to 3 digits total, but no unnecessary precision
+    static unsigned int precision(T n)
+    {
+        double fracPart, intPart;
+        fracPart = modf(n, &intPart);
+        return fracPart < 0.005 ? 0 : n < 10 ? 2 : n < 100 ? 1 : 0;
+    }
+    static bool trailing_zeros(T) { return false; }
+
+    template <typename OutputIterator>
+    static bool dot(OutputIterator&, T, unsigned int precision)
+    {
+        return precision > 0;
+    }
+};
+
 PWIZ_API_DECL
 string abbreviate_byte_size(uintmax_t byteSize, ByteSizeAbbreviation abbreviationType)
 {
@@ -569,25 +595,35 @@ string abbreviate_byte_size(uintmax_t byteSize, ByteSizeAbbreviation abbreviatio
     }
 
     string suffix;
+    double byteSizeDbl;
 
     if( byteSize >= G )
     {
-        byteSize /= G;
+        byteSizeDbl = (double) byteSize / G;
+        //byteSizeDbl = round(byteSizeDbl * 100) / 100;
         suffix = GS;
     } else if( byteSize >= M )
     {
-        byteSize /= M;
+        byteSizeDbl = (double) byteSize / M;
         suffix = MS;
     } else if( byteSize >= K )
     {
-        byteSize /= K;
+        byteSizeDbl = (double) byteSize / K;
         suffix = KS;
     } else
     {
+        byteSizeDbl = (double) byteSize;
         suffix = " B";
+        return lexical_cast<string>(byteSize) + suffix;
     }
 
-    return lexical_cast<string>(byteSize) + suffix;
+    using namespace boost::spirit::karma;
+    typedef real_generator<double, double3_policy<double> > double3_type;
+    static const double3_type double3 = double3_type();
+    char buffer[256];
+    char* p = buffer;
+    generate(p, double3, byteSizeDbl);
+    return std::string(&buffer[0], p) + suffix;
 }
 
 

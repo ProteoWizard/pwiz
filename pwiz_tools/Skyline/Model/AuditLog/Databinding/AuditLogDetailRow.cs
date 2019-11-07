@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
-using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Util.Extensions;
 
@@ -54,7 +53,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
 
                 if (AuditLogRow.Entry.InsertUndoRedoIntoAllInfo && _detailIndex == 0)
                 {
-                    extraText = LogMessage.ParseLogString(AuditLogRow.Entry.ExtraInfo, LogLevel.all_info);
+                    extraText = LogMessage.ParseLogString(AuditLogRow.Entry.ExtraInfo, LogLevel.all_info, AuditLogRow.Entry.DocumentType);
                     undoAction = AuditLogRow.Entry.UndoAction;
                 }
 
@@ -85,7 +84,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
 
                 var index = _detailIndex;
                 // Don't manually insert the special undo redo row, it gets inserted by the AuditLogEntry
-                var list = (IEnumerable<LogMessage>)entry.AllInfo;
+                var list = (IEnumerable<DetailLogMessage>)entry.AllInfo;
                 if (entry.InsertUndoRedoIntoAllInfo)
                 {
                     list = list.Skip(1);
@@ -96,7 +95,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
                 allInfoCopy[index] = entry.AllInfo[_detailIndex].ChangeReason(value);
                 entry = entry.ChangeAllInfo(allInfoCopy);
 
-                ModifyDocument(EditDescription.SetColumn(@"Reason", value),
+                ModifyDocument(EditColumnDescription(nameof(DetailReason), value),
                     doc => AuditLogRow.ChangeEntry(doc, entry), docPair => null);
             }
         }

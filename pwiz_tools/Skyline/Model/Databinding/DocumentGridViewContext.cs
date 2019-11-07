@@ -119,9 +119,9 @@ namespace pwiz.Skyline.Model.Databinding
             }
             var selectedRows = dataGridView.SelectedRows.Cast<DataGridViewRow>()
                 .Select(row => (RowItem) bindingSource[row.Index]).ToArray();
-            if (!selectedRows.Any())
+            if (!selectedRows.Any() && bindingSource.Current is RowItem rowItem)
             {
-                selectedRows = new[] {bindingSource.Current as RowItem};
+                selectedRows = new[] {rowItem};
             }
 
             return selectedRows.Select(row => row.Value).OfType<SkylineDocNode>();
@@ -164,7 +164,7 @@ namespace pwiz.Skyline.Model.Databinding
             }
             foreach (var action in RemovePeaksAction.All)
             {
-                var menuItem = action.CreateMenuItem(BoundDataGridView);
+                var menuItem = action.CreateMenuItem(SkylineDataSchema.ModeUI, BoundDataGridView);
                 if (menuItem != null)
                 {
                     dropDownItems.Add(menuItem);
@@ -174,7 +174,7 @@ namespace pwiz.Skyline.Model.Databinding
             dropDownItems.Add(new ToolStripSeparator());
             foreach (var action in DeleteNodesAction.All)
             {
-                var menuItem = action.CreateMenuItem(BoundDataGridView);
+                var menuItem = action.CreateMenuItem(SkylineDataSchema.ModeUI, BoundDataGridView);
                 if (menuItem != null)
                 {
                     dropDownItems.Add(menuItem);

@@ -19,6 +19,7 @@
 
 using System;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -35,6 +36,10 @@ namespace pwiz.Skyline.SettingsUI
             _skylineWindow = skylineWindow;
 
             InitializeComponent();
+            if (ModeUI != SrmDocument.DOCUMENT_TYPE.proteomic)
+            {
+                pictureBox2.Image = Resources.WizardMoleculeIcon;
+            }
 
             AcceptButton = nextBtn;
             CenterToParent();

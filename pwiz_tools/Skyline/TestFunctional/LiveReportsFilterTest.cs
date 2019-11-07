@@ -94,7 +94,7 @@ namespace pwiz.SkylineTestFunctional
             );
             RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors));
             WaitForConditionUI(() => documentGrid.IsComplete);
-            Assert.AreEqual(12 + (TestSmallMolecules ? 1 : 0), documentGrid.RowCount);
+            Assert.AreEqual(12, documentGrid.RowCount);
             {
                 var quickFilterForm = ShowDialog<QuickFilterForm>(() =>
                 {

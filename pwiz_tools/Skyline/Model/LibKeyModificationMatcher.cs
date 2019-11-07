@@ -301,7 +301,7 @@ namespace pwiz.Skyline.Model
             Peptide peptide;
             if (smallMoleculeKey != null)
             {
-                peptide = new Peptide(new CustomMolecule(smallMoleculeKey.SmallMoleculeLibraryAttributes));
+                peptide = new Peptide(CustomMolecule.FromSmallMoleculeLibraryAttributes(smallMoleculeKey.SmallMoleculeLibraryAttributes));
             }
             else if (peptideKey != null)
             {

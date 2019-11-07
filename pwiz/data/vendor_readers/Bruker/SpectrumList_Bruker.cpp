@@ -99,8 +99,8 @@ PWIZ_API_DECL size_t SpectrumList_Bruker::find(const string& id) const
                 // fall through and return size_ (id not found)
             }
         }
-
-        return size_;
+        
+        return checkNativeIdFindResult(size_, id);
     }
     return scanItr->second;
 }
@@ -256,49 +256,17 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
             result->set(MS_total_ion_current, spectrum->getTIC());
         }
 
+        double oneOverK0 = spectrum->oneOverK0();
+        if (oneOverK0 > 0)
+        {
+            scan.set(MS_inverse_reduced_ion_mobility, oneOverK0, MS_Vs_cm_2);
+            int windowGroup = spectrum->getWindowGroup();
+            if (windowGroup > 0)
+                scan.userParams.push_back(UserParam("windowGroup", lexical_cast<string>(windowGroup))); // diaPASEF data
+        }
+
         if (detailLevel == DetailLevel_InstantMetadata)
             return result;
-
-        if (spectrum->isIonMobilitySpectrum())
-            scan.set(MS_inverse_reduced_ion_mobility, spectrum->oneOverK0(), MS_Vs_cm_2);
-
-        if (detailLevel == DetailLevel_FastMetadata)
-            return result;
-
-        // Enumerating merged scan numbers is not instant.
-        IntegerSet scanNumbers = spectrum->getMergedScanNumbers();
-        if (config_.combineIonMobilitySpectra && scanNumbers.size() < 100)
-        {
-            using namespace boost::spirit::karma;
-            auto frameScanPair = compassDataPtr_->getFrameScanPair(si.scan);
-            generate(std::back_insert_iterator<std::string>(scan.spectrumID),
-                     "frame=" << int_ << " scan=" << int_,
-                     frameScanPair.first, *scanNumbers.begin());
-
-            vector<Scan>& scans = result->scanList.scans;
-            for (auto itr = ++scanNumbers.begin(); itr != scanNumbers.end(); ++itr)
-            {
-                scans.push_back(Scan());
-                scans.back().instrumentConfigurationPtr = msd_.run.defaultInstrumentConfigurationPtr;
-                generate(std::back_insert_iterator<std::string>(scans.back().spectrumID),
-                         "frame=" << int_ << " scan=" << int_,
-                         frameScanPair.first, *itr);
-
-                // CONSIDER: do we need this? all scan times will be the same and it's rather verbose
-                //if (scanTime > 0)
-                //    scans.back().set(MS_scan_start_time, scanTime, UO_second);
-
-                // CONSIDER: do we need this? all scan ranges will be the same and it's very verbose!
-                //if (scanRange.first > 0 && scanRange.second > 0)
-                //    scans.back().scanWindows.push_back(ScanWindow(scanRange.first, scanRange.second, MS_m_z));
-            }
-            result->scanList.set(MS_sum_of_spectra);
-        }
-        else
-            result->scanList.set(MS_no_combination);
-
-        //sd.set(MS_lowest_observed_m_z, minObservedMz);
-        //sd.set(MS_highest_observed_m_z, maxObservedMz);
 
         if (msLevel > 1)
         {
@@ -314,7 +282,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
             {
                 spectrum->getIsolationData(isolMZs, isolModes);
 
-                for (size_t i=0; i < fragMZs.size(); ++i)
+                for (size_t i = 0; i < fragMZs.size(); ++i)
                 {
                     if (fragMZs[i] > 0)
                     {
@@ -375,6 +343,48 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
                 result->precursors.push_back(precursor);
         }
 
+        if (detailLevel == DetailLevel_FastMetadata)
+            return result;
+
+        // Enumerating merged scan numbers is not instant.
+        IntegerSet scanNumbers = spectrum->getMergedScanNumbers();
+        if (config_.combineIonMobilitySpectra)
+        {
+            result->scanList.set(MS_sum_of_spectra);
+            if (scanNumbers.size() < 100)
+            {
+                using namespace boost::spirit::karma;
+                auto frameScanPair = compassDataPtr_->getFrameScanPair(si.scan);
+                generate(std::back_insert_iterator<std::string>(scan.spectrumID),
+                         "frame=" << int_ << " scan=" << int_,
+                         frameScanPair.frame, *scanNumbers.begin());
+
+                vector<Scan>& scans = result->scanList.scans;
+                scans.reserve(scanNumbers.size());
+                for (auto itr = ++scanNumbers.begin(); itr != scanNumbers.end(); ++itr)
+                {
+                    scans.push_back(Scan());
+                    scans.back().instrumentConfigurationPtr = msd_.run.defaultInstrumentConfigurationPtr;
+                    generate(std::back_insert_iterator<std::string>(scans.back().spectrumID),
+                             "frame=" << int_ << " scan=" << int_,
+                             frameScanPair.frame, *itr);
+
+                    // CONSIDER: do we need this? all scan times will be the same and it's rather verbose
+                    //if (scanTime > 0)
+                    //    scans.back().set(MS_scan_start_time, scanTime, UO_second);
+
+                    // CONSIDER: do we need this? all scan ranges will be the same and it's very verbose!
+                    //if (scanRange.first > 0 && scanRange.second > 0)
+                    //    scans.back().scanWindows.push_back(ScanWindow(scanRange.first, scanRange.second, MS_m_z));
+                }
+            }
+        }
+        else
+            result->scanList.set(MS_no_combination);
+
+        //sd.set(MS_lowest_observed_m_z, minObservedMz);
+        //sd.set(MS_highest_observed_m_z, maxObservedMz);
+
         if (detailLevel == DetailLevel_FullData)
         {
             bool getLineData = msLevelsToCentroid.contains(msLevel);
@@ -386,13 +396,15 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
                 auto& mz = result->getMZArray()->data;
                 auto& intensity = result->getIntensityArray()->data;
 
+                result->set(MS_centroid_spectrum); // TIMS is always centroided
+
                 BinaryDataArrayPtr mobility(new BinaryDataArray);
                 result->binaryDataArrayPtrs.push_back(mobility);
                 CVParam arrayType(MS_mean_inverse_reduced_ion_mobility_array);
                 arrayType.units = MS_Vs_cm_2;
                 mobility->cvParams.emplace_back(arrayType);
 
-                spectrum->getCombinedSpectrumData(mz, intensity, mobility->data);
+                spectrum->getCombinedSpectrumData(mz, intensity, mobility->data, config_.sortAndJitter);
                 result->defaultArrayLength = mz.size();
             }
             else
@@ -426,6 +438,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
             if (config_.combineIonMobilitySpectra)
             {
                 result->defaultArrayLength = spectrum->getCombinedSpectrumDataSize();
+                result->set(MS_centroid_spectrum); // TIMS is always centroided
             }
             else
             {
@@ -662,14 +675,14 @@ PWIZ_API_DECL void SpectrumList_Bruker::createIndex()
             if (config_.combineIonMobilitySpectra)
             {
                 generate(sink,
-                         "merged=" << int_,
-                         si.index);
+                         "merged=" << int_ << " frame=" << int_ << " scanStart=" << int_ << " scanEnd=" << int_,
+                         si.index, frameScanPair.frame, frameScanPair.scanStart, frameScanPair.scanEnd);
                 idToIndexTempMap[si.id] = si.index;
             }
             else // not inserting into idToIndexTempMap (instead uses on-the-fly logic in find())
                 generate(sink,
                          "frame=" << int_ << " scan=" << int_,
-                         frameScanPair.first, frameScanPair.second);
+                         frameScanPair.frame, frameScanPair.scanStart);
         }
     }
     else if (format_ != Reader_Bruker_Format_U2)

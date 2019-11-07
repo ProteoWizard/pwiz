@@ -163,7 +163,7 @@ namespace pwiz.Skyline.EditUI
         {
             public override MessageInfo MessageInfo
             {
-                get { return new MessageInfo(MessageType.reintegrated_peaks, PeakScoringModel.Name); }
+                get { return new MessageInfo(MessageType.reintegrated_peaks, SrmDocument.DOCUMENT_TYPE.none, PeakScoringModel.Name); }
             }
 
             public ReintegrateDlgSettings(ReintegrateDlg dlg)

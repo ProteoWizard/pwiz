@@ -25,7 +25,6 @@ using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 using pwiz.Skyline.Model.Results.RemoteApi;
-using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
 using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
 using pwiz.SkylineTestUtil;
 
@@ -103,20 +102,16 @@ namespace pwiz.SkylineTestConnected.Results.RemoteApi
         public void TestRemoteAccountList()
         {
             var unifiAccount = new UnifiAccount("https://unifiserver.xxx", "unifi_username", "unifi_password");
-            var chorusAccount = new ChorusAccount("https://chorusserver.xxx", "chorus_username", "chorus_password");
             var remoteAccountList = new RemoteAccountList();
             remoteAccountList.Add(unifiAccount);
-            remoteAccountList.Add(chorusAccount);
             StringWriter stringWriter = new StringWriter();
             var xmlSerializer = new XmlSerializer(typeof(RemoteAccountList));
             xmlSerializer.Serialize(stringWriter, remoteAccountList);
             var serializedAccountList = stringWriter.ToString();
             Assert.AreEqual(-1, serializedAccountList.IndexOf(unifiAccount.Password, StringComparison.Ordinal));
-            Assert.AreEqual(-1, serializedAccountList.IndexOf(chorusAccount.Password, StringComparison.Ordinal));
             var roundTrip = (RemoteAccountList) xmlSerializer.Deserialize(new StringReader(serializedAccountList));
             Assert.AreEqual(remoteAccountList.Count, roundTrip.Count);
             Assert.AreEqual(unifiAccount, roundTrip[0]);
-            Assert.AreEqual(chorusAccount, roundTrip[1]);
         }
     }
 }

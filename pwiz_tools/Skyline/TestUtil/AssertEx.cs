@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -108,7 +109,7 @@ namespace pwiz.SkylineTestUtil
             Assert.AreNotEqual(0, parts.Length, "Must have at least one thing contained");
             foreach (string part in parts)
             {
-                if (!value.Contains(part))
+                if (!string.IsNullOrEmpty(part) && !value.Contains(part))
                     Assert.Fail("The text '{0}' does not contain '{1}'", value, part);
             }
         }
@@ -390,10 +391,42 @@ namespace pwiz.SkylineTestUtil
             var verStart = xmlText.IndexOf("format_version=\"", StringComparison.Ordinal) + 16;
             string schemaVer = xmlText.Substring(verStart, xmlText.Substring(verStart).IndexOf("\"", StringComparison.Ordinal));
             // ReSharper restore LocalizableElement
+
+            ValidatesAgainstSchema(xmlText, "Skyline_" + schemaVer);
+        }
+
+        [Localizable(false)]
+        public static void ValidateAuditLogAgainstSchema(string xmlText)
+        {
+            int documentHashIndex = xmlText.IndexOf("document_hash", StringComparison.Ordinal);
+            int formatVersionIndex = xmlText.IndexOf("format_version=\"", StringComparison.Ordinal);
+
+            string version = "0";
+            if (documentHashIndex < 0)
+                Assert.Fail("Invalid Audit Log. No audit_log tag found");
+            if (formatVersionIndex > 0 && formatVersionIndex < documentHashIndex)
+            {
+                version = xmlText.Substring(formatVersionIndex + 16,
+                    xmlText.Substring(formatVersionIndex + 16).IndexOf("\"", StringComparison.Ordinal));
+            }
+
+            // While a change in Skyline schema is often associated with change in audit log
+            // schema, it's not always the case
+            if (double.Parse(version, CultureInfo.InvariantCulture) > 4.21)
+            {
+                version = "4.21";
+            }
+
+            ValidatesAgainstSchema(xmlText, "AuditLog.Skyl_" + version);
+        }
+
+
+        public static void ValidatesAgainstSchema(string xmlText, string xsdName)
+        {
             var assembly = Assembly.GetAssembly(typeof(AssertEx));
-            var schemaFileName = typeof(AssertEx).Namespace + String.Format(CultureInfo.InvariantCulture, @".Schemas.Skyline_{0}.xsd", schemaVer);
-            var schemaFile = assembly.GetManifestResourceStream(schemaFileName);   
-            Assert.IsNotNull(schemaFile, "could not locate a schema file called "+schemaFileName);
+            var schemaFileName = typeof(AssertEx).Namespace + String.Format(CultureInfo.InvariantCulture, @".Schemas.{0}.xsd", xsdName);
+            var schemaFile = assembly.GetManifestResourceStream(schemaFileName);
+            Assert.IsNotNull(schemaFile, "could not locate a schema file called " + schemaFileName);
             using (var schemaReader = new XmlTextReader(schemaFile))
             {
                 var schema = XmlSchema.Read(schemaReader, OldSchemaValidationCallBack);
@@ -785,33 +818,7 @@ namespace pwiz.SkylineTestUtil
         {
             string errmsg = string.Empty;
             if (revision != null)
-            {
-                if (Settings.Default.TestSmallMolecules && (revision == (document.RevisionIndex - 1)))
-                    revision++;
-                        // Presumably this got bumped up during document deserialization in our special test mode
                 errmsg += DocumentStateTestAreEqual("RevisionIndex", revision, document.RevisionIndex);
-            }
-            if (Settings.Default.TestSmallMolecules)
-            {
-                // We'll have added a node at the end that the test writer didn't anticipate - bump the counts accordingly
-                if (groups.HasValue)
-                    groups = document.MoleculeGroups.Where(SrmDocument.IsSpecialNonProteomicTestDocNode)
-                        .Aggregate(groups, (current, @group) => current + 1);
-                if (molecules.HasValue)
-                    molecules = document.Molecules.Where(SrmDocument.IsSpecialNonProteomicTestDocNode)
-                        .Aggregate(molecules, (current, @molecule) => current + 1);
-                if (tranGroups.HasValue)
-                    tranGroups =
-                        document.MoleculeTransitionGroups.Where(SrmDocument.IsSpecialNonProteomicTestDocNode)
-                            .Aggregate(tranGroups, (current, @transgroup) => current + 1);
-                if (transitions.HasValue)
-                {
-                    foreach (var tg in document.MoleculeTransitionGroups.Where(SrmDocument.IsSpecialNonProteomicTestDocNode))
-                    {
-                        transitions += tg.TransitionCount;
-                    }
-                }
-            }
             if (groups.HasValue)
                 errmsg += DocumentStateTestAreEqual("MoleculeGroupCount", groups, document.MoleculeGroupCount);
             if (molecules.HasValue)
@@ -935,6 +942,14 @@ namespace pwiz.SkylineTestUtil
             Cloned(target.TransitionSettings.Instrument, copy.TransitionSettings.Instrument, defTran.Instrument);
             Cloned(target.TransitionSettings.FullScan, copy.TransitionSettings.FullScan, defTran.FullScan);
             Cloned(target.TransitionSettings, copy.TransitionSettings);
+            var defData = defSet.DataSettings;
+            Cloned(target.DataSettings.AnnotationDefs, copy.DataSettings.AnnotationDefs, defData.AnnotationDefs);
+            Cloned(target.DataSettings.GroupComparisonDefs, copy.DataSettings.GroupComparisonDefs, defData.GroupComparisonDefs);
+            Cloned(target.DataSettings.Lists, copy.DataSettings.Lists, defData.Lists);
+            Cloned(target.DataSettings.ViewSpecList, copy.DataSettings.ViewSpecList, defData.ViewSpecList);
+            Assert.AreEqual(target.DataSettings, copy.DataSettings);  // Might both by DataSettings.DEFAULT
+            if (!DataSettings.DEFAULT.Equals(target.DataSettings))
+                Assert.AreNotSame(target.DataSettings, copy.DataSettings);
             Cloned(target, copy);
         }
 
@@ -1019,7 +1034,7 @@ namespace pwiz.SkylineTestUtil
                         Assert.AreEqual(mol.Note ?? string.Empty,
                             convertedMol.Note.Replace(RefinementSettings.TestingConvertedFromProteomic, string.Empty));
                     else
-                        Assert.AreEqual(mol.CustomMolecule.InvariantName, SrmDocument.TestingNonProteomicMoleculeName); // This was the magic test molecule
+                        Assert.Fail(@"unexpected empty note"); 
                     Assert.AreEqual(mol.SourceKey, convertedMol.SourceKey);
                     Assert.AreEqual(mol.Rank, convertedMol.Rank);
                     Assert.AreEqual(mol.Results, convertedMol.Results);

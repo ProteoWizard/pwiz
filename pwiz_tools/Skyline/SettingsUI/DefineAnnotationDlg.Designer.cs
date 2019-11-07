@@ -28,6 +28,7 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DefineAnnotationDlg));
             this.label1 = new System.Windows.Forms.Label();
             this.tbxName = new System.Windows.Forms.TextBox();
@@ -39,6 +40,19 @@ namespace pwiz.Skyline.SettingsUI
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.label4 = new System.Windows.Forms.Label();
+            this.imageList1 = new System.Windows.Forms.ImageList(this.components);
+            this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.tabPageEditable = new System.Windows.Forms.TabPage();
+            this.tabPageCalculated = new System.Windows.Forms.TabPage();
+            this.comboAggregateOperation = new System.Windows.Forms.ComboBox();
+            this.lblAggregateOperation = new System.Windows.Forms.Label();
+            this.availableFieldsTree1 = new pwiz.Common.DataBinding.Controls.Editor.AvailableFieldsTree();
+            this.label5 = new System.Windows.Forms.Label();
+            this.comboAppliesTo = new System.Windows.Forms.ComboBox();
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
+            this.tabControl1.SuspendLayout();
+            this.tabPageEditable.SuspendLayout();
+            this.tabPageCalculated.SuspendLayout();
             this.SuspendLayout();
             // 
             // label1
@@ -101,26 +115,98 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.label4, "label4");
             this.label4.Name = "label4";
             // 
+            // imageList1
+            // 
+            this.imageList1.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageList1.ImageStream")));
+            this.imageList1.TransparentColor = System.Drawing.Color.Magenta;
+            this.imageList1.Images.SetKeyName(0, "Delete.bmp");
+            // 
+            // tabControl1
+            // 
+            resources.ApplyResources(this.tabControl1, "tabControl1");
+            this.tabControl1.Controls.Add(this.tabPageEditable);
+            this.tabControl1.Controls.Add(this.tabPageCalculated);
+            this.tabControl1.Name = "tabControl1";
+            this.tabControl1.SelectedIndex = 0;
+            // 
+            // tabPageEditable
+            // 
+            this.tabPageEditable.Controls.Add(this.label2);
+            this.tabPageEditable.Controls.Add(this.comboType);
+            this.tabPageEditable.Controls.Add(this.label4);
+            this.tabPageEditable.Controls.Add(this.tbxValues);
+            this.tabPageEditable.Controls.Add(this.label3);
+            this.tabPageEditable.Controls.Add(this.checkedListBoxAppliesTo);
+            resources.ApplyResources(this.tabPageEditable, "tabPageEditable");
+            this.tabPageEditable.Name = "tabPageEditable";
+            this.tabPageEditable.UseVisualStyleBackColor = true;
+            // 
+            // tabPageCalculated
+            // 
+            this.tabPageCalculated.Controls.Add(this.comboAggregateOperation);
+            this.tabPageCalculated.Controls.Add(this.lblAggregateOperation);
+            this.tabPageCalculated.Controls.Add(this.availableFieldsTree1);
+            this.tabPageCalculated.Controls.Add(this.label5);
+            this.tabPageCalculated.Controls.Add(this.comboAppliesTo);
+            resources.ApplyResources(this.tabPageCalculated, "tabPageCalculated");
+            this.tabPageCalculated.Name = "tabPageCalculated";
+            this.tabPageCalculated.UseVisualStyleBackColor = true;
+            // 
+            // comboAggregateOperation
+            // 
+            resources.ApplyResources(this.comboAggregateOperation, "comboAggregateOperation");
+            this.comboAggregateOperation.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboAggregateOperation.FormattingEnabled = true;
+            this.comboAggregateOperation.Name = "comboAggregateOperation";
+            // 
+            // lblAggregateOperation
+            // 
+            resources.ApplyResources(this.lblAggregateOperation, "lblAggregateOperation");
+            this.lblAggregateOperation.Name = "lblAggregateOperation";
+            // 
+            // availableFieldsTree1
+            // 
+            resources.ApplyResources(this.availableFieldsTree1, "availableFieldsTree1");
+            this.availableFieldsTree1.CheckedColumns = new pwiz.Common.DataBinding.PropertyPath[0];
+            this.availableFieldsTree1.DrawMode = System.Windows.Forms.TreeViewDrawMode.OwnerDrawText;
+            this.availableFieldsTree1.Name = "availableFieldsTree1";
+            this.availableFieldsTree1.ShowNodeToolTips = true;
+            this.availableFieldsTree1.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.availableFieldsTree1_AfterSelect);
+            // 
+            // label5
+            // 
+            resources.ApplyResources(this.label5, "label5");
+            this.label5.Name = "label5";
+            // 
+            // comboAppliesTo
+            // 
+            this.comboAppliesTo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboAppliesTo.FormattingEnabled = true;
+            resources.ApplyResources(this.comboAppliesTo, "comboAppliesTo");
+            this.comboAppliesTo.Name = "comboAppliesTo";
+            this.comboAppliesTo.SelectedIndexChanged += new System.EventHandler(this.comboAppliesTo_SelectedIndexChanged);
+            // 
             // DefineAnnotationDlg
             // 
             this.AcceptButton = this.btnOK;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.Controls.Add(this.label4);
+            this.Controls.Add(this.tabControl1);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOK);
-            this.Controls.Add(this.checkedListBoxAppliesTo);
-            this.Controls.Add(this.label3);
-            this.Controls.Add(this.tbxValues);
-            this.Controls.Add(this.label2);
-            this.Controls.Add(this.comboType);
             this.Controls.Add(this.tbxName);
             this.Controls.Add(this.label1);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "DefineAnnotationDlg";
             this.ShowInTaskbar = false;
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
+            this.tabControl1.ResumeLayout(false);
+            this.tabPageEditable.ResumeLayout(false);
+            this.tabPageEditable.PerformLayout();
+            this.tabPageCalculated.ResumeLayout(false);
+            this.tabPageCalculated.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -138,5 +224,14 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.ImageList imageList1;
+        private System.Windows.Forms.TabControl tabControl1;
+        private System.Windows.Forms.TabPage tabPageEditable;
+        private System.Windows.Forms.TabPage tabPageCalculated;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.ComboBox comboAppliesTo;
+        private Common.DataBinding.Controls.Editor.AvailableFieldsTree availableFieldsTree1;
+        private System.Windows.Forms.ComboBox comboAggregateOperation;
+        private System.Windows.Forms.Label lblAggregateOperation;
     }
 }

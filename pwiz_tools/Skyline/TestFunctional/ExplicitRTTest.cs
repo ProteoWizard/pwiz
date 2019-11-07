@@ -47,9 +47,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
 
-            TestSmallMolecules = false;  // Don't need the magic test node
-
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            var testFilesDir = TestFilesDir;
 
             // Verify our use of explict RT where multiple nodes and multiple chromatograms all have same Q1>Q3
             // This data set has three chromatograms with Q1=150 Q3=150 (one in negative ion mode), and 
@@ -85,7 +83,7 @@ namespace pwiz.SkylineTestFunctional
             var listChromatograms = new List<ChromatogramSet>();
             foreach (var filename in filenames)
             {
-                var path = MsDataFileUri.Parse(filename + ExtensionTestContext.ExtWatersRaw);
+                var path = MsDataFileUri.Parse(filename + ExtensionTestContext.ExtMzml);
                 listChromatograms.Add(AssertResult.FindChromatogramSet(doc, path) ??
                                       new ChromatogramSet(path.GetFileName().Replace('.', '_'), new[] { path }));
             }
@@ -164,7 +162,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForCondition(() => File.Exists(documentFile));
             RunUI(() =>
             {
-                SkylineWindow.OpenFile(documentFile);
+                SkylineWindow.OpenFile(documentFile+"d"); //Highjacking this existing test to also test our handling of user trying to open a Skyline-related file (like .skyd) instead of actual Skyline file
                 SkylineWindow.SaveDocument(documentFile.Replace(".sky", "_updated.sky")); // These are some of our oldest small mol docs, save an updated version for debug ease
             });
             

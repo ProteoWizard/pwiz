@@ -131,8 +131,8 @@ namespace MSConvertGUI
                     directory = ".";
                 foreach (string filepath in Directory.GetFiles(directory, Path.GetFileName(text)))
                 {
+                    FileBox.Tag = filepath;
                     FileBox.Text = filepath;
-                    FileBox.Tag = item;
                     AddFileButton_Click(this, EventArgs.Empty);
                 }
             }
@@ -396,6 +396,8 @@ namespace MSConvertGUI
 
         private void FileBox_TextChanged(object sender, EventArgs e)
         {
+            string fileBoxText = FileBox.Text.Trim();
+            if (FileBox.Tag == null || FileBox.Tag is string) FileBox.Tag = fileBoxText;
             AddFileButton.Enabled = IsValidSource(FileBox.Tag);
         }
 
@@ -445,14 +447,12 @@ namespace MSConvertGUI
 
         private void BrowseFileButton_Click(object sender, EventArgs e)
         {
-            var fileList = new List<string>
-                               {
-                                   "Any spectra format","mzML", "mzXML", "MZ5",
-                                   "MS1", "CMS1", "BMS1", "MS2", "CMS2", "BMS2",
-                                   "Thermo RAW", "Waters RAW", "ABSciex WIFF",
-                                   "Bruker Analysis", "Agilent MassHunter",
-                                   "Mascot Generic", "Bruker Data Exchange"
-                               };
+            var fileList = new List<string>();
+            foreach (var typeExtsPair in ReaderList.FullReaderList.getFileExtensionsByType())
+                if (typeExtsPair.Value.Count > 0) // e.g. exclude UNIFI
+                    fileList.Add(typeExtsPair.Key);
+            fileList.Sort();
+            fileList.Insert(0, "Any spectra format");
 
             OpenDataSourceDialog browseToFileDialog;
             browseToFileDialog = String.IsNullOrEmpty(FileBox.Text)
@@ -613,14 +613,21 @@ namespace MSConvertGUI
                                                });
                     break;
                 case "Subset":
+                    string scanTimeLow = null, scanTimeHigh = null;
+                    if (!String.IsNullOrEmpty(ScanTimeLow.Text) || !String.IsNullOrEmpty(ScanTimeHigh.Text))
+                    {
+                        scanTimeLow = String.IsNullOrEmpty(ScanTimeLow.Text) ? "0" : ScanTimeLow.Text;
+                        scanTimeHigh = String.IsNullOrEmpty(ScanTimeHigh.Text) ? "1e8" : ScanTimeHigh.Text;
+                    }
+
                     if (!String.IsNullOrEmpty(MSLevelLow.Text) || !String.IsNullOrEmpty(MSLevelHigh.Text))
                         FilterDGV.Rows.Add(new[] { "msLevel", String.Format("{0}-{1}", MSLevelLow.Text, MSLevelHigh.Text) });
                     if (!String.IsNullOrEmpty(ScanNumberLow.Text) || !String.IsNullOrEmpty(ScanNumberHigh.Text))
                         FilterDGV.Rows.Add(new[] { "scanNumber", String.Format("{0}-{1}", ScanNumberLow.Text, ScanNumberHigh.Text) });
-                    if (!String.IsNullOrEmpty(ScanTimeLow.Text) || !String.IsNullOrEmpty(ScanTimeHigh.Text))
-                        FilterDGV.Rows.Add(new[] { "scanTime", String.Format("[{0},{1}]", ScanTimeLow.Text, ScanTimeHigh.Text) });
+                    if (!String.IsNullOrEmpty(scanTimeLow) || !String.IsNullOrEmpty(scanTimeHigh))
+                        FilterDGV.Rows.Add(new[] { "scanTime", String.Format("[{0},{1}]", scanTimeLow, scanTimeHigh) });
                     if (!String.IsNullOrEmpty(ScanEventLow.Text) || !String.IsNullOrEmpty(ScanEventHigh.Text))
-                        FilterDGV.Rows.Add(new[] { "scanEvent", String.Format("[{0},{1}]", ScanEventLow.Text, ScanEventHigh.Text) });
+                        FilterDGV.Rows.Add(new[] { "scanEvent", String.Format("{0}-{1}", ScanEventLow.Text, ScanEventHigh.Text) });
                     if (!String.IsNullOrEmpty(ChargeStatesLow.Text) || !String.IsNullOrEmpty(ChargeStatesHigh.Text))
                         FilterDGV.Rows.Add(new[] { "chargeStates", String.Format("{0}-{1}", ChargeStatesLow.Text, ChargeStatesHigh.Text) });
                     if (!String.IsNullOrEmpty(DefaultArrayLengthLow.Text) || !String.IsNullOrEmpty(DefaultArrayLengthHigh.Text))

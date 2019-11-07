@@ -17,6 +17,7 @@
 #ifndef FILESYS_DWA20011025_H
 #define FILESYS_DWA20011025_H
 
+#include "config.h"
 #include "hash.h"
 #include "lists.h"
 #include "object.h"
@@ -37,7 +38,7 @@ typedef struct file_info_t
 typedef struct file_item FILEITEM;
 struct file_item
 {
-    file_info_t * value;  /* expected to be equvalent with &FILEITEM */
+    file_info_t * value;  /* expected to be equivalent with &FILEITEM */
     FILEITEM * next;
 };
 

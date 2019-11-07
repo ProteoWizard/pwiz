@@ -136,6 +136,7 @@
     <Compile Include="AdductTest.cs" />
     <Compile Include="AnnotationUnitTest.cs" />
     <Compile Include="AntivirusExclusionTest.cs" />
+    <Compile Include="AuditLogListTest.cs" />
     <Compile Include="BilinearCurveFitTest.cs" />
     <Compile Include="BookmarkEnumeratorTest.cs" />
     <Compile Include="ChromatogramExporterTest.cs" />
@@ -144,6 +145,7 @@
     <Compile Include="CommandLineImportAnnotationsTest.cs" />
     <Compile Include="CommandLineImportDocTest.cs" />
     <Compile Include="CommandLineMProphetTest.cs" />
+    <Compile Include="CustomMoleculeTest.cs" />
     <Compile Include="DecoysTest.cs" />
     <Compile Include="DigestionTest.cs" />
     <Compile Include="DocLoadLibraryTest.cs" />

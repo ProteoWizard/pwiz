@@ -1,5 +1,5 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:peaksdb-tims-mzid.blib	7	1	9
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:peaksdb-tims-mzid.blib	7	1	10
 id	RefSpectraID	position	mass
 1	3	2	15.994915
 2	3	3	15.994915
@@ -12,16 +12,16 @@ id	RefSpectraID	position	mass
 9	6	2	15.994915
 10	6	3	15.994915
 11	6	6	57.021465
-id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
-1	HEEAPGHRPTTNPNASK	614.9602	3	HEEAPGHRPTTNPNASK	-	-	1	89	0.8649	0.0	0.0	1	0.78329995	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	index=38	0.000901571137605957	19
-2	VAGGAAPSKPASAK	606.3342	2	VAGGAAPSKPASAK	-	-	1	53	0.9457	0.0	0.0	1	0.8244	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	index=42	6.90239803840243e-05	19
-3	NMMAACDPR	549.20526	2	NM[+16.0]M[+16.0]AAC[+57.0]DPR	-	-	1	138	0.8639	0.0	0.0	1	0.8376	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	index=44	0.000490907876152603	19
-4	NMMAACDPR	549.20264	2	NM[+16.0]M[+16.0]AAC[+57.0]DPR	-	-	1	100	0.8634	0.0	0.0	1	0.8466	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	index=45	0.000671428852925952	19
-5	HQGVMVGMGQK	602.27924	2	HQGVM[+16.0]VGM[+16.0]GQK	-	-	1	215	0.8989	0.0	0.0	1	0.855499966666667	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	index=46	0.000149968483550237	19
-6	NMMAACDPR	549.20636	2	NM[+16.0]M[+16.0]AAC[+57.0]DPR	-	-	1	57	0.8639	0.0	0.0	1	0.864400033333333	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	index=49	0.000132739445772974	19
-7	EESGKPGAHVTVK	669.84595	2	EESGKPGAHVTVK	-	-	1	76	0.9462	0.0	0.0	1	0.8734	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	index=51	0.000266685866452148	19
-id	fileName	cutoffScore
-1	/BiblioSpec/tests/inputs/201800411_HeLa_50ng_5min_OptV2_4MSMSscans_newGradients_Slot1-2_01_2438.mgf	0.999
+id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	totalIonCurrent	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
+1	HEEAPGHRPTTNPNASK	614.9602	3	HEEAPGHRPTTNPNASK	-	-	1	89	0.8649	0.0	0.0	1	0.78329995	N/A	N/A	6541.12580466	N/A	N/A	N/A	N/A	N/A	1	index=38	0.00090157	16
+2	VAGGAAPSKPASAK	606.3342	2	VAGGAAPSKPASAK	-	-	1	53	0.9457	0.0	0.0	1	0.8244	N/A	N/A	3088.54889535	N/A	N/A	N/A	N/A	N/A	1	index=42	6.90239803e-05	16
+3	NMMAACDPR	549.20526	2	NM[+16.0]M[+16.0]AAC[+57.0]DPR	-	-	1	138	0.8639	0.0	0.0	1	0.8376	N/A	N/A	10886.70	N/A	N/A	N/A	N/A	N/A	1	index=44	0.00049090	16
+4	NMMAACDPR	549.20264	2	NM[+16.0]M[+16.0]AAC[+57.0]DPR	-	-	1	100	0.8634	0.0	0.0	1	0.8466	N/A	N/A	6030.83342838	N/A	N/A	N/A	N/A	N/A	1	index=45	0.00067142	16
+5	HQGVMVGMGQK	602.27924	2	HQGVM[+16.0]VGM[+16.0]GQK	-	-	1	215	0.8989	0.0	0.0	1	0.85549996	N/A	N/A	34026.35	N/A	N/A	N/A	N/A	N/A	1	index=46	0.00014996	16
+6	NMMAACDPR	549.20636	2	NM[+16.0]M[+16.0]AAC[+57.0]DPR	-	-	1	57	0.8639	0.0	0.0	1	0.86440003	N/A	N/A	3313.85668420	N/A	N/A	N/A	N/A	N/A	1	index=49	0.00013273	16
+7	EESGKPGAHVTVK	669.84595	2	EESGKPGAHVTVK	-	-	1	76	0.9462	0.0	0.0	1	0.8734	N/A	N/A	5230.39095735	N/A	N/A	N/A	N/A	N/A	1	index=51	0.00026668	16
+id	fileName	idFileName	cutoffScore
+1	/BiblioSpec/tests/inputs/201800411_HeLa_50ng_5min_OptV2_4MSMSscans_newGradients_Slot1-2_01_2438.mgf	/BiblioSpec/tests/inputs/peptides_1_1_0.mzid	0.999
 id	scoreType	probabilityType
 0	UNKNOWN	NOT_A_PROBABILITY_VALUE
 1	PERCOLATOR QVALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT

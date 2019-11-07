@@ -26,7 +26,6 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
@@ -115,7 +114,7 @@ namespace pwiz.Skyline.Model
             
             public string Name { get; private set; }
 
-            [Track]
+            [Track(ignoreName:true)]
             public string Value
             {
                 get {
@@ -154,7 +153,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        [TrackChildren]
+        [TrackChildren(ignoreName:true)]
         public IEnumerable<Annotation> AnnotationsEnumerable
         {
             get
@@ -398,18 +397,36 @@ namespace pwiz.Skyline.Model
             return protoAnnotations;
         }
 
-        public static Annotations FromProtoAnnotations(StringPool stringPool, SkylineDocumentProto.Types.Annotations protoAnnotations)
+        public static Annotations FromProtoAnnotations(SkylineDocumentProto.Types.Annotations protoAnnotations)
         {
-            Assume.IsNotNull(stringPool);
             if (protoAnnotations == null)
             {
                 return EMPTY;
             }
             return new Annotations(protoAnnotations.Note, protoAnnotations.Values
                 .Select(value=>new KeyValuePair<string, string>(
-                    stringPool.GetString(value.Name), 
-                    stringPool.GetString(value.TextValue))), 
+                    value.Name, 
+                    value.TextValue)), 
                     protoAnnotations.Color);
+        }
+
+        /// <summary>
+        /// Removes all annotation values whose names are not in the specified Set.
+        /// </summary>
+        public Annotations RetainAnnotationNames(HashSet<string> namesToRetain)
+        {
+            if (_annotations == null)
+            {
+                return this;
+            }
+
+            var newAnnotations = _annotations.Where(kvp => namesToRetain.Contains(kvp.Key)).ToArray();
+            if (newAnnotations.Length == _annotations.Count)
+            {
+                return this;
+            }
+
+            return new Annotations(Note, newAnnotations, ColorIndex);
         }
     }
 }

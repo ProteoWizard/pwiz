@@ -214,13 +214,17 @@ namespace pwiz.SkylineTestUtil
         /// <param name="expectedSpectra">Number of spectra expected in the library</param>
         public static void WaitForLibrary(int expectedSpectra)
         {
-            WaitForCondition(() =>
+            TryWaitForCondition(() =>
             {
                 var librarySettings = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
                 return librarySettings.IsLoaded &&
                        librarySettings.Libraries.Count > 0 &&
                        librarySettings.Libraries[0].Keys.Count() == expectedSpectra;
             });
+            var librarySettingsFinal = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
+            Assert.IsTrue(librarySettingsFinal.IsLoaded);
+            Assert.IsTrue(librarySettingsFinal.Libraries.Count > 0);
+            Assert.AreEqual(expectedSpectra, librarySettingsFinal.Libraries[0].Keys.Count());
         }
 
         public static void AddLibrary(LibrarySpec libSpec, Library lib)

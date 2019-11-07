@@ -28,10 +28,12 @@ import sequence ;
 project 
   : requirements
       <link>static
+      <preserve-test-targets>on # necessary because ExecuteBlib.obj is shared between tests
 ;
 
 # extract the input files for the tests
-path-constant TEST_DATA_PATH : ./inputs ;
+constant TEST_INPUTS_PATH : inputs ;
+path-constant TEST_DATA_PATH : ./$(TEST_INPUTS_PATH) ;
 
 # get copy command and separator
 # TODO remove this
@@ -49,7 +51,7 @@ rule test-data
     {
         .extract-once = true ;
         import tar ;
-        tar.extract $(TEST_DATA_PATH).tar.bz2 : : : : check-last-file-only ;
+        tar.extract $(TEST_DATA_PATH).tar.bz2 : : : : <check-last-file-only>true <keep-old-files>true ;
     }
 
     local result ;
@@ -66,6 +68,13 @@ rule test-data
 }
 
 .os = [ modules.peek : OS ] ; # NT, LINUX, MACOSX
+
+# set UTF-8 codepage on Windows
+if NT = $(.os)
+{
+    ECHO "[pwiz_tools/BiblioSpec] Changing code page to UTF-8 (65001)" ;
+    SHELL "chcp 65001" ;
+}
 
 rule mascot-installed ( properties * )
 {
@@ -90,8 +99,8 @@ alias BlibFilter : ../src//BlibFilter ;
 alias BlibToMs2 : ../src//BlibToMs2 ;
 alias BlibSearch : ../src//BlibSearch ;
 
-exe CompareLibraryContents : CompareLibraryContents.cpp : <include>../src <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3 <library>/ext/boost//filesystem <library>/ext/boost//nowide ;
-exe CompareTextFiles : CompareTextFiles.cpp : <include>../src <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3 <library>/ext/boost//filesystem <library>/ext/boost//nowide ;
+exe CompareLibraryContents : CompareLibraryContents.cpp ../src/CommandLine.cpp ../src/Verbosity.cpp : <include>../src <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3 <library>/ext/boost//program_options <library>/ext/boost//filesystem <library>/ext/boost//nowide ;
+exe CompareTextFiles : CompareTextFiles.cpp ../src/CommandLine.cpp ../src/Verbosity.cpp : <include>../src <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3 <library>/ext/boost//program_options <library>/ext/boost//filesystem <library>/ext/boost//nowide ;
 
 local build-tests ;
 local filter-tests ;
@@ -165,150 +174,167 @@ rule blib-test-search ( name : args * : output-name : reference-names + : inputs
     search-tests += $(name) ;
 }
 
+# Add --unicode to optional arguments section to test that a format supports Unicode input paths
+# NB: it only works with formats that don't determine external spectra filepaths based on the input pathname (e.g. demo.sqt will look for demo.ms2)
+
 # Test building with sqt files
 
-blib-test-build sqt-ms2 : -o : output/demo.blib : sqt-ms2.check : inputs/demo.sqt ;
-blib-test-build sqt-cms2 : -o : output/demo-copy.blib : sqt-cms2.check : inputs/demo-copy.sqt ;
-blib-test-build sqt-ez : -o : output/sqt-ez.blib : sqt-ez.check : inputs/wormy4raw-1.select.sqt ;
+blib-test-build sqt-ms2 : -o : output/sqt-ms2.blib : sqt-ms2.check : $(TEST_INPUTS_PATH)/demo.sqt ;
+blib-test-build sqt-cms2 : -o : output/sqt-cms2.blib : sqt-cms2.check : $(TEST_INPUTS_PATH)/demo-copy.sqt ;
+blib-test-build sqt-ez : -o : output/sqt-ez.blib : sqt-ez.check : $(TEST_INPUTS_PATH)/wormy4raw-1.select.sqt ;
 
 # Test Shimadzu .MLB small molecule library import
-blib-test-build shimadzu-mlb : -o : output/Small_Library-Positive-ions_CE-Merged.blib : Small_Library-Positive-ions_CE-Merged.check : inputs/Small_Library-Positive-ions_CE-Merged.mlb ;
+blib-test-build shimadzu-mlb : --unicode -o : output/Small_Library-Positive-ions_CE-Merged.blib : Small_Library-Positive-ions_CE-Merged.check : $(TEST_INPUTS_PATH)/Small_Library-Positive-ions_CE-Merged.mlb ;
 
 # Test with the tab-delimited input format
 
-blib-test-build ssl : -o : output/ssl.blib : ssl.check : inputs/demo.ssl ;
-blib-test-build ssl-ex : -o : output/ssl-ex.blib : ssl-ex.check : inputs/extra-cols.ssl ;
-blib-test-build duplicates : -o : output/duplicates.blib : duplicates.check : inputs/three-duplicates.ssl ;
-blib-test-build ssl-rt : -o : output/ssl-rt.blib : ssl-rt.check : inputs/ssl-with-rt.ssl ;
-blib-test-build ssl-small-mol : -o : output/ssl-small-mol.blib : ssl-small-mol.check : inputs/ssl-small-mol.ssl ;
+blib-test-build ssl : --unicode -o : output/ssl.blib : ssl.check : $(TEST_INPUTS_PATH)/demo.ssl ;
+blib-test-build ssl-ex : -o : output/ssl-ex.blib : ssl-ex.check : $(TEST_INPUTS_PATH)/extra-cols.ssl ;
+blib-test-build duplicates : -o : output/duplicates.blib : duplicates.check : $(TEST_INPUTS_PATH)/three-duplicates.ssl ;
+blib-test-build ssl-rt : -o : output/ssl-rt.blib : ssl-rt.check : $(TEST_INPUTS_PATH)/ssl-with-rt.ssl ;
+blib-test-build ssl-small-mol : -o : output/ssl-small-mol.blib : ssl-small-mol.check : $(TEST_INPUTS_PATH)/ssl-small-mol.ssl ;
 
 # Test building with percolator XML files
 
-blib-test-build perc-xml : -o : output/perc.blib : perc-xml.check : inputs/smaller.perc.xml ;
+blib-test-build perc-xml : --unicode -o : output/perc-xml.blib : perc-xml.check : $(TEST_INPUTS_PATH)/smaller.perc.xml ;
 
 # Test building with percolator XML files generated by comet
-blib-test-build perc-comet-xml : -o : output/perc-comet.blib : perc-comet-xml.check : inputs/small.comet.perc.xml ;
+blib-test-build perc-comet-xml : -o : output/perc-comet-xml.blib : perc-comet-xml.check : $(TEST_INPUTS_PATH)/small.comet.perc.xml ;
 
 # Test building with percolator XML files (bracketed modifications)
 
-blib-test-build perc-bracket-xml : -o : output/perc-bracket.blib : perc-bracket-xml.check : inputs/bracket.perc.xml ;
+blib-test-build perc-bracket-xml : -o : output/perc-bracket-xml.blib : perc-bracket-xml.check : $(TEST_INPUTS_PATH)/bracket.perc.xml ;
 
 # Test building with .pep.xml from various pipelines
 
-blib-test-build omssa : -o : output/omssa.blib : omssa.check zbuild.skip-lines : inputs/OMSSA.pep.xml ;
-blib-test-build pep-proph : -o : output/pep-proph.blib : pep-proph.check : inputs/CAexample.pep.xml ;
-blib-test-build morpheus : -o : output/morpheus.blib : morpheus.check : inputs/test-morpheus.pep.xml ;
-blib-test-build msgfdb : -o : output/msgfdb.blib : msgfdb.check : inputs/ms-gfdb.pepXML ;
-blib-test-build peaksdb : -o : output/peaksdb.blib : peaksdb.check : inputs/peaksdb.pep.xml ;
-blib-test-build peaksdb-tims-mzid : -o -c@0.999 : output/peaksdb-tims-mzid.blib : peaksdb-tims-mzid.check : inputs/peptides_1_1_0.mzid ;
-blib-test-build prospector : -o : output/prospector.blib : prospector.check zbuild.skip-lines : inputs/V20120113-01_ITMSms2cid.pep.xml ;
-blib-test-build smill : -o : output/smill.blib : smill.check : inputs/CPTAC_Set4_725_091509.pep.XML ;
-blib-test-build smill_ims : -o : output/smill_ims.blib : smill_ims.check smill_ims.skip-lines : inputs/40minG_WBP_wide_z2-3_mid_BSA_5pmol_01.pep.xml ;
-blib-test-build bad-index : -o : output/bad-index.blib : bad-index.check : inputs/interact-prob-three-spec.pep.xml ;
+blib-test-build omssa : --unicode -o : output/omssa.blib : omssa.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/OMSSA.pep.xml ;
+blib-test-build pep-proph : -o : output/pep-proph.blib : pep-proph.check : $(TEST_INPUTS_PATH)/CAexample.pep.xml ;
+blib-test-build morpheus : -o : output/morpheus.blib : morpheus.check : $(TEST_INPUTS_PATH)/test-morpheus.pep.xml ;
+blib-test-build msgfdb : -o : output/msgfdb.blib : msgfdb.check : $(TEST_INPUTS_PATH)/ms-gfdb.pepXML ;
+blib-test-build peaksdb : -o : output/peaksdb.blib : peaksdb.check : $(TEST_INPUTS_PATH)/peaksdb.pep.xml ;
+blib-test-build peaksdb-tims-mzid : -o -c@0.999 : output/peaksdb-tims-mzid.blib : peaksdb-tims-mzid.check : $(TEST_INPUTS_PATH)/peptides_1_1_0.mzid ;
+blib-test-build prospector : -o : output/prospector.blib : prospector.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/V20120113-01_ITMSms2cid.pep.xml ;
+blib-test-build smill : -o : output/smill.blib : smill.check : $(TEST_INPUTS_PATH)/CPTAC_Set4_725_091509.pep.XML ;
+blib-test-build smill_ims : -o : output/smill_ims.blib : smill_ims.check smill_ims.skip-lines : $(TEST_INPUTS_PATH)/40minG_WBP_wide_z2-3_mid_BSA_5pmol_01.pep.xml ;
+blib-test-build bad-index : -o : output/bad-index.blib : bad-index.check : $(TEST_INPUTS_PATH)/interact-prob-three-spec.pep.xml ;
+blib-test-build comet : -o : output/comet.blib : comet.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/comet.demo1.target.pep.xml ;
 
 # Test other xml formats (idpicker, xtandem)
 
-blib-test-build idpicker : -o : output/idpicker.blib : idpicker.check zbuild.skip-lines : inputs/orbi-small-eg.idpXML ;
-blib-test-build tandem : -o : output/tandem.blib : tandem.check zbuild-rt.skip-lines : inputs/out_260_1_step01.2009_09_02_10_55_23.xtan.xml ;
-blib-test-build pride-mascot : -o : output/pride.mascot.blib : pride.mascot.check zbuild.skip-lines : inputs/test.mascot.pride.xml ;
-blib-test-build pride-xcorr : -o : output/pride.xcorr.blib : pride.xcorr.check zbuild.skip-lines : inputs/test.xcorr.pride.xml ;
-blib-test-build pride-bytes : -o : output/pride.xcorr.bytes.blib : pride.xcorr.bytes.check zbuild.skip-lines : inputs/test.bytes.pride.xml ;
-blib-test-build pride-xcorr-no-charges : -o : output/pride.xcorr.nocharges.blib : pride.xcorr.nocharges.check zbuild.skip-lines : inputs/test.xcorr.nocharges.pride.xml ;
-blib-test-build pride-mill : -o : output/pride.mill.blib : pride.mill.check zbuild.skip-lines : inputs/test.mill.pride.xml ;
-blib-test-build tiny-msf : -o : output/tiny.msf.blib : tiny.msf.check zbuild.skip-lines : inputs/tiny.msf ;
-blib-test-build tiny-v2-msf : -o : output/tiny-v2.msf.blib : tiny-v2.msf.check zbuild.skip-lines : inputs/tiny-v2.msf ;
-blib-test-build tiny-v2-filtered-pdResult : -o : output/tiny-v2-filtered.blib : tiny-v2-filtered.pdResult.check zbuild.skip-lines : inputs/tiny-v2-filtered.pdResult ;
-blib-test-build md_special_filtered-pdResult : -o : output/md_special_filtered.blib : md_special_filtered.pdResult.check zbuild.skip-lines : inputs/md_special_filtered.pdResult ;
-blib-test-build pilot : -o : output/pilot.blib : pilot.check : inputs/MB1_98_03.group.xml ;
+blib-test-build idpicker : --unicode -o : output/idpicker.blib : idpicker.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/orbi-small-eg.idpXML ;
+blib-test-build tandem : --unicode -o : output/tandem.blib : tandem.check zbuild-rt.skip-lines : $(TEST_INPUTS_PATH)/out_260_1_step01.2009_09_02_10_55_23.xtan.xml ;
+blib-test-build pride-mascot : --unicode -o : output/pride-mascot.blib : pride-mascot.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test.mascot.pride.xml ;
+blib-test-build pride-xcorr : -o : output/pride-xcorr.blib : pride-xcorr.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test.xcorr.pride.xml ;
+blib-test-build pride-bytes : -o : output/pride-xcorr-bytes.blib : pride-xcorr-bytes.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test.bytes.pride.xml ;
+blib-test-build pride-xcorr-no-charges : -o : output/pride-xcorr-nocharges.blib : pride-xcorr-nocharges.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test.xcorr.nocharges.pride.xml ;
+blib-test-build pride-mill : -o : output/pride-mill.blib : pride-mill.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test.mill.pride.xml ;
+blib-test-build tiny-msf : --unicode -o : output/tiny-msf.blib : tiny-msf.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tiny.msf ;
+blib-test-build tiny-v2-msf : -o : output/tiny-v2-msf.blib : tiny-v2-msf.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tiny-v2.msf ;
+blib-test-build tiny-v2-filtered-pdResult : -o : output/tiny-v2-filtered-pdResult.blib : tiny-v2-filtered-pdResult.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tiny-v2-filtered.pdResult ;
+blib-test-build md_special_filtered-pdResult : --unicode -o : output/md_special_filtered-pdResult.blib : md_special_filtered-pdResult.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/md_special_filtered.pdResult ;
+blib-test-build pilot : --unicode -o : output/pilot.blib : pilot.check : $(TEST_INPUTS_PATH)/MB1_98_03.group.xml ;
+blib-test-build pilot-mzid : --unicode -o : output/pilot-mzid.blib : pilot-mzid.check : $(TEST_INPUTS_PATH)/ProtPilotTest.mzid ;
 
 # Test maxquant text file
-blib-test-build maxquant : -o -E -p@$(TEST_DATA_PATH)/mqpar1.xml : output/maxquant.blib : maxquant.check zbuild.skip-lines : inputs/test.msms.txt ;
+blib-test-build maxquant : --unicode -o -E -p@$(TEST_DATA_PATH)/mqpar1.xml : output/maxquant.blib : maxquant.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test.msms.txt ;
 
 # Test MaxQuant error when external file not found
-blib-test-build maxquant-spectrum-file-not-found : -o -e@~Could_not_find_spectrum_file~ : output/maxquant-spectrum-file-not-found.blib : maxquant-spectrum-file-not-found.check zbuild.skip-lines : inputs/test.msms.txt ;
+blib-test-build maxquant-spectrum-file-not-found : -o -e@~run_with_the_-E_flag~ : output/maxquant-spectrum-file-not-found.blib : maxquant-spectrum-file-not-found.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test.msms.txt ;
 
 # Test reading from stdin (filenames and target sequences)
-blib-test-build maxquant-targeted : -o -s -u -U -S@$(TEST_DATA_PATH)/maxquant-targeted-stdin.txt -E -p@$(TEST_DATA_PATH)/mqpar1.xml : output/maxquant.targeted.blib : maxquant.targeted.check zbuild.skip-lines : : <dependency>maxquant ;
+blib-test-build maxquant-targeted : -o -s -u -U -S@$(TEST_DATA_PATH)/maxquant-targeted-stdin.txt -E -p@$(TEST_DATA_PATH)/mqpar1.xml : output/maxquant-targeted.blib : maxquant-targeted.check zbuild.skip-lines : : <dependency>maxquant ;
 
 # Test maxquant text file (new format) (and lookup for mqpar.xml works)
-blib-test-build maxquant2 : -o -E : output/maxquant2.blib : maxquant2.check zbuild.skip-lines : inputs/test2.msms.txt ;
+blib-test-build maxquant2 : -o -E : output/maxquant2.blib : maxquant2.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test2.msms.txt ;
+blib-test-build maxquant-phospho : -o -E : output/maxquant-phospho.blib : maxquant-phospho.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test-phospho.msms.txt ;
 
 # Test maxquant text file (lookup for modifications.local.xml, custom modification and C-terminal modification)
-blib-test-build maxquant3 : -o -E -p@$(TEST_DATA_PATH)/test-mq3-mqpar.xml -x@$(TEST_DATA_PATH)/test-mq3-modifications.local.xml : output/maxquant3.blib : maxquant3.check zbuild.skip-lines : inputs/test-mq3-msms.txt ;
+blib-test-build maxquant3 : -o -E -p@$(TEST_DATA_PATH)/test-mq3-mqpar.xml -x@$(TEST_DATA_PATH)/test-mq3-modifications.local.xml : output/maxquant3.blib : maxquant3.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test-mq3-msms.txt ;
 
 # Test maxquant text file reading spectra from mzML
-#blib-test-build maxquant-rpal-mzml : -o -p@$(TEST_DATA_PATH)/rpal-orbi-mqpar.xml : output/maxquant-rpal-mzml.blib : maxquant-rpal-mzml.check zbuild.skip-lines : inputs/rpal-orbi-mq-msms.txt ;
-blib-test-build maxquant-yeast-wiff : -o -p@$(TEST_DATA_PATH)/yeast-wiff-mqpar.xml : output/maxquant-yeast-wiff.blib : maxquant-yeast-wiff.check zbuild.skip-lines : inputs/yeast-wiff-msms.txt ;
+blib-test-build maxquant-rpal-raw : -o -p@$(TEST_DATA_PATH)/rpal-raw-mqpar.xml : output/maxquant-rpal-raw.blib : maxquant-rpal-raw.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/rpal-raw-msms.txt ;
+blib-test-build maxquant-bsa-baf : -o -p@$(TEST_DATA_PATH)/bsa-baf-mqpar.xml : output/maxquant-bsa-baf.blib : maxquant-bsa-baf.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/bsa-baf-msms.txt ;
+blib-test-build maxquant-bsa-baf-v1_6_7 : -o -p@$(TEST_DATA_PATH)/bsa-baf-mqpar.xml : output/maxquant-bsa-baf-v1_6_7.blib : maxquant-bsa-baf-v1_6_7.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/bsa-baf-v1_6_7-msms.txt ;
+blib-test-build maxquant-yeast-wiff : -o -p@$(TEST_DATA_PATH)/yeast-wiff-mqpar.xml : output/maxquant-yeast-wiff.blib : maxquant-yeast-wiff.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/yeast-wiff-msms.txt ;
+blib-test-build maxquant-yeast-wiff-i18n : -o -p@$(TEST_DATA_PATH)/yeast-wiff-试验-mqpar.xml : output/maxquant-yeast-wiff-i18n.blib : maxquant-yeast-wiff-i18n.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/yeast-wiff-试验-msms.txt ;
+
+# Test maxquant text file with IMS info in evidence.txt
+blib-test-build maxquant_ims : -o -E : output/maxquant_ims.blib : maxquant_ims.check zbuild.skip-lines : inputs/k0ccs-msms.txt ;
+
+# Test maxquant reading spectra from WIFF with peak picking
+blib-test-build maxquant-prg2012-wiff : -o -p@$(TEST_DATA_PATH)/prg2012-wiff-mqpar.xml : output/maxquant-prg2012-wiff.blib : maxquant-prg2012-wiff.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/prg2012-wiff-msms.txt : <vendor-api-support>off:<build>no ;
 
 # Test mzid format from scaffold
-
-blib-test-build scaffold : -o : output/scaffold.blib : scaffold.check : inputs/scaffold.mzid ;
+blib-test-build scaffold : --unicode -o : output/scaffold.blib : scaffold.check : $(TEST_INPUTS_PATH)/scaffold.mzid ;
 
 # Test mzid format from ByOnic
-
-blib-test-build byonic : -o : output/byonic.blib : byonic.check byonic.skip-lines : inputs/byonic-test.mzid ;
+blib-test-build byonic : --unicode -o : output/byonic.blib : byonic.check byonic.skip-lines : $(TEST_INPUTS_PATH)/byonic-test.mzid ;
 
 # Test mzid format from MSGF+
+blib-test-build msgf-mzid : --unicode -o : output/msgf-mzid.blib : msgf-mzid.check : $(TEST_INPUTS_PATH)/msgf-test.mzid ;
+blib-test-build msgf-mzid-nativeid : -o : output/msgf-mzid-nativeid.blib : msgf-mzid-nativeid.check : $(TEST_INPUTS_PATH)/msgf-test-nativeid.mzid ;
+blib-test-build msgf-mzid-nativeid-evalue : -o : output/msgf-mzid-nativeid-evalue.blib : msgf-mzid-nativeid-evalue.check : $(TEST_INPUTS_PATH)/msgf-test-nativeid-evalue.mzid ;
 
-blib-test-build msgf-mzid : -o : output/msgf-mzid.blib : msgf-mzid.check : inputs/msgf-test.mzid ;
-blib-test-build msgf-mzid-nativeid : -o : output/msgf-mzid-nativeid.blib : msgf-mzid-nativeid.check : inputs/msgf-test-nativeid.mzid ;
+# Test mzid format from PeptideShaker
+blib-test-build peptideshaker-mzid : --unicode -o : output/MoTai_PeptideShaker.blib : MoTai_PeptideShaker.check : $(TEST_INPUTS_PATH)/MoTai_PeptideShaker_subset.mzid ;
 
 # Test mzid format from MetaMorpheus and WIFF
-blib-test-build metamorpheus-mzid : -o : output/metamorpheus.blib : metamorpheus.check : inputs/metamorpheus.mzid ;
+blib-test-build metamorpheus-mzid : --unicode -o : output/metamorpheus.blib : metamorpheus.check : $(TEST_INPUTS_PATH)/metamorpheus.mzid ;
 
 # Test waters csv format
-
-blib-test-build mse : -o : output/mse.blib : mse.check : inputs/tiny_final_fragment.csv ;
+blib-test-build mse : --unicode -o : output/mse.blib : mse.check : $(TEST_INPUTS_PATH)/tiny_final_fragment.csv ;
 
 # Test waters csv format with precursor mobility
-
-blib-test-build mse-mobility : -o -P@0.068999 : output/mse-mobility.blib : mse-mobility.check : inputs/waters-mobility.final_fragment.csv : <vendor-api-support>on ;
+blib-test-build mse-mobility : -o -P@0.068999 : output/mse-mobility.blib : mse-mobility.check : $(TEST_INPUTS_PATH)/waters-mobility.final_fragment.csv : <vendor-api-support>on ;
 
 # Check backward compatibilty with previous notions of ion mobility
 blib-test-build mse-mobility-v12 : -o : output/mse-mobility-from-v12.blib : mse-mobility-from-v12.check mse-mobility.skip-lines : inputs/mse-mobility-v12.blib ;
-blib-test-build mse-mobility-v13 : -o : output/mse-mobility-from-v13.blib : mse-mobility.check mse-mobility.skip-lines : inputs/mse-mobility-v13.blib ;
-blib-test-build mse-mobility-v14 : -o : output/mse-mobility-from-v14.blib : mse-mobility.check mse-mobility.skip-lines : inputs/mse-mobility-v14.blib ;
-blib-test-build mse-mobility-v15 : -o : output/mse-mobility-from-v15.blib : mse-mobility.check mse-mobility.skip-lines : inputs/mse-mobility-v15.blib ;
+blib-test-build mse-mobility-v13 : -o : output/mse-mobility-from-v13.blib : mse-mobility-from-v13.check mse-mobility.skip-lines : inputs/mse-mobility-v13.blib ;
+blib-test-build mse-mobility-v14 : -o : output/mse-mobility-from-v14.blib : mse-mobility-from-v13.check mse-mobility.skip-lines : inputs/mse-mobility-v14.blib ;
+blib-test-build mse-mobility-v15 : -o : output/mse-mobility-from-v15.blib : mse-mobility-from-v13.check mse-mobility.skip-lines : inputs/mse-mobility-v15.blib ;
 
 # Test building with Mascot .dat files, contingent on Mascot support (FIXME: these tests are broken on Linux)
 
-blib-test-build mascot : -o : output/mascot.blib : mascot.check : inputs/F027319.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
-blib-test-build mascot-15N : -o : output/mascot-15N.blib : mascot-15N.check : inputs/F027752.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
-blib-test-build mascot-distiller-and-title : -o : output/mascot-distiller-1.blib : mascot-distiller-1.check : inputs/F007401.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
-blib-test-build mascot-distiller-from-file : -o : output/mascot-distiller-2.blib : mascot-distiller-2.check : inputs/F007401b.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
-blib-test-build mascot_tims : -o : output/mascot_tims.blib : mascot_tims.check : inputs/mascot_tims.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
+blib-test-build mascot : --unicode -o : output/mascot.blib : mascot.check : $(TEST_INPUTS_PATH)/F027319.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
+blib-test-build mascot-15N : -o : output/mascot-15N.blib : mascot-15N.check : $(TEST_INPUTS_PATH)/F027752.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
+blib-test-build mascot-distiller-and-title : -o : output/mascot-distiller-1.blib : mascot-distiller-1.check : $(TEST_INPUTS_PATH)/F007401.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
+blib-test-build mascot-distiller-from-file : --unicode -o : output/mascot-distiller-2.blib : mascot-distiller-2.check : $(TEST_INPUTS_PATH)/F007401b.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
+blib-test-build mascot_tims : -o : output/mascot_tims.blib : mascot_tims.check : $(TEST_INPUTS_PATH)/mascot_tims.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
 
 # Test OpenSWATH files
 
-blib-test-build openswath : -o : output/openswath.blib : openswath.check openswath.skip-lines : inputs/openswath_test.tsv ;
-blib-test-build openswath-osw : -o : output/openswath-osw.blib : openswath-osw.check openswath.skip-lines : inputs/test.osw ;
+blib-test-build openswath : --unicode -o : output/openswath.blib : openswath.check openswath.skip-lines : $(TEST_INPUTS_PATH)/openswath_test.tsv ;
+blib-test-build openswath-osw : -o : output/openswath-osw.blib : openswath-osw.check openswath.skip-lines : $(TEST_INPUTS_PATH)/test.osw ;
+blib-test-build openswath-invalid-tsv : -o -e@~Only_OpenSWATH~ : output/openswath-invalid-tsv.blib : openswath-invalid-tsv.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/ssl-small-mol.tsv ;
 
 # we expect this one to fail, with the error message 'ERROR: Failure reading TIMS ion mobility value ":0.78079097398941"', so args are "-e 0.78079097398941"
-blib-test-build mascot_tims_bad : -e@0.78079097398941 -o : output/mascot_tims_bad.blib : mascot_tims_bad.check : inputs/mascot_tims_bad.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
+blib-test-build mascot_tims_bad : -e@0.78079097398941 -o : output/mascot_tims_bad.blib : mascot_tims_bad.check : $(TEST_INPUTS_PATH)/mascot_tims_bad.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
 
 # Test merging existing libraries
-
-blib-test-build merge : -o : output/xmerged.redundant.blib : xmerged.redundant.check : output/demo-copy.blib output/demo.blib output/pep-proph.blib : <dependency>sqt-ms2 <dependency>sqt-cms2 <dependency>pep-proph ;
+blib-test-build merge : --unicode -o : output/xmerged-redundant.blib : xmerged-redundant.check : output/sqt-cms2.blib output/sqt-ms2.blib output/pep-proph.blib : <dependency>sqt-ms2 <dependency>sqt-cms2 <dependency>pep-proph ;
 
 # Test BlibFilter
-
-blib-test-filter filter : : output/zmerged.filtered.blib : zmerged.filtered.check : output/xmerged.redundant.blib : <dependency>merge ;
+blib-test-filter filter : --unicode : output/zmerged-filtered.blib : zmerged-filtered.check : output/xmerged-redundant.blib : <dependency>merge ;
 
 # Test BlibFilter on a library with precursor mobility values
-
-blib-test-filter filter-mobility : : output/mse-mobility.filtered.blib : mse-mobility.filtered.check : output/mse-mobility.blib : <dependency>mse-mobility ;
+blib-test-filter filter-mobility : --unicode : output/mse-mobility-filtered.blib : mse-mobility-filtered.check : output/mse-mobility.blib : <dependency>mse-mobility ;
 
 # Test BlibFilter on a small molecule library
+blib-test-filter filter-ssl-small-mol : --unicode : output/ssl-small-mol-filtered.blib : ssl-small-mol-filtered.check : output/ssl-small-mol.blib : <dependency>ssl-small-mol ;
 
-blib-test-filter filter-ssl-small-mol : : output/ssl-small-mol.filtered.blib : ssl-small-mol.filtered.check : output/ssl-small-mol.blib : <dependency>ssl-small-mol ;
+# Test BlibFilter's best scoring mode on multiple raw files but only one search engine (score type)
+blib-test-filter filter-best-scoring-one : -b@1 --unicode : output/filter-best-scoring-one.blib : filter-best-scoring-one.check : output/maxquant3.blib : <dependency>maxquant3 ;
+
+# Test BlibFilter's best scoring mode on multiple search engines (score types)
+blib-test-filter filter-best-scoring-multi : -b@1 --unicode : output/filter-best-scoring-multi.blib : filter-best-scoring-multi.check : output/xmerged-redundant.blib : <dependency>merge ;
 
 # Test self-describing -d option
 
 blib-test-tables tables : output/tables.txt : tables.check tables.skip-lines ;
 
 
-#make output/filtered.existing.blib : inputs/empty : @common.copy : <location>. ;
-#run-if-exists ExecuteBlib.cpp : : BlibFilter inputs/existing.blib output/filtered.existing.blib : 
+#make output/filtered.existing.blib : $(TEST_INPUTS_PATH)/empty : @common.copy : <location>. ;
+#run-if-exists ExecuteBlib.cpp : : BlibFilter $(TEST_INPUTS_PATH)/existing.blib output/filtered.existing.blib : 
 #  : build-filter-old ;
 #run-if-exists CompareLibraryContents.cpp compare-src : 
 #  : output/filtered.existing.blib reference/filtered.existing.check : $(compare-reqs)
@@ -317,37 +343,37 @@ blib-test-tables tables : output/tables.txt : tables.check tables.skip-lines ;
 # Test adding spectra to existing libraries, new and old formats
 
 # TODO: these tests are broken
-# requires a clean copy of inputs/existing.blib to output/z.old.blib before running
-#make output/z.old.blib : inputs/existing.blib : @common.copy : $(test_output_req) ;
+# requires a clean copy of $(TEST_INPUTS_PATH)/existing.blib to output/z.old.blib before running
+#make output/z.old.blib : $(TEST_INPUTS_PATH)/existing.blib : @common.copy : $(test_output_req) ;
 #run-if-exists ExecuteBlib.cpp :  
-#  : BlibBuild inputs/CPTAC_Set4_725_091509.pep.XML inputs/old-demo.blib output/sqt-ez.blib output/z.old.blib : 
+#  : BlibBuild $(TEST_INPUTS_PATH)/CPTAC_Set4_725_091509.pep.XML $(TEST_INPUTS_PATH)/old-demo.blib output/sqt-ez.blib output/z.old.blib : 
 #  : build-into-old ;
 #run-if-exists CompareLibraryContents.cpp compare-src : : output/z.old.blib reference/old.check : $(compare-reqs)
 #  : check-old ;
 
 #make output/z.new.blib : output/scaffold.blib : @common.copy : $(test_output_req) ;
 #run-if-exists ExecuteBlib.cpp : 
-#  : BlibBuild inputs/CPTAC_Set4_725_091509.pep.XML inputs/old-demo.blib output/sqt-ez.blib output/z.new.blib : 
+#  : BlibBuild $(TEST_INPUTS_PATH)/CPTAC_Set4_725_091509.pep.XML $(TEST_INPUTS_PATH)/old-demo.blib output/sqt-ez.blib output/z.new.blib : 
 #  : build-into-new ;
 #run-if-exists CompareLibraryContents.cpp compare-src : : output/z.new.blib reference/new.check : $(compare-reqs)
 #  : check-new ;
 
-#make output/z.mixed.blib : inputs/empty : @common.copy : $(test_output_req) ;
-#run-if-exists ExecuteBlib.cpp : -o : BlibBuild inputs/existing.blib output/scaffold.blib output/z.mixed.blib : 
+#make output/z.mixed.blib : $(TEST_INPUTS_PATH)/empty : @common.copy : $(test_output_req) ;
+#run-if-exists ExecuteBlib.cpp : -o : BlibBuild $(TEST_INPUTS_PATH)/existing.blib output/scaffold.blib output/z.mixed.blib : 
 #  : build-mixed ;
 #run-if-exists CompareLibraryContents.cpp compare-src : : output/z.mixed.blib reference/mixed.check : $(compare-reqs)
 #  : check-mixed ;
 
 # Test conversion to text
 
-blib-test-to-ms2 lms2 : : output/demo.lms2 : demo.lms2 lms2-skip-lines : output/demo.blib : <dependency>sqt-ms2 ;
+blib-test-to-ms2 lms2 : : output/demo.lms2 : demo.lms2 lms2-skip-lines : output/sqt-ms2.blib : <dependency>sqt-ms2 ;
 
 # Test BlibSearch
 
-blib-test-search search-demo : --preserve-order : inputs/demo.report : demo.report demo.skip-lines : inputs/demo.ms2 output/demo.blib : <dependency>sqt-ms2 ;
-blib-test-search search-decoy : --preserve-order --decoys-per-target@1 : inputs/demo.decoy.report : demo.decoy.report demo.skip-lines : inputs/demo.ms2 output/demo.blib : <dependency>sqt-ms2 ;
-blib-test-search search-mzsorted : : inputs/mzsorted.report : mzsorted.report mzsorted.skip-lines : inputs/mzsorted.ms2 output/demo.blib : <dependency>sqt-ms2 ;
-blib-test-search search-binning : --bin-size@1.1 --bin-offset@0.2 : inputs/binning.report : binning.report demo.skip-lines : inputs/binning.ms2 output/demo.blib : <dependency>sqt-ms2 ;
+blib-test-search search-demo : --unicode --preserve-order : $(TEST_INPUTS_PATH)/demo.report : demo.report demo.skip-lines : $(TEST_INPUTS_PATH)/demo.ms2 output/sqt-ms2.blib : <dependency>sqt-ms2 ;
+blib-test-search search-decoy : --unicode --preserve-order --decoys-per-target@1 : $(TEST_INPUTS_PATH)/demo.decoy.report : demo.decoy.report demo.skip-lines : $(TEST_INPUTS_PATH)/demo.ms2 output/sqt-ms2.blib : <dependency>sqt-ms2 <dependency>search-demo ;
+blib-test-search search-mzsorted : --unicode : $(TEST_INPUTS_PATH)/mzsorted.report : mzsorted.report mzsorted.skip-lines : $(TEST_INPUTS_PATH)/mzsorted.ms2 output/sqt-ms2.blib : <dependency>sqt-ms2 ;
+blib-test-search search-binning : --unicode --bin-size@1.1 --bin-offset@0.2 : $(TEST_INPUTS_PATH)/binning.report : binning.report demo.skip-lines : $(TEST_INPUTS_PATH)/binning.ms2 output/sqt-ms2.blib : <dependency>sqt-ms2 ;
 
 alias all-build : $(build-tests) ;
 alias all-filter : $(filter-tests) ;

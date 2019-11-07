@@ -27,5 +27,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             get { return typeof(DbSpectrumSourceFiles); }
         }
         public virtual string FileName { get; set; }
+        public virtual string IdFileName { get; set; }
+        public virtual double? CutoffScore { get; set; }
     }
 }

@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var selectedTreeNode = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
             if (selectedTreeNode == null || document.FindNode(selectedTreeNode.Path) == null)
             {
-                Title.Text = Resources.MassErrorReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_mass_error_graph;
+                Title.Text =  Helpers.PeptideToMoleculeTextMapper.Translate(Resources.MassErrorReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_mass_error_graph, document.DocumentType);
                 EmptyGraph(document);
                 return;
             }
@@ -104,7 +104,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else if (!(selectedTreeNode is TransitionGroupTreeNode))
             {
-                Title.Text = Resources.MassErrorReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_mass_error_graph;
+                Title.Text =  Helpers.PeptideToMoleculeTextMapper.Translate(Resources.MassErrorReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_mass_error_graph, document.DocumentType);
                 EmptyGraph(document);
                 CanShowMassErrorLegend = false;
                 return;
@@ -116,7 +116,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 displayType = DisplayTypeChrom.all;
             }
 
-            var replicateGroupOp = GraphValues.ReplicateGroupOp.FromCurrentSettings(document.Settings);
+            var replicateGroupOp = ReplicateGroupOp.FromCurrentSettings(document);
             GraphData graphData = new MassErrorGraphData(document,
                                             identityPath,
                                             displayType,
@@ -222,7 +222,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public MassErrorGraphData(SrmDocument document,
                 IdentityPath identityPath,
                 DisplayTypeChrom displayType,
-                GraphValues.ReplicateGroupOp replicateGroupOp,
+                ReplicateGroupOp replicateGroupOp,
                 PaneKey paneKey)
                 : base(document, identityPath, displayType, replicateGroupOp, paneKey)
             {

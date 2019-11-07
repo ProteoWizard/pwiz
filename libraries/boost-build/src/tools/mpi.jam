@@ -547,7 +547,7 @@ rule configured ( )
   return $(.configured) ;
 }
 
-# Returs the "extra" requirements needed to build MPI. These requirements are
+# Returns the "extra" requirements needed to build MPI. These requirements are
 # part of the /mpi//mpi library target, but they need to be added to anything
 # that uses MPI directly to work around bugs in BBv2's propagation of
 # requirements.
@@ -621,7 +621,7 @@ rule capture-output ( target : sources * : properties * )
 # a list of numbers, which indicates how many processes each test run will use. For
 # example, passing 1 2 7 will run the test with 1 process, then 2 processes, then 7
 # 7 processes. The name provided is just the base name: the actual tests will be
-# the name followed by a hypen, then the number of processes.
+# the name followed by a hyphen, then the number of processes.
 rule mpi-test ( name : sources * : requirements * : schedule * )
 {
     sources ?= $(name).cpp ;

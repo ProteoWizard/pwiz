@@ -17,8 +17,11 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Text;
 
 namespace pwiz.SkylineCmd
 {
@@ -26,6 +29,37 @@ namespace pwiz.SkylineCmd
     {
         [STAThread]
         static int Main(string[] args)
+        {
+            var argsList = args.ToList();
+            AddBufferWidth(argsList);
+
+            var preferredEncoding = GetPreferredEncoding(argsList);
+            using (new EncodingManager(preferredEncoding))
+            {
+                // ReSharper disable once PossibleNullReferenceException
+                return (int)GetMainFunction().Invoke(null, new object[] { argsList.ToArray() });
+            }
+        }
+
+        private static void AddBufferWidth(List<string> argsList)
+        {
+            try
+            {
+                argsList.Insert(0, "--sw=" + (Console.BufferWidth - 1));
+            }
+            catch
+            {
+                // Rely on the default width. The command is being run in an invironment without a screen width
+            }
+        }
+
+        private static Encoding GetPreferredEncoding(List<string> argsList)
+        {
+            // If forcing culture to be something other than the system settings, then also force UTF8 encoding
+            return argsList.FirstOrDefault(arg => arg.StartsWith("--culture=")) != null ? Encoding.UTF8 : null;
+        }
+
+        private static MethodInfo GetMainFunction()
         {
             Assembly assembly;
             // SkylineCmd and Skyline must be in the same directory
@@ -47,8 +81,66 @@ namespace pwiz.SkylineCmd
             }
             var programClass = assembly.GetType(@"pwiz.Skyline.Program");
             var mainFunction = programClass.GetMethod(@"Main");
-            // ReSharper disable once PossibleNullReferenceException
-            return (int) mainFunction.Invoke(null, new object[]{args});
+            return mainFunction;
+        }
+    }
+
+    /// <summary>
+    /// A class for managing setting the Console.OutputEncoding to UTF-8 and reverting
+    /// it back to its original value. Otherwise, this a system change that presists throughout
+    /// a console session, similar to the Windows OS function SetConsoleOutputCP().
+    /// </summary>
+    internal class EncodingManager : IDisposable
+    {
+        private Encoding _startEncoding;
+        private readonly bool _logStatus;
+
+        public EncodingManager(Encoding encodingOverride, bool logStatus = false)
+        {
+            if (encodingOverride == null && !logStatus)
+                return;
+
+            _logStatus = logStatus;
+            try
+            {
+                _startEncoding = Console.OutputEncoding;
+                Log(@"Start encoding: " + _startEncoding.EncodingName);
+                if (_startEncoding.Equals(encodingOverride))
+                    _startEncoding = null;
+                else if (encodingOverride != null)
+                {
+                    Console.OutputEncoding = encodingOverride;
+                    Log(@"Using encoding: " + Console.OutputEncoding.EncodingName);
+                }
+            }
+            catch
+            {
+                // Keep going with the default encoding.
+            }
+        }
+
+        public void Dispose()
+        {
+            if (_startEncoding != null)
+            {
+                try
+                {
+                    Log(@"Revert encoding: " + _startEncoding.EncodingName);
+                    Console.OutputEncoding = _startEncoding;
+                }
+                catch
+                {
+                    // Ignore failure
+                }
+
+                _startEncoding = null;
+            }
+        }
+
+        private void Log(string message)
+        {
+            if (_logStatus)
+                Console.WriteLine(message);
         }
     }
 }

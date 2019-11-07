@@ -45,7 +45,6 @@ DocumentChangeLogEntryDlg,TestAuditLogSaving
 DocumentGridForm,TestReportSummary
 DocumentSettingsDlg,TestAnnotations
 EditCEDlg,TestOptimization
-EditChorusAccountDlg,*
 EditCoVDlg,TestOptimization
 EditCustomMoleculeDlg,TestEditCustomMoleculeDlg
 EditCustomThemeDlg, TestEditCustomTheme
@@ -77,7 +76,6 @@ EditStaticModDlg.IsotopeModView,TestEditStaticMod
 EditStaticModDlg.StructuralModView,TestEditStaticMod
 EmptyProteinsDlg,TestImportPeptideSearch
 ExportAnnotationsDlg,TestExportAnnotations
-ExportChorusRequestDlg,*
 ExportChromatogramDlg,TestExportChromatogram
 ExportLiveReportDlg,TestReportSummary
 ExportMethodDlg.IsolationListView,TestExportDiaList
@@ -132,6 +130,7 @@ MissingFileDlg,TestSynchSiblings
 MProphetFeaturesDlg,TestPeakPickingTutorial
 MultiButtonMsgDlg,TestShareSettings
 NameLayoutForm,TestPivotEditor
+NoModeUIDlg,UIModeSettingsTest
 OpenDataSourceDialog,TestRetentionTimeAlignment
 PasteDlg.FastaTab,ProteinMetadataFunctionalTests
 PasteDlg.PeptideListTab,TestMethodEditTutorial
@@ -144,6 +143,7 @@ PeptideSettingsUI.DigestionTab,TestMethodEditTutorial
 PeptideSettingsUI.FilterTab,TestEditDialogs
 PeptideSettingsUI.LibraryTab,TestMethodEditTutorial
 PeptideSettingsUI.ModificationsTab,TestNeutralLoss
+PeptideSettingsUI.LabelsTab,UIModeSettingsTest
 PeptideSettingsUI.PredictionTab,IrtFunctionalTest
 PeptideSettingsUI.QuantificationTab,TestCalibration
 PeptidesPerProteinDlg,TestImportPeptideSearch
@@ -153,7 +153,6 @@ PreviewReportDlg,TestReportSummaryWithOldReports
 PublishDocumentDlg,TestAccessServer
 PythonInstaller,TestPythonInstaller
 QuickFilterForm,TestLiveReportsFilter
-RecalibrateIrtDlg,IrtFunctionalTest
 RefineDlg,TestMethodEditTutorial
 RefineListDlg,TestRefineListDlg
 RefineProteinListDlg,TestRefineProteinListDlg

@@ -28,6 +28,7 @@ using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
+    [InvariantDisplayName(nameof(ResultFile))]
     public class ResultFile : SkylineObject, IComparable
     {
         private readonly CachedValue<ChromFileInfo> _chromFileInfo;
@@ -80,9 +81,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     }
                 }
 
-                Replicate.ChangeChromatogramSet(EditDescription.SetColumn(@"ExplicitGlobalStandardArea",
-                    value), 
-                Replicate.ChromatogramSet.ChangeMSDataFileInfos(newFileInfos));
+                Replicate.ChangeChromatogramSet(
+                    EditColumnDescription(nameof(ExplicitGlobalStandardArea), value), 
+                    Replicate.ChromatogramSet.ChangeMSDataFileInfos(newFileInfos));
             }
         }
 
@@ -159,6 +160,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public string Locator
         {
             get { return GetLocator(); }
+        }
+
+        public string SampleId
+        {
+            get { return ChromFileInfo.SampleId; }
+        }
+
+        public string InstrumentSerialNumber
+        {
+            get { return ChromFileInfo.InstrumentSerialNumber; }
         }
 
         public override ElementRef GetElementRef()

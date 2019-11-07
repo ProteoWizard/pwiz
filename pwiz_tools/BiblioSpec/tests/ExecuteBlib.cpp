@@ -26,6 +26,26 @@
 #include <cstring>
 #include <cstdlib>
 
+
+class TempFileDeleter
+{
+    bfs::path filepath_;
+
+    public:
+    TempFileDeleter(const bfs::path& filepath) : filepath_(filepath)
+    {
+    }
+
+    ~TempFileDeleter()
+    {
+        boost::system::error_code ec;
+        bfs::remove(filepath_, ec);
+    }
+
+    const bfs::path& filepath() const { return filepath_; }
+};
+
+
 // Run the given BiblioSpec tool with the given arguments
 int executeBlib(const vector<string>& argv)
 {
@@ -58,6 +78,8 @@ int executeBlib(const vector<string>& argv)
     string references, skiplines;
     string outputs; // passed with -o
     string expectedErrorMsg = "";
+    bool unicodeTest = false;
+    vector<TempFileDeleter> tempFiles;
 
     string compareCmd; // CompareLibraryContents or CompareTextFiles
 
@@ -73,6 +95,8 @@ int executeBlib(const vector<string>& argv)
             // Is this a negative test?
             if (token[1] == 'e')
                 expectedErrorMsg = token.substr(3);
+            else if (bal::iequals(token, "--unicode"))
+                unicodeTest = true;
             else if (bal::istarts_with(token, "--out="))
                 outputs += token.substr(6) + " ";
             else
@@ -118,6 +142,17 @@ int executeBlib(const vector<string>& argv)
         }
         else
         {
+            if (unicodeTest)
+            {
+                bfs::path unicodePath(token);
+                unicodePath = unicodePath.parent_path() / ("试验_" + unicodePath.filename().string());
+                if (!bfs::exists(unicodePath))
+                {
+                    bfs::copy_file(token, unicodePath);
+                    tempFiles.emplace_back(unicodePath);
+                }
+                token = unicodePath.string();
+            }
             inputs += token + " ";
         }
     }
@@ -145,28 +180,33 @@ int executeBlib(const vector<string>& argv)
     string fullCommand;
     if (bal::contains(command, "BlibToMs2"))
         fullCommand = command + options + "-f " + outputs + libName;
-    else if(bal::contains(command, "BlibSearch"))
-        fullCommand = command + options + "-R " + outputs + inputs + libName;
+    else if (bal::contains(command, "BlibSearch"))
+    {
+        string outputsTweaked = outputs;
+        bal::replace_all(outputsTweaked, ".decoy.report", ".report"); // when testing decoy.report output, use original report name
+        fullCommand = command + options + "-R " + outputsTweaked + inputs + libName;
+    }
     else
         fullCommand = command + options + inputs + libName + outputs;
     cerr << "Running " << fullCommand << endl;
 
-    int returnValue = system(fullCommand.c_str());
-    cerr << "System returned " << returnValue << endl;
+    int returnValue = bnw::system(fullCommand.c_str());
 
     if (expectedErrorMsg != "")
     {
-        return !returnValue; // Expecting a failure
+        cerr << "Blib command returned " << returnValue << endl;
+        return returnValue == 0; // Expecting a failure
     }
-
-    if (returnValue != 0)
-        return 1;
+    else if (returnValue != 0)
+        throw runtime_error("Blib command returned " + lexical_cast<string>(returnValue));
 
     string fullCompareCommand = compareCmd + outputs + references + skiplines;
     cerr << "Testing output with: " << fullCompareCommand << endl;
     
-    returnValue = system(fullCompareCommand.c_str());
-    cerr << "Compare returned " << returnValue << endl;
+    returnValue = bnw::system(fullCompareCommand.c_str());
+
+    if (returnValue != 0)
+        throw runtime_error("Compare returned " + lexical_cast<string>(returnValue));
 
     return returnValue;
 }

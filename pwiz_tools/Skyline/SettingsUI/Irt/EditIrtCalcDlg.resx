@@ -250,13 +250,13 @@
     <value>9, 163</value>
   </data>
   <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>96, 13</value>
+    <value>76, 13</value>
   </data>
   <data name="label3.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>&amp;Standard peptides:</value>
+    <value>&amp;iRT standards:</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -385,13 +385,13 @@
     <value>3, 29</value>
   </data>
   <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 13</value>
+    <value>90, 13</value>
   </data>
   <data name="label4.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>&amp;Measured peptides:</value>
+    <value>&amp;Other iRT values:</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
@@ -499,16 +499,16 @@
     <value>Top, Right</value>
   </data>
   <data name="btnPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>204, 16</value>
+    <value>148, 16</value>
   </data>
   <data name="btnPeptides.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>131, 23</value>
   </data>
   <data name="btnPeptides.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
   <data name="btnPeptides.Text" xml:space="preserve">
-    <value>Peptides...</value>
+    <value>Choose Standards...</value>
   </data>
   <data name="btnPeptides.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -541,7 +541,7 @@
     <value>True</value>
   </metadata>
   <data name="columnStandardSequence.HeaderText" xml:space="preserve">
-    <value>Modified Sequence</value>
+    <value>Target</value>
   </data>
   <metadata name="columnStandardIrt.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -616,7 +616,7 @@
     <value>True</value>
   </metadata>
   <data name="columnLibrarySequence.HeaderText" xml:space="preserve">
-    <value>Modified Sequence</value>
+    <value>Target</value>
   </data>
   <metadata name="columnLibraryIrt.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -754,7 +754,7 @@
     <value>columnStandardSequence</value>
   </data>
   <data name="&gt;&gt;columnStandardSequence.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>pwiz.Skyline.Controls.TargetColumn, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;columnStandardIrt.Name" xml:space="preserve">
     <value>columnStandardIrt</value>
@@ -766,7 +766,7 @@
     <value>columnLibrarySequence</value>
   </data>
   <data name="&gt;&gt;columnLibrarySequence.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>pwiz.Skyline.Controls.TargetColumn, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;columnLibraryIrt.Name" xml:space="preserve">
     <value>columnLibraryIrt</value>

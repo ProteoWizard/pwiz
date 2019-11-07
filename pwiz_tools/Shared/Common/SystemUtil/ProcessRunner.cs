@@ -38,6 +38,8 @@ namespace pwiz.Common.SystemUtil
     {
         public string StatusPrefix { get; set; }
 
+        public Encoding OutputEncoding { get; set; }
+
         public string MessagePrefix { get; set; }
         private readonly List<string> _messageLog = new List<string>();
 
@@ -59,6 +61,9 @@ namespace pwiz.Common.SystemUtil
             // Make sure required streams are redirected.
             psi.RedirectStandardOutput = true;
             psi.RedirectStandardError = true;
+            psi.RedirectStandardInput = stdin != null;
+            if (OutputEncoding != null)
+                psi.StandardOutputEncoding = psi.StandardErrorEncoding = OutputEncoding;
 
             _messageLog.Clear();
 
@@ -83,7 +88,7 @@ namespace pwiz.Common.SystemUtil
             string line;
             while ((line = reader.ReadLine(progress)) != null)
             {
-                if (writer != null && !line.StartsWith(HideLinePrefix))
+                if (writer != null && (HideLinePrefix == null || !line.StartsWith(HideLinePrefix)))
                     writer.WriteLine(line);
 
                 if (progress == null || line.ToLowerInvariant().StartsWith(@"error"))
@@ -99,7 +104,7 @@ namespace pwiz.Common.SystemUtil
                         return;
                     }
 
-                    if (!string.IsNullOrEmpty(MessagePrefix) && line.StartsWith(MessagePrefix))
+                    if (MessagePrefix != null && line.StartsWith(MessagePrefix))
                     {
                         _messageLog.Add(line.Substring(MessagePrefix.Length));
                     }

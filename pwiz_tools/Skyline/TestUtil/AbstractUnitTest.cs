@@ -25,6 +25,7 @@ using System.Linq;
 using System.Net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -66,11 +67,18 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
+        /// Determines whether or not to (re)record audit logs for tests.
+        /// </summary>
+        protected bool RecordAuditLogs
+        {
+            get { return GetBoolValue("RecordAuditLogs", false); }  // Return false if unspecified
+            set { TestContext.Properties["RecordAuditLogs"] = value ? "true" : "false"; }
+        }
+
+        /// <summary>
         /// This controls whether we run the various tests that are small molecule versions of our standard tests,
         /// for example DocumentExportImportTestAsSmallMolecules().  Such tests convert the entire document to small
         /// molecule representations before proceeding.
-        /// Not to be confused with the "TestSmallMolecules"
-        /// propery below, which just adds an extra small molecule node to all tests and leaves them otherwise unchanged.
         /// Developers that want to see such tests execute within the IDE can add their machine name to the SmallMoleculeDevelopers
         /// list below (partial matches suffice, so name carefully!)
         /// </summary>
@@ -79,24 +87,6 @@ namespace pwiz.SkylineTestUtil
         {
             get { return GetBoolValue("RunSmallMoleculeTestVersions", false) || SmallMoleculeDevelopers.Any(smd => Environment.MachineName.Contains(smd)); }
             set { TestContext.Properties["RunSmallMoleculeTestVersions"] = value ? "true" : "false"; }
-        }
-
-        /// <summary>
-        /// Determines whether or not to add a special small molecule node to each document for test purposes.  Not commonly used.
-        /// See RunSmallMoleculeTestVersions above.
-        /// </summary>
-        private bool? _testSmallMolecules;
-        public bool TestSmallMolecules
-        {
-            get
-            {
-                return _testSmallMolecules ?? false;
-            }
-            set
-            {
-                // Communicate this value to Skyline via Settings.Default
-                Settings.Default.TestSmallMolecules = (_testSmallMolecules = value).Value;
-            }
         }
 
         /// <summary>
@@ -172,6 +162,11 @@ namespace pwiz.SkylineTestUtil
                             if (!Directory.Exists(targetFolder))
                                 Directory.CreateDirectory(targetFolder);
 
+                            bool downloadFromS3 = Environment.GetEnvironmentVariable("SKYLINE_DOWNLOAD_FROM_S3") == "1";
+                            string s3hostname = @"skyline-perftest.s3-us-west-2.amazonaws.com";
+                            if (downloadFromS3)
+                                zipPath = zipPath.Replace(@"skyline.gs.washington.edu", s3hostname).Replace(@"skyline.ms", s3hostname);
+
                             WebClient webClient = new WebClient();
                             using (var fs = new FileSaver(zipFilePath))
                             {
@@ -207,23 +202,50 @@ namespace pwiz.SkylineTestUtil
         }
         public TestFilesDir[] TestFilesDirs { get; set; }
 
+        public static int CountInstances(string search, string searchSpace)
+        {
+            if (search.Length == 0)
+                return 0;
+
+            int count = 0;
+            for (int lastIndex = searchSpace.IndexOf(search, StringComparison.Ordinal);
+                lastIndex != -1;
+                lastIndex = searchSpace.IndexOf(search, lastIndex + 1, StringComparison.Ordinal))
+            {
+                count++;
+            }
+
+            return count;
+        }
+
+        public static int CountErrors(string searchSpace, bool allowUnlocalized = false)
+        {
+            const string enError = "Error";
+            string localError = Resources.CommandLineTest_ConsoleAddFastaTest_Error;
+            int count = CountInstances(localError, searchSpace);
+            if (allowUnlocalized && !Equals(localError, enError))
+                count += CountInstances(enError, searchSpace);
+            return count;
+        }
+
         /// <summary>
         /// Called by the unit test framework when a test begins.
         /// </summary>
         [TestInitialize]
         public void MyTestInitialize()
         {
+
+            Program.UnitTest = true;
+
             // Stop profiler if we are profiling.  The unit test will start profiling explicitly when it wants to.
             DotTraceProfile.Stop(true);
 
-            SecurityProtocolInitializer.Initialize(); // Enable maximum available HTTPS security level, esp. for Chorus
+            SecurityProtocolInitializer.Initialize(); // Enable maximum available HTTPS security level
 
 //            var log = new Log<AbstractUnitTest>();
 //            log.Info(TestContext.TestName + " started");
 
             Settings.Init();
-
-            TestSmallMolecules = GetBoolValue("TestSmallMolecules", false);
 
             STOPWATCH.Restart();
             Initialize();

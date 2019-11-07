@@ -310,8 +310,14 @@ rule quote-string ( string )
     return \"$(string)\" ;
 }
 
-rule extract ( tar-filepath : include-patterns * : tar-requirements * : tar-usage-requirements * : check-last-file-only ? ignore-incremental ? )
+rule extract ( tar-filepath : include-patterns * : tar-requirements * : tar-usage-requirements * : options * )
 {
+    local check-last-file-only = [ feature.get-values <check-last-file-only> : $(options) ] ;
+    local ignore-incremental = [ feature.get-values <ignore-incremental> : $(options) ] ;
+
+    # CONSIDER: take "tar-extra-args" as option instead of explicitly supporting certain args?
+    local keep-old-files = [ feature.get-values <keep-old-files> : $(options) ] ;
+
     if $(ignore-incremental) || ! --incremental in [ modules.peek : ARGV ] || --force-extract in [ modules.peek : ARGV ]
     {
         if ! [ tar-binary-filepath ]
@@ -333,11 +339,11 @@ rule extract ( tar-filepath : include-patterns * : tar-requirements * : tar-usag
             caller-location = [ path.native $(caller-location) ] ;
         }
 
-        extract-really $(tar-filepath) : $(include-patterns) : $(tar-requirements) : $(tar-usage-requirements) : $(check-last-file-only) : $(caller-location) ;
+        extract-really $(tar-filepath) : $(include-patterns) : $(tar-requirements) : $(tar-usage-requirements) : $(check-last-file-only) : $(keep-old-files) : $(caller-location) ;
     }
 }
 
-rule extract-really ( tar-filepath : include-patterns * : tar-requirements * : tar-usage-requirements * : check-last-file-only ? : caller-location )
+rule extract-really ( tar-filepath : include-patterns * : tar-requirements * : tar-usage-requirements * : check-last-file-only ? : keep-old-files ? : caller-location )
 {
     #local project = [ project.current ] ;
 
@@ -434,6 +440,9 @@ rule extract-really ( tar-filepath : include-patterns * : tar-requirements * : t
     {
         local all-files-exist = true ;
 
+        if $(keep-old-files) { keep-old-files = "-k" ; }
+        else { keep-old-files = "" ; }
+
         if $(check-last-file-only)
         {
             # if the last file exists, the extraction is skipped
@@ -464,8 +473,8 @@ rule extract-really ( tar-filepath : include-patterns * : tar-requirements * : t
         {
             ECHO "tar.extract $(tar-filepath:D=): $(include-patterns)" ;
             if ! [ path.exists $(target-location) ] { SHELL "$(MKDIR) \"$(target-location)\"" ; }
-            #echo "cd \"$(target-location)\" $(CS) \"$(tar-binary-filepath)\" $(tar-extra-extract-args) -xf \"$(tar-filepath)\" $(include-patterns)" ;
-            SHELL "cd \"$(target-location)\" $(CS) \"$(tar-binary-filepath)\" $(tar-extra-extract-args) -xf \"$(tar-filepath)\" $(include-patterns)" ;
+            #echo "cd \"$(target-location)\" $(CS) \"$(tar-binary-filepath)\" $(tar-extra-extract-args) $(keep-old-files) -xf \"$(tar-filepath)\" $(include-patterns)" ;
+            SHELL "cd \"$(target-location)\" $(CS) \"$(tar-binary-filepath)\" $(tar-extra-extract-args) $(keep-old-files) -xf \"$(tar-filepath)\" $(include-patterns)" ;
             RESCAN ;
             if ! [ path.exists $(target-location)/$(tar-list[-1]) ]
             {

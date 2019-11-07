@@ -44,6 +44,7 @@ using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Controls.Graphs.Calibration;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -70,7 +71,8 @@ namespace pwiz.Skyline
         private DocumentGridForm _documentGridForm;
         private CalibrationForm _calibrationForm;
         private AuditLogForm _auditLogForm;
-        private readonly List<GraphChromatogram> _listGraphChrom = new List<GraphChromatogram>();
+        public static int MAX_GRAPH_CHROM = 100; // Never show more than this many chromatograms, lest we hit the Windows handle limit
+        private readonly List<GraphChromatogram> _listGraphChrom = new List<GraphChromatogram>(); // List order is MRU, with oldest in position 0
         private bool _inGraphUpdate;
         private ChromFileInfoId _alignToFile;
         private bool _alignToPrediction;
@@ -116,7 +118,7 @@ namespace pwiz.Skyline
             _listGraphPeakArea.ForEach(g => g.ActiveLibrary = activeLibrary);
             _listGraphRetentionTime.ForEach(g => g.ActiveLibrary = activeLibrary);
 
-            foreach (var graphChrom in _listGraphChrom)
+            foreach (var graphChrom in _listGraphChrom.ToArray()) // List may be updating concurrent with this access, so convert to array first
             {
                 if (ReferenceEquals(graphChrom, activeForm))
                     ComboResults.SelectedItem = graphChrom.TabText;
@@ -253,7 +255,7 @@ namespace pwiz.Skyline
                     // Only turn off old ion types, if new settings are not MS1-only full-scan
                     var fullScan = settingsNew.TransitionSettings.FullScan;
                     var enablePeptides = DocumentUI.DocumentType != SrmDocument.DOCUMENT_TYPE.small_molecules;
-                    var enableSmallMolecules = DocumentUI.DocumentType != SrmDocument.DOCUMENT_TYPE.proteomic;
+                    var enableSmallMolecules = DocumentUI.HasSmallMolecules;
                     if (!fullScan.IsEnabled || fullScan.IsEnabledMsMs)
                     {
                         CheckIonTypes(filterOld.PeptideIonTypes, false, enablePeptides);
@@ -274,6 +276,7 @@ namespace pwiz.Skyline
                     // Then enable based on settings and document contents
                     switch (DocumentUI.DocumentType)
                     {
+                        case SrmDocument.DOCUMENT_TYPE.none:
                         case SrmDocument.DOCUMENT_TYPE.proteomic:
                             CheckIonCharges(filterNew.PeptideProductCharges, true);
                             break;
@@ -402,7 +405,7 @@ namespace pwiz.Skyline
                     foreach (var graphChromatogram in _listGraphChrom.ToArray())
                     {
                         string name = graphChromatogram.NameSet;
-                        // Look for mathcing chromatogram sets across the documents
+                        // Look for matching chromatogram sets across the documents
                         ChromatogramSet chromSetOld;
                         ChromatogramSet chromSetNew;
                         int index;
@@ -425,9 +428,10 @@ namespace pwiz.Skyline
                             if (docIdChanged)
                             {
                                 var graphChrom = GetGraphChrom(name);
-                                _listGraphChrom.Remove(graphChrom);
                                 if (graphChrom != null)
-                                    DestroyGraphChrom(graphChrom);
+                                {
+                                    RemoveGraphChromFromList(graphChrom);
+                                }
                             }
                         }
                     }
@@ -449,12 +453,15 @@ namespace pwiz.Skyline
                                 var graphChrom = GetGraphChrom(name);
                                 if (graphChrom == null)
                                 {
-                                    layoutLock.EnsureLocked();
-                                    graphChrom = CreateGraphChrom(name, nameLast, false);
-                                    layoutLock.EnsurePaneLocked(graphChrom.Pane);
+                                    if (_listGraphChrom.Count < MAX_GRAPH_CHROM) // Limit window count to conserve win32 handles
+                                    {
+                                        layoutLock.EnsureLocked();
+                                        graphChrom = CreateGraphChrom(name, nameLast, false);
+                                        layoutLock.EnsurePaneLocked(graphChrom.Pane);
 
-                                    nameFirst = nameFirst ?? name;
-                                    nameLast = name;
+                                        nameFirst = nameFirst ?? name;
+                                        nameLast = name;
+                                    }
                                 }
                                     // If the pane is not showing a tab for this graph, than add one.
                                 else if (graphChrom.Pane == null ||
@@ -529,6 +536,12 @@ namespace pwiz.Skyline
 
             UpdateGraphPanes(listUpdateGraphs);
             FoldChangeForm.CloseInapplicableForms(this);
+        }
+
+        private void RemoveGraphChromFromList(GraphChromatogram graphChrom)
+        {
+            _listGraphChrom.Remove(graphChrom);
+            DestroyGraphChrom(graphChrom);
         }
 
         // Load view layout from the given stream.
@@ -703,6 +716,10 @@ namespace pwiz.Skyline
             }
             if (persistentString.StartsWith(typeof(GraphChromatogram).ToString()))
             {
+                if (_listGraphChrom.Count >= MAX_GRAPH_CHROM)
+                {
+                    return null;
+                }
                 string name = GraphChromatogram.GetTabText(persistentString);
                 var settings = DocumentUI.Settings;
                 if (settings.HasResults)
@@ -951,7 +968,7 @@ namespace pwiz.Skyline
                xMenuItem.Visible = yMenuItem.Visible = zMenuItem.Visible = 
                   DocumentUI.DocumentType != SrmDocument.DOCUMENT_TYPE.small_molecules;
 
-            fragmentsMenuItem.Visible = DocumentUI.DocumentType != SrmDocument.DOCUMENT_TYPE.proteomic;
+            fragmentsMenuItem.Visible = DocumentUI.HasSmallMolecules;
         }
 
         private void charge1MenuItem_Click(object sender, EventArgs e)
@@ -1008,7 +1025,7 @@ namespace pwiz.Skyline
 
             var selectedTreeNode = SelectedNode as SrmTreeNode;
             var displayType = GraphChromatogram.GetDisplayType(DocumentUI, selectedTreeNode);
-            if (displayType == DisplayTypeChrom.base_peak || displayType == DisplayTypeChrom.tic)
+            if (displayType == DisplayTypeChrom.base_peak || displayType == DisplayTypeChrom.tic || displayType == DisplayTypeChrom.qc)
                 return;
             ChromFileInfoId chromFileInfoId = GetSelectedChromFileId();
 
@@ -1077,6 +1094,12 @@ namespace pwiz.Skyline
         private void ranksMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ShowRanks = !Settings.Default.ShowRanks;
+            UpdateSpectrumGraph(false);
+        }
+
+        private void scoresContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowLibraryScores = !Settings.Default.ShowLibraryScores;
             UpdateSpectrumGraph(false);
         }
 
@@ -1153,6 +1176,8 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
             ranksContextMenuItem.Checked = set.ShowRanks;
             menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
+            scoreContextMenuItem.Checked = set.ShowLibraryScores;
+            menuStrip.Items.Insert(iInsert++, scoreContextMenuItem);
             ionMzValuesContextMenuItem.Checked = set.ShowIonMz;
             menuStrip.Items.Insert(iInsert++, ionMzValuesContextMenuItem);
             observedMzValuesContextMenuItem.Checked = set.ShowObservedMz;
@@ -1700,6 +1725,7 @@ namespace pwiz.Skyline
                     toolStripSeparatorTran,
                     basePeakContextMenuItem,
                     ticContextMenuItem,
+                    qcContextMenuItem,
                     toolStripSeparatorOnlyQuantitative,
                     onlyQuantitativeContextMenuItem,
                     toolStripSeparatorSplitGraph,
@@ -1911,12 +1937,44 @@ namespace pwiz.Skyline
                 basePeakContextMenuItem.Visible =
                 ticMenuItem.Visible =
                 ticContextMenuItem.Visible =
+                qcMenuItem.Visible =
+                qcContextMenuItem.Visible =
                 toolStripSeparatorTranMain.Visible =
                 toolStripSeparatorTran.Visible = showAllIonsOptions;
 
             if (!showAllIonsOptions &&
-                    (displayType == DisplayTypeChrom.base_peak || displayType == DisplayTypeChrom.tic))
+                    (displayType == DisplayTypeChrom.base_peak || displayType == DisplayTypeChrom.tic || displayType == DisplayTypeChrom.qc))
                 displayType = DisplayTypeChrom.all;
+
+            if (showAllIonsOptions)
+            {
+                qcMenuItem.DropDownItems.Clear();
+                qcContextMenuItem.DropDownItems.Clear();
+                var qcTraceNames = DocumentUI.MeasuredResults.QcTraceNames.ToList();
+                if (qcTraceNames.Count > 0)
+                {
+                    var qcTraceItems = new ToolStripItem[qcTraceNames.Count];
+                    var qcContextTraceItems = new ToolStripItem[qcTraceNames.Count];
+                    for (int i = 0; i < qcTraceNames.Count; i++)
+                    {
+                        qcTraceItems[i] = new ToolStripMenuItem(qcTraceNames[i], null, qcMenuItem_Click)
+                        {
+                            Checked = displayType == DisplayTypeChrom.qc &&
+                                      Settings.Default.ShowQcTraceName == qcTraceNames[i]
+                        };
+                        qcContextTraceItems[i] = new ToolStripMenuItem(qcTraceNames[i], null, qcMenuItem_Click)
+                        {
+                            Checked = displayType == DisplayTypeChrom.qc &&
+                                      Settings.Default.ShowQcTraceName == qcTraceNames[i]
+                        };
+                    }
+
+                    qcMenuItem.DropDownItems.AddRange(qcTraceItems);
+                    qcContextMenuItem.DropDownItems.AddRange(qcContextTraceItems);
+                }
+                else
+                    qcMenuItem.Visible = qcContextMenuItem.Visible = false;
+            }
 
             precursorsTranMenuItem.Checked = precursorsTranContextMenuItem.Checked =
                 (displayType == DisplayTypeChrom.precursors);
@@ -2083,7 +2141,7 @@ namespace pwiz.Skyline
                     var msg = subsequent ? MessageType.applied_peak_subsequent : MessageType.applied_peak_all;
 
                     ModifyDocument(Resources.SkylineWindow_PickPeakInChromatograms_Apply_picked_peak, document => doc,
-                        docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, msg, path.ToString()));
+                        docPair => AuditLogEntry.CreateSimpleEntry(msg, docPair.NewDocumentType, path.ToString()));
                 }
             }
         }
@@ -2150,7 +2208,7 @@ namespace pwiz.Skyline
                         var peptideGroup = ((PeptideGroupTreeNode) nodePepTree.SrmParent).DocNode;
                         var name = PropertyName.ROOT.SubProperty(peptideGroup.AuditLogText)
                             .SubProperty(nodePepTree.DocNode.AuditLogText);
-                        return AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.removed_all_peaks_from, name,
+                        return AuditLogEntry.CreateSimpleEntry(MessageType.removed_all_peaks_from, docPair.OldDocumentType, name,
                             docPair.OldDoc.MeasuredResults.Chromatograms[SelectedResultsIndex].Name);
                     });
             }
@@ -2175,7 +2233,7 @@ namespace pwiz.Skyline
                     if (nodeTran != null)
                         name = name.SubProperty(nodeTran.AuditLogText);
 
-                    return AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, msg, name,
+                    return AuditLogEntry.CreateSimpleEntry(msg, docPair.OldDocumentType, name,
                         docPair.OldDoc.MeasuredResults.Chromatograms[SelectedResultsIndex].Name);
                 });
         }
@@ -2284,6 +2342,20 @@ namespace pwiz.Skyline
         public void ShowTic()
         {
             SetDisplayTypeChrom(DisplayTypeChrom.tic);
+        }
+
+        private void qcMenuItem_Click(object sender, EventArgs e)
+        {
+            var qcTraceItem = sender as ToolStripMenuItem;
+            if (qcTraceItem == null)
+                throw new InvalidOperationException(@"qcMenuItem_Click must be triggered by a ToolStripMenuItem");
+            ShowQc(qcTraceItem.Text);
+        }
+
+        public void ShowQc(string qcTraceName)
+        {
+            Settings.Default.ShowQcTraceName = qcTraceName;
+            SetDisplayTypeChrom(DisplayTypeChrom.qc);
         }
 
         public void SetDisplayTypeChrom(DisplayTypeChrom displayType)
@@ -2474,7 +2546,26 @@ namespace pwiz.Skyline
             }
             else if (show)
             {
-                CreateGraphChrom(name, SelectedGraphChromName, false);
+                if (_listGraphChrom.Count >= MAX_GRAPH_CHROM)
+                {
+                    // List is too long, re-purpose least recently used
+                    graphChrom = _listGraphChrom[0];
+                    graphChrom.ChangeChromatogram(name);
+                    graphChrom.Activate();
+                    graphChrom.Visible = true;
+                    graphChrom.Focus();
+                }
+                else
+                {
+                    graphChrom = CreateGraphChrom(name, SelectedGraphChromName, false);
+                }
+            }
+
+            if (show)
+            {
+                // Move this to end of MRU so it's seen as most recent
+                _listGraphChrom.Remove(graphChrom);
+                _listGraphChrom.Add(graphChrom);
             }
         }
 
@@ -2625,7 +2716,7 @@ namespace pwiz.Skyline
                     {
                         var name = GetPropertyName(docPair.OldDoc, e.GroupPath, e.TransitionId);
 
-                        return AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.picked_peak, name, e.NameSet,
+                        return AuditLogEntry.CreateSimpleEntry(MessageType.picked_peak, docPair.OldDocumentType, name, e.NameSet,
                             e.RetentionTime.MeasuredTime.ToString(@"#.0", CultureInfo.CurrentCulture));
                     });
             }
@@ -2759,7 +2850,7 @@ namespace pwiz.Skyline
                             .ToList();
                         if (messages.Count == 1)
                         {
-                            return AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc, messages[0]);
+                            return AuditLogEntry.CreateSingleMessageEntry(messages[0]);
                         }                 
                         else if (messages.Count > 1)
                         {
@@ -2767,13 +2858,13 @@ namespace pwiz.Skyline
                             if (names.All(name => Equals(name, firstName)))
                             {
                                 return AuditLogEntry
-                                    .CreateSimpleEntry(docPair.OldDoc, MessageType.changed_peak_bounds_of, firstName)
+                                    .CreateSimpleEntry(MessageType.changed_peak_bounds_of, docPair.OldDocumentType, firstName)
                                     .ChangeAllInfo(messages);
                             }
                             else // TODO: is this even possible?+
                             {
                                 return AuditLogEntry
-                                    .CreateSimpleEntry(docPair.OldDoc, MessageType.changed_peak_bounds)
+                                    .CreateSimpleEntry(MessageType.changed_peak_bounds, docPair.OldDocumentType)
                                     .ChangeAllInfo(messages);
                             }
                         }
@@ -2834,6 +2925,7 @@ namespace pwiz.Skyline
             {
                 result.Add(new MessageInfo(
                     singleTransitionDisplay ? MessageType.changed_peak_start : MessageType.changed_peak_start_all,
+                    Document.DocumentType,
                     name, args.NameSet, LogMessage.RoundDecimal(startTime, 2),
                     LogMessage.RoundDecimal(args.StartTime.MeasuredTime, 2)));
             }
@@ -2841,7 +2933,7 @@ namespace pwiz.Skyline
             if (args.ChangeType == PeakBoundsChangeType.end || args.ChangeType == PeakBoundsChangeType.both)
             {
                 result.Add(new MessageInfo(
-                    singleTransitionDisplay ? MessageType.changed_peak_end : MessageType.changed_peak_end_all, name,
+                    singleTransitionDisplay ? MessageType.changed_peak_end : MessageType.changed_peak_end_all, Document.DocumentType, name,
                     args.NameSet, LogMessage.RoundDecimal(endTime, 2),
                     LogMessage.RoundDecimal(args.EndTime.MeasuredTime, 2)));
             }
@@ -2933,6 +3025,11 @@ namespace pwiz.Skyline
         }
 
         private void closeAllChromatogramsMenuItem_Click(object sender, EventArgs e)
+        {
+            CloseAllChromatograms();
+        }
+
+        public void CloseAllChromatograms()
         {
             foreach (var graphChromatogram in _listGraphChrom)
             {
@@ -3898,8 +3995,8 @@ namespace pwiz.Skyline
 
             ModifyDocument(Resources.SkylineWindow_RemoveRTOutliers_Remove_retention_time_outliers,
                 doc => (SrmDocument) doc.RemoveAll(outlierIds),
-                docPair => AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, MessageType.removed_rt_outlier,
-                    MessageType.removed_rt_outliers, RTGraphController.Outliers, outlier =>  MessageArgs.Create(AuditLogEntry.GetNodeName(docPair.OldDoc, outlier)), null));
+                docPair => AuditLogEntry.CreateCountChangeEntry(MessageType.removed_rt_outlier,
+                    MessageType.removed_rt_outliers, docPair.OldDocumentType, RTGraphController.Outliers, outlier =>  MessageArgs.Create(AuditLogEntry.GetNodeName(docPair.OldDoc, outlier)), null));
         }
 
         private void removeRTContextMenuItem_Click(object sender, EventArgs e)
@@ -4547,18 +4644,16 @@ namespace pwiz.Skyline
 
         private int AddReplicateOrderAndGroupByMenuItems(ToolStrip menuStrip, int iInsert)
         {
-            string groupBy = SummaryReplicateGraphPane.GroupByReplicateAnnotation;
-            var replicateAnnotations = DocumentUI.Settings.DataSettings.AnnotationDefs
-                .Where(annotationDef => annotationDef.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate))
-                .ToArray();
-            if (replicateAnnotations.Length == 0)
-                groupBy = null;
+            string currentGroupBy = SummaryReplicateGraphPane.GroupByReplicateAnnotation;
+            var groupByValues = ReplicateValue.GetGroupableReplicateValues(DocumentUI).ToArray();
+            if (groupByValues.Length == 0)
+                currentGroupBy = null;
 
             // If not grouped by an annotation, show the order-by menuitem
-            if (string.IsNullOrEmpty(groupBy))
+            if (string.IsNullOrEmpty(currentGroupBy))
             {
-                var orderByReplicateAnnotationDef = replicateAnnotations.FirstOrDefault(
-                        annotationDef => SummaryReplicateGraphPane.OrderByReplicateAnnotation == annotationDef.Name);
+                var orderByReplicateAnnotationDef = groupByValues.FirstOrDefault(
+                    value => SummaryReplicateGraphPane.OrderByReplicateAnnotation == value.ToPersistedString());
                 menuStrip.Items.Insert(iInsert++, replicateOrderContextMenuItem);
                 replicateOrderContextMenuItem.DropDownItems.Clear();
                 replicateOrderContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
@@ -4572,42 +4667,50 @@ namespace pwiz.Skyline
                 replicateOrderAcqTimeContextMenuItem.Checked
                     = null == orderByReplicateAnnotationDef &&
                       SummaryReplicateOrder.time == SummaryReplicateGraphPane.ReplicateOrder;
-                foreach (var annotationDef in replicateAnnotations)
+                foreach (var replicateValue in groupByValues)
                 {
                     replicateOrderContextMenuItem.DropDownItems.Add(OrderByReplicateAnnotationMenuItem(
-                        annotationDef, SummaryReplicateGraphPane.OrderByReplicateAnnotation));
+                        replicateValue, SummaryReplicateGraphPane.OrderByReplicateAnnotation));
                 }
             }
             
-            if (replicateAnnotations.Length > 0)
+            if (groupByValues.Length > 0)
             {
                 menuStrip.Items.Insert(iInsert++, groupReplicatesByContextMenuItem);
                 groupReplicatesByContextMenuItem.DropDownItems.Clear();
                 groupReplicatesByContextMenuItem.DropDownItems.Add(groupByReplicateContextMenuItem);
-                groupByReplicateContextMenuItem.Checked = string.IsNullOrEmpty(groupBy);
-                foreach (var annotationDef in replicateAnnotations)
+                groupByReplicateContextMenuItem.Checked = string.IsNullOrEmpty(currentGroupBy);
+                foreach (var replicateValue in groupByValues)
                 {
                     groupReplicatesByContextMenuItem.DropDownItems
-                        .Add(GroupByReplicateAnnotationMenuItem(annotationDef, groupBy));
+                        .Add(GroupByReplicateAnnotationMenuItem(replicateValue, currentGroupBy));
                 }
             }
             return iInsert;
         }
 
-        private ToolStripMenuItem GroupByReplicateAnnotationMenuItem(AnnotationDef annotationDef, string groupBy)
+        public ToolStripMenuItem ReplicateOrderContextMenuItem
         {
-            return new ToolStripMenuItem(annotationDef.Name, null, (sender, eventArgs)=>GroupByReplicateAnnotation(annotationDef.Name))
+            get
+            {
+                return replicateOrderContextMenuItem;
+            }
+        }
+
+        private ToolStripMenuItem GroupByReplicateAnnotationMenuItem(ReplicateValue replicateValue, string groupBy)
+        {
+            return new ToolStripMenuItem(replicateValue.Title, null, (sender, eventArgs)=>GroupByReplicateValue(replicateValue))
                        {
-                           Checked = (annotationDef.Name == groupBy),
+                           Checked = replicateValue.ToPersistedString() == groupBy
                        };
         }
 
-        private ToolStripMenuItem OrderByReplicateAnnotationMenuItem(AnnotationDef annotationDef, string currentOrderBy)
+        private ToolStripMenuItem OrderByReplicateAnnotationMenuItem(ReplicateValue replicateValue, string currentOrderBy)
         {
-            return new ToolStripMenuItem(annotationDef.Name, null,
-                                         (sender, eventArgs) => OrderByReplicateAnnotation(annotationDef.Name))
+            return new ToolStripMenuItem(replicateValue.Title, null,
+                                         (sender, eventArgs) => OrderByReplicateAnnotation(replicateValue))
                 {
-                    Checked = (annotationDef.Name == currentOrderBy)
+                    Checked = replicateValue.ToPersistedString() == currentOrderBy
                 };
         }
 
@@ -4634,17 +4737,10 @@ namespace pwiz.Skyline
             // Remove everything not in the set
             ModifyDocument(Resources.SkylineWindow_RemoveAboveCVCutoff_Remove_peptides_above_CV_cutoff, doc =>
             {
-                var setRemove = new HashSet<int>();
-                foreach (var nodeMolecule in doc.Molecules)
-                {
-                    if (nodeMolecule.GlobalStandardType != null)
-                        continue;
-                    foreach (var nodeGroup in nodeMolecule.TransitionGroups.Where(n => !ids.Contains(n.Id.GlobalIndex)))
-                        setRemove.Add(nodeGroup.Id.GlobalIndex);
-                    nodeCount = setRemove.Count;
-                }
-                return (SrmDocument)doc.RemoveAll(setRemove, (int) SrmDocument.Level.TransitionGroups, (int) SrmDocument.Level.Molecules);
-            }, docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, nodeCount == 1 ? MessageType.removed_peptide_above_cutoff : MessageType.removed_peptides_above_cutoff,
+                var setRemove = AreaCVRefinementData.IndicesToRemove(doc, ids);
+                nodeCount = setRemove.Count;
+                return (SrmDocument)doc.RemoveAll(setRemove, null, (int) SrmDocument.Level.Molecules);
+            }, docPair => AuditLogEntry.CreateSimpleEntry(nodeCount == 1 ? MessageType.removed_peptide_above_cutoff : MessageType.removed_peptides_above_cutoff, docPair.OldDocumentType,
                 nodeCount, Settings.Default.AreaCVCVCutoff * AreaGraphController.GetAreaCVFactorToPercentage()));
         }
 
@@ -4871,18 +4967,25 @@ namespace pwiz.Skyline
 
         private void groupByReplicateContextMenuItem_Click(object sender, EventArgs e)
         {
-            GroupByReplicateAnnotation(null);
+            GroupByReplicateValue(null);
+        }
+
+        public void GroupByReplicateValue(ReplicateValue replicateValue)
+        {
+            SummaryReplicateGraphPane.GroupByReplicateAnnotation = replicateValue?.ToPersistedString();
+            UpdateSummaryGraphs();
         }
 
         public void GroupByReplicateAnnotation(string annotationName)
         {
-            SummaryReplicateGraphPane.GroupByReplicateAnnotation = annotationName;
+            SummaryReplicateGraphPane.GroupByReplicateAnnotation =
+                DocumentAnnotations.ANNOTATION_PREFIX + annotationName;
             UpdateSummaryGraphs();
         }
 
-        public void OrderByReplicateAnnotation(string annotationName)
+        public void OrderByReplicateAnnotation(ReplicateValue replicateValue)
         {
-            SummaryReplicateGraphPane.OrderByReplicateAnnotation = annotationName;
+            SummaryReplicateGraphPane.OrderByReplicateAnnotation = replicateValue.ToPersistedString();
             UpdateSummaryGraphs();
         }
 

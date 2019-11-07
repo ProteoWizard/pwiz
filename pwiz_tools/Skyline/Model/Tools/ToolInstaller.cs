@@ -691,17 +691,17 @@ namespace pwiz.Skyline.Model.Tools
                 }
                 var externalToolReports =
                     Settings.Default.PersistedViews.GetViewSpecList(PersistedViews.ExternalToolsGroup.Id);
-                Dictionary<string, ViewSpec> allExistingReports = new Dictionary<string, ViewSpec>();
+                Dictionary<string, ViewSpecLayout> allExistingReports = new Dictionary<string, ViewSpecLayout>();
                 if (externalToolReports != null)
                 {
-                    foreach (var viewSpec in externalToolReports.ViewSpecs)
+                    foreach (var viewSpec in externalToolReports.ViewSpecLayouts)
                     {
                         allExistingReports[viewSpec.Name] = viewSpec;
                     }
                 }
                 foreach (var reportOrViewSpec in loadedItems)
                 {
-                    ViewSpec existingView;
+                    ViewSpecLayout existingView;
                     if (allExistingReports.TryGetValue(reportOrViewSpec.GetKey(), out existingView))
                     {
                         if (!ReportSharing.AreEquivalent(reportOrViewSpec, new ReportOrViewSpec(existingView)))

@@ -72,9 +72,14 @@ namespace pwiz.Skyline.Util.Extensions
         /// files to be imported directly into Excel on the same system.
         /// <param name="cultureInfo">The culture for which the separator is requested.</param>
         /// </summary>
-        public static char GetCsvSeparator(CultureInfo cultureInfo)
+        public static char GetCsvSeparator(IFormatProvider cultureInfo)
         {
-            return (Equals(SEPARATOR_CSV.ToString(CultureInfo.InvariantCulture), cultureInfo.NumberFormat.NumberDecimalSeparator) ? SEPARATOR_CSV_INTL : SEPARATOR_CSV);
+            var numberFormat = cultureInfo.GetFormat(typeof(NumberFormatInfo)) as NumberFormatInfo;
+            if (numberFormat != null && Equals(SEPARATOR_CSV.ToString(CultureInfo.InvariantCulture), numberFormat.NumberDecimalSeparator))
+            {
+                return SEPARATOR_CSV_INTL;
+            }
+            return SEPARATOR_CSV;
         }
 
         /// <summary>
@@ -624,12 +629,13 @@ namespace pwiz.Skyline.Util.Extensions
             }
             for (int i = 0; i < fields.Length; ++i)
             {
-                FieldNames.Add(fields[i]);
-                FieldDict[fields[i]] = i;
+                var fieldName = fields[i].Trim();
+                FieldNames.Add(fieldName);
+                FieldDict[fieldName] = i;
                 // Check to see if the given column name is actually a synonym for the internal canonical (no spaces, serialized) name
                 if (headerSynonyms != null)
                 {
-                    var key = headerSynonyms.Keys.FirstOrDefault(k => string.Compare(k, fields[i], StringComparison.OrdinalIgnoreCase)==0); // Case insensitive
+                    var key = headerSynonyms.Keys.FirstOrDefault(k => string.Compare(k, fieldName, StringComparison.OrdinalIgnoreCase)==0); // Case insensitive
                     if (!string.IsNullOrEmpty(key))
                     {
                         var syn = headerSynonyms[key];

@@ -21,6 +21,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.AuditLog;
@@ -62,9 +63,14 @@ namespace pwiz.Skyline.Model
     {
         private bool _removeDuplicatePeptides;
 
+        public RefinementSettings()
+        {
+            NormalizationMethod = AreaCVNormalizationMethod.none;
+        }
+
         public override MessageInfo MessageInfo
         {
-            get { return new MessageInfo(MessageType.refined_targets); }
+            get { return new MessageInfo(MessageType.refined_targets, SrmDocument.DOCUMENT_TYPE.none); }
         }
 
         public struct PeptideCharge
@@ -80,18 +86,6 @@ namespace pwiz.Skyline.Model
         }
 
         public enum ProteinSpecType {  name, accession, preferred }
-
-        private class DefaultValuesAddLabelType : DefaultValues
-        {
-            public override bool IsDefault(object obj, object parentObject)
-            {
-                var refSettings = parentObject as RefinementSettings;
-                if (refSettings == null)
-                    return false;
-
-                return refSettings.RefineLabelType == null;
-            }
-        }
 
         public object GetDefaultObject(ObjectInfo<object> info)
         {
@@ -121,9 +115,34 @@ namespace pwiz.Skyline.Model
         public bool RemoveMissingLibrary { get; set; }
         [Track]
         public int? MinTransitionsPepPrecursor { get; set; }
-        [Track]
+
+        private class RefineLabelTypeLocalizer : CustomPropertyLocalizer
+        {
+            private static readonly string ADD_LABEL_TYPE = @"AddRefineLabelType";
+            private static readonly string REMOVE_LABEL_TYPE = @"RefineLabelType";
+
+            public RefineLabelTypeLocalizer() : base(PropertyPath.Parse(@"AddLabelType"), true)
+            {
+            }
+
+            private string LocalizeInternal(object obj)
+            {
+                if (obj == null || obj.GetType() != typeof(bool))
+                    return null;
+
+                return (bool) obj ? ADD_LABEL_TYPE : REMOVE_LABEL_TYPE;
+            }
+
+            protected override string Localize(ObjectPair<object> objectPair)
+            {
+                return LocalizeInternal(objectPair.NewObject) ?? LocalizeInternal(objectPair.OldObject);
+            }
+
+            public override string[] PossibleResourceNames => new[] {ADD_LABEL_TYPE, REMOVE_LABEL_TYPE};
+        }
+
+        [Track(customLocalizer:typeof(RefineLabelTypeLocalizer))]
         public IsotopeLabelType RefineLabelType { get; set; }
-        [Track(defaultValues: typeof(DefaultValuesAddLabelType))]
         public bool AddLabelType { get; set; }
         public PickLevel AutoPickChildrenAll { get; set; }
         [Track]
@@ -139,6 +158,8 @@ namespace pwiz.Skyline.Model
         public double? MaxPeakFoundRatio { get; set; }
         [Track]
         public double? MaxPepPeakRank { get; set; }
+        [Track]
+        public bool MaxPrecursorPeakOnly { get; set; }
         [Track]
         public double? MaxPeakRank { get; set; }
 
@@ -172,6 +193,18 @@ namespace pwiz.Skyline.Model
         public string DecoysMethod { get; set; }
 
         public enum ReplicateInclusion { all, best }
+
+        // Consistency
+        [Track]
+        public double? CVCutoff { get; set; }
+        [Track]
+        public double? QValueCutoff { get; set; }
+        [Track]
+        public int? MinimumDetections { get; set; }
+        [Track]
+        public AreaCVNormalizationMethod NormalizationMethod { get; set; }
+        [Track]
+        public IsotopeLabelType NormalizationLabelType { get; set; }
 
         public SrmDocument Refine(SrmDocument document)
         {
@@ -280,8 +313,49 @@ namespace pwiz.Skyline.Model
 
                 listPepGroups = listPepGroupsFiltered;                
             }
+            var refined = (SrmDocument)document.ChangeChildrenChecked(listPepGroups.ToArray(), true);
+            if (CVCutoff.HasValue || QValueCutoff.HasValue)
+            {
+                if (!document.Settings.HasResults || document.MeasuredResults.Chromatograms.Count < 2)
+                {
+                    throw new Exception(
+                        Resources.RefinementSettings_Refine_The_document_must_contain_at_least_2_replicates_to_refine_based_on_consistency_);
+                }
 
-            return (SrmDocument) document.ChangeChildrenChecked(listPepGroups.ToArray(), true);
+                if (NormalizationMethod == AreaCVNormalizationMethod.global_standards &&
+                    !document.Settings.HasGlobalStandardArea)
+                {
+                    // error
+                    throw new Exception(Resources.RefinementSettings_Refine_The_document_does_not_have_a_global_standard_to_normalize_by_);
+                }
+
+                double cvcutoff = CVCutoff.HasValue ? CVCutoff.Value : double.NaN;
+                double qvalue = QValueCutoff.HasValue ? QValueCutoff.Value : double.NaN;
+                int minDetections = MinimumDetections.HasValue ? MinimumDetections.Value : -1;
+                int ratioIndex = GetLabelIndex(NormalizationLabelType, document);
+                var data = new AreaCVRefinementData(refined, new AreaCVRefinementSettings(cvcutoff, qvalue, minDetections, NormalizationMethod, ratioIndex));
+                refined = data.RemoveAboveCVCutoff(refined);
+            }
+
+            return refined;
+//            return (SrmDocument) document.ChangeChildrenChecked(listPepGroups.ToArray(), true);
+        }
+
+        private int GetLabelIndex(IsotopeLabelType type, SrmDocument doc)
+        {
+            if (type != null)
+            {
+                var mods = doc.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes;
+                var idx = mods.IndexOf(mod => Equals(mod.Name, type.Name));
+                if (idx == -1)
+                {
+                    // error
+                    throw new Exception(Resources.RefinementSettings_GetLabelIndex_The_document_does_not_contain_the_given_reference_type_);
+                }
+                return idx;
+            }
+
+            return -1;
         }
 
         private string GetAcceptProteinKey(PeptideGroupDocNode nodePepGroup)
@@ -393,20 +467,28 @@ namespace pwiz.Skyline.Model
 
                 listPeptides.Add(nodePepRefined);
             }
-
+            
             if (MaxPepPeakRank.HasValue)
             {
                 // Calculate the average peak area for each peptide
                 int countPeps = listPeptides.Count;
                 var listAreaIndexes = new List<PepAreaSortInfo>();
                 var internalStandardTypes = document.Settings.PeptideSettings.Modifications.InternalStandardTypes;
+                var unrankedPeptides = new List<PeptideDocNode>();
                 for (int i = 0; i < countPeps; i++)
                 {
                     var nodePep = listPeptides[i];
                     // Only peptides with children can possible be ranked by area
                     // Those without should be removed by this operation
                     if (nodePep.Children.Count == 0)
-                        continue;                    
+                        continue;     
+                    if (nodePep.GlobalStandardType != null 
+                        || nodePep.TransitionGroups.All(tranGroup=>internalStandardTypes.Contains(tranGroup.LabelType)))
+                    {
+                        // Peptides which are internal standards get added back no matter what
+                        unrankedPeptides.Add(nodePep);
+                        continue;
+                    }
                     int bestResultIndex = (UseBestResult ? nodePep.BestResult : -1);
                     var sortInfo = new PepAreaSortInfo(nodePep, internalStandardTypes, bestResultIndex, listAreaIndexes.Count);
                     listAreaIndexes.Add(sortInfo);
@@ -425,6 +507,7 @@ namespace pwiz.Skyline.Model
 
                 // Add back all peptides with low enough rank.
                 listPeptides.Clear();
+                listPeptides.AddRange(unrankedPeptides);
                 foreach (var areaIndex in arrayAreaIndexes)
                 {
                     if (areaIndex.Area == 0 || areaIndex.Rank > MaxPepPeakRank.Value)
@@ -552,6 +635,24 @@ namespace pwiz.Skyline.Model
             // If groups were added, make sure everything is in the right order.
             if (addedGroups)
                 listGroups.Sort(Peptide.CompareGroups);
+
+            if (MaxPrecursorPeakOnly && listGroups.Count > 1 &&
+                listGroups.Select(g => g.PrecursorAdduct.Unlabeled).Distinct().Count() > 1)
+            {
+                var chargeGroups =
+                    (from g in listGroups
+                        group g by g.TransitionGroup.PrecursorAdduct.Unlabeled
+                        into ga
+                        select new {Adduct = ga.Key, Area = ga.Sum(gg => gg.AveragePeakArea)}).ToArray();
+
+                if (chargeGroups.Any(n => n.Area > 0))
+                {
+                    // Assume that the probability of two measured areas being exactly equal is low
+                    // enough that taking just one is not an issue.
+                    var bestCharge = chargeGroups.Aggregate((n1, n2) => n1.Area > n2.Area ? n1 : n2);
+                    listGroups = listGroups.Where(g => Equals(g.PrecursorAdduct.Unlabeled, bestCharge.Adduct)).ToList();
+                }
+            }
 
             // Change the children, but only change auto-management, if the child
             // identities have changed, not if their contents changed.
@@ -971,7 +1072,7 @@ namespace pwiz.Skyline.Model
                                 var newTransition = new Transition(newTransitionGroup, ionType,
                                     null, transition.Transition.MassIndex, transitionAdduct, null, transitionCustomMolecule);
                                 var newTransitionDocNode = new TransitionDocNode(newTransition, transition.Annotations.Merge(note),
-                                    null, mass, transition.QuantInfo.ChangeLibInfo(transitionLibInfo),
+                                    null, mass, transition.QuantInfo.ChangeLibInfo(transitionLibInfo), ExplicitTransitionValues.EMPTY, 
                                     transition.Results);
                                 var mzShift = transition.Transition.IonType == IonType.precursor ?
                                     mzShiftPrecursor :
@@ -1323,7 +1424,7 @@ namespace pwiz.Skyline.Model
                 var decoyTransition = new Transition(decoyGroup, transition.IonType, transition.CleavageOffset,
                                                      transition.MassIndex, transition.Adduct, productMassShift, transition.CustomIon);
                 decoyNodeTranList.Add(new TransitionDocNode(decoyTransition, nodeTran.Losses, nodeTran.MzMassType.IsAverage() ? TypedMass.ZERO_AVERAGE_MASSH : TypedMass.ZERO_MONO_MASSH, 
-                                                            nodeTran.QuantInfo));
+                                                            nodeTran.QuantInfo, nodeTran.ExplicitValues));
             }
             return decoyNodeTranList.ToArray();
         }
@@ -1470,7 +1571,7 @@ namespace pwiz.Skyline.Model
         private sealed class PepAreaSortInfo
         {
             private readonly PeptideDocNode _nodePep;
-            private readonly Adduct _bestCharge;
+//            private readonly Adduct _bestCharge;
 
             public PepAreaSortInfo(PeptideDocNode nodePep,
                                    ICollection<IsotopeLabelType> internalStandardTypes,
@@ -1488,7 +1589,7 @@ namespace pwiz.Skyline.Model
 
                 // Store the best charge state and its area
                 var bestChargeGroup = chargeGroups.OrderBy(cg => cg.Area).First();
-                _bestCharge = bestChargeGroup.Charge;
+//                _bestCharge = bestChargeGroup.Charge;
                 Area = bestChargeGroup.Area ?? 0;
 
                 Index = index;
@@ -1500,11 +1601,7 @@ namespace pwiz.Skyline.Model
 
             public PeptideDocNode Peptide
             {
-                get
-                {
-                    return (PeptideDocNode) _nodePep.ChangeChildrenChecked(_nodePep.TransitionGroups.Where(
-                        nodeGroup => nodeGroup.TransitionGroup.PrecursorAdduct.Equals(_bestCharge)).ToArray());
-                }
+                get { return _nodePep; }
             }
         }
 

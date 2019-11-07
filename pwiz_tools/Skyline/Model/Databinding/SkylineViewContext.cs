@@ -91,7 +91,7 @@ namespace pwiz.Skyline.Model.Databinding
             return new ViewSpecList(viewSpecs, viewSpecList.ViewLayouts);
         }
 
-        public override void AddOrReplaceViews(ViewGroupId groupId, IEnumerable<ViewSpec> viewSpecs)
+        public override void AddOrReplaceViews(ViewGroupId groupId, IEnumerable<ViewSpecLayout> viewSpecs)
         {
             var viewSpecsArray = ImmutableList.ValueOf(viewSpecs);
             if (Equals(groupId, PersistedViews.MainGroup.Id))
@@ -322,7 +322,23 @@ namespace pwiz.Skyline.Model.Databinding
             }
         }
 
-        public bool Export(CancellationToken cancellationToken, IProgressMonitor progressMonitor, ref IProgressStatus status, ViewInfo viewInfo, TextWriter writer, DsvWriter dsvWriter)
+        public bool Export(CancellationToken cancellationToken, IProgressMonitor progressMonitor,
+            ref IProgressStatus status, ViewInfo viewInfo, TextWriter writer, DsvWriter dsvWriter)
+        {
+            ViewLayout viewLayout = null;
+            if (viewInfo.ViewGroup != null)
+            {
+                var viewLayoutList = GetViewLayoutList(viewInfo.ViewGroup.Id.ViewName(viewInfo.Name));
+                if (viewLayoutList != null)
+                {
+                    viewLayout = viewLayoutList.DefaultLayout;
+                }
+            }
+
+            return Export(cancellationToken, progressMonitor, ref status, viewInfo, viewLayout, writer, dsvWriter);
+        }
+
+        public bool Export(CancellationToken cancellationToken, IProgressMonitor progressMonitor, ref IProgressStatus status, ViewInfo viewInfo, ViewLayout viewLayout, TextWriter writer, DsvWriter dsvWriter)
         {
             progressMonitor = progressMonitor ?? new SilentProgressMonitor();
             using (var bindingListSource = new BindingListSource(cancellationToken))
@@ -429,6 +445,7 @@ namespace pwiz.Skyline.Model.Databinding
                 if (columnDescriptor.PropertyType == typeof(Protein))
                 {
                     columnsToRemove.Add(PropertyPath.Root.Property("Name"));
+                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Protein.AutoSelectPeptides)));
                     if (docHasOnlyCustomIons)
                     {
                         // Peptide-oriented fields that make no sense in a small molecule context
@@ -442,6 +459,7 @@ namespace pwiz.Skyline.Model.Databinding
                 }
                 else if (columnDescriptor.PropertyType == typeof(Entities.Peptide))
                 {
+                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Entities.Peptide.AutoSelectPrecursors)));
                     columnsToRemove.Add(PropertyPath.Root.Property("Sequence"));
                     columnsToRemove.Add(PropertyPath.Root.Property("SequenceLength"));
                     columnsToRemove.Add(PropertyPath.Root.Property("PreviousAa"));
@@ -453,6 +471,8 @@ namespace pwiz.Skyline.Model.Databinding
                     columnsToRemove.Add(PropertyPath.Root.Property("CalibrationCurve"));
                     columnsToRemove.Add(PropertyPath.Root.Property("FiguresOfMerit"));
                     columnsToRemove.Add(PropertyPath.Root.Property("NormalizationMethod"));
+                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Entities.Peptide.AutoSelectPrecursors)));
+                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Entities.Peptide.AttributeGroupId)));
                     foreach (var prop in MoleculeAccessionNumbers.PREFERRED_ACCESSION_TYPE_ORDER)
                         columnsToRemove.Add(PropertyPath.Root.Property(prop)); // By default don't show CAS, InChI etc
                     if (docHasOnlyCustomIons)
@@ -481,7 +501,6 @@ namespace pwiz.Skyline.Model.Databinding
                     }
                     if (!docHasCustomIons)
                     {
-                        columnsToRemove.Add(PropertyPath.Root.Property("ExplicitCollisionEnergy"));
                         columnsToRemove.Add(PropertyPath.Root.Property("IonName"));
                         columnsToRemove.Add(PropertyPath.Root.Property("IonFormula"));
                         columnsToRemove.Add(PropertyPath.Root.Property("NeutralFormula"));
@@ -498,20 +517,23 @@ namespace pwiz.Skyline.Model.Databinding
                     columnsToRemove.Add(PropertyPath.Root.Property("IsDecoy"));
                     columnsToRemove.Add(PropertyPath.Root.Property("DecoyMzShift"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDriftTimeMsec"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDriftTimeHighEnergyOffsetMsec"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitCollisionalCrossSection"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitIonMobility"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitIonMobilityHighEnergyOffset"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitIonMobilityUnits"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitCompensationVoltage"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDeclusteringPotential"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitSLens"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitConeVoltage"));
                     columnsToRemove.Add(PropertyPath.Root.Property("PrecursorConcentration"));
+                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Precursor.AutoSelectTransitions)));
                     addRoot = true;
                 }
                 else if (columnDescriptor.PropertyType == typeof(Entities.Transition))
                 {
+                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitCollisionEnergy"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDriftTimeHighEnergyOffsetMsec"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitIonMobilityHighEnergyOffset"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitCompensationVoltage"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDeclusteringPotential"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitSLens"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitConeVoltage"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ResultSummary"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ProductNeutralMass"));
                     columnsToRemove.Add(PropertyPath.Root.Property("FragmentIonType"));
@@ -546,6 +568,7 @@ namespace pwiz.Skyline.Model.Databinding
                 {
                     columnsToRemove.Add(PropertyPath.Root.Property("Name"));
                     columnsToRemove.Add(PropertyPath.Root.Property("SampleDilutionFactor"));
+                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Replicate.BatchName)));
                     addRoot = true;
                 }
                 viewSpec = viewSpec.SetSublistId(GetReplicateSublist(columnDescriptor.PropertyType));
@@ -666,9 +689,12 @@ namespace pwiz.Skyline.Model.Databinding
 
         public static IEnumerable<RowSourceInfo> GetDocumentGridRowSources(SkylineDataSchema dataSchema)
         {
-            yield return MakeRowSource<Protein>(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Proteins,
+            bool proteomic = dataSchema.DefaultUiMode == UiModes.PROTEOMIC;
+            yield return MakeRowSource<Protein>(dataSchema, 
+                proteomic ? Resources.SkylineViewContext_GetDocumentGridRowSources_Proteins : Resources.SkylineViewContext_GetDocumentGridRowSources_Molecule_Lists,
                 () => new Proteins(dataSchema));
-            yield return MakeRowSource<Entities.Peptide>(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides,
+            yield return MakeRowSource<Entities.Peptide>(dataSchema, 
+                proteomic ? Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides : Resources.SkylineViewContext_GetDocumentGridRowSources_Molecules,
                 () => new Peptides(dataSchema, new[] {IdentityPath.ROOT}));
             yield return MakeRowSource<Precursor>(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors, 
                 () => new Precursors(dataSchema, new[] { IdentityPath.ROOT }));
@@ -712,14 +738,14 @@ namespace pwiz.Skyline.Model.Databinding
             return column;
         }
 
-        private static readonly IDictionary<string, int> _imageIndexes = new Dictionary<string, int>
+        private static readonly IDictionary<string, Tuple<int, int>> _imageIndexes = new Dictionary<string, Tuple<int, int>>
         {
             // ReSharper disable RedundantNameQualifier
-            {typeof (Entities.Protein).FullName, 1},
-            {typeof (Entities.Peptide).FullName, 2},
-            {typeof (Entities.Precursor).FullName, 3},
-            {typeof (Entities.Transition).FullName, 4},
-            {typeof (Entities.Replicate).FullName, 5}
+            {typeof (Entities.Protein).FullName, Tuple.Create(1, 6)},
+            {typeof (Entities.Peptide).FullName, Tuple.Create(2, 7)},
+            {typeof (Entities.Precursor).FullName, Tuple.Create(3, 3)},
+            {typeof (Entities.Transition).FullName, Tuple.Create(4, 4)},
+            {typeof (Entities.Replicate).FullName, Tuple.Create(5, 5)}
             // ReSharper restore RedundantNameQualifier
         };
 
@@ -733,15 +759,21 @@ namespace pwiz.Skyline.Model.Databinding
                 Resources.TransitionGroup,
                 Resources.Fragment,
                 Resources.Replicate,
+                Resources.MoleculeList,
+                Resources.Molecule,
             };
         }
 
         public override int GetImageIndex(ViewSpec viewSpec)
         {
-            int imageIndex;
+            Tuple<int, int> imageIndex;
             if (_imageIndexes.TryGetValue(viewSpec.RowSource, out imageIndex))
             {
-                return imageIndex;
+                if (DataSchema.NormalizeUiMode(viewSpec.UiMode) == UiModes.PROTEOMIC)
+                {
+                    return imageIndex.Item1;
+                }
+                return imageIndex.Item2;
             }
             return -1;
         }
@@ -842,6 +874,20 @@ namespace pwiz.Skyline.Model.Databinding
         protected void DeleteSkylineDocNodes(BoundDataGridView dataGridView, IEnumerable<SkylineDocNode> docNodes)
         {
             DeleteNodesAction.DeleteSkylineDocNodes(SkylineDataSchema.SkylineWindow, dataGridView, docNodes);
+        }
+
+        public override IEnumerable<IUiModeInfo> AvailableUiModes
+        {
+            get
+            {
+                var skylineWindow = SkylineDataSchema.SkylineWindow;
+                if (skylineWindow == null)
+                {
+                    return UiModes.AllModes;
+                }
+
+                return UiModes.AvailableModes(SkylineDataSchema.SkylineWindow.ModeUI);
+            }
         }
     }
 }

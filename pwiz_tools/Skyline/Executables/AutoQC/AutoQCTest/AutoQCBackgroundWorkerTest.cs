@@ -50,7 +50,7 @@ namespace AutoQCTest
 
             var appControl = new TestAppControl();
             var logger = new TestLogger();
-            var processControl = new TestProcessControl(logger);
+            // var processControl = new TestProcessControl(logger);
             var mainSettings = MainSettings.GetDefault();
             mainSettings.FolderToWatch = testDir;
             mainSettings.InstrumentType = "NoInstrument";
@@ -201,6 +201,11 @@ namespace AutoQCTest
             }
 
             public void StopProcess()
+            {
+                throw new NotImplementedException();
+            }
+
+            public void ChangeStatus(ConfigRunner.RunnerStatus status)
             {
                 throw new NotImplementedException();
             }

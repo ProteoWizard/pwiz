@@ -454,12 +454,14 @@ namespace pwiz.Skyline.Controls.Graphs
                                                                               showAdducts,
                                                                               types,
                                                                               rankAdducts,
-                                                                              rankTypes);
+                                                                              rankTypes,
+                                                                              null);
                             GraphItem = new SpectrumGraphItem(nodeGroup, transition, spectrumInfoR, spectrum.LibName)
                                 {
                                     ShowTypes = types,
                                     ShowCharges = charges,
                                     ShowRanks = Settings.Default.ShowRanks,
+                                    ShowScores = Settings.Default.ShowLibraryScores,
                                     ShowMz = Settings.Default.ShowIonMz,
                                     ShowObservedMz = Settings.Default.ShowObservedMz,
                                     ShowDuplicates = Settings.Default.ShowDuplicateIons,
@@ -812,6 +814,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var driftTimeFilter = IonMobilityFilter.EMPTY; // CONSIDER(bspratt) IMS in chromatogram libraries?
             var groupInfo = new ChromatogramGroupInfo(header,
                     new Dictionary<Type, int>(),
+                    new byte[0],
                     new ChromCachedFile[0],
                     new[] { new ChromTransition(chromData.Mz, 0, (float)(driftTimeFilter.IonMobility.Mobility??0), (float)(driftTimeFilter.IonMobilityExtractionWindowWidth??0), ChromSource.unknown), },
                     peaks,

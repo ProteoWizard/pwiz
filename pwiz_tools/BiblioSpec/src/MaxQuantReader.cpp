@@ -23,9 +23,18 @@
  * The MaxQuantReader parses the PSMs from the msms.txt tab delimited file
  * and stores each record. Records are grouped by file. Spectra are then
  * retrieved from the spectrum files. 
+ * 
+ * There may also be an evidence.txt file present, from which ion mobility
+ * data may be parsed.
  */
 
 #include "MaxQuantReader.h"
+#include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
+#include "boost/range/algorithm_ext/insert.hpp"
+#include <boost/lexical_cast.hpp>
+
+namespace filesystem = bfs;
 
 namespace BiblioSpec {
 
@@ -41,15 +50,8 @@ MaxQuantReader::MaxQuantReader(BlibBuilder& maker,
     // MaxQuant defaults to requiring external spectra
     preferEmbeddedSpectra_ = maker.preferEmbeddedSpectra().get_value_or(false);
 
-    if (preferEmbeddedSpectra_) // user wants deconv or has no access to sources
-    {
-        setSpecFileName(tsvName_, // this is for BuildParser
-            false);  // don't look for the file
-
-                     // point to self as spec reader
-        delete specReader_;
-        specReader_ = this;
-    }
+    // read ion mobility info from evidence.txt if it exists
+    initEvidence();
 
     // get mods path (will be empty string if not set)
     modsPath_ = maker.getMaxQuantModsPath();
@@ -68,10 +70,6 @@ MaxQuantReader::~MaxQuantReader()
 {
     if (specReader_ == this)
         specReader_ = NULL; // so parent class doesn't try to delete itself
-    if (tsvFile_.is_open())
-    {
-        tsvFile_.close();
-    }
 }
 
 /**
@@ -105,9 +103,12 @@ void MaxQuantReader::initTargetColumns()
                                                       MaxQuantLine::insertIntensities));
     targetColumns_.push_back(MaxQuantColumnTranslator("Labeling State", -1,
                                                       MaxQuantLine::insertLabelingState));
+    targetColumns_.push_back(MaxQuantColumnTranslator("Evidence ID", -1,
+                                                      MaxQuantLine::insertEvidenceID)); // Lookup into evidence.txt file for ion mobility info
 
     // columns that can are useful but not required
     optionalColumns_.insert("Labeling State");
+    optionalColumns_.insert("Evidence ID");
 }
 
 string checkForModificationsFile(filesystem::path parentPath, const char *filename)
@@ -122,7 +123,7 @@ string checkForModificationsFile(filesystem::path parentPath, const char *filena
 	return modFile;
 }
 
-bool parseModificationsFile(const char* modFile, set<MaxQuantModification>& modBank)
+bool parseModificationsFile(const char* modFile, map<string, MaxQuantModification>& modBank)
 {
 	Verbosity::comment(V_DETAIL, "Parsing modification file %s",
 		modFile);
@@ -257,6 +258,35 @@ void MaxQuantReader::initFixedModifications()
         return;
     }
 
+    string mqparXml = pwiz::util::read_file_header(mqparFile, bfs::file_size(mqparFile));
+
+    // force embedded spectra for TIMS-DDA because there's no way to map those msms.txt scan numbers to external spectra
+    if (mqparXml.find("<lcmsRunType>TIMS-DDA</lcmsRunType>") != string::npos)
+        preferEmbeddedSpectra_ = true;
+
+    if (preferEmbeddedSpectra_) // user wants deconv or has no access to sources
+    {
+        setSpecFileName(tsvName_, // this is for BuildParser
+            false);  // don't look for the file
+
+        // point to self as spec reader
+        delete specReader_;
+        specReader_ = this;
+    }
+    else
+    {
+        // HACK: if mqpar analyzed WIFF file, use index lookup, else use scan number
+        if (mqparXml.find(".wiff</string>") != string::npos || mqparXml.find(".wiff2</string>") != string::npos)
+            lookUpBy_ = INDEX_ID;
+        else
+            lookUpBy_ = SCAN_NUM_ID;
+    }
+
+    // initialize fixed mod vectors for supported positions
+    fixedModBank_[MaxQuantModification::ANYWHERE].clear();
+    fixedModBank_[MaxQuantModification::ANY_N_TERM].clear();
+    fixedModBank_[MaxQuantModification::ANY_C_TERM].clear();
+
     // add all fixed mods to fixedModBank_
     for (set<string>::iterator iter = fixedMods.begin();
          iter != fixedMods.end();
@@ -271,26 +301,15 @@ void MaxQuantReader::initFixedModifications()
                              "modification.", iter->c_str());
             return;
         }
-
-        if (lookup->position != MaxQuantModification::ANYWHERE)
+        /*if (lookup->position != MaxQuantModification::ANYWHERE)
         {
             Verbosity::warn("Fixed mod '%s' will not be used (position is `not 'anywhere').",
                             iter->c_str());
-        }
+        }*/
 
-        map< MaxQuantModification::MAXQUANT_MOD_POSITION,
-            vector<const MaxQuantModification*> >::iterator vectorSearch =
-            fixedModBank_.find(lookup->position);
-        if (vectorSearch == fixedModBank_.end())
-        {
-            vector<const MaxQuantModification*> tmpMods;
-            tmpMods.push_back(lookup);
-            fixedModBank_[lookup->position] = tmpMods;
-        }
-        else
-        {
-            vectorSearch->second.push_back(lookup);
-        }
+        Verbosity::debug("Adding fixed mod '%s' (position %d).", iter->c_str(), lookup->position);
+
+        fixedModBank_[lookup->position].push_back(lookup);
     }
 
     // add all labels to labelBank_
@@ -325,6 +344,79 @@ void MaxQuantReader::initFixedModifications()
             }
             iter->addMods(stateIter, mods);
         }
+    }
+}
+
+/**
+ * Read in the evidence file, if it exists.
+ */
+void MaxQuantReader::initEvidence()
+{
+
+    // Check same folder
+    filesystem::path tryPath = tsvName_.substr(0, tsvName_.length() - 8) + "evidence.txt"; // e.g. c:\blah\testing.msms.txt => c:\blah\testing.evidence.txt
+    Verbosity::comment(V_DETAIL, "Checking for ion mobility information in evidence.txt file in same folder as msms.txt file.");
+    if (!filesystem::exists(tryPath) || !filesystem::is_regular_file(tryPath))
+    {
+        // Not there
+        Verbosity::comment(V_DETAIL, "Did not find evidence.txt file in same folder as msms.txt file. No ion mobility values.");
+        return;
+    }
+    string evidenceFile = tryPath.string();
+
+    Verbosity::comment(V_DETAIL, "Parsing evidence file %s", evidenceFile.c_str());
+    try
+    {
+        ifstream evidence(evidenceFile.c_str());
+        string line;
+        vector<string> columns;
+        getline(evidence, line);
+        boost::split(columns, line, boost::is_any_of("\t"));
+        int col = 0;
+        int colInvK0 = -1;
+        int colCCS = -1;
+        for (vector<string>::iterator it = columns.begin(); it != columns.end(); ++it)
+        {
+            if ((*it == "K0") || (*it == "1/K0")) // Column name changed to the more correct "1/K0" sometime between July and October 2019
+            {
+                colInvK0 = col;
+            }
+            else if (*it == "CCS")
+            {
+                colCCS = col;
+            }
+            col++;
+        }
+        if (colInvK0 < 0 && colCCS < 0)
+        {
+            Verbosity::comment(V_DETAIL, "Did not find any ion mobility data in evidence.txt file.");
+            return; // This file doesn't have what we're interested in
+        }
+
+        while (evidence.good())
+        {
+            getline(evidence, line);
+            if (line.size() == 0)
+                break;
+            boost::split(columns, line, boost::is_any_of("\t"));
+            if (colInvK0 >= 0)
+                inverseK0_.push_back(boost::lexical_cast<double>(columns[colInvK0]));
+            /* Some versions of MaxQuant are known to emit incorrect CCS values. Until we figure out how to tell them apart, best to just ignore. (bspratt July 2019)
+            if (colCCS >= 0)
+                CCS_.push_back(boost::lexical_cast<double>(columns[colCCS]));
+            */
+        }
+        Verbosity::comment(V_DETAIL, "Done parsing %s", evidenceFile.c_str());
+    }
+    catch (std::exception& e)
+    {
+        Verbosity::error("Error parsing evidence.txt file: %s", e.what());
+        return;
+    }
+    catch (...)
+    {
+        Verbosity::error("Unknown error while parsing evidence.txt file");
+        return;
     }
 }
 
@@ -377,8 +469,16 @@ bool MaxQuantReader::parseFile()
             setSpecFileName(filePsmListPair.first.c_str(), false);
         else
         {
+            try
+            {
             setSpecFileName(filePsmListPair.first.c_str(), extensions, dirs);
-            lookUpBy_ = INDEX_ID;
+            }
+            catch (BlibException& e)
+            {
+                if (bal::contains(e.what(), "Could not find spectrum file"))
+                    throw BlibException(e.hasFilename(), "%s; run with the -E flag to allow MaxQuant to use deisotoped/deconvoluted embedded spectra", e.what());
+                throw e;
+            }
         }
 
         buildTables(MAXQUANT_SCORE, filePsmListPair.first, false);
@@ -419,7 +519,7 @@ void MaxQuantReader::parseHeader(string& line)
         // check each column for a match
         for (size_t i = 0; i < numColumns; i++)
         {
-            if (iequals(*token, targetColumns_[i].name_))
+            if (bal::iequals(*token, targetColumns_[i].name_))
             {
                 targetColumns_[i].position_ = colNumber;
                 break;
@@ -464,8 +564,8 @@ void MaxQuantReader::collectPsms()
 
     // get file size and set progress
     streampos originalPos = tsvFile_.tellg();
-    int lineCount = count(istreambuf_iterator<char>(tsvFile_),
-                          istreambuf_iterator<char>(), '\n') + 1;
+    int lineCount = count(std::istreambuf_iterator<char>(tsvFile_),
+                          std::istreambuf_iterator<char>(), '\n') + 1;
     tsvFile_.seekg(originalPos);
     ProgressIndicator progress(lineCount);
 
@@ -561,6 +661,22 @@ void MaxQuantReader::storeLine(MaxQuantLine& entry)
     curMaxQuantPSM_->unmodSeq = entry.sequence;
     curMaxQuantPSM_->mz = entry.mz;
     curMaxQuantPSM_->charge = entry.charge;
+    if (entry.evidenceID >= 0) // look for ion mobility info from evidence.txt file
+    {
+        if (inverseK0_.size() > entry.evidenceID)
+        {
+            curMaxQuantPSM_->ionMobility = inverseK0_[entry.evidenceID];
+            if (curMaxQuantPSM_->ionMobility != 0)
+            {
+                curMaxQuantPSM_->ionMobilityType = IONMOBILITY_INVERSEREDUCED_VSECPERCM2;
+            }
+        }
+        if (CCS_.size() > entry.evidenceID)
+        {
+            curMaxQuantPSM_->ccs = CCS_[entry.evidenceID];
+        }
+    }
+
     try
     {
         addModsToVector(curMaxQuantPSM_->mods, entry.modifications, entry.modifiedSequence);
@@ -599,14 +715,14 @@ void MaxQuantReader::storeLine(MaxQuantLine& entry)
 void MaxQuantReader::addDoublesToVector(vector<double>& v, const string& valueList)
 {
     vector<string> doubles;
-    split(doubles, valueList, is_any_of(";"));
+    bal::split(doubles, valueList, bal::is_any_of(";"));
 
     try
     {
-        transform(doubles.begin(), doubles.end(),
-                  back_inserter(v), lexical_cast<double, string>);
+        for (const string& value : doubles)
+            v.emplace_back(lexical_cast<double>(value));
     }
-    catch (bad_lexical_cast e)
+    catch (bad_lexical_cast&)
     {
         Verbosity::error("Could not cast \"%s\" to doubles", valueList.c_str());
     }
@@ -619,11 +735,15 @@ void MaxQuantReader::addDoublesToVector(vector<double>& v, const string& valueLi
  */
 void MaxQuantReader::addModsToVector(vector<SeqMod>& v, const string& modifications, string modSequence)
 {
+    bal::replace_all(modSequence, "pS", "S(ph)");
+    bal::replace_all(modSequence, "pT", "T(ph)");
+    bal::replace_all(modSequence, "pY", "Y(ph)");
+
     // split modifications whole names
     vector<string> modNames;
-    if (!iequals(modifications, "Unmodified"))
+    if (!bal::iequals(modifications, "Unmodified"))
     {
-        split(modNames, modifications, is_any_of(","));
+        bal::split(modNames, modifications, bal::is_any_of(","));
     }
 
     // remove underscore from beginning and end if they exist
@@ -638,7 +758,7 @@ void MaxQuantReader::addModsToVector(vector<SeqMod>& v, const string& modificati
         --sequenceLength;
     }
     // or before the final modification definition, which MaxQuant uses to destinguish
-    // between N-terminal modifications and modifications on the N-terminal amino acid
+    // between C-terminal modifications and modifications on the C-terminal amino acid
     if (modSequence[sequenceLength - 1] == ')')
     {
         size_t openPos = modSequence.find_last_of('(');
@@ -650,35 +770,38 @@ void MaxQuantReader::addModsToVector(vector<SeqMod>& v, const string& modificati
     }
 
     // get fixed modifications by position
-    vector<const MaxQuantModification*> modsAnywhere;
+    const vector<const MaxQuantModification*>& modsAnywhere = fixedModBank_.find(MaxQuantModification::ANYWHERE)->second;
+    const vector<const MaxQuantModification*>& modsAnyNTerm = fixedModBank_.find(MaxQuantModification::ANY_N_TERM)->second;
+    const vector<const MaxQuantModification*>& modsAnyCTerm = fixedModBank_.find(MaxQuantModification::ANY_C_TERM)->second;
+    
     /* Do not use since we don't know where the peptide is in relation to the Protein N-term/C-term
     vector<const MaxQuantModification*> modsProteinNTerm;
     vector<const MaxQuantModification*> modsProteinCTerm;
-    vector<const MaxQuantModification*> modsAnyNTerm;
-    vector<const MaxQuantModification*> modsAnyCTerm;
     vector<const MaxQuantModification*> modsNotNTerm;
     vector<const MaxQuantModification*> modsNotCTerm;
     */
 
-    map< MaxQuantModification::MAXQUANT_MOD_POSITION, vector<const MaxQuantModification*> >::iterator search;
-    search = fixedModBank_.find(MaxQuantModification::ANYWHERE);
-    if (search != fixedModBank_.end())
-    {
-        modsAnywhere = search->second;
-    }
+    for (const auto& mod : modsAnyNTerm) { v.emplace_back(1, mod->massDelta); }
 
     // iterate over sequence
     int modsFound = 0;
+    int modsTotalLength = 0;
+    SeqMod seqMod;
     for (int i = 0; i < sequenceLength; i++)
     {
         switch (modSequence[i])
         {
         case '(':
-            ++modsFound;
-            // which mod is it?
-            v.push_back(searchForMod(modNames, modSequence, i));
-            // advance iterator past modification
-            i += 3;
+            {
+                ++modsFound;
+                int posOpenParen = i;
+                // which mod is it?
+                seqMod = searchForMod(modNames, modSequence, i);
+                modsTotalLength += i + 1 - posOpenParen;
+                // add the mod unless it's in the modsAnyCTerm list
+                if (find_if(modsAnyCTerm.begin(), modsAnyCTerm.end(), [&](const MaxQuantModification* maxQuantMod) { return maxQuantMod->massDelta == seqMod.deltaMass; }) == modsAnyCTerm.end())
+                    v.push_back(seqMod);
+            }
             break;
         case ')':
             throw BlibException(false, "Unexpected closing parentheses found in sequence %s (line %d)",
@@ -691,12 +814,12 @@ void MaxQuantReader::addModsToVector(vector<SeqMod>& v, const string& modificati
                                     modSequence[i], modSequence.c_str(), lineNum_);
             }
             // check for fixed mods
-            vector<SeqMod> fixedMods =
-                getFixedMods(modSequence[i], (i+1) - 4*modsFound, modsAnywhere);
-            v.insert(v.end(), fixedMods.begin(), fixedMods.end());
+            boost::range::insert(v, v.end(), getFixedMods(modSequence[i], i + 1 - modsTotalLength, modsAnywhere));
             break;
         }
     }
+
+    for (const auto& mod : modsAnyCTerm) { v.emplace_back(sequenceLength - modsTotalLength, mod->massDelta); }
 
     if (modsFound < (int)modNames.size())
     {
@@ -749,22 +872,32 @@ void MaxQuantReader::addLabelModsToVector(vector<SeqMod>& v, const string& rawFi
  * the opening parentheses for the modification in the sequence, attempt to
  * look up which modification it is and return a SeqMod.
  */
-SeqMod MaxQuantReader::searchForMod(vector<string>& modNames, string modSequence, int posOpenParen) {
+SeqMod MaxQuantReader::searchForMod(vector<string>& modNames, const string& modSequence, int& posOpenParen) {
     // get mod abbreviation
-    size_t posCloseParen = modSequence.find(')', posOpenParen + 1);
-    if (posCloseParen == string::npos) {
-        throw BlibException(false, "Closing parentheses expected but not found in sequence %s "
-                                   "(line %d)", modSequence.c_str(), lineNum_);
+    int nestDepth = 1;
+    size_t posFirstParen = posOpenParen;
+    size_t posNextParen = posOpenParen;
+    while (nestDepth > 0)
+    {
+        posNextParen = modSequence.find_first_of("()", posNextParen + 1);
+        if (posNextParen == string::npos) {
+            throw BlibException(false, "Closing parentheses expected but not found in sequence %s "
+                "(line %d)", modSequence.c_str(), lineNum_);
+        }
+        nestDepth += modSequence[posNextParen] == ')' ? -1 : 1;
     }
     size_t modStart = posOpenParen + 1;
-    string modAbbreviation = modSequence.substr(modStart, posCloseParen - modStart);
+    string modAbbreviation = modSequence.substr(modStart, posNextParen - modStart);
+
+    posOpenParen = posNextParen; // advance index to the closing parenthesis
 
     // search list of mod names using abbreviation
-    const MaxQuantModification* lookup;
+    const MaxQuantModification* lookup = NULL;
     for (vector<string>::const_iterator i = modNames.begin(); i != modNames.end(); ++i) {
-        if (iequals(modAbbreviation, i->substr(0, modAbbreviation.length())) &&
-            (lookup = MaxQuantModification::find(modBank_, *i)) != NULL) {
-            return SeqMod(getModPosition(modSequence, posOpenParen), lookup->massDelta);
+        if (bal::iequals(modAbbreviation, i->substr(0, modAbbreviation.length()))) {
+            lookup = MaxQuantModification::find(modBank_, *i);
+            if (lookup != NULL)
+                return SeqMod(getModPosition(modSequence, posFirstParen), lookup->massDelta);
         }
     }
 
@@ -780,9 +913,9 @@ SeqMod MaxQuantReader::searchForMod(vector<string>& modNames, string modSequence
         }
         // Make sure we found a space and that there is at least 1 char after it
         if (newStart + 1 < i->length() && (*i)[newStart] == ' ' &&
-            iequals(modAbbreviation, i->substr(++newStart, modAbbreviation.length())) &&
+            bal::iequals(modAbbreviation, i->substr(++newStart, modAbbreviation.length())) &&
             (lookup = MaxQuantModification::find(modBank_, i->substr(newStart))) != NULL) {
-            return SeqMod(getModPosition(modSequence, posOpenParen), lookup->massDelta);
+            return SeqMod(getModPosition(modSequence, posFirstParen), lookup->massDelta);
         }
     }
 
@@ -793,13 +926,13 @@ SeqMod MaxQuantReader::searchForMod(vector<string>& modNames, string modSequence
 
 int MaxQuantReader::getModPosition(const string& modSeq, int posOpenParen) {
     int modPosition = 0;
-    bool inMod = false;
+    int inMod = 0;
     for (int i = 0; i < posOpenParen; i++) {
         if (modSeq[i] == '(') {
-            inMod = true;
+            ++inMod;
         } else if (modSeq[i] == ')') {
-            inMod = false;
-        } else if (!inMod) {
+            --inMod;
+        } else if (inMod == 0) {
             modPosition++;
         }
     }
@@ -844,6 +977,9 @@ bool MaxQuantReader::getSpectrum(PSM* psm,
     returnData.retentionTime = ((MaxQuantPSM*)psm)->retentionTime;
     returnData.mz = ((MaxQuantPSM*)psm)->mz;
     returnData.numPeaks = ((MaxQuantPSM*)psm)->mzs.size();
+    returnData.ionMobility = ((MaxQuantPSM*)psm)->ionMobility;
+    returnData.ionMobilityType = ((MaxQuantPSM*)psm)->ionMobilityType;
+    returnData.ccs = ((MaxQuantPSM*)psm)->ccs;
 
     if (getPeaks)
     {

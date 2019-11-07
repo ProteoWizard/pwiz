@@ -3,7 +3,7 @@ Summary   : Settings > Transition Settings changed
 All Info  :
 Transition Settings changed
 Settings > Transition Settings -- Filter > Ion types changed from "y, b" to "y, b, p"
-Settings > Transition Settings -- Filter > Small molecule Ion types changed from "f" to "f, p"
+Settings > Transition Settings -- Filter > Molecule Ion types changed from "f" to "f, p"
 Settings > Transition Settings -- Library > Ion match tolerance changed from "0.5" to "0.7"
 Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "Targeted"
 Settings > Transition Settings -- Full-Scan > Product mass analyzer changed from "None" to "QIT"
@@ -159,9 +159,9 @@ Added spectral library "BSA_Protea_label_free_meth3.converted_to_small_molecules
 Build Spectral Library > Cut-off score is "0.99"
 Build Spectral Library > Search files : contains "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml"
 Build Spectral Library > Search files : contains "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"
-Build Spectral Library > iRT standard peptides is None
+Build Spectral Library > iRT standard molecules is None
 Build Spectral Library > Include ambiguous matches is False
-Build Spectral Library > Filter for document peptides is True
+Build Spectral Library > Filter for document molecules is True
 Build Spectral Library > Workflow is "PRM"
 Extra Info: Cut-off score = "0.99",
 Search files = 
@@ -174,15 +174,15 @@ Include ambiguous matches = False,
 Filter for document peptides = True,
 Workflow = "PRM"
 
-Undo Redo : Imported a peptide search
-Summary   : Imported a peptide search
+Undo Redo : Imported a molecule search
+Summary   : Imported a molecule search
 All Info  :
-Imported a peptide search
-Import Peptide Search > Extract Chromatograms > Found results files : contains "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.mzML"
-Import Peptide Search > Extract Chromatograms > Found results files : contains "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.mzML"
-Import Peptide Search > Extract Chromatograms > Files to import simultaneously is "Many"
-Import Peptide Search > Extract Chromatograms > Removed prefix is "klc_20100329v_Protea_Peptide_Curve_"
-Import Peptide Search > Extract Chromatograms > Removed suffix is "_uL_tech1"
+Imported a molecule search
+Import Molecule Search > Extract Chromatograms > Found results files : contains "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.mzML"
+Import Molecule Search > Extract Chromatograms > Found results files : contains "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.mzML"
+Import Molecule Search > Extract Chromatograms > Files to import simultaneously is "Many"
+Import Molecule Search > Extract Chromatograms > Removed prefix is "klc_20100329v_Protea_Peptide_Curve_"
+Import Molecule Search > Extract Chromatograms > Removed suffix is "_uL_tech1"
 Extra Info: Extract Chromatograms = 
 {
     Found results files = 
@@ -214,7 +214,7 @@ Summary   : Settings > Transition Settings changed
 All Info  :
 Transition Settings changed
 Settings > Transition Settings -- Filter > Ion types changed from "y, b" to "y, b, p"
-Settings > Transition Settings -- Filter > Small molecule Ion types changed from "f" to "f, p"
+Settings > Transition Settings -- Filter > Molecule Ion types changed from "f" to "f, p"
 Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "Targeted"
 Settings > Transition Settings -- Full-Scan > Product mass analyzer changed from "None" to "TOF"
 Settings > Transition Settings -- Full-Scan > Resolving power changed from Missing to "30000"

@@ -43,6 +43,10 @@
 #pragma managed
 #include "BinaryData.hpp"
 
+#ifdef __cplusplus_cli
+#define PWIZ_MANAGED_PASSTHROUGH
+#endif
+
 namespace pwiz {
 namespace util {
 
@@ -75,6 +79,16 @@ inline System::String^ ToSystemString(const std::string& source, bool utf8=true)
     }
     else
         return gcnew System::String(source.c_str());
+}
+
+
+template<typename managed_value_type, typename native_value_type, typename conversion_functor>
+inline cli::array<managed_value_type>^ ToSystemArray(const std::vector<native_value_type>& source, conversion_functor f = [](native_value_type i) {return i;})
+{
+    auto result = gcnew cli::array<managed_value_type>(source.size());
+    for (int i = 0; i < (int)source.size(); ++i)
+        result[i] = f(source[i]);
+    return result;
 }
 
 
@@ -235,6 +249,19 @@ std::string trimFunctionMacro(const char* function, const T& param)
     return what;
 }
 
+std::string flattenInnerExceptions(System::Exception^ e)
+{
+    auto what = e->Message;
+    while (e->InnerException != nullptr)
+    {
+        e = e->InnerException;
+        auto newWhat = e->Message;
+        if (!what->Contains(newWhat))
+            what += "\r\n" + newWhat;
+    }
+    return pwiz::util::ToStdString(what);
+}
+
 } // namespace
 
 
@@ -246,7 +273,7 @@ std::string trimFunctionMacro(const char* function, const T& param)
     catch (_com_error& e) {throw std::runtime_error(std::string("COM error: ") + e.ErrorMessage());} \
     /*catch (CException* e) {std::auto_ptr<CException> exceptionDeleter(e); char message[1024]; e->GetErrorMessage(message, 1024); throw std::runtime_error(string("MFC error: ") + message);}*/ \
     catch (System::AggregateException^ e) { throw std::runtime_error(trimFunctionMacro(__FUNCTION__, (param)) + pwiz::util::ToStdString(e->ToString())); } \
-    catch (System::Exception^ e) { throw std::runtime_error(trimFunctionMacro(__FUNCTION__, (param)) + pwiz::util::ToStdString(e->Message)); }
+    catch (System::Exception^ e) { throw std::runtime_error(trimFunctionMacro(__FUNCTION__, (param)) + flattenInnerExceptions(e)); }
 
 #define CATCH_AND_FORWARD CATCH_AND_FORWARD_EX("")
 

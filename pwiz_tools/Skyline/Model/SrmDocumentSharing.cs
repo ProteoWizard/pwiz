@@ -597,7 +597,7 @@ namespace pwiz.Skyline.Model
     {
         public static readonly ShareType COMPLETE = new ShareType(true, null);
         public static readonly ShareType MINIMAL = new ShareType(false, null);
-        public static readonly ShareType DEFAULT = MINIMAL;
+        public static readonly ShareType DEFAULT = COMPLETE;
         public ShareType(bool complete, SkylineVersion skylineVersion)
         {
             Complete = complete;

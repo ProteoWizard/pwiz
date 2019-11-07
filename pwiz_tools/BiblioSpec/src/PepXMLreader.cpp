@@ -30,7 +30,6 @@
 #include <boost/algorithm/string.hpp>
 #include <cmath>
 
-using namespace std;
 namespace bal = boost::algorithm;
 
 namespace BiblioSpec {
@@ -58,6 +57,10 @@ PepXMLreader::PepXMLreader(BlibBuilder& maker,
     dirs.push_back("../../");  // look in grandparent dir in addition to cwd
     extensions.push_back(".mzML"); // look for spec in mzML files
     extensions.push_back(".mzXML"); // look for spec in mzXML files
+    extensions.push_back(".ms2");
+    extensions.push_back(".cms2");
+    extensions.push_back(".bms2");
+    extensions.push_back(".pms2");
 }
 
 PepXMLreader::~PepXMLreader() {
@@ -92,17 +95,15 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
       // Count files for use in reporting percent complete
       numFiles++;
    } else if(isElement("msms_run_summary",name)) {
-      string fileroot = getRequiredAttrValue("base_name",attr);
+      fileroot_ = getRequiredAttrValue("base_name",attr);
       // Because Mascot2XML uses the full path for the base_name,
       // only the part beyond the last "\" or "/" is taken.
-      size_t slash = fileroot.rfind('/');
-      size_t bslash = fileroot.rfind('\\');
+      size_t slash = fileroot_.rfind('/');
+      size_t bslash = fileroot_.rfind('\\');
       if (slash == string::npos || (bslash != string::npos && bslash > slash))
           slash = bslash;
       if (slash != string::npos)
-          fileroot.erase(0, slash + 1);
-          
-      setSpecFileName(fileroot.c_str(), extensions, dirs); 
+          fileroot_.erase(0, slash + 1);
 
       // Check if this pepXML file is from Proteome Discoverer
       string rawType = getAttrValue("raw_data_type", attr);
@@ -177,6 +178,12 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            } else if(search_engine.find("crux") == 0) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from Crux.");
                analysisType_ = CRUX_ANALYSIS;
+           
+           } else if(search_engine.find("comet") == 0) {
+               Verbosity::comment(V_DEBUG, "Pepxml file is from Comet.");
+               analysisType_ = COMET_ANALYSIS;
+               scoreType_ = TANDEM_EXPECTATION_VALUE; // expect values should be compatible with X!Tandem
+               probCutOff = getScoreThreshold(TANDEM);
            }// else assume peptide prophet or inter prophet 
 
            if (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS &&
@@ -185,6 +192,14 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
                throw BlibException(false, "The .pep.xml file appears to be from "
                                 "Proteome Discoverer but not from one of the supported "
                                 "search engines (SEQUEST, Mascot).");
+           }
+
+           // SpectrumMill pepXMLs require mzXML due to using mzxmlFinder
+           if (analysisType_ == SPECTRUM_MILL_ANALYSIS)
+           {
+               extensions.clear();
+               extensions.push_back(".mzML");
+               extensions.push_back(".mzXML");
            }
        }
 
@@ -223,7 +238,8 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            scanNumber = getIntRequiredAttrValue("start_scan", attr);
            if (lookUpBy_ == NAME_ID) {
                spectrumName = getRequiredAttrValue("spectrumNativeID", attr);
-           } else if (psms_.empty() && !(spectrumName = getAttrValue("spectrumNativeID", attr)).empty()) {
+           } else if (psms_.empty() && analysisType_ != INTER_PROPHET_ANALYSIS &&
+                      !(spectrumName = getAttrValue("spectrumNativeID", attr)).empty()) {
                // if the file has spectrumNativeIDs, use those for spectrum lookups
                lookUpBy_ = NAME_ID;
            }
@@ -335,6 +351,9 @@ void PepXMLreader::endElement(const XML_Char* name)
                                 "iProphet, SpectrumMill, OMSSA, Protein Prospector, "
                                 "X! Tandem, Proteome Discoverer, Morpheus, MSGF+).");
         }
+
+        setSpecFileName(fileroot_.c_str(), extensions, dirs);
+
         // if we are using pep.xml from Spectrum mill, we still don't have
         // scan numbers/indexes, here's a hack to get them
         if( analysisType_ == SPECTRUM_MILL_ANALYSIS ) {
@@ -460,6 +479,7 @@ bool PepXMLreader::scorePasses(double score){
     case MSGF_ANALYSIS:
     case PEAKS_ANALYSIS:
     case CRUX_ANALYSIS:
+    case COMET_ANALYSIS:
         if(score <= probCutOff){
             return true;
         }

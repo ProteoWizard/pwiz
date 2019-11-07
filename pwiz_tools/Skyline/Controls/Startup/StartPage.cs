@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
@@ -100,6 +101,29 @@ namespace pwiz.Skyline.Controls.Startup
             PopulateLeftPanel();
             PopulateWizardPanel();
             PopulateTutorialPanel();
+            PositionButtonsModeUI();
+
+            // Setup to manage and interact with mode selector buttons in UI
+            SetModeUIToolStripButtons(toolStripButtonModeUI, true);
+        }
+
+        /// <summary>
+        /// Handler for the toolbar button dropdown that allow user to switch between proteomic, small mol, or mixed UI display.
+        /// </summary>
+        public override void SetUIMode(SrmDocument.DOCUMENT_TYPE mode)
+        {
+            base.SetUIMode(mode);
+
+            PopulateWizardPanel(); // Update wizards for new UI mode
+            PopulateTutorialPanel(); // Update tutorial order for new UI mode
+
+            GetModeUIHelper().OnLoad(this); // Reprocess any needed translations
+
+            // Update the menu structure for this mode
+            if (Program.MainWindow != null)
+            {
+                Program.MainWindow.SetUIMode(ModeUI);
+            }
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -107,6 +131,13 @@ namespace pwiz.Skyline.Controls.Startup
             UpgradeManager.CheckForUpdateAsync(this);
 
             base.OnHandleCreated(e);
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+
+            EnsureUIModeSet();
         }
 
         public StartupAction Action { get; private set; }
@@ -145,12 +176,17 @@ namespace pwiz.Skyline.Controls.Startup
                 {
                     Caption = Resources.SkylineStartup_SkylineStartup_Blank_Document,
                     Icon = Resources.WizardBlankDocument,
-                    EventAction = () => DoAction(skylineWindow => true),
+                    EventAction = () => DoAction(skylineWindow =>
+                    {
+                        skylineWindow.NewDocument(true);
+                        return true;
+                    }),
                     BackColor = _darkHoverColor,
                 },
                 new ActionBoxControl
                 {
                     Caption = Resources.SkylineStartup_SkylineStartup_Import_DDA_Peptide_Search,
+                    IsProteomicOnly = true, // Don't show in small molecule mode
                     Icon = Resources.WizardPeptideSearchDDA,
                     EventAction = () => Import(ActionImport.DataType.peptide_search_dda),
                     Description =
@@ -159,6 +195,7 @@ namespace pwiz.Skyline.Controls.Startup
                 new ActionBoxControl
                 {
                     Caption = Resources.StartPage_PopulateWizardPanel_Import_DIA_Peptide_Search,
+                    IsProteomicOnly = true, // Don't show in small molecule mode
                     Icon = Resources.WizardPeptideSearchDIA,
                     EventAction = () => Import(ActionImport.DataType.peptide_search_dia),
                     Description =
@@ -167,6 +204,7 @@ namespace pwiz.Skyline.Controls.Startup
                 new ActionBoxControl
                 {
                     Caption = Resources.StartPage_PopulateWizardPanel_Import_PRM_Peptide_Search,
+                    IsProteomicOnly = true, // Don't show in small molecule mode
                     Icon = Resources.WizardPeptideSearchPRM,
                     EventAction = () => Import(ActionImport.DataType.peptide_search_prm),
                     Description =
@@ -175,6 +213,7 @@ namespace pwiz.Skyline.Controls.Startup
                 new ActionBoxControl
                 {
                     Caption = Resources.SkylineStartup_SkylineStartup_Import_FASTA,
+                    IsProteomicOnly = true, // Don't show in small molecule mode
                     Icon = Resources.WizardFasta,
                     EventAction = () => Import(ActionImport.DataType.fasta),
                     Description =
@@ -183,6 +222,7 @@ namespace pwiz.Skyline.Controls.Startup
                 new ActionBoxControl
                 {
                     Caption = Resources.SkylineStartup_SkylineStartup_Import_Protein_List,
+                    IsProteomicOnly = true, // Don't show in small molecule mode
                     Icon = Resources.WizardImportProteins,
                     EventAction = () => Import(ActionImport.DataType.proteins),
                     Description =
@@ -191,6 +231,7 @@ namespace pwiz.Skyline.Controls.Startup
                 new ActionBoxControl
                 {
                     Caption = Resources.SkylineStartup_SkylineStartup_Import_Peptide_List,
+                    IsProteomicOnly = true, // Don't show in small molecule mode
                     Icon = Resources.WizardImportPeptide,
                     EventAction = () => Import(ActionImport.DataType.peptides),
                     Description =
@@ -205,9 +246,17 @@ namespace pwiz.Skyline.Controls.Startup
                         Resources.SkylineStartup_SkylineStartup_Start_a_new_Skyline_document_from_a_complete_transition_list_with_peptide_sequences__precursor_m_z_values__and_product_m_z_values__which_you_can_paste_into_a_grid_
                 }
             };
+            flowLayoutPanelWizard.Controls.Clear();
             foreach (var box in wizardBoxPanels)
             {
-                flowLayoutPanelWizard.Controls.Add(box);
+                if (ModeUI != SrmDocument.DOCUMENT_TYPE.small_molecules || !box.IsProteomicOnly)
+                {
+                    flowLayoutPanelWizard.Controls.Add(box);
+                    if (box.IsProteomicOnly)
+                    {
+                        GetModeUIHelper().NoteModeUIInvariantComponent(box); // Call it invariant rather than proteomic so it still shows in small mol mode
+                    }
+                }
             }
         }
 
@@ -216,13 +265,13 @@ namespace pwiz.Skyline.Controls.Startup
             var labelFont = new Font(@"Arial", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
             var labelAnchor = AnchorStyles.Left | AnchorStyles.Right;
             var labelWidth = flowLayoutPanelTutorials.Width;
-            var tutorialBoxPanels = new Control[]
+            var tutorialProteomicBoxPanels = new Control[]
             {
                 new Label // Section heading
                 {
                     Text = Resources.StartPage_PopulateTutorialPanel_Introductory,
                     Font = labelFont,
-                    Anchor  =labelAnchor,
+                    Anchor = labelAnchor,
                     Width = labelWidth
                 },
                 new ActionBoxControl
@@ -234,44 +283,45 @@ namespace pwiz.Skyline.Controls.Startup
                         TutorialLinkResources.MethodEdit_zip,
                         TutorialLinkResources.MethodEdit_pdf,
                         string.Empty
-                        ),
+                    ),
                     Description = Resources.StartPage_getBoxPanels_methodedit
                 },
                 new ActionBoxControl
                 {
-                    Caption = Resources.StartPage_getBoxPanels_Targeted_Method_Refinement, 
+                    Caption = Resources.StartPage_getBoxPanels_Targeted_Method_Refinement,
                     Icon = Resources.MethodRefine_thumb,
                     EventAction = () => Tutorial(
-                        ActionTutorial.TutorialType.targeted_method_refinement, 
+                        ActionTutorial.TutorialType.targeted_method_refinement,
                         TutorialLinkResources.MethodRefine_zip,
                         TutorialLinkResources.MethodRefine_pdf,
                         TutorialLinkResources.MethodRefine_sky
-                        ),
+                    ),
                     Description = Resources.StartPage_getBoxPanels_
                 },
                 new ActionBoxControl
                 {
-                    Caption = Resources.StartPage_PopulateTutorialPanel_Grouped_Study_Data_Processing, 
-                    Icon = Resources.GroupedStudies_thumb, 
-                    EventAction = ()=>Tutorial(
-                        ActionTutorial.TutorialType.grouped_study_data_processing, 
+                    Caption = Resources.StartPage_PopulateTutorialPanel_Grouped_Study_Data_Processing,
+                    Icon = Resources.GroupedStudies_thumb,
+                    EventAction = () => Tutorial(
+                        ActionTutorial.TutorialType.grouped_study_data_processing,
                         TutorialLinkResources.GroupedStudy_zip,
                         TutorialLinkResources.GroupedStudy_pdf,
                         TutorialLinkResources.GroupedStudy_sky
-                        ),
+                    ),
                     Description = Resources.StartPage_GroupedStudy_Description
                 },
                 new ActionBoxControl
                 {
-                    Caption = Resources.StartPage_getBoxPanels_Existing___Quantitative_Experiments, 
-                    Icon = Resources.ExistingQuant_thumb, 
-                    EventAction = ()=>Tutorial(
-                        ActionTutorial.TutorialType.existing_and_quantitative_experiments, 
+                    Caption = Resources.StartPage_getBoxPanels_Existing___Quantitative_Experiments,
+                    Icon = Resources.ExistingQuant_thumb,
+                    EventAction = () => Tutorial(
+                        ActionTutorial.TutorialType.existing_and_quantitative_experiments,
                         TutorialLinkResources.ExistingQuant_zip,
                         TutorialLinkResources.ExistingQuant_pdf,
                         string.Empty
-                        ),
-                    Description = Resources.StartPage_getBoxPanels_Get_hands_on_experience_working_with_quantitative_experiments_and_isotope_labeled_reference_peptides__by_starting_with_experiments_with_published_transition_lists_and_SRM_mass_spectrometer_data__Learn_effective_ways_of_analyzing_your_data_in_Skyline_using_several_of_the_available_peak_area_and_retention_time_summary_charts_,
+                    ),
+                    Description = Resources
+                        .StartPage_getBoxPanels_Get_hands_on_experience_working_with_quantitative_experiments_and_isotope_labeled_reference_peptides__by_starting_with_experiments_with_published_transition_lists_and_SRM_mass_spectrometer_data__Learn_effective_ways_of_analyzing_your_data_in_Skyline_using_several_of_the_available_peak_area_and_retention_time_summary_charts_,
                 },
                 new Label // Section heading
                 {
@@ -282,40 +332,43 @@ namespace pwiz.Skyline.Controls.Startup
                 },
                 new ActionBoxControl
                 {
-                    Caption = Resources.StartPage_getBoxPanels_MS1_Full_Scan_Filtering, 
-                    Icon = Resources.MS1Filtering_thumb, 
-                    EventAction = ()=>Tutorial(
-                        ActionTutorial.TutorialType.ms1_fullscan_filtering, 
+                    Caption = Resources.StartPage_getBoxPanels_MS1_Full_Scan_Filtering,
+                    Icon = Resources.MS1Filtering_thumb,
+                    EventAction = () => Tutorial(
+                        ActionTutorial.TutorialType.ms1_fullscan_filtering,
                         TutorialLinkResources.MS1Filtering_zip,
                         TutorialLinkResources.MS1Filtering_pdf,
                         string.Empty
-                        ),
+                    ),
                     Description = Resources.StartPage_getBoxPanels_ms1filtering
                 },
                 new ActionBoxControl
                 {
-                    Caption = Resources.StartPage_getBoxPanels_Targeted_MS_MS__PRM_, 
-                    Icon = Resources.TargetedMSMS_thumb, 
-                    EventAction = ()=>Tutorial(
-                        ActionTutorial.TutorialType.targeted_ms_ms, 
+                    Caption = Resources.StartPage_getBoxPanels_Targeted_MS_MS__PRM_,
+                    Icon = Resources.TargetedMSMS_thumb,
+                    EventAction = () => Tutorial(
+                        ActionTutorial.TutorialType.targeted_ms_ms,
                         TutorialLinkResources.TargetedMSMS_zip,
                         TutorialLinkResources.TargetedMSMS_pdf,
                         TutorialLinkResources.TargetedMSMS_sky
-                        ),
+                    ),
                     Description = Resources.StartPage_getBoxPanels_targetedmsms
                 },
                 new ActionBoxControl
                 {
-                    Caption = Resources.StartPage_PopulateTutorialPanel_Data_Independent_Acquisition, 
-                    Icon = Resources.DIA_thumb, 
-                    EventAction = ()=>Tutorial(
-                        ActionTutorial.TutorialType.data_independent_acquisition, 
+                    Caption = Resources.StartPage_PopulateTutorialPanel_Data_Independent_Acquisition,
+                    Icon = Resources.DIA_thumb,
+                    EventAction = () => Tutorial(
+                        ActionTutorial.TutorialType.data_independent_acquisition,
                         TutorialLinkResources.DIA_zip,
                         TutorialLinkResources.DIA_pdf,
                         TutorialLinkResources.DIA_sky
-                        ),
+                    ),
                     Description = Resources.StartPage_DIA_Description
-                },
+                }
+            };
+            var tutorialSmallMoleculeBoxPanels = new Control[]
+            {
                 new Label // Section heading
                 {
                     Text = Resources.StartPage_PopulateTutorialPanel_Small_Molecules,
@@ -325,10 +378,10 @@ namespace pwiz.Skyline.Controls.Startup
                 },
                 new ActionBoxControl
                 {
-                    Caption = Resources.StartPage_PopulateTutorialPanel_Small_Molecule_Targets, 
-                    Icon = Resources.SmallMolecule_thumb, 
-                    EventAction = ()=>Tutorial(
-                        ActionTutorial.TutorialType.small_molecule_targets, 
+                    Caption = Resources.StartPage_PopulateTutorialPanel_Small_Molecule_Targets,
+                    Icon = Resources.SmallMolecule_thumb,
+                    EventAction = () => Tutorial(
+                        ActionTutorial.TutorialType.small_molecule_targets,
                         TutorialLinkResources.SmallMolecule_zip,
                         TutorialLinkResources.SmallMolecule_pdf,
                         string.Empty
@@ -337,10 +390,11 @@ namespace pwiz.Skyline.Controls.Startup
                 },
                 new ActionBoxControl
                 {
-                    Caption = Resources.StartPage_PopulateTutorialPanel_Small_Molecule_Method_Development_and_CE_Optimization, 
-                    Icon = Resources.SmallMoleculeMethodDevCEOpt_thumb, 
-                    EventAction = ()=>Tutorial(
-                        ActionTutorial.TutorialType.small_molecule_method_dev_and_ce_opt, 
+                    Caption = Resources
+                        .StartPage_PopulateTutorialPanel_Small_Molecule_Method_Development_and_CE_Optimization,
+                    Icon = Resources.SmallMoleculeMethodDevCEOpt_thumb,
+                    EventAction = () => Tutorial(
+                        ActionTutorial.TutorialType.small_molecule_method_dev_and_ce_opt,
                         TutorialLinkResources.SmallMoleculeMethodDevCEOpt_zip,
                         TutorialLinkResources.SmallMoleculeMethodDevCEOpt_pdf,
                         string.Empty
@@ -349,10 +403,10 @@ namespace pwiz.Skyline.Controls.Startup
                 },
                 new ActionBoxControl
                 {
-                    Caption = Resources.StartPage_PopulateTutorialPanel_Small_Molecule_Quantification, 
-                    Icon = Resources.SmallMoleculeQuantification_thumb, 
-                    EventAction = ()=>Tutorial(
-                        ActionTutorial.TutorialType.small_molecule_quant, 
+                    Caption = Resources.StartPage_PopulateTutorialPanel_Small_Molecule_Quantification,
+                    Icon = Resources.SmallMoleculeQuantification_thumb,
+                    EventAction = () => Tutorial(
+                        ActionTutorial.TutorialType.small_molecule_quant,
                         TutorialLinkResources.SmallMoleculeQuantification_zip,
                         TutorialLinkResources.SmallMoleculeQuantification_pdf,
                         string.Empty
@@ -361,16 +415,19 @@ namespace pwiz.Skyline.Controls.Startup
                 },
                 new ActionBoxControl
                 {
-                    Caption = Resources.StartPage_PopulateTutorialPanel_Hi_Res_Metabolomics, 
-                    Icon = Resources.SHiResMetabolomics_thumb, 
-                    EventAction = ()=>Tutorial(
-                        ActionTutorial.TutorialType.hi_res_metabolomics, 
+                    Caption = Resources.StartPage_PopulateTutorialPanel_Hi_Res_Metabolomics,
+                    Icon = Resources.SHiResMetabolomics_thumb,
+                    EventAction = () => Tutorial(
+                        ActionTutorial.TutorialType.hi_res_metabolomics,
                         TutorialLinkResources.HiResMetabolomics_zip,
                         TutorialLinkResources.HiResMetabolomics_pdf,
                         string.Empty
                     ),
                     Description = Resources.StartPage_HiResMetabolomics_Description
-                },
+                }
+            };
+            var tutorialAdvancedBoxPanels = new Control[]
+            {
                 new Label
                 {
                     Text = Resources.StartPage_PopulateTutorialPanel_Advanced_Topics,
@@ -452,6 +509,15 @@ namespace pwiz.Skyline.Controls.Startup
             };
 
             Control previousBox = null;
+            // For small molecule mode, lead with small molecule tutorials
+            var tutorialBoxPanels = ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules
+                ? tutorialSmallMoleculeBoxPanels.ToList()
+                : tutorialProteomicBoxPanels.ToList();
+            tutorialBoxPanels.AddRange(ModeUI != SrmDocument.DOCUMENT_TYPE.small_molecules
+                ? tutorialSmallMoleculeBoxPanels
+                : tutorialProteomicBoxPanels);
+            tutorialBoxPanels.AddRange(tutorialAdvancedBoxPanels);
+            flowLayoutPanelTutorials.Controls.Clear();
             foreach (var box in tutorialBoxPanels)
             {
                 if (box is Label && previousBox != null)
@@ -460,6 +526,7 @@ namespace pwiz.Skyline.Controls.Startup
                 }
                 flowLayoutPanelTutorials.Controls.Add(box);
                 previousBox = box;
+                GetModeUIHelper().NoteModeUIInvariantComponent(box); // Tutorials don't need any UI mode treatment
             }
         }
 
@@ -549,6 +616,13 @@ namespace pwiz.Skyline.Controls.Startup
             }
         }
 
+        private void PositionButtonsModeUI()
+        {
+            tooStripModeUI.GripStyle = ToolStripGripStyle.Hidden;
+            tooStripModeUI.Location = new Point(Width - (toolStripButtonModeUI.Width + 2*(Margin.Left+2*Margin.Right)), tabControlMain.Top);
+            tooStripModeUI.BringToFront();
+        }
+
         private void StartPage_Resize(object sender, EventArgs e)
         {
             // Left Panel Controls
@@ -561,6 +635,8 @@ namespace pwiz.Skyline.Controls.Startup
             tabControlMain.Height = Height;
             flowLayoutPanelWizard.Height = Height;
             flowLayoutPanelWizard.Width = tabControlMain.Width - 40;
+            // ModeUI controls
+            PositionButtonsModeUI(); 
             // Start Page Window Settings to avoid saving minimized or maximized sizes
             if (WindowState == FormWindowState.Normal)
                 Settings.Default.StartPageSize = Size;
@@ -582,7 +658,7 @@ namespace pwiz.Skyline.Controls.Startup
             Settings.Default.ShowStartupForm = checkBoxShowStartup.Checked;
             if (DialogResult.Cancel == DialogResult)
             {
-                Settings.Default.Save();
+                Settings.Default.SaveWithoutExceptions();
             }
         }
 
@@ -674,6 +750,6 @@ namespace pwiz.Skyline.Controls.Startup
                 TutorialLinkResources.LibraryExplorer_pdf,
                 string.Empty
                 );
-        }  
+        }
     }
 }

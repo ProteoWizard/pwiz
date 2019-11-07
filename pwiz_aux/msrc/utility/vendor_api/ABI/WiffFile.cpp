@@ -53,6 +53,10 @@ using namespace Clearcore2::Data::DataAccess::SampleData;
 using namespace Clearcore2::RawXYProcessing;
 #endif
 
+// peak areas from Sciex are very small values relative to peak heights;
+// multiplying them by this scaling factor makes them more comparable
+const int PEAK_AREA_SCALE_FACTOR = 100;
+
 #include "WiffFile2.ipp"
 
 namespace pwiz {
@@ -79,12 +83,17 @@ class WiffFileImpl : public WiffFile
     virtual const vector<string>& getSampleNames() const;
 
     virtual InstrumentModel getInstrumentModel() const;
+    virtual std::string getInstrumentSerialNumber() const;
     virtual IonSourceType getIonSourceType() const;
     virtual blt::local_date_time getSampleAcquisitionTime(int sample, bool adjustToHostTime) const;
 
     virtual ExperimentPtr getExperiment(int sample, int period, int experiment) const;
     virtual SpectrumPtr getSpectrum(int sample, int period, int experiment, int cycle) const;
     virtual SpectrumPtr getSpectrum(ExperimentPtr experiment, int cycle) const;
+
+    virtual int getADCTraceCount(int sample) const;
+    virtual std::string getADCTraceName(int sample, int traceIndex) const;
+    virtual void getADCTrace(int sample, int traceIndex, ADCTrace& trace) const;
 
     void setSample(int sample) const;
     void setPeriod(int sample, int period) const;
@@ -346,6 +355,7 @@ InstrumentModel WiffFileImpl::getInstrumentModel() const
         if (modelName->Contains("5500"))            return API5500; // predicted
         if (modelName->Contains("QTRAP6500"))       return API6500QTrap; // predicted
         if (modelName->Contains("6500"))            return API6500; // predicted
+        if (modelName->Contains("QTRAP"))           return GenericQTrap;
         if (modelName->Contains("QSTARPULSAR"))     return QStarPulsarI; // also covers variants like "API QStar Pulsar i, 0, Qstar"
         if (modelName->Contains("QSTARXL"))         return QStarXL;
         if (modelName->Contains("QSTARELITE"))      return QStarElite;
@@ -366,6 +376,11 @@ InstrumentModel WiffFileImpl::getInstrumentModel() const
         throw gcnew Exception("unknown instrument type: " + sample->Details->InstrumentName);
     }
     CATCH_AND_FORWARD
+}
+
+std::string WiffFileImpl::getInstrumentSerialNumber() const
+{
+    try {return ToStdString(sample->Details->InstrumentSerialNumber);} CATCH_AND_FORWARD
 }
 
 IonSourceType WiffFileImpl::getIonSourceType() const
@@ -567,7 +582,7 @@ void ExperimentImpl::getSIC(size_t index, pwiz::util::BinaryData<double>& times,
     try
     {
         if (index >= transitionCount)
-            throw std::out_of_range("[Experiment::getSIC()] index out of range");
+            throw std::out_of_range("[Experiment::getSIC()] index " + lexical_cast<string>(index) + " out of range");
 
         ExtractedIonChromatogramSettings^ option = gcnew ExtractedIonChromatogramSettings(index);
         ExtractedIonChromatogram^ xic = msExperiment->GetExtractedIonChromatogram(option);
@@ -591,7 +606,8 @@ void ExperimentImpl::getAcquisitionMassRange(double& startMz, double& stopMz) co
 {
     try
     {
-        if ((ExperimentType) msExperiment->Details->ExperimentType != MRM)
+        if ((ExperimentType) msExperiment->Details->ExperimentType != MRM &&
+            (ExperimentType) msExperiment->Details->ExperimentType != SIM)
         {
             startMz = msExperiment->Details->StartMass;
             stopMz = msExperiment->Details->EndMass;
@@ -788,7 +804,7 @@ void SpectrumImpl::getData(bool doCentroid, pwiz::util::BinaryData<double>& mz, 
             {
                 PeakClass^ peak = peakList[(int)i];
                 mz[i] = peak->xValue;
-                intensities[i] = peak->area;
+                intensities[i] = peak->area * PEAK_AREA_SCALE_FACTOR;
             }
         }
         else
@@ -829,6 +845,44 @@ SpectrumPtr WiffFileImpl::getSpectrum(ExperimentPtr experiment, int cycle) const
 {
     SpectrumImplPtr spectrum(new SpectrumImpl(boost::static_pointer_cast<ExperimentImpl>(experiment), cycle));
     return spectrum;
+}
+
+
+int WiffFileImpl::getADCTraceCount(int sample) const
+{
+    try
+    {
+        setSample(sample);
+        if (!this->sample->HasADCData || this->sample->ADCSample == nullptr)
+            return 0;
+
+        return this->sample->ADCSample->ChannelCount;
+    }
+    CATCH_AND_FORWARD
+}
+
+string WiffFileImpl::getADCTraceName(int sample, int traceIndex) const
+{
+    try
+    {
+        setSample(sample);
+        return ToStdString(this->sample->ADCSample->GetChannelNameAt(traceIndex));
+    }
+    CATCH_AND_FORWARD
+}
+
+void WiffFileImpl::getADCTrace(int sample, int traceIndex, ADCTrace& trace) const
+{
+    try
+    {
+        setSample(sample);
+        auto adcData = this->sample->ADCSample->GetADCData(traceIndex);
+        ToBinaryData(adcData->GetActualXValues(), trace.x);
+        ToBinaryData(adcData->GetActualYValues(), trace.y);
+        trace.xUnits = ToStdString(adcData->XUnits);
+        trace.yUnits = ToStdString(adcData->YUnits);
+    }
+    CATCH_AND_FORWARD
 }
 
 

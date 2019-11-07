@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.FileUI;
@@ -22,6 +23,8 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
+        // TODO(nicksh): Optimizations disabled on this method to help track down intermittent test failure.
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         protected override void DoTest()
         {
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("DuplicateTransitionGroups.sky")));
@@ -43,20 +46,24 @@ namespace pwiz.SkylineTestFunctional
                 Tuple.Create("ExtraHeavy", (double?) 1),
             };
             var dataGridView = documentGrid.DataGridView;
-            Assert.AreEqual(expectedResults.Length, dataGridView.RowCount);
-            for (int iRow = 0; iRow < expectedResults.Length; iRow++)
+            RunUI(() =>
             {
-                Assert.AreEqual(expectedResults[iRow].Item1, dataGridView.Rows[iRow].Cells[0].Value);
-                if (expectedResults[iRow].Item2 == null)
+                Assert.AreEqual(expectedResults.Length, dataGridView.RowCount);
+                for (int iRow = 0; iRow < expectedResults.Length; iRow++)
                 {
-                    Assert.IsNull(dataGridView.Rows[iRow].Cells[1].Value);
+                    Assert.AreEqual(expectedResults[iRow].Item1, dataGridView.Rows[iRow].Cells[0].Value);
+                    if (expectedResults[iRow].Item2 == null)
+                    {
+                        Assert.IsNull(dataGridView.Rows[iRow].Cells[1].Value);
+                    }
+                    else
+                    {
+                        Assert.IsInstanceOfType(dataGridView.Rows[iRow].Cells[1].Value, typeof(double));
+                        Assert.AreEqual(expectedResults[iRow].Item2.Value,
+                            (double) dataGridView.Rows[iRow].Cells[1].Value, .001);
+                    }
                 }
-                else
-                {
-                    Assert.IsInstanceOfType(dataGridView.Rows[iRow].Cells[1].Value, typeof(double));
-                    Assert.AreEqual(expectedResults[iRow].Item2.Value, (double) dataGridView.Rows[iRow].Cells[1].Value, .001);
-                }
-            }
+            });
         }
     }
 }

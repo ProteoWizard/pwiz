@@ -171,18 +171,6 @@
   <data name="&gt;&gt;tbxName.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
-  <data name="comboType.Items" xml:space="preserve">
-    <value>テキスト</value>
-  </data>
-  <data name="comboType.Items1" xml:space="preserve">
-    <value>数字</value>
-  </data>
-  <data name="comboType.Items2" xml:space="preserve">
-    <value>True/False</value>
-  </data>
-  <data name="comboType.Items3" xml:space="preserve">
-    <value>値のリスト</value>
-  </data>
   <data name="comboType.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 79</value>
   </data>

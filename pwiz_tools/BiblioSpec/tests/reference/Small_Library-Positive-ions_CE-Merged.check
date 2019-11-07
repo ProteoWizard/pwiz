@@ -1,20 +1,20 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:Small_Library-Positive-ions_CE-Merged.blib	6	1	9
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:Small_Library-Positive-ions_CE-Merged.blib	6	1	10
 id	RefSpectraID	position	mass
-id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
-1	N/A	285.0	1	N/A	-	-	1	52	0.0	0.0	0.0	0	9.013	N/A	N/A	Diazepam	C16H13ClN2O	[M+H]	N/A	cas:439-14-5	1	9	0.0	0
-2	N/A	326.0	1	N/A	-	-	1	60	0.0	0.0	0.0	0	9.007	N/A	N/A	Midazolam	C18H13ClFN3	[M+H]	N/A	cas:59467-70-8	2	739	0.0	0
-3	N/A	252.0	1	N/A	-	-	1	35	0.0	0.0	0.0	0	5.328	N/A	N/A	7-aminonitrazepam	C15H13N3O	[M+H]	N/A	cas:4928-2-3	3	791	0.0	0
-4	N/A	271.0	1	N/A	-	-	1	46	0.0	0.0	0.0	0	8.047	N/A	N/A	Nordiazepam	C15H11ClN2O	[M+H]	N/A	cas:1088-11-5	4	836	0.0	0
-5	N/A	318.0	1	N/A	-	-	1	9	0.0	0.0	0.0	0	8.828	N/A	N/A	Phosmet	C11H12NO4PS2	[M+H]	N/A	cas:732-11-6	5	837	0.0	0
-6	N/A	324.0	1	N/A	-	-	1	27	0.0	0.0	0.0	0	6.808	N/A	N/A	LSD	C20H25N3O	[M+H]	N/A	cas:50-37-3	6	856	0.0	0
-id	fileName	cutoffScore
-1	C:/LabSolutions/Data/GUS-Project/Library_data_files/Positive-ions/1-1_Diazepam_CE_Select.lcd	-1.0
-2	C:/LabSolutions/Data/GUS-Project/Library_data_files/Positive-ions/45-1_Midazolam_CE_Select.lcd	-1.0
-3	C:/LabSolutions/Data/GUS-Project/Library_data_files/Positive-ions/49-1_7-aminonitrazepam _CE_Select.lcd	-1.0
-4	C:/LabSolutions/Data/GUS-Project/Library_data_files/Positive-ions/50-1_Nordiazepam_CE_Select.lcd	-1.0
-5	C:/LabSolutions/Data/GUS-Project/Library_data_files/Positive-ions/50-1_Phosmet_CE_Select.lcd	-1.0
-6	C:/LabSolutions/Data/GUS-Project/Library_data_files/Positive-ions/52-1_LSD_CE_Select.lcd	-1.0
+id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	totalIonCurrent	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
+1	N/A	285.0	1	N/A	-	-	1	52	0.0	0.0	0.0	0	9.013	N/A	N/A	18071710.0	Diazepam	C16H13ClN2O	[M+H]	N/A	cas:439-14-5	1	9	0.0	0
+2	N/A	326.0	1	N/A	-	-	1	60	0.0	0.0	0.0	0	9.007	N/A	N/A	20993400.0	Midazolam	C18H13ClFN3	[M+H]	N/A	cas:59467-70-8	2	739	0.0	0
+3	N/A	252.0	1	N/A	-	-	1	35	0.0	0.0	0.0	0	5.328	N/A	N/A	16621146.0	7-aminonitrazepam	C15H13N3O	[M+H]	N/A	cas:4928-2-3	3	791	0.0	0
+4	N/A	271.0	1	N/A	-	-	1	46	0.0	0.0	0.0	0	8.047	N/A	N/A	17765153.0	Nordiazepam	C15H11ClN2O	[M+H]	N/A	cas:1088-11-5	4	836	0.0	0
+5	N/A	318.0	1	N/A	-	-	1	9	0.0	0.0	0.0	0	8.828	N/A	N/A	17911596.0	Phosmet	C11H12NO4PS2	[M+H]	N/A	cas:732-11-6	5	837	0.0	0
+6	N/A	324.0	1	N/A	-	-	1	27	0.0	0.0	0.0	0	6.808	N/A	N/A	32478645.0	LSD	C20H25N3O	[M+H]	N/A	cas:50-37-3	6	856	0.0	0
+id	fileName	idFileName	cutoffScore
+1	C:/LabSolutions/Data/GUS-Project/Library_data_files/Positive-ions/1-1_Diazepam_CE_Select.lcd	/BiblioSpec/tests/inputs/试验_Small_Library-Positive-ions_CE-Merged.mlb	-1.0
+2	C:/LabSolutions/Data/GUS-Project/Library_data_files/Positive-ions/45-1_Midazolam_CE_Select.lcd	/BiblioSpec/tests/inputs/试验_Small_Library-Positive-ions_CE-Merged.mlb	-1.0
+3	C:/LabSolutions/Data/GUS-Project/Library_data_files/Positive-ions/49-1_7-aminonitrazepam _CE_Select.lcd	/BiblioSpec/tests/inputs/试验_Small_Library-Positive-ions_CE-Merged.mlb	-1.0
+4	C:/LabSolutions/Data/GUS-Project/Library_data_files/Positive-ions/50-1_Nordiazepam_CE_Select.lcd	/BiblioSpec/tests/inputs/试验_Small_Library-Positive-ions_CE-Merged.mlb	-1.0
+5	C:/LabSolutions/Data/GUS-Project/Library_data_files/Positive-ions/50-1_Phosmet_CE_Select.lcd	/BiblioSpec/tests/inputs/试验_Small_Library-Positive-ions_CE-Merged.mlb	-1.0
+6	C:/LabSolutions/Data/GUS-Project/Library_data_files/Positive-ions/52-1_LSD_CE_Select.lcd	/BiblioSpec/tests/inputs/试验_Small_Library-Positive-ions_CE-Merged.mlb	-1.0
 id	scoreType	probabilityType
 0	UNKNOWN	NOT_A_PROBABILITY_VALUE
 1	PERCOLATOR QVALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT

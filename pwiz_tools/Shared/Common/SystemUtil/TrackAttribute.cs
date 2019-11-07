@@ -34,8 +34,8 @@ namespace pwiz.Common.SystemUtil
     /// <typeparam name="T">Type of the underlying object</typeparam>
     public class ObjectInfo<T> : Immutable where T : class
     {
-        public ObjectInfo(T oldObject = null, T newObject = null, T oldParentObject = null, T newParentObject = null,
-            T oldRootObject = null, T newRootObject = null)
+        public ObjectInfo(T oldObject, T newObject, T oldParentObject, T newParentObject,
+            T oldRootObject, T newRootObject)
         {
             OldObject = oldObject;
             NewObject = newObject;
@@ -43,6 +43,10 @@ namespace pwiz.Common.SystemUtil
             NewParentObject = newParentObject;
             OldRootObject = oldRootObject;
             NewRootObject = newRootObject;
+        }
+
+        public ObjectInfo() : this(null, null, null, null, null, null)
+        {
         }
 
         public ObjectInfo<object> ToObjectType()
@@ -73,14 +77,14 @@ namespace pwiz.Common.SystemUtil
             return ChangeProp(ImClone(this), im => im.ObjectPair = objectPair);
         }
 
-        public ObjectInfo<T> ChangeRootObjectPair(ObjectPair<T> rootObjectPair)
-        {
-            return ChangeProp(ImClone(this), im => im.RootObjectPair = rootObjectPair);
-        }
-
         public ObjectInfo<T> ChangeParentPair(ObjectPair<T> parentPair)
         {
             return ChangeProp(ImClone(this), im => im.ParentObjectPair = parentPair);
+        }
+
+        public ObjectInfo<T> ChangeRootObjectPair(ObjectPair<T> rootObjectPair)
+        {
+            return ChangeProp(ImClone(this), im => im.RootObjectPair = rootObjectPair);
         }
 
         public ObjectPair<T> ObjectPair
@@ -187,11 +191,20 @@ namespace pwiz.Common.SystemUtil
         public T RootObject { get; private set; }
     }
 
+    /// <summary>
+    /// Provides custom string representation of things that appear in the audit log.
+    /// </summary>
     public interface IAuditLogObject
     {
+        /// <summary>
+        /// String representation or Name of the object.
+        /// </summary>
         string AuditLogText { get; }
-        // Determines whether the AuditLogText is a name or a string representation
-        // of the object
+        /// <summary>
+        /// Returns true if the audit log text is the name of this object.
+        /// That is, the audit log text provides no information about the current state and properties of this object.
+        /// Returns false if the audit log text is a description of this object.
+        /// </summary>
         bool IsName { get; }
     }
 
@@ -394,28 +407,61 @@ namespace pwiz.Common.SystemUtil
         }
     }
 
+    public class DefaultValuesZero : DefaultValues
+    {
+        protected override IEnumerable<object> _values
+        {
+            get { yield return 0; }
+        }
+    }
+
     public abstract class TrackAttributeBase : Attribute
     {
         protected TrackAttributeBase(bool isTab, bool ignoreName, bool ignoreDefaultParent, Type defaultValues,
-            Type customLocalizer)
+            Type customLocalizer, int decimalPlaces = -1)
         {
             IsTab = isTab;
             IgnoreName = ignoreName;
             IgnoreDefaultParent = ignoreDefaultParent;
             DefaultValues = defaultValues;
             CustomLocalizer = customLocalizer;
+            DecimalPlaces = decimalPlaces;
         }
 
+        /// <summary>
+        /// Returns true if a "--" should be used to separate this property from its parent. Returns false if it should be ">" or ":".
+        /// </summary>
         public bool IsTab { get; protected set; }
+        /// <summary>
+        /// Returns true if the sub-properties of this property value should be merged with the parent.
+        /// That is, the name of this property gets ignored, and it is as if the properties of this sub-object are properties on the parent.
+        /// </summary>
         public bool IgnoreName { get; protected set; }
-        public bool IgnoreNull { get; protected set; }
+        /// <summary>
+        /// Returns true if the audit log engine should recurse into the sub-properties of this property value.
+        /// </summary>
         public virtual bool DiffProperties { get { return false; } }
+        /// <summary>
+        /// Whether to display this property value, even if this property value is the default value.
+        /// </summary>
         public bool IgnoreDefaultParent { get; protected set; }
+        /// <summary>
+        /// Class which extends <see cref="pwiz.Common.SystemUtil.DefaultValues" /> which provides the default values of this property.
+        /// </summary>
         public Type DefaultValues { get; protected set; }
+        /// <summary>
+        /// Class which extends CustomPropertyLocalizer 
+        /// </summary>
         public Type CustomLocalizer { get; protected set; }
+        /// <summary>
+        /// Number of decimal places to round the value to. Defaults to -1 for no rounding.
+        /// </summary>
+        public int DecimalPlaces { get; protected set; }
     }
 
-    // Can be used on enums to indicate that certain values don't have to be localized
+    /// <summary>
+    /// Can be used on enums to indicate that certain values don't have to be localized. Used for testing only.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Enum)]
     public class IgnoreEnumValuesAttribute : Attribute
     {
@@ -433,6 +479,9 @@ namespace pwiz.Common.SystemUtil
         }
     }
 
+    /// <summary>
+    /// Use this attribute on properties where you do not want to recurse into the sub-properties.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
     public class TrackAttribute : TrackAttributeBase
     {
@@ -440,10 +489,14 @@ namespace pwiz.Common.SystemUtil
             bool ignoreName = false,
             bool ignoreDefaultParent = false,
             Type defaultValues = null,
-            Type customLocalizer = null)
-            : base(isTab, ignoreName, ignoreDefaultParent, defaultValues, customLocalizer) { }
+            Type customLocalizer = null,
+            int decimalPlaces = -1)
+            : base(isTab, ignoreName, ignoreDefaultParent, defaultValues, customLocalizer, decimalPlaces) { }
     }
 
+    /// <summary>
+    /// Use this attribute to tell the Audit Log engine to recurse into the sub-properties.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
     public class TrackChildrenAttribute : TrackAttributeBase
     {

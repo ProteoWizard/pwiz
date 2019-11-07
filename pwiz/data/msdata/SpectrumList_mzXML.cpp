@@ -106,7 +106,7 @@ const SpectrumIdentity& SpectrumList_mzXMLImpl::spectrumIdentity(size_t index) c
 size_t SpectrumList_mzXMLImpl::find(const string& id) const
 {
     map<string,size_t>::const_iterator it=idToIndex_.find(id);
-    return it!=idToIndex_.end() ? it->second : size();
+    return it!=idToIndex_.end() ? it->second : checkNativeIdFindResult(size(), id);
 }
 
 

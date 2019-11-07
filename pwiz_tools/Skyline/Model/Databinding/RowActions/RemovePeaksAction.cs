@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Model.Databinding.RowActions
             }
         }
 
-        public void RemovePeaks(BoundDataGridView dataGridView)
+        public void RemovePeaks(SrmDocument.DOCUMENT_TYPE docType, BoundDataGridView dataGridView)
         {
             var parent = FormUtil.FindTopLevelOwner(dataGridView);
             var selectedPeaks = GetSelectedPeaks(dataGridView).Distinct().ToArray();
@@ -68,7 +68,7 @@ namespace pwiz.Skyline.Model.Databinding.RowActions
             }
 
             var lookup = selectedPeaks.ToLookup(tuple => tuple.Item1, tuple => tuple.Item2).ToArray();
-            string message = GetConfirmRemoveMessage(selectedPeaks.Length, lookup.Length);
+            string message = GetConfirmRemoveMessage(docType, selectedPeaks.Length, lookup.Length);
 
             if (MultiButtonMsgDlg.Show(parent, message, MultiButtonMsgDlg.BUTTON_OK) != DialogResult.OK)
             {
@@ -104,14 +104,14 @@ namespace pwiz.Skyline.Model.Databinding.RowActions
                         });
                         return resultDocument;
                     },
-                    docPair => AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
-                        new MessageInfo(MessageType.removed_peaks, selectedPeaks.Length, lookup.Length)));
+                    docPair => AuditLogEntry.CreateSingleMessageEntry(
+                        new MessageInfo(MessageType.removed_peaks, docPair.NewDocumentType, selectedPeaks.Length, lookup.Length)));
             }
         }
 
         protected abstract SrmDocument RemovePeaks(SrmDocument document, IGrouping<IdentityPath, ResultFileKey> peaks);
 
-        protected abstract string GetConfirmRemoveMessage(int peakCount, int nodeCount);
+        protected abstract string GetConfirmRemoveMessage(SrmDocument.DOCUMENT_TYPE docType, int peakCount, int nodeCount);
         public abstract IEnumerable<Result> GetSelectedResults(BoundDataGridView dataGridView);
 
         public IEnumerable<Tuple<IdentityPath, ResultFileKey>> GetSelectedPeaks(BoundDataGridView dataGridView)
@@ -130,10 +130,10 @@ namespace pwiz.Skyline.Model.Databinding.RowActions
             }
         }
 
-        public override ToolStripMenuItem CreateMenuItem(BoundDataGridView dataGridView)
+        public override ToolStripMenuItem CreateMenuItem(SrmDocument.DOCUMENT_TYPE docType, BoundDataGridView dataGridView)
         {
             var toolStripMenuItem =
-                new ToolStripMenuItem(MenuItemText, null, (sender, args) => RemovePeaks(dataGridView));
+                new ToolStripMenuItem(GetMenuItemText(docType), null, (sender, args) => RemovePeaks(docType, dataGridView));
             if (!GetSelectedResults(dataGridView).Any())
             {
                 toolStripMenuItem.Enabled = false;
@@ -169,20 +169,27 @@ namespace pwiz.Skyline.Model.Databinding.RowActions
 
         class RemovePeptides : RemovePeaksAction
         {
-            protected override string GetConfirmRemoveMessage(int peakCount, int nodeCount)
+            protected override string GetConfirmRemoveMessage(SrmDocument.DOCUMENT_TYPE docType, int peakCount, int nodeCount)
             {
+                bool proteomic = docType == SrmDocument.DOCUMENT_TYPE.proteomic;
                 if (peakCount == 1)
                 {
-                    return Resources.RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_peptide_peak_;
+                    return proteomic 
+                            ? Resources.RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_peptide_peak_
+                            : Resources.RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_molecule_peak_;
                 }
 
                 if (nodeCount == 1)
                 {
-                    return string.Format(Resources.RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_peptide_, peakCount);
+                    return string.Format(proteomic
+                        ? Resources.RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_peptide_
+                        : Resources.RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_molecule_, peakCount);
                 }
 
-                return string.Format(Resources.RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__peptides_, peakCount,
-                    nodeCount);
+                return string.Format(proteomic
+                    ? Resources
+                        .RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__peptides_
+                    : Resources.RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__molecules_, peakCount, nodeCount);
             }
 
             public override IEnumerable<Result> GetSelectedResults(BoundDataGridView dataGridView)
@@ -202,9 +209,11 @@ namespace pwiz.Skyline.Model.Databinding.RowActions
                 }
             }
 
-            public override string MenuItemText
+            public override string GetMenuItemText(SrmDocument.DOCUMENT_TYPE docType)
             {
-                get { return Resources.RemovePeptides_MenuItemText_Remove_Peptide_Peaks___; }
+                return docType == SrmDocument.DOCUMENT_TYPE.proteomic
+                    ? Resources.RemovePeptides_MenuItemText_Remove_Peptide_Peaks___
+                    : Resources.RemovePeptides_MenuItemText_Remove_Molecule_Peaks___;
             }
 
             protected override SrmDocument RemovePeaks(SrmDocument document, IGrouping<IdentityPath, ResultFileKey> peaks)
@@ -232,7 +241,7 @@ namespace pwiz.Skyline.Model.Databinding.RowActions
 
         class RemoveTransitions : RemovePeaksAction
         {
-            protected override string GetConfirmRemoveMessage(int peakCount, int nodeCount)
+            protected override string GetConfirmRemoveMessage(SrmDocument.DOCUMENT_TYPE docType, int peakCount, int nodeCount)
             {
                 if (peakCount == 1)
                 {
@@ -276,15 +285,15 @@ namespace pwiz.Skyline.Model.Databinding.RowActions
                 return document;
             }
 
-            public override string MenuItemText
+            public override string GetMenuItemText(SrmDocument.DOCUMENT_TYPE docType)
             {
-                get { return Resources.RemoveTransitions_MenuItemText_Remove_Transition_Peaks___; }
+                return Resources.RemoveTransitions_MenuItemText_Remove_Transition_Peaks___;
             }
         }
 
         class RemovePrecursors : RemovePeaksAction
         {
-            protected override string GetConfirmRemoveMessage(int peakCount, int nodeCount)
+            protected override string GetConfirmRemoveMessage(SrmDocument.DOCUMENT_TYPE docType, int peakCount, int nodeCount)
             {
                 if (peakCount == 1)
                 {
@@ -333,9 +342,9 @@ namespace pwiz.Skyline.Model.Databinding.RowActions
                 return document;
             }
 
-            public override string MenuItemText
+            public override string GetMenuItemText(SrmDocument.DOCUMENT_TYPE docType)
             {
-                get { return Resources.RemovePrecursors_MenuItemText_Remove_Precursor_Peaks___; }
+                return Resources.RemovePrecursors_MenuItemText_Remove_Precursor_Peaks___;
             }
         }
     }

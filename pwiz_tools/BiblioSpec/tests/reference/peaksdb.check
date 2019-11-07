@@ -1,15 +1,15 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:peaksdb.blib	6	1	9
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:peaksdb.blib	6	1	10
 id	RefSpectraID	position	mass
-id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
-1	DNPQTHYYAVAVVK	802.91	2	DNPQTHYYAVAVVK	-	-	1	2832	0.0	0.0	0.0	0	0.0729	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	2	1.25602996369488e-11	16
-2	TSDANINWNNLK	695.84	2	TSDANINWNNLK	-	-	1	1797	0.0	0.0	0.0	0	0.319566666666667	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	4	6.68343917568615e-07	16
-3	ANELLINVK	507.3	2	ANELLINVK	-	-	1	1495	0.0	0.0	0.0	0	0.368933333333333	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	5	5.4075432294558e-05	16
-4	HSTVFDNLPNPEDR	547.59	3	HSTVFDNLPNPEDR	-	-	1	2072	0.0	0.0	0.0	0	1.3441	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	7	6.13762005164793e-08	16
-5	HSTVFDNLPNPEDR	820.89	2	HSTVFDNLPNPEDR	-	-	1	1321	0.0	0.0	0.0	0	1.42176666666667	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	8	1.0e-09	16
-6	LVNELTEFAK	582.8105	2	LVNELTEFAK	-	-	1	798	0.0	0.0	0.0	0	1.70296666666667	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	12	0.000377572190925416	16
-id	fileName	cutoffScore
-1	/BiblioSpec/tests/inputs/peaksdb.mzXML	-1.0
+id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	totalIonCurrent	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
+1	DNPQTHYYAVAVVK	802.91	2	DNPQTHYYAVAVVK	-	-	1	2832	0.0	0.0	0.0	0	0.0729	N/A	N/A	68756655.21	N/A	N/A	N/A	N/A	N/A	1	2	1.25602996e-11	16
+2	TSDANINWNNLK	695.84	2	TSDANINWNNLK	-	-	1	1797	0.0	0.0	0.0	0	0.31956666	N/A	N/A	4356129.28	N/A	N/A	N/A	N/A	N/A	1	4	6.68343917e-07	16
+3	ANELLINVK	507.3	2	ANELLINVK	-	-	1	1495	0.0	0.0	0.0	0	0.36893333	N/A	N/A	11989252.45	N/A	N/A	N/A	N/A	N/A	1	5	5.40754322e-05	16
+4	HSTVFDNLPNPEDR	547.59	3	HSTVFDNLPNPEDR	-	-	1	2072	0.0	0.0	0.0	0	1.3441	N/A	N/A	81538309.71	N/A	N/A	N/A	N/A	N/A	1	7	6.13762005e-08	16
+5	HSTVFDNLPNPEDR	820.89	2	HSTVFDNLPNPEDR	-	-	1	1321	0.0	0.0	0.0	0	1.42176666	N/A	N/A	14198163.85	N/A	N/A	N/A	N/A	N/A	1	8	1.0e-09	16
+6	LVNELTEFAK	582.8105	2	LVNELTEFAK	-	-	1	798	0.0	0.0	0.0	0	1.70296666	N/A	N/A	3345303.46	N/A	N/A	N/A	N/A	N/A	1	12	0.00037757	16
+id	fileName	idFileName	cutoffScore
+1	/BiblioSpec/tests/inputs/peaksdb.mzXML	/BiblioSpec/tests/inputs/peaksdb.pep.xml	-1.0
 id	scoreType	probabilityType
 0	UNKNOWN	NOT_A_PROBABILITY_VALUE
 1	PERCOLATOR QVALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT

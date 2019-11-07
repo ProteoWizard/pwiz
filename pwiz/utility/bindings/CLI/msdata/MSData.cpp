@@ -783,6 +783,11 @@ Chromatogram^ ChromatogramList::chromatogram(int index, bool getBinaryData)
     try {return gcnew Chromatogram(new b::ChromatogramPtr((*base_)->chromatogram((size_t) index, getBinaryData)));} CATCH_AND_FORWARD
 }
 
+Chromatogram^ ChromatogramList::chromatogram(int index, DetailLevel detailLevel)
+{
+    try { return gcnew Chromatogram(new b::ChromatogramPtr((*base_)->chromatogram((size_t)index, (b::DetailLevel) detailLevel))); } CATCH_AND_FORWARD
+}
+
 DataProcessing^ ChromatogramList::dataProcessing()
 {
     const shared_ptr<const b::DataProcessing> cdp = (*base_)->dataProcessingPtr();

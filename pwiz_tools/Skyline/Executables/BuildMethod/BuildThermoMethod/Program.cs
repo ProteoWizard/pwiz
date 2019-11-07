@@ -15,7 +15,16 @@ using Version = XmlTsq.Version;
 
 namespace BuildThermoMethod
 {
-    internal class UsageException : Exception { }
+    internal class UsageException : Exception
+    {
+        public UsageException()
+        {
+        }
+
+        public UsageException(string message) : base(message)
+        {
+        }
+    }
 
     class Program
     {
@@ -31,18 +40,32 @@ namespace BuildThermoMethod
 
                 Environment.ExitCode = 0;
             }
-            catch (UsageException)
+            catch (UsageException x)
             {
+                if (!string.IsNullOrEmpty(x.Message))
+                    Console.Error.WriteLine("ERROR: {0}", x.Message);
                 Usage();
             }
             catch (IOException x)
             {
-                Console.Error.WriteLine("ERROR: {0}", x.Message);
+                Console.Error.Write(GetErrorText(x));
             }
             catch (Exception x)
             {
-                Console.Error.WriteLine("ERROR: {0}", x.Message);
+                Console.Error.Write(GetErrorText(x));
             }
+        }
+
+        private static string GetErrorText(Exception x)
+        {
+            // Thermo libraries can sometimes throw exceptions with multi-line errors
+            // Any lines that do not get ERROR: prepended will not get reported
+            var sb = new StringBuilder();
+            var reader = new StringReader(x.Message);
+            string line;
+            while ((line = reader.ReadLine()) != null)
+                sb.AppendLine("ERROR: " + line);
+            return sb.ToString();
         }
 
         static void Usage()
@@ -55,8 +78,9 @@ namespace BuildThermoMethod
                     "   -f               Fusion method [default]\n" +
                     "   -e               Endura method\n" +
                     "   -q               Quantiva method\n" +
-					"   -a               Altis method\n" +
+                    "   -a               Altis method\n" +
                     "   -o <output file> New method is written to the specified output file\n" +
+                    "   -x               Export method XML to <basename>.xml file\n" +
                     "   -s               Transition list is read from stdin.\n" +
                     "                    e.g. cat TranList.csv | BuildThermoMethod -s -o new.ext temp.ext\n" +
                     "\n" +
@@ -233,6 +257,7 @@ namespace BuildThermoMethod
         private string InstrumentVersion { get; set; }
         private string TemplateMethod { get; set; }
         private List<MethodTransitions> MethodTrans { get; set; }
+        private bool ExportXml { get; set; }
 
         public BuildThermoMethod()
         {
@@ -251,7 +276,8 @@ namespace BuildThermoMethod
             int i = 0;
             while (i < args.Length && args[i][0] == '-')
             {
-                switch (args[i++][1])
+                string arg = args[i++];
+                switch (arg[1])
                 {
                     case 'f':
                         InstrumentType = InstrumentFusion;
@@ -270,6 +296,9 @@ namespace BuildThermoMethod
                             throw new UsageException();
                         outputMethod = Path.GetFullPath(args[i++]);
                         break;
+                    case 'x':
+                        ExportXml = true;
+                        break;
                     case 's':
                         readStdin = true;
                         break;
@@ -277,7 +306,7 @@ namespace BuildThermoMethod
                         multiFile = true;
                         break;
                     default:
-                        throw new UsageException();
+                        throw new UsageException(string.Format("Unknown argument {0}", arg));
                 }
             }
 
@@ -377,7 +406,7 @@ namespace BuildThermoMethod
                     outputMethodCurrent = line;
                     finalMethod = instream.ReadLine();
                     if (finalMethod == null)
-                        throw new IOException(string.Format("Empty mass list found."));
+                        throw new IOException("Empty mass list found.");
 
                     sb = new StringBuilder();
                 }
@@ -412,26 +441,45 @@ namespace BuildThermoMethod
                 if (string.IsNullOrEmpty(methodTranList.TransitionList))
                     throw new IOException(string.Format("Failure creating method file {0}. The mass list is empty.", methodTranList.FinalMethod));
 
-                using (IMethodXMLContext mxc = MethodXMLFactory.CreateContext(InstrumentType, InstrumentVersion))
-                using (IMethodXML mx = mxc.Create())
+                string outMeth = EnsureExtension(methodTranList.OutputMethod, ".meth");  // Thermo needs the extension to be .meth
+                if (!Equals(outMeth, methodTranList.OutputMethod) && File.Exists(methodTranList.OutputMethod))
+                    File.Move(methodTranList.OutputMethod, outMeth);
+
+                try
                 {
-                    mx.Open(TemplateMethod);
-                    mx.EnableValidation(true);
-                    
-                    ListItem[] listItems = ParseList(methodTranList.TransitionList).ToArray();
-                    if (!listItems.Any())
-                        throw new IOException("Empty mass list found.");
+                    using (IMethodXMLContext mxc = MethodXMLFactory.CreateContext(InstrumentType, InstrumentVersion))
+                    using (IMethodXML mx = mxc.Create())
+                    {
+                        mx.Open(TemplateMethod);
+                        mx.EnableValidation(true);
 
-                    if (InstrumentType.Equals(InstrumentFusion))
-                        mx.ApplyMethodModificationsFromXML(GetFusionModificationXml(listItems));
-                    else
-                        mx.ImportMassListFromXML(GetTsqMassListXml(listItems));
-                    mx.SaveAs(methodTranList.OutputMethod);
+                        ListItem[] listItems = ParseList(methodTranList.TransitionList).ToArray();
+                        if (!listItems.Any())
+                            throw new IOException("Empty mass list found.");
+
+                        if (InstrumentType.Equals(InstrumentFusion))
+                            mx.ApplyMethodModificationsFromXML(GetFusionModificationXml(listItems, outMeth));
+                        else
+                            mx.ImportMassListFromXML(GetTsqMassListXml(listItems, outMeth));
+                        mx.SaveAs(outMeth);
+                    }
+
+                    if (!File.Exists(outMeth))
+                        throw new IOException(string.Format("Failure creating method file {0}.", methodTranList.FinalMethod));
                 }
-
-                if (!File.Exists(methodTranList.OutputMethod))
-                    throw new IOException(string.Format("Failure creating method file {0}.", methodTranList.FinalMethod));
+                finally 
+                {
+                    if (!Equals(outMeth, methodTranList.OutputMethod))
+                        File.Move(outMeth, methodTranList.OutputMethod);
+                }
             }
+        }
+
+        private string EnsureExtension(string path, string ext)
+        {
+            if (path.EndsWith(ext))
+                return path;
+            return Path.ChangeExtension(path, ext);
         }
 
         private static IEnumerable<ListItem> ParseList(string list)
@@ -464,7 +512,7 @@ namespace BuildThermoMethod
         }
 
         // Get XML for Endura/Quantiva methods
-        private static string GetTsqMassListXml(IEnumerable<ListItem> items)
+        private string GetTsqMassListXml(IEnumerable<ListItem> items, string outMethod)
         {
             var method = new Method
             {
@@ -492,14 +540,11 @@ namespace BuildThermoMethod
                 }
             };
 
-            var serializer = new XmlSerializer(method.GetType());
-            var writer = new StringWriter();
-            serializer.Serialize(writer, method);
-            return writer.ToString();
+            return Serialize(method, outMethod);
         }
 
         // Get XML for Fusion methods
-        private static string GetFusionModificationXml(IEnumerable<ListItem> items)
+        private string GetFusionModificationXml(IEnumerable<ListItem> items, string outMethod)
         {
             var itemsEnumerated = items.ToArray();
             var methodModifications = new MethodModifications
@@ -546,10 +591,22 @@ namespace BuildThermoMethod
                 }
             };
 
-            var serializer = new XmlSerializer(methodModifications.GetType());
+            return Serialize(methodModifications, outMethod);
+        }
+
+        private string Serialize(object method, string outMethod)
+        {
+            var serializer = new XmlSerializer(method.GetType());
             var writer = new StringWriter();
-            serializer.Serialize(writer, methodModifications);
-            return writer.ToString();
+            serializer.Serialize(writer, method);
+            string xmlText = writer.ToString();
+            if (ExportXml)
+            {
+                string xmlPath = Path.ChangeExtension(outMethod, ".xml");
+                if (xmlPath != null)
+                    File.WriteAllText(xmlPath, xmlText);
+            }
+            return xmlText;
         }
     }
 }

@@ -88,8 +88,6 @@ namespace pwiz.SkylineTestTutorial
                 return;
             }
 
-            TestSmallMolecules = false; // Don't need that magic extra node, we have an explict test
-
             ForceMzml = true;   // 2-3x faster than raw files for this test.
 
             AsSmallMoleculesTestMode = smallMoleculesTestMode;
@@ -133,6 +131,7 @@ namespace pwiz.SkylineTestTutorial
             var document = WaitForDocumentLoaded();
             if (AsSmallMolecules)
             {
+                RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.mixed)); // Necessary for import wizard to import peptide stuff before we convert
                 CheckConsistentLibraryInfo();
                 ConvertDocumentToSmallMolecules(AsSmallMoleculesTestMode);
                 document = SkylineWindow.Document;
@@ -179,9 +178,8 @@ namespace pwiz.SkylineTestTutorial
                 {
                     // p.6
                     transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Filter;
-                    transitionSettingsUI.FragmentTypes += ", p";
-                    if (AsSmallMolecules)
-                        transitionSettingsUI.SmallMoleculeFragmentTypes += ", p";
+                    Assert.IsTrue(transitionSettingsUI.FragmentTypes.Contains("p")); // Should be added automatically
+                    Assert.IsTrue(transitionSettingsUI.SmallMoleculeFragmentTypes.Contains("p")); // Should be added automatically
                 });
                 PauseForScreenShot<TransitionSettingsUI.FilterTab>("Transition Settings - Filter tab", 9);
 
@@ -191,10 +189,9 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(FullScanPrecursorIsotopes.Count, tranSettingsFullScan.FullScan.PrecursorIsotopes);
                 Assert.AreEqual(FullScanMassAnalyzerType.qit, tranSettingsFullScan.FullScan.PrecursorMassAnalyzer);
                 Assert.AreEqual(FullScanAcquisitionMethod.Targeted, tranSettingsFullScan.FullScan.AcquisitionMethod);
-                Assert.IsTrue(ArrayUtil.EqualsDeep(new[] {IonType.y, IonType.b, IonType.precursor},
+                Assert.IsTrue(ArrayUtil.ContainsAll(new[] {IonType.y, IonType.b, IonType.precursor},
                     tranSettingsFullScan.Filter.PeptideIonTypes));
-                if (AsSmallMolecules)
-                    Assert.IsTrue(ArrayUtil.EqualsDeep(new[] { IonType.custom, IonType.precursor },
+                Assert.IsTrue(ArrayUtil.ContainsAll(new[] { IonType.custom, IonType.precursor },
                         tranSettingsFullScan.Filter.SmallMoleculeIonTypes));
             }
 
@@ -282,7 +279,7 @@ namespace pwiz.SkylineTestTutorial
 
             {
                 var previewReportDlg = ShowDialog<DocumentGridForm>(viewEditor.ShowPreview);
-                var expectedRows = 10 + (TestSmallMolecules ? 1 : 0);
+                var expectedRows = 10;
                 WaitForConditionUI(() => previewReportDlg.IsComplete && previewReportDlg.RowCount == expectedRows);
                 RunUI(() =>
                 {
@@ -331,7 +328,10 @@ namespace pwiz.SkylineTestTutorial
                 // (workflow being demonstratedis peptide based) CONSIDER small mol workflow eventually
                 LowResTestPartOne(RefinementSettings.ConvertToSmallMoleculesMode.none, documentFile);
             }
-
+            if (AsSmallMolecules)
+            {
+                RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.mixed)); // So peptide import wizard still works
+            }
             //p. 12 Import Full-Scan Data
             // Launch import peptide search wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
@@ -604,7 +604,7 @@ namespace pwiz.SkylineTestTutorial
             var importProgress = ShowDialog<AllChromatogramsGraph>(importResultsDlg3.OkDialog);
             WaitForDocumentChangeLoaded(docCalibrate1);
             WaitForConditionUI(() => importProgress.Finished);
-            string expectedErrorFormat = Resources.NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatograms_from__0__full_scan_settings_must_be_enabled_;
+            string expectedErrorFormat = Resources.NoFullScanFilteringException_NoFullScanFilteringException_The_file__0__does_not_contain_SRM_MRM_chromatograms__To_extract_chromatograms_from_its_spectra__go_to_Settings___Transition_Settings___Full_Scan_and_choose_options_appropriate_to_the_acquisition_method_used_;
             if (!TryWaitForConditionUI(() => !string.IsNullOrEmpty(importProgress.Error)))
             {
                 RunUI(() =>
@@ -649,9 +649,8 @@ namespace pwiz.SkylineTestTutorial
                     transitionSettingsUI.RetentionTimeFilterType = RetentionTimeFilterType.none;
 
                     transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Filter;
-                    transitionSettingsUI.FragmentTypes += ", p";
-                    if (AsSmallMolecules)
-                        transitionSettingsUI.SmallMoleculeFragmentTypes += ", p";
+                    Assert.IsTrue(transitionSettingsUI.FragmentTypes.Contains("p")); // Should be added automatically
+                    Assert.IsTrue(transitionSettingsUI.SmallMoleculeFragmentTypes.Contains("p")); // Should be added automatically
                 });
                 PauseForScreenShot<TransitionSettingsUI.FilterTab>("Transition Settings - Filter tab", 29);
 
@@ -663,8 +662,10 @@ namespace pwiz.SkylineTestTutorial
             Assert.AreEqual(FullScanPrecursorIsotopes.Count, tranSettingsHighRes.FullScan.PrecursorIsotopes);
             Assert.AreEqual(FullScanMassAnalyzerType.tof, tranSettingsHighRes.FullScan.PrecursorMassAnalyzer);
             Assert.AreEqual(FullScanAcquisitionMethod.Targeted, tranSettingsHighRes.FullScan.AcquisitionMethod);
-            Assert.IsTrue(ArrayUtil.EqualsDeep(new[] { IonType.y, IonType.b, IonType.precursor },
+            Assert.IsTrue(ArrayUtil.ContainsAll(new[] { IonType.y, IonType.b, IonType.precursor },
                                                tranSettingsHighRes.Filter.PeptideIonTypes));
+            Assert.IsTrue(ArrayUtil.ContainsAll(new[] { IonType.custom, IonType.precursor },
+                                               tranSettingsHighRes.Filter.SmallMoleculeIonTypes));
             RunUI(() => SkylineWindow.ExpandPrecursors());
 
             // Assert each peptide contains 3 precursors transitions (unless this is a masses-only small molecule doc).

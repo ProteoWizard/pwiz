@@ -24,6 +24,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Windows.Forms;
+using Newtonsoft.Json;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Databinding;
@@ -45,7 +46,7 @@ namespace pwiz.Skyline.ToolsUI
             using (var dlg = new OpenFileDialog
             {
                 Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(
-                    Resources.ConfigureToolsDlg_AddFromFile_Zip_Files, @".zip")),
+                    Resources.ConfigureToolsDlg_AddFromFile_Zip_Files, ToolDescription.EXT_INSTALL)),
                 Multiselect = false
             })
             {
@@ -80,6 +81,8 @@ namespace pwiz.Skyline.ToolsUI
             {
                 if (x.InnerException is ToolExecutionException || x.InnerException is WebException)
                     MessageDlg.Show(parent, String.Format(Resources.ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store___0_, x.Message));
+                else if (x.InnerException is JsonReaderException)
+                    MessageDlg.Show(parent, Resources.ToolInstallUI_InstallZipFromWeb_The_server_returned_an_invalid_response__It_might_be_down_for_maintenance__Please_check_the_Tool_Store_on_the_skyline_ms_website_);
                 else
                     throw;
             }

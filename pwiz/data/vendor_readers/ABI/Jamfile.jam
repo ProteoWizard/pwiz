@@ -126,7 +126,7 @@ rule test-requirements ( properties * )
     {
         .extract-once = true ;
         import tar ;
-        tar.extract $(TEST_DATA_PATH).tar.bz2 : : : : check-last-file-only ;
+        tar.extract $(TEST_DATA_PATH).tar.bz2 : : : : <keep-old-files>true ; # <check-last-file-only>true TODO: restore check-last-file-only when tarball needs to be updated (and mzMLs are removed)
     }
     
     local result ;

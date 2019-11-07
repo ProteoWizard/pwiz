@@ -378,13 +378,13 @@
     <value>Empty</value>
   </data>
   <data name="added_small_molecule_precursor" xml:space="preserve">
-    <value>Added small molecule precursor {0}</value>
+    <value>Added molecule precursor {0}</value>
   </data>
   <data name="added_small_molecule" xml:space="preserve">
-    <value>Added small molecule {0}</value>
+    <value>Added molecule {0}</value>
   </data>
   <data name="added_small_molecule_transition" xml:space="preserve">
-    <value>Added small molecule transition {0}</value>
+    <value>Added molecule transition {0}</value>
   </data>
   <data name="added_irt_standard_peptides" xml:space="preserve">
     <value>Added iRT standard peptides</value>
@@ -405,7 +405,7 @@
     <value>Drag and dropped {0} nodes to {1}</value>
   </data>
   <data name="pasted_small_molecule_transition_list" xml:space="preserve">
-    <value>Pasted {0} small molecule transitions</value>
+    <value>Pasted {0} molecule transitions</value>
   </data>
   <data name="applied_peak_all" xml:space="preserve">
     <value>Applied peak {0} to all</value>
@@ -416,7 +416,7 @@
   <data name="removed_peak_from" xml:space="preserve">
     <value>Removed peak from {0} in replicate "{1}"</value>
   </data>
-  <data name="removed_peaks">
+  <data name="removed_peaks" xml:space="preserve">
     <value>Removed {0} peaks from {1} nodes</value>
   </data>
   <data name="removed_all_peaks_from" xml:space="preserve">
@@ -591,7 +591,7 @@
     <value>Imported FASTA from clipboard</value>
   </data>
   <data name="pasted_single_small_molecule_transition" xml:space="preserve">
-    <value>Pasted {0} small molecule transition</value>
+    <value>Pasted {0} molecule transition</value>
   </data>
   <data name="removed_empty_peptide" xml:space="preserve">
     <value>Removed {0} empty peptide</value>
@@ -633,7 +633,7 @@
     <value>The document was modified outside of Skyline: {0}</value>
   </data>
   <data name="AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing" xml:space="preserve">
-    <value>Audit log is corrupted. Audit log entry time stamps and indices should be decreasing</value>
+    <value>Audit log is corrupted. Audit log entry time stamps and indices should be in order. Entry number {0} timestamp {1:G} occurs before entry number {2} timestamp {3:G}.</value>
   </data>
   <data name="test_only" xml:space="preserve">
     <value>{0}</value>
@@ -643,5 +643,20 @@
   </data>
   <data name="start_log_existing_doc" xml:space="preserve">
     <value>Start of audit log for already existing document</value>
+  </data>
+  <data name="AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified" xml:space="preserve">
+    <value>The following audit log entries were modified:
+
+</value>
+  </data>
+  <data name="AuditLogList_ReadFromFile_An_exception_occured_while_reading_the_audit_log" xml:space="preserve">
+    <value>An exception occured while reading the audit log.
+
+Deleting, renaming or moving the audit log file will prevent this error from occuring. You can also send the audit log to the Skyline team to have them attempt to manually fix the file.
+
+For reference, the audit log is located here: "{0}"</value>
+  </data>
+  <data name="AuditLogException_Error_when_loading_document_audit_log__0" xml:space="preserve">
+    <value>Error when loading document's audit log: {0}.</value>
   </data>
 </root>

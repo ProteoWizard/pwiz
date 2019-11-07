@@ -187,7 +187,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Added small molecule {0}.
+        ///   Looks up a localized string similar to Added molecule {0}.
         /// </summary>
         public static string added_small_molecule {
             get {
@@ -196,7 +196,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Added small molecule precursor {0}.
+        ///   Looks up a localized string similar to Added molecule precursor {0}.
         /// </summary>
         public static string added_small_molecule_precursor {
             get {
@@ -205,7 +205,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Added small molecule transition {0}.
+        ///   Looks up a localized string similar to Added molecule transition {0}.
         /// </summary>
         public static string added_small_molecule_transition {
             get {
@@ -264,6 +264,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string associated_peptides_with_proteins {
             get {
                 return ResourceManager.GetString("associated_peptides_with_proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error when loading document&apos;s audit log: {0}..
+        /// </summary>
+        public static string AuditLogException_Error_when_loading_document_audit_log__0 {
+            get {
+                return ResourceManager.GetString("AuditLogException_Error_when_loading_document_audit_log__0", resourceCulture);
             }
         }
         
@@ -368,7 +377,31 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Audit log is corrupted. Audit log entry time stamps and indices should be decreasing.
+        ///   Looks up a localized string similar to An exception occured while reading the audit log.
+        ///
+        ///Deleting, renaming or moving the audit log file will prevent this error from occuring. You can also send the audit log to the Skyline team to have them attempt to manually fix the file.
+        ///
+        ///For reference, the audit log is located here: &quot;{0}&quot;.
+        /// </summary>
+        public static string AuditLogList_ReadFromFile_An_exception_occured_while_reading_the_audit_log {
+            get {
+                return ResourceManager.GetString("AuditLogList_ReadFromFile_An_exception_occured_while_reading_the_audit_log", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The following audit log entries were modified:
+        ///
+        ///.
+        /// </summary>
+        public static string AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified {
+            get {
+                return ResourceManager.GetString("AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Audit log is corrupted. Audit log entry time stamps and indices should be in order. Entry number {0} timestamp {1:G} occurs before entry number {2} timestamp {3:G}..
         /// </summary>
         public static string AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing {
             get {
@@ -1055,7 +1088,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Pasted {0} small molecule transition.
+        ///   Looks up a localized string similar to Pasted {0} molecule transition.
         /// </summary>
         public static string pasted_single_small_molecule_transition {
             get {
@@ -1064,7 +1097,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Pasted {0} small molecule transitions.
+        ///   Looks up a localized string similar to Pasted {0} molecule transitions.
         /// </summary>
         public static string pasted_small_molecule_transition_list {
             get {

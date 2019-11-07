@@ -33,7 +33,10 @@ namespace pwiz.Common.DataBinding.Documentation
         {
             RootColumn = rootColumn;
             StyleSheetHtml = GetStyleSheetHtml();
+            IncludeHidden = true;
         }
+
+        public bool IncludeHidden { get; set; }
 
         public ColumnDescriptor RootColumn { get; private set; }
 
@@ -72,14 +75,30 @@ namespace pwiz.Common.DataBinding.Documentation
                 if (!IsNestedColumn(columnDescriptor))
                 {
                     processedTypes.Add(rowType);
-                    if (null == DataSchema.GetCollectionInfo(rowType) && !IsScalar(rowType))
+                    var collectionInfo = DataSchema.GetCollectionInfo(rowType);
+                    if (collectionInfo != null)
                     {
-                        stringWriter.WriteLine("<div class=\"RowType\" id=\"" + rowType.FullName + "\">" + HtmlEncode(rowType.Name) + "</div>");
+                        columnQueue.Enqueue(ColumnDescriptor.RootColumn(rootColumn.DataSchema, collectionInfo.ElementType, rootColumn.UiMode));
+                    }
+                    else if (!IsScalar(rowType))
+                    {
+                        stringWriter.WriteLine("<div id=\"" + HtmlEncode(rowType.FullName) + "\"><span class=\"RowType\">" +
+                                               HtmlEncode(GetTypeName(rowType)) + "</span>");
+                        string description = GetTypeDescription(rowType);
+                        if (!string.IsNullOrEmpty(description))
+                        {
+                            stringWriter.WriteLine("<span class=\"Description\">" + HtmlEncode(description) + "</span>");
+                        }
+                        stringWriter.WriteLine("</div>");
                         stringWriter.WriteLine(GetDocumentation(columnDescriptor));
                     }
                 }
                 foreach (var child in GetChildColumns(columnDescriptor))
                 {
+                    if (!IncludeHidden && DataSchema.IsHidden(child))
+                    {
+                        continue;
+                    }
                     columnQueue.Enqueue(child);
                 }
             }
@@ -92,8 +111,29 @@ namespace pwiz.Common.DataBinding.Documentation
             stringWriter.WriteLine("<table><tr><th>Name</th><th>Description</th><th>Type</th>");
             foreach (var child in GetChildColumns(columnDescriptor))
             {
+                List<string> captionClasses = new List<string> { @"ColumnCaption" };
+                if (DataSchema.IsHidden(child))
+                {
+                    if (!IncludeHidden)
+                    {
+                        continue;
+                    }
+
+                    if (DataSchema.IsObsolete(child))
+                    {
+                        captionClasses.Add(@"Obsolete");
+                    }
+                    else
+                    {
+                        captionClasses.Add(@"Hidden");
+                    }
+                }
+
+                string captionClass = string.Join(" ", captionClasses);
                 var columnCaption = DataSchema.GetColumnCaption(child);
-                stringWriter.Write("<tr><td class=\"ColumnCaption\">" + HtmlEncode(columnCaption.GetCaption(DataSchema.DataSchemaLocalizer)) + "</td>");
+
+                stringWriter.Write("<tr><td class=\"" + captionClass + "\">" +
+                                   HtmlEncode(columnCaption.GetCaption(DataSchema.DataSchemaLocalizer)) + "</td>");
                 stringWriter.Write("<td class=\"ColumnDescription\">");
                 String tooltip = DataSchema.GetColumnDescription(child);
                 stringWriter.Write(HtmlEncode(tooltip));
@@ -134,11 +174,11 @@ namespace pwiz.Common.DataBinding.Documentation
             string strElement;
             if (elementTypeIsScalar)
             {
-                strElement = HtmlEncode(elementType.Name);
+                strElement = HtmlEncode(GetTypeName(elementType));
             }
             else
             {
-                strElement = "<a href=\"#" + elementType.FullName + "\">" + HtmlEncode(elementType.Name) + "</a>";
+                strElement = "<a href=\"#" + elementType.FullName + "\">" + HtmlEncode(GetTypeName(elementType)) + "</a>";
             }
             if (null == collectionInfo)
             {
@@ -149,7 +189,8 @@ namespace pwiz.Common.DataBinding.Documentation
                 if (collectionInfo.ElementType.IsGenericType &&
                     collectionInfo.ElementType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
                 {
-                    return string.Format(Resources.DocumentationGenerator_GetHtmlForType_Map_of__0__to__1_, HtmlEncode(collectionInfo.ElementType.GetGenericArguments()[0].Name),
+                    return string.Format(Resources.DocumentationGenerator_GetHtmlForType_Map_of__0__to__1_, 
+                        HtmlEncode(GetTypeName(collectionInfo.ElementType.GetGenericArguments()[0])),
                         strElement);
                 }
                 return string.Format(Resources.DocumentationGenerator_GetHtmlForType_Map_of__0_, strElement);
@@ -158,6 +199,16 @@ namespace pwiz.Common.DataBinding.Documentation
             {
                 return string.Format(Resources.DocumentationGenerator_GetHtmlForType_List_of__0_, strElement);
             }
+        }
+
+        public string GetTypeName(Type type)
+        {
+            return DataSchema.GetInvariantDisplayName(RootColumn.UiMode, type).GetCaption(DataSchema.DataSchemaLocalizer);
+        }
+
+        public string GetTypeDescription(Type type)
+        {
+            return DataSchema.GetTypeDescription(RootColumn.UiMode, type);
         }
 
         private bool IsScalar(Type type)

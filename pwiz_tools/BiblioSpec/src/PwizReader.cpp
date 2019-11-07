@@ -25,8 +25,11 @@
  */
 
 #include "PwizReader.h"
+#include "pwiz/analysis/spectrum_processing/SpectrumListFactory.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_PeakPicker.hpp"
 
 using namespace pwiz::msdata;
+using namespace pwiz::analysis;
 using namespace boost;
 
 PwizReader::PwizReader() : curPositionInIndexMzPairs_(0)  {
@@ -57,6 +60,8 @@ void PwizReader::openFile(const char* filename, bool mzSort){
         delete fileReader_;
         #ifdef VENDOR_READERS
         fileReader_ = new MSDataFile(fileName_, &allReaders_);
+        if (SpectrumList_PeakPicker::supportsVendorPeakPicking(fileName_))
+            SpectrumListFactory::wrap(*fileReader_, "peakPicking true 1-");
         #else
         fileReader_ = new MSDataFile(fileName_);
         #endif
@@ -72,6 +77,9 @@ void PwizReader::openFile(const char* filename, bool mzSort){
         if (nativeIdFormat_ == MS_no_nativeID_format)   // This never works
             nativeIdFormat_ = MS_scan_number_only_nativeID_format;
         
+        const auto& nativeIdFormatInfo = cvTermInfo(nativeIdFormat_);
+        BiblioSpec::Verbosity::debug("PwizReader lookup method is %s, nativeIdFormat is %s", specIdTypeToString(idType_), nativeIdFormatInfo.shortName().c_str());
+
         // HACK!  Without this block, I get an index out of bounds
         // error in getSpectrum(1, data, INDEX_ID)
         // With this block, I get errors for getSpectrum(n,data,SCAN_NUM_ID)
@@ -136,10 +144,7 @@ bool PwizReader::getSpectrum(int identifier,
                              BiblioSpec::SPEC_ID_TYPE findBy,
                              bool getPeaks)
 {
-    BiblioSpec::Verbosity::comment(BiblioSpec::V_DETAIL, 
-                                   "PwizReader looking for %s %d.",
-                    (findBy == BiblioSpec::INDEX_ID ? "index" : "scan number" ),
-                                   identifier);
+    BiblioSpec::Verbosity::comment(BiblioSpec::V_DETAIL, "PwizReader looking for %s %d.", specIdTypeToString(findBy), identifier);
     
     size_t foundIndex = getSpecIndex(identifier, findBy);
     
@@ -153,7 +158,7 @@ bool PwizReader::getSpectrum(int identifier,
     if( foundSpec == NULL ){
         return false;
     }
-    auto_ptr<SpectrumInfo> specInfo(new SpectrumInfo());
+    unique_ptr<SpectrumInfo> specInfo(new SpectrumInfo());
     specInfo->SpectrumInfo::update(*foundSpec, getPeaks);
     
     // confirm that it's an ms/ms spectrum
@@ -181,10 +186,15 @@ int PwizReader::getSpecIndex(string identifier){
     while( timesLooked < 2 && foundIndex == -1 ){
         switch(lookUpByNative){
         case(1):
-            foundIndex = allSpectra_->find(identifier);
-            if( foundIndex == (int)allSpectra_->size() ){// not found
+            if (identifier.find('=') == string::npos){
                 foundIndex = -1;
                 lookUpByNative = !lookUpByNative; // try other method
+            } else {
+                foundIndex = allSpectra_->find(identifier);
+                if (foundIndex == (int)allSpectra_->size()) {// not found
+                    foundIndex = -1;
+                    lookUpByNative = !lookUpByNative; // try other method
+                }
             }
             timesLooked++;
             break;
@@ -217,6 +227,7 @@ bool PwizReader::getSpectrum(string identifier,
                              BiblioSpec::SpecData& returnData, 
                              bool getPeaks){
     int foundIndex = getSpecIndex(identifier);
+    BiblioSpec::Verbosity::comment(BiblioSpec::V_DETAIL, "PwizReader looking for id %s.", identifier.c_str());
     return getSpectrum(foundIndex, returnData, BiblioSpec::INDEX_ID, getPeaks);
 }
 
@@ -263,10 +274,7 @@ bool PwizReader::getSpectrum(int identifier,
                                      BiblioSpec::SPEC_ID_TYPE findBy,
                                      bool getPeaks)
 {
-    BiblioSpec::Verbosity::comment(BiblioSpec::V_DETAIL,
-                                   "PwizReader looking for %s %d.",
-                 (findBy == BiblioSpec::INDEX_ID ? "index" : "scan number" ),
-                                   identifier);
+    BiblioSpec::Verbosity::comment(BiblioSpec::V_DETAIL, "PwizReader looking for %s %d.", specIdTypeToString(findBy), identifier);
     
     size_t foundIndex = getSpecIndex(identifier, findBy);
     
@@ -280,7 +288,7 @@ bool PwizReader::getSpectrum(int identifier,
     if( foundSpec == NULL ){
         return false;
     }
-    auto_ptr<SpectrumInfo> specInfo(new SpectrumInfo());
+    unique_ptr<SpectrumInfo> specInfo(new SpectrumInfo());
     specInfo->SpectrumInfo::update(*foundSpec, getPeaks);
     
     // confirm that it's an ms/ms spectrum
@@ -401,7 +409,7 @@ void PwizReader::addCharges(BiblioSpec::Spectrum& returnSpectrum,
  * SpecData.
  */
 void PwizReader::transferSpec(BiblioSpec::SpecData& returnData, 
-                              auto_ptr<SpectrumInfo>& specInfo){
+                              unique_ptr<SpectrumInfo>& specInfo){
     
     returnData.id = specInfo->scanNumber;
     returnData.retentionTime = specInfo->retentionTime/60;  // seconds to minutes
@@ -426,7 +434,7 @@ void PwizReader::transferSpec(BiblioSpec::SpecData& returnData,
  * Copy the information from the Pwiz spectrum to the BiblioSpec spectrum.
  */
 void PwizReader::transferSpectrum(BiblioSpec::Spectrum& returnSpectrum, 
-                                  auto_ptr<SpectrumInfo>& specInfo, 
+                                  unique_ptr<SpectrumInfo>& specInfo, 
                                   SpectrumPtr foundSpec){
     
     returnSpectrum.setScanNumber(specInfo->scanNumber);

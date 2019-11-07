@@ -1,4 +1,6 @@
-﻿namespace pwiz.Skyline.SettingsUI
+﻿using pwiz.Skyline.Controls;
+
+namespace pwiz.Skyline.SettingsUI
 {
     partial class EditOptimizationLibraryDlg
     {
@@ -47,7 +49,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.gridViewLibrary = new pwiz.Skyline.Controls.DataGridViewEx();
-            this.columnSequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnSequence = new TargetColumn();
             this.columnProductIon = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.columnValue = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.columnOptType = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -291,7 +293,7 @@
         private System.Windows.Forms.ToolStripMenuItem addFromFileMenuItem;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.ComboBox comboType;
-        private System.Windows.Forms.DataGridViewTextBoxColumn columnSequence;
+        private TargetColumn columnSequence;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnProductIon;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnValue;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnOptType;

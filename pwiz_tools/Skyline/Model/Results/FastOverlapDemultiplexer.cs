@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
 
 namespace pwiz.Skyline.Model.Results
@@ -28,7 +29,7 @@ namespace pwiz.Skyline.Model.Results
     {
         MsDataFileImpl _dataFile;
         MassTolerance _fragmentTolerance;
-        private Dictionary<int, MsPrecursor[]> _precursorsByScanIndex = new Dictionary<int, MsPrecursor[]>();
+        private Dictionary<int, IList<MsPrecursor>> _precursorsByScanIndex = new Dictionary<int, IList<MsPrecursor>>();
 
         public FastOverlapDemultiplexer(MsDataFileImpl demuxProcessedFile)
         {
@@ -42,7 +43,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public MsDataSpectrum[] GetDeconvolvedSpectra(int index, MsDataSpectrum originalSpectrum)
         {
-            if (originalSpectrum.Precursors.Length != 1)
+            if (originalSpectrum.Precursors.Count != 1)
             {
                 return new[] {originalSpectrum};
             }
@@ -108,15 +109,9 @@ namespace pwiz.Skyline.Model.Results
             }
 
             MsDataSpectrum lowerSpectrum = MakeDeconvSpectrum(originalSpectrum, lowerPeaks);
-            lowerSpectrum.Precursors = new[]
-            {
-                MakeMsPrecursor(lowerMz, middlePrecursorMz.Value)
-            };
+            lowerSpectrum.Precursors = ImmutableList.Singleton(MakeMsPrecursor(lowerMz, middlePrecursorMz.Value));
             MsDataSpectrum upperSpectrum = MakeDeconvSpectrum(originalSpectrum, upperPeaks);
-            upperSpectrum.Precursors = new[]
-            {
-                MakeMsPrecursor(middlePrecursorMz.Value, upperMz)
-            };
+            upperSpectrum.Precursors = ImmutableList.Singleton(MakeMsPrecursor(middlePrecursorMz.Value, upperMz));
             return new[] {lowerSpectrum, upperSpectrum};
         }
 
@@ -190,7 +185,7 @@ namespace pwiz.Skyline.Model.Results
             foreach (var spectrumIndex in spectrumIndexes)
             {
                 var precursors = GetPrecursors(spectrumIndex);
-                if (precursors.Length != 1)
+                if (precursors.Count != 1)
                 {
                     continue;
                 }
@@ -206,12 +201,12 @@ namespace pwiz.Skyline.Model.Results
             return null;
         }
 
-        private MsPrecursor[] GetPrecursors(int scanIndex)
+        private IList<MsPrecursor> GetPrecursors(int scanIndex)
         {
-            MsPrecursor[] precursors;
+            IList<MsPrecursor> precursors;
             if (!_precursorsByScanIndex.TryGetValue(scanIndex, out precursors))
             {
-                precursors = _dataFile.GetPrecursors(scanIndex);
+                precursors = _dataFile.GetPrecursors(scanIndex, 1);
                 _precursorsByScanIndex[scanIndex] = precursors;
             }
             return precursors;

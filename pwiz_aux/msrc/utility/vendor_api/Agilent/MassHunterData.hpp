@@ -272,6 +272,9 @@ typedef boost::shared_ptr<Frame> FramePtr;
 
 class PWIZ_API_DECL MassHunterData
 {
+    protected:
+    std::string massHunterRootPath_; // path to a .d directory with AcqData in it
+
     public:
     typedef boost::shared_ptr<MassHunterData> Ptr;
     static Ptr create(const std::string& path);
@@ -280,6 +283,7 @@ class PWIZ_API_DECL MassHunterData
     virtual std::string getVersion() const = 0;
     virtual DeviceType getDeviceType() const = 0;
     virtual std::string getDeviceName(DeviceType deviceType) const = 0;
+    virtual std::string getDeviceSerialNumber(DeviceType deviceType) const;
     virtual boost::local_time::local_date_time getAcquisitionTime(bool adjustToHostTime) const = 0;
     virtual IonizationMode getIonModes() const = 0;
     virtual MSScanType getScanTypes() const = 0;

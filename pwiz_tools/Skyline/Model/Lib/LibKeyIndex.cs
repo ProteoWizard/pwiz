@@ -162,8 +162,10 @@ namespace pwiz.Skyline.Model.Lib
                 var thatPeptideKey = thatItem.LibraryKey as PeptideLibraryKey;
                 if (thatPeptideKey == null)
                 {
-                    result.Add(thatItem.LibraryKey);
-                    nonPeptideKeySet.Add(thatItem.LibraryKey);
+                    if (nonPeptideKeySet.Add(thatItem.LibraryKey))
+                    {
+                        result.Add(thatItem.LibraryKey); // First time we've seen it, add to list
+                    }
                     continue;
                 }
                 PeptideLibraryKey[] thisKeysWithUnmodSeq;
@@ -413,7 +415,7 @@ namespace pwiz.Skyline.Model.Lib
                 return entries.Select(entry=>entry.IndexItem);
             }
 
-            public class PeptideEntry
+            public struct PeptideEntry
             {
                 public PeptideEntry(IndexItem indexItem, IList<KeyValuePair<int, string>> modifications)
                 {

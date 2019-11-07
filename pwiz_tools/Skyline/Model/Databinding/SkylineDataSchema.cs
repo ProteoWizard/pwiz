@@ -48,6 +48,7 @@ namespace pwiz.Skyline.Model.Databinding
         private readonly CachedValue<ImmutableSortedList<ResultKey, Replicate>> _replicates;
         private readonly CachedValue<IDictionary<ResultFileKey, ResultFile>> _resultFiles;
         private readonly CachedValue<ElementRefs> _elementRefCache;
+        private readonly CachedValue<AnnotationCalculator> _annotationCalculator;
 
         private SrmDocument _batchChangesOriginalDocument;
         private List<EditDescription> _batchEditDescriptions;
@@ -62,6 +63,33 @@ namespace pwiz.Skyline.Model.Databinding
             _replicates = CachedValue.Create(this, CreateReplicateList);
             _resultFiles = CachedValue.Create(this, CreateResultFileList);
             _elementRefCache = CachedValue.Create(this, () => new ElementRefs(Document));
+            _annotationCalculator = CachedValue.Create(this, () => new AnnotationCalculator(this));
+        }
+
+        public override string DefaultUiMode
+        {
+            get
+            {
+                return UiModes.FromDocumentType(ModeUI);
+            }
+        }
+
+        public SrmDocument.DOCUMENT_TYPE ModeUI
+        {
+            get
+            {
+                if (SkylineWindow != null)
+                {
+                    return SkylineWindow.ModeUI;
+                }
+
+                if (_documentContainer.Document.DocumentType == Program.ModeUI)
+                {
+                    return _documentContainer.Document.DocumentType;
+                }
+
+                return SrmDocument.DOCUMENT_TYPE.mixed;
+            }
         }
 
         protected override bool IsScalar(Type type)
@@ -239,6 +267,11 @@ namespace pwiz.Skyline.Model.Databinding
         public ChromDataCache ChromDataCache { get; private set; }
         public ElementRefs ElementRefs { get { return _elementRefCache.Value; } }
 
+        public AnnotationCalculator AnnotationCalculator
+        {
+            get { return _annotationCalculator.Value; }
+        }
+
         public override PropertyDescriptor GetPropertyDescriptor(Type type, string name)
         {
             var propertyDescriptor = base.GetPropertyDescriptor(type, name);
@@ -278,6 +311,24 @@ namespace pwiz.Skyline.Model.Databinding
             }
             var columnCaption = GetColumnCaption(columnDescriptor);
             return ColumnToolTips.ResourceManager.GetString(columnCaption.GetCaption(DataSchemaLocalizer.INVARIANT));
+        }
+
+        public override IColumnCaption GetInvariantDisplayName(string uiMode, Type type)
+        {
+            if (typeof(ListItem).IsAssignableFrom(type))
+            {
+                return ColumnCaption.UnlocalizableCaption(ListItemTypes.INSTANCE.GetListName(type));
+            }
+            return base.GetInvariantDisplayName(uiMode, type);
+        }
+
+        public override string GetTypeDescription(string uiMode, Type type)
+        {
+            if (typeof(ListItem).IsAssignableFrom(type))
+            {
+                return string.Format(Resources.SkylineDataSchema_GetTypeDescription_Item_in_list___0__, ListItemTypes.INSTANCE.GetListName(type));
+            }
+            return base.GetTypeDescription(uiMode, type);
         }
 
         public ImmutableSortedList<ResultKey, Replicate> ReplicateList { get { return _replicates.Value; } }
@@ -385,14 +436,14 @@ namespace pwiz.Skyline.Model.Databinding
                         return null;
                 }
 
-                var entry = AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, singular, plural,
+                var entry = AuditLogEntry.CreateCountChangeEntry(singular, plural, docPair.NewDocumentType,
                     _batchEditDescriptions,
                     descr => MessageArgs.Create(descr.ColumnCaption.GetCaption(DataSchemaLocalizer)),
                     null).ChangeExtraInfo(batchModifyInfo.ExtraInfo + Environment.NewLine);
 
                 entry = entry.Merge(batchModifyInfo.EntryCreator.Create(docPair));
 
-                return entry.AppendAllInfo(_batchEditDescriptions.Select(descr => new MessageInfo(detailType,
+                return entry.AppendAllInfo(_batchEditDescriptions.Select(descr => new MessageInfo(detailType, docPair.NewDocumentType,
                     getArgsFunc(descr))).ToList());
             };
         }
@@ -409,9 +460,9 @@ namespace pwiz.Skyline.Model.Databinding
             if (value == null)
                 return string.Empty;
 
-            // TODO: only allow reflection for all info?
+            // TODO: only allow reflection for all info? Okay to use null for decimal places?
             bool unused;
-            return DiffNode.ObjectToString(true, value, out unused);
+            return DiffNode.ObjectToString(true, value, null, out unused);
         }
 
         public void ModifyDocument(EditDescription editDescription, Func<SrmDocument, SrmDocument> action, Func<SrmDocumentPair, AuditLogEntry> logFunc = null)
@@ -420,9 +471,9 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 if (SkylineWindow != null)
                 {
-					SkylineWindow.ModifyDocument(editDescription.GetUndoText(DataSchemaLocalizer), action,
-						logFunc ?? (docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.set_to_in_document_grid,
-							editDescription.AuditLogParseString, editDescription.ElementRefName, CellValueToString(editDescription.Value))));
+                    SkylineWindow.ModifyDocument(editDescription.GetUndoText(DataSchemaLocalizer), action,
+                        logFunc ?? (docPair => AuditLogEntry.CreateSimpleEntry(MessageType.set_to_in_document_grid, docPair.NewDocumentType,
+                            editDescription.AuditLogParseString, editDescription.ElementRefName, CellValueToString(editDescription.Value))));
                 }
                 else
                 {
@@ -487,13 +538,23 @@ namespace pwiz.Skyline.Model.Databinding
                 return innerPropertyDescriptor;
             }
             return listLookupPropertyDescriptor;
-		}
-		
+        }
+
         public static SkylineDataSchema MemoryDataSchema(SrmDocument document, DataSchemaLocalizer localizer)
         {
             var documentContainer = new MemoryDocumentContainer();
             documentContainer.SetDocument(document, documentContainer.Document);
             return new SkylineDataSchema(documentContainer, localizer);
+        }
+
+        public override string NormalizeUiMode(string uiMode)
+        {
+            if (string.IsNullOrEmpty(uiMode))
+            {
+                return UiModes.PROTEOMIC;
+            }
+
+            return uiMode;
         }
     }
 }

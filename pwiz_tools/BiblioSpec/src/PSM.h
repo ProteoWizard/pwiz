@@ -79,6 +79,7 @@ struct PSM{
   double score;    ///< score associated with this paring of spec and seq
   double ionMobility; ///< e.g. drift time, inverse reduced ion mobility, or compensation voltage
   BiblioSpec::IONMOBILITY_TYPE ionMobilityType;
+  double ccs; // collisional cross section (ion mobility information)
   std::string specName; ///< the parentFileName attribute from the scanOrigin element
   std::set<const Protein*> proteins;
 
@@ -86,7 +87,7 @@ struct PSM{
   SmallMolMetadata smallMolMetadata;
 
   PSM()
-  : charge(0), specKey(-1), specIndex(-1), score(0), ionMobility(0), ionMobilityType(BiblioSpec::IONMOBILITY_NONE) {};
+  : charge(0), specKey(-1), specIndex(-1), score(0), ionMobility(0), ionMobilityType(BiblioSpec::IONMOBILITY_NONE), ccs(0) {};
   
   virtual ~PSM(){ };
 
@@ -100,6 +101,7 @@ struct PSM{
     score = 0;
     ionMobility = 0;
     ionMobilityType = BiblioSpec::IONMOBILITY_NONE;
+    ccs = 0;
     specName.clear();
     smallMolMetadata.clear();
     proteins.clear();

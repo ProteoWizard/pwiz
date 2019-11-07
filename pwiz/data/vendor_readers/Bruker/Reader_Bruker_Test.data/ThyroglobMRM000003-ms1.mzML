@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd" id="ThyroglobMRM000003" version="1.1.0">
+  <cvList count="2">
+    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.30" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
+    <cv id="UO" fullName="Unit Ontology" version="09:04:2014" URI="https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/unit.obo"/>
+  </cvList>
+  <fileDescription>
+    <fileContent>
+    </fileContent>
+    <sourceFileList count="2">
+      <sourceFile id="ThyroglobMRM000003.d_x005c_Analysis.tdf" name="Analysis.tdf" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data\ThyroglobMRM000003.d">
+        <cvParam cvRef="MS" accession="MS:1002818" name="Bruker TDF nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1002817" name="Bruker TDF format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="9b34ec0a0cd9c76b67b2d8dffe6da677a2aa2b5d"/>
+      </sourceFile>
+      <sourceFile id="ThyroglobMRM000003.d_x005c_Analysis.tdf_bin" name="Analysis.tdf_bin" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data\ThyroglobMRM000003.d">
+        <cvParam cvRef="MS" accession="MS:1002818" name="Bruker TDF nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1002817" name="Bruker TDF format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="a8d2e3ca9139ccd0b1fcdd34f10a575206b5c4fb"/>
+      </sourceFile>
+    </sourceFileList>
+  </fileDescription>
+  <referenceableParamGroupList count="1">
+    <referenceableParamGroup id="CommonInstrumentParams">
+      <cvParam cvRef="MS" accession="MS:1000122" name="Bruker Daltonics instrument model" value=""/>
+    </referenceableParamGroup>
+  </referenceableParamGroupList>
+  <softwareList count="3">
+    <software id="TIMS_SDK" version="2.3.101.131-791">
+      <cvParam cvRef="MS" accession="MS:1000692" name="Bruker software" value=""/>
+      <userParam name="software name" value="TIMS SDK"/>
+    </software>
+    <software id="micrOTOFcontrol" version="5.0.71.422-9346-vc110">
+      <cvParam cvRef="MS" accession="MS:1000726" name="micrOTOFcontrol" value=""/>
+    </software>
+    <software id="pwiz_Reader_Bruker" version="3.0.19304">
+      <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
+    </software>
+  </softwareList>
+  <instrumentConfigurationList count="1">
+    <instrumentConfiguration id="IC1">
+      <referenceableParamGroupRef ref="CommonInstrumentParams"/>
+      <cvParam cvRef="MS" accession="MS:1000529" name="instrument serial number" value="1838271.23"/>
+      <componentList count="5">
+        <source order="1">
+          <cvParam cvRef="MS" accession="MS:1000073" name="electrospray ionization" value=""/>
+          <cvParam cvRef="MS" accession="MS:1000057" name="electrospray inlet" value=""/>
+        </source>
+        <analyzer order="2">
+          <cvParam cvRef="MS" accession="MS:1000081" name="quadrupole" value=""/>
+        </analyzer>
+        <analyzer order="3">
+          <cvParam cvRef="MS" accession="MS:1000084" name="time-of-flight" value=""/>
+        </analyzer>
+        <detector order="4">
+          <cvParam cvRef="MS" accession="MS:1000114" name="microchannel plate detector" value=""/>
+        </detector>
+        <detector order="5">
+          <cvParam cvRef="MS" accession="MS:1000116" name="photomultiplier" value=""/>
+        </detector>
+      </componentList>
+      <softwareRef ref="micrOTOFcontrol"/>
+    </instrumentConfiguration>
+  </instrumentConfigurationList>
+  <dataProcessingList count="1">
+    <dataProcessing id="pwiz_Reader_Bruker_conversion">
+      <processingMethod order="0" softwareRef="pwiz_Reader_Bruker">
+        <cvParam cvRef="MS" accession="MS:1000544" name="Conversion to mzML" value=""/>
+      </processingMethod>
+    </dataProcessing>
+  </dataProcessingList>
+  <run id="ThyroglobMRM000003" defaultInstrumentConfigurationRef="IC1" startTimeStamp="2017-06-23T18:24:10Z" defaultSourceFileRef="ThyroglobMRM000003.d_x005c_Analysis.tdf">
+    <chromatogramList count="2" defaultDataProcessingRef="pwiz_Reader_Bruker_conversion">
+      <chromatogram index="0" id="TIC" defaultArrayLength="0">
+        <cvParam cvRef="MS" accession="MS:1000235" name="total ion current chromatogram" value=""/>
+        <binaryDataArrayList count="2">
+          <binaryDataArray encodedLength="0">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000595" name="time array" value="" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
+            <binary></binary>
+          </binaryDataArray>
+          <binaryDataArray encodedLength="0">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+            <binary></binary>
+          </binaryDataArray>
+        </binaryDataArrayList>
+      </chromatogram>
+      <chromatogram index="1" id="BPC" defaultArrayLength="0">
+        <cvParam cvRef="MS" accession="MS:1000628" name="basepeak chromatogram" value=""/>
+        <binaryDataArrayList count="2">
+          <binaryDataArray encodedLength="0">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000595" name="time array" value="" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
+            <binary></binary>
+          </binaryDataArray>
+          <binaryDataArray encodedLength="0">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+            <binary></binary>
+          </binaryDataArray>
+        </binaryDataArrayList>
+      </chromatogram>
+    </chromatogramList>
+  </run>
+</mzML>

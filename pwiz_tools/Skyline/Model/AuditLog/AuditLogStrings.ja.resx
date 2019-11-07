@@ -378,13 +378,13 @@
     <value>空</value>
   </data>
   <data name="added_small_molecule_precursor" xml:space="preserve">
-    <value>低分子プリカーサー{0}が追加されました</value>
+    <value>分子プリカーサー{0}が追加されました</value>
   </data>
   <data name="added_small_molecule" xml:space="preserve">
-    <value>低分子{0}が追加されました</value>
+    <value>分子{0}が追加されました</value>
   </data>
   <data name="added_small_molecule_transition" xml:space="preserve">
-    <value>低分子トランジション{0}が追加されました</value>
+    <value>分子トランジション{0}が追加されました</value>
   </data>
   <data name="added_irt_standard_peptides" xml:space="preserve">
     <value>iRT標準ペプチドが追加されました</value>
@@ -405,7 +405,7 @@
     <value>{0}個のノードが{1}にドラッグアンドドロップされました</value>
   </data>
   <data name="pasted_small_molecule_transition_list" xml:space="preserve">
-    <value>{0}個の低分子トランジションが貼り付けられました</value>
+    <value>{0}個の分子トランジションが貼り付けられました</value>
   </data>
   <data name="applied_peak_all" xml:space="preserve">
     <value>ピーク{0}がすべてに適用されました</value>
@@ -415,6 +415,9 @@
   </data>
   <data name="removed_peak_from" xml:space="preserve">
     <value>繰り返し測定「{1}」にある{0}からピークが削除されました</value>
+  </data>
+  <data name="removed_peaks" xml:space="preserve">
+    <value>{1}個のノードから{0}個のピークが削除されました。</value>
   </data>
   <data name="removed_all_peaks_from" xml:space="preserve">
     <value>繰り返し測定「{1}」にある{0}からすべてのピークが削除されました</value>
@@ -588,7 +591,7 @@
     <value>クリップボードからFASTAがインポートされました</value>
   </data>
   <data name="pasted_single_small_molecule_transition" xml:space="preserve">
-    <value>{0}個の低分子トランジションが貼り付けられました</value>
+    <value>{0}個の分子トランジションが貼り付けられました</value>
   </data>
   <data name="removed_empty_peptide" xml:space="preserve">
     <value>{0}個の空欄のペプチドが削除されました</value>
@@ -630,9 +633,6 @@
     <value>ドキュメントがSkyline外で変更されました
 ：{0}</value>
   </data>
-  <data name="AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing" xml:space="preserve">
-    <value>監査ログが壊れています。監査ログエントリのタイムスタンプとインデックスの値が小さくなるはずです。</value>
-  </data>
   <data name="test_only" xml:space="preserve">
     <value>{0}</value>
   </data>
@@ -641,5 +641,17 @@
   </data>
   <data name="start_log_existing_doc" xml:space="preserve">
     <value>既存ドキュメントの監査ログの開始</value>
+  </data>
+  <data name="AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified" xml:space="preserve">
+    <value>次の監査ログエントリが変更されています：
+
+</value>
+  </data>
+  <data name="AuditLogList_ReadFromFile_An_exception_occured_while_reading_the_audit_log" xml:space="preserve">
+    <value>監査ログを読み取り中に例外が発生しました。
+
+監査ログファイルを削除、名前の変更したり移動することによってこのエラーが発生しなくなります。またはSkylineチームに監査ログを送信することも可能で、チームはファイルの手動修正を試みます。
+
+ご参考までに、監査ログの場所はここです：「{0}」</value>
   </data>
 </root>

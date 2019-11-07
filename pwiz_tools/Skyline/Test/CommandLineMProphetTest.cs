@@ -17,10 +17,8 @@
  * limitations under the License.
  */
 
-using System.IO;
-using System.Text;
+using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
@@ -28,7 +26,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTest
 {
     [TestClass]
-    public class CommandLineMProphetTest : AbstractUnitTest
+    public class CommandLineMProphetTest : AbstractUnitTestEx
     {
         private const string ZIP_FILE = @"Test\CommandLineMProphetTest.zip";
 
@@ -40,14 +38,24 @@ namespace pwiz.SkylineTest
             var docPath = testFilesDir.GetTestPath(docName);
             const string modelName = "testModel";
 
-            // with mods and invalid cutoff score
-            var output = RunCommand("--in=" + docPath,
-                "--reintegrate-model-name=" + modelName,
+            var args = new List<string>
+            {
+                "--in=" + docPath,
                 "--reintegrate-create-model",
                 "--reintegrate-overwrite-peaks",
-                "--save"
-            );
+            };
 
+            var output = RunCommand(args.ToArray());
+
+            // Extra warning about spectral library
+            Assert.AreEqual(3, CountInstances(Resources.CommandLineTest_ConsoleAddFastaTest_Warning, output));
+
+            args.Add("--reintegrate-model-name=" + modelName);
+            args.Add("--save");
+
+            output = RunCommand(args.ToArray());
+
+            Assert.AreEqual(1, CountInstances(Resources.CommandLineTest_ConsoleAddFastaTest_Warning, output));
             AssertEx.Contains(output, string.Format(Resources.CommandLine_CreateScoringModel_Creating_scoring_model__0_, modelName));
             var doc = ResultsUtil.DeserializeDocument(docPath);
             foreach (var peakFeatureCalculator in MProphetPeakScoringModel.GetDefaultCalculators(doc))
@@ -64,14 +72,6 @@ namespace pwiz.SkylineTest
                 AssertEx.Contains(output, peakFeatureCalculator.Name);
             }
             AssertEx.Contains(output, string.Format(Resources.CommandLine_SaveFile_File__0__saved_, docName));
-        }
-
-        private static string RunCommand(params string[] inputArgs)
-        {
-            var consoleBuffer = new StringBuilder();
-            var consoleOutput = new CommandStatusWriter(new StringWriter(consoleBuffer));
-            CommandLineRunner.RunCommand(inputArgs, consoleOutput);
-            return consoleBuffer.ToString();
         }
     }
 }

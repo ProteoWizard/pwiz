@@ -100,8 +100,7 @@ namespace pwiz.SkylineTestFunctional
             CheckPreview(viewEditor, (preview, document) =>
             {
                 int expectedRows = document.PeptideTransitionGroupCount*
-                                   document.Settings.MeasuredResults.Chromatograms.Count +
-                                   (TestSmallMolecules ? 1 : 0);
+                                   document.Settings.MeasuredResults.Chromatograms.Count;
                 Assert.AreEqual(expectedRows, preview.RowCount);
                 CollectionAssert.AreEqual(viewEditor.ChooseColumnsTab.ColumnNames, preview.ColumnHeaderNames);
             });
@@ -150,7 +149,7 @@ namespace pwiz.SkylineTestFunctional
                 CheckPreview(viewEditor, (preview, document) =>
                 {
                     int replicateCount = document.Settings.MeasuredResults.Chromatograms.Count;
-                    Assert.AreEqual(document.PeptideTransitionCount*replicateCount + (TestSmallMolecules ? 2 : 0),
+                    Assert.AreEqual(document.PeptideTransitionCount*replicateCount,
                         preview.RowCount);
 
                     CollectionAssert.AreEqual(viewEditor.ChooseColumnsTab.ColumnNames, preview.ColumnHeaderNames);
@@ -208,7 +207,7 @@ namespace pwiz.SkylineTestFunctional
             string transitionReport = TestFilesDir.GetTestPath("TransitionRTAreaSummary.csv");
             OkDialog(exportLiveReportDlg, () => exportLiveReportDlg.OkDialog(transitionReport, ','));
             VerifyReportFile(transitionReport,
-                docFinal.PeptideTransitionCount * docFinal.Settings.MeasuredResults.Chromatograms.Count + (TestSmallMolecules ? 2 : 0),
+                docFinal.PeptideTransitionCount * docFinal.Settings.MeasuredResults.Chromatograms.Count,
                 transitionColumnNames, true);
         }
 
@@ -229,19 +228,18 @@ namespace pwiz.SkylineTestFunctional
                     string value = values[j];
 
                     if (columnName.Equals("PeptideSequence"))
-                        Assert.IsTrue(FastaSequence.IsExSequence(value) || (TestSmallMolecules && value.StartsWith("zzz")));
+                        Assert.IsTrue(FastaSequence.IsExSequence(value));
                     else if (columnName.StartsWith("Cv"))
                     {
-                        Assert.IsTrue(TestSmallMolecules || invariantFormat || value.EndsWith("%"));
-                        Assert.IsTrue(TestSmallMolecules || double.Parse(value.Substring(0, value.Length - 1), NumberStyles.Float, formatProvider) > 0);
+                        Assert.IsTrue(invariantFormat || value.EndsWith("%"));
+                        Assert.IsTrue(double.Parse(value.Substring(0, value.Length - 1), NumberStyles.Float, formatProvider) > 0);
                     }
                     else if (!columnName.Equals("ProteinName"))
                     {
                         double valueParsed;
                         if (!double.TryParse(value, NumberStyles.Float, formatProvider, out valueParsed))
                         {
-                            if (!(TestSmallMolecules && value==TextUtil.EXCEL_NA))
-                                Assert.Fail("Failed parsing {0} as a double", value);
+                             Assert.Fail("Failed parsing {0} as a double", value);
                         }
                         else
                         {

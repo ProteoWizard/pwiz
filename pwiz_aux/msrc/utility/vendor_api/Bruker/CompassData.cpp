@@ -542,11 +542,12 @@ struct CompassDataImpl : public CompassData
         if ((MS_Analysis^) msAnalysis_ != nullptr) delete msAnalysis_;
         if ((LC_Analysis^) lcAnalysis_ != nullptr) lcAnalysis_->Close();
 
+        /* HACK: allow CompassXtract to keep this file locked because it doesn't seem to interfere with opening the file again
         if (format_ == Reader_Bruker_Format_YEP)
             if (bal::iends_with(rawpath_, "analysis.yep"))
                 force_close_handles_to_filepath(rawpath_);
             else
-                force_close_handles_to_filepath((bfs::path(rawpath_) / "analysis.yep").string());
+                force_close_handles_to_filepath((bfs::path(rawpath_) / "analysis.yep").string());*/
     }
 
     virtual bool hasMSData() const {return hasMSData_;}
@@ -602,6 +603,16 @@ struct CompassDataImpl : public CompassData
             return LCSpectrumPtr(new LCSpectrumImpl(sc->default[scan]));
         }
         CATCH_AND_FORWARD
+    }
+
+    virtual ChromatogramPtr getTIC() const
+    {
+        return ChromatogramPtr();
+    }
+
+    virtual ChromatogramPtr getBPC() const
+    {
+        return ChromatogramPtr();
     }
 
     virtual std::string getOperatorName() const
@@ -661,6 +672,8 @@ struct CompassDataImpl : public CompassData
         try {return ToStdString(msAnalysis_->InstrumentDescription);} CATCH_AND_FORWARD
     }
 
+    virtual std::string getInstrumentSerialNumber() const { return ""; }
+
     virtual InstrumentSource getInstrumentSource() const { return InstrumentSource_Unknown; }
     virtual std::string getAcquisitionSoftware() const { return ""; }
     virtual std::string getAcquisitionSoftwareVersion() const { return "unknown"; }
@@ -683,12 +696,13 @@ struct CompassDataImpl : public CompassData
 PWIZ_API_DECL CompassDataPtr CompassData::create(const string& rawpath, bool combineIonMobilitySpectra,
                                                  Reader_Bruker_Format format,
                                                  int preferOnlyMsLevel, // when nonzero, caller only wants spectra at this ms level
-                                                 bool allowMsMsWithoutPrecursor) // when false, PASEF MS2 specta without precursor info will be excluded
+                                                 bool allowMsMsWithoutPrecursor, // when false, PASEF MS2 specta without precursor info will be excluded
+                                                 const vector<chemistry::MzMobilityWindow>& isolationMzFilter) // when non-empty, only scans from precursors matching one of the included m/zs (i.e. within a precursor isolation window) will be enumerated
 {
     if (format == Reader_Bruker_Format_BAF || format == Reader_Bruker_Format_BAF_and_U2)
         return CompassDataPtr(new Baf2SqlImpl(rawpath));
     else if (format == Reader_Bruker_Format_TDF)
-        return CompassDataPtr(new TimsDataImpl(rawpath, combineIonMobilitySpectra, preferOnlyMsLevel, allowMsMsWithoutPrecursor));
+        return CompassDataPtr(new TimsDataImpl(rawpath, combineIonMobilitySpectra, preferOnlyMsLevel, allowMsMsWithoutPrecursor, isolationMzFilter));
 
     try {return CompassDataPtr(new CompassDataImpl(rawpath, format));} CATCH_AND_FORWARD
 }
@@ -756,12 +770,13 @@ PWIZ_API_DECL const MSSpectrumParameter& MSSpectrumParameterIterator::dereferenc
 PWIZ_API_DECL CompassDataPtr CompassData::create(const string& rawpath, bool combineIonMobilitySpectra,
                                                  Reader_Bruker_Format format,
                                                  int preferOnlyMsLevel, // when nonzero, caller only wants spectra at this ms level
-                                                 bool allowMsMsWithoutPrecursor) // when false, PASEF MS2 specta without precursor info will be excluded
+                                                 bool allowMsMsWithoutPrecursor, // when false, PASEF MS2 specta without precursor info will be excluded
+                                                 const vector<chemistry::MzMobilityWindow>& isolationMzFilter) // when non-empty, only scans from precursors matching one of the included m/zs (i.e. within a precursor isolation window) will be enumerated
 {
     if (format == Reader_Bruker_Format_BAF || format == Reader_Bruker_Format_BAF_and_U2)
         return CompassDataPtr(new Baf2SqlImpl(rawpath));
     else if (format == Reader_Bruker_Format_TDF)
-        return CompassDataPtr(new TimsDataImpl(rawpath, combineIonMobilitySpectra, preferOnlyMsLevel, allowMsMsWithoutPrecursor));
+        return CompassDataPtr(new TimsDataImpl(rawpath, combineIonMobilitySpectra, preferOnlyMsLevel, allowMsMsWithoutPrecursor, isolationMzFilter));
     else
         throw runtime_error("[CompassData::create] Bruker API was built with only BAF and TDF support; YEP and FID files not supported in this build");
 }
@@ -770,7 +785,7 @@ PWIZ_API_DECL CompassDataPtr CompassData::create(const string& rawpath, bool com
 #endif // PWIZ_READER_BRUKER_WITH_COMPASSXTRACT
 
 
-PWIZ_API_DECL pair<size_t, size_t> CompassData::getFrameScanPair(int scanIndex) const
+PWIZ_API_DECL FrameScanRange CompassData::getFrameScanPair(int scanIndex) const
 {
     throw runtime_error("[getFrameScanPair()] only supported for TDF data");
 }

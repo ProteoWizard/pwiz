@@ -224,6 +224,9 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                 });
                 PauseForScreenShot("Edit predictor form", 18);
 
+                // Check that a new value was calculated for all precursors
+                RunUI(() => Assert.AreEqual(SkylineWindow.Document.MoleculeTransitionGroupCount, driftPredictor.Predictor.IonMobilityRows.Count));
+
                 OkDialog(driftPredictor, () => driftPredictor.OkDialog());
 
                 PauseForScreenShot("Peptide Settings - Prediction", 19);

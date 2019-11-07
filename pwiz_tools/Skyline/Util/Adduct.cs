@@ -25,6 +25,7 @@ using System.Text.RegularExpressions;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
@@ -128,7 +129,7 @@ namespace pwiz.Skyline.Util
                 // Check for implied positive ion mode - we see "MH", "MH+", "MNH4+" etc in the wild
                 // Also watch for for label-only like  "[M2Cl37]"
                 var posNext = input.IndexOf('M') + 1;
-                if (posNext > 0)
+                if (posNext > 0 && posNext < input.Length)
                 {
                     if (input[posNext] != '+' && input[posNext] != '-') 
                     {
@@ -181,6 +182,10 @@ namespace pwiz.Skyline.Util
                 {
                     // No leading + or - : is it because description starts with a label, or because + mode is implied?
                     var limit = input.IndexOfAny(new[] { '+', '-', ']' });
+                    if (limit < 0)
+                    {
+                        return null;
+                    }
                     double test;
                     if (double.TryParse(input.Substring(posNext, limit - posNext),
                         NumberStyles.Float | NumberStyles.AllowThousands, NumberFormatInfo.InvariantInfo, out test))
@@ -213,7 +218,7 @@ namespace pwiz.Skyline.Util
             new Regex(
                 @"\[?(?<multM>\d*)M(?<label>(\(.*\)|[^\+\-]*))?(?<adduct>[\+\-][^\]]*)(\](?<declaredChargeCount>\d*)(?<declaredChargeSign>[+-]*)?)?$",
                 RegexOptions.ExplicitCapture | RegexOptions.Singleline | RegexOptions.CultureInvariant);
-        private static readonly Regex ADDUCT_INNER_REGEX = new Regex(@"(?<oper>\+|\-)(?<multM>\d+)?(?<ion>[^-+]*)",
+        private static readonly Regex ADDUCT_INNER_REGEX = new Regex(@"(?<oper>\+|\-)(?<multM>\d+)?\(?(?<ion>[^-+\)]*)\)?",
             RegexOptions.ExplicitCapture | RegexOptions.Singleline | RegexOptions.CultureInvariant);
         private static readonly Regex ADDUCT_ION_REGEX = new Regex(@"(?<multM>\d+)?(?<ion>[A-Z][a-z]?['\""]?)",
             RegexOptions.ExplicitCapture | RegexOptions.Singleline | RegexOptions.CultureInvariant);
@@ -1689,6 +1694,17 @@ namespace pwiz.Skyline.Util
         public bool IsName
         {
             get { return true; }
+        }
+
+        public bool IsValidProductAdduct(Adduct precursorAdduct, TransitionLosses losses)
+        {
+            int precursorCharge = precursorAdduct.AdductCharge;
+            if (losses != null)
+            {
+                precursorCharge -= losses.TotalCharge;
+            }
+
+            return Math.Abs(AdductCharge) <= Math.Abs(precursorCharge);
         }
     }
 }

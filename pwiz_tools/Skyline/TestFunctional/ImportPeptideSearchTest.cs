@@ -378,7 +378,7 @@ namespace pwiz.SkylineTestFunctional
                 
                 // Exclude spectrum source files is unchecked, so the control should match
                 // the two spectrum source files that match exactly: modless.mzXML and mods.mzXML
-                List<ImportPeptideSearch.FoundResultsFile> foundResults = importResultsControl.FoundResultsFiles;
+                var foundResults = importResultsControl.FoundResultsFiles;
                 string[] missingResults = importResultsControl.MissingResultsFiles.ToArray();
                 Assert.AreEqual(2, foundResults.Count);
                 Assert.AreEqual("modless", foundResults[0].Name);
@@ -598,6 +598,39 @@ namespace pwiz.SkylineTestFunctional
                         Assert.IsTrue(nodeTranGroup.TransitionCount >= minIonCount);
                     }
                 }
+            }
+
+            // Check scores
+            var precursorScores = new Dictionary<string, List<Tuple<double, double>>>
+            {
+                {"LAEQAER", new List<Tuple<double, double>> {new Tuple<double, double>(408.7141, 0.999999)}},
+                {"YDEMVESMK", new List<Tuple<double, double>> {new Tuple<double, double>(566.2385, 0.999998)}},
+                {"VAGMDVELTVEER", new List<Tuple<double, double>> {new Tuple<double, double>(724.3585, 0.999998)}},
+                {"NLLSVAYK", new List<Tuple<double, double>> {new Tuple<double, double>(454.2660, 0.999999)}},
+                {"IISSIEQK", new List<Tuple<double, double>> {new Tuple<double, double>(459.2687, 0.997624)}},
+                {"QMVETELK", new List<Tuple<double, double>> {new Tuple<double, double>(489.2522, 0.999995)}},
+                {"HLIPAANTGESK", new List<Tuple<double, double>> {new Tuple<double, double>(413.2227, 0.999994)}},
+                {"YLAEFATGNDR", new List<Tuple<double, double>> {new Tuple<double, double>(628.7989, 0.999999)}},
+                {"EAAENSLVAYK", new List<Tuple<double, double>> {new Tuple<double, double>(597.8037, 0.999999)}},
+                {"AASDIAMTELPPTHPIR", new List<Tuple<double, double>> {new Tuple<double, double>(607.3172, 0.999999)}},
+                {"AAFDDAIAELDTLSEESYK", new List<Tuple<double, double>> {new Tuple<double, double>(696.6600, 0.999313)}},
+                {"DSTLIMQLLR", new List<Tuple<double, double>> {new Tuple<double, double>(595.3341, 0.999999)}},
+            };
+            foreach (var nodeTranGroup in doc.MoleculeTransitionGroups)
+            {
+                Assert.IsTrue(nodeTranGroup.HasLibInfo);
+                var bibliospecInfo = nodeTranGroup.LibInfo as BiblioSpecSpectrumHeaderInfo;
+                Assert.IsNotNull(bibliospecInfo);
+                if (!precursorScores.TryGetValue(nodeTranGroup.Peptide.Sequence, out var precursorList))
+                {
+                    Assert.Fail("peptide {0} not in score dictionary", nodeTranGroup.Peptide.Sequence);
+                }
+                var knownPrecursor = precursorList.FirstOrDefault(tuple => Math.Abs(tuple.Item1 - nodeTranGroup.PrecursorMz.Value) < 0.001);
+                if (knownPrecursor == null)
+                {
+                    Assert.Fail("precursor {0} not in score dictionary", nodeTranGroup.PrecursorMz);
+                }
+                Assert.AreEqual(knownPrecursor.Item2, bibliospecInfo.Score.GetValueOrDefault(), 0.000001);
             }
 
             RunUI(() => SkylineWindow.SaveDocument());

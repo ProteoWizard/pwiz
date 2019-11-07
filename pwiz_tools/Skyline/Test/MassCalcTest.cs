@@ -126,7 +126,62 @@ namespace pwiz.SkylineTest
             {
                 Assert.AreEqual(expected[i].Key, actual[i].Key, .0001);
                 Assert.AreEqual(expected[i].Value, actual[i].Value, .0001);
-            } 
+            }
+
+            // Now try it with dimer 
+            actual = calc.GetMzDistribution(sequence, Adduct.FromStringAssumeProtonated("[2M+H]"), IsotopeAbundances.Default).MassesSortedByAbundance();
+            expected = new List<KeyValuePair<double, double>>
+            {
+                new KeyValuePair<double, double>(1463.74754654509, 0.446952046999841),
+                new KeyValuePair<double, double>(1464.75091373569, 0.308094366214783),
+                new KeyValuePair<double, double>(1465.75428096509, 0.104502495092047),
+                new KeyValuePair<double, double>(1465.75177853495, 0.0241787720728353),
+                new KeyValuePair<double, double>(1466.75765484084, 0.0235859617485415),
+                new KeyValuePair<double, double>(1464.74458144349, 0.0229861821768609),
+                new KeyValuePair<double, double>(1466.75514391842, 0.0166321763672613),
+                new KeyValuePair<double, double>(1465.74794863409, 0.0158449061303438),
+                new KeyValuePair<double, double>(1464.75382328909, 0.00693546665186705),
+                new KeyValuePair<double, double>(1467.75850938071, 0.00562963106050384),
+                new KeyValuePair<double, double>(1466.75131586349, 0.00537443201400792),
+                new KeyValuePair<double, double>(1465.75719047969, 0.00478077730453152),
+                new KeyValuePair<double, double>(1467.76104095438, 0.00404384128691872),
+                new KeyValuePair<double, double>(1466.7605577091, 0.00162159134209772),
+                new KeyValuePair<double, double>(1468.76187811107, 0.00125712562385447),
+                new KeyValuePair<double, double>(1466.74882721349, 0.0012251401424684),
+                new KeyValuePair<double, double>(1467.75468976295, 0.00121294105003981),
+                new KeyValuePair<double, double>(1467.75219259911, 0.000842727179304581),
+                new KeyValuePair<double, double>(1467.75603830967, 0.000586408980257825),
+                new KeyValuePair<double, double>(1468.76444202787, 0.000567782385153248),
+                new KeyValuePair<double, double>(1465.74161634189, 0.000548855573943895),
+                new KeyValuePair<double, double>(1468.75939300441, 0.000398455807475131),
+                new KeyValuePair<double, double>(1466.74498353249, 0.000378338820311423),
+                new KeyValuePair<double, double>(1467.76392745102, 0.000362303274653099),
+                new KeyValuePair<double, double>(1468.75555806299, 0.000285235413419449),
+                new KeyValuePair<double, double>(1468.75807595161, 0.000207931538310744),
+                new KeyValuePair<double, double>(1469.76526667317, 0.000206771603698575),
+                new KeyValuePair<double, double>(1469.76274777416, 0.000133221073579107),
+                new KeyValuePair<double, double>(1467.7483507619, 0.00012832870395677),
+                new KeyValuePair<double, double>(1469.7678564138, 6.79035524187075E-05),
+                new KeyValuePair<double, double>(1469.7589267626, 6.36963686931021E-05),
+                new KeyValuePair<double, double>(1468.76730210576, 6.02445600328977E-05),
+                new KeyValuePair<double, double>(1465.76010003309, 3.90471536916692E-05),
+                new KeyValuePair<double, double>(1470.76607119395, 3.04466596822611E-05),
+                new KeyValuePair<double, double>(1468.7530730878, 3.01473461225893E-05),
+                new KeyValuePair<double, double>(1467.74586211189, 2.92534441292776E-05),
+                new KeyValuePair<double, double>(1469.76147692291, 2.91999633188283E-05),
+                new KeyValuePair<double, double>(1468.7517180868, 2.85070807700198E-05),
+                new KeyValuePair<double, double>(1470.76865091652, 2.75751131620645E-05),
+                new KeyValuePair<double, double>(1466.76346722369, 2.69161046467483E-05),
+                new KeyValuePair<double, double>(1469.75642098879, 2.07496271610838E-05),
+                new KeyValuePair<double, double>(1468.74922749751, 2.01223285414029E-05),
+                new KeyValuePair<double, double>(1465.75598028509, 1.13541999955428E-05),
+                new KeyValuePair<double, double>(1470.76230177139, 1.06228647668148E-05)
+            };
+            for (var i = 0; i < expected.Count; i++)
+            {
+                Assert.AreEqual(expected[i].Key, actual[i].Key, .0001);
+                Assert.AreEqual(expected[i].Value, actual[i].Value, .0001);
+            }
         }
         [TestMethod]
         public void TestSequenceMassCalcNormalizeModifiedSequence()
@@ -197,6 +252,11 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(155.11, sequenceMassCalc.GetPrecursorMass("K"), .1);
             Assert.AreEqual("C'6H14N'2O2", sequenceMassCalc.GetMolecularFormula("K"));
 
+            var labelLaK = new StaticMod("labelLaK", "K", null, "La");
+            sequenceMassCalc.AddStaticModifications(new[] { labelLaK });
+            Assert.AreEqual(294.033, sequenceMassCalc.GetPrecursorMass("K"), .1);
+            Assert.AreEqual("C'6H14LaN'2O2", sequenceMassCalc.GetMolecularFormula("K"));
+            
             // Check our ability to handle strangely constructed chemical formulas
             Assert.AreEqual(Molecule.Parse("C12H9S2P0").ToString(), Molecule.Parse("C12H9S2").ToString()); // P0 is weird
             Assert.AreEqual(Molecule.Parse("C12H9S2P1").ToString(), Molecule.Parse("C12H9S2P").ToString()); // P1 is weird

@@ -30,6 +30,7 @@ using System.Text;
 using System.Threading;
 using System.Xml;
 using System.Xml.Serialization;
+using Microsoft.Win32;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -345,6 +346,7 @@ namespace pwiz.Skyline.Model
     public abstract class ExportProperties
     {
         public virtual ExportStrategy ExportStrategy { get; set; }
+        public virtual bool SortByMz { get; set; }
         public virtual bool IgnoreProteins { get; set; }
         public virtual int? MaxTransitions { get; set; }
         public virtual ExportMethodType MethodType { get; set; }
@@ -383,6 +385,7 @@ namespace pwiz.Skyline.Model
             where TExp : AbstractMassListExporter
         {
             exporter.Strategy = ExportStrategy;
+            exporter.SortByMz = SortByMz;
             exporter.IgnoreProteins = IgnoreProteins;
             exporter.InclusionList = InclusionList;
             exporter.MaxTransitions = MaxTransitions;
@@ -894,7 +897,7 @@ namespace pwiz.Skyline.Model
 
                 if (UseSlens)
                 {
-                    writer.Write(nodeTranGroup.ExplicitValues.SLens ?? DEFAULT_SLENS);
+                    writer.Write(ExplicitTransitionValues.Get(nodeTran).SLens ?? DEFAULT_SLENS);
                     writer.Write(FieldSeparator);
                 }
 
@@ -978,6 +981,87 @@ namespace pwiz.Skyline.Model
             }
 
             writer.WriteLine();
+        }
+
+        protected const string EXE_BUILD_METHOD = @"Method\Thermo\BuildThermoMethod";
+
+        // ReSharper disable LocalizableElement
+        private static readonly string[] DEPENDENCY_LIBRARIES = {
+                                                                    "Thermo.TNG.MethodXMLFactory.dll",
+                                                                    "Thermo.TNG.MethodXMLInterface.dll"
+                                                                };
+        // ReSharper restore LocalizableElement
+
+        protected static void EnsureLibraries()
+        {
+            string skylinePath = Assembly.GetExecutingAssembly().Location;
+            if (string.IsNullOrEmpty(skylinePath))
+                throw new IOException(Resources.ThermoMassListExporter_EnsureLibraries_Thermo_method_creation_software_may_not_be_installed_correctly_);
+
+            // ReSharper disable ConstantNullCoalescingCondition
+            string buildSubdir = Path.GetDirectoryName(EXE_BUILD_METHOD) ?? string.Empty;
+            string exeDir = Path.Combine(Path.GetDirectoryName(skylinePath) ?? string.Empty, buildSubdir);
+            string instrumentSoftwarePath = GetSoftwarePath();                                                        
+            if (instrumentSoftwarePath == null)
+            {
+                // If all the necessary libraries exist, then continue even if MassLynx is gone.
+                foreach (var libraryName in DEPENDENCY_LIBRARIES)
+                {
+                    if (!File.Exists(Path.Combine(exeDir, libraryName)))
+                        throw new IOException(Resources.ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_);
+                }
+                return;
+            }
+
+            // ReSharper restore ConstantNullCoalescingCondition
+            foreach (var library in DEPENDENCY_LIBRARIES)
+            {
+                string srcFile = Path.Combine(instrumentSoftwarePath, library);
+                if (!File.Exists(srcFile))
+                {
+                    throw new IOException(
+                        string.Format(Resources.ThermoMassListExporter_EnsureLibraries_Thermo_instrument_software_may_not_be_installed_correctly__The_library__0__could_not_be_found_,
+                                      srcFile));
+                }
+                // If destination file does not exist or has a different modification time from
+                // the source, then copy the source file from the installation.
+                string destFile = Path.Combine(exeDir, library);
+                if (!File.Exists(destFile) || !Equals(File.GetLastWriteTime(destFile), File.GetLastWriteTime(srcFile)))
+                    File.Copy(srcFile, destFile, true);
+            }
+        }
+
+        private static string GetSoftwarePath()
+        {
+            try
+            {
+                // CONSIDER: Might be worth breaking this up to provide more helpful error messages
+                using (var tngKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Wow6432Node\Thermo Instruments\TNG"))
+                using (var machineKey = GetFirstSubKey(tngKey))
+                using (var versionKey = GetFirstSubKey(machineKey))
+                {
+                    if (versionKey == null)
+                        return null;
+                    var valueObject = versionKey.GetValue(@"ProgramPath");
+                    if (valueObject == null)
+                        return null;
+                    return valueObject.ToString();
+                }
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static RegistryKey GetFirstSubKey(RegistryKey parentKey)
+        {
+            if (parentKey == null)
+                return null;
+            int keyCount = parentKey.SubKeyCount;
+            if (keyCount < 1)
+                return null;
+            return parentKey.OpenSubKey(parentKey.GetSubKeyNames()[0]);
         }
     }
 
@@ -1070,7 +1154,7 @@ namespace pwiz.Skyline.Model
                 {
                     int compoundStep = ++_compoundCounts[compound]/MAX_COMPOUND_NAME + 1;
                     if (compoundStep > 1)
-                        compound += '.' + compoundStep;
+                        compound += '.' + compoundStep.ToString(CultureInfo);
                 }
             }
             writer.WriteDsvField(compound, FieldSeparator);
@@ -1138,7 +1222,7 @@ namespace pwiz.Skyline.Model
             if (UseSlens)
             {
                 writer.Write(FieldSeparator);
-                writer.Write((nodeTranGroup.ExplicitValues.SLens ?? DEFAULT_SLENS).ToString(CultureInfo));
+                writer.Write((ExplicitTransitionValues.Get(nodeTran).SLens ?? DEFAULT_SLENS).ToString(CultureInfo));
             }
             if (WriteFaimsCv)
             {
@@ -1729,8 +1813,6 @@ namespace pwiz.Skyline.Model
 
     public class ThermoQuantivaMethodExporter : ThermoQuantivaMassListExporter
     {
-        public const string EXE_BUILD_METHOD = @"Method\Thermo\BuildThermoMethod";
-
         public ThermoQuantivaMethodExporter(SrmDocument document)
             : base(document)
         {
@@ -1738,6 +1820,9 @@ namespace pwiz.Skyline.Model
 
         public void ExportMethod(string fileName, string templateName, string instrumentType, IProgressMonitor progressMonitor)
         {
+            if (fileName != null)
+                EnsureLibraries();
+
             if (!InitExport(fileName, progressMonitor))
                 return;
 
@@ -1760,8 +1845,6 @@ namespace pwiz.Skyline.Model
 
     public class ThermoFusionMethodExporter : ThermoFusionMassListExporter
     {
-        public const string EXE_BUILD_METHOD = @"Method\Thermo\BuildThermoMethod";
-
         public ThermoFusionMethodExporter(SrmDocument document)
             : base(document)
         {
@@ -1770,6 +1853,9 @@ namespace pwiz.Skyline.Model
 
         public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
         {
+            if (fileName != null)
+                EnsureLibraries();
+
             if (!InitExport(fileName, progressMonitor))
                 return;
 
@@ -2379,6 +2465,7 @@ namespace pwiz.Skyline.Model
         {
             try
             {
+                // ReSharper disable once PossibleNullReferenceException
                 return proc.MainModule.ModuleName;
             }
             catch
@@ -3090,7 +3177,7 @@ namespace pwiz.Skyline.Model
             var polarity = (nodeTranGroup.PrecursorCharge > 0) ? @"Positive" : @"Negative";
             if (UseSlens)
             {
-                var slens = (nodeTranGroup.ExplicitValues.SLens ?? DEFAULT_SLENS).ToString(CultureInfo);  
+                var slens = (ExplicitTransitionValues.Get(nodeTran).SLens ?? DEFAULT_SLENS).ToString(CultureInfo);  
                 Write(writer, precursorMz, string.Empty, string.Empty, z, polarity, start, end, collisionEnergy, slens, comment);
             }
             else
@@ -3190,7 +3277,7 @@ namespace pwiz.Skyline.Model
             }
             if (UseSlens)
             {
-                var slens = (nodeTranGroup.ExplicitValues.SLens ?? DEFAULT_SLENS).ToString(CultureInfo);
+                var slens = (ExplicitTransitionValues.Get(nodeTran).SLens ?? DEFAULT_SLENS).ToString(CultureInfo);
                 writeColumns.Add(slens);
             }
             Write(writer, writeColumns.ToArray());
@@ -3329,7 +3416,7 @@ namespace pwiz.Skyline.Model
             // Waters only excepts integers for CE and CV
             writer.Write((int)Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step)));
             writer.Write(FieldSeparator);
-            writer.Write((int)Math.Round(nodeTranGroup.ExplicitValues.ConeVoltage ?? ConeVoltage));
+            writer.Write((int)Math.Round(ExplicitTransitionValues.Get(nodeTran).ConeVoltage ?? ConeVoltage));
             writer.Write(FieldSeparator);
 
             // Extra information not used by instrument
@@ -3501,7 +3588,7 @@ namespace pwiz.Skyline.Model
                 writer.Write(FieldSeparator);
             }
             // CV
-            writer.Write(nodeTranGroup.ExplicitValues.ConeVoltage ?? ConeVoltage);
+            writer.Write(ExplicitTransitionValues.Get(nodeTran).ConeVoltage ?? ConeVoltage);
             writer.Write(FieldSeparator);
             // EDCMass
             var edcMass = ExportEdcMass && transitions.Any()

@@ -48,12 +48,12 @@ namespace pwiz.SkylineTest.MSstats.Normalization
             var memoryDocumentContainer = new MemoryDocumentContainer();
             Assert.IsTrue(memoryDocumentContainer.SetDocument(testDocument, memoryDocumentContainer.Document));
             SkylineDataSchema skylineDataSchema = new SkylineDataSchema(memoryDocumentContainer, DataSchemaLocalizer.INVARIANT);
-            var view = ReportSharing.DeserializeReportList(OpenTestFile("MSstats_report.skyr")).First().ViewSpec;
+            var view = ReportSharing.DeserializeReportList(OpenTestFile("MSstats_report.skyr")).First().ViewSpecLayout;
             var viewContext = new DocumentGridViewContext(skylineDataSchema);
             StringWriter stringWriter = new StringWriter();
             IProgressStatus progressStatus = new ProgressStatus();
             viewContext.Export(CancellationToken.None, new SilentProgressMonitor(), ref progressStatus,
-                viewContext.GetViewInfo(ViewGroup.BUILT_IN, view), stringWriter,
+                viewContext.GetViewInfo(ViewGroup.BUILT_IN, view.ViewSpec), stringWriter,
                 viewContext.GetCsvWriter());
             string expectedReport = new StreamReader(OpenTestFile("BrudererSubset_MSstatsInput.csv")).ReadToEnd();
             AssertEx.NoDiff(expectedReport, stringWriter.ToString());
@@ -283,7 +283,7 @@ namespace pwiz.SkylineTest.MSstats.Normalization
                     Assert.AreEqual(expectedResult.TValue, foldChange.TValue, 1E-5);
                     Assert.AreEqual(expectedResult.PValue, foldChange.PValue, 1E-5);
                 }
-                else if (!SrmDocument.IsSpecialNonProteomicTestDocNode(protein)) // Avoid the special small molecule test nodes
+                else
                 {
                     Assert.IsNull(groupComparisonResult);
                     var standardPeptides = protein.Molecules.Where(mol => null != mol.GlobalStandardType).ToArray();
@@ -301,7 +301,6 @@ namespace pwiz.SkylineTest.MSstats.Normalization
                     Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                     return null;
                 }
-                TestSmallMolecules = false;  // We test small molecules explicitly
             }
             using (var stream = OpenTestFile(asSmallMolecules ? "BrudererSubsetAsSmallMolecules.sky" : "BrudererSubset.sky"))
             {

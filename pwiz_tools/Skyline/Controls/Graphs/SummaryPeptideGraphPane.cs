@@ -54,7 +54,9 @@ namespace pwiz.Skyline.Controls.Graphs
             : base(graphSummary)
         {
             PaneKey = paneKey;
-            string xAxisTitle = Resources.SummaryPeptideGraphPane_SummaryPeptideGraphPane_Peptide;
+            string xAxisTitle = 
+                Helpers.PeptideToMoleculeTextMapper.Translate(Resources.SummaryPeptideGraphPane_SummaryPeptideGraphPane_Peptide, 
+                    graphSummary.DocumentUIContainer.DocumentUI.DocumentType);
             if (null != paneKey.IsotopeLabelType && !paneKey.IsotopeLabelType.IsLight)
             {
                 xAxisTitle += @" (" + paneKey.IsotopeLabelType + @")";

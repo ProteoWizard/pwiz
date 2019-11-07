@@ -97,7 +97,9 @@ public:
     [ProtoBuf::ProtoMember(1)]
     property cli::array<double>^ Intensities;
 
-    ~Spectrum() { if (intensityArray != nullptr) delete intensityArray; }
+    virtual ~Spectrum() { if (intensityArray != nullptr) delete intensityArray; intensityArray = nullptr; }
+    !Spectrum() { delete this; }
+
     std::vector<double>* intensityArray;
 };
 
@@ -113,7 +115,9 @@ public:
     [ProtoBuf::ProtoMember(2)]
     property cli::array<int>^ ScanSize;
 
-    ~MassSpectrum() { if (mzArray != nullptr) delete mzArray; }
+    virtual ~MassSpectrum() { if (mzArray != nullptr) delete mzArray; mzArray = nullptr; }
+    !MassSpectrum() { delete this; }
+
     std::vector<double>* mzArray;
 };
 
@@ -221,7 +225,7 @@ ref class ParallelDownloadQueue
         }
 
 #ifdef WIN32 // DEBUG
-        Console::WriteLine("Chunk size: {0}, Num. spectra: {1}", chunkSize, numSpectra);
+        Console::Error->WriteLine("Chunk size: {0}, Num. spectra: {1}", chunkSize, numSpectra);
 #endif
 
         _queueScheduler = gcnew QueuedTaskScheduler();
@@ -238,7 +242,7 @@ ref class ParallelDownloadQueue
 
     ~ParallelDownloadQueue()
     {
-        Console::WriteLine("Disposing queue and cancelling requests.");
+        Console::Error->WriteLine("Disposing queue and cancelling requests.");
         _cancelTokenSource->Cancel();
         //for each (Task^ task in _tasksByIndex->Values)
         //    task->Wait();
@@ -248,7 +252,7 @@ ref class ParallelDownloadQueue
     {
         int currentThreadId = System::Threading::Thread::CurrentThread->ManagedThreadId;
 #ifdef _WIN32 //DEBUG
-        Console::WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + "Requesting chunk {0} on thread {1}", taskIndex, currentThreadId);
+        Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + "Requesting chunk {0} on thread {1}", taskIndex, currentThreadId);
 #endif
         HttpClient^ httpClient = nullptr;
         while (!_httpClients->TryDequeue(httpClient)) {}
@@ -295,7 +299,7 @@ ref class ParallelDownloadQueue
                         {
                             // try again
 #ifdef _WIN32 //DEBUG
-                            Console::WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + System::String::Format("Retrying spectra chunk request {0} on thread {1} (attempt #{3}) due to error ({2})", taskIndex, currentThreadId, e->ToString()->Replace("\r", "")->Split(L'\n')[0], requestRetryCount));
+                            Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + System::String::Format("Retrying spectra chunk request {0} on thread {1} (attempt #{3}) due to error ({2})", taskIndex, currentThreadId, e->ToString()->Replace("\r", "")->Split(L'\n')[0], requestRetryCount));
 #endif
                             System::Threading::Thread::Sleep(2000 * Math::Pow(2, requestRetryCount));
                         }
@@ -312,7 +316,7 @@ ref class ParallelDownloadQueue
 
 #ifdef _WIN32 //DEBUG
                 //if (streamRetryCount == 1)
-                    Console::WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + "Starting chunk {0} ({1}ms to send request and read response headers)", taskIndex, (stop - requestStart).TotalMilliseconds);
+                    Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + "Starting chunk {0} ({1}ms to send request and read response headers)", taskIndex, (stop - requestStart).TotalMilliseconds);
 #endif
 
                 start = DateTime::UtcNow;
@@ -436,7 +440,7 @@ ref class ParallelDownloadQueue
                 {
                     // try again
 #ifdef _WIN32 //DEBUG
-                    Console::WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + System::String::Format("Retrying spectra chunk download {0} on thread {1} (attempt #{3}) due to error ({2})", taskIndex, currentThreadId, e->ToString()->Replace("\r", "")->Split(L'\n')[0], streamRetryCount));
+                    Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + System::String::Format("Retrying spectra chunk download {0} on thread {1} (attempt #{3}) due to error ({2})", taskIndex, currentThreadId, e->ToString()->Replace("\r", "")->Split(L'\n')[0], streamRetryCount));
 #endif
                     System::Threading::Thread::Sleep(2000 * Math::Pow(2, streamRetryCount));
                     bytesDownloaded = 0;
@@ -454,7 +458,7 @@ ref class ParallelDownloadQueue
         }
 #ifdef _WIN32 //DEBUG
         DateTime stop = DateTime::UtcNow;
-        Console::WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + "FINISHED chunk {0} on thread {1} ({2} bytes in {3}s)", taskIndex, currentThreadId, bytesDownloaded, (stop - start).TotalSeconds);
+        Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + "FINISHED chunk {0} on thread {1} ({2} bytes in {3}s); cache size {4}", taskIndex, currentThreadId, bytesDownloaded, (stop - start).TotalSeconds, _cache->Count);
 #endif
         _tasksByIndex->Remove(taskIndex); // remove the task
         _httpClients->Enqueue(httpClient); // add client back to queue
@@ -523,11 +527,12 @@ class UnifiData::Impl
             getNumberOfSpectra();
             //Console::WriteLine("numLogicalSpectra: {0}, numNetworkSpectra: {1}", _numLogicalSpectra, _numNetworkSpectra);
 
-            _chunkSize = Math::Max(100, (int) std::ceil(_numNetworkSpectra /100.0));//200;
+            _chunkSize = 10;// Math::Max(10, (int)std::ceil(_numNetworkSpectra / 500.0));
+
 #ifdef _WIN64
-            _chunkReadahead = 3;
+            _chunkReadahead = 8;
 #else
-            _chunkReadahead = 1;
+            _chunkReadahead = 2;
 #endif
             _cacheSize = _chunkSize * _chunkReadahead * 2;
 
@@ -848,7 +853,7 @@ class UnifiData::Impl
         auto tokenClient = gcnew TokenClient(tokenEndpoint(), "resourceownerclient", _clientSecret, nullptr, IdentityModel::Client::AuthenticationStyle::BasicAuthentication);
         TokenResponse^ response = tokenClient->RequestAsync(fields, System::Threading::CancellationToken::None)->Result;
         if (response->IsError)
-            throw user_error("authentication error: incorrect username or password? (" + ToStdString(response->Error) + ")");
+            throw user_error("authentication error: incorrect hostname, username or password? (" + ToStdString(response->Error) + ")");
 
         _accessToken = response->AccessToken;
         //Console::WriteLine(_accessToken);
@@ -1150,7 +1155,7 @@ class UnifiData::Impl
                     _queue->getChunkTask(taskIndex + _chunkSize * i, false, false);
             }
 #ifdef _WIN32 //DEBUG
-            Console::WriteLine("WAITING for chunk {0}", taskIndex);
+            Console::Error->WriteLine("WAITING for chunk {0}", taskIndex);
 #endif
             chunkTask->Wait(); // wait for the task to finish
 

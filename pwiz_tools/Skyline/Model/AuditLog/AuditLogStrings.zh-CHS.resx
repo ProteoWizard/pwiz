@@ -378,13 +378,13 @@
     <value>空</value>
   </data>
   <data name="added_small_molecule_precursor" xml:space="preserve">
-    <value>已添加小分子母离子 {0}</value>
+    <value>已添加分子母离子 {0}</value>
   </data>
   <data name="added_small_molecule" xml:space="preserve">
-    <value>已添加小分子 {0}</value>
+    <value>已添加分子 {0}</value>
   </data>
   <data name="added_small_molecule_transition" xml:space="preserve">
-    <value>已添加小分子离子对 {0}</value>
+    <value>已添加分子离子对 {0}</value>
   </data>
   <data name="added_irt_standard_peptides" xml:space="preserve">
     <value>已添加 iRT 标准肽段</value>
@@ -405,16 +405,19 @@
     <value>将 {0} 节点拖放至 {1}</value>
   </data>
   <data name="pasted_small_molecule_transition_list" xml:space="preserve">
-    <value>已粘贴 {0} 小分子离子对</value>
+    <value>已粘贴 {0} 分子离子对</value>
   </data>
   <data name="applied_peak_all" xml:space="preserve">
-    <value>已将峰 {0} 应用于所有</value>
+    <value>应用所有峰值{0}</value>
   </data>
   <data name="applied_peak_subsequent" xml:space="preserve">
-    <value>已将峰 {0} 应用于后续</value>
+    <value>应用峰值{0}到后续</value>
   </data>
   <data name="removed_peak_from" xml:space="preserve">
-    <value>已在重复测定“{1}”中从 {0} 删除峰</value>
+    <value>从复制“{1}”中删除了{0}的峰值</value>
+  </data>
+  <data name="removed_peaks" xml:space="preserve">
+    <value>已从 {1} 个节点中删除 {0} 个峰</value>
   </data>
   <data name="removed_all_peaks_from" xml:space="preserve">
     <value>已在重复测定“{1}”中从 {0} 删除所有峰</value>
@@ -588,10 +591,10 @@
     <value>已从剪切板导入 FASTA</value>
   </data>
   <data name="pasted_single_small_molecule_transition" xml:space="preserve">
-    <value>已粘贴 {0} 小分子离子对</value>
+    <value>已粘贴 {0} 分子离子对</value>
   </data>
   <data name="removed_empty_peptide" xml:space="preserve">
-    <value>已删除 {0} 空肽段</value>
+    <value>去除了{0}空肽</value>
   </data>
   <data name="removed_duplicate_peptide" xml:space="preserve">
     <value>已删除 {0} 重复肽段</value>
@@ -629,9 +632,6 @@
   <data name="modified_outside_of_skyline" xml:space="preserve">
     <value>该文档在 Skyline 之外进行了修改：{0}</value>
   </data>
-  <data name="AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing" xml:space="preserve">
-    <value>审计日志已损坏。审计日志条目时间戳和索引应该减少</value>
-  </data>
   <data name="test_only" xml:space="preserve">
     <value>{0}</value>
   </data>
@@ -640,5 +640,17 @@
   </data>
   <data name="start_log_existing_doc" xml:space="preserve">
     <value>现有文档的审计日志开始</value>
+  </data>
+  <data name="AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified" xml:space="preserve">
+    <value>以下审计日志条目已被修改：
+
+</value>
+  </data>
+  <data name="AuditLogList_ReadFromFile_An_exception_occured_while_reading_the_audit_log" xml:space="preserve">
+    <value>读取审计日志时发生异常。
+
+删除、重命名或移动审计日志文件将防止发生此错误。您还可以将审计日志发送到 Skyline 团队，使其尝试手动修复文件。
+
+作为参考，审计日志位于：“{0}”</value>
   </data>
 </root>

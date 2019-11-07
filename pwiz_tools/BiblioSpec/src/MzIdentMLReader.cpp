@@ -28,7 +28,6 @@
 #include <iostream>
 #include <boost/algorithm/string.hpp>
 
-using namespace std;
 using namespace pwiz;
 using namespace identdata;
 
@@ -102,6 +101,10 @@ bool MzIdentMLReader::parseFile(){
             break;
         case PEAKS_ANALYSIS:
             scoreType = PEAKS_CONFIDENCE_SCORE;
+            break;
+        case PROT_PILOT_ANALYSIS:
+            scoreType = PROTEIN_PILOT_CONFIDENCE;
+            break;
         case GENERIC_QVALUE_ANALYSIS:
             scoreType = GENERIC_QVALUE;
             break;
@@ -156,8 +159,16 @@ void MzIdentMLReader::collectPsms(map<DBSequencePtr, Protein>& proteins) {
             ++result_iter_)
         {
             SpectrumIdentificationResult& result = **result_iter_;
-            string idStr = result.spectrumID;
+
+            // HACK: ProteinPilot mzid output has spectraData always pointing at SD_1 but has a file=xxx which is the 1-based index to the correct file
+            if (bal::starts_with(result.id, "file="))
+            {
+                int fileIndex = msdata::id::valueAs<int>(result.id, "file") - 1;
+                result.spectraDataPtr = pwizReader_->dataCollection.inputs.spectraData.at(fileIndex);
+            }
+
             string filename = result.spectraDataPtr->location;
+            string idStr = result.spectrumID;
             filename += ";";
             filename += getFilenameFromID(idStr);
             
@@ -168,8 +179,14 @@ void MzIdentMLReader::collectPsms(map<DBSequencePtr, Protein>& proteins) {
             {
                 SpectrumIdentificationItem& item = **item_iter_;
 
+                if (item.peptideEvidencePtr.empty())
+                {
+                    Verbosity::warn("%s does not have any PeptideEvidenceRefs", result.id.c_str());
+                    continue;
+                }
+
                 // only include top-ranked PSMs, skip decoys
-                if( item.rank != 1 || item.peptideEvidencePtr.front()->isDecoy ){ 
+                if( item.rank > 1 || item.peptideEvidencePtr.front()->isDecoy ){
                     continue;
                 }
 
@@ -311,7 +328,7 @@ double MzIdentMLReader::getScore(const SpectrumIdentificationItem& item){
     {
         switch (cvParam.cvid)
         {
-            case MS_PeptideShaker_peptide_confidence:
+            case MS_PeptideShaker_PSM_confidence:
                 if (analysisType_ == UNKNOWN_ANALYSIS) {
                     analysisType_ = PEPTIDESHAKER_ANALYSIS;
                     scoreThreshold_ = getScoreThreshold(PEPTIDE_SHAKER);
@@ -366,7 +383,17 @@ double MzIdentMLReader::getScore(const SpectrumIdentificationItem& item){
                     return pow(10, cvParam.valueAs<double>() / -10);
                 break;
 
+            case MS_Paragon_confidence:
+                if (analysisType_ == UNKNOWN_ANALYSIS) {
+                    analysisType_ = PROT_PILOT_ANALYSIS;
+                    scoreThreshold_ = getScoreThreshold(PROT_PILOT);
+                }
+                if (analysisType_ == PROT_PILOT_ANALYSIS)
+                    return cvParam.valueAs<double>();
+                break;
+
             case MS_PSM_level_q_value:
+            case MS_percolator_Q_value:
                 if (analysisType_ == UNKNOWN_ANALYSIS) {
                     analysisType_ = GENERIC_QVALUE_ANALYSIS;
                     scoreThreshold_ = getScoreThreshold(GENERIC_QVALUE_INPUT);
@@ -377,6 +404,22 @@ double MzIdentMLReader::getScore(const SpectrumIdentificationItem& item){
 
             default:
                 continue;
+        }
+    }
+
+    // another round of search for secondary scores if primary scores aren't found
+    for (const CVParam& cvParam : item.cvParams)
+    {
+        switch (cvParam.cvid)
+        {
+            case MS_MS_GF_EValue:
+                if (analysisType_ == UNKNOWN_ANALYSIS) {
+                    analysisType_ = MSGF_ANALYSIS;
+                    scoreThreshold_ = getScoreThreshold(MSGF);
+                }
+                if (analysisType_ == MSGF_ANALYSIS)
+                    return cvParam.valueAs<double>();
+                break;
         }
     }
 
@@ -397,6 +440,7 @@ bool MzIdentMLReader::passThreshold(double score)
         // Scores where higher is better
         case SCAFFOLD_ANALYSIS:
         case PEPTIDESHAKER_ANALYSIS:
+        case PROT_PILOT_ANALYSIS:
             return score >= scoreThreshold_;
     }
     Verbosity::error("Can't determine cutoff score, unknown analysis type");

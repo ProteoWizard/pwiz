@@ -26,26 +26,37 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results.RemoteApi.GeneratedCode;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
     public sealed class SpectrumFilterPair : IComparable<SpectrumFilterPair>
     {
         private static readonly SpectrumProductFilter[] EMPTY_FILTERS = new SpectrumProductFilter[0];
-
+        private readonly bool _filterByTime;
+        private readonly double _maxTime;
+        private readonly double _minTime;
         public SpectrumFilterPair(PrecursorTextId precursorTextId, Color peptideColor, int id, double? minTime, double? maxTime,
-            double highEnergyIonMobilityValueOffset, bool highAccQ1, bool highAccQ3)
+            bool highAccQ1, bool highAccQ3)
         {
             Id = id;
             ModifiedSequence = precursorTextId.Target;
             PeptideColor = peptideColor;
             Q1 = precursorTextId.PrecursorMz;
             Extractor = precursorTextId.Extractor;
-            MinTime = minTime;
-            MaxTime = maxTime;
+
+            if (minTime.HasValue && maxTime.HasValue)
+            {
+                _filterByTime = true;
+                _minTime = minTime.Value;
+                _maxTime = maxTime.Value;
+            }
+            else
+            {
+                // If not min and max, then it should be neither. Asymmetric limits not supported.
+                Assume.IsTrue(!minTime.HasValue && !maxTime.HasValue);
+            }
             IonMobilityInfo = precursorTextId.IonMobility;
-            HighEnergyIonMobilityValueOffset = highEnergyIonMobilityValueOffset;
             MinIonMobilityValue = IonMobilityInfo.IsEmpty ? null : IonMobilityInfo.IonMobility.Mobility - (IonMobilityInfo.IonMobilityExtractionWindowWidth??0)/2;
             MaxIonMobilityValue = IonMobilityInfo.IsEmpty ? null : MinIonMobilityValue + (IonMobilityInfo.IonMobilityExtractionWindowWidth ?? 0);
             HighAccQ1 = highAccQ1;
@@ -55,44 +66,8 @@ namespace pwiz.Skyline.Model.Results
 
             if (Q1 == 0)
             {
-                Ms1ProductFilters = new[] {new SpectrumProductFilter(SignedMz.ZERO, 0)};
+                Ms1ProductFilters = new[] {new SpectrumProductFilter(SignedMz.ZERO, 0, 0)};
                 SimProductFilters = Ms1ProductFilters;  // We want TIC and BPC for all scans, even if they have narrow machine settings and look like SIM
-            }
-        }
-
-        public SpectrumFilterPair(ChromatogramRequestDocumentChromatogramGroup requestGroup)
-        {
-            Q1 = new SignedMz(requestGroup.PrecursorMz);
-            ModifiedSequence = new Target(requestGroup.ModifiedSequence);
-            switch (requestGroup.Extractor)
-            {
-                case RemoteApi.GeneratedCode.ChromExtractor.BasePeak:
-                    Extractor = ChromExtractor.base_peak;
-                    break;
-                case RemoteApi.GeneratedCode.ChromExtractor.Summed:
-                    Extractor = ChromExtractor.summed;
-                    break;
-            }
-            if (requestGroup.MinTimeSpecified)
-            {
-                MinTime = requestGroup.MinTime;
-            }
-            if (requestGroup.MaxTimeSpecified)
-            {
-                MaxTime = requestGroup.MaxTime;
-            }
-            switch (requestGroup.Source)
-            {
-                case RemoteApi.GeneratedCode.ChromSource.Ms1:
-                    Ms1ProductFilters = requestGroup.Chromatogram.Select(
-                        product => new SpectrumProductFilter(product.ProductMz, product.MzWindow)).ToArray();
-                    HighAccQ1 = requestGroup.MassErrors;
-                    break;
-                case RemoteApi.GeneratedCode.ChromSource.Ms2:
-                    Ms2ProductFilters = requestGroup.Chromatogram.Select(
-                        product => new SpectrumProductFilter(product.ProductMz, product.MzWindow)).ToArray();
-                    HighAccQ3 = requestGroup.MassErrors;
-                    break;
             }
         }
 
@@ -103,11 +78,13 @@ namespace pwiz.Skyline.Model.Results
         public Target ModifiedSequence { get; private set; }
         public Color PeptideColor { get; private set; }
         public SignedMz Q1 { get; private set; }
-        public double? MinTime { get; private set; }
-        public double? MaxTime { get; private set; }
+        public double? MinTime { get { return _filterByTime ? _minTime : (double?) null; } }
+        public double? MaxTime { get { return _filterByTime ? _maxTime : (double?) null; } }
         public double? MinIonMobilityValue { get; set; }
         public double? MaxIonMobilityValue { get; set; }
-        private double HighEnergyIonMobilityValueOffset { get; set; }
+        public int? BestWindowGroup { get; private set; }
+        public double? BestWindowGroupDistance { get; private set; }
+        public IList<int> OtherWindowGroups { get; private set; }
         private IonMobilityFilter IonMobilityInfo { get; set; }
         private SpectrumProductFilter[] Ms1ProductFilters { get; set; }
         private SpectrumProductFilter[] SimProductFilters { get; set; }
@@ -115,32 +92,33 @@ namespace pwiz.Skyline.Model.Results
 
         public int AddQ1FilterValues(IEnumerable<SignedMz> filterValues, Func<double, double> getFilterWindow)
         {
-            int filterCount = AddFilterValues(MergeFilters(Ms1ProductFilters, filterValues).Distinct(),
+
+            int filterCount = AddFilterValues(MergeFilters(Ms1ProductFilters, filterValues.Select(mz => new SpectrumFilterValues(mz, 0))).Distinct(),
                 getFilterWindow, filters => Ms1ProductFilters = filters);
             // Make complete copies for SIM scans. Some day these may be different.
-            SimProductFilters = Ms1ProductFilters.Select(f => new SpectrumProductFilter(f.TargetMz, f.FilterWidth)).ToArray();
+            SimProductFilters = Ms1ProductFilters.Select(f => new SpectrumProductFilter(f.TargetMz, f.FilterWidth, 0)).ToArray();
             return filterCount * 2;
         }
 
-        public int AddQ3FilterValues(IEnumerable<SignedMz> filterValues, Func<double, double> getFilterWindow)
+        public int AddQ3FilterValues(IEnumerable<SpectrumFilterValues> filterValues, Func<double, double> getFilterWindow)
         {
             return AddFilterValues(MergeFilters(Ms2ProductFilters, filterValues).Distinct(),
                 getFilterWindow, filters => Ms2ProductFilters = filters);
         }
 
-        private static IEnumerable<SignedMz> MergeFilters(IEnumerable<SpectrumProductFilter> existing, IEnumerable<SignedMz> added)
+        private static IEnumerable<SpectrumFilterValues> MergeFilters(IEnumerable<SpectrumProductFilter> existing, IEnumerable<SpectrumFilterValues> added)
         {
             if (existing == null)
                 return added;
-            return existing.Select(f => f.TargetMz).Union(added);
+            return existing.Select(f => new SpectrumFilterValues(f.TargetMz, f.HighEnergyIonMobilityValueOffset)).Union(added);
         }
 
-        private int AddFilterValues(IEnumerable<SignedMz> filterValues,
+        private int AddFilterValues(IEnumerable<SpectrumFilterValues> filterValues,
                                             Func<double, double> getFilterWindow,
                                             Action<SpectrumProductFilter[]> setFilters)
         {
             var arrayFilters = filterValues.OrderBy(mz => mz)
-                .Select(mz => new SpectrumProductFilter(mz, getFilterWindow(mz)))
+                .Select(mz => new SpectrumProductFilter(mz.mz, getFilterWindow(mz.mz), mz.ionMobilityHighEnergyOffset))
                 .ToArray();
             setFilters(arrayFilters);
             return arrayFilters.Length;
@@ -152,13 +130,13 @@ namespace pwiz.Skyline.Model.Results
             return FilterSpectrumList(spectra, filters, HighAccQ1, false);
         }
 
-        public ExtractedSpectrum FilterQ3SpectrumList(MsDataSpectrum[] spectra, bool useDriftTimeHighEnergyOffset)
+        public ExtractedSpectrum FilterQ3SpectrumList(MsDataSpectrum[] spectra, bool useIonMobilityHighEnergyOffset)
         {
             // All-ions extraction for MS1 scans only
             if (Q1 == 0)
                 return null;
 
-            return FilterSpectrumList(spectra, Ms2ProductFilters, HighAccQ3, useDriftTimeHighEnergyOffset);
+            return FilterSpectrumList(spectra, Ms2ProductFilters, HighAccQ3, useIonMobilityHighEnergyOffset);
         }
 
         /// <summary>
@@ -173,7 +151,7 @@ namespace pwiz.Skyline.Model.Results
         /// trying to measure ions per injection, basically).
         /// </summary>
         private ExtractedSpectrum FilterSpectrumList(MsDataSpectrum[] spectra,
-            SpectrumProductFilter[] productFilters, bool highAcc, bool useDriftTimeHighEnergyOffset)
+            SpectrumProductFilter[] productFilters, bool highAcc, bool useIonMobilityHighEnergyOffset)
         {
             int targetCount = 1;
             if (Q1 == 0)
@@ -189,6 +167,9 @@ namespace pwiz.Skyline.Model.Results
             float[] massErrors = highAcc ? new float[targetCount] : null;
             double[] meanErrors = highAcc ? new double[targetCount] : null;
 
+            double minIonMobilityHighEnergyOffset = useIonMobilityHighEnergyOffset ? productFilters.Select(f => f.HighEnergyIonMobilityValueOffset).Min() : 0;
+            double maxIonMobilityHighEnergyOffset = useIonMobilityHighEnergyOffset ? productFilters.Select(f => f.HighEnergyIonMobilityValueOffset).Max() : 0;
+
             int spectrumCount = 0;
             int rtCount = 0;
             double lastRT = 0;
@@ -201,18 +182,17 @@ namespace pwiz.Skyline.Model.Results
                 var im1 = spectra[1].IonMobility.Mobility;
                 if (im0.HasValue && im1.HasValue)
                 {
-                    var offset = useDriftTimeHighEnergyOffset ? HighEnergyIonMobilityValueOffset : 0;
 
                     if (im0 < im1)
                     {
                         // Binary search for first spectrum in ascending ion mobility range (as in drift time)
-                        var im = MinIonMobilityValue.Value + offset;
+                        var im = MinIonMobilityValue.Value + minIonMobilityHighEnergyOffset;
                         specIndexFirst = CollectionUtil.BinarySearch(spectra, s => (s.IonMobility.Mobility ?? 0).CompareTo(im), true);
                     }
                     else if (im0 > im1)
                     {
                         // Binary search for first spectrum in descending ion mobility range (as in TIMS)
-                        var im = MaxIonMobilityValue.Value + offset;
+                        var im = MaxIonMobilityValue.Value + maxIonMobilityHighEnergyOffset;
                         specIndexFirst = CollectionUtil.BinarySearch(spectra, s => im.CompareTo(s.IonMobility.Mobility ?? 0), true);
                     }
 
@@ -227,7 +207,7 @@ namespace pwiz.Skyline.Model.Results
                 var spectrum = spectra[specIndex];
                 // If these are spectra from distinct retention times, average them.
                 // Note that for ion mobility data we will see fewer retention time changes 
-                // than the total spectra count - ascending DT within each RT.  Within a
+                // than the total spectra count - ascending DT (or descending 1/K0) within each RT.  Within a
                 // single retention time the ions are additive.
                 var rt = spectrum.RetentionTime ?? 0;
                 if (lastRT != rt)
@@ -241,8 +221,10 @@ namespace pwiz.Skyline.Model.Results
                     continue;
                 spectrumCount++;
 
-                // Filter on ion mobility, if any
-                if (!ContainsIonMobilityValue(spectrum.IonMobility, useDriftTimeHighEnergyOffset))
+                // Filter on ion mobility, if any - gross check before we look at individual fragment high energy offsets
+                if (spectrum.IonMobilities == null &&   // Not for 3D spectra
+                    !ContainsIonMobilityValue(spectrum.IonMobility, maxIonMobilityHighEnergyOffset) &&
+                    !ContainsIonMobilityValue(spectrum.IonMobility, minIonMobilityHighEnergyOffset))
                 {
                     if (specIndex > specIndexFirst && specIndexFirst > 0)
                     {
@@ -263,6 +245,7 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 var intensityArray = spectrum.Intensities;
+                var imsArray = spectrum.IonMobilities;
 
                 // Search for matching peaks for each Q3 filter
                 // Use binary search to get to the first m/z value to be considered more quickly
@@ -272,11 +255,22 @@ namespace pwiz.Skyline.Model.Results
                 int iPeak = 0;
                 for (int targetIndex = 0; targetIndex < targetCount; targetIndex++)
                 {
+                    var productFilter = productFilters[targetIndex];
+                    // If fragments have individual high energy ion mobility offsets, recheck
+                    // but only if there is no IonMobilities array. Otherwise IMS filtering is
+                    // performed during extraction
+                    if (spectrum.IonMobilities == null &&
+                        productFilter.HighEnergyIonMobilityValueOffset != 0 &&
+                        !ContainsIonMobilityValue(spectrum.IonMobility, productFilter.HighEnergyIonMobilityValueOffset))
+                    {
+                        continue;
+                    }
+
+
                     // Look for the first peak that is greater than the start of the filter
                     double targetMz = 0, endFilter = double.MaxValue;
                     if (Q1 != 0)
                     {
-                        var productFilter = productFilters[targetIndex];
                         targetMz = productFilter.TargetMz;
                         double filterWindow = productFilter.FilterWidth;
                         double startFilter = targetMz - filterWindow / 2;
@@ -299,6 +293,10 @@ namespace pwiz.Skyline.Model.Results
                     {
                         double mz = mzArray[iNext];
                         double intensity = intensityArray[iNext];
+
+                        // Avoid adding points that are not within the allowed ion mobility range
+                        if (imsArray != null && !ContainsIonMobilityValue(imsArray[iNext], productFilter.HighEnergyIonMobilityValueOffset))
+                            continue;
                     
                         if (Extractor == ChromExtractor.summed)
                             totalIntensity += intensity;
@@ -343,7 +341,7 @@ namespace pwiz.Skyline.Model.Results
                 for (int i = 0; i < targetCount; i++)
                     extractedIntensities[i] *= scale;
             }
-            var dtFilter = GetIonMobilityWindow(useDriftTimeHighEnergyOffset);
+            var dtFilter = GetIonMobilityWindow();
             return new ExtractedSpectrum(ModifiedSequence,
                 PeptideColor,
                 Q1,
@@ -362,48 +360,7 @@ namespace pwiz.Skyline.Model.Results
 
         public bool ContainsRetentionTime(double retentionTime)
         {
-            return (!MinTime.HasValue || MinTime.Value <= retentionTime) &&
-                (!MaxTime.HasValue || MaxTime.Value >= retentionTime);
-        }
-
-        public IEnumerable<ChromatogramRequestDocumentChromatogramGroup> ToChromatogramRequestDocumentChromatogramGroups()
-        {
-            // TODO(bspratt) how to communicate scan polarity to Chorus?
-            if (null != Ms1ProductFilters)
-            {
-                var chromatograms = new List<ChromatogramRequestDocumentChromatogramGroupChromatogram>();
-                foreach (var spectrumProductFilter in Ms1ProductFilters)
-                {
-                    var product = new ChromatogramRequestDocumentChromatogramGroupChromatogram
-                    {
-                        ProductMz = spectrumProductFilter.TargetMz.RawValue, // Negative ion mode values serialize as negative numbers
-                        MzWindow = spectrumProductFilter.FilterWidth,
-                    };
-                    chromatograms.Add(product);
-                }
-                if (chromatograms.Count > 0)
-                {
-                    yield return MakeChromatogramRequestDocumentChromatogramGroup(ChromSource.ms1, HighAccQ1 && 0 != Q1, chromatograms);
-                }
-            }
-            if (null != Ms2ProductFilters)
-            {
-                var chromatograms = new List<ChromatogramRequestDocumentChromatogramGroupChromatogram>();
-                foreach (var spectrumProductFilter in Ms2ProductFilters)
-                {
-                    var product = new ChromatogramRequestDocumentChromatogramGroupChromatogram
-                    {
-                        ProductMz = spectrumProductFilter.TargetMz.RawValue, // Negative ion mode values serialize as negative numbers
-                        MzWindow = spectrumProductFilter.FilterWidth,
-                    };
-                    chromatograms.Add(product);
-                }
-                if (chromatograms.Count > 0)
-                {
-                    yield return
-                        MakeChromatogramRequestDocumentChromatogramGroup(ChromSource.fragment, HighAccQ3, chromatograms);
-                }
-            }
+            return !_filterByTime || (_minTime <= retentionTime && retentionTime <= _maxTime);
         }
 
         public IEnumerable<int> ProductFilterIds
@@ -432,13 +389,13 @@ namespace pwiz.Skyline.Model.Results
         {
             if (null != productFilters)
             {
-                var ionMobility = GetIonMobilityWindow(highEnergy);
+                var ionMobility = GetIonMobilityWindow();
                 foreach (var spectrumProductFilter in productFilters)
                 {
                     spectrumProductFilter.FilterId = listChromKeys.Count;
                     var key = new ChromKey(ModifiedSequence,
                         Q1,
-                        ionMobility,
+                        ionMobility.ApplyOffset(highEnergy ? spectrumProductFilter.HighEnergyIonMobilityValueOffset : 0),
                         spectrumProductFilter.TargetMz,
                         0,  // CE value (Shimadzu SRM only)
                         spectrumProductFilter.FilterWidth,
@@ -453,90 +410,78 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private ChromatogramRequestDocumentChromatogramGroup MakeChromatogramRequestDocumentChromatogramGroup(
-            ChromSource chromSource, bool calculateMassErrors, IEnumerable<ChromatogramRequestDocumentChromatogramGroupChromatogram> chromatograms)
-        {
-            ChromatogramRequestDocumentChromatogramGroup docFilterPair = new ChromatogramRequestDocumentChromatogramGroup
-            {
-                ModifiedSequence = ModifiedSequence != null ? ModifiedSequence.ToString() : null,
-                PrecursorMz = Q1.RawValue,  // A negative ion mode precursor will be serialized as a negative mz value
-                MassErrors = calculateMassErrors,
-            };
-            switch (Extractor)
-            {
-                case ChromExtractor.base_peak:
-                    docFilterPair.Extractor = RemoteApi.GeneratedCode.ChromExtractor.BasePeak;
-                    break;
-                case ChromExtractor.summed:
-                    docFilterPair.Extractor = RemoteApi.GeneratedCode.ChromExtractor.Summed;
-                    break;
-            }
-            if (MinTime.HasValue)
-            {
-                docFilterPair.MinTime = MinTime.Value;
-                docFilterPair.MinTimeSpecified = true;
-            }
-            if (MaxTime.HasValue)
-            {
-                docFilterPair.MaxTime = MaxTime.Value;
-                docFilterPair.MaxTimeSpecified = true;
-            }
-            if (MinIonMobilityValue.HasValue && MaxIonMobilityValue.HasValue)
-            {
-                docFilterPair.DriftTime = (MinIonMobilityValue.Value + MaxIonMobilityValue.Value)/2;
-                if (ChromSource.fragment == chromSource) // Use high energy offset for fragments
-                {
-                    docFilterPair.DriftTime += HighEnergyIonMobilityValueOffset;
-                }
-                docFilterPair.DriftTimeSpecified = true;
-                docFilterPair.DriftTimeWindow = MaxIonMobilityValue.Value - MinIonMobilityValue.Value;
-                docFilterPair.DriftTimeWindowSpecified = true;
-            }
-            switch (chromSource)
-            {
-                case ChromSource.ms1:
-                    docFilterPair.Source = RemoteApi.GeneratedCode.ChromSource.Ms1;
-                    break;
-                case ChromSource.fragment:
-                    docFilterPair.Source = RemoteApi.GeneratedCode.ChromSource.Ms2;
-                    break;
-                case ChromSource.sim:
-                    docFilterPair.Source = RemoteApi.GeneratedCode.ChromSource.Sim;
-                    break;
-            }
-            docFilterPair.Chromatogram = chromatograms.ToArray();
-            return docFilterPair;
-        }
-
         public bool HasIonMobilityFAIMS()
         {
             return IonMobilityInfo.HasIonMobilityValue && 
                    IonMobilityInfo.IonMobility.Units == eIonMobilityUnits.compensation_V;
         }
 
-        public bool ContainsIonMobilityValue(IonMobilityValue ionMobility, bool highEnergy)
+        public bool ContainsIonMobilityValue(IonMobilityValue ionMobility, double highEnergyOffset)
         {
-            if (!ionMobility.HasValue)
-                return true; // It doesn't NOT have the ion mobility, since there isn't one
-            double offset = highEnergy ? HighEnergyIonMobilityValueOffset : 0;
-            return (!MinIonMobilityValue.HasValue || MinIonMobilityValue.Value+offset <= ionMobility.Mobility) &&
-                (!MaxIonMobilityValue.HasValue || MaxIonMobilityValue.Value+offset >= ionMobility.Mobility);
+            return !ionMobility.HasValue || ContainsIonMobilityValue(ionMobility.Mobility.Value, highEnergyOffset);
         }
 
-        public IonMobilityFilter GetIonMobilityWindow(bool highEnergy)
+        public bool ContainsIonMobilityValue(double ionMobilityValue, double highEnergyOffset)
+        {
+            return (!MinIonMobilityValue.HasValue || MinIonMobilityValue.Value + highEnergyOffset <= ionMobilityValue) &&
+                   (!MaxIonMobilityValue.HasValue || MaxIonMobilityValue.Value + highEnergyOffset >= ionMobilityValue);
+        }
+
+        public IonMobilityFilter GetIonMobilityWindow()
         {
             if (MinIonMobilityValue.HasValue && MaxIonMobilityValue.HasValue)
             {
-                // High energy (product ion) scans may have a faster ion mobility, as in Waters MsE
-                double offset = highEnergy ? HighEnergyIonMobilityValueOffset : 0;
+                // High energy (product ion) scans may have a faster ion mobility, as in Waters MsE, that gets applied elsewhere
                 var width = MaxIonMobilityValue.Value - MinIonMobilityValue.Value;
-                var center = offset + MinIonMobilityValue.Value + 0.5*width;
+                var center = MinIonMobilityValue.Value + 0.5*width;
                 return IonMobilityFilter.GetIonMobilityFilter(IonMobilityValue.GetIonMobilityValue(center, IonMobilityInfo.IonMobility.Units), width, IonMobilityInfo.CollisionalCrossSectionSqA);
             }
             else
             {
                 return IonMobilityFilter.EMPTY;
             }
+        }
+
+        public bool IsKnownWindowGroup(int windowGroup)
+        {
+            return windowGroup == BestWindowGroup ||
+                   (OtherWindowGroups != null && OtherWindowGroups.Contains(windowGroup));
+        }
+
+        public bool IsBestWindowGroup(int windowGroup)
+        {
+            return windowGroup == BestWindowGroup;
+        }
+
+        public bool UpdateBestWindowGroup(int windowGroup, double distance)
+        {
+            if (BestWindowGroup.HasValue)
+            {
+                // Already have a best value and this is it
+                if (BestWindowGroup.Value == windowGroup)
+                    return true;
+                // Not it and the distance is not closer
+                if (BestWindowGroupDistance.Value <= distance)
+                    return false;
+            }
+            // This becomes the best window group
+            if (BestWindowGroup.HasValue)
+            {
+                // Save any previously seen window groups, providing for most likely cases:
+                // 1. No other possible window groups
+                // 2. 1 other possible window group
+                if (OtherWindowGroups == null)
+                    OtherWindowGroups = new[] {BestWindowGroup.Value};
+                else
+                {
+                    if (OtherWindowGroups.Count == 1)
+                        OtherWindowGroups = new List<int>(OtherWindowGroups);
+                    OtherWindowGroups.Add(BestWindowGroup.Value);
+                }
+            }
+            BestWindowGroup = windowGroup;
+            BestWindowGroupDistance = distance;
+            return true;
         }
 
         public bool MatchesDdaPrecursor(SignedMz precursorMz)
@@ -547,26 +492,31 @@ namespace pwiz.Skyline.Model.Results
 
     public class SpectrumProductFilter
     {
-        public SpectrumProductFilter(double targetMz, double filterWidth) :
-            this(new SignedMz(targetMz), filterWidth)
+        public SpectrumProductFilter(double targetMz, double filterWidth, double highEnergyIonMobilityValueOffset) :
+            this(new SignedMz(targetMz), filterWidth, highEnergyIonMobilityValueOffset)
         {
         }
 
-        public SpectrumProductFilter(SignedMz targetMz, double filterWidth)
+        public SpectrumProductFilter(SignedMz targetMz, double filterWidth, double highEnergyIonMobilityValueOffset)
         {
             TargetMz = targetMz;
             FilterWidth = filterWidth;
+            HighEnergyIonMobilityValueOffset = highEnergyIonMobilityValueOffset;
         }
 
         public SignedMz TargetMz { get; private set; }
         public double FilterWidth { get; private set; }
         public int FilterId { get; set; }
+        public double HighEnergyIonMobilityValueOffset { get; private set; }
+
 
         #region object overrides
 
         protected bool Equals(SpectrumProductFilter other)
         {
-            return TargetMz.Equals(other.TargetMz) && FilterWidth.Equals(other.FilterWidth) && FilterId == other.FilterId;
+            return TargetMz.Equals(other.TargetMz) && FilterWidth.Equals(other.FilterWidth) &&
+                   FilterId == other.FilterId && 
+                   Equals(HighEnergyIonMobilityValueOffset, other.HighEnergyIonMobilityValueOffset);
         }
 
         public override bool Equals(object obj)
@@ -584,10 +534,62 @@ namespace pwiz.Skyline.Model.Results
                 var hashCode = TargetMz.GetHashCode();
                 hashCode = (hashCode*397) ^ FilterWidth.GetHashCode();
                 hashCode = (hashCode*397) ^ FilterId;
+                hashCode = (hashCode * 397) ^ HighEnergyIonMobilityValueOffset.GetHashCode();
                 return hashCode;
             }
         }
 
         #endregion
     }
+
+    public class SpectrumFilterValues : IComparable<SpectrumFilterValues>, IComparable
+    {
+        public SignedMz mz;
+        public double ionMobilityHighEnergyOffset;
+
+        public SpectrumFilterValues(SignedMz mz, double ionMobilityHighEnergyOffset)
+        {
+            this.mz = mz;
+            this.ionMobilityHighEnergyOffset = ionMobilityHighEnergyOffset;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as SpectrumFilterValues);
+        }
+
+        public bool Equals(SpectrumFilterValues other)
+        {
+            return other != null &&
+                   mz.Equals(other.mz) &&
+                   ionMobilityHighEnergyOffset == other.ionMobilityHighEnergyOffset;
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = 1155459730;
+            hashCode = hashCode * -1521134295 + EqualityComparer<SignedMz>.Default.GetHashCode(mz);
+            hashCode = hashCode * -1521134295 + ionMobilityHighEnergyOffset.GetHashCode();
+            return hashCode;
+        }
+
+        public int CompareTo(SpectrumFilterValues other)
+        {
+            if (ReferenceEquals(this, other)) return 0;
+            if (ReferenceEquals(null, other)) return 1;
+            var mzComparison = mz.CompareTo(other.mz);
+            if (mzComparison != 0) return mzComparison;
+            return ionMobilityHighEnergyOffset.CompareTo(other.ionMobilityHighEnergyOffset);
+        }
+
+        public int CompareTo(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return 1;
+            if (ReferenceEquals(this, obj)) return 0;
+            if (!(obj is SpectrumFilterValues)) throw new ArgumentException(@"Object must be of type MzAndIonMobilityHighEnergyOffset");
+            return CompareTo((SpectrumFilterValues)obj);
+        }
+    }
+
+
 }

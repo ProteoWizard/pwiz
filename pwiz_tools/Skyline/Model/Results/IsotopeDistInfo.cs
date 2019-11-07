@@ -87,7 +87,7 @@ namespace pwiz.Skyline.Model.Results
             // peaks
             // CONSIDER: Mass accuracy information is not calculated here
             var key = new PrecursorTextId(signedQ1FilterValues[monoMassIndex], null, null, ChromExtractor.summed);
-            var filter = new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, 0, null, null, 0, false, false);
+            var filter = new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, 0, null, null, false, false);
             filter.AddQ1FilterValues(signedQ1FilterValues, calcFilterWindow);
 
             var expectedSpectrum = filter.FilterQ1SpectrumList(new[] { new MsDataSpectrum
@@ -264,6 +264,11 @@ namespace pwiz.Skyline.Model.Results
             public double Mz { get; private set; }
             public int Rank { get; private set; }
             public float Proportion { get; private set; }
+
+            public override string ToString() // For ease in debugging
+            {
+                return String.Format(@"mz {0} rank {1} proportion {2}", Mz, Rank, Proportion);
+            }
         }
     }
 

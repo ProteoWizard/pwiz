@@ -1,6 +1,6 @@
 ﻿/*
  * Original author: Tobias Rohde <tobiasr .at. uw.edu>,
- *                  MacCoss Lab, Department of Genome Sciences, UW
+ *                  MacCoss Lab, Department of Genome Sciences, UWboo
  *
  * Copyright 2018 University of Washington - Seattle, WA
  * 
@@ -134,29 +134,41 @@ namespace pwiz.Skyline.Model.AuditLog
             get { return ImmutableList<Property>.ValueOf(_properties); }
         }
 
-        public static DiffNodeEnumerator EnumerateDiffNodes(ObjectInfo<object> objectInfo, Property rootProperty, bool expand, Func<DiffNode, bool> nodeSelector = null)
+        public static DiffNodeEnumerator EnumerateDiffNodes(ObjectInfo<object> objectInfo, Property rootProperty, SrmDocument.DOCUMENT_TYPE defaultDocumentType, bool expand, Func<DiffNode, bool> nodeSelector = null)
         {
-            return new DiffNodeEnumerator(EnumerateDiffNodes(objectInfo, rootProperty, expand,
+            return new DiffNodeEnumerator(EnumerateDiffNodes(objectInfo, rootProperty, defaultDocumentType, expand,
                 PropertyPath.Root.Property(rootProperty.PropertyName), null, null, nodeSelector, null, 0));
         }
 
-        public static DiffNodeEnumerator EnumerateDiffNodes(ObjectPair<object> rootPair, Property rootProperty, T obj, Func<DiffNode, bool> nodeSelector = null)
+        public static DiffNodeEnumerator EnumerateDiffNodes(ObjectPair<object> rootPair, Property rootProperty, SrmDocument.DOCUMENT_TYPE defaultDocumentType, T obj, Func<DiffNode, bool> nodeSelector = null)
         {
-            var objInfo = new ObjectInfo<object>(null, obj, null, null, rootPair.OldObject, rootPair.NewObject);
-            return new DiffNodeEnumerator(EnumerateDiffNodes(objInfo, rootProperty, true));
+            var objInfo = new ObjectInfo<object>()
+                .ChangeNewObject(obj)
+                .ChangeRootObjectPair(rootPair);
+            return new DiffNodeEnumerator(EnumerateDiffNodes(objInfo, rootProperty, defaultDocumentType, true));
         }
 
         // TODO: make this function and its overloads in nongeneric Reflector class simpler by introducing new class storing parameters
-        private static IEnumerator<DiffNode> EnumerateDiffNodes(ObjectInfo<object> objectInfo, Property thisProperty,
+        private static IEnumerator<DiffNode> EnumerateDiffNodes(ObjectInfo<object> objectInfo, Property thisProperty, SrmDocument.DOCUMENT_TYPE defaultDocumentType,
             bool expand, PropertyPath propertyPath, object elementKey, IList<object> defaults, Func<DiffNode, bool> nodeSelector, DiffNode resultNode, int stackDepth)
         {
+            var docType = objectInfo.NewObject is SrmDocument document ? document.DocumentType
+                : objectInfo.NewParentObject is SrmDocument documentp ? documentp.DocumentType
+                : objectInfo.NewRootObject is SrmDocument documentr ? documentr.DocumentType
+                : SrmDocument.DOCUMENT_TYPE.none;
+
+            if (docType == SrmDocument.DOCUMENT_TYPE.none)
+            {
+                docType = defaultDocumentType;
+            }
+
             nodeSelector = nodeSelector ?? (n => true);
             if (objectInfo.ObjectPair.ReferenceEquals() && !expand)
                 yield break;
 
             resultNode = resultNode ?? (thisProperty.IsCollectionElement
-                ? new ElementPropertyDiffNode(thisProperty, propertyPath, objectInfo.ObjectPair, elementKey, null, expand)
-                : new PropertyDiffNode(thisProperty, propertyPath, objectInfo.ObjectPair, null, expand));
+                ? new ElementPropertyDiffNode(thisProperty, propertyPath, objectInfo.ObjectPair, elementKey, docType, null, expand)
+                : new PropertyDiffNode(thisProperty, propertyPath, objectInfo.ObjectPair, docType, null, expand));
 
             var expandAnyways = false;
 
@@ -208,7 +220,7 @@ namespace pwiz.Skyline.Model.AuditLog
             if (collection != null)
             {
                 var nodeIter = Reflector.EnumerateCollectionDiffNodes(objectInfo.ChangeObjectPair(collection.Collections), collection,
-                    thisProperty, propertyPath, expand, defaults, nodeSelector, resultNode, stackDepth);
+                    thisProperty, propertyPath, docType, expand, defaults, nodeSelector, resultNode, stackDepth);
 
                 while (nodeIter.MoveNext())
                     yield return nodeIter.Current;
@@ -241,7 +253,7 @@ namespace pwiz.Skyline.Model.AuditLog
                     .ChangeNewObject(property.GetValue(objectInfo.NewObject));
 
                 var valType = property.GetPropertyType(newObjectInfo.ObjectPair);
-                var nodeIter = Reflector.EnumerateDiffNodes(valType, newObjectInfo, property, expand, newPropertyPath,
+                var nodeIter = Reflector.EnumerateDiffNodes(valType, newObjectInfo, property, docType, expand, newPropertyPath,
                     null, defaults, nodeSelector, null, stackDepth);
 
                 DiffNode current = null;
@@ -273,12 +285,12 @@ namespace pwiz.Skyline.Model.AuditLog
     /// </summary>
     public static partial class Reflector
     {
-        public static bool Equals(Type objectType, ObjectInfo<object> objInfo, Property property)
+        public static bool Equals(Type objectType, ObjectInfo<object> objInfo, Property property, SrmDocument.DOCUMENT_TYPE docType)
         {
-            return !EnumerateDiffNodes(objectType, objInfo, property, false).MoveNext();
+            return !EnumerateDiffNodes(objectType, objInfo, property, docType, false).MoveNext();
         }
 
-        public static IEnumerator<DiffNode> EnumerateDiffNodes(Type objectType, ObjectInfo<object> objectInfo, Property thisProperty,
+        public static IEnumerator<DiffNode> EnumerateDiffNodes(Type objectType, ObjectInfo<object> objectInfo, Property thisProperty, SrmDocument.DOCUMENT_TYPE defaultDocumentType,
             bool expand, PropertyPath propertyPath, object elementKey, IList<object> defaults, Func<DiffNode, bool> resultSelector, DiffNode resultNode, int stackDepth)
         {
             if (++stackDepth > MAX_STACK_DEPTH)
@@ -289,7 +301,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 null,
                 new[]
                 {
-                    typeof(ObjectInfo<object>), typeof(Property), typeof(bool), typeof(PropertyPath),
+                    typeof(ObjectInfo<object>), typeof(Property), typeof(SrmDocument.DOCUMENT_TYPE), typeof(bool), typeof(PropertyPath),
                     typeof(object), typeof(IList<object>), typeof(Func<DiffNode, bool>), typeof(PropertyDiffNode), typeof(int)
                 },
                 null);
@@ -299,18 +311,11 @@ namespace pwiz.Skyline.Model.AuditLog
             var reflector = Activator.CreateInstance(type);
 
             // ReSharper disable once PossibleNullReferenceException
-            return (IEnumerator<DiffNode>)enumerateDiffNodes.Invoke(reflector, new[] { objectInfo, thisProperty, expand, propertyPath, elementKey, defaults, resultSelector, resultNode, stackDepth });
+            return (IEnumerator<DiffNode>)enumerateDiffNodes.Invoke(reflector, new[] { objectInfo, thisProperty, defaultDocumentType, expand, propertyPath, elementKey, defaults, resultSelector, resultNode, stackDepth });
         }
 
         private static bool Matches(Property property, ObjectInfo<object> objectInfo)
         {
-            if (objectInfo.ObjectPair.ReferenceEquals())
-                return true;
-
-            if (ReferenceEquals(objectInfo.OldObject, null) || ReferenceEquals(objectInfo.NewObject, null))
-                return false;
-
-
             var objectPair = objectInfo.ObjectPair;
 
             if (objectPair.ReferenceEquals())
@@ -332,7 +337,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 auditLogObjects.OldObject.AuditLogText == auditLogObjects.NewObject.AuditLogText)
                 return true;
 
-            return Equals(type, objectInfo.ToObjectType(), property);
+            return Equals(type, objectInfo.ToObjectType(), property, SrmDocument.DOCUMENT_TYPE.none);
         }
 
         /// <summary>
@@ -342,6 +347,7 @@ namespace pwiz.Skyline.Model.AuditLog
         /// <param name="collection">Collection object to retrieve elements from collection</param>
         /// <param name="property">The property of the collection</param>
         /// <param name="propertyPath">The path to the collectins property</param>
+        /// <param name="defaultDocumentType">May be used to decide whether to perform "peptide"->"molecule" translation on human readable log entry</param>
         /// <param name="expand">Whether to expand subproperties</param>
         /// <param name="defaults">Default collections</param>
         /// <param name="nodeSelector">Selector to be applied to each node to check if it should be included</param>
@@ -349,15 +355,24 @@ namespace pwiz.Skyline.Model.AuditLog
         /// <param name="stackDepth">Depth of stack, used for stack overflow detection</param>
         /// <returns>A node representing the differences found in the collections</returns>
         public static IEnumerator<DiffNode> EnumerateCollectionDiffNodes(ObjectInfo<object> objectInfo, Collection collection, Property property,
-            PropertyPath propertyPath, bool expand, IList<object> defaults, Func<DiffNode, bool> nodeSelector, DiffNode existingNode, int stackDepth)
+            PropertyPath propertyPath, SrmDocument.DOCUMENT_TYPE defaultDocumentType, bool expand, IList<object> defaults, Func<DiffNode, bool> nodeSelector, DiffNode existingNode, int stackDepth)
         {
+            var docType = objectInfo.NewObject is SrmDocument document ? document.DocumentType
+                : objectInfo.NewParentObject is SrmDocument documentp ? documentp.DocumentType
+                : objectInfo.NewRootObject is SrmDocument documentr ? documentr.DocumentType
+                : SrmDocument.DOCUMENT_TYPE.none;
+            if (docType == SrmDocument.DOCUMENT_TYPE.none)
+            {
+                docType = defaultDocumentType;
+            }
+
             nodeSelector = nodeSelector ?? (n => true);
 
             var oldKeys = collection.Info.GetKeys(collection.Collections.OldObject).OfType<object>().ToArray();
             var newKeys = collection.Info.GetKeys(collection.Collections.NewObject).OfType<object>().ToList();
 
             var resultNode = CollectionPropertyDiffNode.FromPropertyDiffNode(existingNode as PropertyDiffNode) ??
-                         new CollectionPropertyDiffNode(property, propertyPath, objectInfo.ObjectPair, null, expand);
+                         new CollectionPropertyDiffNode(property, propertyPath, objectInfo.ObjectPair, docType, null, expand);
 
             if (oldKeys.Length > 0 && newKeys.Count == 0)
                 resultNode = resultNode.SetRemovedAll();
@@ -392,7 +407,7 @@ namespace pwiz.Skyline.Model.AuditLog
                             collection.Info.GetItemValueFromKey(collection.Collections.NewObject, key));
 
                         return property.DiffProperties
-                            ? Equals(collection.Info.ElementValueType, objectInfo.ChangeObjectPair(valuePair), property)
+                            ? Equals(collection.Info.ElementValueType, objectInfo.ChangeObjectPair(valuePair), property, docType)
                             : valuePair.Equals();
                     });
                 });
@@ -429,7 +444,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 {
                     var newElem = collection.Info.GetItemValueFromKey(collection.Collections.NewObject, newKeys[index]);
                     var info = objectInfo.ChangeObjectPair(ObjectPair.Create(oldElem, newElem));
-                    var nodeIter = EnumerateDiffNodes(property.GetPropertyType(info.ObjectPair), info, property, expand,
+                    var nodeIter = EnumerateDiffNodes(property.GetPropertyType(info.ObjectPair), info, property, docType, expand,
                         propertyPath.LookupByKey(newKeys[index].ToString()), newKeys[index], defaults, nodeSelector, null, stackDepth);
 
                     DiffNode current = null;
@@ -451,7 +466,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 {
                     // If the element can't be found, we assume it was removed
                     var node = new ElementDiffNode(property, propertyPath.LookupByKey(oldKey.ToString()),
-                        oldElem, key, true, null, expand);
+                        oldElem, key, true, docType, null, expand);
                     resultNode.Nodes.Add(node);
 
                     if (nodeSelector(node))
@@ -462,16 +477,16 @@ namespace pwiz.Skyline.Model.AuditLog
             // The keys that are left over are most likely elements that were added to the colletion
             var added = newKeys.Select(k =>
                     new ElementDiffNode(property, propertyPath.LookupByKey(k.ToString()),
-                        collection.Info.GetItemValueFromKey(collection.Collections.NewObject, k), k, false, null,
+                        collection.Info.GetItemValueFromKey(collection.Collections.NewObject, k), k, false, docType, null,
                         expand))
                 .Where(n => nodeSelector(n)).ToList();
 
             foreach (var node in added)
             {
-                if (expand || AuditLogObject.GetAuditLogObject(node.Element).IsName)
+                if (expand || AuditLogObject.IsNameObject(node.Element))
                 {
                     var info = objectInfo.ChangeObjectPair(ObjectPair.Create(null, node.Element));
-                    var nodeIter = EnumerateDiffNodes(node.Property.GetPropertyType(node.Element), info, node.Property, expand,
+                    var nodeIter = EnumerateDiffNodes(node.Property.GetPropertyType(node.Element), info, node.Property, docType, expand,
                         node.PropertyPath, node.ElementKey, defaults, nodeSelector, node, stackDepth);
 
                     while (nodeIter.MoveNext())
@@ -593,17 +608,17 @@ namespace pwiz.Skyline.Model.AuditLog
             return (IList<Property>)property.GetValue(reflector);
         }
 
-        public static DiffNodeEnumerator EnumerateDiffNodes(Type objectType, ObjectInfo<object> objectInfo, Property rootProperty, bool expand, Func<DiffNode, bool> resultSelector = null)
+        public static DiffNodeEnumerator EnumerateDiffNodes(Type objectType, ObjectInfo<object> objectInfo, Property rootProperty, SrmDocument.DOCUMENT_TYPE docType, bool expand, Func<DiffNode, bool> resultSelector = null)
         {
             var type = typeof(Reflector<>).MakeGenericType(objectType);
             var enumerateDiffNodes = type.GetMethod(@"EnumerateDiffNodes", BindingFlags.Public | BindingFlags.Static, null,
-                new[] { typeof(ObjectInfo<object>), typeof(Property), typeof(bool), typeof(Func<DiffNode, bool>) }, null);
+                new[] { typeof(ObjectInfo<object>), typeof(Property), typeof(SrmDocument.DOCUMENT_TYPE), typeof(bool), typeof(Func<DiffNode, bool>) }, null);
 
             Assume.IsNotNull(enumerateDiffNodes);
 
             var reflector = Activator.CreateInstance(type);
 
-            return (DiffNodeEnumerator)enumerateDiffNodes.Invoke(reflector, new object[] { objectInfo, rootProperty, expand, resultSelector });
+            return (DiffNodeEnumerator)enumerateDiffNodes.Invoke(reflector, new object[] { objectInfo, rootProperty, docType, expand, resultSelector });
         }
 
         #endregion

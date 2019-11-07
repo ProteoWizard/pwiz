@@ -36,7 +36,6 @@
 using namespace pwiz::vendor_api::Waters;
 #endif
 
-using namespace std;
 
 namespace BiblioSpec {
 
@@ -613,20 +612,18 @@ void WatersMseReader::parseModString(LineEntry& entry,
         if (i->empty() || boost::iequals(*i, "None")) {
             continue;
         }
-        map<string, double>::const_iterator j = mods_.find(*i);
-        if (j == mods_.end()) {
-            for (j = mods_.begin(); j != mods_.end(); j++) {
-                if (boost::iequals(j->first, i->substr(0, j->first.length()))) {
-                    break;
-                }
-            }
-            if (j == mods_.end()) {
-                throw BlibException(false, "The modification '%s' on line %d is not recognized.",
-                                    i->c_str(), lineNum_);
-            }
+        // CONSIDER: strip position from mod name and do a proper map::find() or lower_bound()
+        map<string, double>::const_reverse_iterator j;
+        for (j = mods_.rbegin(); j != mods_.rend(); ++j) {
+            if (boost::algorithm::istarts_with(*i, j->first))
+                break;
+        }
+        if (j == mods_.rend()) {
+            throw BlibException(false, "The modification '%s' on line %d is not recognized.",
+                                i->c_str(), lineNum_);
         }
         // find the position in the sequence
-        size_t openBrace = i->find('(');
+        size_t openBrace = i->rfind('(');
         int position = atoi(i->c_str() + openBrace + 1);
         
         // check that there was a valid position

@@ -159,6 +159,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             Type = type;
             Text = Controller.Text + @" - " + Type.CustomToString();
+            Helpers.PeptideToMoleculeTextMapper.TranslateForm(this, _documentContainer.Document.DocumentType); // Use terminology like "Molecule Comparison" instead of "Peptide Comparison" as appropriate
 
             UpdateUI();
         }
@@ -536,7 +537,7 @@ namespace pwiz.Skyline.Controls.Graphs
     public enum GraphTypeSummary
     {
         invalid = 0,
-        replicate = 1 << 0,
+        replicate = 1,
         peptide = 1 << 1,
         score_to_run_regression = 1 << 2,
         schedule = 1 << 3,

@@ -104,7 +104,7 @@ namespace pwiz.Skyline.Model
 
         protected override IList<DocNode> OrderedChildren(IList<DocNode> children)
         {
-            if (Peptide.IsCustomMolecule && children.Any() && !SrmDocument.IsSpecialNonProteomicTestDocNode(this))
+            if (Peptide.IsCustomMolecule && children.Any())
             {
                 // Enforce order for small molecules, except those that are fictions of the test system
                 return children.OrderBy(t => (TransitionGroupDocNode)t, new TransitionGroupDocNode.CustomIonPrecursorComparer()).ToArray();
@@ -517,6 +517,8 @@ namespace pwiz.Skyline.Model
 
         public NormalizationMethod NormalizationMethod { get; private set; }
 
+        public string AttributeGroupId { get; private set; }
+
         #region Property change methods
 
         private PeptideDocNode UpdateModifiedSequence(SrmSettings settingsNew)
@@ -620,6 +622,12 @@ namespace pwiz.Skyline.Model
         public PeptideDocNode ChangeNormalizationMethod(NormalizationMethod normalizationMethod)
         {
             return ChangeProp(ImClone(this), im => im.NormalizationMethod = normalizationMethod);
+        }
+
+        public PeptideDocNode ChangeAttributeGroupId(string attributeGroupId)
+        {
+            return ChangeProp(ImClone(this),
+                im => im.AttributeGroupId = string.IsNullOrEmpty(attributeGroupId) ? null : attributeGroupId);
         }
 
         #endregion
@@ -810,17 +818,17 @@ namespace pwiz.Skyline.Model
                 bool isPickedIntensityRank = useHighestRank &&
                                              ReferenceEquals(rankId, LibrarySpec.PEP_RANK_PICKED_INTENSITY);
 
-                Dictionary<Identity, DocNode> mapIdToChild = CreateIdContentToChildMap();
+                ILookup<Identity, TransitionGroupDocNode> mapIdToChild =
+                    TransitionGroups.ToLookup(nodeGroup => nodeGroup.Id);
                 foreach (TransitionGroup tranGroup in GetTransitionGroups(settingsNew, explicitMods, true))
                 {
-                    TransitionGroupDocNode nodeGroup;
+                    IList<TransitionGroupDocNode> nodeGroups = null;
                     SrmSettingsDiff diffNode = diff;
 
-                    DocNode existing;
                     // Add values that existed before the change, unless using picked intensity ranking,
                     // since this could bias the ranking, otherwise.
-                    if (!isPickedIntensityRank && mapIdToChild.TryGetValue(tranGroup, out existing))
-                        nodeGroup = (TransitionGroupDocNode)existing;
+                    if (!isPickedIntensityRank && mapIdToChild.Contains(tranGroup))
+                        nodeGroups = mapIdToChild[tranGroup].ToArray();
                     // Add new node
                     else
                     {
@@ -828,22 +836,30 @@ namespace pwiz.Skyline.Model
                             ? GetMatchingTransitions(tranGroup, settingsNew, explicitMods)
                             : null;
 
-                        nodeGroup = new TransitionGroupDocNode(tranGroup, transitions);
+                        nodeGroups = ImmutableList.Singleton(new TransitionGroupDocNode(tranGroup, transitions));
                         // If not recursing, then ChangeSettings will not be called on nodeGroup.  So, make
                         // sure its precursor m/z is set correctly.
                         if (!recurse)
-                            nodeGroup = nodeGroup.ChangePrecursorMz(settingsNew, explicitMods);
+                        {
+                            nodeGroups = ImmutableList.ValueOf(nodeGroups.Select(nodeGroup =>
+                                nodeGroup.ChangePrecursorMz(settingsNew, explicitMods)));
+                        }
                         diffNode = SrmSettingsDiff.ALL;
                     }
 
-                    if (nodeGroup != null)
+                    if (nodeGroups != null)
                     {
-                        nodeGroup = recurse
-                            ? nodeGroup.ChangeSettings(settingsNew, nodeResult, explicitMods, diffNode)
-                            : nodeGroup;
-                        if (settingsNew.TransitionSettings.Libraries.HasMinIonCount(nodeGroup) && transitionSettings.IsMeasurablePrecursor(nodeGroup.PrecursorMz))
+                        if (recurse)
                         {
-                            childrenNew.Add(nodeGroup);
+                            nodeGroups = nodeGroups.Select(nodeGroup =>
+                                nodeGroup.ChangeSettings(settingsNew, nodeResult, explicitMods, diffNode)).ToList();
+                        }
+                        foreach (var nodeGroup in nodeGroups)
+                        {
+                            if (settingsNew.TransitionSettings.Libraries.HasMinIonCount(nodeGroup) && transitionSettings.IsMeasurablePrecursor(nodeGroup.PrecursorMz))
+                            {
+                                childrenNew.Add(nodeGroup);
+                            }
                         }
                     }
                 }
@@ -860,10 +876,10 @@ namespace pwiz.Skyline.Model
                         for (int i = 0; i < childrenNew.Count; i++)
                         {
                             var nodeNew = (TransitionGroupDocNode) childrenNew[i];
-                            DocNode existing;
-                            if (mapIdToChild.TryGetValue(nodeNew.TransitionGroup, out existing))
+                            IList<TransitionGroupDocNode> existing = mapIdToChild[nodeNew.TransitionGroup].ToList();
+                            if (existing.Count == 1)
                             {
-                                childrenNew[i] = ((TransitionGroupDocNode) existing)
+                                childrenNew[i] = existing.First()
                                     .ChangeSettings(settingsNew, nodeResult, explicitMods, diff);
                             }
                         }
@@ -894,7 +910,7 @@ namespace pwiz.Skyline.Model
                     diff.DiffTransitions || diff.DiffTransitionProps ||
                     diff.DiffResults)
                 {
-                    IList<DocNode> childrenNew = new List<DocNode>();
+                    IList<DocNode> childrenNew = new List<DocNode>(nodeResult.Children.Count);
 
                     // Enumerate the nodes making necessary changes.
                     foreach (TransitionGroupDocNode nodeGroup in nodeResult.Children)
@@ -1107,6 +1123,13 @@ namespace pwiz.Skyline.Model
                 if (!HasResults)
                     return this;
                 return ChangeResults(null);
+            }
+            else if (!settingsNew.MeasuredResults.Chromatograms.Any(c => c.IsLoaded) &&
+                     (!HasResults || Results.All(r => r.IsEmpty)))
+            {
+                if (HasResults && Results.Count == settingsNew.MeasuredResults.Chromatograms.Count)
+                    return this;
+                return ChangeResults(settingsNew.MeasuredResults.EmptyPeptideResults);
             }
 
             var transitionGroupKeys = new HashSet<Tuple<IsotopeLabelType, Adduct>>();
@@ -1465,7 +1488,7 @@ namespace pwiz.Skyline.Model
                         // first as a shortcut
                         var infoNew = info;
                         if (!ReferenceEquals(ratios, info.Ratios) && !ArrayUtil.EqualsDeep(ratios, info.Ratios))
-                            infoNew = infoNew.ChangeRatios(false, ratios);
+                            infoNew = infoNew.ChangeRatios(ratios);
                         if (isMatching && calc.IsSetMatching && !info.IsUserSetMatched)
                             infoNew = infoNew.ChangeUserSet(UserSet.MATCHED);
                         if (!ReferenceEquals(info, infoNew) && listInfoNew == null)
@@ -1896,7 +1919,8 @@ namespace pwiz.Skyline.Model
                 other.BestResult == BestResult &&
                 Equals(other.InternalStandardConcentration, InternalStandardConcentration) &&
                 Equals(other.ConcentrationMultiplier, ConcentrationMultiplier) &&
-                Equals(other.NormalizationMethod, NormalizationMethod);
+                Equals(other.NormalizationMethod, NormalizationMethod) &&
+                Equals(other.AttributeGroupId, AttributeGroupId);
             return equal; // For debugging convenience
         }
 
@@ -1921,6 +1945,7 @@ namespace pwiz.Skyline.Model
                 result = (result*397) ^ InternalStandardConcentration.GetHashCode();
                 result = (result*397) ^ ConcentrationMultiplier.GetHashCode();
                 result = (result*397) ^ (NormalizationMethod == null ? 0 : NormalizationMethod.GetHashCode());
+                result = (result*397) ^ (AttributeGroupId == null ? 0 : AttributeGroupId.GetHashCode());
                 return result;
             }
         }

@@ -74,7 +74,7 @@ def contextMenuRegistries() :
     for appName in appNames :
         txt = componentText.replace("_MY_APPU_",appName.upper())
         txt = txt.replace("__MY_APP__","Open with "+appName)
-        txt = txt.replace("__MY_PATH__","[APPLICATIONROOTDIRECTORY]"+appName+".exe")
+        txt = txt.replace("__MY_PATH__","[APPLICATIONFOLDER]"+appName+".exe")
         registries = registries + txt
     return registries
 

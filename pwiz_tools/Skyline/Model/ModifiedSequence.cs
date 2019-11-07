@@ -46,17 +46,35 @@ namespace pwiz.Skyline.Model
                 return null;
             }
             var unmodifiedSequence = docNode.Peptide.Sequence;
-            bool includeStaticMods = true;
-            bool includeStaticHeavyMods = false;
+            List<IsotopeLabelType> implicitLabelTypes = new List<IsotopeLabelType>();
+            implicitLabelTypes.Add(IsotopeLabelType.light);
+            if (!labelType.IsLight)
+            {
+                implicitLabelTypes.Add(labelType);
+            }
             List<Modification> explicitMods = new List<Modification>();
             if (null != docNode.ExplicitMods)
             {
                 var staticBaseMods = docNode.ExplicitMods.GetStaticBaseMods(labelType);
+                if (staticBaseMods != null)
+                {
+                    implicitLabelTypes.Clear();
+                }
                 var labelMods = docNode.ExplicitMods.GetModifications(labelType);
-                if (labelMods == null && !labelType.IsLight)
+                if (labelMods != null)
+                {
+                    if (!docNode.ExplicitMods.IsVariableStaticMods)
+                    {
+                        implicitLabelTypes.Remove(labelType);
+                    }
+                }
+                else if (!labelType.IsLight)
                 {
                     labelMods = docNode.ExplicitMods.GetModifications(IsotopeLabelType.light);
-                    includeStaticHeavyMods = true;
+                    if (labelMods != null && !docNode.ExplicitMods.IsVariableStaticMods)
+                    {
+                        implicitLabelTypes.Remove(IsotopeLabelType.light);
+                    }
                 }
                 if (labelMods != null || staticBaseMods != null)
                 {
@@ -66,43 +84,40 @@ namespace pwiz.Skyline.Model
                     {
                         explicitMods.Add(MakeModification(unmodifiedSequence, mod));
                     }
-                    includeStaticMods = docNode.ExplicitMods.IsVariableStaticMods && staticBaseMods == null;
                 }
             }
 
-            if (includeStaticMods || includeStaticHeavyMods)
+            List<StaticMod> implicitMods = new List<StaticMod>();
+            var peptideModifications = settings.PeptideSettings.Modifications;
+            foreach (var implicitLabelType in implicitLabelTypes)
             {
-                var peptideModifications = settings.PeptideSettings.Modifications;
-                for (int i = 0; i < unmodifiedSequence.Length; i++)
+                implicitMods.AddRange(peptideModifications.GetModifications(implicitLabelType));
+            }
+
+            for (int i = 0; i < unmodifiedSequence.Length; i++)
+            {
+                foreach (var staticMod in implicitMods)
                 {
-                    IEnumerable<StaticMod> staticMods = peptideModifications.GetModifications(labelType);
-                    if (!labelType.IsLight && includeStaticMods)
+                    if (staticMod.IsExplicit || staticMod.IsVariable)
                     {
-                        staticMods = peptideModifications.GetModifications(IsotopeLabelType.light).Concat(staticMods);
+                        continue;
                     }
-                    foreach (var staticMod in staticMods)
+                    if (staticMod.Terminus.HasValue)
                     {
-                        if (staticMod.IsExplicit || staticMod.IsVariable)
+                        if (staticMod.Terminus == ModTerminus.N && i != 0)
                         {
                             continue;
                         }
-                        if (staticMod.Terminus.HasValue)
-                        {
-                            if (staticMod.Terminus == ModTerminus.N && i != 0)
-                            {
-                                continue;
-                            }
-                            if (staticMod.Terminus == ModTerminus.C && i != unmodifiedSequence.Length - 1)
-                            {
-                                continue;
-                            }
-                        }
-                        if (!string.IsNullOrEmpty(staticMod.AAs) && !staticMod.AAs.Contains(unmodifiedSequence[i]))
+                        if (staticMod.Terminus == ModTerminus.C && i != unmodifiedSequence.Length - 1)
                         {
                             continue;
                         }
-                        explicitMods.Add(MakeModification(unmodifiedSequence, new ExplicitMod(i, staticMod)));
                     }
+                    if (!string.IsNullOrEmpty(staticMod.AAs) && !staticMod.AAs.Contains(unmodifiedSequence[i]))
+                    {
+                        continue;
+                    }
+                    explicitMods.Add(MakeModification(unmodifiedSequence, new ExplicitMod(i, staticMod)));
                 }
             }
             return new ModifiedSequence(unmodifiedSequence, explicitMods, settings.TransitionSettings.Prediction.PrecursorMassType);

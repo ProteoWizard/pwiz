@@ -754,7 +754,7 @@ namespace pwiz.Skyline.Model
                 else
                 {
                     var massdiff2 = strMassDiff.TrimStart('+', '-');
-                    normalizedSeq.Append(string.Format(CultureInfo.InvariantCulture, @"[{0}{1}]", massDiff > 0 ? @"+" : string.Empty, massdiff2));
+                    normalizedSeq.Append(string.Format(CultureInfo.InvariantCulture, @"[{0}{1}]", massDiff > 0 ? @"+" : @"-", massdiff2));
                 }
                 ichLast = ichCloseBracket + 1;
             }
@@ -843,12 +843,13 @@ namespace pwiz.Skyline.Model
             var result = md;
             var charge = adduct.AdductCharge;
             // Note we use the traditional peptide-oriented calculation when adduct is protonated and not an n-mer, mostly for stability in tests
-            var mol = (adduct.IsProtonated && adduct.GetMassMultiplier() == 1) ? molecule.Elements : adduct.ApplyToMolecule(molecule.Elements);
+            var protonated = adduct.IsProtonated && (adduct.GetMassMultiplier() == 1);
+            var mol = protonated ? molecule.Elements : adduct.ApplyToMolecule(molecule.Elements);
             foreach (var element in mol)
             {
                 result = result.Add(md.Add(abundances[element.Key]).Multiply(element.Value));
             }
-            return result.OffsetAndDivide(unexplainedMass + charge * (adduct.IsProtonated ? BioMassCalc.MassProton : -BioMassCalc.MassElectron), charge);
+            return result.OffsetAndDivide(unexplainedMass + charge * (protonated ? BioMassCalc.MassProton : -BioMassCalc.MassElectron), charge);
         }
 
         private MoleculeUnsorted GetFormula(string seq, ExplicitSequenceMods mods, out double unexplainedMass)
@@ -1300,7 +1301,7 @@ namespace pwiz.Skyline.Model
 
             // ReSharper disable CharImplicitlyConvertedToNumeric
             // Handle values for non-amino acids
-            // Wikipedia says Aspartic acid or Asparagine
+            // Wikipedia says Aspartic acid or Asparagine, this seems to be average of Cytosine and Cyanoalanine
             _aminoMasses['b'] = _aminoMasses['B'] =
                 (_massCalc.CalculateMassFromFormula(@"C4H5NO3") + _massCalc.CalculateMassFromFormula(@"C4H6N2O2")) / 2;
             _aminoMasses['j'] = _aminoMasses['J'] = 0.0;

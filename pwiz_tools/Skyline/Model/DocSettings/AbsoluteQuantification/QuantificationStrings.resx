@@ -273,4 +273,13 @@
   <data name="CalibrationCurve_ToString_Turning_Point___0_" xml:space="preserve">
     <value>Turning Point: {0}</value>
   </data>
+  <data name="CalibrationForm_GetFormTitle__Replicate___0__" xml:space="preserve">
+    <value>(Replicate: {0})</value>
+  </data>
+  <data name="CalibrationForm_GetFormTitle__Batch___0__" xml:space="preserve">
+    <value>(Batch: {0})</value>
+  </data>
+  <data name="CalibrationForm_GetFormTitle__All_Replicates_" xml:space="preserve">
+    <value>(All Replicates)</value>
+  </data>
 </root>

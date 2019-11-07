@@ -16,11 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -30,6 +25,12 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Windows.Forms;
+using pwiz.Skyline.Controls.Graphs;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -40,6 +41,8 @@ namespace pwiz.Skyline.EditUI
 
         private readonly string _removeLabelText;
         private readonly string _removeTipText;
+
+        private int _standardTypeCount;
 
         public RefineDlg(SrmDocument document)
         {
@@ -81,6 +84,40 @@ namespace pwiz.Skyline.EditUI
                 }
             }
 
+            if (!settings.HasResults || _settings.MeasuredResults.Chromatograms.Count < 2)
+            {
+                tabControl1.TabPages.Remove(tabConsistency);
+            }
+            else
+            {
+                // Consistency tab
+                textQVal.Enabled = document.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained;
+                numericUpDownDetections.Enabled = textQVal.Enabled;
+                if (numericUpDownDetections.Enabled)
+                {
+                    numericUpDownDetections.Minimum = 1;
+                    numericUpDownDetections.Maximum = _document.MeasuredResults.Chromatograms.Count;
+                    numericUpDownDetections.Value = 1;
+                }
+
+                var mods = _document.Settings.PeptideSettings.Modifications;
+                var standardTypes = mods.RatioInternalStandardTypes;
+                comboNormalizeTo.Items.Clear();
+
+                if (mods.HasHeavyModifications)
+                {
+                    comboNormalizeTo.Items.AddRange(standardTypes.Select((s) => s.Title).ToArray());
+                    _standardTypeCount = standardTypes.Count;
+                }
+
+                var hasGlobalStandard = _document.Settings.HasGlobalStandardArea;
+                if (hasGlobalStandard)
+                    comboNormalizeTo.Items.Add(Resources.RefineDlg_NormalizationMethod_Global_standards);
+                comboNormalizeTo.Items.Add(Resources.RefineDlg_NormalizationMethod_Medians);
+                comboNormalizeTo.Items.Add(Resources.RefineDlg_NormalizationMethod_None);
+                comboNormalizeTo.SelectedIndex = comboNormalizeTo.Items.Count - 1;
+            }
+
             if (settings.PeptideSettings.Libraries.HasLibraries)
             {
                 labelMinDotProduct.Enabled = textMinDotProduct.Enabled = groupLibCorr.Enabled = true;
@@ -89,6 +126,38 @@ namespace pwiz.Skyline.EditUI
             {
                 labelMinIdotProduct.Enabled = textMinIdotProduct.Enabled = groupLibCorr.Enabled = true;
             }
+        }
+
+        private AreaCVNormalizationMethod GetNormalizationMethod(int idx)
+        {
+            if (idx < 0)
+                return AreaCVNormalizationMethod.none;
+            if (idx < _standardTypeCount)
+            {
+                return AreaCVNormalizationMethod.ratio;
+            }
+            idx -= _standardTypeCount;
+            if (!_document.Settings.HasGlobalStandardArea)
+                idx++;
+
+            var normalizationMethod = AreaCVNormalizationMethod.none;
+            switch (idx)
+            {
+                case 0:
+                    normalizationMethod =
+                        _document.Settings.HasGlobalStandardArea
+                            ? AreaCVNormalizationMethod.global_standards
+                            : AreaCVNormalizationMethod.medians;
+                    break;
+                case 1:
+                    normalizationMethod = AreaCVNormalizationMethod.medians;
+                    break;
+                case 2:
+                    normalizationMethod = AreaCVNormalizationMethod.none;
+                    break;
+            }
+
+            return normalizationMethod;
         }
 
         protected override void OnShown(EventArgs e)
@@ -110,6 +179,12 @@ namespace pwiz.Skyline.EditUI
             set { cbPreferLarger.Checked = value; }
         }
 
+        public bool MaxPrecursorPeakOnly
+        {
+            get { return cbMaxPrecursorOnly.Checked; }
+            set { cbMaxPrecursorOnly.Checked = value; }
+        }
+
         public bool RemoveMissingResults
         {
             get { return radioRemoveMissing.Checked; }
@@ -126,6 +201,72 @@ namespace pwiz.Skyline.EditUI
         {
             get { return Convert.ToDouble(textMinDotProduct.Text); }
             set { textMinDotProduct.Text = value.ToString(LocalizationHelper.CurrentCulture); }
+        }
+
+        public int CVCutoff
+        {
+            get { return Convert.ToInt32(textCVCutoff.Text); }
+            set { textCVCutoff.Text = value.ToString(LocalizationHelper.CurrentCulture); }
+        }
+
+        public double QValueCutoff
+        {
+            get
+            {
+                double result;
+                return double.TryParse(textQVal.Text, out result) ? result : double.NaN;
+            }
+            set { textQVal.Text = value.ToString(CultureInfo.CurrentCulture); }
+        }
+
+        public int MinimumDetections
+        {
+            get { return (int) numericUpDownDetections.Value; }
+            set { numericUpDownDetections.Value = value; }
+        }
+
+        public AreaCVNormalizationMethod NormalizationMethod
+        {
+            get
+            {
+                var selected = comboNormalizeTo.SelectedItem.ToString();
+                
+                if (Equals(selected, Resources.RefineDlg_NormalizationMethod_None))
+                    return AreaCVNormalizationMethod.none;
+                else if (Equals(selected, Resources.RefineDlg_NormalizationMethod_Medians))
+                    return AreaCVNormalizationMethod.medians;
+                else if (Equals(selected, Resources.RefineDlg_NormalizationMethod_Global_standards))
+                    return AreaCVNormalizationMethod.global_standards;
+                else
+                    return AreaCVNormalizationMethod.ratio;
+            }
+            set
+            {
+                if (!Equals(value, AreaCVNormalizationMethod.ratio))
+                    if (value == AreaCVNormalizationMethod.global_standards)
+                        comboNormalizeTo.SelectedItem = Resources.RefineDlg_NormalizationMethod_Global_standards;
+                    else if (value == AreaCVNormalizationMethod.medians)
+                        comboNormalizeTo.SelectedItem = Resources.RefineDlg_NormalizationMethod_Medians;
+                    else
+                        comboNormalizeTo.SelectedItem = Resources.RefineDlg_NormalizationMethod_None;
+            }
+        }
+
+        public IsotopeLabelType CVRefineLabelType
+        {
+            get
+            {
+                if (comboNormalizeTo.Items.Count == 0) return null;
+                string cvRefineTypeName = comboNormalizeTo.SelectedItem.ToString();
+                if (string.IsNullOrEmpty(cvRefineTypeName) || Equals(cvRefineTypeName, Resources.RefineDlg_NormalizationMethod_None)
+                    || Equals(cvRefineTypeName, Resources.RefineDlg_NormalizationMethod_Medians) || Equals(cvRefineTypeName, Resources.RefineDlg_NormalizationMethod_Global_standards))
+                    return null;
+                cvRefineTypeName = char.ToLowerInvariant(cvRefineTypeName[0]) + cvRefineTypeName.Substring(1);
+                var typedMods = _settings.PeptideSettings.Modifications.GetModificationsByName(cvRefineTypeName);
+                return typedMods.LabelType;
+            }
+
+            set { comboNormalizeTo.SelectedItem = value.Title; }
         }
 
         public IsotopeLabelType RefineLabelType
@@ -156,7 +297,7 @@ namespace pwiz.Skyline.EditUI
             if (!string.IsNullOrEmpty(textMinPeptides.Text))
             {
                 int minVal;
-                if (!helper.ValidateNumberTextBox(tabControl1, 0, textMinPeptides, 0, 10, out minVal))
+                if (!helper.ValidateNumberTextBox(textMinPeptides, 0, 10, out minVal))
                     return;
                 minPeptidesPerProtein = minVal;
             }
@@ -164,7 +305,7 @@ namespace pwiz.Skyline.EditUI
             if (!string.IsNullOrEmpty(textMinTransitions.Text))
             {
                 int minVal;
-                if (!helper.ValidateNumberTextBox(tabControl1, 0, textMinTransitions, 0, 100, out minVal))
+                if (!helper.ValidateNumberTextBox(textMinTransitions, 0, 100, out minVal))
                     return;
                 minTransitionsPerPrecursor = minVal;
             }
@@ -189,14 +330,14 @@ namespace pwiz.Skyline.EditUI
             if (!string.IsNullOrEmpty(textMinPeakFoundRatio.Text))
             {
                 double minVal;
-                if (!helper.ValidateDecimalTextBox(tabControl1, 1, textMinPeakFoundRatio, 0, 1, out minVal))
+                if (!helper.ValidateDecimalTextBox(textMinPeakFoundRatio, 0, 1, out minVal))
                     return;
                 minPeakFoundRatio = minVal;
             }
             if (!string.IsNullOrEmpty(textMaxPeakFoundRatio.Text))
             {
                 double maxVal;
-                if (!helper.ValidateDecimalTextBox(tabControl1, 1, textMaxPeakFoundRatio, 0, 1, out maxVal))
+                if (!helper.ValidateDecimalTextBox(textMaxPeakFoundRatio, 0, 1, out maxVal))
                     return;
                 maxPeakFoundRatio = maxVal;
             }
@@ -212,15 +353,16 @@ namespace pwiz.Skyline.EditUI
             if (!string.IsNullOrEmpty(textMaxPepPeakRank.Text))
             {
                 int maxVal;
-                if (!helper.ValidateNumberTextBox(tabControl1, 1, textMaxPepPeakRank, 1, 10, out maxVal))
+                if (!helper.ValidateNumberTextBox(textMaxPepPeakRank, 1, 20, out maxVal))
                     return;
                 maxPepPeakRank = maxVal;
             }
+
             int? maxPeakRank = null;
             if (!string.IsNullOrEmpty(textMaxPeakRank.Text))
             {
                 int maxVal;
-                if (!helper.ValidateNumberTextBox(tabControl1, 1, textMaxPeakRank, 1, 10, out maxVal))
+                if (!helper.ValidateNumberTextBox(textMaxPeakRank, 1, 20, out maxVal))
                     return;
                 maxPeakRank = maxVal;
             }
@@ -231,7 +373,7 @@ namespace pwiz.Skyline.EditUI
             if (!string.IsNullOrEmpty(textRTRegressionThreshold.Text))
             {
                 double minVal;
-                if (!helper.ValidateDecimalTextBox(tabControl1, 1, textRTRegressionThreshold, 0, 1, out minVal))
+                if (!helper.ValidateDecimalTextBox(textRTRegressionThreshold, 0, 1, out minVal))
                     return;
                 rtRegressionThreshold = minVal;
             }
@@ -240,7 +382,7 @@ namespace pwiz.Skyline.EditUI
             if (!string.IsNullOrEmpty(textMinDotProduct.Text))
             {
                 double minVal;
-                if (!helper.ValidateDecimalTextBox(tabControl1, 1, textMinDotProduct, 0, 1, out minVal))
+                if (!helper.ValidateDecimalTextBox(textMinDotProduct, 0, 1, out minVal))
                     return;
                 dotProductThreshold = minVal;
             }
@@ -249,12 +391,41 @@ namespace pwiz.Skyline.EditUI
             if (!string.IsNullOrEmpty(textMinIdotProduct.Text))
             {
                 double minVal;
-                if (!helper.ValidateDecimalTextBox(tabControl1, 1, textMinIdotProduct, 0, 1, out minVal))
+                if (!helper.ValidateDecimalTextBox(textMinIdotProduct, 0, 1, out minVal))
                     return;
                 idotProductThreshold = minVal;
             }
 
             bool useBestResult = comboReplicateUse.SelectedIndex > 0;
+
+            double? cvCutoff = null;
+            if (!string.IsNullOrEmpty(textCVCutoff.Text))
+            {
+                double cutoffVal;
+                if (!helper.ValidateDecimalTextBox(textCVCutoff, 0, null, out cutoffVal))
+                    return;
+                cvCutoff = cutoffVal;
+            }
+
+            double? qvalueCutoff = null;
+            if (!string.IsNullOrWhiteSpace(textQVal.Text))
+            {
+                double qvalue;
+                if (!helper.ValidateDecimalTextBox(textQVal, 0.0, 1.0, out qvalue))
+                    return;
+                qvalueCutoff = qvalue;
+            }
+
+            int? minimumDetections = null;
+            if (numericUpDownDetections.Enabled)
+            {
+                minimumDetections = (int) numericUpDownDetections.Value;
+            }
+
+            var normIdx = comboNormalizeTo.SelectedIndex;
+            var normMethod = GetNormalizationMethod(normIdx);
+
+            IsotopeLabelType referenceType = CVRefineLabelType;
 
             RefinementSettings = new RefinementSettings
                                      {
@@ -268,6 +439,7 @@ namespace pwiz.Skyline.EditUI
                                          MinPeakFoundRatio = minPeakFoundRatio,
                                          MaxPeakFoundRatio = maxPeakFoundRatio,
                                          MaxPepPeakRank = maxPepPeakRank,
+                                         MaxPrecursorPeakOnly = cbMaxPrecursorOnly.Checked,
                                          MaxPeakRank = maxPeakRank,
                                          PreferLargeIons = cbPreferLarger.Checked,
                                          RemoveMissingResults = removeMissingResults,
@@ -277,7 +449,12 @@ namespace pwiz.Skyline.EditUI
                                          UseBestResult = useBestResult,
                                          AutoPickChildrenAll = (cbAutoPeptides.Checked ? PickLevel.peptides : 0) |
                                                                (cbAutoPrecursors.Checked ? PickLevel.precursors : 0) |
-                                                               (cbAutoTransitions.Checked ? PickLevel.transitions : 0)
+                                                               (cbAutoTransitions.Checked ? PickLevel.transitions : 0),
+                                         CVCutoff = cvCutoff,
+                                         QValueCutoff = qvalueCutoff,
+                                         MinimumDetections =  minimumDetections,
+                                         NormalizationMethod = normMethod,
+                                         NormalizationLabelType = referenceType
                                      };
 
             DialogResult = DialogResult.OK;

@@ -24,7 +24,9 @@ import property ;
 import property-set ;
 
 header = zstd.h ;
-names = zstd ;
+# libzstd only needed for VisualC++ builds
+# *_static variants for prebuilt Windows static libraries
+names = zstd zstd_static libzstd libzstd_static ;
 
 library-id = 0 ;
 

@@ -107,6 +107,8 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
         case InstrumentModelType_TSQ_Quantiva:              return MS_TSQ_Quantiva;
         case InstrumentModelType_TSQ_Endura:                return MS_TSQ_Endura;
         case InstrumentModelType_TSQ_Altis:                 return MS_TSQ_Altis;
+        case InstrumentModelType_Orbitrap_Exploris_480:     return MS_Orbitrap_Exploris_480;
+        case InstrumentModelType_Orbitrap_Eclipse:          return MS_Orbitrap_Eclipse;
 
         default:
             throw std::runtime_error("[Reader_Thermo::translateAsInstrumentModel] Enumerated instrument model " + lexical_cast<string>(instrumentModelType) + " has no CV term mapping!");
@@ -124,7 +126,9 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(RawFile& rawfile)
     InstrumentModelType model = rawfile.getInstrumentModel();
 
     // source common to all configurations (TODO: handle multiple sources in a single run?)
-    ScanInfoPtr firstScanInfo = rawfile.getScanInfo(1);
+    auto raw = rawfile.getRawByThread(0);
+    raw->setCurrentController(Controller_MS, 1);
+    ScanInfoPtr firstScanInfo = raw->getScanInfo(1);
     CVID firstIonizationType = translateAsIonizationType(firstScanInfo->ionizationType());
     CVID firstInletType = translateAsInletType(firstScanInfo->ionizationType());
 
@@ -135,7 +139,15 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(RawFile& rawfile)
     if (firstInletType != CVID_Unknown)
         commonSource.set(firstInletType);
 
-    return createInstrumentConfigurations(commonSource, model);
+    auto configurations = createInstrumentConfigurations(commonSource, model);
+
+    if (rawfile.getNumberOfControllersOfType(Controller_PDA) > 0)
+    {
+        configurations.push_back(InstrumentConfiguration());
+        configurations.back().componentList.push_back(Component(MS_PDA, 1));
+    }
+
+    return configurations;
 }
 
 
@@ -147,6 +159,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
     switch (model)
     {
         case InstrumentModelType_Q_Exactive:
+        case InstrumentModelType_Orbitrap_Exploris_480:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_quadrupole, 2));
@@ -176,6 +189,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
 
         case InstrumentModelType_Orbitrap_Fusion:
         case InstrumentModelType_Orbitrap_Fusion_ETD:
+        case InstrumentModelType_Orbitrap_Eclipse:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_quadrupole, 2));

@@ -40,7 +40,6 @@ namespace SkylineTester
                 MainWindow.QualityPassCount.Value = 1;
                 MainWindow.Pass0.Checked = true;
                 MainWindow.Pass1.Checked = true;
-                MainWindow.QualityAddSmallMoleculeNodes.Checked = MainWindow.TestsAddSmallMoleculeNodes.Checked;
                 MainWindow.QualityRunSmallMoleculeVersions.Checked = MainWindow.TestsRunSmallMoleculeVersions.Checked;
                 MainWindow.QualityChooseTests.Checked = true;
                 MainWindow.RunQualityFromTestsTab();
@@ -67,14 +66,14 @@ namespace SkylineTester
             if (MainWindow.RunDemoMode.Checked)
                 args.Append(" demo=on");
 
-            if (MainWindow.TestsAddSmallMoleculeNodes.Checked)
-                args.Append(" testsmallmolecules=on");
-
             if (MainWindow.TestsRunSmallMoleculeVersions.Checked)
                 args.Append(" runsmallmoleculeversions=on");
 
             if (MainWindow.TestsRandomize.Checked)
                 args.Append(" random=on");
+
+            if (MainWindow.TestsRecordAuditLogs.Checked)
+                args.Append(" recordauditlogs=on");
 
             int count;
             if (!int.TryParse(MainWindow.TestsRepeatCount.Text, out count))

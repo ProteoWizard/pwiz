@@ -93,27 +93,8 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             String path = textPath.Text;
-
-            if (!File.Exists(path))
+            if (!ValidateLibraryPath(this, path))
             {
-                MessageBox.Show(this, string.Format(Resources.EditLibraryDlg_OkDialog_The_file__0__does_not_exist, path), Program.Name);
-                textPath.Focus();
-                return;
-            }
-            if (FileEx.IsDirectory(path))
-            {
-                MessageBox.Show(this, string.Format(Resources.EditLibraryDlg_OkDialog_The_path__0__is_a_directory, path), Program.Name);
-                textPath.Focus();
-                return;
-            }
-            
-            // Display an error message if the user is trying to add a BiblioSpec library,
-            // and the library has the text "redundant" in the file name.
-            if (path.EndsWith(BiblioSpecLiteSpec.EXT_REDUNDANT))
-            {
-                var message = TextUtil.LineSeparate(string.Format(Resources.EditLibraryDlg_OkDialog_The_file__0__appears_to_be_a_redundant_library, path),
-                                                    Resources.EditLibraryDlg_OkDialog_Please_choose_a_non_redundant_library);
-                MessageDlg.Show(this, string.Format(message, path));
                 textPath.Focus();
                 return;
             }
@@ -144,7 +125,10 @@ namespace pwiz.Skyline.SettingsUI
                             // Library failed to load
                         }
                         LibraryRetentionTimes libRts;
+                        // (ReSharper 2019.1 seems not to notice the check that's already here)
+                        // ReSharper disable PossibleNullReferenceException
                         if (lib != null && lib.TryGetIrts(out libRts) &&
+                        // ReSharper restore PossibleNullReferenceException
                             Settings.Default.RTScoreCalculatorList.All(calc => calc.PersistencePath != path))
                         {
                             using (var addPredictorDlg = new AddRetentionTimePredictorDlg(name, path, true))
@@ -167,7 +151,10 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         if (null != lib)
                         {
+                            // (ReSharper 2019.1 seems not to notice the check that's already here)
+                            // ReSharper disable PossibleNullReferenceException
                             foreach (var pooledStream in lib.ReadStreams)
+                            // ReSharper restore PossibleNullReferenceException
                             {
                                 pooledStream.CloseStream();
                             }
@@ -179,6 +166,32 @@ namespace pwiz.Skyline.SettingsUI
             _librarySpec = librarySpec;
             DialogResult = DialogResult.OK;
             Close();
+        }
+
+        public static bool ValidateLibraryPath(Control owner, string path)
+        {
+            if (!File.Exists(path))
+            {
+                MessageDlg.Show(owner, string.Format(Resources.EditLibraryDlg_OkDialog_The_file__0__does_not_exist, path));
+                return false;
+            }
+            if (FileEx.IsDirectory(path))
+            {
+                MessageDlg.Show(owner, string.Format(Resources.EditLibraryDlg_OkDialog_The_path__0__is_a_directory, path));
+                return false;
+            }
+
+            // Display an error message if the user is trying to add a BiblioSpec library,
+            // and the library has the text "redundant" in the file name.
+            if (path.EndsWith(BiblioSpecLiteSpec.EXT_REDUNDANT))
+            {
+                var message = TextUtil.LineSeparate(string.Format(Resources.EditLibraryDlg_OkDialog_The_file__0__appears_to_be_a_redundant_library, path),
+                    Resources.EditLibraryDlg_OkDialog_Please_choose_a_non_redundant_library);
+                MessageDlg.Show(owner, string.Format(message, path));
+                return false;
+            }
+
+            return true;
         }
 
         private void btnBrowse_Click(object sender, EventArgs e)

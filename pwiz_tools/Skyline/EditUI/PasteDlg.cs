@@ -860,17 +860,21 @@ namespace pwiz.Skyline.EditUI
         private void btnTransitionListHelp_Click(object sender, EventArgs e)
         {
             // ReSharper disable LocalizableElement
-            var helpText = Resources.PasteDlg_btnTransitionListHelp_Click_ +
-                string.Join(", ", SmallMoleculeTransitionListColumnHeaders.KnownHeaders) + 
-                "\r\n" + 
-                string.Format(Resources.PasteDlg_btnTransitionListHelp_Click_Supported_values_for__0__are___1_, SmallMoleculeTransitionListColumnHeaders.imUnits, string.Join(", ", Enum.GetNames(typeof(eIonMobilityUnits)))) +
-                "\r\n\r\n" + 
-                Resources.PasteDlg_btnTransitionListHelp_Click_2_ +
-                "\r\n\r\n" + 
-                Resources.FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__ +
-                "\r\n\r\n" + 
-                Adduct.Tips;
-                // ReSharper restore LocalizableElement
+            var helpText = Resources.PasteDlg_btnTransitionListHelp_Click_;
+            if (btnCustomMoleculeColumns.Visible)
+            {
+                helpText = Resources.PasteDlg_btnTransitionListHelp_Click_SmallMol_ +
+                    string.Join(", ", SmallMoleculeTransitionListColumnHeaders.KnownHeaders) +
+                    "\r\n" +
+                    string.Format(Resources.PasteDlg_btnTransitionListHelp_Click_Supported_values_for__0__are___1_, SmallMoleculeTransitionListColumnHeaders.imUnits, string.Join(", ", Enum.GetNames(typeof(eIonMobilityUnits))))+
+                    "\r\n\r\n" + 
+                    Resources.PasteDlg_btnTransitionListHelp_Click_2_ +
+                    "\r\n\r\n" + 
+                    Resources.FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__ +
+                    "\r\n\r\n" + 
+                    Adduct.Tips;
+            }
+            // ReSharper restore LocalizableElement
             MessageBox.Show(this, helpText, Resources.PasteDlg_btnTransitionListHelp_Click_Transition_List_Help);
         }
 
@@ -898,8 +902,19 @@ namespace pwiz.Skyline.EditUI
                 btnCustomMoleculeColumns.Visible = radioMolecule.Visible = radioPeptide.Visible = (value == PasteFormat.transition_list);
                 if (value == PasteFormat.transition_list)
                 {
-                    radioPeptide.Checked = Settings.Default.TransitionListInsertPeptides;
-                    IsMolecule = btnCustomMoleculeColumns.Enabled = !radioPeptide.Checked;
+                    if (ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic)
+                    {
+                        radioPeptide.Checked = true;
+                    }
+                    else if (ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules)
+                    {
+                        radioPeptide.Checked = false;
+                    }
+                    else
+                    {
+                        radioPeptide.Checked = Settings.Default.TransitionListInsertPeptides;
+                    }
+                    IsMolecule = !radioPeptide.Checked;
                     UpdateMoleculeType();
                 }
                 for (int i = tabControl1.Controls.Count - 1; i >= 0; i--)
@@ -1292,7 +1307,7 @@ namespace pwiz.Skyline.EditUI
                         }        
                     }
 
-                    return AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, singular, plural, added, count)
+                    return AuditLogEntry.CreateCountChangeEntry(singular, plural, docPair.NewDocumentType, added, count)
                         .ChangeExtraInfo(extraInfo)
                         .Merge(docPair, _entryCreators, false);
                 });
@@ -1749,6 +1764,7 @@ namespace pwiz.Skyline.EditUI
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.idHMDB, SmallMoleculeTransitionListColumnHeaders.idHMDB); // No need to localize
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.idInChi, SmallMoleculeTransitionListColumnHeaders.idInChi); // No need to localize
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.idSMILES, SmallMoleculeTransitionListColumnHeaders.idSMILES); // No need to localize
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.idKEGG, SmallMoleculeTransitionListColumnHeaders.idKEGG); // No need to localize
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.slens, Resources.PasteDlg_UpdateMoleculeType_S_Lens);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.coneVoltage, Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.dtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Drift_Time__msec_);

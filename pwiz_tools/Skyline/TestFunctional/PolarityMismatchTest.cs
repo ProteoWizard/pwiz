@@ -48,9 +48,6 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            TestSmallMolecules = false; // This is small molecule data, no need for extra nodes
-
-
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
             var replicatePath = testFilesDir.GetTestPath("090215_033.mzML"); // properly converted, with polarity sense

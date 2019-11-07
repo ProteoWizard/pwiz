@@ -68,11 +68,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { cbAutoRetry.Checked = value; }
         }
 
-        public static List<ImportPeptideSearch.FoundResultsFile> EnsureUniqueNames(List<ImportPeptideSearch.FoundResultsFile> files)
+        public static List<ImportPeptideSearch.FoundResultsFile> EnsureUniqueNames(IList<ImportPeptideSearch.FoundResultsFile> files)
         {
             var result = new List<ImportPeptideSearch.FoundResultsFile>();
             // Enforce uniqueness in names (might be constructed from list of files a.raw, a.mzML)
-            var names = ImportResultsDlg.EnsureUniqueNames(files.Select(f => f.Name).ToList());
+            var names = Helpers.EnsureUniqueNames(files.Select(f => f.Name).ToList());
             for (var i = 0; i < files.Count; i++)
             {
                 result.Add(new ImportPeptideSearch.FoundResultsFile(names[i], files[i].Path));
@@ -80,7 +80,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             return result;
         }
 
-        public List<ImportPeptideSearch.FoundResultsFile> FoundResultsFiles
+        public IList<ImportPeptideSearch.FoundResultsFile> FoundResultsFiles
         {
             get { return ImportPeptideSearch.GetFoundResultsFiles(ExcludeSpectrumSourceFiles).ToList(); }
             set

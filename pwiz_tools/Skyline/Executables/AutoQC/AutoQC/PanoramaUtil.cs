@@ -76,7 +76,7 @@ namespace AutoQC
                 case UserState.nonvalid:
                     throw new PanoramaServerException("The username and password could not be authenticated with the panorama server");
                 case UserState.unknown:
-                    throw new PanoramaServerException(string.Format("Unknown error connecting to the server {0}", uriServer.AbsoluteUri));
+                    throw new PanoramaServerException(string.Format("Unknown error validating user on server {0}", uriServer.AbsoluteUri));
             }
 
             switch (panoramaClient.IsPanorama())
@@ -84,7 +84,7 @@ namespace AutoQC
                 case PanoramaState.other:
                     throw new PanoramaServerException(string.Format("The server {0} is not a Panorama server", uriServer.AbsoluteUri));
                 case PanoramaState.unknown:
-                    throw new PanoramaServerException(string.Format("Unknown error connecting to the server {0}", uriServer.AbsoluteUri));
+                    throw new PanoramaServerException(string.Format("Unknown error while checking if server {0} is a Panorama server", uriServer.AbsoluteUri));
             }
         }
 
@@ -119,7 +119,7 @@ namespace AutoQC
                         return TryEnsureLogin(pServer, ref serverUri);
                     }
                 }
-                return UserState.unknown;
+                throw;
             }
         }
 
@@ -372,7 +372,7 @@ namespace AutoQC
                     if (TryNewProtocol(() => TryGetServerState(false) == ServerState.available))
                         return ServerState.available;
 
-                    return ServerState.unknown;
+                    throw;
                 }
             }
             return ServerState.unknown;

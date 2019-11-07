@@ -8,6 +8,7 @@
 #ifndef FRAMES_DWA20011021_H
 #define FRAMES_DWA20011021_H
 
+#include "config.h"
 #include "lists.h"
 #include "modules.h"
 #include "object.h"

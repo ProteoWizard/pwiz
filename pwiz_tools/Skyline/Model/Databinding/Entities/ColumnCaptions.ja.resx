@@ -117,6 +117,12 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AbsFoldChange">
+    <value>絶対倍率変化</value>
+  </data>
+  <data name="AbsLog2FoldChange">
+    <value>Log2の絶対値の変化率</value>
+  </data>
   <data name="Accuracy">
     <value>精度</value>
   </data>
@@ -125,6 +131,9 @@
   </data>
   <data name="AdjustedPValue">
     <value>調整されたP-値</value>
+  </data>
+  <data name="AllInfoMessage">
+    <value>すべての情報に関するメッセージ</value>
   </data>
   <data name="AnalyteConcentration">
     <value>アナライト濃度</value>
@@ -138,6 +147,27 @@
   <data name="AreaRatio">
     <value>面積比</value>
   </data>
+  <data name="AuditLogRow">
+    <value>監査ログ行</value>
+  </data>
+  <data name="AuditLogRowId">
+    <value>エントリID</value>
+  </data>
+  <data name="AuditLogDetailRowId">
+    <value>詳細ID</value>
+  </data>
+  <data name="AutoSelectMolecules">
+    <value>分子を自動選択</value>
+  </data>
+  <data name="AutoSelectPeptides">
+    <value>ペプチドを自動選択</value>
+  </data>
+  <data name="AutoSelectPrecursors">
+    <value>プリカーサーを自動選択</value>
+  </data>
+  <data name="AutoSelectTransitions">
+    <value>トランジションを自動選択</value>
+  </data>
   <data name="AverageMassErrorPPM">
     <value>平均質量誤差PPM</value>
   </data>
@@ -149,6 +179,18 @@
   </data>
   <data name="Background">
     <value>バックグラウンド</value>
+  </data>
+  <data name="BatchFiguresOfMerit">
+    <value>バッチ性能指数</value>
+  </data>
+  <data name="BatchLimitOfDetection">
+    <value>バッチ検出限界</value>
+  </data>
+  <data name="BatchLimitOfQuantification">
+    <value>バッチ定量限界</value>
+  </data>
+  <data name="BatchName">
+    <value>バッチ名</value>
   </data>
   <data name="BeginPos">
     <value>開始位置</value>
@@ -164,6 +206,9 @@
   </data>
   <data name="CalibrationCurve">
     <value>校正曲線</value>
+  </data>
+  <data name="CAS">
+    <value>CAS</value>
   </data>
   <data name="Chromatogram">
     <value>クロマトグラム</value>
@@ -194,6 +239,9 @@
   </data>
   <data name="Coeluting">
     <value>共溶出</value>
+  </data>
+  <data name="CollisionalCrossSection">
+    <value>衝突断面積</value>
   </data>
   <data name="CollisionEnergy">
     <value>衝突エネルギー</value>
@@ -249,8 +297,29 @@
   <data name="DecoyMzShift">
     <value>デコイMzシフト</value>
   </data>
+  <data name="DetailReason">
+    <value>詳しい理由</value>
+  </data>
+  <data name="DetectionQValue">
+    <value>検知Q値</value>
+  </data>
+  <data name="DetectionZScore">
+    <value>検知Zスコア</value>
+  </data>
   <data name="DegreesOfFreedom">
     <value>自由度</value>
+  </data>
+  <data name="Details">
+    <value>詳細</value>
+  </data>
+  <data name="DriftTimeMS1">
+    <value>ドリフト時間MS1</value>
+  </data>
+  <data name="DriftTimeFragment">
+    <value>ドリフト時間断片</value>
+  </data>
+  <data name="DriftTimeWindow">
+    <value>ドリフト時間ウィンドウ</value>
   </data>
   <data name="EndPos">
     <value>終了位置</value>
@@ -266,6 +335,48 @@
   </data>
   <data name="ExcludeFromCalibration">
     <value>校正から除外</value>
+  </data>
+  <data name="ExplicitCollisionEnergy">
+    <value>明示的衝突エネルギー</value>
+  </data>
+  <data name="ExplicitCompensationVoltage">
+    <value>明示的補償電圧</value>
+  </data>
+  <data name="ExplicitConeVoltage">
+    <value>明示的コーン電圧</value>
+  </data>
+  <data name="ExplicitDeclusteringPotential">
+    <value>明示的デクラスタリングポテンシャル</value>
+  </data>
+  <data name="ExplicitDriftTimeHighEnergyOffsetMsec">
+    <value>明示的ドリフト時間高エネルギーオフセットミリ秒</value>
+  </data>
+  <data name="ExplicitCollisionalCrossSection">
+    <value>明示的衝突断面積</value>
+  </data>
+  <data name="ExplicitDriftTimeMsec">
+    <value>明示的ドリフト時間ミリ秒</value>
+  </data>
+  <data name="ExplicitGlobalStandardArea">
+    <value>明示的グローバル標準領域</value>
+  </data>
+  <data name="ExplicitIonMobility">
+    <value>指定されたイオン移動度</value>
+  </data>
+  <data name="ExplicitIonMobilityHighEnergyOffset">
+    <value>指定されたイオン移動度の高エネルギーのオフセット</value>
+  </data>
+  <data name="ExplicitIonMobilityUnits">
+    <value>指定されたイオン移動度の単位</value>
+  </data>
+  <data name="ExplicitRetentionTime">
+    <value>明示的保持時間</value>
+  </data>
+  <data name="ExplicitRetentionTimeWindow">
+    <value>明示的保持時間ウィンドウ</value>
+  </data>
+  <data name="ExplicitSLens">
+    <value>指定されたSレンズ</value>
   </data>
   <data name="FiguresOfMerit">
     <value>性能指数</value>
@@ -312,8 +423,17 @@
   <data name="Height">
     <value>高さ</value>
   </data>
+  <data name="HMDB">
+    <value>HMDB</value>
+  </data>
   <data name="Identified">
     <value>同定済み</value>
+  </data>
+  <data name="InChiKey">
+    <value>InChiKey</value>
+  </data>
+  <data name="InChI">
+    <value>InChI</value>
   </data>
   <data name="Intensities">
     <value>強度</value>
@@ -336,8 +456,29 @@
   <data name="InterpolatedNumberOfPoints">
     <value>補間されたポイント数</value>
   </data>
+  <data name="InterpolatedSpectrumIds">
+    <value>補間されたスペクトルID</value>
+  </data>
   <data name="InterpolatedTimes">
     <value>補間された時間</value>
+  </data>
+  <data name="IonMobilityFragment">
+    <value>イオン移動度のフラグメント</value>
+  </data>
+  <data name="IonMobilityMS1">
+    <value>イオン移動度のMS1</value>
+  </data>
+  <data name="IonMobilityWindow">
+    <value>イオン移動度ウィンドウ</value>
+  </data>
+  <data name="IonMobilityUnits">
+    <value>イオン移動度の単位</value>
+  </data>
+  <data name="IonName">
+    <value>イオン名</value>
+  </data>
+  <data name="IonFormula">
+    <value>イオン式</value>
   </data>
   <data name="IsDecoy">
     <value>同位体デコイ</value>
@@ -398,6 +539,9 @@
   </data>
   <data name="Losses">
     <value>ロス</value>
+  </data>
+  <data name="LossFormulas">
+    <value>損失式</value>
   </data>
   <data name="LossNeutralMass">
     <value>ロスニュートラル質量</value>
@@ -483,6 +627,9 @@
   <data name="MissedCleavages">
     <value>ミス開裂</value>
   </data>
+  <data name="ModifiedAreaProportion">
+    <value>修飾された面積率</value>
+  </data>
   <data name="ModifiedSequence">
     <value>修飾シークエンス</value>
   </data>
@@ -503,6 +650,54 @@
   </data>
   <data name="ModifiedTime">
     <value>修飾時間</value>
+  </data>
+  <data name="Molecule">
+    <value>分子</value>
+  </data>
+  <data name="MoleculeListLocator">
+    <value>分子リストロケーター</value>
+  </data>
+  <data name="MoleculeName">
+    <value>分子名</value>
+  </data>
+  <data name="MoleculeFormula">
+    <value>分子式</value>
+  </data>
+  <data name="MoleculeList">
+    <value>分子リスト</value>
+  </data>
+  <data name="MoleculeListName">
+    <value>分子リスト名</value>
+  </data>
+  <data name="MoleculeListNote">
+    <value>分子リストメモ</value>
+  </data>
+  <data name="MoleculeLists">
+    <value>分子リスト</value>
+  </data>
+  <data name="MoleculeLocator">
+    <value>分子ロケーター</value>
+  </data>
+  <data name="MoleculeNote">
+    <value>分子メモ</value>
+  </data>
+  <data name="MoleculePeakFoundRatio">
+    <value>分子ピーク検出率</value>
+  </data>
+  <data name="MoleculeResult">
+    <value>分子結果</value>
+  </data>
+  <data name="MoleculeResultLocator">
+    <value>分子結果ロケーター</value>
+  </data>
+  <data name="MoleculeResults">
+    <value>分子結果</value>
+  </data>
+  <data name="MoleculeRetentionTime">
+    <value>分子保持時間</value>
+  </data>
+  <data name="Molecules">
+    <value>分子</value>
   </data>
   <data name="MonoisotopicMasses">
     <value>モノアイソトピック質量</value>
@@ -606,11 +801,20 @@
   <data name="Precursor">
     <value>プリカーサー</value>
   </data>
+  <data name="PrecursorAdduct">
+    <value>プリカーサー付加物</value>
+  </data>
   <data name="PrecursorCharge">
     <value>プリカーサー電荷</value>
   </data>
   <data name="PrecursorConcentration">
     <value>プリカーサー濃度</value>
+  </data>
+  <data name="PrecursorIonName">
+    <value>プリカーサーイオン名</value>
+  </data>
+  <data name="PrecursorIonFormula">
+    <value>プリカーサーイオン式</value>
   </data>
   <data name="PrecursorLocator">
     <value>プリカーサーロケーター</value>
@@ -618,17 +822,14 @@
   <data name="PrecursorMz">
     <value>プリカーサーMz</value>
   </data>
+  <data name="PrecursorNeutralFormula">
+    <value>プリカーサーのニュートラル式</value>
+  </data>
   <data name="PrecursorNeutralMass">
     <value>プリカーサーニュートラル質量</value>
   </data>
   <data name="PrecursorNote">
     <value>プリカーサーメモ</value>
-  </data>
-  <data name="DetectionQValue">
-    <value>検知Q値</value>
-  </data>
-  <data name="DetectionZScore">
-    <value>検知Zスコア</value>
   </data>
   <data name="PrecursorPeakFoundRatio">
     <value>プリカーサーピーク検出率</value>
@@ -660,14 +861,23 @@
   <data name="PreviousAa">
     <value>前へAa</value>
   </data>
+  <data name="ProductAdduct">
+    <value>プロダクトの付加物</value>
+  </data>
   <data name="ProductCharge">
     <value>プロダクト電荷</value>
   </data>
   <data name="ProductDecoyMzShift">
     <value>プロダクトデコイMzシフト</value>
   </data>
+  <data name="ProductIonFormula">
+    <value>プロダクトイオン式</value>
+  </data>
   <data name="ProductMz">
     <value>プロダクトMz</value>
+  </data>
+  <data name="ProductNeutralFormula">
+    <value>プロダクトのニュートラル式</value>
   </data>
   <data name="ProductNeutralMass">
     <value>プロダクトニュートラル質量</value>
@@ -744,8 +954,14 @@
   <data name="RawNumberOfPoints">
     <value>生データポイント数</value>
   </data>
+  <data name="RawSpectrumIds">
+    <value>生スペクトルID</value>
+  </data>
   <data name="RawTimes">
     <value>生データ時間</value>
+  </data>
+  <data name="Reason">
+    <value>理由</value>
   </data>
   <data name="Replicate">
     <value>繰り返し測定</value>
@@ -819,8 +1035,17 @@
   <data name="SampleType">
     <value>試料タイプ</value>
   </data>
+  <data name="SkylineVersion">
+    <value>Skylineバージョン</value>
+  </data>
   <data name="Slope">
     <value>勾配</value>
+  </data>
+  <data name="SMILES">
+    <value>SMILES</value>
+  </data>
+  <data name="SpectrumIds">
+    <value>スペクトルID</value>
   </data>
   <data name="StandardError">
     <value>標準エラー</value>
@@ -867,6 +1092,9 @@
   <data name="StdevTotalAreaRatio">
     <value>Stdev総面積比</value>
   </data>
+  <data name="SummaryMessage">
+    <value>概要に関するメッセージ</value>
+  </data>
   <data name="ThreeLetterCodes">
     <value>3文字コード</value>
   </data>
@@ -876,8 +1104,14 @@
   <data name="TotalArea">
     <value>総面積</value>
   </data>
+  <data name="Time">
+    <value>時間</value>
+  </data>
   <data name="Times">
     <value>回数</value>
+  </data>
+  <data name="TimeStamp">
+    <value>タイムスタンプ</value>
   </data>
   <data name="TotalAreaFragment">
     <value>総面積断片</value>
@@ -942,8 +1176,14 @@
   <data name="TValue">
     <value>T-値</value>
   </data>
+  <data name="UndoRedoMessage">
+    <value>やり直しを元に戻すに関するメッセージ</value>
+  </data>
   <data name="UnimodIds">
     <value>Unimod Id</value>
+  </data>
+  <data name="User">
+    <value>ユーザー</value>
   </data>
   <data name="UserSetPeak">
     <value>ユーザーセットピーク</value>
@@ -951,166 +1191,7 @@
   <data name="UserSetTotal">
     <value>ユーザーセットの合計</value>
   </data>
-  <data name="Value">
-    <value>値</value>
-  </data>
-  <data name="IonName">
-    <value>イオン名</value>
-  </data>
-  <data name="IonFormula">
-    <value>イオン式</value>
-  </data>
-  <data name="PrecursorIonName">
-    <value>プリカーサーイオン名</value>
-  </data>
-  <data name="PrecursorIonFormula">
-    <value>プリカーサーイオン式</value>
-  </data>
-  <data name="ProductIonFormula">
-    <value>プロダクトイオン式</value>
-  </data>
-  <data name="ExplicitCollisionEnergy">
-    <value>明示的衝突エネルギー</value>
-  </data>
-  <data name="ExplicitDriftTimeHighEnergyOffsetMsec">
-    <value>明示的ドリフト時間高エネルギーオフセットミリ秒</value>
-  </data>
-  <data name="ExplicitCollisionalCrossSection">
-    <value>明示的衝突断面積</value>
-  </data>
-  <data name="ExplicitDriftTimeMsec">
-    <value>明示的ドリフト時間ミリ秒</value>
-  </data>
-  <data name="ExplicitIonMobility">
-    <value>指定されたイオン移動度</value>
-  </data>
-  <data name="ExplicitIonMobilityHighEnergyOffset">
-    <value>指定されたイオン移動度の高エネルギーのオフセット</value>
-  </data>
-  <data name="ExplicitIonMobilityUnits">
-    <value>指定されたイオン移動度の単位</value>
-  </data>
-  <data name="IonMobilityFragment">
-    <value>イオン移動度のフラグメント</value>
-  </data>
-  <data name="IonMobilityMS1">
-    <value>イオン移動度のMS1</value>
-  </data>
-  <data name="IonMobilityWindow">
-    <value>イオン移動度ウィンドウ</value>
-  </data>
-  <data name="IonMobilityUnits">
-    <value>イオン移動度の単位</value>
-  </data>
-  <data name="ExplicitGlobalStandardArea">
-    <value>明示的グローバル標準領域</value>
-  </data>
-  <data name="ExplicitRetentionTime">
-    <value>明示的保持時間</value>
-  </data>
-  <data name="ExplicitRetentionTimeWindow">
-    <value>明示的保持時間ウィンドウ</value>
-  </data>
-  <data name="ExplicitSLens">
-    <value>明示的S-レンズ</value>
-  </data>
-  <data name="ExplicitConeVoltage">
-    <value>明示的コーン電圧</value>
-  </data>
-  <data name="ExplicitDeclusteringPotential">
-    <value>明示的デクラスタリングポテンシャル</value>
-  </data>
-  <data name="ExplicitCompensationVoltage">
-    <value>明示的補償電圧</value>
-  </data>
-  <data name="PrecursorAdduct">
-    <value>プリカーサー付加物</value>
-  </data>
-  <data name="PrecursorNeutralFormula">
-    <value>プリカーサーのニュートラル式</value>
-  </data>
-  <data name="ProductAdduct">
-    <value>プロダクトの付加物</value>
-  </data>
-  <data name="ProductNeutralFormula">
-    <value>プロダクトのニュートラル式</value>
-  </data>
-  <data name="MoleculeName">
-    <value>分子名</value>
-  </data>
-  <data name="MoleculeFormula">
-    <value>分子式</value>
-  </data>
-  <data name="CollisionalCrossSection">
-    <value>衝突断面積</value>
-  </data>
-  <data name="DriftTimeMS1">
-    <value>ドリフト時間MS1</value>
-  </data>
-  <data name="DriftTimeFragment">
-    <value>ドリフト時間断片</value>
-  </data>
-  <data name="DriftTimeWindow">
-    <value>ドリフト時間ウィンドウ</value>
-  </data>
-  <data name="CAS">
-    <value>CAS</value>
-  </data>
-  <data name="InChiKey">
-    <value>InChiKey</value>
-  </data>
-  <data name="InChI">
-    <value>InChI</value>
-  </data>
-  <data name="HMDB">
-    <value>HMDB</value>
-  </data>
-  <data name="SMILES">
-    <value>SMILES</value>
-  </data>
-  <data name="AbsFoldChange">
-    <value>絶対倍率変化</value>
-  </data>
-  <data name="AbsLog2FoldChange">
-    <value>Log2の絶対値の変化率</value>
-  </data>
-  <data name="DocumentFormat">
-    <value>ドキュメント形式バージョン</value>
-  </data>
-  <data name="Reason">
-    <value>理由</value>
-  </data>
-  <data name="DetailReason">
-    <value>詳しい理由</value>
-  </data>
-  <data name="SkylineVersion">
-    <value>Skylineバージョン</value>
-  </data>
-  <data name="TimeStamp">
-    <value>タイムスタンプ</value>
-  </data>
-  <data name="User">
-    <value>ユーザー</value>
-  </data>
-  <data name="UndoRedoMessage">
-    <value>やり直しを元に戻すに関するメッセージ</value>
-  </data>
-  <data name="SummaryMessage">
-    <value>概要に関するメッセージ</value>
-  </data>
-  <data name="AllInfoMessage">
-    <value>すべての情報に関するメッセージ</value>
-  </data>
-  <data name="Details">
-    <value>詳細</value>
-  </data>
-  <data name="AuditLogRow">
-    <value>監査ログ行</value>
-  </data>
-  <data name="AuditLogRowId">
-    <value>エントリID</value>
-  </data>
-  <data name="AuditLogDetailRowId">
-    <value>詳細ID</value>
+  <data name="UTCTime">
+    <value>UTC時刻</value>
   </data>
 </root>

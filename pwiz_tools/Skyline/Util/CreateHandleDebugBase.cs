@@ -82,6 +82,7 @@ namespace pwiz.Skyline.Util
         [Localizable(false)]
         private void ControlCreateHandle()
         {
+            Program.Log?.Invoke(string.Format("\r\nStacktrace: {0}\r\n", Environment.StackTrace));
             Program.Log?.Invoke("\r\nBegin ControlCreateHandle\r\n");
             var formType = typeof(Form);
             var controlType = typeof(Control);
@@ -263,6 +264,7 @@ namespace pwiz.Skyline.Util
             }
         }
 
+        /* Uncomment this for debugging purposes
         protected override void CreateHandle()
         {
             if (Program.FunctionalTest)
@@ -270,5 +272,6 @@ namespace pwiz.Skyline.Util
             else
                 base.CreateHandle();
         }
+        */
     }
 }

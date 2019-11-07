@@ -192,7 +192,7 @@ namespace TestRunner
                 "quality=off;pass0=off;pass1=off;" +
                 "perftests=off;" +
                 "runsmallmoleculeversions=off;" +
-                "testsmallmolecules=off;" +
+                "recordauditlogs=off;" +
                 "clipboardcheck=off;profile=off;vendors=on;language=fr-FR,en-US;" +
                 "log=TestRunner.log;report=TestRunner.log;dmpdir=Minidumps;teamcitytestdecoration=off";
             var commandLineArgs = new CommandLineArgs(args, commandLineOptions);
@@ -384,8 +384,8 @@ namespace TestRunner
             bool offscreen = commandLineArgs.ArgAsBool("offscreen");
             bool internet = commandLineArgs.ArgAsBool("internet");
             bool perftests = commandLineArgs.ArgAsBool("perftests");
-            bool addsmallmoleculenodes = commandLineArgs.ArgAsBool("testsmallmolecules"); // Add the magic small molecule test node to every document?
             bool runsmallmoleculeversions = commandLineArgs.ArgAsBool("runsmallmoleculeversions"); // Run the various tests that are versions of other tests with the document completely converted to small molecules?
+            bool recordauditlogs = commandLineArgs.ArgAsBool("recordauditlogs"); // Replace or create audit logs for tutorial tests
             bool useVendorReaders = commandLineArgs.ArgAsBool("vendors");
             bool showStatus = commandLineArgs.ArgAsBool("status");
             bool showFormNames = commandLineArgs.ArgAsBool("showformnames");
@@ -439,10 +439,47 @@ namespace TestRunner
             }
 
             var runTests = new RunTests(
-                demoMode, buildMode, offscreen, internet, showStatus, perftests, addsmallmoleculenodes,
-                runsmallmoleculeversions, teamcityTestDecoration,
+                demoMode, buildMode, offscreen, internet, showStatus, perftests,
+                runsmallmoleculeversions, recordauditlogs, teamcityTestDecoration,
                 pauseDialogs, pauseSeconds, useVendorReaders, timeoutMultiplier, 
                 results, log);
+            
+            if (asNightly && !string.IsNullOrEmpty(dmpDir) && Directory.Exists(dmpDir))
+            {
+                runTests.Log("# Deleting memory dumps.\r\n");
+
+                var dmpDirInfo = new DirectoryInfo(dmpDir);
+                var memoryDumps = dmpDirInfo.GetFileSystemInfos("*.dmp")
+                    .OrderBy(f => f.CreationTime)
+                    .ToArray();
+
+                runTests.Log("# Found {0} mempory dumps in {1}.\r\n", memoryDumps.Length, dmpDir);
+
+                // Only keep 5 pairs. If memory dumps are deleted manually it could
+                // happen that we delete a pre-dump but not a post-dump
+                if (memoryDumps.Length > 10)
+                {
+                    foreach (var dmp in memoryDumps.Take(memoryDumps.Length - 10))
+                    {
+                        // Just to double check that we don't delete other files
+                        if (dmp.Extension == ".dmp" &&
+                            (dmp.Name.StartsWith("pre_") || dmp.Name.StartsWith("post_")))
+                        {
+                            runTests.Log("# Deleting {0}.\r\n", dmp.FullName);
+                            File.Delete(dmp.FullName);
+
+                            if (File.Exists(dmp.FullName))
+                                runTests.Log("# WARNING: {0} not deleted.\r\n", dmp.FullName);
+                        }
+                        else
+                        {
+                            runTests.Log("# Skipping deletion of {0}.\r\n", dmp.FullName);
+                        }
+                    }
+                }
+
+                runTests.Log("\r\n");
+            }
 
             if (commandLineArgs.ArgAsBool("clipboardcheck"))
             {
@@ -491,7 +528,6 @@ namespace TestRunner
                 runTests.AccessInternet = false;
                 runTests.LiveReports = false;
                 runTests.RunPerfTests = false;
-                runTests.AddSmallMoleculeNodes = false;
                 runTests.CheckCrtLeaks = CrtLeakThreshold;
                 bool warnedPass0PerfTest = false;
                 for (int testNumber = 0; testNumber < testList.Count; testNumber++)
@@ -514,7 +550,6 @@ namespace TestRunner
                 runTests.AccessInternet = internet;
                 runTests.LiveReports = true;
                 runTests.RunPerfTests = perftests;
-                runTests.AddSmallMoleculeNodes = addsmallmoleculenodes;
                 runTests.CheckCrtLeaks = 0;
 
                 foreach (var removeTest in removeList)
@@ -638,7 +673,6 @@ namespace TestRunner
             int perfPass = pass; // For nightly tests, we'll run perf tests just once per language, and only in one language (dynamically chosen for coverage) if english and french (along with any others) are both enabled
             bool needsPerfTestPass2Warning = asNightly && testList.Any(t => t.IsPerfTest); // No perf tests, no warning
             var perfTestsOneLanguageOnly = asNightly && perftests && languages.Any(l => l.StartsWith("en")) && languages.Any(l => l.StartsWith("fr"));
-            bool flip = true;
 
             for (; pass < passEnd; pass++)
             {
@@ -704,42 +738,6 @@ namespace TestRunner
                 foreach (var removeTest in removeList)
                     testList.Remove(removeTest);
                 removeList.Clear();
-                runTests.AddSmallMoleculeNodes = addsmallmoleculenodes && (flip = !flip); // Do this in every other pass, so we get it both ways
-            }
-
-            if (asNightly && !string.IsNullOrEmpty(dmpDir))
-            {
-                runTests.Log("# Deleting memory dumps.\r\n");
-
-                var dmpDirInfo = new DirectoryInfo(dmpDir);
-                var memoryDumps = dmpDirInfo.GetFileSystemInfos("*.dmp")
-                    .OrderBy(f => f.CreationTime)
-                    .ToArray();
-
-                runTests.Log("# Found {0} mempory dumps in {1}.\r\n", memoryDumps.Length, dmpDir);
-
-                // Only keep 5 pairs. If memory dumps are deleted manually it could
-                // happen that we delete a pre-dump but not a post-dump
-                if (memoryDumps.Length > 10)
-                {
-                    foreach (var dmp in memoryDumps.Take(memoryDumps.Length - 10))
-                    {
-                        // Just to double check that we don't delete other files
-                        if (dmp.Extension == ".dmp" &&
-                            (dmp.Name.StartsWith("pre_") || dmp.Name.StartsWith("post_")))
-                        {
-                            runTests.Log("# Deleting {0}.\r\n", dmp.FullName);
-                            File.Delete(dmp.FullName);
-
-                            if (File.Exists(dmp.FullName))
-                                runTests.Log("# WARNING: {0} not deleted.\r\n", dmp.FullName);
-                        }
-                        else
-                        {
-                            runTests.Log("# Skipping deletion of {0}.\r\n", dmp.FullName);
-                        }
-                    }
-                }
             }
 
             return runTests.FailureCount == 0;

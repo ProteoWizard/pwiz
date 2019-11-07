@@ -702,6 +702,7 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public class Target : IComparable<Target>, IEquatable<Target>, IAuditLogObject
     {
+        public static readonly Target EMPTY = new Target(string.Empty);
         public Target(string sequence)
         {
             Sequence = sequence;
@@ -713,7 +714,7 @@ namespace pwiz.Skyline.Model
 
         public Target(SmallMoleculeLibraryAttributes molecule) 
         {
-            Molecule = new CustomMolecule(molecule);
+            Molecule = CustomMolecule.FromSmallMoleculeLibraryAttributes(molecule);
         }
 
         public string Sequence { get; private set; }

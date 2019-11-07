@@ -33,7 +33,7 @@
       <Media Id="1" Cabinet="ProteoWizard.cab" EmbedCab="yes" />
       <Icon Id="seems_Icon.exe" SourceFile="msvc-release\seems.exe" />
       <Property Id="ARPPRODUCTICON" Value="seems_Icon.exe" />
-      <Property Id="ApplicationFolderName" Value="ProteoWizard {numeric-version} $(var.AddressModel)-bit" />
+      <Property Id="ApplicationFolderName" Value="ProteoWizard {version}" />
       <Property Id="WixAppFolder" Value="WixPerUserFolder" />
       <!--<WixVariable Id="WixUIBannerBmp" Value="..\Resources\SetupBanner.bmp" />
       <WixVariable Id="WixUIDialogBmp" Value="..\Resources\SetupBackground.bmp" />-->
@@ -45,13 +45,6 @@
       <?else?>
           <?define ProgramFilesFolder="ProgramFilesFolder"?>
       <?endif?>
-
-
-      <PropertyRef Id='NETFRAMEWORK35'/>
-      <PropertyRef Id='NETFRAMEWORK35_SP_LEVEL'/>
-      <Condition Message="Requires Microsoft .NET 3.5 Framework with Service Pack 1">
-          <![CDATA[Installed OR (NETFRAMEWORK35_SP_LEVEL and NOT NETFRAMEWORK35_SP_LEVEL = "#0")]]>
-      </Condition>
 
       <PropertyRef Id='NETFRAMEWORK45'/>
       <Condition Message="Requires Microsoft .NET 4.7.2 Framework">
@@ -158,8 +151,12 @@
 
     <PropertyRef Id="ApplicationFolderName" />
 
-    <CustomAction Id="WixSetDefaultPerUserFolder2" Property="WixPerUserFolder" Value="[LocalAppDataFolder]Apps\[ApplicationFolderName]" Execute="immediate" />
-    <CustomAction Id="WixSetDefaultPerMachineFolder2" Property="WixPerMachineFolder" Value="[ProgramFilesFolder][ApplicationFolderName]" Execute="immediate" />
+    <?if $(var.AddressModel)=64 ?>
+      <CustomAction Id="WixSetDefaultPerMachineFolder2" Property="WixPerMachineFolder" Value="[ProgramFiles64Folder]ProteoWizard\[ApplicationFolderName]" Execute="immediate" />
+    <?else?>
+      <CustomAction Id="WixSetDefaultPerMachineFolder2" Property="WixPerMachineFolder" Value="[ProgramFilesFolder]ProteoWizard\[ApplicationFolderName]" Execute="immediate" />
+    <?endif?>
+    <CustomAction Id="WixSetDefaultPerUserFolder2" Property="WixPerUserFolder" Value="[LocalAppDataFolder]Apps\[ApplicationFolderName] $(var.AddressModel)-bit" Execute="immediate" />
     <CustomAction Id="WixSetPerUserFolder2" Property="APPLICATIONFOLDER" Value="[WixPerUserFolder]" Execute="immediate" />
     <CustomAction Id="WixSetPerMachineFolder2" Property="APPLICATIONFOLDER" Value="[WixPerMachineFolder]" Execute="immediate" />
 

@@ -146,9 +146,17 @@ if ! --incremental in [ modules.peek : ARGV ] || --force-generate-version in [ m
     local year = [ MATCH "([0-9][0-9][0-9][0-9])" : [ modules.peek : JAMDATE ] ] ;
     local AssemblyCopyright = "Copyright © $(AssemblyCompany) $(year)" ;
 
+    if --automated in [ modules.peek : ARGV ]
+    {
+        last-commit-hash = "$(last-commit-hash) (automated build)" ;
+    }
+    else if ! --official in [ modules.peek : ARGV ]
+    {
+        last-commit-hash = "$(last-commit-hash) (developer build)" ;
+    }
+
     local header-text =
 "$(using-namespace) System$(namespace-delimiter)Reflection;
-$(using-namespace) System$(namespace-delimiter)Runtime$(namespace-delimiter)CompilerServices;
 $(using-namespace) System$(namespace-delimiter)Runtime$(namespace-delimiter)InteropServices;
 
 [assembly: AssemblyTitle$(attribute-suffix)(\"$(AssemblyTitle)\")]$(attribute-line-terminator)
@@ -162,6 +170,7 @@ $(using-namespace) System$(namespace-delimiter)Runtime$(namespace-delimiter)Inte
 [assembly: ComVisible$(attribute-suffix)(false)]$(attribute-line-terminator)
 " ;
 
+    # $(using-namespace) System$(namespace-delimiter)Runtime$(namespace-delimiter)CompilerServices;
     # [assembly: System.Runtime.CompilerServices.InternalsVisibleTo$(attribute-suffix)(\"Tests\")]$(attribute-line-terminator)
 
     header-text = @($(filepath):E=$(header-text)) ;

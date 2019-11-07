@@ -32,6 +32,7 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include <boost/bind.hpp>
+#include <boost/range/algorithm/for_each.hpp>
 
 
 using namespace pwiz::cv;
@@ -77,7 +78,13 @@ PWIZ_API_DECL size_t ChromatogramList_Thermo::find(const string& id) const
 }
 
 
-PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index, bool getBinaryData) const 
+PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index, bool getBinaryData) const
+{
+    return chromatogram(index, getBinaryData ? DetailLevel_FullData : DetailLevel_FullMetadata);
+}
+
+
+PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index, DetailLevel detailLevel) const
 {
     boost::call_once(indexInitialized_.flag, boost::bind(&ChromatogramList_Thermo::createIndex, this));
     if (index>size())
@@ -92,6 +99,8 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
     if (ci.polarityType != CVID_Unknown)
         result->set(ci.polarityType);
 
+    bool getBinaryData = detailLevel == DetailLevel_FullData;
+
     try
     {
         rawfile_->setCurrentController(ci.controllerType, ci.controllerNumber);
@@ -103,14 +112,31 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
 
             case MS_TIC_chromatogram:
             {
+                if (detailLevel < DetailLevel_FullMetadata)
+                    return result;
+
+                CVID intensityUnits = ci.controllerType == Controller_MS ? MS_number_of_detector_counts : UO_microampere;
                 ChromatogramDataPtr cd = rawfile_->getChromatogramData(Type_TIC, "", 0, 0, 0, rawfile_->getFirstScanTime(), rawfile_->getLastScanTime());
-                if (getBinaryData) result->setTimeIntensityArrays(cd->times(), cd->intensities(), UO_minute, MS_number_of_detector_counts);
+                if (getBinaryData)
+                {
+                    result->setTimeIntensityArrays(cd->times(), cd->intensities(), UO_minute, intensityUnits);
+
+                    if (intensityUnits == UO_microampere)
+                    {
+                        // Thermo seems to store CAD intensities as attoAmps but shows them as picoAmps in QualBrowser;
+                        // Convert atto to microamperes until UO gets picoampere
+                        boost::range::for_each(result->getIntensityArray()->data, [&](auto& v) {v *= 1e-12;});
+                    }
+                }
                 else result->defaultArrayLength = cd->size();
             }
             break;
 
             case MS_SIC_chromatogram: // generate SIC for <precursor>
             {
+                if (detailLevel < DetailLevel_FullMetadata)
+                    return result;
+
                 ChromatogramDataPtr cd = rawfile_->getChromatogramData(Type_MassRange, index_[index].filter, 0, 100000, 0, rawfile_->getFirstScanTime(), rawfile_->getLastScanTime());
                 if (getBinaryData) result->setTimeIntensityArrays(cd->times(), cd->intensities(), UO_minute, MS_number_of_detector_counts);
                 else result->defaultArrayLength = cd->size();
@@ -153,6 +179,9 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
                 result->product.isolationWindow.set(MS_isolation_window_lower_offset, ci.q3Offset, MS_m_z);
                 result->product.isolationWindow.set(MS_isolation_window_upper_offset, ci.q3Offset, MS_m_z);
 
+                if (detailLevel < DetailLevel_FullMetadata)
+                    return result;
+
                 string q1 = (format("%.10g", std::locale::classic()) % ci.q1).str();
                 string q3Range = (format("%.10g-%.10g", std::locale::classic())
                                   % (ci.q3 - ci.q3Offset)
@@ -173,6 +202,9 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
                 result->precursor.isolationWindow.set(MS_isolation_window_lower_offset, ci.q3Offset, MS_m_z);
                 result->precursor.isolationWindow.set(MS_isolation_window_upper_offset, ci.q3Offset, MS_m_z);
 
+                if (detailLevel < DetailLevel_FullMetadata)
+                    return result;
+
                 string q1Range = (format("%.10g-%.10g", std::locale::classic())
                                   % (ci.q1 - ci.q3Offset)
                                   % (ci.q1 + ci.q3Offset)
@@ -186,31 +218,25 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
             }
             break;
 
-    /*case MS_absorption_chromatogram: // generate "Total Scan" chromatogram for entire run
+            case MS_absorption_chromatogram: // PDA: generate "Total Scan" chromatogram for entire run
             {
                 ChromatogramDataPtr cd = rawfile_->getChromatogramData(
-                    Type_TotalScan, Operator_None, Type_MassRange,
-                    "", "", "", 0,
-                    rawfile_->getFirstScanTime(), rawfile_->getLastScanTime()),
-                    Smoothing_None, 0);
-                pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
-                if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_minute, MS_number_of_detector_counts);
+                    Type_TotalScan, "", 0, 0, 0,
+                    rawfile_->getFirstScanTime(), rawfile_->getLastScanTime());
+                if (getBinaryData) result->setTimeIntensityArrays(cd->times(), cd->intensities(), UO_minute, UO_absorbance_unit);
                 else result->defaultArrayLength = cd->size();
             }
             break;
 
-            case MS_mass_chromatogram: // generate "ECD" chromatogram for entire run
+            case MS_emission_chromatogram: // UV: generate "ECD" chromatogram for entire run
             {
                 ChromatogramDataPtr cd = rawfile_->getChromatogramData(
-                    Type_ECD, Operator_None, Type_MassRange,
-                    "", "", "", 0,
-                    0, std::numeric_limits<double>::max(),
-                    Smoothing_None, 0);
-                pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
-                if (getBinaryData) result->setTimeIntensityPairs(data, cd->size(), UO_minute, MS_number_of_detector_counts);
+                    Type_ECD, "", 0, 0, 0,
+                    rawfile_->getFirstScanTime(), rawfile_->getLastScanTime());
+                if (getBinaryData) result->setTimeIntensityArrays(cd->times(), cd->intensities(), UO_minute, UO_absorbance_unit);
                 else result->defaultArrayLength = cd->size();
             }
-            break;*/
+            break;
         }
 
         return result;
@@ -226,10 +252,26 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
 }
 
 
+PWIZ_API_DECL ChromatogramList_Thermo::IndexEntry& ChromatogramList_Thermo::addChromatogram(const string& id, ControllerType controllerType, int controllerNumber, CVID chromatogramType, const string& filter) const
+{
+    index_.push_back(IndexEntry());
+    IndexEntry& ci = index_.back();
+    ci.controllerType = controllerType;
+    ci.controllerNumber = controllerNumber;
+    ci.filter = filter;
+    ci.index = index_.size() - 1;
+    ci.id = id;
+    ci.chromatogramType = chromatogramType;
+    ci.polarityType = CVID_Unknown;
+    idMap_[ci.id] = ci.index;
+    return ci;
+}
+
+
 PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
 {
     for (int controllerType = Controller_MS;
-         controllerType <= Controller_UV;
+         controllerType < Controller_Count;
          ++controllerType)
     {
         long numControllers = rawfile_->getNumberOfControllersOfType((ControllerType) controllerType);
@@ -246,16 +288,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                 case Controller_MS:
                 {
                     // support file-level TIC for all file types
-                    index_.push_back(IndexEntry());
-                    IndexEntry& ci = index_.back();
-                    ci.controllerType = (ControllerType) controllerType;
-                    ci.controllerNumber = n;
-                    ci.filter = "";
-                    ci.index = index_.size()-1;
-                    ci.id = "TIC";
-                    ci.chromatogramType = MS_TIC_chromatogram;
-                    ci.polarityType = CVID_Unknown;
-                    idMap_[ci.id] = ci.index;
+                    addChromatogram("TIC", (ControllerType) controllerType, n, MS_TIC_chromatogram, "");
 
                     // for certain filter types, support additional chromatograms
                     vector<string> filterArray = rawfile_->getFilters();
@@ -286,24 +319,20 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
 
                                 for (size_t j=0, jc=scanInfo->scanRangeCount(); j < jc; ++j)
                                 {
-                                    index_.push_back(IndexEntry());
-                                    IndexEntry& ci = index_.back();
-                                    ci.chromatogramType = MS_SRM_chromatogram;
-                                    ci.controllerType = (ControllerType) controllerType;
-                                    ci.controllerNumber = n;
-                                    ci.filter = filterString;
-                                    ci.index = index_.size()-1;
-                                    ci.q1 = scanInfo->precursorMZ(0);
-                                    ci.q3 = (scanInfo->scanRange(j).first + scanInfo->scanRange(j).second) / 2.0;
-                                    ci.polarityType = translate(scanInfo->polarityType());
-                                    string polarity = polarityStringForFilter(ci.polarityType);
-                                    ci.id = (format("%sSRM SIC %s,%.10g", std::locale::classic())
+                                    double q1 = scanInfo->precursorMZ(0);
+                                    double q3 = (scanInfo->scanRange(j).first + scanInfo->scanRange(j).second) / 2.0;
+                                    auto polarityType = translate(scanInfo->polarityType());
+                                    string polarity = polarityStringForFilter(polarityType);
+                                    string id = (format("%sSRM SIC %s,%.10g", std::locale::classic())
                                              % polarity
                                              % precursorMZ
-                                             % ci.q3
+                                             % q3
                                             ).str();
+                                    IndexEntry& ci = addChromatogram(id, (ControllerType)controllerType, n, MS_SRM_chromatogram, filterString);
+                                    ci.q1 = q1;
+                                    ci.q3 = q3;
+                                    ci.polarityType = polarityType;
                                     ci.q3Offset = (scanInfo->scanRange(j).second - scanInfo->scanRange(j).first) / 2.0;
-                                    idMap_[ci.id] = ci.index;
                                 }
                             }
                             break; // case ScanType_SRM
@@ -316,23 +345,19 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
 
                                 for (size_t j=0, jc=scanInfo->scanRangeCount(); j < jc; ++j)
                                 {
-                                    index_.push_back(IndexEntry());
-                                    IndexEntry& ci = index_.back();
-                                    ci.chromatogramType = MS_SIM_chromatogram;
-                                    ci.controllerType = (ControllerType) controllerType;
-                                    ci.controllerNumber = n;
-                                    ci.filter = filterString;
-                                    ci.index = index_.size()-1;
-                                    ci.polarityType = translate(scanInfo->polarityType());
-                                    string polarity = polarityStringForFilter(ci.polarityType);
-                                    ci.q1 = (scanInfo->scanRange(j).first + scanInfo->scanRange(j).second) / 2.0;
-                                    ci.id = (format("%sSIM SIC %.10g", std::locale::classic())
+                                    double q1 = (scanInfo->scanRange(j).first + scanInfo->scanRange(j).second) / 2.0;
+                                    auto polarityType = translate(scanInfo->polarityType());
+                                    string polarity = polarityStringForFilter(polarityType);
+                                    string id = (format("%sSIM SIC %.10g", std::locale::classic())
                                              % polarity
-                                             % ci.q1
+                                             % q1
                                             ).str();
+                                    IndexEntry& ci = addChromatogram(id, (ControllerType)controllerType, n, MS_SIM_chromatogram, filterString);
+                                    ci.q1 = q1;
+                                    ci.polarityType = polarityType;
+
                                     // this should be q1Offset
                                     ci.q3Offset = (scanInfo->scanRange(j).second - scanInfo->scanRange(j).first) / 2.0;
-                                    idMap_[ci.id] = ci.index;
                                 }
                             }
                             break; // case ScanType_SIM
@@ -355,32 +380,27 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
 
                 case Controller_PDA:
                 {
-                    // "Total Scan" appears to be the equivalent of the TIC
-                    index_.push_back(IndexEntry());
-                    IndexEntry& ci = index_.back();
-                    ci.controllerType = (ControllerType) controllerType;
-                    ci.controllerNumber = n;
-                    ci.index = index_.size()-1;
-                    ci.id = "Total Scan";
-                    ci.chromatogramType = MS_absorption_chromatogram;
-                    ci.polarityType = CVID_Unknown;
-                    idMap_[ci.id] = ci.index;
+                    addChromatogram("PDA " + lexical_cast<string>(n), (ControllerType)controllerType, n, MS_absorption_chromatogram, "");
                 }
                 break; // case Controller_PDA
 
-                case Controller_Analog:
+                case Controller_UV:
                 {
-                    // "ECD" appears to be the equivalent of the TIC
-                    index_.push_back(IndexEntry());
-                    IndexEntry& ci = index_.back();
-                    ci.controllerType = (ControllerType) controllerType;
-                    ci.controllerNumber = n;
-                    ci.index = index_.size()-1;
-                    ci.id = "ECD";
-                    ci.chromatogramType = MS_emission_chromatogram;
-                    ci.polarityType = CVID_Unknown;
-                    idMap_[ci.id] = ci.index;
+                    auto instrumentData = rawfile_->getInstrumentData();
+                    if (bal::ends_with(instrumentData.Units, "AbsorbanceUnits") && instrumentData.AxisLabelY.empty())
+                    {
+                        addChromatogram("UV " + lexical_cast<string>(n), (ControllerType)controllerType, n, MS_emission_chromatogram, "");
+                    }
+                    else if (instrumentData.AxisLabelY == "pA") // picoamperes?
+                    {
+                        addChromatogram("CAD " + lexical_cast<string>(n), (ControllerType)controllerType, n, MS_TIC_chromatogram, "");
+                    }
+                    else
+                    {
+                        // TODO: pressure/flow chromatogram
+                    }
                 }
+                break; // case Controller_UV
 
                 default:
                     // TODO: are there sensible default chromatograms for other controller types?
