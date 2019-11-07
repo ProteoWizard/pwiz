@@ -232,7 +232,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
             return true;
         }
 
-        public bool UseResults()
+        public void UseResults()
+        {
+            SetCalibrationPeptides();
+        }
+
+        public bool SetCalibrationPeptides()
         {
             CheckDisposed();
             var document = Program.ActiveDocumentUI;
@@ -379,7 +384,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 new KeyValuePair<Target, bool>(match.Item1.ModifiedTarget, true)));
             if (StandardPeptideCount == 0 || StandardPeptideList.Count(pep => regressionPeptides.ContainsKey(pep.Target)) >= regressionPeptides.Count / 2)
             {
-                if (!UseResults())
+                if (!SetCalibrationPeptides())
                 {
                     comboRegression.SelectedIndex = 0;
                     return;
