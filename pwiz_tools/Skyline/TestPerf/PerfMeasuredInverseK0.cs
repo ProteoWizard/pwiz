@@ -39,7 +39,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         private const string bsaFmolTimsInfusionesiPrecMz5Mz5 = "BSA_50fmol_TIMS_InfusionESI_10prec_mz5.mz5";
 
-//        [TestMethod]  TODO restore this when we have IM peak detection working for 3-array IMS data
+        [TestMethod]
         public void MeasuredInverseK0ValuesPerfTest()
         {
             TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfMeasuredInverseK0.zip";
@@ -123,6 +123,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var mz5 = TestFilesDir.GetTestPath(bsaFmolTimsInfusionesiPrecMz5Mz5);
             ImportResultsFile(mz5);
             document = WaitForDocumentChange(document);
+//PauseTest(); uncomment this to play with raw data display 
             foreach (var nodeGroup in document.MoleculeTransitionGroups)
             {
                 Assume.AreEqual(2, nodeGroup.Results.Count);

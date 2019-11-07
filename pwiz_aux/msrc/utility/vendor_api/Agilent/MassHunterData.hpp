@@ -266,7 +266,7 @@ struct PWIZ_API_DECL Frame
     virtual DriftScanPtr getScan(int driftBinIndex) const = 0;
     virtual DriftScanPtr getTotalScan() const = 0;
 
-    virtual void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities) const = 0;
+    virtual void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities, bool ignoreZeroIntensityPoints) const = 0;
     virtual size_t getCombinedSpectrumDataSize() const = 0;
 
     virtual ~Frame() {}

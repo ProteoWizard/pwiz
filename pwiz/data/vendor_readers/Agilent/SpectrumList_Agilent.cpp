@@ -365,7 +365,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
             arrayType.units = UO_millisecond;
             mobility->cvParams.emplace_back(arrayType);
 
-            lastFrame_->getCombinedSpectrumData(mzArray, intensityArray, mobility->data);
+            lastFrame_->getCombinedSpectrumData(mzArray, intensityArray, mobility->data, config_.ignoreZeroIntensityPoints);
         }
         else if (doCentroid || xArray.size() < 3)
         {

@@ -91,7 +91,7 @@ struct FrameImpl : public Frame
     virtual DriftScanPtr getScan(int driftBinIndex) const;
     virtual DriftScanPtr getTotalScan() const;
 
-    virtual void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities) const;
+    virtual void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities, bool ignoreZeroIntensityPoints) const;
     virtual size_t getCombinedSpectrumDataSize() const;
 
     private:
@@ -470,7 +470,7 @@ DriftScanPtr FrameImpl::getTotalScan() const
     CATCH_AND_FORWARD
 }
 
-void FrameImpl::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities) const
+void FrameImpl::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities, bool ignoreZeroIntensityPoints) const
 {
     try
     {
@@ -491,14 +491,17 @@ void FrameImpl::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz
             expectedNonZeroPoints += specData->NonZeroPoints;
         }
 
-        auto mzArray = gcnew cli::array<double>(3*expectedNonZeroPoints + 2); // handle worst case scenario for preserving zeros adjacent to nonzeros ie 0,1,0,0,1,0,0,1,0,0,1,0
-        auto intensityArray = gcnew cli::array<double>(3*expectedNonZeroPoints + 2);
-        auto mobilityArray = gcnew cli::array<double>(3*expectedNonZeroPoints + 2);
+        if (!ignoreZeroIntensityPoints)
+            expectedNonZeroPoints = 3 * expectedNonZeroPoints + 2; // handle worst case scenario for preserving zeros adjacent to nonzeros ie 0,1,0,0,1,0,0,1,0,0,1,0
+
+        auto mzArray = gcnew cli::array<double>(expectedNonZeroPoints); 
+        auto intensityArray = gcnew cli::array<double>(expectedNonZeroPoints);
+        auto mobilityArray = gcnew cli::array<double>(expectedNonZeroPoints);
         int lastNonZeroIndex = 0;
 
         for (size_t i = 0; i < nonEmptyDriftBins.size(); ++i)
         {
-            imsReader_->FrameMs(frameIndex_ + 1, nonEmptyDriftBins[i], MIDAC::MidacSpecFormat::ZeroBounded, true, (MIDAC::IMidacSpecDataMs^%) specData);
+            imsReader_->FrameMs(frameIndex_ + 1, nonEmptyDriftBins[i], ignoreZeroIntensityPoints ? MIDAC::MidacSpecFormat::ZeroTrimmed : MIDAC::MidacSpecFormat::ZeroBounded, true, (MIDAC::IMidacSpecDataMs^%) specData);
             if (Object::ReferenceEquals(specData, nullptr))
                 throw gcnew System::Exception(ToSystemString("null spectrum returned for frame ") + frameIndex_ + " and drift bin " + nonEmptyDriftBins[i]);
 
@@ -508,8 +511,8 @@ void FrameImpl::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz
             for (int j = 0, end = specData->XArray->Length; j < end; ++j)
             {
                 double intensity = specData->YArray[j];
-                // Don't save zero intensity points unless they are start or end of a run of zeros
-                if (intensity == 0 && previousIntensity == 0 && j + 1 < end && specData->YArray[j + 1] == 0)
+                // Don't save zero intensity points unless directed to, and they are start or end of a run of zeros
+                if (intensity == 0 && (ignoreZeroIntensityPoints || (previousIntensity == 0 && j + 1 < end && specData->YArray[j + 1] == 0)))
                     continue;
                 mzArray[lastNonZeroIndex] = specData->XArray[j];
                 intensityArray[lastNonZeroIndex] = previousIntensity = intensity;
