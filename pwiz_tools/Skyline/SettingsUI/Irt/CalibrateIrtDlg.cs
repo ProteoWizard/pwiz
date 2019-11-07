@@ -236,55 +236,59 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             CheckDisposed();
             var document = Program.ActiveDocumentUI;
-
             if (!document.Settings.HasResults)
             {
                 MessageDlg.Show(this, Resources.CalibrateIrtDlg_UseResults_The_document_must_contain_results_to_calibrate_a_standard);
                 return false;
             }
-
             var targetResolver = TargetResolver.MakeTargetResolver(document);
             _gridViewDriver.TargetResolver = targetResolver;
 
             var docTargets = document.Molecules.Where(nodePep => nodePep.SchedulingTime.HasValue).Select(nodePep => nodePep.ModifiedTarget).Distinct().ToArray();
             var count = docTargets.Length;
-            var exclude = SelectedRegressionOption?.MatchedRegressionPeptides?.Select(match => match.Item2.ModifiedTarget).ToHashSet();
-            if (exclude != null && exclude.Count > 0)
+
+            // If calibrating against another standard, exclude peptides in that standard
+            var excludePeps = SelectedRegressionOption?.MatchedRegressionPeptides?.Select(match => match.Item2.ModifiedTarget).ToHashSet();
+            var exclude = excludePeps != null && excludePeps.Count > 0;
+
+            if (exclude)
             {
-                docTargets = docTargets.Where(target => !exclude.Contains(target)).ToArray();
+                docTargets = docTargets.Where(target => !excludePeps.Contains(target)).ToArray();
                 count = docTargets.Length;
-                if (count < MIN_STANDARD_PEPTIDES)
+            }
+
+            if (count < MIN_STANDARD_PEPTIDES)
+            {
+                MessageDlg.Show(this,
+                    ModeUIAwareStringFormat(!exclude
+                            ? Resources.CalibrateIrtDlg_UseResults_The_document_contains_results_for__0__peptides__which_is_less_than_the_minimum_requirement_of__1__to_calibrate_a_standard_
+                            : Resources.CalibrateIrtDlg_SetCalibrationPeptides_The_document_contains_results_for__0__peptide_s__not_in_this_standard__which_is_less_than_the_minimum_requirement_of__1__to_calibrate_a_standard_,
+                        count, MIN_STANDARD_PEPTIDES));
+                return false;
+            }
+            else if (count < MIN_SUGGESTED_STANDARD_PEPTIDES)
+            {
+                if (MultiButtonMsgDlg.Show(this,
+                        ModeUIAwareStringFormat(!exclude
+                                ? Resources.CalibrateIrtDlg_UseResults_The_document_contains_results_for__0__peptides__but_using_fewer_than__1__standard_peptides_is_not_recommended__Are_you_sure_you_want_to_continue_
+                                : Resources.CalibrateIrtDlg_UseResults_The_document_contains_results_for__0__peptides_not_in_this_standard__but_using_fewer_than__1__standard_peptides_is_not_recommended__Are_you_sure_you_want_to_continue_,
+                            count, MIN_SUGGESTED_STANDARD_PEPTIDES),
+                        MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false) != DialogResult.Yes)
                 {
-                    MessageDlg.Show(this,
-                        ModeUIAwareStringFormat(
-                            Resources.CalibrateIrtDlg_SetCalibrationPeptides_The_document_contains_results_for__0__peptide_s__not_in_this_standard__which_is_less_than_the_minimum_requirement_of__1__to_calibrate_a_standard_,
-                            count, MIN_STANDARD_PEPTIDES));
                     return false;
                 }
-                else if (count < MIN_SUGGESTED_STANDARD_PEPTIDES)
-                {
-                    if (MultiButtonMsgDlg.Show(this,
-                            ModeUIAwareStringFormat(
-                                Resources.CalibrateIrtDlg_SetCalibrationPeptides_The_document_only_contains_results_for__0__peptide_s__not_in_this_standard__It_is_recommended_to_use_at_least__1__peptides_to_calibrate_a_standard__Are_you_sure_you_wish_to_continue_,
-                                count, MIN_SUGGESTED_STANDARD_PEPTIDES),
-                            MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false) != DialogResult.Yes)
-                    {
-                        return false;
-                    }
-                }
             }
-            if (count > 20)
+            else if (count > 20)
             {
-                using (var dlg = new AddIrtStandardsDlg(count, exclude != null && exclude.Count > 0))
+                using (var dlg = new AddIrtStandardsDlg(count, excludePeps != null && excludePeps.Count > 0))
                 {
                     if (dlg.ShowDialog(this) != DialogResult.OK)
                         return false;
-
                     count = dlg.StandardCount;
                 }
             }
 
-            _gridViewDriver.Recalculate(document, count, SelectedRegressionOption?.RegressionLine, exclude);
+            _gridViewDriver.Recalculate(document, count, SelectedRegressionOption?.RegressionLine, excludePeps);
             return true;
         }
 
@@ -350,8 +354,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 comboMinPeptide.Items.Clear();
                 comboMaxPeptide.Items.Clear();
             }
-            btnGraph.Enabled = lblEquation.Visible = calibrateMeasuredRt.Visible = btnGraphIrts.Enabled = !SelectedRegressionOption.ForcedIrts;
-            btnUseCurrent.Enabled = !SelectedRegressionOption.ForcedStandards;
+            lblEquation.Visible = calibrateMeasuredRt.Visible = !SelectedRegressionOption.ForcedIrts;
             if (IsRecalibration)
             {
                 UpdateEquation(sender, e);
@@ -371,11 +374,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 return;
             }
 
+            // If standard peptide list is empty, or contains over 50% of the selected regression's peptides, use results
             var regressionPeptides = new TargetMap<bool>(SelectedRegressionOption.MatchedRegressionPeptides.Select(match =>
                 new KeyValuePair<Target, bool>(match.Item1.ModifiedTarget, true)));
             if (StandardPeptideCount == 0 || StandardPeptideList.Count(pep => regressionPeptides.ContainsKey(pep.Target)) >= regressionPeptides.Count / 2)
             {
-                // If standard peptide list is empty, or contains over 50% of the selected regression's peptides, use results
                 if (!UseResults())
                 {
                     comboRegression.SelectedIndex = 0;
