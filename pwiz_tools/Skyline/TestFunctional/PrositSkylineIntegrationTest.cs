@@ -1360,12 +1360,11 @@ namespace pwiz.SkylineTestFunctional
             var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             var buildLibrary = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
 
-            RunUI(() => { Assert.IsFalse(buildLibrary.Prosit); });
-
-            var toolOptions = WaitForOpenForm<ToolOptionsUI>();
-            WaitForConditionUI(() => toolOptions.PrositServerStatus == ToolOptionsUI.ServerStatus.AVAILABLE);
-            RunUI(() => toolOptions.DialogResult = DialogResult.OK);
-            WaitForClosedForm(toolOptions);
+            RunUI(() =>
+            {
+                Assert.IsFalse(buildLibrary.Prosit);
+                buildLibrary.Prosit = true;
+            });
 
             RunUI(() =>
             {
