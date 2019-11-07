@@ -314,6 +314,16 @@ namespace pwiz.SkylineTestData.Results
                 var measuredResults = docResults.Settings.MeasuredResults;
                 var chromatograms = measuredResults.Chromatograms;
                 Assert.AreEqual(2, chromatograms.Count);
+                var dictPathToIndex = new Dictionary<MsDataFileUri, int>();
+                for (int i = 0; i < 2; i++)
+                {
+                    Assert.AreEqual(listChromatograms[i].BatchName, chromatograms[i].BatchName);
+                    for (int j = 0; j < 2; j++)
+                    {
+                        Assert.AreEqual(listChromatograms[i].MSDataFileInfos[j].FilePath, chromatograms[i].MSDataFileInfos[j].FilePath);
+                        dictPathToIndex.Add(listChromatograms[i].MSDataFileInfos[j].FilePath, j);
+                    }
+                }
 
                 const float tolerance = (float)TransitionInstrument.DEFAULT_MZ_MATCH_TOLERANCE;
 
@@ -321,20 +331,23 @@ namespace pwiz.SkylineTestData.Results
                 {
                     var nodePep = pair.NodePep;
                     var nodeGroup = pair.NodeGroup;
-                    Assert.IsTrue(nodeGroup.HasResults);
+                    Assert.IsTrue(nodeGroup.HasResults, string.Format("Missing results on {0}", nodeGroup));
                     Assert.AreEqual(2, nodeGroup.Results.Count);
                     foreach (var result in nodeGroup.Results)
                         Assert.AreEqual(2, result.Count);
                     for (int i = 0; i < 2; i++)
                     {
                         ChromatogramGroupInfo[] chromInfos;
-                        Assert.IsTrue(measuredResults.TryLoadChromatogram(i, nodePep, nodeGroup, tolerance, true, out chromInfos));
+                        Assert.IsTrue(measuredResults.TryLoadChromatogram(i, nodePep, nodeGroup, tolerance, true, out chromInfos),
+                            string.Format("Missing chromatogram {0} - {1}", nodeGroup, i));
                         Assert.AreEqual(2, chromInfos.Length);
                         double[] peakAreas = new double[2];
                         for (int j = 0; j < 2; j++)
                         {
                             var chromInfo = chromInfos[j];
-                            Assert.IsTrue(chromInfo.BestPeakIndex != -1);
+                            // No guarantee that chromInfos will be in the same order as the ChromatogramSet.MsDataFileInfos
+                            int peakAreaIndex = dictPathToIndex[chromInfo.FilePath];
+                            Assert.IsTrue(chromInfo.BestPeakIndex != -1, string.Format("Missing peak {0} - {1}:{2}", nodeGroup, i, j));
                             foreach (var tranInfo in chromInfo.TransitionPointSets)
                             {
                                 var peakInfo = tranInfo.GetPeak(chromInfo.BestPeakIndex);
@@ -344,19 +357,23 @@ namespace pwiz.SkylineTestData.Results
                                 // Check times
                                 var times = tranInfo.Times;
                                 int iStart = CollectionUtil.BinarySearch(times, peakInfo.StartTime);
-                                Assert.IsTrue(iStart >= 0);
+                                Assert.IsTrue(iStart >= 0, string.Format("Start time not {0}", iStart));
                                 int iEnd = CollectionUtil.BinarySearch(times, peakInfo.EndTime);
-                                Assert.IsTrue(iEnd >= 0);
+                                Assert.IsTrue(iEnd >= 0, string.Format("End time not found {0}", iEnd));
                                 int iPeak = CollectionUtil.BinarySearch(times, peakInfo.RetentionTime);
                                 // Check intensities at times
                                 var intensities = tranInfo.Intensities;
-                                Assert.IsTrue(intensities[iStart] < intensities[iPeak]);
-                                Assert.IsTrue(intensities[iEnd] < intensities[iPeak]);
+                                Assert.IsTrue(intensities[iStart] < intensities[iPeak],
+                                    string.Format("Start intensity {0} >= peak intensity {1}", intensities[iStart], intensities[iPeak]));
+                                Assert.IsTrue(intensities[iEnd] < intensities[iPeak],
+                                    string.Format("End intensity {0} >= peak intensity {1}", intensities[iEnd], intensities[iPeak]));
                                 // Sum peak area
-                                peakAreas[j] += peakInfo.Area;
+                                peakAreas[peakAreaIndex] += peakInfo.Area;
                             }
                         }
-                        Assert.IsTrue(peakAreas[0] < peakAreas[1]);
+
+                        Assert.IsTrue(peakAreas[0] < peakAreas[1],
+                            string.Format("{0} analyte area >= {1} standard area", peakAreas[0], peakAreas[1]));
                     }
                 }
             }
