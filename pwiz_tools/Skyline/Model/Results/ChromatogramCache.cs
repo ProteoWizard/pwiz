@@ -1078,7 +1078,7 @@ namespace pwiz.Skyline.Model.Results
                     {
                         Buffer.BlockCopy(bytes, offset, scanIds[source], 0, sizeArrayScanIds);
                         offset += sizeArrayScanIds;
-        }
+                    }
                 }
             }
         }

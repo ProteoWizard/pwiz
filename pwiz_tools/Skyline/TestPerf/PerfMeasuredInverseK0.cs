@@ -39,7 +39,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         private const string bsaFmolTimsInfusionesiPrecMz5Mz5 = "BSA_50fmol_TIMS_InfusionESI_10prec_mz5.mz5";
 
-        [TestMethod] 
+//        [TestMethod]  TODO restore this when we have IM peak detection working for 3-array IMS data
         public void MeasuredInverseK0ValuesPerfTest()
         {
             TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfMeasuredInverseK0.zip";

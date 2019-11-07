@@ -2567,8 +2567,8 @@ Are you sure you want to continue?</value>
   <data name="ConfigureToolsDlg_AddFromWeb_Contacting_the_server" xml:space="preserve">
     <value>Contacting the server</value>
   </data>
-  <data name="EditFragmentLossDlg_EditFragmentLossDlg_Neutral_loss__chemical_formula_" xml:space="preserve">
-    <value>Neutral loss &amp;chemical formula:</value>
+  <data name="EditFragmentLossDlg_EditFragmentLossDlg_Loss__chemical_formula_" xml:space="preserve">
+    <value>Loss &amp;chemical formula:</value>
   </data>
   <data name="EditDPDlg_UseCurrentData_Insufficient_data_found_to_calculate_a_new_regression" xml:space="preserve">
     <value>Insufficient data found to calculate a new regression.</value>
@@ -10747,5 +10747,14 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="FileStreamManager_GetTempFileName_Failed_attempting_to_create_a_temporary_file_in_the_folder__0__with_the_following_error_" xml:space="preserve">
     <value>Failed attempting to create a temporary file in the folder {0} with the following error:</value>
+  </data>
+  <data name="EditIrtCalcDlg_ChangeStandardPeptides_Removed_peptides_on_iRT_standard_protein" xml:space="preserve">
+    <value>Removed peptides on iRT standard protein</value>
+  </data>
+  <data name="ChangeIrtPeptidesDlg_OkDialog_The_following_peptides_were_removed_" xml:space="preserve">
+    <value>The following peptides were removed:</value>
+  </data>
+  <data name="ChangeIrtPeptidesDlg_OkDialog_Would_you_like_to_remove_them_from_the_document_" xml:space="preserve">
+    <value>Would you like to remove them from the document?</value>
   </data>
 </root>

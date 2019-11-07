@@ -71,7 +71,8 @@ namespace pwiz.Skyline
         private DocumentGridForm _documentGridForm;
         private CalibrationForm _calibrationForm;
         private AuditLogForm _auditLogForm;
-        private readonly List<GraphChromatogram> _listGraphChrom = new List<GraphChromatogram>();
+        public static int MAX_GRAPH_CHROM = 100; // Never show more than this many chromatograms, lest we hit the Windows handle limit
+        private readonly List<GraphChromatogram> _listGraphChrom = new List<GraphChromatogram>(); // List order is MRU, with oldest in position 0
         private bool _inGraphUpdate;
         private ChromFileInfoId _alignToFile;
         private bool _alignToPrediction;
@@ -117,7 +118,7 @@ namespace pwiz.Skyline
             _listGraphPeakArea.ForEach(g => g.ActiveLibrary = activeLibrary);
             _listGraphRetentionTime.ForEach(g => g.ActiveLibrary = activeLibrary);
 
-            foreach (var graphChrom in _listGraphChrom)
+            foreach (var graphChrom in _listGraphChrom.ToArray()) // List may be updating concurrent with this access, so convert to array first
             {
                 if (ReferenceEquals(graphChrom, activeForm))
                     ComboResults.SelectedItem = graphChrom.TabText;
@@ -404,7 +405,7 @@ namespace pwiz.Skyline
                     foreach (var graphChromatogram in _listGraphChrom.ToArray())
                     {
                         string name = graphChromatogram.NameSet;
-                        // Look for mathcing chromatogram sets across the documents
+                        // Look for matching chromatogram sets across the documents
                         ChromatogramSet chromSetOld;
                         ChromatogramSet chromSetNew;
                         int index;
@@ -427,9 +428,10 @@ namespace pwiz.Skyline
                             if (docIdChanged)
                             {
                                 var graphChrom = GetGraphChrom(name);
-                                _listGraphChrom.Remove(graphChrom);
                                 if (graphChrom != null)
-                                    DestroyGraphChrom(graphChrom);
+                                {
+                                    RemoveGraphChromFromList(graphChrom);
+                                }
                             }
                         }
                     }
@@ -451,12 +453,15 @@ namespace pwiz.Skyline
                                 var graphChrom = GetGraphChrom(name);
                                 if (graphChrom == null)
                                 {
-                                    layoutLock.EnsureLocked();
-                                    graphChrom = CreateGraphChrom(name, nameLast, false);
-                                    layoutLock.EnsurePaneLocked(graphChrom.Pane);
+                                    if (_listGraphChrom.Count < MAX_GRAPH_CHROM) // Limit window count to conserve win32 handles
+                                    {
+                                        layoutLock.EnsureLocked();
+                                        graphChrom = CreateGraphChrom(name, nameLast, false);
+                                        layoutLock.EnsurePaneLocked(graphChrom.Pane);
 
-                                    nameFirst = nameFirst ?? name;
-                                    nameLast = name;
+                                        nameFirst = nameFirst ?? name;
+                                        nameLast = name;
+                                    }
                                 }
                                     // If the pane is not showing a tab for this graph, than add one.
                                 else if (graphChrom.Pane == null ||
@@ -531,6 +536,12 @@ namespace pwiz.Skyline
 
             UpdateGraphPanes(listUpdateGraphs);
             FoldChangeForm.CloseInapplicableForms(this);
+        }
+
+        private void RemoveGraphChromFromList(GraphChromatogram graphChrom)
+        {
+            _listGraphChrom.Remove(graphChrom);
+            DestroyGraphChrom(graphChrom);
         }
 
         // Load view layout from the given stream.
@@ -705,6 +716,10 @@ namespace pwiz.Skyline
             }
             if (persistentString.StartsWith(typeof(GraphChromatogram).ToString()))
             {
+                if (_listGraphChrom.Count >= MAX_GRAPH_CHROM)
+                {
+                    return null;
+                }
                 string name = GraphChromatogram.GetTabText(persistentString);
                 var settings = DocumentUI.Settings;
                 if (settings.HasResults)
@@ -2531,7 +2546,26 @@ namespace pwiz.Skyline
             }
             else if (show)
             {
-                CreateGraphChrom(name, SelectedGraphChromName, false);
+                if (_listGraphChrom.Count >= MAX_GRAPH_CHROM)
+                {
+                    // List is too long, re-purpose least recently used
+                    graphChrom = _listGraphChrom[0];
+                    graphChrom.ChangeChromatogram(name);
+                    graphChrom.Activate();
+                    graphChrom.Visible = true;
+                    graphChrom.Focus();
+                }
+                else
+                {
+                    graphChrom = CreateGraphChrom(name, SelectedGraphChromName, false);
+                }
+            }
+
+            if (show)
+            {
+                // Move this to end of MRU so it's seen as most recent
+                _listGraphChrom.Remove(graphChrom);
+                _listGraphChrom.Add(graphChrom);
             }
         }
 
@@ -2991,6 +3025,11 @@ namespace pwiz.Skyline
         }
 
         private void closeAllChromatogramsMenuItem_Click(object sender, EventArgs e)
+        {
+            CloseAllChromatograms();
+        }
+
+        public void CloseAllChromatograms()
         {
             foreach (var graphChromatogram in _listGraphChrom)
             {

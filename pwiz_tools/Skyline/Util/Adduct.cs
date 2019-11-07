@@ -25,6 +25,7 @@ using System.Text.RegularExpressions;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
@@ -1693,6 +1694,17 @@ namespace pwiz.Skyline.Util
         public bool IsName
         {
             get { return true; }
+        }
+
+        public bool IsValidProductAdduct(Adduct precursorAdduct, TransitionLosses losses)
+        {
+            int precursorCharge = precursorAdduct.AdductCharge;
+            if (losses != null)
+            {
+                precursorCharge -= losses.TotalCharge;
+            }
+
+            return Math.Abs(AdductCharge) <= Math.Abs(precursorCharge);
         }
     }
 }
