@@ -158,6 +158,9 @@ namespace pwiz.Skyline.Controls.Graphs
             get { return GraphItem.TransitionGroupNode; }
         }
 
+        /// <summary>
+        /// Normalized collisition energy for Prosit
+        /// </summary>
         public int PrositNCE
         {
             get { return (int) comboCE.SelectedItem; }
@@ -344,12 +347,12 @@ namespace pwiz.Skyline.Controls.Graphs
                     comboMirrorSpectrum.Visible = showMirror;
                     mirrorLabel.Visible = showMirror;
                     comboSpectrum.Visible = true;
-                    toolStripLabel1.Visible = true;
+                    labelSpectrum.Visible = true;
                 }
                 else
                 {
                     comboSpectrum.Visible = false;
-                    toolStripLabel1.Visible = false;
+                    labelSpectrum.Visible = false;
                     comboMirrorSpectrum.Visible = false;
                     mirrorLabel.Visible = false;
                 }
@@ -373,7 +376,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         int selectedIndex = comboSpectrum.SelectedIndex;
                         object selectedMirror = comboMirrorSpectrum.SelectedItem;
 
-                        using (var _ = new ToolbarUpdate(this))
+                        using (new ToolbarUpdate(this))
                         {
                             comboSpectrum.Items.Clear();
                             comboMirrorSpectrum.Items.Clear();
@@ -416,7 +419,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         // TODO: figure out better way with _inToolBarUpdate
                         // Not a great way of doing this, but we need to ensure that we don't get into
                         // an infinite recursion
-                        if (!ArrayUtil.EqualsDeep(comboCE.Items.Cast<int>().ToArray(), ces) || (int)comboCE.SelectedItem !=
+                        if (!comboCE.Items.Cast<int>().SequenceEqual(ces) || (int)comboCE.SelectedItem !=
                             Settings.Default.PrositNCE)
                         {
                             comboCE.Items.Clear();
@@ -560,41 +563,27 @@ namespace pwiz.Skyline.Controls.Graphs
                 Transition = transition;
             }
 
-            public SpectrumNodeSelection()
-            {
-            }
-
             public static SpectrumNodeSelection GetCurrent(IStateProvider stateProvider)
             {
-                var result = new SpectrumNodeSelection();
-                var nodeTree = stateProvider.SelectedNode as SrmTreeNode;
-
-                switch (nodeTree)
+                switch (stateProvider.SelectedNode)
                 {
                     case PeptideTreeNode p:
                     {
-                        result.Peptide = p.DocNode;
-                        
                         var listInfoGroups = GetChargeGroups(p, !Settings.Default.Prosit);
-                        result.Precursor = listInfoGroups.Length == 1 ? listInfoGroups[0] : null;
-                        break;
+                        return new SpectrumNodeSelection(p.DocNode,
+                            listInfoGroups.Length == 1 ? listInfoGroups[0] : null, null);
                     }
                     case TransitionGroupTreeNode pr:
                     {
-                        result.Precursor = pr.DocNode;
-                        result.Peptide = pr.PepNode;
-                        break;
+                        return new SpectrumNodeSelection(pr.PepNode, pr.DocNode, null);
                     }
                     case TransitionTreeNode t:
                     {
-                        result.Transition = t.DocNode;
-                        result.Precursor = t.TransitionGroupNode;
-                        result.Peptide = t.PepNode;
-                        break;
+                        return new SpectrumNodeSelection(t.PepNode, t.TransitionGroupNode, t.DocNode);
                     }
                 }
 
-                return result;
+                return new SpectrumNodeSelection(null, null, null);
             }
 
             public static explicit operator PeptidePrecursorPair(SpectrumNodeSelection sel)

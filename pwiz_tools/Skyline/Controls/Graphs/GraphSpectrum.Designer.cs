@@ -31,7 +31,7 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(GraphSpectrum));
             this.toolBar = new System.Windows.Forms.ToolStrip();
-            this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
+            this.labelSpectrum = new System.Windows.Forms.ToolStripLabel();
             this.comboSpectrum = new System.Windows.Forms.ToolStripComboBox();
             this.mirrorLabel = new System.Windows.Forms.ToolStripLabel();
             this.comboMirrorSpectrum = new System.Windows.Forms.ToolStripComboBox();
@@ -49,7 +49,7 @@
             this.toolBar.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolBar.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.toolBar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripLabel1,
+            this.labelSpectrum,
             this.comboSpectrum,
             this.mirrorLabel,
             this.comboMirrorSpectrum,
@@ -58,10 +58,10 @@
             resources.ApplyResources(this.toolBar, "toolBar");
             this.toolBar.Name = "toolBar";
             // 
-            // toolStripLabel1
+            // labelSpectrum
             // 
-            this.toolStripLabel1.Name = "toolStripLabel1";
-            resources.ApplyResources(this.toolStripLabel1, "toolStripLabel1");
+            this.labelSpectrum.Name = "labelSpectrum";
+            resources.ApplyResources(this.labelSpectrum, "labelSpectrum");
             // 
             // comboSpectrum
             // 
@@ -146,7 +146,7 @@
         private System.Windows.Forms.ToolStrip toolBar;
         private System.Windows.Forms.Panel GraphPanel;
         private pwiz.MSGraph.MSGraphControl graphControl;
-        private System.Windows.Forms.ToolStripLabel toolStripLabel1;
+        private System.Windows.Forms.ToolStripLabel labelSpectrum;
         private System.Windows.Forms.ToolStripComboBox comboSpectrum;
         private System.Windows.Forms.ToolStripLabel mirrorLabel;
         private System.Windows.Forms.ToolStripComboBox comboMirrorSpectrum;
