@@ -752,7 +752,7 @@ namespace pwiz.Skyline
             (c, p) => c.Refinement.IdotProductThreshold = p.ValueDouble);
         public static readonly Argument ARG_REFINE_USE_BEST_RESULT = new RefineArgument(@"refine-use-best-result",
             (c, p) => c.Refinement.UseBestResult = true);
-        // Refinement consistency tab
+        // Refinement consistency tab tmp
         public static readonly Argument ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF = new RefineArgument(@"refine-cv-remove-above-cutoff", NUM_VALUE,
             (c,p) => c.Refinement.CVCutoff = p.ValueDouble);
         public static readonly Argument ARG_REFINE_CV_GLOBAL_NORMALIZE = new RefineArgument(@"refine-cv-global-normalize",
