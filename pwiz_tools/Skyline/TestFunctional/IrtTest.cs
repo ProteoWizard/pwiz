@@ -765,18 +765,18 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(10, dlg.RegressionGraphDatas.First().RegularPoints.Count);
                 dlg.CloseDialog();
             });
-            RunDlg<AddIrtStandardsDlg>(() =>
-                    calibrateIrtDlg.SelectedRegressionOption = calibrateIrtDlg.RegressionOptions.First(opt => opt.Name.Equals(IrtStandard.PIERCE.Name)),
-                false, dlg =>
-                {
-                    dlg.StandardCount = 10;
-                    dlg.OkDialog();
-                });
+            RunUI(() => calibrateIrtDlg.SelectedRegressionOption = calibrateIrtDlg.RegressionOptions.First(opt => opt.Name.Equals(IrtStandard.PIERCE.Name)));
+            RunDlg<AddIrtStandardsDlg>(() => calibrateIrtDlg.UseResults(), false, dlg =>
+            {
+                dlg.StandardCount = 10;
+                dlg.OkDialog();
+            });
             var standardPeptides = new List<Target>();
             RunUI(() =>
             {
                 Assert.AreEqual(10, calibrateIrtDlg.StandardPeptideCount);
                 calibrateIrtDlg.SelectedRegressionOption = calibrateIrtDlg.RegressionOptions.First(opt => opt.Name.Equals(IrtStandard.REPLICAL.Name));
+                calibrateIrtDlg.UseResults();
                 Assert.AreEqual(15, calibrateIrtDlg.StandardPeptideCount);
                 standardPeptides.AddRange(calibrateIrtDlg.StandardPeptideList.Select(pep => pep.Target));
             });
