@@ -19,10 +19,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
@@ -30,7 +28,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestData
 {
     [TestClass]
-    public class CommandLineNoJoinTest : AbstractUnitTest
+    public class CommandLineNoJoinTest : AbstractUnitTestEx
     {
         /// <summary>
         /// Tests importing some raw files using the "--no-join" command line parameter which leaves the individual .skyd file there.
@@ -100,13 +98,6 @@ namespace pwiz.SkylineTestData
                     Assert.AreEqual(rawFiles[iFile], msDataFilePath.FilePath);
                 }
             }
-        }
-        
-        private void RunCommand(params string[] inputArgs)
-        {
-            var consoleBuffer = new StringBuilder();
-            var consoleOutput = new CommandStatusWriter(new StringWriter(consoleBuffer));
-            CommandLineRunner.RunCommand(inputArgs, consoleOutput);
         }
     }
 }

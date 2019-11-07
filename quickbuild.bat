@@ -10,7 +10,7 @@ set PWIZ_ROOT=%~dp0
 set PWIZ_ROOT=%PWIZ_ROOT:~0,-1%
 set BOOST_BUILD_PATH=%PWIZ_ROOT%\libraries\boost-build
 
-set PWIZ_BJAM=%BOOST_BUILD_PATH%\src\engine\bin.nt\bjam.exe
+set PWIZ_BJAM=%BOOST_BUILD_PATH%\src\engine\b2.exe
 
 REM # msvc.jam assumes it will find "ShowVer.exe" in %PATH%
 set PATH=%PWIZ_ROOT%\libraries;%PATH%
@@ -35,7 +35,7 @@ call build.bat --UPDATE -sLOCATE_TARGET=bin.nt
 @echo off
 setlocal
 @echo off
-set PWIZ_BJAM=%BOOST_BUILD_PATH%\src\engine\bin.nt\bjam.exe
+set PWIZ_BJAM=%BOOST_BUILD_PATH%\src\engine\b2.exe
 IF NOT EXIST "%PWIZ_BJAM%" echo Error building bjam. & exit /b 1
 popd
 :SKIP_BJAM

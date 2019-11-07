@@ -36,7 +36,7 @@ using SkylineNightly.Properties;
 
 namespace SkylineNightly
 {
-    // ReSharper disable NonLocalizedString
+    // ReSharper disable LocalizableElement
     public class Nightly
     {
 
@@ -59,16 +59,26 @@ namespace SkylineNightly
 
         private static string GetPostUrl(string path)
         {
-            return LABKEY_PROTOCOL + "://" + LABKEY_SERVER_ROOT + "/" + LABKEY_MODULE + "/" + path + "/" +
-                   LABKEY_ACTION + ".view";
+            return GetUrl(path, LABKEY_MODULE, LABKEY_ACTION);
         }
+
+        private static string GetUrl(string path, string controller, string action)
+        {
+            return LABKEY_PROTOCOL + "://" + LABKEY_SERVER_ROOT + "/" + controller + "/" + path + "/" +
+                   action + ".view";
+        }
+
         private static string LABKEY_URL = GetPostUrl("home/development/Nightly%20x64");
         private static string LABKEY_PERF_URL = GetPostUrl("home/development/Performance%20Tests");
         private static string LABKEY_STRESS_URL = GetPostUrl("home/development/NightlyStress");
         private static string LABKEY_RELEASE_URL = GetPostUrl("home/development/Release%20Branch");
         private static string LABKEY_RELEASE_PERF_URL = GetPostUrl("home/development/Release%20Branch%20Performance%20Tests");
         private static string LABKEY_INTEGRATION_URL = GetPostUrl("home/development/Integration");
-        
+        private static string LABKEY_INTEGRATION_PERF_URL = GetPostUrl("home/development/Integration%20With%20Perf%20Tests");
+        private static string LABKEY_HOME_URL = GetUrl("home", "project", "begin");
+
+        private static string LABKEY_CSRF = @"X-LABKEY-CSRF";
+
         private const string GIT_MASTER_URL = "https://github.com/ProteoWizard/pwiz";
         private const string GIT_BRANCHES_URL = GIT_MASTER_URL + "/tree/";
 
@@ -122,13 +132,13 @@ namespace SkylineNightly
         public void Finish(string message, string errMessage)
         {
             // Leave a note for the user, in a way that won't interfere with our next run
-            Log("Done.  Exit message:"); // Not L10N
+            Log("Done.  Exit message:"); 
             Log(message);
             if (!string.IsNullOrEmpty(errMessage))
                 Log(errMessage);
             if (string.IsNullOrEmpty(LogFileName))
             {
-                MessageBox.Show(message, @"SkylineNightly Help");    // Not L10N
+                MessageBox.Show(message, @"SkylineNightly Help");    
             }
             else
             {
@@ -136,7 +146,7 @@ namespace SkylineNightly
                 {
                     StartInfo =
                     {
-                        FileName = "notepad.exe", // Not L10N
+                        FileName = "notepad.exe", 
                         Arguments = LogFileName
                     }
                 };
@@ -144,7 +154,7 @@ namespace SkylineNightly
             }
         }
 
-        public enum RunMode { parse, post, trunk, perf, release, stress, integration, release_perf }
+        public enum RunMode { parse, post, trunk, perf, release, stress, integration, release_perf, integration_perf }
 
         private string SkylineTesterStoppedByUser = "SkylineTester stopped by user";
 
@@ -161,7 +171,7 @@ namespace SkylineNightly
             if (!string.IsNullOrEmpty(postResult))
             {
                 if (!string.IsNullOrEmpty(runResult))
-                    runResult += "\n"; // Not L10N
+                    runResult += "\n"; 
                 runResult += postResult;
             }
             return runResult;
@@ -446,7 +456,7 @@ namespace SkylineNightly
             {
                 client.Credentials = new NetworkCredential(TEAM_CITY_USER_NAME, TEAM_CITY_USER_PASSWORD);
                 var isRelease = ((mode == RunMode.release) || (mode == RunMode.release_perf));
-                var isIntegration = mode == RunMode.integration;
+                var isIntegration = mode == RunMode.integration || mode == RunMode.integration_perf;
                 var branchType = (isRelease||isIntegration) ? "" : "?branch=master"; // TC has a config just for release branch, and another for integration branch, but main config builds pull requests, other branches etc
                 var buildType = isIntegration ? TEAM_CITY_BUILD_TYPE_64_INTEGRATION : isRelease ? TEAM_CITY_BUILD_TYPE_64_RELEASE : TEAM_CITY_BUILD_TYPE_64_MASTER;
 
@@ -570,7 +580,7 @@ namespace SkylineNightly
             }
             return isTrunk
                 ? (hasPerftests ? RunMode.perf : RunMode.trunk)
-                : (isIntegration ? RunMode.integration :  (hasPerftests ? RunMode.release_perf : RunMode.release));
+                : (isIntegration ? (hasPerftests ? RunMode.integration_perf : RunMode.integration) :  (hasPerftests ? RunMode.release_perf : RunMode.release));
         }
 
         private class TestLogLineProperties
@@ -785,6 +795,8 @@ namespace SkylineNightly
             // Post to server.
             if (mode == RunMode.integration)
                 url = LABKEY_INTEGRATION_URL;
+            else if (mode == RunMode.integration_perf)
+                url = LABKEY_INTEGRATION_PERF_URL;
             else if (mode == RunMode.release_perf)
                 url = LABKEY_RELEASE_PERF_URL;
             else if (mode == RunMode.release)
@@ -818,30 +830,32 @@ namespace SkylineNightly
         private string PostToLink(string link, string postData, string filePath)
         {
             var errmessage = string.Empty;
-            Log("Posting results to " + link); // Not L10N
+            Log("Posting results to " + link); 
             for (var retry = 5; retry > 0; retry--)
             {
-                string boundary = "---------------------------" + DateTime.Now.Ticks.ToString("x"); // Not L10N
-                byte[] boundarybytes = Encoding.ASCII.GetBytes("\r\n--" + boundary + "\r\n"); // Not L10N
+                string boundary = "---------------------------" + DateTime.Now.Ticks.ToString("x"); 
+                byte[] boundarybytes = Encoding.ASCII.GetBytes("\r\n--" + boundary + "\r\n"); 
 
                 var wr = (HttpWebRequest) WebRequest.Create(link);
                 wr.ProtocolVersion = HttpVersion.Version10;
-                wr.ContentType = "multipart/form-data; boundary=" + boundary; // Not L10N
-                wr.Method = "POST"; // Not L10N
+                wr.ContentType = "multipart/form-data; boundary=" + boundary; 
+                wr.Method = "POST"; 
                 wr.KeepAlive = true;
                 wr.Credentials = CredentialCache.DefaultCredentials;
-                
+
+                SetCSRFToken(wr);
+
                 var rs = wr.GetRequestStream();
 
                 rs.Write(boundarybytes, 0, boundarybytes.Length);
-                const string headerTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n"; // Not L10N
+                const string headerTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n"; 
                 string header = string.Format(headerTemplate, "xml_file", filePath != null ? Path.GetFileName(filePath) : "xml_file", "text/xml");
                 byte[] headerbytes = Encoding.UTF8.GetBytes(header);
                 rs.Write(headerbytes, 0, headerbytes.Length);
                 var bytes = Encoding.UTF8.GetBytes(postData);
                 rs.Write(bytes, 0, bytes.Length);
 
-                byte[] trailer = Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n"); // Not L10N
+                byte[] trailer = Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n"); 
                 rs.Write(trailer, 0, trailer.Length);
                 rs.Close();
 
@@ -868,11 +882,11 @@ namespace SkylineNightly
                 if (retry > 1)
                 {
                     Thread.Sleep(30000);
-                    Log("Retrying post"); // Not L10N
+                    Log("Retrying post"); 
                     errmessage = String.Empty;
                 }
             }
-            Log(errmessage = "Failed to post results: " + errmessage); // Not L10N
+            Log(errmessage = "Failed to post results: " + errmessage); 
             return errmessage;
         }
 
@@ -1016,7 +1030,38 @@ namespace SkylineNightly
                 Log("Could not create diagnostic screenshot: got exception \"" + x.Message + "\"");
             }
         }
+
+        private void SetCSRFToken(HttpWebRequest postReq)
+        {
+            var url = LABKEY_HOME_URL;
+
+            var sessionCookies = new CookieContainer();
+            try
+            {
+                var request = (HttpWebRequest)WebRequest.Create(url);
+                request.Method = @"GET";
+                request.CookieContainer = sessionCookies;
+                using (var response = (HttpWebResponse)request.GetResponse())
+                {
+                    postReq.CookieContainer = sessionCookies;
+                    var csrf = response.Cookies[LABKEY_CSRF];
+                    if (csrf != null)
+                    {
+                        // The server set a cookie called X-LABKEY-CSRF, get its value and add a header to the POST request
+                        postReq.Headers.Add(LABKEY_CSRF, csrf.Value);
+                    }
+                    else
+                    {
+                        Log(@"CSRF token not found.");
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Log($@"Error establishing a session and getting a CSRF token: {e}");
+            }
+        }
     }
 
-    // ReSharper restore NonLocalizedString
+    // ReSharper restore LocalizableElement
 }

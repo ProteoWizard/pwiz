@@ -23,6 +23,7 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Layout;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 
@@ -42,10 +43,10 @@ namespace pwiz.Skyline.Model.Databinding
         {
             XmlReader xmlReader = new XmlTextReader(stream);
             xmlReader.Read();
-            if (xmlReader.IsStartElement("views")) // Not L10N
+            if (xmlReader.IsStartElement(@"views"))
             {
                 ViewSpecList viewSpecList = ViewSpecList.Deserialize(xmlReader);
-                return viewSpecList.ViewSpecs.Select(view => new ReportOrViewSpec(view)).ToList();
+                return viewSpecList.ViewSpecLayouts.Select(view => new ReportOrViewSpec(view)).ToList();
             }
             var reportOrViewSpecList = new ReportOrViewSpecListNoDefaults();
             reportOrViewSpecList.ReadXml(xmlReader);
@@ -70,9 +71,10 @@ namespace pwiz.Skyline.Model.Databinding
         public static IDictionary<ViewName, ReportOrViewSpec> GetExistingReports()
         {
             var documentGridViewContext = new DocumentGridViewContext(GetSkylineDataSchema(GetDefaultDocument(), DataSchemaLocalizer.INVARIANT));
-            var items = documentGridViewContext.ViewGroups.SelectMany(group=>documentGridViewContext.GetViewSpecList(group.Id).ViewSpecs.Select(
-                viewSpec=> new KeyValuePair<ViewName, ReportOrViewSpec>(
-                    new ViewName(group.Id, viewSpec.Name), new ReportOrViewSpec(viewSpec))));
+            var items = documentGridViewContext.ViewGroups
+                .SelectMany(group => documentGridViewContext.GetViewSpecList(group.Id).ViewSpecLayouts
+                    .Select(viewSpec => new KeyValuePair<ViewName, ReportOrViewSpec>(
+                        new ViewName(group.Id, viewSpec.Name), new ReportOrViewSpec(viewSpec))));
             return SafeToDictionary(items);
         }
 
@@ -89,31 +91,31 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 SaveReport(viewPath, new ReportOrViewSpec((ReportSpec) reportOrViewSpec.ReportSpec.ChangeName(newName)));
             }
-            else if (null != reportOrViewSpec.ViewSpec)
+            else if (null != reportOrViewSpec.ViewSpecLayout)
             {
-                SaveReport(viewPath, new ReportOrViewSpec(reportOrViewSpec.ViewSpec.SetName(newName)));
+                SaveReport(viewPath, new ReportOrViewSpec(reportOrViewSpec.ViewSpecLayout.ChangeName(newName)));
             }
         }
 
-        public static IEnumerable<ViewSpec> ConvertAll(IEnumerable<ReportOrViewSpec> reportOrViewSpecs,
+        public static IEnumerable<ViewSpecLayout> ConvertAll(IEnumerable<ReportOrViewSpec> reportOrViewSpecs,
             SrmDocument document)
         {
             ReportSpecConverter converter = null;
             foreach (var reportOrViewSpec in reportOrViewSpecs)
             {
-                if (reportOrViewSpec.ViewSpec != null)
+                if (reportOrViewSpec.ViewSpecLayout != null)
                 {
-                    yield return reportOrViewSpec.ViewSpec;
+                    yield return reportOrViewSpec.ViewSpecLayout;
                 }
                 else
                 {
                     converter = converter ?? new ReportSpecConverter(GetSkylineDataSchema(document, DataSchemaLocalizer.INVARIANT));
-                    yield return converter.Convert(reportOrViewSpec.ReportSpec).GetViewSpec();
+                    yield return new ViewSpecLayout(converter.Convert(reportOrViewSpec.ReportSpec).GetViewSpec().SetUiMode(String.Empty), ViewLayoutList.EMPTY);
                 }
             }
         }
 
-        private static ViewSpec ConvertView(ReportOrViewSpec reportOrViewSpec)
+        private static ViewSpecLayout ConvertView(ReportOrViewSpec reportOrViewSpec)
         {
             return ConvertAll(new[] {reportOrViewSpec}, GetDefaultDocument()).First();
         }

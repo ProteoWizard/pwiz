@@ -1,5 +1,5 @@
 ﻿/*
- * Original author: Bian Pratt <bspratt .at. u.washington.edu>,
+ * Original author: Brian Pratt <bspratt .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2014 University of Washington - Seattle, WA
@@ -65,12 +65,15 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 }
             }
 
-            _smallMoleculeUI = Program.MainWindow.Document.DocumentType != SrmDocument.DOCUMENT_TYPE.proteomic;
+            _smallMoleculeUI = Program.MainWindow.Document.HasSmallMolecules || Program.MainWindow.ModeUI != SrmDocument.DOCUMENT_TYPE.proteomic;
             if (_smallMoleculeUI)
             {
                 gridMeasuredDriftTimes.Columns[COLUMN_SEQUENCE].HeaderText = Resources.EditDriftTimePredictorDlg_EditDriftTimePredictorDlg_Molecule;
                 gridMeasuredDriftTimes.Columns[COLUMN_CHARGE].HeaderText = Resources.EditDriftTimePredictorDlg_EditDriftTimePredictorDlg_Adduct;
             }
+
+            var targetResolver = TargetResolver.MakeTargetResolver(Program.ActiveDocumentUI);
+            MeasuredDriftTimeSequence.TargetResolver = targetResolver;
 
             // TODO: ion mobility libraries are more complex than initially thought - leave these conversions to the mass spec vendors for now
             labelIonMobilityLibrary.Visible = comboLibrary.Visible = false;
@@ -113,9 +116,9 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                                 r.Intercept.ToString(LocalizationHelper.CurrentCulture));
                         }
                     }
-                    textResolvingPower.Text = string.Format("{0:F04}", _predictor.WindowWidthCalculator.ResolvingPower); // Not L10N
-                    textWidthAtDt0.Text = string.Format("{0:F04}", _predictor.WindowWidthCalculator.PeakWidthAtIonMobilityValueZero); // Not L10N
-                    textWidthAtDtMax.Text = string.Format("{0:F04}", _predictor.WindowWidthCalculator.PeakWidthAtIonMobilityValueMax); // Not L10N
+                    textResolvingPower.Text = string.Format(@"{0:F04}", _predictor.WindowWidthCalculator.ResolvingPower);
+                    textWidthAtDt0.Text = string.Format(@"{0:F04}", _predictor.WindowWidthCalculator.PeakWidthAtIonMobilityValueZero);
+                    textWidthAtDtMax.Text = string.Format(@"{0:F04}", _predictor.WindowWidthCalculator.PeakWidthAtIonMobilityValueMax);
                     cbLinear.Checked = _predictor.WindowWidthCalculator.PeakWidthMode == IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.linear_range;
                 }
                 UpdateControls();
@@ -149,7 +152,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 foreach (var p in predictor.MeasuredMobilityIons)
                 {
                     var ccs = p.Value.CollisionalCrossSectionSqA.HasValue
-                        ? string.Format("{0:F04}",p.Value.CollisionalCrossSectionSqA.Value) // Not L10N
+                        ? string.Format(@"{0:F04}",p.Value.CollisionalCrossSectionSqA.Value)
                         : string.Empty;
                     var im = p.Value.IonMobility.Units == units ? p.Value.IonMobility.Mobility : null;
                     var imOffset = p.Value.IonMobility.Units == units ? p.Value.HighEnergyIonMobilityValueOffset : 0;
@@ -224,7 +227,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         {
             var helper = new MessageBoxHelper(this);
 
-            var driftTable = new MeasuredDriftTimeTable(gridMeasuredDriftTimes);
+            var driftTable = new MeasuredDriftTimeTable(gridMeasuredDriftTimes, MeasuredDriftTimeSequence.TargetResolver);
 
             var table = new ChargeRegressionTable(gridRegression);
 
@@ -434,9 +437,9 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         {
             try
             {
-                var driftTable = new MeasuredDriftTimeTable(gridMeasuredDriftTimes);
+                var driftTable = new MeasuredDriftTimeTable(gridMeasuredDriftTimes, MeasuredDriftTimeSequence.TargetResolver);
                 bool useHighEnergyOffset = cbOffsetHighEnergySpectra.Checked;
-                var tempDriftTimePredictor = new IonMobilityPredictor("tmp", driftTable.GetTableMeasuredIonMobility(useHighEnergyOffset, Units), null, null, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, 30, 0, 0); // Not L10N
+                var tempDriftTimePredictor = new IonMobilityPredictor(@"tmp", driftTable.GetTableMeasuredIonMobility(useHighEnergyOffset, Units), null, null, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, 30, 0, 0);
                 using (var longWaitDlg = new LongWaitDlg
                 {
                     Text = Resources.EditDriftTimePredictorDlg_GetDriftTimesFromResults_Finding_ion_mobility_values_for_peaks,
@@ -513,10 +516,12 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
     public class MeasuredDriftTimeTable
     {
         private readonly DataGridView _gridMeasuredDriftTimePeptides;
+        private readonly TargetResolver _targetResolver;
 
-        public MeasuredDriftTimeTable(DataGridView gridMeasuredDriftTimePeptides)
+        public MeasuredDriftTimeTable(DataGridView gridMeasuredDriftTimePeptides, TargetResolver targetResolver)
         {
             _gridMeasuredDriftTimePeptides = gridMeasuredDriftTimePeptides;
+            _targetResolver = targetResolver;
         }
 
         public Dictionary<LibKey, IonMobilityAndCCS> GetTableMeasuredIonMobility(bool useHighEnergyOffsets, eIonMobilityUnits units)
@@ -534,14 +539,10 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
                 // OK, we have a non-empty "sequence" string, but is that actually a peptide or a molecule?
                 // See if there's anything in the document whose text representation matches what's in the list
-                var target = Program.MainWindow.Document.Molecules.Select(m=>m.Target).FirstOrDefault(t => seq.Equals(t.ToString()));
+               
+                var target = _targetResolver.ResolveTarget(seq);
                 if (target == null || target.IsEmpty)
-                {
-                    // Does seq evaluate as a peptide?
-                    target = !seq.All(c => char.IsUpper(c) || char.IsDigit(c) || "[+-,.]()".Contains(c)) // Not L10N
-                        ? new Target(CustomMolecule.FromSerializableString(seq)) 
-                        : Target.FromSerializableString(seq);
-                }
+                    return null;
 
                 Adduct charge;
                 if (!ValidateCharge(e, row.Cells[EditDriftTimePredictorDlg.COLUMN_CHARGE], target.IsProteomic, out charge))

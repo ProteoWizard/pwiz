@@ -38,6 +38,7 @@ PWIZ_API_DECL std::string pwiz::msdata::Reader_UIMF::identify(const std::string&
 #include "pwiz/data/msdata/Version.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "SpectrumList_UIMF.hpp"
+#include "ChromatogramList_UIMF.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 
 
@@ -60,33 +61,31 @@ void fillInMetadata(const string& rawpath, UIMFReaderPtr rawfile, MSData& msd)
 {
     msd.cvs = defaultCVList();
 
-    const set<UIMFReader::FrameType>& frameTypes = rawfile->getFrameTypes();
-    if (frameTypes.count(UIMFReader::FrameType_MS1) > 0) msd.fileDescription.fileContent.set(MS_MS1_spectrum);
-    if (frameTypes.count(UIMFReader::FrameType_Calibration) > 0) msd.fileDescription.fileContent.set(MS_calibration_spectrum);
-    if (frameTypes.count(UIMFReader::FrameType_Prescan) > 0) msd.fileDescription.fileContent.set(MS_MS1_spectrum);
-    if (frameTypes.count(UIMFReader::FrameType_MS2) > 0) msd.fileDescription.fileContent.set(MS_MSn_spectrum);
+    const set<FrameType>& frameTypes = rawfile->getFrameTypes();
+    if (frameTypes.count(FrameType_MS1) > 0) msd.fileDescription.fileContent.set(MS_MS1_spectrum);
+    if (frameTypes.count(FrameType_Calibration) > 0) msd.fileDescription.fileContent.set(MS_calibration_spectrum);
+    if (frameTypes.count(FrameType_Prescan) > 0) msd.fileDescription.fileContent.set(MS_MS1_spectrum);
+    if (frameTypes.count(FrameType_MS2) > 0) msd.fileDescription.fileContent.set(MS_MSn_spectrum);
 
 
     msd.fileDescription.fileContent.set(MS_profile_spectrum);
 
-    /*msd.fileDescription.fileContent.set(MS_TIC_chromatogram);
-    if (scanTypes & MSScanType_SelectedIon)
+    msd.fileDescription.fileContent.set(MS_TIC_chromatogram);
+    /*if (scanTypes & MSScanType_SelectedIon)
         msd.fileDescription.fileContent.set(MS_SIM_chromatogram);
     if (scanTypes & MSScanType_MultipleReaction)
         msd.fileDescription.fileContent.set(MS_SRM_chromatogram);*/
 
     // iterate over all files in AcqData
-    
+
     bfs::path sourcePath(rawpath);
 
     SourceFilePtr sourceFile(new SourceFile);
     sourceFile->id = BFS_STRING(sourcePath.leaf());
     sourceFile->name = BFS_STRING(sourcePath.leaf());
     sourceFile->location = "file:///" + BFS_GENERIC_STRING(BFS_COMPLETE(sourcePath.branch_path()));
-    //sourceFile->set(MS_UIMF_MassHunter_nativeID_format);
-    //sourceFile->set(MS_UIMF_MassHunter_format);
-    sourceFile->userParams.push_back(UserParam("UIMF nativeID format", "frame=xsd:nonNegativeInteger scan=xsd:nonNegativeInteger frameType=xsd:nonNegativeInteger"));
-    sourceFile->userParams.push_back(UserParam("UIMF file format"));
+    sourceFile->set(MS_UIMF_nativeID_format);
+    sourceFile->set(MS_UIMF_format);
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 
     msd.id = bfs::basename(sourcePath);
@@ -105,9 +104,9 @@ void fillInMetadata(const string& rawpath, UIMFReaderPtr rawfile, MSData& msd)
 
     // give ownership of dpPwiz to the SpectrumList (and ChromatogramList)
     SpectrumList_UIMF* sl = dynamic_cast<SpectrumList_UIMF*>(msd.run.spectrumListPtr.get());
-    //ChromatogramList_UIMF* cl = dynamic_cast<ChromatogramList_UIMF*>(msd.run.chromatogramListPtr.get());
+    ChromatogramList_UIMF* cl = dynamic_cast<ChromatogramList_UIMF*>(msd.run.chromatogramListPtr.get());
     if (sl) sl->setDataProcessingPtr(dpPwiz);
-    //if (cl) cl->setDataProcessingPtr(dpPwiz);
+    if (cl) cl->setDataProcessingPtr(dpPwiz);
 
     // add dummy IC
     msd.instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration("IC")));
@@ -137,9 +136,9 @@ void Reader_UIMF::read(const string& filename,
     UIMFReaderPtr dataReader(UIMFReader::create(filename));
 
     shared_ptr<SpectrumList_UIMF> sl(new SpectrumList_UIMF(result, dataReader, config));
-    //shared_ptr<ChromatogramList_UIMF> cl(new ChromatogramList_UIMF(dataReader));
+    shared_ptr<ChromatogramList_UIMF> cl(new ChromatogramList_UIMF(dataReader));
     result.run.spectrumListPtr = sl;
-    //result.run.chromatogramListPtr = cl;
+    result.run.chromatogramListPtr = cl;
 
     fillInMetadata(filename, dataReader, result);
 }

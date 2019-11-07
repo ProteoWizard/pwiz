@@ -25,6 +25,7 @@ using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.Databinding.RowActions;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Databinding
@@ -102,46 +103,28 @@ namespace pwiz.Skyline.Model.Databinding
 
         public override void Delete()
         {
-            DeleteSkylineDocNodes(BoundDataGridView, GetSelectedDocNodes(BoundDataGridView));
+            DeleteSkylineDocNodes(BoundDataGridView, GetSelectedDocNodes(BoundDataGridView).ToArray());
         }
 
-        private List<SkylineDocNode> GetSelectedDocNodes(BoundDataGridView dataGridView)
+        private IEnumerable<SkylineDocNode> GetSelectedDocNodes(BoundDataGridView dataGridView)
         {
-            var docNodes = new List<SkylineDocNode>();
-            var identityPaths = new HashSet<IdentityPath>();
             if (null == dataGridView)
             {
-                return docNodes;
+                return new SkylineDocNode[0];
             }
             var bindingSource = dataGridView.DataSource as BindingListSource;
             if (null == bindingSource)
             {
-                return docNodes;
+                return new SkylineDocNode[0];
             }
             var selectedRows = dataGridView.SelectedRows.Cast<DataGridViewRow>()
                 .Select(row => (RowItem) bindingSource[row.Index]).ToArray();
-            if (!selectedRows.Any())
+            if (!selectedRows.Any() && bindingSource.Current is RowItem rowItem)
             {
-                selectedRows = new[] {bindingSource.Current as RowItem};
+                selectedRows = new[] {rowItem};
             }
 
-            foreach (var rowItem in selectedRows)
-            {
-                if (rowItem == null)
-                {
-                    continue;
-                }
-                var docNode = rowItem.Value as SkylineDocNode;
-                if (docNode == null)
-                {
-                    continue;
-                }
-                if (identityPaths.Add(docNode.IdentityPath))
-                {
-                    docNodes.Add(docNode);
-                }
-            }
-            return docNodes;
+            return selectedRows.Select(row => row.Value).OfType<SkylineDocNode>();
         }
 
         /// <summary>
@@ -160,12 +143,43 @@ namespace pwiz.Skyline.Model.Databinding
 
         protected override ViewSpec GetBlankView()
         {
-            return new ViewSpec().SetRowType(typeof (Protein)).SetSublistId(PropertyPath.Parse("Results!*")); // Not L10N
+            return new ViewSpec().SetRowType(typeof (Protein)).SetSublistId(PropertyPath.Parse(@"Results!*"));
         }
 
         public void UpdateBuiltInViews()
         {
             RowSources = GetDocumentGridRowSources(SkylineDataSchema);
-}
+        }
+
+        public override bool HasRowActions
+        {
+            get { return true; }
+        }
+        public override void RowActionsDropDownOpening(ToolStripItemCollection dropDownItems)
+        {
+            base.RowActionsDropDownOpening(dropDownItems);
+            if (BoundDataGridView == null)
+            {
+                return;
+            }
+            foreach (var action in RemovePeaksAction.All)
+            {
+                var menuItem = action.CreateMenuItem(SkylineDataSchema.ModeUI, BoundDataGridView);
+                if (menuItem != null)
+                {
+                    dropDownItems.Add(menuItem);
+                }
+            }
+
+            dropDownItems.Add(new ToolStripSeparator());
+            foreach (var action in DeleteNodesAction.All)
+            {
+                var menuItem = action.CreateMenuItem(SkylineDataSchema.ModeUI, BoundDataGridView);
+                if (menuItem != null)
+                {
+                    dropDownItems.Add(menuItem);
+                }
+            }
+        }
     }
 }

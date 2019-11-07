@@ -58,7 +58,6 @@ void test()
         Chromatogram& s = *simple->chromatograms.back();
         s.index = i;
         s.id = "S" + lexical_cast<string>(i);
-        s.nativeID = lexical_cast<string>(i);
     }
 
     shared_ptr<MyWrapper> wrapper(new MyWrapper(simple)); 
@@ -70,18 +69,14 @@ void test()
     for (size_t i=0; i<chromatogramCount; i++)
     {
         string id = "S" + lexical_cast<string>(i);
-        string nativeID = lexical_cast<string>(i);
 
         unit_assert(wrapper->find(id) == i);
-        unit_assert(wrapper->findNative(nativeID) == i);
 
         const ChromatogramIdentity& identity = wrapper->chromatogramIdentity(i);
         unit_assert(identity.id == id);
-        unit_assert(identity.nativeID == nativeID);
 
         ChromatogramPtr s = wrapper->chromatogram(i);
         unit_assert(s->id == id);
-        unit_assert(s->nativeID == nativeID);
     }
 }
 

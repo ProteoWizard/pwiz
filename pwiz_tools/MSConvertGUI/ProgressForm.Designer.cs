@@ -52,7 +52,6 @@ namespace MSConvertGUI
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this.ProgressSplit = new System.Windows.Forms.SplitContainer();
             this.JobDataView = new System.Windows.Forms.DataGridView();
-            this.dataGridViewProgressColumn1 = new CustomProgressCell.DataGridViewProgressColumn();
             this.NameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ProgressColumn = new CustomProgressCell.DataGridViewProgressColumn();
             this.ProgressSplit.Panel1.SuspendLayout();
@@ -95,14 +94,6 @@ namespace MSConvertGUI
             this.JobDataView.TabIndex = 0;
             this.JobDataView.SelectionChanged += new System.EventHandler(this.JobDataView_SelectionChanged);
             // 
-            // dataGridViewProgressColumn1
-            // 
-            this.dataGridViewProgressColumn1.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.dataGridViewProgressColumn1.FillWeight = 30F;
-            this.dataGridViewProgressColumn1.HeaderText = "Progress";
-            this.dataGridViewProgressColumn1.MinimumWidth = 100;
-            this.dataGridViewProgressColumn1.Name = "dataGridViewProgressColumn1";
-            // 
             // NameColumn
             // 
             this.NameColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
@@ -116,9 +107,9 @@ namespace MSConvertGUI
             dataGridViewCellStyle1.ForeColor = System.Drawing.Color.Black;
             dataGridViewCellStyle1.SelectionForeColor = System.Drawing.Color.Black;
             this.ProgressColumn.DefaultCellStyle = dataGridViewCellStyle1;
-            this.ProgressColumn.FillWeight = 40F;
+            this.ProgressColumn.FillWeight = 60F;
             this.ProgressColumn.HeaderText = "Progress";
-            this.ProgressColumn.MinimumWidth = 100;
+            this.ProgressColumn.MinimumWidth = 50;
             this.ProgressColumn.Name = "ProgressColumn";
             // 
             // ProgressForm
@@ -129,6 +120,8 @@ namespace MSConvertGUI
             this.Controls.Add(this.ProgressSplit);
             this.Name = "ProgressForm";
             this.Text = "ProgressForm";
+            this.ShowIcon = false;
+            this.ShowInTaskbar = false;
             this.Load += new System.EventHandler(this.ProgressForm_Load);
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.ProgressForm_FormClosing);
             this.ProgressSplit.Panel1.ResumeLayout(false);
@@ -142,7 +135,6 @@ namespace MSConvertGUI
 
         private System.Windows.Forms.SplitContainer ProgressSplit;
         private System.Windows.Forms.DataGridView JobDataView;
-        private CustomProgressCell.DataGridViewProgressColumn dataGridViewProgressColumn1;
         private System.Windows.Forms.DataGridViewTextBoxColumn NameColumn;
         private CustomProgressCell.DataGridViewProgressColumn ProgressColumn;
     }

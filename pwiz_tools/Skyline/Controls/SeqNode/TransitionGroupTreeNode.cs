@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -168,8 +168,8 @@ namespace pwiz.Skyline.Controls.SeqNode
                 GetResultsText(nodeGroup, settings.NodePep, settings.Index, settings.RatioIndex));
         }
 
-        private const string DOTP_FORMAT = "0.##"; // Not L10N
-        private const string CS_SEPARATOR = ", "; // Not L10N
+        private const string DOTP_FORMAT = "0.##";
+        private const string CS_SEPARATOR = ", ";
 
         public static string GetResultsText(TransitionGroupDocNode nodeGroup,
             PeptideDocNode nodePep, int indexResult, int indexRatio)
@@ -179,15 +179,15 @@ namespace pwiz.Skyline.Controls.SeqNode
             RatioValue ratio = nodeGroup.GetPeakAreaRatio(indexResult, indexRatio);
             if (null == ratio && !isotopeProduct.HasValue && !libraryProduct.HasValue)
                 return string.Empty;
-            StringBuilder sb = new StringBuilder(" ("); // Not L10N
+            StringBuilder sb = new StringBuilder(@" (");
             int len = sb.Length;
             if (isotopeProduct.HasValue)
-                sb.Append(string.Format("idotp {0}", isotopeProduct.Value.ToString(DOTP_FORMAT))); // Not L10N
+                sb.Append(string.Format(@"idotp {0}", isotopeProduct.Value.ToString(DOTP_FORMAT)));
             if (libraryProduct.HasValue)
             {
                 if (sb.Length > len)
                     sb.Append(CS_SEPARATOR);
-                sb.Append(string.Format("dotp {0}", libraryProduct.Value.ToString(DOTP_FORMAT))); // Not L10N
+                sb.Append(string.Format(@"dotp {0}", libraryProduct.Value.ToString(DOTP_FORMAT)));
             }
             if (ratio != null)
             {
@@ -195,14 +195,14 @@ namespace pwiz.Skyline.Controls.SeqNode
                     sb.Append(CS_SEPARATOR);
                 if (!double.IsNaN(ratio.StdDev))
                 {
-                    sb.Append(string.Format("rdotp {0}", ratio.DotProduct.ToString(DOTP_FORMAT))); // Not L10N
+                    sb.Append(string.Format(@"rdotp {0}", ratio.DotProduct.ToString(DOTP_FORMAT)));
                     sb.Append(CS_SEPARATOR);
                 }
 
                 sb.Append(string.Format(Resources.TransitionGroupTreeNode_GetResultsText_total_ratio__0__,
                                         MathEx.RoundAboveZero(ratio.Ratio, 2, 4)));
             }
-            sb.Append(")"); // Not L10N
+            sb.Append(@")");
             return sb.ToString();
         }
 
@@ -215,7 +215,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         public static string GetLabel(TransitionGroup tranGroup, double precursorMz,
             string resultsText)
         {
-            return string.Format("{0}{1}{2}{3}", GetMzLabel(tranGroup, precursorMz), // Not L10N
+            return string.Format(@"{0}{1}{2}{3}", GetMzLabel(tranGroup, precursorMz),
                                  Transition.GetChargeIndicator(tranGroup.PrecursorAdduct),
                                  tranGroup.LabelTypeText, resultsText);
         }
@@ -224,7 +224,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             int? massShift = tranGroup.DecoyMassShift;
             double shift = SequenceMassCalc.GetPeptideInterval(massShift);
-            return string.Format("{0:F04}{1}", precursorMz - shift, // Not L10N
+            return string.Format(@"{0:F04}{1}", precursorMz - shift,
                 Transition.GetDecoyText(massShift));
         }
 
@@ -429,9 +429,9 @@ namespace pwiz.Skyline.Controls.SeqNode
                 {
                     customTable.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Molecule, nodeGroup.CustomMolecule.Name, rt);
                     customTable.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Precursor_charge,
-                        nodeGroup.TransitionGroup.PrecursorAdduct.AdductCharge.ToString(LocalizationHelper.CurrentCulture), rt);
+                        FormatAdductTip(nodeGroup.TransitionGroup.PrecursorAdduct), rt);
                     customTable.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Precursor_mz,
-                        string.Format("{0:F04}", nodeGroup.PrecursorMz), rt); // Not L10N
+                        string.Format(@"{0:F04}", nodeGroup.PrecursorMz), rt);
                     if (nodeGroup.CustomMolecule.Formula != null)
                     {
                         customTable.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Formula,
@@ -491,9 +491,9 @@ namespace pwiz.Skyline.Controls.SeqNode
                 tableDetails.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Precursor_charge,
                                           precursorCharge.AdductCharge.ToString(LocalizationHelper.CurrentCulture), rt);
                 tableDetails.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Precursor_mz,
-                                          string.Format("{0:F04}", precursorMz), rt); // Not L10N
+                                          string.Format(@"{0:F04}", precursorMz), rt);
                 tableDetails.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Precursor_mh,
-                                          string.Format("{0:F04}", nodeGroup.GetPrecursorIonMass()), // Not L10N
+                                          string.Format(@"{0:F04}", nodeGroup.GetPrecursorIonMass()),
                                           rt);
                 int? decoyMassShift = nodeGroup.TransitionGroup.DecoyMassShift;
                 if (decoyMassShift.HasValue)
@@ -511,9 +511,9 @@ namespace pwiz.Skyline.Controls.SeqNode
                 {
                     var headers = new RowDesc
                                   {
-                                      CreateHead("#", rt), // Not L10N
-                                      CreateHead("AA", rt), // Not L10N
-                                      CreateHead("#", rt) // Not L10N
+                                      CreateHead(@"#", rt),
+                                      CreateHead(@"AA", rt),
+                                      CreateHead(@"#", rt)
                                   };
                     foreach (var charge in charges)
                     {
@@ -622,7 +622,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                                           RenderTools rt)
         {
             double mz = SequenceMassCalc.GetMZ(massH, charge);
-            CellDesc cell = CreateData(string.Format("{0:F02}", mz), rt); // Not L10N
+            CellDesc cell = CreateData(string.Format(@"{0:F02}", mz), rt);
 
             foreach (TransitionDocNode nodeTran in choices)
             {

@@ -24,7 +24,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
-    public partial class UpgradeDlg : FormEx
+    public partial class UpgradeDlg : ModeUIInvariantFormEx // This dialog is neither proteomic nor small mol
     {
         private readonly string _defaultButtonText;
 
@@ -73,12 +73,12 @@ namespace pwiz.Skyline.Alerts
 
             // Make this change immediate and persistent.
             UpgradeManager.CheckAtStartup = cbAtStartup.Checked;
-            Settings.Default.Save();
+            Settings.Default.SaveWithoutExceptions();
         }
 
         private void linkReleaseNotes_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            string notes = Install.Type == Install.InstallType.release ? "notes" : "notes-daily";  // Not L10N
+            string notes = Install.Type == Install.InstallType.release ? @"notes" : @"notes-daily";
             WebHelpers.OpenSkylineShortLink(this, notes);
         }
     }

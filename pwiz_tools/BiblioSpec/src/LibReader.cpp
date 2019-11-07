@@ -24,7 +24,6 @@
 #include "LibReader.h"
 #include <map>
 
-using namespace std;
 
 namespace BiblioSpec {
 

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -36,12 +36,12 @@ namespace pwiz.Skyline.EditUI
         private const int VSPACE = 3;
         private const int HSPACE = 10;
 
-        private const string PREFIX_STATIC_NAME = "comboStatic";    // Not L10N
-        private const string PREFIX_HEAVY_NAME = "comboHeavy";    // Not L10N
+        private const string PREFIX_STATIC_NAME = "comboStatic";
+        private const string PREFIX_HEAVY_NAME = "comboHeavy";
 
-        private const string PREFIX_LABEL_NAME = "labelHeavy1";    // Not L10N
+        private const string PREFIX_LABEL_NAME = "labelHeavy1";
 
-        private static readonly Regex REGEX_HEAVY_NAME = new Regex(PREFIX_HEAVY_NAME + @"(\d+)_(\d+)"); // Not L10N
+        private static readonly Regex REGEX_HEAVY_NAME = new Regex(PREFIX_HEAVY_NAME + @"(\d+)_(\d+)");
 
         private readonly List<ComboBox> _listComboStatic = new List<ComboBox>();
         private readonly List<int> _listSelectedIndexStatic = new List<int>();
@@ -52,17 +52,17 @@ namespace pwiz.Skyline.EditUI
 
         public static string GetStaticName(int row)
         {
-            return string.Format("{0}{1}", PREFIX_STATIC_NAME, row); // Not L10N
+            return string.Format(@"{0}{1}", PREFIX_STATIC_NAME, row);
         }
 
         public static string GetHeavyName(int row, int col)
         {
-            return string.Format("{0}{1}_{2}", PREFIX_HEAVY_NAME, row, col); // Not L10N
+            return string.Format(@"{0}{1}_{2}", PREFIX_HEAVY_NAME, row, col);
         }
 
         private static string GetIsotopeLabelName(int col)
         {
-            return string.Format("{0}{1}", PREFIX_LABEL_NAME, col); // Not L10N
+            return string.Format(@"{0}{1}", PREFIX_LABEL_NAME, col);
         }
 
         private static string GetIsotopeLabelText(IsotopeLabelType labelType)
@@ -139,7 +139,7 @@ namespace pwiz.Skyline.EditUI
                     int top = Top = comboStaticLast.Bottom + VSPACE;
                     panelMain.Controls.Add(labelAALast = new Label
                     {
-                        Name = ("labelAA" + row), // Not L10N
+                        Name = (@"labelAA" + row),
                         AutoSize = true,
                         Font = labelAA1.Font,
                         Left = labelAA1.Left,
@@ -339,6 +339,7 @@ namespace pwiz.Skyline.EditUI
                 }
             }
             listItems.Add(Resources.SettingsListComboDriver_Add);
+            listItems.Add(Resources.SettingsListComboDriver_Edit_current);
             listItems.Add(Resources.SettingsListComboDriver_Edit_list);
             if (!EqualsItems(combo, listItems))
             {
@@ -370,6 +371,12 @@ namespace pwiz.Skyline.EditUI
         {
             var selectedItem = combo.SelectedItem;
             return (selectedItem != null && Resources.SettingsListComboDriver_Add == selectedItem.ToString());
+        }
+
+        private static bool EditCurrentSelected(ComboBox combo)
+        {
+            var selectedItem = combo.SelectedItem;
+            return (selectedItem != null && Resources.SettingsListComboDriver_Edit_current == combo.SelectedItem.ToString());
         }
 
         private static bool EditListSelected(ComboBox combo)
@@ -493,6 +500,22 @@ namespace pwiz.Skyline.EditUI
                     // Reset the selected index before edit was chosen.
                     combo.SelectedIndex = selectedIndexLast;
                 }
+            }
+            else if (EditCurrentSelected(combo))
+            {
+                StaticMod itemEdit;
+                if (listSettingsMods.TryGetValue((string) combo.Items[selectedIndexLast], out itemEdit))
+                {
+                    StaticMod itemNew = listSettingsMods.EditItem(this, itemEdit, listSettingsMods, null);
+                    if (!Equals(itemNew, null))
+                    {
+                        int i = listSettingsMods.IndexOf(itemEdit);
+                        listSettingsMods[i] = itemNew;
+                        LoadLists(listSettingsMods, listExplicitMods, listCombo, indexAA, itemNew.GetKey(),
+                            selectEither);
+                    }
+                }
+                combo.SelectedIndex = selectedIndexLast;
             }
             else if (EditListSelected(combo))
             {

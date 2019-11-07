@@ -460,7 +460,7 @@ namespace pwiz.Skyline.Model.Results
 
         private readonly IList<ChromKey> _chromKeys;
         private readonly float _maxRetentionTime;
-        private readonly int _spectrumCount;
+        private readonly int _cycleCount;
         private readonly string _cachePath;
         private readonly SpillFile[] _spillFiles;
         private readonly int[] _idToGroupId;
@@ -471,13 +471,13 @@ namespace pwiz.Skyline.Model.Results
             IList<IList<int>> chromatogramRequestOrder,
             IList<ChromKey> chromKeys,
             float maxRetentionTime,
-            int spectrumCount,
+            int cycleCount,
             string cachePath)
         {
             RequestOrder = chromatogramRequestOrder;
             _chromKeys = chromKeys;
             _maxRetentionTime = maxRetentionTime;
-            _spectrumCount = spectrumCount;
+            _cycleCount = cycleCount;
             _cachePath = cachePath;
             if (RequestOrder == null)
                 return;
@@ -536,10 +536,7 @@ namespace pwiz.Skyline.Model.Results
                     {
                         cachePath = _spillFiles[i].FileName;
                     }
-                    if (_spillFiles[i].Stream != null)
-                    {
-                        _spillFiles[i].Stream.Dispose();
-                    }
+                    _spillFiles[i].CloseStream();
                 }
 
                 if (cachePath != null)
@@ -577,7 +574,7 @@ namespace pwiz.Skyline.Model.Results
         public Stream GetFileStream(int chromIndex)
         {
             int groupIndex = GetGroupIndex(chromIndex);
-            return _spillFiles[groupIndex].CreateFileStream(_cachePath);
+            return _spillFiles[groupIndex].CreateFileStream(_cachePath, groupIndex);
         }
 
         /// <summary>
@@ -603,6 +600,18 @@ namespace pwiz.Skyline.Model.Results
             {
                 timeIntensities = TimeIntensities.EMPTY;
                 return 0;
+            }
+
+            if (ReferenceEquals(_cachedSpillFile, spillFile))
+            {
+                if (spillFile.Stream != null)
+                {
+                    if (_bytesFromSpillFile == null || spillFile.Stream.Length != _bytesFromSpillFile.Length)
+                    {
+                        // Need to reread spill file if more bytes were written since the time it was cached.
+                        _cachedSpillFile = null;
+                    }
+                }
             }
 
             if (!ReferenceEquals(_cachedSpillFile, spillFile))
@@ -633,7 +642,7 @@ namespace pwiz.Skyline.Model.Results
         private long GetMaxSize(int groupIndex)
         {
             int recordSize = sizeof(float) + sizeof(float) + sizeof(float) + sizeof(int); // time, intensity, mass error, scan index
-            return _spectrumCount * RequestOrder[groupIndex].Count * recordSize;
+            return _cycleCount * RequestOrder[groupIndex].Count * recordSize;
         }
 
         /// <summary>
@@ -657,14 +666,14 @@ namespace pwiz.Skyline.Model.Results
         {
             if (!minTime.HasValue || !maxTime.HasValue)
             {
-                return _spectrumCount;
+                return _cycleCount;
             }
             double duration = maxTime.Value - minTime.Value;
             if (duration >= _maxRetentionTime || duration <= 0)
             {
-                return _spectrumCount;
+                return _cycleCount;
             }
-            return (int)Math.Ceiling(duration * _spectrumCount / _maxRetentionTime);
+            return (int)Math.Ceiling(duration * _cycleCount / _maxRetentionTime);
         }
 
         /// <summary>
@@ -675,10 +684,11 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private class SpillFile
         {
+            private FileStream _fileStream;
             public BufferedStream Stream { get; private set; }
             public float MaxTime { get; set; }
             
-            public BufferedStream CreateFileStream(string cachePath)
+            public BufferedStream CreateFileStream(string cachePath, int groupIndex)
             {
                 if (Stream == null)
                 {
@@ -687,8 +697,12 @@ namespace pwiz.Skyline.Model.Results
                     var xicDir = GetSpillDirectory(cachePath);
                     Helpers.Try<Exception>(() =>
                     {
-                        string fileName = FileStreamManager.Default.GetTempFileName(xicDir, "xic"); // Not L10N
-                        Stream = new BufferedStream(File.Create(fileName, ushort.MaxValue, FileOptions.DeleteOnClose));
+                        string fileName = FileStreamManager.Default.GetTempFileName(xicDir, string.Format(@"{0:X03}", groupIndex & 0xFFF));    // Need uniquifying groupId because GetTempFileName is limited to 65,535 files with the same prefix in a folder
+                        // Create the FileStream with a buffer size of 1 so that it never buffers, and therefore
+                        // never tries to FlushWrite in its finalizer (errors thrown in finalizers can kill Skyline)
+                        _fileStream = File.Create(fileName, 1, FileOptions.DeleteOnClose);
+                        // Wrap the FileStream in a BufferedStream. BufferedStream does not have a finalizer
+                        Stream = new BufferedStream(_fileStream, ushort.MaxValue);
                         FileName = fileName;
                     },
                     2, 100);
@@ -698,7 +712,12 @@ namespace pwiz.Skyline.Model.Results
 
             public void CloseStream()
             {
-                Stream.Dispose();
+                if (_fileStream != null)
+                {
+                    _fileStream.Dispose();
+                    _fileStream = null;
+                }
+
                 Stream = null;
                 FileName = null;
             }
@@ -706,13 +725,13 @@ namespace pwiz.Skyline.Model.Results
             private static string GetSpillDirectory(string cachePath)
             {
                 string cacheDir = Path.GetDirectoryName(cachePath) ?? string.Empty;
-                return Path.Combine(cacheDir, "xic"); // Not L10N
+                return Path.Combine(cacheDir, @"xic");
             }
 
             public override string ToString()
             {
                 return FileName == null
-                    ? "(none)" // Not L10N
+                    ? @"(none)"
                     : FileName.Substring(FileName.Length - 8);
             }
 

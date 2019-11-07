@@ -278,7 +278,7 @@ namespace pwiz.Skyline.FileUI
 
         private static readonly string[] SUFFIX_COMMON_CONCENTRATIONS = 
         {
-            "amol", "fmol", "pmol", "nmol", "umol", "mol"   // Not L10N
+            @"amol", @"fmol", @"pmol", @"nmol", @"umol", @"mol"
         };
 
         public static string GetCommonSuffix(IEnumerable<string> names)
@@ -297,7 +297,7 @@ namespace pwiz.Skyline.FileUI
 
         private static bool IsNumericOrSeperator(string s)
         {
-            const string allowedChars = "0123456789.-_";    // Not L10N
+            const string allowedChars = "0123456789.-_";
             return s.All(c => allowedChars.Contains(c));
         }
 
@@ -496,30 +496,12 @@ namespace pwiz.Skyline.FileUI
             return false;
         }
 
-        public static List<string> EnsureUniqueNames(List<string> names, HashSet<string> reservedNames = null)
-        {
-            var setUsedNames = reservedNames ?? new HashSet<string>();
-            var result = new List<string>();
-            for (int i = 0; i < names.Count; i++)
-            {
-                string baseName = names[i];
-                // Make sure the next name added is unique
-                string name = (baseName.Length != 0 ? baseName : "1"); // Not L10N
-                for (int suffix = 2; setUsedNames.Contains(name); suffix++)
-                    name = baseName + suffix;
-                result.Add(name);
-                // Add this name to the used set
-                setUsedNames.Add(name);
-            }
-            return result;
-        }
-
         private void EnsureUniqueNames()
         {
             var setUsedNames = new HashSet<string>();
             foreach (var item in comboName.Items)
                 setUsedNames.Add(item.ToString());
-            var names = EnsureUniqueNames(NamedPathSets.Select(n => n.Key).ToList(), setUsedNames);
+            var names = Helpers.EnsureUniqueNames(NamedPathSets.Select(n => n.Key).ToList(), setUsedNames);
             for (int i = 0; i < NamedPathSets.Length; i++)
             {
                 var namedPathSet = NamedPathSets[i];
@@ -678,8 +660,8 @@ namespace pwiz.Skyline.FileUI
 
             protected override AuditLogEntry CreateEntry(SrmDocumentPair docPair)
             {
-                var entry = AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, MessageType.imported_result,
-                    MessageType.imported_results, FileNames, MessageArgs.DefaultSingular, null);
+                var entry = AuditLogEntry.CreateCountChangeEntry(MessageType.imported_result,
+                    MessageType.imported_results, docPair.NewDocumentType, FileNames, MessageArgs.DefaultSingular, null);
 
                 return entry.Merge(base.CreateEntry(docPair), false);
             }

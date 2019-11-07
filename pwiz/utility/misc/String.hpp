@@ -26,6 +26,8 @@
 
 #include <string>
 #include <sstream>
+#include <algorithm>
+#include <cctype>
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 #include "pwiz/utility/misc/optimized_lexical_cast.hpp"
@@ -77,6 +79,13 @@ std::string longestCommonPrefix(const SequenceT& strings)
             }
     }
     return result;
+}
+
+
+/// heuristic that returns iterator in str pointing to first Unicode character, or str.end() if there are no Unicode characters
+inline std::string::const_iterator findUnicodeBytes(const std::string& str)
+{
+    return std::find_if(str.begin(), str.end(), [](char ch) { return !isprint(static_cast<unsigned char>(ch)) || static_cast<int>(ch) < 0; });
 }
 
 

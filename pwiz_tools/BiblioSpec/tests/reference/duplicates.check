@@ -1,19 +1,19 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:duplicates.blib	9	1	9
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:duplicates.blib	9	1	10
 id	RefSpectraID	position	mass
-id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
-1	TASEFDSAIAQDK	613.81	2	TASEFDSAIAQDK	-	-	1	442	0.0	0.0	0.0	0	0.0	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	146	0.0	0
-2	LDVDELGDVAQK	498.7	2	LDVDELGDVAQK	-	-	1	281	0.0	0.0	0.0	0	0.0	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	151	0.0	0
-3	NFLETVELQVGLK	497.29	3	NFLETVELQVGLK	-	-	1	140	0.0	0.0	0.0	0	0.0	N/A	N/A	N/A	N/A	N/A	N/A	N/A	2	137	0.0	0
-4	NFLETVELQVGLK	497.29	3	NFLETVELQVGLK	-	-	1	181	0.0	0.0	0.0	0	0.0	N/A	N/A	N/A	N/A	N/A	N/A	N/A	2	141	0.0	0
-5	NFLETVELQVGLK	497.29	3	NFLETVELQVGLK	-	-	1	214	0.0	0.0	0.0	0	0.0	N/A	N/A	N/A	N/A	N/A	N/A	N/A	2	144	0.0	0
-6	NEVSAMPTLLLFK	733.77	2	NEVSAMPTLLLFK	-	-	1	495	0.0	0.0	0.0	0	0.0	N/A	N/A	N/A	N/A	N/A	N/A	N/A	2	149	0.0	0
-7	NGFQTGSASKASA	613.79	2	NGFQTGSASKASA	-	-	1	314	0.0	0.0	0.0	0	0.0	N/A	N/A	N/A	N/A	N/A	N/A	N/A	2	153	0.0	0
-8	ELESAAYDHAEPVQPEDAPQDIANDELK	1032.44	3	ELESAAYDHAEPVQPEDAPQDIANDELK	-	-	1	795	0.0	0.0	0.0	0	0.0	N/A	N/A	N/A	N/A	N/A	N/A	N/A	2	156	0.0	0
-9	NFLETVELQVGLK	745.75	2	NFLETVELQVGLK	-	-	1	635	0.0	0.0	0.0	0	0.0	N/A	N/A	N/A	N/A	N/A	N/A	N/A	2	159	0.0	0
-id	fileName	cutoffScore
-1	/BiblioSpec/tests/inputs/demo-copy.cms2	-1.0
-2	/BiblioSpec/tests/inputs/demo.ms2	-1.0
+id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	totalIonCurrent	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
+1	TASEFDSAIAQDK	613.81	2	TASEFDSAIAQDK	-	-	1	442	0.0	0.0	0.0	0	0.0	N/A	N/A	4927.79999905	N/A	N/A	N/A	N/A	N/A	1	146	0.0	0
+2	LDVDELGDVAQK	498.7	2	LDVDELGDVAQK	-	-	1	281	0.0	0.0	0.0	0	0.0	N/A	N/A	2507.60002039	N/A	N/A	N/A	N/A	N/A	1	151	0.0	0
+3	NFLETVELQVGLK	497.29	3	NFLETVELQVGLK	-	-	1	140	0.0	0.0	0.0	0	0.0	N/A	N/A	54808.50	N/A	N/A	N/A	N/A	N/A	2	137	0.0	0
+4	NFLETVELQVGLK	497.29	3	NFLETVELQVGLK	-	-	1	181	0.0	0.0	0.0	0	0.0	N/A	N/A	22402.69	N/A	N/A	N/A	N/A	N/A	2	141	0.0	0
+5	NFLETVELQVGLK	497.29	3	NFLETVELQVGLK	-	-	1	214	0.0	0.0	0.0	0	0.0	N/A	N/A	33789.70	N/A	N/A	N/A	N/A	N/A	2	144	0.0	0
+6	NEVSAMPTLLLFK	733.77	2	NEVSAMPTLLLFK	-	-	1	495	0.0	0.0	0.0	0	0.0	N/A	N/A	61420.90	N/A	N/A	N/A	N/A	N/A	2	149	0.0	0
+7	NGFQTGSASKASA	613.79	2	NGFQTGSASKASA	-	-	1	314	0.0	0.0	0.0	0	0.0	N/A	N/A	3071.09999614	N/A	N/A	N/A	N/A	N/A	2	153	0.0	0
+8	ELESAAYDHAEPVQPEDAPQDIANDELK	1032.44	3	ELESAAYDHAEPVQPEDAPQDIANDELK	-	-	1	795	0.0	0.0	0.0	0	0.0	N/A	N/A	18881.00	N/A	N/A	N/A	N/A	N/A	2	156	0.0	0
+9	NFLETVELQVGLK	745.75	2	NFLETVELQVGLK	-	-	1	635	0.0	0.0	0.0	0	0.0	N/A	N/A	39862.69	N/A	N/A	N/A	N/A	N/A	2	159	0.0	0
+id	fileName	idFileName	cutoffScore
+1	/BiblioSpec/tests/inputs/demo-copy.cms2	/BiblioSpec/tests/inputs/three-duplicates.ssl	-1.0
+2	/BiblioSpec/tests/inputs/demo.ms2	/BiblioSpec/tests/inputs/three-duplicates.ssl	-1.0
 id	scoreType	probabilityType
 0	UNKNOWN	NOT_A_PROBABILITY_VALUE
 1	PERCOLATOR QVALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT

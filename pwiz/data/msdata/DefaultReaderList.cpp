@@ -302,14 +302,11 @@ PWIZ_API_DECL void Reader_MGF::read(const std::string& filename,
 
 PWIZ_API_DECL std::string Reader_MSn::identify(const string& filename, const string& head) const
 {
-    bool isOK = has_extension(filename, ".ms1") ||
-                has_extension(filename, ".cms1") ||
-                has_extension(filename, ".bms1") ||
-                has_extension(filename, ".ms2") ||
-                has_extension(filename, ".cms2") ||
-                has_extension(filename, ".bms2");
-
-    return std::string( isOK ? getType() : "" );
+    if (has_extension(filename, ".ms1") || has_extension(filename, ".cms1") || has_extension(filename, ".bms1"))
+        return "MS1";
+    if (has_extension(filename, ".ms2") || has_extension(filename, ".cms2") || has_extension(filename, ".bms2"))
+        return "MS2";
+    return "";
 }
 
 PWIZ_API_DECL void Reader_MSn::read(const string& filename,
@@ -441,6 +438,11 @@ PWIZ_API_DECL std::string Reader_mz5::identify(const string& filename, const str
 #endif
         return getType();
     }
+    catch (ReaderFail& e)
+    {
+        if (bal::contains(e.what(), "MZ5 does not support Unicode"))
+            throw e;
+    }
     catch (std::runtime_error&)
     {
         return "";
@@ -486,12 +488,13 @@ PWIZ_API_DECL void Reader_mz5::read(const std::string& filename,
 /// default Reader list
 PWIZ_API_DECL DefaultReaderList::DefaultReaderList()
 {
-    push_back(ReaderPtr(new Reader_mzML));
-    push_back(ReaderPtr(new Reader_mzXML));
-    push_back(ReaderPtr(new Reader_MGF));
-    push_back(ReaderPtr(new Reader_MSn));
-    push_back(ReaderPtr(new Reader_BTDX));
-    push_back(ReaderPtr(new Reader_mz5));
+    emplace_back(new Reader_mzML);
+    emplace_back(new Reader_mzXML);
+    emplace_back(new Reader_MGF);
+    emplace_back(new Reader_MS1);
+    emplace_back(new Reader_MS2);
+    emplace_back(new Reader_BTDX);
+    emplace_back(new Reader_mz5);
 }
 
 

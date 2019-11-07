@@ -19,9 +19,7 @@
 
 using System.IO;
 using System.Linq;
-using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -34,7 +32,7 @@ namespace pwiz.SkylineTest
     /// borrowing heavily from TestFunctional.ImportDocTest
     /// </summary>
     [TestClass]
-    public class CommandLineImportDocTest : AbstractUnitTest
+    public class CommandLineImportDocTest : AbstractUnitTestEx
     {
         private const string ZIP_FILE = @"TestFunctional\ImportDocTest.zip";
 
@@ -203,14 +201,6 @@ namespace pwiz.SkylineTest
             // Cache should now contain results for both documents
             long newCacheLen = new FileInfo(cachePersistPath4).Length;
             Assert.AreEqual(expectCacheLen, newCacheLen);        
-        }
-
-        private static string RunCommand(params string[] inputArgs)
-        {
-            var consoleBuffer = new StringBuilder();
-            var consoleOutput = new CommandStatusWriter(new StringWriter(consoleBuffer));
-            CommandLineRunner.RunCommand(inputArgs, consoleOutput);
-            return consoleBuffer.ToString();
         }
 
         private static void CheckRunCommandOutputContains(string expectedMessage, string actualMessage)

@@ -119,6 +119,7 @@
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.contextMenuStripPrecursorAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.contextMenuStripFragmentAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabGeneral.SuspendLayout();
             this.tabFilter.SuspendLayout();
@@ -331,6 +332,7 @@
             this.tabPage1.Controls.Add(this.textPeptideIonCharges);
             resources.ApplyResources(this.tabPage1, "tabPage1");
             this.tabPage1.Name = "tabPage1";
+            this.modeUIHandler.SetUIMode(this.tabPage1, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
             // label5
@@ -440,6 +442,7 @@
             this.tabPage2.Controls.Add(this.lblSmallMoleculePrecursorAdducts);
             resources.ApplyResources(this.tabPage2, "tabPage2");
             this.tabPage2.Name = "tabPage2";
+            this.modeUIHandler.SetUIMode(this.tabPage2, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol);
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
             // btnPrecursorAdduct
@@ -754,13 +757,11 @@
             // 
             // contextMenuStripPrecursorAdduct
             // 
-            this.contextMenuStripPrecursorAdduct.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.contextMenuStripPrecursorAdduct.Name = "contextMenuStripPrecursorAdduct";
             resources.ApplyResources(this.contextMenuStripPrecursorAdduct, "contextMenuStripPrecursorAdduct");
             // 
             // contextMenuStripFragmentAdduct
             // 
-            this.contextMenuStripFragmentAdduct.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.contextMenuStripFragmentAdduct.Name = "contextMenuStripFragmentAdduct";
             resources.ApplyResources(this.contextMenuStripFragmentAdduct, "contextMenuStripFragmentAdduct");
             // 
@@ -778,6 +779,7 @@
             this.MinimizeBox = false;
             this.Name = "TransitionSettingsUI";
             this.ShowInTaskbar = false;
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.tabControl1.ResumeLayout(false);
             this.tabGeneral.ResumeLayout(false);
             this.tabGeneral.PerformLayout();

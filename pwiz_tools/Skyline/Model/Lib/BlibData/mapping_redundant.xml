@@ -79,6 +79,8 @@
       <generator class="native"/>
     </id>
     <property name="FileName" column="fileName"/>
+    <property name="IdFileName" column="idFileName"/>
+    <property name="CutoffScore" column="cutoffScore"/>
   </class>
   <class name="DbRefSpectraPeakAnnotationsRedundant" table="RefSpectraPeakAnnotations">
     <id name="Id">

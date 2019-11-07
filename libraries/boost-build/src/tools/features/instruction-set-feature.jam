@@ -14,6 +14,7 @@ feature.feature instruction-set
         pentium3m pentium-m pentium4 pentium4m prescott nocona core2 corei7 corei7-avx core-avx-i
         conroe conroe-xe conroe-l allendale merom merom-xe kentsfield kentsfield-xe penryn wolfdale
         yorksfield nehalem sandy-bridge ivy-bridge haswell broadwell skylake skylake-avx512 cannonlake
+        icelake
         k6 k6-2 k6-3 athlon athlon-tbird athlon-4 athlon-xp athlon-mp k8 opteron athlon64 athlon-fx
         k8-sse3 opteron-sse3 athlon64-sse3 amdfam10 barcelona bdver1 bdver2 bdver3 bdver4 btver1
         btver2 znver1 winchip-c6 winchip2 c3 c3-2 atom
@@ -41,6 +42,9 @@ feature.feature instruction-set
         # Advanced RISC Machines
         armv2 armv2a armv3 armv3m armv4 armv4t armv5 armv5t armv5te armv6 armv6j iwmmxt ep9312
         armv7 armv7s
+	
+	# z Systems (aka s390x)
+	z196 zEC12 z13 z14
 
     :
         propagated optional

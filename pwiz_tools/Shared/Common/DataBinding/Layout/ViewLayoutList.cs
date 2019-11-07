@@ -46,6 +46,19 @@ namespace pwiz.Common.DataBinding.Layout
             return ChangeProp(ImClone(this), im => im.DefaultLayoutName = name);
         }
 
+        public ViewLayout DefaultLayout
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(DefaultLayoutName))
+                {
+                    return null;
+                }
+
+                return FindLayout(DefaultLayoutName);
+            }
+        }
+
         [TrackChildren]
         public ImmutableList<ViewLayout> Layouts { get; private set; }
 
@@ -109,7 +122,7 @@ namespace pwiz.Common.DataBinding.Layout
             }
         }
 
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteAttributeString("viewName", ViewName);
@@ -156,6 +169,6 @@ namespace pwiz.Common.DataBinding.Layout
             layoutList = layoutList.ChangeLayouts(layouts);
             return layoutList;
         }
-        // ReSharper enable NonLocalizedString
+        // ReSharper restore LocalizableElement
     }
 }

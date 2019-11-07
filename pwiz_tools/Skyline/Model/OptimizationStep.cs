@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Model
         }
 
         public delegate double GetRegressionValue(SrmSettings settings, PeptideDocNode nodePep,
-                                                  TransitionGroupDocNode nodeGroup, TReg regression, int step);
+                                                  TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, TReg regression, int step);
 
         public static double? FindOptimizedValueFromResults(SrmSettings settings,
                                                            PeptideDocNode nodePep,
@@ -96,7 +96,7 @@ namespace pwiz.Skyline.Model
                     if (maxArea < optStep.TotalArea)
                     {
                         maxArea = optStep.TotalArea;
-                        bestValue = getRegressionValue(settings, nodePep, nodeGroup, optStep.Regression, optStep.Step);
+                        bestValue = getRegressionValue(settings, nodePep, nodeGroup, nodeTran, optStep.Regression, optStep.Step);
                     }
                 }
             }
@@ -113,7 +113,7 @@ namespace pwiz.Skyline.Model
                                              GetRegressionValue getRegressionValue)
         {
             double? optimizedValue = FindOptimizedValueFromResults(settings, nodePep, nodeGroup, nodeTran, methodType, getRegressionValue);
-            return optimizedValue.HasValue ? optimizedValue.Value : getRegressionValue(settings, nodePep, nodeGroup, regressionDocument, 0);
+            return optimizedValue.HasValue ? optimizedValue.Value : getRegressionValue(settings, nodePep, nodeGroup, nodeTran, regressionDocument, 0);
         }
 
         // ReSharper disable SuggestBaseTypeForParameter

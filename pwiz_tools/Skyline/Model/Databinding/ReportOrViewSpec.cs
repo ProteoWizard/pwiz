@@ -25,55 +25,58 @@ using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Layout;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Databinding
 {
-    [XmlRoot("report")]    
+    [XmlRoot("report")]
     public class ReportOrViewSpec : XmlNamedElement
     {
         private ReportOrViewSpec()
         {
         }
-        public ReportOrViewSpec(ReportSpec reportSpec) : base(reportSpec.Name)
+
+        public ReportOrViewSpec(ReportSpec reportSpec) : base(reportSpec.Name ?? NAME_INTERNAL)
         {
             ReportSpec = reportSpec;
         }
 
-        public ReportOrViewSpec(ViewSpec viewSpec) : base(viewSpec.Name ?? NAME_INTERNAL)
+        public ReportOrViewSpec(ViewSpecLayout viewSpec) : base(viewSpec.Name ?? NAME_INTERNAL)
         {
-            ViewSpec = viewSpec;
+            ViewSpecLayout = viewSpec;
         }
 
         public ReportSpec ReportSpec { get; private set; }
-        public ViewSpec ViewSpec { get; private set; }
+        public ViewSpecLayout ViewSpecLayout { get; private set; }
 
         public override void ReadXml(XmlReader reader)
         {
             base.ReadXml(reader);
-            if (null != reader.GetAttribute("rowsource") || null != reader.GetAttribute("sublist")) // Not L10N
+            if (null != reader.GetAttribute(@"rowsource") || null != reader.GetAttribute(@"sublist"))
             {
-                ViewSpec = ViewSpec.ReadXml(reader);
+                ViewSpecLayout = new ViewSpecLayout(ViewSpec.ReadXml(reader), ViewLayoutList.EMPTY);
             }
             else
             {
                 ReportSpec = ReportSpec.Deserialize(reader);
             }
         }
-
         public override void WriteXml(XmlWriter writer)
         {
-            if (ViewSpec != null)
+            if (ViewSpecLayout != null)
             {
-                ViewSpec.WriteXml(writer);
+                ViewSpecLayout.ViewSpec.WriteXml(writer);
             }
             else
             {
                 ReportSpec.WriteXml(writer);
             }
+
         }
+
         public static ReportOrViewSpec Deserialize(XmlReader reader)
         {
             return reader.Deserialize(new ReportOrViewSpec());
@@ -81,15 +84,17 @@ namespace pwiz.Skyline.Model.Databinding
 
         public new ReportOrViewSpec ChangeName(string newName)
         {
-            if (null != ViewSpec)
+            if (null != ViewSpecLayout)
             {
-                return new ReportOrViewSpec(ViewSpec.SetName(newName));
+                return new ReportOrViewSpec(ViewSpecLayout.ChangeName(newName));
             }
+
             if (null != ReportSpec)
             {
-                return new ReportOrViewSpec((ReportSpec) ReportSpec.ChangeName(newName));
+                return new ReportOrViewSpec((ReportSpec)ReportSpec.ChangeName(newName));
             }
-            return (ReportOrViewSpec) base.ChangeName(newName);
+
+            throw new InvalidOperationException();
         }
     }
 
@@ -125,10 +130,10 @@ namespace pwiz.Skyline.Model.Databinding
                 list.AddRange(ReportSharing.DeserializeReportList(new MemoryStream(Encoding.UTF8.GetBytes(REPORTS_V3))));
             }
             var nameMap = new Dictionary<string, string>{
-                {"Peptide Ratio Results", Resources.ReportSpecList_GetDefaults_Peptide_Ratio_Results}, // Not L10N
-                {"Peptide RT Results", Resources.ReportSpecList_GetDefaults_Peptide_RT_Results}, // Not L10N
-                {"Transition Results", Resources.ReportSpecList_GetDefaults_Transition_Results}, // Not L10N
-                {"Peak Boundaries", Resources.ReportSpecList_GetDefaults_Peak_Boundaries} // Not L10N
+                {@"Peptide Ratio Results", Resources.ReportSpecList_GetDefaults_Peptide_Ratio_Results},
+                {@"Peptide RT Results", Resources.ReportSpecList_GetDefaults_Peptide_RT_Results},
+                {@"Transition Results", Resources.ReportSpecList_GetDefaults_Transition_Results},
+                {@"Peak Boundaries", Resources.ReportSpecList_GetDefaults_Peak_Boundaries}
             };
             for (int i = 0; i < list.Count; i++)
             {
@@ -184,7 +189,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         public ReportOrViewSpec CopyItem(ReportOrViewSpec item)
         {
-            return new ReportOrViewSpec(item.ViewSpec.SetName(null));
+            return new ReportOrViewSpec(item.ViewSpecLayout.ChangeName(null));
         }
 
         protected override IList<ReportOrViewSpec> DeserializeItems(Stream stream)
@@ -192,7 +197,7 @@ namespace pwiz.Skyline.Model.Databinding
             return ReportSharing.DeserializeReportList(stream);
         }
 
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         private const string REPORTS_V1 = @"<ReportSpecList>
   <report name='Peptide Ratio Results' rowsource='pwiz.Skyline.Model.Databinding.Entities.Peptide' sublist='Results!*'>
     <column name='Sequence' />
@@ -251,6 +256,6 @@ namespace pwiz.Skyline.Model.Databinding
     <filter column='Results!*.Value' opname='isnotnullorblank' />
   </report>
 </ReportSpecList>";
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
     }
 }

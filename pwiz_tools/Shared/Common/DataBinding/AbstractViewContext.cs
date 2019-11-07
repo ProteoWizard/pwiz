@@ -43,7 +43,7 @@ namespace pwiz.Common.DataBinding
     public abstract class AbstractViewContext : IViewContext
     {
         
-        public const string DefaultViewName = "default"; // Not L10N
+        public const string DefaultViewName = "default";
         private IList<RowSourceInfo> _rowSources;
 
         protected AbstractViewContext(DataSchema dataSchema, IEnumerable<RowSourceInfo> rowSources)
@@ -124,7 +124,7 @@ namespace pwiz.Common.DataBinding
             return true;
         }
 
-        public virtual void AddOrReplaceViews(ViewGroupId groupId, IEnumerable<ViewSpec> viewSpecs)
+        public virtual void AddOrReplaceViews(ViewGroupId groupId, IEnumerable<ViewSpecLayout> viewSpecs)
         {
             var viewSpecList = GetViewSpecList(groupId) ?? ViewSpecList.EMPTY;
             viewSpecList = viewSpecList.AddOrReplaceViews(viewSpecs);
@@ -155,7 +155,7 @@ namespace pwiz.Common.DataBinding
             return new ViewInfo(DataSchema, rowSourceInfo.RowType, viewSpec).ChangeViewGroup(viewGroup);
         }
 
-        public ViewInfo GetViewInfo(ViewName? viewName)
+        public virtual ViewInfo GetViewInfo(ViewName? viewName)
         {
             if (!viewName.HasValue)
             {
@@ -227,7 +227,7 @@ namespace pwiz.Common.DataBinding
             try
             {
                 var dataFormats = new[] {DataFormats.CSV, DataFormats.TSV};
-                string fileFilter = string.Join("|", dataFormats.Select(format => format.FileFilter).ToArray()); // Not L10N
+                string fileFilter = string.Join(@"|", dataFormats.Select(format => format.FileFilter).ToArray());
                 using (var saveFileDialog = new SaveFileDialog
                 {
                     Filter = fileFilter,
@@ -352,7 +352,7 @@ namespace pwiz.Common.DataBinding
         public virtual void SaveView(ViewGroupId groupId, ViewSpec viewSpec, string originalName)
         {
             var viewSpecList = GetViewSpecList(groupId) ?? ViewSpecList.EMPTY;
-            viewSpecList = viewSpecList.ReplaceView(originalName, viewSpec);
+            viewSpecList = viewSpecList.ReplaceView(originalName, new ViewSpecLayout(viewSpec, viewSpecList.GetViewLayouts(viewSpec.Name)));
             SaveViewSpecList(groupId, viewSpecList);
         }
 
@@ -365,9 +365,9 @@ namespace pwiz.Common.DataBinding
         {
             var currentViews = GetViewSpecList(viewGroup.Id);
             var conflicts = new HashSet<string>();
-            foreach (var view in viewSpecList.ViewSpecs)
+            foreach (var view in viewSpecList.ViewSpecLayouts)
             {
-                var existing = currentViews.GetView(view.Name);
+                var existing = currentViews.GetViewSpecLayout(view.Name);
                 if (existing != null && !Equals(existing, view))
                 {
                     conflicts.Add(view.Name);
@@ -398,13 +398,11 @@ namespace pwiz.Common.DataBinding
                         break;
                 }
             }
-            foreach (var view in viewSpecList.ViewSpecs)
+            foreach (var view in viewSpecList.ViewSpecLayouts)
             {
                 if (null == currentViews.GetView(view.Name))
                 {
                     currentViews = currentViews.ReplaceView(null, view);
-                    currentViews = currentViews.SaveViewLayouts(currentViews.GetViewLayouts(view.Name)
-                        .Merge(viewSpecList.GetViewLayouts(view.Name).Layouts));
                 }
             }
             SaveViewSpecList(viewGroup.Id, currentViews);
@@ -477,7 +475,7 @@ namespace pwiz.Common.DataBinding
             }
             catch (Exception exception)
             {
-                Trace.TraceError("Exception constructing column of type {0}:{1}", columnTypeAttribute.ColumnType, exception); // Not L10N
+                Trace.TraceError(@"Exception constructing column of type {0}:{1}", columnTypeAttribute.ColumnType, exception);
                 return null;
             }
         }
@@ -594,7 +592,7 @@ namespace pwiz.Common.DataBinding
 
         protected static ViewSpec GetDefaultViewSpec(ColumnDescriptor parentColumn)
         {
-            var viewSpec = new ViewSpec().SetName(DefaultViewName).SetRowType(parentColumn.PropertyType);
+            var viewSpec = new ViewSpec().SetName(DefaultViewName).SetRowType(parentColumn.PropertyType).SetUiMode(parentColumn.UiMode);
             var columns = new List<ColumnSpec>();
             foreach (var column in parentColumn.GetChildColumns())
             {
@@ -602,7 +600,7 @@ namespace pwiz.Common.DataBinding
                 {
                     continue;
                 }
-                if (column.DataSchema.IsAdvanced(column))
+                if (column.DataSchema.IsHidden(column))
                 {
                     continue;
                 }
@@ -670,6 +668,20 @@ namespace pwiz.Common.DataBinding
             var viewSpecList = GetViewSpecList(viewGroup);
             viewSpecList = viewSpecList.SaveViewLayouts(list);
             SaveViewSpecList(viewGroup, viewSpecList);
+        }
+
+        public virtual bool HasRowActions
+        {
+            get { return false; }
+        }
+        public virtual void RowActionsDropDownOpening(ToolStripItemCollection dropDownItems)
+        {
+            dropDownItems.Clear();
+        }
+
+        public virtual IEnumerable<IUiModeInfo> AvailableUiModes
+        {
+            get { yield break; }
         }
 
         // Default implementation of ViewsChanged which never fires.

@@ -1,22 +1,22 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:ssl-ex.blib	9	1	9
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:ssl-ex.blib	9	1	10
 id	RefSpectraID	position	mass
 1	2	1	21.0
 2	2	7	80.0
 3	9	20	80.0
 4	9	23	21.0
-id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
-1	GAIAAAHYIR	519.75257647844	2	GAIAAAHYIR	-	-	1	8007	0.0	0.0	0.0	0	2.430175	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	1	0.0	1
-2	DFPVISSV	965.48047649	1	D[+21.0]FPVISS[+80.0]V	-	-	1	4190	0.0	0.0	0.0	0	2.4879284	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	2	0.0	1
-3	TPGPGGQAALR	511.24877647844	2	TPGPGGQAALR	-	-	1	8205	0.0	0.0	0.0	0	2.5073917	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	3	0.0	1
-4	GTSTYPVKPLDSSK	740.38702647844	2	GTSTYPVKPLDSSK	-	-	1	7703	0.0	0.0	0.0	0	2.5207016	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	4	0.0	1
-5	TASGNIIPSSTGAAK	687.86572647844	2	TASGNIIPSSTGAAK	-	-	1	8217	0.0	0.0	0.0	0	2.53093	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	5	0.0	1
-6	EEQNIADGVEQK	680.32602647844	2	EEQNIADGVEQK	-	-	1	3352	0.0	0.0	0.0	0	5.187053	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	17	0.0	1
-7	IEEELGDK	466.73317647844	2	IEEELGDK	-	-	1	3401	0.0	0.0	0.0	0	5.9557066	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	18	0.0	1
-8	KVESLGSPSGATK	630.84322647844	2	KVESLGSPSGATK	-	-	1	2849	0.0	0.0	0.0	0	6.096598	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	19	0.0	1
-9	AENITLCSITKKGVPLVTLSNGD	620.55365147266	4	AENITLCSITKKGVPLVTLS[+80.0]NGD[+21.0]	-	-	1	2056	0.0	0.0	0.0	0	8.7613	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	20	0.0	1
-id	fileName	cutoffScore
-1	/BiblioSpec/tests/inputs/extra-cols.ms2	-1.0
+id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	totalIonCurrent	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
+1	GAIAAAHYIR	519.75257647	2	GAIAAAHYIR	-	-	1	8007	0.0	0.0	0.0	0	2.430175	N/A	N/A	373289.87	N/A	N/A	N/A	N/A	N/A	1	1	0.0	1
+2	DFPVISSV	965.48047649	1	D[+21.0]FPVISS[+80.0]V	-	-	1	4190	0.0	0.0	0.0	0	2.4879284	N/A	N/A	17812.99	N/A	N/A	N/A	N/A	N/A	1	2	0.0	1
+3	TPGPGGQAALR	511.24877647	2	TPGPGGQAALR	-	-	1	8205	0.0	0.0	0.0	0	2.5073917	N/A	N/A	136148.43	N/A	N/A	N/A	N/A	N/A	1	3	0.0	1
+4	GTSTYPVKPLDSSK	740.38702647	2	GTSTYPVKPLDSSK	-	-	1	7703	0.0	0.0	0.0	0	2.5207016	N/A	N/A	55712.79	N/A	N/A	N/A	N/A	N/A	1	4	0.0	1
+5	TASGNIIPSSTGAAK	687.86572647	2	TASGNIIPSSTGAAK	-	-	1	8217	0.0	0.0	0.0	0	2.53093	N/A	N/A	128022.17	N/A	N/A	N/A	N/A	N/A	1	5	0.0	1
+6	EEQNIADGVEQK	680.32602647	2	EEQNIADGVEQK	-	-	1	3352	0.0	0.0	0.0	0	5.187053	N/A	N/A	10942.40	N/A	N/A	N/A	N/A	N/A	1	17	0.0	1
+7	IEEELGDK	466.73317647	2	IEEELGDK	-	-	1	3401	0.0	0.0	0.0	0	5.9557066	N/A	N/A	18009.39	N/A	N/A	N/A	N/A	N/A	1	18	0.0	1
+8	KVESLGSPSGATK	630.84322647	2	KVESLGSPSGATK	-	-	1	2849	0.0	0.0	0.0	0	6.096598	N/A	N/A	7629.64999314	N/A	N/A	N/A	N/A	N/A	1	19	0.0	1
+9	AENITLCSITKKGVPLVTLSNGD	620.55365147	4	AENITLCSITKKGVPLVTLS[+80.0]NGD[+21.0]	-	-	1	2056	0.0	0.0	0.0	0	8.7613	N/A	N/A	4393.13999583	N/A	N/A	N/A	N/A	N/A	1	20	0.0	1
+id	fileName	idFileName	cutoffScore
+1	/BiblioSpec/tests/inputs/extra-cols.ms2	/BiblioSpec/tests/inputs/extra-cols.ssl	-1.0
 id	scoreType	probabilityType
 0	UNKNOWN	NOT_A_PROBABILITY_VALUE
 1	PERCOLATOR QVALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT

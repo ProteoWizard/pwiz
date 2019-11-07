@@ -25,6 +25,7 @@ project
     : requirements 
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
         #<define>_PROFILE_PERFORMANCE
+        #<define>_PROFILE_SOLVER_CONVERGENCE
         #<define>_USE_DEMUX_DEBUG_WRITER
     ;
 
@@ -146,7 +147,10 @@ run-if-exists SpectrumList_MZRefinerTest.cpp pwiz_analysis_spectrum_processing
 
 import path sequence ;
 run-if-exists SpectrumList_3D_Test.cpp pwiz_analysis_spectrum_processing_basic $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers//pwiz_data_vendor_readers
-    : [ path.native $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d ] # args
+    : # args
+      [ sequence.transform path.native : $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d
+                                         $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/UIMF/Reader_UIMF_Test.data/BSA_10ugml_CID.UIMF
+      ]
     : # input-files
     : <vendor-api-support>off:<build>no # requirements
     : SpectrumList_3D_Test # target name
@@ -175,7 +179,9 @@ run-if-exists SpectrumList_LockmassRefinerTest.cpp pwiz_analysis_spectrum_proces
     ;
 
 run-if-exists SpectrumList_DemuxTest.cpp pwiz_analysis_spectrum_processing_basic
-    : [ path.native $(PWIZ_ROOT_PATH)/pwiz/analysis/spectrum_processing/SpectrumList_DemuxTest.data/MsxTest.mzML ] # args
+    : # args
+      [ path.native $(PWIZ_ROOT_PATH)/pwiz/analysis/spectrum_processing/SpectrumList_DemuxTest.data/MsxTest.mzML ]
+      [ path.native $(PWIZ_ROOT_PATH)/pwiz/analysis/spectrum_processing/SpectrumList_DemuxTest.data/OverlapTest.mzML ]
     : # input-files
     : # requirements
     : SpectrumList_DemuxTest # target name

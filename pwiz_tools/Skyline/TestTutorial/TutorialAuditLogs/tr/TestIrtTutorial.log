@@ -81,8 +81,8 @@ Settings > Peptide Settings -- Prediction > Retention time predictor changed fro
 Settings > Peptide Settings -- Prediction > Retention time predictor > Calculator is "iRT-C18"
 Settings > Peptide Settings -- Prediction > Retention time predictor > Calculator > iRT database path is "iRT-C18.irtdb"
 Settings > Peptide Settings -- Prediction > Retention time predictor > Time window is "5"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Regression > Slope is "0,1515432133522282"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Regression > Intercept is "15,093983970674566"
+Settings > Peptide Settings -- Prediction > Retention time predictor > Regression > Slope is "0,151543213352228"
+Settings > Peptide Settings -- Prediction > Retention time predictor > Regression > Intercept is "15,0939839706746"
 Settings > Peptide Settings -- Prediction > Retention time predictor > Auto-calculate regression is False
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides is Empty
 Settings > Peptide Settings -- Prediction > Use measured retention times when present changed from False to True

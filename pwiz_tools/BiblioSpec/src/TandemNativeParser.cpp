@@ -35,8 +35,8 @@ Information for getting spec filenames from .xtan files
 #include "TandemNativeParser.h"
 #include "BlibMaker.h"
 #include "AminoAcidMasses.h"
+#include "pwiz/utility/misc/Std.hpp"
 
-using namespace std;
 
 namespace BiblioSpec {
 

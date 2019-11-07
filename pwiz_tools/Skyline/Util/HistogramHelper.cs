@@ -20,7 +20,7 @@ namespace pwiz.Skyline.Util
             return PeptidesAndTransitionGroups.Get(graphSummary.StateProvider.SelectedNodes, graphSummary.ResultsIndex, int.MaxValue);
         }
 
-        public static void CreateAndShowFindResults(ZedGraphControl sender, GraphSummary graphSummary, SrmDocument document, AreaCVGraphData.CVData data)
+        public static void CreateAndShowFindResults(ZedGraphControl sender, GraphSummary graphSummary, SrmDocument document, CVData data)
         {
             var peptideAnnotationPairs = data.PeptideAnnotationPairs.ToList();
             var results = new List<FindResult>(peptideAnnotationPairs.Count);
@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Util
 
         public static string FormatDouble(double d, int decimals)
         {
-            return d.ToString("F0" + decimals, LocalizationHelper.CurrentCulture); // Not L10N
+            return d.ToString(@"F0" + decimals, LocalizationHelper.CurrentCulture);
         }
     }
 }

@@ -29,13 +29,13 @@ namespace pwiz.Common.PeakFinding
 
         public static string PeakToString(IFoundPeak foundPeak)
         {
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             return String.Format(
                 "StartIndex: {0} EndIndex: {1} TimeIndex: {2} Area: {3} BackgroundArea: {4} Height: {5} Fwhm: {6} FwhmDegenerate: {7} Identified: {8}",
                 foundPeak.StartIndex, foundPeak.EndIndex, foundPeak.TimeIndex, foundPeak.Area,
                 foundPeak.BackgroundArea, foundPeak.Height, foundPeak.Fwhm,
                 foundPeak.FwhmDegenerate, foundPeak.Identified);
-            // ReSharper enable NonLocalizedString
+            // ReSharper restore LocalizableElement
         }
     }
 }

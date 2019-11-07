@@ -37,7 +37,8 @@ namespace pwiz.Skyline.Model.Results
         Eleven = 11, // Adds chromatogram start, stop times, and uncompressed size info, and new flag bit for SignedMz
         Twelve = 12, // Adds structure sizes to CacheHeaderStruct
         Thirteen = 13,
-        CURRENT = Thirteen,
+        Fourteen = 14,
+        CURRENT = Fourteen,
     }
     
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
@@ -75,13 +76,13 @@ namespace pwiz.Skyline.Model.Results
             }
             if (cacheFormatVersion >= CacheFormatVersion.Nine)
             {
-                return Marshal.SizeOf<CacheHeaderStruct>() - (int) Marshal.OffsetOf<CacheHeaderStruct>("locationScanIds"); // Not L10N
+                return Marshal.SizeOf<CacheHeaderStruct>() - (int) Marshal.OffsetOf<CacheHeaderStruct>(@"locationScanIds");
             }
             if (cacheFormatVersion >= CacheFormatVersion.Five)
             {
-                return Marshal.SizeOf<CacheHeaderStruct>() - (int) Marshal.OffsetOf<CacheHeaderStruct>("numScoreTypes"); // Not L10N
+                return Marshal.SizeOf<CacheHeaderStruct>() - (int) Marshal.OffsetOf<CacheHeaderStruct>(@"numScoreTypes");
             }
-            return Marshal.SizeOf<CacheHeaderStruct>() - (int) Marshal.OffsetOf<CacheHeaderStruct>("formatVersion"); // Not L10N
+            return Marshal.SizeOf<CacheHeaderStruct>() - (int) Marshal.OffsetOf<CacheHeaderStruct>(@"formatVersion");
         }
 
         public static CacheHeaderStruct Read(Stream stream)
@@ -137,7 +138,7 @@ namespace pwiz.Skyline.Model.Results
         public static readonly CacheFormat CURRENT = new CacheFormat
         {
             FormatVersion = CacheFormatVersion.CURRENT,
-            VersionRequired = CacheFormatVersion.Twelve,
+            VersionRequired = CacheFormatVersion.Fourteen,
             CachedFileSize = Marshal.SizeOf<CachedFileHeaderStruct>(),
             ChromGroupHeaderSize = Marshal.SizeOf<ChromGroupHeaderInfo>(),
             ChromPeakSize = Marshal.SizeOf<ChromPeak>(),

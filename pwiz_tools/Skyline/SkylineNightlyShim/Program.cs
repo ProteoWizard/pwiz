@@ -23,7 +23,7 @@
 // Accepts same argmuments as SkylineNightly, but first updates local SkylineNightly.exe from GitHub artifacts before invoking it
 // 
 
-// ReSharper disable NonLocalizedString
+// ReSharper disable LocalizableElement
 
 using System;
 using System.Diagnostics;

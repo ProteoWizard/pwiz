@@ -23,6 +23,7 @@ namespace pwiz.Common.DataBinding
             {
                 return;
             }
+            // ReSharper disable once PossibleNullReferenceException
             if (!viewSpecList.ViewSpecs.Any())
             {
                 _viewSpecLists.Remove(viewGroup.Name);
@@ -61,9 +62,9 @@ namespace pwiz.Common.DataBinding
                 reader.Read();
                 while (true)
                 {
-                    if (reader.IsStartElement("views")) // Not L10N
+                    if (reader.IsStartElement(@"views"))
                     {
-                        string groupName = reader.GetAttribute("name"); // Not L10N
+                        string groupName = reader.GetAttribute(@"name");
                         // ReSharper disable AssignNullToNotNullAttribute
                         viewSpecLists.Add(groupName, ViewSpecList.Deserialize(reader));
                         // ReSharper restore AssignNullToNotNullAttribute
@@ -86,8 +87,8 @@ namespace pwiz.Common.DataBinding
         {
             foreach (var entry in _viewSpecLists)
             {
-                writer.WriteStartElement("views"); // Not L10N
-                writer.WriteAttributeString("name", entry.Key); // Not L10N
+                writer.WriteStartElement(@"views");
+                writer.WriteAttributeString(@"name", entry.Key);
                 entry.Value.WriteXml(writer);
                 writer.WriteEndElement();
             }

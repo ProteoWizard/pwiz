@@ -29,32 +29,33 @@ namespace pwiz.Skyline.Model.AuditLog
 {
     public partial class Reflector<T>
     {
-        public static string ToString(ObjectPair<object> rootPair, T obj, ToStringState state)
+        public static string ToString(ObjectPair<object> rootPair, SrmDocument.DOCUMENT_TYPE docType, T obj, ToStringState state)
         {
             var objectInfo = new ObjectInfo<object>().ChangeNewObject(obj)
                 .ChangeRootObjectPair(rootPair ?? ObjectPair<object>.Create(null, null));
             var rootProp = RootProperty.Create(typeof(T));
 
-            var enumerator = EnumerateDiffNodes(objectInfo, rootProp, true);
+            var enumerator = EnumerateDiffNodes(objectInfo, rootProp, docType, true);
 
-            return ToString(objectInfo.ParentObjectPair, DiffTree.FromEnumerator(enumerator, DateTime.Now).Root, state);
+            return ToString(objectInfo.ParentObjectPair, docType, DiffTree.FromEnumerator(enumerator, DateTime.UtcNow).Root, state);
         }
 
         /// <summary>
         /// Converts the given object to a string, showing each of its properties values.
         /// </summary>
         /// <param name="rootPair">old and new document, can be null</param>
+        /// <param name="docType">May determine whether human readable version requires "peptide"->"molecule" translation</param> // CONSIDER: does this belong in ToStringState?
         /// <param name="rootNode">diff node describing root object change</param>
         /// <param name="state">describes how to format the string</param>
         /// <returns>String representation</returns>
-        public static string ToString(ObjectPair<object> rootPair, DiffNode rootNode, ToStringState state)
+        public static string ToString(ObjectPair<object> rootPair, SrmDocument.DOCUMENT_TYPE docType, DiffNode rootNode, ToStringState state)
         {
-            return Reflector.ToString(rootPair, rootNode, null, state).Trim();
+            return Reflector.ToString(rootPair, docType, rootNode, null, state).Trim();
         }
 
         public static string ToString(T obj)
         {
-            return ToString(null, obj, null);
+            return ToString(null, SrmDocument.DOCUMENT_TYPE.none, obj, null);
         }
     }
 
@@ -72,7 +73,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 return false;
 
             return obj is IFormattable ||
-                   (obj.GetType().Namespace == "System" && !IsCollectionType(obj.GetType())); // Not L10N
+                   (obj.GetType().Namespace == @"System" && !IsCollectionType(obj.GetType()));
         }
 
         private static string GetIndentation(int indentLevel)
@@ -93,7 +94,7 @@ namespace pwiz.Skyline.Model.AuditLog
             return s;
         }
 
-        public static string ToString(ObjectPair<object> rootPair, DiffNode node, DiffNode parentNode, ToStringState state)
+        public static string ToString(ObjectPair<object> rootPair, SrmDocument.DOCUMENT_TYPE docType, DiffNode node, DiffNode parentNode, ToStringState state)
         {
             state = state ?? ToStringState.DEFAULT;
 
@@ -126,15 +127,15 @@ namespace pwiz.Skyline.Model.AuditLog
                         return LogMessage.MISSING;
 
                     return Indent(indent,
-                        AuditLogToStringHelper.ToString(obj, o => ToString(
-                            node.Property.GetPropertyType(o), rootPair, o, state)), state.IndentLevel - 1);
+                        AuditLogToStringHelper.ToString(obj, property.DecimalPlaces, o => ToString(
+                            node.Property.GetPropertyType(o), rootPair, docType, o, state)), state.IndentLevel - 1);
                 }
             }
 
-            return ToStringInternal(rootPair, node, parentNode, state);
+            return ToStringInternal(rootPair, docType, node, parentNode, state);
         }
 
-        private static string ToStringInternal(ObjectPair<object> rootPair, DiffNode node, DiffNode parentNode, ToStringState state)
+        private static string ToStringInternal(ObjectPair<object> rootPair, SrmDocument.DOCUMENT_TYPE docType, DiffNode node, DiffNode parentNode, ToStringState state)
         {
             if (node == null)
                 return string.Empty;
@@ -145,17 +146,19 @@ namespace pwiz.Skyline.Model.AuditLog
 
             var obj = node.Objects.First();
             var property = node.Property;
-            var auditLogObj = AuditLogObject.GetAuditLogObject(obj);
+            var auditLogObj = AuditLogObject.GetAuditLogObject(obj, property.DecimalPlaces, out _);
 
-            var result = "{0}"; // Not L10N
+            var result = @"{0}";
             string format;
 
-            if (!property.IgnoreName && auditLogObj.IsName)
+            // If the parent has ignore name set to true but it's a list, we still want to show
+            // the name for the elements
+            if ((!property.IgnoreName || parentNode is CollectionPropertyDiffNode)  && auditLogObj.IsName)
             {
                 var name = LogMessage.Quote(auditLogObj.AuditLogText);
                 var indent = state.FormatWhitespace && (node.Property.IgnoreName || parentNode is CollectionPropertyDiffNode);
                 if (node.Nodes.Count != 0)
-                    result = Indent(indent, string.Format("{0}: {{0}}", name), state.IndentLevel - 1); // Not L10N
+                    result = Indent(indent, string.Format(@"{0}: {{0}}", name), state.IndentLevel - 1);
                 else
                     return name;
             }
@@ -167,13 +170,13 @@ namespace pwiz.Skyline.Model.AuditLog
                 if (node.Nodes.Count == 0)
                     return LogMessage.EMPTY;
 
-                start = "["; // Not L10N
-                end = "]"; // Not L10N
+                start = @"[";
+                end = @"]";
             }
             else
             {
-                start = "{{"; // Not L10N
-                end = "}}"; // Not L10N
+                start = @"{{";
+                end = @"}}";
             }
 
             // If we don't want to wrap properties or this is the "root" text, we don't
@@ -184,12 +187,12 @@ namespace pwiz.Skyline.Model.AuditLog
                 var indentation = GetIndentation(state.IndentLevel - 1);
                 var openingIndent = auditLogObj.IsName ? string.Empty : indentation;
                 format = state.FormatWhitespace
-                    ? string.Format("{0}{3}{1}{5}{{0}}{5}{4}{2}", prepend, start, end, openingIndent, indentation, Environment.NewLine) // Not L10N
-                    : string.Format("{0} {{0}} {1}", start, end); // Not L10N
+                    ? string.Format(@"{0}{3}{1}{5}{{0}}{5}{4}{2}", prepend, start, end, openingIndent, indentation, Environment.NewLine)
+                    : string.Format(@"{0} {{0}} {1}", start, end);
             }
             else
             {
-                format = "{0}"; // Not L10N
+                format = @"{0}";
             }
 
             var strings = new List<string>();
@@ -200,18 +203,18 @@ namespace pwiz.Skyline.Model.AuditLog
                     var newState = state.ChangeWrapProperties(state.WrapProperties && !subNode.Property.IgnoreName);
                     if (!subNode.Property.IgnoreName)
                         newState = newState.ChangeIndentLevel(state.IndentLevel + 1);
-                    var str = ToString(rootPair, subNode, node, newState);
+                    var str = ToString(rootPair, docType, subNode, node, newState);
                     if (!string.IsNullOrEmpty(str))
                         strings.Add(str);
                 }
                 else
                 {
 
-                    var str = ToString(rootPair, subNode, node,
+                    var str = ToString(rootPair, docType, subNode, node,
                         state.ChangeWrapProperties(true).ChangeIndentLevel(state.IndentLevel + 1));
                     if (!string.IsNullOrEmpty(str))
                         strings.Add(Indent(state.FormatWhitespace,
-                            subNode.Property.GetName(rootPair, subNode, node) + " = " + str, state.IndentLevel)); // Not L10N
+                            subNode.Property.GetName(rootPair, subNode, node) + @" = " + str, state.IndentLevel));
                 }
             }
 
@@ -219,17 +222,17 @@ namespace pwiz.Skyline.Model.AuditLog
             if (strings.Count == 0)
                 return string.Empty;
 
-            var separator = string.Format(",{0}", state.FormatWhitespace ? Environment.NewLine : " "); // Not L10N
-            return string.Format(result, string.Format(format, string.Join(separator, strings))); // Not L10N
+            var separator = string.Format(@",{0}", state.FormatWhitespace ? Environment.NewLine : @" ");
+            return string.Format(result, string.Format(format, string.Join(separator, strings)));
         }
 
         #region Wrapper functions
 
-        public static string ToString(Type objectType, ObjectPair<object> rootPair, object obj, ToStringState state)
+        public static string ToString(Type objectType, ObjectPair<object> rootPair, SrmDocument.DOCUMENT_TYPE docType, object obj, ToStringState state)
         {
             var type = typeof(Reflector<>).MakeGenericType(objectType);
             var toString = type.GetMethod("ToString", BindingFlags.Public | BindingFlags.Static, null,
-                new[] {typeof(ObjectPair<object>), objectType, typeof(ToStringState) },
+                new[] {typeof(ObjectPair<object>), typeof(SrmDocument.DOCUMENT_TYPE), objectType, typeof(ToStringState) },
                 null);
 
             Assume.IsNotNull(toString);
@@ -237,7 +240,7 @@ namespace pwiz.Skyline.Model.AuditLog
             var reflector = Activator.CreateInstance(type);
 
             // ReSharper disable once PossibleNullReferenceException
-            return (string)toString.Invoke(reflector, new[] { rootPair, obj, state });
+            return (string)toString.Invoke(reflector, new[] { rootPair, docType, obj, state });
         }
 
         #endregion

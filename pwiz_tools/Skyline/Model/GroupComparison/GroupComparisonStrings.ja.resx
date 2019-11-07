@@ -181,7 +181,7 @@
     <value>中央値を均一化</value>
   </data>
   <data name="NormalizationMethod_QUANTILE_Quantile" xml:space="preserve">
-    <value>変位値</value>
+    <value>分位値</value>
   </data>
   <data name="NormalizationMethod_GLOBAL_STANDARDS_Ratio_to_Global_Standards" xml:space="preserve">
     <value>グローバル標準に対する比率</value>
@@ -213,7 +213,7 @@
     <value>トランジション領域の合計</value>
   </data>
   <data name="SummarizationMethod_MEDIANPOLISH_Tukey_s_Median_Polish" xml:space="preserve">
-    <value>Tukeyの中央値完全化</value>
+    <value>Tukeyの中央値分散分析</value>
   </data>
   <data name="FoldChangeBarGraph_GetTitle_Bar_Graph" xml:space="preserve">
     <value>棒グラフ</value>
@@ -299,8 +299,8 @@
   <data name="CreateMatchExpression_PopulateComboBoxes_Molecula_Formula" xml:space="preserve">
     <value>分子式</value>
   </data>
-  <data name="CreateMatchExpression_PopulateComboBoxes_Molecule_Group_Name" xml:space="preserve">
-    <value>分子グループ名</value>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Molecule_List_Name" xml:space="preserve">
+    <value>分子リスト名</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Size" xml:space="preserve">
     <value>サイズ</value>

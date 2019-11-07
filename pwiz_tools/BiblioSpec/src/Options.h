@@ -30,14 +30,11 @@
 #ifndef OPTIONS_H
 #define OPTIONS_H
 
-#include <stdlib.h>
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <sstream>
-#include <map>
+#include <cstdlib>
+#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Stream.hpp"
+#include "pwiz/utility/misc/Container.hpp"
 
-using namespace std;
 
 class Options{
 

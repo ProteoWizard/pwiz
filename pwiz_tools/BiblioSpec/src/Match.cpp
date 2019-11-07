@@ -23,7 +23,6 @@
 
 #include "Match.h"
 
-using namespace std;
 
 namespace BiblioSpec {
 

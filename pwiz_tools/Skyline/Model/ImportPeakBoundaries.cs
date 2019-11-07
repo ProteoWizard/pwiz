@@ -73,9 +73,9 @@ namespace pwiz.Skyline.Model
             {
                 var sb = new StringBuilder();
                 sb.Append(Peptide);
-                sb.Append(separator); // Not L10N
+                sb.Append(separator);
                 sb.Append(File);
-                sb.Append(separator); // Not L10N
+                sb.Append(separator);
                 sb.Append(Charge);
                 return sb.ToString();
             }
@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Model
 
         public static int[] REQUIRED_NO_CHROM { get { return REQUIRED_FIELDS.Take(2).ToArray(); }}
 
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         // NOTE: The first name is what appears in error messages about missing required fields
         public static string[][] FIELD_NAMES
         {
@@ -121,7 +121,7 @@ namespace pwiz.Skyline.Model
                 };
             }
         }
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 
         public static readonly string[] STANDARD_FIELD_NAMES = FIELD_NAMES.Select(fieldNames => fieldNames[0]).ToArray();
 
@@ -539,7 +539,7 @@ namespace pwiz.Skyline.Model
                     string[] missingFields = fieldIndices.Select((index, i) => new Tuple<int, int>(index, i))
                         .Where(t => t.Item1 == -1 && requiredFields.Contains(t.Item2))
                         .Select(t => allFieldNames[t.Item2][0]).ToArray();
-                    fieldNames = string.Join(", ", missingFields); // Not L10N
+                    fieldNames = string.Join(@", ", missingFields);
                 }
                 throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_Failed_to_find_the_necessary_headers__0__in_the_first_line, fieldNames));
             }
@@ -692,9 +692,9 @@ namespace pwiz.Skyline.Model
                 int itemsToShow = Math.Min(items.Count, maxItems);
                 var itemsList = items.ToList();
                 for (int i = 0; i < itemsToShow; ++i)
-                    sb.AppendLine(printLine(itemsList[i])); // Not L10N
+                    sb.AppendLine(printLine(itemsList[i]));
                 if (itemsToShow < items.Count)
-                    sb.AppendLine("..."); // Not L10N
+                    sb.AppendLine(@"...");
                 sb.AppendLine();
                 sb.Append(messageLines.Last);
                 var dlgFiles = MultiButtonMsgDlg.Show(parent, sb.ToString(), MultiButtonMsgDlg.BUTTON_OK);
@@ -813,10 +813,10 @@ namespace pwiz.Skyline.Model
                     {
                         switch (decoyString.ToLowerInvariant())
                         {
-                            case "false": // Not L10N
+                            case @"false":
                                 decoyNum = 0;
                                 break;
-                            case "true": // Not L10N
+                            case @"true":
                                 decoyNum = 1;
                                 break;
                             default:

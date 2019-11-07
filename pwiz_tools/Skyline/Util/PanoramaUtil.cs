@@ -43,10 +43,10 @@ namespace pwiz.Skyline.Util
 {
     public static class PanoramaUtil
     {
-        public const string PANORAMA_WEB = "https://panoramaweb.org/"; // Not L10N
-        public const string FORM_POST = "POST"; // Not L10N
-        public const string LABKEY_CTX = "/labkey/"; // Not L10N
-        public const string ENSURE_LOGIN_PATH = "security/home/ensureLogin.view"; // Not L10N
+        public const string PANORAMA_WEB = "https://panoramaweb.org/";
+        public const string FORM_POST = "POST";
+        public const string LABKEY_CTX = "/labkey/";
+        public const string ENSURE_LOGIN_PATH = "security/home/ensureLogin.view";
 
         public static Uri ServerNameToUri(string serverName)
         {
@@ -62,8 +62,8 @@ namespace pwiz.Skyline.Util
 
         private static string ServerNameToUrl(string serverName)
         {
-            const string https = "https://"; // Not L10N
-            const string http = "http://"; // Not L10N
+            const string https = "https://";
+            const string http = "http://";
             
             var httpsIndex = serverName.IndexOf(https, StringComparison.Ordinal);
             var httpIndex = serverName.IndexOf(http, StringComparison.Ordinal);
@@ -217,10 +217,10 @@ namespace pwiz.Skyline.Util
             if (folderJson != null)
             {
 
-                var folderType = (string)folderJson["folderType"]; // Not L10N
-                var modules = folderJson["activeModules"]; // Not L10N
+                var folderType = (string)folderJson[@"folderType"];
+                var modules = folderJson[@"activeModules"];
                 return modules != null && ContainsTargetedMSModule(modules) &&
-                       Equals("Targeted MS", folderType); // Not L10N
+                       Equals(@"Targeted MS", folderType);
             }
             return false;
         }
@@ -234,7 +234,7 @@ namespace pwiz.Skyline.Util
         {
             if (folderJson != null)
             {
-                var userPermissions = folderJson.Value<int?>("userPermissions"); // Not L10N
+                var userPermissions = folderJson.Value<int?>(@"userPermissions");
                 return userPermissions != null && Equals(userPermissions & 2, 2);
             }
             return false;
@@ -244,7 +244,7 @@ namespace pwiz.Skyline.Util
         {
             foreach (var module in modules)
             {
-                if (string.Equals(module.ToString(), "TargetedMS")) // Not L10N
+                if (string.Equals(module.ToString(), @"TargetedMS"))
                     return true;
             }
             return false;
@@ -257,12 +257,12 @@ namespace pwiz.Skyline.Util
 
         public static Uri Call(Uri serverUri, string controller, string folderPath, string method, string query, bool isApi = false)
         {
-            string path = controller + "/" + (folderPath ?? string.Empty) + "/" + // Not L10N
-                          method + (isApi ? ".api" : ".view"); // Not L10N
+            string path = controller + @"/" + (folderPath ?? string.Empty) + @"/" +
+                          method + (isApi ? @".api" : @".view");
 
             if (!string.IsNullOrEmpty(query))
             {
-                path = path + "?" + query;  // Not L10N
+                path = path + @"?" + query;
             }
 
             return new Uri(serverUri, path);
@@ -270,8 +270,8 @@ namespace pwiz.Skyline.Util
 
         public static Uri GetContainersUri(Uri serverUri, string folder, bool includeSubfolders)
         {
-            var queryString = string.Format("includeSubfolders={0}&moduleProperties=TargetedMS", includeSubfolders ? "true" : "false"); // Not L10N
-            return Call(serverUri, "project", folder, "getContainers", queryString); // Not L10N
+            var queryString = string.Format(@"includeSubfolders={0}&moduleProperties=TargetedMS", includeSubfolders ? @"true" : @"false");
+            return Call(serverUri, @"project", folder, @"getContainers", queryString);
         }
 
     }
@@ -310,8 +310,8 @@ namespace pwiz.Skyline.Util
 
         internal static string GetBasicAuthHeader(string username, string password)
         {
-            byte[] authBytes = Encoding.UTF8.GetBytes(String.Format("{0}:{1}", username, password)); // Not L10N
-            var authHeader = "Basic " + Convert.ToBase64String(authBytes); // Not L10N
+            byte[] authBytes = Encoding.UTF8.GetBytes(String.Format(@"{0}:{1}", username, password));
+            var authHeader = @"Basic " + Convert.ToBase64String(authBytes);
             return authHeader;   
         }
 
@@ -489,16 +489,16 @@ namespace pwiz.Skyline.Util
             Uri currentUri = ServerUri;
             
             // try again using https
-            if (ServerUri.Scheme.Equals("http")) // Not L10N
+            if (ServerUri.Scheme.Equals(@"http"))
             {
-                ServerUri = new Uri(currentUri.AbsoluteUri.Replace("http", "https")); // Not L10N
+                ServerUri = new Uri(currentUri.AbsoluteUri.Replace(@"http", @"https"));
                 return testFunc();
             }
             // We assume "https" (PanoramaUtil.ServerNameToUrl) if there is no scheme in the user provided URL.
             // Try http. LabKey Server may not be running under SSL. 
-            else if (ServerUri.Scheme.Equals("https")) // Not L10N
+            else if (ServerUri.Scheme.Equals(@"https"))
             {
-                ServerUri = new Uri(currentUri.AbsoluteUri.Replace("https", "http")); // Not L10N
+                ServerUri = new Uri(currentUri.AbsoluteUri.Replace(@"https", @"http"));
                 return testFunc();
             }
 
@@ -515,12 +515,12 @@ namespace pwiz.Skyline.Util
         {
             try
             {
-                Uri uri = new Uri(ServerUri, "project/home/getContainers.view"); // Not L10N
+                Uri uri = new Uri(ServerUri, @"project/home/getContainers.view");
                 using (var webClient = new UTF8WebClient())
                 {
                     JObject jsonResponse = webClient.Get(uri);
-                    string type = (string)jsonResponse["type"]; // Not L10N
-                    if (string.Equals(type, "project")) // Not L10N
+                    string type = (string)jsonResponse[@"type"];
+                    if (string.Equals(type, @"project"))
                     {
                         return PanoramaState.panorama;
                     }
@@ -626,7 +626,7 @@ namespace pwiz.Skyline.Util
             }
 
             JToken serverSkydVersion;
-            if (serverVersionsJson.TryGetValue("SKYD_version", out serverSkydVersion)) // Not L10N
+            if (serverVersionsJson.TryGetValue(@"SKYD_version", out serverSkydVersion))
             {
                 int version;
                 if (int.TryParse(serverSkydVersion.Value<string>(), out version))
@@ -750,7 +750,7 @@ namespace pwiz.Skyline.Util
             EnsureLogin(server);
 
             // Retrieve folders from server.
-            Uri uri = PanoramaUtil.GetContainersUri(server.URI, folder, true); // Not L10N
+            Uri uri = PanoramaUtil.GetContainersUri(server.URI, folder, true);
 
             using (var webClient = new WebClientWithCredentials(server.URI, server.Username, server.Password))
             {
@@ -770,17 +770,17 @@ namespace pwiz.Skyline.Util
                 _webClient.UploadProgressChanged += webClient_UploadProgressChanged;
                 _webClient.UploadFileCompleted += webClient_UploadFileCompleted;
 
-                var webDav = PanoramaUtil.Call(server.URI, "pipeline", folderPath, "getPipelineContainer", true); // Not L10N
+                var webDav = PanoramaUtil.Call(server.URI, @"pipeline", folderPath, @"getPipelineContainer", true);
                 JObject jsonWebDavInfo = _webClient.Get(webDav);
 
-                string webDavUrl = (string)jsonWebDavInfo["webDavURL"]; // Not L10N
+                string webDavUrl = (string)jsonWebDavInfo[@"webDavURL"];
 
                 // Upload Url minus the name of the zip file.
                 var baseUploadUri = new Uri(server.URI, webDavUrl); // webDavUrl will start with the context path (e.g. /labkey/...). We will get the correct URL even if serverUri has a context path.
                 // Use Uri.EscapeDataString instead of Uri.EscapleUriString.  
                 // The latter will not escape characters such as '+' or '#' 
                 var escapedZipFileName = Uri.EscapeDataString(zipFileName);
-                var tmpUploadUri = new Uri(baseUploadUri, escapedZipFileName + ".part"); // Not L10N
+                var tmpUploadUri = new Uri(baseUploadUri, escapedZipFileName + @".part");
                 var uploadUri = new Uri(baseUploadUri, escapedZipFileName);
 
                 lock (this)
@@ -788,8 +788,8 @@ namespace pwiz.Skyline.Util
                     // Write to a temp file first. This will be renamed after a successful upload or deleted if the upload is canceled.
                     // Add a "Temporary" header so that LabKey marks this as a temporary file.
                     // https://www.labkey.org/issues/home/Developer/issues/details.view?issueId=19220
-                    _webClient.Headers.Add("Temporary", "T"); // Not L10N
-                    _webClient.UploadFileAsync(tmpUploadUri, "PUT", zipFilePath); // Not L10N
+                    _webClient.Headers.Add(@"Temporary", @"T");
+                    _webClient.UploadFileAsync(tmpUploadUri, @"PUT", zipFilePath);
 
                     // Wait for the upload to complete
                     Monitor.Wait(this);
@@ -806,7 +806,7 @@ namespace pwiz.Skyline.Util
                     return null;
                 }
                 // Remove the "Temporary" header added while uploading the file
-                _webClient.Headers.Remove("Temporary"); // Not L10N 
+                _webClient.Headers.Remove(@"Temporary");
 
                 // Make sure the temporary file was uploaded to the server
                 ConfirmFileOnServer(tmpUploadUri, server.AuthHeader);
@@ -822,23 +822,23 @@ namespace pwiz.Skyline.Util
                 progressMonitor.UpdateProgress(_progressStatus = _progressStatus.ChangePercentComplete(-1));
 
                 // Data must be completely uploaded before we can import.
-                Uri importUrl = PanoramaUtil.Call(server.URI, "targetedms", folderPath, "skylineDocUploadApi"); // Not L10N
+                Uri importUrl = PanoramaUtil.Call(server.URI, @"targetedms", folderPath, @"skylineDocUploadApi");
 
                 // Need to tell server which uploaded file to import.
                 var dataImportInformation = new NameValueCollection
                                                 {
                                                     // For now, we only have one root that user can upload to
-                                                    {"path", "./"}, // Not L10N 
-                                                    {"file", zipFileName} // Not L10N
+                                                    {@"path", @"./"},
+                                                    {@"file", zipFileName}
                                                 };
                 
                 JToken importResponse = _webClient.Post(importUrl, dataImportInformation);
 
                 // ID to check import status.
-                var details = importResponse["UploadedJobDetails"]; // Not L10N
-                int rowId = (int)details[0]["RowId"]; // Not L10N
-                Uri statusUri = PanoramaUtil.Call(server.URI, "query", folderPath, "selectRows", // Not L10N
-                                     "query.queryName=job&schemaName=pipeline&query.rowId~eq=" + rowId); // Not L10N
+                var details = importResponse[@"UploadedJobDetails"];
+                int rowId = (int)details[0][@"RowId"];
+                Uri statusUri = PanoramaUtil.Call(server.URI, @"query", folderPath, @"selectRows",
+                                     @"query.queryName=job&schemaName=pipeline&query.rowId~eq=" + rowId);
                 bool complete = false;
                 // Wait for import to finish before returning.
                 Uri result = null;
@@ -848,23 +848,23 @@ namespace pwiz.Skyline.Util
                         return null;
 
                     JToken jStatusResponse = _webClient.Get(statusUri);
-                    JToken rows = jStatusResponse["rows"]; // Not L10N
-                    var row = rows.FirstOrDefault(r => (int)r["RowId"] == rowId); // Not L10N
+                    JToken rows = jStatusResponse[@"rows"];
+                    var row = rows.FirstOrDefault(r => (int)r[@"RowId"] == rowId);
                     if (row == null)
                         continue;
 
-                    string status = (string)row["Status"]; // Not L10N
-                    result = new Uri(server.URI, (string)row["_labkeyurl_Description"]); // Not L10N
-                    if (string.Equals(status, "ERROR")) // Not L10N
+                    string status = (string)row[@"Status"];
+                    result = new Uri(server.URI, (string)row[@"_labkeyurl_Description"]);
+                    if (string.Equals(status, @"ERROR"))
                     {
-                        var jobUrl = new Uri(server.URI, (string)row["_labkeyurl_RowId"]); // Not L10N
+                        var jobUrl = new Uri(server.URI, (string)row[@"_labkeyurl_RowId"]);
                         var e = new PanoramaImportErrorException(server.URI, jobUrl); 
                         progressMonitor.UpdateProgress(
                             _progressStatus = _progressStatus.ChangeErrorException(e));
                         throw e;
                     }
 
-                    complete = string.Equals(status, "COMPLETE"); // Not L10N
+                    complete = string.Equals(status, @"COMPLETE");
                 }
 
                 progressMonitor.UpdateProgress(_progressStatus.Complete());
@@ -874,7 +874,7 @@ namespace pwiz.Skyline.Util
 
         public override JObject SupportedVersionsJson(Server server)
         {
-            var uri = PanoramaUtil.Call(server.URI, "targetedms", null, "getMaxSupportedVersions"); // Not L10N
+            var uri = PanoramaUtil.Call(server.URI, @"targetedms", null, @"getMaxSupportedVersions");
 
             string supportedVersionsJson;
 
@@ -929,14 +929,14 @@ namespace pwiz.Skyline.Util
 
             // Destination URI.  
             // NOTE: Do not use Uri.ToString since it does not return the escaped version.
-            request.Headers.Add("Destination", destUri.AbsoluteUri); // Not L10N
+            request.Headers.Add(@"Destination", destUri.AbsoluteUri);
 
             // If a file already exists at the destination URI, it will not be overwritten.  
             // The server would return a 412 Precondition Failed status code.
-            request.Headers.Add("Overwrite", "F"); // Not L10N
+            request.Headers.Add(@"Overwrite", @"F");
 
             DoRequest(request,
-                "MOVE", // Not L10N
+                @"MOVE",
                 authHeader,
                 Resources.WebPanoramaPublishClient_RenameTempZipFile_Error_renaming_temporary_zip_file__,
                 5 // Try up to 5 times.
@@ -965,7 +965,7 @@ namespace pwiz.Skyline.Util
                 var msg = x.Message;
                 if (x.InnerException != null)
                 {
-                    msg += ". Inner Exception: " + x.InnerException.Message; // Not L10N
+                    msg += @". Inner Exception: " + x.InnerException.Message;
                 }
                 throw new Exception(
                     TextUtil.LineSeparate(errorMessage, msg), x);
@@ -977,7 +977,7 @@ namespace pwiz.Skyline.Util
             var request = (HttpWebRequest)WebRequest.Create(sourceUri.ToString());
 
             DoRequest(request,
-                "DELETE", // Not L10N
+                @"DELETE",
                 authHeader,
                 Resources.WebPanoramaPublishClient_DeleteTempZipFile_Error_deleting_temporary_zip_file__);
         }
@@ -988,7 +988,7 @@ namespace pwiz.Skyline.Util
 
             // Do a HEAD request to check if the file exists on the server.
             DoRequest(request,
-                "HEAD", // Not L10N
+                @"HEAD",
                 authHeader,
                 Resources.WebPanoramaPublishClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator_
                 );
@@ -1075,7 +1075,7 @@ namespace pwiz.Skyline.Util
         private string _csrfToken;
         private Uri _serverUri;
 
-        private static string LABKEY_CSRF = "X-LABKEY-CSRF"; // Not L10N
+        private static string LABKEY_CSRF = @"X-LABKEY-CSRF";
 
         public WebClientWithCredentials(Uri serverUri, string username, string password)
         {
@@ -1164,7 +1164,7 @@ namespace pwiz.Skyline.Util
             if (path.Length > 1)
             {
                 // Get the context path (e.g. /labkey) from the path
-                var idx = path.IndexOf("/", 1, StringComparison.Ordinal); // Not L10N
+                var idx = path.IndexOf(@"/", 1, StringComparison.Ordinal);
                 if (idx != -1 && path.Length > idx + 1)
                 {
                     path = path.Substring(0, idx + 1);
@@ -1174,16 +1174,18 @@ namespace pwiz.Skyline.Util
             // Need trailing '/' for correct URIs with new Uri(baseUri, relativeUri) method
             // With no trailing '/', new Uri("https://panoramaweb.org/labkey", "project/getContainers.view") will
             // return https://panoramaweb.org/project/getContainers.view (no labkey)
-            path = path + (path.EndsWith("/") ? "" : "/");  // Not L10N 
+            // ReSharper disable LocalizableElement
+            path = path + (path.EndsWith("/") ? "" : "/");
+            // ReSharper restore LocalizableElement
 
             ServerUri = new UriBuilder(serverUri) { Path = path, Query = string.Empty, Fragment = string.Empty }.Uri;
         }
 
         public bool RemoveContextPath()
         {
-            if (!ServerUri.AbsolutePath.Equals("/"))  // Not L10N
+            if (!ServerUri.AbsolutePath.Equals(@"/"))
             {
-                ServerUri = new UriBuilder(ServerUri){Path="/"}.Uri;  // Not L10N
+                ServerUri = new UriBuilder(ServerUri){Path=@"/"}.Uri;
                 return true;
             }
             return false;
@@ -1191,7 +1193,7 @@ namespace pwiz.Skyline.Util
 
         public bool AddLabKeyContextPath()
         {
-            if (ServerUri.AbsolutePath.Equals("/"))  // Not L10N
+            if (ServerUri.AbsolutePath.Equals(@"/"))
             {
                 ServerUri = new UriBuilder(ServerUri) { Path = PanoramaUtil.LABKEY_CTX }.Uri;
                 return true;

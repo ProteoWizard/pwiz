@@ -49,7 +49,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
             string responseBody = httpClient.GetAsync(requestUri).Result.Content.ReadAsStringAsync().Result;
             var jsonObject = JObject.Parse(responseBody);
 
-            var foldersValue = jsonObject["value"] as JArray; // Not L10N
+            var foldersValue = jsonObject[@"value"] as JArray;
             if (foldersValue == null)
             {
                 return ImmutableList<UnifiFolderObject>.EMPTY;
@@ -63,13 +63,13 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
             var response = httpClient.GetAsync(requestUri).Result;
             string responseBody = response.Content.ReadAsStringAsync().Result;
             var jsonObject = JObject.Parse(responseBody);
-            var itemsValue = jsonObject["value"] as JArray; // Not L10N
+            var itemsValue = jsonObject[@"value"] as JArray;
             if (itemsValue == null)
             {
                 return ImmutableList<UnifiFileObject>.EMPTY;
             }
             return ImmutableList.ValueOf(itemsValue.OfType<JObject>()
-                .Where(f => "SampleResult" == UnifiObject.GetProperty(f, "type")) // Not L10N
+                .Where(f => @"SampleResult" == UnifiObject.GetProperty(f, @"type"))
                 .Select(f => new UnifiFileObject(f)));
         }
 
@@ -102,16 +102,16 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
             }
         }
 
-        public override void RetryFetchContents(RemoteUrl chorusUrl)
+        public override void RetryFetchContents(RemoteUrl remoteUrl)
         {
-            var unifiUrl = (UnifiUrl) chorusUrl;
+            var unifiUrl = (UnifiUrl) remoteUrl;
             RetryFetch(GetRootContentsUrl(), GetFolders);
             RetryFetch(GetFileContentsUrl(unifiUrl), GetFiles);
         }
 
         private Uri GetRootContentsUrl()
         {
-            return new Uri(UnifiAccount.ServerUrl + "/unifi/v1/folders"); // Not L10N
+            return new Uri(UnifiAccount.ServerUrl + @"/unifi/v1/folders");
         }
 
         private Uri GetFileContentsUrl(UnifiUrl unifiUrl)
@@ -120,7 +120,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
             {
                 return null;
             }
-            string url = string.Format("/unifi/v1/folders({0})/items", unifiUrl.Id); // Not L10N
+            string url = string.Format(@"/unifi/v1/folders({0})/items", unifiUrl.Id);
             return new Uri(UnifiAccount.ServerUrl + url);
         }
     }

@@ -151,7 +151,7 @@ namespace pwiz.SkylineTestTutorial
                 WaitForConditionUI(() => previewReportDlg.IsComplete);
                 RunUI(() =>
                 {
-                    Assert.AreEqual(20 + (TestSmallMolecules ? 1 : 0), previewReportDlg.RowCount);
+                    Assert.AreEqual(20, previewReportDlg.RowCount);
                     Assert.AreEqual(58, previewReportDlg.ColumnCount);
                 });
                 PauseForScreenShot<DocumentGridForm>("Preview form", 8);
@@ -230,7 +230,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(()=>{exportReportDlg1.ReportName = customReportName;});
             }
             var previewDlg = ShowDialog<DocumentGridForm>(exportReportDlg1.ShowPreview);
-            var expectedRows = 20 + (TestSmallMolecules ? 1 : 0);
+            var expectedRows = 20;
             WaitForCondition(() => previewDlg.RowCount == expectedRows);
             Assert.AreEqual(expectedRows, previewDlg.RowCount);
             Assert.AreEqual(58, previewDlg.ColumnCount);
@@ -302,7 +302,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                     Assert.IsTrue(previewReportDlg.ColumnCount > columnCount);
-                    Assert.AreEqual((rowCount / 2) + (TestSmallMolecules ? 1 : 0), previewReportDlg.RowCount);
+                    Assert.AreEqual((rowCount / 2), previewReportDlg.RowCount);
                 });
                 PauseForScreenShot<DocumentGridForm>("Adjust the scrollbar so that the first displayed column is \"light Height\" and the last displayed column is \"heavy Product Mz\"", 17);
                 OkDialog(previewReportDlg, previewReportDlg.Close);
@@ -332,9 +332,9 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
                 manageViewsForm.ImportViews(TestFilesDir.GetTestPath(@"CustomReports\Summary_stats.skyr"))
             );
-            PauseForScreenShot<ManageViewsForm>("Manage Views form", 19);
+            PauseForScreenShot<ManageViewsForm>("Manage Reports form", 19);
             OkDialog(manageViewsForm, manageViewsForm.Close);
-            PauseForScreenShot<DocumentGridForm>("Click the views dropdown and highlight 'Summary_stats'", 20);
+            PauseForScreenShot<DocumentGridForm>("Click the Reports dropdown and highlight 'Summary_stats'", 20);
 
             RunUI(() => documentGridForm.ChooseView("Summary Statistics"));
             WaitForConditionUI(() => documentGridForm.IsComplete);
@@ -394,7 +394,6 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.SelectedPath = ((SrmTreeNode)SkylineWindow.SequenceTree.SelectedNode.Nodes[0]).Path;
             });
             WaitForGraphs();
-            PauseForScreenShot("Results Grid view subsection", 27);
 
             RunUI(() =>
             {
@@ -412,6 +411,8 @@ namespace pwiz.SkylineTestTutorial
             WaitForGraphs();
             RunUI(() => SkylineWindow.SelectedResultsIndex = 1);
             WaitForGraphs();
+
+            PauseForScreenShot("Results Grid view subsection", 27);
 
             RunDlg<ViewEditor>(resultsGridForm.NavBar.CustomizeView, resultsGridViewEditor =>
             {
@@ -434,7 +435,6 @@ namespace pwiz.SkylineTestTutorial
                 }
                 resultsGridViewEditor.OkDialog();
             });
-            PauseForScreenShot("Results grid with fewer columns (missing?)");  // No longer in tutorial?
 
             RunUI(() => SkylineWindow.SelectedNode.Expand());
 

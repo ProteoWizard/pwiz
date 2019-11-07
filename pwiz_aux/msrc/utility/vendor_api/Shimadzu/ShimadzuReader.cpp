@@ -227,9 +227,12 @@ class ShimadzuReaderImpl : public ShimadzuReader
             // first try to open with MRM reader
             ReaderResult result = reader_->OpenDataFile(systemFilepath);
 
-            // if that fails, try to load data with QTOF reader
-            if (result != ReaderResult::OK)
+            // if that fails or if the file has no transitions, try to load data with QTOF reader
+            if (result != ReaderResult::OK || getTransitions().empty())
             {
+                if (result == ReaderResult::OK)
+                    reader_->CloseDataFile();
+
                 dataObject_ = gcnew DataObject();
                 auto result2 = dataObject_->IO->LoadData(systemFilepath);
                 if (ShimadzuUtil::Failed(result2))
@@ -300,7 +303,7 @@ class ShimadzuReaderImpl : public ShimadzuReader
                 scanCount_ = lastScanNumber;
 
                 ShimadzuGeneric::PrecursorResultData^ precursorResultData;
-                dataObject_->MS->Spectrum->GetPrecoursorList(nullptr, precursorResultData);
+                dataObject_->MS->Spectrum->GetPrecursorList(gcnew ShimadzuGeneric::DdaPrecursorFilter(), precursorResultData);
                 if (precursorResultData->SurveyList->Count > 0)
                     for each(auto dependent in precursorResultData->SurveyList[0]->DependentList)
                         for each(int scan in dependent->ScanNoList)
@@ -456,7 +459,9 @@ TICChromatogramImpl::TICChromatogramImpl(const ShimadzuReaderImpl& reader, DataO
         auto& eventNumbers = reader.eventNumbersBySegment_[i - 1];
         for (short eventNumber : eventNumbers)
         {
-            chromatogramMng->GetTICChromatogram(eventTIC, i, eventNumber);
+            auto result = chromatogramMng->GetTICChromatogram(eventTIC, i, eventNumber);
+            if (ShimadzuUtil::Failed(result))
+                throw runtime_error("failed to get TIC chromatogram for segment " + lexical_cast<string>(i) + ", event " + lexical_cast<string>(eventNumber));
             for (int j = 0, end = eventTIC->ChromIntList->Length; j < end; ++j)
             {
                 int rt = eventTIC->RetTimeList[j];

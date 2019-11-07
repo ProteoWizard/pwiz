@@ -72,6 +72,16 @@ namespace pwiz.Skyline.Model.AuditLog
         public bool IgnoreName { get { return _trackAttribute.IgnoreName; } }
         public bool DiffProperties { get { return _trackAttribute.DiffProperties; } }
 
+        public int? DecimalPlaces
+        {
+            get
+            {
+                if (_trackAttribute.DecimalPlaces == -1)
+                    return null;
+                return _trackAttribute.DecimalPlaces;
+            }
+        }
+
         public CustomPropertyLocalizer CustomLocalizer
         {
             get
@@ -201,7 +211,7 @@ namespace pwiz.Skyline.Model.AuditLog
         // For Debugging
         public override string ToString()
         {
-            return string.Format("{0} ({1})", PropertyName, _propertyType.Name); // Not L10N
+            return string.Format(@"{0} ({1})", PropertyName, _propertyType.Name);
         }
     }
 

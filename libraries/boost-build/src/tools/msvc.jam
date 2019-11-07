@@ -11,6 +11,194 @@
 # (See accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
 
+#| tag::doc[]
+
+[[bbv2.reference.tools.compiler.msvc]]
+= Microsoft Visual C++
+
+The `msvc` module supports the
+http://msdn.microsoft.com/visualc/[Microsoft Visual C++] command-line
+tools on Microsoft Windows. The supported products and versions of
+command line tools are listed below:
+
+* Visual Studio 2019-14.2
+* Visual Studio 2017—14.1
+* Visual Studio 2015—14.0
+* Visual Studio 2013—12.0
+* Visual Studio 2012—11.0
+* Visual Studio 2010—10.0
+* Visual Studio 2008—9.0
+* Visual Studio 2005—8.0
+* Visual Studio .NET 2003—7.1
+* Visual Studio .NET—7.0
+* Visual Studio 6.0, Service Pack 5--6.5
+
+The user would then call the boost build executable with the toolset set
+equal to `msvc-[version number]` for example to build with Visual Studio
+2017 one could run:
+
+----
+.\b2 toolset=msvc-14.2 target
+----
+
+The `msvc` module is initialized using the following syntax:
+
+----
+using msvc : [version] : [c++-compile-command] : [compiler options] ;
+----
+
+This statement may be repeated several times, if you want to configure
+several versions of the compiler.
+
+If the version is not explicitly specified, the most recent version
+found in the registry will be used instead. If the special value `all`
+is passed as the version, all versions found in the registry will be
+configured. If a version is specified, but the command is not, the
+compiler binary will be searched in standard installation paths for that
+version, followed by PATH.
+
+The compiler command should be specified using forward slashes, and
+quoted.
+
+The following options can be provided, using
+_`<option-name>option-value syntax`_:
+
+`cflags`::
+Specifies additional compiler flags that will be used when compiling C
+sources.
+
+`cxxflags`::
+Specifies additional compiler flags that will be used when compiling C++
+sources.
+
+`compileflags`::
+Specifies additional compiler flags that will be used when compiling both C
+and C++ sources.
+
+`linkflags`::
+Specifies additional command line options that will be passed to the linker.
+
+`assembler`::
+The command that compiles assembler sources. If not specified, `ml`
+will be used. The command will be invoked after the setup script was
+executed and adjusted the PATH variable.
+
+`compiler`::
+The command that compiles C and C++ sources. If not specified, `cl`
+will be used. The command will be invoked after the setup script was
+executed and adjusted the PATH variable.
+
+`compiler-filter`::
+Command through which to pipe the output of running the compiler. For
+ example to pass the output to STLfilt.
+
+`idl-compiler`::
+The command that compiles Microsoft COM interface definition files. If
+not specified, `midl` will be used. The command will be invoked after
+the setup script was executed and adjusted the PATH variable.
+
+`linker`::
+The command that links executables and dynamic libraries. If not
+specified, `link` will be used. The command will be invoked after the
+setup script was executed and adjusted the PATH variable.
+
+`mc-compiler`::
+The command that compiles Microsoft message catalog files. If not
+specified, `mc` will be used. The command will be invoked after the
+setup script was executed and adjusted the PATH variable.
+
+`resource-compiler`::
+The command that compiles resource files. If not specified, `rc` will
+be used. The command will be invoked after the setup script was
+executed and adjusted the PATH variable.
+
+`setup`::
+The filename of the global environment setup script to run before
+invoking any of the tools defined in this toolset. Will not be used in
+case a target platform specific script has been explicitly specified
+for the current target platform. Used setup script will be passed the
+target platform identifier (x86, x86_amd64, x86_ia64, amd64 or ia64)
+as a parameter. If not specified a default script is chosen based on
+the used compiler binary, e.g. `vcvars32.bat` or `vsvars32.bat`.
+
+`setup-amd64`; `setup-i386`; `setup-ia64`::
+The filename of the target platform specific environment setup script
+to run before invoking any of the tools defined in this toolset. If
+not specified the global environment setup script is used.
+
+[[bbv2.reference.tools.compiler.msvc.64]]
+== 64-bit support
+
+Starting with version 8.0, Microsoft Visual Studio can generate binaries
+for 64-bit processor, both 64-bit flavours of x86 (codenamed
+AMD64/EM64T), and Itanium (codenamed IA64). In addition, compilers that
+are itself run in 64-bit mode, for better performance, are provided. The
+complete list of compiler configurations are as follows (we abbreviate
+AMD64/EM64T to just AMD64):
+
+* 32-bit x86 host, 32-bit x86 target
+* 32-bit x86 host, 64-bit AMD64 target
+* 32-bit x86 host, 64-bit IA64 target
+* 64-bit AMD64 host, 64-bit AMD64 target
+* 64-bit IA64 host, 64-bit IA64 target
+
+The 32-bit host compilers can be always used, even on 64-bit Windows. On
+the contrary, 64-bit host compilers require both 64-bit host processor
+and 64-bit Windows, but can be faster. By default, only 32-bit host,
+32-bit target compiler is installed, and additional compilers need to be
+installed explicitly.
+
+To use 64-bit compilation you should:
+
+1. Configure you compiler as usual. If you provide a path to the
+compiler explicitly, provide the path to the 32-bit compiler. If you try
+to specify the path to any of 64-bit compilers, configuration will not
+work.
+2. When compiling, use `address-model=64`, to generate AMD64 code.
+3. To generate IA64 code, use `architecture=ia64`
+
+The (AMD64 host, AMD64 target) compiler will be used automatically when
+you are generating AMD64 code and are running 64-bit Windows on AMD64.
+The (IA64 host, IA64 target) compiler will never be used, since nobody
+has an IA64 machine to test.
+
+It is believed that AMD64 and EM64T targets are essentially compatible.
+The compiler options `/favor:AMD64` and `/favor:EM64T`, which are
+accepted only by AMD64 targeting compilers, cause the generated code to
+be tuned to a specific flavor of 64-bit x86. Boost.Build will make use
+of those options depending on the value of the`instruction-set` feature.
+
+[[bbv2.reference.tools.compiler.msvc.winrt]]
+== Windows Runtime support
+
+Starting with version 11.0, Microsoft Visual Studio can produce binaries
+for Windows Store and Phone in addition to traditional Win32 desktop. To
+specify which Windows API set to target, use the `windows-api` feature.
+Available options are `desktop`, `store`, or `phone`. If not specified,
+`desktop` will be used.
+
+When using `store` or `phone` the specified toolset determines what
+Windows version is targeted. The following options are available:
+
+* Windows 8.0: toolset=msvc-11.0 windows-api=store
+* Windows 8.1: toolset=msvc-12.0 windows-api=store
+* Windows Phone 8.0: toolset=msvc-11.0 windows-api=phone
+* Windows Phone 8.1: toolset=msvc-12.0 windows-api=phone
+
+For example use the following to build for Windows Store 8.1 with the
+ARM architecture:
+
+----
+.\b2 toolset=msvc-12.0 windows-api=store architecture=arm
+----
+
+Note that when targeting Windows Phone 8.1, version 12.0 didn't include
+the vcvars phone setup scripts. They can be separately downloaded from
+http://blogs.msdn.com/b/vcblog/archive/2014/07/18/using-boost-libraries-in-windows-store-and-phone-applications.aspx[here].
+
+|# # end::doc[]
+
+
 ################################################################################
 #
 # MSVC Boost Build toolset module.
@@ -35,6 +223,7 @@ import project ;
 import property ;
 import property-set ;
 import rc ;
+import sequence ;
 import set ;
 import toolset ;
 import type ;
@@ -281,6 +470,7 @@ rule configure-version-specific ( toolset : version : conditions )
         toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-i386)  : "/MACHINE:X86" ;
         toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-ia64)  : "/MACHINE:IA64" ;
         toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-arm)   : "/MACHINE:ARM" ;
+        toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-arm64) : "/MACHINE:ARM64" ;
 
         # Make sure that manifest will be generated even if there is no
         # dependencies to put there.
@@ -1091,7 +1281,15 @@ local rule generate-setup-cmd ( version : command : parent : options * : cpu : g
         }
         else
         {
-            if [ MATCH "(14.1)" : $(version) ]
+            if [ MATCH "(14.2)" : $(version) ]
+            {
+                if $(.debug-configuration)
+                {
+                    ECHO 'notice\: "[generate-setup-cmd]" $(version) is 14.2' ;
+                }
+                parent = [ path.native [ path.join  $(parent) "..\\..\\..\\..\\..\\Auxiliary\\Build" ] ] ;
+            }
+            else if [ MATCH "(14.1)" : $(version) ]
             {
                 if $(.debug-configuration)
                 {
@@ -1153,6 +1351,11 @@ local rule set-setup-command ( targets * : properties * )
     if ! [ on $(targets) return $(.SETUP) ]
     {
         local setup-script = [ on $(targets) return $(.SETUP-SCRIPT) ] ;
+        # If no setup script was given, then we don't need to do anything.
+        if ! $(setup-script)
+        {
+            return ;
+        }
         local setup-options = [ on $(targets) return $(.SETUP-OPTIONS) ] ;
         local key = .setup-command-$(setup-script:E=)-$(setup-options:E=) ;
         if ! $($(key))
@@ -1187,12 +1390,15 @@ local rule set-setup-command ( targets * : properties * )
 #
 local rule configure-really ( version ? : options * )
 {
-    local v = $(version) ;
+    local command = [ feature.get-values <command> : $(options) ] ;
 
-    # Decide what the 'default' version is.
-    if ! $(v)
+    if ! $(version) && ! $(command)
     {
+        # We were given neither a command, nor a version.
         # Take the best registered (i.e. auto-detected) version.
+        # FIXME: consider whether an explicitly specified setup script
+        # should disable this logic.  We already won't get here if
+        # there is a user specified command.
         version = [ $(.versions).all ] ;
         for local known in $(.known-versions)
         {
@@ -1202,59 +1408,31 @@ local rule configure-really ( version ? : options * )
                 break ;
             }
         }
+        # version might still have multiple elements if no versions
+        # were auto-detected, but an unknown version was configured
+        # manually.
         version = $(version[1]) ;
-        v = $(version) ;
-
-        # Note: 'version' can still be empty at this point if no versions have
-        # been auto-detected.
-        version ?= "default" ;
     }
 
-    # Version alias -> real version number.
-    version = [ resolve-possible-msvc-version-alias $(version) ] ;
-
-    # Check whether the selected configuration is already in use.
-    if $(version) in [ $(.versions).used ]
+    # Handle a user-provided command, and deduce the version if necessary.
+    # If the user-requested version was not autodetected and no command
+    # was given, attempt to find it in PATH
+    if $(command) || ! ( $(version:E=default) in [ $(.versions).all ] )
     {
-        # Allow multiple 'toolset.using' calls for the same configuration if the
-        # identical sets of options are used.
-        if $(options) && ( $(options) != [ $(.versions).get $(version) : options ] )
+        local found-command = [ common.get-invocation-command-nodefault msvc : cl.exe : $(command) ] ;
+
+        if $(found-command)
         {
-            import errors ;
-            errors.error "MSVC toolset configuration: Toolset version"
-                "'$(version)' already configured." ;
+            command = $(found-command) ;
+            if ! $(command:D)
+            {
+                local path = [ common.get-absolute-tool-path $(command) ] ;
+                command = $(command:R=$(path)) ;
+            }
         }
-    }
-    else
-    {
-        # Register a new configuration.
-        $(.versions).register $(version) ;
-
-        # Add user-supplied to auto-detected options.
-        options = [ $(.versions).get $(version) : options ] $(options) ;
-
-        # Mark the configuration as 'used'.
-        $(.versions).use $(version) ;
-
-        # Generate conditions and save them.
-        local conditions = [ common.check-init-parameters msvc : version $(v) ]
-            ;
-
-        $(.versions).set $(version) : conditions : $(conditions) ;
-
-        local command = [ feature.get-values <command> : $(options) ] ;
-
-        # For 14.1 we need the exact version as MS is planning rolling updates
-        # that will cause our `setup-cmd` to become invalid
-        exact-version = [ MATCH "(14\.10\.[0-9\.]+)" : $(command) ] ;
-
-        # If version is specified, we try to search first in default paths, and
-        # only then in PATH.
-        command = [ common.get-invocation-command msvc : cl.exe : $(command) :
-            [ default-paths $(version) ] : $(version) ] ;
-
-        if ( ! $(version) || $(version) = "default" ) && ! $(command:D)
+        else
         {
+            # If we still failed to find cl.exe, bail out.
             ECHO ;
             ECHO warning\:
                 "Did not find command for MSVC toolset."
@@ -1265,9 +1443,8 @@ local rule configure-really ( version ? : options * )
                 "build from the 'Visual Studio Command Prompt for VS 2017'."
                 ;
             ECHO ;
+            command ?= cl.exe ;
         }
-
-        common.handle-options msvc : $(conditions) : $(command) : $(options) ;
 
         if ! $(version)
         {
@@ -1275,7 +1452,11 @@ local rule configure-really ( version ? : options * )
             # version from the path.
             # FIXME: We currently detect both Microsoft Visual Studio 9.0 and
             # 9.0express as 9.0 here.
-            if [ MATCH "(MSVC\\14.1)" : $(command) ]
+            if [ MATCH "(MSVC\\\\14.2)" : $(command) ]
+            {
+                version = 14.2 ;
+            }
+            else if [ MATCH "(MSVC\\\\14.1)" : $(command) ]
             {
                 version = 14.1 ;
             }
@@ -1321,13 +1502,51 @@ local rule configure-really ( version ? : options * )
                 version = 6.0 ;
             }
         }
+    }
+
+    # Version alias -> real version number.
+    version = [ resolve-possible-msvc-version-alias $(version) ] ;
+
+    # Check whether the selected configuration is already in use.
+    if $(version) in [ $(.versions).used ]
+    {
+        # Allow multiple 'toolset.using' calls for the same configuration if the
+        # identical sets of options are used.
+        if $(options) && ( $(options) != [ $(.versions).get $(version) : options ] )
+        {
+            import errors ;
+            errors.user-error "MSVC toolset configuration: Toolset version"
+                "'$(version)' already configured." ;
+        }
+    }
+    else
+    {
+        # Register a new configuration.
+        $(.versions).register $(version) ;
+        $(.versions).set $(version) : options : $(options) ;
+
+        # Mark the configuration as 'used'.
+        $(.versions).use $(version) ;
+
+        # Generate conditions and save them.
+        local conditions = [ common.check-init-parameters msvc : version $(version) ] ;
+
+        $(.versions).set $(version) : conditions : $(conditions) ;
+
+        command ?= [ $(.versions).get $(version) : default-command ] ;
+
+        # For 14.1+ we need the exact version as MS is planning rolling updates
+        # that will cause our `setup-cmd` to become invalid
+        exact-version = [ MATCH "(14\.[1-9][0-9]\.[0-9\.]+)" : $(command) ] ;
+
+        common.handle-options msvc : $(conditions) : $(command) : $(options) ;
 
         # Generate and register setup command.
 
         local below-8.0 = [ MATCH "^([67]\\.)" : $(version) ] ;
         local below-11.0 = [ MATCH "^([6789]\\.|10\\.)" : $(version) ] ;
         
-        local cpu = i386 amd64 ia64 arm ;
+        local cpu = i386 amd64 ia64 arm arm64 ;
         if $(below-8.0)
         {
             cpu = i386 ;
@@ -1341,6 +1560,7 @@ local rule configure-really ( version ? : options * )
         local setup-i386 ;
         local setup-ia64 ;
         local setup-arm ;
+        local setup-arm64 ;
         local setup-phone-i386 ;
         local setup-phone-arm ;
 
@@ -1398,6 +1618,7 @@ local rule configure-really ( version ? : options * )
             local default-setup-i386  = vcvars32.bat ;
             local default-setup-ia64  = vcvarsx86_ia64.bat ;
             local default-setup-arm   = vcvarsx86_arm.bat ;
+            local default-setup-arm64 = vcvarsx86_arm64.bat ;
             local default-setup-phone-i386 = vcvarsphonex86.bat ;
             local default-setup-phone-arm = vcvarsphonex86_arm.bat ;
 
@@ -1409,6 +1630,7 @@ local rule configure-really ( version ? : options * )
             local default-global-setup-options-i386  = x86 ;
             local default-global-setup-options-ia64  = x86_ia64 ;
             local default-global-setup-options-arm   = x86_arm ;
+            local default-global-setup-options-arm64 = x86_arm64 ;
 
             # When using 64-bit Windows, and targeting 64-bit, it is possible to
             # use a native 64-bit compiler, selected by the "amd64" & "ia64"
@@ -1426,18 +1648,9 @@ local rule configure-really ( version ? : options * )
             # Windows, the above test will fail (since WOW64 simulates a 32-bit
             # environment, including environment values).  So check the WOW64
             # variable PROCESSOR_ARCHITEW6432 as well.
-            if [ MATCH ^(AMD64) : [ os.environ PROCESSOR_ARCHITEW6432 ] ] && $(global-setup)
+            if [ MATCH ^(AMD64) : [ os.environ PROCESSOR_ARCHITEW6432 ] ]
             {
-                # Express editions do not have native 64-bit tools, use x86 cross-compile instead
-                local result = [ SHELL "\"$(global-setup)\" amd64" ] ;
-                if [ MATCH (missing) : $(result) ]
-                {
-                    default-global-setup-options-amd64 = x86_amd64 ;
-                }
-                else
-                {
-                    default-global-setup-options-amd64 = amd64 ;
-                }
+                default-global-setup-options-amd64 = amd64 ;
             }
             # TODO: The same 'native compiler usage' should be implemented for
             # the Itanium platform by using the "ia64" parameter. For this
@@ -1498,6 +1711,7 @@ local rule configure-really ( version ? : options * )
         local default-assembler-i386  = "ml -coff" ;
         local default-assembler-ia64  = ias ;
         local default-assembler-ia64  = armasm ;
+        local default-assembler-arm64 = armasm64 ;
 
         assembler = [ feature.get-values <assembler> : $(options) ] ;
 
@@ -1524,14 +1738,14 @@ local rule configure-really ( version ? : options * )
             {
                 for local cpu-condition in $(cpu-conditions)
                 {
-                    ECHO "notice: [msvc-cfg] condition: '$(cpu-condition)', setup: '$(setup-$(c))'" ;
+                    ECHO "notice: [msvc-cfg] condition: '$(cpu-condition)', setup: '$(setup-$(c):J= )'" ;
                 }
             }
 
             local cpu-assembler = $(assembler) ;
             cpu-assembler ?= $(default-assembler-$(c)) ;
 
-            for api in desktop store phone
+            for local api in desktop store phone
             {
                 local setup-script = $(setup-$(c)) ;
                 if $(api) = phone
@@ -1603,49 +1817,50 @@ local rule configure-really ( version ? : options * )
 #
 local rule default-path ( version )
 {
-    # Use auto-detected path if possible.
-    local result = [ feature.get-values <command> : [ $(.versions).get $(version)
-        : options ] ] ;
-
-    if $(result)
-    {
-        result = $(result:D) ;
-    }
-    else
+    local result ;
     {
         # try to use vswhere
-        local pseudo_env_VS150 ;
-        if $(version) = 14.1 || $(version) = "default"
+        local pseudo_env_VSCOMNTOOLS ;
+        local all-env-paths ;
+        local root = [ os.environ "ProgramFiles(x86)" ] ;
+        if ( ! $(root) )
+        {
+            root = [ os.environ "ProgramFiles" ] ;
+        }
+        local vswhere = "$(root)\\Microsoft Visual Studio\\Installer\\vswhere.exe" ;
+        if $(version) in 14.1 14.2 default && [ path.exists $(vswhere) ]
         {
             local req = "-requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64" ;
             local prop = "-property installationPath" ;
-            local limit = "-version \"[15.0,16.0)\"" ;
-            local root = [ os.environ "ProgramFiles(x86)" ] ;
-            if ( ! $(root) )
+            local limit ;
+
+            if $(version) = 14.2 || $(version) = "default"
             {
-                root = [ os.environ "ProgramFiles" ] ;
+                limit = "-version \"[16.0,17.0)\"" ;
             }
-            local vswhere = "$(root)\\Microsoft Visual Studio\\Installer\\vswhere.exe" ;
-            if ( [ path.exists $(vswhere) ] )
+            else if $(version) = 14.1
             {
-                local vmwhere_cmd = "\"$(vswhere)\" -latest -products * $(req) $(prop) $(limit)" ;
-                local shell_ret = [ SPLIT_BY_CHARACTERS [ SHELL $(vmwhere_cmd) ] : "\n" ] ;
-                pseudo_env_VS150 = [ path.native [ path.join $(shell_ret) "\\Common7\\Tools" ] ] ;
+                limit = "-version \"[15.0,16.0)\"" ;
             }
+
+            local vswhere_cmd = "\"$(vswhere)\" -latest -products * $(req) $(prop) $(limit)" ;
+            local shell_ret = [ SPLIT_BY_CHARACTERS [ SHELL $(vswhere_cmd) ] : "\n" ] ;
+            pseudo_env_VSCOMNTOOLS = [ path.native [ path.join $(shell_ret) "\\Common7\\Tools" ] ] ;
+            if ! [ path.exists $(pseudo_env_VSCOMNTOOLS) ]
+            {
+                return ; # Not found.  If we have vswhere, assume that it works.
+            }
+            all-env-paths = $(pseudo_env_VSCOMNTOOLS) ;
+        }
+        else
+        {
+            all-env-paths = [ sequence.transform os.environ
+                : $(.version-$(version)-env) ] ;
         }
 
         # Check environment or previous path_VS150
-        for local env in $(.version-$(version)-env)
+        for local env-path in $(all-env-paths)
         {
-            local env-path ;
-            if ( $(pseudo_env_VS150) && [ path.exists $(pseudo_env_VS150) ] )
-            {
-                env-path = $(pseudo_env_VS150) ;
-            }
-            else
-            {
-                env-path = [ os.environ $(env) ] ;
-            }
             if $(env-path) && $(.version-$(version)-path)
             {
                 for local bin-path in $(.version-$(version)-path)
@@ -1668,28 +1883,6 @@ local rule default-path ( version )
     return $(result) ;
 }
 
-
-# Returns either the default installation path (if 'version' is not empty) or
-# list of all known default paths (if no version is given)
-#
-local rule default-paths ( version ? )
-{
-    local possible-paths ;
-
-    if $(version)
-    {
-        possible-paths += [ default-path $(version) ] ;
-    }
-    else
-    {
-        for local i in $(.known-versions)
-        {
-            possible-paths += [ default-path $(i) ] ;
-        }
-    }
-
-    return $(possible-paths) ;
-}
 
 
 rule get-rspline ( target : lang-opt )
@@ -1894,6 +2087,8 @@ local rule register-toolset-really ( )
     toolset.flags msvc.compile CFLAGS <warnings>on : /W3 ;
     toolset.flags msvc.compile CFLAGS <warnings>off : /W0 ;
     toolset.flags msvc.compile CFLAGS <warnings>all : /W4 ;
+    toolset.flags msvc.compile CFLAGS <warnings>extra : /W4 ;
+    toolset.flags msvc.compile CFLAGS <warnings>pedantic : /W4 ;
     toolset.flags msvc.compile CFLAGS <warnings-as-errors>on : /WX ;
 
     toolset.flags msvc.compile C++FLAGS  <exception-handling>on/<asynch-exceptions>off/<extern-c-nothrow>off : /EHs ;
@@ -2016,7 +2211,7 @@ local rule register-configuration ( version : path ? )
             }
 
             $(.versions).register $(version) ;
-            $(.versions).set $(version) : options : <command>$(command) ;
+            $(.versions).set $(version) : default-command : $(command) ;
         }
     }
 }
@@ -2063,6 +2258,9 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
     <architecture>arm/<address-model>
     <architecture>arm/<address-model>32 ;
 
+.cpu-arch-arm64 =
+    <architecture>arm/<address-model>
+    <architecture>arm/<address-model>64 ;
 
 # Supported CPU types (only Itanium optimization options are supported from
 # VC++ 2005 on). See
@@ -2075,7 +2273,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
                      conroe conroe-xe conroe-l allendale merom
                      merom-xe kentsfield kentsfield-xe penryn wolfdale
                      yorksfield nehalem sandy-bridge ivy-bridge haswell
-                     broadwell skylake skylake-avx512 cannonlake ;
+                     broadwell skylake skylake-avx512 cannonlake icelake ;
 .cpu-type-amd64    = k8 opteron athlon64 athlon-fx k8-sse3 opteron-sse3
                      athlon64-sse3 amdfam10 barcelona bdver1 bdver2 bdver3
                      bdver4 btver1 btver2 znver1 ;
@@ -2087,7 +2285,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
                      armv7 armv7s ;
 
 # Known toolset versions, in order of preference.
-.known-versions = 14.1 14.0 12.0 11.0 10.0 10.0express 9.0 9.0express 8.0 8.0express 7.1
+.known-versions = 14.2 14.1 14.0 12.0 11.0 10.0 10.0express 9.0 9.0express 8.0 8.0express 7.1
     7.1toolkit 7.0 6.0 ;
 
 # Version aliases.
@@ -2100,7 +2298,6 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 .version-alias-11 = 11.0 ;
 .version-alias-12 = 12.0 ;
 .version-alias-14 = 14.0 ;
-.version-alias-14.1 = 14.1 ;
 
 # Names of registry keys containing the Visual C++ installation path (relative
 # to "HKEY_LOCAL_MACHINE\SOFTWARE\\Microsoft").
@@ -2130,6 +2327,11 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
     "Microsoft Visual Studio/2017/*/VC/Tools/MSVC/*/bin/Host*/*"
     ;
 .version-14.1-env = VS150COMNTOOLS ProgramFiles ProgramFiles(x86) ;
+.version-14.2-path =
+    "../../VC/Tools/MSVC/*/bin/Host*/*"
+    "Microsoft Visual Studio/2019/*/VC/Tools/MSVC/*/bin/Host*/*"
+    ;
+.version-14.2-env = VS160COMNTOOLS ProgramFiles ProgramFiles(x86) ;
 
 # Auto-detect all the available msvc installations on the system.
 auto-detect-toolset-versions ;

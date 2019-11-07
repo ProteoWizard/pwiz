@@ -30,6 +30,7 @@
 #include <set>
 #include <deque>
 #include <stack>
+#include <queue>
 #include <algorithm>
 #include <numeric>
 #include <utility>
@@ -43,6 +44,7 @@ using std::set;
 using std::multiset;
 using std::deque;
 using std::stack;
+using std::queue;
 using std::pair;
 using std::make_pair;
 
@@ -149,6 +151,14 @@ namespace std
         o << " )";
 
         return o;
+    }
+
+    template<typename KeyT>
+    set<KeyT> operator- (const set<KeyT>& lhs, const set<KeyT>& rhs)
+    {
+        set<KeyT> result;
+        set_difference(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), insert_iterator<set<KeyT>>(result, result.begin()));
+        return result;
     }
 }
 

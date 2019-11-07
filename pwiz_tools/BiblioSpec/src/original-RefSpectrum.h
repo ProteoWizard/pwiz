@@ -35,8 +35,11 @@
 #include <vector>
 #include "original-Spectrum.h"
 #include "original-RefFile.h"
+#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Stream.hpp"
+#include "pwiz/utility/misc/Container.hpp"
 
-using namespace std;
+using std::binary_function;
 
 enum MODS { Meth, Cl };
 

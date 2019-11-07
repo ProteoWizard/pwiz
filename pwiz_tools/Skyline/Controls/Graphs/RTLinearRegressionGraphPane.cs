@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -401,8 +401,12 @@ namespace pwiz.Skyline.Controls.Graphs
                         // Calculate and refine regression on background thread
                         lock (_requestLock)
                         {
-                            ActionUtil.RunAsync(() => UpdateAndRefine(_requestContext, _cancellationTokenSource),
-                                "Update and refine regression data"); // Not L10N
+                            // 
+                            var ctx = _requestContext;
+                            var token = _cancellationTokenSource.Token;
+
+                            ActionUtil.RunAsync(() => UpdateAndRefine(ctx, token),
+                                @"Update and refine regression data");
                         }
                         Title.Text = Resources.RTLinearRegressionGraphPane_UpdateGraph_Calculating___;
                         shouldDrawGraph = false;
@@ -542,7 +546,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         private void UpdateAndRefine(RequestContext requestContext,
-            CancellationTokenSource cancellationTokenSource)
+            CancellationToken cancellationToken)
         {
             try
             {
@@ -552,16 +556,16 @@ namespace pwiz.Skyline.Controls.Graphs
                     regressionSettings.Refine, regressionSettings.PointsType, regressionSettings.RegressionMethod,
                     regressionSettings.OriginalIndex,
                     // ReSharper disable once InconsistentlySynchronizedField
-                    cancellationTokenSource.Token);
+                    cancellationToken);
 
                 if (regressionSettings.Refine && !IsDataRefined(newData))
                 {
                     var data = newData;
-                    newData = Refine(newData, () => cancellationTokenSource.IsCancellationRequested ||
+                    newData = Refine(newData, () => cancellationToken.IsCancellationRequested ||
                                                     !IsValidFor(data, GraphSummary.DocumentUIContainer.Document));
                 }
 
-                ThreadingHelper.CheckCanceled(cancellationTokenSource.Token);
+                ThreadingHelper.CheckCanceled(cancellationToken);
 
                 // Update the graph on the UI thread.
                 lock (_requestLock)
@@ -575,17 +579,27 @@ namespace pwiz.Skyline.Controls.Graphs
                     requestContext.Settings = null;
                 }
 
-                try
+                if (GraphSummary.IsHandleCreated)
                 {
-                    GraphSummary.Invoke(new Action(() =>
+                    try
                     {
-                        if (!cancellationTokenSource.IsCancellationRequested)
-                            UpdateGraph(false);
-                    }));
-                }
-                catch (ObjectDisposedException)
-                {
-                    // Can happen during tests
+                        GraphSummary.Invoke(new Action(() =>
+                        {
+                            try
+                            {
+                                if (!cancellationToken.IsCancellationRequested)
+                                    UpdateGraph(false);
+                            }
+                            catch (Exception ex)
+                            {
+                                Program.ReportException(ex);
+                            }
+                        }));
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        // Can happen during tests
+                    }
                 }
             }
             catch (OperationCanceledException)
@@ -666,7 +680,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 _targetIndex = targetIndex;
                 _originalIndex = originalIndex;
                 if(IsRunToRun && _originalIndex < 0)
-                    throw new ArgumentException("Original index cannot not be negative if we are doing run to run regression"); // Not L10N
+                    throw new ArgumentException(@"Original index cannot not be negative if we are doing run to run regression");
                 _bestResult = bestResult && !IsRunToRun;
                 _threshold = threshold;
                 _thresholdPrecision = thresholdPrecision;
@@ -685,8 +699,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var origTimesDict = IsRunToRun ? new Dictionary<Target, double>() : null;
                 var targetTimesDict = IsRunToRun ? new Dictionary<Target, double>() : null;
                 
-                // CONSIDER: Retention time prediction for small molecules?
-                foreach (var nodePeptide in document.Peptides)
+                foreach (var nodePeptide in document.Molecules)
                 {
                     ThreadingHelper.CheckCanceled(token);
                     index++;
@@ -1347,10 +1360,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 var conversion = GetConversion(regression);
                 if (conversion == null || statistics == null)
                 {
-                    label = String.Format("{0} = ?, {1} = ?\n" + "{2} = ?\n" + "r = ?", // Not L10N
+                    // ReSharper disable LocalizableElement
+                    label = String.Format("{0} = ?, {1} = ?\n" + "{2} = ?\n" + "r = ?",
                                           Resources.Regression_slope,
                                           Resources.Regression_intercept,
                                           Resources.GraphData_AddRegressionLabel_window);
+                    // ReSharper restore LocalizableElement
                 }
                 else
                 {

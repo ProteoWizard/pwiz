@@ -243,7 +243,7 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(editListUI, editListUI.OkDialog);
                 RunUI(() => peptideSettingsUI.PickedLibraries = new[] { libname });
 
-                // Check error cases for resolving power (caused unexpected excption)
+                // Check error cases for resolving power (caused unexpected exception)
                 RunUI(() =>
                 {
                     peptideSettingsUI.IsUseSpectralLibraryDriftTimes = true;
@@ -789,7 +789,8 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
             var progress = new SilentProgressMonitor();
             var exported = testFilesDir.GetTestPath("export.blib");
-            Skyline.SkylineWindow.ExportSpectralLibrary(SkylineWindow.DocumentFilePath, SkylineWindow.Document, exported, progress);
+            new SpectralLibraryExporter(SkylineWindow.Document, SkylineWindow.DocumentFilePath)
+                .ExportSpectralLibrary(exported, progress);
             var refSpectra = GetRefSpectra(exported);
             Assert.IsTrue(refSpectra.All(r => (r.IonMobility??0) > 0));
 

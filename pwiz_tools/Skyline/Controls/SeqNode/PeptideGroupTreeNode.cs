@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -61,7 +61,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             {
                 if (DocNode.IsNonProteomic)
                 {
-                    return Resources.PeptideGroupTreeNode_Heading_Molecule_Group;
+                    return Resources.PeptideGroupTreeNode_Heading_Molecule_List;
                 }
                 return Model.Id is FastaSequence
                     ? Resources.PeptideGroupTreeNode_Heading_Protein
@@ -234,7 +234,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         #region ITipProvider Members
 
         private const string X80 =
-            "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"; // Not L10N
+            @"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 
         public override bool HasTip
         {
@@ -369,13 +369,13 @@ namespace pwiz.Skyline.Controls.SeqNode
 
                 if (elipsis)
                 {
-                    SizeF sizeElipsis = g.MeasureString(" ...", rt.FontNormal); // Not L10N
+                    SizeF sizeElipsis = g.MeasureString(@" ...", rt.FontNormal);
                     width -= sizeElipsis.Width;
                 }
 
                 float widthTotal = 0;
                 PointF ptDraw = new PointF(widthTotal, height);
-                if (peptideList && aa[start] == 'X') // Not L10N: For amino acid comparison
+                if (peptideList && aa[start] == 'X') // For amino acid comparison
                     start++;
                 for (int i = start; i < aa.Length; i++)
                 {
@@ -398,7 +398,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                                 brush = (chosen ? rt.BrushChosen : rt.BrushChoice);
                         }
                     }
-                    if (peptideList && aa[i] == 'X') // Not L10N: For amino acid comparison
+                    if (peptideList && aa[i] == 'X') // For amino acid comparison
                         return i + 1;
                     string s = aa.Substring(i, 1);
                     SizeF sizeAa = g.MeasureString(s, font);
@@ -406,7 +406,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                     if (widthTotal > width)
                     {
                         if (elipsis && draw)
-                            g.DrawString(" ...", rt.FontNormal, rt.BrushNormal, ptDraw); // Not L10N
+                            g.DrawString(@" ...", rt.FontNormal, rt.BrushNormal, ptDraw);
                         return i;
                     }
                     widthTotal -= 4;    // Remove MeasureString padding.
@@ -442,21 +442,21 @@ namespace pwiz.Skyline.Controls.SeqNode
             if (!Equals(DocNode.Name, fastaSeq.Name))
             {
                 int oldNameLen = (fastaSeq.Name != null ? fastaSeq.Name.Length : 0);
-                fastaText = ">" + DocNode.Name + fastaText.Substring(oldNameLen + 1); // Not L10N
+                fastaText = @">" + DocNode.Name + fastaText.Substring(oldNameLen + 1);
             }
             data.SetData(DataFormats.Text, fastaText);
 
             var sb = new StringBuilder();
-            sb.Append("<b>").Append(DocNode.Name).Append("</b> "); // Not L10N
-            sb.Append("<i>"); // Not L10N
+            sb.Append(@"<b>").Append(DocNode.Name).Append(@"</b> ");
+            sb.Append(@"<i>");
             if (string.IsNullOrEmpty(DocNode.Description)) // CONSIDER bspratt - a more complete set of data here, maybe - accession etc
-                sb.AppendLine("<br/>"); // Not L10N
+                sb.AppendLine(@"<br/>");
             else
             {
                 foreach (string desc in Descriptions)
-                    sb.Append(desc).AppendLine("<br/>"); // Not L10N
+                    sb.Append(desc).AppendLine(@"<br/>");
             }
-            sb.Append("</i>"); // Not L10N
+            sb.Append(@"</i>");
 
             using (var peptides = GetChoices(true).GetEnumerator())
             {
@@ -479,7 +479,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                                 // Need a new font tag, if the chosen state is changing
                                 if (chosenNew != chosen)
                                 {
-                                    sb.Append("</font>"); // Not L10N
+                                    sb.Append(@"</font>");
                                     inPeptide = false;
                                 }
                                 chosen = chosenNew;
@@ -490,21 +490,23 @@ namespace pwiz.Skyline.Controls.SeqNode
                             if (!inPeptide)
                             {
                                 sb.Append(chosen
-                                              ? "<font style=\"font-weight: bold; color: blue\">" // Not L10N
-                                              : "<font style=\"font-weight: bold\">"); // Not L10N
+                                              // ReSharper disable LocalizableElement
+                                              ? "<font style=\"font-weight: bold; color: blue\">"
+                                              : "<font style=\"font-weight: bold\">");
+                                              // ReSharper restore LocalizableElement
                                 inPeptide = true;
                             }
                         }
                         else if (inPeptide)
                         {
-                            sb.Append("</font>"); // Not L10N
+                            sb.Append(@"</font>");
                             inPeptide = false;
                         }
                     }
                     sb.Append(aa[i]);
                 }
                 if (inPeptide)
-                    sb.Append("</font>"); // Not L10N
+                    sb.Append(@"</font>");
             }
 
             data.SetData(DataFormats.Html, HtmlFragment.ClipBoardText(sb.ToString()));                

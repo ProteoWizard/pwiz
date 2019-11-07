@@ -40,10 +40,17 @@ namespace pwiz.Skyline.Model.Results
         public long locationScanIds;
         // Version 13 file header addition
         public float ticArea;
+        // Version 14 file header addition
+        public int lenSampleId;
+        public int lenSerialNumber;
 
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         public static int GetStructSize(CacheFormatVersion formatVersion)
         {
+            if (formatVersion >= CacheFormatVersion.Fourteen)
+            {
+                return 60;
+            }
             if (formatVersion >= CacheFormatVersion.Thirteen)
             {
                 return 52;
@@ -73,6 +80,6 @@ namespace pwiz.Skyline.Model.Results
                 return 12;
             }
         }
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
     }
 }

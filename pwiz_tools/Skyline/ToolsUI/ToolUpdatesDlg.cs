@@ -31,7 +31,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.ToolsUI
 {
-    public partial class ToolUpdatesDlg : FormEx
+    public partial class ToolUpdatesDlg : ModeUIInvariantFormEx // Neither proteomic nor small mol, never wants the "peptide"=>"molecule" translation
     {
         private readonly SkylineWindow _parent;
         private readonly IDictionary<ToolUpdateInfo, ICollection<ToolDescription>> _tools;
@@ -142,7 +142,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             successfulDownloads = new Collection<ToolUpdateInfo>();
             failedDownloads = new Collection<string>();
-            ToolDir = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "ToolDir")); // Not L10N
+            ToolDir = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), @"ToolDir"));
 
             foreach (var tool in tools)
             {
@@ -264,7 +264,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public static string FormatFailureMessage(string toolName, string errorMsg)
         {
-            return string.Format("{0}: {1}", toolName, errorMsg); // Not L10N
+            return string.Format(@"{0}: {1}", toolName, errorMsg);
         }
 
         #region Functional test support

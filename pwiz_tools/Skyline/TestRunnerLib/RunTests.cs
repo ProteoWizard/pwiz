@@ -84,7 +84,7 @@ namespace TestRunnerLib
         public long ManagedMemoryBytes { get; private set; }
         public bool AccessInternet { get; set; }
         public bool RunPerfTests { get; set; }
-        public bool AddSmallMoleculeNodes{ get; set; }
+        public bool RecordAuditLogs { get; set; }
         public bool RunsSmallMoleculeVersions { get; set; }
         public bool LiveReports { get; set; }
         public bool TeamCityTestDecoration { get; set; }
@@ -93,7 +93,12 @@ namespace TestRunnerLib
         {
             get { return !RunPerfTests; }   // 12-hour perf runs get much slower with system heap reporting
         }
-      
+
+        public static bool WriteMiniDumps
+        {
+            get { return false; }
+        }
+
         public RunTests(
             bool demoMode,
             bool buildMode,
@@ -101,8 +106,8 @@ namespace TestRunnerLib
             bool internet,
             bool showStatus,
             bool perftests,
-            bool addsmallmoleculenodes,
             bool runsmallmoleculeversions,
+            bool recordauditlogs,
             bool teamcityTestDecoration,
             IEnumerable<string> pauseForms,
             int pauseSeconds = 0,
@@ -129,12 +134,13 @@ namespace TestRunnerLib
             Skyline.Set("UnitTestTimeoutMultiplier", timeoutMultiplier);
             Skyline.Set("PauseSeconds", pauseSeconds);
             Skyline.Set("PauseForms", pauseForms != null ? pauseForms.ToList() : null);
+            Skyline.Set("Log", (Action<string>)(s => Log(s)));
             Skyline.Run("Init");
 
             AccessInternet = internet;
             RunPerfTests = perftests;
-            AddSmallMoleculeNodes= addsmallmoleculenodes;  // Add the magic small molecule test node to all documents?
             RunsSmallMoleculeVersions = runsmallmoleculeversions;  // Run the small molecule version of various tests?
+            RecordAuditLogs = recordauditlogs; // Replace or create audit logs for tutorial tests
             LiveReports = true;
             TeamCityTestDecoration = teamcityTestDecoration;
 
@@ -208,7 +214,7 @@ namespace TestRunnerLib
 
             var dumpFileName = string.Format("{0}.{1}_{2}_{3}_{4:yyyy_MM_dd__hh_mm_ss_tt}.dmp", pass, testNumber, test.TestMethod.Name, Language.TwoLetterISOLanguageName, DateTime.Now);
 
-            if (test.MinidumpLeakThreshold != null)
+            if (WriteMiniDumps && test.MinidumpLeakThreshold != null)
             {
                 try
                 {
@@ -220,8 +226,9 @@ namespace TestRunnerLib
 
                     Directory.CreateDirectory(dmpDir);
 
-                    if(!MiniDump.WriteMiniDump(Path.Combine(dmpDir, "pre_" + dumpFileName)))
-                        Log("[WARNING] Failed to write pre mini dump (GetLastError() = {0})", Marshal.GetLastWin32Error());
+                    var path = Path.Combine(dmpDir, "pre_" + dumpFileName);
+                    if (!MiniDump.WriteMiniDump(path))
+                        Log("[WARNING] Failed to write pre mini dump to '{0}' (GetLastError() = {1})", path, Marshal.GetLastWin32Error());
                 }
                 catch(Exception ex)
                 {
@@ -237,11 +244,11 @@ namespace TestRunnerLib
                 // Set the TestContext.
                 TestContext.Properties["AccessInternet"] = AccessInternet.ToString();
                 TestContext.Properties["RunPerfTests"] = RunPerfTests.ToString();
-                TestContext.Properties["TestSmallMolecules"] = AddSmallMoleculeNodes.ToString(); // Add the magic small molecule test node to every document?
                 TestContext.Properties["RunSmallMoleculeTestVersions"] = RunsSmallMoleculeVersions.ToString(); // Run the AsSmallMolecule version of tests when available?
                 TestContext.Properties["LiveReports"] = LiveReports.ToString();
                 TestContext.Properties["TestName"] = test.TestMethod.Name;
                 TestContext.Properties["TestRunResultsDirectory"] = testResultsDir;
+                TestContext.Properties["RecordAuditLogs"] = RecordAuditLogs.ToString();
 
                 if (test.SetTestContext != null)
                 {
@@ -278,7 +285,7 @@ namespace TestRunnerLib
                 exception = e;
             }
             stopwatch.Stop();
-            LastTestDuration = (int) (stopwatch.ElapsedMilliseconds/1000);
+            LastTestDuration = (int) stopwatch.ElapsedMilliseconds;
             // Allow as much to be garbage collected as possible
 
             // Restore culture.
@@ -299,15 +306,16 @@ namespace TestRunnerLib
             LastUserHandleCount = GetHandleCount(HandleType.user);
             LastGdiHandleCount = GetHandleCount(HandleType.gdi);
 
-            if (test.MinidumpLeakThreshold != null)
+            if (WriteMiniDumps && test.MinidumpLeakThreshold != null)
             {
                 try
                 {
                     var leak = (TotalMemoryBytes - previousPrivateBytes) / MB;
                     if (leak > test.MinidumpLeakThreshold.Value)
                     {
-                        if (!MiniDump.WriteMiniDump(Path.Combine(dmpDir, "post_" + dumpFileName)))
-                            Log("[WARNING] Failed to write post mini dump (GetLastError() = {0})", Marshal.GetLastWin32Error());
+                        var path = Path.Combine(dmpDir, "post_" + dumpFileName);
+                        if (!MiniDump.WriteMiniDump(path))
+                            Log("[WARNING] Failed to write post mini dump to '{0}' (GetLastError() = {1})", path, Marshal.GetLastWin32Error());
                     }
                     else
                     {
@@ -344,7 +352,7 @@ namespace TestRunnerLib
                     TotalMemory,
                     LastUserHandleCount + LastGdiHandleCount,
                     LastTotalHandleCount,
-                    LastTestDuration);
+                    LastTestDuration/1000);
 //                Log("# Heaps " + string.Join("\t", heapCounts.Select(s => s.ToString())) + Environment.NewLine);
 //                Log("# Handles " + string.Join("\t", handleCounts.Where(c => c.Count() > 14).Select(c => c.Key + ": " + c.Count())) + Environment.NewLine);
                 if (crtLeakedBytes > CheckCrtLeaks)
@@ -352,11 +360,6 @@ namespace TestRunnerLib
 
                 TeamCityFinishTest(test);
 
-                using (var writer = new FileStream("TestRunnerMemory.log", FileMode.Append, FileAccess.Write, FileShare.Read))
-                using (var stringWriter = new StreamWriter(writer))
-                {
-                    stringWriter.WriteLine(TotalMemory.ToString("F1"));
-                }
                 return true;
             }
 
@@ -385,7 +388,7 @@ namespace TestRunnerLib
                 TotalMemory,
                 LastUserHandleCount + LastGdiHandleCount,
                 LastTotalHandleCount,
-                LastTestDuration,
+                LastTestDuration/1000,
                 test.TestMethod.Name,
                 message,
                 exception);
@@ -566,15 +569,20 @@ namespace TestRunnerLib
 
         public double ManagedMemory { get { return ManagedMemoryBytes / (double) MB; } }
 
+
+        private static readonly object _logLock = new object();
         [StringFormatMethod("info")]
         public void Log(string info, params object[] args)
         {
-            Console.Write(info, args);
-            Console.Out.Flush(); // Get this info to TeamCity or SkylineTester ASAP
-            if (_log != null)
+            lock (_logLock)
             {
-                _log.Write(info, args);
-                _log.Flush();
+                Console.Write(info, args);
+                Console.Out.Flush(); // Get this info to TeamCity or SkylineTester ASAP
+                if (_log != null)
+                {
+                    _log.Write(info, args);
+                    _log.Flush();
+                }
             }
         }
 
@@ -600,10 +608,10 @@ namespace TestRunnerLib
                 tcMessage.Replace("[", "|[");
                 tcMessage.Replace("]", "|]");
                 Console.WriteLine("##teamcity[testFailed name='{0}' message='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, tcMessage);
-                // ReSharper enable LocalizableElement
+                // ReSharper restore LocalizableElement
             }
 
-            Console.WriteLine(@"##teamcity[testFinished name='{0}' duration='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, LastTestDuration * 1000);
+            Console.WriteLine(@"##teamcity[testFinished name='{0}' duration='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, LastTestDuration);
         }
 
         public static IEnumerable<TestInfo> GetTestInfos(string testDll)
@@ -617,7 +625,7 @@ namespace TestRunnerLib
                 {
                     if (!DerivesFromAbstractUnitTest(type))
 // ReSharper disable LocalizableElement
-                        Console.WriteLine("WARNING: " + type.Name + " does not derive from AbstractUnitTest!"); // Not L10N
+                        Console.WriteLine("WARNING: " + type.Name + " does not derive from AbstractUnitTest!");
 // ReSharper restore LocalizableElement
                     MethodInfo testInitializeMethod = null;
                     MethodInfo testCleanupMethod = null;

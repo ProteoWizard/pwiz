@@ -20,6 +20,7 @@
 //
 
 #include "Compare.h"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include <stdlib.h>
 
@@ -113,25 +114,34 @@ int test (const vector<string>& args)
 
 
 int main(int argc, char* argv[])
-{  
-    TEST_PROLOG(argc, argv)
-    if (teamcityTestDecoration)
-        testArgs.erase(find(testArgs.begin(), testArgs.end(), "--teamcity-test-decoration"));
+{
+    bnw::args utf8ArgWrapper(argc, argv); // modifies argv in-place with UTF-8 version on Windows
+    pwiz::util::enable_utf8_path_operations();
 
     try
     {
-        test(testArgs);
+        return test(vector<string>(argv, argv + argc));
     }
     catch (exception& e)
     {
-        TEST_FAILED(e.what())
+        cerr << e.what() << endl;
+        return 1;
+    }
+    catch (const char* msg)
+    {
+        cerr << msg << endl;
+        return 1;
+    }
+    catch (string msg)
+    {
+        cerr << msg << endl;
+        return 1;
     }
     catch (...)
     {
-        TEST_FAILED("Caught unknown exception.")
+        cerr << "Caught unknown exception." << endl;
+        return 1;
     }
-
-    TEST_EPILOG
 }
 
 

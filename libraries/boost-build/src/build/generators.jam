@@ -657,7 +657,7 @@ class generator
         # type.
         if ! $(self.source-types)
         {
-            # Anything is acceptible
+            # Anything is acceptable
             return [ property-set.empty ] $(sources) ;
         }
         else
@@ -1042,7 +1042,7 @@ local rule try-one-generator-really ( project name ? : generator : target-type
     generators.dout [ indent ] " " $(targets) ;
     if $(usage-requirements)
     {
-        generators.dout [ indent ] "  with usage requirements:" $(x) ;
+        generators.dout [ indent ] "  with usage requirements:" $(usage-requirements) ;
     }
 
     if $(success)
@@ -1264,7 +1264,7 @@ rule find-viable-generators ( target-type : property-set )
 
     # Generators which override 'all'.
     local all-overrides ;
-    # Generators which are overriden.
+    # Generators which are overridden.
     local overriden-ids ;
     for local g in $(viable-generators)
     {

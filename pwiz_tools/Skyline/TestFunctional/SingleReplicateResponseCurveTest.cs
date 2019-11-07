@@ -28,6 +28,8 @@ using pwiz.SkylineTestUtil;
 using System;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -40,6 +42,10 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class SingleReplicateResponseCurveTest : AbstractFunctionalTest
     {
+        private const string PRECURSOR_CONCENTRATIONS_VIEW = "PrecursorConcentrations";
+        private const string CALIBRATION_CURVES_VIEW = "CalibrationCurves";
+        private const string PRECURSOR_QUANTIFICATION_VIEW = "PrecursorQuantifications";
+
         [TestMethod]
         public void TestSingleReplicateResponseCurve()
         {
@@ -52,8 +58,60 @@ namespace pwiz.SkylineTestFunctional
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("SingleReplicateResponseCurveTest.sky")));
             RunUI(()=>SkylineWindow.ShowDocumentGrid(true));
             var documentGrid = WaitForOpenForm<DocumentGridForm>();
+            CreateViews(documentGrid);
             SetPrecursorConcentrations(documentGrid);
             ShowReplicateCalibrationCurveColumns(documentGrid);
+            VerifyPrecursorQuantifications(documentGrid);
+        }
+
+        private void CreateViews(DocumentGridForm documentGrid)
+        {
+            // Create view "PrecursorConcentrations"
+            RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors));
+            WaitForConditionUI(() => documentGrid.IsComplete);
+            var viewEditor = ShowDialog<ViewEditor>(documentGrid.DataboundGridControl.NavBar.CustomizeView);
+            RunUI(() =>
+            {
+                viewEditor.ChooseColumnsTab.AddColumn(PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*")
+                    .Property(nameof(Precursor.PrecursorConcentration)));
+                viewEditor.ViewName = PRECURSOR_CONCENTRATIONS_VIEW;
+            });
+            OkDialog(viewEditor, viewEditor.OkDialog);
+
+            // Create view "CalibrationCurves"
+            RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides));
+            WaitForConditionUI(() => documentGrid.IsComplete);
+            viewEditor = ShowDialog<ViewEditor>(documentGrid.DataboundGridControl.NavBar.CustomizeView);
+            RunUI(() =>
+            {
+                viewEditor.ChooseColumnsTab.AddColumn(
+                    PropertyPath.Parse("Proteins!*.Peptides!*.CalibrationCurve"));
+                viewEditor.ChooseColumnsTab.AddColumn(
+                    PropertyPath.Parse("Proteins!*.Peptides!*.CalibrationCurve.PointCount"));
+                viewEditor.ChooseColumnsTab.AddColumn(PropertyPath.Parse("Proteins!*.Peptides!*.Results!*.Value")
+                    .Property(nameof(PeptideResult.ReplicateCalibrationCurve)));
+                viewEditor.ChooseColumnsTab.AddColumn(
+                    PropertyPath.Parse("Proteins!*.Peptides!*.Results!*.Value.ReplicateCalibrationCurve.PointCount"));
+                viewEditor.ViewName = CALIBRATION_CURVES_VIEW;
+            });
+            OkDialog(viewEditor, viewEditor.OkDialog);
+
+            // Create view "PrecursorConcentrations"
+            RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors));
+            WaitForConditionUI(() => documentGrid.IsComplete);
+            viewEditor = ShowDialog<ViewEditor>(documentGrid.DataboundGridControl.NavBar.CustomizeView);
+            RunUI(() =>
+            {
+                viewEditor.ChooseColumnsTab.AddColumn(PropertyPath.Parse("Proteins!*.Peptides!*.Results!*.Value")
+                    .Property(nameof(PeptideResult.ReplicateCalibrationCurve)));
+                viewEditor.ChooseColumnsTab.AddColumn(
+                    PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Results!*.Value")
+                        .Property(nameof(PrecursorResult.PrecursorQuantification)));
+                viewEditor.ChooseColumnsTab.AddColumn(
+                    PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Results!*.Value"));
+                viewEditor.ViewName = PRECURSOR_QUANTIFICATION_VIEW;
+            });
+            OkDialog(viewEditor, viewEditor.OkDialog);
         }
 
         /// <summary>
@@ -61,22 +119,10 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private void SetPrecursorConcentrations(DocumentGridForm documentGrid)
         {
-            RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors));
+            RunUI(() => documentGrid.ChooseView(PRECURSOR_CONCENTRATIONS_VIEW));
             WaitForConditionUI(() => documentGrid.IsComplete);
-            var viewEditor = ShowDialog<ViewEditor>(documentGrid.DataboundGridControl.NavBar.CustomizeView);
-            RunUI(() =>
-            {
-                viewEditor.ActiveAvailableFieldsTree.SelectColumn(PropertyPath.Root.Property("Proteins")
-                    .LookupAllItems().Property("Peptides").LookupAllItems().Property("Precursors").LookupAllItems()
-                    .Property("PrecursorConcentration"));
-                viewEditor.ChooseColumnsTab.AddColumn(
-                    PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.PrecursorConcentration"));
-                viewEditor.ViewName = "PrecursorConcentrations";
-            });
-            OkDialog(viewEditor, viewEditor.OkDialog);
-            WaitForConditionUI(() => documentGrid.IsComplete);
-            var colPrecursorConcentration =
-                documentGrid.DataboundGridControl.FindColumn(PropertyPath.Root.Property("PrecursorConcentration"));
+            var colPrecursorConcentration = documentGrid.DataboundGridControl.FindColumn(
+                PropertyPath.Root.Property(nameof(Precursor.PrecursorConcentration)));
             Assert.IsNotNull(colPrecursorConcentration);
             // These are the concentrations of the light, heavy4, heavy3, heavy2, heavy1
             double[] concentrations = { 0.125, 200, 20, 2, .5 };
@@ -96,22 +142,7 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private void ShowReplicateCalibrationCurveColumns(DocumentGridForm documentGrid)
         {
-            RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides));
-            WaitForConditionUI(() => documentGrid.IsComplete);
-            var viewEditor = ShowDialog<ViewEditor>(documentGrid.DataboundGridControl.NavBar.CustomizeView);
-            RunUI(() =>
-            {
-                viewEditor.ChooseColumnsTab.AddColumn(
-                    PropertyPath.Parse("Proteins!*.Peptides!*.CalibrationCurve"));
-                viewEditor.ChooseColumnsTab.AddColumn(
-                    PropertyPath.Parse("Proteins!*.Peptides!*.CalibrationCurve.PointCount"));
-                viewEditor.ChooseColumnsTab.AddColumn(
-                    PropertyPath.Parse("Proteins!*.Peptides!*.Results!*.Value.ReplicateCalibrationCurve"));
-                viewEditor.ChooseColumnsTab.AddColumn(
-                    PropertyPath.Parse("Proteins!*.Peptides!*.Results!*.Value.ReplicateCalibrationCurve.PointCount"));
-                viewEditor.ViewName = "CalibrationCurves";
-            });
-            OkDialog(viewEditor, viewEditor.OkDialog);
+            RunUI(() => documentGrid.ChooseView(CALIBRATION_CURVES_VIEW));
             WaitForConditionUI(() => documentGrid.IsComplete);
             var colCalibrationCurve = documentGrid.FindColumn(PropertyPath.Parse("CalibrationCurve"));
             var colPointCount = documentGrid.FindColumn(PropertyPath.Parse("CalibrationCurve.PointCount"));
@@ -131,19 +162,53 @@ namespace pwiz.SkylineTestFunctional
             RunUI(()=>
             {
                 documentGrid.DataGridView.CurrentCell =
-                        documentGrid.DataGridView.Rows[0].Cells[colReplicateCalibrationCurve.Index];
+                    documentGrid.DataGridView.Rows[0].Cells[colReplicateCalibrationCurve.Index];
                 documentGrid.DataGridView.SendKeyDownUp(new KeyEventArgs(Keys.Space));
             });
             var calibrationForm = WaitForOpenForm<CalibrationForm>();
             Assert.IsNotNull(calibrationForm);
-            Assert.IsTrue(Settings.Default.CalibrationCurveOptions.SingleReplicate);
+            Assert.IsTrue(Settings.Default.CalibrationCurveOptions.SingleBatch);
             RunUI(() =>
             {
                 documentGrid.DataGridView.CurrentCell =
                     documentGrid.DataGridView.Rows[0].Cells[colCalibrationCurve.Index];
                 documentGrid.DataGridView.SendKeyDownUp(new KeyEventArgs(Keys.Space));
             });
-            Assert.IsFalse(Settings.Default.CalibrationCurveOptions.SingleReplicate);
+            Assert.IsFalse(Settings.Default.CalibrationCurveOptions.SingleBatch);
+        }
+
+        private void VerifyPrecursorQuantifications(DocumentGridForm documentGrid)
+        {
+            RunUI(() => documentGrid.ChooseView(PRECURSOR_QUANTIFICATION_VIEW));
+            WaitForConditionUI(() => documentGrid.IsComplete);
+
+            var pathPrecursorResult = PropertyPath.Parse("Results!*.Value");
+            var colReplicateCalibrationCurve = documentGrid.FindColumn(pathPrecursorResult
+                .Property(nameof(PrecursorResult.PeptideResult))
+                .Property(nameof(PeptideResult.ReplicateCalibrationCurve)));
+            var colQuantificationResult = documentGrid.FindColumn(pathPrecursorResult
+                .Property(nameof(PrecursorResult.PrecursorQuantification)));
+            var colPrecursorResult = documentGrid.FindColumn(pathPrecursorResult);
+            var colPrecursor = documentGrid.FindColumn(PropertyPath.Root);
+            RunUI(() =>
+            {
+                foreach (var row in documentGrid.DataGridView.Rows.Cast<DataGridViewRow>())
+                {
+                    var replicateCalibrationCurve =
+                        (LinkValue<CalibrationCurve>) row.Cells[colReplicateCalibrationCurve.Index].Value;
+                    var quantificationResult =
+                        (LinkValue<QuantificationResult>) row.Cells[colQuantificationResult.Index].Value;
+                    var precursor = (Precursor) row.Cells[colPrecursor.Index].Value;
+                    var precursorResult = (PrecursorResult) row.Cells[colPrecursorResult.Index].Value;
+                    var totalArea = precursorResult.TotalArea;
+                    var calculatedConcentration = replicateCalibrationCurve.Value.GetFittedX(totalArea);
+                    Assert.AreEqual(calculatedConcentration.Value, quantificationResult.Value.CalculatedConcentration.Value, .0001);
+                    var expectedConcentration = precursorResult.Precursor.PrecursorConcentration;
+                    var accuracy = calculatedConcentration / expectedConcentration;
+                    Assert.AreEqual(accuracy.Value, quantificationResult.Value.Accuracy.Value, .0001);
+                }
+            });
+
         }
     }
 }

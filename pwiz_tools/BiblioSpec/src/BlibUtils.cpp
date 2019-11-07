@@ -23,7 +23,6 @@
 #include "BlibUtils.h"
 
 
-using namespace std;
 namespace bfs = boost::filesystem;
 
 namespace BiblioSpec {
@@ -98,6 +97,22 @@ const char* scoreTypeToProbabilityTypeString(PSM_SCORE_TYPE scoreType){
     default:
         return "UNKNOWN";
     };
+}
+
+
+const char* specIdTypeToString(SPEC_ID_TYPE specIdType)
+{
+    switch (specIdType)
+    {
+        case SCAN_NUM_ID:
+            return "scan number";
+        case INDEX_ID:
+            return "index";
+        case NAME_ID:
+            return "nativeID";
+        default:
+            throw BlibException(true, "unknown specIdType");
+    }
 }
 
 

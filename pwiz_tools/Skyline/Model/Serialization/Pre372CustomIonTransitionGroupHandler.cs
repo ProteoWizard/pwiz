@@ -210,7 +210,7 @@ namespace pwiz.Skyline.Model.Serialization
                 }
             }
             Assume.IsTrue(_precursorRawDetails.TrueForAll(d => !Adduct.IsNullOrEmpty(d._proposedAdduct)),
-                "Unable to to deduce adducts and common molecule for " + peptide); // Not L10N
+                @"Unable to to deduce adducts and common molecule for " + peptide);
 
             // We found a satisfactory set of adducts and neutral molecule, update the "peptide" and
             // modify the readahead buffer with the new adduct info
@@ -286,7 +286,7 @@ namespace pwiz.Skyline.Model.Serialization
                 {
                     foreach (var kvpIsotopeCount in precursor._labels)
                     {
-                        var unlabeled = BioMassCalc.UnlabeledFromIsotopeSymbol(kvpIsotopeCount.Key);
+                        var unlabeled = BioMassCalc.GetMonoisotopicSymbol(kvpIsotopeCount.Key);
                         int parentCount;
                         parentComposition.TryGetValue(unlabeled, out parentCount);
                         if (kvpIsotopeCount.Value > parentCount)
@@ -352,7 +352,7 @@ namespace pwiz.Skyline.Model.Serialization
             }
 
             // Should never arrive here
-            Assume.Fail("Unable to to deduce adducts and common molecule for " + peptide); // Not L10N
+            Assume.Fail(@"Unable to to deduce adducts and common molecule for " + peptide);
             return UpdatePeptideAndInsertAdductsInXML(ref peptide, _precursorRawDetails.Select(d => d._nominalAdduct));
         }
 

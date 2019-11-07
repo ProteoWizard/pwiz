@@ -18,9 +18,9 @@
  */
 
 using System.IO;
-using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
@@ -28,7 +28,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestData
 {
     [TestClass]
-    public class CommandLineImportTest : AbstractUnitTest
+    public class CommandLineImportTest : AbstractUnitTestEx
     {
         private const string ZIP_FILE = @"TestData\CommandLineImportTest.zip";
 
@@ -42,16 +42,23 @@ namespace pwiz.SkylineTestData
             var fastaPath = testFilesDir.GetTestPath("bov-5-prot.fasta");
 
             // with mods and invalid cutoff score
-            const string badCutoff = "1.1";
-            var output = RunCommand("--in=" + docPath,
+            const double badCutoff = 1.1;
+            var args = new[]
+            {
+                "--in=" + docPath,
                 "--out=" + outPath,
                 "--import-search-file=" + searchFilePath,
                 "--import-search-cutoff-score=" + badCutoff,
                 "--import-search-add-mods",
-                "--import-fasta=" + fastaPath);
+                "--import-fasta=" + fastaPath
+            };
+            var output = RunCommand(args);
 
-            AssertEx.Contains(output, string.Format(
-                Resources.CommandArgs_ParseArgsInternal_Warning__The_cutoff_score__0__is_invalid__It_must_be_a_value_between_0_and_1_, badCutoff));
+            AssertEx.Contains(output, new CommandArgs.ValueOutOfRangeDoubleException(CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF, badCutoff, 0, 1).Message);
+
+            args[3] = "--import-search-cutoff-score=" + Settings.Default.LibraryResultCutOff;
+            output = RunCommand(args);
+
             AssertEx.Contains(output, TextUtil.LineSeparate(Resources.CommandLine_ImportSearch_Creating_spectral_library_from_files_,
                 Path.GetFileName(searchFilePath)));
             AssertEx.Contains(output, string.Format(Resources.CommandLine_ImportSearch_Adding__0__modifications_, 2));
@@ -93,8 +100,34 @@ namespace pwiz.SkylineTestData
                 "--import-search-cutoff-score=" + 0.99,
                 "--import-search-add-mods");
 
-            AssertEx.Contains(output, CommandArgs.WarnArgRequirementText(CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_FILE, CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF));
-            AssertEx.Contains(output, CommandArgs.WarnArgRequirementText(CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_FILE, CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_MODS));
+            AssertEx.Contains(output, CommandArgs.WarnArgRequirementText(CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF, CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_FILE));
+            AssertEx.Contains(output, CommandArgs.WarnArgRequirementText(CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_MODS, CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_FILE));
+
+
+            // MaxQuant embedding error
+            searchFilePath = testFilesDir.GetTestPath("yeast-wiff-msms.txt");
+            output = RunCommand("--in=" + docPath,
+                "--out=" + outPath2,
+                "--import-search-file=" + searchFilePath,
+                "--import-fasta=" + fastaPath);
+
+            AssertEx.Contains(output, TextUtil.LineSeparate(Resources.CommandLine_ImportSearch_Creating_spectral_library_from_files_,
+                Path.GetFileName(searchFilePath)));
+            AssertEx.Contains(output, string.Format(Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__,
+                "wine yeast sampleA_2", searchFilePath));
+            AssertEx.Contains(output, string.Format(Resources.CommandLine_ShowLibraryMissingExternalSpectraError_DescriptionWithSupportedExtensions__0__, BiblioSpecLiteBuilder.BiblioSpecSupportedFileExtensions));
+
+            output = RunCommand("--in=" + docPath,
+                "--out=" + outPath2,
+                "--import-search-file=" + searchFilePath,
+                "--import-fasta=" + fastaPath,
+                "--import-search-prefer-embedded-spectra");
+
+            AssertEx.Contains(output, TextUtil.LineSeparate(Resources.CommandLine_ImportSearch_Creating_spectral_library_from_files_,
+                Path.GetFileName(searchFilePath)));
+            Assert.IsTrue(!output.Contains(string.Format(Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__,
+                "wine yeast sampleA_2", searchFilePath)));
+            Assert.IsTrue(!output.Contains(string.Format(Resources.CommandLine_ShowLibraryMissingExternalSpectraError_DescriptionWithSupportedExtensions__0__, BiblioSpecLiteBuilder.BiblioSpecSupportedFileExtensions)));
         }
 
         [TestMethod]
@@ -112,14 +145,6 @@ namespace pwiz.SkylineTestData
             var doc = ResultsUtil.DeserializeDocument(outPath);
             Assert.AreEqual(2, doc.MoleculeGroupCount);
             Assert.AreEqual(4, doc.MoleculeCount);
-        }
-        
-        private static string RunCommand(params string[] inputArgs)
-        {
-            var consoleBuffer = new StringBuilder();
-            var consoleOutput = new CommandStatusWriter(new StringWriter(consoleBuffer));
-            CommandLineRunner.RunCommand(inputArgs, consoleOutput);
-            return consoleBuffer.ToString();
         }
     }
 }

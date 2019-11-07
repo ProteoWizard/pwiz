@@ -30,7 +30,6 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Results.RemoteApi;
-using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
@@ -240,7 +239,7 @@ namespace pwiz.Skyline.Model.Results
             private void FinishLoad(string documentPath, MeasuredResults resultsLoad, MeasuredResults resultsPrevious)
             {
                 // Only one finisher at a time, otherwise guaranteed wasted work
-                // CONSIDER: In thoery this should be a lock per document container, but in
+                // CONSIDER: In theory this should be a lock per document container, but in
                 //           practice we have only one document container per process
                 lock (_finishLock)
                 {
@@ -397,7 +396,7 @@ namespace pwiz.Skyline.Model.Results
 
         public string IsLoadedExplained() // For test and debug purposes, gives a descriptive string for IsLoaded failure
         {
-            return IsLoaded ? string.Empty : "No ChromFileInfo.FileWriteTime for " + string.Join(",", MSDataFileInfos.Where(info => !info.FileWriteTime.HasValue).Select(f => f.FilePath.GetFilePath())); // Not L10N
+            return IsLoaded ? string.Empty : @"No ChromFileInfo.FileWriteTime for " + string.Join(@",", MSDataFileInfos.Where(info => !info.FileWriteTime.HasValue).Select(f => f.FilePath.GetFilePath()));
         }
 
         public Annotations Annotations { get; private set; }
@@ -465,6 +464,8 @@ namespace pwiz.Skyline.Model.Results
         public double SampleDilutionFactor { get; private set; }
 
         public SampleType SampleType { get; private set; }
+
+        public string BatchName { get; private set; }
 
         #region Property change methods
 
@@ -585,6 +586,11 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im.SampleDilutionFactor = dilutionFactor);
         }
 
+        public ChromatogramSet ChangeBatchName(string batchName)
+        {
+            return ChangeProp(ImClone(this), im => im.BatchName = string.IsNullOrEmpty(batchName) ? null : batchName);
+        }
+
         #endregion
 
         public static MsDataFileUri GetExistingDataFilePath(string cachePath, MsDataFileUri msDataFileUri)
@@ -689,6 +695,9 @@ namespace pwiz.Skyline.Model.Results
             tic_area,
             ion_mobility_type,
             sample_dilution_factor,
+            batch_name,
+            sample_id,
+            instrument_serial_number,
         }
 
         private static readonly IXmlElementHelper<OptimizableRegression>[] OPTIMIZATION_HELPERS =
@@ -708,6 +717,7 @@ namespace pwiz.Skyline.Model.Results
             AnalyteConcentration = reader.GetNullableDoubleAttribute(ATTR.analyte_concentration);
             SampleType = SampleType.FromName(reader.GetAttribute(ATTR.sample_type));
             SampleDilutionFactor = reader.GetDoubleAttribute(ATTR.sample_dilution_factor, DEFAULT_DILUTION_FACTOR);
+            BatchName = reader.GetAttribute(ATTR.batch_name);
             // Consume tag
             reader.Read();
 
@@ -733,6 +743,8 @@ namespace pwiz.Skyline.Model.Results
                 chromFileInfo = chromFileInfo.ChangeExplicitGlobalStandardArea(
                     reader.GetNullableDoubleAttribute(ATTR.explicit_global_standard_area));
                 chromFileInfo = chromFileInfo.ChangeTicArea(reader.GetNullableDoubleAttribute(ATTR.tic_area));
+                chromFileInfo = chromFileInfo.ChangeSampleId(reader.GetAttribute(ATTR.sample_id));
+                chromFileInfo = chromFileInfo.ChangeSerialNumber(reader.GetAttribute(ATTR.instrument_serial_number));
                 chromFileInfos.Add(chromFileInfo);
                 
                 string id = reader.GetAttribute(ATTR.id) ?? GetOrdinalSaveId(fileLoadIds.Count);
@@ -764,6 +776,7 @@ namespace pwiz.Skyline.Model.Results
                 writer.WriteAttribute(ATTR.sample_type, SampleType.Name);
             }
             writer.WriteAttribute(ATTR.sample_dilution_factor, SampleDilutionFactor, DEFAULT_DILUTION_FACTOR);
+            writer.WriteAttributeIfString(ATTR.batch_name, BatchName);
 
             // Write optimization element, if present
             if (OptimizationFunction != null)
@@ -782,13 +795,15 @@ namespace pwiz.Skyline.Model.Results
                 writer.WriteAttribute(ATTR.id, GetOrdinalSaveId(i++));
                 writer.WriteAttribute(ATTR.file_path, fileInfo.FilePath);
                 writer.WriteAttribute(ATTR.sample_name, fileInfo.FilePath.GetSampleOrFileName());
-                if(fileInfo.RunStartTime != null)
+                writer.WriteAttributeIfString(ATTR.sample_id, fileInfo.SampleId);
+                writer.WriteAttributeIfString(ATTR.instrument_serial_number, fileInfo.InstrumentSerialNumber);
+                if (fileInfo.RunStartTime != null)
                 {
-                    writer.WriteAttribute(ATTR.acquired_time, XmlConvert.ToString((DateTime) fileInfo.RunStartTime, "yyyy-MM-ddTHH:mm:ss")); // Not L10N
+                    writer.WriteAttribute(ATTR.acquired_time, XmlConvert.ToString((DateTime) fileInfo.RunStartTime, @"yyyy-MM-ddTHH:mm:ss"));
                 }
                 if(fileInfo.FileWriteTime != null)
                 {
-                    writer.WriteAttribute(ATTR.modified_time, XmlConvert.ToString((DateTime)fileInfo.FileWriteTime, "yyyy-MM-ddTHH:mm:ss")); // Not L10N
+                    writer.WriteAttribute(ATTR.modified_time, XmlConvert.ToString((DateTime)fileInfo.FileWriteTime, @"yyyy-MM-ddTHH:mm:ss"));
                 }
                 writer.WriteAttribute(ATTR.has_midas_spectra, fileInfo.HasMidasSpectra, false);
                 writer.WriteAttributeNullable(ATTR.explicit_global_standard_area, fileInfo.ExplicitGlobalStandardArea);
@@ -838,7 +853,7 @@ namespace pwiz.Skyline.Model.Results
                 throw new ArgumentOutOfRangeException(nameof(ordinalIndex),
                                                       Resources.ChromatogramSet_GetOrdinalSaveId_Attempting_to_save_results_info_for_a_file_that_cannot_be_found);
 
-            return string.Format("{0}_f{1}", Helpers.MakeXmlId(Name), ordinalIndex); // Not L10N
+            return string.Format(@"{0}_f{1}", Helpers.MakeXmlId(Name), ordinalIndex);
         }
 
         public string GetFileSaveId(ChromFileInfoId fileId)
@@ -921,12 +936,6 @@ namespace pwiz.Skyline.Model.Results
                 FileWriteTime = remoteUrl.ModifiedTime;
                 filePath = remoteUrl.ChangeModifiedTime(null);
             }
-            var chorusUrl = filePath as ChorusUrl;
-            if (chorusUrl != null)
-            {
-                RunStartTime = chorusUrl.RunStartTime;
-                filePath = chorusUrl.ChangeRunStartTime(null);
-            }
             FilePath = filePath;
             InstrumentInfoList = new MsInstrumentConfigInfo[0];
         }
@@ -944,6 +953,8 @@ namespace pwiz.Skyline.Model.Results
         public double? ExplicitGlobalStandardArea { get; private set; }
         public double? TicArea { get; private set; }
         public eIonMobilityUnits IonMobilityUnits { get; private set; }
+        public string SampleId { get; private set; }
+        public string InstrumentSerialNumber { get; private set; }
 
         public IList<MsInstrumentConfigInfo> InstrumentInfoList
         {
@@ -988,12 +999,24 @@ namespace pwiz.Skyline.Model.Results
                                                      im.HasMidasSpectra = fileInfo.HasMidasSpectra;
                                                      im.TicArea = fileInfo.TicArea;
                                                      im.IonMobilityUnits = fileInfo.IonMobilityUnits;
+                                                     im.SampleId = fileInfo.SampleId;
+                                                     im.InstrumentSerialNumber = fileInfo.InstrumentSerialNumber;
                                                  });
         }
 
         public ChromFileInfo ChangeTicArea(double? ticArea)
         {
             return ChangeProp(ImClone(this), im => im.TicArea = ticArea);
+        }
+
+        public ChromFileInfo ChangeSampleId(string sampleId)
+        {
+            return ChangeProp(ImClone(this), im => im.SampleId = sampleId);
+        }
+
+        public ChromFileInfo ChangeSerialNumber(string serialNumber)
+        {
+            return ChangeProp(ImClone(this), im => im.InstrumentSerialNumber = serialNumber);
         }
 
         public ChromFileInfo ChangeRetentionTimeAlignments(IEnumerable<KeyValuePair<ChromFileInfoId, RegressionLineElement>> retentionTimeAlignments)
@@ -1038,6 +1061,10 @@ namespace pwiz.Skyline.Model.Results
                 return false;
             if (!Equals(IonMobilityUnits, other.IonMobilityUnits))
                 return false;
+            if (!Equals(SampleId, other.SampleId))
+                return false;
+            if (!Equals(InstrumentSerialNumber, other.InstrumentSerialNumber))
+                return false;
             if (!ArrayUtil.EqualsDeep(other.InstrumentInfoList, InstrumentInfoList))
                 return false;
             if (!ArrayUtil.EqualsDeep(other.RetentionTimeAlignments, RetentionTimeAlignments))
@@ -1072,6 +1099,8 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ ExplicitGlobalStandardArea.GetHashCode();
                 result = (result * 397) ^ TicArea.GetHashCode();
                 result = (result * 397) ^ IonMobilityUnits.GetHashCode();
+                result = (result * 397) ^ SampleId?.GetHashCode() ?? 0;
+                result = (result * 397) ^ InstrumentSerialNumber?.GetHashCode() ?? 0;
                 return result;
             }
         }
@@ -1107,23 +1136,23 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public static class SampleHelp
     {
-        private const string TAG_LOCKMASS_POS = "lockmass_pos"; // Not L10N
-        private const string TAG_LOCKMASS_NEG = "lockmass_neg"; // Not L10N
-        private const string TAG_LOCKMASS_TOL = "lockmass_tol"; // Not L10N
-        private const string TAG_CENTROID_MS1 = "centroid_ms1"; // Not L10N
-        private const string TAG_CENTROID_MS2 = "centroid_ms2"; // Not L10N
-        private const string VAL_TRUE = "true"; // Not L10N
+        private const string TAG_LOCKMASS_POS = "lockmass_pos";
+        private const string TAG_LOCKMASS_NEG = "lockmass_neg";
+        private const string TAG_LOCKMASS_TOL = "lockmass_tol";
+        private const string TAG_CENTROID_MS1 = "centroid_ms1";
+        private const string TAG_CENTROID_MS2 = "centroid_ms2";
+        private const string VAL_TRUE = "true";
 
         public static string EncodePath(string filePath, string sampleName, int sampleIndex, LockMassParameters lockMassParameters,
             bool centroidMS1, bool centroidMS2)
         {
             var parameters = new List<string>();
-            const string pairFormat = "{0}={1}"; // Not L10N
+            const string pairFormat = "{0}={1}";
             string filePart;
             if (!(string.IsNullOrEmpty(sampleName) && -1 == sampleIndex))
             {
                 // Info for distinguishing a single sample within a WIFF file.
-                filePart = string.Format("{0}|{1}|{2}", filePath, sampleName ?? string.Empty, sampleIndex); // Not L10N
+                filePart = string.Format(@"{0}|{1}|{2}", filePath, sampleName ?? string.Empty, sampleIndex);
             }
             else
             {
@@ -1141,26 +1170,26 @@ namespace pwiz.Skyline.Model.Results
             }
             if (centroidMS1)
             {
-                parameters.Add(string.Format(CultureInfo.InvariantCulture, pairFormat, TAG_CENTROID_MS1, VAL_TRUE)); // Not L10N
+                parameters.Add(string.Format(CultureInfo.InvariantCulture, pairFormat, TAG_CENTROID_MS1, VAL_TRUE));
             }
             if (centroidMS2)
             {
-                parameters.Add(string.Format(CultureInfo.InvariantCulture, pairFormat, TAG_CENTROID_MS2, VAL_TRUE)); // Not L10N
+                parameters.Add(string.Format(CultureInfo.InvariantCulture, pairFormat, TAG_CENTROID_MS2, VAL_TRUE));
             }
 
-            return parameters.Any() ? string.Format("{0}?{1}", filePart, string.Join("&", parameters)) : filePart; // Not L10N
+            return parameters.Any() ? string.Format(@"{0}?{1}", filePart, string.Join(@"&", parameters)) : filePart;
         }
 
         public static string EscapeSampleId(string sampleId)
         {
             var invalidFileChars = Path.GetInvalidFileNameChars();
-            var invalidNameChars = new[] {',', '.', ';'}; // Not L10N
+            var invalidNameChars = new[] {',', '.', ';'};
             if (sampleId.IndexOfAny(invalidFileChars) == -1 &&
                     sampleId.IndexOfAny(invalidNameChars) == -1)
                 return sampleId;
             var sb = new StringBuilder();
             foreach (char c in sampleId)
-                sb.Append(invalidFileChars.Contains(c) || invalidNameChars.Contains(c) ? '_' : c); // Not L10N
+                sb.Append(invalidFileChars.Contains(c) || invalidNameChars.Contains(c) ? '_' : c);
             return sb.ToString();
         }
 
@@ -1171,16 +1200,16 @@ namespace pwiz.Skyline.Model.Results
 
         public static string GetPathFilePart(string path)
         {
-            path = GetLocationPart(path); // Just in case the url args contain '|'  // Not L10N
-            if (path.IndexOf('|') == -1) // Not L10N
+            path = GetLocationPart(path); // Just in case the url args contain '|'
+            if (path.IndexOf('|') == -1)
                 return path;
-            return path.Split('|')[0]; // Not L10N
+            return path.Split('|')[0];
         }
 
         public static bool HasSamplePart(string path)
         {
-            path = GetLocationPart(path); // Just in case the url args contain '|'  // Not L10N
-            string[] parts = path.Split('|'); // Not L10N
+            path = GetLocationPart(path); // Just in case the url args contain '|'
+            string[] parts = path.Split('|');
 
             int sampleIndex;
             return parts.Length == 3 && int.TryParse(parts[2], out sampleIndex);
@@ -1188,10 +1217,10 @@ namespace pwiz.Skyline.Model.Results
 
         public static string GetPathSampleNamePart(string path)
         {
-            path = GetLocationPart(path); // Just in case the url args contain '|'  // Not L10N
-            if (path.IndexOf('|') == -1) // Not L10N
+            path = GetLocationPart(path); // Just in case the url args contain '|'
+            if (path.IndexOf('|') == -1)
                 return null;
-            return path.Split('|')[1]; // Not L10N
+            return path.Split('|')[1];
         }
 
         public static string GetPathSampleNamePart(MsDataFileUri msDataFileUri)
@@ -1201,11 +1230,11 @@ namespace pwiz.Skyline.Model.Results
 
         public static int GetPathSampleIndexPart(string path)
         {
-            path = GetLocationPart(path); // Just in case the url args contain '|'  // Not L10N
+            path = GetLocationPart(path); // Just in case the url args contain '|'
             int sampleIndex = -1;
-            if (path.IndexOf('|') != -1) // Not L10N
+            if (path.IndexOf('|') != -1)
             {
-                string[] parts = path.Split('|'); // Not L10N
+                string[] parts = path.Split('|');
                 int index;
                 if (parts.Length == 3 && int.TryParse(parts[2], out index))
                     sampleIndex = index;
@@ -1251,10 +1280,10 @@ namespace pwiz.Skyline.Model.Results
 
         private static string ParseParameter(string name, string url)
         {
-            var parts = url.Split('?'); // Not L10N
+            var parts = url.Split('?');
             if (parts.Length > 1)
             {
-                var parameters = parts[1].Split('&'); // Not L10N
+                var parameters = parts[1].Split('&');
                 var parameter = parameters.FirstOrDefault(p => p.StartsWith(name));
                 if (parameter != null)
                 {

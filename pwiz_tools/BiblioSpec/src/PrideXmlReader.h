@@ -32,7 +32,6 @@
 #include <algorithm>
 #include <cctype>
 
-using namespace std;
 namespace BiblioSpec {
 
 class BlibMaker;

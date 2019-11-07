@@ -297,10 +297,10 @@
     <value>Labeled</value>
   </data>
   <data name="CreateMatchExpression_PopulateComboBoxes_Molecula_Formula" xml:space="preserve">
-    <value>Molecula Formula</value>
+    <value>Molecular Formula</value>
   </data>
-  <data name="CreateMatchExpression_PopulateComboBoxes_Molecule_Group_Name" xml:space="preserve">
-    <value>Molecule Group Name</value>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Molecule_List_Name" xml:space="preserve">
+    <value>Molecule List Name</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Size" xml:space="preserve">
     <value>Size</value>

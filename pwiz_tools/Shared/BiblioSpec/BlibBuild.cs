@@ -78,8 +78,8 @@ namespace pwiz.BiblioSpec
 
     public sealed class BlibBuild
     {
-        private const string EXE_BLIB_BUILD = "BlibBuild"; // Not L10N
-        public const string EXT_SQLITE_JOURNAL = "-journal"; // Not L10N
+        private const string EXE_BLIB_BUILD = "BlibBuild";
+        public const string EXT_SQLITE_JOURNAL = "-journal";
 
         private ReadOnlyCollection<string> _inputFiles;
 
@@ -96,6 +96,8 @@ namespace pwiz.BiblioSpec
         public string Authority { get; set; }
         public int? CompressLevel { get; set; }
         public bool IncludeAmbiguousMatches { get; set; }
+        public bool? PreferEmbeddedSpectra { get; set; }
+        public bool DebugMode { get; set; }
 
         public IList<string> InputFiles
         {
@@ -107,9 +109,19 @@ namespace pwiz.BiblioSpec
 
         public bool BuildLibrary(LibraryBuildAction libraryBuildAction, IProgressMonitor progressMonitor, ref IProgressStatus status, out string[] ambiguous)
         {
+            return BuildLibrary(libraryBuildAction, progressMonitor, ref status, out _, out _, out ambiguous);
+        }
+
+        public bool BuildLibrary(LibraryBuildAction libraryBuildAction, IProgressMonitor progressMonitor, ref IProgressStatus status, out string commandArgs, out string messageLog, out string[] ambiguous)
+        {
             // Arguments for BlibBuild
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             List<string> argv = new List<string> { "-s", "-A", "-H" };  // Read from stdin, get ambiguous match messages, high precision modifications
+            if (DebugMode)
+            {
+                argv.Add("-v"); // Verbose for debugging
+                argv.Add("debug");
+            }
             if (libraryBuildAction == LibraryBuildAction.Create)
                 argv.Add("-o");
             if (CutOffScore.HasValue)
@@ -136,20 +148,33 @@ namespace pwiz.BiblioSpec
             {
                 argv.Add("-K");
             }
-            string dirCommon = PathEx.GetCommonRoot(InputFiles);
-            var stdinBuilder = new StringBuilder();
-            foreach (string fileName in InputFiles)
-                stdinBuilder.AppendLine(PathEx.RemovePrefix(fileName, dirCommon));
-            if (TargetSequences != null)
+            if (PreferEmbeddedSpectra == true)
             {
-                argv.Add("-U");
-                stdinBuilder.AppendLine();
-                foreach (string targetSequence in TargetSequences)
-                    stdinBuilder.AppendLine(targetSequence);
+                argv.Add("-E");
             }
-            // ReSharper restore NonLocalizedString
+            string dirCommon = PathEx.GetCommonRoot(InputFiles);
 
-            argv.Add("\"" + OutputPath + "\""); // Not L10N
+            string stdinFilename = Path.GetTempFileName();
+            argv.Add($"-S \"{stdinFilename}\"");
+            using (var stdinFile = new StreamWriter(stdinFilename, false, new UTF8Encoding(false)))
+            {
+                foreach (string fileName in InputFiles)
+                    stdinFile.WriteLine(PathEx.RemovePrefix(fileName, dirCommon));
+
+                if (TargetSequences != null)
+                {
+                    argv.Add("-U");
+                    stdinFile.WriteLine();
+                    foreach (string targetSequence in TargetSequences)
+                        stdinFile.WriteLine(targetSequence);
+                }
+                stdinFile.Close();
+            }
+            // ReSharper restore LocalizableElement
+
+            // ReSharper disable LocalizableElement
+            argv.Add("\"" + OutputPath + "\"");
+            // ReSharper restore LocalizableElement
 
             var psiBlibBuilder = new ProcessStartInfo(EXE_BLIB_BUILD)
                                      {
@@ -157,23 +182,41 @@ namespace pwiz.BiblioSpec
                                          UseShellExecute = false,
                                          // Common directory includes the directory separator
                                          WorkingDirectory = dirCommon.Substring(0, dirCommon.Length - 1),
-                                         Arguments = string.Join(" ", argv.ToArray()), // Not L10N
+                                         Arguments = string.Join(@" ", argv.ToArray()),
                                          RedirectStandardOutput = true,
                                          RedirectStandardError = true,
-                                         RedirectStandardInput = true
+                                         RedirectStandardInput = false,
+                                         StandardOutputEncoding = Encoding.UTF8,
+                                         StandardErrorEncoding = Encoding.UTF8
                                      };
+
             bool isComplete = false;
             ambiguous = new string[0];
+            messageLog = string.Empty;
             try
             {
-                var processRunner = new ProcessRunner {MessagePrefix = "AMBIGUOUS:"}; // Not L10N
-                processRunner.Run(psiBlibBuilder, stdinBuilder.ToString(), progressMonitor, ref status);
+                const string ambiguousPrefix = @"AMBIGUOUS:";
+                var processRunner = new ProcessRunner { MessagePrefix = DebugMode ? string.Empty : ambiguousPrefix };
+                processRunner.Run(psiBlibBuilder, null, progressMonitor, ref status);
                 isComplete = status.IsComplete;
                 if (isComplete)
-                    ambiguous = processRunner.MessageLog().Distinct().OrderBy(s => s).ToArray();
+                {
+                    var messages = processRunner.MessageLog();
+                    messageLog = string.Join(Environment.NewLine, processRunner.MessageLog());
+                    if (DebugMode)
+                    {
+                        messages = messages.Where(l => l.StartsWith(ambiguousPrefix))
+                            .Select(l => l.Substring(ambiguousPrefix.Length));
+                    }
+                    ambiguous = messages.Distinct().OrderBy(s => s).ToArray();
+                }
             }
             finally 
             {
+                // Keep a copy of what got sent to BlibBuild for debugging purposes
+                commandArgs = psiBlibBuilder.Arguments + Environment.NewLine + string.Join(Environment.NewLine, File.ReadAllLines(stdinFilename));
+
+                File.Delete(stdinFilename);
                 if (!isComplete)
                 {
                     // If something happened (error or cancel) to end processing, then

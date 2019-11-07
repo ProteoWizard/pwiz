@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
@@ -31,6 +32,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
+    [InvariantDisplayName(nameof(Transition))]
     [AnnotationTarget(AnnotationDef.AnnotationTarget.transition)]
     public class Transition : SkylineDocNode<TransitionDocNode>
     {
@@ -52,7 +54,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [InvariantDisplayName("TransitionResults")]
-        [OneToMany(ForeignKey = "Transition", ItemDisplayName = "TransitionResult")]
+        [OneToMany(ForeignKey = nameof(TransitionResult.Transition))]
         public IDictionary<ResultKey, TransitionResult> Results
         {
             get
@@ -73,7 +75,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         protected override TransitionDocNode CreateEmptyNode()
         {
-            return new TransitionDocNode(new Model.Transition(new TransitionGroup(new Model.Peptide(null, "X", null, null, 0), Adduct.SINGLY_PROTONATED, IsotopeLabelType.light), 0), Annotations.EMPTY, null, TypedMass.ZERO_MONO_MASSH, TransitionDocNode.TransitionQuantInfo.DEFAULT, null); // Not L10N
+            var transitionGroup = new TransitionGroup(new Model.Peptide(null, @"X", null, null, 0),
+                Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
+            var transition = new Model.Transition(transitionGroup, 0, Adduct.SINGLY_PROTONATED);
+            return new TransitionDocNode(transition, Annotations.EMPTY, null, TypedMass.ZERO_MONO_MASSH,
+                TransitionDocNode.TransitionQuantInfo.DEFAULT, ExplicitTransitionValues.EMPTY, null);
         }
 
         [InvariantDisplayName("TransitionResultsSummary")]
@@ -126,6 +132,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 : string.Empty;
             }
         }
+        [Hidden(InUiMode = UiModes.PROTEOMIC)]
         public string ProductAdduct
         {
             get
@@ -138,6 +145,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return DocNode.Transition.IonType; }
         }
         [Format(NullValue = TextUtil.EXCEL_NA)]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public int? FragmentIonOrdinal
         {
             get
@@ -147,6 +155,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return DocNode.Transition.Ordinal;
             }
         }
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public char? CleavageAa
         {
             get
@@ -157,6 +166,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
         [Format(NullValue = TextUtil.EXCEL_NA)]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public double? LossNeutralMass
         {
             get
@@ -166,13 +176,26 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return DocNode.LostMass;
             }
         }
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public string Losses
         {
             get
             {
                 return IsCustomTransition()
                     ? null
-                    : (DocNode.HasLoss ? string.Join(", ", DocNode.Losses.ToStrings()) : string.Empty);  // Not L10N
+                    : (DocNode.HasLoss ? string.Join(@", ", DocNode.Losses.ToStrings()) : string.Empty);
+            }
+        }
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
+        public string LossFormulas
+        {
+            get
+            {
+                if (IsCustomTransition())
+                    return null;
+                return DocNode.HasLoss && DocNode.Losses.Losses.All(l => l.Loss.Formula != null)
+                        ? string.Join(@", ", DocNode.Losses.Losses.Select(l => l.Loss.Formula))
+                        : string.Empty;
             }
         }
 
@@ -182,16 +205,76 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return DocNode.ExplicitQuantitative; }
             set
             {
-                ChangeDocNode(EditDescription.SetColumn("Quantitative", value), // Not L10N
+                ChangeDocNode(EditColumnDescription(nameof(Quantitative), value),
                     docNode=>docNode.ChangeQuantitative(value));
             }
         }
+
+        [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
+        [Importable]
+        public double? ExplicitCollisionEnergy
+        {
+            get { return DocNode.ExplicitValues.CollisionEnergy; }
+            set
+            {
+                ChangeDocNode(EditDescription.SetColumn(@"ExplicitCollisionEnergy", value),
+                    docNode => DocNode.ChangeExplicitCollisionEnergy(value));
+            }
+        }
+
+        [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
+        [Importable]
+        public double? ExplicitSLens
+        {
+            get { return DocNode.ExplicitValues.SLens; }
+            set
+            {
+                ChangeDocNode(EditDescription.SetColumn(@"ExplicitSLens", value),
+                    docNode => docNode.ChangeExplicitSLens(value));
+            }
+        }
+
+        [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
+        [Importable]
+        public double? ExplicitConeVoltage
+        {
+            get { return DocNode.ExplicitValues.ConeVoltage; }
+            set
+            {
+                ChangeDocNode(EditDescription.SetColumn(@"ExplicitConeVoltage", value),
+                    docNode => docNode.ChangeExplicitConeVoltage(value));
+            }
+        }
+
+        [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
+        [Importable]
+        public double? ExplicitDeclusteringPotential
+        {
+            get { return DocNode.ExplicitValues.DeclusteringPotential; }
+            set
+            {
+                ChangeDocNode(EditDescription.SetColumn(@"ExplicitDeclusteringPotential", value),
+                    docNode => docNode.ChangeExplicitDeclusteringPotential(value));
+            }
+        }
+
+        [Importable]
+        public double? ExplicitIonMobilityHighEnergyOffset
+        {
+            get { return DocNode.ExplicitValues.IonMobilityHighEnergyOffset; }
+            set
+            {
+                ChangeDocNode(EditDescription.SetColumn(@"ExplicitIonMobilityHighEnergyOffset", value),
+                    docNode => docNode.ChangeExplicitIonMobilityHighEnergyOffset(value));
+            }
+        }
+
         [InvariantDisplayName("TransitionNote")]
         [Importable]
         public string Note
         {
             get { return DocNode.Note; }
-            set { ChangeDocNode(EditDescription.SetColumn("TransitionNote", value), // Not L10N
+            set { ChangeDocNode(EditColumnDescription(nameof(Note), value),
                 docNode=>(TransitionDocNode) docNode.ChangeAnnotations(docNode.Annotations.ChangeNote(value)));}
         }
         [Format(NullValue = TextUtil.EXCEL_NA)]
@@ -263,6 +346,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get { return TransitionRef.PROTOTYPE; }
         }
+
+        protected override Type SkylineDocNodeType
+        {
+            get { return typeof(Transition); }
+        }
     }
 
     public class TransitionResultSummary : SkylineObject
@@ -325,7 +413,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [Obsolete]
-        public string ReplicatePath { get { return "/"; } } // Not L10N
+        public string ReplicatePath { get { return @"/"; } }
         [Obsolete]
         public Transition Transition { get; private set; }
         [ChildDisplayName("{0}RetentionTime")]
@@ -341,7 +429,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public override string ToString()
         {
-            return string.Format("RT: {0} Area: {1}", RetentionTime, Area); // Not L10N?
+            return string.Format(@"RT: {0} Area: {1}", RetentionTime, Area); // CONSIDER: localize?
         }
 
     }

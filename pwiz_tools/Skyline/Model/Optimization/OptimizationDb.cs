@@ -45,14 +45,15 @@ namespace pwiz.Skyline.Model.Optimization
 
     public class OptimizationDb : Immutable, IValidating
     {
-        public const string EXT = ".optdb"; // Not L10N
+        public const string EXT = ".optdb";
 
         public static string FILTER_OPTDB
         {
             get { return TextUtil.FileDialogFilter(Resources.OptimizationDb_FILTER_OPTDB_Optimization_Libraries, EXT); }
         }
 
-        public const int SCHEMA_VERSION_CURRENT = 2;
+        public const int SCHEMA_VERSION_CURRENT = 3; // Version 3 saves Charge and ProductCharge as TEXT instead of INT to accomodate adduct descriptions
+                                                     // No special code needed for reading V2, SQLite is happy to present int as string
 
         private readonly string _path;
         private readonly ISessionFactory _sessionFactory;
@@ -289,20 +290,20 @@ namespace pwiz.Skyline.Model.Optimization
             var precursors = new Dictionary<Target, HashSet<int>>(); // PeptideModSeq -> charges
             var optimizations = new List<Tuple<DbOptimization, double>>(); // DbOptimization, product m/z
             int maxCharge = 1;
-            using (SQLiteConnection connection = new SQLiteConnection("Data Source = " + path)) // Not L10N
+            using (SQLiteConnection connection = new SQLiteConnection(@"Data Source = " + path))
             using (SQLiteCommand command = new SQLiteCommand(connection))
             {
                 connection.Open();
-                command.CommandText = "SELECT PeptideModSeq, Charge, Mz, Value, Type FROM OptimizationLibrary"; // Not L10N
+                command.CommandText = @"SELECT PeptideModSeq, Charge, Mz, Value, Type FROM OptimizationLibrary";
                 using (SQLiteDataReader reader = command.ExecuteReader())
                 {
                     while (reader.Read())
                     {
-                        var type = (OptimizationType)reader["Type"]; // Not L10N
-                        var modifiedSequence = new Target(reader["PeptideModSeq"].ToString()); // Not L10N
-                        var charge = (int)reader["Charge"]; // Not L10N
-                        var productMz = (double)reader["Mz"]; // Not L10N
-                        var value = (double)reader["Value"]; // Not L10N
+                        var type = (OptimizationType)reader[@"Type"];
+                        var modifiedSequence = new Target(reader[@"PeptideModSeq"].ToString());
+                        var charge = (int)reader[@"Charge"];
+                        var productMz = (double)reader[@"Mz"];
+                        var value = (double)reader[@"Value"];
                         optimizations.Add(new Tuple<DbOptimization, double>(new DbOptimization(type, modifiedSequence, Adduct.FromChargeProtonated(charge), string.Empty, Adduct.EMPTY, value), productMz));
 
                         if (!precursors.ContainsKey(modifiedSequence))
@@ -319,15 +320,15 @@ namespace pwiz.Skyline.Model.Optimization
             }
             var peptideList = (from precursor in precursors
                                from charge in precursor.Value
-                               select string.Format("{0}{1}", precursor.Key, Transition.GetChargeIndicator(Adduct.FromChargeProtonated(charge))) // Not L10N
+                               select string.Format(@"{0}{1}", precursor.Key, Transition.GetChargeIndicator(Adduct.FromChargeProtonated(charge)))
                                ).ToList();
 
             var newDoc = new SrmDocument(document != null ? document.Settings : SrmSettingsList.GetDefault());
             newDoc = newDoc.ChangeSettings(newDoc.Settings
                 .ChangePeptideLibraries(libs => libs.ChangePick(PeptidePick.filter))
                 .ChangeTransitionFilter(filter =>
-                    filter.ChangeFragmentRangeFirstName("ion 1") // Not L10N
-                          .ChangeFragmentRangeLastName("last ion") // Not L10N
+                    filter.ChangeFragmentRangeFirstName(@"ion 1")
+                          .ChangeFragmentRangeLastName(@"last ion")
                           .ChangePeptideProductCharges(Enumerable.Range(1, maxCharge).Select(Adduct.FromChargeProtonated).ToList()) // TODO(bspratt) negative charge peptides
                           .ChangePeptideIonTypes(new []{ IonType.y, IonType.b })) // TODO(bspratt) generalize to molecules?
                 .ChangeTransitionLibraries(libs => libs.ChangePick(TransitionLibraryPick.none))
@@ -335,7 +336,9 @@ namespace pwiz.Skyline.Model.Optimization
             var matcher = new ModificationMatcher();
             matcher.CreateMatches(newDoc.Settings, peptideList, Settings.Default.StaticModList, Settings.Default.HeavyModList);
             FastaImporter importer = new FastaImporter(newDoc, matcher);
-            string text = string.Format(">>{0}\r\n{1}", newDoc.GetPeptideGroupId(true), TextUtil.LineSeparate(peptideList)); // Not L10N
+            // ReSharper disable LocalizableElement
+            string text = string.Format(">>{0}\r\n{1}", newDoc.GetPeptideGroupId(true), TextUtil.LineSeparate(peptideList));
+            // ReSharper restore LocalizableElement
             PeptideGroupDocNode imported = importer.Import(new StringReader(text), null, Helpers.CountLinesInString(text)).First();
 
             int optimizationsUpdated = 0;

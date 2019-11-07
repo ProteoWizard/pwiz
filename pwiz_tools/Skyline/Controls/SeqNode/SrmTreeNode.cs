@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using System.Drawing.Imaging;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -43,7 +44,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
     public class EmptyNode : TreeNodeMS
     {
-        public const string TEXT_EMPTY = "                 "; // Not L10N
+        public const string TEXT_EMPTY = "                 ";
 
         public EmptyNode(): base(TEXT_EMPTY)
         {
@@ -266,6 +267,13 @@ namespace pwiz.Skyline.Controls.SeqNode
             get { return !Model.Annotations.IsEmpty; }
         }
 
+        protected static string FormatAdductTip(Adduct adduct)
+        {
+            return adduct.IsProteomic
+                ? string.Format(adduct.AdductCharge.ToString(LocalizationHelper.CurrentCulture))
+                : string.Format(@"{0} ({1})", adduct.AdductCharge.ToString(LocalizationHelper.CurrentCulture), adduct.AdductFormula);
+        }
+
         public virtual Size RenderTip(Graphics g, Size sizeMax, bool draw)
         {
             var table = new TableDesc();
@@ -305,7 +313,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                     }
                     // If the last row was multi-line, add a spacer line.
                     if (lastMultiLine)
-                        table.AddDetailRow(" ", " ", rt); // Not L10N
+                        table.AddDetailRow(@" ", @" ", rt);
                     lastMultiLine = table.AddDetailRowLineWrap(g, annotationName, annotationValue, rt);
                 }
                 SizeF size = table.CalcDimensions(g);
@@ -990,7 +998,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
     public class NodeTip : CustomTip
     {
-        public static string FontFace { get { return "Arial"; } } // Not L10N
+        public static string FontFace { get { return @"Arial"; } }
         public static float FontSize { get { return 8f; } }
 
         public static int TipDelayMs { get { return 500; } }
@@ -1157,7 +1165,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         }
 
         private const string X80 =
-        "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"; // Not L10N
+        @"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 
         /// <summary>
         /// Adds a text column a with potential line wrap.
@@ -1192,7 +1200,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             AddDetailRow(firstRow ? name : string.Empty, line, rt);
             // The text is multi-line if either it required wrapping to multiple rows,
             // or it contains new-line characters.
-            return !firstRow || value.Contains('\n'); // Not L10N
+            return !firstRow || value.Contains('\n');
         }
 
         public SizeF CalcDimensions(Graphics g)

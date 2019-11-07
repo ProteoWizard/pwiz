@@ -117,7 +117,7 @@ namespace pwiz.Skyline.SettingsUI
                                 regressionLine.Intercept.ToString(LocalizationHelper.CurrentCulture);
                         }
                     }
-                    textTimeWindow.Text = string.Format("{0:F04}", _regression.TimeWindow); // Not L10N
+                    textTimeWindow.Text = string.Format(@"{0:F04}", _regression.TimeWindow);
                 }
             }
         }
@@ -584,10 +584,10 @@ namespace pwiz.Skyline.SettingsUI
                 var regressionLine = regression.Conversion as RegressionLineElement;
                 if (regressionLine != null)
                 {
-                    textSlope.Text = string.Format("{0}", regressionLine.Slope); // Not L10N 
-                    textIntercept.Text = string.Format("{0}", regressionLine.Intercept); // Not L10N
+                    textSlope.Text = string.Format(@"{0}", regressionLine.Slope);
+                    textIntercept.Text = string.Format(@"{0}", regressionLine.Intercept);
                 }
-                textTimeWindow.Text = string.Format("{0:F01}", regression.TimeWindow); // Not L10N
+                textTimeWindow.Text = string.Format(@"{0:F01}", regression.TimeWindow);
 
                 // Select best calculator match.
                 calculatorSpec = regression.Calculator;
@@ -742,14 +742,17 @@ namespace pwiz.Skyline.SettingsUI
 
         public Target Target { get; set; }
         public double RetentionTime { get; set; }
-        public string Sequence { get { return Target == null ? string.Empty : Target.ToString(); } }
+        public string Sequence { get { return Target == null ? string.Empty : Target.ToSerializableString(); } }
 
         public static string ValidateSequence(Target sequence)
         {
-            if (sequence.IsEmpty || !sequence.IsProteomic)
+            if (sequence.IsEmpty)
                 return Resources.MeasuredPeptide_ValidateSequence_A_modified_peptide_sequence_is_required_for_each_entry;
-            if (!FastaSequence.IsExSequence(sequence.Sequence))
-                return string.Format(Resources.MeasuredPeptide_ValidateSequence_The_sequence__0__is_not_a_valid_modified_peptide_sequence, sequence);
+            if (sequence.IsProteomic)
+            {
+                if (!FastaSequence.IsExSequence(sequence.Sequence))
+                    return string.Format(Resources.MeasuredPeptide_ValidateSequence_The_sequence__0__is_not_a_valid_modified_peptide_sequence, sequence);
+            }
             return null;
         }
 

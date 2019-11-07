@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -78,6 +78,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             string label = DisplayText(DocNode, SequenceTree.GetDisplaySettings(PepNode));
             if (!Equals(label, Text))
                 Text = label;
+            ForeColor = DocNode.ExplicitQuantitative ? SystemColors.WindowText : SystemColors.GrayText;
         }
         
         public int TypeImageIndex
@@ -150,7 +151,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             if (rank.HasValue && rank > 0)
             {
                 // Mark MS1 transition ranks with "i" for isotope
-                string rankText = (nodeTran.IsMs1 ? "i " : string.Empty) + rank; // Not L10N
+                string rankText = (nodeTran.IsMs1 ? @"i " : string.Empty) + rank;
                 label = string.Format(Resources.TransitionTreeNode_GetResultsText__0__, rankText);
             }
             float? ratio = nodeTran.GetPeakAreaRatio(index, indexRatio);
@@ -164,7 +165,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             Transition tran = nodeTran.Transition;
             string labelPrefix;
-            const string labelPrefixSpacer = " - "; // Not L10N
+            const string labelPrefixSpacer = " - ";
             if (tran.IsPrecursor())
             {
                 labelPrefix = nodeTran.FragmentIonName + Transition.GetMassIndexText(tran.MassIndex) + labelPrefixSpacer;
@@ -185,7 +186,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
             if (!nodeTran.HasLibInfo && !nodeTran.HasDistInfo)
             {
-                return string.Format("{0}{1}{2}{3}", // Not L10N
+                return string.Format(@"{0}{1}{2}{3}",
                                      labelPrefix,
                                      GetMzLabel(nodeTran),
                                      Transition.GetChargeIndicator(tran.Adduct),
@@ -196,7 +197,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                               ? string.Format(Resources.TransitionTreeNode_GetLabel_irank__0__, nodeTran.IsotopeDistInfo.Rank)
                               : string.Format(Resources.TransitionTreeNode_GetLabel_rank__0__, nodeTran.LibInfo.Rank);
 
-            return string.Format("{0}{1}{2} ({3}){4}", // Not L10N
+            return string.Format(@"{0}{1}{2} ({3}){4}",
                                  labelPrefix,
                                  GetMzLabel(nodeTran),
                                  Transition.GetChargeIndicator(tran.Adduct),
@@ -208,7 +209,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             int? massShift = nodeTran.Transition.DecoyMassShift;
             double shift = SequenceMassCalc.GetPeptideInterval(massShift);
-            return string.Format("{0:F04}{1}", nodeTran.Mz - shift, // Not L10N
+            return string.Format(@"{0:F04}{1}", nodeTran.Mz - shift,
                 Transition.GetDecoyText(massShift));
         }
 
@@ -234,8 +235,8 @@ namespace pwiz.Skyline.Controls.SeqNode
             using (RenderTools rt = new RenderTools())
             {
                 table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Ion, nodeTran.Transition.FragmentIonName, rt);
-                table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Charge, nodeTran.Transition.Adduct.AdductCharge.ToString(LocalizationHelper.CurrentCulture), rt);
-                table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Product_m_z, string.Format("{0:F04}", nodeTran.Mz), rt); // Not L10N
+                table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Charge, FormatAdductTip(nodeTran.Transition.Adduct), rt);
+                table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Product_m_z, string.Format(@"{0:F04}", nodeTran.Mz), rt);
                 int? decoyMassShift = nodeTran.Transition.DecoyMassShift;
                 if (decoyMassShift.HasValue)
                     table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Decoy_Mass_Shift, decoyMassShift.Value.ToString(LocalizationHelper.CurrentCulture), rt);
@@ -250,7 +251,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                     // followed by individual losses
                     else
                     {
-                        table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Loss, string.Format("{0:F04}", losses.Mass), rt); // Not L10N
+                        table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Loss, string.Format(@"{0:F04}", losses.Mass), rt);
                         table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Losses, TextUtil.LineSeparate(losses.ToStrings()), rt);
                     }
                 }

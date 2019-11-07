@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Util
         /* translation of the ReadParmFile perl routine.  This does not read a parameter */
         /* file; it makes static initializers for the parameter data.                    */
 
-        public const String VERSION = "Krokhin,3.0"; // Not L10N
+        public const String VERSION = @"Krokhin,3.0";
 
         private class AAParams
         {
@@ -124,7 +124,7 @@ namespace pwiz.Skyline.Util
               without the surrounding 0s.
             */
 
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             CLUSTCOMB.Add("0110", 0.3);
             CLUSTCOMB.Add("0150", 0.4);
             CLUSTCOMB.Add("0510", 0.4);
@@ -444,7 +444,7 @@ namespace pwiz.Skyline.Util
             HlxScore6.Add("ZZUUXZ", 1.25);
             HlxScore6.Add("ZZUUZX", 0.75);
             HlxScore6.Add("ZZUUZZ", 0.75);
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
         }
 
         public enum Column { A300, A100 }
@@ -759,23 +759,23 @@ namespace pwiz.Skyline.Util
             if (NOCLUSTER == 1)
                 return 0.0;
 
-            string cc = "0" + sq + "0"; // Not L10N
+            string cc = @"0" + sq + @"0";
 // ReSharper disable ConditionIsAlwaysTrueOrFalse
             if (ALGORITHM_VERSION == 3)
 // ReSharper restore ConditionIsAlwaysTrueOrFalse
             {
-                cc = cc.ReplaceAAs("LIW", "5"); // Not L10N
-                cc = cc.ReplaceAAs("AMYV", "1"); // Not L10N
-                cc = cc.ReplaceAAs("A-Z", "0"); // Not L10N
+                cc = cc.ReplaceAAs(@"LIW", @"5");
+                cc = cc.ReplaceAAs(@"AMYV", @"1");
+                cc = cc.ReplaceAAs(@"A-Z", @"0");
             }
             else
             // Suppress the unreachable code warning
 #pragma warning disable 162
 // ReSharper disable HeuristicUnreachableCode
             {
-                cc = cc.ReplaceAAs("LIWF", "5"); // Not L10N
-                cc = cc.ReplaceAAs("MYV", "1"); // Not L10N
-                cc = cc.ReplaceAAs("A-Z", "0"); // Not L10N
+                cc = cc.ReplaceAAs(@"LIWF", @"5");
+                cc = cc.ReplaceAAs(@"MYV", @"1");
+                cc = cc.ReplaceAAs(@"A-Z", @"0");
             }
 // ReSharper restore HeuristicUnreachableCode
 #pragma warning restore 162
@@ -810,11 +810,11 @@ namespace pwiz.Skyline.Util
         private static double proline(String sq)
         {
             double score = 0.0;
-            if (sq.Contains("PPPP")) // Not L10N
+            if (sq.Contains(@"PPPP"))
                 score = PPPPSCORE;
-            else if (sq.Contains("PPP")) // Not L10N
+            else if (sq.Contains(@"PPP"))
                 score = PPPSCORE;
-            else if (sq.Contains("PP")) // Not L10N
+            else if (sq.Contains(@"PP"))
                 score = PPSCORE;
             return score;
         }
@@ -926,12 +926,12 @@ namespace pwiz.Skyline.Util
         {
             double cr0 =
                                      _partial_charge(PK0, pH)                    // n terminus
-               + CNTref[eMap('K')] * _partial_charge(AAPARAMS['K'].PK, pH)  // lys // Not L10N
-               + CNTref[eMap('R')] * _partial_charge(AAPARAMS['R'].PK, pH)  // arg // Not L10N 
-               + CNTref[eMap('H')] * _partial_charge(AAPARAMS['H'].PK, pH)  // his // Not L10N
-               - CNTref[eMap('D')] * _partial_charge(pH, AAPARAMS['D'].PK)  // asp // Not L10N
-               - CNTref[eMap('E')] * _partial_charge(pH, AAPARAMS['E'].PK)  // glu // Not L10N
-               - CNTref[eMap('Y')] * _partial_charge(pH, AAPARAMS['Y'].PK)  // try // Not L10N
+               + CNTref[eMap('K')] * _partial_charge(AAPARAMS['K'].PK, pH)  // lys
+               + CNTref[eMap('R')] * _partial_charge(AAPARAMS['R'].PK, pH)  // arg
+               + CNTref[eMap('H')] * _partial_charge(AAPARAMS['H'].PK, pH)  // his
+               - CNTref[eMap('D')] * _partial_charge(pH, AAPARAMS['D'].PK)  // asp
+               - CNTref[eMap('E')] * _partial_charge(pH, AAPARAMS['E'].PK)  // glu
+               - CNTref[eMap('Y')] * _partial_charge(pH, AAPARAMS['Y'].PK)  // try
                - _partial_charge(pH, PK1); // c terminus
             /*
             // The following was taken out of the formula for R
@@ -1021,11 +1021,11 @@ namespace pwiz.Skyline.Util
             /* Translator1 note:  notice lowercase 'z'.  This never appears in any patterns to which this
                string is compared, and will never match any helicity patterns.
             */
-            hc = hc.ReplaceAAs("PHRK", "z"); // Not L10N
-            hc = hc.ReplaceAAs("WFIL", "X"); // Not L10N
-            hc = hc.ReplaceAAs("YMVA", "Z"); // Not L10N
-            hc = hc.ReplaceAAs("DE", "O"); // Not L10N
-            hc = hc.ReplaceAAs("GSPCNKQHRT", "U"); // Not L10N
+            hc = hc.ReplaceAAs(@"PHRK", @"z");
+            hc = hc.ReplaceAAs(@"WFIL", @"X");
+            hc = hc.ReplaceAAs(@"YMVA", @"Z");
+            hc = hc.ReplaceAAs(@"DE", @"O");
+            hc = hc.ReplaceAAs(@"GSPCNKQHRT", @"U");
 
             double sum = 0.0;
             int sqlen = hc.Length;
@@ -1106,9 +1106,9 @@ namespace pwiz.Skyline.Util
             char testAAl = testsq[OFF1 + posn];
             char testAAr = testsq[OFF1 + posn + 2];
             string testsqCopy = testsq.Substring(OFF1 + posn + 1);
-            double mult = connector(f01, testAAl, testAAr, "--", far1, far2); // Not L10N
+            double mult = connector(f01, testAAl, testAAr, @"--", far1, far2);
             prod1 = prod1 * mult;
-            if (etype == '*') // Not L10N
+            if (etype == '*')
                 prod1 = prod1 * 25.0;
             if (mult == 0.0)
             {
@@ -1117,19 +1117,19 @@ namespace pwiz.Skyline.Util
             for (int i = 1; i < pattern.Length - 2; i = i + 3)
             {
                 string fpart = pattern.Substring(i, 2);
-                char gpart = (i + 2) < pattern.Length ? pattern[i + 2] : '\0'; // Not L10N
+                char gpart = (i + 2) < pattern.Length ? pattern[i + 2] : '\0';
                 double s3 = AAPARAMS[gpart].H2BASCORE;
-                if (fpart.Equals("--")) // Not L10N
+                if (fpart.Equals(@"--"))
                 {
-                    iss = 0; far1 = '\0'; far2 = '\0'; // Not L10N
+                    iss = 0; far1 = '\0'; far2 = '\0';
                 }
-                if (fpart.Equals("<-")) // Not L10N
+                if (fpart.Equals(@"<-"))
                 {
-                    iss = 1; far1 = testsqCopy[i + 1]; far2 = '\0'; // Not L10N
+                    iss = 1; far1 = testsqCopy[i + 1]; far2 = '\0'; 
                 }
-                if (fpart.Equals("->")) // Not L10N
+                if (fpart.Equals(@"->"))
                 {
-                    iss = -1; far1 = '\0'; far2 = testsqCopy[i + 3]; // Not L10N
+                    iss = -1; far1 = '\0'; far2 = testsqCopy[i + 3];
                 }
 
                 testAAl = testsqCopy[i + 1 + iss];
@@ -1137,7 +1137,7 @@ namespace pwiz.Skyline.Util
 
                 mult = connector(gpart, testAAl, testAAr, fpart, far1, far2);
 
-                if (etype == '*') // Not L10N
+                if (etype == '*')
                 {
                     if (mult != 0.0 || acount < 3)
                     {
@@ -1145,7 +1145,7 @@ namespace pwiz.Skyline.Util
                     }
                 }
 
-                if (etype == '+') // Not L10N
+                if (etype == '+')
                 {
                     prod1 = prod1 + s3 * mult;
                 }
@@ -1166,22 +1166,22 @@ namespace pwiz.Skyline.Util
         {
             double mult = 1.0;
 
-            if (ct.Contains("<-")) { mult *= 0.2; } // Not L10N
-            if (ct.Contains("->")) { mult *= 0.1; } // Not L10N
+            if (ct.Contains(@"<-")) { mult *= 0.2; }
+            if (ct.Contains(@"->")) { mult *= 0.1; }
 
             mult *= AAPARAMS[lp].H2CMULT;
             if (lp != rp) mult *= AAPARAMS[rp].H2CMULT;
 
-            if (acid == 'A' || acid == 'Y' || acid == 'V' || acid == 'M') // Not L10N
+            if (acid == 'A' || acid == 'Y' || acid == 'V' || acid == 'M')
             {
-                if (lp == 'P' || lp == 'G' || rp == 'P' || rp == 'G') mult = 0.0; // Not L10N
-                if (ct.Contains("->") || ct.Contains("<-")) mult = 0.0; // Not L10N
+                if (lp == 'P' || lp == 'G' || rp == 'P' || rp == 'G') mult = 0.0;
+                if (ct.Contains(@"->") || ct.Contains(@"<-")) mult = 0.0;
             }
 
-            if (acid == 'L' || acid == 'W' || acid == 'F' || acid == 'I') // Not L10N
+            if (acid == 'L' || acid == 'W' || acid == 'F' || acid == 'I')
             {
-                if (((lp == 'P' || lp == 'G') || (rp == 'P' || rp == 'G')) && (!ct.Contains("--"))) mult = 0.0; // Not L10N
-                if (((far1 == 'P' || far1 == 'G') || (far2 == 'P' || far2 == 'G')) && (ct.Contains("<-") || ct.Contains("->"))) mult = 0.0; // Not L10N
+                if (((lp == 'P' || lp == 'G') || (rp == 'P' || rp == 'G')) && (!ct.Contains(@"--"))) mult = 0.0;
+                if (((far1 == 'P' || far1 == 'G') || (far2 == 'P' || far2 == 'G')) && (ct.Contains(@"<-") || ct.Contains(@"->"))) mult = 0.0;
             }
             return mult;
         }
@@ -1216,13 +1216,13 @@ namespace pwiz.Skyline.Util
             string prechop = sq;
             string sqCopy = sq.Substring(2, sq.Length - 4);
 
-            string pass1 = sqCopy.ReplaceAAs("WFILYMVA", "1"); // Not L10N
-            pass1 = pass1.ReplaceAAs("GSPCNKQHRTDE", "0"); // Not L10N
+            string pass1 = sqCopy.ReplaceAAs(@"WFILYMVA", @"1");
+            pass1 = pass1.ReplaceAAs(@"GSPCNKQHRTDE", @"0");
 
             for (int i = 0; i < pass1.Length; i++)
             {
                 char m = pass1[i];
-                if (m == '1') // Not L10N
+                if (m == '1')
                 {
                     string lc = pass1.Substring(i);
                     string sq2 = sqCopy.Substring(i);
@@ -1233,41 +1233,41 @@ namespace pwiz.Skyline.Util
                     while (zap <= llim && subt < 2)
                     {
                         char f1 = (zap < 0 || zap >= lc.Length ? '0' : lc[zap]);
-                        char f2 = (zap - 1 < 0 || zap - 1 >= lc.Length ? '0' : lc[zap - 1]); // Not L10N
-                        char f3 = (zap + 1 < 0 || zap + 1 >= lc.Length ? '0' : lc[zap + 1]); // Not L10N
+                        char f2 = (zap - 1 < 0 || zap - 1 >= lc.Length ? '0' : lc[zap - 1]);
+                        char f3 = (zap + 1 < 0 || zap + 1 >= lc.Length ? '0' : lc[zap + 1]);
 
-                        if (f1 == '1') // Not L10N
+                        if (f1 == '1')
                         {
                             if (zap > 0)
-                                pat += "--"; // Not L10N
+                                pat += @"--";
                             pat += sq2.Substring(zap, 1);
                         }
                         else
                         {
-                            if (f2 == '1' && f1 == '0') // Not L10N
+                            if (f2 == '1' && f1 == '0')
                             {
                                 subt++;
                                 if (subt < 2)
                                 {
-                                    pat += "->"; // Not L10N
+                                    pat += @"->";
                                     pat += sq2.Substring(zap - 1, 1);
                                 }
                             }
                             else
                             {
-                                if (f3 == '1' && f1 == '0') // Not L10N
+                                if (f3 == '1' && f1 == '0')
                                 {
                                     subt++;
                                     if (subt < 2)
                                     {
-                                        pat += "<-"; // Not L10N
+                                        pat += @"<-";
                                         pat += sq2.Substring(zap + 1, 1);
                                     }
                                 }
                             }
                         }
 
-                        if (f1 == '0' && f2 == '0' && f3 == '0') // Not L10N
+                        if (f1 == '0' && f2 == '0' && f3 == '0')
                             zap = 1000;
                         zap += 3;
                     }
@@ -1275,7 +1275,7 @@ namespace pwiz.Skyline.Util
                     if (pat.Length > 4)
                     {
                         traps = prechop;
-                        double skore = evalH2pattern(pat, traps, i - 1, '*'); // Not L10N
+                        double skore = evalH2pattern(pat, traps, i - 1, '*');
                         if (skore >= hiscore)
                         {
                             hiscore = skore;
@@ -1290,7 +1290,7 @@ namespace pwiz.Skyline.Util
             {
                 double gscore = hiscore; //not my()'ed in perl source
                 traps = prechop;
-                hiscore = evalH2pattern(best, traps, best_pos - 1, '+'); // Not L10N
+                hiscore = evalH2pattern(best, traps, best_pos - 1, '+');
 
                 ret[HISC] = hiscore;
                 ret[GSC] = gscore;
@@ -1322,7 +1322,7 @@ namespace pwiz.Skyline.Util
                 lenMult = 1;
             }
             double NoPMult = 0.75;
-            if (sq.Contains("P")) // Not L10N
+            if (sq.Contains(@"P"))
                 NoPMult = 0.0;
             double h2mult = 1.0 + lenMult + NoPMult;
             return HELIX2SCALE * h2mult * h2FwBk;
@@ -1334,18 +1334,18 @@ namespace pwiz.Skyline.Util
                 return 0.0;
             string mpart = sq.Substring(sq.Length - 4);
 
-            if (mpart[0] == 'D' || mpart[0] == 'E') // Not L10N
+            if (mpart[0] == 'D' || mpart[0] == 'E')
             {
                 mpart = mpart.Substring(1, 2);
-                if (mpart.ContainsAA("PGKRH")) // Not L10N
+                if (mpart.ContainsAA(@"PGKRH"))
                     return 0.0;
-                mpart = mpart.ReplaceAAs("LI", "X"); // Not L10N
-                mpart = mpart.ReplaceAAs("AVYFWM", "Z"); // Not L10N
-                mpart = mpart.ReplaceAAs("GSPCNKQHRTDE", "U"); // Not L10N
+                mpart = mpart.ReplaceAAs(@"LI", @"X");
+                mpart = mpart.ReplaceAAs(@"AVYFWM", @"Z");
+                mpart = mpart.ReplaceAAs(@"GSPCNKQHRTDE", @"U");
 
                 switch (mpart)
                 {
-                    // ReSharper disable NonLocalizedString
+                    // ReSharper disable LocalizableElement
                     case "XX": return 1.0;
                     case "ZX": return 0.5;
                     case "XZ": return 0.5;
@@ -1354,7 +1354,7 @@ namespace pwiz.Skyline.Util
                     case "UX": return 0.4;
                     case "ZU": return 0.2;
                     case "UZ": return 0.2;
-                    // ReSharper restore NonLocalizedString
+                    // ReSharper restore LocalizableElement
                 }
             }
             return 0;
@@ -1430,7 +1430,7 @@ namespace pwiz.Skyline.Util
         public static string ReplaceAAs(this IEnumerable<char> s, string aas, string newValue)
         {
             StringBuilder sb = new StringBuilder();
-            bool allAAs = (aas == "A-Z"); // Not L10N
+            bool allAAs = (aas == @"A-Z");
             foreach (char c in s)
             {
                 if (!allAAs && aas.IndexOf(c) != -1)

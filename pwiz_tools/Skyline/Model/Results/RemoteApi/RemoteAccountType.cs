@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using pwiz.Common.Collections;
-using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
 using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
 using pwiz.Skyline.Properties;
 
@@ -25,9 +24,8 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 {
     public abstract class RemoteAccountType
     {
-        public static readonly RemoteAccountType CHORUS = new Chorus();
         public static readonly RemoteAccountType UNIFI = new Unifi();
-        public static readonly ImmutableList<RemoteAccountType> ALL = ImmutableList.ValueOf(new[] {UNIFI, CHORUS});
+        public static readonly ImmutableList<RemoteAccountType> ALL = ImmutableList.ValueOf(new[] {UNIFI});
 
         public abstract string Name { get;  }
         public abstract string Label { get; }
@@ -36,29 +34,6 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         public override string ToString()
         {
             return Label;
-        }
-
-        private class Chorus : RemoteAccountType
-        {
-            public override string Label
-            {
-                get { return Resources.Chorus_Label_Chorus; }
-            }
-
-            public override string Name
-            {
-                get { return "chorus"; } // Not L10N
-            }
-
-            public override RemoteUrl GetEmptyUrl()
-            {
-                return ChorusUrl.Empty;
-            }
-
-            public override RemoteAccount GetEmptyAccount()
-            {
-                return ChorusAccount.BLANK;
-            }
         }
 
         private class Unifi : RemoteAccountType
@@ -75,12 +50,12 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
             public override string Name
             {
-                get { return "unifi"; } // Not L10N
+                get { return @"unifi"; }
             }
 
             public override RemoteAccount GetEmptyAccount()
             {
-                return new UnifiAccount("https://unifiapi.waters.com:50034", null, null); // Not L10N
+                return new UnifiAccount(@"https://unifiapi.waters.com:50034", null, null);
             }
         }
     }

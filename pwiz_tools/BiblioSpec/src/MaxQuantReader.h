@@ -29,8 +29,9 @@
 #include <sstream>
 #include <stdexcept>
 
-using namespace std;
-using namespace boost;
+using boost::tokenizer;
+using boost::escaped_list_separator;
+
 
 namespace BiblioSpec {
 
@@ -73,10 +74,11 @@ public:
     double pep;
     double score;
     int labelingState;
+    int evidenceID; // index into evidence.txt file for ion mobility info
     string masses;
     string intensities;
 
-    MaxQuantLine() : scanNumber(0), mz(0), charge(0), retentionTime(0), score(0), labelingState(-1) {}
+    MaxQuantLine() : scanNumber(0), mz(0), charge(0), retentionTime(0), score(0), labelingState(-1), evidenceID(-1) {}
 
     static void insertRawFile(MaxQuantLine& le, const string& value)
     {
@@ -121,6 +123,10 @@ public:
     static void insertLabelingState(MaxQuantLine& le, const string& value)
     {
         le.labelingState = (value.empty()) ? -1 : lexical_cast<int>(value);
+    }
+    static void insertEvidenceID(MaxQuantLine& le, const string& value)
+    {
+        le.evidenceID = (value.empty()) ? -1 : lexical_cast<int>(value);
     }
     static void insertMasses(MaxQuantLine& le, const string& value)
     {
@@ -188,15 +194,18 @@ private:
     string tsvName_;
     ifstream tsvFile_;
     string modsPath_;
+    string paramsPath_;
     double scoreThreshold_;
     int lineNum_;
     map< string, vector<MaxQuantPSM*> > fileMap_; // store psms by filename
     MaxQuantPSM* curMaxQuantPSM_; // use this instead of curPSM_
     vector<MaxQuantColumnTranslator> targetColumns_; // columns to extract
     set<string> optionalColumns_; // columns that are optional
-    set<MaxQuantModification> modBank_;   // full mod name -> delta mass
+    map<string, MaxQuantModification> modBank_;   // full mod name -> delta mass
     map< MaxQuantModification::MAXQUANT_MOD_POSITION, vector<const MaxQuantModification*> > fixedModBank_;
     vector<MaxQuantLabels> labelBank_;
+    vector<double> inverseK0_; // optionally parsed from evidence.txt
+    vector<double> CCS_; // optionally parsed from evidence.txt
 
     void initTargetColumns();
     void initModifications();
@@ -208,9 +217,10 @@ private:
     void addDoublesToVector(vector<double>& v, const string& valueList);
     void addModsToVector(vector<SeqMod>& v, const string& modifications, string modSequence);
     void addLabelModsToVector(vector<SeqMod>& v, const string& rawFile, const string& sequence, int labelingState);
-    SeqMod searchForMod(vector<string>& modNames, string modSequence, int posOpenParen);
+    SeqMod searchForMod(vector<string>& modNames, const string& modSequence, int& posOpenParen);
     static int getModPosition(const string& modSeq, int posOpenParen);
     vector<SeqMod> getFixedMods(char aa, int aaPosition, const vector<const MaxQuantModification*>& mods);
+    void initEvidence();  // optionally parse ion mobility info from evidence.txt
 
     const escaped_list_separator<char> separator_;
 };
@@ -219,7 +229,7 @@ class MaxQuantWrongSequenceException : public std::exception {
 public:
     MaxQuantWrongSequenceException(const std::string& mod, const std::string& seq, int line) {
         std::stringstream ss;
-        ss << "No matching mod for " << mod << " in sequence " << seq << " (line " << line << ")";
+        ss << "No matching mod for " << mod << " in sequence " << seq << " (line " << line << "). Make sure you have provided the correct modifications[.local].xml file.";
         message_ = ss.str();
     }
     virtual ~MaxQuantWrongSequenceException() throw () {}

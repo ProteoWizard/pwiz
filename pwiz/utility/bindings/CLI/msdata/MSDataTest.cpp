@@ -32,6 +32,7 @@ using namespace pwiz::CLI::data;
 using namespace pwiz::CLI::msdata;
 using namespace pwiz::CLI::util;
 
+#using<System.Core.dll>
 
 void testSpectrumListSimple()
 {
@@ -182,6 +183,9 @@ void testExample()
     Precursor^ p = s->precursors[0];
     IsolationWindow^ iw = p->isolationWindow;
     unit_assert_equal(s->precursors[0]->isolationWindow->cvParam(CVID::MS_isolation_window_lower_offset)->value, 0.5, 1e-6);
+
+    auto mzArray = s->getMZArray()->data;
+    unit_assert_operator_equal(10, mzArray->Storage()->Length);
 }
 
 
@@ -195,6 +199,23 @@ void testCatchAndForward()
 }
 
 
+void testReader()
+{
+    auto typeSet = gcnew System::Collections::Generic::HashSet<String^>(ReaderList::FullReaderList->getTypes());
+    unit_assert(typeSet->Contains("Sciex WIFF/WIFF2"));
+    unit_assert(typeSet->Contains("mzML"));
+
+    auto extSet = gcnew System::Collections::Generic::HashSet<String^>(ReaderList::FullReaderList->getFileExtensions());
+    unit_assert(extSet->Contains(".wiff"));
+    unit_assert(extSet->Contains(".wiff2"));
+    unit_assert(extSet->Contains(".mzml"));
+
+    auto typeExtMap = ReaderList::FullReaderList->getFileExtensionsByType();
+    unit_assert(typeExtMap->ContainsKey("Sciex WIFF/WIFF2") && typeExtMap["Sciex WIFF/WIFF2"]->Count == 2 && typeExtMap["Sciex WIFF/WIFF2"][0] == ".wiff" && typeExtMap["Sciex WIFF/WIFF2"][1] == ".wiff2");
+    unit_assert(typeExtMap->ContainsKey("Waters UNIFI") && typeExtMap["Waters UNIFI"]->Count == 0);
+}
+
+
 int main(int argc, char* argv[])
 {
     TEST_PROLOG_EX(argc, argv, "_CLI")
@@ -205,6 +226,7 @@ int main(int argc, char* argv[])
         testChromatograms();
         testExample();
         testCatchAndForward();
+        testReader();
     }
     catch (exception& e)
     {

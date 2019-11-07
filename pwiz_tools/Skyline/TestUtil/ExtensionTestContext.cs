@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -36,7 +36,7 @@ namespace pwiz.SkylineTestUtil
         {
             get
             {
-                return !(Program.NoVendorReaders || ("1").Equals(Environment.GetEnvironmentVariable("COR_ENABLE_PROFILING"))); // Not L10N
+                return !(Program.NoVendorReaders || (@"1").Equals(Environment.GetEnvironmentVariable(@"COR_ENABLE_PROFILING")));
             }
         }
 
@@ -54,7 +54,7 @@ namespace pwiz.SkylineTestUtil
                 var testZipFiles = Path.Combine(directory, "TestZipFiles");
                 if (Directory.Exists(testZipFiles))
                     return Path.Combine(testZipFiles, relativePath);
-                if (File.Exists(Path.Combine(directory, Program.Name + ".sln")))
+                if (File.Exists(Path.Combine(directory, "Skyline.sln")))
                     return Path.Combine(directory, relativePath);
             }
             return null;
@@ -157,10 +157,9 @@ namespace pwiz.SkylineTestUtil
             get
             {
                 // return false to import mzML
-                return (DateTime.Now.Year > 2018 /* start failing after the new year */ ||
-                        (Environment.Is64BitProcess && !Program.SkylineOffscreen &&  /* wiff2 access leaks thread and event handles, so avoid it during nightly tests when offscreen */
-                         (CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator != "," || /* wiff2 access fails under french language settings */
-                          CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator != "\xA0")) /* no break space */ ) ;
+                return (Environment.Is64BitProcess && !Program.SkylineOffscreen &&  /* wiff2 access leaks thread and event handles, so avoid it during nightly tests when offscreen */
+                        (CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator != "," || /* wiff2 access fails under french language settings */
+                         CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator != "\xA0")) /* no break space */ ;
             }
         }
 

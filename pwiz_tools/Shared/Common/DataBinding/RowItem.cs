@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
-using System.ComponentModel;
 using pwiz.Common.Collections;
 
 namespace pwiz.Common.DataBinding
@@ -62,10 +61,6 @@ namespace pwiz.Common.DataBinding
                 return this;
             }
             return new RowItem(this) { PivotKeys = newPivotKeys };
-        }
-
-        public virtual void HookPropertyChange(object component, PropertyDescriptor propertyDescriptor)
-        {
         }
     }
 }

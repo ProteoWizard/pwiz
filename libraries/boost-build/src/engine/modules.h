@@ -6,6 +6,7 @@
 #ifndef MODULES_DWA10182001_H
 #define MODULES_DWA10182001_H
 
+#include "config.h"
 #include "lists.h"
 #include "object.h"
 

@@ -8,6 +8,7 @@
 #ifndef BJAM_DEBUG_H
 #define BJAM_DEBUG_H
 
+#include "config.h"
 #include "constants.h"
 #include "object.h"
 

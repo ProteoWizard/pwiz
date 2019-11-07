@@ -25,6 +25,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return chromatogramGroupInfo.TimeIntensitiesGroup;
         }
 
+        public MsDataFileScanIds ReadMsDataFileScanIds()
+        {
+            return DataSchema.ChromDataCache.GetScanIds(DataSchema.Document,
+                PrecursorResult.GetResultFile().ChromFileInfo.FilePath);
+        }
+
         private ChromatogramGroupInfo GetChromatogramGroup(bool loadPoints)
         {
             return DataSchema.ChromDataCache.GetChromatogramGroupInfo(DataSchema.Document,

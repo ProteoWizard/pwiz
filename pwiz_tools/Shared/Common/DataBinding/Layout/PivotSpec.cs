@@ -208,7 +208,7 @@ namespace pwiz.Common.DataBinding.Layout
             return string.Join(Environment.NewLine, parts);
         }
 
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         public void WriteXml(XmlWriter writer)
         {
             foreach (var rowHeader in RowHeaders)
@@ -288,7 +288,7 @@ namespace pwiz.Common.DataBinding.Layout
             pivotSpec.Values = ImmutableList.ValueOf(values);
             return pivotSpec;
         }
-        // ReSharper enable NonLocalizedString
+        // ReSharper restore LocalizableElement
 
         private static void ReadEndElement(XmlReader reader, string name)
         {

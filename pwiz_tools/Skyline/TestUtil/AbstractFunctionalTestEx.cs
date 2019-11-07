@@ -214,13 +214,17 @@ namespace pwiz.SkylineTestUtil
         /// <param name="expectedSpectra">Number of spectra expected in the library</param>
         public static void WaitForLibrary(int expectedSpectra)
         {
-            WaitForCondition(() =>
+            TryWaitForCondition(() =>
             {
                 var librarySettings = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
                 return librarySettings.IsLoaded &&
                        librarySettings.Libraries.Count > 0 &&
                        librarySettings.Libraries[0].Keys.Count() == expectedSpectra;
             });
+            var librarySettingsFinal = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
+            Assert.IsTrue(librarySettingsFinal.IsLoaded);
+            Assert.IsTrue(librarySettingsFinal.Libraries.Count > 0);
+            Assert.AreEqual(expectedSpectra, librarySettingsFinal.Libraries[0].Keys.Count());
         }
 
         public static void AddLibrary(LibrarySpec libSpec, Library lib)
@@ -479,7 +483,7 @@ namespace pwiz.SkylineTestUtil
                         string.Format(Resources.BuildBackgroundProteomeDlg_AddFastaFile_The_added_file_included__0__repeated_protein_sequences__Their_names_were_added_as_aliases_to_ensure_the_protein_list_contains_only_one_copy_of_each_sequence_,
                         repeats), messageDlg.Message);
                     messageDlg.OkDialog();
-                }); // Not L10N
+                });
             
         }
     }

@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 2018:08:13 13:42
+date: 2019:09:10 09:30
 
 saved-by: psi-pi_team
 default-namespace: UNIMOD
@@ -316,7 +316,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:7
 name: Deamidated
-def: "Deamidation." [FindMod:FLAC, RESID:AA0128, FindMod:CITR, URL:http\://www.ionsource.com/Card/Deamidation/deamidation.htm, RESID:AA0214, PMID:6838602, PMID:15700232, FindMod:DEAM, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=7]
+def: "Deamidation." [PMID:6838602, RESID:AA0214, URL:http\://www.ionsource.com/Card/Deamidation/deamidation.htm, FindMod:CITR, RESID:AA0128, FindMod:FLAC, PMID:15700232, FindMod:DEAM, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=7]
 synonym: "phenyllactyl from N-term Phe Citrullination" []
 xref: record_id "7"
 xref: delta_mono_mass "0.984016"
@@ -325,7 +325,7 @@ xref: delta_composition "H(-1) N(-1) O"
 xref: username_of_poster "unimod"
 xref: group_of_poster "admin"
 xref: date_time_posted "2002-08-19 19:17:11"
-xref: date_time_modified "2011-05-12 08:53:06"
+xref: date_time_modified "2018-10-25 09:32:26"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "0"
@@ -344,6 +344,14 @@ xref: spec_2_site "R"
 xref: spec_2_position "Anywhere"
 xref: spec_2_classification "Post-translational"
 xref: spec_2_misc_notes "Protein which is post-translationally modified by the de-imination of one or more arginine residues; Peptidylarginine deiminase (PAD) converts protein bound to citrulline"
+xref: spec_2_neutral_loss_0_mono_mass "0"
+xref: spec_2_neutral_loss_0_avge_mass "0"
+xref: spec_2_neutral_loss_0_flag "false"
+xref: spec_2_neutral_loss_0_composition "0"
+xref: spec_2_neutral_loss_44_mono_mass "43.005814"
+xref: spec_2_neutral_loss_44_avge_mass "43.0247"
+xref: spec_2_neutral_loss_44_flag "false"
+xref: spec_2_neutral_loss_44_composition "H C N O"
 xref: spec_3_group "3"
 xref: spec_3_hidden "1"
 xref: spec_3_site "F"
@@ -5334,8 +5342,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:275
 name: Nitrosyl
-def: "S-nitrosylation." [RESID:AA0230, PMID:10442087, FindMod:NTRY, PMID:15688001, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=275]
-comment: Protein which is posttranslationally modified by the attachment of a nitric oxide group on the sulfur atom of one or more cysteine residues.
+def: "Nitrosylation." [FindMod:NTRY, PMID:10442087, RESID:AA0230, PMID:15688001, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=275]
 xref: record_id "275"
 xref: delta_mono_mass "28.990164"
 xref: delta_avge_mass "28.9982"
@@ -5343,13 +5350,20 @@ xref: delta_composition "H(-1) N O"
 xref: username_of_poster "dengh"
 xref: group_of_poster "users"
 xref: date_time_posted "2004-12-11 00:23:12"
-xref: date_time_modified "2006-10-15 18:00:14"
+xref: date_time_modified "2019-09-10 09:17:23"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
 xref: spec_1_site "C"
 xref: spec_1_position "Anywhere"
 xref: spec_1_classification "Post-translational"
+xref: spec_1_misc_notes "S-nitrosylation"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "Y"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Chemical derivative"
+xref: spec_2_misc_notes "photochemical decomposition"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -9441,7 +9455,7 @@ id: UNIMOD:481
 name: Label:2H(4)
 def: "4,4,5,5-D4 Lysine." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=481]
 comment: For SILAC experiments.
-synonym: "K4" []
+synonym: "Alanine-2,3,3,3-d4" []
 xref: record_id "481"
 xref: delta_mono_mass "4.025107"
 xref: delta_avge_mass "4.0246"
@@ -9449,7 +9463,7 @@ xref: delta_composition "H(-4) 2H(4)"
 xref: username_of_poster "yunwah"
 xref: group_of_poster "users"
 xref: date_time_posted "2006-02-20 11:44:19"
-xref: date_time_modified "2010-06-04 15:12:04"
+xref: date_time_modified "2019-01-10 15:45:13"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -9467,6 +9481,17 @@ xref: spec_3_site "Y"
 xref: spec_3_position "Anywhere"
 xref: spec_3_classification "Isotopic label"
 xref: spec_3_misc_notes "Cambridge Labs DLM-451"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "A"
+xref: spec_4_position "Anywhere"
+xref: spec_4_classification "Isotopic label"
+xref: spec_4_misc_notes "485845 Aldrich"
+xref: spec_5_group "5"
+xref: spec_5_hidden "1"
+xref: spec_5_site "U"
+xref: spec_5_position "Anywhere"
+xref: spec_5_classification "Isotopic label"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -40879,7 +40904,7 @@ is_a: UNIMOD:0 ! unimod root node
 
 [Term]
 id: UNIMOD:1849
-name: 2-hydroxyisobutyrylation
+name: hydroxyisobutyryl
 def: "2-hydroxyisobutyrylation." [PMID:24681537, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1849]
 xref: record_id "1849"
 xref: delta_mono_mass "86.036779"
@@ -40888,7 +40913,7 @@ xref: delta_composition "H(6) C(4) O(2)"
 xref: username_of_poster "cfeller"
 xref: group_of_poster ""
 xref: date_time_posted "2017-03-30 11:16:14"
-xref: date_time_modified "2017-04-03 09:43:26"
+xref: date_time_modified "2019-09-10 09:07:50"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -43695,7 +43720,7 @@ is_a: UNIMOD:0 ! unimod root node
 id: UNIMOD:1970
 name: Unknown:162
 def: "Unidentified modification of 162.1258 found in open search." [URL:http\://www.matrixscience.com/blog/trying-to-illuminate-proteomics-dark-matter.html, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1970]
-synonym: "The elemental composition should be assumed incorrect" []
+synonym: "The elemental composition should be assumed incorrect Although it happens to be that of Diethylene glycol butyl ether, a common solvent." []
 xref: record_id "1970"
 xref: delta_mono_mass "162.125595"
 xref: delta_avge_mass "162.2267"
@@ -43703,7 +43728,7 @@ xref: delta_composition "H(18) C(8) O(3)"
 xref: username_of_poster "unimod"
 xref: group_of_poster ""
 xref: date_time_posted "2017-12-07 09:51:01"
-xref: date_time_modified "2017-12-07 09:54:04"
+xref: date_time_modified "2018-10-17 14:27:53"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -44295,6 +44320,346 @@ xref: spec_3_site "Y"
 xref: spec_3_position "Anywhere"
 xref: spec_3_classification "Artefact"
 xref: spec_3_misc_notes "possible side chain reaction when labeling N-term"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1999
+name: Xlink:DST[56]
+def: "DST crosslinker cleaved by sodium periodate." [URL:https\://assets.thermofisher.com/TFS-Assets/LSG/manuals/MAN0011282_DST_UG.pdf, PMID:212103, PMID:3001048, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1999]
+xref: record_id "1999"
+xref: delta_mono_mass "55.989829"
+xref: delta_avge_mass "56.0202"
+xref: delta_composition "C(2) O(2)"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2018-08-29 11:31:26"
+xref: date_time_modified "2018-08-29 11:37:13"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "N-term"
+xref: spec_2_position "Protein N-term"
+xref: spec_2_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2001
+name: ZQG
+def: "Carbobenzoxy-L-glutaminyl-glycine." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2001]
+comment: Glutamine-donor substrate for transglutaminase.
+xref: record_id "2001"
+xref: delta_mono_mass "320.100836"
+xref: delta_avge_mass "320.2973"
+xref: delta_composition "H(16) C(15) N(2) O(6)"
+xref: username_of_poster "Barbara Spolaore"
+xref: group_of_poster ""
+xref: date_time_posted "2018-09-18 12:01:47"
+xref: date_time_modified "2019-06-05 10:18:16"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_1_neutral_loss_135_mono_mass "134.036779"
+xref: spec_1_neutral_loss_135_avge_mass "134.132"
+xref: spec_1_neutral_loss_135_flag "false"
+xref: spec_1_neutral_loss_135_composition "H(6) C(8) O(2)"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2006
+name: Haloxon
+def: "O-Dichloroethylphosphate." [PMID:4677141, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2006]
+xref: record_id "2006"
+xref: delta_mono_mass "203.950987"
+xref: delta_avge_mass "204.9763"
+xref: delta_composition "H(7) C(4) O(3) P Cl(2)"
+xref: username_of_poster "lmschopfer"
+xref: group_of_poster ""
+xref: date_time_posted "2019-03-21 14:40:01"
+xref: date_time_modified "2019-03-21 15:45:39"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "H"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "K"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "T"
+xref: spec_4_position "Anywhere"
+xref: spec_4_classification "Chemical derivative"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "S"
+xref: spec_4_position "Anywhere"
+xref: spec_4_classification "Chemical derivative"
+xref: spec_5_group "5"
+xref: spec_5_hidden "1"
+xref: spec_5_site "Y"
+xref: spec_5_position "Anywhere"
+xref: spec_5_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2007
+name: Methamidophos-S
+def: "S-methyl amino phosphinate." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2007]
+xref: record_id "2007"
+xref: delta_mono_mass "108.975121"
+xref: delta_avge_mass "109.0873"
+xref: delta_composition "H(4) C N O P S"
+xref: username_of_poster "lmschopfer"
+xref: group_of_poster ""
+xref: date_time_posted "2019-03-22 16:54:28"
+xref: date_time_modified "2019-05-22 14:56:50"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "H"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "K"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "S"
+xref: spec_4_position "Anywhere"
+xref: spec_4_classification "Chemical derivative"
+xref: spec_5_group "5"
+xref: spec_5_hidden "1"
+xref: spec_5_site "T"
+xref: spec_5_position "Anywhere"
+xref: spec_5_classification "Chemical derivative"
+xref: spec_6_group "6"
+xref: spec_6_hidden "1"
+xref: spec_6_site "Y"
+xref: spec_6_position "Anywhere"
+xref: spec_6_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2008
+name: Methamidophos-O
+def: "O-methyl amino phosphinate." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2008]
+xref: record_id "2008"
+xref: delta_mono_mass "92.997965"
+xref: delta_avge_mass "93.0217"
+xref: delta_composition "H(4) C N O(2) P"
+xref: username_of_poster "lmschopfer"
+xref: group_of_poster ""
+xref: date_time_posted "2019-03-22 17:03:48"
+xref: date_time_modified "2019-05-22 14:57:05"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "H"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "K"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "S"
+xref: spec_4_position "Anywhere"
+xref: spec_4_classification "Chemical derivative"
+xref: spec_5_group "5"
+xref: spec_5_hidden "1"
+xref: spec_5_site "T"
+xref: spec_5_position "Anywhere"
+xref: spec_5_classification "Chemical derivative"
+xref: spec_6_group "6"
+xref: spec_6_hidden "1"
+xref: spec_6_site "Y"
+xref: spec_6_position "Anywhere"
+xref: spec_6_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2014
+name: Nitrene
+def: "Loss of O2; nitro photochemical decomposition." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2014]
+xref: record_id "2014"
+xref: delta_mono_mass "12.995249"
+xref: delta_avge_mass "12.9988"
+xref: delta_composition "H(-1) N"
+xref: username_of_poster "alhansen"
+xref: group_of_poster ""
+xref: date_time_posted "2019-07-10 21:24:33"
+xref: date_time_modified "2019-09-10 09:30:40"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "Y"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Artefact"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2015
+name: shTMT
+def: "Super Heavy Tandem Mass Tag." [URL:https\://www.thermofisher.com/order/catalog/product/A43073, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2015]
+comment: This modification describes the Super Heavy TMT Reagent. Upon HCD, this reagent releases a reporter ion of 132.14153 (monoisotopic mass).
+synonym: "Tandem Mass Tag and TMT are registered Trademarks of Proteome Sciences plc. Super Heavy TMT" []
+xref: record_id "2015"
+xref: delta_mono_mass "235.176741"
+xref: delta_avge_mass "235.2201"
+xref: delta_composition "H(20) C(3) 13C(9) 15N(2) O(2)"
+xref: username_of_poster "rbomgard"
+xref: group_of_poster ""
+xref: date_time_posted "2019-07-10 21:42:41"
+xref: date_time_modified "2019-09-10 09:30:18"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "N-term"
+xref: spec_2_position "Protein N-term"
+xref: spec_2_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "N-term"
+xref: spec_3_position "Any N-term"
+xref: spec_3_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2016
+name: TMTpro
+def: "TMTpro 16plex Tandem Mass Tag." [URL:https\://www.thermofisher.com/order/catalog/product/A44520, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2016]
+comment: This modification describes the isotope-labeled TMTpro Reagent with m/z values of the TMTpro fragment ions to be quantified for 16plex: 126.127726,127. 124761, 127.131081, 128.128116, 128.134436, 129.131471, 129.13779, 130.134825, 130.141145, 131.13818, 131.1445, 132.141535, 132.147855, 133.14489, 133.15121, and 134.148245.
+synonym: "Tandem Mass Tag and TMT are registered Trademarks of Proteome Sciences plc." []
+xref: record_id "2016"
+xref: delta_mono_mass "304.207146"
+xref: delta_avge_mass "304.3127"
+xref: delta_composition "H(25) C(8) 13C(7) N 15N(2) O(3)"
+xref: username_of_poster "rbomgard"
+xref: group_of_poster ""
+xref: date_time_posted "2019-09-06 19:43:32"
+xref: date_time_modified "2019-09-10 09:11:27"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "0"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Isotopic label"
+xref: spec_2_group "2"
+xref: spec_2_hidden "0"
+xref: spec_2_site "N-term"
+xref: spec_2_position "Any N-term"
+xref: spec_2_classification "Isotopic label"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "N-term"
+xref: spec_3_position "Protein N-term"
+xref: spec_3_classification "Isotopic label"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "H"
+xref: spec_4_position "Anywhere"
+xref: spec_4_classification "Isotopic label"
+xref: spec_5_group "5"
+xref: spec_5_hidden "1"
+xref: spec_5_site "S"
+xref: spec_5_position "Anywhere"
+xref: spec_5_classification "Isotopic label"
+xref: spec_6_group "6"
+xref: spec_6_hidden "1"
+xref: spec_6_site "T"
+xref: spec_6_position "Anywhere"
+xref: spec_6_classification "Isotopic label"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2017
+name: TMTpro_zero
+def: "Native TMTpro Tandem Mass Tag." [URL:https\://www.thermofisher.com/order/catalog/product/A44518, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2017]
+comment: This modification describes the native TMTpro Reagent without isotopic label with reporter mass m/z 126.127726.
+synonym: "Tandem Mass Tag and TMT are registered Trademarks of Proteome Sciences plc." []
+xref: record_id "2017"
+xref: delta_mono_mass "295.189592"
+xref: delta_avge_mass "295.3773"
+xref: delta_composition "H(25) C(15) N(3) O(3)"
+xref: username_of_poster "rbomgard"
+xref: group_of_poster ""
+xref: date_time_posted "2019-09-06 20:04:30"
+xref: date_time_modified "2019-09-10 09:10:52"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "N-term"
+xref: spec_2_position "Any N-term"
+xref: spec_2_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "N-term"
+xref: spec_3_position "Protein N-term"
+xref: spec_3_classification "Chemical derivative"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "H"
+xref: spec_4_position "Anywhere"
+xref: spec_4_classification "Chemical derivative"
+xref: spec_5_group "5"
+xref: spec_5_hidden "1"
+xref: spec_5_site "S"
+xref: spec_5_position "Anywhere"
+xref: spec_5_classification "Chemical derivative"
+xref: spec_6_group "6"
+xref: spec_6_hidden "1"
+xref: spec_6_site "T"
+xref: spec_6_position "Anywhere"
+xref: spec_6_classification "Chemical derivative"
 is_a: UNIMOD:0 ! unimod root node
 
 

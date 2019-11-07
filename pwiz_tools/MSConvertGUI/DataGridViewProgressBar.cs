@@ -28,6 +28,9 @@ using System.ComponentModel;
 
 namespace CustomProgressCell
 {
+    /// <summary>
+    /// Must be built 32-bit to show in ProgressForm in design mode
+    /// </summary>
     public sealed class DataGridViewProgressColumn : DataGridViewColumn
     {
         public DataGridViewProgressColumn()

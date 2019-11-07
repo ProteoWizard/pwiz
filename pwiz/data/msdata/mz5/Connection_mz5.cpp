@@ -27,6 +27,7 @@
 #include "Translator_mz5.hpp"
 #include <algorithm>
 #include "boost/thread/mutex.hpp"
+#include "pwiz/utility/misc/String.hpp"
 
 namespace pwiz {
 namespace msdata {
@@ -41,6 +42,9 @@ Connection_mz5::Connection_mz5(const std::string filename, const OpenPolicy op,
     config_(config)
 {
     boost::mutex::scoped_lock lock(connectionReadMutex_);
+
+    if (pwiz::util::findUnicodeBytes(filename) != filename.end())
+        throw ReaderFail("[Connection_mz5] MZ5 does not support Unicode in filepaths ('" + filename + "')");
 
     FileCreatPropList fcparm = FileCreatPropList::DEFAULT;
     FileAccPropList faparm = FileAccPropList::DEFAULT;

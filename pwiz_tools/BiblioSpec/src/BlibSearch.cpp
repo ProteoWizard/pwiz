@@ -45,8 +45,8 @@
 #include "PsmFile.h"
 #include "PwizReader.h"
 #include "SpecFileReader.h"
+#include "pwiz/utility/misc/Filesystem.hpp"
 
-using namespace std;
 namespace ops = boost::program_options;
 using namespace BiblioSpec;
 
@@ -74,6 +74,9 @@ string getTargetReportName(const string& specFileName,
  */
 int main(int argc, char* argv[])
 {
+    bnw::args utf8ArgWrapper(argc, argv); // modifies argv in-place with UTF-8 version on Windows
+    pwiz::util::enable_utf8_path_operations();
+
     // declare storage for options values
     ops::variables_map options_table;
 
@@ -101,8 +104,9 @@ int main(int argc, char* argv[])
     reportFileName = tmpReport;
     targetReport.open(reportFileName.c_str());
     if( options_table["decoys-per-target"].as<int>() > 0 ){
-        BiblioSpec::replaceExtension(reportFileName,"decoy.report"); 
-        decoyReport.open(reportFileName.c_str());
+        string decoyReportName = finalReport;
+        BiblioSpec::replaceExtension(decoyReportName,"decoy.report");
+        decoyReport.open(decoyReportName.c_str());
     }
 
     // Initialize a .psm file (sqlite db), if requested

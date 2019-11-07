@@ -30,7 +30,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Scoring
 {
-    [XmlRoot("legacy_peak_scoring_model")] // Not L10N
+    [XmlRoot(@"legacy_peak_scoring_model")]
     public class LegacyScoringModel : PeakScoringModelSpec
     {
         public static string DEFAULT_NAME { get { return Resources.LegacyScoringModel_DEFAULT_NAME_Default; } } 
@@ -121,7 +121,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         };
 
         public override IPeakScoringModel Train(IList<IList<float[]>> targets, IList<IList<float[]>> decoys, TargetDecoyGenerator targetDecoyGenerator, LinearModelParams initParameters,
-            int? iterations = null, bool includeSecondBest = false, bool preTrain = true, IProgressMonitor progressMonitor = null, string documentPath = null)
+            IList<double> cutoffs, int? iterations = null, bool includeSecondBest = false, bool preTrain = true, IProgressMonitor progressMonitor = null, string documentPath = null)
         {
             return ChangeProp(ImClone(this), im =>
             {

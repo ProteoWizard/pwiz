@@ -73,7 +73,7 @@ PWIZ_API_DECL size_t SpectrumList_Shimadzu::find(const string& id) const
 
     map<string, size_t>::const_iterator scanItr = idToIndexMap_.find(id);
     if (scanItr == idToIndexMap_.end())
-        return size_;
+        return checkNativeIdFindResult(size_, id);
     return scanItr->second;
 }
 
@@ -119,7 +119,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Shimadzu::spectrum(size_t index, DetailLe
 
     double scanTime = spectrum->getScanTime();
     if (scanTime > 0 || ie.scanNumber == 1)
-        scan.set(MS_scan_start_time, scanTime / 1000, UO_minute); // Shimadzu stores time in milliseconds
+        scan.set(MS_scan_start_time, scanTime / 1000, UO_second); // Shimadzu stores time in milliseconds
 
     int msLevel = spectrum->getMSLevel();
     result->set(MS_ms_level, msLevel);

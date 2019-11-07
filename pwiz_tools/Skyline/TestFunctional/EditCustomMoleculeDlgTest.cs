@@ -50,7 +50,9 @@ namespace pwiz.SkylineTestFunctional
         const double testRT = 234.56;
         const double testRTWindow = 4.56;
 
-        public static readonly ExplicitTransitionGroupValues TESTVALUES = new ExplicitTransitionGroupValues(1.23, 2.34, -.345, eIonMobilityUnits.drift_time_msec, 345.6, 4.56, 5.67, 6.78, 7.89); // Using this helps catch untested functionality as we add members
+
+        public static readonly ExplicitTransitionGroupValues TESTVALUES_GROUP = ExplicitTransitionGroupValues.Create(2.34, eIonMobilityUnits.drift_time_msec, 345.6); // Using this helps catch untested functionality as we add members
+        public static readonly ExplicitTransitionValues TESTVALUES_TRAN =  ExplicitTransitionValues.Create(1.23, -.345, 5.67, 6.78, 7.89);
 
         protected override void DoTest()
         {
@@ -145,7 +147,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(doc.MoleculeTransitionGroups.ElementAt(0).EqualsId(docA.MoleculeTransitionGroups.ElementAt(0)));  // No change to Id node or its child Ids
             Assert.AreEqual(testRT, doc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTime);
             Assert.AreEqual(testRTWindow, doc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTimeWindow);
-            Assert.AreEqual(TESTVALUES, docA.MoleculeTransitionGroups.ElementAt(0).ExplicitValues);
+            Assert.AreEqual(TESTVALUES_GROUP, docA.MoleculeTransitionGroups.ElementAt(0).ExplicitValues);
 
             var editMoleculeDlg = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.ModifyPeptide);
             double massPrecisionTolerance = Math.Pow(10, -SequenceMassCalc.MassPrecision);
@@ -255,15 +257,9 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 // Test the "set" part of "Issue 371: Small molecules: need to be able to import and/or set CE, RT and DT for individual precursors and products"
-                editMoleculeDlgA.IonMobility = TESTVALUES.IonMobility.Value;
-                editMoleculeDlgA.IonMobilityHighEnergyOffset = TESTVALUES.IonMobilityHighEnergyOffset.Value;
-                editMoleculeDlgA.IonMobilityUnits = TESTVALUES.IonMobilityUnits;
-                editMoleculeDlgA.CollisionalCrossSectionSqA = TESTVALUES.CollisionalCrossSectionSqA.Value;
-                editMoleculeDlgA.CollisionEnergy = TESTVALUES.CollisionEnergy.Value;
-                editMoleculeDlgA.SLens = TESTVALUES.SLens.Value;
-                editMoleculeDlgA.ConeVoltage = TESTVALUES.ConeVoltage;
-                editMoleculeDlgA.DeclusteringPotential = TESTVALUES.DeclusteringPotential;
-                editMoleculeDlgA.CompensationVoltage = TESTVALUES.CompensationVoltage;
+                editMoleculeDlgA.IonMobility = TESTVALUES_GROUP.IonMobility.Value;
+                editMoleculeDlgA.IonMobilityUnits = TESTVALUES_GROUP.IonMobilityUnits;
+                editMoleculeDlgA.CollisionalCrossSectionSqA = TESTVALUES_GROUP.CollisionalCrossSectionSqA.Value;
             });
             OkDialog(editMoleculeDlgA, editMoleculeDlgA.OkDialog);
             var doc = WaitForDocumentChange(docA);
@@ -271,7 +267,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(peptideDocNode);
             Assert.IsTrue(peptideDocNode.EqualsId(docA.Molecules.ElementAt(0))); // No Id change
             Assert.IsTrue(doc.MoleculeTransitionGroups.ElementAt(0).EqualsId(docA.MoleculeTransitionGroups.ElementAt(0)));  // No change to Id node or its child Ids
-            Assert.AreEqual(TESTVALUES, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues);
+            Assert.AreEqual(TESTVALUES_GROUP, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues);
             Assert.IsNull(peptideDocNode.ExplicitRetentionTime);
             var editMoleculeDlg = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.ModifySmallMoleculeTransitionGroup);
             double massPrecisionTolerance = Math.Pow(10, -SequenceMassCalc.MassPrecision);
@@ -357,17 +353,8 @@ namespace pwiz.SkylineTestFunctional
 
             Assert.IsFalse(newdoc.MoleculeTransitionGroups.ElementAt(0).EqualsId(peptideDocNode));  // Changing the adduct changes the Id node
             // Verify that CE overrides work
-            Assert.AreEqual(TESTVALUES, newdoc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues);
+            Assert.AreEqual(TESTVALUES_GROUP, newdoc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues);
             Assert.IsNull(newdoc.Molecules.ElementAt(0).ExplicitRetentionTime);  // Not set yet
-
-            // Verify that the explicitly set drift time overides any calculations
-            double windowDT;
-            double driftTimeMax = 1000.0;
-            var centerDriftTime = newdoc.Settings.GetIonMobility(
-                                       newdoc.Molecules.First(), newdoc.MoleculeTransitionGroups.First(), null, null, driftTimeMax, out windowDT);
-            Assert.AreEqual(TESTVALUES.IonMobility.Value, centerDriftTime.IonMobility.Mobility.Value, .0001);
-            Assert.AreEqual(TESTVALUES.IonMobility.Value + TESTVALUES.IonMobilityHighEnergyOffset.Value, centerDriftTime.GetHighEnergyDriftTimeMsec() ?? 0, .0001);
-            Assert.AreEqual(0, windowDT, .0001);
 
             // Verify that tree selection doesn't change just because we changed an ID object
             // (formerly the tree node would collapse and focus would jump up a level)
@@ -406,12 +393,28 @@ namespace pwiz.SkylineTestFunctional
                 editMoleculeDlg.FormulaBox.AverageMass = 800;
                 editMoleculeDlg.FormulaBox.MonoMass = monoMass.Value;
                 editMoleculeDlg.NameText = "Fragment";
+
+                // Transition level explicit values
+                editMoleculeDlg.IonMobilityHighEnergyOffset = TESTVALUES_TRAN.IonMobilityHighEnergyOffset.Value;
+                editMoleculeDlg.CollisionEnergy = TESTVALUES_TRAN.CollisionEnergy.Value;
+                editMoleculeDlg.SLens = TESTVALUES_TRAN.SLens.Value;
+                editMoleculeDlg.ConeVoltage = TESTVALUES_TRAN.ConeVoltage;
+                editMoleculeDlg.DeclusteringPotential = TESTVALUES_TRAN.DeclusteringPotential;
             });
             OkDialog(editMoleculeDlg,editMoleculeDlg.OkDialog);
             var newdoc = WaitForDocumentChange(doc);
             Assert.AreEqual("Fragment", newdoc.MoleculeTransitions.ElementAt(0).Transition.CustomIon.ToString());
             Assert.AreEqual(BioMassCalc.CalculateIonMz(monoMass, editMoleculeDlg.Adduct), newdoc.MoleculeTransitions.ElementAt(0).Mz, massPrecisionTolerance);
             Assert.IsFalse(ReferenceEquals(doc.MoleculeTransitions.ElementAt(0).Id, newdoc.MoleculeTransitions.ElementAt(0).Id)); // Changing the mass changes the Id
+
+            // Verify that the explicitly set drift time overides any calculations
+            double windowDT;
+            double driftTimeMax = 1000.0;
+            var centerDriftTime = newdoc.Settings.GetIonMobility(
+                newdoc.Molecules.First(), newdoc.MoleculeTransitionGroups.First(), newdoc.MoleculeTransitions.First(), null, null, driftTimeMax, out windowDT);
+            Assert.AreEqual(TESTVALUES_GROUP.IonMobility.Value, centerDriftTime.IonMobility.Mobility.Value, .0001);
+            Assert.AreEqual(TESTVALUES_GROUP.IonMobility.Value + TESTVALUES_TRAN.IonMobilityHighEnergyOffset.Value, centerDriftTime.GetHighEnergyDriftTimeMsec() ?? 0, .0001);
+            Assert.AreEqual(0, windowDT, .0001);
 
             // Verify that tree selection doesn't change just because we changed an ID object
             // (formerly the tree node would collapse and focus would jump up a level)
@@ -874,13 +877,17 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 fullScanDlg.SmallMoleculePrecursorAdducts = "[M+H],[M-H]";
-                fullScanDlg.SmallMoleculeFragmentTypes = "f,p";
+                // Intentionally omit "f,p" to check that it gets added for us due to full scan being enabled
+                fullScanDlg.SmallMoleculeFragmentTypes = "";
                 fullScanDlg.SetAutoSelect = true;
                 fullScanDlg.SelectedTab = TransitionSettingsUI.TABS.FullScan;
                 fullScanDlg.PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;
                 fullScanDlg.Peaks = 3;
+                fullScanDlg.AcquisitionMethod = FullScanAcquisitionMethod.Targeted;
             });
             OkDialog(fullScanDlg, fullScanDlg.OkDialog);
+            Assert.IsTrue(SkylineWindow.Document.Settings.TransitionSettings.Filter.SmallMoleculeIonTypes.Contains(IonType.custom));
+            Assert.IsTrue(SkylineWindow.Document.Settings.TransitionSettings.Filter.SmallMoleculeIonTypes.Contains(IonType.precursor));
             using (new CheckDocumentState(1, 1, 2, 10))
             {
                 RunUI(() => SkylineWindow.ExpandPrecursors());

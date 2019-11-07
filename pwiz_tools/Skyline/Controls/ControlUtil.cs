@@ -98,30 +98,6 @@ namespace pwiz.Skyline.Controls
             return valid;
         }
 
-        public bool ValidateDecimalTextBox(TabControl tabControl, int tabIndex,
-            TextBox control, double? min, double? max, out double val)
-        {
-            bool valid = ValidateDecimalTextBox(control, min, max, out val);
-            if (!valid && tabControl.SelectedIndex != tabIndex && _showMessages)
-            {
-                tabControl.SelectedIndex = tabIndex;
-                control.Focus();
-            }
-            return valid;
-        }
-
-        public bool ValidateDecimalListTextBox(TabControl tabControl, int tabIndex,
-                                              TextBox control, double? min, double? max, out double[] val)
-        {
-            bool valid = ValidateDecimalListTextBox(control, min, max, out val);
-            if (!valid && tabControl.SelectedIndex != tabIndex)
-            {
-                tabControl.SelectedIndex = tabIndex;
-                control.Focus();
-            }
-            return valid;
-        }
-
         public bool ValidateDecimalListTextBox(TextBox control,
                                               double? min, double? max, out double[] val)
         {
@@ -208,30 +184,6 @@ namespace pwiz.Skyline.Controls
             return valid;
         }
 
-        public bool ValidateNumberTextBox(TabControl tabControl, int tabIndex,
-            TextBox control, int? min, int? max, out int val)
-        {
-            bool valid = ValidateNumberTextBox(control, min, max, out val);
-            if (!valid && tabControl.SelectedIndex != tabIndex && _showMessages)
-            {
-                tabControl.SelectedIndex = tabIndex;
-                control.Focus();                
-            }
-            return valid;
-        }
-
-        public bool ValidateNumberListTextBox(TabControl tabControl, int tabIndex,
-                                              TextBox control, int min, int max, out int[] val)
-        {
-            bool valid = ValidateNumberListTextBox(control, min, max, out val);
-            if (!valid && tabControl.SelectedIndex != tabIndex)
-            {
-                tabControl.SelectedIndex = tabIndex;
-                control.Focus();
-            }
-            return valid;
-        }
-
         public bool ValidateNumberListTextBox(TextBox control,
                                               int min, int max, out int[] val)
         {
@@ -243,13 +195,6 @@ namespace pwiz.Skyline.Controls
                              null, min, max);
 
             return false;
-        }
-
-        public void ShowTextBoxError(TabControl tabControl, int tabIndex, TextBox control, string message)
-        {
-            ShowTextBoxError(control, message);
-            tabControl.SelectedIndex = tabIndex;
-            control.Focus();
         }
 
         /// <summary>
@@ -265,6 +210,7 @@ namespace pwiz.Skyline.Controls
         {
             if(!_showMessages)
                 return;
+            EnsureControlTabPagesVisible(control);
             if (vals.Length > 0 && vals[0] == null)
                 vals[0] = GetControlMessage(control);
             MessageDlg.Show(_parent, string.Format(message, vals));
@@ -296,7 +242,7 @@ namespace pwiz.Skyline.Controls
             else
             {
                 // For roman character languages, just remove the ambersand
-                message = message.Replace("&", string.Empty); // Not L10N
+                message = message.Replace(@"&", string.Empty);
             }
             if (message.Length > 0 && message[message.Length - 1] == ':')
                 message = message.Substring(0, message.Length - 1);
@@ -320,6 +266,26 @@ namespace pwiz.Skyline.Controls
                 return;
             string messageException = XmlUtil.GetInvalidDataMessage(path, x);
             MessageDlg.ShowWithException(_parent, TextUtil.LineSeparate(firstLine, messageException), x);
+        }
+
+        /// <summary>
+        /// If the control is inside of one or more tab controls, make sure that the SelectedTab
+        /// is correct so that the control will be visible.
+        /// </summary>
+        public void EnsureControlTabPagesVisible(Control control)
+        {
+            for (;control != null; control = control.Parent)
+            {
+                var tabPage = control as TabPage;
+                if (tabPage != null)
+                {
+                    var tabControl = tabPage.Parent as TabControl;
+                    if (tabControl != null && tabControl.SelectedTab != tabPage)
+                    {
+                        tabControl.SelectedTab = tabPage;
+                    }
+                }
+            }
         }
     }
 }

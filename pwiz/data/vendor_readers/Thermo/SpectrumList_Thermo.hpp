@@ -38,6 +38,7 @@
 #ifdef PWIZ_READER_THERMO
 #include "pwiz_aux/msrc/utility/vendor_api/thermo/RawFile.h"
 #include "pwiz/utility/misc/Once.hpp"
+#include "pwiz/data/msdata/MemoryMRUCache.hpp"
 #include <boost/thread.hpp>
 using namespace pwiz::vendor_api::Thermo;
 #endif // PWIZ_READER_THERMO
@@ -78,7 +79,7 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListIonMobilityBase
     size_t size_;
     vector<int> spectraByScanType;
     vector<int> spectraByMSOrder;
-    mutable boost::recursive_mutex readMutex;
+    mutable boost::mutex readMutex;
     map<long, vector<double> > fillIndex;
 
     struct IndexEntry : public SpectrumIdentity
@@ -94,11 +95,24 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListIonMobilityBase
 
     vector<IndexEntry> index_;
     map<string, size_t> idToIndexMap_;
+    int maxMsLevel_; // determines which ms levels to keep in precursorCache
 
     void createIndex();
 
-    size_t findPrecursorSpectrumIndex(int precursorMsLevel, double precursorIsolationMz, size_t index) const;
-    pwiz::vendor_api::Thermo::ScanInfoPtr findPrecursorZoomScan(int precursorMsLevel, double precursorIsolationMz, size_t index) const;
+    /// a cache mapping spectrum indices to copies of the binary data (we have to keep copies because downstream filters could modify the data)
+    typedef pair<std::vector<double>, std::vector<double>> PrecursorBinaryData;
+    struct CacheEntry
+    {
+        CacheEntry(size_t i, const PrecursorBinaryData& b) : index(i), binaryData(b) {};
+        size_t index;
+        PrecursorBinaryData binaryData;
+    };
+    typedef MemoryMRUCache<CacheEntry, BOOST_MULTI_INDEX_MEMBER(CacheEntry, size_t, index) > CacheType;
+    mutable CacheType precursorCache_;
+
+    size_t findPrecursorSpectrumIndex(RawFile* raw, int precursorMsLevel, double precursorIsolationMz, size_t index) const;
+    double getPrecursorIntensity(int precursorSpectrumIndex, double isolationMz, double isolationHalfWidth, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
+    pwiz::vendor_api::Thermo::ScanInfoPtr findPrecursorZoomScan(RawFile* raw, int precursorMsLevel, double precursorIsolationMz, size_t index) const;
 
 #endif // PWIZ_READER_THERMO
 };

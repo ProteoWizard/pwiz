@@ -157,7 +157,7 @@
     <value>0</value>
   </data>
   <data name="labelModifications.Text" xml:space="preserve">
-    <value>インポートされた検索結果には、以下に示す修飾が含まれているようです。ドキュメントに追加したいものを選択してください：</value>
+    <value>インポートされた検索結果には、次に示す修飾が含まれているようです。ドキュメントに追加したいものを選択してください：</value>
   </data>
   <data name="&gt;&gt;labelModifications.Name" xml:space="preserve">
     <value>labelModifications</value>

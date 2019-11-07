@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Alana Killeen <killea .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -177,7 +177,7 @@ namespace pwiz.Skyline.Model
                                     };
                             }
                             // NistLibraryBase writes [?] for any modification it does not understand
-                            else if (!Equals("?", massString)) // Not L10N
+                            else if (!Equals(@"?", massString))
                             {
                                 // Get more information on a failure that was posted to the exception web page
                                 throw new FormatException(string.Format(Resources.LibKeyModificationMatcher_EnumerateSequenceInfos_The_number___0___is_not_in_the_correct_format_, massString));
@@ -301,7 +301,7 @@ namespace pwiz.Skyline.Model
             Peptide peptide;
             if (smallMoleculeKey != null)
             {
-                peptide = new Peptide(new CustomMolecule(smallMoleculeKey.SmallMoleculeLibraryAttributes));
+                peptide = new Peptide(CustomMolecule.FromSmallMoleculeLibraryAttributes(smallMoleculeKey.SmallMoleculeLibraryAttributes));
             }
             else if (peptideKey != null)
             {

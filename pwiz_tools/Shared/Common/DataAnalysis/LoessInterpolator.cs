@@ -146,12 +146,12 @@ namespace pwiz.Common.DataAnalysis
         {
             if (bandwidth < 0 || bandwidth > 1)
             {
-                throw new ArgumentException("Bandwidth must be between 0 and 1"); // Not L10N
+                throw new ArgumentException(@"Bandwidth must be between 0 and 1");
             }
             _bandwidth = bandwidth;
             if (robustnessIters < 0)
             {
-                throw new ArgumentException("RobustnessIters must be non-negative"); // Not L10N
+                throw new ArgumentException(@"RobustnessIters must be non-negative");
             }
             _robustnessIters = robustnessIters;
             _accuracy = accuracy;
@@ -176,14 +176,14 @@ namespace pwiz.Common.DataAnalysis
         {
             if (xval.Length != yval.Length)
             {
-                throw new ArgumentException("Mismatched array lengths"); // Not L10N
+                throw new ArgumentException(@"Mismatched array lengths");
             }
 
             int n = xval.Length;
 
             if (n == 0)
             {
-                throw new ArgumentException("Must have at least one point"); // Not L10N
+                throw new ArgumentException(@"Must have at least one point");
             }
 
             CheckAllFiniteReal(xval);
@@ -206,7 +206,7 @@ namespace pwiz.Common.DataAnalysis
 
             if (bandwidthInPoints < 2)
             {
-                throw new ArgumentException("Bandwidth too small"); // Not L10N
+                throw new ArgumentException(@"Bandwidth too small");
             }
 
             double[] res = new double[n];
@@ -349,7 +349,7 @@ namespace pwiz.Common.DataAnalysis
         {
             if (xval.Length != yval.Length)
             {
-                throw new ArgumentException("Array lengths must match"); // Not L10N
+                throw new ArgumentException(@"Array lengths must match");
             }
 
             double[] unitWeights = Enumerable.Repeat(1.0, xval.Length).ToArray();
@@ -432,7 +432,7 @@ namespace pwiz.Common.DataAnalysis
         {
             if (values.Any(x => double.IsInfinity(x) || Double.IsNaN(x)))
             {
-                throw new ArgumentException("Not a real number"); // Not L10N
+                throw new ArgumentException(@"Not a real number");
             }
         }
 
@@ -450,7 +450,7 @@ namespace pwiz.Common.DataAnalysis
             {
                 if (i >= 1 && xval[i - 1] > xval[i])
                 {
-                    throw new ArgumentException("Values out of order at " + i); // Not L10N
+                    throw new ArgumentException(@"Values out of order at " + i);
                 }
             }
         }

@@ -19,6 +19,7 @@
 using System;
 using System.ComponentModel;
 using System.Globalization;
+using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
@@ -89,7 +90,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 var timeIntensitiesGroup = ChromatogramGroup.ReadTimeIntensitiesGroup();
                 if (timeIntensitiesGroup is RawTimeIntensities)
                 {
-                    return new Data(timeIntensitiesGroup.TransitionTimeIntensities[_chromatogramInfo.Value.TransitionIndex]);
+                    return new Data(timeIntensitiesGroup.TransitionTimeIntensities[_chromatogramInfo.Value.TransitionIndex], GetLazyMsDataFileScanIds());
                 }
                 return null;
             }
@@ -112,9 +113,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     var interpolatedTimeIntensities = rawTimeIntensities
                         .TransitionTimeIntensities[_chromatogramInfo.Value.TransitionIndex]
                         .Interpolate(rawTimeIntensities.GetInterpolatedTimes(), rawTimeIntensities.InferZeroes);
-                    return new Data(interpolatedTimeIntensities);
+                    return new Data(interpolatedTimeIntensities, GetLazyMsDataFileScanIds());
                 }
-                return new Data(timeIntensitiesGroup.TransitionTimeIntensities[_chromatogramInfo.Value.TransitionIndex]);
+                return new Data(timeIntensitiesGroup.TransitionTimeIntensities[_chromatogramInfo.Value.TransitionIndex], GetLazyMsDataFileScanIds());
             }
         }
 
@@ -136,12 +137,19 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return chromatogramInfos[index];
         }
 
+        private Lazy<MsDataFileScanIds> GetLazyMsDataFileScanIds()
+        {
+            return new Lazy<MsDataFileScanIds>(ChromatogramGroup.ReadMsDataFileScanIds);
+        }
+
         public class Data
         {
             private TimeIntensities _timeIntensities;
-            public Data(TimeIntensities timeIntensities)
+            private Lazy<MsDataFileScanIds> _scanIds;
+            public Data(TimeIntensities timeIntensities, Lazy<MsDataFileScanIds> scanIds)
             {
                 _timeIntensities = timeIntensities;
+                _scanIds = scanIds;
             }
             [Format(NullValue = TextUtil.EXCEL_NA)]
             public int NumberOfPoints { get { return _timeIntensities.NumPoints; } }
@@ -151,6 +159,26 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             public FormattableList<float> Intensities { get { return new FormattableList<float>(_timeIntensities.Intensities); } }
             [Format(Formats.MASS_ERROR)]
             public FormattableList<float> MassErrors { get { return new FormattableList<float>(_timeIntensities.MassErrors); }}
+
+            public FormattableList<string> SpectrumIds
+            {
+                get
+                {
+                    if (_timeIntensities.ScanIds == null || _scanIds == null)
+                    {
+                        return null;
+                    }
+
+                    var scanIds = _scanIds.Value;
+                    if (scanIds == null)
+                    {
+                        return null;
+                    }
+
+                    return new FormattableList<string>(_timeIntensities.ScanIds
+                        .Select(index => scanIds.GetMsDataFileSpectrumId(index)).ToArray());
+                }
+            }
 
             public override string ToString()
             {
@@ -165,7 +193,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return TextUtil.EXCEL_NA;
             }
 
-            return string.Format("{0}: {1}/{2}", ChromatogramSource, // Not L10N
+            return string.Format(@"{0}: {1}/{2}", ChromatogramSource,
                 ChromatogramPrecursorMz.Value.ToString(Formats.Mz, CultureInfo.CurrentCulture),
                 ChromatogramProductMz.Value.ToString(Formats.Mz, CultureInfo.CurrentCulture));
         }

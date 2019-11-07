@@ -130,6 +130,8 @@ struct DriftScanImpl : public DriftScan
 
 MidacDataImpl::MidacDataImpl(const std::string& path)
 {
+    massHunterRootPath_ = path;
+
     try
     {
         String^ filepath = ToSystemString(path);
@@ -145,6 +147,15 @@ MidacDataImpl::MidacDataImpl(const std::string& path)
 
             // Force read of some data before we start; gets some assertions out of the way.
             imsReader_->FrameInfo(1)->FrameUnitConverter;
+        }
+
+        ticTimes_.resize(imsReader_->FileInfo->NumFrames);
+        ticIntensities_.resize(ticTimes_.size());
+        for (size_t i = 0; i < ticTimes_.size(); ++i)
+        {
+            auto frameInfo = imsReader_->FrameInfo(i+1);
+            ticTimes_[i] = frameInfo->AcqTimeRange->Min;
+            ticIntensities_[i] = frameInfo->Tic;
         }
 
         hasProfileData_ = bfs::exists(bfs::path(path) / "AcqData/MSProfile.bin");
@@ -215,7 +226,7 @@ MSStorageMode MidacDataImpl::getSpectraFormat() const
 
 int MidacDataImpl::getTotalScansPresent() const
 {
-    try {return (MSStorageMode) imsReader_->FileInfo->NumFrames * imsReader_->FileInfo->MaxNonTfsMsPerFrame;} CATCH_AND_FORWARD
+    try {return (int) imsReader_->FileInfo->NumFrames * imsReader_->FileInfo->MaxNonTfsMsPerFrame;} CATCH_AND_FORWARD
 }
 
 bool MidacDataImpl::hasProfileData() const

@@ -31,7 +31,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.GroupComparison
 {
-    public partial class CreateMatchExpressionDlg : FormEx
+    public partial class CreateMatchExpressionDlg : ModeUIInvariantFormEx // Dialog has explicit logic for handling UI modes
     {
         private readonly FoldChangeBindingSource.FoldChangeRow[] _foldChangeRows;
         private readonly bool _allowUpdateGrid;
@@ -91,7 +91,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 {
                     AddComboBoxItems(matchComboBox,
                         new MatchOptionStringPair(MatchOption.MoleculeGroupName,
-                            GroupComparisonStrings.CreateMatchExpression_PopulateComboBoxes_Molecule_Group_Name));
+                            GroupComparisonStrings.CreateMatchExpression_PopulateComboBoxes_Molecule_List_Name));
                 }
             }
             else
@@ -132,8 +132,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private void AddComboBoxItems(ComboBox comboBox, params MatchOptionStringPair[] items)
         {
-            comboBox.ValueMember = "MatchOption"; // Not L10N
-            comboBox.DisplayMember = "DisplayString"; // Not L10N
+            comboBox.ValueMember = @"MatchOption";
+            comboBox.DisplayMember = @"DisplayString";
             comboBox.Items.AddRange(items);
         }
 

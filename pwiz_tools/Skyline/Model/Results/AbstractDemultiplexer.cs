@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Properties;
 
@@ -113,11 +114,11 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
                 var scanNumber = _msMsSpectra[i];
-                MsPrecursor[] precs = _file.GetPrecursors(scanNumber);
+                IList<MsPrecursor> precs = _file.GetPrecursors(scanNumber, 1);
                 _isoMapper.Add(precs, _filter);
                 if (!nIsoWindowsPerScan.HasValue)
                 {
-                    nIsoWindowsPerScan = precs.Length;
+                    nIsoWindowsPerScan = precs.Count;
                 }
             }
             if (!nIsoWindowsPerScan.HasValue)
@@ -323,7 +324,7 @@ namespace pwiz.Skyline.Model.Results
             if (index < 0 || index > _file.SpectrumCount)
             {
                 throw new IndexOutOfRangeException(
-                    string.Format("OverlapDemultiplexer: GetDeconvolvedSpectra: Index {0} is out of range", index)); // Not L10N
+                    string.Format(@"OverlapDemultiplexer: GetDeconvolvedSpectra: Index {0} is out of range", index));
             }
 
             // If the first time called, initialize the cache
@@ -424,20 +425,18 @@ namespace pwiz.Skyline.Model.Results
             returnSpectra = new MsDataSpectrum[deconvIndices.Length];
             for (int deconvSpecIndex = 0; deconvSpecIndex < deconvIndices.Length; ++deconvSpecIndex)
             {
+                var deconvRegion = _isoMapper.GetDeconvRegion(deconvIndices[deconvSpecIndex]);
                 var deconvSpec = new MsDataSpectrum
                 {
                     Intensities = deconvIntensities[deconvSpecIndex],
                     Mzs = deconvMzs[deconvSpecIndex],
-                    Precursors = new MsPrecursor[1]
-                };
-                var deconvRegion = _isoMapper.GetDeconvRegion(deconvIndices[deconvSpecIndex]);
-                var precursor = new MsPrecursor
+                    Precursors = ImmutableList.Singleton(new MsPrecursor
                     {
-                        PrecursorMz = new SignedMz(deconvRegion.CenterMz, originalSpectrum.NegativeCharge) ,
-                        IsolationWindowLower =  deconvRegion.Width/2.0,
-                        IsolationWindowUpper =  deconvRegion.Width/2.0
-                    };
-                deconvSpec.Precursors[0] = precursor;
+                        PrecursorMz = new SignedMz(deconvRegion.CenterMz, originalSpectrum.NegativeCharge),
+                        IsolationWindowLower = deconvRegion.Width / 2.0,
+                        IsolationWindowUpper = deconvRegion.Width / 2.0
+                    })
+                };
                 deconvSpec.Centroided = originalSpectrum.Centroided;
                 deconvSpec.Level = originalSpectrum.Level;
                 deconvSpec.RetentionTime = originalSpectrum.RetentionTime;
@@ -713,7 +712,7 @@ namespace pwiz.Skyline.Model.Results
             if (isoIndex < 0 || isoIndex > _isolationWindows.Count)
             {
                 throw new ArgumentOutOfRangeException(
-                    string.Format("IsolationWindowMapper: isoIndex {0} out of range", // Not L10N
+                    string.Format(@"IsolationWindowMapper: isoIndex {0} out of range",
                                   isoIndex));
             }
             return _isolationWindows[isoIndex];
@@ -724,7 +723,7 @@ namespace pwiz.Skyline.Model.Results
             if (isoIndex < 0 || isoIndex > _precursors.Count)
             {
                 throw new ArgumentOutOfRangeException(
-                    string.Format("IsolationWindowMapper: isoIndex {0} out of range", // Not L10N
+                    string.Format(@"IsolationWindowMapper: isoIndex {0} out of range",
                                   isoIndex));
             }
             return _precursors[isoIndex];
@@ -1140,7 +1139,7 @@ namespace pwiz.Skyline.Model.Results
                 if (0 > t || t > _deconvTransitions.Length)
                 {
                     throw new IndexOutOfRangeException(
-                        string.Format("TransitionBinner: BinsForPrecursors: precursor index out of range: {0}", // Not L10N
+                        string.Format(@"TransitionBinner: BinsForPrecursors: precursor index out of range: {0}",
                                       t));
                 }
                 validBins.UnionWith(_deconvTransitions[t]);
@@ -1154,7 +1153,7 @@ namespace pwiz.Skyline.Model.Results
             if (0 > deconvWindow || deconvWindow > _deconvTransitions.Length)
             {
                 throw new IndexOutOfRangeException(
-                    string.Format("TransitionBinner: BinInPrecursor: precursor index out of range: {0}", // Not L10N
+                    string.Format(@"TransitionBinner: BinInPrecursor: precursor index out of range: {0}",
                                   deconvWindow));
             }
             return _deconvTransitions[deconvWindow].Contains(bin);
@@ -1165,7 +1164,7 @@ namespace pwiz.Skyline.Model.Results
             if (0 >= numWindows || numWindows > _deconvTransitions.Length)
             {
                 throw new ArgumentOutOfRangeException(
-                    string.Format("TransitionBinner: MaxTransitions asked for transitions from too many precursors: {0}", // Not L10N?  Will users see this?
+                    string.Format(@"TransitionBinner: MaxTransitions asked for transitions from too many precursors: {0}", // CONSIDER: localize?  Will users see this?
                                   numWindows));
             }
             var transNumsSorted = from prec in _deconvTransitions
@@ -1205,7 +1204,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (MinBin > queryBin || queryBin > MaxBin)
             {
-                throw new IndexOutOfRangeException( string.Format("TransitionBinner[TransInfoFromBin]: Index out of range: {0}", // Not L10N
+                throw new IndexOutOfRangeException( string.Format(@"TransitionBinner[TransInfoFromBin]: Index out of range: {0}",
                                                     queryBin));
             }
             return _allTransitions[queryBin];

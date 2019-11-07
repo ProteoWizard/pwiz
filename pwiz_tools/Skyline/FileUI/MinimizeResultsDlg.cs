@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -52,6 +52,7 @@ namespace pwiz.Skyline.FileUI
             Icon = Resources.Skyline;
             Settings = new ChromCacheMinimizer.Settings()
                 .ChangeDiscardUnmatchedChromatograms(true)
+                .ChangeDiscardAllIonsChromatograms(false)
                 .ChangeNoiseTimeRange(null);
             DocumentUIContainer = documentUIContainer;
             bindingSource1.DataSource = _rowItems = new BindingList<GridRowItem>();
@@ -119,6 +120,7 @@ namespace pwiz.Skyline.FileUI
                 {
                     _changingOptimizeSettings = true;
                     _settings = value;
+                    // ReSharper disable once PossibleNullReferenceException
                     cbxDiscardUnmatchedChromatograms.Checked = Settings.DiscardUnmatchedChromatograms;
                     if (Settings.NoiseTimeRange.HasValue)
                     {
@@ -187,7 +189,7 @@ namespace pwiz.Skyline.FileUI
                 _statisticsCollector = value;
                 if (StatisticsCollector != null)
                 {
-                    ActionUtil.RunAsync(StatisticsCollector.CollectStatistics, "Collect statistics");   // Not L10N
+                    ActionUtil.RunAsync(StatisticsCollector.CollectStatistics, @"Collect statistics");
                 }
             }
         }

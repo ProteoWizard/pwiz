@@ -100,7 +100,7 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             ViewSpec = PivotIsotopeLabel(ViewSpec, pivotIsotopeLabel);
         }
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         private static readonly IList<PropertyPath> PrecursorCrosstabValueStartsWith =
             ImmutableList.ValueOf(new[]
             {
@@ -222,7 +222,7 @@ namespace pwiz.Skyline.Controls.Databinding
             }
             return viewSpec.SetColumns(newColumns);
         }
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 
         #region for testing
 

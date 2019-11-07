@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib;
@@ -107,7 +108,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             var minimizer = new QueueWorker<MinimizeParams>(null, MinimizeAndWrite);
-            minimizer.RunAsync(MINIMIZING_THREADS, "Minimizing/Writing", MAX_GROUP_READ_AHEAD); // Not L10N
+            minimizer.RunAsync(MINIMIZING_THREADS, @"Minimizing/Writing", MAX_GROUP_READ_AHEAD);
 
             for (int iHeader = 0; iHeader < ChromGroupHeaderInfos.Count; iHeader++)
             {
@@ -131,7 +132,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                     catch (Exception exception)
                     {
-                        Trace.TraceWarning("Unable to read chromatogram {0}", exception); // Not L10N
+                        Trace.TraceWarning(@"Unable to read chromatogram {0}", exception);
                     }
                 }
 
@@ -222,7 +223,8 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
                 bool kept = !settings.DiscardUnmatchedChromatograms
-                    || matchingTransitions.Count > 0;
+                    || matchingTransitions.Count > 0
+                    || (chromatogram.PrecursorMz.Equals(SignedMz.ZERO) && !settings.DiscardAllIonsChromatograms);
                 if (kept)
                 {
                     keptTransitionIndexes.Add(i);
@@ -417,6 +419,11 @@ namespace pwiz.Skyline.Model.Results
             {
                 return ChangeProp(ImClone(this), im => im.NoiseTimeRange = value);
             }
+            public bool DiscardAllIonsChromatograms { get; private set; }
+            public Settings ChangeDiscardAllIonsChromatograms(bool value)
+            {
+                return ChangeProp(ImClone(this), im => im.DiscardAllIonsChromatograms = value);
+            }
             public bool DiscardUnmatchedChromatograms { get; private set; }
             public Settings ChangeDiscardUnmatchedChromatograms(bool value)
             {
@@ -531,7 +538,7 @@ namespace pwiz.Skyline.Model.Results
                 }
                 if (hasOrphanFiles)
                 {
-                    _replicates[results.Chromatograms.Count].Name = "<Unmatched Files>"; // Not L10N? Function invoke uses?
+                    _replicates[results.Chromatograms.Count].Name = @"<Unmatched Files>"; // CONSIDER: localize? Function invoke uses?
                 }
                 foreach (var chromHeaderInfo in ChromCacheMinimizer.ChromGroupHeaderInfos)
                 {

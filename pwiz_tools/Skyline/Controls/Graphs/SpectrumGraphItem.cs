@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 string libraryNamePrefix = LibraryName;
                 if (!string.IsNullOrEmpty(libraryNamePrefix))
-                    libraryNamePrefix += " - "; // Not L10N
+                    libraryNamePrefix += @" - ";
 
                 TransitionGroup transitionGroup = TransitionGroupNode.TransitionGroup;
                 string sequence = transitionGroup.Peptide.IsCustomMolecule
@@ -68,8 +68,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (transitionGroup.Peptide.IsCustomMolecule)
                 {
                     return labelType.IsLight
-                        ? string.Format("{0}{1}{2}", libraryNamePrefix, transitionGroup.Peptide.CustomMolecule.DisplayName, charge) // Not L10N
-                        : string.Format("{0}{1}{2} ({3})", libraryNamePrefix, sequence, charge, labelType); // Not L10N
+                        ? string.Format(@"{0}{1}{2}", libraryNamePrefix, transitionGroup.Peptide.CustomMolecule.DisplayName, charge)
+                        : string.Format(@"{0}{1}{2} ({3})", libraryNamePrefix, sequence, charge, labelType);
                 }
                 return labelType.IsLight
                     ? string.Format(Resources.SpectrumGraphItem_Title__0__1__Charge__2__, libraryNamePrefix, sequence, charge)
@@ -80,7 +80,7 @@ namespace pwiz.Skyline.Controls.Graphs
     
     public abstract class AbstractSpectrumGraphItem : AbstractMSGraphItem
     {
-        private const string FONT_FACE = "Arial"; // Not L10N
+        private const string FONT_FACE = "Arial";
         private static readonly Color COLOR_A = Color.YellowGreen;
         private static readonly Color COLOR_X = Color.Green;
         private static readonly Color COLOR_B = Color.BlueViolet;
@@ -100,6 +100,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public ICollection<IonType> ShowTypes { get; set; }
         public ICollection<int> ShowCharges { get; set; } // List of absolute charge values to display CONSIDER(bspratt): may want finer per-adduct control for small mol use
         public bool ShowRanks { get; set; }
+        public bool ShowScores { get; set; }
         public bool ShowMz { get; set; }
         public bool ShowObservedMz { get; set; }
         public bool ShowDuplicates { get; set; }
@@ -210,6 +211,19 @@ namespace pwiz.Skyline.Controls.Graphs
                 annotations.Add(stick);
             }
             //ReSharper restore UseObjectOrCollectionInitializer
+
+            if (ShowScores && SpectrumInfo.Score.HasValue)
+            {
+                var text = new TextObj(
+                    string.Format(LocalizationHelper.CurrentCulture, Resources.AbstractSpectrumGraphItem_AddAnnotations_, SpectrumInfo.Score),
+                    0.01, 0, CoordType.ChartFraction, AlignH.Left, AlignV.Top)
+                {
+                    IsClippedToChartRect = true,
+                    ZOrder = ZOrder.E_BehindCurves,
+                    FontSpec = GraphSummary.CreateFontSpec(Color.Black),
+                };
+                annotations.Add(text);
+            }
         }
 
         public override PointAnnotation AnnotatePoint(PointPair point)
@@ -291,15 +305,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 label.Append(mfi.Ordinal.ToString(LocalizationHelper.CurrentCulture));
             if (mfi.Losses != null)
             {
-                label.Append(" -"); // Not L10N
+                label.Append(@" -");
                 label.Append(Math.Round(mfi.Losses.Mass, 1));
             }
             var chargeIndicator = mfi.Charge.Equals(Adduct.SINGLY_PROTONATED) ? string.Empty : Transition.GetChargeIndicator(mfi.Charge);
             label.Append(chargeIndicator);
             if (showMz)
-                label.Append(string.Format(" = {0:F01}", mfi.PredictedMz)); // Not L10N
+                label.Append(string.Format(@" = {0:F01}", mfi.PredictedMz));
             if (rank > 0 && ShowRanks)
-                label.Append(TextUtil.SEPARATOR_SPACE).Append(string.Format("({0})",string.Format(Resources.AbstractSpectrumGraphItem_GetLabel_rank__0__, rank))); // Not L10N
+                label.Append(TextUtil.SEPARATOR_SPACE).Append(string.Format(@"({0})",string.Format(Resources.AbstractSpectrumGraphItem_GetLabel_rank__0__, rank)));
             return label.ToString();
         }
 
@@ -415,7 +429,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private static void CustomizeAxis(Axis axis, string title)
         {
-            axis.Title.FontSpec.Family = "Arial"; // Not L10N
+            axis.Title.FontSpec.Family = @"Arial";
             axis.Title.FontSpec.Size = 14;
             axis.Color = axis.Title.FontSpec.FontColor = Color.Black;
             axis.Title.FontSpec.Border.IsVisible = false;
@@ -429,7 +443,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         public static void SetAxisText(Axis axis, string title)
         {
-            if (string.Equals(title, "m/z")) // Not L10N
+            if (string.Equals(title, @"m/z"))
                 axis.Title.FontSpec.IsItalic = true;
             axis.Title.Text = title;
         }

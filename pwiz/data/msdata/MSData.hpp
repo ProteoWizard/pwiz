@@ -562,6 +562,9 @@ struct PWIZ_API_DECL Spectrum : public SpectrumIdentity, public ParamContainer
     void setMZIntensityPairs(const MZIntensityPair* input, size_t size, CVID intensityUnits);
 
     /// set m/z and intensity arrays separately (they must be the same size)
+    void setMZIntensityArrays(const pwiz::util::BinaryData<double>& mzArray, const pwiz::util::BinaryData<double>& intensityArray, CVID intensityUnits);
+
+    /// set m/z and intensity arrays separately (they must be the same size)
     void setMZIntensityArrays(const std::vector<double>& mzArray, const std::vector<double>& intensityArray, CVID intensityUnits);
 
     /// set m/z and intensity arrays separately (they must be the same size) by swapping the vector contents
@@ -693,7 +696,8 @@ class PWIZ_API_DECL SpectrumList
     virtual SpectrumPtr spectrum(const SpectrumPtr& seed, bool getBinaryData) const;
 
     /// retrieve a spectrum by index
-    /// - detailLevel determines what fields are guaranteed present on the spectrum after the call
+    /// - detailLevel determines what fields are present on the spectrum after the call
+    /// - only DetailLevel_FullMetadata or higher guarantees that defaultArrayLength is set (it may require getting the binary data just to check the number of points)
     /// - client may assume the underlying Spectrum* is valid 
     virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel) const;
 
@@ -773,6 +777,12 @@ class PWIZ_API_DECL ChromatogramList
     /// - binary data arrays will be provided if (getBinaryData == true);
     /// - client may assume the underlying Chromatogram* is valid 
     virtual ChromatogramPtr chromatogram(size_t index, bool getBinaryData = false) const = 0;
+
+    /// retrieve a chromatogram by index
+    /// - detailLevel determines what fields are present on the chromatogram after the call
+    /// - only DetailLevel_FullMetadata or higher guarantees that defaultArrayLength is set (it may require getting the binary data just to check the number of points)
+    /// - client may assume the underlying Spectrum* is valid 
+    virtual ChromatogramPtr chromatogram(size_t index, DetailLevel detailLevel) const;
 
     /// returns the data processing affecting spectra retrieved through this interface
     /// - may return a null shared pointer

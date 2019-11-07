@@ -33,17 +33,20 @@ namespace pwiz.Skyline.Model.AuditLog
     /// </summary>
     public abstract class DiffNode : Immutable
     {
-        protected DiffNode(Property property, PropertyPath propertyPath, IEnumerable<DiffNode> nodes = null, bool expanded = false)
+        protected DiffNode(Property property, PropertyPath propertyPath, SrmDocument.DOCUMENT_TYPE docType, IEnumerable<DiffNode> nodes = null, bool expanded = false)
         {
             Property = property;
             PropertyPath = propertyPath;
             Nodes = nodes != null ? new List<DiffNode>(nodes) : new List<DiffNode>();
             Expanded = expanded;
+            DocType = docType;
         }
 
         public Property Property { get; protected set; }
         public PropertyPath PropertyPath { get; protected set; }
         public IList<DiffNode> Nodes { get; protected set; }
+        public SrmDocument.DOCUMENT_TYPE DocType { get; private set; }
+
 
         // The current object should be the first
         public abstract IEnumerable<object> Objects { get; }
@@ -70,9 +73,14 @@ namespace pwiz.Skyline.Model.AuditLog
             return ObjectToString(allowReflection, Objects.FirstOrDefault(o => o != null), out _);
         }
 
-        public static string ObjectToString(bool allowReflection, object obj, out bool isName)
+        protected string ObjectToString(bool allowReflection, object obj, out bool isName)
         {
-            var auditLogObj = AuditLogObject.GetAuditLogObject(obj, out var usesReflection);
+            return ObjectToString(allowReflection, obj, Property.DecimalPlaces, out isName);
+        }
+
+        public static string ObjectToString(bool allowReflection, object obj, int? decimalPlaces, out bool isName)
+        {
+            var auditLogObj = AuditLogObject.GetAuditLogObject(obj, decimalPlaces, out var usesReflection);
             isName = auditLogObj.IsName;
 
             if (usesReflection)
@@ -164,7 +172,7 @@ namespace pwiz.Skyline.Model.AuditLog
             }
             
             var obj = Objects.FirstOrDefault();
-            var isNamedChange = IsFirstExpansionNode || (obj != null && AuditLogObject.GetAuditLogObject(obj).IsName) &&
+            var isNamedChange = IsFirstExpansionNode || (obj != null && AuditLogObject.IsNameObject(obj)) &&
                                     Expanded && !canIgnoreName;
 
             if (isNamedChange)
@@ -204,8 +212,8 @@ namespace pwiz.Skyline.Model.AuditLog
     /// </summary>
     public class PropertyDiffNode : DiffNode
     {
-        public PropertyDiffNode(Property property, PropertyPath propertyPath, ObjectPair<object> value, IEnumerable<DiffNode> nodes = null, bool expanded = false)
-            : base(property, propertyPath, nodes, expanded)
+        public PropertyDiffNode(Property property, PropertyPath propertyPath, ObjectPair<object> value, SrmDocument.DOCUMENT_TYPE docType, IEnumerable<DiffNode> nodes = null, bool expanded = false)
+            : base(property, propertyPath, docType, nodes, expanded)
         {
             Value = value;
         }
@@ -237,8 +245,8 @@ namespace pwiz.Skyline.Model.AuditLog
 
             if (Expanded && level == LogLevel.all_info)
             {
-                return new LogMessage(level, MessageType.is_,
-                    string.Empty, Expanded, name.ToString(), stringPair.NewObject);
+                return new LogMessage(level, MessageType.is_, DocType,
+                     Expanded, name.ToString(), stringPair.NewObject);
             }
 
             // If the string representations are the same, we don't want to show either of them
@@ -248,17 +256,17 @@ namespace pwiz.Skyline.Model.AuditLog
                 // case it gets set to "Missing"
                 if (oldIsName || newIsName || (level == LogLevel.all_info && !Expanded))
                 {
-                    return new LogMessage(level, MessageType.changed_from_to, string.Empty, Expanded,
+                    return new LogMessage(level, MessageType.changed_from_to, DocType, Expanded,
                         name.ToString(), stringPair.OldObject, stringPair.NewObject);
                 }
                 else if (stringPair.NewObject != null)
                 {
-                    return new LogMessage(level, MessageType.changed_to, string.Empty, Expanded,
+                    return new LogMessage(level, MessageType.changed_to, DocType, Expanded,
                         name.ToString(), stringPair.NewObject);
                 }
             }
 
-            return new LogMessage(level, MessageType.changed, string.Empty, Expanded,
+            return new LogMessage(level, MessageType.changed, DocType, Expanded,
                 name.ToString());
         }
     }
@@ -266,13 +274,14 @@ namespace pwiz.Skyline.Model.AuditLog
     public class CollectionPropertyDiffNode : PropertyDiffNode
     {
         public CollectionPropertyDiffNode(Property property, PropertyPath propertyPath, ObjectPair<object> value,
-            IEnumerable<DiffNode> nodes = null, bool expanded = false) : base(property, propertyPath, value, nodes,
+            SrmDocument.DOCUMENT_TYPE docType,
+            IEnumerable<DiffNode> nodes = null, bool expanded = false) : base(property, propertyPath, value, docType, nodes,
             expanded)
         {
         }
 
         public CollectionPropertyDiffNode(PropertyDiffNode copyNode) : this(copyNode.Property, copyNode.PropertyPath,
-            copyNode.Value, copyNode.Nodes, copyNode.Expanded)
+            copyNode.Value, copyNode.DocType, copyNode.Nodes, copyNode.Expanded)
         {
         }
 
@@ -286,7 +295,7 @@ namespace pwiz.Skyline.Model.AuditLog
             if (!RemovedAll)
                 return base.ToMessage(name, level, allowReflection);
 
-            return new LogMessage(level, MessageType.removed_all, string.Empty, Expanded,
+            return new LogMessage(level, MessageType.removed_all, DocType, Expanded,
                 name.ToString());
         }
 
@@ -303,8 +312,8 @@ namespace pwiz.Skyline.Model.AuditLog
     /// </summary>
     public class ElementPropertyDiffNode : PropertyDiffNode
     {
-        public ElementPropertyDiffNode(Property property, PropertyPath propertyPath, ObjectPair<object> value, object elementKey, IEnumerable<DiffNode> nodes = null, bool expanded = false)
-            : base(property, propertyPath, value, nodes, expanded)
+        public ElementPropertyDiffNode(Property property, PropertyPath propertyPath, ObjectPair<object> value, object elementKey, SrmDocument.DOCUMENT_TYPE docType, IEnumerable<DiffNode> nodes = null, bool expanded = false)
+            : base(property, propertyPath, value, docType, nodes, expanded)
         {
             ElementKey = elementKey;
         }
@@ -318,8 +327,8 @@ namespace pwiz.Skyline.Model.AuditLog
     /// </summary>
     public class ElementDiffNode : DiffNode
     {
-        public ElementDiffNode(Property property, PropertyPath propertyPath, object element, object elementKey, bool removed, IEnumerable<DiffNode> nodes = null, bool expanded = false)
-            : base(property, propertyPath, nodes, expanded)
+        public ElementDiffNode(Property property, PropertyPath propertyPath, object element, object elementKey, bool removed, SrmDocument.DOCUMENT_TYPE docType, IEnumerable<DiffNode> nodes = null, bool expanded = false)
+            : base(property, propertyPath, docType, nodes, expanded)
         {
             Element = element;
             ElementKey = elementKey;
@@ -342,8 +351,8 @@ namespace pwiz.Skyline.Model.AuditLog
                 name = name.Parent;
 
             return new LogMessage(level,
-                Removed ? MessageType.removed_from : Expanded ? MessageType.contains : MessageType.added_to,
-                string.Empty, Expanded, name.ToString(), value);
+                Removed ? MessageType.removed_from : Expanded ? MessageType.contains : MessageType.added_to, DocType,
+                Expanded, name.ToString(), value);
         }
     }
 
@@ -384,7 +393,7 @@ namespace pwiz.Skyline.Model.AuditLog
         public DiffTree(DiffNode root, DateTime? timeStamp = null)
         {
             Root = root;
-            TimeStamp = timeStamp ?? DateTime.Now;
+            TimeStamp = timeStamp ?? DateTime.UtcNow;
         }
 
         public static DiffTree FromEnumerator(IEnumerator<DiffNode> treeEnumerator, DateTime? timeStamp = null)
@@ -393,7 +402,7 @@ namespace pwiz.Skyline.Model.AuditLog
             while (treeEnumerator.MoveNext())
                 current = treeEnumerator.Current;
 
-            return new DiffTree(current, timeStamp ?? DateTime.Now);
+            return new DiffTree(current, timeStamp ?? DateTime.UtcNow);
         }
 
         public DiffNode Root { get; private set; }

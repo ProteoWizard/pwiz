@@ -47,6 +47,8 @@ namespace BiblioSpec{
                         MSGF_ANALYSIS,
                         PEPTIDESHAKER_ANALYSIS,
                         MASCOT_ANALYSIS,
+                        PEAKS_ANALYSIS,
+                        PROT_PILOT_ANALYSIS,
                         GENERIC_QVALUE_ANALYSIS };
 
         ANALYSIS analysisType_;
@@ -63,6 +65,7 @@ namespace BiblioSpec{
 
         void collectPsms(std::map<pwiz::identdata::DBSequencePtr, Protein>& proteins);
         void extractModifications(pwiz::identdata::PeptidePtr peptide, PSM* psm);
+        void extractIonMobility(const pwiz::identdata::SpectrumIdentificationResult& result, const pwiz::identdata::SpectrumIdentificationItem& item, PSM* psm);
         double getScore(const pwiz::identdata::SpectrumIdentificationItem& item);
         bool passThreshold(double score);
         static bool stringToScan(const std::string& name, PSM* psm);

@@ -19,6 +19,7 @@ import path ;
 import sequence ;
 import toolset ;
 import virtual-target ;
+import numbers ;
 
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 {
@@ -409,7 +410,7 @@ local rule check-tool-aux ( command )
 
 
 # Checks that a tool can be invoked by 'command'. If command is not an absolute
-# path, checks if it can be found in 'path'. If comand is an absolute path,
+# path, checks if it can be found in 'path'. If command is an absolute path,
 # check that it exists. Returns 'command' if ok or empty string otherwise.
 #
 local rule check-tool ( xcommand + )
@@ -428,6 +429,7 @@ local rule check-tool ( xcommand + )
 # - OPTIONS for compile         to the value of <compileflags> in $(options)
 # - OPTIONS for compile.c       to the value of <cflags>       in $(options)
 # - OPTIONS for compile.c++     to the value of <cxxflags>     in $(options)
+# - OPTIONS for compile.asm     to the value of <asmflags>     in $(options)
 # - OPTIONS for compile.fortran to the value of <fflags>       in $(options)
 # - OPTIONS for link            to the value of <linkflags>    in $(options)
 #
@@ -452,6 +454,9 @@ rule handle-options ( toolset : condition * : command * : options * )
 
     toolset.flags $(toolset).compile.c++     OPTIONS $(condition) :
         [ feature.get-values <cxxflags>     : $(options) ] : unchecked ;
+
+    toolset.flags $(toolset).compile.asm     OPTIONS $(condition) :
+        [ feature.get-values <asmflags>     : $(options) ] : unchecked ;
 
     toolset.flags $(toolset).compile.fortran OPTIONS $(condition) :
         [ feature.get-values <fflags>       : $(options) ] : unchecked ;
@@ -718,6 +723,8 @@ if [ os.name ] = NT
     actions quietly mkdir
     {
         if not exist "$(<)\" mkdir "$(<)"
+        if ERRORLEVEL 1 if not exist "$(<)\" timeout 1 & mkdir "$(<)"
+        if ERRORLEVEL 1 if not exist "$(<)\" timeout 3 & mkdir "$(<)"
     }
 }
 else
@@ -740,12 +747,6 @@ rule copy
 }
 
 
-actions copy
-{
-    $(CP) "$(>)" $(WINDOWS-CP-HACK) "$(<)" $(NULL_OUT)
-}
-
-
 rule RmTemps
 {
 }
@@ -761,21 +762,55 @@ rule hard-link
 {
 }
 
-if [ os.name ] = NT
+
+if --verbose in [ modules.peek : ARGV ]
 {
-    actions hard-link
+    actions copy
     {
-        $(RM) "$(<)" 2$(NULL_OUT) $(NULL_OUT)
-        $(LN) "$(<)" "$(>)" 2$(NULL_OUT) $(NULL_OUT)
-        IF ERRORLEVEL 1 $(CP) "$(>)" $(WINDOWS-CP-HACK) "$(<)" $(NULL_OUT)
+        $(CP) "$(>)" $(WINDOWS-CP-HACK) "$(<)" $(NULL_OUT)
+    }
+
+    if [ os.name ] = NT
+    {
+        actions hard-link
+        {
+            $(RM) "$(<)" 2$(NULL_OUT) $(NULL_OUT)
+            $(LN) "$(<)" "$(>)" 2$(NULL_OUT) $(NULL_OUT)
+            IF ERRORLEVEL 1 $(CP) "$(>)" $(WINDOWS-CP-HACK) "$(<)" $(NULL_OUT)
+        }
+    }
+    else
+    {
+        actions hard-link
+        {
+            $(RM) "$(<)" 2$(NULL_OUT) $(NULL_OUT)
+            $(LN) "$(>)" "$(<)" $(NULL_OUT)
+        }
     }
 }
 else
 {
-    actions hard-link
+    actions quietly copy
     {
-        $(RM) "$(<)" 2$(NULL_OUT) $(NULL_OUT)
-        $(LN) "$(>)" "$(<)" $(NULL_OUT)
+        $(CP) "$(>)" $(WINDOWS-CP-HACK) "$(<)" $(NULL_OUT)
+    }
+
+    if [ os.name ] = NT
+    {
+        actions quietly hard-link
+        {
+            $(RM) "$(<)" 2$(NULL_OUT) $(NULL_OUT)
+            $(LN) "$(<)" "$(>)" 2$(NULL_OUT) $(NULL_OUT)
+            IF ERRORLEVEL 1 $(CP) "$(>)" $(WINDOWS-CP-HACK) "$(<)" $(NULL_OUT)
+        }
+    }
+    else
+    {
+        actions quietly hard-link
+        {
+            $(RM) "$(<)" 2$(NULL_OUT) $(NULL_OUT)
+            $(LN) "$(>)" "$(<)" $(NULL_OUT)
+        }
     }
 }
 
@@ -933,6 +968,7 @@ local rule toolset-tag ( name : type ? : property-set )
             {
                case darwin : tag += clang-darwin ;
                case linux  : tag += clang ;
+               case win    : tag += clangw ;
             }
         }
         case como* : tag += como ;
@@ -967,7 +1003,7 @@ local rule toolset-tag ( name : type ? : property-set )
         case tru64cxx* : tag += tru ;
         case vacpp* : tag += xlc ;
     }
-    local version = [ MATCH "<toolset.*version>([0123456789]+)[.]([0123456789]*)"
+    local version = [ MATCH "<toolset.*version>([0123456789]+)[.]?([0123456789]*)"
         : $(properties) ] ;
     # For historical reasons, vc6.0 and vc7.0 use different naming.
     if $(tag) = vc
@@ -982,6 +1018,19 @@ local rule toolset-tag ( name : type ? : property-set )
             version = 7 ;
         }
     }
+
+    # From GCC 5, versioning changes and minor becomes patch
+    if $(tag) = gcc && [ numbers.less 4 $(version[1]) ]
+    {
+        version = $(version[1]) ;
+    }
+
+    # Ditto, from Clang 4
+    if ( $(tag) = clang || $(tag) = clangw ) && [ numbers.less 3 $(version[1]) ]
+    {
+        version = $(version[1]) ;
+    }
+
     # On intel, version is not added, because it does not matter and it is the
     # version of vc used as backend that matters. Ideally, we should encode the
     # backend version but that would break compatibility with V1.

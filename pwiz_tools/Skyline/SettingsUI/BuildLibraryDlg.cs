@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -69,6 +69,8 @@ namespace pwiz.Skyline.SettingsUI
         private readonly MessageBoxHelper _helper;
         private readonly IDocumentUIContainer _documentUiContainer;
 
+        private readonly SettingsListComboDriver<IrtStandard> _driverStandards;
+
         public BuildLibraryDlg(IDocumentUIContainer documentContainer)
         {
             InitializeComponent();
@@ -93,8 +95,8 @@ namespace pwiz.Skyline.SettingsUI
 
             _helper = new MessageBoxHelper(this);
 
-            foreach (var standard in IrtStandard.ALL)
-                comboStandards.Items.Add(standard);
+            _driverStandards = new SettingsListComboDriver<IrtStandard>(comboStandards, Settings.Default.IrtStandardList);
+            _driverStandards.LoadList(IrtStandard.EMPTY.GetKey());
         }
 
         public ILibraryBuilder Builder { get { return _builder;  } }
@@ -227,7 +229,8 @@ namespace pwiz.Skyline.SettingsUI
                                   KeepRedundant = LibraryKeepRedundant,
                                   CutOffScore = cutOffScore,
                                   Id = Helpers.MakeId(textName.Text),
-                                  IrtStandard = comboStandards.SelectedItem as IrtStandard
+                                  IrtStandard = _driverStandards.SelectedItem,
+                                  PreferEmbeddedSpectra = PreferEmbeddedSpectra
                               };
             }
             return true;
@@ -341,7 +344,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             var wildExts = new string[RESULTS_EXTS.Length];
             for (int i = 0; i < wildExts.Length; i++)
-                wildExts[i] = "*" + RESULTS_EXTS[i]; // Not L10N
+                wildExts[i] = @"*" + RESULTS_EXTS[i];
 
             using (var dlg = new OpenFileDialog
                 {
@@ -352,8 +355,8 @@ namespace pwiz.Skyline.SettingsUI
                     Multiselect = true,
                     DefaultExt = BiblioSpecLibSpec.EXT,
                     Filter = TextUtil.FileDialogFiltersAll(
-                        Resources.BuildLibraryDlg_btnAddFile_Click_Matched_Peptides + string.Join(",", wildExts) + ")|" + // Not L10N
-                        string.Join(";", wildExts), // Not L10N
+                        Resources.BuildLibraryDlg_btnAddFile_Click_Matched_Peptides + string.Join(@",", wildExts) + @")|" +
+                        string.Join(@";", wildExts),
                         BiblioSpecLiteSpec.FILTER_BLIB)
                 })
             {
@@ -504,7 +507,9 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     var message = TextUtil.SpaceSeparate(Resources.BuildLibraryDlg_AddInputFiles_The_following_files_are_not_valid_library_input_files,
                                   string.Empty,
-                                  "\t" + string.Join("\n\t", filesError.ToArray())); // Not L10N                    
+                                  // ReSharper disable LocalizableElement
+                                  "\t" + string.Join("\n\t", filesError.ToArray()));
+                                  // ReSharper restore LocalizableElement
                     MessageDlg.Show(parent, message);
                 }
             }
@@ -643,8 +648,31 @@ namespace pwiz.Skyline.SettingsUI
 
         public IrtStandard IrtStandard
         {
-            get { return comboStandards.SelectedItem as IrtStandard ?? IrtStandard.NULL; }
-            set { comboStandards.SelectedIndex = comboStandards.Items.IndexOf(value); }
+            get { return _driverStandards.SelectedItem; }
+            set
+            {
+                var index = 0;
+                if (value != null)
+                {
+                    for (var i = 0; i < comboStandards.Items.Count; i++)
+                    {
+                        if (comboStandards.Items[i].ToString().Equals(value.GetKey()))
+                        {
+                            index = i;
+                            break;
+                        }
+                    }
+                }
+                comboStandards.SelectedIndex = index;
+                _driverStandards.SelectedIndexChangedEvent(null, null);
+            }
+        }
+
+        public bool? PreferEmbeddedSpectra { get; set; }
+
+        private void comboStandards_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _driverStandards.SelectedIndexChangedEvent(sender, e);
         }
     }
 }

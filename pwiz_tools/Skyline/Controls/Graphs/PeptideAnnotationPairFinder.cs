@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Tobias Rohde <tobiasr .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -18,6 +18,7 @@
  */
 using System.Collections.Generic;
 using System.Globalization;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Properties;
 
@@ -25,17 +26,17 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public class PeptideAnnotationPairFinder : AbstractFinder
     {
-        private readonly List<AreaCVGraphData.PeptideAnnotationPair> _pairs;
+        private readonly List<PeptideAnnotationPair> _pairs;
         private readonly double _displayCV;
 
-        public PeptideAnnotationPairFinder(List<AreaCVGraphData.PeptideAnnotationPair> pairs, double displayCV)
+        public PeptideAnnotationPairFinder(List<PeptideAnnotationPair> pairs, double displayCV)
         {
             _pairs = pairs;
             _displayCV = displayCV;
         }
         public override string Name
         {
-            get { return "peptide_annotation_pair_finder"; } // Not L10N
+            get { return @"peptide_annotation_pair_finder"; }
         }
 
         public override string DisplayName
@@ -60,7 +61,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public static string GetDisplayText(double cv, string annotation)
         {
-            var cvString = (cv * AreaGraphController.GetAreaCVFactorToDecimal()).ToString(CultureInfo.CurrentCulture) + (Settings.Default.AreaCVShowDecimals ? "" : "%"); // Not L10N
+            // ReSharper disable LocalizableElement
+            var cvString = (cv * AreaGraphController.GetAreaCVFactorToDecimal()).ToString(CultureInfo.CurrentCulture) + (Settings.Default.AreaCVShowDecimals ? "" : "%");
+            // ReSharper restore LocalizableElement
             if (annotation != null)
                 return string.Format(Resources.PeptideAnnotationPairFinder_GetDisplayText__0__CV_in__1_, cvString, annotation);
             else

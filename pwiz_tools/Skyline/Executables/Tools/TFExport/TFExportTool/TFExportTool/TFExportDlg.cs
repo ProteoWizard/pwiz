@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using TFExportTool.Properties;
 
 namespace TFExportTool
 {
@@ -10,6 +11,9 @@ namespace TFExportTool
         public TFExportDlg(List<String> filePaths)
         {
             InitializeComponent();
+
+            Icon = Resources.icon;
+
             comboBoxStandard.SelectedIndex = 0;
             BindingSource bs = new BindingSource();
             bs.DataSource = filePaths;

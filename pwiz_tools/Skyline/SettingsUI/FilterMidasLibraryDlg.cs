@@ -41,11 +41,11 @@ namespace pwiz.Skyline.SettingsUI
             if (libSpec != null)
             {
                 LibraryName = Helpers.GetUniqueName(
-                    libSpec.Name.Insert(libSpec.Name.StartsWith(MidasLibSpec.PREFIX) ? MidasLibSpec.PREFIX.Length : 0, "Filter_"), // Not L10N
+                    libSpec.Name.Insert(libSpec.Name.StartsWith(MidasLibSpec.PREFIX) ? MidasLibSpec.PREFIX.Length : 0, @"Filter_"),
                     _libSpecs.Select(lib => lib.Name).ToArray());
                 if (!string.IsNullOrEmpty(docPath))
                     // ReSharper disable once AssignNullToNotNullAttribute
-                    FileName = Path.Combine(Path.GetDirectoryName(docPath), Path.ChangeExtension(Path.GetFileName(libSpec.FilePath), ".midas.blib")); // Not L10N
+                    FileName = Path.Combine(Path.GetDirectoryName(docPath), Path.ChangeExtension(Path.GetFileName(libSpec.FilePath), @".midas.blib"));
             }
         }
 

@@ -62,7 +62,8 @@ class Serializer_mz5::Impl
      * @param iterationListenerRegistry progress listener
      */
     void write(const std::string& filename, const MSData& msd,
-               const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const;
+               const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
+               bool useWorkerThreads) const;
 
     /**
      * Not supported.
@@ -92,11 +93,12 @@ private:
 
 void Serializer_mz5::Impl::write(const std::string& filename,
                                  const MSData& msd,
-                                 const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const
+                                 const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
+                                 bool useWorkerThreads) const
 {
     ReferenceWrite_mz5 wref(msd);
     Connection_mz5 con(filename, Connection_mz5::RemoveAndCreate, config_);
-    wref.writeTo(con, iterationListenerRegistry);
+    wref.writeTo(con, iterationListenerRegistry, useWorkerThreads);
 }
 
 void Serializer_mz5::Impl::write(std::ostream& os, const MSData& msd,
@@ -151,9 +153,10 @@ PWIZ_API_DECL Serializer_mz5::Serializer_mz5(const pwiz::msdata::MSDataFile::Wri
 
 PWIZ_API_DECL
 void Serializer_mz5::write(const std::string& filename, const MSData& msd,
-                           const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const
+                           const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
+                           bool useWorkerThreads) const
 {
-    return impl_->write(filename, msd, iterationListenerRegistry);
+    return impl_->write(filename, msd, iterationListenerRegistry, useWorkerThreads);
 }
 
 PWIZ_API_DECL

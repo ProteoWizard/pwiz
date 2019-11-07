@@ -19,7 +19,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
@@ -132,6 +134,8 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("M2Cl37+2Na"), Adduct.FromStringAssumeProtonated("M2Cl37+3Na").ChangeCharge(2));
             AssertEx.ThrowsException<InvalidOperationException>(()=>Adduct.FromStringAssumeProtonated("M+2Na-H").ChangeCharge(2)); // Too complex to adjust formula
 
+            AssertEx.ThrowsException<InvalidOperationException>(() => Adduct.FromStringAssumeProtonatedNonProteomic("[M2")); // Seen in the wild, wasn't handled well
+
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("M++++").AdductCharge,Adduct.FromChargeNoMass(4).AdductCharge);
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("M+4"), Adduct.FromChargeNoMass(4));
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("M--").AdductCharge, Adduct.FromChargeNoMass(-2).AdductCharge);
@@ -196,6 +200,7 @@ namespace pwiz.SkylineTest
             CheckLabel(BioMassCalc.S33);
             CheckLabel(BioMassCalc.S34);
             CheckLabel(BioMassCalc.P32);
+            CheckLabel(BioMassCalc.C14);
             CheckLabel(BioMassCalc.O17);
             CheckLabel(BioMassCalc.O18);
 
@@ -232,6 +237,9 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(relabeled, unlabeled.ChangeIsotopeLabels(labelsAlso));
             Assert.AreNotEqual(labeled, unlabeled.ChangeIsotopeLabels(labelsAlso));
 
+            // Check Deuterium and Tritium handling
+            Assert.AreEqual(BioMassCalc.MONOISOTOPIC.GetMass("Cl2Cl'3H5H'4N12"), BioMassCalc.MONOISOTOPIC.GetMass("Cl2Cl'3H5D4N12"));
+            Assert.AreEqual(BioMassCalc.MONOISOTOPIC.GetMass("Cl2Cl'3H5H\"4N12"), BioMassCalc.MONOISOTOPIC.GetMass("Cl2Cl'3H5T4N12"));
             Assert.AreEqual(Molecule.Parse("Cl2Cl'3H5H'4N12".Replace("Cl'", label).Replace("Cl", unlabel)),
                 Molecule.Parse(relabeled.ApplyIsotopeLabelsToFormula("Cl5H9N12".Replace("Cl", unlabel)))); // Replaces three of five Cl and four of nine H
             var m100 = new TypedMass(100, MassType.Monoisotopic);
@@ -252,11 +260,12 @@ namespace pwiz.SkylineTest
             TestAdductOperators();
 
             var coverage = new HashSet<string>();
-
-
+            TestPentaneAdduct("[M+2NH4]", "C5H20N2", 2, coverage); // multiple of a group
+            TestPentaneAdduct("[M+2(NH4)]", "C5H20N2", 2, coverage); // multiple of a group in parenthesis
             TestPentaneAdduct("[M+2H]", "C5H14", 2, coverage);
             TestPentaneAdduct("[M2C13+2H]", "C3C'2H14", 2, coverage); // Labeled
             TestPentaneAdduct("[2M2C13+2H]", "C6C'4H26", 2, coverage); // Labeled dimer
+            TestPentaneAdduct("[2M2C14+2H]", "C6C\"4H26", 2, coverage); // Labeled dimer
             TestPentaneAdduct("[M2C13]", "C3C'2H12", 0, coverage); // Labeled no charge
             TestPentaneAdduct("[2M2C13]", "C6C'4H24", 0, coverage); // Labeled, dimer, no charge
             TestPentaneAdduct("[2M]", "C10H24", 0, coverage); // dimer no charge
@@ -289,6 +298,11 @@ namespace pwiz.SkylineTest
             TestPentaneAdduct("[M-2H]", "C5H10", -2, coverage);
             TestPentaneAdduct("[M-2H]2-", "C5H10", -2, coverage);
             TestPentaneAdduct("[M+2H]++", "C5H14", 2, coverage);
+            TestPentaneAdduct("[MH2+2H]++", "C5H13H'", 2, coverage); // Isotope
+            TestPentaneAdduct("[MH3+2H]++", "C5H13H\"", 2, coverage);  // Isotope
+            TestPentaneAdduct("[MD+2H]++", "C5H13H'", 2, coverage);  // Isotope
+            TestPentaneAdduct("[MD+DMSO+2H]++", "C7H19H'OS", 2, coverage); // Check handling of Deuterium and DMSO together
+            TestPentaneAdduct("[MT+DMSO+2H]++", "C7H19H\"OS", 2, coverage); // Check handling of Tritium
             TestPentaneAdduct("[M+DMSO+2H]++", "C7H20OS", 2, coverage);
             TestPentaneAdduct("[M+DMSO+2H]2+", "C7H20OS", 2, coverage);
             TestPentaneAdduct("[M+MeOH-H]", "C6H15O", -1, coverage); // Methanol "CH3OH"
@@ -347,6 +361,7 @@ namespace pwiz.SkylineTest
             TestTaxolAdduct("M+FA-H", 898.329091, -1, coverage);
             TestTaxolAdduct("M+Hac-H", 912.344741, -1, coverage);
             TestTaxolAdduct("M+Br", 932.249775, -1, coverage);
+            TestTaxolAdduct("MT+TFA-H", 968.324767, -1, coverage); // Tritium label + TFA
             TestTaxolAdduct("M+TFA-H", 966.316476, -1, coverage);
             TestTaxolAdduct("2M-H", 1705.654504, -1, coverage);
             TestTaxolAdduct("2M+FA-H", 1751.659981, -1, coverage);
@@ -363,6 +378,11 @@ namespace pwiz.SkylineTest
             TestTaxolAdduct("M2C13+2H+Na", 292.778220 + (2 * dC13) / 3.0, 3, coverage);
             TestTaxolAdduct("2M2C13+3H", 285.450906 + (massTaxol + 4 * dC13) / 3.0, 3, coverage);
             TestTaxolAdduct("2M2C13+2H+Na", 292.778220 + (massTaxol + 4 * dC13) / 3.0, 3, coverage);
+            var dC14 = BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C14) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C);
+            TestTaxolAdduct("M2C14+3H", 285.450928 + (2 * dC14) / 3.0, 3, coverage);
+            TestTaxolAdduct("M2C14+2H+Na", 292.778220 + (2 * dC14) / 3.0, 3, coverage);
+            TestTaxolAdduct("2M2C14+3H", 285.450906 + (massTaxol + 4 * dC14) / 3.0, 3, coverage);
+            TestTaxolAdduct("2M2C14+2H+Na", 292.778220 + (massTaxol + 4 * dC14) / 3.0, 3, coverage);
 
             // Using example adducts from
             // https://gnps.ucsd.edu/ProteoSAFe/gnpslibrary.jsp?library=GNPS-LIBRARY#%7B%22Library_Class_input%22%3A%221%7C%7C2%7C%7C3%7C%7CEXACT%22%7D
@@ -470,6 +490,42 @@ namespace pwiz.SkylineTest
                     }
                 }
             }
+        }
+
+        [TestMethod]
+        public void ChargeStateTextTest()
+        {
+            int min = Transition.MIN_PRODUCT_CHARGE, max = Transition.MAX_PRODUCT_CHARGE;
+            for (int i = min; i < max; i++)
+            {
+                ValidateChargeText(i, Transition.GetChargeIndicator(Adduct.FromChargeProtonated(i)));
+                ValidateChargeText(-i, Transition.GetChargeIndicator(Adduct.FromChargeProtonated(-i)));
+                ValidateChargeText(i, Transition.GetChargeIndicator(Adduct.FromChargeProtonated(i), CultureInfo.InvariantCulture));
+                ValidateChargeText(-i, Transition.GetChargeIndicator(Adduct.FromChargeProtonated(-i), CultureInfo.InvariantCulture));
+                ValidateChargeText(i, GetLongFormChargeIndicator(i));
+                ValidateChargeText(-i, GetLongFormChargeIndicator(-i));
+            }
+        }
+
+        private static void ValidateChargeText(int charge, string chargeText)
+        {
+            const string pepText = "PEPTIDER";
+            int min = Transition.MIN_PRODUCT_CHARGE, max = Transition.MAX_PRODUCT_CHARGE;
+            Assert.AreEqual(pepText, Transition.StripChargeIndicators(pepText + chargeText, min, max),
+                "Unable to round trip charge text " + chargeText);
+            Assert.AreEqual(Adduct.FromChargeProtonated(charge), Transition.GetChargeFromIndicator(chargeText, min, max));
+
+            // If the charge indicator contains a space, make sure it is not necessary to be interpreted correctly
+            if (chargeText.Contains(' '))
+                ValidateChargeText(charge, chargeText.Replace(" ", string.Empty));
+        }
+
+        private string GetLongFormChargeIndicator(int i)
+        {
+            char c = i > 0 ? '+' : '-';
+            var sb = new StringBuilder();
+            sb.Append(c, Math.Abs(i));
+            return sb.ToString();
         }
     }
 }

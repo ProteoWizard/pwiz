@@ -35,7 +35,7 @@
       <Value Profile="(Default)">1</Value>
     </Setting>
     <Setting Name="SourceExtensions" Type="System.String" Scope="User">
-      <Value Profile="(Default)">mz5;mzML;RAW;mzXML;MGF;MS2;WIFF;d</Value>
+      <Value Profile="(Default)">.mz5;.mzML;.RAW;.mzXML;.MGF;.MS2;.wiff;.wiff2;.lcd;.d;fid;.xml</Value>
     </Setting>
     <Setting Name="FastaPaths" Type="System.Collections.Specialized.StringCollection" Scope="User">
       <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
@@ -77,6 +77,7 @@
   &lt;string&gt;OMSSA expect;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Descending Off expect&lt;/string&gt;
   &lt;string&gt;Pepitome optimized;MonteCarlo;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Linear hgt;1 Ascending Linear kendallpval&lt;/string&gt;
   &lt;string&gt;Pepitome MVH;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off myrimatch:mvh&lt;/string&gt;
+  &lt;string&gt;ProteinPilot;StaticWeighted;False;Linear;Ignore;Ignore;Ignore;Ignore;0.02;1 Ascending Off paragon:confidence&lt;/string&gt;
   &lt;string&gt;pFind evalue;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Descending Off evalue&lt;/string&gt;
   &lt;string&gt;Phenyx zscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off zscore&lt;/string&gt;
   &lt;string&gt;Sequest optimized;MonteCarlo;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Linear sequest:xcorr;1 Ascending Linear sequest:deltacn&lt;/string&gt;

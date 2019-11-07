@@ -86,7 +86,7 @@ rule init ( version ? : location : options * )
   {
      .initialized = true ;
 
-     tar.extract $(location).tar.bz2 : *.c *.h : : : check-last-file-only ;
+     tar.extract $(location).tar.bz2 : *.c *.h : : : <check-last-file-only>true ;
      
     version ?= default ;
     local requirements = [ extension.define expat $(version) : $(location) : $(options) ] [ extension.static-with-fpic ] ;

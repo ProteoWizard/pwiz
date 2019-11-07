@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -150,18 +150,6 @@ namespace pwiz.Common.DataBinding.Internal
         public void ClearTransformStack()
         {
             TransformStack = TransformStack.EMPTY;
-        }
-        public ViewSpec ViewSpec
-        {
-            get
-            {
-                // TODO(nicksh):Apply current sort if any.
-                return ViewInfo.ViewSpec;
-            }
-            set
-            {
-                ViewInfo = new ViewInfo(ViewInfo.ParentColumn, value);
-            }
         }
 
         public INewRowHandler NewRowHandler
@@ -531,7 +519,7 @@ namespace pwiz.Common.DataBinding.Internal
 
         public void OnUnhandledException(Exception exception)
         {
-            Trace.TraceError("BindingListView unhandled exception {0}", exception); // Not L10N
+            Trace.TraceError(@"BindingListView unhandled exception {0}", exception);
             var unhandledExceptionEvent = UnhandledExceptionEvent;
             if (null != unhandledExceptionEvent)
             {

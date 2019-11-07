@@ -49,7 +49,7 @@
             this.comboRelativeRT = new System.Windows.Forms.ComboBox();
             this.labelRelativeRT = new System.Windows.Forms.Label();
             this.cbVariableMod = new System.Windows.Forms.CheckBox();
-            this.listNeutralLosses = new System.Windows.Forms.ListBox();
+            this.listLosses = new System.Windows.Forms.ListBox();
             this.labelLoss = new System.Windows.Forms.Label();
             this.panelLoss = new System.Windows.Forms.Panel();
             this.toolBarLosses = new System.Windows.Forms.ToolStrip();
@@ -57,6 +57,7 @@
             this.tbbEditLoss = new System.Windows.Forms.ToolStripButton();
             this.tbbDeleteLoss = new System.Windows.Forms.ToolStripButton();
             this.comboMod = new System.Windows.Forms.ComboBox();
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.panelAtoms.SuspendLayout();
             this.panelLoss.SuspendLayout();
             this.toolBarLosses.SuspendLayout();
@@ -197,12 +198,12 @@
             this.cbVariableMod.Name = "cbVariableMod";
             this.cbVariableMod.UseVisualStyleBackColor = true;
             // 
-            // listNeutralLosses
+            // listLosses
             // 
-            resources.ApplyResources(this.listNeutralLosses, "listNeutralLosses");
-            this.listNeutralLosses.FormattingEnabled = true;
-            this.listNeutralLosses.Name = "listNeutralLosses";
-            this.listNeutralLosses.SelectedIndexChanged += new System.EventHandler(this.listNeutralLosses_SelectedIndexChanged);
+            resources.ApplyResources(this.listLosses, "listLosses");
+            this.listLosses.FormattingEnabled = true;
+            this.listLosses.Name = "listLosses";
+            this.listLosses.SelectedIndexChanged += new System.EventHandler(this.listNeutralLosses_SelectedIndexChanged);
             // 
             // labelLoss
             // 
@@ -211,7 +212,7 @@
             // 
             // panelLoss
             // 
-            this.panelLoss.Controls.Add(this.listNeutralLosses);
+            this.panelLoss.Controls.Add(this.listLosses);
             this.panelLoss.Controls.Add(this.toolBarLosses);
             resources.ApplyResources(this.panelLoss, "panelLoss");
             this.panelLoss.Name = "panelLoss";
@@ -220,7 +221,6 @@
             // 
             resources.ApplyResources(this.toolBarLosses, "toolBarLosses");
             this.toolBarLosses.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-            this.toolBarLosses.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.toolBarLosses.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.tbbAddLoss,
             this.tbbEditLoss,
@@ -287,6 +287,7 @@
             this.MinimizeBox = false;
             this.Name = "EditStaticModDlg";
             this.ShowInTaskbar = false;
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.panelAtoms.ResumeLayout(false);
             this.panelAtoms.PerformLayout();
             this.panelLoss.ResumeLayout(false);
@@ -320,7 +321,7 @@
         private System.Windows.Forms.ComboBox comboRelativeRT;
         private System.Windows.Forms.Label labelRelativeRT;
         private System.Windows.Forms.CheckBox cbVariableMod;
-        private System.Windows.Forms.ListBox listNeutralLosses;
+        private System.Windows.Forms.ListBox listLosses;
         private System.Windows.Forms.Label labelLoss;
         private System.Windows.Forms.Panel panelLoss;
         private System.Windows.Forms.ToolStrip toolBarLosses;

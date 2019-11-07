@@ -39,7 +39,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include "sqlite3.h"
-#include <time.h>
+#include <ctime>
 #include <vector>
 #include <set>
 #include <queue>
@@ -49,8 +49,10 @@
 #include "Verbosity.h"
 #include "BlibUtils.h"
 #include "PSM.h"
+#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Stream.hpp"
+#include "pwiz/utility/misc/Container.hpp"
 
-using namespace std;
 
 namespace BiblioSpec {
 
@@ -98,6 +100,7 @@ class BlibBuilder : public BlibMaker
   void setCurFile(int i);
   int getCurFile() const;
   string getMaxQuantModsPath();
+  string getMaxQuantParamsPath();
   double getPusherInterval() const;
   const set<string>* getTargetSequences();
   const set<string>* getTargetSequencesModified();
@@ -133,6 +136,7 @@ class BlibBuilder : public BlibMaker
   vector<char*> input_files;
   int curFile;
   string maxQuantModsPath;
+  string maxQuantParamsPath;
   double forcedPusherInterval;
   set<string>* targetSequences;
   set<string>* targetSequencesModified;

@@ -29,14 +29,16 @@ namespace SkylineNightly
 {
     public partial class SkylineNightly : Form
     {
-        public static readonly Nightly.RunMode[] RunModes = { Nightly.RunMode.trunk, Nightly.RunMode.perf, Nightly.RunMode.release, Nightly.RunMode.stress, Nightly.RunMode.integration, Nightly.RunMode.release_perf };
+        public static readonly Nightly.RunMode[] RunModes = 
+            { Nightly.RunMode.trunk, Nightly.RunMode.perf, Nightly.RunMode.release, Nightly.RunMode.stress, Nightly.RunMode.integration, Nightly.RunMode.release_perf, Nightly.RunMode.integration_perf };
 
         public SkylineNightly()
         {
             InitializeComponent();
 
             comboBoxOptions.SelectedIndex = Array.IndexOf(RunModes, Enum.Parse(typeof(Nightly.RunMode), Settings.Default.mode1, false));
-            comboBoxOptions2.SelectedIndex = Settings.Default.mode2 == "" ? 6 : Array.IndexOf(RunModes, Enum.Parse(typeof(Nightly.RunMode), Settings.Default.mode2, false)); //6 == None // Not L10N
+            comboBoxOptions2.SelectedIndex = 
+                Settings.Default.mode2 == string.Empty ? RunModes.Length : Array.IndexOf(RunModes, Enum.Parse(typeof(Nightly.RunMode), Settings.Default.mode2, false)); // RunModes.Count == None
 
             startTime.Value = DateTime.Parse(Settings.Default.StartTime);
             textBoxFolder.Text = Settings.Default.NightlyFolder;
@@ -48,9 +50,9 @@ namespace SkylineNightly
                 // and possibly other services like automated back-ups.
                 // Much better to just use a directory at the root of either a
                 // larger D: drive, or the C: drive.
-                string defaultDir = @"D:\Nightly"; // Not L10N
-                if (!Directory.Exists(@"D:\")) // Not L10N
-                    defaultDir = @"C:\Nightly"; // Not L10N
+                string defaultDir = @"D:\Nightly"; 
+                if (!Directory.Exists(@"D:\")) 
+                    defaultDir = @"C:\Nightly";
                 textBoxFolder.Text = Path.Combine(defaultDir);
             }
 
@@ -74,8 +76,8 @@ namespace SkylineNightly
             if (!Path.IsPathRooted(nightlyFolder))
             {
                 // ReSharper disable once LocalizableElement
-                MessageBox.Show(this, "Relative paths to the Documents folder are no longer allowed.\r\n" + // Not L10N
-                                      "Please specify a full path, ideally outside your Documents folder."); // Not L10N
+                MessageBox.Show(this, "Relative paths to the Documents folder are no longer allowed.\r\n" + 
+                                      @"Please specify a full path, ideally outside your Documents folder.");
                 return;
             }
 
@@ -84,7 +86,7 @@ namespace SkylineNightly
 
             Settings.Default.NightlyFolder = nightlyFolder;
             Settings.Default.mode1 = RunModes[comboBoxOptions.SelectedIndex].ToString();
-            Settings.Default.mode2 = comboBoxOptions2.SelectedIndex == 6 ? "" : RunModes[comboBoxOptions2.SelectedIndex].ToString(); //6 == None // Not L10N
+            Settings.Default.mode2 = comboBoxOptions2.SelectedIndex == RunModes.Length ? string.Empty : RunModes[comboBoxOptions2.SelectedIndex].ToString(); //RunModes.Length == None
 
             Settings.Default.Save();
 
@@ -99,7 +101,7 @@ namespace SkylineNightly
                 {
                     // Create a new task definition and assign properties
                     var td = ts.NewTask();
-                    td.RegistrationInfo.Description = "Skyline nightly build/test"; // Not L10N
+                    td.RegistrationInfo.Description = @"Skyline nightly build/test";
                     td.Principal.LogonType = TaskLogonType.InteractiveToken;
 
                     // Add a trigger that will fire the task every day
@@ -131,7 +133,7 @@ namespace SkylineNightly
 
                     // Add an action that will launch SkylineNightlyShim whenever the trigger fires
                     var assembly = Assembly.GetExecutingAssembly();
-                    td.Actions.Add(new ExecAction(assembly.Location.Replace(".exe", "Shim.exe"), runType)); // Not L10N
+                    td.Actions.Add(new ExecAction(assembly.Location.Replace(@".exe", @"Shim.exe"), runType));
 
                     // Register the task in the root folder
                     ts.RootFolder.RegisterTaskDefinition(Nightly.NightlyTaskNameWithUser, td);
@@ -140,7 +142,9 @@ namespace SkylineNightly
             }
             catch (UnauthorizedAccessException exception)
             {
-                MessageBox.Show(string.Format("You need to run as Administrator to schedule a new task.\n\n {0}", exception)); // Not L10N
+                // ReSharper disable LocalizableElement
+                MessageBox.Show(string.Format("You need to run as Administrator to schedule a new task.\n\n {0}", exception));
+                // ReSharper restore LocalizableElement
             }
 
             Close();
@@ -149,24 +153,25 @@ namespace SkylineNightly
         public string RunType(out int durationHours)
         {
             durationHours = 0;
-			string result = "run "; // Not L10N
+			string result = @"run ";
 
             int[] hours =
             {
                 Nightly.DEFAULT_DURATION_HOURS, Nightly.PERF_DURATION_HOURS, Nightly.DEFAULT_DURATION_HOURS, -1,
-                Nightly.DEFAULT_DURATION_HOURS, Nightly.PERF_DURATION_HOURS
+                Nightly.DEFAULT_DURATION_HOURS, Nightly.PERF_DURATION_HOURS, Nightly.PERF_DURATION_HOURS
             };
 
             result += RunModes[comboBoxOptions.SelectedIndex].ToString();
             durationHours += hours[comboBoxOptions.SelectedIndex];
 
-            if (comboBoxOptions2.SelectedIndex != 6 && comboBoxOptions2.SelectedIndex != -1) //!= none && != not selected
+            if (comboBoxOptions2.SelectedIndex != RunModes.Length && comboBoxOptions2.SelectedIndex != -1) //!= none && != not selected
             {
-				result += " " + RunModes[comboBoxOptions2.SelectedIndex]; // Not L10N
+				result += @" " + RunModes[comboBoxOptions2.SelectedIndex];
                 durationHours += hours[comboBoxOptions2.SelectedIndex];
             }
 
-            if (comboBoxOptions.SelectedIndex == 3 || comboBoxOptions2.SelectedIndex == 3) // 3 == Stress
+            var stress = Array.IndexOf(RunModes, Nightly.RunMode.stress);  // 3 == Stress
+            if (comboBoxOptions.SelectedIndex == stress || comboBoxOptions2.SelectedIndex == stress)
             {
                 durationHours = -1;
             }
@@ -178,7 +183,7 @@ namespace SkylineNightly
         {
             int durationHours;
             RunType(out durationHours);
-            endTime.Text = durationHours == -1 ? "no limit" : (startTime.Value + TimeSpan.FromHours(durationHours)).ToShortTimeString(); // Not L10N
+            endTime.Text = durationHours == -1 ? @"no limit" : (startTime.Value + TimeSpan.FromHours(durationHours)).ToShortTimeString();
         }
 
         private void Now_Click(object sender, EventArgs e)
@@ -191,7 +196,7 @@ namespace SkylineNightly
             using (var dlg = new FolderBrowserDialog
             {
                 // ReSharper disable LocalizableElement
-                Description = "Select or create a nightly build folder.", // Not L10N
+                Description = "Select or create a nightly build folder.", 
                 // ReSharper restore LocalizableElement
                 ShowNewFolderButton = true,
                 SelectedPath = textBoxFolder.Text

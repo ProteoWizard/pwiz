@@ -90,11 +90,11 @@ namespace pwiz.Skyline.Model.Results
         {
             if (!ReferenceEquals(Times, RawTimes))
             {
-                throw new InvalidOperationException("Cannot truncate data set after interpolation"); // Not L10N
+                throw new InvalidOperationException(@"Cannot truncate data set after interpolation");
             }
             if (Peaks.Count > 0)
             {
-                throw new InvalidOperationException("Cannot truncate after peak detection"); // Not L10N
+                throw new InvalidOperationException(@"Cannot truncate after peak detection");
             }
             // Avoid truncating chromatograms down to something less than half the window width.
             double minLength = (maxTime - minTime)/2;
@@ -150,7 +150,14 @@ namespace pwiz.Skyline.Model.Results
         {
             Finder = Crawdads.NewCrawdadPeakFinder();
             Finder.SetChromatogram(Times, Intensities);
-            RawPeaks = new [] {Finder.GetPeak(TimeToIndex(peakBounds.StartTime), TimeToIndex(peakBounds.EndTime))};
+            if (peakBounds.IsEmpty)
+            {
+                RawPeaks = new IFoundPeak[0];
+            }
+            else
+            {
+                RawPeaks = new[] { Finder.GetPeak(TimeToIndex(peakBounds.StartTime), TimeToIndex(peakBounds.EndTime)) };
+            }
         }
 
         private int[] TimesToIndices(double[] retentionTimes)
@@ -313,7 +320,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override string ToString()
         {
-            return Key + string.Format(" ({0})", ProviderId);   // Not L10N
+            return Key + string.Format(@" ({0})", ProviderId);
         }
     }
 
@@ -338,10 +345,10 @@ namespace pwiz.Skyline.Model.Results
         public override string ToString()
         {
             return Peak == null ? Data.Key.ToString() :
-                String.Format("{0} - area = {1:F0}{2}{3}, start = {4}, end = {5}, rt = {6}-{7}>{8}",  // Not L10N : For debugging
+                String.Format(@"{0} - area = {1:F0}{2}{3}, start = {4}, end = {5}, rt = {6}-{7}>{8}",  // : For debugging
                     Data.Key, Peak.Area,
-                    Peak.Identified ? "+" : string.Empty, // Not L10N
-                    DataPeak.IsForcedIntegration ? "*" : string.Empty, // Not L10N
+                    Peak.Identified ? @"+" : string.Empty,
+                    DataPeak.IsForcedIntegration ? @"*" : string.Empty,
                     Peak.StartIndex, Peak.EndIndex,
                     Data.Times[Peak.StartIndex], Data.Times[Peak.EndIndex], Data.Times[Peak.TimeIndex]);
         }

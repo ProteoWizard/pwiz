@@ -24,6 +24,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis;
 using pwiz.Common.DataAnalysis.FoldChange;
 using pwiz.Common.DataAnalysis.Matrices;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Hibernate;
 
@@ -38,6 +39,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         {
             SrmDocument = document;
             ComparisonDef = comparisonDef;
+            var annotationCalculator = new AnnotationCalculator(document);
             _qrFactorizationCache = qrFactorizationCache;
             List<KeyValuePair<int, ReplicateDetails>> replicateIndexes = new List<KeyValuePair<int, ReplicateDetails>>();
             var controlGroupIdentifier = ComparisonDef.GetControlGroupIdentifier(SrmDocument.Settings);
@@ -49,7 +51,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                     var chromatogramSet = chromatograms[i];
                     ReplicateDetails replicateDetails = new ReplicateDetails()
                     {
-                        GroupIdentifier = comparisonDef.GetGroupIdentifier(SrmDocument.Settings, chromatogramSet)
+                        GroupIdentifier = comparisonDef.GetGroupIdentifier(annotationCalculator, chromatogramSet)
                     };
                     if (Equals(controlGroupIdentifier, replicateDetails.GroupIdentifier))
                     {
@@ -435,7 +437,10 @@ namespace pwiz.Skyline.Model.GroupComparison
                         .ChangeNormalizationMethod(ComparisonDef.NormalizationMethod)
                         .ChangeMsLevel(selector.MsLevel);
                     var peptideQuantifier = new PeptideQuantifier(GetNormalizationData, selector.Protein, peptide,
-                        quantificationSettings);
+                        quantificationSettings)
+                    {
+                        QValueCutoff = ComparisonDef.QValueCutoff
+                    };
                     if (null != selector.LabelType)
                     {
                         peptideQuantifier.MeasuredLabelTypes = ImmutableList.Singleton(selector.LabelType);
@@ -529,7 +534,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         {
             return string.Join(Environment.NewLine, Enumerable.Range(0, matrix.GetLength(0)).Select(iRow =>
             {
-                return string.Join(",", // Not L10N
+                return string.Join(@",",
                     Enumerable.Range(0, matrix.GetLength(1)).Select(iCol =>
                 {
                     var value = matrix[iRow, iCol];

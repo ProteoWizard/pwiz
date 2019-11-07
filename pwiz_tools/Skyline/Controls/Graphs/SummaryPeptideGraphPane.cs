@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -54,10 +54,12 @@ namespace pwiz.Skyline.Controls.Graphs
             : base(graphSummary)
         {
             PaneKey = paneKey;
-            string xAxisTitle = Resources.SummaryPeptideGraphPane_SummaryPeptideGraphPane_Peptide;
+            string xAxisTitle = 
+                Helpers.PeptideToMoleculeTextMapper.Translate(Resources.SummaryPeptideGraphPane_SummaryPeptideGraphPane_Peptide, 
+                    graphSummary.DocumentUIContainer.DocumentUI.DocumentType);
             if (null != paneKey.IsotopeLabelType && !paneKey.IsotopeLabelType.IsLight)
             {
-                xAxisTitle += " (" + paneKey.IsotopeLabelType + ")"; // Not L10N
+                xAxisTitle += @" (" + paneKey.IsotopeLabelType + @")";
             }
             XAxis.Title.Text = xAxisTitle;
             XAxis.Type = AxisType.Text;
@@ -372,7 +374,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             label += transitionGroup.LabelTypeText;
                         if (peptideOrder == SummaryPeptideOrder.time)
                         {
-                            label += string.Format(" ({0:F01})", displayTotals ? // Not L10N
+                            label += string.Format(@" ({0:F01})", displayTotals ?
                                                                                    dataPoint.TimePepCharge : dataPoint.TimeGroup);                            
                         }
                         labels.Add(label);

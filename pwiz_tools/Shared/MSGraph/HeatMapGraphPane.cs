@@ -80,7 +80,7 @@ namespace pwiz.MSGraph
                 if ((i + 1) % (_heatMapColors.Length / 4) == 0)
                 {
                     double intensity = logScale ? Math.Pow(Math.E, i/scale) : i / scale;
-                    curves[i].Label.Text = intensity.ToString("F0"); // Not L10N
+                    curves[i].Label.Text = intensity.ToString(@"F0");
                 }
                 graphPane.CurveList.Insert(0, curves[i]);
             }
@@ -232,6 +232,10 @@ namespace pwiz.MSGraph
             X = (float)x;
             Y = (float)y;
             Z = (float)z;
+        }
+        public override string ToString() // For ease of debugging
+        {
+            return string.Format(@"{0},{1},{2}", X, Y, Z);
         }
     }
 }

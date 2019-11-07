@@ -310,7 +310,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             }
 
             LibraryIonMobilityInfo libraryIonMobilityInfo;
-            doc1.Settings.PeptideSettings.Libraries.Libraries.First().TryGetIonMobilityInfos(0, out libraryIonMobilityInfo);
+            doc1.Settings.PeptideSettings.Libraries.Libraries.First().TryGetIonMobilityInfos(doc1.MoleculeLibKeys.ToArray(), 0, out libraryIonMobilityInfo);
             if (driftInfoExplicitDT == null)
             {
                 driftInfoExplicitDT = libraryIonMobilityInfo;
@@ -325,7 +325,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     {
                         double windowDT;
                         var calculatedDriftTime = doc1.Settings.GetIonMobility(
-                            pep, nodeGroup, libraryIonMobilityInfo, instrumentInfo, 0, out windowDT);
+                            pep, nodeGroup, null, libraryIonMobilityInfo, instrumentInfo, 0, out windowDT);
                         var libKey = new LibKey(pep.ModifiedSequence, nodeGroup.PrecursorAdduct);
                         IonMobilityAndCCS[] infoValueExplicitDT;
                         if (!dictExplicitDT.TryGetValue(libKey, out infoValueExplicitDT))

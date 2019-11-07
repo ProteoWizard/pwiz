@@ -378,7 +378,7 @@ namespace BiblioSpec
             double qvalue = sqlite3_column_double(statement, 3);
 
             auto altIter = alts.find(peptideId);    
-            double altScore = (altIter != alts.end()) ? altIter->second : -numeric_limits<double>::max();
+            double altScore = (altIter != alts.end()) ? altIter->second : -std::numeric_limits<double>::max();
 
             // check if we already processed a peptide that references this spectrum
             auto processedSpectraSearch = processedSpectra.find(specId);

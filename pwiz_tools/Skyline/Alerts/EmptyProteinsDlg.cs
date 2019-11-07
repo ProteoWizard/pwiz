@@ -18,6 +18,7 @@
  */
 using System;
 using System.Windows.Forms;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -48,10 +49,11 @@ namespace pwiz.Skyline.Alerts
 
         public class EmptyProteinsSettings : AuditLogOperationSettings<EmptyProteinsSettings>
         {
-            public EmptyProteinsSettings(bool keepEmptyProteins, int emptyProteins)
+            public EmptyProteinsSettings(bool keepEmptyProteins, int emptyProteins, SrmDocument.DOCUMENT_TYPE docType)
             {
                 KeepEmptyProteins = keepEmptyProteins;
                 EmptyProteins = emptyProteins;
+                DocType = docType;
             }
 
             public override MessageInfo MessageInfo
@@ -63,12 +65,13 @@ namespace pwiz.Skyline.Alerts
                         msgType = KeepEmptyProteins ? MessageType.kept_empty_protein : MessageType.removed_empty_proteins;
                     else
                         msgType = KeepEmptyProteins ? MessageType.kept_empty_proteins : MessageType.removed_empty_protein;
-                    return new MessageInfo(msgType, EmptyProteins);
+                    return new MessageInfo(msgType, DocType, EmptyProteins);
                 }
             }
 
             public bool KeepEmptyProteins { get; private set; }
             public int EmptyProteins { get; private set; }
+            private SrmDocument.DOCUMENT_TYPE DocType { get; set; }
         }
 
         public bool IsKeepEmptyProteins { get; set; }
@@ -98,7 +101,7 @@ namespace pwiz.Skyline.Alerts
 
         public EmptyProteinsSettings FormSettings
         {
-            get { return new EmptyProteinsSettings(IsKeepEmptyProteins, EmptyProteins); }
+            get { return new EmptyProteinsSettings(IsKeepEmptyProteins, EmptyProteins, ModeUI); }
         }
     }
 }

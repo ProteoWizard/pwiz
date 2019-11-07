@@ -159,11 +159,11 @@ namespace pwiz.Skyline.Controls.Graphs
             var selectedTreeNode = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
             if (GraphSummary.StateProvider.SelectedNode is EmptyNode) // if EmptyNode selected
             {
-                selectedTreeNode = GraphSummary.StateProvider.SelectedNodes.First() as SrmTreeNode;
+                selectedTreeNode = GraphSummary.StateProvider.SelectedNodes.OfType<SrmTreeNode>().FirstOrDefault();
             }
             if (selectedTreeNode == null || document.FindNode(selectedTreeNode.Path) == null)
             {
-                Title.Text = Resources.AreaReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_peak_area_graph;
+                Title.Text = Helpers.PeptideToMoleculeTextMapper.Translate(Resources.AreaReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_peak_area_graph, document.DocumentType);
                 EmptyGraph(document);
                 return;
             }
@@ -225,7 +225,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else if (!(selectedTreeNode is TransitionGroupTreeNode || selectedTreeNode is PeptideGroupTreeNode))
             {
-                Title.Text = Resources.AreaReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_peak_area_graph;
+                Title.Text = Helpers.PeptideToMoleculeTextMapper.Translate(Resources.AreaReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_peak_area_graph, document.DocumentType);
                 EmptyGraph(document);
                 CanShowPeakAreaLegend = false;
                 CanShowDotProduct = false;
@@ -311,7 +311,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             var graphType = AreaGraphController.GraphDisplayType;
             var expectedValue = IsExpectedVisible ? ExpectedVisible : AreaExpectedValue.none;
-            var replicateGroupOp = GraphValues.ReplicateGroupOp.FromCurrentSettings(document.Settings);
+            var replicateGroupOp = ReplicateGroupOp.FromCurrentSettings(document);
             var graphData = IsMultiSelect  ? 
                 new AreaGraphData(document,
                     peptidePaths,
@@ -809,9 +809,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 switch (ExpectedVisible)
                 {
                     case AreaExpectedValue.library:
-                        return "dotp"; // Not L10N
+                        return @"dotp";
                     case AreaExpectedValue.isotope_dist:
-                        return "idotp"; // Not L10N
+                        return @"idotp";
                     default:
                         return string.Empty; 
                 }
@@ -820,7 +820,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private string GetDotProductText(float? dotpValue)
         {
-            return dotpValue.HasValue ? string.Format("{0}\n{1:F02}", DotpLabelText, dotpValue) : null; // Not L10N
+            // ReSharper disable LocalizableElement
+            return dotpValue.HasValue ? string.Format("{0}\n{1:F02}", DotpLabelText, dotpValue) : null;
+            // ReSharper restore LocalizableElement
         }
 
         protected override int SelectedIndex
@@ -883,7 +885,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public AreaGraphData(SrmDocument document,
                                  IdentityPath identityPath,
                                  DisplayTypeChrom displayType,
-                                 GraphValues.ReplicateGroupOp replicateGroupOp,
+                                 ReplicateGroupOp replicateGroupOp,
                                  int ratioIndex,
                                  AreaNormalizeToData normalize,
                                  AreaExpectedValue expectedVisible,
@@ -901,7 +903,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public AreaGraphData(SrmDocument document,
                                  IEnumerable<IdentityPath> selectedDocNodePaths,
                                  DisplayTypeChrom displayType,
-                                 GraphValues.ReplicateGroupOp replicateGroupOp,
+                                 ReplicateGroupOp replicateGroupOp,
                                  int ratioIndex,
                                  AreaNormalizeToData normalize,
                                  AreaExpectedValue expectedVisible,

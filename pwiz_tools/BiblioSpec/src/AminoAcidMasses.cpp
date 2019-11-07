@@ -24,7 +24,6 @@
 
 #include "AminoAcidMasses.h"
 
-using namespace std;
 
 namespace BiblioSpec {
 

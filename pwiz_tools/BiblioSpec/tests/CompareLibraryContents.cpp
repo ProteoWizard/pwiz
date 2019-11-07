@@ -21,12 +21,16 @@
 
 #include "Compare.h"
 #include "pwiz/utility/misc/unit.hpp"
+#include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
+#include "boost/xpressive/xpressive_dynamic.hpp"
 #include <cstring>
 #include <stdlib.h>
 #include "sqlite3.h"
 #include "smart_stmt.h"
 
 using namespace BiblioSpec;
+namespace bxp = boost::xpressive;
 
 // Information for replacing part of a string.
 // Replace text between start and end with replace_str.
@@ -37,76 +41,24 @@ using namespace BiblioSpec;
 // Delete the text if replace_str_ is NULL or empty.
 struct FindReplace {
 
-    const char* find_str_start_;
-    const char* find_str_end_;
-    size_t find_pos_start_;
-    size_t find_pos_end_;
-    const char* replace_str_;
-
-    FindReplace(){
-        find_str_start_ = NULL;
-        find_str_end_ = NULL;
-        find_pos_start_ = string::npos;
-        find_pos_end_ = string::npos;
-        replace_str_ = NULL;
-    }
-
-    FindReplace(const char* find_str_start,
-            const char* find_str_end,
-            size_t find_pos_start,
-            size_t find_pos_end,
-            const char* replace_str){
-        find_str_start_ = find_str_start;
-        find_str_end_ = find_str_end;
-        find_pos_start_ = find_pos_start;
-        find_pos_end_ = find_pos_end;
-        replace_str_ = replace_str;
-    }
+    string find_regex_;
+    string replace_str_;
 
     void clear(){
-        find_str_start_ = NULL;
-        find_str_end_ = NULL;
-        find_pos_start_ = string::npos;
-        find_pos_end_ = string::npos;
-        replace_str_ = NULL;
+        find_regex_.clear();
+        replace_str_.clear();
     }
 
     // true if no replacement to make
     bool empty(){
-        return ( find_str_start_ == NULL && find_str_end_ == NULL
-                 && find_pos_start_ == string::npos );
+        return find_regex_.empty() && replace_str_.empty();
     }
 };
 
 // Use info to modify the given string.
 void Replace(FindReplace& info, string& workingString){
-
-    if( info.empty() ){ return; }
-
-    // use either the given start and end positions
-    // or set them based on the text
-    size_t start = info.find_pos_start_;
-    size_t end = info.find_pos_end_;
-
-    if( info.find_str_start_ != NULL && strlen(info.find_str_start_) != 0 ){
-        start = workingString.find(info.find_str_start_);
-        // if not found, do no replacement
-        if( start == string::npos ){
-            return;
-        }
-    } 
-    if( info.find_str_end_ != NULL && strlen(info.find_str_end_) != 0 ){
-        end = workingString.find(info.find_str_end_, start);
-        // if we didn't find it, don't replace anything
-        if( end == string::npos ){ return; }
-    }
-
-    // get the length of the section to replace
-    size_t length = end - start;
-
-    // replace the selected substring
-    const char* replace = (info.replace_str_ == NULL) ? "" : info.replace_str_;
-    workingString.replace(start, length, replace);
+    bxp::sregex re = bxp::sregex::compile(info.find_regex_);
+    workingString = bxp::regex_replace(workingString, re, info.replace_str_);
 }
 
 // Execute the given select statement on the given database
@@ -147,14 +99,8 @@ void statementToLines(sqlite3* dbConnection,
             result += ((val == NULL || strlen(val) == 0) ? "N/A" : val);
         }
 
-        if( swapSlash ){
-            size_t position = result.find( "\\" ); 
-
-            while ( position != string::npos ) {
-              result.replace( position, 1, "/" );
-              position = result.find( "\\", position + 1 );
-           } 
-        }
+        if( swapSlash )
+            bal::replace_all(result, "\\", "/");
         Replace(findReplace, result);
         outputLines.push_back(result);
 
@@ -168,6 +114,7 @@ void getSelectInfo(vector<const char*>& selectStrings,
                    vector<FindReplace>& deleteText,
                    vector<bool>& swapSlash){
     FindReplace fp;
+
     selectStrings.push_back("SELECT libLSID, numSpecs, majorVersion, minorVersion FROM LibInfo");
     deleteText.push_back(fp);
     swapSlash.push_back(false);
@@ -175,12 +122,16 @@ void getSelectInfo(vector<const char*>& selectStrings,
     deleteText.push_back(fp);
     swapSlash.push_back(false);
     selectStrings.push_back("select * from RefSpectra");
+    // limit small (or scientific notation) real numbers to 8 digits after decimal place (allowing 4 digits before decimal)
+    // limit large real numbers to 2 digits after decimal place (allowing 5 or more digits before decimal)
+    fp.find_regex_ = "((?:\\d{5,}\\.\\d{0,2})|(?:\\d{1,4}\\.\\d{0,8}))\\d*";
+    fp.replace_str_ = "$1";
     deleteText.push_back(fp);
+    fp.clear();
     swapSlash.push_back(false);
     selectStrings.push_back("select * from SpectrumSourceFiles");
-    fp.find_str_start_ = "	";
-    fp.find_str_end_ = "/BiblioSpec/tests";
-    fp.replace_str_ = "	";
+    fp.find_regex_ = "\t[^\t]*/BiblioSpec/tests"; // erase the part of the path before /BiblioSpec/tests (which may differ between developer/test machines)
+    fp.replace_str_ = "\t/BiblioSpec/tests";
     deleteText.push_back(fp);
     fp.clear();
     swapSlash.push_back(true);
@@ -219,7 +170,7 @@ void getObserved(const char* libName, vector<string>& outputLines){
 void removeObservedFiles(const string& libName){
     string outName = libName;
     outName += ".observed";
-    remove(outName.c_str());
+    bfs::remove(outName.c_str());
 }
 
 // When the output does not match the expected, print the observed output
@@ -286,8 +237,11 @@ int test (const vector<string>& args)
     while( !compareFile.eof() )
     {
         if( lineNum >= outputLines.size() )
+        {
+            printObserved(outputLines, libName);
             throw runtime_error("The expected input has more lines than what was observed (" +
                                 lexical_cast<string>(outputLines.size()) + ")");
+        }
 
         string& observed = outputLines[lineNum];
 
@@ -317,31 +271,34 @@ int test (const vector<string>& args)
 
 
 int main(int argc, char* argv[])
-{  
-    TEST_PROLOG(argc, argv)
-    if (teamcityTestDecoration)
-        testArgs.erase(find(testArgs.begin(), testArgs.end(), "--teamcity-test-decoration"));
+{
+    bnw::args utf8ArgWrapper(argc, argv); // modifies argv in-place with UTF-8 version on Windows
+    pwiz::util::enable_utf8_path_operations();
 
     try
     {
-        test(testArgs);
+        return test(vector<string>(argv, argv+argc));
     }
     catch (exception& e)
     {
-        TEST_FAILED(e.what())
+        cerr << e.what() << endl;
+        return 1;
     }
-    catch (const char* msg) {
-      TEST_FAILED(msg);
+    catch (const char* msg)
+    {
+        cerr << msg << endl;
+        return 1;
     }
-    catch (string msg) {
-      TEST_FAILED(msg.c_str());
+    catch (string msg)
+    {
+        cerr << msg << endl;
+        return 1;
     }
     catch (...)
     {
-        TEST_FAILED("Caught unknown exception.")
+        cerr << "Caught unknown exception." << endl;
+        return 1;
     }
-
-    TEST_EPILOG
 }
 
 

@@ -20,6 +20,7 @@ using System;
 using System.ComponentModel;
 using System.Linq;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Lists;
@@ -114,7 +115,7 @@ namespace pwiz.Skyline.Model.Databinding
             var existingRecord = listItem.GetRecord() as ListItem.ExistingRecordData;
             if (existingRecord == null)
             {
-                throw new InvalidOperationException("Invalid row " + listItem.GetRecord()); // Not L10N since cannot happen
+                throw new InvalidOperationException(@"Invalid row " + listItem.GetRecord()); // Cannot happen
             }
             var editDescription = EditDescription.SetAnnotation(AnnotationDef, value)
                 .ChangeElementRef(((ListRef) ListRef.PROTOTYPE.ChangeName(ListName)).GetListItemRef(listItem));
@@ -140,7 +141,7 @@ namespace pwiz.Skyline.Model.Databinding
                     doc.Settings.ChangeDataSettings(
                     
                     ChangeListData(doc.Settings.DataSettings, listData)));
-            });
+            }, AuditLogEntry.SettingsLogFunction);
 
         }
 

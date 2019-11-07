@@ -16,8 +16,7 @@ IF EXIST build-nt-x86 rmdir /s /q build-nt-x86
 IF EXIST build-nt-x86_64 rmdir /s /q build-nt-x86_64
 
 if %VERBOSE%==1 echo   Cleaning libraries...
-IF EXIST libraries\boost-build\src\engine\bin.nt rmdir /s /q libraries\boost-build\src\engine\bin.nt
-IF EXIST libraries\boost-build\src\engine\bootstrap rmdir /s /q libraries\boost-build\src\engine\bootstrap
+git clean -f -x libraries/boost-build/src/engine > nul
 IF EXIST libraries\boost_1_43_0 rmdir /s /q libraries\boost_1_43_0
 IF EXIST libraries\boost_1_54_0 rmdir /s /q libraries\boost_1_54_0
 IF EXIST libraries\boost_1_56_0 rmdir /s /q libraries\boost_1_56_0
@@ -61,6 +60,8 @@ rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Bruker\x64 > nul 2>&1
 del /f /q pwiz_aux\msrc\utility\vendor_api\Shimadzu\EULA.SFCS > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86 > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64 > nul 2>&1
+del /f /q pwiz_aux\msrc\utility\vendor_api\Shimadzu\*.dll > nul 2>&1
+rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Shimadzu\ja-JP > nul 2>&1
 del /f /q pwiz_aux\msrc\utility\vendor_api\Thermo\*.dll > nul 2>&1
 del /f /q pwiz_aux\msrc\utility\vendor_api\Thermo\*.manifest > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Thermo\x86 > nul 2>&1
@@ -73,12 +74,13 @@ rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc12_x64 > nul 2>&1
 del /f /q pwiz_aux\msrc\utility\vendor_api\Waters\*.h > nul 2>&1
 
 if %VERBOSE%==1 echo   Cleaning vendor test data...
-rmdir /s /q pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.data > nul 2>&1
-rmdir /s /q pwiz\data\vendor_readers\Agilent\Reader_Agilent_Test.data > nul 2>&1
-rmdir /s /q pwiz\data\vendor_readers\ABI\Reader_ABI_Test.data > nul 2>&1
+git clean -f -d -X pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.data > nul
 rmdir /s /q pwiz\data\vendor_readers\ABI\T2D\Reader_ABI_T2D_Test.data > nul 2>&1
-rmdir /s /q pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data > nul 2>&1
-rmdir /s /q pwiz\data\vendor_readers\UIMF\Reader_UIMF_Test.data > nul 2>&1
+git clean -f -d -X pwiz\data\vendor_readers\UIMF\Reader_UIMF_Test.data > nul
+git clean -f -d -X pwiz\data\vendor_readers\ABI\Reader_ABI_Test.data > nul
+git clean -f -d -X pwiz\data\vendor_readers\Agilent\Reader_Agilent_Test.data > nul
+git clean -f -d -X pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data > nul
+git clean -f -d -X pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data > nul
 
 IF EXIST pwiz_tools\clean-apps.bat call pwiz_tools\clean-apps.bat
 

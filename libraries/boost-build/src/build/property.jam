@@ -144,7 +144,11 @@ rule evaluate-conditionals-in-context ( properties * : context * )
         local new = [ indirect.call $(i) $(context) ] ;
         if $(p) && [ $(p).location ]
         {
-            result += [ translate-paths $(new) : [ $(p).location ] ] ;
+            local location = [ $(p).location ] ;
+            local project-id = [ project.attribute $(m) id ] ;
+            project-id ?= [ path.root $(location) [ path.pwd ] ] ;
+            result +=
+                [ translate $(new) : $(project-id) : $(location) : $(m) ] ;
         }
         else
         {
@@ -655,7 +659,14 @@ rule translate-paths ( properties * : path )
             local t ;
             for local v in $(values)
             {
-                t += [ path.root [ path.make $(v) ] $(path) ] ;
+                if $(p:G) = <dll-path> && [ MATCH ('\\$ORIGIN') : $(v) ]
+                {
+                    t += $(v) ;
+                }
+                else
+                {
+                    t += [ path.root [ path.make $(v) ] $(path) ] ;
+                }
             }
             t = $(t:J="&&") ;
             result += $(condition)$(t:TG=$(p:G)) ;

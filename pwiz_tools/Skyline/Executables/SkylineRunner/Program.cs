@@ -24,23 +24,24 @@ using System.IO;
 using System.IO.Pipes;
 using System.Linq;
 using System.Threading;
-using SkylineRunner.Properties;
+using pwiz.SkylineRunner.Properties;
 
-namespace SkylineRunner
+namespace pwiz.SkylineRunner
 {
     class Program
     {
-        public static readonly object SERVER_CONNECTION_LOCK = new object();
+        private static readonly object SERVER_CONNECTION_LOCK = new object();
+
         private bool _connected;
 
         static int Main(string[] args)
         {
-            return new Program().run(args);
+            return new Program().Run(args);
         }
 
-        private int run(IEnumerable<string> args)
+        private int Run(IEnumerable<string> args)
         {
-            const string skylineAppName = "Skyline"; // Not L10N
+            const string skylineAppName = "Skyline-daily"; // Not L10N
             string[] possibleSkylinePaths = ListPossibleSkylineShortcutPaths(skylineAppName);
             string skylinePath = possibleSkylinePaths.FirstOrDefault(File.Exists);
             if (null == skylinePath)
@@ -57,7 +58,7 @@ namespace SkylineRunner
             {
                 CreateNoWindow = true,
                 UseShellExecute = false,
-                Arguments = String.Format("/c \"{0}\" CMD{1}", skylinePath, guidSuffix) // Not L10N
+                Arguments = string.Format("/c \"{0}\" CMD{1}", skylinePath, guidSuffix) // Not L10N
             };
             Process.Start(psiExporter);
 
@@ -73,6 +74,15 @@ namespace SkylineRunner
 
                 using (StreamWriter sw = new StreamWriter(serverStream))
                 {
+                    // Send the console width for SkylineRunner to Skyline
+                    try
+                    {
+                        sw.WriteLine("--sw=" + (Console.BufferWidth - 1));
+                    }
+                    catch
+                    {
+                        // Rely on the default width. The command is being run in an invironment without a screen width
+                    }
                     // Send the directory of SkylineRunner to Skyline
                     sw.WriteLine("--dir=" + Directory.GetCurrentDirectory()); // Not L10N
 
@@ -150,7 +160,7 @@ namespace SkylineRunner
                     return false;
                 }
                 // ReSharper disable once UnusedVariable
-                catch (Exception ignored)
+                catch (Exception)
                 {
                     return false;
                 }

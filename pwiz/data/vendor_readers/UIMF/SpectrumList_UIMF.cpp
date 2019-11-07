@@ -73,7 +73,7 @@ PWIZ_API_DECL size_t SpectrumList_UIMF::find(const string& id) const
 
     map<string, size_t>::const_iterator scanItr = idToIndexMap_.find(id);
     if (scanItr == idToIndexMap_.end())
-        return size_;
+        return checkNativeIdFindResult(size_, id);
     return scanItr->second;
 }
 
@@ -103,7 +103,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_UIMF::spectrum(size_t index, DetailLevel 
     result->id = ie.id;
 
     int msLevel = UIMFReader::getMsLevel(rawIndexEntry.frameType);
-    CVID spectrumType = rawIndexEntry.frameType == UIMFReader::FrameType_Calibration ? MS_calibration_spectrum : (msLevel == 1 ? MS_MS1_spectrum : MS_MSn_spectrum);
+    CVID spectrumType = rawIndexEntry.frameType == FrameType_Calibration ? MS_calibration_spectrum : (msLevel == 1 ? MS_MS1_spectrum : MS_MSn_spectrum);
     result->set(MS_ms_level, msLevel);
     result->set(spectrumType);
     result->set(MS_profile_spectrum);
@@ -145,11 +145,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_UIMF::spectrum(size_t index, DetailLevel 
 }
 
 
-/*PWIZ_API_DECL pwiz::analysis::Spectrum3DPtr SpectrumList_UIMF::spectrum3d(double scanStartTime, const boost::icl::interval_set<double>& driftTimeRanges) const
+PWIZ_API_DECL pwiz::analysis::Spectrum3DPtr SpectrumList_UIMF::spectrum3d(double scanStartTime, const boost::icl::interval_set<double>& driftTimeRanges) const
 {
     pwiz::analysis::Spectrum3DPtr result(new pwiz::analysis::Spectrum3D);
 
-    if (!rawfile_->hasIonMobilityData())
+    if (!rawfile_->hasIonMobility())
         return result;
 
     boost::call_once(indexInitialized_.flag, boost::bind(&SpectrumList_UIMF::createIndex, this));
@@ -158,25 +158,48 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_UIMF::spectrum(size_t index, DetailLevel 
     if (findItr == scanTimeToFrameMap_.end() || findItr->first - 1e-8 > scanStartTime)
         return result;
 
-    FramePtr frame = rawfile_->getIonMobilityFrame(findItr->second);
-    int driftBinsPerFrame = frame->getDriftBinsPresent();
+    const vector<DriftScanInfoPtr> scans = rawfile_->getDriftScansForFrame(findItr->second);
+    int driftBinsPerFrame = rawfile_->getMaxDriftScansPerFrame();
     (*result).reserve(driftBinsPerFrame);
-    for (int driftBinIndex = 0; driftBinIndex < driftBinsPerFrame; ++driftBinIndex)
+    for (DriftScanInfoPtr scanInfo : scans)
     {
-        DriftScanPtr driftScan = frame->getScan(driftBinIndex);
-        if (driftTimeRanges.find(driftScan->getDriftTime()) == driftTimeRanges.end())
+        if (driftTimeRanges.find(scanInfo->getDriftTime()) == driftTimeRanges.end())
             continue;
 
-        boost::container::flat_map<double, float>& driftSpectrum = (*result)[driftScan->getDriftTime()];
-        size_t numDataPoints = (size_t) driftScan->getTotalDataPoints();
-        const vector<double>& mzArray = driftScan->getXArray();
-        const vector<float>& intensityArray = driftScan->getYArray();
+        boost::container::flat_map<double, float>& driftSpectrum = (*result)[scanInfo->getDriftTime()];
+        size_t numDataPoints = (size_t) scanInfo->getNonZeroCount();
+        pwiz::util::BinaryData<double> mzArray, intensityArray;
+        rawfile_->getScan(scanInfo->getFrameNumber(), scanInfo->getDriftScanNumber(), scanInfo->getFrameType(), mzArray, intensityArray, true);
         driftSpectrum.reserve(numDataPoints);
         for (size_t i = 0; i < numDataPoints; ++i)
             driftSpectrum[mzArray[i]] = intensityArray[i];
     }
     return result;
-}*/
+}
+
+
+PWIZ_API_DECL bool SpectrumList_UIMF::hasIonMobility() const
+{
+    return rawfile_->hasIonMobility();
+}
+
+
+PWIZ_API_DECL bool SpectrumList_UIMF::canConvertIonMobilityAndCCS() const
+{
+    return rawfile_->canConvertIonMobilityAndCCS();
+}
+
+
+PWIZ_API_DECL double SpectrumList_UIMF::ionMobilityToCCS(double driftTime, double mz, int charge) const
+{
+    return rawfile_->ionMobilityToCCS(driftTime, mz, charge);
+}
+
+
+PWIZ_API_DECL double SpectrumList_UIMF::ccsToIonMobility(double ccs, double mz, int charge) const
+{
+    return rawfile_->ccsToIonMobility(ccs, mz, charge);
+}
 
 
 PWIZ_API_DECL void SpectrumList_UIMF::createIndex() const

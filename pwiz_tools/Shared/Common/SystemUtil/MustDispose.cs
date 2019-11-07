@@ -80,7 +80,7 @@ namespace pwiz.Common.SystemUtil
             {
                 if (!Equals(member, default(T)))
                 {
-                    throw new InvalidOperationException("Already attached"); // Not L10N
+                    throw new InvalidOperationException(@"Already attached");
                 }
                 member = newValue;
             }

@@ -1,12 +1,12 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:omssa.blib	2	1	9
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:omssa.blib	2	1	10
 id	RefSpectraID	position	mass
 1	1	1	15.995
-id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
-1	MPCTEDYLSLILNR	842.345336914062	2	M[+16.0]PCTEDYLSLILNR	-	-	1	316	0.0	0.0	0.0	0	54.4525	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	11633	1.0e-14	10
-2	MPCTEDYLSLILNR	834.34521484375	2	MPCTEDYLSLILNR	-	-	1	553	0.0	0.0	0.0	0	55.5641666666667	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	11885	8.0e-15	10
-id	fileName	cutoffScore
-1	/BiblioSpec/tests/inputs/OMSSA.mzXML	-1.0
+id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	totalIonCurrent	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
+1	MPCTEDYLSLILNR	842.34533691	2	M[+16.0]PCTEDYLSLILNR	-	-	1	316	0.0	0.0	0.0	0	54.4525	N/A	N/A	6874.48814058	N/A	N/A	N/A	N/A	N/A	1	11633	1.0e-14	10
+2	MPCTEDYLSLILNR	834.34521484	2	MPCTEDYLSLILNR	-	-	1	553	0.0	0.0	0.0	0	55.56416666	N/A	N/A	144034.52	N/A	N/A	N/A	N/A	N/A	1	11885	8.0e-15	10
+id	fileName	idFileName	cutoffScore
+1	/BiblioSpec/tests/inputs/OMSSA.mzXML	/BiblioSpec/tests/inputs/试验_OMSSA.pep.xml	-1.0
 id	scoreType	probabilityType
 0	UNKNOWN	NOT_A_PROBABILITY_VALUE
 1	PERCOLATOR QVALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT

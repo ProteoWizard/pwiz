@@ -41,7 +41,7 @@ import xsltproc ;
 import virtual-target ;
 
 
-# Use to specify extra configuration paramters. These get translated into a
+# Use to specify extra configuration parameters. These get translated into a
 # doxyfile which configures the building of the docs.
 feature.feature "doxygen:param" : : free ;
 
@@ -369,7 +369,7 @@ actions quietly rm-htmldir
 
 
 # The rules below require BoostBook stylesheets, so we need some code to check
-# that the boostbook module has actualy been initialized.
+# that the boostbook module has actually been initialized.
 #
 rule check-boostbook ( )
 {

@@ -234,7 +234,7 @@ make sure your instrument can handle the number of transitions in each file.</va
     <value>164, 22</value>
   </data>
   <data name="textMaxTransitions.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="textMaxTransitions.ToolTip" xml:space="preserve">
     <value>Each file created will have at most this number of transitions, but may have fewer,
@@ -265,7 +265,7 @@ if peptide or protein boundaries do not allow the maximum.</value>
     <value>236, 17</value>
   </data>
   <data name="labelMaxTransitions.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="labelMaxTransitions.Text" xml:space="preserve">
     <value>Ma&amp;x transitions per sample injection:</value>
@@ -378,6 +378,12 @@ if peptide or protein boundaries do not allow the maximum.</value>
   <data name="comboTargetType.TabIndex" type="System.Int32, mscorlib">
     <value>13</value>
   </data>
+  <data name="comboTargetType.ToolTip" xml:space="preserve">
+    <value>Type of method to export.
+Standard will export an unscheduled method.
+Triggered will export a method where secondary transitions will not be measured
+until primary transitions reach a certain intensity threshold.</value>
+  </data>
   <data name="&gt;&gt;comboTargetType.Name" xml:space="preserve">
     <value>comboTargetType</value>
   </data>
@@ -401,6 +407,9 @@ if peptide or protein boundaries do not allow the maximum.</value>
   </data>
   <data name="textRunLength.TabIndex" type="System.Int32, mscorlib">
     <value>15</value>
+  </data>
+  <data name="textRunLength.ToolTip" xml:space="preserve">
+    <value>Run length of the entire gradient in minutes, required for unscheduled Thermo and Waters methods.</value>
   </data>
   <data name="textRunLength.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -428,6 +437,9 @@ if peptide or protein boundaries do not allow the maximum.</value>
   </data>
   <data name="textDwellTime.TabIndex" type="System.Int32, mscorlib">
     <value>20</value>
+  </data>
+  <data name="textDwellTime.ToolTip" xml:space="preserve">
+    <value>Dwell time per transition in milliseconds, required for unscheduled Agilent and SCIEX methods.</value>
   </data>
   <data name="textDwellTime.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -588,6 +600,10 @@ if peptide or protein boundaries do not allow the maximum.</value>
   <data name="textTemplateFile.TabIndex" type="System.Int32, mscorlib">
     <value>23</value>
   </data>
+  <data name="textTemplateFile.ToolTip" xml:space="preserve">
+    <value>Existing method file containing settings that will be used in the exported method.
+A single template transition may also be required for transition values not controled by Skyline.</value>
+  </data>
   <data name="&gt;&gt;textTemplateFile.Name" xml:space="preserve">
     <value>textTemplateFile</value>
   </data>
@@ -643,7 +659,7 @@ if peptide or protein boundaries do not allow the maximum.</value>
     <value>125, 21</value>
   </data>
   <data name="cbIgnoreProteins.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="cbIgnoreProteins.Text" xml:space="preserve">
     <value>Ignore p&amp;roteins</value>
@@ -822,7 +838,7 @@ and base name as the Analyst acquisition method.</value>
     <value>173, 24</value>
   </data>
   <data name="comboPolarityFilter.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>12</value>
   </data>
   <data name="comboPolarityFilter.ToolTip" xml:space="preserve">
     <value>Controls export behavior for documents with both positive and negative transitions. Allows for output of only positive or only negative transitions, or creates separate outputs for each polarity.</value>
@@ -884,6 +900,10 @@ and base name as the Analyst acquisition method.</value>
   <data name="cbSlens.Text" xml:space="preserve">
     <value>Write S-&amp;Lens values</value>
   </data>
+  <data name="cbSlens.ToolTip" xml:space="preserve">
+    <value>Write the S-lens column for Thermo instruments.
+For transitions without an explicit S-lens value, 50 is used.</value>
+  </data>
   <data name="&gt;&gt;cbSlens.Name" xml:space="preserve">
     <value>cbSlens</value>
   </data>
@@ -933,7 +953,7 @@ and base name as the Analyst acquisition method.</value>
     <value>78, 17</value>
   </data>
   <data name="labelOptimizing.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>13</value>
   </data>
   <data name="labelOptimizing.Text" xml:space="preserve">
     <value>Optimi&amp;zing:</value>
@@ -963,7 +983,7 @@ and base name as the Analyst acquisition method.</value>
     <value>66, 17</value>
   </data>
   <data name="labelMethods.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="labelMethods.Text" xml:space="preserve">
     <value>Methods:</value>
@@ -993,7 +1013,7 @@ and base name as the Analyst acquisition method.</value>
     <value>24, 17</value>
   </data>
   <data name="labelMethodNum.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="labelMethodNum.Text" xml:space="preserve">
     <value>##</value>
@@ -1075,6 +1095,9 @@ and base name as the Analyst acquisition method.</value>
   </data>
   <data name="textPrimaryCount.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
+  </data>
+  <data name="textPrimaryCount.ToolTip" xml:space="preserve">
+    <value>The number of transitions to make primary when exporting a triggered method.</value>
   </data>
   <data name="&gt;&gt;textPrimaryCount.Name" xml:space="preserve">
     <value>textPrimaryCount</value>
@@ -1214,6 +1237,9 @@ and base name as the Analyst acquisition method.</value>
   <data name="comboTuning.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
+  <data name="comboTuning.ToolTip" xml:space="preserve">
+    <value>Level of tuning to use when optimizing for compensation voltages.</value>
+  </data>
   <data name="&gt;&gt;comboTuning.Name" xml:space="preserve">
     <value>comboTuning</value>
   </data>
@@ -1301,6 +1327,11 @@ and base name as the Analyst acquisition method.</value>
   <data name="cbExportEdcMass.Text" xml:space="preserve">
     <value>&amp;Write EDC mass</value>
   </data>
+  <data name="cbExportEdcMass.ToolTip" xml:space="preserve">
+    <value>If checked, exports Enhanced Duty Cycle (EDC) values for Waters methods.
+These values will be the m/z of the top ranked transition of the precursor.
+If unchecked, zeros will be written in their place.</value>
+  </data>
   <data name="&gt;&gt;cbExportEdcMass.Name" xml:space="preserve">
     <value>cbExportEdcMass</value>
   </data>
@@ -1350,7 +1381,7 @@ and base name as the Analyst acquisition method.</value>
     <value>117, 17</value>
   </data>
   <data name="labelPolarityFilter.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>11</value>
   </data>
   <data name="labelPolarityFilter.Text" xml:space="preserve">
     <value>Polarit&amp;y:</value>
@@ -1412,6 +1443,9 @@ and base name as the Analyst acquisition method.</value>
   <data name="cbWriteCoV.Text" xml:space="preserve">
     <value>Write FAIMS CV values</value>
   </data>
+  <data name="cbWriteCoV.ToolTip" xml:space="preserve">
+    <value>Write the FAIMS compensation voltage column for Thermo TSQ instruments.</value>
+  </data>
   <data name="&gt;&gt;cbWriteCoV.Name" xml:space="preserve">
     <value>cbWriteCoV</value>
   </data>
@@ -1422,6 +1456,40 @@ and base name as the Analyst acquisition method.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbWriteCoV.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="cbSortByMz.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbSortByMz.Location" type="System.Drawing.Point, System.Drawing">
+    <value>226, 115</value>
+  </data>
+  <data name="cbSortByMz.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>1, 1, 1, 1</value>
+  </data>
+  <data name="cbSortByMz.Size" type="System.Drawing.Size, System.Drawing">
+    <value>112, 21</value>
+  </data>
+  <data name="cbSortByMz.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="cbSortByMz.Text" xml:space="preserve">
+    <value>Order by m/z</value>
+  </data>
+  <data name="cbSortByMz.ToolTip" xml:space="preserve">
+    <value>If checked, the exported method is ordered by m/z values in ascending order
+(precursor m/z, then product m/z when applicable) for optimized quadrupole switching.</value>
+  </data>
+  <data name="&gt;&gt;cbSortByMz.Name" xml:space="preserve">
+    <value>cbSortByMz</value>
+  </data>
+  <data name="&gt;&gt;cbSortByMz.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbSortByMz.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;cbSortByMz.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">

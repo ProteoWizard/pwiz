@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Tobias Rohde <tobiasr .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -65,7 +66,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public AreaCVGraphDataCache()
             {
                 _producerConsumer = new StackWorker<GraphDataProperties>(null, CacheData);
-                _producerConsumer.RunAsync(MAX_THREADS, "AreaCVGraphDataCache"); // Not L10N
+                _producerConsumer.RunAsync(MAX_THREADS, @"AreaCVGraphDataCache");
                 _cacheInfo = new CacheInfo();
                 _tokenSource = new CancellationTokenSource();
             }

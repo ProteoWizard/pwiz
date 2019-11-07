@@ -30,6 +30,7 @@
 using namespace System;
 
 #include "vector.hpp" // for RANGE_CHECK and ValidateCopyToArrayArgs
+#include "SharedCLI.hpp"
 
 namespace pwiz {
 namespace CLI {
@@ -91,8 +92,12 @@ public:
     /// </summary>
     virtual cli::array<double>^ Storage()
     {
-        System::Runtime::InteropServices::GCHandle handle = (System::Runtime::InteropServices::GCHandle) System::IntPtr(base().managedStorage());
-        return (cli::array<double>^) handle.Target;
+        try
+        {
+            System::Runtime::InteropServices::GCHandle handle = (System::Runtime::InteropServices::GCHandle) System::IntPtr(base().managedStorage());
+            return (cli::array<double>^) handle.Target;
+        }
+        CATCH_AND_FORWARD
     }
 
     ref struct Enumerator : System::Collections::Generic::IEnumerator<double>

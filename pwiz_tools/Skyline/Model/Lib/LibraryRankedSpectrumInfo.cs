@@ -36,9 +36,9 @@ namespace pwiz.Skyline.Model.Lib
                                          IsotopeLabelType labelType, TransitionGroupDocNode group,
                                          SrmSettings settings, Target lookupSequence, ExplicitMods lookupMods,
                                          IEnumerable<Adduct> charges, IEnumerable<IonType> types,
-                                         IEnumerable<Adduct> rankCharges, IEnumerable<IonType> rankTypes)
+                                         IEnumerable<Adduct> rankCharges, IEnumerable<IonType> rankTypes, double? score)
             : this(info, labelType, group, settings, lookupSequence, lookupMods,
-                   charges, types, rankCharges, rankTypes, false, true, -1)
+                   charges, types, rankCharges, rankTypes, score, false, true, -1)
         {
         }
 
@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Model.Lib
                    // ReadOnlyCollection enumerators are too slow, and show under a profiler
                    group.IsCustomIon ? settings.TransitionSettings.Filter.SmallMoleculeFragmentAdducts.ToArray() : settings.TransitionSettings.Filter.PeptideProductCharges.ToArray(),
                    group.IsCustomIon ? settings.TransitionSettings.Filter.SmallMoleculeIonTypes.ToArray() : settings.TransitionSettings.Filter.PeptideIonTypes.ToArray(),
-                   useFilter, false, minPeaks)
+                   null, useFilter, false, minPeaks)
         {
         }
 
@@ -60,7 +60,7 @@ namespace pwiz.Skyline.Model.Lib
                                           Target lookupSequence, ExplicitMods lookupMods,
                                           IEnumerable<Adduct> charges, IEnumerable<IonType> types,
                                           IEnumerable<Adduct> rankCharges, IEnumerable<IonType> rankTypes,
-                                          bool useFilter, bool matchAll, int minPeaks)
+                                          double? score, bool useFilter, bool matchAll, int minPeaks)
         {
             LabelType = labelType;
 
@@ -70,6 +70,15 @@ namespace pwiz.Skyline.Model.Lib
 
             TransitionGroup group = groupDocNode.TransitionGroup;
             bool isProteomic = group.IsProteomic;
+
+            if (score == null && groupDocNode.HasLibInfo && groupDocNode.LibInfo is BiblioSpecSpectrumHeaderInfo libInfo)
+            {
+                Score = libInfo.Score;
+            }
+            else
+            {
+                Score = score;
+            }
 
             if (!useFilter)
             {
@@ -306,6 +315,7 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
+        public double? Score { get; private set; }
         public IsotopeLabelType LabelType { get; private set; }
         public double Tolerance { get; private set; }
 
@@ -392,7 +402,7 @@ namespace pwiz.Skyline.Model.Lib
 
             public override string ToString()
             {
-                return Mz + " " + (Name ?? string.Empty) + " " + Adduct; // Not L10N
+                return Mz + @" " + (Name ?? string.Empty) + @" " + Adduct;
             }
         }
 
@@ -461,8 +471,8 @@ namespace pwiz.Skyline.Model.Lib
             {
                 var annotation = !HasAnnotations ?
                     string.Empty:
-                    string.Format(" ({0})", string.Join("/", _mi.Annotations.Where(a => !SpectrumPeakAnnotation.IsNullOrEmpty(a))).Select(a => a.ToString())); // Not L10N
-                return string.Format("i={0}, mz={1}{2}", _mi.Intensity, _mi.Mz, annotation); // Not L10N
+                    string.Format(@" ({0})", string.Join(@"/", _mi.Annotations.Where(a => !SpectrumPeakAnnotation.IsNullOrEmpty(a))).Select(a => a.ToString()));
+                return string.Format(@"i={0}, mz={1}{2}", _mi.Intensity, _mi.Mz, annotation);
             }
 
             private SpectrumPeaksInfo.MI _mi;

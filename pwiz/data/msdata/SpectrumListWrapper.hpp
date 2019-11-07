@@ -25,7 +25,7 @@
 #define _SPECTRUMLISTWRAPPER_HPP_ 
 
 
-#include "pwiz/data/msdata/MSData.hpp"
+#include "pwiz/data/msdata/SpectrumListBase.hpp"
 #include <stdexcept>
 
 
@@ -34,16 +34,16 @@ namespace msdata {
 
 
 /// Inheritable pass-through implementation for wrapping a SpectrumList 
-class PWIZ_API_DECL SpectrumListWrapper : public SpectrumList
+class PWIZ_API_DECL SpectrumListWrapper : public SpectrumListBase
 {
     public:
 
     SpectrumListWrapper(const SpectrumListPtr& inner)
-    :   inner_(inner),
-        dp_(inner->dataProcessingPtr().get() ? new DataProcessing(*inner->dataProcessingPtr())
-                                             : new DataProcessing("pwiz_Spectrum_Processing"))
+    :   inner_(inner)
     {
         if (!inner.get()) throw std::runtime_error("[SpectrumListWrapper] Null SpectrumListPtr.");
+        dp_.reset(inner->dataProcessingPtr().get() ? new DataProcessing(*inner->dataProcessingPtr())
+                                                   : new DataProcessing("pwiz_Spectrum_Processing"));
     }
 
     virtual size_t size() const {return inner_->size();}
@@ -70,7 +70,6 @@ class PWIZ_API_DECL SpectrumListWrapper : public SpectrumList
     protected:
 
     SpectrumListPtr inner_;
-    DataProcessingPtr dp_;
 };
 
 

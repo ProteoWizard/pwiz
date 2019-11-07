@@ -514,7 +514,7 @@ namespace pwiz.Skyline.Util
         public void CopyTo(T[] array, int arrayIndex)
         {
             if (array == null)
-                throw new ArgumentNullException(nameof(array));   // Not L10N
+                throw new ArgumentNullException(nameof(array));
 
             array[arrayIndex] = _item;
         }
@@ -769,6 +769,20 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
+        /// Checks for equality of all items in an IEnumerable without regard for order.
+        /// </summary>
+        /// <typeparam name="TItem">Type of items in the IEnumerable</typeparam>
+        /// <param name="values1">First IEnumerable in the comparison</param>
+        /// <param name="values2">Second IEnumerable in the comparison</param>
+        /// <returns>True if all items in one IEnumerable are found in the other, and IEnumerables are same length</returns>
+        public static bool ContainsAll<TItem>(this IEnumerable<TItem> values1, IEnumerable<TItem> values2)
+        {
+            var set1 = values1.ToHashSet();
+            var set2 = values2.ToHashSet();
+            return set1.Count == set2.Count && set1.IsSubsetOf(set2);
+        }
+
+        /// <summary>
         /// Checks for deep equality, or equality of all items in an Array.
         /// </summary>
         /// <typeparam name="TItem">Type of items in the array</typeparam>
@@ -884,7 +898,7 @@ namespace pwiz.Skyline.Util
             
         }
 
-    /// <summary>
+        /// <summary>
         /// Enumerates two lists assigning references from the second list to
         /// entries in the first list, where they are equal.  Useful for maintaining
         /// reference equality when recalculating values. Similar to <see cref="Helpers.AssignIfEquals{T}"/>.
@@ -920,16 +934,39 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
+        /// Use when you have more than just one other array to sort. Otherwise, consider using Linq
+        /// </summary>
+        public static void Sort<TItem>(TItem[] array, params TItem[][] secondaryArrays)
+        {
+            int[] sortIndexes;
+            Sort(array, out sortIndexes);
+            int len = array.Length;
+            TItem[] buffer = new TItem[len];
+            foreach (var secondaryArray in secondaryArrays.Where(a => a != null))
+                ApplyOrder(sortIndexes, secondaryArray, buffer);
+        }
+
+        /// <summary>
         /// Apply the ordering gotten from the sorting of an array (see Sort method above)
         /// to a new array.
         /// </summary>
         /// <typeparam name="TItem">Type of array elements</typeparam>
         /// <param name="sortIndexes">Array of indexes that recorded sort operations</param>
         /// <param name="array">Array to be reordered using the index array</param>
-        /// <returns></returns>
-        public static TItem[] ApplyOrder<TItem>(int[] sortIndexes, TItem[] array)
+        /// <param name="buffer">An optional buffer to use to avoid allocating a new array and force in-place sorting</param>
+        /// <returns>A sorted version of the original array</returns>
+        public static TItem[] ApplyOrder<TItem>(int[] sortIndexes, TItem[] array, TItem[] buffer = null)
         {
-            var ordered = new TItem[array.Length];
+            TItem[] ordered;
+            int len = array.Length;
+            if (buffer == null)
+                ordered = new TItem[len];
+            else
+            {
+                Array.Copy(array, buffer, len);
+                ordered = array;
+                array = buffer;
+            }
             for (int i = 0; i < array.Length; i++)
                 ordered[i] = array[sortIndexes[i]];
             return ordered;
@@ -1355,7 +1392,7 @@ namespace pwiz.Skyline.Util
     /// <summary>
     /// A set of generic, static helper functions.
     /// </summary>
-    public static class Helpers
+    public static partial class Helpers
     {
         /// <summary>
         /// Swaps two reference values in memory, making each contain
@@ -1463,7 +1500,7 @@ namespace pwiz.Skyline.Util
         {
             int i = localizedStrings.IndexOf(v => Equals(v, value));
             if (i == -1)
-                throw new ArgumentException(string.Format("The string '{0}' does not match an enum value ({1})", value, string.Join(", ", localizedStrings))); // Not L10N
+                throw new ArgumentException(string.Format(@"The string '{0}' does not match an enum value ({1})", value, string.Join(@", ", localizedStrings)));
             return (TEnum) (object) i;            
         }
 
@@ -1494,13 +1531,13 @@ namespace pwiz.Skyline.Util
         public static string MakeId(IEnumerable<char> name, bool capitalize)
         {
             StringBuilder sb = new StringBuilder();
-            char lastC = '\0'; // Not L10N
+            char lastC = '\0'; 
             foreach (var c in name)
             {
                 if (char.IsLetterOrDigit(c))
                 {
-                    if (lastC == ' ') // Not L10N
-                        sb.Append('_'); // Not L10N
+                    if (lastC == ' ')
+                        sb.Append('_');
                     lastC = c;
                     if (capitalize && sb.Length == 0)
                         sb.Append(c.ToString(CultureInfo.InvariantCulture).ToUpperInvariant());
@@ -1508,7 +1545,7 @@ namespace pwiz.Skyline.Util
                         sb.Append(c);
                 }
                 // Must start with a letter or digit
-                else if (lastC != '\0') // Not L10N
+                else if (lastC != '\0')
                 {
                     // After the start _ okay (dashes turned out to be problematic)
                     if (c == '_' /* || c == '-'*/)
@@ -1516,19 +1553,19 @@ namespace pwiz.Skyline.Util
                     // All other characters are replaced with _, but once the next
                     // letter or number is seen.
                     else if (char.IsLetterOrDigit(lastC))
-                        lastC = ' '; // Not L10N
+                        lastC = ' ';
                 }
             }
             return sb.ToString();
         }
 
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         private static readonly Regex REGEX_XML_ID = new Regex("/^[:_A-Za-z][-.:_A-Za-z0-9]*$/");
         private const string XML_ID_FIRST_CHARS = ":_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
         private const string XML_ID_FOLLOW_CHARS = "-.:_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         private const string XML_NON_ID_SEPARATOR_CHARS = ";[]{}()!|\\/\"'<>";
         private const string XML_NON_ID_PUNCTUATION_CHARS = ",?";
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 
         public static string MakeXmlId(string name)
         {
@@ -1544,7 +1581,7 @@ namespace pwiz.Skyline.Util
                 sb.Append(name[i++]);
             else
             {
-                sb.Append('_'); // Not L10N
+                sb.Append('_');
                 // If the first character is not allowable, advance past it.
                 // Otherwise, keep it in the ID.
                 if (!XML_ID_FOLLOW_CHARS.Contains(name[i]))
@@ -1556,13 +1593,13 @@ namespace pwiz.Skyline.Util
                 if (XML_ID_FOLLOW_CHARS.Contains(c))
                     sb.Append(c);
                 else if (char.IsWhiteSpace(c))
-                    sb.Append('_'); // Not L10N
+                    sb.Append('_');
                 else if (XML_NON_ID_SEPARATOR_CHARS.Contains(c))
-                    sb.Append(':'); // Not L10N
+                    sb.Append(':');
                 else if (XML_NON_ID_PUNCTUATION_CHARS.Contains(c))
-                    sb.Append('.'); // Not L10N
+                    sb.Append('.');
                 else
-                    sb.Append('-'); // Not L10N
+                    sb.Append('-');
             }
             return sb.ToString();
         }
@@ -1616,6 +1653,24 @@ namespace pwiz.Skyline.Util
             return 0;
         }
 
+        public static List<string> EnsureUniqueNames(List<string> names, HashSet<string> reservedNames = null)
+        {
+            var setUsedNames = reservedNames ?? new HashSet<string>();
+            var result = new List<string>();
+            for (int i = 0; i < names.Count; i++)
+            {
+                string baseName = names[i];
+                // Make sure the next name added is unique
+                string name = (baseName.Length != 0 ? baseName : @"1");
+                for (int suffix = 2; setUsedNames.Contains(name); suffix++)
+                    name = baseName + suffix;
+                result.Add(name);
+                // Add this name to the used set
+                setUsedNames.Add(name);
+            }
+            return result;
+        }
+
         /// <summary>
         /// Count the number of lines in the file specified.
         /// </summary>
@@ -1649,9 +1704,9 @@ namespace pwiz.Skyline.Util
             return count;
         }
 
-        private const char LABEL_SEP_CHAR = '_'; // Not L10N
-        private const string ELIPSIS = "..."; // Not L10N
-        private static readonly char[] SPACE_CHARS = { '_', '-', ' ', '.', ',' }; // Not L10N
+        private const char LABEL_SEP_CHAR = '_';
+        private const string ELIPSIS = "...";
+        private static readonly char[] SPACE_CHARS = { '_', '-', ' ', '.', ',' };
 
         /// <summary>
         /// Finds repetitive text in labels and removes the text to save space.
@@ -1862,7 +1917,7 @@ namespace pwiz.Skyline.Util
 
         public static string NullableDoubleToString(double? d)
         {
-            return d.HasValue ? d.Value.ToString(LocalizationHelper.CurrentCulture) : string.Empty;
+            return d.HasValue ? d.Value.ToString(LocalizationHelper.CurrentCulture) : String.Empty;
         }
     }
 
@@ -1871,49 +1926,49 @@ namespace pwiz.Skyline.Util
     /// </summary>
     public static class Assume
     {
-        public static void IsTrue(bool condition, string error = "") // Not L10N
+        public static void IsTrue(bool condition, string error = "")
         {
             if (!condition)
                 Fail(error);
         }
 
-        public static void IsFalse(bool condition, string error = "") // Not L10N
+        public static void IsFalse(bool condition, string error = "")
         {
             if (condition)
                 Fail(error);
         }
 
-        public static void IsNotNull(object o, string parameterName = "") // Not L10N
+        public static void IsNotNull(object o, string parameterName = "")
         {
             if (o == null)
-                Fail(string.IsNullOrEmpty(parameterName) ? "null object" : parameterName + " is null"); // Not L10N
+                Fail(string.IsNullOrEmpty(parameterName) ? @"null object" : parameterName + @" is null");
         }
 
-        public static void IsNull(object o, string parameterName = "") // Not L10N
+        public static void IsNull(object o, string parameterName = "")
         {
             if (o != null)
-                Fail(string.IsNullOrEmpty(parameterName) ? "non-null object" : parameterName + " is not null"); // Not L10N
+                Fail(string.IsNullOrEmpty(parameterName) ? @"non-null object" : parameterName + @" is not null");
         }
 
-        public static void AreEqual(object left, object right, string error = "") // Not L10N
+        public static void AreEqual(object left, object right, string error = "")
         {
             if (!Equals(left, right))
                 Fail(error);
         }
 
-        public static void AreNotEqual(object left, object right, string error = "") // Not L10N
+        public static void AreNotEqual(object left, object right, string error = "")
         {
             if (Equals(left, right))
                 Fail(error);
         }
 
-        public static void AreEqual(double expected, double actual, double delta, string error = "") // Not L10N
+        public static void AreEqual(double expected, double actual, double delta, string error = "")
         {
             if (Math.Abs(expected-actual) > delta)
                 Fail(error);
         }
 
-        public static void Fail(string error = "") // Not L10N
+        public static void Fail(string error = "")
         {
             throw new AssumptionException(error);
         }
@@ -1927,7 +1982,7 @@ namespace pwiz.Skyline.Util
         public static T Value<T>(T? value) where T : struct
         {
             if (!value.HasValue)
-                Fail("Nullable_was_expected_to_have_a_value");  // Not L10N
+                Fail(@"Nullable_was_expected_to_have_a_value"); 
             return value.Value;
         }
     }
@@ -1978,23 +2033,23 @@ namespace pwiz.Skyline.Util
         {
             StringBuilder stackTrace = new StringBuilder();
             if (showMessage)
-                stackTrace.AppendLine("Stack trace:").AppendLine(); // Not L10N
+                stackTrace.AppendLine(@"Stack trace:").AppendLine();
 
             stackTrace.AppendLine(exception.StackTrace).AppendLine();
 
             for (var x = exception.InnerException; x != null; x = x.InnerException)
             {
                 if (ReferenceEquals(x, exception.InnerException))
-                    stackTrace.AppendLine("Inner exceptions:"); // Not L10N
+                    stackTrace.AppendLine(@"Inner exceptions:");
                 else
-                    stackTrace.AppendLine("---------------------------------------------------------------"); // Not L10N
-                stackTrace.Append("Exception type: ").Append(x.GetType().FullName).AppendLine(); // Not L10N
-                stackTrace.Append("Error message: ").AppendLine(x.Message); // Not L10N
+                    stackTrace.AppendLine(@"---------------------------------------------------------------");
+                stackTrace.Append(@"Exception type: ").Append(x.GetType().FullName).AppendLine();
+                stackTrace.Append(@"Error message: ").AppendLine(x.Message);
                 stackTrace.AppendLine(x.Message).AppendLine(x.StackTrace);
             }
             if (null != stackTraceExceptionCaughtAt)
             {
-                stackTrace.AppendLine("Exception caught at: "); // Not L10N
+                stackTrace.AppendLine(@"Exception caught at: ");
                 stackTrace.AppendLine(stackTraceExceptionCaughtAt.ToString());
             }
             return stackTrace.ToString();
@@ -2052,7 +2107,7 @@ namespace pwiz.Skyline.Util
                     }
                     worker.DoneAdding(true);
                     if (worker.Exception != null)
-                        throw new AggregateException("Exception in Parallel.For", worker.Exception);    // Not L10N
+                        throw new AggregateException(@"Exception in Parallel.For", worker.Exception);   
                 }
             }, catchClause);
 //            LoopWithExceptionHandling(() => Parallel.For(fromInclusive, toExclusive, PARALLEL_OPTIONS, localBody), catchClause);
@@ -2078,7 +2133,7 @@ namespace pwiz.Skyline.Util
                     }
                     worker.DoneAdding(true);
                     if (worker.Exception != null)
-                        throw new AggregateException("Exception in Parallel.ForEx", worker.Exception);  // Not L10N
+                        throw new AggregateException(@"Exception in Parallel.ForEx", worker.Exception); 
                 }
             }, catchClause);
 //            LoopWithExceptionHandling(() => Parallel.ForEach(source, PARALLEL_OPTIONS, localBody), catchClause);

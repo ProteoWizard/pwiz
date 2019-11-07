@@ -41,6 +41,9 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            // Need to be in mixed UI mode to see both options for paste dialog
+            RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.mixed));
+
             RunDlg<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg, pasteDlg =>
             {
                 pasteDlg.IsMolecule = true;
@@ -75,7 +78,7 @@ namespace pwiz.SkylineTestFunctional
             
             RunUI(() => SkylineWindow.ShowDocumentGrid(true));
             var documentGrid = FindOpenForm<DocumentGridForm>();
-            RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides));
+            RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Molecules));
             WaitForConditionUI(() => documentGrid.IsComplete);
             Assert.AreEqual(4, documentGrid.DataGridView.Rows.Count);
             foreach (var molecule in SkylineWindow.Document.Molecules)

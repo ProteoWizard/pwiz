@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
@@ -157,11 +158,35 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 var viewName = BindingListSource.ViewInfo.ViewGroup.Id.ViewName(BindingListSource.ViewInfo.Name);
                 var newViewInfo = documentGridViewContext.GetViewInfo(viewName);
-                if (null != newViewInfo && !Equals(newViewInfo.ViewSpec, BindingListSource.ViewSpec))
+                if (null != newViewInfo && !ColumnsEqual(newViewInfo, BindingListSource.ViewInfo))
                 {
                     BindingListSource.SetView(newViewInfo, BindingListSource.RowSource);
                 }
             }
+        }
+
+        private bool ColumnsEqual(ViewInfo viewInfo1, ViewInfo viewInfo2)
+        {
+            if (!Equals(viewInfo1.ViewSpec, viewInfo2.ViewSpec))
+            {
+                return false;
+            }
+
+            if (viewInfo1.DisplayColumns.Count != viewInfo2.DisplayColumns.Count)
+            {
+                return false;
+            }
+
+            for (int icol = 0; icol < viewInfo1.DisplayColumns.Count; icol++)
+            {
+                if (!viewInfo1.DisplayColumns[icol].ColumnDescriptor.GetAttributes()
+                    .SequenceEqual(viewInfo2.DisplayColumns[icol].ColumnDescriptor.GetAttributes()))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private void DocumentGridForm_KeyDown(object sender, KeyEventArgs e)

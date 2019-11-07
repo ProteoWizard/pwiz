@@ -123,7 +123,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>296, 3</value>
+    <value>282, 3</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -147,6 +147,45 @@
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="&gt;&gt;btnShare.Name" xml:space="preserve">
+    <value>btnShare</value>
+  </data>
+  <data name="&gt;&gt;btnShare.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnShare.Parent" xml:space="preserve">
+    <value>panelButtonBar</value>
+  </data>
+  <data name="&gt;&gt;btnShare.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="panelButtonBar.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Bottom</value>
+  </data>
+  <data name="panelButtonBar.FlowDirection" type="System.Windows.Forms.FlowDirection, System.Windows.Forms">
+    <value>RightToLeft</value>
+  </data>
+  <data name="panelButtonBar.Location" type="System.Drawing.Point, System.Drawing">
+    <value>5, 166</value>
+  </data>
+  <data name="panelButtonBar.Size" type="System.Drawing.Size, System.Drawing">
+    <value>360, 31</value>
+  </data>
+  <data name="panelButtonBar.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;panelButtonBar.Name" xml:space="preserve">
+    <value>panelButtonBar</value>
+  </data>
+  <data name="&gt;&gt;panelButtonBar.Type" xml:space="preserve">
+    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelButtonBar.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelButtonBar.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
   <data name="btnShare.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
@@ -154,7 +193,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnShare.Location" type="System.Drawing.Point, System.Drawing">
-    <value>215, 3</value>
+    <value>201, 3</value>
   </data>
   <data name="btnShare.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -177,53 +216,27 @@
   <data name="&gt;&gt;btnShare.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="panelButtonBar.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Bottom</value>
-  </data>
-  <data name="panelButtonBar.FlowDirection" type="System.Windows.Forms.FlowDirection, System.Windows.Forms">
-    <value>RightToLeft</value>
-  </data>
-  <data name="panelButtonBar.Location" type="System.Drawing.Point, System.Drawing">
-    <value>5, 391</value>
-  </data>
-  <data name="panelButtonBar.Size" type="System.Drawing.Size, System.Drawing">
-    <value>374, 31</value>
-  </data>
-  <data name="panelButtonBar.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;panelButtonBar.Name" xml:space="preserve">
-    <value>panelButtonBar</value>
-  </data>
-  <data name="&gt;&gt;panelButtonBar.Type" xml:space="preserve">
-    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panelButtonBar.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;panelButtonBar.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="groupBoxFileFormat.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="groupBoxFileFormat.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
-    <value>GrowAndShrink</value>
-  </data>
-  <data name="comboSkylineVersion.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Top</value>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <data name="comboSkylineVersion.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
   </data>
   <data name="comboSkylineVersion.Font" type="System.Drawing.Font, System.Drawing">
     <value>Microsoft Sans Serif, 8.25pt</value>
   </data>
   <data name="comboSkylineVersion.Location" type="System.Drawing.Point, System.Drawing">
-    <value>5, 84</value>
+    <value>8, 128</value>
   </data>
   <data name="comboSkylineVersion.Size" type="System.Drawing.Size, System.Drawing">
-    <value>364, 21</value>
+    <value>350, 21</value>
   </data>
   <data name="comboSkylineVersion.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>4</value>
+  </data>
+  <data name="comboSkylineVersion.ToolTip" xml:space="preserve">
+    <value>This document can be saved in a format which is compatible with previous versions of Skyline.
+Note that not all data is preserved when saving as a previous version.</value>
   </data>
   <data name="&gt;&gt;comboSkylineVersion.Name" xml:space="preserve">
     <value>comboSkylineVersion</value>
@@ -232,37 +245,31 @@
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboSkylineVersion.Parent" xml:space="preserve">
-    <value>groupBoxFileFormat</value>
+    <value>$this</value>
   </data>
   <data name="&gt;&gt;comboSkylineVersion.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>3</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
-  </data>
-  <data name="label2.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Top</value>
   </data>
   <data name="label2.Font" type="System.Drawing.Font, System.Drawing">
     <value>Microsoft Sans Serif, 8.25pt</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>5, 19</value>
+    <value>8, 112</value>
   </data>
   <data name="label2.MaximumSize" type="System.Drawing.Size, System.Drawing">
     <value>380, 0</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>360, 65</value>
+    <value>92, 13</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>3</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>This document can be saved in a format which is compatible with previous versions of Skyline.
-Note that not all data is preserved when saving as a previous version.
-
-Skyline file format:
+    <value>Skyline file format:
 </value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
@@ -272,85 +279,10 @@ Skyline file format:
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
-    <value>groupBoxFileFormat</value>
+    <value>$this</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
     <value>1</value>
-  </data>
-  <data name="groupBoxFileFormat.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="groupBoxFileFormat.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 9pt</value>
-  </data>
-  <data name="groupBoxFileFormat.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 10</value>
-  </data>
-  <data name="groupBoxFileFormat.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>5, 5, 5, 5</value>
-  </data>
-  <data name="groupBoxFileFormat.Size" type="System.Drawing.Size, System.Drawing">
-    <value>374, 110</value>
-  </data>
-  <data name="groupBoxFileFormat.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="groupBoxFileFormat.Text" xml:space="preserve">
-    <value>File Format</value>
-  </data>
-  <data name="&gt;&gt;groupBoxFileFormat.Name" xml:space="preserve">
-    <value>groupBoxFileFormat</value>
-  </data>
-  <data name="&gt;&gt;groupBoxFileFormat.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;groupBoxFileFormat.Parent" xml:space="preserve">
-    <value>panelFileFormat</value>
-  </data>
-  <data name="&gt;&gt;groupBoxFileFormat.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="groupBoxShareType.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="groupBoxShareType.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
-    <value>GrowAndShrink</value>
-  </data>
-  <data name="flowLayoutPanelMinimalComplete.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="flowLayoutPanelMinimalComplete.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
-    <value>GrowAndShrink</value>
-  </data>
-  <data name="radioMinimal.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="radioMinimal.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 8.25pt</value>
-  </data>
-  <data name="radioMinimal.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 3</value>
-  </data>
-  <data name="radioMinimal.Size" type="System.Drawing.Size, System.Drawing">
-    <value>60, 17</value>
-  </data>
-  <data name="radioMinimal.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="radioMinimal.Text" xml:space="preserve">
-    <value>Minimal</value>
-  </data>
-  <data name="&gt;&gt;radioMinimal.Name" xml:space="preserve">
-    <value>radioMinimal</value>
-  </data>
-  <data name="&gt;&gt;radioMinimal.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioMinimal.Parent" xml:space="preserve">
-    <value>flowLayoutPanelMinimalComplete</value>
-  </data>
-  <data name="&gt;&gt;radioMinimal.ZOrder" xml:space="preserve">
-    <value>0</value>
   </data>
   <data name="radioComplete.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -358,17 +290,23 @@ Skyline file format:
   <data name="radioComplete.Font" type="System.Drawing.Font, System.Drawing">
     <value>Microsoft Sans Serif, 8.25pt</value>
   </data>
+  <data name="radioComplete.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
   <data name="radioComplete.Location" type="System.Drawing.Point, System.Drawing">
-    <value>69, 3</value>
+    <value>20, 43</value>
   </data>
   <data name="radioComplete.Size" type="System.Drawing.Size, System.Drawing">
-    <value>69, 17</value>
+    <value>102, 17</value>
   </data>
   <data name="radioComplete.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
   <data name="radioComplete.Text" xml:space="preserve">
-    <value>Complete</value>
+    <value>Store everything</value>
+  </data>
+  <data name="radioComplete.ToolTip" xml:space="preserve">
+    <value>The .zip file will contain all data from the Skyline document</value>
   </data>
   <data name="&gt;&gt;radioComplete.Name" xml:space="preserve">
     <value>radioComplete</value>
@@ -377,309 +315,61 @@ Skyline file format:
     <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;radioComplete.Parent" xml:space="preserve">
-    <value>flowLayoutPanelMinimalComplete</value>
+    <value>$this</value>
   </data>
   <data name="&gt;&gt;radioComplete.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="flowLayoutPanelMinimalComplete.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Top</value>
-  </data>
-  <data name="flowLayoutPanelMinimalComplete.Location" type="System.Drawing.Point, System.Drawing">
-    <value>5, 153</value>
-  </data>
-  <data name="flowLayoutPanelMinimalComplete.Size" type="System.Drawing.Size, System.Drawing">
-    <value>364, 23</value>
-  </data>
-  <data name="flowLayoutPanelMinimalComplete.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
-  </data>
-  <data name="&gt;&gt;flowLayoutPanelMinimalComplete.Name" xml:space="preserve">
-    <value>flowLayoutPanelMinimalComplete</value>
-  </data>
-  <data name="&gt;&gt;flowLayoutPanelMinimalComplete.Type" xml:space="preserve">
-    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;flowLayoutPanelMinimalComplete.Parent" xml:space="preserve">
-    <value>groupBoxShareType</value>
-  </data>
-  <data name="&gt;&gt;flowLayoutPanelMinimalComplete.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="lblShareTypeFooter.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblShareTypeFooter.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Top</value>
-  </data>
-  <data name="lblShareTypeFooter.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 8.25pt</value>
-  </data>
-  <data name="lblShareTypeFooter.Location" type="System.Drawing.Point, System.Drawing">
-    <value>5, 127</value>
-  </data>
-  <data name="lblShareTypeFooter.MaximumSize" type="System.Drawing.Size, System.Drawing">
-    <value>380, 0</value>
-  </data>
-  <data name="lblShareTypeFooter.Size" type="System.Drawing.Size, System.Drawing">
-    <value>329, 26</value>
-  </data>
-  <data name="lblShareTypeFooter.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
-  </data>
-  <data name="lblShareTypeFooter.Text" xml:space="preserve">
-    <value>
-Do you want to share the document in the minimal or complete form?</value>
-  </data>
-  <data name="&gt;&gt;lblShareTypeFooter.Name" xml:space="preserve">
-    <value>lblShareTypeFooter</value>
-  </data>
-  <data name="&gt;&gt;lblShareTypeFooter.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblShareTypeFooter.Parent" xml:space="preserve">
-    <value>groupBoxShareType</value>
-  </data>
-  <data name="&gt;&gt;lblShareTypeFooter.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="lblLibraries.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblLibraries.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Top</value>
-  </data>
-  <data name="lblLibraries.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 8.25pt</value>
-  </data>
-  <data name="lblLibraries.Location" type="System.Drawing.Point, System.Drawing">
-    <value>5, 104</value>
-  </data>
-  <data name="lblLibraries.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
-  </data>
-  <data name="lblLibraries.MaximumSize" type="System.Drawing.Size, System.Drawing">
-    <value>380, 0</value>
-  </data>
-  <data name="lblLibraries.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>0, 5, 0, 5</value>
-  </data>
-  <data name="lblLibraries.Size" type="System.Drawing.Size, System.Drawing">
-    <value>341, 23</value>
-  </data>
-  <data name="lblLibraries.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="lblLibraries.Text" xml:space="preserve">
-    <value>• all libraries minimized to contain only precursors used in the document</value>
-  </data>
-  <data name="lblLibraries.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="&gt;&gt;lblLibraries.Name" xml:space="preserve">
-    <value>lblLibraries</value>
-  </data>
-  <data name="&gt;&gt;lblLibraries.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblLibraries.Parent" xml:space="preserve">
-    <value>groupBoxShareType</value>
-  </data>
-  <data name="&gt;&gt;lblLibraries.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="lblRetentionTimeCalculator.AutoSize" type="System.Boolean, mscorlib">
+  <data name="radioMinimal.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="lblRetentionTimeCalculator.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Top</value>
-  </data>
-  <data name="lblRetentionTimeCalculator.Font" type="System.Drawing.Font, System.Drawing">
+  <data name="radioMinimal.Font" type="System.Drawing.Font, System.Drawing">
     <value>Microsoft Sans Serif, 8.25pt</value>
   </data>
-  <data name="lblRetentionTimeCalculator.Location" type="System.Drawing.Point, System.Drawing">
-    <value>5, 68</value>
+  <data name="radioMinimal.Location" type="System.Drawing.Point, System.Drawing">
+    <value>20, 66</value>
   </data>
-  <data name="lblRetentionTimeCalculator.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
+  <data name="radioMinimal.Size" type="System.Drawing.Size, System.Drawing">
+    <value>103, 17</value>
   </data>
-  <data name="lblRetentionTimeCalculator.MaximumSize" type="System.Drawing.Size, System.Drawing">
-    <value>380, 0</value>
+  <data name="radioMinimal.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
   </data>
-  <data name="lblRetentionTimeCalculator.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>0, 5, 0, 5</value>
+  <data name="radioMinimal.Text" xml:space="preserve">
+    <value>Minimize libraries</value>
   </data>
-  <data name="lblRetentionTimeCalculator.Size" type="System.Drawing.Size, System.Drawing">
-    <value>359, 36</value>
+  <data name="radioMinimal.ToolTip" xml:space="preserve">
+    <value>Libraries will have entries removed that do not match peptides in the Skyline document.</value>
   </data>
-  <data name="lblRetentionTimeCalculator.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+  <data name="&gt;&gt;radioMinimal.Name" xml:space="preserve">
+    <value>radioMinimal</value>
   </data>
-  <data name="lblRetentionTimeCalculator.Text" xml:space="preserve">
-    <value>• retention time calculator minimized to contain only standard peptides and library peptides used in the document</value>
+  <data name="&gt;&gt;radioMinimal.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="lblRetentionTimeCalculator.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
+  <data name="&gt;&gt;radioMinimal.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="&gt;&gt;lblRetentionTimeCalculator.Name" xml:space="preserve">
-    <value>lblRetentionTimeCalculator</value>
-  </data>
-  <data name="&gt;&gt;lblRetentionTimeCalculator.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblRetentionTimeCalculator.Parent" xml:space="preserve">
-    <value>groupBoxShareType</value>
-  </data>
-  <data name="&gt;&gt;lblRetentionTimeCalculator.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="lblBackgroundProteome.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblBackgroundProteome.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Top</value>
-  </data>
-  <data name="lblBackgroundProteome.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 8.25pt</value>
-  </data>
-  <data name="lblBackgroundProteome.Location" type="System.Drawing.Point, System.Drawing">
-    <value>5, 45</value>
-  </data>
-  <data name="lblBackgroundProteome.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
-  </data>
-  <data name="lblBackgroundProteome.MaximumSize" type="System.Drawing.Size, System.Drawing">
-    <value>380, 0</value>
-  </data>
-  <data name="lblBackgroundProteome.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>0, 5, 0, 5</value>
-  </data>
-  <data name="lblBackgroundProteome.Size" type="System.Drawing.Size, System.Drawing">
-    <value>187, 23</value>
-  </data>
-  <data name="lblBackgroundProteome.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="lblBackgroundProteome.Text" xml:space="preserve">
-    <value>• background proteome disconnected</value>
-  </data>
-  <data name="lblBackgroundProteome.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="&gt;&gt;lblBackgroundProteome.Name" xml:space="preserve">
-    <value>lblBackgroundProteome</value>
-  </data>
-  <data name="&gt;&gt;lblBackgroundProteome.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblBackgroundProteome.Parent" xml:space="preserve">
-    <value>groupBoxShareType</value>
-  </data>
-  <data name="&gt;&gt;lblBackgroundProteome.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="lblShareTypeHeader.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblShareTypeHeader.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Top</value>
-  </data>
-  <data name="lblShareTypeHeader.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 8.25pt</value>
-  </data>
-  <data name="lblShareTypeHeader.Location" type="System.Drawing.Point, System.Drawing">
-    <value>5, 19</value>
-  </data>
-  <data name="lblShareTypeHeader.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
-  </data>
-  <data name="lblShareTypeHeader.MaximumSize" type="System.Drawing.Size, System.Drawing">
-    <value>380, 0</value>
-  </data>
-  <data name="lblShareTypeHeader.Size" type="System.Drawing.Size, System.Drawing">
-    <value>367, 26</value>
-  </data>
-  <data name="lblShareTypeHeader.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="lblShareTypeHeader.Text" xml:space="preserve">
-    <value>The document can be shared either in its complete form, or in a minimal form intended for read-only use with the following changes:
-</value>
-  </data>
-  <data name="&gt;&gt;lblShareTypeHeader.Name" xml:space="preserve">
-    <value>lblShareTypeHeader</value>
-  </data>
-  <data name="&gt;&gt;lblShareTypeHeader.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblShareTypeHeader.Parent" xml:space="preserve">
-    <value>groupBoxShareType</value>
-  </data>
-  <data name="&gt;&gt;lblShareTypeHeader.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="groupBoxShareType.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Top</value>
-  </data>
-  <data name="groupBoxShareType.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 9pt</value>
-  </data>
-  <data name="groupBoxShareType.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 44</value>
-  </data>
-  <data name="groupBoxShareType.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>5, 5, 5, 5</value>
-  </data>
-  <data name="groupBoxShareType.Size" type="System.Drawing.Size, System.Drawing">
-    <value>374, 181</value>
-  </data>
-  <data name="groupBoxShareType.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="groupBoxShareType.Text" xml:space="preserve">
-    <value>Share Type</value>
-  </data>
-  <data name="groupBoxShareType.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="&gt;&gt;groupBoxShareType.Name" xml:space="preserve">
-    <value>groupBoxShareType</value>
-  </data>
-  <data name="&gt;&gt;groupBoxShareType.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;groupBoxShareType.Parent" xml:space="preserve">
-    <value>panel2</value>
-  </data>
-  <data name="&gt;&gt;groupBoxShareType.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;radioMinimal.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="label3.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Top</value>
-  </data>
-  <data name="label3.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 9pt</value>
-  </data>
   <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
+    <value>8, 5</value>
   </data>
   <data name="label3.MaximumSize" type="System.Drawing.Size, System.Drawing">
-    <value>370, 0</value>
-  </data>
-  <data name="label3.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>7, 7, 7, 7</value>
+    <value>350, 0</value>
   </data>
   <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>361, 44</value>
+    <value>334, 26</value>
   </data>
   <data name="label3.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>Please choose from the following to determine the handling of the data in your Skyline document.</value>
+    <value>This action will create a .zip file containing the Skyline document and supporting files.</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -688,71 +378,14 @@ Do you want to share the document in the minimal or complete form?</value>
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label3.Parent" xml:space="preserve">
-    <value>panel2</value>
+    <value>$this</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>4</value>
   </data>
-  <data name="panel2.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="panel2.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
-    <value>GrowAndShrink</value>
-  </data>
-  <data name="panel2.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Top</value>
-  </data>
-  <data name="panel2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>5, 5</value>
-  </data>
-  <data name="panel2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>374, 225</value>
-  </data>
-  <data name="panel2.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="&gt;&gt;panel2.Name" xml:space="preserve">
-    <value>panel2</value>
-  </data>
-  <data name="&gt;&gt;panel2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panel2.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;panel2.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="panelFileFormat.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="panelFileFormat.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Top</value>
-  </data>
-  <data name="panelFileFormat.Location" type="System.Drawing.Point, System.Drawing">
-    <value>5, 230</value>
-  </data>
-  <data name="panelFileFormat.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>0, 10, 0, 0</value>
-  </data>
-  <data name="panelFileFormat.Size" type="System.Drawing.Size, System.Drawing">
-    <value>374, 120</value>
-  </data>
-  <data name="panelFileFormat.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="&gt;&gt;panelFileFormat.Name" xml:space="preserve">
-    <value>panelFileFormat</value>
-  </data>
-  <data name="&gt;&gt;panelFileFormat.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panelFileFormat.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;panelFileFormat.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
@@ -760,13 +393,22 @@ Do you want to share the document in the minimal or complete form?</value>
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>384, 427</value>
+    <value>370, 202</value>
   </data>
   <data name="$this.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>5, 5, 5, 5</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterScreen</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>Share Skyline Document</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
+    <value>toolTip1</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ShareTypeDlg</value>

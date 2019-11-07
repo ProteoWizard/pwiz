@@ -61,13 +61,15 @@ namespace pwiz.Skyline
         public const int EXIT_CODE_SUCCESS = 0;
         public const int EXIT_CODE_FAILURE_TO_START = 1;
         public const int EXIT_CODE_RAN_WITH_ERRORS = 2;
-        public const string OPEN_DOCUMENT_ARG = "--opendoc"; // Not L10N
+        public const string OPEN_DOCUMENT_ARG = "--opendoc";
 
         public static string MainToolServiceName { get; private set; }
         
         // Parameters for testing.
         public static bool StressTest { get; set; }                 // Set true when doing stress testing (i.e. TestRunner).
+        public static bool UnitTest { get; set; }                   // Set to true by AbstractUnitTest and AbstractFunctionalTest
         public static bool FunctionalTest { get; set; }             // Set to true by AbstractFunctionalTest
+        public static string DefaultUiMode { get; set; }            // Set to avoid seeing NoModeUiDlg at the start of a test
         public static bool SkylineOffscreen { get; set; }           // Set true to move Skyline windows offscreen.
         public static bool DemoMode { get; set; }                   // Set to true in demo mode (main window is full screen and pauses at screenshots)
         public static bool NoVendorReaders { get; set; }            // Set true to avoid calling vendor readers.
@@ -80,6 +82,7 @@ namespace pwiz.Skyline
         public static IList<string> PauseForms { get; set; }        // List of forms to pause after displaying.
         public static string ExtraRawFileSearchFolder { get; set; } // Perf test support for avoiding extra copying of large raw files
         public static List<Exception> TestExceptions { get; set; }  // To avoid showing unexpected exception UI during tests and instead log them as failures
+        public static Action<string> Log { get; set; }              // Function to allow Skyline to write to the test log. Needs to be thread-safe
 
         // Command-line results import support
         public static bool DisableJoining { get; set; }
@@ -112,7 +115,7 @@ namespace pwiz.Skyline
                 return 1;
             }
 
-            SecurityProtocolInitializer.Initialize(); // Enable highest available security level for HTTPS connections, esp. Chorus
+            SecurityProtocolInitializer.Initialize(); // Enable highest available security level for HTTPS connections
 
             CommonFormEx.TestMode = FunctionalTest;
             CommonFormEx.Offscreen = SkylineOffscreen;
@@ -133,11 +136,9 @@ namespace pwiz.Skyline
                     {
                         AttachConsole(-1);
                         textWriter = Console.Out;
-                        Console.WriteLine();
-                        Console.WriteLine();
                     }
                     var writer = new CommandStatusWriter(textWriter);
-                    if (args[0].Equals("--ui", StringComparison.InvariantCultureIgnoreCase)) // Not L10N
+                    if (args[0].Equals(@"--ui", StringComparison.InvariantCultureIgnoreCase))
                     {
                         // ReSharper disable once ObjectCreationAsStatement
                         new CommandLineUI(args, writer);
@@ -160,7 +161,7 @@ namespace pwiz.Skyline
             else if (AppDomain.CurrentDomain.SetupInformation.ActivationArguments != null &&
                 AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData != null &&
                 AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData.Length > 0 &&
-                CommandLineRunner.HasCommandPrefix(AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData[0])) // Not L10N
+                CommandLineRunner.HasCommandPrefix(AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData[0]))
             {
                 CommandLineRunner clr = new CommandLineRunner();
                 clr.Start(AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData[0]);
@@ -297,8 +298,8 @@ namespace pwiz.Skyline
                 // Position window offscreen for stress testing.
                 if (SkylineOffscreen)
                     FormEx.SetOffscreen(MainWindow);
-
-                SendAnalyticsHitAsync();
+                if (!UnitTest)  // Covers Unit and Functional tests
+                    SendAnalyticsHitAsync();
 
                 MainToolServiceName = Guid.NewGuid().ToString();
                 Application.Run(MainWindow);
@@ -312,6 +313,7 @@ namespace pwiz.Skyline
             }
 
             MainWindow = null;
+            SystemEvents.DisplaySettingsChanged -= SystemEventsOnDisplaySettingsChanged;
             return EXIT_CODE_SUCCESS;
         }
 
@@ -330,8 +332,9 @@ namespace pwiz.Skyline
 
         private static void SendAnalyticsHitAsync()
         {
-            if (!Install.Version.Equals(String.Empty) &&
-                Install.Type != Install.InstallType.developer)
+            if (!Install.Version.Equals(String.Empty) &&    // This is rarely true anymore with the strong versioning introduced in 19.1.1.309
+                !Install.IsDeveloperInstall &&
+                !Install.IsAutomatedBuild)  // Currently the only automated build we care about is the Docker Container which is command-line only
             {
                 ActionUtil.RunAsync(() =>
                 {
@@ -341,7 +344,7 @@ namespace pwiz.Skyline
                     }
                     catch (Exception ex)
                     {
-                        Trace.TraceWarning("Exception sending analytics hit {0}", ex); // Not L10N
+                        Trace.TraceWarning(@"Exception sending analytics hit {0}", ex);
                     }
                 });
             }
@@ -349,7 +352,7 @@ namespace pwiz.Skyline
 
         private static void SendAnalyticsHit()
         {
-            // ReSharper disable NonLocalizedString
+            // ReSharper disable LocalizableElement
             var postData = "v=1"; // Version 
             postData += "&t=event"; // Event hit type
             postData += "&tid=UA-9194399-1"; // Tracking Id 
@@ -376,7 +379,7 @@ namespace pwiz.Skyline
             {
                 new StreamReader(responseStream).ReadToEnd();
             }
-            // ReSharper restore NonLocalizedString
+            // ReSharper restore LocalizableElement
         }
 
         public static void StartToolService()
@@ -407,7 +410,7 @@ namespace pwiz.Skyline
         private static void CopyOldTools(string outerToolsFolderPath, ILongWaitBroker broker)
         {
             //Copy tools to a different folder then Directory.Move if successful.
-            string tempOuterToolsFolderPath = string.Concat(outerToolsFolderPath, "_installing"); // Not L10N
+            string tempOuterToolsFolderPath = string.Concat(outerToolsFolderPath, @"_installing");
             if (Directory.Exists(tempOuterToolsFolderPath))
             {
                 DirectoryEx.SafeDelete(tempOuterToolsFolderPath);
@@ -464,6 +467,13 @@ namespace pwiz.Skyline
 
                 // Add handler for non-UI thread exceptions. 
                 AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+
+                if (Settings.Default.SettingsUpgradeRequired)
+                {
+                    Settings.Default.Upgrade();
+                    Settings.Default.SettingsUpgradeRequired = false;
+                    Settings.Default.Save();
+                }
             }
         }
 
@@ -512,7 +522,7 @@ namespace pwiz.Skyline
                 return;
             }
 
-            Trace.TraceError("Unhandled exception: {0}", exception); // Not L10N
+            Trace.TraceError(@"Unhandled exception: {0}", exception);
             var stackTrace = new StackTrace(1, true);
             var mainWindow = MainWindow;
             try
@@ -524,7 +534,7 @@ namespace pwiz.Skyline
             }
             catch (Exception exception2)
             {
-                Trace.TraceError("Exception in ReportException: {0}", exception2); // Not L10N
+                Trace.TraceError(@"Exception in ReportException: {0}", exception2);
             }
         }
 
@@ -536,17 +546,26 @@ namespace pwiz.Skyline
                 return;
             }
 
-            Trace.TraceError("Unhandled exception on UI thread: {0}", e.Exception); // Not L10N
+            Trace.TraceError(@"Unhandled exception on UI thread: {0}", e.Exception);
             var stackTrace = new StackTrace(1, true);
             ReportExceptionUI(e.Exception, stackTrace);
         }
 
         private static void ReportExceptionUI(Exception exception, StackTrace stackTrace)
         {
-            using (var reportForm = new ReportErrorDlg(exception, stackTrace))
+            try
             {
-                reportForm.ShowDialog(MainWindow);
-            }         
+                using (var reportForm = new ReportErrorDlg(exception, stackTrace))
+                {
+                    reportForm.ShowDialog(MainWindow);
+                }
+            }
+            catch (Exception e2)
+            {
+                // We had an error trying to bring up the ReportErrorDlg.
+                // Skyline is going to shut down, but we want to preserve the original exception.
+                throw new AggregateException(exception, e2);
+            }
         }
 
         public static void AddTestException(Exception exception)
@@ -561,6 +580,28 @@ namespace pwiz.Skyline
         public static StartPage StartWindow { get; private set; }
         public static SrmDocument ActiveDocument { get { return MainWindow != null ? MainWindow.Document : null; } }
         public static SrmDocument ActiveDocumentUI { get { return MainWindow != null ? MainWindow.DocumentUI : null; } }
+        
+        /// <summary>
+        /// Gets the current UI mode (proteomic / small molecule / mixed) as a function of  <see cref="Settings"/>
+        /// and the contents of the current document
+        /// </summary>
+        public static SrmDocument.DOCUMENT_TYPE ModeUI
+        {
+            get
+            {
+                SrmDocument.DOCUMENT_TYPE mode;
+                if (ActiveDocument != null)
+                {
+                    mode = MainWindow.ModeUI; // Document contents help determine UI mode
+                }
+                else if (!Enum.TryParse(Settings.Default.UIMode, out mode))
+                {
+                    mode = SrmDocument.DOCUMENT_TYPE.proteomic; // No saved setting, default to tradition
+                }
+
+                return mode;
+            }
+        }
 
         /// <summary>
         /// Shortcut to the application name stored in <see cref="Settings"/>
@@ -571,7 +612,7 @@ namespace pwiz.Skyline
             {
                 return _name ??
                        (_name =
-                        Settings.Default.ProgramName + (Install.Type == Install.InstallType.daily ? "-daily" : string.Empty)); // Not L10N
+                        Settings.Default.ProgramName + (Install.Type == Install.InstallType.daily ? @"-daily" : string.Empty));
             }
         }
 
@@ -607,7 +648,7 @@ namespace pwiz.Skyline
 
     public class CommandLineRunner
     {
-        private const string COMMAND_PREFIX = "CMD"; // Not L10N
+        private const string COMMAND_PREFIX = "CMD";
 
         public static bool HasCommandPrefix(string arg)
         {
@@ -640,7 +681,7 @@ namespace pwiz.Skyline
             string guidSuffix = RemoveCommandPrefix(arg0);
 
             List<string> args = new List<string>();
-            using (NamedPipeClientStream pipeStream = new NamedPipeClientStream("SkylineInputPipe" + guidSuffix)) // Not L10N
+            using (NamedPipeClientStream pipeStream = new NamedPipeClientStream(@"SkylineInputPipe" + guidSuffix))
             {
                 // The connect function will wait 5s for the pipe to become available
                 try
@@ -664,8 +705,8 @@ namespace pwiz.Skyline
                 }
             }
 
-            string outPipeName = "SkylineOutputPipe" + guidSuffix; // Not L10N
-            using (var serverStream = new NamedPipeServerStream(outPipeName)) // Not L10N
+            string outPipeName = @"SkylineOutputPipe" + guidSuffix;
+            using (var serverStream = new NamedPipeServerStream(outPipeName))
             {
                 var namedPipeServerConnector = new NamedPipeServerConnector();
                 if (!namedPipeServerConnector.WaitForConnection(serverStream, outPipeName))

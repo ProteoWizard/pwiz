@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Model
         private readonly float _matchTolerance;
         private readonly IList<ChromatogramSet> _chromatogramSets;
 
-        // ReSharper disable NonLocalizedString
+        // ReSharper disable LocalizableElement
         public static readonly string[] FIELD_NAMES =
         {
             "FileName",
@@ -66,7 +66,7 @@ namespace pwiz.Skyline.Model
             "Times",
             "Intensities"
         };
-        // ReSharper restore NonLocalizedString
+        // ReSharper restore LocalizableElement
 
         /// <summary>
         /// Executes an export for all chromatograms in the document
@@ -287,9 +287,11 @@ namespace pwiz.Skyline.Model
             switch (extractor)
             {
                 case ChromExtractor.base_peak:
-                    return "BasePeak"; // Not L10N
+                    return @"BasePeak"; 
                 case ChromExtractor.summed:
-                    return "Summed"; // Not L10N
+                    return @"Summed";
+                case ChromExtractor.qc:
+                    return @"QC";
                 default:
                     throw new InvalidDataException(Resources.ChromatogramExporter_GetExtractorName_Invalid_extractor_name_);
             }

@@ -16,7 +16,7 @@ minorVersion INTEGER -- Version 7 adds peak annotations
 -- Version 2 added ion mobility information
 )
 
-INSERT INTO LibInfo values('urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:example','Tue Jun 12 14:28:40 2018',-1,0,9)
+INSERT INTO LibInfo values('urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:example','Thu Aug  8 10:00:43 2019',-1,0,10)
 
 CREATE TABLE RefSpectra ( -- spectrum metadata - actual mz/intensity pairs in RefSpectraPeaks
 id INTEGER primary key autoincrement not null, -- lookup key for RefSpectraPeaks
@@ -35,6 +35,7 @@ ionMobilityType TINYINT, -- ion mobility units (required if ionMobility is used,
 retentionTime REAL, -- chromatographic retention time in minutes, if known
 startTime REAL, -- start retention time in minutes, if known
 endTime REAL, -- end retention time in minutes, if known
+totalIonCurrent REAL, -- total ion current of spectrum
 moleculeName VARCHAR(128), -- precursor molecule's name (not needed for peptides)
 chemicalFormula VARCHAR(128), -- precursor molecule's neutral formula (not needed for peptides)
 precursorAdduct VARCHAR(128), -- ionizing adduct e.g. [M+Na], [2M-H2O+2H] etc (not needed for peptides)
@@ -86,7 +87,8 @@ mzObserved REAL not null -- actual measured mz, should agree with the indexed mz
 
 CREATE TABLE SpectrumSourceFiles ( -- information about the file or files from which this spectral library was derived
 id INTEGER PRIMARY KEY autoincrement not null,
-fileName VARCHAR(512), -- source file, typically some kind of search tool output
+fileName VARCHAR(512), -- source spectrum file; same as idFilename if embedded spectra were used, otherwise the path to the external spectrum file (mzML/mzXML)
+idFileName VARCHAR(512), -- identification file, typically some kind of search tool output
 cutoffScore REAL -- filter threshold used when converting the source file to a BiblioSpec library. See RefSpectra scoreType field for information about the type of cutoff.
 )
 

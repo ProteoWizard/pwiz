@@ -29,10 +29,11 @@
 
 #include "BlibBuilder.h"
 #include "SqliteRoutine.h"
+#include "pwiz/utility/misc/Filesystem.hpp"
+#include "boost/filesystem/detail/utf8_codecvt_facet.hpp"
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/join.hpp>
 
-using namespace std;
 
 namespace BiblioSpec {
 
@@ -125,8 +126,12 @@ void BlibBuilder::usage()
         "   -i <library_id>   LSID library ID. Default uses file name.\n"
         "   -a <authority>    LSID authority. Default proteome.gs.washington.edu.\n"
         "   -x <filename>     Specify the path of XML modifications file for parsing MaxQuant files.\n"
+        "   -p <filename>     Specify the path of XML parameters file for parsing MaxQuant files.\n"
         "   -P <float>        Specify pusher interval for Waters final_fragment.csv files.\n"
-        "   -d [<filename>]   Document the .blib format by writing SQLite commands to a file, or stdout if no filename is given.\n";
+        "   -d [<filename>]   Document the .blib format by writing SQLite commands to a file, or stdout if no filename is given.\n"
+        "   -E                Prefer reading peaks from embedded spectra (currently only affects MaxQuant msms.txt)\n"
+        "   -A                Output messages noting ambiguously matched spectra (spectra matched to multiple peptides)\n"
+        "   -K                Keep ambiguously matched spectra\n";
 
     cerr << usage << endl;
     exit(1);
@@ -154,6 +159,10 @@ int BlibBuilder::getCurFile() const {
 
 string BlibBuilder::getMaxQuantModsPath() {
     return maxQuantModsPath;
+}
+
+string BlibBuilder::getMaxQuantParamsPath() {
+    return maxQuantParamsPath;
 }
 
 double BlibBuilder::getPusherInterval() const {
@@ -192,12 +201,14 @@ int BlibBuilder::parseCommandArgs(int argc, char* argv[])
             {
                 string infileName;
                 getline(*stdinStream, infileName);
+                bal::trim(infileName);
                 if (infileName.empty())
                 {
                     break;
                 }
                 char* name = new char[infileName.size()+1];
                 strcpy(name, infileName.c_str());
+                Verbosity::debug("Input file: %s", name);
                 input_files.push_back(name);
             }
             break;
@@ -271,11 +282,19 @@ int BlibBuilder::transferLibrary(int iLib,
                                  const ProgressIndicator* parentProgress)
 {
     // Check to see if library exists
-    struct stat fileStats;
-    int gotStats = stat(input_files.at(iLib), &fileStats);
-    if( gotStats != 0 ){
-        throw BlibException(true, "Library file '%s' cannot be opened for "
-                            "transfering", input_files.at(iLib));
+
+    {
+        auto libPath = input_files.at(iLib);
+        if (!bfs::exists(libPath))
+        {
+            throw BlibException(true, "Library file '%s' cannot be opened for "
+                "transferring: file does not exist", bfs::absolute(libPath).string().c_str());
+        }
+        ifstream test(libPath);
+        if (!test) {
+            throw BlibException(true, "Library file '%s' cannot be opened for "
+                "transferring", libPath);
+        }
     }
 
     // give the incomming library a name
@@ -287,10 +306,14 @@ int BlibBuilder::transferLibrary(int iLib,
             input_files.at(iLib), schemaTmp);
     sql_stmt(zSql);
 
+    createUpdatedRefSpectraView(schemaTmp);
+
     // does the incomming library have retentiontime, score, etc columns
     int tableVersion = 0;
     if (tableColumnExists(schemaTmp, "RefSpectra", "retentionTime")) {
         if (tableColumnExists(schemaTmp, "RefSpectra", "startTime")) {
+            tableVersion = MIN_VERSION_TIC;
+        } else if (tableColumnExists(schemaTmp, "RefSpectra", "startTime")) {
             tableVersion = MIN_VERSION_RT_BOUNDS;
         } else if (tableExists(schemaTmp, "RefSpectraPeakAnnotations")) {
             tableVersion = MIN_VERSION_PEAK_ANNOT;
@@ -344,6 +367,8 @@ int BlibBuilder::transferLibrary(int iLib,
 
         rc = sqlite3_step(pStmt);
     }
+
+    sql_stmt("DROP VIEW RefSpectraTransfer");
 
     endTransaction();
     int numberProcessed =  progress->processed();
@@ -493,6 +518,8 @@ int BlibBuilder::parseNextSwitch(int i, int argc, char* argv[])
         Verbosity::set_verbosity(v_level);
     } else if (switchName == 'x' && ++i < argc) {
         maxQuantModsPath = string(argv[i]);
+    } else if (switchName == 'p' && ++i < argc) {
+        maxQuantParamsPath = string(argv[i]);
     } else if (switchName == 'P' && ++i < argc) {
         forcedPusherInterval = atof(argv[i]);
     } else if (switchName == 'u') {
@@ -507,6 +534,8 @@ int BlibBuilder::parseNextSwitch(int i, int argc, char* argv[])
         keepAmbiguous_ = true;
     } else if (switchName == 'H') {
         setHighPrecisionModifications(true);
+    } else if (switchName == 'E') {
+        preferEmbeddedSpectra_ = true;
     } else {
         return BlibMaker::parseNextSwitch(i, argc, argv);
     }

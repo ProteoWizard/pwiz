@@ -1,4 +1,4 @@
-//
+﻿//
 // $Id: MSGraphPane.cs 1599 2009-12-04 01:35:39Z brendanx $
 //
 //
@@ -81,13 +81,16 @@ namespace pwiz.MSGraph
                 return;
 
             foreach( CurveItem curve in CurveList )
-                if( curve.Points is MSPointList )
+            {
+                if (curve.Points is MSPointList msPointList)
                 {
+                   
                     if( XAxis.Scale.MinAuto && XAxis.Scale.MaxAuto )
-                        ( curve.Points as MSPointList ).SetScale( bins );
+                        msPointList.SetScale( bins );
                     else
-                        ( curve.Points as MSPointList ).SetScale( XAxis.Scale, bins );
+                        msPointList.SetScale( XAxis.Scale, bins );
                 }
+            }
 
             AxisChange();
         }
@@ -277,7 +280,7 @@ namespace pwiz.MSGraph
 
 
             // some dummy labels for very fast clipping
-            string baseLabel = "0"; // Not L10N
+            string baseLabel = @"0";
             foreach( CurveItem item in CurveList )
             {
                 IMSGraphItemInfo info = item.Tag as IMSGraphItemInfo;
@@ -459,6 +462,12 @@ namespace pwiz.MSGraph
                 TextObj text = obj as TextObj;
                 if (text != null)
                 {
+                    if (text.Location.CoordinateFrame == CoordType.ChartFraction &&
+                        text.Location.AlignH == AlignH.Left && text.Location.AlignV == AlignV.Top)
+                    {
+                        GraphObjList.Add(text);
+                        continue;
+                    }
                     if (isXChartFractionObject(text) && (text.Location.X < XAxis.Scale.Min || text.Location.X > XAxis.Scale.Max))
                         continue;
 

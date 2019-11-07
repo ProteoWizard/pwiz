@@ -33,16 +33,15 @@
 #include "Spectrum.h"
 #include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz/data/msdata/SpectrumInfo.hpp"
+#include <memory>
+using std::unique_ptr;
 
 // NOTE:  This adds about 600 KB to the size of the binary, which should only be done
 //        if it is of benefit.  It did not benefit BlibBuild, and so was made conditional.
 #ifdef VENDOR_READERS
-#ifdef _MSC_VER
 #include "pwiz_tools/common/FullReaderList.hpp"
 #endif
-#endif
 using namespace pwiz::msdata;
-using namespace boost;
 
 class PwizReader : public BiblioSpec::SpecFileReader {
  public:
@@ -103,11 +102,9 @@ class PwizReader : public BiblioSpec::SpecFileReader {
 
  private:
     string fileName_;
-    #ifdef _MSC_VER
 #ifdef VENDOR_READERS
     FullReaderList allReaders_;
 #endif
-    #endif
     MSDataFile* fileReader_;
     CVID nativeIdFormat_;
     SpectrumListPtr allSpectra_;
@@ -149,13 +146,13 @@ class PwizReader : public BiblioSpec::SpecFileReader {
      * SpecData.
      */
     void transferSpec(BiblioSpec::SpecData& returnData, 
-                      auto_ptr<SpectrumInfo>& specInfo);
+                      unique_ptr<SpectrumInfo>& specInfo);
 
     /**
      * Copy the information from the Pwiz spectrum to the BiblioSpec spectrum.
      */
     void transferSpectrum(BiblioSpec::Spectrum& returnSpectrum, 
-                          auto_ptr<SpectrumInfo>& specInfo, 
+                          unique_ptr<SpectrumInfo>& specInfo, 
                           SpectrumPtr foundSpec);
 
 };

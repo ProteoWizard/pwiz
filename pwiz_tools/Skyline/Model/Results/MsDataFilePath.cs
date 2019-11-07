@@ -20,7 +20,6 @@ using System;
 using System.IO;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
-using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
 using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
 
 namespace pwiz.Skyline.Model.Results
@@ -63,10 +62,6 @@ namespace pwiz.Skyline.Model.Results
 
         public static MsDataFileUri Parse(string url)
         {
-            if (url.StartsWith(ChorusUrl.ChorusUrlPrefix))
-            {
-                return new ChorusUrl(url);
-            }
             if (url.StartsWith(UnifiUrl.UrlPrefix))
             {
                 return new UnifiUrl(url);
@@ -79,7 +74,7 @@ namespace pwiz.Skyline.Model.Results
                 SampleHelp.GetCentroidMs2(url));
         }
 
-        public abstract MsDataFileImpl OpenMsDataFile(bool simAsSpectra, int preferOnlyMsLevel);
+        public abstract MsDataFileImpl OpenMsDataFile(bool simAsSpectra, int preferOnlyMsLevel, bool combineIonMobilitySpectra);
         public int CompareTo(object obj)
         {
             if (obj == null)
@@ -170,7 +165,7 @@ namespace pwiz.Skyline.Model.Results
             // Has to be a Waters .raw file, not just an mzML translation of one
             if (String.IsNullOrEmpty(filePath))
                 return false; // Not even a file
-            if (!GetFilePath().ToLowerInvariant().EndsWith(".raw"))  // Not L10N
+            if (!GetFilePath().ToLowerInvariant().EndsWith(@".raw"))
                 return false; // Return without even opening the file
             if (!Directory.Exists(filePath))
                 return false; // Thermo .raw is a file, Waters .raw is actually a directory
@@ -267,11 +262,12 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public override MsDataFileImpl OpenMsDataFile(bool simAsSpectra, int preferOnlyMsLevel)
+        public override MsDataFileImpl OpenMsDataFile(bool simAsSpectra, int preferOnlyMsLevel, bool combineIonMobilitySpectra)
         {
             return new MsDataFileImpl(FilePath, Math.Max(SampleIndex, 0), LockMassParameters, simAsSpectra,
                 requireVendorCentroidedMS1: CentroidMs1, requireVendorCentroidedMS2: CentroidMs2,
-                ignoreZeroIntensityPoints: true, preferOnlyMsLevel: preferOnlyMsLevel);
+                ignoreZeroIntensityPoints: true, preferOnlyMsLevel: preferOnlyMsLevel,
+                combineIonMobilitySpectra: combineIonMobilitySpectra);
         }
     }
 }

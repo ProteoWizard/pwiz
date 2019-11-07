@@ -31,6 +31,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
@@ -55,12 +56,15 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         private DbIrtPeptide[] _originalPeptides;
         private DbIrtPeptide[] _originalKnownPeptides;
+        private string _originalDocumentXml;
         private readonly StandardGridViewDriver _gridViewStandardDriver;
         private readonly LibraryGridViewDriver _gridViewLibraryDriver;
 
         //Used to determine whether we are creating a new calculator, trying to overwrite
         //an old one, or editing an old one
         private readonly string _editingName = string.Empty;
+
+        private readonly SettingsListComboDriver<IrtStandard> _driverStandards;
 
         public EditIrtCalcDlg(RCalcIrt calc, IEnumerable<RetentionScoreCalculatorSpec> existingCalcs)
         {
@@ -78,8 +82,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
             _gridViewStandardDriver.LibraryPeptideList = _gridViewLibraryDriver.Items;
             _gridViewLibraryDriver.StandardPeptideList = _gridViewStandardDriver.Items;
 
-            foreach (var standard in IrtStandard.ALL)
-                comboStandards.Items.Add(standard);
+            _driverStandards = new SettingsListComboDriver<IrtStandard>(comboStandards, Settings.Default.IrtStandardList);
+            _driverStandards.LoadList(IrtStandard.EMPTY.GetKey());
 
             if (calc != null)
             {
@@ -88,6 +92,13 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
                 OpenDatabase(databaseStartPath);
             }
+
+            var targetResolver = TargetResolver.MakeTargetResolver(Program.ActiveDocumentUI, 
+                _originalPeptides?.Select(p=>p.Target));
+            _gridViewStandardDriver.TargetResolver = targetResolver;
+            _gridViewLibraryDriver.TargetResolver = targetResolver;
+            columnStandardSequence.TargetResolver = targetResolver;
+            columnLibrarySequence.TargetResolver = targetResolver;
         }
 
         private void OnLoad(object sender, EventArgs e)
@@ -129,12 +140,24 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         private BindingList<DbIrtPeptide> LibraryPeptideList { get { return _gridViewLibraryDriver.Items; } }
 
-        private IrtStandard CurrentStandard
+        public void ResetPeptideListBindings()
+        {
+            StandardPeptideList.ResetBindings();
+            LibraryPeptideList.ResetBindings();
+        }
+
+        private int CurrentStandardIndex
         {
             get
             {
-                return comboStandards.Items.Cast<IrtStandard>().FirstOrDefault(standard => standard.IsMatch(StandardPeptideList, IRT_TOLERANCE))
-                    ?? IrtStandard.NULL;
+                for (var i = 0; i < _driverStandards.List.Count; i++)
+                {
+                    if (_driverStandards.List[i].IsMatch(StandardPeptideList, IRT_TOLERANCE))
+                    {
+                        return i;
+                    }
+                }
+                return -1;
             }
         }
 
@@ -272,7 +295,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             try
             {
                 IList<DbIrtPeptide> dbPeptides;
-                IrtDb.GetIrtDb(path, null, out dbPeptides); // TODO: LongWaitDlg
+                var db = IrtDb.GetIrtDb(path, null, out dbPeptides); // TODO: LongWaitDlg
 
                 LoadStandard(dbPeptides);
                 LoadLibrary(dbPeptides);
@@ -280,8 +303,16 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 // Clone all of the peptides to use for comparison in OkDialog
                 _originalPeptides = dbPeptides.Select(p => new DbIrtPeptide(p)).ToArray();
                 _originalKnownPeptides = _originalPeptides.Where(p => IrtStandard.AnyContains(p, IRT_TOLERANCE)).ToArray();
+                _originalDocumentXml = db.DocumentXml;
 
                 textDatabase.Text = path;
+
+                if (_originalPeptides.Any(p => !p.Target.IsProteomic))
+                {
+                    GetModeUIHelper().ModeUI = _originalPeptides.Any(p => p.Target.IsProteomic)
+                        ? SrmDocument.DOCUMENT_TYPE.mixed
+                        : SrmDocument.DOCUMENT_TYPE.small_molecules;
+                }
             }
             catch (DatabaseOpeningException e)
             {
@@ -372,7 +403,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             if (StandardPeptideList.Count < CalibrateIrtDlg.MIN_STANDARD_PEPTIDES)
             {
-                MessageDlg.Show(this, string.Format(Resources.EditIrtCalcDlg_OkDialog_Please_enter_at_least__0__standard_peptides,
+                MessageDlg.Show(this, ModeUIAwareStringFormat(Resources.EditIrtCalcDlg_OkDialog_Please_enter_at_least__0__standard_peptides,
                                                     CalibrateIrtDlg.MIN_STANDARD_PEPTIDES));
                 gridViewStandard.Focus();
                 return;
@@ -380,8 +411,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             if (StandardPeptideList.Count < CalibrateIrtDlg.MIN_SUGGESTED_STANDARD_PEPTIDES)
             {
-                string messageTooFewPeptides = string.Format(Resources
-                    .EditIrtCalcDlg_OkDialog_Using_fewer_than__0__standard_peptides_is_not_recommended_Are_you_sure_you_want_to_continue_with_only__1__,
+                string messageTooFewPeptides = ModeUIAwareStringFormat(Resources
+                   .EditIrtCalcDlg_OkDialog_Using_fewer_than__0__standard_peptides_is_not_recommended_Are_you_sure_you_want_to_continue_with_only__1__,
                     CalibrateIrtDlg.MIN_SUGGESTED_STANDARD_PEPTIDES, StandardPeptideList.Count);
 
                 DialogResult result = MultiButtonMsgDlg.Show(this, messageTooFewPeptides, MultiButtonMsgDlg.BUTTON_YES,
@@ -397,10 +428,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 if (DatabaseChanged)
                 {
-                    using (FileSaver fileSaver = new FileSaver(path))
+                    using (var fileSaver = new FileSaver(path))
                     {
-                        IrtDb db = IrtDb.CreateIrtDb(fileSaver.SafeName);
-                        db.AddPeptides(null, AllPeptides.ToArray());
+                        var db = IrtDb.CreateIrtDb(fileSaver.SafeName);
+                        db = db.AddPeptides(null, AllPeptides.ToArray());
+                        db.SetDocumentXml(Program.ActiveDocumentUI, _originalDocumentXml);
                         fileSaver.Commit();
                     }
                 }
@@ -417,7 +449,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 // CONSIDER: Not sure if this is the right thing to do.  It would
                 //           be nice to solve whatever is causing this, but this is
                 //           better than showing an unexpected error form with stack trace.
-                MessageDlg.Show(this, Resources.EditIrtCalcDlg_OkDialog_Failure_updating_peptides_in_the_iRT_database___The_database_may_be_out_of_synch_);
+                MessageDlg.Show(this, GetModeUIHelper().Translate(Resources.EditIrtCalcDlg_OkDialog_Failure_updating_peptides_in_the_iRT_database___The_database_may_be_out_of_synch_));
                 return;
             }
 
@@ -436,14 +468,14 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 // CONSIDER: Select the peptide row
                 if (seqModified.IsProteomic && !FastaSequence.IsExSequence(seqModified.Sequence))
                 {
-                    MessageDlg.Show(this, string.Format(Resources.EditIrtCalcDlg_ValidatePeptideList_The_value__0__is_not_a_valid_modified_peptide_sequence,
+                    MessageDlg.Show(this, ModeUIAwareStringFormat(Resources.EditIrtCalcDlg_ValidatePeptideList_The_value__0__is_not_a_valid_modified_peptide_sequence,
                                                         seqModified));
                     return false;
                 }
 
                 if (sequenceSet.Contains(seqModified))
                 {
-                    MessageDlg.Show(this, string.Format(Resources.EditIrtCalcDlg_ValidatePeptideList_The_peptide__0__appears_in_the__1__table_more_than_once,
+                    MessageDlg.Show(this, ModeUIAwareStringFormat(Resources.EditIrtCalcDlg_ValidatePeptideList_The_peptide__0__appears_in_the__1__table_more_than_once,
                                                         seqModified, tableName));
                     return false;
                 }
@@ -467,30 +499,27 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             CheckDisposed();
             if (LibraryPeptideList.Count == 0)
-                CalibrateOnce();
-            else
-                Recalibrate();
-        }
-
-        private void CalibrateOnce()
-        {
-            using (var calibrateDlg = new CalibrateIrtDlg())
             {
-                if (calibrateDlg.ShowDialog(this) == DialogResult.OK)
+                // Select "Add..." from the ComboBox
+                for (var i = 0; i < _driverStandards.Combo.Items.Count; i++)
                 {
-                    LoadStandard(calibrateDlg.CalibrationPeptides);
+                    if (_driverStandards.Combo.Items[i].ToString().Equals(Resources.SettingsListComboDriver_Add))
+                    {
+                        _driverStandards.Combo.SelectedIndex = i;
+                        return;
+                    }
                 }
             }
-        }
-
-        private void Recalibrate()
-        {
-            using (var recalibrateDlg = new RecalibrateIrtDlg(AllPeptides.ToArray()))
+            else
             {
-                if (recalibrateDlg.ShowDialog(this) == DialogResult.OK)
+                // Select "Edit current..." from the ComboBox
+                for (var i = 0; i < _driverStandards.Combo.Items.Count; i++)
                 {
-                    StandardPeptideList.ResetBindings();
-                    LibraryPeptideList.ResetBindings();
+                    if (_driverStandards.Combo.Items[i].ToString().Equals(Resources.SettingsListComboDriver_Edit_current))
+                    {
+                        _driverStandards.Combo.SelectedIndex = i;
+                        return;
+                    }
                 }
             }
         }
@@ -502,11 +531,21 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         public void ChangeStandardPeptides()
         {
-            using (var changeDlg = new ChangeIrtPeptidesDlg(AllPeptides.ToArray()))
+            var skylineWindow = Program.MainWindow;
+            lock (skylineWindow.GetDocumentChangeLock())
             {
-                if (changeDlg.ShowDialog(this) == DialogResult.OK)
+                using (var changeDlg = new ChangeIrtPeptidesDlg(AllPeptides.ToArray(), skylineWindow.Document.MoleculeGroups))
                 {
+                    if (changeDlg.ShowDialog(this) != DialogResult.OK)
+                        return;
                     _gridViewStandardDriver.Reset(changeDlg.Peptides.OrderBy(peptide => peptide.Irt).ToArray());
+                    if (changeDlg.ReplacementProtein != null)
+                    {
+                        skylineWindow.ModifyDocument(Resources.EditIrtCalcDlg_ChangeStandardPeptides_Removed_peptides_on_iRT_standard_protein,
+                            document => (SrmDocument) document.ReplaceChild(IdentityPath.ROOT,
+                                changeDlg.ReplacementProtein), docPair => AuditLogEntry.DiffDocNodes(MessageType.modified, docPair,
+                                AuditLogEntry.GetNodeName(docPair.OldDoc, changeDlg.ReplacementProtein)));
+                    }
                 }
             }
         }
@@ -529,7 +568,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             if (StandardPeptideCount < CalibrateIrtDlg.MIN_STANDARD_PEPTIDES)
             {
-                MessageDlg.Show(this, string.Format(Resources.EditIrtCalcDlg_OkDialog_Please_enter_at_least__0__standard_peptides,
+                MessageDlg.Show(this, ModeUIAwareStringFormat(Resources.EditIrtCalcDlg_OkDialog_Please_enter_at_least__0__standard_peptides,
                                                     CalibrateIrtDlg.MIN_STANDARD_PEPTIDES));
                 return;
             }
@@ -622,24 +661,24 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     GridLibrary.CurrentCell = GridLibrary.Rows[0].Cells[0];
                 }
 
+                var existingStandard = new TargetMap<DbIrtPeptide>(Items.Select(pep =>
+                    new KeyValuePair<Target, DbIrtPeptide>(pep.ModifiedTarget, pep)));
+                var existingLibrary = new TargetMap<DbIrtPeptide>(LibraryPeptideList.Select(pep =>
+                    new KeyValuePair<Target, DbIrtPeptide>(pep.ModifiedTarget, pep)));
+                var libraryRemoved = new List<Target>();
+
                 // Make sure to use existing peptides where possible
-                for (int i = 0; i < standardPeptidesNew.Count; i++)
+                for (var i = 0; i < standardPeptidesNew.Count; i++)
                 {
                     var peptide = standardPeptidesNew[i];
-                    var sequence = peptide.ModifiedTarget;
-                    DbIrtPeptide peptideExist;
-                    int iPep;
-                    if ((iPep = LibraryPeptideList.IndexOf(p => Equals(p.ModifiedTarget, sequence))) != -1)
+                    var target = peptide.ModifiedTarget;
+
+                    if (existingLibrary.TryGetValue(target, out var peptideExist))
                     {
-                        peptideExist = new DbIrtPeptide(LibraryPeptideList[iPep]);
-                        // Remove from the library list, so that it is in only one list
-                        LibraryPeptideList.RemoveAt(iPep);
+                        // Mark for removal from the library list, so that it will be in only one list
+                        libraryRemoved.Add(target);
                     }
-                    else if ((iPep = Items.IndexOf(p => Equals(p.ModifiedTarget, sequence))) != -1)
-                    {
-                        peptideExist = new DbIrtPeptide(Items[iPep]);
-                    }
-                    else
+                    else if (!existingStandard.TryGetValue(target, out peptideExist))
                     {
                         continue;
                     }
@@ -651,16 +690,17 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     standardPeptidesNew[i] = peptideExist;
                 }
 
-                // Add all standard peptides not included in the new list to the general library list
-                foreach (var peptide in from standardPeptide in Items
-                                        let sequence = standardPeptide.ModifiedTarget
-                                        where sequence != null &&
-                                            !standardPeptidesNew.Any(p => Equals(p.ModifiedTarget, sequence))
-                                        select standardPeptide)
+                var libraryRemovedMap = new TargetMap<bool>(libraryRemoved.Select(target => new KeyValuePair<Target, bool>(target, true)));
+                for (var i = LibraryPeptideList.Count - 1; i >= 0; i--)
                 {
-                    peptide.Standard = false;
-                    LibraryPeptideList.Add(new DbIrtPeptide(peptide));
+                    if (libraryRemovedMap.ContainsKey(LibraryPeptideList[i].ModifiedTarget))
+                        LibraryPeptideList.RemoveAt(i);
                 }
+
+                // Add all standard peptides not included in the new list to the general library list
+                var newStandard = new TargetMap<bool>(standardPeptidesNew.Select(pep => new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)));
+                foreach (var pep in Items.Where(oldPep => !newStandard.ContainsKey(oldPep.ModifiedTarget)))
+                    LibraryPeptideList.Add(new DbIrtPeptide(pep) {Standard = false});
 
                 Items.Clear();
                 foreach (var peptide in standardPeptidesNew)
@@ -694,7 +734,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     if (StandardPeptideList.Any(p => Equals(p.ModifiedTarget, sequence)))
                     {
                         MessageDlg.Show(MessageParent,
-                                        string.Format(Resources.LibraryGridViewDriver_DoPaste_The_peptide__0__is_already_present_in_the__1__table__and_may_not_be_pasted_into_the__2__table,
+                                        ModeUIHelper.Format(Resources.LibraryGridViewDriver_DoPaste_The_peptide__0__is_already_present_in_the__1__table__and_may_not_be_pasted_into_the__2__table,
                                                       sequence,
                                                       Resources.EditIrtCalcDlg_OkDialog_standard_table_name,
                                                       Resources.EditIrtCalcDlg_OkDialog_library_table_name));
@@ -741,7 +781,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     {
                         var message = TextUtil.LineSeparate(Resources.LibraryGridViewDriver_AddResults_An_error_occurred_attempting_to_add_results_from_current_document,
                                                             x.Message);
-                        MessageDlg.Show(MessageParent, message);
+                        MessageDlg.ShowWithException(MessageParent, message, x);
                         return;
                     }
                 }
@@ -757,24 +797,29 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             private sealed class DocumentRetentionTimeProvider : IRetentionTimeProvider
             {
-                private readonly Dictionary<Target, double> _dictPeptideRetentionTime;
+                private readonly TargetMap<double> _dictPeptideRetentionTime;
 
                 public DocumentRetentionTimeProvider(SrmDocument document, ChromFileInfo fileInfo)
                 {
                     Name = fileInfo.FilePath.ToString();
 
-                    _dictPeptideRetentionTime = new Dictionary<Target, double>();
-                    foreach (var nodePep in document.Peptides)
+                    _dictPeptideRetentionTime =
+                        new TargetMap<double>(GetRetentionTimesFromDocument(document, fileInfo));
+                }
+
+                private static IEnumerable<KeyValuePair<Target, double>> GetRetentionTimesFromDocument(SrmDocument document, ChromFileInfo fileInfo)
+                {
+                    var targets = new HashSet<Target>();
+                    foreach (var nodePep in document.Molecules)
                     {
                         var modSeq = document.Settings.GetModifiedSequence(nodePep);
-                        if (_dictPeptideRetentionTime.ContainsKey(modSeq))
+                        if (!targets.Add(modSeq))
                             continue;
                         float? centerTime = nodePep.GetSchedulingTime(fileInfo.FileId);
                         if (!centerTime.HasValue)
                             continue;
-                        _dictPeptideRetentionTime.Add(modSeq, centerTime.Value);
+                        yield return new KeyValuePair<Target, double>(modSeq, centerTime.Value);
                     }
-
                 }
 
                 public string Name { get; private set; }
@@ -874,7 +919,10 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 {
                     if (library != null)
                     {
+                        // (ReSharper 2019.1 seems not to notice the check that's already here)
+                        // ReSharper disable PossibleNullReferenceException
                         foreach (var pooledStream in library.ReadStreams)
+                        // ReSharper restore PossibleNullReferenceException
                             pooledStream.CloseStream();
                     }
                 }
@@ -935,12 +983,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
             private sealed class IrtRetentionTimeProvider : IRetentionTimeProvider
             {
                 private readonly string _name;
-                private readonly Dictionary<Target, DbIrtPeptide> _dictSequenceToPeptide;
+                private readonly TargetMap<DbIrtPeptide> _dictSequenceToPeptide;
 
                 public IrtRetentionTimeProvider(string name, IrtDb irtDb)
                 {
                     _name = name;
-                    _dictSequenceToPeptide = irtDb.GetPeptides().ToDictionary(peptide => peptide.ModifiedTarget);
+                    _dictSequenceToPeptide = new TargetMap<DbIrtPeptide>(irtDb.GetPeptides().ToDictionary(peptide => peptide.ModifiedTarget));
                 }
 
                 public string Name
@@ -1173,7 +1221,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         private void UpdateNumStandards()
         {
-            labelNumStandards.Text = string.Format(StandardPeptideCount == 1
+            labelNumStandards.Text = ModeUIAwareStringFormat(StandardPeptideCount == 1
                                                        ? Resources.EditIrtCalcDlg_UpdateNumStandards__0__Standard_peptide___1__required_
                                                        : Resources.EditIrtCalcDlg_UpdateNumStandards__0__Standard_peptides___1__required_,
                                                    StandardPeptideCount, RCalcIrt.MinStandardCount(StandardPeptideCount));
@@ -1182,12 +1230,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
         private void UpdateNumPeptides()
         {
             bool hasLibraryPeptides = LibraryPeptideList.Count != 0;
-            btnCalibrate.Text = (hasLibraryPeptides
+            btnCalibrate.Text = GetModeUIHelper().Translate(hasLibraryPeptides
                                      ? Resources.EditIrtCalcDlg_UpdateNumPeptides_Recalibrate
                                      : Resources.EditIrtCalcDlg_UpdateNumPeptides_Calibrate);
             btnPeptides.Visible = hasLibraryPeptides;
 
-            labelNumPeptides.Text = string.Format(LibraryPeptideList.Count == 1
+            labelNumPeptides.Text = ModeUIAwareStringFormat(LibraryPeptideList.Count == 1
                                                       ? Resources.EditIrtCalcDlg_UpdateNumPeptides__0__Peptide
                                                       : Resources.EditIrtCalcDlg_UpdateNumPeptides__0__Peptides,
                                                   LibraryPeptideList.Count);
@@ -1213,15 +1261,15 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         public IrtStandard IrtStandards
         {
-            get { return comboStandards.SelectedItem as IrtStandard; }
+            get { return _driverStandards.SelectedItem; }
             set
             {
                 if (value == null)
                     comboStandards.SelectedIndex = 0;
 
-                for (var i = 0; i < comboStandards.Items.Count; i++)
+                for (var i = 0; i < _driverStandards.List.Count; i++)
                 {
-                    if (comboStandards.Items[i] == value)
+                    if (ReferenceEquals(_driverStandards.List[i], value))
                     {
                         comboStandards.SelectedIndex = i;
                         return;
@@ -1235,39 +1283,76 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         private void comboStandards_SelectedIndexChanged(object sender, EventArgs e)
         {
-            var current = CurrentStandard;
-            var selected = (IrtStandard) comboStandards.SelectedItem;
+            var selected = _driverStandards.SelectedItem;
+            var lastIdx = _driverStandards.SelectedIndexLast;
 
-            if (current == selected)
+            if (comboStandards.SelectedItem.ToString().Equals(Resources.SettingsListComboDriver_Edit_current) &&
+                IrtStandard.ALL.Any(standard => standard.Name.Equals(comboStandards.Items[lastIdx])))
             {
+                // Edit a built-in standard, copy it and edit the copy
+                var standardCopy =
+                    new IrtStandard(
+                        Helpers.GetUniqueName(comboStandards.Items[lastIdx].ToString(),
+                            _driverStandards.List.Select(standard => standard.Name).ToArray()), null, StandardPeptides);
+                using (var calibrateIrtDlg = new CalibrateIrtDlg(standardCopy, _driverStandards.List, LibraryPeptides.ToArray()))
+                {
+                    if (calibrateIrtDlg.ShowDialog(this) == DialogResult.OK)
+                    {
+                        _driverStandards.List.Add(calibrateIrtDlg.IrtStandard);
+                        _driverStandards.LoadList(calibrateIrtDlg.IrtStandard.GetKey());
+                    }
+                    else
+                    {
+                        comboStandards.SelectedIndex = lastIdx;
+                    }
+                }
                 return;
             }
 
-            if (!IrtStandard.AllStandards(StandardPeptideList, IRT_TOLERANCE))
+            if (selected == null || comboStandards.SelectedIndex == lastIdx)
             {
-                comboStandards.SelectedItem = IrtStandard.NULL;
-                MessageDlg.Show(this,
-                    Resources.EditIrtCalcDlg_comboStandards_SelectedIndexChanged_The_list_of_standard_peptides_must_contain_only_recognized_iRT_C18_standards_to_switch_to_a_predefined_set_of_iRT_C18_standards_);
+                _driverStandards.SelectedIndexChangedEvent(sender, e);
                 return;
             }
 
-            if (_originalPeptides != null)
+            // Any known iRT standard peptides that were in the calculator when it was loaded
+            // but are not in the newly selected standard will be moved to the library peptide list.
+            if (_originalPeptides != null && IrtStandard.ALL.Any(standard => standard.Name.Equals(selected.Name)))
             {
                 foreach (var original in _originalKnownPeptides.Where(peptide =>
                     !selected.Contains(peptide, IRT_TOLERANCE) &&
                     IrtStandard.ContainsMatch(StandardPeptides, peptide, IRT_TOLERANCE) &&
-                    !IrtStandard.ContainsMatch(LibraryPeptides, peptide, IRT_TOLERANCE)))
+                    !IrtStandard.ContainsMatch(LibraryPeptides, peptide, null)))
                 {
-                    LibraryPeptideList.Add(new DbIrtPeptide(original) {Standard = false});
+                    LibraryPeptideList.Add(new DbIrtPeptide(original) { Standard = false });
                 }
             }
-
             LoadStandard(selected.Peptides);
+            _driverStandards.SelectedIndexChangedEvent(sender, e);
         }
 
         private void HandleStandardsChanged(object sender, EventArgs eventArgs)
         {
-            comboStandards.SelectedItem = CurrentStandard;
+            var selectedItem = _driverStandards.SelectedItem;
+            if (selectedItem != null)
+            {
+                var selectedName = selectedItem.Name;
+                if (!Settings.Default.IrtStandardList.GetDefaults().Any(standard => standard.Name.Equals(selectedName)))
+                {
+                    // Update standard
+                    _driverStandards.List[comboStandards.SelectedIndex] = _driverStandards.SelectedItem.ChangePeptides(StandardPeptides);
+                }
+                else if (selectedName.Equals(IrtStandard.EMPTY.Name))
+                {
+                    // Set ComboBox from None to the matching standard, if any
+                    var current = CurrentStandardIndex;
+                    if (current != -1)
+                    {
+                        comboStandards.SelectedIndex = current;
+                    }
+                }
+            }
+
             // Use a dictionary to avoid this becoming O(n^2)
             var dictLibraryPeptides = new Dictionary<Target, DbIrtPeptide>();
             foreach (var libraryPeptide in LibraryPeptides)
