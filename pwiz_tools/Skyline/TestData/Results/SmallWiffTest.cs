@@ -187,7 +187,7 @@ namespace pwiz.SkylineTestData.Results
 
                 docResults = docContainer.Document;
 
-                AssertEx.IsDocumentState(docResults, 6, 9, 9, 18, 54);
+                AssertEx.IsDocumentState(docResults, 5, 9, 9, 18, 54);
                 Assert.IsTrue(docResults.Settings.MeasuredResults.IsLoaded);
 
                 foreach (var nodeTran in docResults.PeptideTransitions)
