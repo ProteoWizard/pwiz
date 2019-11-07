@@ -210,6 +210,8 @@ class RawFileThreadImpl : public RawFile
             long maxPeakCount,
             bool centroidResult) const;
 
+    virtual NoiseListPtr getNoiseList(long scanNumber) const;
+
     virtual std::vector<std::string> getFilters() const;
     virtual ScanInfoPtr getScanInfo(long scanNumber) const;
 
@@ -1040,9 +1042,9 @@ NoiseListPtr RawFileImpl::getNoiseList(long scanNumber) const
         double* pdval = (double*)noisePacket2.parray->pvData;
         for (long i = 0; i < size; ++i)
         {
-            result->mzArray[i] = (double)pdval[(i * 3) + 0];
-            result->intensityArray[i] = (float)pdval[(i * 3) + 1];
-            result->baselineArray[i] = (float)pdval[(i * 3) + 2];
+            result->mzArray[i] = pdval[(i * 3) + 0];
+            result->intensityArray[i] = pdval[(i * 3) + 1];
+            result->baselineArray[i] = pdval[(i * 3) + 2];
         }
 #else
         auto noiseData = raw_->GetAdvancedPacketData(scanNumber)->NoiseData;
@@ -2598,6 +2600,29 @@ MassListPtr RawFileThreadImpl::getMassList(long scanNumber,
     CATCH_AND_FORWARD
 }
 
+NoiseListPtr RawFileThreadImpl::getNoiseList(long scanNumber) const
+{
+    try
+    {
+        auto result = boost::make_shared<NoiseList>();
+
+        auto noiseData = raw_->GetAdvancedPacketData(scanNumber)->NoiseData;
+        long size = noiseData->Length;
+        result->mzArray.resize(size);
+        result->baselineArray.resize(size);
+        result->intensityArray.resize(size);
+
+        for (long i = 0; i < size; ++i)
+        {
+            result->mzArray[i] = noiseData[i]->Mass;
+            result->intensityArray[i] = noiseData[i]->Noise;
+            result->baselineArray[i] = noiseData[i]->Baseline;
+        }
+
+        return result;
+    }
+    CATCH_AND_FORWARD
+}
 
 std::vector<string> RawFileThreadImpl::getFilters() const
 {

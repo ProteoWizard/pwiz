@@ -71,7 +71,6 @@ struct Config : public Reader::Config
     {
         simAsSpectra = false;
         srmAsSpectra = false;
-        addNoiseData = false;
         combineIonMobilitySpectra = false;
         unknownInstrumentIsError = true;
         stripLocationFromSourceFiles = false;
