@@ -435,8 +435,23 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
 
         if (!mzArray.empty())
         {
-            result->set(MS_lowest_observed_m_z, mzArray.front(), MS_m_z);
-            result->set(MS_highest_observed_m_z, mzArray.back(), MS_m_z);
+            for (size_t i = 0; i < 10; ++i)
+            {
+                if (intensityArray[i] > 0)
+                {
+                    result->set(MS_lowest_observed_m_z, mzArray[i], MS_m_z);
+                    break;
+                }
+            }
+
+            for (size_t i = intensityArray.size()-1; i > 0; --i)
+            {
+                if (intensityArray[i] > 0)
+                {
+                    result->set(MS_highest_observed_m_z, mzArray[i], MS_m_z);
+                    break;
+                }
+            }
         }
         result->defaultArrayLength = mzArray.size();
     }

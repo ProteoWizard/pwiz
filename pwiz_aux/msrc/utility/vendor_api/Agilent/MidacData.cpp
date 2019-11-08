@@ -506,23 +506,42 @@ void FrameImpl::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz
                 throw gcnew System::Exception(ToSystemString("null spectrum returned for frame ") + frameIndex_ + " and drift bin " + nonEmptyDriftBins[i]);
 
             double driftTime = specData->DriftTimeRanges->Length > 0 ? specData->DriftTimeRanges[0]->Min : 0;
-            double previousIntensity = 0;
 
             for (int j = 0, end = specData->XArray->Length; j < end; ++j)
             {
                 double intensity = specData->YArray[j];
-                // Don't save zero intensity points unless directed to, and they are start or end of a run of zeros
-                if (intensity == 0 && (ignoreZeroIntensityPoints || (previousIntensity == 0 && j + 1 < end && specData->YArray[j + 1] == 0)))
+                // NB: ZeroTrimmed may actually have some zeros in it, but specData->NonZeroPoints does not include them
+                if (intensity == 0 && ignoreZeroIntensityPoints)
                     continue;
                 mzArray[lastNonZeroIndex] = specData->XArray[j];
-                intensityArray[lastNonZeroIndex] = previousIntensity = intensity;
+                intensityArray[lastNonZeroIndex] = intensity;
                 mobilityArray[lastNonZeroIndex] = driftTime;
                 ++lastNonZeroIndex;
             }
+
+            if (!ignoreZeroIntensityPoints)
+            {
+                // ZeroBounded seems to have a bug where it doesn't add a final trailing zero
+                double lastMzDelta = mzArray[lastNonZeroIndex - 1] - mzArray[lastNonZeroIndex - 2];
+                mzArray[lastNonZeroIndex] = mzArray[lastNonZeroIndex - 1] + lastMzDelta;
+                intensityArray[lastNonZeroIndex] = 0;
+                mobilityArray[lastNonZeroIndex] = mobilityArray[lastNonZeroIndex - 1];
+                ++lastNonZeroIndex;
+            }
         }
-        ToBinaryData(mzArray, 0, mz, 0, lastNonZeroIndex);
-        ToBinaryData(intensityArray, 0, intensities, 0, lastNonZeroIndex);
-        ToBinaryData(mobilityArray, 0, mobilities, 0, lastNonZeroIndex);
+
+        if (ignoreZeroIntensityPoints)
+        {
+            ToBinaryData(mzArray, mz);
+            ToBinaryData(intensityArray, intensities);
+            ToBinaryData(mobilityArray, mobilities);
+        }
+        else
+        {
+            ToBinaryData(mzArray, 0, mz, 0, lastNonZeroIndex);
+            ToBinaryData(intensityArray, 0, intensities, 0, lastNonZeroIndex);
+            ToBinaryData(mobilityArray, 0, mobilities, 0, lastNonZeroIndex);
+        }
     }
     CATCH_AND_FORWARD
 }

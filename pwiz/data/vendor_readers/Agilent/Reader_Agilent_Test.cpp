@@ -60,6 +60,9 @@ int main(int argc, char* argv[])
         pwiz::util::ReaderTestConfig config;
         config.combineIonMobilitySpectra = true;
         pwiz::util::testReader(pwiz::msdata::Reader_Agilent(), testArgs, testAcceptOnly, requireUnicodeSupport, IsIonMobility(), config);
+
+        config.ignoreZeroIntensityPoints = true;
+        pwiz::util::testReader(pwiz::msdata::Reader_Agilent(), testArgs, testAcceptOnly, requireUnicodeSupport, IsIonMobility(), config);
     }
     catch (exception& e)
     {
