@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<PrositConfig xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Server>131.159.152.7:8500</Server>
+  <RootCertificate></RootCertificate>
+  <ClientCertificate></ClientCertificate>
+  <ClientKey></ClientKey>
+</PrositConfig>

@@ -434,8 +434,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
         {
             get
             {
-                return !string.IsNullOrEmpty(Settings.Default.PrositServer) &&
-                       Settings.Default.PrositIntensityModel != null &&
+                return Settings.Default.PrositIntensityModel != null &&
                        Settings.Default.PrositRetentionTimeModel != null;
             }
         }

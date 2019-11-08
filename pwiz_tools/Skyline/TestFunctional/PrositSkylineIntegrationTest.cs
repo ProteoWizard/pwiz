@@ -26,7 +26,6 @@ using Google.Protobuf.Collections;
 using Grpc.Core;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
@@ -34,6 +33,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Prosit;
 using pwiz.Skyline.Model.Prosit.Communication;
+using pwiz.Skyline.Model.Prosit.Config;
 using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -1238,7 +1238,7 @@ namespace pwiz.SkylineTestFunctional
             PrositConstants.CACHE_PREV_PREDICTION = false;
 
             PrositPredictionClient.FakeClient = RecordData
-                ? new FakePrositPredictionClient(PrositConstants.DEV_PROSIT_SERVER)
+                ? new FakePrositPredictionClient(string.Empty)
                 : new FakePrositPredictionClient(QUERIES);
 
             if (RecordData)
@@ -1359,20 +1359,11 @@ namespace pwiz.SkylineTestFunctional
             var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             var buildLibrary = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
 
-            RunUI(() => { Assert.IsFalse(buildLibrary.Prosit); });
-
-            // Test dialog that warns you about Prosit not being set up
-            var server = Settings.Default.PrositServer;
-            Settings.Default.PrositServer = null;
-
-            var alert = ShowDialog<AlertDlg>(() => { buildLibrary.Prosit = true; });
-            RunUI(() => alert.ClickYes());
-            var toolOptions = WaitForOpenForm<ToolOptionsUI>();
-            RunUI(() => { toolOptions.PrositServerCombo = server; });
-            WaitForConditionUI(() => toolOptions.PrositServerStatus == ToolOptionsUI.ServerStatus.AVAILABLE);
-            RunUI(() => toolOptions.DialogResult = DialogResult.OK);
-            WaitForClosedForm(toolOptions);
-            WaitForClosedForm(alert);
+            RunUI(() =>
+            {
+                Assert.IsFalse(buildLibrary.Prosit);
+                buildLibrary.Prosit = true;
+            });
 
             RunUI(() =>
             {
@@ -1461,7 +1452,6 @@ namespace pwiz.SkylineTestFunctional
             {
                 // Also set ip, otherwise we will keep getting exceptions about the server not being set,
                 // although we are using the fake test client
-                toolOptions.PrositServerCombo = PrositConstants.DEV_PROSIT_SERVER;
                 toolOptions.PrositIntensityModelCombo = "intensity_2";
                 toolOptions.PrositRetentionTimeModelCombo = "iRT";
                 toolOptions.CECombo = 28;
@@ -1471,7 +1461,6 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => toolOptions.DialogResult = DialogResult.OK);
             WaitForClosedForm(toolOptions);
 
-            Assert.AreEqual(PrositConstants.DEV_PROSIT_SERVER, Settings.Default.PrositServer);
             Assert.AreEqual("intensity_2", Settings.Default.PrositIntensityModel);
             Assert.AreEqual("iRT", Settings.Default.PrositRetentionTimeModel);
             Assert.AreEqual(28, Settings.Default.PrositNCE);
@@ -1933,7 +1922,7 @@ namespace pwiz.SkylineTestFunctional
         private List<PrositQuery> _expectedQueries;
 
         public FakePrositPredictionClient(string server) :
-            base(server)
+            base(PrositConfig.GetPrositConfig())
         {
             QueryIndex = 0;
         }
