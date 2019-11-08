@@ -741,6 +741,10 @@ namespace pwiz.Skyline.SettingsUI
             RetentionTime = rt;
         }
 
+        public MeasuredPeptide(MeasuredPeptide other) : this(other.Target, other.RetentionTime)
+        {
+        }
+
         public Target Target { get; set; }
         public double RetentionTime { get; set; }
         public string Sequence { get { return Target == null ? string.Empty : Target.ToSerializableString(); } }
