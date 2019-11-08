@@ -769,6 +769,22 @@ namespace pwiz.Skyline
                 c.Refinement.NormalizationMethod = AreaCVNormalizationMethod.ratio;
                 c.RefinementCvLabelTypeName = p.Value;
             }) { WrapValue = true };
+        public static readonly Argument ARG_REFINE_CV_TRANSITIONS = new RefineArgument(@"refine-cv-transitions",
+            new[] { AreaCVTransitions.all.ToString(), AreaCVTransitions.best.ToString() },
+            (c, p) =>
+            {
+                c.Refinement.Transitions = (AreaCVTransitions)Enum.Parse(typeof(AreaCVTransitions), p.Value, false);
+                c.Refinement.CountTransitions = -1;
+            });
+        public static readonly Argument ARG_REFINE_CV_TRANSITIONS_COUNT = new RefineArgument(@"refine-cv-transitions-count", INT_VALUE,
+            (c, p) =>
+            {
+                c.Refinement.Transitions = AreaCVTransitions.count;
+                c.Refinement.CountTransitions = p.ValueInt;
+            });
+        public static readonly Argument ARG_REFINE_CV_MS_LEVEL = new RefineArgument(@"refine-cv-ms-level",
+            Helpers.GetEnumValues<AreaCVMsLevel>().Select(e => e.ToString()).ToArray(),
+            (c, p) => c.Refinement.MSLevel = (AreaCVMsLevel) Enum.Parse(typeof(AreaCVMsLevel), p.Value, true));
         public static readonly Argument ARG_REFINE_QVALUE_CUTOFF = new RefineArgument(@"refine-qvalue-cutoff", NUM_VALUE,
             (c, p) => c.Refinement.QValueCutoff = p.ValueDouble);
         public static readonly Argument ARG_REFINE_MINIMUM_DETECTIONS = new RefineArgument(@"refine-minimum-detections", INT_VALUE,
@@ -789,6 +805,7 @@ namespace pwiz.Skyline
             ARG_REFINE_MIN_TIME_CORRELATION, ARG_REFINE_MIN_DOTP, ARG_REFINE_MIN_IDOTP,
             ARG_REFINE_USE_BEST_RESULT,
             ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF, ARG_REFINE_CV_GLOBAL_NORMALIZE, ARG_REFINE_CV_REFERENCE_NORMALIZE,
+            ARG_REFINE_CV_TRANSITIONS, ARG_REFINE_CV_TRANSITIONS_COUNT, ARG_REFINE_CV_MS_LEVEL,
             ARG_REFINE_QVALUE_CUTOFF, ARG_REFINE_MINIMUM_DETECTIONS);
         
 

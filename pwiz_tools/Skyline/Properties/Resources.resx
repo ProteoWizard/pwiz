@@ -10724,6 +10724,18 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="IrtDb_MakeDocumentXml_iRT_standards" xml:space="preserve">
     <value>iRT standards</value>
   </data>
+  <data name="RefineDlg_RefineDlg_all" xml:space="preserve">
+    <value>all</value>
+  </data>
+  <data name="RefineDlg_RefineDlg_best" xml:space="preserve">
+    <value>best</value>
+  </data>
+  <data name="RefineDlg_RefineDlg_Precursors" xml:space="preserve">
+    <value>Precursors</value>
+  </data>
+  <data name="RefineDlg_RefineDlg_Products" xml:space="preserve">
+    <value>Products</value>
+  </data>
   <data name="CommandLine_CreateUntrainedScoringModel_Error__Excluding_feature_scores_is_not_permitted_with_the_default_Skyline_model_" xml:space="preserve">
     <value>Error: Excluding feature scores is not permitted with the default Skyline model.</value>
   </data>

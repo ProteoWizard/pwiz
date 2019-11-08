@@ -829,6 +829,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The MS level used in the CV calculations. Defaults to &quot;products&quot; which will usually have lower CVs than precursors in methods like PRM and DIA..
+        /// </summary>
+        internal static string _refine_cv_ms_level {
+            get {
+                return ResourceManager.GetString("_refine_cv_ms_level", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Areas used in CV calculations are normalized to a reference type, e.g. &quot;heavy&quot;..
         /// </summary>
         internal static string _refine_cv_reference_normalize {
@@ -843,6 +852,24 @@ namespace pwiz.Skyline {
         internal static string _refine_cv_remove_above_cutoff {
             get {
                 return ResourceManager.GetString("_refine_cv_remove_above_cutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specifies the transitions for which peak areas are summed and used in CV calculations for CV refinement. (either all or a single best transition).
+        /// </summary>
+        internal static string _refine_cv_transitions {
+            get {
+                return ResourceManager.GetString("_refine_cv_transitions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specifies the count of transitions selected by library transition rank (isotopes for precursors and library for fragments) for which peak areas are summed and used in CV calculations for CV refinement..
+        /// </summary>
+        internal static string _refine_cv_transitions_count {
+            get {
+                return ResourceManager.GetString("_refine_cv_transitions_count", resourceCulture);
             }
         }
         
