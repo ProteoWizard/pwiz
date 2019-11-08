@@ -26,7 +26,6 @@ using Google.Protobuf.Collections;
 using Grpc.Core;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;

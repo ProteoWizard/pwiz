@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Xml.Serialization;
 using Grpc.Core;
 
@@ -56,9 +58,13 @@ namespace pwiz.Skyline.Model.Prosit.Config
         /// </summary>
         public static PrositConfig GetPrositConfig()
         {
-            using (var stream =
-                typeof(PrositConfig).Assembly.GetManifestResourceStream(typeof(PrositConfig), "PrositConfig.xml"))
+            using (var stream = typeof(PrositConfig).Assembly
+                .GetManifestResourceStream(typeof(PrositConfig), "PrositConfig.xml"))
             {
+                if (stream == null)
+                {
+                    throw new InvalidOperationException(@"Unable to read PrositConfig.xml");
+                }
                 var xmlSerializer = new XmlSerializer(typeof(PrositConfig));
                 return (PrositConfig) xmlSerializer.Deserialize(stream);
             }
