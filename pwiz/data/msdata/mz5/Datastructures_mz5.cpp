@@ -2010,14 +2010,14 @@ void DataProcessingMZ5::read(
 }
 
 PrecursorMZ5::PrecursorMZ5() :
-    externalSpectrumId(emptyString()), activation(), isolationWindow(),
+    externalSpectrumId(emptyString()), paramList(), activation(), isolationWindow(),
             selectedIonList(), spectrumRefID(), sourceFileRefID()
 {
 }
 
 PrecursorMZ5::PrecursorMZ5(const PrecursorMZ5& precursor)
 {
-    init(precursor.activation, precursor.isolationWindow,
+    init(precursor.paramList, precursor.activation, precursor.isolationWindow,
             precursor.selectedIonList, precursor.spectrumRefID,
             precursor.sourceFileRefID, precursor.externalSpectrumId);
 }
@@ -2025,6 +2025,9 @@ PrecursorMZ5::PrecursorMZ5(const PrecursorMZ5& precursor)
 PrecursorMZ5::PrecursorMZ5(const pwiz::msdata::Precursor& precursor,
         const ReferenceWrite_mz5& wref)
 {
+    ParamListMZ5 params(precursor.cvParams,
+            precursor.userParams,
+            precursor.paramGroupPtrs, wref);
     ParamListMZ5 activation(precursor.activation.cvParams,
             precursor.activation.userParams,
             precursor.activation.paramGroupPtrs, wref);
@@ -2044,7 +2047,7 @@ PrecursorMZ5::PrecursorMZ5(const pwiz::msdata::Precursor& precursor,
         RefMZ5 tmp(*precursor.sourceFilePtr.get(), wref);
         refSourceFile = tmp;
     }
-    init(activation, isolation, selectedIons, refspectrum, refSourceFile,
+    init(params, activation, isolation, selectedIons, refspectrum, refSourceFile,
             precursor.externalSpectrumID.c_str());
 }
 
@@ -2053,7 +2056,7 @@ PrecursorMZ5& PrecursorMZ5::operator=(const PrecursorMZ5& rhs)
     if (this != &rhs)
     {
         delete[] externalSpectrumId;
-        init(rhs.activation, rhs.isolationWindow, rhs.selectedIonList,
+        init(rhs.paramList, rhs.activation, rhs.isolationWindow, rhs.selectedIonList,
                 rhs.spectrumRefID, rhs.sourceFileRefID, rhs.externalSpectrumId);
     }
     return *this;
@@ -2064,11 +2067,13 @@ PrecursorMZ5::~PrecursorMZ5()
     delete[] externalSpectrumId;
 }
 
-void PrecursorMZ5::init(const ParamListMZ5& activation,
+void PrecursorMZ5::init(const ParamListMZ5& params,
+       const ParamListMZ5& activation,
         const ParamListMZ5& isolationWindow,
         const ParamListsMZ5 selectedIonList, const RefMZ5& refSpectrum,
         const RefMZ5& refSourceFile, const char* externalSpectrumId)
 {
+    this->paramList = params;
     this->activation = activation;
     this->isolationWindow = isolationWindow;
     this->selectedIonList = selectedIonList;
@@ -2080,6 +2085,8 @@ void PrecursorMZ5::init(const ParamListMZ5& activation,
 void PrecursorMZ5::fillPrecursor(pwiz::msdata::Precursor& p,
         const ReferenceRead_mz5& rref)
 {
+    this->paramList.fillParamContainer(
+            dynamic_cast<pwiz::msdata::ParamContainer&> (p), rref);
     this->activation.fillParamContainer(
             dynamic_cast<pwiz::msdata::ParamContainer&> (p.activation), rref);
     this->isolationWindow.fillParamContainer(
@@ -2116,6 +2123,8 @@ CompType PrecursorMZ5::getType()
     size_t offset = 0;
     ret.insertMember("externalSpectrumId", offset, stringtype);
     offset += stringtype.getSize();
+    ret.insertMember("params", offset, ParamListMZ5::getType());
+    offset += ParamListMZ5::getType().getSize();
     ret.insertMember("activation", offset, ParamListMZ5::getType());
     offset += ParamListMZ5::getType().getSize();
     ret.insertMember("isolationWindow", offset, ParamListMZ5::getType());

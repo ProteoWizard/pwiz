@@ -249,6 +249,10 @@ class SpectrumList_MGF_Filter : public SpectrumListWrapper
             }
         }
 
+        // MGF only supports 1 precursor
+        if (result->precursors.size() > 1)
+            result->precursors.resize(1);
+
         return result;
     }
 };

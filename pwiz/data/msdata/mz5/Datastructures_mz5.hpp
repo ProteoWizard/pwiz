@@ -601,6 +601,7 @@ struct DataProcessingMZ5
 struct PrecursorMZ5
 {
     char* externalSpectrumId;
+    ParamListMZ5 paramList;
     ParamListMZ5 activation;
     ParamListMZ5 isolationWindow;
     ParamListsMZ5 selectedIonList;
@@ -612,7 +613,8 @@ struct PrecursorMZ5
                     const ReferenceWrite_mz5& wref);
     PrecursorMZ5& operator=(const PrecursorMZ5&);
     ~PrecursorMZ5();
-    void init(const ParamListMZ5& activation,
+    void init(const ParamListMZ5& params,
+            const ParamListMZ5& activation,
             const ParamListMZ5& isolationWindow,
             const ParamListsMZ5 selectedIonList, const RefMZ5& refSpectrum,
             const RefMZ5& refSourceFile, const char* externalSpectrumId);
