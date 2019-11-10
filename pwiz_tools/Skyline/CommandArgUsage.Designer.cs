@@ -664,6 +664,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Resolving power of ion mobility dimension used to filter around ion mobility values from the spectral libraries..
+        /// </summary>
+        internal static string _ims_library_res {
+            get {
+                return ResourceManager.GetString("_ims_library_res", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Open a Skyline file.
         /// </summary>
         internal static string _in {

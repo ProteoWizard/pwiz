@@ -1127,13 +1127,16 @@ namespace pwiz.Skyline
             (c, p) => c.FullScanProductResMz = p.ValueDouble) { WrapValue = true };
         public static readonly Argument ARG_FULL_SCAN_RT_FILTER_TOLERANCE = new DocArgument(@"full-scan-rt-filter-tolerance", MINUTES_VALUE,
             (c, p) => c.FullScanRetentionTimeFilterLength = p.ValueDouble) { WrapValue = true };
+        public static readonly Argument ARG_IMS_LIBRARY_RES = new DocArgument(@"ims-library-res", RP_VALUE,
+                (c, p) => c.IonMobilityLibraryRes = p.ValueDouble)
+            { WrapValue = true };
 
         private static readonly ArgumentGroup GROUP_SETTINGS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_SETTINGS_Document_Settings, false,
             ARG_TRAN_PRECURSOR_ION_CHARGES, ARG_TRAN_FRAGMENT_ION_CHARGES, ARG_TRAN_FRAGMENT_ION_TYPES,
             ARG_TRAN_PREDICT_CE, ARG_TRAN_PREDICT_DP, ARG_TRAN_PREDICT_COV, ARG_TRAN_PREDICT_OPTDB,
             ARG_FULL_SCAN_PRECURSOR_RES, ARG_FULL_SCAN_PRECURSOR_RES_MZ,
             ARG_FULL_SCAN_PRODUCT_RES, ARG_FULL_SCAN_PRODUCT_RES_MZ,
-            ARG_FULL_SCAN_RT_FILTER_TOLERANCE)
+            ARG_FULL_SCAN_RT_FILTER_TOLERANCE, ARG_IMS_LIBRARY_RES)
         {            
             LeftColumnWidth = 34,
             Dependencies =
@@ -1206,7 +1209,7 @@ namespace pwiz.Skyline
         public double? FullScanProductResMz { get; private set; }
         public double? FullScanRetentionTimeFilterLength { get; private set; }
 
-        public bool FullScanSetting
+        public bool FullScanSettings
         {
             get
             {
@@ -1216,6 +1219,13 @@ namespace pwiz.Skyline
                         ?? FullScanProductResMz
                         ?? FullScanRetentionTimeFilterLength).HasValue;
             }
+        }
+
+        public double? IonMobilityLibraryRes { get; private set; }
+
+        public bool ImsSettings
+        {
+            get { return IonMobilityLibraryRes.HasValue; }
         }
 
         // For importing a tool from a zip file.

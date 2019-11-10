@@ -6243,6 +6243,36 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Changing ion mobility spectral library resolving power to {0}..
+        /// </summary>
+        public static string CommandLine_SetImsSettings_Changing_ion_mobility_spectral_library_resolving_power_to__0__ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetImsSettings_Changing_ion_mobility_spectral_library_resolving_power" +
+                        "_to__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enabling extraction based on spectral library ion mobility values..
+        /// </summary>
+        public static string CommandLine_SetImsSettings_Enabling_extraction_based_on_spectral_library_ion_mobility_values_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetImsSettings_Enabling_extraction_based_on_spectral_library_ion_mobi" +
+                        "lity_values_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Failed attempting to change the ion mobility settings..
+        /// </summary>
+        public static string CommandLine_SetImsSettings_Error__Failed_attempting_to_change_the_ion_mobility_settings_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetImsSettings_Error__Failed_attempting_to_change_the_ion_mobility_se" +
+                        "ttings_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: Cannot set library name without path..
         /// </summary>
         public static string CommandLine_SetLibrary_Error__Cannot_set_library_name_without_path_ {
