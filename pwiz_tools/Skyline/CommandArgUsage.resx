@@ -781,4 +781,7 @@ greater peak area.</value>
   <data name="CommandArgs_NUM_LIST_VALUE" xml:space="preserve">
     <value>&lt;number list&gt;</value>
   </data>
+  <data name="_ims_library_res" xml:space="preserve">
+    <value>Resolving power of ion mobility dimension used to filter around ion mobility values from the spectral libraries.</value>
+  </data>
 </root>
