@@ -2083,10 +2083,10 @@ void PrecursorMZ5::init(const ParamListMZ5& params,
 }
 
 void PrecursorMZ5::fillPrecursor(pwiz::msdata::Precursor& p,
-        const ReferenceRead_mz5& rref)
+        const ReferenceRead_mz5& rref, const Connection_mz5& conn)
 {
-    this->paramList.fillParamContainer(
-            dynamic_cast<pwiz::msdata::ParamContainer&> (p), rref);
+    if (conn.getFileInformation().minorVersion >= 10)
+        this->paramList.fillParamContainer(dynamic_cast<pwiz::msdata::ParamContainer&> (p), rref);
     this->activation.fillParamContainer(
             dynamic_cast<pwiz::msdata::ParamContainer&> (p.activation), rref);
     this->isolationWindow.fillParamContainer(
@@ -2124,7 +2124,7 @@ CompType PrecursorMZ5::getType()
     ret.insertMember("externalSpectrumId", offset, stringtype);
     offset += stringtype.getSize();
     ret.insertMember("params", offset, ParamListMZ5::getType());
-    offset += ParamListMZ5::getType().getSize();
+    offset += sizeof(ParamListMZ5Data);
     ret.insertMember("activation", offset, ParamListMZ5::getType());
     offset += ParamListMZ5::getType().getSize();
     ret.insertMember("isolationWindow", offset, ParamListMZ5::getType());
@@ -2191,13 +2191,13 @@ void PrecursorListMZ5::init(const PrecursorMZ5* list, const size_t len)
 }
 
 void PrecursorListMZ5::fill(std::vector<pwiz::msdata::Precursor>& l,
-        const ReferenceRead_mz5& rref)
+        const ReferenceRead_mz5& rref, const Connection_mz5& conn)
 {
     l.reserve(static_cast<hsize_t> (len));
     for (unsigned long i = 0; i < len; ++i)
     {
         pwiz::msdata::Precursor p;
-        list[i].fillPrecursor(p, rref);
+        list[i].fillPrecursor(p, rref, conn);
         l.push_back(p);
     }
 }
@@ -2271,7 +2271,7 @@ void ChromatogramMZ5::init(const ParamListMZ5& params,
 }
 
 pwiz::msdata::Chromatogram* ChromatogramMZ5::getChromatogram(
-        const ReferenceRead_mz5& rref)
+        const ReferenceRead_mz5& rref, const Connection_mz5& conn)
 {
     pwiz::msdata::Chromatogram* c = new pwiz::msdata::Chromatogram();
     std::string sid(id);
@@ -2292,7 +2292,7 @@ pwiz::msdata::Chromatogram* ChromatogramMZ5::getChromatogram(
     } catch (std::out_of_range&)
     {
     }
-    this->precursor.fillPrecursor(c->precursor, rref);
+    this->precursor.fillPrecursor(c->precursor, rref, conn);
     this->productIsolationWindow.fillParamContainer(
             dynamic_cast<pwiz::msdata::ParamContainer&> (c->product.isolationWindow),
             rref);
@@ -2410,7 +2410,7 @@ void SpectrumMZ5::init(const ParamListMZ5& params, const ScansMZ5& scanList,
     this->spotID = strcpyi(spotID);
 }
 
-pwiz::msdata::Spectrum* SpectrumMZ5::getSpectrum(const ReferenceRead_mz5& rref)
+pwiz::msdata::Spectrum* SpectrumMZ5::getSpectrum(const ReferenceRead_mz5& rref, const Connection_mz5& conn)
 {
     pwiz::msdata::Spectrum* s = new pwiz::msdata::Spectrum();
     std::string sid = id;
@@ -2446,7 +2446,7 @@ pwiz::msdata::Spectrum* SpectrumMZ5::getSpectrum(const ReferenceRead_mz5& rref)
 
     this->paramList.fillParamContainer(
             dynamic_cast<pwiz::msdata::ParamContainer&> (*s), rref);
-    this->precursorList.fill(s->precursors, rref);
+    this->precursorList.fill(s->precursors, rref, conn);
     this->productList.fill(s->products, rref);
     this->scanList.fill(s->scanList, rref);
 
