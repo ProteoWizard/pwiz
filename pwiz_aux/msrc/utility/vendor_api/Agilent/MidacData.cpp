@@ -91,8 +91,9 @@ struct FrameImpl : public Frame
     virtual DriftScanPtr getScan(int driftBinIndex) const;
     virtual DriftScanPtr getTotalScan() const;
 
-    virtual void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities, bool ignoreZeroIntensityPoints) const;
-    virtual size_t getCombinedSpectrumDataSize() const;
+    virtual void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities,
+                                         bool ignoreZeroIntensityPoints, const std::vector<pwiz::chemistry::MzMobilityWindow>& mzMobilityFilter) const;
+    virtual size_t getCombinedSpectrumDataSize(bool ignoreZeroIntensityPoints, const std::vector<pwiz::chemistry::MzMobilityWindow>& mzMobilityFilter) const;
 
     private:
     int frameIndex_;
@@ -470,7 +471,8 @@ DriftScanPtr FrameImpl::getTotalScan() const
     CATCH_AND_FORWARD
 }
 
-void FrameImpl::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities, bool ignoreZeroIntensityPoints) const
+void FrameImpl::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities,
+                                        bool ignoreZeroIntensityPoints, const std::vector<pwiz::chemistry::MzMobilityWindow>& mzMobilityFilter) const
 {
     try
     {
@@ -484,11 +486,34 @@ void FrameImpl::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz
 
         MIDAC::IMidacSpecDataMs^ specData = (MIDAC::IMidacSpecDataMs^) specData_;
 
+        vector<short> driftBinsFiltered;
         int expectedNonZeroPoints = 0;
-        for (size_t i = 0; i < nonEmptyDriftBins.size(); ++i)
+
+        if (mzMobilityFilter.empty())
         {
-            imsReader_->FrameMs(frameIndex_ + 1, nonEmptyDriftBins[i], MIDAC::MidacSpecFormat::Metadata, true, (MIDAC::IMidacSpecDataMs^%) specData);
-            expectedNonZeroPoints += specData->NonZeroPoints;
+            driftBinsFiltered = nonEmptyDriftBins;
+            for (size_t i = 0; i < nonEmptyDriftBins.size(); ++i)
+            {
+                imsReader_->FrameMs(frameIndex_ + 1, nonEmptyDriftBins[i], MIDAC::MidacSpecFormat::Metadata, true, (MIDAC::IMidacSpecDataMs^%) specData);
+                expectedNonZeroPoints += specData->NonZeroPoints;
+            }
+        }
+        else
+        {
+            driftBinsFiltered.reserve(nonEmptyDriftBins.size());
+
+            for (size_t i = 0; i < nonEmptyDriftBins.size(); ++i)
+            {
+                imsReader_->FrameMs(frameIndex_ + 1, nonEmptyDriftBins[i], MIDAC::MidacSpecFormat::Metadata, true, (MIDAC::IMidacSpecDataMs^%) specData);
+
+                double driftTime = specData->DriftTimeRanges->Length > 0 ? specData->DriftTimeRanges[0]->Min : 0;
+
+                if (chemistry::MzMobilityWindow::mobilityValueInBounds(mzMobilityFilter, driftTime))
+                {
+                    expectedNonZeroPoints += specData->NonZeroPoints;
+                    driftBinsFiltered.push_back(nonEmptyDriftBins[i]);
+                }
+            }
         }
 
         if (!ignoreZeroIntensityPoints)
@@ -499,11 +524,11 @@ void FrameImpl::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz
         auto mobilityArray = gcnew cli::array<double>(expectedNonZeroPoints);
         int lastNonZeroIndex = 0;
 
-        for (size_t i = 0; i < nonEmptyDriftBins.size(); ++i)
+        for (short driftBin : driftBinsFiltered)
         {
-            imsReader_->FrameMs(frameIndex_ + 1, nonEmptyDriftBins[i], ignoreZeroIntensityPoints ? MIDAC::MidacSpecFormat::ZeroTrimmed : MIDAC::MidacSpecFormat::ZeroBounded, true, (MIDAC::IMidacSpecDataMs^%) specData);
+            imsReader_->FrameMs(frameIndex_ + 1, driftBin, ignoreZeroIntensityPoints ? MIDAC::MidacSpecFormat::ZeroTrimmed : MIDAC::MidacSpecFormat::ZeroBounded, true, (MIDAC::IMidacSpecDataMs^%) specData);
             if (Object::ReferenceEquals(specData, nullptr))
-                throw gcnew System::Exception(ToSystemString("null spectrum returned for frame ") + frameIndex_ + " and drift bin " + nonEmptyDriftBins[i]);
+                throw gcnew System::Exception(ToSystemString("null spectrum returned for frame ") + frameIndex_ + " and drift bin " + driftBin);
 
             double driftTime = specData->DriftTimeRanges->Length > 0 ? specData->DriftTimeRanges[0]->Min : 0;
 
@@ -546,7 +571,7 @@ void FrameImpl::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz
     CATCH_AND_FORWARD
 }
 
-size_t FrameImpl::getCombinedSpectrumDataSize() const
+size_t FrameImpl::getCombinedSpectrumDataSize(bool ignoreZeroIntensityPoints, const std::vector<pwiz::chemistry::MzMobilityWindow>& mzMobilityFilter) const
 {
     try
     {
@@ -557,13 +582,33 @@ size_t FrameImpl::getCombinedSpectrumDataSize() const
 
         MIDAC::IMidacSpecDataMs^ specData = (MIDAC::IMidacSpecDataMs^) specData_;
 
-        int expectedNonZeroPoints = 0;
+        if (ignoreZeroIntensityPoints)
+        {
+            int expectedNonZeroPoints = 0;
+            for (size_t i = 0; i < nonEmptyDriftBins.size(); ++i)
+            {
+                imsReader_->FrameMs(frameIndex_ + 1, nonEmptyDriftBins[i], MIDAC::MidacSpecFormat::Metadata, true, (MIDAC::IMidacSpecDataMs^%) specData);
+                double driftTime = specData->DriftTimeRanges->Length > 0 ? specData->DriftTimeRanges[0]->Min : 0;
+
+                if (chemistry::MzMobilityWindow::mobilityValueInBounds(mzMobilityFilter, driftTime))
+                    expectedNonZeroPoints += specData->NonZeroPoints;
+            }
+            return expectedNonZeroPoints;
+        }
+        
+        int expectedPoints = 0;
         for (size_t i = 0; i < nonEmptyDriftBins.size(); ++i)
         {
             imsReader_->FrameMs(frameIndex_ + 1, nonEmptyDriftBins[i], MIDAC::MidacSpecFormat::Metadata, true, (MIDAC::IMidacSpecDataMs^%) specData);
-            expectedNonZeroPoints += specData->NonZeroPoints;
+            double driftTime = specData->DriftTimeRanges->Length > 0 ? specData->DriftTimeRanges[0]->Min : 0;
+
+            if (chemistry::MzMobilityWindow::mobilityValueInBounds(mzMobilityFilter, driftTime))
+            {
+                imsReader_->FrameMs(frameIndex_ + 1, nonEmptyDriftBins[i], MIDAC::MidacSpecFormat::ZeroBounded, true, (MIDAC::IMidacSpecDataMs^%) specData);
+                expectedPoints += specData->XArray->Length + 1; // add 1 for missing trailing zero
+            }
         }
-        return expectedNonZeroPoints;
+        return expectedPoints;
     }
     CATCH_AND_FORWARD
 }

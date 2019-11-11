@@ -63,6 +63,9 @@ int main(int argc, char* argv[])
 
         config.ignoreZeroIntensityPoints = true;
         pwiz::util::testReader(pwiz::msdata::Reader_Agilent(), testArgs, testAcceptOnly, requireUnicodeSupport, IsIonMobility(), config);
+
+        config.isolationMzAndMobilityFilter.emplace_back(40, 1);
+        pwiz::util::testReader(pwiz::msdata::Reader_Agilent(), testArgs, testAcceptOnly, requireUnicodeSupport, IsIonMobility(), config);
     }
     catch (exception& e)
     {

@@ -266,7 +266,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
                 return result;
 
             auto mobilityArray = boost::make_shared<BinaryDataArray>();
-            getCombinedSpectrumData(ie.function, ie.block, mzArray, intensityArray, mobilityArray->data, config_.ignoreZeroIntensityPoints);
+            getCombinedSpectrumData(ie.function, ie.block, mzArray, intensityArray, mobilityArray->data);
             result->defaultArrayLength = mzArray.size();
 
             result->swapMZIntensityArrays(mzArray, intensityArray, MS_number_of_detector_counts); // Donate mass and intensity buffers to result vectors
@@ -428,13 +428,14 @@ PWIZ_API_DECL pwiz::analysis::Spectrum3DPtr SpectrumList_Waters::spectrum3d(doub
     return result;
 }
 
-PWIZ_API_DECL void SpectrumList_Waters::getCombinedSpectrumData(int function, int block, BinaryData<double>& mz, BinaryData<double>& intensity, BinaryData<double>& driftTime, bool ignoreZeroIntensityPoints) const
+PWIZ_API_DECL void SpectrumList_Waters::getCombinedSpectrumData(int function, int block, BinaryData<double>& mz, BinaryData<double>& intensity, BinaryData<double>& driftTime) const
 {
     MassLynxRawScanReader& cdc = rawdata_->GetCompressedDataClusterForBlock(function, block);
     vector<float>& imsMasses = imsMasses_;
     vector<float>& imsIntensities = imsIntensities_;
 
     int numScansInBlock = rawdata_->Info.GetDriftScanCount(function);
+    const auto& mzMobilityFilter = config_.isolationMzAndMobilityFilter;
 
     // NB: there's currently no way to know how many points the final array will have; PEAKS_IN_SCAN is a useful heuristic with a bit of expansion factored in
     int totalPoints = rawdata_->GetScanStat<int>(function, block, MassLynxScanItem::PEAKS_IN_SCAN) * 1.5;
@@ -447,11 +448,14 @@ PWIZ_API_DECL void SpectrumList_Waters::getCombinedSpectrumData(int function, in
     {
         double dt = rawdata_->GetDriftTime(function, scan);
 
+        if (!chemistry::MzMobilityWindow::mobilityValueInBounds(config_.isolationMzAndMobilityFilter, dt))
+            continue;
+
         cdc.ReadScan(function, block, scan, imsMasses, imsIntensities);
 
         for (int i = 0, end = imsMasses.size(); i < end; ++i)
         {
-            if (ignoreZeroIntensityPoints && imsIntensities[i] == 0)
+            if (config_.ignoreZeroIntensityPoints && imsIntensities[i] == 0)
                 continue;
             if (currentPoints >= totalPoints)
             {

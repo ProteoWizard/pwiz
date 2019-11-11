@@ -365,7 +365,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
             arrayType.units = UO_millisecond;
             mobility->cvParams.emplace_back(arrayType);
 
-            lastFrame_->getCombinedSpectrumData(mzArray, intensityArray, mobility->data, config_.ignoreZeroIntensityPoints);
+            lastFrame_->getCombinedSpectrumData(mzArray, intensityArray, mobility->data, config_.ignoreZeroIntensityPoints, config_.isolationMzAndMobilityFilter);
         }
         else if (doCentroid || xArray.size() < 3)
         {
@@ -459,7 +459,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
     {
         if (isIonMobilityScan && config_.combineIonMobilitySpectra)
         {
-            result->defaultArrayLength = lastFrame_->getCombinedSpectrumDataSize();
+            result->defaultArrayLength = lastFrame_->getCombinedSpectrumDataSize(config_.ignoreZeroIntensityPoints, config_.isolationMzAndMobilityFilter);
         }
         else if (doCentroid || xArray.size() < 3)
         {
