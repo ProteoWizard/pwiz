@@ -727,16 +727,19 @@ void TimsSpectrum::getProfileData(automation_vector<double>& mz, automation_vect
 
 double TimsSpectrum::oneOverK0() const
 {
-    if (HasPasefPrecursorInfo()) // combination mode must be on
-    {
-        vector<double> avgScanNumber(1, GetPasefPrecursorInfo().avgScanNumber);
-        vector<double> avgOneOverK0(1);
-        frame_.timsDataImpl_.tdfStorage_.scanNumToOneOverK0(frame_.frameId_, avgScanNumber, avgOneOverK0);
-        return avgOneOverK0[0];
-    }
-    else if (!isCombinedScans())
+    if (!isCombinedScans())
     {
         return frame_.oneOverK0_[scanBegin_];
+    }
+    else if (HasPasefPrecursorInfo()) // combination mode must be on
+    {
+        double avgScanNumber = GetPasefPrecursorInfo().avgScanNumber;
+        size_t ceilIndex = min(frame_.oneOverK0_.size()-1, (size_t) ceil(avgScanNumber));
+        size_t floorIndex = (size_t) floor(avgScanNumber);
+        double tmp;
+        double fraction = modf(avgScanNumber, &tmp);
+        //cout << scanBegin_ << " " << avgScanNumber << " " << ceilIndex << " " << floorIndex << " " << fraction << " " << frame_.oneOverK0_[floorIndex] << " " << frame_.oneOverK0_[ceilIndex] << endl;
+        return (1-fraction) * frame_.oneOverK0_[floorIndex] + fraction * frame_.oneOverK0_[ceilIndex];
     }
     else
     {
