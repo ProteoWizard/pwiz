@@ -424,14 +424,14 @@ namespace pwiz.Skyline.SettingsUI
             {
                 var status = longWait.PerformWork(GetParent(), 800, monitor =>
                 {
-                    monitor.UpdateProgress(new ProgressStatus().ZoomUntil(100));
+                    monitor.UpdateProgress(new ProgressStatus().ChangePercentComplete(-1));
                     irtProviders = lib.RetentionTimeProvidersIrt.ToArray();
                     if (!irtProviders.Any())
                         irtProviders = lib.RetentionTimeProviders.ToArray();
 
                     if (ReferenceEquals(standard, IrtStandard.CIRT_SHORT))
                     {
-                        var libPeptides = irtProviders.SelectMany(provider => provider.PeptideRetentionTimes).Select(rt => rt.PeptideSequence).Distinct().ToHashSet();
+                        var libPeptides = irtProviders.SelectMany(provider => provider.PeptideRetentionTimes).Select(rt => rt.PeptideSequence).ToHashSet();
                         cirtPeptides = IrtStandard.CIRT.Peptides.Where(pep => libPeptides.Contains(pep.ModifiedTarget)).ToArray();
                     }
                 });
