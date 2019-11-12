@@ -46,6 +46,7 @@ namespace mz5 {
 class ReferenceWrite_mz5;
 class ReferenceRead_mz5;
 class Configuration_mz5;
+class Connection_mz5;
 
 /**
  * CVParam value string size
@@ -601,6 +602,7 @@ struct DataProcessingMZ5
 struct PrecursorMZ5
 {
     char* externalSpectrumId;
+    ParamListMZ5 paramList;
     ParamListMZ5 activation;
     ParamListMZ5 isolationWindow;
     ParamListsMZ5 selectedIonList;
@@ -612,11 +614,12 @@ struct PrecursorMZ5
                     const ReferenceWrite_mz5& wref);
     PrecursorMZ5& operator=(const PrecursorMZ5&);
     ~PrecursorMZ5();
-    void init(const ParamListMZ5& activation,
+    void init(const ParamListMZ5& params,
+            const ParamListMZ5& activation,
             const ParamListMZ5& isolationWindow,
             const ParamListsMZ5 selectedIonList, const RefMZ5& refSpectrum,
             const RefMZ5& refSourceFile, const char* externalSpectrumId);
-    void fillPrecursor(pwiz::msdata::Precursor&, const ReferenceRead_mz5& rref);
+    void fillPrecursor(pwiz::msdata::Precursor&, const ReferenceRead_mz5& rref, const Connection_mz5& conn);
     static H5::CompType getType();
 };
 
@@ -636,7 +639,7 @@ struct PrecursorListMZ5
     ~PrecursorListMZ5();
     void init(const PrecursorMZ5*, const size_t len);
     void fill(std::vector<pwiz::msdata::Precursor>&,
-            const ReferenceRead_mz5& rref);
+            const ReferenceRead_mz5& rref, const Connection_mz5& conn);
     static H5::VarLenType getType();
 };
 
@@ -661,7 +664,7 @@ struct ChromatogramMZ5
             const ParamListMZ5& productIsolationWindow,
             const RefMZ5& refDataProcessing, const unsigned long index,
             const char* id);
-    pwiz::msdata::Chromatogram* getChromatogram(const ReferenceRead_mz5& rref);
+    pwiz::msdata::Chromatogram* getChromatogram(const ReferenceRead_mz5& rref, const Connection_mz5& conn);
     pwiz::msdata::ChromatogramIdentity getChromatogramIdentity();
     static H5::CompType getType();
 };
@@ -749,7 +752,7 @@ struct SpectrumMZ5
             const ParamListsMZ5& productIonIsolationWindows,
             const RefMZ5& refDataProcessing, const RefMZ5& refSourceFile,
             const unsigned long index, const char* id, const char* spotID);
-    pwiz::msdata::Spectrum* getSpectrum(const ReferenceRead_mz5& rref);
+    pwiz::msdata::Spectrum* getSpectrum(const ReferenceRead_mz5& rref, const Connection_mz5& conn);
     pwiz::msdata::SpectrumIdentity getSpectrumIdentity();
     void fillSpectrumIdentity(pwiz::msdata::SpectrumIdentity& si);
     static H5::CompType getType();
