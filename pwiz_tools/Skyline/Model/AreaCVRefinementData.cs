@@ -42,7 +42,6 @@ namespace pwiz.Skyline.Model
             // Avoid using not-MS1 with a document that is only MS1
             if (!ms1 && document.MoleculeTransitions.All(t => t.IsMs1))
                 ms1 = true;
-            var best = settings.Transitions == AreaCVTransitions.best;
             double? qvalueCutoff = null;
             if (ShouldUseQValues(document))
                 qvalueCutoff = _settings.QValueCutoff;
@@ -98,7 +97,14 @@ namespace pwiz.Skyline.Model
 
                                     var chromInfo = t.GetSafeChromInfo(index)
                                         .FirstOrDefault(c => c.OptimizationStep == 0);
-                                    return chromInfo != null && (!best || chromInfo.RankByLevel == 1);
+                                    if (chromInfo == null)
+                                        return false;
+                                    if (_settings.Transitions == AreaCVTransitions.best)
+                                        return chromInfo.RankByLevel == 1;
+                                    if (_settings.Transitions == AreaCVTransitions.all)
+                                        return true;
+
+                                    return chromInfo.RankByLevel <= _settings.CountTransitions;
                                     // ReSharper disable once PossibleNullReferenceException
                                 }).Sum(t => (double) t.GetSafeChromInfo(index).FirstOrDefault(c => c.OptimizationStep == 0).Area);
 
@@ -283,16 +289,17 @@ namespace pwiz.Skyline.Model
 
     public class AreaCVRefinementSettings
     {
-        public AreaCVRefinementSettings(double cvCutoff, double qValueCutoff, int minimumDetections, AreaCVNormalizationMethod normalizationMethod, int ratioIndex)
+        public AreaCVRefinementSettings(double cvCutoff, double qValueCutoff, int minimumDetections, AreaCVNormalizationMethod normalizationMethod, int ratioIndex,
+            AreaCVTransitions transitions, int countTransitions, AreaCVMsLevel msLevel)
         {
             CVCutoff = cvCutoff;
             QValueCutoff = qValueCutoff;
             MinimumDetections = minimumDetections;
             NormalizationMethod = normalizationMethod;
             RatioIndex = ratioIndex;
-            MsLevel = AreaCVMsLevel.products;   // Not MS1 for now
-            Transitions = AreaCVTransitions.all; // All transitions for now
-            Transitions = (AreaCVTransitions) 3;
+            MsLevel = msLevel;
+            Transitions = transitions;
+            CountTransitions = countTransitions;
             Annotation = null;
             Group = null;
         }
@@ -326,6 +333,7 @@ namespace pwiz.Skyline.Model
         public AreaCVNormalizationMethod NormalizationMethod { get; protected set; }
         public AreaCVMsLevel MsLevel { get; protected set; }
         public AreaCVTransitions Transitions { get; protected set; }
+        public int CountTransitions { get; protected set; }
         public int RatioIndex { get; protected set; }
         public string Group { get; protected set; }
         public string Annotation { get; protected set; }

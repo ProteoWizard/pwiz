@@ -196,6 +196,7 @@ void Connection_mz5::readFile()
                 config_.setTranslating(fi[0].deltaMZ && fi[0].translateInten);
             }
         }
+        fileInfo_ = *fi;
         hsize_t dim[1] =
         { static_cast<hsize_t> (dsend) };
         DataSpace dspr(1, dim);
@@ -402,6 +403,11 @@ void Connection_mz5::flush(const Configuration_mz5::MZ5DataSets v)
 const Configuration_mz5& Connection_mz5::getConfiguration()
 {
     return config_;
+}
+
+const FileInformationMZ5& Connection_mz5::getFileInformation() const
+{
+    return fileInfo_;
 }
 
 void Connection_mz5::close()

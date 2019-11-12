@@ -161,7 +161,6 @@
     <Compile Include="InternetAccessTest.cs" />
     <Compile Include="IonMobilityUnitTest.cs" />
     <Compile Include="IpiToUniprotTest.cs" />
-    <Compile Include="IrtPeptidePickerTest.cs" />
     <Compile Include="IsotypeModTest.cs" />
     <Compile Include="LibraryLoadTest.cs" />
     <Compile Include="LibrarySettingsTest.cs" />

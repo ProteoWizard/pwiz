@@ -769,6 +769,22 @@ namespace pwiz.Skyline
                 c.Refinement.NormalizationMethod = AreaCVNormalizationMethod.ratio;
                 c.RefinementCvLabelTypeName = p.Value;
             }) { WrapValue = true };
+        public static readonly Argument ARG_REFINE_CV_TRANSITIONS = new RefineArgument(@"refine-cv-transitions",
+            new[] { AreaCVTransitions.all.ToString(), AreaCVTransitions.best.ToString() },
+            (c, p) =>
+            {
+                c.Refinement.Transitions = (AreaCVTransitions)Enum.Parse(typeof(AreaCVTransitions), p.Value, false);
+                c.Refinement.CountTransitions = -1;
+            });
+        public static readonly Argument ARG_REFINE_CV_TRANSITIONS_COUNT = new RefineArgument(@"refine-cv-transitions-count", INT_VALUE,
+            (c, p) =>
+            {
+                c.Refinement.Transitions = AreaCVTransitions.count;
+                c.Refinement.CountTransitions = p.ValueInt;
+            });
+        public static readonly Argument ARG_REFINE_CV_MS_LEVEL = new RefineArgument(@"refine-cv-ms-level",
+            Helpers.GetEnumValues<AreaCVMsLevel>().Select(e => e.ToString()).ToArray(),
+            (c, p) => c.Refinement.MSLevel = (AreaCVMsLevel) Enum.Parse(typeof(AreaCVMsLevel), p.Value, true));
         public static readonly Argument ARG_REFINE_QVALUE_CUTOFF = new RefineArgument(@"refine-qvalue-cutoff", NUM_VALUE,
             (c, p) => c.Refinement.QValueCutoff = p.ValueDouble);
         public static readonly Argument ARG_REFINE_MINIMUM_DETECTIONS = new RefineArgument(@"refine-minimum-detections", INT_VALUE,
@@ -789,6 +805,7 @@ namespace pwiz.Skyline
             ARG_REFINE_MIN_TIME_CORRELATION, ARG_REFINE_MIN_DOTP, ARG_REFINE_MIN_IDOTP,
             ARG_REFINE_USE_BEST_RESULT,
             ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF, ARG_REFINE_CV_GLOBAL_NORMALIZE, ARG_REFINE_CV_REFERENCE_NORMALIZE,
+            ARG_REFINE_CV_TRANSITIONS, ARG_REFINE_CV_TRANSITIONS_COUNT, ARG_REFINE_CV_MS_LEVEL,
             ARG_REFINE_QVALUE_CUTOFF, ARG_REFINE_MINIMUM_DETECTIONS);
         
 
@@ -1110,13 +1127,16 @@ namespace pwiz.Skyline
             (c, p) => c.FullScanProductResMz = p.ValueDouble) { WrapValue = true };
         public static readonly Argument ARG_FULL_SCAN_RT_FILTER_TOLERANCE = new DocArgument(@"full-scan-rt-filter-tolerance", MINUTES_VALUE,
             (c, p) => c.FullScanRetentionTimeFilterLength = p.ValueDouble) { WrapValue = true };
+        public static readonly Argument ARG_IMS_LIBRARY_RES = new DocArgument(@"ims-library-res", RP_VALUE,
+                (c, p) => c.IonMobilityLibraryRes = p.ValueDouble)
+            { WrapValue = true };
 
         private static readonly ArgumentGroup GROUP_SETTINGS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_SETTINGS_Document_Settings, false,
             ARG_TRAN_PRECURSOR_ION_CHARGES, ARG_TRAN_FRAGMENT_ION_CHARGES, ARG_TRAN_FRAGMENT_ION_TYPES,
             ARG_TRAN_PREDICT_CE, ARG_TRAN_PREDICT_DP, ARG_TRAN_PREDICT_COV, ARG_TRAN_PREDICT_OPTDB,
             ARG_FULL_SCAN_PRECURSOR_RES, ARG_FULL_SCAN_PRECURSOR_RES_MZ,
             ARG_FULL_SCAN_PRODUCT_RES, ARG_FULL_SCAN_PRODUCT_RES_MZ,
-            ARG_FULL_SCAN_RT_FILTER_TOLERANCE)
+            ARG_FULL_SCAN_RT_FILTER_TOLERANCE, ARG_IMS_LIBRARY_RES)
         {            
             LeftColumnWidth = 34,
             Dependencies =
@@ -1189,7 +1209,7 @@ namespace pwiz.Skyline
         public double? FullScanProductResMz { get; private set; }
         public double? FullScanRetentionTimeFilterLength { get; private set; }
 
-        public bool FullScanSetting
+        public bool FullScanSettings
         {
             get
             {
@@ -1199,6 +1219,13 @@ namespace pwiz.Skyline
                         ?? FullScanProductResMz
                         ?? FullScanRetentionTimeFilterLength).HasValue;
             }
+        }
+
+        public double? IonMobilityLibraryRes { get; private set; }
+
+        public bool ImsSettings
+        {
+            get { return IonMobilityLibraryRes.HasValue; }
         }
 
         // For importing a tool from a zip file.

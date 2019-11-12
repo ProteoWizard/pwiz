@@ -35,8 +35,8 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
-            this.label1 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
+            this.labelMinIrt = new System.Windows.Forms.Label();
+            this.labelMaxIrt = new System.Windows.Forms.Label();
             this.textMaxIrt = new System.Windows.Forms.TextBox();
             this.textMinIrt = new System.Windows.Forms.TextBox();
             this.btnOk = new System.Windows.Forms.Button();
@@ -52,16 +52,16 @@
             this.comboRegression = new System.Windows.Forms.ComboBox();
             this.btnGraph = new System.Windows.Forms.Button();
             this.grpLinearEquation = new System.Windows.Forms.GroupBox();
+            this.lblEquation = new System.Windows.Forms.Label();
             this.comboMaxPeptide = new System.Windows.Forms.ComboBox();
-            this.label6 = new System.Windows.Forms.Label();
+            this.labelMaxPeptide = new System.Windows.Forms.Label();
             this.comboMinPeptide = new System.Windows.Forms.ComboBox();
-            this.label5 = new System.Windows.Forms.Label();
+            this.labelMinPeptide = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             this.btnGraphIrts = new System.Windows.Forms.Button();
             this.labelStandardCount = new System.Windows.Forms.Label();
             this.panelPeptides = new System.Windows.Forms.Panel();
-            this.lblEquation = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceStandard)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridViewCalibrate)).BeginInit();
@@ -69,27 +69,27 @@
             this.panelPeptides.SuspendLayout();
             this.SuspendLayout();
             // 
-            // label1
+            // labelMinIrt
             // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
+            resources.ApplyResources(this.labelMinIrt, "labelMinIrt");
+            this.labelMinIrt.Name = "labelMinIrt";
             // 
-            // label2
+            // labelMaxIrt
             // 
-            resources.ApplyResources(this.label2, "label2");
-            this.label2.Name = "label2";
+            resources.ApplyResources(this.labelMaxIrt, "labelMaxIrt");
+            this.labelMaxIrt.Name = "labelMaxIrt";
             // 
             // textMaxIrt
             // 
             resources.ApplyResources(this.textMaxIrt, "textMaxIrt");
             this.textMaxIrt.Name = "textMaxIrt";
-            this.textMaxIrt.TextChanged += new System.EventHandler(this.UpdateControls);
+            this.textMaxIrt.TextChanged += new System.EventHandler(this.UpdateEquation);
             // 
             // textMinIrt
             // 
             resources.ApplyResources(this.textMinIrt, "textMinIrt");
             this.textMinIrt.Name = "textMinIrt";
-            this.textMinIrt.TextChanged += new System.EventHandler(this.UpdateControls);
+            this.textMinIrt.TextChanged += new System.EventHandler(this.UpdateEquation);
             // 
             // btnOk
             // 
@@ -167,7 +167,7 @@
             // 
             // colIrt
             // 
-            this.colIrt.DataPropertyName = "Irt";
+            this.colIrt.DataPropertyName = "IrtDisplay";
             dataGridViewCellStyle3.Format = "N2";
             this.colIrt.DefaultCellStyle = dataGridViewCellStyle3;
             this.colIrt.FillWeight = 78.08542F;
@@ -204,19 +204,24 @@
             // 
             this.grpLinearEquation.Controls.Add(this.lblEquation);
             this.grpLinearEquation.Controls.Add(this.comboMaxPeptide);
-            this.grpLinearEquation.Controls.Add(this.label6);
+            this.grpLinearEquation.Controls.Add(this.labelMaxPeptide);
             this.grpLinearEquation.Controls.Add(this.comboMinPeptide);
-            this.grpLinearEquation.Controls.Add(this.label5);
+            this.grpLinearEquation.Controls.Add(this.labelMinPeptide);
             this.grpLinearEquation.Controls.Add(this.label4);
             this.grpLinearEquation.Controls.Add(this.btnGraph);
             this.grpLinearEquation.Controls.Add(this.comboRegression);
-            this.grpLinearEquation.Controls.Add(this.label1);
+            this.grpLinearEquation.Controls.Add(this.labelMinIrt);
             this.grpLinearEquation.Controls.Add(this.textMinIrt);
             this.grpLinearEquation.Controls.Add(this.textMaxIrt);
-            this.grpLinearEquation.Controls.Add(this.label2);
+            this.grpLinearEquation.Controls.Add(this.labelMaxIrt);
             resources.ApplyResources(this.grpLinearEquation, "grpLinearEquation");
             this.grpLinearEquation.Name = "grpLinearEquation";
             this.grpLinearEquation.TabStop = false;
+            // 
+            // lblEquation
+            // 
+            resources.ApplyResources(this.lblEquation, "lblEquation");
+            this.lblEquation.Name = "lblEquation";
             // 
             // comboMaxPeptide
             // 
@@ -224,12 +229,12 @@
             this.comboMaxPeptide.FormattingEnabled = true;
             resources.ApplyResources(this.comboMaxPeptide, "comboMaxPeptide");
             this.comboMaxPeptide.Name = "comboMaxPeptide";
-            this.comboMaxPeptide.SelectedIndexChanged += new System.EventHandler(this.UpdateControls);
+            this.comboMaxPeptide.SelectedIndexChanged += new System.EventHandler(this.UpdateEquation);
             // 
-            // label6
+            // labelMaxPeptide
             // 
-            resources.ApplyResources(this.label6, "label6");
-            this.label6.Name = "label6";
+            resources.ApplyResources(this.labelMaxPeptide, "labelMaxPeptide");
+            this.labelMaxPeptide.Name = "labelMaxPeptide";
             // 
             // comboMinPeptide
             // 
@@ -237,12 +242,12 @@
             this.comboMinPeptide.FormattingEnabled = true;
             resources.ApplyResources(this.comboMinPeptide, "comboMinPeptide");
             this.comboMinPeptide.Name = "comboMinPeptide";
-            this.comboMinPeptide.SelectedIndexChanged += new System.EventHandler(this.UpdateControls);
+            this.comboMinPeptide.SelectedIndexChanged += new System.EventHandler(this.UpdateEquation);
             // 
-            // label5
+            // labelMinPeptide
             // 
-            resources.ApplyResources(this.label5, "label5");
-            this.label5.Name = "label5";
+            resources.ApplyResources(this.labelMinPeptide, "labelMinPeptide");
+            this.labelMinPeptide.Name = "labelMinPeptide";
             // 
             // label4
             // 
@@ -273,11 +278,6 @@
             this.panelPeptides.Controls.Add(this.labelStandardCount);
             this.panelPeptides.Controls.Add(this.gridViewCalibrate);
             this.panelPeptides.Name = "panelPeptides";
-            // 
-            // lblEquation
-            // 
-            resources.ApplyResources(this.lblEquation, "lblEquation");
-            this.lblEquation.Name = "lblEquation";
             // 
             // CalibrateIrtDlg
             // 
@@ -312,8 +312,8 @@
 
         #endregion
 
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label labelMinIrt;
+        private System.Windows.Forms.Label labelMaxIrt;
         private System.Windows.Forms.TextBox textMaxIrt;
         private System.Windows.Forms.TextBox textMinIrt;
         private pwiz.Skyline.Controls.DataGridViewEx gridViewCalibrate;
@@ -328,9 +328,9 @@
         private System.Windows.Forms.GroupBox grpLinearEquation;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.ComboBox comboMaxPeptide;
-        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.Label labelMaxPeptide;
         private System.Windows.Forms.ComboBox comboMinPeptide;
-        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Label labelMinPeptide;
         private System.Windows.Forms.Label label7;
         private Controls.TargetColumn calibratePeptides;
         private System.Windows.Forms.DataGridViewTextBoxColumn calibrateMeasuredRt;
