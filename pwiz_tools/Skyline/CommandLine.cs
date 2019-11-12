@@ -199,9 +199,15 @@ namespace pwiz.Skyline
                 if (!SetFilterSettings(commandArgs))
                     return false;
             }
-            if (commandArgs.FullScanSetting)
+            if (commandArgs.FullScanSettings)
             {
                 if (!SetFullScanSettings(commandArgs))
+                    return false;
+            }
+
+            if (commandArgs.ImsSettings)
+            {
+                if (!SetImsSettings(commandArgs))
                     return false;
             }
 
@@ -792,6 +798,7 @@ namespace pwiz.Skyline
                         _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_product_resolving_power_to__0__at__1__, res, resMz);
                     else
                         _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_product_resolving_power_to__0__, res);
+
                     ModifyDocument(d => d.ChangeSettings(_doc.Settings.ChangeTransitionFullScan(f =>
                         f.ChangeProductResolution(f.ProductMassAnalyzer, res, resMz ?? f.ProductResMz))), AuditLogEntry.SettingsLogFunction);
                 }
@@ -802,6 +809,7 @@ namespace pwiz.Skyline
                         _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_from_predicted_value_, rtLen);
                     else if (_doc.Settings.TransitionSettings.FullScan.RetentionTimeFilterType == RetentionTimeFilterType.ms2_ids)
                         _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_from_MS_MS_IDs_, rtLen);
+
                     ModifyDocument(d => d.ChangeSettings(_doc.Settings.ChangeTransitionFullScan(f =>
                         f.ChangeRetentionTimeFilter(f.RetentionTimeFilterType, rtLen))), AuditLogEntry.SettingsLogFunction);
                 }
@@ -810,6 +818,40 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Error__Failed_attempting_to_change_the_transiton_full_scan_settings_);
+                _out.WriteLine(x.Message);
+                return false;
+            }
+        }
+
+        private bool SetImsSettings(CommandArgs commandArgs)
+        {
+            try
+            {
+                if (commandArgs.IonMobilityLibraryRes.HasValue)
+                {
+                    if (!_doc.Settings.PeptideSettings.Prediction.UseLibraryIonMobilityValues)
+                        _out.WriteLine(Resources.CommandLine_SetImsSettings_Enabling_extraction_based_on_spectral_library_ion_mobility_values_);
+                    double rp = commandArgs.IonMobilityLibraryRes.Value;
+                    var imsWindowCalcNew = new IonMobilityWindowWidthCalculator(rp);
+                    var imsWindowCalc = _doc.Settings.PeptideSettings.Prediction.LibraryIonMobilityWindowWidthCalculator;
+                    if (!Equals(imsWindowCalc, imsWindowCalcNew))
+                        _out.WriteLine(Resources.CommandLine_SetImsSettings_Changing_ion_mobility_spectral_library_resolving_power_to__0__, rp);
+                    ModifyDocument(d => d.ChangeSettings(d.Settings.ChangePeptidePrediction(p =>
+                        {
+                            var result = p;
+                            if (!result.UseLibraryIonMobilityValues)
+                                result = result.ChangeUseLibraryIonMobilityValues(true);
+                            if (!Equals(result.LibraryIonMobilityWindowWidthCalculator, imsWindowCalcNew))
+                                result = result.ChangeLibraryDriftTimesWindowWidthCalculator(imsWindowCalcNew);
+                            return result;
+                        })),
+                        AuditLogEntry.SettingsLogFunction);
+                }
+                return true;
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine(Resources.CommandLine_SetImsSettings_Error__Failed_attempting_to_change_the_ion_mobility_settings_);
                 _out.WriteLine(x.Message);
                 return false;
             }

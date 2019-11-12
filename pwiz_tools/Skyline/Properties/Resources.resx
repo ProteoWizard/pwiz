@@ -10724,6 +10724,18 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="IrtDb_MakeDocumentXml_iRT_standards" xml:space="preserve">
     <value>iRT standards</value>
   </data>
+  <data name="RefineDlg_RefineDlg_all" xml:space="preserve">
+    <value>all</value>
+  </data>
+  <data name="RefineDlg_RefineDlg_best" xml:space="preserve">
+    <value>best</value>
+  </data>
+  <data name="RefineDlg_RefineDlg_Precursors" xml:space="preserve">
+    <value>Precursors</value>
+  </data>
+  <data name="RefineDlg_RefineDlg_Products" xml:space="preserve">
+    <value>Products</value>
+  </data>
   <data name="CommandLine_CreateUntrainedScoringModel_Error__Excluding_feature_scores_is_not_permitted_with_the_default_Skyline_model_" xml:space="preserve">
     <value>Error: Excluding feature scores is not permitted with the default Skyline model.</value>
   </data>
@@ -10774,5 +10786,14 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="CalibrateIrtDlg_UseResults_The_document_contains_results_for__0__peptides_not_in_this_standard__but_using_fewer_than__1__standard_peptides_is_not_recommended__Are_you_sure_you_want_to_continue_" xml:space="preserve">
     <value>The document contains results for {0} peptides not in this standard, but using fewer than {1} standard peptides is not recommended. Are you sure you want to continue?</value>
+  </data>
+  <data name="CommandLine_SetImsSettings_Enabling_extraction_based_on_spectral_library_ion_mobility_values_" xml:space="preserve">
+    <value>Enabling extraction based on spectral library ion mobility values.</value>
+  </data>
+  <data name="CommandLine_SetImsSettings_Changing_ion_mobility_spectral_library_resolving_power_to__0__" xml:space="preserve">
+    <value>Changing ion mobility spectral library resolving power to {0}.</value>
+  </data>
+  <data name="CommandLine_SetImsSettings_Error__Failed_attempting_to_change_the_ion_mobility_settings_" xml:space="preserve">
+    <value>Error: Failed attempting to change the ion mobility settings.</value>
   </data>
 </root>

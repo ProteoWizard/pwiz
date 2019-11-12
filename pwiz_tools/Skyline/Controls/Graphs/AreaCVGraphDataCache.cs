@@ -134,7 +134,8 @@ namespace pwiz.Skyline.Controls.Graphs
                             properties.MinimumDetections,
                             settings.BinWidth,
                             settings.MsLevel,
-                            settings.Transitions), _tokenSource.Token);
+                            settings.Transitions,
+                            settings.CountTransitions), _tokenSource.Token);
 
                     lock (_cacheInfo)
                     {
