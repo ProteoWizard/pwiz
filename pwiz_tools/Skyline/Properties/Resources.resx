@@ -10724,7 +10724,6 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="IrtDb_MakeDocumentXml_iRT_standards" xml:space="preserve">
     <value>iRT standards</value>
   </data>
-<<<<<<< HEAD
   <data name="DisplayModificationOption_NOT_SHOWN_Not_Shown" xml:space="preserve">
     <value>Not Shown</value>
   </data>
@@ -10739,7 +10738,7 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="DisplayModificationOption_UNIMOD_ID_Unimod_ID" xml:space="preserve">
     <value>Unimod ID</value>
-=======
+  </data>
   <data name="RefineDlg_RefineDlg_all" xml:space="preserve">
     <value>all</value>
   </data>
