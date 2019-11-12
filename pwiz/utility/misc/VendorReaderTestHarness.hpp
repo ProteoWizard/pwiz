@@ -50,6 +50,7 @@ struct PWIZ_API_DECL ReaderTestConfig : public pwiz::msdata::Reader::Config
     bool peakPicking; // test vendor centroiding
     int thresholdCount; // test that downstream mutating filters don't conflict with any vendor reader implementation details
     bool doublePrecision; // true if vendor data needs 64-bit precision (like Bruker TDF)
+    boost::optional<double> diffPrecision; // override default Diff::BaseDiffConfig::precision
     boost::optional<std::pair<int, int>> indexRange;
 };
 
