@@ -42,6 +42,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static int HISTOGRAM_DATA_START = 0;
         private static int HISTOGRAM2D_DATA_START = 8;
+        private static int HISTOGRAM_HEAVY_START = 16;
 
         private static readonly AreaCVGraphDataStatistics[] STATS =
         {
@@ -61,6 +62,8 @@ namespace pwiz.SkylineTestFunctional
             new AreaCVGraphDataStatistics(104, 104, 3.6500000000000004, 7.95, 124, 1.5, 0, 4, 0.0910411123260385, 0.13629032258064522, 0.83064516129032262),
             new AreaCVGraphDataStatistics(116, 116, 3.6500000000000004, 7.9, 124, 1.56, 0, 2, 0.16285824088051082, 0.19709677419354832, 0.70967741935483875),
             new AreaCVGraphDataStatistics(111, 111, 3.4000000000000004, 7.7, 124, 1.56, 0.02, 3, 0.1766911536848243, 0.20919354838709681, 0.64516129032258063),
+            new AreaCVGraphDataStatistics(31, 31, 0, 0, 58, 0.91, 0.32, 5, 0.49278393482158084, 0.51948275862068971, 0),
+            new AreaCVGraphDataStatistics(10, 10, 0, 0, 29, 0.15, 0, 7, 0.05964059360481419, 0.056206896551724145, 1),
         };
 
         private static readonly string[] HISTOGRAM_FINDRESULTS = 
@@ -129,7 +132,6 @@ namespace pwiz.SkylineTestFunctional
         {
             OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky"));
             
-
             // Add a bunch of unmeasured precursors and transitions which should not impact the statistics
             // This once caused the CV graphs to fail to complete calculating
             AddUnmeasuredElements();
@@ -140,6 +142,9 @@ namespace pwiz.SkylineTestFunctional
 
             OpenDocument(TestFilesDir.GetTestPath(@"iPRG 2015 Study mini.sky"));
             TestRefinementTransitions();
+
+            OpenDocument(TestFilesDir.GetTestPath(@"PRM_technical_variability_tocheck.sky"));
+            TestNormalizeToHeavyHistogram();
 
             if (RecordData)
             {
@@ -184,16 +189,7 @@ namespace pwiz.SkylineTestFunctional
 
             WaitForGraphs();
 
-            // Reset settings
-            RunUI(() =>
-            {
-                SkylineWindow.SetAreaCVBinWidth(1.0);
-                SkylineWindow.SetAreaCVPointsType(PointsTypePeakArea.targets);
-                SkylineWindow.SetAreaCVGroup(null);
-                SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.none);
-            });
-
-            WaitForGraphs();
+            ResetHistogramSettings();
 
             var graph = SkylineWindow.GraphPeakArea;
             var toolbar = graph.Toolbar as AreaCVToolbar;
@@ -341,6 +337,36 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.medians);
                 SkylineWindow.SetAreaCVTransitions(AreaCVTransitions.all, -1);
             });
+        }
+
+        private static void ResetHistogramSettings()
+        {
+            RunUI(() =>
+            {
+                SkylineWindow.SetAreaCVBinWidth(1.0);
+                SkylineWindow.SetAreaCVPointsType(PointsTypePeakArea.targets);
+                SkylineWindow.SetAreaCVGroup(null);
+                SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.none);
+            });
+
+            WaitForGraphs();
+        }
+
+        private void TestNormalizeToHeavyHistogram()
+        {
+            RunUI(SkylineWindow.ShowPeakAreaCVHistogram);
+
+            ResetHistogramSettings();
+
+            AreaCVHistogramGraphPane pane;
+            Assert.IsTrue(SkylineWindow.GraphPeakArea.TryGetGraphPane(out pane));
+            Assert.IsInstanceOfType(pane, typeof(IAreaCVHistogramInfo));
+
+            int startIndex = HISTOGRAM_HEAVY_START;
+            AssertDataCorrect(pane, startIndex++);
+
+            RunUI(() => SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.ratio, 0));
+            AssertDataCorrect(pane, startIndex);
         }
 
         private void TestRefinement()
