@@ -1336,6 +1336,108 @@ exceed this threshold.</value>
   <data name="&gt;&gt;tabResults.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="labelTransType.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelTransType.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelTransType.Location" type="System.Drawing.Point, System.Drawing">
+    <value>178, 25</value>
+  </data>
+  <data name="labelTransType.Size" type="System.Drawing.Size, System.Drawing">
+    <value>79, 13</value>
+  </data>
+  <data name="labelTransType.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="labelTransType.Text" xml:space="preserve">
+    <value>&amp;Transition type:</value>
+  </data>
+  <data name="&gt;&gt;labelTransType.Name" xml:space="preserve">
+    <value>labelTransType</value>
+  </data>
+  <data name="&gt;&gt;labelTransType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelTransType.Parent" xml:space="preserve">
+    <value>groupPeakArea</value>
+  </data>
+  <data name="&gt;&gt;labelTransType.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="comboTransType.Location" type="System.Drawing.Point, System.Drawing">
+    <value>181, 41</value>
+  </data>
+  <data name="comboTransType.Size" type="System.Drawing.Size, System.Drawing">
+    <value>98, 21</value>
+  </data>
+  <data name="comboTransType.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;comboTransType.Name" xml:space="preserve">
+    <value>comboTransType</value>
+  </data>
+  <data name="&gt;&gt;comboTransType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboTransType.Parent" xml:space="preserve">
+    <value>groupPeakArea</value>
+  </data>
+  <data name="&gt;&gt;comboTransType.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="labelTransitions.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelTransitions.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelTransitions.Location" type="System.Drawing.Point, System.Drawing">
+    <value>178, 76</value>
+  </data>
+  <data name="labelTransitions.Size" type="System.Drawing.Size, System.Drawing">
+    <value>101, 13</value>
+  </data>
+  <data name="labelTransitions.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="labelTransitions.Text" xml:space="preserve">
+    <value>&amp;Summed transitions:</value>
+  </data>
+  <data name="&gt;&gt;labelTransitions.Name" xml:space="preserve">
+    <value>labelTransitions</value>
+  </data>
+  <data name="&gt;&gt;labelTransitions.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelTransitions.Parent" xml:space="preserve">
+    <value>groupPeakArea</value>
+  </data>
+  <data name="&gt;&gt;labelTransitions.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="comboTransitions.Location" type="System.Drawing.Point, System.Drawing">
+    <value>181, 92</value>
+  </data>
+  <data name="comboTransitions.Size" type="System.Drawing.Size, System.Drawing">
+    <value>98, 21</value>
+  </data>
+  <data name="comboTransitions.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="&gt;&gt;comboTransitions.Name" xml:space="preserve">
+    <value>comboTransitions</value>
+  </data>
+  <data name="&gt;&gt;comboTransitions.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboTransitions.Parent" xml:space="preserve">
+    <value>groupPeakArea</value>
+  </data>
+  <data name="&gt;&gt;comboTransitions.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
   <data name="labelCV.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -1355,7 +1457,7 @@ exceed this threshold.</value>
     <value>0</value>
   </data>
   <data name="labelCV.Text" xml:space="preserve">
-    <value>CV cutoff:</value>
+    <value>C&amp;V cutoff:</value>
   </data>
   <data name="&gt;&gt;labelCV.Name" xml:space="preserve">
     <value>labelCV</value>
@@ -1367,7 +1469,7 @@ exceed this threshold.</value>
     <value>groupPeakArea</value>
   </data>
   <data name="&gt;&gt;labelCV.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>4</value>
   </data>
   <data name="labelPercent.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1400,7 +1502,7 @@ exceed this threshold.</value>
     <value>groupPeakArea</value>
   </data>
   <data name="&gt;&gt;labelPercent.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>5</value>
   </data>
   <data name="textCVCutoff.Location" type="System.Drawing.Point, System.Drawing">
     <value>33, 41</value>
@@ -1424,16 +1526,16 @@ exceed this threshold.</value>
     <value>groupPeakArea</value>
   </data>
   <data name="&gt;&gt;textCVCutoff.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>6</value>
   </data>
   <data name="comboNormalizeTo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>181, 41</value>
+    <value>33, 92</value>
   </data>
   <data name="comboNormalizeTo.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
   </data>
   <data name="comboNormalizeTo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>121, 21</value>
+    <value>98, 21</value>
   </data>
   <data name="comboNormalizeTo.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -1448,7 +1550,7 @@ exceed this threshold.</value>
     <value>groupPeakArea</value>
   </data>
   <data name="&gt;&gt;comboNormalizeTo.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>7</value>
   </data>
   <data name="labelNormalize.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1457,7 +1559,7 @@ exceed this threshold.</value>
     <value>NoControl</value>
   </data>
   <data name="labelNormalize.Location" type="System.Drawing.Point, System.Drawing">
-    <value>177, 25</value>
+    <value>30, 76</value>
   </data>
   <data name="labelNormalize.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
@@ -1469,7 +1571,7 @@ exceed this threshold.</value>
     <value>3</value>
   </data>
   <data name="labelNormalize.Text" xml:space="preserve">
-    <value>Normalize to:</value>
+    <value>&amp;Normalize to:</value>
   </data>
   <data name="&gt;&gt;labelNormalize.Name" xml:space="preserve">
     <value>labelNormalize</value>
@@ -1481,16 +1583,16 @@ exceed this threshold.</value>
     <value>groupPeakArea</value>
   </data>
   <data name="&gt;&gt;labelNormalize.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>8</value>
   </data>
   <data name="groupPeakArea.Location" type="System.Drawing.Point, System.Drawing">
     <value>25, 28</value>
   </data>
   <data name="groupPeakArea.Size" type="System.Drawing.Size, System.Drawing">
-    <value>332, 80</value>
+    <value>332, 141</value>
   </data>
   <data name="groupPeakArea.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>0</value>
   </data>
   <data name="groupPeakArea.Text" xml:space="preserve">
     <value>Peak Areas</value>
@@ -1586,7 +1688,7 @@ exceed this threshold.</value>
     <value>2</value>
   </data>
   <data name="labelDetections.Text" xml:space="preserve">
-    <value>Detected in:
+    <value>&amp;Detected in:
 </value>
   </data>
   <data name="&gt;&gt;labelDetections.Name" xml:space="preserve">
@@ -1620,7 +1722,7 @@ exceed this threshold.</value>
     <value>0</value>
   </data>
   <data name="labelQVal.Text" xml:space="preserve">
-    <value>Q value cutoff:</value>
+    <value>&amp;Q value cutoff:</value>
   </data>
   <data name="&gt;&gt;labelQVal.Name" xml:space="preserve">
     <value>labelQVal</value>
@@ -1662,7 +1764,7 @@ exceed this threshold.</value>
     <value>4</value>
   </data>
   <data name="groupDetection.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 135</value>
+    <value>25, 180</value>
   </data>
   <data name="groupDetection.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1674,7 +1776,7 @@ exceed this threshold.</value>
     <value>332, 80</value>
   </data>
   <data name="groupDetection.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>0</value>
   </data>
   <data name="groupDetection.Text" xml:space="preserve">
     <value>Detection</value>
@@ -1761,7 +1863,7 @@ exceed this threshold.</value>
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=19.1.1.311, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
@@ -1773,6 +1875,6 @@ exceed this threshold.</value>
     <value>RefineDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=19.1.1.311, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

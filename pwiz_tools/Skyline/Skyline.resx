@@ -1322,6 +1322,12 @@
   <data name="areaCVAllTransitionsToolStripMenuItem.Text" xml:space="preserve">
     <value>All</value>
   </data>
+  <data name="areaCVCountTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="areaCVCountTransitionsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Count</value>
+  </data>
   <data name="areaCVBestTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>129, 22</value>
   </data>
@@ -4740,6 +4746,12 @@ first occurrence of any peptide.</value>
     <value>areaCVAllTransitionsToolStripMenuItem</value>
   </data>
   <data name="&gt;&gt;areaCVAllTransitionsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVCountTransitionsToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCVCountTransitionsToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVCountTransitionsToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;areaCVBestTransitionsToolStripMenuItem.Name" xml:space="preserve">

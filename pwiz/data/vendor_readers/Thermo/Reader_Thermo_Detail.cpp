@@ -147,6 +147,43 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(RawFile& rawfile)
         configurations.back().componentList.push_back(Component(MS_PDA, 1));
     }
 
+    if (configurations.empty())
+    {
+        configurations.push_back(InstrumentConfiguration());
+        configurations.back().componentList.push_back(commonSource);
+        CVID analyzerType = CVID_Unknown;
+        CVID detectorType = CVID_Unknown;
+        switch (firstScanInfo->massAnalyzerType())
+        {
+            case MassAnalyzerType_FTICR:
+                analyzerType = MS_FT_ICR;
+                detectorType = MS_inductive_detector;
+                break;
+            case MassAnalyzerType_Orbitrap:
+                analyzerType = MS_orbitrap;
+                detectorType = MS_inductive_detector;
+                break;
+            case MassAnalyzerType_Linear_Ion_Trap:
+                analyzerType = MS_radial_ejection_linear_ion_trap;
+                detectorType = MS_electron_multiplier;
+                break;
+            case MassAnalyzerType_Quadrupole_Ion_Trap:
+                analyzerType = MS_quadrupole_ion_trap;
+                detectorType = MS_electron_multiplier;
+                break;
+            case MassAnalyzerType_Magnetic_Sector:
+                analyzerType = MS_magnetic_sector;
+                detectorType = MS_electron_multiplier;
+                break;
+        }
+
+        if (analyzerType != CVID_Unknown)
+        {
+            configurations.back().componentList.push_back(Component(analyzerType, 2));
+            configurations.back().componentList.push_back(Component(detectorType, 3));
+        }
+    }
+
     return configurations;
 }
 

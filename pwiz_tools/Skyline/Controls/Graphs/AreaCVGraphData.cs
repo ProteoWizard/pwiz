@@ -62,7 +62,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public static readonly AreaCVGraphData INVALID = new AreaCVGraphData(null,
             new AreaCVGraphSettings((GraphTypeSummary) ~0, (AreaCVNormalizationMethod) ~0, -1, string.Empty,
                 string.Empty, (PointsTypePeakArea) ~0, double.NaN, double.NaN, -1, double.NaN, (AreaCVMsLevel) ~0,
-                (AreaCVTransitions) ~0));
+                (AreaCVTransitions) ~0, -1));
 
         private void CalculateStats()
         {
@@ -123,6 +123,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 GraphType = graphType;
                 MsLevel = AreaGraphController.AreaCVMsLevel;
                 Transitions = AreaGraphController.AreaCVTransitions;
+                CountTransitions = AreaGraphController.AreaCVTransitionsCount;
                 NormalizationMethod = AreaGraphController.NormalizationMethod;
                 RatioIndex = AreaGraphController.AreaCVRatioIndex;
                 Group = AreaGraphController.GroupByGroup != null ? string.Copy(AreaGraphController.GroupByGroup) : null;
@@ -135,7 +136,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             public AreaCVGraphSettings(GraphTypeSummary graphType, AreaCVNormalizationMethod normalizationMethod, int ratioIndex, string group, string annotation, PointsTypePeakArea pointsType, double qValueCutoff,
-                double cvCutoff, int minimumDetections, double binwidth, AreaCVMsLevel msLevel, AreaCVTransitions transitions)
+                double cvCutoff, int minimumDetections, double binwidth, AreaCVMsLevel msLevel, AreaCVTransitions transitions, int countTransitions)
             {
                 GraphType = graphType;
                 NormalizationMethod = normalizationMethod;
@@ -149,13 +150,14 @@ namespace pwiz.Skyline.Controls.Graphs
                 BinWidth = binwidth;
                 MsLevel = msLevel;
                 Transitions = transitions;
+                CountTransitions = countTransitions;
             }
 
             public static bool CacheEqual(AreaCVGraphSettings a, AreaCVGraphSettings b)
             {
                 return a.GraphType == b.GraphType && a.Group == b.Group &&
                        a.PointsType == b.PointsType && (a.QValueCutoff == b.QValueCutoff || double.IsNaN(a.QValueCutoff) && double.IsNaN(b.QValueCutoff)) &&
-                       a.CVCutoff == b.CVCutoff && a.BinWidth == b.BinWidth && a.MsLevel == b.MsLevel && a.Transitions == b.Transitions;
+                       a.CVCutoff == b.CVCutoff && a.BinWidth == b.BinWidth && a.MsLevel == b.MsLevel && a.Transitions == b.Transitions && a.CountTransitions == b.CountTransitions;
             }
 
             public override void AddToInternalData(ICollection<InternalData> data, List<AreaInfo> areas,

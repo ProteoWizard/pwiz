@@ -74,6 +74,10 @@
             this.label3 = new System.Windows.Forms.Label();
             this.tabConsistency = new System.Windows.Forms.TabPage();
             this.groupPeakArea = new System.Windows.Forms.GroupBox();
+            this.labelTransType = new System.Windows.Forms.Label();
+            this.comboTransType = new System.Windows.Forms.ComboBox();
+            this.labelTransitions = new System.Windows.Forms.Label();
+            this.comboTransitions = new System.Windows.Forms.ComboBox();
             this.labelCV = new System.Windows.Forms.Label();
             this.labelPercent = new System.Windows.Forms.Label();
             this.textCVCutoff = new System.Windows.Forms.TextBox();
@@ -410,6 +414,10 @@
             // 
             // groupPeakArea
             // 
+            this.groupPeakArea.Controls.Add(this.labelTransType);
+            this.groupPeakArea.Controls.Add(this.comboTransType);
+            this.groupPeakArea.Controls.Add(this.labelTransitions);
+            this.groupPeakArea.Controls.Add(this.comboTransitions);
             this.groupPeakArea.Controls.Add(this.labelCV);
             this.groupPeakArea.Controls.Add(this.labelPercent);
             this.groupPeakArea.Controls.Add(this.textCVCutoff);
@@ -418,6 +426,30 @@
             resources.ApplyResources(this.groupPeakArea, "groupPeakArea");
             this.groupPeakArea.Name = "groupPeakArea";
             this.groupPeakArea.TabStop = false;
+            // 
+            // labelTransType
+            // 
+            resources.ApplyResources(this.labelTransType, "labelTransType");
+            this.labelTransType.Name = "labelTransType";
+            // 
+            // comboTransType
+            // 
+            this.comboTransType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboTransType.FormattingEnabled = true;
+            resources.ApplyResources(this.comboTransType, "comboTransType");
+            this.comboTransType.Name = "comboTransType";
+            // 
+            // labelTransitions
+            // 
+            resources.ApplyResources(this.labelTransitions, "labelTransitions");
+            this.labelTransitions.Name = "labelTransitions";
+            // 
+            // comboTransitions
+            // 
+            this.comboTransitions.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboTransitions.FormattingEnabled = true;
+            resources.ApplyResources(this.comboTransitions, "comboTransitions");
+            this.comboTransitions.Name = "comboTransitions";
             // 
             // labelCV
             // 
@@ -573,5 +605,9 @@
         private System.Windows.Forms.Label labelPercent;
         private System.Windows.Forms.NumericUpDown numericUpDownDetections;
         private System.Windows.Forms.GroupBox groupPeakArea;
+        private System.Windows.Forms.Label labelTransitions;
+        private System.Windows.Forms.ComboBox comboTransitions;
+        private System.Windows.Forms.Label labelTransType;
+        private System.Windows.Forms.ComboBox comboTransType;
     }
 }
