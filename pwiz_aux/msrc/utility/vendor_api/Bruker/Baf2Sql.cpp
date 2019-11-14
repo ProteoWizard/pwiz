@@ -337,15 +337,11 @@ void Baf2SqlSpectrum::handleAllIons() // Deal with all-ions MS1 data by presenti
     }
 }
 
-void Baf2SqlSpectrum::getIsolationData(std::vector<double>& isolatedMZs, std::vector<IsolationMode>& isolationModes) const
+void Baf2SqlSpectrum::getIsolationData(std::vector<IsolationInfo>& isolationInfo) const
 {
-    isolatedMZs.clear();
-    isolationModes.clear();
+    isolationInfo.clear();
     if (precursorMz_.is_initialized())
-    {
-        isolatedMZs.resize(1, precursorMz_.get());
-        isolationModes.resize(1, IsolationMode_On);
-    }
+        isolationInfo.resize(1, IsolationInfo{ precursorMz_.get(), IsolationMode_On, 0 });
 }
 
 void Baf2SqlSpectrum::getFragmentationData(std::vector<double>& fragmentedMZs, std::vector<FragmentationMode>& fragmentationModes) const

@@ -367,6 +367,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
 
                 info.isolationMz = row.get<double>(colIsolationMz);
                 info.isolationWidth = row.get<double>(colIsolationWidth);
+                info.collisionEnergy = row.get<double>(colCE);
                 int windowGroup = row.get<int>(colWindowGroup);
 
                 info.numScans = 1 + scanEnd - scanBegin;
@@ -807,25 +808,23 @@ IntegerSet TimsSpectrum::getMergedScanNumbers() const
 int TimsSpectrum::getMSMSStage() const { return frame_.msLevel_; }
 double TimsSpectrum::getRetentionTime() const { return frame_.rt_; }
 
-void TimsSpectrum::getIsolationData(std::vector<double>& isolatedMZs, std::vector<IsolationMode>& isolationModes) const
+void TimsSpectrum::getIsolationData(std::vector<IsolationInfo>& isolationInfo) const
 {
-    isolatedMZs.clear();
-    isolationModes.clear();
+    isolationInfo.clear();
 
     if (HasPasefPrecursorInfo())
     {
-        isolatedMZs.resize(1, GetPasefPrecursorInfo().isolationMz);
-        isolationModes.resize(1, IsolationMode_On);
+        const auto& info = GetPasefPrecursorInfo();
+        isolationInfo.resize(1, IsolationInfo{ info.isolationMz, IsolationMode_On, info.collisionEnergy });
     }
     else if (!frame_.diaPasefIsolationInfoByScanNumber_.empty())
     {
-        isolatedMZs.resize(1, getDiaPasefIsolationInfo().isolationMz);
-        isolationModes.resize(1, IsolationMode_On);
+        const auto& info = getDiaPasefIsolationInfo();
+        isolationInfo.resize(1, IsolationInfo{ info.isolationMz, IsolationMode_On, info.collisionEnergy });
     }
     else if (frame_.precursorMz_.is_initialized())
     {
-        isolatedMZs.resize(1, frame_.precursorMz_.get());
-        isolationModes.resize(1, IsolationMode_On);
+        isolationInfo.resize(1, IsolationInfo{ frame_.precursorMz_.get(), IsolationMode_On, 0 });
     }
 }
 

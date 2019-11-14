@@ -272,15 +272,15 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
         {
             Precursor precursor;
 
-            vector<double> fragMZs, isolMZs;
+            vector<double> fragMZs;
             vector<FragmentationMode> fragModes;
-            vector<IsolationMode> isolModes;
+            vector<IsolationInfo> isolationInfo;
 
             spectrum->getFragmentationData(fragMZs, fragModes);
 
             if (!fragMZs.empty())
             {
-                spectrum->getIsolationData(isolMZs, isolModes);
+                spectrum->getIsolationData(isolationInfo);
 
                 for (size_t i = 0; i < fragMZs.size(); ++i)
                 {
@@ -320,14 +320,13 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
                             case FragmentationMode_PTR:
                                 break;
                         }
-                        //precursor.activation.set(MS_collision_energy, pExScanStats_->CollisionEnergy);
 
                         precursor.selectedIons.push_back(selectedIon);
                     }
 
-                    if (isolMZs[i] > 0)
+                    if (isolationInfo[i].isolationMz > 0)
                     {
-                        precursor.isolationWindow.set(MS_isolation_window_target_m_z, isolMZs[i], MS_m_z);
+                        precursor.isolationWindow.set(MS_isolation_window_target_m_z, isolationInfo[i].isolationMz, MS_m_z);
 
                         double isolationWidth = spectrum->getIsolationWidth();
                         if (isolationWidth > 0)
@@ -335,6 +334,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
                             precursor.isolationWindow.set(MS_isolation_window_lower_offset, isolationWidth / 2, MS_m_z);
                             precursor.isolationWindow.set(MS_isolation_window_upper_offset, isolationWidth / 2, MS_m_z);
                         }
+
+                        if (isolationInfo[i].collisionEnergy > 0)
+                            precursor.activation.set(MS_collision_energy, isolationInfo[i].collisionEnergy);
                     }
                 }
             }
