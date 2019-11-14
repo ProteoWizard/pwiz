@@ -202,7 +202,7 @@ namespace pwiz.Skyline.Model.Results
                 }
                 else
                 {
-                    _dataFile = DataFilePath.OpenMsDataFile(true, 0, combineIonMobilitySpectra, ignoreZeroIntensityPoints);
+                    _dataFile = DataFilePath.OpenMsDataFile(true, 0, combineIonMobilitySpectra, null, ignoreZeroIntensityPoints);
                 }
             }
             return _dataFile;
