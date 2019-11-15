@@ -75,7 +75,7 @@ struct PWIZ_API_DECL Baf2SqlSpectrum : public MSSpectrum
 
     virtual int getMSMSStage() const;
     virtual double getRetentionTime() const;
-    virtual void getIsolationData(std::vector<double>& isolatedMZs, std::vector<IsolationMode>& isolationModes) const;
+    virtual void getIsolationData(std::vector<IsolationInfo>& isolationInfo) const;
     virtual void getFragmentationData(std::vector<double>& fragmentedMZs, std::vector<FragmentationMode>& fragmentationModes) const;
     virtual IonPolarity getPolarity() const;
 
