@@ -300,7 +300,7 @@
     <value>分子式</value>
   </data>
   <data name="CreateMatchExpression_PopulateComboBoxes_Molecule_List_Name" xml:space="preserve">
-    <value>分子列名称</value>
+    <value>分子列表名称</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Size" xml:space="preserve">
     <value>大小</value>

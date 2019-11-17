@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -5311,7 +5311,7 @@
     <value>仅支持对非蛋白质组学分子直接编辑该值。</value>
   </data>
   <data name="SkylineWindow_ImportMassList_Finishing_up_import" xml:space="preserve">
-    <value>完成导入</value>
+    <value>正在完成导入</value>
   </data>
   <data name="PanoramaHelper_ValidateFolder_" xml:space="preserve">
     <value>尝试验证访问服务器 {1} 上的 Panorama 文件夹 {0} 时发生未知错误。
@@ -10113,7 +10113,7 @@
     <comment>&gt;Used in PeptideToMoleculeText.Translate to update strings like "select a modifed sequence" to read "select a molecule" when non-peptide documents are in use</comment>
   </data>
   <data name="PeptideToMoleculeText_Modified_Peptide_Sequence" xml:space="preserve">
-    <value>已修改的肽序列</value>
+    <value>修改的肽序列</value>
     <comment>&gt;Used in PeptideToMoleculeText.Translate to update strings like "select a modifed peptide sequence" to read "select a molecule" when non-peptide documents are in use</comment>
   </data>
   <data name="PeptideToMoleculeText_Peptide_Sequence" xml:space="preserve">
@@ -10499,7 +10499,7 @@
     <value>选择一个 {0}</value>
   </data>
   <data name="CommandLine_RefineDocument_Refining_document___" xml:space="preserve">
-    <value>正在调整文档...</value>
+    <value>正在细化文档...</value>
   </data>
   <data name="CommandLine_LogNewEntries_Document_unchanged" xml:space="preserve">
     <value>文档未更改</value>
@@ -10514,7 +10514,7 @@
     <value>分子列表</value>
   </data>
   <data name="SkylineViewContext_GetDocumentGridRowSources_Molecules" xml:space="preserve">
-    <value>分子学</value>
+    <value>分子</value>
   </data>
   <data name="Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_molecule_list___0___" xml:space="preserve">
     <value>您是否确定想要删除分子列表“{0}”？</value>

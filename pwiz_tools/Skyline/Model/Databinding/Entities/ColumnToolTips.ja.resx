@@ -554,7 +554,7 @@
     <value>ペプチドシークエンスにおけるmissed cleavage siteの数</value>
   </data>
   <data name="ModifiedAreaProportion">
-    <value>同じ無修飾シーケンスを持つこのタンパク質と繰り返し測定にある、すべてのペプチド結果の和を除算したこのペプチド結果を正規化した面積です。</value>
+    <value>このペプチドの結果の正規化された面積を、同じタンパク質および繰り返し測定された同じ非修飾シークエンスを持つすべてのペプチドの結果の合計で割ったものです。</value>
   </data>
   <data name="ModifiedSequence">
     <value>システインアルキル化など、アミノ酸のすべての修飾を含んだペプチドのシークエンス。 （例：AGLC[+57]QTFVYGGC[+57]R）</value>
