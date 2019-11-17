@@ -172,7 +172,7 @@
     <value>平均质量误差PPM</value>
   </data>
   <data name="AverageMasses">
-    <value>平均成群</value>
+    <value>平均质量</value>
   </data>
   <data name="AverageMeasuredRetentionTime">
     <value>平均测量保留时间</value>
@@ -373,10 +373,10 @@
     <value>明确保留时间</value>
   </data>
   <data name="ExplicitRetentionTimeWindow">
-    <value>显式保留时间窗口</value>
+    <value>明示保留时间窗口</value>
   </data>
   <data name="ExplicitSLens">
-    <value>明确 SLens</value>
+    <value>明示SLens</value>
   </data>
   <data name="FiguresOfMerit">
     <value>品质因数</value>
@@ -626,18 +626,18 @@
     <value>遗漏的酶解位点数</value>
   </data>
   <data name="ModifiedAreaProportion">
-    <value>修改面积比例</value>
+    <value>修改的面积比例</value>
   </data>
   <data name="ModifiedSequence">
-    <value>修改序列</value>
+    <value>修改的序列</value>
   </data>
-  <data name="ModifiedSequenceAverageMasses"><value>修改序列平均质量</value></data>
-  <data name="ModifiedSequenceFullNames"><value>修改序列全名</value></data>
-  <data name="ModifiedSequenceMonoisotopicMasses"><value>修饰的序列同位素质量</value></data>
-  <data name="ModifiedSequenceThreeLetterCodes"><value>修改序列三字母代码</value></data>
-  <data name="ModifiedSequenceUnimodIds"><value>修改序列单模式ID</value></data>
+  <data name="ModifiedSequenceAverageMasses"><value>修改的序列平均质量</value></data>
+  <data name="ModifiedSequenceFullNames"><value>修改的序列全名</value></data>
+  <data name="ModifiedSequenceMonoisotopicMasses"><value>修改的序列同位素质量</value></data>
+  <data name="ModifiedSequenceThreeLetterCodes"><value>修改的序列三字母代码</value></data>
+  <data name="ModifiedSequenceUnimodIds"><value>修改的序列Unimod ID</value></data>
   <data name="ModifiedTime">
-    <value>修改时间</value>
+    <value>修改的时间</value>
   </data>
   <data name="Molecule">
     <value>分子</value>
@@ -685,7 +685,7 @@
     <value>分子保留时间</value>
   </data>
   <data name="Molecules">
-    <value>分子学</value>
+    <value>分子</value>
   </data>
   <data name="MonoisotopicMasses"><value>单一同位素质量</value></data>
   <data name="MsLevel">
