@@ -1635,13 +1635,16 @@ void ScanInfoImpl::parseFilterString()
     CATCH_AND_FORWARD_EX(ToStdString(filter_->ToString()))
 #endif
 
+    if (precursorMZs_.empty() || msLevel_ < 1)
+        return;
+
     auto isolationWidths = getIsolationWidths();
     for (size_t i = 0; i < msLevel_ - 1; ++i)
         precursorInfo_.push_back(PrecursorInfo{ int(i+1), precursorMZs_[i], precursorMZs_[i], isolationWidths[i], precursorActivationEnergies_[i], activationType_, 0, 0 });
 
     if (hasMultiplePrecursors_ && spsMasses_.empty()) // MSX mode means there can be more than 1 filter line m/z for the current ms level
     {
-        for (size_t i = msLevel_-1; i < precursorMZs_.size(); ++i)
+        for (size_t i = msLevel_ - 1; i < precursorMZs_.size(); ++i)
             precursorInfo_.push_back(PrecursorInfo{ msLevel_ - 1, precursorMZs_[i], precursorMZs_[i], isolationWidths[i], precursorActivationEnergies_[i], activationType_, 0, 0 });
     }
 }
@@ -1949,7 +1952,7 @@ void RawFileImpl::parseInstrumentMethod()
 
 vector<double> ScanInfoImpl::getIsolationWidths() const
 {
-    vector<double> isolationWidths(msLevel_ - 1, 0);
+    vector<double> isolationWidths(max(0l, msLevel_ - 1), 0);
 
     if (scanNumber_ == 0)
         return isolationWidths;
