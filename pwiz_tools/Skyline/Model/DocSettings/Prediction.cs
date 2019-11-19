@@ -3329,6 +3329,11 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public static readonly IonMobilityWindowWidthCalculator EMPTY = new IonMobilityWindowWidthCalculator(IonMobilityPeakWidthType.resolving_power, 0, 0, 0);
 
+        public IonMobilityWindowWidthCalculator(double resolvingPower)
+            : this(IonMobilityPeakWidthType.resolving_power, resolvingPower, 0, 0)
+        {
+        }
+
         public IonMobilityWindowWidthCalculator(IonMobilityPeakWidthType peakWidthMode,
                                     double resolvingPower,
                                     double widthAtIonMobilityValueZero, 
