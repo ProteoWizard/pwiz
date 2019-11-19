@@ -89,7 +89,7 @@ namespace pwiz.Skyline
     /// Main window class for the Skyline application.  Skyline is an SDI application,
     /// but it is intentionally designed around a document window instance without
     /// assuming that it is the only such window in the application to allow it to
-    /// become either MDI or multiple-SDI per process.get
+    /// become either MDI or multiple-SDI per process.
     /// </summary>
     public partial class SkylineWindow
         : FormEx,
