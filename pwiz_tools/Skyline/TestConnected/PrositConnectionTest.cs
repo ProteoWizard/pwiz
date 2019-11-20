@@ -38,7 +38,7 @@ namespace pwiz.SkylineTestConnected
         /// <summary>
         /// Tests that a connection can successfully be made to the server specified in PrositConfig.GetPrositConfig().
         /// </summary>
-        [TestMethod]
+        //[TestMethod]
         public void TestPrositConnection()
         {
             PrositPredictionClient client = PrositPredictionClient.CreateClient(PrositConfig.GetPrositConfig());
