@@ -50,6 +50,7 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using ZedGraph;
 using pwiz.Skyline.Util.Extensions;
+using PeptideDocNode = pwiz.Skyline.Model.PeptideDocNode;
 using Transition = pwiz.Skyline.Model.Transition;
 
 namespace pwiz.Skyline
@@ -319,25 +320,21 @@ namespace pwiz.Skyline
                     }
                 }
 
-                bool enable = settingsNew.PeptideSettings.Libraries.HasLibraries;
-                if (enable)
+                UpdateIonTypesMenuItemsVisibility();
+                if (!graphsToolStripMenuItem.Enabled)
                 {
-                    UpdateIonTypesMenuItemsVisibility();
-                }
-                if (graphsToolStripMenuItem.Enabled != enable)
-                {
-                    graphsToolStripMenuItem.Enabled = enable;
-                    ionTypesMenuItem.Enabled = enable;
-                    chargesMenuItem.Enabled = enable;
-                    ranksMenuItem.Enabled = enable;
+                    graphsToolStripMenuItem.Enabled = true;
+                    ionTypesMenuItem.Enabled = true;
+                    chargesMenuItem.Enabled = true;
+                    ranksMenuItem.Enabled = true;
 
                     if (!deserialized)
                     {
                         layoutLock.EnsureLocked();
-                        ShowGraphSpectrum(enable && Settings.Default.ShowSpectra);
+                        ShowGraphSpectrum(Settings.Default.ShowSpectra);
                     }
                 }
-                enable = settingsNew.HasResults;
+                var enable = settingsNew.HasResults;
                 bool enableSchedule = IsRetentionTimeGraphTypeEnabled(GraphTypeSummary.schedule);
                 bool enableRunToRun = IsRetentionTimeGraphTypeEnabled(GraphTypeSummary.run_to_run_regression);
                 if (replicateComparisonMenuItem.Enabled != enable ||
@@ -1154,6 +1151,7 @@ namespace pwiz.Skyline
                 fragmentionsContextMenuItem.Checked = set.ShowFragmentIons;
                 menuStrip.Items.Insert(iInsert++, fragmentionsContextMenuItem);
             }
+
             precursorIonContextMenuItem.Checked = set.ShowPrecursorIon;
             menuStrip.Items.Insert(iInsert++, precursorIonContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator11);
@@ -1183,6 +1181,17 @@ namespace pwiz.Skyline
             lockYaxisContextMenuItem.Checked = set.LockYAxis;
             menuStrip.Items.Insert(iInsert++, lockYaxisContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator14);
+
+            // Need to test small mol
+            if (isProteomic)
+            {
+                prositLibMatchItem.Checked = Settings.Default.Prosit;
+                menuStrip.Items.Insert(iInsert++, prositLibMatchItem);
+                mirrorMenuItem.Checked = Settings.Default.LibMatchMirror;
+                menuStrip.Items.Insert(iInsert++, mirrorMenuItem);
+                menuStrip.Items.Insert(iInsert++, toolStripSeparator61);
+            }
+
             menuStrip.Items.Insert(iInsert++, spectrumPropsContextMenuItem);
             showLibraryChromatogramsSpectrumContextMenuItem.Checked = set.ShowLibraryChromatograms;
             menuStrip.Items.Insert(iInsert++, showLibraryChromatogramsSpectrumContextMenuItem);

@@ -990,6 +990,30 @@ namespace pwiz.SkylineTestUtil
             Assert.AreEqual(LineBracket(expected), LineBracket(actual));
         }
 
+        public static void IsLessThan<T>(T actual, T expectedBound) where T : IComparable<T>
+        {
+            if (actual.CompareTo(expectedBound) >= 0)
+                Assert.Fail("\"{0}\" is not less than \"{1}\"", actual, expectedBound);
+        }
+
+        public static void IsLessThanOrEqual<T>(T actual, T expectedBound) where T : IComparable<T>
+        {
+            if (actual.CompareTo(expectedBound) > 0)
+                Assert.Fail("\"{0}\" is not less than or equal to \"{1}\"", actual, expectedBound);
+        }
+
+        public static void IsGreaterThan<T>(T actual, T expectedBound) where T : IComparable<T>
+        {
+            if (actual.CompareTo(expectedBound) <= 0)
+                Assert.Fail("\"{0}\" is not greater than \"{1}\"", actual, expectedBound);
+        }
+
+        public static void IsGreaterThanOrEqual<T>(T actual, T expectedBound) where T : IComparable<T>
+        {
+            if (actual.CompareTo(expectedBound) < 0)
+                Assert.Fail("\"{0}\" is not greater than or equal to \"{1}\"", actual, expectedBound);
+        }
+
         /// <summary>
         /// Puts newlines before and after a string to make error reporting clearer
         /// </summary>

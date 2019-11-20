@@ -144,6 +144,39 @@
   <data name="splitPeptideList.Orientation" type="System.Windows.Forms.Orientation, System.Windows.Forms">
     <value>Horizontal</value>
   </data>
+  <data name="prositCheckBox.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="prositCheckBox.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Bottom</value>
+  </data>
+  <data name="prositCheckBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 573</value>
+  </data>
+  <data name="prositCheckBox.RightToLeft" type="System.Windows.Forms.RightToLeft, System.Windows.Forms">
+    <value>No</value>
+  </data>
+  <data name="prositCheckBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>601, 33</value>
+  </data>
+  <data name="prositCheckBox.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="prositCheckBox.Text" xml:space="preserve">
+    <value>Prosit</value>
+  </data>
+  <data name="&gt;&gt;prositCheckBox.Name" xml:space="preserve">
+    <value>prositCheckBox</value>
+  </data>
+  <data name="&gt;&gt;prositCheckBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;prositCheckBox.Parent" xml:space="preserve">
+    <value>PeptideListPanel</value>
+  </data>
+  <data name="&gt;&gt;prositCheckBox.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="listPeptide.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
