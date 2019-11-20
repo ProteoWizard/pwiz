@@ -342,12 +342,13 @@ Configuration_mz5::MZ5DataSets Configuration_mz5::getVariableFor(
     {
         return variableVariables_.find(name)->second;
     }
-	//spelling error - backward compatibility
-	if (name == "ChomatogramTime")
-	{
-		return variableVariables_.find("ChromatogramTime")->second;
-	}
-		
+
+    //spelling error - backward compatibility
+    if (name == "ChomatogramTime")
+    {
+        return variableVariables_.find("ChromatogramTime")->second;
+    }
+
     throw std::out_of_range("[Configurator_mz5::getVariableFor]: out of range");
 }
 
