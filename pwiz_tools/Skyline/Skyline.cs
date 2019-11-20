@@ -5740,7 +5740,7 @@ namespace pwiz.Skyline
             mirrorMenuItem.Checked = !mirrorMenuItem.Checked;
             _graphSpectrumSettings.Mirror = mirrorMenuItem.Checked;
         }
-    }
+
         private void viewToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             viewModificationsMenuItem.DropDownItems.Clear();
