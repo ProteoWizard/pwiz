@@ -317,7 +317,14 @@ namespace pwiz.Skyline.Model.Results
 
         // Construct a list of target precursor mz and (optional) ion mobility windows for pwiz to prefilter (not guaranteed)
         // N.B. This is most properly done per file in case files have different associated libraries
-        private IList<MsDataFileImpl.PrecursorMzAndIonMobilityWindow> GetPrecursorMzAndIonMobilityWindows(TransitionFullScan fullScan, MsDataFileUri dataFilePath)
+        // TODO (bsratt): More care needs to be taken not to duplicate effort with SpectrumFilter which also calls GetIonMobilities which can take seconds in large documents
+        private IList<MsDataFileImpl.PrecursorMzAndIonMobilityWindow> GetPrecursorMzAndIonMobilityWindows(
+            TransitionFullScan fullScan, MsDataFileUri dataFilePath)
+        {
+            return null; // GetPrecursorMzAndIonMobilityWindowsSlow(fullScan, dataFilePath);
+        }
+        private IList<MsDataFileImpl.PrecursorMzAndIonMobilityWindow> GetPrecursorMzAndIonMobilityWindowsSlow(
+            TransitionFullScan fullScan, MsDataFileUri dataFilePath)
         {
             List<MsDataFileImpl.PrecursorMzAndIonMobilityWindow> precursorIonMobility = null;
             if (fullScan.IsEnabled || fullScan.IsEnabledMsMs)

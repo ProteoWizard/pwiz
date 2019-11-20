@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -728,9 +727,12 @@ namespace pwiz.Skyline.Model.Results
             /// an important memory burden.
             /// </summary>
             private const int READ_BUFFER_SIZE = 100;
-            private readonly BlockingCollection<SpectrumInfo> _pendingInfoList =
-                new BlockingCollection<SpectrumInfo>(READ_BUFFER_SIZE);
-            private BlockingCollection<SpectrumInfo> _unprocessedInfoList;
+            private const int MAX_QUEUE_MEMORY = 200 * 1024 * 1024; // 200 MB
+            private readonly MemoryBlockingCollection<SpectrumInfo> _pendingInfoList =
+                new MemoryBlockingCollection<SpectrumInfo>(MAX_QUEUE_MEMORY, READ_BUFFER_SIZE);
+
+            private const int SORT_THREAD_COUNT = 4;
+            private QueueWorker<SpectrumInfo> _unprocessedInfoList;
             private SpectrumInfo _currentInfo;
 
             public Spectra(SrmDocument document, SpectrumFilter filter, ChromatogramLoadingStatus.TransitionData allChromData, MsDataFileImpl dataFile)
@@ -828,11 +830,9 @@ namespace pwiz.Skyline.Model.Results
 
                 if (_runningAsync)
                 {
-                    // Just in case the Read or Sort thread is waiting to add a spectrum to a full pending list
+                    // Just in case the Read thread is waiting to add a spectrum to a full pending list
                     SpectrumInfo info;
                     _pendingInfoList.TryTake(out info);
-                    if (_unprocessedInfoList != null)
-                        _unprocessedInfoList.TryTake(out info);
                 }
                 return dataFile;
             }
@@ -843,8 +843,10 @@ namespace pwiz.Skyline.Model.Results
             public void Dispose()
             {
                 var dataFile = Detach();
-                if (dataFile != null)
-                    dataFile.Dispose();
+                dataFile?.Dispose();
+                _unprocessedInfoList?.Dispose();
+                _pendingInfoList?.Dispose();
+                _currentInfo?.Dispose();
             }
 
             public int PercentComplete
@@ -896,26 +898,35 @@ namespace pwiz.Skyline.Model.Results
             {
                 _exception = exception;
                 if (_unprocessedInfoList != null)
-                    _unprocessedInfoList.Add(SpectrumInfo.LAST);
-                else
-                    _pendingInfoList.Add(SpectrumInfo.LAST);
+                    _unprocessedInfoList.DoneAdding();
+                _pendingInfoList.Add(SpectrumInfo.LAST);
             }
 
             public bool NextSpectrum()
             {
-                if (_runningAsync)
+                var lastInfo = _currentInfo;
+                try
                 {
-                    _currentInfo = _pendingInfoList.Take();
-                    if (_exception != null)
-                        Helpers.WrapAndThrowException(_exception);
-                }
-                else
-                {
-                    lock (_dataFileLock)
+                    if (_runningAsync)
                     {
-                        int i = _currentInfo != null ? _currentInfo.Index : -1;
-                        _currentInfo = ReadSpectrum(ref i);
+                        _currentInfo = _pendingInfoList.Take();
+                        _currentInfo.SortEvent?.WaitOne();   // Until sorted
+                        if (_exception != null)
+                            Helpers.WrapAndThrowException(_exception);
                     }
+                    else
+                    {
+                        lock (_dataFileLock)
+                        {
+                            int i = _currentInfo != null ? _currentInfo.Index : -1;
+                            _currentInfo = ReadSpectrum(ref i);
+                        }
+                    }
+                }
+                finally
+                {
+                    if (!ReferenceEquals(_currentInfo, lastInfo))
+                        lastInfo?.Dispose();
                 }
                 return !_currentInfo.IsLast;
             }
@@ -941,50 +952,48 @@ namespace pwiz.Skyline.Model.Results
                         nextInfo = ReadSpectrum(ref i);
                     }
 
-                    // If the spectrum contains an IMS array, then it needs to be ordered
-                    // Once the sorter thread is created, all spectra must go through it
-                    var spectrum = nextInfo.DataSpectrum;
-                    if (_unprocessedInfoList == null && (spectrum?.IonMobilities == null || !_runningAsync))
-                    {
-                        // If not running async order before adding to the list
-                        if (spectrum?.IonMobilities != null)
-                            ArrayUtil.Sort(spectrum.Mzs, spectrum.Intensities, spectrum.IonMobilities);
-                        _pendingInfoList.Add(nextInfo);
-                    }
+                    EnsureSortedMzs(nextInfo);
+
+                    _pendingInfoList.Add(nextInfo);
+                }
+                while (!nextInfo.IsLast);
+
+                _unprocessedInfoList?.DoneAdding(true);
+            }
+
+            private void EnsureSortedMzs(SpectrumInfo nextInfo)
+            {
+                // If the spectrum contains an IMS array, then it needs to be ordered
+                // Once the sorter thread is created, all spectra must go through it
+                if (nextInfo.DataSpectrum?.IonMobilities != null)
+                {
+                    // If not running async just sort on the current thread
+                    if (!_runningAsync)
+                        SortSpectrum(nextInfo, 0);
                     else
                     {
                         // Defer starting the extra thread until the first case is seen
                         if (_unprocessedInfoList == null)
                         {
-                            _unprocessedInfoList = new BlockingCollection<SpectrumInfo>(READ_BUFFER_SIZE);
-                            ActionUtil.RunAsync(() =>
-                            {
-                                try
-                                {
-                                    SortSpectra();
-                                }
-                                catch (Exception ex)
-                                {
-                                    SetException(ex);
-                                }
-                            }, @"Spectrum sorter");
+                            // Don't let unprocessed spectra get too far ahead, because sorting will
+                            // take a relatively consistent amount of time. So, if it takes longer than
+                            // retrieval, then this queue will just get backed up. Using more than a 
+                            // single thread helps to keep this O(n*log(n)) processing from becoming a
+                            // bottleneck
+                            _unprocessedInfoList = new QueueWorker<SpectrumInfo>(null, SortSpectrum);
+                            _unprocessedInfoList.RunAsync(SORT_THREAD_COUNT, @"Spectrum sorter");
                         }
+
                         _unprocessedInfoList.Add(nextInfo);
                     }
                 }
-                while (!nextInfo.IsLast);
             }
 
-            private void SortSpectra()
+            private void SortSpectrum(SpectrumInfo spectrumInfo, int i)
             {
-                SpectrumInfo nextInfo;
-                while (!(nextInfo = _unprocessedInfoList.Take()).IsLast)
-                {
-                    var spectrum = nextInfo.DataSpectrum;
-                    ArrayUtil.Sort(spectrum.Mzs, spectrum.Intensities, spectrum.IonMobilities);
-                    _pendingInfoList.Add(nextInfo);
-                }
-                _pendingInfoList.Add(nextInfo); // Add the last spectrum to end the Spectrum reader thread
+                var spectrum = spectrumInfo.DataSpectrum;
+                ArrayUtil.Sort(spectrum.Mzs, spectrum.Intensities, spectrum.IonMobilities);
+                spectrumInfo.SortEvent.Set();
             }
 
             private SpectrumInfo ReadSpectrum(ref int i)
@@ -1011,8 +1020,7 @@ namespace pwiz.Skyline.Model.Results
                                 string.Format(Resources.SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_precursor_mz,
                                     _dataFile.GetSpectrumId(i)));
                         }
-                        return new SpectrumInfo(i, nextSpectrum, new []{nextSpectrum},
-                            (float) nextSpectrum.RetentionTime.Value);
+                        return new SpectrumInfo(i, new []{nextSpectrum}, (float) nextSpectrum.RetentionTime.Value);
                     }
                     else
                     {
@@ -1106,30 +1114,53 @@ namespace pwiz.Skyline.Model.Results
                             continue;
                         }
 
-                        return new SpectrumInfo(i, nextSpectrum, nextSpectra, rt.Value);
+                        return new SpectrumInfo(i, nextSpectra, rt.Value);
                     }
                 }
                 return SpectrumInfo.LAST;
             }
 
-            private class SpectrumInfo
+            private class SpectrumInfo : IDisposable, IMemSized
             {
-                public static readonly SpectrumInfo LAST = new SpectrumInfo(-1, null, null, 0);
+                public static readonly SpectrumInfo LAST = new SpectrumInfo(-1, null, 0);
 
-                public SpectrumInfo(int index, MsDataSpectrum dataSpectrum, MsDataSpectrum[] allSpectra, double retentionTime)
+                public SpectrumInfo(int index, MsDataSpectrum[] allSpectra, double retentionTime)
                 {
                     Index = index;
-                    DataSpectrum = dataSpectrum;
                     AllSpectra = allSpectra;
                     RetentionTime = retentionTime;
+                    // Size should be dominated by the array lengths
+                    int arrayLen = 0, arrayCount = 0;
+                    if (allSpectra != null)
+                    {
+                        DataSpectrum = allSpectra[0];
+                        arrayLen = allSpectra.Sum(s => s.Intensities.Length);
+                        arrayCount = 2;
+                    }
+
+                    if (DataSpectrum != null && DataSpectrum.IonMobilities != null)
+                    {
+                        SortEvent = new ManualResetEvent(false);
+                        arrayCount++;
+                    }
+
+                    Size = arrayLen * arrayCount * sizeof(double);
                 }
+
+                public ManualResetEvent SortEvent { get; private set; }
 
                 public int Index { get; private set; }
                 public MsDataSpectrum DataSpectrum { get; private set; }
                 public MsDataSpectrum[] AllSpectra { get; private set; }
                 public double RetentionTime { get; private set; }
+                public int Size { get; private set; }
 
                 public bool IsLast { get { return DataSpectrum == null; } }
+
+                public void Dispose()
+                {
+                    SortEvent?.Dispose();
+                }
             }
         }
 
