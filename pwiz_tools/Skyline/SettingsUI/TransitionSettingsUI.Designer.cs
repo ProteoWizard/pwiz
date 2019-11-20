@@ -119,6 +119,7 @@
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.contextMenuStripPrecursorAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.contextMenuStripFragmentAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.cbxTriggeredAcquisition = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabGeneral.SuspendLayout();
@@ -610,6 +611,7 @@
             // 
             // tabInstrument
             // 
+            this.tabInstrument.Controls.Add(this.cbxTriggeredAcquisition);
             this.tabInstrument.Controls.Add(this.textMaxInclusions);
             this.tabInstrument.Controls.Add(this.label21);
             this.tabInstrument.Controls.Add(this.label30);
@@ -765,6 +767,12 @@
             this.contextMenuStripFragmentAdduct.Name = "contextMenuStripFragmentAdduct";
             resources.ApplyResources(this.contextMenuStripFragmentAdduct, "contextMenuStripFragmentAdduct");
             // 
+            // cbxTriggeredAcquisition
+            // 
+            resources.ApplyResources(this.cbxTriggeredAcquisition, "cbxTriggeredAcquisition");
+            this.cbxTriggeredAcquisition.Name = "cbxTriggeredAcquisition";
+            this.cbxTriggeredAcquisition.UseVisualStyleBackColor = true;
+            // 
             // TransitionSettingsUI
             // 
             this.AcceptButton = this.btnOk;
@@ -893,5 +901,6 @@
         private System.Windows.Forms.ContextMenuStrip contextMenuStripFragmentAdduct;
         private System.Windows.Forms.Label label22;
         private System.Windows.Forms.TextBox textMinIonCount;
+        private System.Windows.Forms.CheckBox cbxTriggeredAcquisition;
     }
 }
