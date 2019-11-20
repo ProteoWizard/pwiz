@@ -603,12 +603,12 @@ namespace pwiz.Skyline.Model.Lib
             return false;
         }
 
-        public override IEnumerable<SpectrumInfo> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
+        public override IEnumerable<SpectrumInfoLibrary> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
         {
             // This base class only handles best match spectra
             SpectrumHeaderInfo libInfo;
             if (redundancy == LibraryRedundancy.best && TryGetLibInfo(key, out libInfo))
-                yield return new SpectrumInfo(this, labelType, key) { SpectrumHeaderInfo = libInfo };
+                yield return new SpectrumInfoLibrary(this, labelType, key) { SpectrumHeaderInfo = libInfo };
         }
 
         public override int? FileCount
