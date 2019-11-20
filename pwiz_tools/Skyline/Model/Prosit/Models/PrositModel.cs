@@ -297,6 +297,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
             processed = 0;
             totalCount = inputsList.Sum(pi => pi.InputRows.Count);
 
+            progressMonitor.UpdateProgress(progressStatus.Complete());
             progressStatus =
                 new ProgressStatus(PrositResources.PrositModel_BatchPredict_Requesting_predictions_from_Prosit);
             progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete(0));
@@ -313,6 +314,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
                     progressStatus.ChangePercentComplete(100 * processed / totalCount));
             }
 
+            progressMonitor.UpdateProgress(progressStatus.Complete());
             return CreateSkylineOutput(settings, validInputsList.SelectMany(i => i).ToArray(), prositOutputAll);
         }
     }
