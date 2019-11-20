@@ -21563,6 +21563,16 @@ namespace pwiz.Skyline.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        public static System.Drawing.Bitmap prosit_logo_dark_blue {
+            get {
+                object obj = ResourceManager.GetObject("prosit_logo_dark_blue", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         public static System.Drawing.Bitmap Protein {
             get {
                 object obj = ResourceManager.GetObject("Protein", resourceCulture);
@@ -25751,15 +25761,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Creating Spectral Library.
-        /// </summary>
-        public static string SkylineWindow_ImportMassList_Creating_Spectral_Library {
-            get {
-                return ResourceManager.GetString("SkylineWindow_ImportMassList_Creating_Spectral_Library", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Failed reading the file.  Peptide {0} matches an existing iRT standard peptide..
         /// </summary>
         public static string SkylineWindow_ImportMassList_Failed_reading_the_file___Peptide__0__matches_an_existing_iRT_standard_peptide_ {
@@ -25886,6 +25887,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SkylineWindow_ImportMassList_You_must_save_the_Skyline_document_in_order_to_creat" +
                         "e_a_spectral_library_from_a_transition_list_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Creating Spectral Library.
+        /// </summary>
+        public static string SkylineWindow_ImportMassListIntensities_Creating_Spectral_Library {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportMassListIntensities_Creating_Spectral_Library", resourceCulture);
             }
         }
         
