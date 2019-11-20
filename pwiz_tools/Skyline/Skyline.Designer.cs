@@ -80,12 +80,16 @@ namespace pwiz.Skyline
             this.charge4ContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator12 = new System.Windows.Forms.ToolStripSeparator();
             this.ranksContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.scoreContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ionMzValuesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.observedMzValuesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.duplicatesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator13 = new System.Windows.Forms.ToolStripSeparator();
             this.lockYaxisContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator14 = new System.Windows.Forms.ToolStripSeparator();
+            this.prositLibMatchItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.mirrorMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator61 = new System.Windows.Forms.ToolStripSeparator();
             this.spectrumPropsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator15 = new System.Windows.Forms.ToolStripSeparator();
             this.zoomSpectrumContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -242,6 +246,7 @@ namespace pwiz.Skyline
             this.areaCVdecoysToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVTransitionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVAllTransitionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaCVCountTransitionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVBestTransitionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator58 = new System.Windows.Forms.ToolStripSeparator();
             this.areaCVPrecursorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -312,7 +317,6 @@ namespace pwiz.Skyline
             this.exportSpectralLibraryMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.chromatogramsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mProphetFeaturesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.chorusRequestToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportAnnotationsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mruBeforeToolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.mruAfterToolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
@@ -782,12 +786,16 @@ namespace pwiz.Skyline
             this.chargesContextMenuItem,
             this.toolStripSeparator12,
             this.ranksContextMenuItem,
+            this.scoreContextMenuItem,
             this.ionMzValuesContextMenuItem,
             this.observedMzValuesContextMenuItem,
             this.duplicatesContextMenuItem,
             this.toolStripSeparator13,
             this.lockYaxisContextMenuItem,
             this.toolStripSeparator14,
+            this.prositLibMatchItem,
+            this.mirrorMenuItem,
+            this.toolStripSeparator61,
             this.spectrumPropsContextMenuItem,
             this.toolStripSeparator15,
             this.zoomSpectrumContextMenuItem,
@@ -903,6 +911,13 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.ranksContextMenuItem, "ranksContextMenuItem");
             this.ranksContextMenuItem.Click += new System.EventHandler(this.ranksMenuItem_Click);
             // 
+            // scoreContextMenuItem
+            // 
+            this.scoreContextMenuItem.CheckOnClick = true;
+            this.scoreContextMenuItem.Name = "scoreContextMenuItem";
+            resources.ApplyResources(this.scoreContextMenuItem, "scoreContextMenuItem");
+            this.scoreContextMenuItem.Click += new System.EventHandler(this.scoresContextMenuItem_Click);
+            // 
             // ionMzValuesContextMenuItem
             // 
             this.ionMzValuesContextMenuItem.CheckOnClick = true;
@@ -940,6 +955,23 @@ namespace pwiz.Skyline
             // 
             this.toolStripSeparator14.Name = "toolStripSeparator14";
             resources.ApplyResources(this.toolStripSeparator14, "toolStripSeparator14");
+            // 
+            // prositLibMatchItem
+            // 
+            this.prositLibMatchItem.Name = "prositLibMatchItem";
+            resources.ApplyResources(this.prositLibMatchItem, "prositLibMatchItem");
+            this.prositLibMatchItem.Click += new System.EventHandler(this.prositLibMatchItem_Click);
+            // 
+            // mirrorMenuItem
+            // 
+            this.mirrorMenuItem.Name = "mirrorMenuItem";
+            resources.ApplyResources(this.mirrorMenuItem, "mirrorMenuItem");
+            this.mirrorMenuItem.Click += new System.EventHandler(this.mirrorMenuItem_Click);
+            // 
+            // toolStripSeparator61
+            // 
+            this.toolStripSeparator61.Name = "toolStripSeparator61";
+            resources.ApplyResources(this.toolStripSeparator61, "toolStripSeparator61");
             // 
             // spectrumPropsContextMenuItem
             // 
@@ -2031,6 +2063,7 @@ namespace pwiz.Skyline
             // 
             this.areaCVTransitionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.areaCVAllTransitionsToolStripMenuItem,
+            this.areaCVCountTransitionsToolStripMenuItem,
             this.areaCVBestTransitionsToolStripMenuItem,
             this.toolStripSeparator58,
             this.areaCVPrecursorsToolStripMenuItem,
@@ -2043,6 +2076,11 @@ namespace pwiz.Skyline
             this.areaCVAllTransitionsToolStripMenuItem.Name = "areaCVAllTransitionsToolStripMenuItem";
             resources.ApplyResources(this.areaCVAllTransitionsToolStripMenuItem, "areaCVAllTransitionsToolStripMenuItem");
             this.areaCVAllTransitionsToolStripMenuItem.Click += new System.EventHandler(this.areaCVAllTransitionsToolStripMenuItem_Click);
+            // 
+            // areaCVCountTransitionsToolStripMenuItem
+            // 
+            this.areaCVCountTransitionsToolStripMenuItem.Name = "areaCVCountTransitionsToolStripMenuItem";
+            resources.ApplyResources(this.areaCVCountTransitionsToolStripMenuItem, "areaCVCountTransitionsToolStripMenuItem");
             // 
             // areaCVBestTransitionsToolStripMenuItem
             // 
@@ -2488,7 +2526,6 @@ namespace pwiz.Skyline
             this.exportSpectralLibraryMenuItem,
             this.chromatogramsToolStripMenuItem,
             this.mProphetFeaturesMenuItem,
-            this.chorusRequestToolStripMenuItem,
             this.exportAnnotationsMenuItem});
             this.exportToolStripMenuItem.Name = "exportToolStripMenuItem";
             resources.ApplyResources(this.exportToolStripMenuItem, "exportToolStripMenuItem");
@@ -2551,12 +2588,6 @@ namespace pwiz.Skyline
             this.mProphetFeaturesMenuItem.Name = "mProphetFeaturesMenuItem";
             resources.ApplyResources(this.mProphetFeaturesMenuItem, "mProphetFeaturesMenuItem");
             this.mProphetFeaturesMenuItem.Click += new System.EventHandler(this.mProphetFeaturesMenuItem_Click);
-            // 
-            // chorusRequestToolStripMenuItem
-            // 
-            this.chorusRequestToolStripMenuItem.Name = "chorusRequestToolStripMenuItem";
-            resources.ApplyResources(this.chorusRequestToolStripMenuItem, "chorusRequestToolStripMenuItem");
-            this.chorusRequestToolStripMenuItem.Click += new System.EventHandler(this.chorusRequestToolStripMenuItem_Click);
             // 
             // exportAnnotationsMenuItem
             // 
@@ -4682,7 +4713,6 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem irtStandardMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toolStoreMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparatorTools;
-        private System.Windows.Forms.ToolStripMenuItem chorusRequestToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showTargetsByNameToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showTargetsByAccessionToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showTargetsByPreferredNameToolStripMenuItem;
@@ -4803,6 +4833,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem importAnnotationsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaCVTransitionsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaCVAllTransitionsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaCVCountTransitionsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaCVBestTransitionsToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator58;
         private System.Windows.Forms.ToolStripMenuItem areaCVPrecursorsToolStripMenuItem;
@@ -4824,6 +4855,10 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem mixedToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toggleQuantitativeContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem markTransitionsQuantitativeContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem scoreContextMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator61;
+        private System.Windows.Forms.ToolStripMenuItem prositLibMatchItem;
+        private System.Windows.Forms.ToolStripMenuItem mirrorMenuItem;
     }
 }
 

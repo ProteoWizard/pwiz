@@ -250,6 +250,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Order exported method by m/z values in ascending order (precursor m/z, then product m/z when applicable) for optimized quadrupole switching..
+        /// </summary>
+        internal static string _exp_order_by_mz {
+            get {
+                return ResourceManager.GetString("_exp_order_by_mz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Controls export behavior for documents with both positive and negative transitions. Allows for output of only positive or only negative transitions, or creates separate outputs for each polarity. Defaults to all, and is ignored for single polarity documents..
         /// </summary>
         internal static string _exp_polarity {
@@ -484,6 +493,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A regular expression that is applied to file names to select the ones that will be imported..
+        /// </summary>
+        internal static string _import_filename_pattern {
+            get {
+                return ResourceManager.GetString("_import_filename_pattern", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Waters lockmass correction m/z for negative ion scans..
         /// </summary>
         internal static string _import_lockmass_negative {
@@ -565,6 +583,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A regular expression that is applied to sample names (e.g. in a multi-injection .wiff file) to select the ones that will be imported..
+        /// </summary>
+        internal static string _import_samplename_pattern {
+            get {
+                return ResourceManager.GetString("_import_samplename_pattern", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Adds all modifications found in peptide search results files to the open document..
         /// </summary>
         internal static string _import_search_add_mods {
@@ -633,6 +660,15 @@ namespace pwiz.Skyline {
         internal static string _import_warn_on_failure {
             get {
                 return ResourceManager.GetString("_import_warn_on_failure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Resolving power of ion mobility dimension used to filter around ion mobility values from the spectral libraries..
+        /// </summary>
+        internal static string _ims_library_res {
+            get {
+                return ResourceManager.GetString("_ims_library_res", resourceCulture);
             }
         }
         
@@ -793,6 +829,60 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Areas used in CV calculations are normalized as specified. (default no normalization).
+        /// </summary>
+        internal static string _refine_cv_global_normalize {
+            get {
+                return ResourceManager.GetString("_refine_cv_global_normalize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The MS level used in the CV calculations. Defaults to &quot;products&quot; which will usually have lower CVs than precursors in methods like PRM and DIA..
+        /// </summary>
+        internal static string _refine_cv_ms_level {
+            get {
+                return ResourceManager.GetString("_refine_cv_ms_level", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Areas used in CV calculations are normalized to a reference type, e.g. &quot;heavy&quot;..
+        /// </summary>
+        internal static string _refine_cv_reference_normalize {
+            get {
+                return ResourceManager.GetString("_refine_cv_reference_normalize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All target precursors with peak area CV above the cutoff will be removed..
+        /// </summary>
+        internal static string _refine_cv_remove_above_cutoff {
+            get {
+                return ResourceManager.GetString("_refine_cv_remove_above_cutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specifies the transitions for which peak areas are summed and used in CV calculations for CV refinement. (either all or a single best transition).
+        /// </summary>
+        internal static string _refine_cv_transitions {
+            get {
+                return ResourceManager.GetString("_refine_cv_transitions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specifies the count of transitions selected by library transition rank (isotopes for precursors and library for fragments) for which peak areas are summed and used in CV calculations for CV refinement..
+        /// </summary>
+        internal static string _refine_cv_transitions_count {
+            get {
+                return ResourceManager.GetString("_refine_cv_transitions_count", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Precursors of the specified isotope label type will be removed (default) or added if --refine-add-label-type is also used..
         /// </summary>
         internal static string _refine_label_type {
@@ -915,6 +1005,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to All target precursors with less than the specified number of replicates with detection q value below the --refine-qvalue-cutoff are removed..
+        /// </summary>
+        internal static string _refine_minimum_detections {
+            get {
+                return ResourceManager.GetString("_refine_minimum_detections", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to All targets that do not correspond to a library match will be removed..
         /// </summary>
         internal static string _refine_missing_library {
@@ -941,6 +1040,15 @@ namespace pwiz.Skyline {
         internal static string _refine_prefer_larger_products {
             get {
                 return ResourceManager.GetString("_refine_prefer_larger_products", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All target precursors with a maximum detection q value above the cutoff will be removed. If --refine-minimum-detections is used then at least the specified number of replicates must have a detection q value below the cutoff..
+        /// </summary>
+        internal static string _refine_qvalue_cutoff {
+            get {
+                return ResourceManager.GetString("_refine_qvalue_cutoff", resourceCulture);
             }
         }
         
@@ -1037,6 +1145,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The type of peak scoring model to train to produce z scores and q values. (dafault mProphet) Skyline - simply scales coefficients of the default Skyline model to estimate a unit normal distribution from the decoys. SkylineML - uses the mProphet machine learning algorithm to train a model using only the default set of feature scores..
+        /// </summary>
+        internal static string _reintegrate_model_type {
+            get {
+                return ResourceManager.GetString("_reintegrate_model_type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Existing manually integrated peaks will be overwritten with peaks chosen by the reintegration model. (requires --reintegrate-model-name).
         /// </summary>
         internal static string _reintegrate_overwrite_peaks {
@@ -1123,6 +1240,15 @@ namespace pwiz.Skyline {
         internal static string _save {
             get {
                 return ResourceManager.GetString("_save", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Causes settings changes to the global environment, e.g. added reports, libraries, enzymes, etc. to be saved to the program configuration file..
+        /// </summary>
+        internal static string _save_settings {
+            get {
+                return ResourceManager.GetString("_save_settings", resourceCulture);
             }
         }
         
@@ -1290,6 +1416,42 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Changes the transition settings collision energy prediction setting to one of the previously defined options..
+        /// </summary>
+        internal static string _tran_predict_ce {
+            get {
+                return ResourceManager.GetString("_tran_predict_ce", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Changes the transition settings compensation voltage prediction setting to one of the previously defined options..
+        /// </summary>
+        internal static string _tran_predict_cov {
+            get {
+                return ResourceManager.GetString("_tran_predict_cov", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Changes the transition settings declustering potential prediction setting to one of the previously defined options..
+        /// </summary>
+        internal static string _tran_predict_dp {
+            get {
+                return ResourceManager.GetString("_tran_predict_dp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Changes the transition settings optimization library used in predicting instrument parameters to one of the previously defined options..
+        /// </summary>
+        internal static string _tran_predict_optdb {
+            get {
+                return ResourceManager.GetString("_tran_predict_optdb", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A comma-separated list of product ion charge states to apply to peptide fragments to generate product ion transitions. Changes the transition filter settings for the open document..
         /// </summary>
         internal static string _tran_product_ion_charges {
@@ -1304,6 +1466,15 @@ namespace pwiz.Skyline {
         internal static string _tran_product_ion_types {
             get {
                 return ResourceManager.GetString("_tran_product_ion_types", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Emits version information for the running installation.
+        /// </summary>
+        internal static string _version {
+            get {
+                return ResourceManager.GetString("_version", resourceCulture);
             }
         }
         
@@ -1658,6 +1829,15 @@ namespace pwiz.Skyline {
         internal static string CommandArgs_NAME_VALUE {
             get {
                 return ResourceManager.GetString("CommandArgs_NAME_VALUE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;number list&gt;.
+        /// </summary>
+        internal static string CommandArgs_NUM_LIST_VALUE {
+            get {
+                return ResourceManager.GetString("CommandArgs_NUM_LIST_VALUE", resourceCulture);
             }
         }
         

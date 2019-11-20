@@ -1,5 +1,4 @@
 ﻿/*
-/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -72,6 +71,8 @@ using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
+using pwiz.Skyline.Model.Prosit.Communication;
+using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
@@ -97,7 +98,8 @@ namespace pwiz.Skyline
             IProgressMonitor,
             ILibraryBuildNotificationContainer,
             IToolMacroProvider,
-            IModifyDocumentContainer
+            IModifyDocumentContainer,
+            IRetentionScoreSource
     {
         private SequenceTreeForm _sequenceTreeForm;
         private ImmediateWindow _immediateWindow;
@@ -185,6 +187,9 @@ namespace pwiz.Skyline
             _importPeptideSearchManager.ProgressUpdateEvent += UpdateProgress;
             _importPeptideSearchManager.Register(this);
 
+            // RTScoreCalculatorList.DEFAULTS[2].ScoreProvider
+            //    .Attach(this);
+
             DocumentUIChangedEvent += ShowAutoTrainResults;
 
             checkForUpdatesMenuItem.Visible =
@@ -249,7 +254,6 @@ namespace pwiz.Skyline
 
             var defaultUIMode = Settings.Default.UIMode;
             NewDocument(); // Side effect: initializes Settings.Default.UIMode to proteomic if no previous value
-            chorusRequestToolStripMenuItem.Visible = Settings.Default.EnableChorus;
 
             // Set UI mode to user default (proteomic/molecule/mixed)
             SrmDocument.DOCUMENT_TYPE defaultModeUI;
@@ -3338,10 +3342,10 @@ namespace pwiz.Skyline
 
         private void ShowPeptideSettingsUI(IWin32Window parent, PeptideSettingsUI.TABS? tab)
         {
-            using (PeptideSettingsUI ps = new PeptideSettingsUI(this, _libraryManager, tab ))
+            using (PeptideSettingsUI ps = new PeptideSettingsUI(this, _libraryManager, tab))
             {
-                var oldStandard = RCalcIrtStandard();
-                
+                var oldStandard = RCalcIrt.IrtPeptides(Document).ToHashSet();
+
                 if (ps.ShowDialog(parent) == DialogResult.OK)
                 {
                     if (ps.IsShowLibraryExplorer)
@@ -3351,10 +3355,7 @@ namespace pwiz.Skyline
                             OwnedForms[libraryExpIndex].Activate();
                     }
 
-                    HashSet<Target> missingPeptides;
-                    var newStandard = RCalcIrtStandard(out missingPeptides);
-                    if (oldStandard != newStandard)
-                        AddStandardsToDocument(newStandard, missingPeptides);
+                    HandleStandardsChanged(oldStandard);
                 }
             }
 
@@ -3362,27 +3363,76 @@ namespace pwiz.Skyline
             // Explorer's spectrum graph pane.
             UpdateGraphPanes();
         }
-
-        private void AddStandardsToDocument(IrtStandard standard, ICollection<Target> missingPeptides)
+        public static List<PrositIntensityModel.PeptidePrecursorNCE> ReadStandardPeptides(IrtStandard standard)
         {
-            var standardDocReader = standard.DocumentReader;
-            if (standardDocReader == null)
+            SrmDocument docImport;
+            using (var standardDocReader = standard.GetDocumentReader())
+            {
+                if (standardDocReader == null)
+                    return null;
+
+                var ser = new XmlSerializer(typeof(SrmDocument));
+                docImport = (SrmDocument) ser.Deserialize(standardDocReader);
+            }
+
+            var peps = docImport.Peptides.ToList();
+            var precs = peps.Select(p => p.TransitionGroups.First());
+            /*for (var i = 0; i < peps.Count; i++)
+            {
+                var modSeq = ModifiedSequence.GetModifiedSequence(docImport.Settings, peps[i], IsotopeLabelType.light);
+                peps[i] = peps[i].ChangeExplicitMods(new ExplicitMods(peps[i].Peptide,
+                    modSeq.ExplicitMods.Select(m => m.ExplicitMod).ToArray(),
+                    new TypedExplicitModifications[0]));
+            }*/
+            return Enumerable.Zip(peps, precs,
+                (pep, prec) => new PrositIntensityModel.PeptidePrecursorNCE(pep, prec)).ToList();
+        }
+
+        private void HandleStandardsChanged(ICollection<Target> oldStandard)        {
+            var calc = RCalcIrt.Calculator(Document);
+            if (calc == null)
+                return;
+            calc = calc.Initialize(null) as RCalcIrt;
+            if (calc == null)
+                return;
+            var newStandard = calc.GetStandardPeptides().ToArray();
+            if (newStandard.Length == 0 || newStandard.Length == oldStandard.Count && newStandard.All(oldStandard.Contains))
+            {
+                // Standard peptides have not changed
+                return;
+            }
+            
+            // Determine which peptides are in the standard, but not in the document
+            var missingPeptides = newStandard.Except(Document.Peptides.Select(pep => pep.Peptide.Target)).ToHashSet();
+            if (missingPeptides.Count == 0)
                 return;
 
-            // Check if document already has the standards
-            var docPeptides = Document.Peptides.Select(nodePep => nodePep.Peptide.Target);
-            var standardPeptides = standard.Peptides.Select(pep => pep.Target).Except(missingPeptides);
-            if (!standardPeptides.Except(docPeptides).Any())
-                return;
+            if (!string.IsNullOrEmpty(calc.DocumentXml))
+            {
+                using (var reader = new StringReader(calc.DocumentXml))
+                {
+                    AddStandardsToDocument(reader, missingPeptides);
+                }
+            }
+            else
+            {
+                using (var reader = IrtStandard.WhichStandard(newStandard).GetDocumentReader())
+                {
+                    if (reader != null)
+                        AddStandardsToDocument(reader, missingPeptides);
+                }
+            }
+        }
 
+        private void AddStandardsToDocument(TextReader reader, ICollection<Target> missingPeptides)
+        {
             using (var dlg = new AddIrtStandardsToDocumentDlg())
             {
                 if (dlg.ShowDialog(this) == DialogResult.Yes)
                 {
                     ModifyDocument(Resources.SkylineWindow_AddStandardsToDocument_Add_standard_peptides, doc =>
                     {
-                        IdentityPath firstAdded, nextAdd;
-                        doc = doc.ImportDocumentXml(standardDocReader,
+                        doc = doc.ImportDocumentXml(reader,
                                                     string.Empty,
                                                     MeasuredResults.MergeAction.remove,
                                                     false,
@@ -3390,13 +3440,13 @@ namespace pwiz.Skyline
                                                     Settings.Default.StaticModList,
                                                     Settings.Default.HeavyModList,
                                                     doc.Children.Any() ? new IdentityPath(doc.Children.First().Id) : null,
-                                                    out firstAdded,
-                                                    out nextAdd,
+                                                    out var firstAdded,
+                                                    out _,
                                                     false);
 
                         var standardPepGroup = doc.PeptideGroups.First(nodePepGroup => new IdentityPath(nodePepGroup.Id).Equals(firstAdded));
                         var pepList = new List<DocNode>();
-                        foreach (var nodePep in standardPepGroup.Peptides.Where(pep => !missingPeptides.Contains(pep.ModifiedTarget)))
+                        foreach (var nodePep in standardPepGroup.Peptides.Where(pep => missingPeptides.Contains(pep.ModifiedTarget)))
                         {
                             var tranGroupList = new List<DocNode>();
                             foreach (TransitionGroupDocNode nodeTranGroup in nodePep.Children)
@@ -3412,19 +3462,6 @@ namespace pwiz.Skyline
                     }, dlg.FormSettings.EntryCreator.Create);
                 }
             }
-        }
-
-        private IrtStandard RCalcIrtStandard()
-        {
-            HashSet<Target> missingPeptides;
-            return RCalcIrtStandard(out missingPeptides);
-        }
-
-        private IrtStandard RCalcIrtStandard(out HashSet<Target> missingPeptides)
-        {
-            missingPeptides = new HashSet<Target>();
-            var calcPeptides = RCalcIrt.IrtPeptides(Document).ToArray();
-            return calcPeptides.Any() ? IrtStandard.WhichStandard(calcPeptides, out missingPeptides) : IrtStandard.EMPTY;
         }
 
         private void transitionSettingsMenuItem_Click(object sender, EventArgs e)
@@ -3743,10 +3780,24 @@ namespace pwiz.Skyline
 
         public void ShowToolOptionsUI()
         {
-            using (var dlg = new ToolOptionsUI())
+            using (var dlg = new ToolOptionsUI(_documentUI.Settings))
             {
                 dlg.ShowDialog(this);
             }
+        }
+
+        public void ShowToolOptionsUI(IWin32Window owner, ToolOptionsUI.TABS tab)
+        {
+            using (var dlg = new ToolOptionsUI(_documentUI.Settings))
+            {
+                dlg.NavigateToTab(tab);
+                dlg.ShowDialog(owner);
+            }
+        }
+
+        public void ShowToolOptionsUI(ToolOptionsUI.TABS tab)
+        {
+            ShowToolOptionsUI(this, tab);
         }
 
         private void updatesToolsMenuItem_Click(object sender, EventArgs e)
@@ -4814,11 +4865,12 @@ namespace pwiz.Skyline
                 SequenceTree.ResultsIndex = ComboResults.SelectedIndex;
 
                 // Make sure the graphs for the result set are visible.
-                if (GetGraphChrom(name) != null)
+                if (GetGraphChrom(name) != null || // Graph exists
+                    _listGraphChrom.Count >= MAX_GRAPH_CHROM) // Graph doesn't exist, presumably because there are more chromatograms than available graphs
                 {
                     bool focus = ComboResults.Focused;
 
-                    ShowGraphChrom(name, true);
+                    ShowGraphChrom(name, true); // Side effect - will close least recently used graph if more than MAX_GRAPH_CHROM open
 
                     if (focus)
                         // Keep focus on the combo box
@@ -5657,6 +5709,36 @@ namespace pwiz.Skyline
         private void mixedToolStripMenuItem_Click(object sender, EventArgs e)
         {
             SetUIMode(SrmDocument.DOCUMENT_TYPE.mixed);
+        }
+
+        private void prositLibMatchItem_Click(object sender, EventArgs e)
+        {
+            prositLibMatchItem.Checked = !prositLibMatchItem.Checked;
+
+            if (prositLibMatchItem.Checked)
+                PrositUIHelpers.CheckPrositSettings(this, this);
+
+            _graphSpectrumSettings.Prosit = prositLibMatchItem.Checked;
+        }
+
+        public bool ValidateSource()
+        {
+            return true;
+        }
+
+        public double? GetScore(Target target)
+        {
+            var node = Document.Peptides.FirstOrDefault(p => p.ModifiedTarget.Equals(target));
+            if (node == null)
+                return null;
+            return PrositRetentionTimeModel.Instance?.PredictSingle(PrositPredictionClient.Current, Document.Settings,
+                node, CancellationToken.None)[node];
+        }
+
+        private void mirrorMenuItem_Click(object sender, EventArgs e)
+        {
+            mirrorMenuItem.Checked = !mirrorMenuItem.Checked;
+            _graphSpectrumSettings.Mirror = mirrorMenuItem.Checked;
         }
     }
 }

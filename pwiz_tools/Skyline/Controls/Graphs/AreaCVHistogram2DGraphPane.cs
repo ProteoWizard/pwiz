@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private bool _percentage;
         private int _decimals;
 
-        private AreaCVGraphData.CVData _selectedData;
+        private CVData _selectedData;
 
         public AreaCVHistogram2DGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
@@ -81,7 +81,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         var objectList = lineItem.Tag as List<object>;
                         if (objectList != null)
                         {
-                            _selectedData = (AreaCVGraphData.CVData)objectList[index];
+                            _selectedData = (CVData)objectList[index];
                             sender.Cursor = Cursors.Hand;
                             return true;
                         }

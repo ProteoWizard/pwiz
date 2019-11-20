@@ -26,14 +26,16 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results.RemoteApi.GeneratedCode;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
     public sealed class SpectrumFilterPair : IComparable<SpectrumFilterPair>
     {
         private static readonly SpectrumProductFilter[] EMPTY_FILTERS = new SpectrumProductFilter[0];
-
+        private readonly bool _filterByTime;
+        private readonly double _maxTime;
+        private readonly double _minTime;
         public SpectrumFilterPair(PrecursorTextId precursorTextId, Color peptideColor, int id, double? minTime, double? maxTime,
             bool highAccQ1, bool highAccQ3)
         {
@@ -42,8 +44,18 @@ namespace pwiz.Skyline.Model.Results
             PeptideColor = peptideColor;
             Q1 = precursorTextId.PrecursorMz;
             Extractor = precursorTextId.Extractor;
-            MinTime = minTime;
-            MaxTime = maxTime;
+
+            if (minTime.HasValue && maxTime.HasValue)
+            {
+                _filterByTime = true;
+                _minTime = minTime.Value;
+                _maxTime = maxTime.Value;
+            }
+            else
+            {
+                // If not min and max, then it should be neither. Asymmetric limits not supported.
+                Assume.IsTrue(!minTime.HasValue && !maxTime.HasValue);
+            }
             IonMobilityInfo = precursorTextId.IonMobility;
             MinIonMobilityValue = IonMobilityInfo.IsEmpty ? null : IonMobilityInfo.IonMobility.Mobility - (IonMobilityInfo.IonMobilityExtractionWindowWidth??0)/2;
             MaxIonMobilityValue = IonMobilityInfo.IsEmpty ? null : MinIonMobilityValue + (IonMobilityInfo.IonMobilityExtractionWindowWidth ?? 0);
@@ -59,42 +71,6 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public SpectrumFilterPair(ChromatogramRequestDocumentChromatogramGroup requestGroup)
-        {
-            Q1 = new SignedMz(requestGroup.PrecursorMz);
-            ModifiedSequence = new Target(requestGroup.ModifiedSequence);
-            switch (requestGroup.Extractor)
-            {
-                case RemoteApi.GeneratedCode.ChromExtractor.BasePeak:
-                    Extractor = ChromExtractor.base_peak;
-                    break;
-                case RemoteApi.GeneratedCode.ChromExtractor.Summed:
-                    Extractor = ChromExtractor.summed;
-                    break;
-            }
-            if (requestGroup.MinTimeSpecified)
-            {
-                MinTime = requestGroup.MinTime;
-            }
-            if (requestGroup.MaxTimeSpecified)
-            {
-                MaxTime = requestGroup.MaxTime;
-            }
-            switch (requestGroup.Source)
-            {
-                case RemoteApi.GeneratedCode.ChromSource.Ms1:
-                    Ms1ProductFilters = requestGroup.Chromatogram.Select(
-                        product => new SpectrumProductFilter(product.ProductMz, product.MzWindow, 0)).ToArray(); // CONSIDER(bspratt): is high energy ion mobility offset an issue here?
-                    HighAccQ1 = requestGroup.MassErrors;
-                    break;
-                case RemoteApi.GeneratedCode.ChromSource.Ms2:
-                    Ms2ProductFilters = requestGroup.Chromatogram.Select(
-                        product => new SpectrumProductFilter(product.ProductMz, product.MzWindow, 0)).ToArray(); // CONSIDER(bspratt): is high energy ion mobility offset an issue here?
-                    HighAccQ3 = requestGroup.MassErrors;
-                    break;
-            }
-        }
-
         public int Id { get; private set; }
         public ChromExtractor Extractor { get; private set; }
         public bool HighAccQ1 { get; private set; }
@@ -102,10 +78,13 @@ namespace pwiz.Skyline.Model.Results
         public Target ModifiedSequence { get; private set; }
         public Color PeptideColor { get; private set; }
         public SignedMz Q1 { get; private set; }
-        public double? MinTime { get; private set; }
-        public double? MaxTime { get; private set; }
+        public double? MinTime { get { return _filterByTime ? _minTime : (double?) null; } }
+        public double? MaxTime { get { return _filterByTime ? _maxTime : (double?) null; } }
         public double? MinIonMobilityValue { get; set; }
         public double? MaxIonMobilityValue { get; set; }
+        public int? BestWindowGroup { get; private set; }
+        public double? BestWindowGroupDistance { get; private set; }
+        public IList<int> OtherWindowGroups { get; private set; }
         private IonMobilityFilter IonMobilityInfo { get; set; }
         private SpectrumProductFilter[] Ms1ProductFilters { get; set; }
         private SpectrumProductFilter[] SimProductFilters { get; set; }
@@ -243,7 +222,8 @@ namespace pwiz.Skyline.Model.Results
                 spectrumCount++;
 
                 // Filter on ion mobility, if any - gross check before we look at individual fragment high energy offsets
-                if (!ContainsIonMobilityValue(spectrum.IonMobility, maxIonMobilityHighEnergyOffset) &&
+                if (spectrum.IonMobilities == null &&   // Not for 3D spectra
+                    !ContainsIonMobilityValue(spectrum.IonMobility, maxIonMobilityHighEnergyOffset) &&
                     !ContainsIonMobilityValue(spectrum.IonMobility, minIonMobilityHighEnergyOffset))
                 {
                     if (specIndex > specIndexFirst && specIndexFirst > 0)
@@ -265,6 +245,7 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 var intensityArray = spectrum.Intensities;
+                var imsArray = spectrum.IonMobilities;
 
                 // Search for matching peaks for each Q3 filter
                 // Use binary search to get to the first m/z value to be considered more quickly
@@ -274,9 +255,12 @@ namespace pwiz.Skyline.Model.Results
                 int iPeak = 0;
                 for (int targetIndex = 0; targetIndex < targetCount; targetIndex++)
                 {
-                    // If fragments have individual high energy ion mobility offsets, recheck
                     var productFilter = productFilters[targetIndex];
-                    if (productFilter.HighEnergyIonMobilityValueOffset != 0 &&
+                    // If fragments have individual high energy ion mobility offsets, recheck
+                    // but only if there is no IonMobilities array. Otherwise IMS filtering is
+                    // performed during extraction
+                    if (spectrum.IonMobilities == null &&
+                        productFilter.HighEnergyIonMobilityValueOffset != 0 &&
                         !ContainsIonMobilityValue(spectrum.IonMobility, productFilter.HighEnergyIonMobilityValueOffset))
                     {
                         continue;
@@ -309,6 +293,10 @@ namespace pwiz.Skyline.Model.Results
                     {
                         double mz = mzArray[iNext];
                         double intensity = intensityArray[iNext];
+
+                        // Avoid adding points that are not within the allowed ion mobility range
+                        if (imsArray != null && !ContainsIonMobilityValue(imsArray[iNext], productFilter.HighEnergyIonMobilityValueOffset))
+                            continue;
                     
                         if (Extractor == ChromExtractor.summed)
                             totalIntensity += intensity;
@@ -372,48 +360,7 @@ namespace pwiz.Skyline.Model.Results
 
         public bool ContainsRetentionTime(double retentionTime)
         {
-            return (!MinTime.HasValue || MinTime.Value <= retentionTime) &&
-                (!MaxTime.HasValue || MaxTime.Value >= retentionTime);
-        }
-
-        public IEnumerable<ChromatogramRequestDocumentChromatogramGroup> ToChromatogramRequestDocumentChromatogramGroups()
-        {
-            // CONSIDER(bspratt) how to communicate scan polarity to Chorus?
-            if (null != Ms1ProductFilters)
-            {
-                var chromatograms = new List<ChromatogramRequestDocumentChromatogramGroupChromatogram>();
-                foreach (var spectrumProductFilter in Ms1ProductFilters)
-                {
-                    var product = new ChromatogramRequestDocumentChromatogramGroupChromatogram
-                    {
-                        ProductMz = spectrumProductFilter.TargetMz.RawValue, // Negative ion mode values serialize as negative numbers
-                        MzWindow = spectrumProductFilter.FilterWidth,
-                    };
-                    chromatograms.Add(product);
-                }
-                if (chromatograms.Count > 0)
-                {
-                    yield return MakeChromatogramRequestDocumentChromatogramGroup(ChromSource.ms1, HighAccQ1 && 0 != Q1, chromatograms);
-                }
-            }
-            if (null != Ms2ProductFilters)
-            {
-                var chromatograms = new List<ChromatogramRequestDocumentChromatogramGroupChromatogram>();
-                foreach (var spectrumProductFilter in Ms2ProductFilters)
-                {
-                    var product = new ChromatogramRequestDocumentChromatogramGroupChromatogram
-                    {
-                        ProductMz = spectrumProductFilter.TargetMz.RawValue, // Negative ion mode values serialize as negative numbers
-                        MzWindow = spectrumProductFilter.FilterWidth,
-                    };
-                    chromatograms.Add(product);
-                }
-                if (chromatograms.Count > 0)
-                {
-                    yield return
-                        MakeChromatogramRequestDocumentChromatogramGroup(ChromSource.fragment, HighAccQ3, chromatograms);
-                }
-            }
+            return !_filterByTime || (_minTime <= retentionTime && retentionTime <= _maxTime);
         }
 
         public IEnumerable<int> ProductFilterIds
@@ -463,61 +410,6 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private ChromatogramRequestDocumentChromatogramGroup MakeChromatogramRequestDocumentChromatogramGroup(
-            ChromSource chromSource, bool calculateMassErrors, IEnumerable<ChromatogramRequestDocumentChromatogramGroupChromatogram> chromatograms)
-        {
-            ChromatogramRequestDocumentChromatogramGroup docFilterPair = new ChromatogramRequestDocumentChromatogramGroup
-            {
-                ModifiedSequence = ModifiedSequence != null ? ModifiedSequence.ToString() : null,
-                PrecursorMz = Q1.RawValue,  // A negative ion mode precursor will be serialized as a negative mz value
-                MassErrors = calculateMassErrors,
-            };
-            switch (Extractor)
-            {
-                case ChromExtractor.base_peak:
-                    docFilterPair.Extractor = RemoteApi.GeneratedCode.ChromExtractor.BasePeak;
-                    break;
-                case ChromExtractor.summed:
-                    docFilterPair.Extractor = RemoteApi.GeneratedCode.ChromExtractor.Summed;
-                    break;
-            }
-            if (MinTime.HasValue)
-            {
-                docFilterPair.MinTime = MinTime.Value;
-                docFilterPair.MinTimeSpecified = true;
-            }
-            if (MaxTime.HasValue)
-            {
-                docFilterPair.MaxTime = MaxTime.Value;
-                docFilterPair.MaxTimeSpecified = true;
-            }
-            if (MinIonMobilityValue.HasValue && MaxIonMobilityValue.HasValue)
-            {
-                docFilterPair.DriftTime = (MinIonMobilityValue.Value + MaxIonMobilityValue.Value)/2;
-                //if (ChromSource.fragment == chromSource) // Use high energy offset for fragments
-                //{
-                //    docFilterPair.IonMobility += HighEnergyIonMobilityValueOffset; // CONSIDER(bspratt) - make Chorus understand per-fragment high energy IMS offsets
-                //}
-                docFilterPair.DriftTimeSpecified = true;
-                docFilterPair.DriftTimeWindow = MaxIonMobilityValue.Value - MinIonMobilityValue.Value;
-                docFilterPair.DriftTimeWindowSpecified = true;
-            }
-            switch (chromSource)
-            {
-                case ChromSource.ms1:
-                    docFilterPair.Source = RemoteApi.GeneratedCode.ChromSource.Ms1;
-                    break;
-                case ChromSource.fragment:
-                    docFilterPair.Source = RemoteApi.GeneratedCode.ChromSource.Ms2;
-                    break;
-                case ChromSource.sim:
-                    docFilterPair.Source = RemoteApi.GeneratedCode.ChromSource.Sim;
-                    break;
-            }
-            docFilterPair.Chromatogram = chromatograms.ToArray();
-            return docFilterPair;
-        }
-
         public bool HasIonMobilityFAIMS()
         {
             return IonMobilityInfo.HasIonMobilityValue && 
@@ -526,10 +418,13 @@ namespace pwiz.Skyline.Model.Results
 
         public bool ContainsIonMobilityValue(IonMobilityValue ionMobility, double highEnergyOffset)
         {
-            if (!ionMobility.HasValue)
-                return true; // It doesn't NOT have the ion mobility, since there isn't one
-            return (!MinIonMobilityValue.HasValue || MinIonMobilityValue.Value+highEnergyOffset <= ionMobility.Mobility) &&
-                (!MaxIonMobilityValue.HasValue || MaxIonMobilityValue.Value+highEnergyOffset >= ionMobility.Mobility);
+            return !ionMobility.HasValue || ContainsIonMobilityValue(ionMobility.Mobility.Value, highEnergyOffset);
+        }
+
+        public bool ContainsIonMobilityValue(double ionMobilityValue, double highEnergyOffset)
+        {
+            return (!MinIonMobilityValue.HasValue || MinIonMobilityValue.Value + highEnergyOffset <= ionMobilityValue) &&
+                   (!MaxIonMobilityValue.HasValue || MaxIonMobilityValue.Value + highEnergyOffset >= ionMobilityValue);
         }
 
         public IonMobilityFilter GetIonMobilityWindow()
@@ -545,6 +440,48 @@ namespace pwiz.Skyline.Model.Results
             {
                 return IonMobilityFilter.EMPTY;
             }
+        }
+
+        public bool IsKnownWindowGroup(int windowGroup)
+        {
+            return windowGroup == BestWindowGroup ||
+                   (OtherWindowGroups != null && OtherWindowGroups.Contains(windowGroup));
+        }
+
+        public bool IsBestWindowGroup(int windowGroup)
+        {
+            return windowGroup == BestWindowGroup;
+        }
+
+        public bool UpdateBestWindowGroup(int windowGroup, double distance)
+        {
+            if (BestWindowGroup.HasValue)
+            {
+                // Already have a best value and this is it
+                if (BestWindowGroup.Value == windowGroup)
+                    return true;
+                // Not it and the distance is not closer
+                if (BestWindowGroupDistance.Value <= distance)
+                    return false;
+            }
+            // This becomes the best window group
+            if (BestWindowGroup.HasValue)
+            {
+                // Save any previously seen window groups, providing for most likely cases:
+                // 1. No other possible window groups
+                // 2. 1 other possible window group
+                if (OtherWindowGroups == null)
+                    OtherWindowGroups = new[] {BestWindowGroup.Value};
+                else
+                {
+                    if (OtherWindowGroups.Count == 1)
+                        OtherWindowGroups = new List<int>(OtherWindowGroups);
+                    OtherWindowGroups.Add(BestWindowGroup.Value);
+                }
+            }
+            BestWindowGroup = windowGroup;
+            BestWindowGroupDistance = distance;
+            return true;
         }
 
         public bool MatchesDdaPrecursor(SignedMz precursorMz)

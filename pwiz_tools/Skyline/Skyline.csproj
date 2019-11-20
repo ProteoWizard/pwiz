@@ -112,6 +112,12 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
     </Reference>
+    <Reference Include="Grpc.Core">
+      <HintPath>..\Shared\Lib\Grpc.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Grpc.Core.Api">
+      <HintPath>..\Shared\Lib\Grpc.Core.Api.dll</HintPath>
+    </Reference>
     <Reference Include="IdentityModel, Version=3.6.1.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\Lib\IdentityModel.dll</HintPath>
@@ -161,8 +167,17 @@
     <Reference Include="System.Data.SQLite">
       <HintPath>..\..\libraries\SQLite\$(Platform)\System.Data.SQLite.dll</HintPath>
     </Reference>
+    <Reference Include="System.Interactive.Async">
+      <HintPath>..\Shared\Lib\System.Interactive.Async.dll</HintPath>
+    </Reference>
     <Reference Include="System.Management" />
+    <Reference Include="System.Memory">
+      <HintPath>..\Shared\Lib\System.Memory.dll</HintPath>
+    </Reference>
     <Reference Include="System.Net.Http" />
+    <Reference Include="System.Runtime.CompilerServices.Unsafe">
+      <HintPath>..\Shared\Lib\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
     <Reference Include="System.Security" />
     <Reference Include="System.Web" />
     <Reference Include="System.Data.DataSetExtensions">
@@ -324,6 +339,7 @@
     <Compile Include="Controls\ImageListBox.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Controls\PrositUIHelpers.cs" />
     <Compile Include="Controls\TargetColumn.cs" />
     <Compile Include="FileUI\ExportAnnotationsDlg.cs">
       <SubType>Form</SubType>
@@ -338,6 +354,8 @@
     <Compile Include="Controls\DocumentChangeLogEntryDlg.Designer.cs">
       <DependentUpon>DocumentChangeLogEntryDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\AreaCVGraphData.cs" />
+    <Compile Include="Model\AreaCVRefinementData.cs" />
     <Compile Include="Model\AuditLog\AuditLogObject.cs" />
     <Compile Include="Model\AuditLog\AuditLogToStringHelper.cs" />
     <Compile Include="Model\AuditLog\BlockHash.cs" />
@@ -427,8 +445,22 @@
     <Compile Include="Model\Lists\ListExceptionDetail.cs" />
     <Compile Include="Model\MassModification.cs" />
     <Compile Include="Model\Optimization\OptimizationDictionary.cs" />
+    <Compile Include="Model\Prosit\Config\PrositConfig.cs" />
+    <Compile Include="Model\Prosit\Models\PrositIntensityModel.cs" />
+    <Compile Include="Model\Prosit\Models\PrositModel.cs" />
+    <Compile Include="Model\Prosit\PrositConstants.cs" />
+    <Compile Include="Model\Prosit\Communication\PrositPredictionClient.cs" />
+    <Compile Include="Model\Prosit\Models\PrositRetentionTimeModel.cs" />
+    <Compile Include="Model\Prosit\PrositExceptions.cs" />
+    <Compile Include="Model\Prosit\PrositLibraryBuilder.cs" />
+    <Compile Include="Model\Prosit\PrositMS2Spectra.cs" />
+    <Compile Include="Model\Prosit\PrositResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>PrositResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Prosit\PrositRetentionScoreCalculator.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteAccountList.cs" />
-    <Compile Include="Model\Results\RemoteApi\Chorus\ChorusUrl.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteAccount.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteAccountType.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteItem.cs" />
@@ -495,6 +527,14 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="ProtocolBuffers\GeneratedCode\Model.cs" />
+    <Compile Include="ProtocolBuffers\GeneratedCode\Predict.cs" />
+    <Compile Include="ProtocolBuffers\GeneratedCode\PredictionService.cs" />
+    <Compile Include="ProtocolBuffers\GeneratedCode\PredictionServiceGrpc.cs" />
+    <Compile Include="ProtocolBuffers\GeneratedCode\ResourceHandle.cs" />
+    <Compile Include="ProtocolBuffers\GeneratedCode\Tensor.cs" />
+    <Compile Include="ProtocolBuffers\GeneratedCode\TensorShape.cs" />
+    <Compile Include="ProtocolBuffers\GeneratedCode\Types.cs" />
     <Compile Include="Util\UiModes.cs" />
     <Compile Include="SettingsUI\IonMobility\UseSpectralLibraryIonMobilityValuesControl.cs">
       <SubType>UserControl</SubType>
@@ -576,7 +616,6 @@
     <Compile Include="Controls\FindResultsForm.Designer.cs">
       <DependentUpon>FindResultsForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Controls\Graphs\AreaCVGraphData.cs" />
     <Compile Include="Controls\Graphs\AreaCVHistogram2DGraphPane.cs" />
     <Compile Include="Controls\Graphs\AreaCVHistogramGraphPane.cs" />
     <Compile Include="Controls\Graphs\AreaCVToolbarProperties.cs">
@@ -718,12 +757,6 @@
     <Compile Include="Controls\Graphs\UniquePrefixGenerator.cs" />
     <Compile Include="Model\GroupComparison\GroupIdentifier.cs" />
     <Compile Include="Controls\GroupComparison\GroupComparisonViewContext.cs" />
-    <Compile Include="Controls\GroupComparison\MsStatsLogoForm.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Controls\GroupComparison\MsStatsLogoForm.Designer.cs">
-      <DependentUpon>MsStatsLogoForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="Controls\ImmediateWindow.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -920,12 +953,6 @@
     </Compile>
     <Compile Include="FileUI\ChooseSchedulingReplicatesDlg.Designer.cs">
       <DependentUpon>ChooseSchedulingReplicatesDlg.cs</DependentUpon>
-    </Compile>
-    <Compile Include="FileUI\ExportChorusRequestDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FileUI\ExportChorusRequestDlg.Designer.cs">
-      <DependentUpon>ExportChorusRequestDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="FileUI\ExportChromatogramDlg.cs">
       <SubType>Form</SubType>
@@ -1354,7 +1381,6 @@
     <Compile Include="Model\Results\CachedChromatogramDataProvider.cs" />
     <Compile Include="Model\Results\CachedFileHeader.cs" />
     <Compile Include="Model\Results\CacheFormat.cs" />
-    <Compile Include="Model\Results\ChorusResponseChromDataProvider.cs" />
     <Compile Include="Model\Results\Chromatogram.cs" />
     <Compile Include="Model\Results\ChromatogramCache.cs" />
     <Compile Include="Controls\Graphs\AllChromatogramsGraph.cs">
@@ -1402,19 +1428,6 @@
     <Compile Include="Model\Results\PeptideFinder.cs" />
     <Compile Include="Model\Results\PrecursorTextId.cs" />
     <Compile Include="Model\Results\RatioValue.cs" />
-    <Compile Include="Model\Results\RemoteApi\Chorus\ChorusAccount.cs" />
-    <Compile Include="Model\Results\RemoteApi\Chorus\ChorusContents.cs" />
-    <Compile Include="Model\Results\RemoteApi\Chorus\ChorusErrorResponse.cs" />
-    <Compile Include="Model\Results\RemoteApi\Chorus\ChorusScanProvider.cs" />
-    <Compile Include="Model\Results\RemoteApi\Chorus\ChorusSession.cs" />
-    <Compile Include="Model\Results\RemoteApi\Chorus\ChromatogramGeneratorTask.cs" />
-    <Compile Include="Model\Results\RemoteApi\Chorus\ChromatogramRequestProvider.cs" />
-    <Compile Include="Model\Results\RemoteApi\Chorus\ChromTaskList.cs" />
-    <Compile Include="Model\Results\RemoteApi\GeneratedCode\ChromatogramRequest.cs">
-      <DependentUpon>ChromatogramRequest.xsd</DependentUpon>
-    </Compile>
-    <Compile Include="Model\Results\RemoteApi\GeneratedCode\ChromatogramRequestExtra.cs" />
-    <Compile Include="Model\Results\RemoteChromDataProvider.cs" />
     <Compile Include="Model\Results\ResultNameMap.cs" />
     <Compile Include="Model\Results\ScanProvider.cs" />
     <Compile Include="Model\RetentionTimes\Aligner.cs" />
@@ -1670,12 +1683,6 @@
     </Compile>
     <Compile Include="SettingsUI\Irt\ChangeIrtPeptidesDlg.Designer.cs">
       <DependentUpon>ChangeIrtPeptidesDlg.cs</DependentUpon>
-    </Compile>
-    <Compile Include="SettingsUI\Irt\RecalibrateIrtDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SettingsUI\Irt\RecalibrateIrtDlg.Designer.cs">
-      <DependentUpon>RecalibrateIrtDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="SettingsUI\Irt\EditIrtCalcDlg.cs">
       <SubType>Form</SubType>
@@ -2118,15 +2125,6 @@
     <EmbeddedResource Include="Controls\GroupComparison\FoldChangeVolcanoPlot.zh-CHS.resx">
       <DependentUpon>FoldChangeVolcanoPlot.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Controls\GroupComparison\MsStatsLogoForm.ja.resx">
-      <DependentUpon>MsStatsLogoForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Controls\GroupComparison\MsStatsLogoForm.resx">
-      <DependentUpon>MsStatsLogoForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Controls\GroupComparison\MsStatsLogoForm.zh-CHS.resx">
-      <DependentUpon>MsStatsLogoForm.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Lists\ListDesigner.ja.resx">
       <DependentUpon>ListDesigner.cs</DependentUpon>
     </EmbeddedResource>
@@ -2257,13 +2255,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ExportAnnotationsDlg.resx">
       <DependentUpon>ExportAnnotationsDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\ExportChorusRequestDlg.ja.resx">
-      <DependentUpon>ExportChorusRequestDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\ExportChorusRequestDlg.zh-CHS.resx">
-      <DependentUpon>ExportChorusRequestDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ImportResultsLockMassDlg.ja.resx">
       <DependentUpon>ImportResultsLockMassDlg.cs</DependentUpon>
@@ -2617,9 +2608,6 @@
     <EmbeddedResource Include="FileUI\ChooseSchedulingReplicatesDlg.ja.resx">
       <DependentUpon>ChooseSchedulingReplicatesDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\ExportChorusRequestDlg.resx">
-      <DependentUpon>ExportChorusRequestDlg.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ChooseSchedulingReplicatesDlg.zh-CHS.resx">
       <DependentUpon>ChooseSchedulingReplicatesDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2781,6 +2769,11 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\GroupComparison\GroupComparisonStrings.zh-CHS.resx" />
+    <EmbeddedResource Include="Model\Prosit\PrositResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>PrositResources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\PeptideLib.bmp" />
     <EmbeddedResource Include="Resources\PeptideIrtLib.bmp" />
     <EmbeddedResource Include="Resources\PeptideIrt.bmp" />
@@ -2853,6 +2846,14 @@
       <Link>unimod.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\Shared\Lib\grpc_csharp_ext.x64.dll">
+      <Link>grpc_csharp_ext.x64.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Shared\Lib\grpc_csharp_ext.x86.dll">
+      <Link>grpc_csharp_ext.x86.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Condition=" '$(Platform)' == 'x86' " Include="..\Shared\ProteowizardWrapper\obj\x86\timsdata.dll">
       <Link>timsdata.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -2901,6 +2902,18 @@
     <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearchPRM.png" />
     <EmbeddedResource Include="Resources\Ions_fragments.bmp" />
     <EmbeddedResource Include="Resources\Edit_Undo_Multiple.bmp" />
+    <Protobuf Include="ProtocolBuffers\model.proto" />
+    <Protobuf Include="ProtocolBuffers\predict.proto" />
+    <Protobuf Include="ProtocolBuffers\prediction_service.proto" />
+    <Protobuf Include="ProtocolBuffers\resource_handle.proto" />
+    <Protobuf Include="ProtocolBuffers\tensor.proto" />
+    <Protobuf Include="ProtocolBuffers\tensor_shape.proto" />
+    <Protobuf Include="ProtocolBuffers\types.proto" />
+    <EmbeddedResource Include="Model\Prosit\Config\PrositConfig.xml">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <None Include="Model\Prosit\Config\PrositConfig_development.xml" />
+    <None Include="Model\Prosit\Config\UpdatePrositConfiguration.bat" />
     <None Include="Resources\Locked.bmp" />
     <EmbeddedResource Include="Resources\MoleculeLib.bmp" />
     <None Include="Resources\MoleculeStandard.bmp" />
@@ -2942,6 +2955,7 @@
     <EmbeddedResource Include="Resources\MoleculeIrt.bmp" />
     <EmbeddedResource Include="Resources\MoleculeIrtLib.bmp" />
     <EmbeddedResource Include="Resources\MoleculeStandardLib.bmp" />
+    <EmbeddedResource Include="Resources\prosit_logo_dark_blue.png" />
     <Content Include="SkylineProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -3285,12 +3299,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\EditIrtCalcDlg.zh-CHS.resx">
       <DependentUpon>EditIrtCalcDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\Irt\RecalibrateIrtDlg.ja.resx">
-      <DependentUpon>RecalibrateIrtDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\Irt\RecalibrateIrtDlg.zh-CHS.resx">
-      <DependentUpon>RecalibrateIrtDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Optimization\AddOptimizationLibraryDlg.ja.resx">
       <DependentUpon>AddOptimizationLibraryDlg.cs</DependentUpon>
@@ -3640,10 +3648,6 @@
       <SubType>Designer</SubType>
     </None>
     <None Include="Jamfile.jam" />
-    <None Include="Model\Results\RemoteApi\GeneratedCode\ChromatogramRequest.xsd">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Model\Results\RemoteApi\GeneratedCode\gencodefromxsd.bat" />
     <None Include="Properties\Settings.settings">
       <Generator>PublicSettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -4749,10 +4753,6 @@
       <DependentUpon>ChangeIrtPeptidesDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\Irt\RecalibrateIrtDlg.resx">
-      <DependentUpon>RecalibrateIrtDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\EditIrtCalcDlg.resx">
       <DependentUpon>EditIrtCalcDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -5002,8 +5002,6 @@
     <Exec Command="SignAfterPublish.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).pfx&quot; password &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
   </Target>
   <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
-    <PreBuildEvent>$(ProjectDir)ProtocolBuffers\generatecode.bat</PreBuildEvent>
+    <PreBuildEvent>$(ProjectDir)ProtocolBuffers\generatecode.bat &amp;&amp; $(ProjectDir)Model\Prosit\Config\UpdatePrositConfiguration.bat</PreBuildEvent>
   </PropertyGroup>
 </Project>

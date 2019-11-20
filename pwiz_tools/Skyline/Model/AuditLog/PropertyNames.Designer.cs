@@ -1033,6 +1033,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Charge.
+        /// </summary>
+        public static string FragmentLoss_Charge {
+            get {
+                return ResourceManager.GetString("FragmentLoss_Charge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Neutral loss chemical formula.
         /// </summary>
         public static string FragmentLoss_Formula {
@@ -2662,6 +2671,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Transitions count.
+        /// </summary>
+        public static string RefinementSettings_CountTransitions {
+            get {
+                return ResourceManager.GetString("RefinementSettings_CountTransitions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove above cv cutoff.
+        /// </summary>
+        public static string RefinementSettings_CVCutoff {
+            get {
+                return ResourceManager.GetString("RefinementSettings_CVCutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Min dotp.
         /// </summary>
         public static string RefinementSettings_DotProductThreshold {
@@ -2725,6 +2752,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Minimum Detections.
+        /// </summary>
+        public static string RefinementSettings_MinimumDetections {
+            get {
+                return ResourceManager.GetString("RefinementSettings_MinimumDetections", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Min peak found ratio.
         /// </summary>
         public static string RefinementSettings_MinPeakFoundRatio {
@@ -2752,11 +2788,47 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to MS level.
+        /// </summary>
+        public static string RefinementSettings_MSLevel {
+            get {
+                return ResourceManager.GetString("RefinementSettings_MSLevel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Normalization to standard type.
+        /// </summary>
+        public static string RefinementSettings_NormalizationLabelType {
+            get {
+                return ResourceManager.GetString("RefinementSettings_NormalizationLabelType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Normalization method.
+        /// </summary>
+        public static string RefinementSettings_NormalizationMethod {
+            get {
+                return ResourceManager.GetString("RefinementSettings_NormalizationMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Prefer larger product ions.
         /// </summary>
         public static string RefinementSettings_PreferLargeIons {
             get {
                 return ResourceManager.GetString("RefinementSettings_PreferLargeIons", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove above qvalue cutoff.
+        /// </summary>
+        public static string RefinementSettings_QValueCutoff {
+            get {
+                return ResourceManager.GetString("RefinementSettings_QValueCutoff", resourceCulture);
             }
         }
         
@@ -2820,6 +2892,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string RefinementSettings_RTRegressionThreshold {
             get {
                 return ResourceManager.GetString("RefinementSettings_RTRegressionThreshold", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transitions.
+        /// </summary>
+        public static string RefinementSettings_Transitions {
+            get {
+                return ResourceManager.GetString("RefinementSettings_Transitions", resourceCulture);
             }
         }
         
@@ -3621,6 +3702,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string TransitionGroupDocNode_PrecursorAdduct {
             get {
                 return ResourceManager.GetString("TransitionGroupDocNode_PrecursorAdduct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor concentration.
+        /// </summary>
+        public static string TransitionGroupDocNode_PrecursorConcentration {
+            get {
+                return ResourceManager.GetString("TransitionGroupDocNode_PrecursorConcentration", resourceCulture);
             }
         }
         

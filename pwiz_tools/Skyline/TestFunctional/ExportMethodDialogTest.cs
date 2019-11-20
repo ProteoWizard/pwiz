@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -578,12 +579,48 @@ namespace pwiz.SkylineTestFunctional
             string brukerTemplateMeth = TestFilesDir.GetTestPath("Bruker Template Scheduled Precursor List.m");
             WaitForDocumentLoaded();
 
+            // Test order by m/z
+            {
+                var exportFile = TestFilesDir.GetTestPath("export-order-by-mz.txt");
+
+                RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List),
+                    exportMethodDlg =>
+                    {
+                        exportMethodDlg.SortByMz = true;
+                        exportMethodDlg.OkDialog(exportFile);
+                    });
+
+                using (var reader = new StreamReader(exportFile))
+                {
+                    double prevPrecursor = 0;
+                    double prevProduct = 0;
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        Assert.IsNotNull(line);
+                        var values = line.Split(',');
+                        Assert.IsTrue(values.Length >= 2);
+                        Assert.IsTrue(double.TryParse(values[0], NumberStyles.Any, CultureInfo.InvariantCulture, out var precursor));
+                        Assert.IsTrue(double.TryParse(values[1], NumberStyles.Any, CultureInfo.InvariantCulture, out var product));
+                        Assert.IsTrue(prevPrecursor <= precursor);
+                        if (prevPrecursor != precursor)
+                        {
+                            prevProduct = 0;
+                        }
+                        Assert.IsTrue(prevProduct <= product);
+                        prevPrecursor = precursor;
+                        prevProduct = product;
+                    }
+                }
+            }
+
             // Export PRM method unscheduled
             RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method),
                     exportMethodDlg =>
                     {
                         exportMethodDlg.InstrumentType = ExportInstrumentType.BRUKER_TOF;
                         exportMethodDlg.ExportStrategy = ExportStrategy.Single;
+                        exportMethodDlg.SortByMz = false;
                         exportMethodDlg.SetTemplateFile(brukerTemplateMeth);
                         exportMethodDlg.MethodType = ExportMethodType.Standard;
                         Assert.IsTrue(exportMethodDlg.IsRunLengthVisible);

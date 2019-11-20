@@ -407,6 +407,12 @@
   <data name="ranksContextMenuItem.Text" xml:space="preserve">
     <value>Ranks</value>
   </data>
+  <data name="scoreContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>193, 22</value>
+  </data>
+  <data name="scoreContextMenuItem.Text" xml:space="preserve">
+    <value>Score</value>
+  </data>
   <data name="ionMzValuesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
   </data>
@@ -435,6 +441,21 @@
     <value>Auto-scale Y-axis</value>
   </data>
   <data name="toolStripSeparator14.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 6</value>
+  </data>
+  <data name="prositLibMatchItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>193, 22</value>
+  </data>
+  <data name="prositLibMatchItem.Text" xml:space="preserve">
+    <value>Prosit</value>
+  </data>
+  <data name="mirrorMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>193, 22</value>
+  </data>
+  <data name="mirrorMenuItem.Text" xml:space="preserve">
+    <value>Mirror</value>
+  </data>
+  <data name="toolStripSeparator61.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 6</value>
   </data>
   <data name="spectrumPropsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
@@ -1316,6 +1337,12 @@
   <data name="areaCVAllTransitionsToolStripMenuItem.Text" xml:space="preserve">
     <value>All</value>
   </data>
+  <data name="areaCVCountTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="areaCVCountTransitionsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Count</value>
+  </data>
   <data name="areaCVBestTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>129, 22</value>
   </data>
@@ -1898,12 +1925,6 @@
   </data>
   <data name="mProphetFeaturesMenuItem.Text" xml:space="preserve">
     <value>m&amp;Prophet Features...</value>
-  </data>
-  <data name="chorusRequestToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>183, 22</value>
-  </data>
-  <data name="chorusRequestToolStripMenuItem.Text" xml:space="preserve">
-    <value>Chorus Request...</value>
   </data>
   <data name="exportAnnotationsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
@@ -3782,6 +3803,12 @@ first occurrence of any peptide.</value>
   <data name="&gt;&gt;ranksContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;scoreContextMenuItem.Name" xml:space="preserve">
+    <value>scoreContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;scoreContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;ionMzValuesContextMenuItem.Name" xml:space="preserve">
     <value>ionMzValuesContextMenuItem</value>
   </data>
@@ -3816,6 +3843,24 @@ first occurrence of any peptide.</value>
     <value>toolStripSeparator14</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator14.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;prositLibMatchItem.Name" xml:space="preserve">
+    <value>prositLibMatchItem</value>
+  </data>
+  <data name="&gt;&gt;prositLibMatchItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;mirrorMenuItem.Name" xml:space="preserve">
+    <value>mirrorMenuItem</value>
+  </data>
+  <data name="&gt;&gt;mirrorMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator61.Name" xml:space="preserve">
+    <value>toolStripSeparator61</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator61.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;spectrumPropsContextMenuItem.Name" xml:space="preserve">
@@ -4736,6 +4781,12 @@ first occurrence of any peptide.</value>
   <data name="&gt;&gt;areaCVAllTransitionsToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;areaCVCountTransitionsToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCVCountTransitionsToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVCountTransitionsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;areaCVBestTransitionsToolStripMenuItem.Name" xml:space="preserve">
     <value>areaCVBestTransitionsToolStripMenuItem</value>
   </data>
@@ -5124,12 +5175,6 @@ first occurrence of any peptide.</value>
     <value>mProphetFeaturesMenuItem</value>
   </data>
   <data name="&gt;&gt;mProphetFeaturesMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;chorusRequestToolStripMenuItem.Name" xml:space="preserve">
-    <value>chorusRequestToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;chorusRequestToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;exportAnnotationsMenuItem.Name" xml:space="preserve">

@@ -1814,7 +1814,11 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>5</value>
   </data>
   <data name="textSpectralLibraryDriftTimesWidthAtDt0.ToolTip" xml:space="preserve">
-    <value>スペクトルライブラリにおけるイオン移動度の許容誤差を決定する。ここで： imMax = 測定イオン移動度の最大値  W0 =イオン移動度ゼロでの幅  Wmax = imMaxでの幅 「W」はイオン移動度「M」に中心のあるイオン移動度の一致ウィンドウの幅
+    <value>スペクトルライブラリにおけるイオン移動度に一致する許容誤差を決定する。ここで：
+imMax = 測定イオン移動度の最大値
+W0 = イオン移動度ゼロでの幅
+Wmax = imMaxでの幅
+「W」はイオン移動度「M」に中心のあるイオン移動度の一致ウィンドウの幅
 W = (W0 + M*(Wmax-W0)/imMax)</value>
   </data>
   <data name="&gt;&gt;textMeasureRTWindow.Parent" xml:space="preserve">
@@ -2032,7 +2036,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="textSpectralLibraryDriftTimesWidthAtDtMax.ToolTip" xml:space="preserve">
-    <value>スペクトルライブラリにおけるイオン移動度に一致する許容誤差を決定する。ここで：
+    <value>スペクトラルライブラリにおけるイオン移動度の許容誤差を決定する。ここで：
 imMax = 測定イオン移動度の最大値
 W0 = イオン移動度ゼロでの幅
 Wmax = imMaxでの幅

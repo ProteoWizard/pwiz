@@ -837,7 +837,25 @@ namespace pwiz.Skyline.Properties
                 this[typeof(RTScoreCalculatorList).Name] = value;
             }
         }
-        
+
+        [UserScopedSettingAttribute]
+        public IrtStandardList IrtStandardList
+        {
+            get
+            {
+                var list = (IrtStandardList) this[typeof(IrtStandardList).Name];
+
+                if (list == null)
+                {
+                    list = new IrtStandardList();
+                    list.AddDefaults();
+                    IrtStandardList = list;
+                }
+                return list;
+            }
+            set => this[typeof(IrtStandardList).Name] = value;
+        }
+
         public IonMobilityPredictor GetDriftTimePredictorByName(string name)
         {
             // Null return is valid for this list, and means no ion mobility
@@ -1147,21 +1165,6 @@ namespace pwiz.Skyline.Properties
             {
                 this[@"RemoteAccountList"] = value;
             }
-        }
-
-        [UserScopedSetting]
-        public bool EnableChorus
-        {
-            get
-            {
-                var value = this[@"EnableChorus"];
-                if (value == null)
-                {
-                    return false;
-                }
-                return (bool) value;
-            }
-            set { this[@"EnableChorus"] = value; }
         }
 
         [UserScopedSetting]
@@ -2007,10 +2010,11 @@ namespace pwiz.Skyline.Properties
     
     public sealed class RTScoreCalculatorList : SettingsListNotifying<RetentionScoreCalculatorSpec>
     {
-        private static readonly RetentionScoreCalculator[] DEFAULTS =
+        public static readonly RetentionScoreCalculator[] DEFAULTS =
         {
             new RetentionScoreCalculator(RetentionTimeRegression.SSRCALC_100_A),
-            new RetentionScoreCalculator(RetentionTimeRegression.SSRCALC_300_A)
+            new RetentionScoreCalculator(RetentionTimeRegression.SSRCALC_300_A),
+            // new RetentionScoreCalculator(RetentionTimeRegression.PROSITRTCALC)
         };
 
         /// <summary>
@@ -2143,7 +2147,51 @@ namespace pwiz.Skyline.Properties
             return item != null && !GetDefaults().Contains(item);
         }
     }
-    
+
+    public sealed class IrtStandardList : SettingsList<IrtStandard>
+    {
+        public override IrtStandard EditItem(Control owner, IrtStandard item, IEnumerable<IrtStandard> existing,
+            object tag)
+        {
+            var updatePeptides = new DbIrtPeptide[0];
+            var editIrtCalcDlg = owner as EditIrtCalcDlg;
+            var recalibrate = item != null && editIrtCalcDlg != null;
+            if (recalibrate)
+            {
+                updatePeptides = editIrtCalcDlg.AllPeptides.ToArray();
+            }
+
+            using (var calibrateIrtDlg = new CalibrateIrtDlg(item, existing ?? this, updatePeptides))
+            {
+                if (calibrateIrtDlg.ShowDialog(owner) == DialogResult.OK)
+                {
+                    if (recalibrate)
+                    {
+                        editIrtCalcDlg.ResetPeptideListBindings();
+                    }
+                    return calibrateIrtDlg.IrtStandard;
+                }
+                return null;
+            }
+        }
+
+        public override IrtStandard CopyItem(IrtStandard item)
+        {
+            return (IrtStandard) item.ChangeName(string.Empty);
+        }
+
+        public override IEnumerable<IrtStandard> GetDefaults(int revisionIndex)
+        {
+            return IrtStandard.ALL;
+        }
+
+        public override string Title => Resources.IrtStandardList_Title_Edit_iRT_Standards;
+
+        public override string Label => Resources.IrtStandardList_Label_iRT_Standards;
+
+        public override int ExcludeDefaults => 1;
+    }
+
     public sealed class IonMobilityLibraryList : SettingsListNotifying<IonMobilityLibrarySpec>
     {
         /// <summary>

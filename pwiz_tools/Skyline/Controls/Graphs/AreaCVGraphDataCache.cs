@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -133,7 +134,8 @@ namespace pwiz.Skyline.Controls.Graphs
                             properties.MinimumDetections,
                             settings.BinWidth,
                             settings.MsLevel,
-                            settings.Transitions), _tokenSource.Token);
+                            settings.Transitions,
+                            settings.CountTransitions), _tokenSource.Token);
 
                     lock (_cacheInfo)
                     {

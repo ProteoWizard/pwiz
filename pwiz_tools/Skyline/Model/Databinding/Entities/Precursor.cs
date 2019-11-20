@@ -361,7 +361,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             set
             {
                 eIonMobilityUnits eValue;
-                if (SmallMoleculeTransitionListReader.IonMobilityUnitsSynonyms.TryGetValue(value.Trim(), out eValue))
+                if (SmallMoleculeTransitionListReader.IonMobilityUnitsSynonyms.TryGetValue(string.IsNullOrEmpty(value) ? string.Empty : value.Trim(), out eValue))
                     ChangeDocNode(EditColumnDescription(nameof(ExplicitIonMobilityUnits), eValue),
                         docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobility(docNode.ExplicitValues.IonMobility, eValue)));
             }
@@ -440,6 +440,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 }
                 return null;
             }
+        }
+
+        [Format(NullValue = TextUtil.EXCEL_NA)]
+        public double? LibraryProbabilityScore
+        {
+            get { return (DocNode.LibInfo as BiblioSpecSpectrumHeaderInfo)?.Score; }
         }
 
         [Format(NullValue = TextUtil.EXCEL_NA)]

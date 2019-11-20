@@ -144,7 +144,7 @@
   <data name="MQuestReferenceShapeCalc_MQuestReferenceShapeCalc_Reference_shape" xml:space="preserve">
     <value>参照形</value>
   </data>
-  <data name="EditChorusAccountDlg_ValidateValues_There_is_already_an_account_defined_for_the_user__0__on_the_server__1_" xml:space="preserve">
+  <data name="EditRemoteAccountDlg_ValidateValues_There_is_already_an_account_defined_for_the_user__0__on_the_server__1_" xml:space="preserve">
     <value>サーバー{1}上のユーザー{0}に対しアカウントが既に定義されています</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
@@ -1410,9 +1410,6 @@
   <data name="WizardPeptideSearchPRM" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\StartPage\WizardPeptideSearchPRM.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="SkylineWindow_ImportMassList_Creating_Spectral_Library" xml:space="preserve">
-    <value>スペクトルライブラリの作成中</value>
-  </data>
   <data name="AminoAcid_ValidateAAList_The_amino_acid__0__is_repeated_in_the_value__1__" xml:space="preserve">
     <value>値「{1}」でアミノ酸「{0}」が繰り返されています。</value>
   </data>
@@ -2023,7 +2020,7 @@
     <value>既存を保持</value>
   </data>
   <data name="StatementCompletionTextBox_CreateListViewItems_Descriptions" xml:space="preserve">
-    <value>説明：</value>
+    <value>表記：</value>
   </data>
   <data name="Icojam-Blueberry-Basic-Arrow-right" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Icojam-Blueberry-Basic-Arrow-right.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -6854,7 +6851,7 @@
   <data name="RefineListDlg_OkDialog_The_sequence__0__is_not_a_valid_peptide" xml:space="preserve">
     <value>シークエンス「{0}」は有効なペプチドではありません。</value>
   </data>
-  <data name="ChorusSession_FetchContents_There_was_an_error_communicating_with_the_server__" xml:space="preserve">
+  <data name="RemoteSession_FetchContents_There_was_an_error_communicating_with_the_server__" xml:space="preserve">
     <value>サーバーとのコミュニケーションエラーがあります： </value>
   </data>
   <data name="SkylineWindow_AddMolecule_Custom_molecules_cannot_be_added_to_a_peptide_list_" xml:space="preserve">
@@ -8220,7 +8217,7 @@
     <value>プロ手オームファイル{0}を作成しようとした際にエラーが発生しました。</value>
   </data>
   <data name="StartPage_SmallMolecule_Description" xml:space="preserve">
-    <value>Skylineを利用して非プロテオミクスイオンをターゲットする方法を学びます。代謝実験で使用される分子トランジションリストをインポートし、Waters Xevo TQSからの14回の実行をインポートします。非プロテオミクス実験に、Skylineインターフェイスのパワーを利用する方法を学び始めましょう。</value>
+    <value>Skylineを利用して非プロテオミクスイオンをターゲットする方法を学びます。メタボロミクス実験で使用される分子トランジションリストをインポートし、Waters Xevo TQSからの14回の実行をインポートします。非プロテオミクス実験に、Skylineインターフェイスのパワーを利用する方法を学び始めましょう。</value>
   </data>
   <data name="CommandLine_ImportToolsFromZip_Error__the_file_specified_with_the___tool_add_zip_command_is_not_a__zip_file__Please_specify_a_valid__zip_file_" xml:space="preserve">
     <value>エラー：--tool-add-zipコマンドで指定されたファイルは.zipファイルではありません。有効な.zipファイルを指定してください。</value>
@@ -9045,19 +9042,19 @@
  
 Skylineでの列の順序は、列のヘッダーを左右にドラッグすることで調整できます。
  
-ほとんどのペプチドトランジションリストは、「ファイル|インポート|トランジションリスト...」メニューアイテムでインポートできるか、[ターゲット]ウィンドウに直接貼り付けることさえできます。</value>
+ほとんどのペプチドトランジションリストは、「ファイル|インポート|トランジションリスト...」メニューアイテムでインポートでき、[ターゲット]ウィンドウに直接貼り付けることもできます。</value>
   </data>
   <data name="PasteDlg_btnTransitionListHelp_Click_SmallMol_" xml:space="preserve">
     <value>このウィンドウの一番簡単な使用方法は、Excel（またはデータがCSV形式の場合テキストエディタ）からコピーしグリッドに貼り付けることです。
- 
-Skylineでの列の順序は、列のヘッダーを左右にドラッグすることで調整できます。
- 
-ほとんどのペプチドトランジションリストは、「ファイル|インポート|トランジションリスト...」メニューアイテムでインポートできるか、[ターゲット]ウィンドウに直接貼り付けることさえできます。</value>
+
+Skylineでの列の順序は、列のヘッダーを左右にドラッグすることで調整できます。分子の場合、[列...]ボタンで有効にする列を選択することもできます。
+
+ほとんどのペプチドトランジションリストは、「ファイル|インポート|トランジションリスト...」メニューアイテムでインポートでき、[ターゲット]ウィンドウに直接貼り付けることもできます。また列ヘッダーにこれらの名前が使われている場合、分子トランジションリストでもこれが実施できます： </value>
   </data>
   <data name="PasteDlg_btnTransitionListHelp_Click_2_" xml:space="preserve">
     <value>分子のイオン式に関するメモ：
 
-お使いのトランジションリストの形式で分子式と付加イオンの表記を単一の列にまとめている場合（例：「C8H10N4O2[M+Na]」）、[イオン式]の列を使用し、[付加イオン]の列は無視してください。お使いのトランジションリストが分子式と付加イオンの表記を別々の列に記載している場合、[イオン式]の列に分子式を、付加イオンの説明に[付加イオン]の列を使用してください。</value>
+お使いのトランジションリストの形式で分子式と付加イオンの表記を単一の列にまとめている場合（例：「C8H10N4O2[M+Na]」）、[イオン式]の列を使用し、[付加イオン]の列は無視してください。お使いのトランジションリストで分子式と付加イオンの表記を別々の列に記載している場合、[イオン式]の列に分子式を、付加イオンの説明に[付加イオン]の列を使用してください。</value>
   </data>
   <data name="DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_" xml:space="preserve">
     <value>ピーク幅は負の値にはできません。</value>
@@ -10134,7 +10131,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>該当プロパティはありません</value>
   </data>
   <data name="ListDesigner_OkDialog_There_was_an_error_trying_to_apply_this_list_definition_to_the_original_data_" xml:space="preserve">
-    <value>このリスト定義を元のデータに適用しようとする際にエラーがありました：</value>
+    <value>このリスト定義を元のデータに適用しようとする際にエラーが発生しました：</value>
   </data>
   <data name="ListGridForm_BindingListSourceOnListChanged_List__" xml:space="preserve">
     <value>リスト： </value>
@@ -10242,13 +10239,13 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>詳細なトピック</value>
   </data>
   <data name="StartPage_SmallMoleculeMethodDevCEOpt_Description" xml:space="preserve">
-    <value>プリカーサーm/z、プロダクトイオンm/zおよび衝突エネルギーの値のみが指定されている文献引用から、安定同位体標識付分子をターゲットとするSkylineドキュメントを作成する方法を学びます。Sciex製Triple QuadによるCE初期値を用いたWaters製Xevo TQ-Sの複数の繰り返し測定データセットをインポートすることで、分子の保持時間スケジュール設定と衝突エネルギーの最適化を実施します。ターゲットとするプロテオミクス用に当初作成されたSkylineの多くの既存機能が、現在では非プロテオミクス分子データにいかに適用されているかを学びます。</value>
+    <value>プリカーサーm/z、プロダクトイオンm/zおよび衝突エネルギーの値のみが指定されている文献引用から、安定同位体標識付分子をターゲットとするSkylineドキュメントを作成する方法を学びます。Sciex製Triple QuadによるCE初期値を用いたWaters製Xevo TQ-Sの複数の繰り返し測定データセットをインポートすることで、分子の保持時間スケジュール設定と衝突エネルギーの最適化を実施します。ターゲットプロテオミクス用に当初作成されたSkylineの多くの既存機能が、現在では非プロテオミクス分子データにいかに適用されているかを学びます。</value>
   </data>
   <data name="StartPage_SmallMoleculeQuantification_Description" xml:space="preserve">
-    <value>プリカーサーイオン化学式と付加イオン、およびプロダクトイオンm/zの値として指定された分子をターゲットとするSkylineドキュメントを作成する方法を学びます。三連四重極質量分析計でLC-MS/MSを用いて収集した複数の繰り返し測定データセットをインポートし、ターゲットとするプロテオミクス用に当初作成されたSkylineの多くの既存機能が、現在では非プロテオミクス分子データにいかに適用されているかを学びます。</value>
+    <value>プリカーサーイオン化学式と付加イオン、およびプロダクトイオンm/zの値として指定された分子をターゲットとするSkylineドキュメントを作成する方法を学びます。三連四重極質量分析計でLC-MS/MSを用いて収集した複数の繰り返し測定データセットをインポートし、ターゲットプロテオミクス用に当初作成されたSkylineの多くの既存機能が、現在では非プロテオミクス分子データにいかに適用されているかを学びます。</value>
   </data>
   <data name="StartPage_HiResMetabolomics_Description" xml:space="preserve">
-    <value>プリカーサーイオン化学式と付加イオンとして指定された分子をターゲットとするSkylineドキュメントを作成する方法を学びます。一連の血漿試料をQ Exactive Orbitrap質量分析計でデータ収集した複数の繰り返し測定データセットをインポートし、ターゲットとするプロテオミクス用に当初作成されたSkylineの多くの既存機能が、現在では非プロテオミクス分子データにいかに適用されているかを学びます。</value>
+    <value>プリカーサーイオン化学式と付加イオンとして指定された分子をターゲットとするSkylineドキュメントを作成する方法を学びます。一連の血漿試料をQ Exactive Orbitrap質量分析計でデータ収集した複数の繰り返し測定データセットをインポートし、ターゲットプロテオミクス用に当初作成されたSkylineの多くの既存機能が、現在では非プロテオミクス分子データにいかに適用されているかを学びます。</value>
   </data>
   <data name="LinearInLogSpace_Label_Linear_in_Log_Space" xml:space="preserve">
     <value>対数空間の線形</value>
@@ -10343,7 +10340,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__" xml:space="preserve">
     <value>「{0}」に一致する外部スペクトルファイルが、MaxQuant入力ファイル「{1}」と同じディレクトリ内か、親かそのまた親のディレクトリ内に見つかりませんでした。
 
-元のファイルがない場合、その入力ファイルからの組み込みスペクトルでライブラリを構築することができます。ただし、MaxQuantの組み込みスペクトルにあるフラグメントイオンは、荷電状態でデコンボリューションされており、1価のフラグメントイオンのみが含まれています。そのイオンの強度は質量分析計で測定された典型的なものではない可能性があります。</value>
+元のファイルがない場合、その入力ファイルからの組み込みスペクトルでライブラリを構築することができます。ただし、MaxQuantの組み込みスペクトルにあるフラグメントイオンは、荷電状態でデコンボリューションされており、1価のフラグメントイオンのみが含まれています。質量分析計で測定された強度を表していない可能性があります。</value>
   </data>
   <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptionsSupportsExtensions__0__" xml:space="preserve">
     <value>組み込みスペクトルを使用するには、[組み込み]をクリックします。
@@ -10422,7 +10419,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>分子リストを削除...</value>
   </data>
   <data name="TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0___" xml:space="preserve">
-    <value>「{0}」から分子を分解できません。</value>
+    <value>「{0}」から分子を解釈できません。</value>
   </data>
   <data name="UIModeProteomic" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\UIModeProteomic.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -10476,7 +10473,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>エラー：引数{0}と{1}のオプションは併用できません。</value>
   </data>
   <data name="TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0____could_be_any_of__1_" xml:space="preserve">
-    <value>「{0}」から分子を分解できません。{1}のいずれかの可能性があります。</value>
+    <value>「{0}」から分子を解釈できません。{1}のいずれかの可能性があります。</value>
     <comment>{0} is search text, {1} is a list of molecule names that the search text could refer to</comment>
   </data>
   <data name="CommandLine_ImportAnnotations_Error__Failed_while_reading_annotations_" xml:space="preserve">
@@ -10492,7 +10489,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>ドキュメントの最適化中...</value>
   </data>
   <data name="CommandLine_LogNewEntries_Document_unchanged" xml:space="preserve">
-    <value>ドキュメントは未変更</value>
+    <value>ドキュメントは変更されていません</value>
   </data>
   <data name="CommandLine_LogDocumentDelta_Removed___0_" xml:space="preserve">
     <value>削除されました：{0}</value>
@@ -10531,7 +10528,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>これら{0}個の分子を本当に削除してもよろしいですか？</value>
   </data>
   <data name="TransitionSettingsControl_ValidateAdductListTextBox__0__must_contain_a_comma_separated_list_of_integers_describing_charge_states_between__1__and__2__" xml:space="preserve">
-    <value>{0}には、{1}から{2}までの荷電状態を説明する整数のカンマ区切りのリストが含まれている必要があります。</value>
+    <value>{0}には、{1}から{2}までの荷電状態を記述する整数のカンマ区切りのリストが含まれている必要があります。</value>
   </data>
   <data name="SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filename_extension_and_are_in_XML_format_" xml:space="preserve">
     <value>開けようとしているファイル（「{0}」）は、Skylineドキュメントではないようです。通常Skylineドキュメントには「{1}」か「{2}」のファイル名拡張子があり、XML形式です。</value>
@@ -10547,7 +10544,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>注釈： </value>
   </data>
   <data name="ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_" xml:space="preserve">
-    <value>有効なThermo装置が設置されているのが見つかりませんでした。</value>
+    <value>有効なThermo装置のソフトウェアがインストールされていません。</value>
   </data>
   <data name="ThermoMassListExporter_EnsureLibraries_Thermo_method_creation_software_may_not_be_installed_correctly_" xml:space="preserve">
     <value>Thermoメソッド作成ソフトウェアが正しくインストールされていない可能性があります。</value>

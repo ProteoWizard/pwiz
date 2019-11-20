@@ -1240,11 +1240,11 @@ namespace pwiz.Skyline.Model.DocSettings
             return GetRetentionTimes(new MsDataFilePath(name));
         }
 
-        public LibraryIonMobilityInfo GetIonMobilities(MsDataFileUri filePath)
+        public LibraryIonMobilityInfo GetIonMobilities(LibKey[] targetIons, MsDataFileUri filePath)
         {
             var libraries = PeptideSettings.Libraries;
             LibraryIonMobilityInfo ionMobilities;
-            if (libraries.TryGetDriftTimeInfos(filePath, out ionMobilities))
+            if (libraries.TryGetDriftTimeInfos(targetIons, filePath, out ionMobilities))
                 return ionMobilities;
             return null;
         }
@@ -1268,7 +1268,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <param name="charge"> The charge to match. </param>
         /// <param name="mods"> The modifications to match. </param>
         /// <returns> Returns a list of the matching spectra. </returns>
-        public IEnumerable<SpectrumInfo> GetBestSpectra(Target sequence, Adduct charge, ExplicitMods mods)
+        public IEnumerable<SpectrumInfoLibrary> GetBestSpectra(Target sequence, Adduct charge, ExplicitMods mods)
         {
             var libraries = PeptideSettings.Libraries;
             return from typedSequence in GetTypedSequences(sequence, mods, charge)
@@ -1277,7 +1277,7 @@ namespace pwiz.Skyline.Model.DocSettings
                    select spectrumInfo;
         }
 
-        public IEnumerable<SpectrumInfo> GetMidasSpectra(double precursorMz)
+        public IEnumerable<SpectrumInfoLibrary> GetMidasSpectra(double precursorMz)
         {
             return PeptideSettings.Libraries.MidasLibraries.SelectMany(
                 lib => lib.GetSpectra(new LibKey(precursorMz), IsotopeLabelType.light, LibraryRedundancy.all));
@@ -1293,7 +1293,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <param name="labelType">The primary label type to match</param>
         /// <param name="mods"> The modifications to match. </param>
         /// <returns> Returns a list of the matching spectra. </returns>
-        public IEnumerable<SpectrumInfo> GetRedundantSpectra(Peptide peptide, Target sequence, Adduct adduct, IsotopeLabelType labelType,
+        public IEnumerable<SpectrumInfoLibrary> GetRedundantSpectra(Peptide peptide, Target sequence, Adduct adduct, IsotopeLabelType labelType,
                                                        ExplicitMods mods)
         {
             LibKey libKey;

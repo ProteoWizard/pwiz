@@ -97,6 +97,10 @@ namespace TestPerf
                 driftPredictor.SetResolvingPower(50);
                 driftPredictor.GetDriftTimesFromResults();
             });
+
+            // Check that a new value was calculated for all precursors
+            RunUI(() => Assert.AreEqual(SkylineWindow.Document.MoleculeTransitionGroupCount, driftPredictor.Predictor.IonMobilityRows.Count));
+
             OkDialog(driftPredictor, () => driftPredictor.OkDialog());
 
             RunUI(() =>

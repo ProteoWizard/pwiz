@@ -109,6 +109,15 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
     </Reference>
+    <Reference Include="Google.Protobuf, Version=3.5.1.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604" />
+    <Reference Include="Grpc.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=d754f35622e28bad, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Shared\Lib\Grpc.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Grpc.Core.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=d754f35622e28bad, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Shared\Lib\Grpc.Core.Api.dll</HintPath>
+    </Reference>
     <Reference Include="log4net">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\log4net.dll</HintPath>
@@ -154,6 +163,7 @@
     <Compile Include="AssociateProteinsDlgTest.cs" />
     <Compile Include="AuditLogSavingTest.cs" />
     <Compile Include="AuditLogTest.cs" />
+    <Compile Include="AuditLogValidationTest.cs" />
     <Compile Include="AutoSelectTest.cs" />
     <Compile Include="BackgroundEventThreadsTest.cs" />
     <Compile Include="BatchCalibrationTest.cs" />
@@ -161,7 +171,7 @@
     <Compile Include="CalibrationScenariosTest.cs" />
     <Compile Include="CalibrationTest.cs" />
     <Compile Include="CancelExportReportTest.cs" />
-    <Compile Include="ChorusFunctionalTest.cs" />
+    <Compile Include="ChargedLossesTest.cs" />
     <Compile Include="ChromDataSetMatchingTest.cs" />
     <Compile Include="ChromGraphTransformTest.cs" />
     <Compile Include="ChromUITest.cs" />
@@ -174,6 +184,7 @@
     <Compile Include="ExpressionAnnotationsTest.cs" />
     <Compile Include="FormUtilTest.cs" />
     <Compile Include="FullScanFilterInteractionTest.cs" />
+    <Compile Include="HighReplicateCountTest.cs" />
     <Compile Include="ImportAnnotationsTest.cs" />
     <Compile Include="ClearAllSettingsTest.cs" />
     <Compile Include="DocumentGridClipboardOperationsTest.cs" />
@@ -256,6 +267,7 @@
     <Compile Include="PrecursorTest.cs" />
     <Compile Include="ProfileImport.cs" />
     <Compile Include="ProfileMemory.cs" />
+    <Compile Include="PrositSkylineIntegrationTest.cs" />
     <Compile Include="ProteinMetadataFunctionalTest.cs" />
     <Compile Include="ProteinMetadataBackgroundLoaderTest.cs" />
     <Compile Include="PythonInstallerTest.cs" />
@@ -369,12 +381,12 @@
     <None Include="AreaCVHistogramTest.zip" />
     <None Include="AssayLibraryImportTest.zip" />
     <None Include="AuditLogSavingTest.zip" />
+    <None Include="AuditLogValidationTest.zip" />
     <None Include="BackgroundProteomeTest.zip" />
     <None Include="BatchCalibrationTest.zip" />
     <None Include="CalibrationScenariosTest.zip" />
     <None Include="CalibrationTest.zip" />
     <None Include="CancelExportReportTest.zip" />
-    <None Include="ChorusFunctionalTest.zip" />
     <None Include="ChromGraphTransformTest.zip" />
     <None Include="ChromUITest.zip" />
     <None Include="ConfigureToolsDlgTest.zip" />
@@ -399,6 +411,7 @@
     <None Include="GroupComparisonPivotEditorTest.zip" />
     <None Include="GroupComparisonTest.zip" />
     <None Include="HighPrecModsTest.zip" />
+    <None Include="HighReplicateCountTest.zip" />
     <None Include="ImportAnnotationsTest.zip" />
     <None Include="ImportDocTest.zip" />
     <None Include="ImportEncyclopeDiaLibraryTest.zip" />

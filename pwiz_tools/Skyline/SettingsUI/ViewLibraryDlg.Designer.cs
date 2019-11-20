@@ -90,6 +90,7 @@ namespace pwiz.Skyline.SettingsUI
             this.charge4ContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator12 = new System.Windows.Forms.ToolStripSeparator();
             this.ranksContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.scoreContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ionMzValuesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.observedMzValuesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.duplicatesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -101,6 +102,7 @@ namespace pwiz.Skyline.SettingsUI
             this.toolStripSeparator15 = new System.Windows.Forms.ToolStripSeparator();
             this.zoomSpectrumContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator27 = new System.Windows.Forms.ToolStripSeparator();
+            this.prositCheckBox = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.splitPeptideList)).BeginInit();
             this.splitPeptideList.Panel1.SuspendLayout();
@@ -140,6 +142,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // PeptideListPanel
             // 
+            this.PeptideListPanel.Controls.Add(this.prositCheckBox);
             this.PeptideListPanel.Controls.Add(this.listPeptide);
             this.PeptideListPanel.Controls.Add(this.cbShowModMasses);
             resources.ApplyResources(this.PeptideListPanel, "PeptideListPanel");
@@ -494,6 +497,7 @@ namespace pwiz.Skyline.SettingsUI
             this.chargesContextMenuItem,
             this.toolStripSeparator12,
             this.ranksContextMenuItem,
+            this.scoreContextMenuItem,
             this.ionMzValuesContextMenuItem,
             this.observedMzValuesContextMenuItem,
             this.duplicatesContextMenuItem,
@@ -615,6 +619,13 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.ranksContextMenuItem, "ranksContextMenuItem");
             this.ranksContextMenuItem.Click += new System.EventHandler(this.ranksContextMenuItem_Click);
             // 
+            // scoreContextMenuItem
+            // 
+            this.scoreContextMenuItem.CheckOnClick = true;
+            this.scoreContextMenuItem.Name = "scoreContextMenuItem";
+            resources.ApplyResources(this.scoreContextMenuItem, "scoreContextMenuItem");
+            this.scoreContextMenuItem.Click += new System.EventHandler(this.scoreContextMenuItem_Click);
+            // 
             // ionMzValuesContextMenuItem
             // 
             this.ionMzValuesContextMenuItem.CheckOnClick = true;
@@ -680,6 +691,12 @@ namespace pwiz.Skyline.SettingsUI
             // 
             this.toolStripSeparator27.Name = "toolStripSeparator27";
             resources.ApplyResources(this.toolStripSeparator27, "toolStripSeparator27");
+            // 
+            // prositCheckBox
+            // 
+            resources.ApplyResources(this.prositCheckBox, "prositCheckBox");
+            this.prositCheckBox.Name = "prositCheckBox";
+            this.prositCheckBox.UseVisualStyleBackColor = true;
             // 
             // ViewLibraryDlg
             // 
@@ -801,9 +818,7 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.ToolStripMenuItem showChromatogramsContextMenuItem;
         private System.Windows.Forms.Label MoleculeLabel;
         private System.Windows.Forms.ToolStripButton btnFragmentIons;
-
-
-
-
+        private System.Windows.Forms.ToolStripMenuItem scoreContextMenuItem;
+        private System.Windows.Forms.CheckBox prositCheckBox;
     }
 }

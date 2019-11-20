@@ -182,20 +182,21 @@ namespace pwiz.Skyline.Model.Results
                 ChromDataProvider provider = null;
                 try
                 {
-                    if (dataFilePathRecalc == null && !RemoteChromDataProvider.IsRemoteChromFile(dataFilePath))
+                    if (dataFilePathRecalc == null)
                     {
                         // Always use SIM as spectra, if any full-scan chromatogram extraction is enabled
                         var fullScan = _document.Settings.TransitionSettings.FullScan;
                         var enableSimSpectrum = fullScan.IsEnabled;
                         var preferOnlyMsLevel = fullScan.IsEnabled && !fullScan.IsEnabledMsMs ? 1 : 0; // If we don't want MS2, ask reader to totally skip it (not guaranteed)
-                        inFile = MSDataFilePath.OpenMsDataFile(enableSimSpectrum, preferOnlyMsLevel);
+//                        var precursorIonMobility = GetPrecursorMzAndIonMobilityWindows(fullScan, dataFilePath); // A list of [mz, (optionally) IM window] values for pre-filtering by pwiz (not guaranteed)
+                        inFile = MSDataFilePath.OpenMsDataFile(enableSimSpectrum, preferOnlyMsLevel, true);
                         // Preserve centroiding info as part of MsDataFileUri string in chromdata only if it will be used
                         // CONSIDER: Dangerously high knowledge of future control flow required for making this decision
                         if (!ChromatogramDataProvider.HasChromatogramData(inFile) && !inFile.HasSrmSpectra)
                             MSDataFilePath = dataFilePath = MSDataFilePath.ChangeCentroiding(centroidMS1, centroidMS2);
                     }
 
-                    // Check for cancelation
+                    // Check for cancellation
                     if (_loader.IsCanceled)
                     {
                         _loader.UpdateProgress(_status = _status.Cancel());
@@ -211,7 +212,7 @@ namespace pwiz.Skyline.Model.Results
                         if (null == inFile)
                         {
                             _currentFileInfo = new FileBuildInfo(fileInfo.RunStartTime,
-                                fileInfo.FileWriteTime ?? DateTime.Now, new MsInstrumentConfigInfo[0], null, false);
+                                fileInfo.FileWriteTime ?? DateTime.Now, new MsInstrumentConfigInfo[0], null, false, null, null);
                         }
                         else
                         {
@@ -229,15 +230,6 @@ namespace pwiz.Skyline.Model.Results
                             allChromData.MaxRetentionTime = (float) (provider.MaxRetentionTime ?? 0);
                             allChromData.MaxRetentionTimeKnown = provider.MaxRetentionTime.HasValue;
                         }
-                    }
-                    else if (ChorusResponseChromDataProvider.IsChorusResponse(dataFilePath))
-                    {
-                        provider = new ChorusResponseChromDataProvider(_document, fileInfo, _status, 0, 100, _loader);
-                    }
-                    else if (RemoteChromDataProvider.IsRemoteChromFile(dataFilePath))
-                    {
-                        provider = new RemoteChromDataProvider(_document, _retentionTimePredictor, fileInfo, _status, 0,
-                            100, _loader);
                     }
                     else if (ChromatogramDataProvider.HasChromatogramData(inFile))
                     {
@@ -367,7 +359,9 @@ namespace pwiz.Skyline.Model.Results
                                      cachedFile.FileWriteTime,
                                      cachedFile.InstrumentInfoList,
                                      cachedFile.IsSingleMatchMz,
-                                     cachedFile.HasMidasSpectra);
+                                     cachedFile.HasMidasSpectra,
+                                     cachedFile.SampleId,
+                                     cachedFile.InstrumentSerialNumber);
         }
 
         private MsDataFileImpl GetMsDataFile(string dataFilePathPart, int sampleIndex, LockMassParameters lockMassParameters, MsInstrumentConfigInfo msInstrumentConfigInfo, bool enableSimSpectrum, bool requireCentroidedMS1, bool requireCentroidedMS2, int preferOnlyMsLevel)
@@ -496,6 +490,8 @@ namespace pwiz.Skyline.Model.Results
                                      _currentFileInfo.LocationScanIds,
                                      (float?) provider.TicArea,
                                      provider.IonMobilityUnits,
+                                     _currentFileInfo.SampleId,
+                                     _currentFileInfo.SerialNumber,
                                      _currentFileInfo.InstrumentInfoList));
         }
 
@@ -790,7 +786,7 @@ namespace pwiz.Skyline.Model.Results
         /// <summary>
         /// Used for retentiont time prediction during import
         /// </summary>
-        private class RetentionTimePredictor : IRetentionTimePredictor
+        public class RetentionTimePredictor : IRetentionTimePredictor
         {
             private readonly RetentionScoreCalculatorSpec _calculator;
             private readonly double _timeWindow;
@@ -1445,25 +1441,31 @@ namespace pwiz.Skyline.Model.Results
         public static FileBuildInfo GetFileBuildInfo(MsDataFileUri msDataFileUri, MsDataFileImpl file)
         {
             return new FileBuildInfo(file.RunStartTime, msDataFileUri.GetFileLastWriteTime(),
-                file.GetInstrumentConfigInfoList(), null, false);
+                file.GetInstrumentConfigInfoList(), null, false, file.GetSampleId(), file.GetInstrumentSerialNumber());
         }
 
         public FileBuildInfo(DateTime? startTime,
             DateTime lastWriteTime,
             IEnumerable<MsInstrumentConfigInfo> instrumentInfoList,
             bool? isSingleMatchMz,
-            bool hasMidasSpectra)
+            bool hasMidasSpectra,
+            string sampleId,
+            string serialNumber)
         {
             StartTime = startTime;
             LastWriteTime = lastWriteTime;
             InstrumentInfoList = instrumentInfoList;
             IsSingleMatchMz = isSingleMatchMz;
+            SampleId = sampleId;
+            SerialNumber = serialNumber;
         }
 
         public DateTime? StartTime { get; private set; }
         public DateTime LastWriteTime { get; private set; }
         public IEnumerable<MsInstrumentConfigInfo> InstrumentInfoList { get; private set; }
         public ChromCachedFile.FlagValues Flags { get; private set; }
+        public string SampleId { get; private set; }
+        public string SerialNumber { get; private set; }
 
         public bool? IsSingleMatchMz
         {

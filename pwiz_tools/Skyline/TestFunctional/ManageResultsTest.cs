@@ -159,7 +159,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(graphChrom.NameSet, dictGraphPositions[ptLeftTop].NameSet);
             }
 
-            var firstGraphChrom = listGraphChroms[3];
+            var firstGraphChrom = listGraphChroms[0]; // First loaded is least recently used, and this list serves as an MRU with most recent at the tail
             Point ptLeftTopFirst = GetTopLeft(firstGraphChrom.Parent);
 
             RunDlg<ArrangeGraphsGroupedDlg>(SkylineWindow.ArrangeGraphsGrouped, dlg =>

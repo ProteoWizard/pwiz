@@ -312,7 +312,16 @@ namespace pwiz.Skyline
                             skylineDocumentHash = reader.Stream.Done();
                         }
 
-                        document = document.ReadAuditLog(path, skylineDocumentHash, AskForLogEntry);
+                        try
+                        {
+                            document = document.ReadAuditLog(path, skylineDocumentHash, AskForLogEntry);
+                        }
+                        catch (Exception e)
+                        {
+                            throw new AuditLogException(
+                                string.Format(AuditLogStrings.AuditLogException_Error_when_loading_document_audit_log__0, path), e);
+
+                        }
                     });
 
                     if (longWaitDlg.IsCanceled)
@@ -321,11 +330,22 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                exception = x;
-                // Was that even a Skyline file?
-                if (!SrmDocument.IsSkylineFile(path, out var explained))
+                var ex = x;
+                if (AuditLogException.IsAuditLogInvolved(x))
                 {
-                    exception = new IOException(explained); // Offer a more helpful explanation than that from the failed XML parser
+                    MessageDlg.ShowWithException(parentWindow ?? this, 
+                        AuditLogException.GetMultiLevelMessage(x),
+                        x);
+                }
+                else
+                {
+                    exception = x;
+                    // Was that even a Skyline file?
+                    if (!SrmDocument.IsSkylineFile(path, out var explained))
+                    {
+                        exception = new IOException(
+                            explained); // Offer a more helpful explanation than that from the failed XML parser
+                    }
                 }
             }
 
@@ -342,6 +362,7 @@ namespace pwiz.Skyline
 
                     // Make sure settings lists contain correct values for
                     // this document.
+                    // ReSharper disable once PossibleNullReferenceException
                     document.Settings.UpdateLists(path);
                 }
                 catch (Exception x)
@@ -387,9 +408,11 @@ namespace pwiz.Skyline
             // Once user has opened an existing document, stop reminding them to set a default UI mode
             if (string.IsNullOrEmpty(Settings.Default.UIMode))
             {
+                // ReSharper disable PossibleNullReferenceException
                 var mode = document.DocumentType == SrmDocument.DOCUMENT_TYPE.none
                     ? SrmDocument.DOCUMENT_TYPE.proteomic
                     : document.DocumentType;
+                // ReSharper restore PossibleNullReferenceException
                 Settings.Default.UIMode = mode.ToString();
             }
             
@@ -2200,8 +2223,8 @@ namespace pwiz.Skyline
             }
             using (var blibDb = BlibDb.CreateBlibDb(AssayLibraryFileName))
             {
-                docLibrarySpec = new BiblioSpecLiteSpec(AssayLibraryName, AssayLibraryFileName);
-                using (var longWaitDlg = new LongWaitDlg(this) { Text = Resources.SkylineWindow_ImportMassList_Creating_Spectral_Library })
+                docLibrarySpec = new BiblioSpecLiteSpec(AssayLibraryName ?? Path.GetFileNameWithoutExtension(AssayLibraryFileName), AssayLibraryFileName);
+                using (var longWaitDlg = new LongWaitDlg(this) { Text = Resources.SkylineWindow_ImportMassListIntensities_Creating_Spectral_Library })
                 {
                     var docNew = doc;
                     BiblioSpecLiteLibrary docLibraryNew = null;
@@ -2209,7 +2232,7 @@ namespace pwiz.Skyline
                     var indexOldLibrary2 = indexOldLibrary;
                     longWaitDlg.PerformWork(this, 1000, progressMonitor =>
                     {
-                        docLibraryNew = blibDb.CreateLibraryFromSpectra(docLibrarySpec2, librarySpectra, AssayLibraryName, progressMonitor);
+                        docLibraryNew = blibDb.CreateLibraryFromSpectra(docLibrarySpec2, librarySpectra, AssayLibraryName ?? Path.GetFileNameWithoutExtension(AssayLibraryFileName), progressMonitor);
                         if (docLibraryNew == null)
                             return;
                         var newSettings = docNew.Settings.ChangePeptideLibraries(libs => libs.ChangeLibrary(docLibraryNew, docLibrarySpec2, indexOldLibrary2));
@@ -3079,14 +3102,6 @@ namespace pwiz.Skyline
             return true; // success!
         }
 
-
-        private void chorusRequestToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            using (var dlg = new ExportChorusRequestDlg(DocumentUI, Path.GetFileNameWithoutExtension(DocumentFilePath)))
-            {
-                dlg.ShowDialog(this);
-            }
-        }
 
         private void exportAnnotationsMenuItem_Click(object sender, EventArgs e)
         {
