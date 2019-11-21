@@ -294,7 +294,15 @@ namespace pwiz.Skyline.Model.Lib.Midas
             _spectra = null;
             if (FilePath == null)
                 return false;
-            var info = new FileInfo(FilePath);
+            FileInfo info;
+            try
+            {
+                info = new FileInfo(FilePath);
+            }
+            catch
+            {
+                return false;
+            }
             if (!info.Exists || info.Length == 0)
                 return false;
 
