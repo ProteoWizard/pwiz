@@ -642,7 +642,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var yScale = GraphPane.YAxis.Scale;
             yScale.MinAuto = yScale.MaxAuto = false;
             bool isSpectrum = !spectrumBtn.Visible || spectrumBtn.Checked;
-            GraphPane.LockYAxisAtZero = isSpectrum;
+            GraphPane.LockYAxisMinAtZero = isSpectrum;
             
             // Auto scale graph for spectrum view.
             if (isSpectrum)

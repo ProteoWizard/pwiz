@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package tensorflow.serving;
+option cc_enable_arenas = true;
+
+// import "google/protobuf/wrappers.proto";
+
+// Wrapper message for `int64`.
+//
+// The JSON representation for `Int64Value` is JSON string.
+message Int64Value {
+  // The int64 value.
+  int64 value = 1;
+}
+
+// Metadata for an inference request such as the model name and version.
+message ModelSpec {
+  // Required servable name.
+  string name = 1;
+
+  // Optional version. Recommended to be left unset in the common case. Should
+  // be specified only when there is a strong version consistency requirement.
+  //
+  // When left unspecified, the system will serve the best available version.
+  // This is typically the latest version, though during version transitions,
+  // notably when serving on a fleet of instances, may be either the previous or
+  // new version.
+  // google.protobuf.Int64Value version = 2;
+  Int64Value version = 2;
+
+  // A named signature to evaluate. If unspecified, the default signature will
+  // be used.
+  string signature_name = 3;
+}
