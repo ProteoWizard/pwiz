@@ -18,6 +18,7 @@
  */
 
 
+using System;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
@@ -31,9 +32,9 @@ using pwiz.SkylineTestUtil;
 namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
 {
     /// <summary>
-    /// Verify measured ion mobility derviation and filtering with Bruker TIMS data
+    /// Verify measured ion mobility derivation and filtering with Bruker TIMS data
     /// </summary>
-    [TestClass]
+//    [TestClass]
     public class MeasuredInverseK0PerfTest : AbstractFunctionalTestEx
     {
 
@@ -42,7 +43,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         [TestMethod]
         public void MeasuredInverseK0ValuesPerfTest()
         {
-            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfMeasuredInverseK0.zip";
+            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfMeasuredInverseK0_v2.zip";
             TestFilesPersistent = new[] { "BSA_50fmol_TIMS_InfusionESI_10prec.d", bsaFmolTimsInfusionesiPrecMz5Mz5 }; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
 
             RunFunctionalTest();
@@ -77,6 +78,10 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 driftTimePredictorDlg.SetPredictorName("test_tims");
                 driftTimePredictorDlg.SetResolvingPower(40);
                 driftTimePredictorDlg.GetDriftTimesFromResults();
+            });
+            // PauseTest(); // Uncomment this to inspect ion mobility finder results
+            RunUI(() =>
+            {
                 driftTimePredictorDlg.OkDialog(true); // Force overwrite if a named predictor already exists
             });
             WaitForClosedForm(driftTimePredictorDlg);
@@ -119,18 +124,22 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             }
             Assume.IsTrue(nChanges >= nNonEmpty*.9); // We expect nearly all peaks to change in area with IMS filter in use
 
-            // And read some mz5 converted from Bruker, then compare replicates - should be identical
+            // And read some mz5 converted from Bruker in non-3-array-format, then compare replicates - should be similar
             var mz5 = TestFilesDir.GetTestPath(bsaFmolTimsInfusionesiPrecMz5Mz5);
             ImportResultsFile(mz5);
             document = WaitForDocumentChange(document);
-//PauseTest(); uncomment this to play with raw data display 
             foreach (var nodeGroup in document.MoleculeTransitionGroups)
             {
                 Assume.AreEqual(2, nodeGroup.Results.Count);
                 foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                 {
                     Assume.AreEqual(2, nodeTran.Results.Count);
-                    Assume.AreEqual(nodeTran.Results[0], nodeTran.Results[1]);
+                    if (nodeTran.Results[0].Any())
+                    {
+                        var diff = Math.Abs(nodeTran.Results[0].First().Area - nodeTran.Results[1].First().Area) /
+                                   Math.Min(nodeTran.Results[0].First().Area, nodeTran.Results[1].First().Area);
+                        Assume.IsTrue(diff <= 0.02, string.Format("excessive difference in peak area between 2- and 3-array IMS representation"));
+                    }
                 }
             }
         }  

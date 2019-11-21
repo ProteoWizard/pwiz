@@ -21,11 +21,11 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -139,23 +139,17 @@ namespace pwiz.Skyline.Model.Results
                 _getMsDataFileScanIds = null;
             }
             int dataFileSpectrumStartIndex = internalScanIndex;
-            var combineIonMobilitySpectra = true;
             // For backward compatibility support SKYD files that did not store scan ID bytes
             if (_msDataFileScanIds != null)
             {
                 var scanIdText = _msDataFileScanIds.GetMsDataFileSpectrumId(internalScanIndex);
-                combineIonMobilitySpectra = scanIdText.Count(c => c.Equals('.')) > 2; // Backward compatibility - does this have merged.frame.scanStart.ScanEnd syntax?
-                dataFileSpectrumStartIndex = GetDataFile(combineIonMobilitySpectra, ignoreZeroIntensityPoints).GetSpectrumIndex(scanIdText);
-                if (dataFileSpectrumStartIndex == -1 && combineIonMobilitySpectra)
-                {
-                    // try without combining ion mobility (if it's turned on)
-                    combineIonMobilitySpectra = false;
-                    dataFileSpectrumStartIndex = GetDataFile(false, ignoreZeroIntensityPoints).GetSpectrumIndex(scanIdText);
-                    if (dataFileSpectrumStartIndex == -1)
-                        throw new IOException(string.Format(Resources.ScanProvider_GetScans_The_scan_ID__0__was_not_found_in_the_file__1__, scanIdText, DataFilePath.GetFileName()));
-                }
+                dataFileSpectrumStartIndex = GetDataFile(ignoreZeroIntensityPoints).GetSpectrumIndex(scanIdText);
             }
-            var currentSpectrum = GetDataFile(combineIonMobilitySpectra, ignoreZeroIntensityPoints).GetSpectrum(dataFileSpectrumStartIndex);
+            var currentSpectrum = GetDataFile(ignoreZeroIntensityPoints).GetSpectrum(dataFileSpectrumStartIndex);
+            if (currentSpectrum.IonMobilities != null)
+            {
+                ArrayUtil.Sort(currentSpectrum.Mzs, currentSpectrum.Intensities, currentSpectrum.IonMobilities); // Sort in m/z order
+            }
             spectra.Add(currentSpectrum);
             if (currentSpectrum.IonMobilities == null && // No need to look ahead for 3-array IMS representation
                 currentSpectrum.IonMobility.HasValue)
@@ -164,7 +158,7 @@ namespace pwiz.Skyline.Model.Results
                 while (true)
                 {
                     dataFileSpectrumStartIndex++;
-                    var nextSpectrum = GetDataFile(combineIonMobilitySpectra, ignoreZeroIntensityPoints).GetSpectrum(dataFileSpectrumStartIndex);
+                    var nextSpectrum = GetDataFile(ignoreZeroIntensityPoints).GetSpectrum(dataFileSpectrumStartIndex);
                     if (!nextSpectrum.IonMobility.HasValue ||
                         nextSpectrum.RetentionTime != currentSpectrum.RetentionTime)
                     {
@@ -177,7 +171,7 @@ namespace pwiz.Skyline.Model.Results
             return spectra.ToArray();
         }
 
-        private MsDataFileImpl GetDataFile(bool combineIonMobilitySpectra, bool ignoreZeroIntensityPoints)
+        private MsDataFileImpl GetDataFile( bool ignoreZeroIntensityPoints)
         {
             if (_dataFile == null)
             {
@@ -195,14 +189,14 @@ namespace pwiz.Skyline.Model.Results
                         sampleIndex = 0;
                     // Full-scan extraction always uses SIM as spectra
                     _dataFile = new MsDataFileImpl(dataFilePath, sampleIndex, lockMassParameters, true,
-                        combineIonMobilitySpectra: combineIonMobilitySpectra,
+                        combineIonMobilitySpectra: DataFilePath.GetCombineIonMobilitySpectra(),
                         requireVendorCentroidedMS1: DataFilePath.GetCentroidMs1(),
                         requireVendorCentroidedMS2: DataFilePath.GetCentroidMs2(),
                         ignoreZeroIntensityPoints: ignoreZeroIntensityPoints);
                 }
                 else
                 {
-                    _dataFile = DataFilePath.OpenMsDataFile(true, 0, combineIonMobilitySpectra, null, ignoreZeroIntensityPoints);
+                    _dataFile = DataFilePath.OpenMsDataFile(true, 0, null, ignoreZeroIntensityPoints);
                 }
             }
             return _dataFile;

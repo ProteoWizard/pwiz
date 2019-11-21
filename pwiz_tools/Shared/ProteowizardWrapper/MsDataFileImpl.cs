@@ -159,7 +159,7 @@ namespace pwiz.ProteowizardWrapper
             bool requireVendorCentroidedMS1 = false, bool requireVendorCentroidedMS2 = false,
             bool ignoreZeroIntensityPoints = false, 
             int preferOnlyMsLevel = 0,
-            bool combineIonMobilitySpectra = true,
+            bool combineIonMobilitySpectra = true, // Ask for IMS data in 3-array format by default (not guaranteed)
             IEnumerable<PrecursorMzAndIonMobilityWindow> precursorMzAndIonMobilityWindows = null)
         {
 
@@ -617,7 +617,7 @@ namespace pwiz.ProteowizardWrapper
             return GetMaxIonMobilityInList();
         }
 
-        public bool HasCombinedIonMobilitySpectra => _config.combineIonMobilitySpectra;
+        public bool HasCombinedIonMobilitySpectra => IonMobilityUnits != eIonMobilityUnits.none &&  _ionMobilitySpectrumList != null && _ionMobilitySpectrumList.hasCombinedIonMobility();
 
         /// <summary>
         /// Gets the value of the MS_sample_name CV param of first sample in the MSData object, or null if there is no sample information.

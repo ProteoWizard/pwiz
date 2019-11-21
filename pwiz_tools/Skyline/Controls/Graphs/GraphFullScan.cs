@@ -95,12 +95,6 @@ namespace pwiz.Skyline.Controls.Graphs
             if (_msDataFileScanHelper.MsDataSpectra == null)
                 return;
 
-            foreach (var spectrum in spectra)
-            {
-                if (spectrum.IonMobilities != null)
-                    ArrayUtil.Sort(spectrum.Mzs, spectrum.Intensities, spectrum.IonMobilities);
-            }
-
             // Find max values.
             _maxMz = 0;
             _maxIntensity = 0;

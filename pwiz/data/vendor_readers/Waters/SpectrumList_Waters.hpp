@@ -69,6 +69,7 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListIonMobilityBase
     virtual pair<int, int> sonarMzToDriftBinRange(int function, float precursorMz, float precursorTolerance) const;
 
     virtual bool hasIonMobility() const;
+    virtual bool hasCombinedIonMobility() const;
     virtual bool canConvertIonMobilityAndCCS() const;
     virtual double ionMobilityToCCS(double ionMobility, double mz, int charge) const;
     virtual double ccsToIonMobility(double ccs, double mz, int charge) const;

@@ -86,6 +86,7 @@ namespace pwiz.Skyline.Model.Results
         public double? BestWindowGroupDistance { get; private set; }
         public IList<int> OtherWindowGroups { get; private set; }
         private IonMobilityFilter IonMobilityInfo { get; set; }
+        private bool HasCombinedIonMobility { get; set; } // When true, data was read in 3-array format, which affects spectrum ID format
         private SpectrumProductFilter[] Ms1ProductFilters { get; set; }
         private SpectrumProductFilter[] SimProductFilters { get; set; }
         public SpectrumProductFilter[] Ms2ProductFilters { get; set; }

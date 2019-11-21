@@ -47,6 +47,7 @@ namespace pwiz.Skyline.Model.Results
         private bool _isSingleMzMatch;
         private bool _sourceHasPositivePolarityData;
         private bool _sourceHasNegativePolarityData;
+        private bool _sourceHasCombinedIonMobilitySpectra;
         private double? _ticArea;
 
         private readonly ChromatogramLoadingStatus.TransitionData _allChromData;
@@ -110,6 +111,7 @@ namespace pwiz.Skyline.Model.Results
 
             if (NeedMaxIonMobilityValue(dataFile))
                 _maxIonMobilityValue = dataFile.GetMaxIonMobility();
+            _sourceHasCombinedIonMobilitySpectra = dataFile.HasCombinedIonMobilitySpectra;
 
             // Create the filter responsible for chromatogram extraction
             bool firstPass = (_retentionTimePredictor != null);
@@ -220,6 +222,8 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public override eIonMobilityUnits IonMobilityUnits { get { return _filter.IonMobilityUnits; } }
+
+        public override bool SourceHasCombinedIonMobilitySpectra { get { return _sourceHasCombinedIonMobilitySpectra; } }
 
         private void ExtractionComplete()
         {
@@ -1552,6 +1556,7 @@ namespace pwiz.Skyline.Model.Results
 
         public bool ProvidesCollisionalCrossSectionConverter { get { return _dataFile.ProvidesCollisionalCrossSectionConverter; } }
         public eIonMobilityUnits IonMobilityUnits { get { return _dataFile.IonMobilityUnits; } }
+        public bool HasCombinedIonMobility { get { return _dataFile.HasCombinedIonMobilitySpectra; } } // When true, data source provides IMS data in 3-array format, which affects spectrum ID format
 
         public IonMobilityValue IonMobilityFromCCS(double ccs, double mz, int charge)
         {

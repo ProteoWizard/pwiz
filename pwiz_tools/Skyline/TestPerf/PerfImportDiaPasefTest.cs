@@ -44,7 +44,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         [Timeout(6000000)]  // Initial download can take a long time
         public void BrukerDiaPasefImportTest()
         {
-            // RunPerfTests = true; // Uncomment this to force test to run in IDE TODO re-comment this
+            // RunPerfTests = true; // Uncomment this to force test to run in IDE
             Log.AddMemoryAppender();
             TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfImportBrukerDiaPasef_v2.zip";
             TestFilesPersistent = new[] { ".d" }; // List of file basenames that we'd like to unzip alongside parent zipFile, and (re)use in place
@@ -69,6 +69,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             
             // Update the paths to the .d files mentioned in the skyline doc
             string text = File.ReadAllText(skyfile);
+            // Update to indicate that file should be loaded with combined ion mobility
+            text = text.Replace(@"&amp;centroid_ms2=true", @"&amp;centroid_ms2=true&amp;combine_ims=true");
             text = text.Replace(@"PerfImportBrukerDiaPasef", TestFilesDir.PersistentFilesDir);
             text = RemoveReplicateReference(text, @"diagonalSWATH_MSMS_Slot1-10_1_3420"); // Remove reference to replicate with file type that we don't need to handle at this time
             text = RemoveReplicateReference(text, @"SWATHlike_MSMS_Slot1-10_1_3421"); // Remove reference to replicate with file type that we don't need to handle at this time

@@ -162,8 +162,6 @@ namespace pwiz.Skyline.Model.Results
             try
             {
                 var dataFilePath = MSDataFilePath;
-                var centroidMS1 = MSDataFilePath.GetCentroidMs1();
-                var centroidMS2 = MSDataFilePath.GetCentroidMs2();
                 var msDataFilePath = MSDataFilePath as MsDataFilePath;
                 if (msDataFilePath != null)
                 {
@@ -189,11 +187,7 @@ namespace pwiz.Skyline.Model.Results
                         var enableSimSpectrum = fullScan.IsEnabled;
                         var preferOnlyMsLevel = fullScan.IsEnabled && !fullScan.IsEnabledMsMs ? 1 : 0; // If we don't want MS2, ask reader to totally skip it (not guaranteed)
                         var precursorIonMobility = GetPrecursorMzAndIonMobilityWindows(fullScan, dataFilePath); // A list of m/z and/or IM window values for pre-filtering by pwiz (not guaranteed)
-                        inFile = MSDataFilePath.OpenMsDataFile(enableSimSpectrum, preferOnlyMsLevel, true, precursorIonMobility, true); // Combine ion mobility spectra, omit zero intensity points
-                        // Preserve centroiding info as part of MsDataFileUri string in chromdata only if it will be used
-                        // CONSIDER: Dangerously high knowledge of future control flow required for making this decision
-                        if (!ChromatogramDataProvider.HasChromatogramData(inFile) && !inFile.HasSrmSpectra)
-                            MSDataFilePath = dataFilePath = MSDataFilePath.ChangeCentroiding(centroidMS1, centroidMS2);
+                        inFile = MSDataFilePath.OpenMsDataFile(enableSimSpectrum, preferOnlyMsLevel, precursorIonMobility, true); // Omit zero intensity points
                     }
 
                     // Check for cancellation
@@ -386,7 +380,7 @@ namespace pwiz.Skyline.Model.Results
 
         private MsDataFileUri GetRecalcDataFilePath(MsDataFileUri dataFilePath, out string dataFilePathPart)
         {
-            if (_cacheRecalc == null || !_cacheRecalc.CachedFilePaths.Contains(dataFilePath))
+            if (_cacheRecalc == null || !_cacheRecalc.CachedFilePaths.Contains(dataFilePath.GetLocation()))
             {
                 dataFilePathPart = null;
                 return null;
@@ -529,7 +523,8 @@ namespace pwiz.Skyline.Model.Results
             {
                 throw new ChromCacheBuildException(MSDataFilePath, _chromDataSets.Exception);
             }
-            _listCachedFiles.Add(new ChromCachedFile(MSDataFilePath,
+
+            _listCachedFiles.Add(new ChromCachedFile(MSDataFilePath.ChangeCombineIonMobilitySpectra(provider.SourceHasCombinedIonMobilitySpectra),
                                      _currentFileInfo.Flags,
                                      _currentFileInfo.LastWriteTime,
                                      _currentFileInfo.StartTime,

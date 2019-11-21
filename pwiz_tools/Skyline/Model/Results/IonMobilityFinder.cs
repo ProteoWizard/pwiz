@@ -333,7 +333,7 @@ namespace pwiz.Skyline.Model.Results
             IonMobilityValue ionMobilityValue = IonMobilityValue.EMPTY;
             double maxIntensity = 0;
 
-            // Avoid picking MS2 ion mobility values wildly different from MS1 valuess
+            // Avoid picking MS2 ion mobility values wildly different from MS1 values
             IonMobilityValue ms1IonMobilityBest;
             if ((msLevel == 2) && _ms1IonMobilities.ContainsKey(libKey))
             {

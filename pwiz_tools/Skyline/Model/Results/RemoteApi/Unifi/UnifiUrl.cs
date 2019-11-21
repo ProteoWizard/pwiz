@@ -51,6 +51,16 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
             return true;
         }
 
+        public override bool GetCombineIonMobilitySpectra()
+        {
+            return false;
+        }
+
+        public override MsDataFileUri ChangeCombineIonMobilitySpectra(bool combineIonMobilitySpectra)
+        {
+            throw new NotImplementedException();
+        }
+
         public override RemoteAccountType AccountType
         {
             get { return RemoteAccountType.UNIFI; }
@@ -63,7 +73,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
             return result;
         }
 
-        public override MsDataFileImpl OpenMsDataFile(bool simAsSpectra, int preferOnlyMsLevel, bool combineIonMobilitySpectra, IEnumerable<MsDataFileImpl.PrecursorMzAndIonMobilityWindow> precursorMzAndIonMobilityWindows, bool ignoreZeroIntensityPoints)
+        public override MsDataFileImpl OpenMsDataFile(bool simAsSpectra, int preferOnlyMsLevel, IEnumerable<MsDataFileImpl.PrecursorMzAndIonMobilityWindow> precursorMzAndIonMobilityWindows, bool ignoreZeroIntensityPoints)
         {
             var account = FindMatchingAccount(Settings.Default.RemoteAccountList) as UnifiAccount;
             if (account == null)
@@ -81,7 +91,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
             return new MsDataFileImpl(serverUrl, 0, LockMassParameters, simAsSpectra,
                 requireVendorCentroidedMS1: CentroidMs1, requireVendorCentroidedMS2: CentroidMs2,
                 ignoreZeroIntensityPoints: ignoreZeroIntensityPoints, preferOnlyMsLevel: preferOnlyMsLevel,
-                combineIonMobilitySpectra: combineIonMobilitySpectra,
+                combineIonMobilitySpectra: false, // CONSIDER: 3-array ims for unifi?
                 precursorMzAndIonMobilityWindows: precursorMzAndIonMobilityWindows);
         }
     }

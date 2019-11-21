@@ -722,6 +722,11 @@ PWIZ_API_DECL bool SpectrumList_Bruker::canConvertIonMobilityAndCCS() const
     return format_ == Reader_Bruker_Format_TDF;
 }
 
+PWIZ_API_DECL bool SpectrumList_Bruker::hasCombinedIonMobility() const
+{
+    return format_ == Reader_Bruker_Format_TDF && config_.combineIonMobilitySpectra;
+}
+
 // Per email thread Aug 22 2017 bpratt, mattc, Bruker's SvenB:
 // The gas is nitrogen(14.0067 AMU) and the temperature is(according to Sven) assumed to be 305K.
 static const double ccs_conversion_factor = 18509.863216340458;
@@ -772,6 +777,7 @@ SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLevel detailLevel)
 SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
 SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
 bool SpectrumList_Bruker::hasIonMobility() const { return false; }
+bool SpectrumList_Bruker::hasCombinedIonMobility() const { return false; }
 bool SpectrumList_Bruker::hasPASEF() const { return false; }
 bool SpectrumList_Bruker::canConvertIonMobilityAndCCS() const { return false; }
 double SpectrumList_Bruker::ionMobilityToCCS(double ionMobility, double mz, int charge) const {return 0;}

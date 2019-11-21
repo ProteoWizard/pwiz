@@ -685,6 +685,11 @@ PWIZ_API_DECL bool SpectrumList_Thermo::canConvertIonMobilityAndCCS() const
     return false;
 }
 
+PWIZ_API_DECL bool SpectrumList_Thermo::hasCombinedIonMobility() const
+{
+    return false;
+}
+
 PWIZ_API_DECL double SpectrumList_Thermo::ionMobilityToCCS(double ionMobility, double mz, int charge) const
 {
     return 0;
@@ -949,6 +954,7 @@ const SpectrumIdentity& SpectrumList_Thermo::spectrumIdentity(size_t index) cons
 size_t SpectrumList_Thermo::find(const std::string& id) const {return 0;}
 bool SpectrumList_Thermo::hasIonMobility() const {return false;}
 bool SpectrumList_Thermo::canConvertIonMobilityAndCCS() const {return false;}
+bool SpectrumList_Thermo::hasCombinedIonMobility() const {return false;}
 double SpectrumList_Thermo::ionMobilityToCCS(double ionMobility, double mz, int charge) const {return 0;}
 double SpectrumList_Thermo::ccsToIonMobility(double ccs, double mz, int charge) const {return 0;}
 SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData) const {return SpectrumPtr();}
