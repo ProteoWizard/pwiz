@@ -34,7 +34,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     /// <summary>
     /// Verify measured ion mobility derivation and filtering with Bruker TIMS data
     /// </summary>
-//    [TestClass]
+    [TestClass]
     public class MeasuredInverseK0PerfTest : AbstractFunctionalTestEx
     {
 
@@ -124,7 +124,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             }
             Assume.IsTrue(nChanges >= nNonEmpty*.9); // We expect nearly all peaks to change in area with IMS filter in use
 
-            // And read some mz5 converted from Bruker in non-3-array-format, then compare replicates - should be similar
+            // And read some mz5 converted from Bruker in 2-array IMS format, then compare replicates - should be identical
             var mz5 = TestFilesDir.GetTestPath(bsaFmolTimsInfusionesiPrecMz5Mz5);
             ImportResultsFile(mz5);
             document = WaitForDocumentChange(document);
@@ -134,12 +134,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                 {
                     Assume.AreEqual(2, nodeTran.Results.Count);
-                    if (nodeTran.Results[0].Any())
-                    {
-                        var diff = Math.Abs(nodeTran.Results[0].First().Area - nodeTran.Results[1].First().Area) /
-                                   Math.Min(nodeTran.Results[0].First().Area, nodeTran.Results[1].First().Area);
-                        Assume.IsTrue(diff <= 0.02, string.Format("excessive difference in peak area between 2- and 3-array IMS representation"));
-                    }
+                    Assume.AreEqual(nodeTran.Results[0], nodeTran.Results[1]);
                 }
             }
         }  

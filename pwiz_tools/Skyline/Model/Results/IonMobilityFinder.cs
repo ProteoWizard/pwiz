@@ -49,6 +49,9 @@ namespace pwiz.Skyline.Model.Results
         private readonly IProgressMonitor _progressMonitor;
         private IProgressStatus _progressStatus;
         private Exception _dataFileScanHelperException;
+        private double _maxHighEnergyDriftOffsetMsec;
+        private bool _useHighEnergyOffset;
+        private IonMobilityValue _ms1IonMobilityBest;
 
         private struct IonMobilityIntensityPair
         {
@@ -70,7 +73,16 @@ namespace pwiz.Skyline.Model.Results
             _progressMonitor = progressMonitor;
         }
 
-        public bool UseHighEnergyOffset { get; set; }
+        public bool UseHighEnergyOffset
+        {
+            get => _useHighEnergyOffset;
+            set
+            {
+                _useHighEnergyOffset = value;
+                _maxHighEnergyDriftOffsetMsec =
+                    _useHighEnergyOffset ? 2 : 0; // CONSIDER(bspratt): user definable? or dynamically set by looking at scan to scan drift delta? Or resolving power?
+            }
+        }
 
         /// <summary>
         /// Looks through the result and finds ion mobility values.
@@ -334,67 +346,87 @@ namespace pwiz.Skyline.Model.Results
             double maxIntensity = 0;
 
             // Avoid picking MS2 ion mobility values wildly different from MS1 values
-            IonMobilityValue ms1IonMobilityBest;
             if ((msLevel == 2) && _ms1IonMobilities.ContainsKey(libKey))
             {
-                ms1IonMobilityBest =
+                _ms1IonMobilityBest =
                     _ms1IonMobilities[libKey].OrderByDescending(p => p.Intensity)
                         .FirstOrDefault()
                         .IonMobility.IonMobility;
             }
             else
             {
-                ms1IonMobilityBest = IonMobilityValue.EMPTY;
+                _ms1IonMobilityBest = IonMobilityValue.EMPTY;
             }
 
-            double maxHighEnergyDriftOffsetMsec = UseHighEnergyOffset ? 2 : 0; // CONSIDER(bspratt): user definable? or dynamically set by looking at scan to scan drift delta? Or resolving power?
+b           var totalIntensitiesPerIM = new Dictionary<double, double>();
+            double ionMobilityAtMaxIntensity = 0;
+            var isThreeArrayFormat = false;
             foreach (var scan in _msDataFileScanHelper.MsDataSpectra.Where(scan => scan != null))
             {
-                var isThreeArrayFormat = scan.IonMobilities != null;
+                isThreeArrayFormat = scan.IonMobilities != null;
                 if (!isThreeArrayFormat)
                 {
                     if (!scan.IonMobility.HasValue || !scan.Mzs.Any())
                         continue;
-                    if (ms1IonMobilityBest.HasValue &&
-                        (scan.IonMobility.Mobility <
-                         ms1IonMobilityBest.Mobility - maxHighEnergyDriftOffsetMsec ||
-                         scan.IonMobility.Mobility >
-                         ms1IonMobilityBest.Mobility + maxHighEnergyDriftOffsetMsec))
+                    if (IsExtremeMs2Value(scan.IonMobility.Mobility.Value))
                         continue;
-                }
 
-                // Get the total intensity for all transitions of current msLevel
-                double totalIntensity = 0;
-                double ionMobilityAtMaxIntensity = 0;
-                double maxIntensity3D = 0;
-                foreach (var t in transitions)
-                {
-                    Assume.IsTrue(t.ProductMz.IsNegative == scan.NegativeCharge);  // It would be strange if associated scan did not have same polarity
-                    var mzPeak = t.ProductMz;
-                    var halfwin = (t.ExtractionWidth ?? tolerance)/2;
-                    var mzLow = mzPeak - halfwin;
-                    var mzHigh = mzPeak + halfwin;
-                    var first = Array.BinarySearch(scan.Mzs, mzLow);
-                    if (first < 0)
-                        first = ~first;
-                    for (var i = first; i < scan.Mzs.Length; i++)
+                    // Get the total intensity for all transitions of current msLevel
+                    double totalIntensity = 0;
+                    foreach (var t in transitions)
                     {
-                        if (scan.Mzs[i] > mzHigh)
-                            break;
-                        var intensity = scan.Intensities[i];
-                        totalIntensity += intensity;
-                        if (isThreeArrayFormat && intensity > maxIntensity3D)
+                        var mzHigh = FindRangeMz(tolerance, t, scan, out var first);
+                        for (var i = first; i < scan.Mzs.Length; i++)
                         {
-                            ionMobilityAtMaxIntensity = scan.IonMobilities[i];
-                            maxIntensity3D = intensity;
+                            if (scan.Mzs[i] > mzHigh)
+                                break;
+                            totalIntensity += scan.Intensities[i];
+                        }
+                    }
+                    if (maxIntensity < totalIntensity)
+                    {
+                        ionMobilityValue = scan.IonMobility;
+                        maxIntensity = totalIntensity;
+                    }
+                }
+                else // 3-array IMS format
+                {
+                    // Get the total intensity for all transitions of current msLevel
+                    foreach (var t in transitions)
+                    {
+                        var mzHigh = FindRangeMz(tolerance, t, scan, out var first);
+                        for (var i = first; i < scan.Mzs.Length; i++)
+                        {
+                            if (scan.Mzs[i] > mzHigh)
+                                break;
+                            var im = scan.IonMobilities[i];
+                            if (IsExtremeMs2Value(im))
+                                continue;
+
+                            var intensityThisMzAndIM = scan.Intensities[i];
+                            if (!totalIntensitiesPerIM.TryGetValue(im, out var totalIntensityThisIM))
+                            {
+                                totalIntensityThisIM = intensityThisMzAndIM;
+                                totalIntensitiesPerIM.Add(im, totalIntensityThisIM);
+                            }
+                            else
+                            {
+                                totalIntensityThisIM += intensityThisMzAndIM;
+                                totalIntensitiesPerIM[im] = totalIntensityThisIM;
+                            }
+                            if (maxIntensity < totalIntensityThisIM)
+                            {
+                                maxIntensity = totalIntensityThisIM;
+                                ionMobilityAtMaxIntensity = im;
+                            }
                         }
                     }
                 }
-                if (maxIntensity < totalIntensity)
-                {
-                    ionMobilityValue = isThreeArrayFormat ? IonMobilityValue.GetIonMobilityValue(ionMobilityAtMaxIntensity, _msDataFileScanHelper.ScanProvider.IonMobilityUnits) : scan.IonMobility;
-                    maxIntensity = totalIntensity;
-                }
+            }
+
+            if (isThreeArrayFormat)
+            {
+                ionMobilityValue = IonMobilityValue.GetIonMobilityValue(ionMobilityAtMaxIntensity, _msDataFileScanHelper.ScanProvider.IonMobilityUnits);
             }
             if (ionMobilityValue.HasValue)
             {
@@ -413,6 +445,26 @@ namespace pwiz.Skyline.Model.Results
                 }
                 listPairs.Add(result);
             }
+        }
+
+        private static SignedMz FindRangeMz(float tolerance, TransitionFullScanInfo t, MsDataSpectrum scan, out int first)
+        {
+            Assume.IsTrue(t.ProductMz.IsNegative == scan.NegativeCharge);  // It would be strange if associated scan did not have same polarity
+            var mzPeak = t.ProductMz;
+            var halfwin = (t.ExtractionWidth ?? tolerance) / 2;
+            var mzLow = mzPeak - halfwin;
+            var mzHigh = mzPeak + halfwin;
+            first = Array.BinarySearch(scan.Mzs, mzLow);
+            if (first < 0)
+                first = ~first;
+            return mzHigh;
+        }
+
+        private bool IsExtremeMs2Value(double im)
+        {
+            return _ms1IonMobilityBest.HasValue &&
+                   (im < _ms1IonMobilityBest.Mobility - _maxHighEnergyDriftOffsetMsec ||
+                    im > _ms1IonMobilityBest.Mobility + _maxHighEnergyDriftOffsetMsec);
         }
 
         private void HandleLoadScanException(Exception ex)
