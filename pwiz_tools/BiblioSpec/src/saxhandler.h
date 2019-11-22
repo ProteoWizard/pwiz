@@ -199,6 +199,21 @@ public:
         
         return value;
     }
+
+    double getDoubleAttrValueOr(const char* name, const XML_Char **attr, double defaultValue) {
+
+        const char* value = getAttrValue(name, attr);
+        if (strlen(value) == 0)
+            return defaultValue;
+        try
+        {
+            return lexical_cast<double>(value);
+        }
+        catch (bad_lexical_cast&)
+        {
+            throwParseError("The value '%s' in attribute '%s' could not be cast to .", value, name);
+        }
+    }
     
     /**
      * Returns the current position in the file in bytes.
