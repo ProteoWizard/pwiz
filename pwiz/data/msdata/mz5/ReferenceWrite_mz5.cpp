@@ -455,7 +455,7 @@ pwiz::util::IterationListener::Status ReferenceWrite_mz5::readAndWriteChromatogr
                         {
                             accIndex += (unsigned long)inten.size();
                             connection.extendData(time,
-                                    Configuration_mz5::ChomatogramTime);
+                                    Configuration_mz5::ChromatogramTime);
                             connection.extendData(inten,
                                     Configuration_mz5::ChromatogramIntensity);
                         }
