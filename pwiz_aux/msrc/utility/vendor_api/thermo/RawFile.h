@@ -212,22 +212,17 @@ struct PWIZ_API_DECL MassList
 typedef shared_ptr<MassList> MassListPtr;
 
 
-struct PWIZ_API_DECL ThermoNoiseDataInfo
+struct PWIZ_API_DECL NoiseList
 {
-    double mz;
-    float baseline;
-    float intensity;
+    pwiz::util::BinaryData<double> mzArray;
+    pwiz::util::BinaryData<double> baselineArray;
+    pwiz::util::BinaryData<double> intensityArray;
+    size_t size() const { return mzArray.size(); }
 };
 
-class PWIZ_API_DECL NoiseData
-{
-    public:
-    virtual long scanNumber() const = 0;
-    virtual long size() const = 0;
-    virtual ThermoNoiseDataInfo* data() const = 0;
-};
 
-typedef shared_ptr<NoiseData> NoiseDataPtr;
+typedef shared_ptr<NoiseList> NoiseListPtr;
+
 
 struct PWIZ_API_DECL MassRange
 {
@@ -449,7 +444,7 @@ class PWIZ_API_DECL RawFile
     virtual ScanInfoPtr getScanInfo(long scanNumber) const = 0;
     static ScanInfoPtr getScanInfoFromFilterString(const std::string& filterString);
 
-    virtual NoiseDataPtr getNoiseData(long scanNumber) = 0;
+    virtual NoiseListPtr getNoiseList(long scanNumber) const = 0;
 
     virtual MSOrder getMSOrder(long scanNumber) const = 0;
     virtual double getPrecursorMass(long scanNumber, MSOrder msOrder = MSOrder_Any) const = 0;

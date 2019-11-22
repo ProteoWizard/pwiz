@@ -108,8 +108,6 @@ class RawFileImpl : public RawFile
     virtual std::vector<std::string> getFilters() const;
     virtual ScanInfoPtr getScanInfo(long scanNumber) const;
 
-    virtual NoiseDataPtr getNoiseData(long scanNumber);
-
     virtual MSOrder getMSOrder(long scanNumber) const;
     virtual double getPrecursorMass(long scanNumber, MSOrder msOrder) const;
     virtual ScanType getScanType(long scanNumber) const;
@@ -1085,27 +1083,13 @@ NoiseListPtr RawFileImpl::getNoiseList(long scanNumber) const
             result->baselineArray[i] = pdval[(i * 3) + 2];
         }
 #else
-        auto noiseData = raw_->GetAdvancedPacketData(scanNumber)->NoiseData;
-        long size = noiseData->Length;
-        result->mzArray.resize(size);
-        result->baselineArray.resize(size);
-        result->intensityArray.resize(size);
-
-        for (long i = 0; i < size; ++i)
-        {
-            result->mzArray[i] = noiseData[i]->Mass;
-            result->intensityArray[i] = noiseData[i]->Noise;
-            result->baselineArray[i] = noiseData[i]->Baseline;
-        }
+        throw runtime_error("getNoiseList must be called from RawFileThreadImpl");
 #endif
         return result;
     }
     CATCH_AND_FORWARD
 }
 
-std::vector<string> RawFileImpl::getFilters() const
-{
-    _variant_t v;
 
 std::vector<string> RawFileImpl::getFilters() const
 {

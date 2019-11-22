@@ -728,7 +728,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
 
                 if (config_.addNoiseData)
                 {
-                    NoiseListPtr noiseData = rawfile_->getNoiseList(ie.scan);
+                    NoiseListPtr noiseData = raw->getNoiseList(ie.scan);
                     
                     if (noiseData != NULL && noiseData->size() > 0)
                     {
