@@ -66,7 +66,7 @@ class PWIZ_API_DECL Reader
         /// when false, the reader will treat times with unknown time zone as UTC
         bool adjustUnknownTimeZonesToHostTimeZone;
 
-        // when true, a reader will include noise data if available
+        /// when true, a reader will include noise data if available
         bool addNoiseData;
 
         /// progress listener for when initializing a file takes a long time,
@@ -83,7 +83,7 @@ class PWIZ_API_DECL Reader
         /// temporary(?) variable to avoid needing to regenerate Bruker test data
         bool sortAndJitter;
 
-        // when non-empty, only MS2 scans from precursors matching one of the included m/z, and optionally mobility, (i.e. within a precursor isolation window) will be enumerated (currently only affects Bruker PASEF data)
+        /// when non-empty, only MS2 scans from precursors matching one of the included m/z, and optionally mobility, (i.e. within a precursor isolation window) will be enumerated (currently only affects Bruker PASEF data)
         std::vector<chemistry::MzMobilityWindow> isolationMzAndMobilityFilter;
 
         Config();

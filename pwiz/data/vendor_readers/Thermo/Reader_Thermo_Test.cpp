@@ -199,6 +199,9 @@ int main(int argc, char* argv[])
         config.peakPicking = true;
         pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsRawFile(), config);
 
+        config.addNoiseData = true;
+        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsRawFile(), config);
+
         #ifdef PWIZ_READER_THERMO
         // CONSIDER: do this test in VendorReaderTestHarness for all vendor readers?
         ::SetThreadLocale(LANG_TURKISH);
