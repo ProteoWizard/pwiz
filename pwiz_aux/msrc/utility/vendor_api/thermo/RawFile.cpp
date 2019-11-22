@@ -880,41 +880,6 @@ class MassListImpl
     long size_;
 };*/
 
-class NoiseDataImpl : public NoiseData
-{
-    public:
-    NoiseDataImpl(long scanNumber, VARIANT& noisePacket)
-    {
-        if (noisePacket.vt != (VT_ARRAY | VT_R8))
-            throw RawEgg("NoiseDataImpl(): VARIANT error.");
-
-        _variant_t noisePacket2(noisePacket, false);
-        size_ = (long)noisePacket2.parray->rgsabound[0].cElements;
-        data_ = new ThermoNoiseDataInfo[size_];
-
-        double* pdval = (double*)noisePacket2.parray->pvData;
-        for (long i = 0; i < size_; ++i)
-        {
-            data_[i].mz = (double)pdval[(i * 3) + 0];
-            data_[i].intensity = (float)pdval[(i * 3) + 1];
-            data_[i].baseline = (float)pdval[(i * 3) + 2];
-        }
-    }
-
-    ~NoiseDataImpl()
-    {
-        delete data_;
-    }
-
-    virtual long scanNumber() const { return scanNumber_; }
-    virtual long size() const { return size_; }
-    virtual ThermoNoiseDataInfo* data() const { return data_; }
-
-    private:
-    long scanNumber_;
-    ThermoNoiseDataInfo* data_;
-    long size_;
-}; */
 } // namespace
 #endif
 
