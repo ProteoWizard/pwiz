@@ -358,7 +358,7 @@ namespace pwiz.Skyline.Model.Results
                 _ms1IonMobilityBest = IonMobilityValue.EMPTY;
             }
 
-b           var totalIntensitiesPerIM = new Dictionary<double, double>();
+            var totalIntensitiesPerIM = new Dictionary<double, double>();
             double ionMobilityAtMaxIntensity = 0;
             var isThreeArrayFormat = false;
             foreach (var scan in _msDataFileScanHelper.MsDataSpectra.Where(scan => scan != null))

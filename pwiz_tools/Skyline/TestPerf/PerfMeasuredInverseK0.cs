@@ -20,6 +20,7 @@
 
 using System;
 using System.Linq;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.FileUI;
@@ -27,6 +28,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
@@ -128,15 +130,36 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var mz5 = TestFilesDir.GetTestPath(bsaFmolTimsInfusionesiPrecMz5Mz5);
             ImportResultsFile(mz5);
             document = WaitForDocumentChange(document);
+            var sb = new StringBuilder();
+            int trials = 0;
+            int diffs = 0;
             foreach (var nodeGroup in document.MoleculeTransitionGroups)
             {
                 Assume.AreEqual(2, nodeGroup.Results.Count);
                 foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                 {
                     Assume.AreEqual(2, nodeTran.Results.Count);
-                    Assume.AreEqual(nodeTran.Results[0], nodeTran.Results[1]);
+                    if (nodeTran.Results[0].Any() || nodeTran.Results[1].Any())
+                        trials++;
+                    if (Equals(nodeTran.Results[0], nodeTran.Results[1]))
+                        continue;
+                    var diff = Math.Abs(nodeTran.Results[0].First().Area - nodeTran.Results[1].First().Area) /
+                               Math.Min(nodeTran.Results[0].First().Area, nodeTran.Results[1].First().Area);
+                    diffs++;
+                    if (diff > 0)
+                    {
+                        sb.AppendLine(string.Format("Difference {0} in {1} - {2}",
+                            diff, nodeGroup, nodeTran.Transition));
+                    }
+                    else
+                    {
+                        sb.AppendLine(string.Format("No area difference in {0} - {1}",
+                            nodeGroup, nodeTran.Transition));
+                    }
                 }
             }
+            if (sb.Length > 0)
+                Assert.Fail(TextUtil.LineSeparate(string.Format("{0} of {1} differences found in peak areas between 2- and 3- array spectra", diffs, trials), sb.ToString()));
         }  
     }
 }

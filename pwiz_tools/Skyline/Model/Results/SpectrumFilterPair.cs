@@ -176,33 +176,33 @@ namespace pwiz.Skyline.Model.Results
             double lastRT = 0;
             var specIndexFirst = 0;
             var specIndexLast = spectra.Length;
-            if (specIndexLast > 1 && MinIonMobilityValue.HasValue)
-            {
-                // Only inspect the range of spectra that match our ion mobility window
-                var im0 = spectra[0].IonMobility.Mobility;
-                var im1 = spectra[1].IonMobility.Mobility;
-                if (im0.HasValue && im1.HasValue)
-                {
-
-                    if (im0 < im1)
-                    {
-                        // Binary search for first spectrum in ascending ion mobility range (as in drift time)
-                        var im = MinIonMobilityValue.Value + minIonMobilityHighEnergyOffset;
-                        specIndexFirst = CollectionUtil.BinarySearch(spectra, s => (s.IonMobility.Mobility ?? 0).CompareTo(im), true);
-                    }
-                    else if (im0 > im1)
-                    {
-                        // Binary search for first spectrum in descending ion mobility range (as in TIMS)
-                        var im = MaxIonMobilityValue.Value + maxIonMobilityHighEnergyOffset;
-                        specIndexFirst = CollectionUtil.BinarySearch(spectra, s => im.CompareTo(s.IonMobility.Mobility ?? 0), true);
-                    }
-
-                    if (specIndexFirst < 0)
-                    {
-                        specIndexFirst = ~specIndexFirst;
-                    }
-                }
-            }
+//            if (specIndexLast > 1 && MinIonMobilityValue.HasValue)
+//            {
+//                // Only inspect the range of spectra that match our ion mobility window
+//                var im0 = spectra[0].IonMobility.Mobility;
+//                var im1 = spectra[1].IonMobility.Mobility;
+//                if (im0.HasValue && im1.HasValue)
+//                {
+//
+//                    if (im0 < im1)
+//                    {
+//                        // Binary search for first spectrum in ascending ion mobility range (as in drift time)
+//                        var im = MinIonMobilityValue.Value + minIonMobilityHighEnergyOffset;
+//                        specIndexFirst = CollectionUtil.BinarySearch(spectra, s => (s.IonMobility.Mobility ?? 0).CompareTo(im), true);
+//                    }
+//                    else if (im0 > im1)
+//                    {
+//                        // Binary search for first spectrum in descending ion mobility range (as in TIMS)
+//                        var im = MaxIonMobilityValue.Value + maxIonMobilityHighEnergyOffset;
+//                        specIndexFirst = CollectionUtil.BinarySearch(spectra, s => im.CompareTo(s.IonMobility.Mobility ?? 0), true);
+//                    }
+//
+//                    if (specIndexFirst < 0)
+//                    {
+//                        specIndexFirst = ~specIndexFirst;
+//                    }
+//                }
+//            }
             for (var specIndex = specIndexFirst; specIndex < specIndexLast; specIndex++)
             {
                 var spectrum = spectra[specIndex];
@@ -223,16 +223,16 @@ namespace pwiz.Skyline.Model.Results
                 spectrumCount++;
 
                 // Filter on ion mobility, if any - gross check before we look at individual fragment high energy offsets
-                if (spectrum.IonMobilities == null &&   // Not for 3D spectra
-                    !ContainsIonMobilityValue(spectrum.IonMobility, maxIonMobilityHighEnergyOffset) &&
-                    !ContainsIonMobilityValue(spectrum.IonMobility, minIonMobilityHighEnergyOffset))
-                {
-                    if (specIndex > specIndexFirst && specIndexFirst > 0)
-                    {
-                        break; // We have left the range of interesting ion mobilities
-                    }
-                    continue;
-                }
+//                if (spectrum.IonMobilities == null &&   // Not for 3D spectra
+//                    !ContainsIonMobilityValue(spectrum.IonMobility, maxIonMobilityHighEnergyOffset) &&
+//                    !ContainsIonMobilityValue(spectrum.IonMobility, minIonMobilityHighEnergyOffset))
+//                {
+//                    if (specIndex > specIndexFirst && specIndexFirst > 0)
+//                    {
+//                        break; // We have left the range of interesting ion mobilities
+//                    }
+//                    continue;
+//                }
                 var mzArray = spectrum.Mzs;
                 if ((mzArray == null) || (mzArray.Length==0))
                     continue;
@@ -261,7 +261,7 @@ namespace pwiz.Skyline.Model.Results
                     // but only if there is no IonMobilities array. Otherwise IMS filtering is
                     // performed during extraction
                     if (spectrum.IonMobilities == null &&
-                        productFilter.HighEnergyIonMobilityValueOffset != 0 &&
+//                        productFilter.HighEnergyIonMobilityValueOffset != 0 &&
                         !ContainsIonMobilityValue(spectrum.IonMobility, productFilter.HighEnergyIonMobilityValueOffset))
                     {
                         continue;
