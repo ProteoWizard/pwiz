@@ -267,7 +267,7 @@ blib-test-build maxquant_ims : -o -E : output/maxquant_ims.blib : maxquant_ims.c
 blib-test-build maxquant-prg2012-wiff : -o -p@$(TEST_DATA_PATH)/prg2012-wiff-mqpar.xml : output/maxquant-prg2012-wiff.blib : maxquant-prg2012-wiff.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/prg2012-wiff-msms.txt : <vendor-api-support>off:<build>no ;
 
 # Test maxquant with a label specified in a custom modifications file
-blib-test-build maxquant-heavy-label : -o -E -p@$(TEST_DATA_PATH)/heavy-label-mqpar.xml -x@$(TEST_DATA_PATH)/heavy-label-modifications.xml : output/maxquant-heavy-label.blib : maxquant-heavy-label.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/heavy-label-msms.txt ;
+#blib-test-build maxquant-heavy-label : -o -E -p@$(TEST_DATA_PATH)/heavy-label-mqpar.xml -x@$(TEST_DATA_PATH)/heavy-label-modifications.xml : output/maxquant-heavy-label.blib : maxquant-heavy-label.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/heavy-label-msms.txt ;
 
 # Test mzid format from scaffold
 blib-test-build scaffold : --unicode -o : output/scaffold.blib : scaffold.check : $(TEST_INPUTS_PATH)/scaffold.mzid ;
