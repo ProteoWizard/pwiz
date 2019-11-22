@@ -258,7 +258,7 @@ ChromatogramPtr ChromatogramList_mz5Impl::chromatogram(size_t index, bool getBin
         {
             if (!binaryParamList_[index].empty()) {
                 std::vector<double> time, inten;
-                conn_->getData(time, Configuration_mz5::ChomatogramTime, start, end);
+                conn_->getData(time, Configuration_mz5::ChromatogramTime, start, end);
                 conn_->getData(inten, Configuration_mz5::ChromatogramIntensity, start, end);
                 ptr->setTimeIntensityArrays(time, inten, CVID_Unknown, CVID_Unknown);
                 // time and intensity unit will be set by the following command
