@@ -856,14 +856,14 @@ namespace pwiz.ProteowizardWrapper
                            s.getArrayByCVID(CVID.MS_mean_drift_time_array)?.data;
                     break;
                 case eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
-                    data = s.getArrayByCVID(CVID.MS_raw_inverse_reduced_ion_mobility_array)?.data ??
-                           s.getArrayByCVID(CVID.MS_mean_inverse_reduced_ion_mobility_array)?.data;
+                    data = s.getArrayByCVID(CVID.MS_mean_inverse_reduced_ion_mobility_array)?.data ??
+                           s.getArrayByCVID(CVID.MS_raw_inverse_reduced_ion_mobility_array)?.data;
                     break;
 //                default:
 //                    throw new InvalidDataException(string.Format(@"mobility type {0} does not support ion mobility arrays", IonMobilityUnits));
             }
 
-            return data?.Storage();
+            return data?.ToArray();
         }
 
         private MsDataSpectrum GetSpectrum(Spectrum spectrum, int spectrumIndex)

@@ -83,7 +83,7 @@ namespace pwiz.Skyline.Model.Results
                     dictNameToIndex.Add(set.Name, i);
                     dictIdToIndex.Add(set.Id.GlobalIndex, i);
                     foreach (var path in set.MSDataFilePaths)
-                        _setFiles.Add(path);
+                        _setFiles.Add(path.GetLocation());
                 }
                 _dictNameToIndex = new ImmutableDictionary<string, int>(dictNameToIndex);
                 _dictIdToIndex = new ImmutableDictionary<int, int>(dictIdToIndex);
@@ -246,7 +246,7 @@ namespace pwiz.Skyline.Model.Results
 
         public bool IsDataFilePath(MsDataFileUri path)
         {
-            return _setFiles.Contains(path);
+            return _setFiles.Contains(path.GetLocation());
         }
 
         public ChromFileInfo GetChromFileInfo<TChromInfo>(Results<TChromInfo> results, int replicateIndex)
@@ -430,7 +430,7 @@ namespace pwiz.Skyline.Model.Results
         {
             _cacheFinal = cacheFinal;
             _listPartialCaches = MakeReadOnly(partialCaches);
-            _setCachedFiles = new HashSet<MsDataFileUri>(CachedFilePaths);
+            _setCachedFiles = new HashSet<MsDataFileUri>(CachedFilePaths.Select(p => p.GetLocation()));
         }
 
         public MeasuredResults UpdateCaches(string documentPath, MeasuredResults resultsCache)

@@ -244,7 +244,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
             public override MsDataFileUri ChangeCombineIonMobilitySpectra(bool combineIonMobilitySpectra)
             {
-                throw new NotImplementedException();
+                return this; // Not supported
             }
 
             public override RemoteAccountType AccountType

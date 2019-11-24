@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
 
         public override MsDataFileUri ChangeCombineIonMobilitySpectra(bool combineIonMobilitySpectra)
         {
-            throw new NotImplementedException();
+            return this; // Don't bother trying, it's not supported.  CONSIDER: combined IMS in unifi, eventually
         }
 
         public override RemoteAccountType AccountType

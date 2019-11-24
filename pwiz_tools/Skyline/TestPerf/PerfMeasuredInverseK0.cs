@@ -19,12 +19,15 @@
 
 
 using System;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.Util;
@@ -40,13 +43,14 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     public class MeasuredInverseK0PerfTest : AbstractFunctionalTestEx
     {
 
-        private const string bsaFmolTimsInfusionesiPrecMz5Mz5 = "BSA_50fmol_TIMS_InfusionESI_10prec_mz5.mz5";
+        private const string bsaFmolTimsInfusionesiPrecMz5Mz5 = "_BSA_50fmol_TIMS_InfusionESI_10prec_mz5.mz5";
+        private const string  BSA_50fmol_TIMS_InfusionESI_10precd =  "BSA_50fmol_TIMS_InfusionESI_10prec.d";
 
         [TestMethod]
         public void MeasuredInverseK0ValuesPerfTest()
         {
-            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfMeasuredInverseK0_v2.zip";
-            TestFilesPersistent = new[] { "BSA_50fmol_TIMS_InfusionESI_10prec.d", bsaFmolTimsInfusionesiPrecMz5Mz5 }; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
+            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfMeasuredInverseK0_v3.zip";
+            TestFilesPersistent = new[] { BSA_50fmol_TIMS_InfusionESI_10precd, bsaFmolTimsInfusionesiPrecMz5Mz5 }; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
 
             RunFunctionalTest();
             
@@ -56,16 +60,21 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         {
             // Load a document with results loaded without drift filter
             string skyFile = TestFilesDir.GetTestPath("tims_test.sky");
-            Program.ExtraRawFileSearchFolder = TestFilesDir.PersistentFilesDir; // So we don't have to reload the raw files, which have moved relative to skyd file 
+            Program.ExtraRawFileSearchFolder = TestFilesDir.PersistentFilesDir;
             RunUI(() => SkylineWindow.OpenFile(skyFile));
-
+            RunUI(() => Settings.Default.ImportResultsSimultaneousFiles = (int)MultiFileLoader.ImportResultsSimultaneousFileOptions.many); // use maximum threads for multiple file import
+            ImportResults(BSA_50fmol_TIMS_InfusionESI_10precd);
             var document = WaitForDocumentLoaded(240000);  // If it decides to remake chromatograms this can take awhile
             AssertEx.IsDocumentState(document, null, 1, 34, 89, 1007);
+            var testPath = TestFilesDir.GetTestPath("local.sky");
             RunUI(() =>
             {
-                SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("local.sky")); // Avoid "document changed since last edit" message
-                document = SkylineWindow.DocumentUI;
+                // Show that we can reopen a document with 3-array data in it
+                SkylineWindow.SaveDocument(testPath); // Avoid "document changed since last edit" message
+                SkylineWindow.NewDocument();
+                SkylineWindow.LoadFile(testPath);
             });
+            document = WaitForDocumentLoaded(240000);
             var transitions = document.MoleculeTransitions.ToArray();
 
             // Verify ability to extract predictions from raw data
@@ -110,7 +119,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var nNonEmpty = 0;
             for (var i = 0; i < transitions.Length; i++)
             {
-                Assume.AreEqual(transitions[i].Mz, transitionsNew[i].Mz);
+                Assert.AreEqual(transitions[i].Mz, transitionsNew[i].Mz);
                 if (transitions[i].AveragePeakArea.HasValue)
                 {
                     nNonEmpty++;
@@ -121,10 +130,10 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 }
                 else
                 {
-                    Assume.AreEqual(transitions[i].AveragePeakArea, transitionsNew[i].AveragePeakArea);
+                    Assert.AreEqual(transitions[i].AveragePeakArea, transitionsNew[i].AveragePeakArea);
                 }
             }
-            Assume.IsTrue(nChanges >= nNonEmpty*.9); // We expect nearly all peaks to change in area with IMS filter in use
+            Assert.IsTrue(nChanges >= nNonEmpty*.9); // We expect nearly all peaks to change in area with IMS filter in use
 
             // And read some mz5 converted from Bruker in 2-array IMS format, then compare replicates - should be identical
             var mz5 = TestFilesDir.GetTestPath(bsaFmolTimsInfusionesiPrecMz5Mz5);
@@ -135,7 +144,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             int diffs = 0;
             foreach (var nodeGroup in document.MoleculeTransitionGroups)
             {
-                Assume.AreEqual(2, nodeGroup.Results.Count);
+                Assert.AreEqual(2, nodeGroup.Results.Count);
                 foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                 {
                     Assume.AreEqual(2, nodeTran.Results.Count);
@@ -160,6 +169,32 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             }
             if (sb.Length > 0)
                 Assert.Fail(TextUtil.LineSeparate(string.Format("{0} of {1} differences found in peak areas between 2- and 3- array spectra", diffs, trials), sb.ToString()));
-        }  
+
+            // Verify that the data was loaded in 3-array IMS format for .d and 2-array for .mz5 (which was converted that way on purpose)
+            RunUI(() =>
+            {
+                SkylineWindow.SaveDocument(testPath);
+            });
+            VerifySerialization(testPath);
+
+            // Now a quick test to make sure that we process these properly from the commandline
+            File.Delete(testPath);
+            RunCommand("--in=" + skyFile,
+                "--import-all=" + TestFilesDir.PersistentFilesDir,
+                "--out=" + testPath);
+            VerifySerialization(testPath);
+
+        }
+
+        private void VerifySerialization(string testPath)
+        {
+            var text = File.ReadAllText(testPath);
+            var filePath = TestFilesDir.GetTestPath(BSA_50fmol_TIMS_InfusionESI_10precd);
+            var encodePath = SampleHelp.EncodePath(filePath, null, -1, null, false, false, true);
+            Assert.IsTrue(text.Contains(encodePath + '"'));
+            filePath = TestFilesDir.GetTestPath(bsaFmolTimsInfusionesiPrecMz5Mz5);
+            encodePath = SampleHelp.EncodePath(filePath, null, -1, null, false, false, false);
+            Assert.IsTrue(text.Contains(encodePath + '"'));
+        }
     }
 }

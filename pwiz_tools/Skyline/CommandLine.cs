@@ -3299,7 +3299,7 @@ namespace pwiz.Skyline
                     var chromatogram = listChromatograms[indexChrom];
                     var paths = chromatogram.MSDataFilePaths;
                     var listFilePaths = paths.ToList();
-                    listFilePaths.Add(dataFile);
+                    listFilePaths.Add(dataFile.ChangeCombineIonMobilitySpectra(true)); // Try to load as 3-array IMS data if that happens to be supported
                     listChromatograms[indexChrom] = chromatogram.ChangeMSDataFilePaths(listFilePaths);
                 }
                 else
