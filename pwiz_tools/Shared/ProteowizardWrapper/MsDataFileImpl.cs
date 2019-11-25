@@ -389,7 +389,8 @@ namespace pwiz.ProteowizardWrapper
 
         public bool IsWatersLockmassSpectrum(MsDataSpectrum s)
         {
-            return _lockmassFunction.HasValue && (s.WatersFunctionNumber >= _lockmassFunction.Value);
+            return _lockmassFunction.HasValue && 
+                   MsDataSpectrum.WatersFunctionNumberFromId(s.Id, HasIonMobilitySpectra) >= _lockmassFunction.Value;
         }
 
         /// <summary>
@@ -580,6 +581,13 @@ namespace pwiz.ProteowizardWrapper
                             _lockmassParameters.LockmassNegative ?? 0,
                             _lockmassParameters.LockmassTolerance ?? LockMassParameters.LOCKMASS_TOLERANCE_DEFAULT);
                     }
+                    // Ion mobility info
+                    if (_spectrumList != null) // No ion mobility for chromatogram-only files
+                    {
+                        _ionMobilitySpectrumList = new SpectrumList_IonMobility(_spectrumList);
+                        _ionMobilityUnits = _ionMobilitySpectrumList.getIonMobilityUnits();
+                        _providesConversionCCStoIonMobility = _ionMobilitySpectrumList.canConvertIonMobilityAndCCS(_ionMobilityUnits);
+                    }
                     if (IsWatersFile  && _spectrumList != null)
                     {
                         if (_spectrumList.size() > 0 && !hasSrmSpectra)
@@ -592,7 +600,7 @@ namespace pwiz.ProteowizardWrapper
                             {
                                 if (GetMsLevel(spectrum) == 1)
                                 {
-                                    var function = MsDataSpectrum.WatersFunctionNumberFromId(id.abbreviate(spectrum.id));
+                                    var function = MsDataSpectrum.WatersFunctionNumberFromId(id.abbreviate(spectrum.id), HasCombinedIonMobilitySpectra);
                                     if (function > 1)
                                         _lockmassFunction = function; // Ignore all scans in this function for chromatogram extraction purposes
                                 }
@@ -600,13 +608,6 @@ namespace pwiz.ProteowizardWrapper
                         }
                     }
 
-                    // Ion mobility info
-                    if (_spectrumList != null) // No ion mobility for chromatogram-only files
-                    {
-                        _ionMobilitySpectrumList = new SpectrumList_IonMobility(_spectrumList);
-                        _ionMobilityUnits = _ionMobilitySpectrumList.getIonMobilityUnits();
-                        _providesConversionCCStoIonMobility = _ionMobilitySpectrumList.canConvertIonMobilityAndCCS(_ionMobilityUnits);
-                    }
                 }
                 return _spectrumList;
             }
@@ -1534,17 +1535,9 @@ namespace pwiz.ProteowizardWrapper
         public double? MaxIonMobility { get; set; }
         public int WindowGroup { get; set; } // For Bruker diaPASEF
 
-        public static int WatersFunctionNumberFromId(string id)
+        public static int WatersFunctionNumberFromId(string id, bool isCombinedIonMobility)
         {
-            return int.Parse(id.Split('.')[0]); // Yes, this will throw if it's not in dotted format - and that's good
-        }
-
-        public int WatersFunctionNumber
-        {
-            get 
-            {
-                return WatersFunctionNumberFromId(Id);
-            }
+            return int.Parse(id.Split('.')[isCombinedIonMobility ? 1 :0]); // Yes, this will throw if it's not in dotted format - and that's good
         }
 
         public override string ToString() // For debugging convenience, not user-facing
