@@ -58,26 +58,30 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         protected override void DoTest()
         {
-            // Load a document with results loaded without drift filter
             string skyFile = TestFilesDir.GetTestPath("tims_test.sky");
             Program.ExtraRawFileSearchFolder = TestFilesDir.PersistentFilesDir;
-            RunUI(() => SkylineWindow.OpenFile(skyFile));
-            RunUI(() => Settings.Default.ImportResultsSimultaneousFiles = (int)MultiFileLoader.ImportResultsSimultaneousFileOptions.many); // use maximum threads for multiple file import
-            ImportResults(BSA_50fmol_TIMS_InfusionESI_10precd);
-            var document = WaitForDocumentLoaded(240000);  // If it decides to remake chromatograms this can take awhile
-            AssertEx.IsDocumentState(document, null, 1, 34, 89, 1007);
             var testPath = TestFilesDir.GetTestPath("local.sky");
+
+            // Make sure that commandline loading employs 3-array IMS (should be quick if it does)
+            TestCommandlineImport(skyFile, testPath);
+
+            RunUI(() => Settings.Default.ImportResultsSimultaneousFiles = (int)MultiFileLoader.ImportResultsSimultaneousFileOptions.many); // use maximum threads for multiple file import
+            RunUI(() => SkylineWindow.OpenFile(skyFile));
+            ImportResults(BSA_50fmol_TIMS_InfusionESI_10precd);
+            var document = WaitForDocumentLoaded(240000);  // mz5 part of this this can take awhile
+            AssertEx.IsDocumentState(document, null, 1, 34, 89, 1007);
             RunUI(() =>
             {
                 // Show that we can reopen a document with 3-array data in it
-                SkylineWindow.SaveDocument(testPath); // Avoid "document changed since last edit" message
+                SkylineWindow.SaveDocument(testPath); 
                 SkylineWindow.NewDocument();
+                VerifySerialization(testPath, false);
                 SkylineWindow.LoadFile(testPath);
             });
             document = WaitForDocumentLoaded(240000);
             var transitions = document.MoleculeTransitions.ToArray();
 
-            // Verify ability to extract predictions from raw data
+            // Verify ability to extract ion mobility peaks from raw data
             var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(
                 () => SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Prediction));
 
@@ -170,31 +174,37 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             if (sb.Length > 0)
                 Assert.Fail(TextUtil.LineSeparate(string.Format("{0} of {1} differences found in peak areas between 2- and 3- array spectra", diffs, trials), sb.ToString()));
 
-            // Verify that the data was loaded in 3-array IMS format for .d and 2-array for .mz5 (which was converted that way on purpose)
+            // Verify that the data was loaded in 3-array IMS format for .d and 2-array for .mz5 (which was converted that way on purpose) by looking at serialization
             RunUI(() =>
             {
                 SkylineWindow.SaveDocument(testPath);
             });
-            VerifySerialization(testPath);
-
-            // Now a quick test to make sure that we process these properly from the commandline
-            File.Delete(testPath);
-            RunCommand("--in=" + skyFile,
-                "--import-all=" + TestFilesDir.PersistentFilesDir,
-                "--out=" + testPath);
-            VerifySerialization(testPath);
+            VerifySerialization(testPath, true);
 
         }
 
-        private void VerifySerialization(string testPath)
+        private void TestCommandlineImport(string skyFile, string testPath)
+        {
+            if (File.Exists(testPath))
+                File.Delete(testPath);
+            RunCommand("--in=" + skyFile,
+                "--import-file=" + TestFilesDir.GetTestPath(BSA_50fmol_TIMS_InfusionESI_10precd),
+                "--out=" + testPath);
+            VerifySerialization(testPath, false);
+        }
+
+        private void VerifySerialization(string testPath, bool expect_mz5)
         {
             var text = File.ReadAllText(testPath);
             var filePath = TestFilesDir.GetTestPath(BSA_50fmol_TIMS_InfusionESI_10precd);
             var encodePath = SampleHelp.EncodePath(filePath, null, -1, null, false, false, true);
             Assert.IsTrue(text.Contains(encodePath + '"'));
-            filePath = TestFilesDir.GetTestPath(bsaFmolTimsInfusionesiPrecMz5Mz5);
-            encodePath = SampleHelp.EncodePath(filePath, null, -1, null, false, false, false);
-            Assert.IsTrue(text.Contains(encodePath + '"'));
+            if (expect_mz5)
+            {
+                filePath = TestFilesDir.GetTestPath(bsaFmolTimsInfusionesiPrecMz5Mz5);
+                encodePath = SampleHelp.EncodePath(filePath, null, -1, null, false, false, false);
+                Assert.IsTrue(text.Contains(encodePath + '"'));
+            }
         }
     }
 }
