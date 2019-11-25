@@ -419,6 +419,7 @@
     <Compile Include="Model\AuditLog\DiffNode.cs" />
     <Compile Include="Model\AuditLog\PropertyName.cs" />
     <Compile Include="Model\ExplicitTransitionValues.cs" />
+    <Compile Include="Model\GroupComparisonRefinementData.cs" />
     <Compile Include="Model\Lib\BlibData\DbRefSpectraPeakAnnotations.cs" />
     <Compile Include="Model\Lib\ExplicitPeakBounds.cs" />
     <Compile Include="Model\Lib\LibKeyIndex.cs" />
