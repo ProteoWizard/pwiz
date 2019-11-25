@@ -2561,7 +2561,7 @@ namespace pwiz.Skyline
 
         public void ShowRefineDlg()
         {
-            using (var refineDlg = new RefineDlg(DocumentUI))
+            using (var refineDlg = new RefineDlg(this))
             {
                 if (refineDlg.ShowDialog(this) == DialogResult.OK)
                 {

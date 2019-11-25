@@ -32,6 +32,8 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Controls.GroupComparison;
+using pwiz.Skyline.Model.GroupComparison;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -55,12 +57,15 @@ namespace pwiz.Skyline.EditUI
         private readonly string _removeLabelText;
         private readonly string _removeTipText;
 
+        private readonly SettingsListBoxDriver<GroupComparisonDef> _groupComparisonsListBoxDriver;
+
         private int _standardTypeCount;
 
-        public RefineDlg(SrmDocument document)
+        public RefineDlg(IDocumentUIContainer documentContainer)
         {
-            _document = document;
-            _settings = document.Settings;
+            _document = documentContainer.DocumentUI;
+            _settings = documentContainer.DocumentUI.Settings;
+            DocumentContainer = documentContainer;
 
             InitializeComponent();
 
@@ -78,8 +83,7 @@ namespace pwiz.Skyline.EditUI
             comboRefineLabelType.SelectedIndex = 0;
             comboReplicateUse.SelectedIndex = 0;
 
-            var settings = document.Settings;
-            if (!settings.HasResults)
+            if (!_settings.HasResults)
             {
                 // For some reason we need to preserve and then restore all the tool tips
                 // to keep them working in this case. Not sure why.
@@ -97,14 +101,14 @@ namespace pwiz.Skyline.EditUI
                 }
             }
 
-            if (!settings.HasResults || _settings.MeasuredResults.Chromatograms.Count < 2)
+            if (!_settings.HasResults || _settings.MeasuredResults.Chromatograms.Count < 2)
             {
                 tabControl1.TabPages.Remove(tabConsistency);
             }
             else
             {
                 // Consistency tab
-                textQVal.Enabled = document.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained;
+                textQVal.Enabled = _settings.PeptideSettings.Integration.PeakScoringModel.IsTrained;
                 numericUpDownDetections.Enabled = textQVal.Enabled;
                 if (numericUpDownDetections.Enabled)
                 {
@@ -134,19 +138,19 @@ namespace pwiz.Skyline.EditUI
                 comboTransitions.Items.Add(Resources.RefineDlg_RefineDlg_best);
                 comboTransitions.SelectedIndex = 0;
 
-                var maxTrans = document.MoleculeTransitionGroups.Select(g => g.TransitionCount).DefaultIfEmpty().Max();
+                var maxTrans = _document.MoleculeTransitionGroups.Select(g => g.TransitionCount).DefaultIfEmpty().Max();
                 for (int i = 1; i <= maxTrans; i++)
                 {
                     comboTransitions.Items.Add(i);
                 }
 
-                if (document.MoleculeTransitions.Any(t => t.IsMs1))
+                if (_document.MoleculeTransitions.Any(t => t.IsMs1))
                 {
                     comboTransType.Items.Add(Resources.RefineDlg_RefineDlg_Precursors);
                     comboTransType.SelectedIndex = comboTransType.Items.Count - 1;
                 }
 
-                if (document.MoleculeTransitions.Any(t => !t.IsMs1))
+                if (_document.MoleculeTransitions.Any(t => !t.IsMs1))
                 {
                     comboTransType.Items.Add(Resources.RefineDlg_RefineDlg_Products);
                     comboTransType.SelectedIndex = comboTransType.Items.Count - 1;
@@ -156,14 +160,20 @@ namespace pwiz.Skyline.EditUI
                     comboTransType.Enabled = false;
             }
 
-            if (settings.PeptideSettings.Libraries.HasLibraries)
+            if (_settings.PeptideSettings.Libraries.HasLibraries)
             {
                 labelMinDotProduct.Enabled = textMinDotProduct.Enabled = groupLibCorr.Enabled = true;
             }
-            if (settings.TransitionSettings.FullScan.IsHighResPrecursor)
+            if (_settings.TransitionSettings.FullScan.IsHighResPrecursor)
             {
                 labelMinIdotProduct.Enabled = textMinIdotProduct.Enabled = groupLibCorr.Enabled = true;
             }
+
+            // Group Comparisons
+            _groupComparisonsListBoxDriver = new SettingsListBoxDriver<GroupComparisonDef>(
+                checkedListBoxGroupComparisons, Settings.Default.GroupComparisonDefList);
+            _groupComparisonsListBoxDriver.LoadList(
+                _document.Settings.DataSettings.GroupComparisonDefs);
         }
 
         private AreaCVNormalizationMethod GetNormalizationMethod(int idx)
@@ -202,6 +212,8 @@ namespace pwiz.Skyline.EditUI
         {
             tabControl1.FocusFirstTabStop();
         }
+
+        public IDocumentUIContainer DocumentContainer { get; private set; }
 
         public RefinementSettings RefinementSettings { get; private set; }
 
@@ -645,6 +657,23 @@ namespace pwiz.Skyline.EditUI
         public RefinementSettings FormSettings
         {
             get { return RefinementSettings; }
+        }
+
+        private void btnEditGroupComparisons_Click(object sender, EventArgs e)
+        {
+            EditGroupComparisonList();
+        }
+
+        public void EditGroupComparisonList()
+        {
+            _groupComparisonsListBoxDriver.EditList(DocumentContainer);
+        }
+
+        private void checkBoxLog_CheckedChanged(object sender, EventArgs e)
+        {
+            var log = checkBoxLog.Checked;
+            VolcanoPlotPropertiesDlg.UpdateTextBoxAndLabel(textFoldChange, labelFoldChangeUnit, log, 2);
+            VolcanoPlotPropertiesDlg.UpdateTextBoxAndLabel(textPValue, labelPValueUnit, log, 10, true);
         }
     }
 }
