@@ -50,6 +50,7 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using ZedGraph;
 using pwiz.Skyline.Util.Extensions;
+using PeptideDocNode = pwiz.Skyline.Model.PeptideDocNode;
 using Transition = pwiz.Skyline.Model.Transition;
 
 namespace pwiz.Skyline
@@ -319,25 +320,21 @@ namespace pwiz.Skyline
                     }
                 }
 
-                bool enable = settingsNew.PeptideSettings.Libraries.HasLibraries;
-                if (enable)
+                UpdateIonTypesMenuItemsVisibility();
+                if (!graphsToolStripMenuItem.Enabled)
                 {
-                    UpdateIonTypesMenuItemsVisibility();
-                }
-                if (graphsToolStripMenuItem.Enabled != enable)
-                {
-                    graphsToolStripMenuItem.Enabled = enable;
-                    ionTypesMenuItem.Enabled = enable;
-                    chargesMenuItem.Enabled = enable;
-                    ranksMenuItem.Enabled = enable;
+                    graphsToolStripMenuItem.Enabled = true;
+                    ionTypesMenuItem.Enabled = true;
+                    chargesMenuItem.Enabled = true;
+                    ranksMenuItem.Enabled = true;
 
                     if (!deserialized)
                     {
                         layoutLock.EnsureLocked();
-                        ShowGraphSpectrum(enable && Settings.Default.ShowSpectra);
+                        ShowGraphSpectrum(Settings.Default.ShowSpectra);
                     }
                 }
-                enable = settingsNew.HasResults;
+                var enable = settingsNew.HasResults;
                 bool enableSchedule = IsRetentionTimeGraphTypeEnabled(GraphTypeSummary.schedule);
                 bool enableRunToRun = IsRetentionTimeGraphTypeEnabled(GraphTypeSummary.run_to_run_regression);
                 if (replicateComparisonMenuItem.Enabled != enable ||
@@ -1159,6 +1156,7 @@ namespace pwiz.Skyline
                 fragmentionsContextMenuItem.Checked = set.ShowFragmentIons;
                 menuStrip.Items.Insert(iInsert++, fragmentionsContextMenuItem);
             }
+
             precursorIonContextMenuItem.Checked = set.ShowPrecursorIon;
             menuStrip.Items.Insert(iInsert++, precursorIonContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator11);
@@ -1188,6 +1186,17 @@ namespace pwiz.Skyline
             lockYaxisContextMenuItem.Checked = set.LockYAxis;
             menuStrip.Items.Insert(iInsert++, lockYaxisContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator14);
+
+            // Need to test small mol
+            if (isProteomic)
+            {
+                prositLibMatchItem.Checked = Settings.Default.Prosit;
+                menuStrip.Items.Insert(iInsert++, prositLibMatchItem);
+                mirrorMenuItem.Checked = Settings.Default.LibMatchMirror;
+                menuStrip.Items.Insert(iInsert++, mirrorMenuItem);
+                menuStrip.Items.Insert(iInsert++, toolStripSeparator61);
+            }
+
             menuStrip.Items.Insert(iInsert++, spectrumPropsContextMenuItem);
             showLibraryChromatogramsSpectrumContextMenuItem.Checked = set.ShowLibraryChromatograms;
             menuStrip.Items.Insert(iInsert++, showLibraryChromatogramsSpectrumContextMenuItem);
@@ -4367,11 +4376,26 @@ namespace pwiz.Skyline
                     areaCVTransitionsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                     {
                         areaCVAllTransitionsToolStripMenuItem,
+                        areaCVCountTransitionsToolStripMenuItem,
                         areaCVBestTransitionsToolStripMenuItem,
                         toolStripSeparator58,
                         areaCVPrecursorsToolStripMenuItem,
                         areaCVProductsToolStripMenuItem
                     });
+                }
+
+                if (areaCVCountTransitionsToolStripMenuItem.DropDownItems.Count == 0)
+                {
+                    var maxTransCount = Document.PeptideTransitionGroups.Max(g => g.TransitionCount);
+                    for (int i = 1; i <= maxTransCount; i++)
+                    {
+                        var tmp = new ToolStripMenuItem(i.ToString(), null,
+                            areaCVCountTransitionsToolStripMenuItem_Click)
+                        {
+                            Checked = AreaGraphController.AreaCVTransitionsCount == i
+                        };
+                        areaCVCountTransitionsToolStripMenuItem.DropDownItems.Add(tmp);
+                    }
                 }
 
                 menuStrip.Items.Insert(iInsert++, areaCVTransitionsToolStripMenuItem);
@@ -4469,22 +4493,36 @@ namespace pwiz.Skyline
         {
             areaCVAllTransitionsToolStripMenuItem.Checked = AreaGraphController.AreaCVTransitions == AreaCVTransitions.all;
             areaCVBestTransitionsToolStripMenuItem.Checked = AreaGraphController.AreaCVTransitions == AreaCVTransitions.best;
+            var selectedCount = AreaGraphController.AreaCVTransitionsCount;
+            for (int i = 0; i < areaCVCountTransitionsToolStripMenuItem.DropDownItems.Count; i++)
+            {
+                ((ToolStripMenuItem)areaCVCountTransitionsToolStripMenuItem.DropDownItems[i]).Checked =
+                    selectedCount - 1 == i;
+            }
             areaCVPrecursorsToolStripMenuItem.Checked = AreaGraphController.AreaCVMsLevel == AreaCVMsLevel.precursors;
             areaCVProductsToolStripMenuItem.Checked = AreaGraphController.AreaCVMsLevel == AreaCVMsLevel.products;
         }
 
         private void areaCVAllTransitionsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SetAreaCVTransitions(AreaCVTransitions.all);
+            SetAreaCVTransitions(AreaCVTransitions.all, -1);
+        }
+
+        private void areaCVCountTransitionsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var item = (ToolStripMenuItem)sender;
+            int selectedIdx = ((ToolStripMenuItem)item.OwnerItem).DropDownItems.IndexOf(item) + 1;
+            SetAreaCVTransitions(AreaCVTransitions.count, selectedIdx);
         }
 
         private void areaCVBestTransitionsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SetAreaCVTransitions(AreaCVTransitions.best);
+            SetAreaCVTransitions(AreaCVTransitions.best, -1);
         }
 
-        public void SetAreaCVTransitions(AreaCVTransitions transitions)
+        public void SetAreaCVTransitions(AreaCVTransitions transitions, int count)
         {
+            AreaGraphController.AreaCVTransitionsCount = count;
             AreaGraphController.AreaCVTransitions = transitions;
             UpdatePeakAreaGraph();
         }

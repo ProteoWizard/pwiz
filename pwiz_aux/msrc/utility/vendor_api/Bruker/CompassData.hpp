@@ -131,6 +131,13 @@ PWIZ_API_DECL enum DetailLevel
     DetailLevel_FullData
 };
 
+struct PWIZ_API_DECL IsolationInfo
+{
+    double isolationMz;
+    IsolationMode isolationMode;
+    double collisionEnergy;
+};
+
 struct PWIZ_API_DECL MSSpectrumParameter
 {
     std::string group;
@@ -196,8 +203,7 @@ struct PWIZ_API_DECL MSSpectrum
 
     virtual int getMSMSStage() const = 0;
     virtual double getRetentionTime() const = 0;
-    virtual void getIsolationData(std::vector<double>& isolatedMZs,
-                                  std::vector<IsolationMode>& isolationModes) const = 0;
+    virtual void getIsolationData(std::vector<IsolationInfo>& isolationInfo) const = 0;
     virtual void getFragmentationData(std::vector<double>& fragmentedMZs,
                                       std::vector<FragmentationMode>& fragmentationModes) const = 0;
     virtual IonPolarity getPolarity() const = 0;

@@ -112,6 +112,12 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
     </Reference>
+    <Reference Include="Grpc.Core">
+      <HintPath>..\Shared\Lib\Grpc.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Grpc.Core.Api">
+      <HintPath>..\Shared\Lib\Grpc.Core.Api.dll</HintPath>
+    </Reference>
     <Reference Include="IdentityModel, Version=3.6.1.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\Lib\IdentityModel.dll</HintPath>
@@ -161,8 +167,17 @@
     <Reference Include="System.Data.SQLite">
       <HintPath>..\..\libraries\SQLite\$(Platform)\System.Data.SQLite.dll</HintPath>
     </Reference>
+    <Reference Include="System.Interactive.Async">
+      <HintPath>..\Shared\Lib\System.Interactive.Async.dll</HintPath>
+    </Reference>
     <Reference Include="System.Management" />
+    <Reference Include="System.Memory">
+      <HintPath>..\Shared\Lib\System.Memory.dll</HintPath>
+    </Reference>
     <Reference Include="System.Net.Http" />
+    <Reference Include="System.Runtime.CompilerServices.Unsafe">
+      <HintPath>..\Shared\Lib\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
     <Reference Include="System.Security" />
     <Reference Include="System.Web" />
     <Reference Include="System.Data.DataSetExtensions">
@@ -324,6 +339,7 @@
     <Compile Include="Controls\ImageListBox.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Controls\PrositUIHelpers.cs" />
     <Compile Include="Controls\TargetColumn.cs" />
     <Compile Include="FileUI\ExportAnnotationsDlg.cs">
       <SubType>Form</SubType>
@@ -429,6 +445,21 @@
     <Compile Include="Model\Lists\ListExceptionDetail.cs" />
     <Compile Include="Model\MassModification.cs" />
     <Compile Include="Model\Optimization\OptimizationDictionary.cs" />
+    <Compile Include="Model\Prosit\Config\PrositConfig.cs" />
+    <Compile Include="Model\Prosit\Models\PrositIntensityModel.cs" />
+    <Compile Include="Model\Prosit\Models\PrositModel.cs" />
+    <Compile Include="Model\Prosit\PrositConstants.cs" />
+    <Compile Include="Model\Prosit\Communication\PrositPredictionClient.cs" />
+    <Compile Include="Model\Prosit\Models\PrositRetentionTimeModel.cs" />
+    <Compile Include="Model\Prosit\PrositExceptions.cs" />
+    <Compile Include="Model\Prosit\PrositLibraryBuilder.cs" />
+    <Compile Include="Model\Prosit\PrositMS2Spectra.cs" />
+    <Compile Include="Model\Prosit\PrositResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>PrositResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Prosit\PrositRetentionScoreCalculator.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteAccountList.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteAccount.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteAccountType.cs" />
@@ -496,6 +527,14 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="ProtocolBuffers\GeneratedCode\Model.cs" />
+    <Compile Include="ProtocolBuffers\GeneratedCode\Predict.cs" />
+    <Compile Include="ProtocolBuffers\GeneratedCode\PredictionService.cs" />
+    <Compile Include="ProtocolBuffers\GeneratedCode\PredictionServiceGrpc.cs" />
+    <Compile Include="ProtocolBuffers\GeneratedCode\ResourceHandle.cs" />
+    <Compile Include="ProtocolBuffers\GeneratedCode\Tensor.cs" />
+    <Compile Include="ProtocolBuffers\GeneratedCode\TensorShape.cs" />
+    <Compile Include="ProtocolBuffers\GeneratedCode\Types.cs" />
     <Compile Include="Util\UiModes.cs" />
     <Compile Include="SettingsUI\IonMobility\UseSpectralLibraryIonMobilityValuesControl.cs">
       <SubType>UserControl</SubType>
@@ -2730,6 +2769,11 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\GroupComparison\GroupComparisonStrings.zh-CHS.resx" />
+    <EmbeddedResource Include="Model\Prosit\PrositResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>PrositResources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\PeptideLib.bmp" />
     <EmbeddedResource Include="Resources\PeptideIrtLib.bmp" />
     <EmbeddedResource Include="Resources\PeptideIrt.bmp" />
@@ -2802,6 +2846,14 @@
       <Link>unimod.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\Shared\Lib\grpc_csharp_ext.x64.dll">
+      <Link>grpc_csharp_ext.x64.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Shared\Lib\grpc_csharp_ext.x86.dll">
+      <Link>grpc_csharp_ext.x86.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Condition=" '$(Platform)' == 'x86' " Include="..\Shared\ProteowizardWrapper\obj\x86\timsdata.dll">
       <Link>timsdata.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -2850,6 +2902,18 @@
     <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearchPRM.png" />
     <EmbeddedResource Include="Resources\Ions_fragments.bmp" />
     <EmbeddedResource Include="Resources\Edit_Undo_Multiple.bmp" />
+    <Protobuf Include="ProtocolBuffers\model.proto" />
+    <Protobuf Include="ProtocolBuffers\predict.proto" />
+    <Protobuf Include="ProtocolBuffers\prediction_service.proto" />
+    <Protobuf Include="ProtocolBuffers\resource_handle.proto" />
+    <Protobuf Include="ProtocolBuffers\tensor.proto" />
+    <Protobuf Include="ProtocolBuffers\tensor_shape.proto" />
+    <Protobuf Include="ProtocolBuffers\types.proto" />
+    <EmbeddedResource Include="Model\Prosit\Config\PrositConfig.xml">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <None Include="Model\Prosit\Config\PrositConfig_development.xml" />
+    <None Include="Model\Prosit\Config\UpdatePrositConfiguration.bat" />
     <None Include="Resources\Locked.bmp" />
     <EmbeddedResource Include="Resources\MoleculeLib.bmp" />
     <None Include="Resources\MoleculeStandard.bmp" />
@@ -2891,6 +2955,7 @@
     <EmbeddedResource Include="Resources\MoleculeIrt.bmp" />
     <EmbeddedResource Include="Resources\MoleculeIrtLib.bmp" />
     <EmbeddedResource Include="Resources\MoleculeStandardLib.bmp" />
+    <EmbeddedResource Include="Resources\prosit_logo_dark_blue.png" />
     <Content Include="SkylineProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -4937,8 +5002,6 @@
     <Exec Command="SignAfterPublish.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).pfx&quot; password &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
   </Target>
   <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
-    <PreBuildEvent>$(ProjectDir)ProtocolBuffers\generatecode.bat</PreBuildEvent>
+    <PreBuildEvent>$(ProjectDir)ProtocolBuffers\generatecode.bat &amp;&amp; $(ProjectDir)Model\Prosit\Config\UpdatePrositConfiguration.bat</PreBuildEvent>
   </PropertyGroup>
 </Project>

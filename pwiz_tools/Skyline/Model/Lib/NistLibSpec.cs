@@ -1266,12 +1266,12 @@ namespace pwiz.Skyline.Model.Lib
             return arrayMI;
         }
 
-        public override IEnumerable<SpectrumInfo> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
+        public override IEnumerable<SpectrumInfoLibrary> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
         {
             int i = FindEntry(key);
             if (i != -1)
             {
-                yield return new SpectrumInfo(this, labelType, i)
+                yield return new SpectrumInfoLibrary(this, labelType, i)
                 {
                     SpectrumHeaderInfo = CreateSpectrumHeaderInfo(_libraryEntries[i]),
                     RetentionTime = _libraryEntries[i].RT
