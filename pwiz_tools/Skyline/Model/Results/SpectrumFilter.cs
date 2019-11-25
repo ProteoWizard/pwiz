@@ -898,7 +898,7 @@ namespace pwiz.Skyline.Model.Results
 
             public ExtractedSpectrum Filter(ExtractedSpectrum filteredSrmSpectrum, SpectrumFilterPair filterPair, IsolationWindowFilter isoWin)
             {
-                if (_filteredSpectra == null)
+                if (_filteredSpectra == null || filteredSrmSpectrum == null)
                     return filteredSrmSpectrum;
 
                 if (!_filteredSpectra.TryGetValue(filterPair, out var list))
