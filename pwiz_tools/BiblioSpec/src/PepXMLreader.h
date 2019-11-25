@@ -69,7 +69,8 @@ class PepXMLreader : public BuildParser{
                   PROTEOME_DISCOVERER_ANALYSIS,
                   XTANDEM_ANALYSIS,
                   CRUX_ANALYSIS,
-                  COMET_ANALYSIS};
+                  COMET_ANALYSIS,
+                  MSFRAGGER_ANALYSIS};
 
   vector<SeqMod> mods;      ///< mods for the current spectrum being parsed
   vector<std::string> dirs;       ///< directories where spec files might be
@@ -97,6 +98,7 @@ class PepXMLreader : public BuildParser{
   int scanNumber;
   double precursorMZ;
   int charge;
+  double ionMobility;
   string spectrumName;
   char pepSeq[200];
   int state;

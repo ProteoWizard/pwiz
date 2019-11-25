@@ -26,6 +26,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.MSGraph;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -606,7 +607,8 @@ namespace pwiz.Skyline.Controls.Graphs
         private SpectrumDisplayInfo UpdatePrositPrediction(SpectrumNodeSelection selection)
         {
             var prositRequest = new PrositHelpers.PrositRequest(
-                DocumentUI.Settings, selection.Peptide, selection.Precursor, () => Invoke((Action)(() => UpdateUI())));
+                DocumentUI.Settings, selection.Peptide, selection.Precursor,
+                () => CommonActionUtil.SafeBeginInvoke(this, () => UpdateUI()));
 
             if (_prositRequest == null || !_prositRequest.Equals(prositRequest))
             {
