@@ -94,7 +94,14 @@ Even More Stuff
             myStream.Seek(0, SeekOrigin.Begin);
             var roundTrip = xmlSerializer.Deserialize(myStream);
             Assert.IsInstanceOfType(roundTrip, typeof(PrositConfig));
-            TestContext.WriteLine(Encoding.UTF8.GetString(myStream.ToArray()));
+            try
+            {
+                TestContext.WriteLine(Encoding.UTF8.GetString(myStream.ToArray()));
+            }
+            catch
+            {
+                // ignore possible TargetInvocationException:NotImplementedException
+            }
         }
 
         [TestMethod]
