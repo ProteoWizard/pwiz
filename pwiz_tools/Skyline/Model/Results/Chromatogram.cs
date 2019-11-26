@@ -489,6 +489,13 @@ namespace pwiz.Skyline.Model.Results
                 {
                     chromFileInfo = new ChromFileInfo(filePath);
                 }
+                else
+                {
+                    if (!Equals(chromFileInfo.FilePath, filePath))
+                    {
+                        chromFileInfo = chromFileInfo.ChangeFilePath(filePath);
+                    }
+                }
                 listFileInfos.Add(chromFileInfo);
             }
 
