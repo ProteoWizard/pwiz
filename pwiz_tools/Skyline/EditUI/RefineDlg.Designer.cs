@@ -90,7 +90,7 @@
             this.labelQVal = new System.Windows.Forms.Label();
             this.textQVal = new System.Windows.Forms.TextBox();
             this.tabGroupComparisons = new System.Windows.Forms.TabPage();
-            this.comboBox1 = new System.Windows.Forms.ComboBox();
+            this.comboMSGroupComparisons = new System.Windows.Forms.ComboBox();
             this.labelFoldChangeUnit = new System.Windows.Forms.Label();
             this.labelPValueUnit = new System.Windows.Forms.Label();
             this.checkBoxLog = new System.Windows.Forms.CheckBox();
@@ -531,7 +531,7 @@
             // 
             // tabGroupComparisons
             // 
-            this.tabGroupComparisons.Controls.Add(this.comboBox1);
+            this.tabGroupComparisons.Controls.Add(this.comboMSGroupComparisons);
             this.tabGroupComparisons.Controls.Add(this.labelFoldChangeUnit);
             this.tabGroupComparisons.Controls.Add(this.labelPValueUnit);
             this.tabGroupComparisons.Controls.Add(this.checkBoxLog);
@@ -547,11 +547,11 @@
             this.tabGroupComparisons.Name = "tabGroupComparisons";
             this.tabGroupComparisons.UseVisualStyleBackColor = true;
             // 
-            // comboBox1
+            // comboMSGroupComparisons
             // 
-            this.comboBox1.FormattingEnabled = true;
-            resources.ApplyResources(this.comboBox1, "comboBox1");
-            this.comboBox1.Name = "comboBox1";
+            this.comboMSGroupComparisons.FormattingEnabled = true;
+            resources.ApplyResources(this.comboMSGroupComparisons, "comboMSGroupComparisons");
+            this.comboMSGroupComparisons.Name = "comboMSGroupComparisons";
             // 
             // labelFoldChangeUnit
             // 
@@ -725,6 +725,6 @@
         private System.Windows.Forms.Label labelGroupComparison;
         private System.Windows.Forms.Label labelFoldChangeUnit;
         private System.Windows.Forms.Label labelPValueUnit;
-        private System.Windows.Forms.ComboBox comboBox1;
+        private System.Windows.Forms.ComboBox comboMSGroupComparisons;
     }
 }

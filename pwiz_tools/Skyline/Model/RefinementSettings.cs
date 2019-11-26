@@ -27,6 +27,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
@@ -212,6 +213,14 @@ namespace pwiz.Skyline.Model
         public int? CountTransitions { get; set; }
         [Track]
         public AreaCVMsLevel MSLevel { get; set; }
+        [Track]
+        public double? FoldChangeCutoff { get; set; }
+        [Track]
+        public double? AdjustedPValueCutoff { get; set; }
+        [Track]
+        public int? MSLevelGroupComparisons { get; set; }
+        [Track]
+        public GroupComparisonDef GroupComparisonDef { get; set; }
 
         public SrmDocument Refine(SrmDocument document)
         {
@@ -344,6 +353,16 @@ namespace pwiz.Skyline.Model
                 var data = new AreaCVRefinementData(refined, new AreaCVRefinementSettings(cvcutoff, qvalue, minDetections, NormalizationMethod, ratioIndex,
                     Transitions, countTransitions, MSLevel));
                 refined = data.RemoveAboveCVCutoff(refined);
+            }
+
+            if (AdjustedPValueCutoff.HasValue || FoldChangeCutoff.HasValue)
+            {
+                var pValueCutoff = AdjustedPValueCutoff.HasValue ? AdjustedPValueCutoff.Value : double.NaN;
+                var foldChangeCutoff = FoldChangeCutoff.HasValue ? FoldChangeCutoff.Value : double.NaN;
+                var msLevel = MSLevelGroupComparisons.HasValue ? MSLevelGroupComparisons.Value : 1;
+                var groupComparisonData = new GroupComparisonRefinementData(refined, pValueCutoff, foldChangeCutoff,
+                    msLevel, GroupComparisonDef);
+                refined = groupComparisonData.RemoveBelowCutoffs(refined);
             }
 
             return refined;

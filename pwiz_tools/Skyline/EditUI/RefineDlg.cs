@@ -174,6 +174,23 @@ namespace pwiz.Skyline.EditUI
                 checkedListBoxGroupComparisons, Settings.Default.GroupComparisonDefList);
             _groupComparisonsListBoxDriver.LoadList(
                 _document.Settings.DataSettings.GroupComparisonDefs);
+
+            if (_document.PeptideTransitions.Any(t => t.IsMs1))
+            {
+                comboMSGroupComparisons.Items.Add("1");
+                comboMSGroupComparisons.SelectedIndex = comboMSGroupComparisons.Items.Count - 1;
+            }
+
+            if (_document.PeptideTransitions.Any(t => !t.IsMs1))
+            {
+                comboMSGroupComparisons.Items.Add("2");
+                comboMSGroupComparisons.SelectedIndex = comboMSGroupComparisons.Items.Count - 1;
+            }
+
+            if (comboMSGroupComparisons.Items.Count == 1)
+            {
+                comboMSGroupComparisons.Enabled = false;
+            }
         }
 
         private AreaCVNormalizationMethod GetNormalizationMethod(int idx)
@@ -524,6 +541,32 @@ namespace pwiz.Skyline.EditUI
                 msLevel = AreCVMsLevelExtension.GetEnum(selectedMs);
             }
 
+            double? adjustedPValueCutoff = null;
+            if (!string.IsNullOrEmpty(textPValue.Text))
+            {
+                double adjustedPval;
+                if (!helper.ValidateDecimalTextBox(textPValue, 0.0, checkBoxLog.Checked ? (double?) null : 1.0, out adjustedPval))
+                    return;
+                adjustedPValueCutoff = adjustedPval;
+            }
+
+            double? foldChangeCutoff = null;
+            if (!string.IsNullOrEmpty(textFoldChange.Text))
+            {
+                double foldChange;
+                if (!helper.ValidateDecimalTextBox(textFoldChange, checkBoxLog.Checked ? (double?) null : 0.0, null, out foldChange, false))
+                    return;
+                foldChangeCutoff = foldChange;
+            }
+
+            GroupComparisonDef groupComparisonDef = null;
+            if (_groupComparisonsListBoxDriver.Chosen.Length > 0)
+            {
+                groupComparisonDef = _groupComparisonsListBoxDriver.Chosen[0];
+            }
+
+            int msLevelGroupComparison = int.Parse(comboMSGroupComparisons.SelectedItem.ToString());
+
             RefinementSettings = new RefinementSettings
                                      {
                                          MinPeptidesPerProtein = minPeptidesPerProtein,
@@ -554,7 +597,11 @@ namespace pwiz.Skyline.EditUI
                                          NormalizationLabelType = referenceType,
                                          Transitions = transitionsSelection,
                                          CountTransitions = numTransitions,
-                                         MSLevel = msLevel
+                                         MSLevel = msLevel,
+                                         AdjustedPValueCutoff = adjustedPValueCutoff,
+                                         FoldChangeCutoff = foldChangeCutoff,
+                                         MSLevelGroupComparisons = msLevelGroupComparison,
+                                         GroupComparisonDef = groupComparisonDef
                                      };
 
             DialogResult = DialogResult.OK;

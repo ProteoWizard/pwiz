@@ -1823,25 +1823,25 @@ exceed this threshold.</value>
   <data name="&gt;&gt;tabConsistency.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="comboBox1.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="comboMSGroupComparisons.Location" type="System.Drawing.Point, System.Drawing">
     <value>15, 177</value>
   </data>
-  <data name="comboBox1.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="comboMSGroupComparisons.Size" type="System.Drawing.Size, System.Drawing">
     <value>65, 21</value>
   </data>
-  <data name="comboBox1.TabIndex" type="System.Int32, mscorlib">
+  <data name="comboMSGroupComparisons.TabIndex" type="System.Int32, mscorlib">
     <value>11</value>
   </data>
-  <data name="&gt;&gt;comboBox1.Name" xml:space="preserve">
-    <value>comboBox1</value>
+  <data name="&gt;&gt;comboMSGroupComparisons.Name" xml:space="preserve">
+    <value>comboMSGroupComparisons</value>
   </data>
-  <data name="&gt;&gt;comboBox1.Type" xml:space="preserve">
+  <data name="&gt;&gt;comboMSGroupComparisons.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;comboBox1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;comboMSGroupComparisons.Parent" xml:space="preserve">
     <value>tabGroupComparisons</value>
   </data>
-  <data name="&gt;&gt;comboBox1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;comboMSGroupComparisons.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="labelFoldChangeUnit.AutoSize" type="System.Boolean, mscorlib">
