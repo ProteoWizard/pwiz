@@ -39,7 +39,7 @@ using SpyTools;
 
 namespace seems
 {
-    public partial class TimeMzHeatmapForm : DockableForm
+    public partial class TimeMzHeatmapForm : ManagedDockableForm
     {
         public pwiz.MSGraph.MSGraphControl ZedGraphControl { get { return msGraphControl; } }
 
@@ -66,15 +66,12 @@ namespace seems
         private List<BoundingBox> heatmapBoundsByMsLevel; // updated when scan time changes
         private List<HeatMapGraphPane> heatmapGraphPaneByMsLevel; // 1 heatmap per ms level
 
-        private ManagedDataSource source;
-        private Manager manager;
-
         public TimeMzHeatmapForm(Manager manager, ManagedDataSource source)
         {
             InitializeComponent();
 
-            this.manager = manager;
-            this.source = source;
+            Manager = manager;
+            Source = source;
             heatmapGraphPaneByMsLevel = new List<HeatMapGraphPane>();
             heatmapBoundsByMsLevel = new List<BoundingBox>();
 
@@ -136,7 +133,7 @@ namespace seems
         private void ShowHeatmaps()
         {
 
-            var dgv = source.SpectrumListForm.GridView;
+            var dgv = Source.SpectrumListForm.GridView;
             var scanTimeColumn = dgv.Columns["ScanTime"];
             var msLevelColumn = dgv.Columns["MsLevel"];
             var heatmapPointsByMsLevel = new List<List<Point3D>>(dgv.RowCount);
@@ -148,7 +145,7 @@ namespace seems
             while (heatmapPointsByMsLevel.Count <= msLevels.Max)
                 heatmapPointsByMsLevel.Add(new List<Point3D>());
 
-            var peakPicker = new pwiz.CLI.analysis.SpectrumList_PeakPicker(source.Source.MSDataFile.run.spectrumList, new pwiz.CLI.analysis.CwtPeakDetector(1, 0.5), true, new int[]{1});
+            var peakPicker = new pwiz.CLI.analysis.SpectrumList_PeakPicker(Source.Source.MSDataFile.run.spectrumList, new pwiz.CLI.analysis.CwtPeakDetector(1, 0.5), true, new int[]{1});
             for (int i = 0; i < dgv.RowCount; ++i)
             {
                 int msLevel = (int)dgv[msLevelColumn.Index, i].Value - 1;
@@ -164,7 +161,7 @@ namespace seems
                 Application.DoEvents();
 
                 var bounds = heatmapBoundsByMsLevel[msLevel];
-                var spectrum = source.GetMassSpectrum(source.Source.Spectra[i].Index, peakPicker);
+                var spectrum = Source.GetMassSpectrum(Source.Source.Spectra[i].Index, peakPicker);
                 double scanTime = (double)dgv[scanTimeColumn.Index, i].Value;
                 var points = spectrum.Points;
                 for (int j = 0; j < points.Count; ++j)
@@ -204,7 +201,7 @@ namespace seems
 
         protected override void OnShown(EventArgs e)
         {
-            var dgv = source.SpectrumListForm.GridView;
+            var dgv = Source.SpectrumListForm.GridView;
             var scanTimeColumn = dgv.Columns["ScanTime"];
             var ticColumn = dgv.Columns["TotalIonCurrent"];
             var msLevelColumn = dgv.Columns["MsLevel"];

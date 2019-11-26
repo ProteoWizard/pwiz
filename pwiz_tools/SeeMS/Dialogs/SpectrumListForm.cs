@@ -116,6 +116,8 @@ namespace seems
             gridView.Columns["BasePeakIntensity"].ToolTipText = new CVTermInfo( CVID.MS_base_peak_intensity ).def;
             gridView.Columns["TotalIonCurrent"].ToolTipText = new CVTermInfo( CVID.MS_total_ion_current ).def;
 
+	        gridView.Columns["ScanTime"].HeaderText += Properties.Settings.Default.TimeInMinutes ? " (min)" : " (sec)";
+
             gridView.DataBindingComplete += new DataGridViewBindingCompleteEventHandler( gridView_DataBindingComplete );
         }
 
@@ -149,7 +151,9 @@ namespace seems
             row.MsLevel = !param.empty() ? (int) param.value : 0;
 
             param = scan != null ? scan.cvParam( CVID.MS_scan_start_time ) : new CVParam();
-            row.ScanTime = !param.empty() ? (double) param.value : 0;
+            row.ScanTime = !param.empty() ? param.timeInSeconds() : 0;
+            if (Properties.Settings.Default.TimeInMinutes)
+                row.ScanTime /= 60;
 
             param = s.cvParam( CVID.MS_base_peak_m_z );
             row.BasePeakMz = !param.empty() ? (double) param.value : 0;
