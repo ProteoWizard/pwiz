@@ -1,3 +1,4 @@
+@echo off
 REM This batch file executes the Protocol Compiler on all of the .proto files in this directory
 REM The output is first sent to the directory "tmp"
 REM Then, only the files in "tmp" which are different than what is already in "GeneratedCode" get
@@ -11,7 +12,7 @@ REM "fc.exe": compares two files. Error level will be greater than 0 if files ar
 
 pushd %~dp0
 if not exist tmp mkdir tmp
-.\protoc.exe --csharp_out=tmp *.proto
+for /f %%i in ('dir /B *.proto') do protoc %%i --csharp_out=tmp --plugin=protoc-gen-grpc=grpc_csharp_plugin.exe --grpc_out=tmp
 FOR /R tmp %%F in (*.cs) DO (
 	fc.exe tmp\%%~nF%%~xF GeneratedCode\%%~nF%%~xF > nul 2> nul
 	if ERRORLEVEL 1 COPY tmp\%%~nF%%~xF GeneratedCode\%%~nF%%~xF

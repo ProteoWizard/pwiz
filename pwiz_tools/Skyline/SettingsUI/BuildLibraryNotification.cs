@@ -214,6 +214,7 @@ namespace pwiz.Skyline.SettingsUI
     {
         LibraryManager LibraryManager { get; }
         void ModifyDocument(string description, Func<SrmDocument, SrmDocument> act, Func<SrmDocumentPair, AuditLogEntry> logFunc);
+        SrmDocument Document { get; }
     }
 
     public sealed class LibraryBuildNotificationHandler

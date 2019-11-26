@@ -176,7 +176,7 @@ namespace pwiz.Skyline.Model.Irt
                 MakePeptide(@"ELISNASDALDK",                25.06),
                 MakePeptide(@"IGPLGLSPK",                   29.44),
                 MakePeptide(@"TTPSYVAFTDTER",               34.81),
-                MakePeptide(@"VC[+57.0]ENIPIVLC[+57.0]GNK", 54.97),
+                MakePeptide(@"VC[+57.021464]ENIPIVLC[+57.021464]GNK", 54.97),
                 MakePeptide(@"DLTDYLMK",                    59.78),
                 MakePeptide(@"LGEHNIDVLEGNEQFINAAK",        60.00),
                 MakePeptide(@"SYELPDGQVITIGNER",            66.92),

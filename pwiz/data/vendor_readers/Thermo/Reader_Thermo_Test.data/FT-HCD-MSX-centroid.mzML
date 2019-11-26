@@ -90,30 +90,13 @@
           <precursor>
             <userParam name="ms level" value="1"/>
             <isolationWindow>
-              <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="522.987607" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="768.099021" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="2.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="2.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
-                <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="522.987607" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-              </selectedIon>
-            </selectedIonList>
-            <activation>
-              <cvParam cvRef="MS" accession="MS:1000422" name="beam-type collision-induced dissociation" value=""/>
-              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="27.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
-            </activation>
-          </precursor>
-          <precursor>
-            <userParam name="ms level" value="1"/>
-            <isolationWindow>
-              <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="698.067188" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-              <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="2.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-              <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="2.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-            </isolationWindow>
-            <selectedIonList count="1">
-              <selectedIon>
-                <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="698.067188" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="768.099021" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -141,13 +124,30 @@
           <precursor>
             <userParam name="ms level" value="1"/>
             <isolationWindow>
-              <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="768.099021" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="698.067188" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="2.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="2.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
-                <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="768.099021" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="698.067188" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              </selectedIon>
+            </selectedIonList>
+            <activation>
+              <cvParam cvRef="MS" accession="MS:1000422" name="beam-type collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="27.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            </activation>
+          </precursor>
+          <precursor>
+            <userParam name="ms level" value="1"/>
+            <isolationWindow>
+              <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="522.987607" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="2.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="2.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+            </isolationWindow>
+            <selectedIonList count="1">
+              <selectedIon>
+                <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="522.987607" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </selectedIon>
             </selectedIonList>
             <activation>

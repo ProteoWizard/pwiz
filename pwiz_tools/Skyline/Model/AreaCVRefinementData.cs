@@ -120,8 +120,9 @@ namespace pwiz.Skyline.Model
                                     if (ci != null)
                                     {
                                         var ratioValue = ci.GetRatio(_settings.RatioIndex);
-                                        if (ratioValue != null)
-                                            normalizedArea /= ratioValue.Ratio;
+                                        if (ratioValue == null)
+                                            continue;   // Skip the standards
+                                        normalizedArea = ratioValue.Ratio;
                                     }
                                 }
                                 areas.Add(new AreaInfo(sumArea, normalizedArea));

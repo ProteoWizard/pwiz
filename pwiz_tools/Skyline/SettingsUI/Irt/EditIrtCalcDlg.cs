@@ -928,6 +928,23 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 AddToLibrary(irtAverages);
             }
 
+            public class NopProgressMonitor : IProgressMonitor
+            {
+                public bool IsCanceled
+                {
+                    get { return false; }
+                }
+                public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+                {
+                    return UpdateProgressResponse.normal;
+                }
+
+                public bool HasUI
+                {
+                    get { return false; }
+                }
+            }
+
             public void AddIrtDatabase()
             {
                 var irtCalcs = Settings.Default.RTScoreCalculatorList.Where(calc => calc is RCalcIrt).Cast<RCalcIrt>();

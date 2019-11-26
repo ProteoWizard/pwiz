@@ -650,7 +650,7 @@
   <data name="AuditLogList_ReadFromFile_An_exception_occured_while_reading_the_audit_log" xml:space="preserve">
     <value>監査ログを読み取り中に例外が発生しました。
 
-監査ログファイルを削除、名前の変更したり移動することによってこのエラーが発生しなくなります。またはSkylineチームに監査ログを送信することも可能で、チームはファイルの手動修正を試みます。
+監査ログファイルの削除、名前の変更や移動によってこのエラーが発生しなくなります。またはSkylineチームに監査ログを送信することも可能で、チームはファイルの手動修正を試みます。
 
 ご参考までに、監査ログの場所はここです：「{0}」</value>
   </data>

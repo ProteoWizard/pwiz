@@ -2010,10 +2010,11 @@ namespace pwiz.Skyline.Properties
     
     public sealed class RTScoreCalculatorList : SettingsListNotifying<RetentionScoreCalculatorSpec>
     {
-        private static readonly RetentionScoreCalculator[] DEFAULTS =
+        public static readonly RetentionScoreCalculator[] DEFAULTS =
         {
             new RetentionScoreCalculator(RetentionTimeRegression.SSRCALC_100_A),
-            new RetentionScoreCalculator(RetentionTimeRegression.SSRCALC_300_A)
+            new RetentionScoreCalculator(RetentionTimeRegression.SSRCALC_300_A),
+            // new RetentionScoreCalculator(RetentionTimeRegression.PROSITRTCALC)
         };
 
         /// <summary>
