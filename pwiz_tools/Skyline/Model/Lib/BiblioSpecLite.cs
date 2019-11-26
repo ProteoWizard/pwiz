@@ -1405,18 +1405,18 @@ namespace pwiz.Skyline.Model.Lib
                 ILookup<LibKey, IonMobilityAndCCS[]> timesLookup = _libraryEntries.ToLookup(
                     entry => entry.Key,
                     entry => entry.IonMobilitiesByFileId.GetIonMobilityInfo(source.Id));
-                var timesDict = timesLookup.ToDictionary(
+                var timesDict = timesLookup.Where(tl => !tl.IsNullOrEmpty() && tl.Any(i => i != null)).ToDictionary(
                     grouping => grouping.Key,
                     grouping =>
                     {
-                        var array = grouping.SelectMany(values => values).ToArray();
+                        var array = grouping.SelectMany(values => values).Where(v => v != null && !v.IsEmpty).ToArray();
                         Array.Sort(array);
                         return array;
                     });
                 var nonEmptyTimesDict = timesDict
                     .Where(kvp => kvp.Value.Length > 0)
                     .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-                ionMobilities = new LibraryIonMobilityInfo(source.FilePath, nonEmptyTimesDict);
+                ionMobilities = nonEmptyTimesDict.Any() ? new LibraryIonMobilityInfo(source.FilePath, nonEmptyTimesDict) : null;
                 return true;
             }
 
