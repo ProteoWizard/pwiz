@@ -174,6 +174,8 @@ namespace pwiz.Skyline.Model.Results
 
             var imRangeHelper = new IonMobilityRangeHelper(spectra, useIonMobilityHighEnergyOffset ? productFilters : null,
                 MinIonMobilityValue, MaxIonMobilityValue);
+//            if (spectra.Length > 1)
+//                Console.Write(string.Empty);
             for (int specIndex = imRangeHelper.IndexFirst; specIndex < spectra.Length; specIndex++)
             {
                 var spectrum = spectra[specIndex];
