@@ -480,12 +480,12 @@ namespace pwiz.Skyline.Model.Results
             var set = ImClone(this);
 
             // Be sure to preserve existing file info objects
-            var dictPathToFileInfo = MSDataFileInfos.ToDictionary(info => info.FilePath);
+            var dictPathToFileInfo = MSDataFileInfos.ToLookup(info => info.FilePath.GetLocation());
             var listFileInfos = new List<ChromFileInfo>();
             foreach (var filePath in prop)
             {
-                ChromFileInfo chromFileInfo;
-                if (!dictPathToFileInfo.TryGetValue(filePath, out chromFileInfo))
+                ChromFileInfo chromFileInfo = dictPathToFileInfo[filePath.GetLocation()].FirstOrDefault();
+                if (chromFileInfo == null)
                 {
                     chromFileInfo = new ChromFileInfo(filePath);
                 }
