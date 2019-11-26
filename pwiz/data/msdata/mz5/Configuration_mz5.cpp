@@ -117,8 +117,8 @@ void Configuration_mz5::init(const bool deltamz,
             "SpectrumMZ"));
     variableNames_.insert(std::pair<MZ5DataSets, std::string>(
             SpectrumIntensity, "SpectrumIntensity"));
-    variableNames_.insert(std::pair<MZ5DataSets, std::string>(ChromatogramTime,
-            "ChromatogramTime"));
+    variableNames_.insert(std::pair<MZ5DataSets, std::string>(ChomatogramTime,
+            "ChomatogramTime"));
     variableNames_.insert(std::pair<MZ5DataSets, std::string>(
             ChromatogramIntensity, "ChromatogramIntensity"));
     variableNames_.insert(std::pair<MZ5DataSets, std::string>(FileInformation,
@@ -237,12 +237,12 @@ void Configuration_mz5::init(const bool deltamz,
 
     if (timeprec == pwiz::msdata::BinaryDataEncoder::Precision_64)
     {
-        variableTypes_.insert(std::pair<MZ5DataSets, DataType>(ChromatogramTime,
+        variableTypes_.insert(std::pair<MZ5DataSets, DataType>(ChomatogramTime,
                 PredType::NATIVE_DOUBLE));
     }
     else if (timeprec == pwiz::msdata::BinaryDataEncoder::Precision_32)
     {
-        variableTypes_.insert(std::pair<MZ5DataSets, DataType>(ChromatogramTime,
+        variableTypes_.insert(std::pair<MZ5DataSets, DataType>(ChomatogramTime,
                 PredType::NATIVE_FLOAT));
     }
     else
@@ -269,7 +269,7 @@ void Configuration_mz5::init(const bool deltamz,
             spectrumChunkSize));
     variableChunkSizes_.insert(std::pair<MZ5DataSets, hsize_t>(
             SpectrumIntensity, spectrumChunkSize));
-    variableChunkSizes_.insert(std::pair<MZ5DataSets, hsize_t>(ChromatogramTime,
+    variableChunkSizes_.insert(std::pair<MZ5DataSets, hsize_t>(ChomatogramTime,
             chromatogramChunkSize));
     variableChunkSizes_.insert(std::pair<MZ5DataSets, hsize_t>(
             ChromatogramIntensity, chromatogramChunkSize));
@@ -289,7 +289,7 @@ void Configuration_mz5::init(const bool deltamz,
             spectrumBufferSize));
     variableBufferSizes_.insert(std::pair<MZ5DataSets, size_t>(
             SpectrumIntensity, spectrumBufferSize));
-    variableBufferSizes_.insert(std::pair<MZ5DataSets, size_t>(ChromatogramTime,
+    variableBufferSizes_.insert(std::pair<MZ5DataSets, size_t>(ChomatogramTime,
             chromatogramBufferSize));
     variableBufferSizes_.insert(std::pair<MZ5DataSets, size_t>(
             ChromatogramIntensity, chromatogramBufferSize));
@@ -342,13 +342,6 @@ Configuration_mz5::MZ5DataSets Configuration_mz5::getVariableFor(
     {
         return variableVariables_.find(name)->second;
     }
-
-    //spelling error - backward compatibility
-    if (name == "ChomatogramTime")
-    {
-        return variableVariables_.find("ChromatogramTime")->second;
-    }
-
     throw std::out_of_range("[Configurator_mz5::getVariableFor]: out of range");
 }
 
