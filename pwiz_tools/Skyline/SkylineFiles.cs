@@ -2508,7 +2508,7 @@ namespace pwiz.Skyline
                 if (numNoSource > 0)
                     message.Add(string.Format(Resources.SkylineWindow_ImportResults__0__decoy_s__do_not_have_a_matching_target, numNoSource));
                 if (numWrongTransitionCount > 0)
-                    message.Add(string.Format(Resources.SkylineWindow_ImportResults__0__decoy_s__do_not_have_the_same_number_of_transitions_as_the_matching_target, numWrongTransitionCount));
+                    message.Add(string.Format(Resources.SkylineWindow_ImportResults__0__decoy_s__do_not_have_the_same_number_of_transitions_as_their_matching_target, numWrongTransitionCount));
                 message.Add(string.Empty);
                 message.Add(Resources.SkylineWindow_ImportResults_Do_you_want_to_generate_new_decoys_or_continue_with_the_current_decoys_);
                 using (var dlg = new MultiButtonMsgDlg(TextUtil.LineSeparate(message),
@@ -2640,34 +2640,21 @@ namespace pwiz.Skyline
 
         public static bool CheckDecoys(SrmDocument document, out int numDecoys, out int numNoSource, out int numWrongTransitionCount)
         {
-            var targets = new Dictionary<Target, List<PeptideDocNode>>();
-            var decoys = new List<PeptideDocNode>();
-            foreach (var nodePep in document.Peptides)
-            {
-                if (!nodePep.IsDecoy)
-                {
-                    if (targets.TryGetValue(nodePep.ModifiedTarget, out var list))
-                        list.Add(nodePep);
-                    else
-                        targets[nodePep.ModifiedTarget] = new List<PeptideDocNode> {nodePep};
-                }
-                else
-                {
-                    decoys.Add(nodePep);
-                }
-            }
+            var targets = document.Peptides.Where(pep => !pep.IsDecoy).ToLookup(pep => pep.ModifiedTarget);
 
-            numDecoys = decoys.Count;
+            numDecoys = 0;
             numNoSource = 0;
             numWrongTransitionCount = 0;
-            foreach (var decoy in decoys)
+
+            foreach (var decoy in document.Peptides.Where(pep => pep.IsDecoy))
             {
-                if (!targets.TryGetValue(decoy.SourceModifiedTarget, out var sources))
+                numDecoys++;
+                var sources = targets[decoy.SourceModifiedTarget].ToArray();
+                if (sources.Length == 0)
                     numNoSource++;
                 else if (sources.All(target => target.TransitionCount != decoy.TransitionCount))
                     numWrongTransitionCount++;
             }
-
             return numNoSource == 0 && numWrongTransitionCount == 0;
         }
 

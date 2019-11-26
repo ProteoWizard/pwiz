@@ -10811,8 +10811,8 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="SkylineWindow_ImportResults__0__decoy_s__do_not_have_a_matching_target" xml:space="preserve">
     <value>{0} decoy(s) do not have a matching target</value>
   </data>
-  <data name="SkylineWindow_ImportResults__0__decoy_s__do_not_have_the_same_number_of_transitions_as_the_matching_target" xml:space="preserve">
-    <value>{0} decoy(s) do not have the same number of transitions as the matching target</value>
+  <data name="SkylineWindow_ImportResults__0__decoy_s__do_not_have_the_same_number_of_transitions_as_their_matching_target" xml:space="preserve">
+    <value>{0} decoy(s) do not have the same number of transitions as their matching target</value>
   </data>
   <data name="SkylineWindow_ImportResults_Do_you_want_to_generate_new_decoys_or_continue_with_the_current_decoys_" xml:space="preserve">
     <value>Do you want to generate new decoys or continue with the current decoys?</value>

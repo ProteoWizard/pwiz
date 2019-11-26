@@ -26012,12 +26012,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} decoy(s) do not have the same number of transitions as the matching target.
+        ///   Looks up a localized string similar to {0} decoy(s) do not have the same number of transitions as their matching target.
         /// </summary>
-        public static string SkylineWindow_ImportResults__0__decoy_s__do_not_have_the_same_number_of_transitions_as_the_matching_target {
+        public static string SkylineWindow_ImportResults__0__decoy_s__do_not_have_the_same_number_of_transitions_as_their_matching_target {
             get {
                 return ResourceManager.GetString("SkylineWindow_ImportResults__0__decoy_s__do_not_have_the_same_number_of_transitio" +
-                        "ns_as_the_matching_target", resourceCulture);
+                        "ns_as_their_matching_target", resourceCulture);
             }
         }
         
