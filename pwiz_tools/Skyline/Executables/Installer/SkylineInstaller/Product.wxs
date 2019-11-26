@@ -597,13 +597,6 @@
       </Component>
       <Component Id="Skyline.exe.config">
         <File Source="$(var.Skyline.TargetDir)/$(var.Skyline.TargetName).exe.config" KeyPath="yes" Id="Skyline_exe_config"/>
-        <util:XmlFile Id="SetInstalledVersion" 
-                      Action="setValue"
-                      ElementPath="//applicationSettings/pwiz.Skyline.Properties.Settings/setting[\[]@name='InstalledVersion'[\]]/value" 
-                      Value="$(var.ProductVersion)"
-                      File="[#Skyline_exe_config]"
-                      SelectionLanguage="XPath"
-                      />
       </Component>
       <Component Id="Skyline.exe.manifest">
         <File Source="$(var.Skyline.TargetDir)/$(var.Skyline.TargetName).exe.manifest" KeyPath="yes"/>
