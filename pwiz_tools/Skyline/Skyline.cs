@@ -5742,6 +5742,27 @@ namespace pwiz.Skyline
             mirrorMenuItem.Checked = !mirrorMenuItem.Checked;
             _graphSpectrumSettings.Mirror = mirrorMenuItem.Checked;
         }
+
+        private void viewToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            viewModificationsMenuItem.DropDownItems.Clear();
+            var currentOption = DisplayModificationOption.Current;
+            foreach (var opt in DisplayModificationOption.All)
+            {
+                var menuItem = new ToolStripMenuItem(opt.MenuItemText);
+                menuItem.Click += (s, a) => SetModifiedSequenceDisplayOption(opt);
+                menuItem.Checked = Equals(currentOption, opt);
+                viewModificationsMenuItem.DropDownItems.Add(menuItem);
+            }
+            ranksMenuItem.Checked = ranksContextMenuItem.Checked = Settings.Default.ShowRanks;
+        }
+
+        public void SetModifiedSequenceDisplayOption(DisplayModificationOption displayModificationOption)
+        {
+            DisplayModificationOption.Current = displayModificationOption;
+            ShowSequenceTreeForm(true, true);
+            UpdateGraphPanes();
+        }
     }
 }
 
