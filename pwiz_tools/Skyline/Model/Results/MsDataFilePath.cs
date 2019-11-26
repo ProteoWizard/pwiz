@@ -93,14 +93,14 @@ namespace pwiz.Skyline.Model.Results
 
     public class MsDataFilePath : MsDataFileUri
     {
-        public static readonly MsDataFilePath EMPTY = new MsDataFilePath(string.Empty, null, false, false, false);
+        public static readonly MsDataFilePath EMPTY = new MsDataFilePath(string.Empty);
         public MsDataFilePath(string filePath, LockMassParameters lockMassParameters = null, 
-            bool centroidMs1=false, bool centroidMs2=false, bool combineIonMobilitySpectra = true)
+            bool centroidMs1=false, bool centroidMs2=false, bool combineIonMobilitySpectra = false)
             : this(filePath, null, -1, lockMassParameters, centroidMs1, centroidMs2, combineIonMobilitySpectra)
         {
         }
         public MsDataFilePath(string filePath, string sampleName, int sampleIndex, LockMassParameters lockMassParameters = null,
-            bool centroidMs1 = false, bool centroidMs2 = false, bool combineIonMobilitySpectra = true)
+            bool centroidMs1 = false, bool centroidMs2 = false, bool combineIonMobilitySpectra = false)
         {
             FilePath = filePath;
             SampleName = sampleName;
@@ -138,7 +138,7 @@ namespace pwiz.Skyline.Model.Results
         public override MsDataFileUri GetLocation()
         {
             if (!LockMassParameters.IsEmpty || CentroidMs1 || CentroidMs2 || CombineIonMobilitySpectra)
-                return new MsDataFilePath(FilePath, SampleName, SampleIndex, null, false, false, false);
+                return new MsDataFilePath(FilePath, SampleName, SampleIndex);
             return this;
         }
 
