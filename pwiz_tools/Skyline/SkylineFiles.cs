@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Text;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using Ionic.Zip;
@@ -2500,18 +2501,23 @@ namespace pwiz.Skyline
 
             if (!CheckDecoys(DocumentUI, out var numDecoys, out var numNoSource, out var numWrongTransitionCount))
             {
-                var message = new List<string>
-                {
-                    string.Format(Resources.SkylineWindow_ImportResults_The_document_contains_decoys_that_do_not_match_the_targets__Out_of__0__decoys_, numDecoys),
-                    string.Empty
-                };
-                if (numNoSource > 0)
-                    message.Add(string.Format(Resources.SkylineWindow_ImportResults__0__decoy_s__do_not_have_a_matching_target, numNoSource));
-                if (numWrongTransitionCount > 0)
-                    message.Add(string.Format(Resources.SkylineWindow_ImportResults__0__decoy_s__do_not_have_the_same_number_of_transitions_as_their_matching_target, numWrongTransitionCount));
-                message.Add(string.Empty);
-                message.Add(Resources.SkylineWindow_ImportResults_Do_you_want_to_generate_new_decoys_or_continue_with_the_current_decoys_);
-                using (var dlg = new MultiButtonMsgDlg(TextUtil.LineSeparate(message),
+                var sb = new StringBuilder();
+                sb.AppendLine(numDecoys == 1
+                    ? Resources.SkylineWindow_ImportResults_The_document_contains_a_decoy_that_does_not_match_the_targets_
+                    : string.Format(Resources.SkylineWindow_ImportResults_The_document_contains_decoys_that_do_not_match_the_targets__Out_of__0__decoys_, numDecoys));
+
+                sb.AppendLine(string.Empty);
+                if (numNoSource == 1)
+                    sb.AppendLine(Resources.SkylineWindow_ImportResults_1_decoy_does_not_have_a_matching_target);
+                else if (numNoSource > 1)
+                    sb.AppendLine(string.Format(Resources.SkylineWindow_ImportResults__0__decoys_do_not_have_a_matching_target, numNoSource));
+                if (numWrongTransitionCount == 1)
+                    sb.AppendLine(Resources.SkylineWindow_ImportResults_1_decoy_does_not_have_the_same_number_of_transitions_as_its_matching_target);
+                else if (numWrongTransitionCount > 0)
+                    sb.AppendLine(string.Format(Resources.SkylineWindow_ImportResults__0__decoys_do_not_have_the_same_number_of_transitions_as_their_matching_targets, numWrongTransitionCount));
+                sb.AppendLine(string.Empty);
+                sb.AppendLine(Resources.SkylineWindow_ImportResults_Do_you_want_to_generate_new_decoys_or_continue_with_the_current_decoys_);
+                using (var dlg = new MultiButtonMsgDlg(sb.ToString(),
                     Resources.SkylineWindow_ImportResults_Generate, Resources.SkylineWindow_ImportResults_Continue, true))
                 {
                     switch (dlg.ShowDialog(this))

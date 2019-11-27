@@ -26048,21 +26048,40 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} decoy(s) do not have a matching target.
+        ///   Looks up a localized string similar to {0} decoys do not have a matching target.
         /// </summary>
-        public static string SkylineWindow_ImportResults__0__decoy_s__do_not_have_a_matching_target {
+        public static string SkylineWindow_ImportResults__0__decoys_do_not_have_a_matching_target {
             get {
-                return ResourceManager.GetString("SkylineWindow_ImportResults__0__decoy_s__do_not_have_a_matching_target", resourceCulture);
+                return ResourceManager.GetString("SkylineWindow_ImportResults__0__decoys_do_not_have_a_matching_target", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} decoy(s) do not have the same number of transitions as their matching target.
+        ///   Looks up a localized string similar to {0} decoys do not have the same number of transitions as their matching targets.
         /// </summary>
-        public static string SkylineWindow_ImportResults__0__decoy_s__do_not_have_the_same_number_of_transitions_as_their_matching_target {
+        public static string SkylineWindow_ImportResults__0__decoys_do_not_have_the_same_number_of_transitions_as_their_matching_targets {
             get {
-                return ResourceManager.GetString("SkylineWindow_ImportResults__0__decoy_s__do_not_have_the_same_number_of_transitio" +
-                        "ns_as_their_matching_target", resourceCulture);
+                return ResourceManager.GetString("SkylineWindow_ImportResults__0__decoys_do_not_have_the_same_number_of_transitions" +
+                        "_as_their_matching_targets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 1 decoy does not have a matching target.
+        /// </summary>
+        public static string SkylineWindow_ImportResults_1_decoy_does_not_have_a_matching_target {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportResults_1_decoy_does_not_have_a_matching_target", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 1 decoy does not have the same number of transitions as its matching target.
+        /// </summary>
+        public static string SkylineWindow_ImportResults_1_decoy_does_not_have_the_same_number_of_transitions_as_its_matching_target {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportResults_1_decoy_does_not_have_the_same_number_of_transitions_" +
+                        "as_its_matching_target", resourceCulture);
             }
         }
         
@@ -26179,6 +26198,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SkylineWindow_ImportResults_The_document_contains__0__of_these_iRT_standard_pepti" +
                         "des_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document contains a decoy that does not match the targets:.
+        /// </summary>
+        public static string SkylineWindow_ImportResults_The_document_contains_a_decoy_that_does_not_match_the_targets_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportResults_The_document_contains_a_decoy_that_does_not_match_the" +
+                        "_targets_", resourceCulture);
             }
         }
         

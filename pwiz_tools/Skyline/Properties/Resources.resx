@@ -10814,6 +10814,9 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="CommandLine_SetImsSettings_Error__Failed_attempting_to_change_the_ion_mobility_settings_" xml:space="preserve">
     <value>Error: Failed attempting to change the ion mobility settings.</value>
   </data>
+  <data name="SkylineWindow_ImportResults_The_document_contains_a_decoy_that_does_not_match_the_targets_" xml:space="preserve">
+    <value>The document contains a decoy that does not match the targets:</value>
+  </data>
   <data name="SkylineWindow_ImportResults_The_document_contains_decoys_that_do_not_match_the_targets__Out_of__0__decoys_" xml:space="preserve">
     <value>The document contains decoys that do not match the targets. Out of {0} decoys:</value>
   </data>
@@ -10823,11 +10826,17 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="SkylineWindow_ImportResults_Generate" xml:space="preserve">
     <value>Generate</value>
   </data>
-  <data name="SkylineWindow_ImportResults__0__decoy_s__do_not_have_a_matching_target" xml:space="preserve">
-    <value>{0} decoy(s) do not have a matching target</value>
+  <data name="SkylineWindow_ImportResults_1_decoy_does_not_have_a_matching_target" xml:space="preserve">
+    <value>1 decoy does not have a matching target</value>
   </data>
-  <data name="SkylineWindow_ImportResults__0__decoy_s__do_not_have_the_same_number_of_transitions_as_their_matching_target" xml:space="preserve">
-    <value>{0} decoy(s) do not have the same number of transitions as their matching target</value>
+  <data name="SkylineWindow_ImportResults__0__decoys_do_not_have_a_matching_target" xml:space="preserve">
+    <value>{0} decoys do not have a matching target</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_1_decoy_does_not_have_the_same_number_of_transitions_as_its_matching_target" xml:space="preserve">
+    <value>1 decoy does not have the same number of transitions as its matching target</value>
+  </data>
+  <data name="SkylineWindow_ImportResults__0__decoys_do_not_have_the_same_number_of_transitions_as_their_matching_targets" xml:space="preserve">
+    <value>{0} decoys do not have the same number of transitions as their matching targets</value>
   </data>
   <data name="SkylineWindow_ImportResults_Do_you_want_to_generate_new_decoys_or_continue_with_the_current_decoys_" xml:space="preserve">
     <value>Do you want to generate new decoys or continue with the current decoys?</value>

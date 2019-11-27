@@ -121,14 +121,16 @@ namespace pwiz.SkylineTestFunctional
                     Assert.IsTrue(
                         dlg.Message.StartsWith(string.Format(
                             Resources.SkylineWindow_ImportResults_The_document_contains_decoys_that_do_not_match_the_targets__Out_of__0__decoys_, numDecoys)));
-                    if (numNoSource > 0)
-                        Assert.IsTrue(
-                            dlg.Message.Contains(string.Format(
-                                Resources.SkylineWindow_ImportResults__0__decoy_s__do_not_have_a_matching_target, numNoSource)));
-                    if (numWrongTransitionCount > 0)
-                        Assert.IsTrue(
-                            dlg.Message.Contains(string.Format(
-                                Resources.SkylineWindow_ImportResults__0__decoy_s__do_not_have_the_same_number_of_transitions_as_the_matching_target, numWrongTransitionCount)));
+                    if (numNoSource == 1)
+                        Assert.IsTrue(dlg.Message.Contains(Resources.SkylineWindow_ImportResults_1_decoy_does_not_have_a_matching_target));
+                    else if (numNoSource > 1)
+                        Assert.IsTrue(dlg.Message.Contains(string.Format(
+                            Resources.SkylineWindow_ImportResults__0__decoys_do_not_have_a_matching_target, numNoSource)));
+                    if (numWrongTransitionCount == 1)
+                        Assert.IsTrue(dlg.Message.Contains(Resources.SkylineWindow_ImportResults_1_decoy_does_not_have_the_same_number_of_transitions_as_its_matching_target));
+                    else if (numWrongTransitionCount > 1)
+                        Assert.IsTrue(dlg.Message.Contains(string.Format(
+                            Resources.SkylineWindow_ImportResults__0__decoys_do_not_have_the_same_number_of_transitions_as_their_matching_targets, numWrongTransitionCount)));
                     dlg.BtnCancelClick();
                 });
             }
