@@ -431,7 +431,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                         // Set up full scan settings page
                         TransitionSettingsControl.Initialize(WorkflowType);
-                        FullScanSettingsControl.ModifyOptionsForImportPeptideSearchWizard(WorkflowType);
+                        FullScanSettingsControl.ModifyOptionsForImportPeptideSearchWizard(WorkflowType, BuildPepSearchLibControl.ImportPeptideSearch.DocLib);
 
                         if (!MatchModificationsControl.Initialize(Document))
                             _pagesToSkip.Add(Pages.match_modifications_page);
