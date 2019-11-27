@@ -68,6 +68,7 @@
             this.columnLibrarySequence = new pwiz.Skyline.Controls.TargetColumn();
             this.columnLibraryIrt = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.comboStandards = new System.Windows.Forms.ComboBox();
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceLibrary)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceStandard)).BeginInit();
             this.contextMenuAdd.SuspendLayout();
@@ -158,6 +159,7 @@
             // 
             // contextMenuAdd
             // 
+            this.contextMenuAdd.ImageScalingSize = new System.Drawing.Size(40, 40);
             this.contextMenuAdd.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.addResultsContextMenuItem,
             this.addSpectralLibraryContextMenuItem,
@@ -347,6 +349,7 @@
             this.Name = "EditIrtCalcDlg";
             this.ShowInTaskbar = false;
             this.Load += new System.EventHandler(this.OnLoad);
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceLibrary)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceStandard)).EndInit();
             this.contextMenuAdd.ResumeLayout(false);

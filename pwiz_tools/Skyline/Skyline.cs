@@ -71,6 +71,8 @@ using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
+using pwiz.Skyline.Model.Prosit.Communication;
+using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
@@ -96,7 +98,8 @@ namespace pwiz.Skyline
             IProgressMonitor,
             ILibraryBuildNotificationContainer,
             IToolMacroProvider,
-            IModifyDocumentContainer
+            IModifyDocumentContainer,
+            IRetentionScoreSource
     {
         private SequenceTreeForm _sequenceTreeForm;
         private ImmediateWindow _immediateWindow;
@@ -183,6 +186,9 @@ namespace pwiz.Skyline
             _importPeptideSearchManager = new ImportPeptideSearchManager();
             _importPeptideSearchManager.ProgressUpdateEvent += UpdateProgress;
             _importPeptideSearchManager.Register(this);
+
+            // RTScoreCalculatorList.DEFAULTS[2].ScoreProvider
+            //    .Attach(this);
 
             DocumentUIChangedEvent += ShowAutoTrainResults;
 
@@ -3361,9 +3367,32 @@ namespace pwiz.Skyline
             // Explorer's spectrum graph pane.
             UpdateGraphPanes();
         }
-
-        private void HandleStandardsChanged(ICollection<Target> oldStandard)
+        public static List<PrositIntensityModel.PeptidePrecursorNCE> ReadStandardPeptides(IrtStandard standard)
         {
+            SrmDocument docImport;
+            using (var standardDocReader = standard.GetDocumentReader())
+            {
+                if (standardDocReader == null)
+                    return null;
+
+                var ser = new XmlSerializer(typeof(SrmDocument));
+                docImport = (SrmDocument) ser.Deserialize(standardDocReader);
+            }
+
+            var peps = docImport.Peptides.ToList();
+            var precs = peps.Select(p => p.TransitionGroups.First());
+            /*for (var i = 0; i < peps.Count; i++)
+            {
+                var modSeq = ModifiedSequence.GetModifiedSequence(docImport.Settings, peps[i], IsotopeLabelType.light);
+                peps[i] = peps[i].ChangeExplicitMods(new ExplicitMods(peps[i].Peptide,
+                    modSeq.ExplicitMods.Select(m => m.ExplicitMod).ToArray(),
+                    new TypedExplicitModifications[0]));
+            }*/
+            return Enumerable.Zip(peps, precs,
+                (pep, prec) => new PrositIntensityModel.PeptidePrecursorNCE(pep, prec)).ToList();
+        }
+
+        private void HandleStandardsChanged(ICollection<Target> oldStandard)        {
             var calc = RCalcIrt.Calculator(Document);
             if (calc == null)
                 return;
@@ -3755,10 +3784,24 @@ namespace pwiz.Skyline
 
         public void ShowToolOptionsUI()
         {
-            using (var dlg = new ToolOptionsUI())
+            using (var dlg = new ToolOptionsUI(_documentUI.Settings))
             {
                 dlg.ShowDialog(this);
             }
+        }
+
+        public void ShowToolOptionsUI(IWin32Window owner, ToolOptionsUI.TABS tab)
+        {
+            using (var dlg = new ToolOptionsUI(_documentUI.Settings))
+            {
+                dlg.NavigateToTab(tab);
+                dlg.ShowDialog(owner);
+            }
+        }
+
+        public void ShowToolOptionsUI(ToolOptionsUI.TABS tab)
+        {
+            ShowToolOptionsUI(this, tab);
         }
 
         private void updatesToolsMenuItem_Click(object sender, EventArgs e)
@@ -5670,6 +5713,57 @@ namespace pwiz.Skyline
         private void mixedToolStripMenuItem_Click(object sender, EventArgs e)
         {
             SetUIMode(SrmDocument.DOCUMENT_TYPE.mixed);
+        }
+
+        private void prositLibMatchItem_Click(object sender, EventArgs e)
+        {
+            prositLibMatchItem.Checked = !prositLibMatchItem.Checked;
+
+            if (prositLibMatchItem.Checked)
+                PrositUIHelpers.CheckPrositSettings(this, this);
+
+            _graphSpectrumSettings.Prosit = prositLibMatchItem.Checked;
+        }
+
+        public bool ValidateSource()
+        {
+            return true;
+        }
+
+        public double? GetScore(Target target)
+        {
+            var node = Document.Peptides.FirstOrDefault(p => p.ModifiedTarget.Equals(target));
+            if (node == null)
+                return null;
+            return PrositRetentionTimeModel.Instance?.PredictSingle(PrositPredictionClient.Current, Document.Settings,
+                node, CancellationToken.None)[node];
+        }
+
+        private void mirrorMenuItem_Click(object sender, EventArgs e)
+        {
+            mirrorMenuItem.Checked = !mirrorMenuItem.Checked;
+            _graphSpectrumSettings.Mirror = mirrorMenuItem.Checked;
+        }
+
+        private void viewToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            viewModificationsMenuItem.DropDownItems.Clear();
+            var currentOption = DisplayModificationOption.Current;
+            foreach (var opt in DisplayModificationOption.All)
+            {
+                var menuItem = new ToolStripMenuItem(opt.MenuItemText);
+                menuItem.Click += (s, a) => SetModifiedSequenceDisplayOption(opt);
+                menuItem.Checked = Equals(currentOption, opt);
+                viewModificationsMenuItem.DropDownItems.Add(menuItem);
+            }
+            ranksMenuItem.Checked = ranksContextMenuItem.Checked = Settings.Default.ShowRanks;
+        }
+
+        public void SetModifiedSequenceDisplayOption(DisplayModificationOption displayModificationOption)
+        {
+            DisplayModificationOption.Current = displayModificationOption;
+            ShowSequenceTreeForm(true, true);
+            UpdateGraphPanes();
         }
     }
 }

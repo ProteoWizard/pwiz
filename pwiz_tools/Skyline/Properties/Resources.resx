@@ -1407,9 +1407,6 @@
   <data name="WizardPeptideSearchPRM" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\StartPage\WizardPeptideSearchPRM.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="SkylineWindow_ImportMassList_Creating_Spectral_Library" xml:space="preserve">
-    <value>Creating Spectral Library</value>
-  </data>
   <data name="AminoAcid_ValidateAAList_The_amino_acid__0__is_repeated_in_the_value__1__" xml:space="preserve">
     <value>The amino acid '{0}' is repeated in the value '{1}'.</value>
   </data>
@@ -10522,7 +10519,7 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="GraphChromatogram_UpdateUI_No_QC_chromatogram_found" xml:space="preserve">
     <value>No corresponding QC chromatogram found</value>
- </data>
+  </data>
   <data name="SkylineVersion_V19_1_Skyline_19_1" xml:space="preserve">
     <value>Skyline 19.1</value>
   </data>
@@ -10591,6 +10588,12 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="ExportMethodDlg_comboOptimizing_SelectedIndexChanged_Export_a_method_with_extra_transitions_for_finding_an_optimal_value_" xml:space="preserve">
     <value>Export a method with extra transitions for finding an optimal value.</value>
+  </data>
+  <data name="prosit_logo_dark_blue" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\prosit_logo_dark_blue.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="SkylineWindow_ImportMassListIntensities_Creating_Spectral_Library" xml:space="preserve">
+    <value>Creating Spectral Library</value>
   </data>
   <data name="ExceptionDialog_Caused_by_____" xml:space="preserve">
     <value>Caused by ---&gt;</value>
@@ -10723,6 +10726,21 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="IrtDb_MakeDocumentXml_iRT_standards" xml:space="preserve">
     <value>iRT standards</value>
+  </data>
+  <data name="DisplayModificationOption_NOT_SHOWN_Not_Shown" xml:space="preserve">
+    <value>Not Shown</value>
+  </data>
+  <data name="DisplayModificationOption_MASS_DELTA_Mass_Difference" xml:space="preserve">
+    <value>Mass Difference</value>
+  </data>
+  <data name="DisplayModificationOption_THREE_LETTER_CODE_Three_Letter_Code" xml:space="preserve">
+    <value>Three Letter Code</value>
+  </data>
+  <data name="DisplayModificationOption_FULL_NAME_Full_Name" xml:space="preserve">
+    <value>Full Name</value>
+  </data>
+  <data name="DisplayModificationOption_UNIMOD_ID_Unimod_ID" xml:space="preserve">
+    <value>Unimod ID</value>
   </data>
   <data name="RefineDlg_RefineDlg_all" xml:space="preserve">
     <value>all</value>

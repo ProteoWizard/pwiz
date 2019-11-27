@@ -645,7 +645,7 @@
     <value>分子列表的名称。</value>
   </data>
   <data name="MoleculeListNote">
-    <value>与分子列表无关的自由文本。</value>
+    <value>与分子列表无关的自由文本注释。</value>
   </data>
   <data name="MoleculeList">
     <value>Skyline 文档中的一组分子。</value>
@@ -667,7 +667,7 @@
     <value>分子峰值发现比率</value>
   </data>
   <data name="MonoisotopicMasses">
-    <value>修饰的序列，其中修饰由它们的单同位素质量引用，例如，"C[+57.021464]"。</value>
+    <value>以其单一同位素质量指代修饰的修饰序列，例如，"C[+57.021464]"。</value>
   </data>
   <data name="MoleculeResult">
     <value>分子结果</value>
@@ -739,19 +739,19 @@
 氨基酸序列（例如 AC[+57]GR）。</value>
   </data>
   <data name="PeptideModifiedSequenceAverageMasses">
-    <value>以其平均质量指代修饰的肽段的修饰序列，例如"C[+57.05162]"。</value>
+    <value>以其平均质量指代修饰的肽的修饰序列，例如"C[+57.05162]"。</value>
   </data>
   <data name="PeptideModifiedSequenceFullNames">
-    <value>以其全名指代修饰的肽段的修饰序列，例如"C[Carbamidomethyl (C)]"。</value>
+    <value>以其全名指代修饰的肽的修饰序列，例如"C[Carbamidomethyl (C)]"。</value>
   </data>
   <data name="PeptideModifiedSequenceMonoisotopicMasses">
-    <value>以其单一同位素质量指代修饰的肽段的修饰序列，例如"C[+57.021464]"。</value>
+    <value>以其单一同位素质量指代修饰的肽的修饰序列，例如"C[+57.021464]"。</value>
   </data>
   <data name="PeptideModifiedSequenceThreeLetterCodes">
-    <value>以其三字母代码指代修饰的肽段的修饰序列，例如"C[CAM]"。如果修饰没有三字母代码，则使用其全名代替。</value>
+    <value>以其三字母代码指代修饰的肽的修饰序列，例如"C[CAM]"。如果修饰没有三字母代码，则使用其全名代替。</value>
   </data>
   <data name="PeptideModifiedSequenceUnimodIds">
-    <value>以其 unimod id 指代修饰的肽段的修饰序列，例如"C(unimod:4)"。如果修饰没有 unimod id，则使用其全名代替。</value>
+    <value>以其 unimod id 指代修饰的肽的修饰序列，例如"C(unimod:4)"。如果修饰没有 unimod id，则使用其全名代替。</value>
   </data>
   <data name="PeptideNote">
     <value>点击“编辑”菜单中的“编辑注释”后显示的与肽相关的自由
@@ -1253,7 +1253,7 @@
     <value>标准化分子标识符</value>
   </data>
   <data name="Time">
-    <value>进行此更改的时间，以您当前的当地时区来表示</value>
+    <value>进行此更改的时间，以您目前的当地时区来表示</value>
   </data>
   <data name="UTCTime">
     <value>进行此更改的时间，以世界时间 (GMT) 来表示</value>

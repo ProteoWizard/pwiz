@@ -1077,7 +1077,7 @@ class ScanInfoImpl : public ScanInfo
     virtual bool isSourceCID() const { return isSourceCID_; }
     virtual AccurateMassType accurateMassType() const { return accurateMassType_; }
 
-    virtual std::vector<PrecursorInfo> precursorInfo() const;
+    virtual const std::vector<PrecursorInfo>& precursorInfo() const;
     virtual long precursorCount() const {return precursorMZs_.size();}
     virtual long precursorCharge() const;
     virtual double precursorMZ(long index, bool preferMonoisotope) const;
@@ -1160,6 +1160,7 @@ class ScanInfoImpl : public ScanInfo
     bool supplementalActivation_;
     vector<double> precursorMZs_;
     vector<double> precursorActivationEnergies_;
+    vector<PrecursorInfo> precursorInfo_;
     vector<pair<double, double> > scanRanges_;
     bool isProfileScan_;
     bool isCentroidScan_;
@@ -1284,6 +1285,7 @@ void ScanInfoImpl::initialize()
         scanRanges_.clear();
         precursorMZs_.clear();
         precursorActivationEnergies_.clear();
+        precursorInfo_.clear();
         trailerExtraMap_.clear();
         spsMasses_.clear();
 
@@ -1340,7 +1342,9 @@ void ScanInfoImpl::initialize()
                 vector<string> tokens;
                 bal::split(tokens, spsMassesStr, bal::is_any_of(","));
 
-                // skip first 
+                double isolationWidth = precursorInfo_.back().isolationWidth;
+
+                // skip first SPS mass which has already been added to precursorMZs_ in parseFilterString()
                 for (size_t i = 1; i < tokens.size(); ++i)
                 {
                     bal::trim(tokens[i]);
@@ -1349,6 +1353,7 @@ void ScanInfoImpl::initialize()
                     spsMasses_.push_back(lexical_cast<double>(tokens[i]));
                     precursorMZs_.push_back(spsMasses_.back());
                     precursorActivationEnergies_.push_back(precursorActivationEnergies_.back());
+                    precursorInfo_.push_back(PrecursorInfo{ msLevel_ - 1, spsMasses_.back(), spsMasses_.back(), isolationWidth, precursorActivationEnergies_.back(), activationType_, 0, 0 });
                 }
                 hasMultiplePrecursors_ = true;
                 isSPS_ = true;
@@ -1629,12 +1634,24 @@ void ScanInfoImpl::parseFilterString()
     }
     CATCH_AND_FORWARD_EX(ToStdString(filter_->ToString()))
 #endif
+
+    if (precursorMZs_.empty() || msLevel_ < 1)
+        return;
+
+    auto isolationWidths = getIsolationWidths();
+    for (size_t i = 0; i < msLevel_ - 1; ++i)
+        precursorInfo_.push_back(PrecursorInfo{ int(i+1), precursorMZs_[i], precursorMZs_[i], isolationWidths[i], precursorActivationEnergies_[i], activationType_, 0, 0 });
+
+    if (hasMultiplePrecursors_ && spsMasses_.empty()) // MSX mode means there can be more than 1 filter line m/z for the current ms level
+    {
+        for (size_t i = msLevel_ - 1; i < precursorMZs_.size(); ++i)
+            precursorInfo_.push_back(PrecursorInfo{ msLevel_ - 1, precursorMZs_[i], precursorMZs_[i], isolationWidths.back(), precursorActivationEnergies_[i], activationType_, 0, 0 });
+    }
 }
 
-vector<PrecursorInfo> ScanInfoImpl::precursorInfo() const
+const vector<PrecursorInfo>& ScanInfoImpl::precursorInfo() const
 {
-    vector<PrecursorInfo> precursorInfo;
-    return precursorInfo;
+    return precursorInfo_;
 }
 
 long ScanInfoImpl::precursorCharge() const
@@ -1935,19 +1952,20 @@ void RawFileImpl::parseInstrumentMethod()
 
 vector<double> ScanInfoImpl::getIsolationWidths() const
 {
-    vector<double> isolationWidths;
+    vector<double> isolationWidths(max(0l, msLevel_ - 1), 0);
 
     if (scanNumber_ == 0)
         return isolationWidths;
 
     if (!spsMasses_.empty())
     {
+        isolationWidths.clear();
 #ifndef _WIN64
         double isolationWidth;
-        checkResult(rawfile_->raw_->GetIsolationWidthForScanNum(scanNumber_, 0, &isolationWidth));
+        checkResult(rawfile_->raw_->GetIsolationWidthForScanNum(scanNumber_, msLevel_ - 1, &isolationWidth));
         isolationWidths.resize(precursorMZs_.size(), isolationWidth);
 #else
-        isolationWidths.resize(precursorMZs_.size(), filter_->GetIsolationWidth(0));
+        isolationWidths.resize(precursorMZs_.size(), filter_->GetIsolationWidth(filter_->MassCount - 1));
 #endif
         return isolationWidths;
     }
@@ -1960,11 +1978,10 @@ vector<double> ScanInfoImpl::getIsolationWidths() const
 
     long numMSOrders;
     checkResult(rawfile_->raw_->GetNumberOfMSOrdersFromScanNum(scanNumber_, &numMSOrders));
-    for (long i = 0; i < numMSOrders; i++)
+    isolationWidths.resize(max(numMSOrders, msLevel_ - 1));
+    for (long i = 0; i < isolationWidths.size(); i++)
     {
-        double isolationWidth;
-        checkResult(rawfile_->raw_->GetIsolationWidthForScanNum(scanNumber_, i, &isolationWidth));
-        isolationWidths.push_back(isolationWidth);
+        checkResult(rawfile_->raw_->GetIsolationWidthForScanNum(scanNumber_, i, &isolationWidths[i]));
     }
 #else
     MSOrder msOrder = (MSOrder) filter_->MSOrder;
@@ -1972,9 +1989,10 @@ vector<double> ScanInfoImpl::getIsolationWidths() const
         return isolationWidths;
 
     long massCount = filter_->MassCount;
-    for (long i = 0; i < massCount; i++)
+    isolationWidths.resize(max(massCount, msLevel_ - 1));
+    for (long i = 0; i < isolationWidths.size(); i++)
     {
-        isolationWidths.push_back(filter_->GetIsolationWidth(i));
+        isolationWidths[i] = filter_->GetIsolationWidth(i);
     }
 #endif
     return isolationWidths;

@@ -2100,18 +2100,16 @@ namespace pwiz.Skyline.Model.DocSettings
         public bool HasAnyLibraryIonMobilities(IEnumerable<LibKey> targetIons)
         {
             var targets = targetIons?.ToArray();
-            foreach (var lib in _libraries.Where(l => l != null))
-            {
-                // Get ION MOBILITIES for all files in each library
-                for (int i = 0; lib.TryGetIonMobilityInfos(targets, i, out var ionMobilities); i++) // Returns false when i> internal list length
-                {
-                    if (ionMobilities != null  && ionMobilities.GetIonMobilityDict().Any())
-                    {
-                        return true;
-                    }
-                }
-            }
+            return _libraries.Any(lib => lib != null && HasIonMobilities(lib, targets));
+        }
 
+        public static bool HasIonMobilities(Library lib, LibKey[] targetIons)
+        {
+            for (var i = 0; lib.TryGetIonMobilityInfos(targetIons, i, out var ionMobilities); i++) // Returns false when i> internal list length
+            {
+                if (ionMobilities != null && ionMobilities.GetIonMobilityDict().Any())
+                    return true;
+            }
             return false;
         }
 
@@ -2154,7 +2152,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <param name="key">The LibKey to match on</param>
         /// <param name="labelType">The IsotopeLabelType to match on</param>
         /// <param name="bestMatch">True if only best-match spectra are included</param>
-        public IEnumerable<SpectrumInfo> GetSpectra(LibKey key, IsotopeLabelType labelType, bool bestMatch)
+        public IEnumerable<SpectrumInfoLibrary> GetSpectra(LibKey key, IsotopeLabelType labelType, bool bestMatch)
         {
             Assume.IsTrue(IsLoaded);
 

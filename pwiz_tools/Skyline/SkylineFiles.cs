@@ -2233,8 +2233,8 @@ namespace pwiz.Skyline
             }
             using (var blibDb = BlibDb.CreateBlibDb(AssayLibraryFileName))
             {
-                docLibrarySpec = new BiblioSpecLiteSpec(AssayLibraryName, AssayLibraryFileName);
-                using (var longWaitDlg = new LongWaitDlg(this) { Text = Resources.SkylineWindow_ImportMassList_Creating_Spectral_Library })
+                docLibrarySpec = new BiblioSpecLiteSpec(AssayLibraryName ?? Path.GetFileNameWithoutExtension(AssayLibraryFileName), AssayLibraryFileName);
+                using (var longWaitDlg = new LongWaitDlg(this) { Text = Resources.SkylineWindow_ImportMassListIntensities_Creating_Spectral_Library })
                 {
                     var docNew = doc;
                     BiblioSpecLiteLibrary docLibraryNew = null;
@@ -2242,7 +2242,7 @@ namespace pwiz.Skyline
                     var indexOldLibrary2 = indexOldLibrary;
                     longWaitDlg.PerformWork(this, 1000, progressMonitor =>
                     {
-                        docLibraryNew = blibDb.CreateLibraryFromSpectra(docLibrarySpec2, librarySpectra, AssayLibraryName, progressMonitor);
+                        docLibraryNew = blibDb.CreateLibraryFromSpectra(docLibrarySpec2, librarySpectra, AssayLibraryName ?? Path.GetFileNameWithoutExtension(AssayLibraryFileName), progressMonitor);
                         if (docLibraryNew == null)
                             return;
                         var newSettings = docNew.Settings.ChangePeptideLibraries(libs => libs.ChangeLibrary(docLibraryNew, docLibrarySpec2, indexOldLibrary2));

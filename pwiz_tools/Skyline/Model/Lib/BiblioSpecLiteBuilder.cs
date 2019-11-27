@@ -32,7 +32,15 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Lib
 {
-    public sealed class BiblioSpecLiteBuilder : ILibraryBuilder
+    public interface IiRTCapableLibraryBuilder : ILibraryBuilder
+    {
+        string AmbiguousMatchesMessage { get; }
+        IrtStandard IrtStandard { get; }
+        string BuildCommandArgs { get; }
+        string BuildOutput { get; }
+    }
+
+    public sealed class BiblioSpecLiteBuilder : IiRTCapableLibraryBuilder
     {
         // ReSharper disable LocalizableElement
         public const string EXT_PEP_XML = ".pep.xml";
