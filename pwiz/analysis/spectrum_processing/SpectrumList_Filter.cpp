@@ -271,8 +271,8 @@ PWIZ_API_DECL boost::logic::tribool SpectrumList_FilterPredicate_ScanEventSet::a
 //
 
 
-PWIZ_API_DECL SpectrumList_FilterPredicate_ScanTimeRange::SpectrumList_FilterPredicate_ScanTimeRange(double scanTimeLow, double scanTimeHigh)
-:   scanTimeLow_(scanTimeLow), scanTimeHigh_(scanTimeHigh)
+PWIZ_API_DECL SpectrumList_FilterPredicate_ScanTimeRange::SpectrumList_FilterPredicate_ScanTimeRange(double scanTimeLow, double scanTimeHigh, bool assumeSorted)
+:   scanTimeLow_(scanTimeLow), scanTimeHigh_(scanTimeHigh), eos_(false), assumeSorted_(assumeSorted)
 {}
 
 
@@ -291,7 +291,14 @@ PWIZ_API_DECL boost::logic::tribool SpectrumList_FilterPredicate_ScanTimeRange::
     if (param.cvid == CVID_Unknown) return boost::logic::indeterminate;
     double time = param.timeInSeconds();
 
+    eos_ = assumeSorted_ && time > scanTimeHigh_;
     return (time>=scanTimeLow_ && time<=scanTimeHigh_);
+}
+
+
+PWIZ_API_DECL bool SpectrumList_FilterPredicate_ScanTimeRange::done() const
+{
+    return eos_; // end of set
 }
 
 
