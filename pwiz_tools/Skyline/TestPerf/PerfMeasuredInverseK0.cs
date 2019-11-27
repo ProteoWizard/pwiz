@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -197,7 +198,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         {
             var text = File.ReadAllText(testPath);
             var filePath = TestFilesDir.GetTestPath(BSA_50fmol_TIMS_InfusionESI_10precd);
-            var encodePath = SampleHelp.EncodePath(filePath, null, -1, null, false, false, true);
+            var encodePath = SampleHelp.EncodePath(filePath, null, -1, null, false, false, !MsDataFileImpl.ForceUncombinedIonMobility);
             Assert.IsTrue(text.Contains(encodePath + '"'));
             if (expect_mz5)
             {
