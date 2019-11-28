@@ -52,7 +52,7 @@ namespace pwiz.ProteowizardWrapper
             get
             {
                 // Forces pwiz_data_cli.dll to be loaded with all its dependencies
-                // Throws and exception if the DLL load failes
+                // Throws and exception if the DLL load fails
                 var test = new MSData();
                 // Return the version string once the load succeeds
                 return Version.ToString();
@@ -849,7 +849,10 @@ namespace pwiz.ProteowizardWrapper
                 }
                 var spectrum = GetCachedSpectrum(spectrumIndex, true);
                 {
-                    return GetSpectrum(spectrum, spectrumIndex);
+                    // Avoid wrapping the same cached Spectrum twice
+                    if (_lastSpectrumInfo == null)
+                        _lastSpectrumInfo = GetSpectrum(spectrum, spectrumIndex);
+                    return _lastSpectrumInfo;
                 }
             }
         }
@@ -1088,6 +1091,7 @@ namespace pwiz.ProteowizardWrapper
         private int _lastScanIndex = -1;
         private DetailLevel _lastDetailLevel;
         private Spectrum _lastSpectrum;
+        private MsDataSpectrum _lastSpectrumInfo;
         private Spectrum GetCachedSpectrum(int scanIndex, DetailLevel detailLevel)
         {
             if (scanIndex != _lastScanIndex || detailLevel > _lastDetailLevel)
@@ -1096,6 +1100,7 @@ namespace pwiz.ProteowizardWrapper
                 _lastDetailLevel = detailLevel;
                 _lastSpectrum?.Dispose();
                 _lastSpectrum = SpectrumList.spectrum(_lastScanIndex, _lastDetailLevel);
+                _lastSpectrumInfo = null;
             }
             return _lastSpectrum;
         }
