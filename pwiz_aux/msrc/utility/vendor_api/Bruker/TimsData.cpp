@@ -291,11 +291,13 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         for (int i=1; i <= isolationMzFilter_.size(); ++i)
         {
             const auto& mzMobilityWindow = isolationMzFilter_[i-1];
-
-            string mzStr = lexical_cast<string>(mzMobilityWindow.mz);
+            if (!mzMobilityWindow.mz)
+                continue;
+            string mzStr = lexical_cast<string>(mzMobilityWindow.mz.get());
             isolationMzFilterStrs.push_back(mzStr + " > IsolationMz-IsolationWidth/2 AND " + mzStr + " < IsolationMz+IsolationWidth/2");
         }
-        pasefIsolationMzFilter = " WHERE (" + bal::join(isolationMzFilterStrs, ") OR (") + ") ";
+        if (!isolationMzFilterStrs.empty())
+            pasefIsolationMzFilter = " WHERE (" + bal::join(isolationMzFilterStrs, ") OR (") + ") ";
     }
 
     if (hasPASEFData_ && preferOnlyMsLevel_ != 1)
@@ -385,7 +387,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                     // the scan range is set to the superset of all mobility filters that match the frame
                     for (const auto& mzMobilityWindow : isolationMzFilter_)
                     {
-                        if (mzMobilityWindow.mz < isolationLowerBound || mzMobilityWindow.mz > isolationUpperBound)
+                        if (mzMobilityWindow.mz.is_initialized() && (mzMobilityWindow.mz.get() < isolationLowerBound || mzMobilityWindow.mz.get() > isolationUpperBound))
                             continue;
 
                         // if any matching m/z filter has no mobility filter, then all scans must be included
