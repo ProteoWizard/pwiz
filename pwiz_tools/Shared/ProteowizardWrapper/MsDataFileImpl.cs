@@ -185,7 +185,7 @@ namespace pwiz.ProteowizardWrapper
                     srmAsSpectra = srmAsSpectra,
                     acceptZeroLengthSpectra = acceptZeroLengthSpectra,
                     ignoreZeroIntensityPoints = ignoreZeroIntensityPoints,
-                    preferOnlyMsLevel = preferOnlyMsLevel,
+                    preferOnlyMsLevel = !ForceUncombinedIonMobility && combineIonMobilitySpectra ? 0 : preferOnlyMsLevel,
                     allowMsMsWithoutPrecursor = false,
                     combineIonMobilitySpectra = !ForceUncombinedIonMobility && combineIonMobilitySpectra,
                     isolationMzAndMobilityFilter = GetMzMobilityWindows(precursorMzAndIonMobilityWindows)
