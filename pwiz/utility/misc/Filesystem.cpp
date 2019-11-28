@@ -563,9 +563,11 @@ struct double3_policy : boost::spirit::karma::real_policies<T>
     static bool trailing_zeros(T) { return false; }
 
     template <typename OutputIterator>
-    static bool dot(OutputIterator&, T, unsigned int precision)
+    static bool dot(OutputIterator& sink, T n, unsigned int precision)
     {
-        return precision > 0;
+        if (precision == 0)
+            return false;
+        return boost::spirit::karma::real_policies<T>::dot(sink, n, precision);
     }
 };
 

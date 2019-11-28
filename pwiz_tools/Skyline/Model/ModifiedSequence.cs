@@ -187,7 +187,7 @@ namespace pwiz.Skyline.Model
         {
             StringBuilder result = new StringBuilder();
             int seqCharsReturned = 0;
-            foreach (var modGroup in _explicitMods.GroupBy(mod=>mod.IndexAA))
+            foreach (var modGroup in _explicitMods.GroupBy(mod => mod.IndexAA))
             {
                 result.Append(_unmodifiedSequence.Substring(seqCharsReturned,
                     modGroup.Key + 1 - seqCharsReturned));
@@ -196,6 +196,16 @@ namespace pwiz.Skyline.Model
             }
             result.Append(_unmodifiedSequence.Substring(seqCharsReturned));
             return result.ToString();
+        }
+
+        public IEnumerable<Modification> GetModifications()
+        {
+            return _explicitMods;
+        }
+
+        public string GetUnmodifiedSequence()
+        {
+            return _unmodifiedSequence;
         }
 
         public static string FormatThreeLetterCode(Modification modification)

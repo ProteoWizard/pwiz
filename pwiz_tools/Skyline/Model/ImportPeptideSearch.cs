@@ -42,6 +42,7 @@ namespace pwiz.Skyline.Model
             SearchFilenames = new string[0];
             CutoffScore = Settings.Default.LibraryResultCutOff;
             SpectrumSourceFiles = new Dictionary<string, FoundResultsFilePossibilities>();
+            IrtStandard = null;
 
             _matcher = new LibKeyModificationMatcher();
             UserDefinedTypedMods = new HashSet<StaticMod>();
@@ -53,6 +54,7 @@ namespace pwiz.Skyline.Model
         public Dictionary<string, FoundResultsFilePossibilities> SpectrumSourceFiles { get; set; }
 
         public bool HasDocLib { get { return DocLib != null; } }
+        public IrtStandard IrtStandard { get; set; }
         private readonly LibKeyModificationMatcher _matcher;
         private IsotopeLabelType DefaultHeavyLabelType { get; set; }
         public HashSet<StaticMod> UserDefinedTypedMods { get; private set; }

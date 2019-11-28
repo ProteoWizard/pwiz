@@ -118,8 +118,11 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        if (analysisType_ == UNKNOWN_ANALYSIS ||
            analysisType_ == PROTEOME_DISCOVERER_ANALYSIS) {
            string search_engine = getAttrValue("search_engine", attr);
+           string search_engine_version = getAttrValue("search_engine_version", attr);
            std::transform(search_engine.begin(), search_engine.end(), search_engine.begin(), ::tolower);
+           std::transform(search_engine_version.begin(), search_engine_version.end(), search_engine_version.begin(), ::tolower);
            bal::replace_all(search_engine, " ", ""); // remove spaces
+           bal::replace_all(search_engine_version, " ", ""); // remove spaces
            if(search_engine.find("spectrummill") == 0) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from Spectrum Mill.");
                analysisType_ = SPECTRUM_MILL_ANALYSIS;
@@ -171,8 +174,18 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
                probCutOff = getScoreThreshold(MASCOT);
            } else if(search_engine.find("x!tandem") == 0 &&
                      analysisType_ != PEPTIDE_PROPHET_ANALYSIS) {
-               Verbosity::comment(V_DEBUG, "Pepxml file is from X! Tandem.");
-               analysisType_ = XTANDEM_ANALYSIS;
+               if (search_engine_version.find("msfragger") == 0) {
+                   Verbosity::comment(V_DEBUG, "Pepxml file is from MSFragger.");
+                   analysisType_ = MSFRAGGER_ANALYSIS;
+                   extensions.push_back("_calibrated.mgf");
+                   extensions.push_back("_uncalibrated.mgf");
+                   lookUpBy_ = NAME_ID;
+                   specReader_->setIdType(NAME_ID);
+               }
+               else {
+                   Verbosity::comment(V_DEBUG, "Pepxml file is from X! Tandem.");
+                   analysisType_ = XTANDEM_ANALYSIS;
+               }
                scoreType_ = TANDEM_EXPECTATION_VALUE;
                probCutOff = getScoreThreshold(TANDEM);
            } else if(search_engine.find("crux") == 0) {
@@ -214,6 +227,7 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        pepProb = 0;
        pepSeq[0]='\0';
        mods.clear();
+       ionMobility = 0;
        
        int minCharge = 1;
        
@@ -230,6 +244,9 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            scanNumber = getIntRequiredAttrValue("start_scan", attr);
            scanIndex = scanNumber - 1;
        }
+       else if (analysisType_ == MSFRAGGER_ANALYSIS) {
+           spectrumName = getRequiredAttrValue("spectrum", attr);
+       }
        // this should never happen, error should have been thrown earlier
        else if (analysisType_ == UNKNOWN_ANALYSIS) {
            throw BlibException(false, "The .pep.xml file is not from one of the recognized sources");
@@ -245,6 +262,7 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            }
        }
        charge = getIntRequiredAttrValue("assumed_charge",attr, minCharge, 20);
+       ionMobility = getDoubleAttrValueOr("ion_mobility", attr, 0.0);
    } else if(isElement("search_hit", name)) {
        // Only use this search hit, if rank is 1 or missing (zero)
        if (atoi(getAttrValue("hit_rank",attr)) < 2 && state == STATE_ROOT) {
@@ -417,6 +435,9 @@ void PepXMLreader::endElement(const XML_Char* name)
             curPSM_->score = pepProb;
             curPSM_->mods = mods;
             curPSM_->specName = spectrumName;
+            curPSM_->ionMobility = ionMobility;
+            if (ionMobility > 0)
+                curPSM_->ionMobilityType = IONMOBILITY_INVERSEREDUCED_VSECPERCM2; // currently only from MS-Fragger which only supports TIMS ion mobility (?)
             
             Verbosity::comment(V_DETAIL, "Adding psm.  Scan %d, charge %d, "
                                "score %.2f, seq %s, name %s.",
@@ -480,6 +501,7 @@ bool PepXMLreader::scorePasses(double score){
     case PEAKS_ANALYSIS:
     case CRUX_ANALYSIS:
     case COMET_ANALYSIS:
+    case MSFRAGGER_ANALYSIS:
         if(score <= probCutOff){
             return true;
         }
@@ -487,6 +509,8 @@ bool PepXMLreader::scorePasses(double score){
 
     case UNKNOWN_ANALYSIS:
         return false;
+    default:
+        throw std::runtime_error("analysis type " + lexical_cast<string>(analysisType_) + " is not handled by PepXMLreader::scorePasses (bug)");
     }
     return false;
 }

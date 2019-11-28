@@ -374,6 +374,12 @@ class ShimadzuReaderImpl : public ShimadzuReader
 
         System::DateTime acquisitionTime = dataObject_->SampleInfo->AnalysisDate.ToUniversalTime();
 
+        // these are Boost.DateTime restrictions enforced because one of the test files had a corrupt date
+        if (acquisitionTime.Year > 10000)
+            acquisitionTime = acquisitionTime.AddYears(10000 - acquisitionTime.Year);
+        else if (acquisitionTime.Year < 1400)
+            acquisitionTime = acquisitionTime.AddYears(1400 - acquisitionTime.Year);
+
         bpt::ptime pt(boost::gregorian::date(acquisitionTime.Year, boost::gregorian::greg_month(acquisitionTime.Month), acquisitionTime.Day),
                       bpt::time_duration(acquisitionTime.Hour, acquisitionTime.Minute, acquisitionTime.Second, bpt::millisec(acquisitionTime.Millisecond).fractional_seconds()));
 

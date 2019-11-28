@@ -210,11 +210,15 @@ SpectrumListPtr filterCreator_scanTime(const MSData& msd, const string& arg, pwi
 {
     double scanTimeLow = 0;
     double scanTimeHigh = 0;
+    LocaleBool assumeSorted = true;
 
     istringstream iss(arg);
     char open='\0', comma='\0', close='\0';
     iss >> open >> scanTimeLow >> comma >> scanTimeHigh >> close;
-
+    
+    if (iss.good())
+        iss >> assumeSorted;
+    cout << assumeSorted << endl;
     if (open!='[' || comma!=',' || close!=']')
     {
         cerr << "scanTime filter argument does not have form \"[\"<startTime>,<endTime>\"]\", ignored." << endl;
@@ -223,7 +227,7 @@ SpectrumListPtr filterCreator_scanTime(const MSData& msd, const string& arg, pwi
 
     return SpectrumListPtr(new
         SpectrumList_Filter(msd.run.spectrumListPtr, 
-                            SpectrumList_FilterPredicate_ScanTimeRange(scanTimeLow, scanTimeHigh)));
+                            SpectrumList_FilterPredicate_ScanTimeRange(scanTimeLow, scanTimeHigh, assumeSorted)));
 }
 UsageInfo usage_scanTime = {"<scan_time_range>",
     "This filter selects only spectra within a given time range.\n"

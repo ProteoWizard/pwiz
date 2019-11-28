@@ -277,44 +277,30 @@ namespace pwiz.Skyline.Controls.SeqNode
                 listTextSequences.Add(CreatePlainTextSequence(label, fonts));
             else
             {
-                string pepSequence = nodePep.Peptide.Target.Sequence;
+                var peptideFormatter = PeptideFormatter.MakePeptideFormatter(settings, nodePep, fonts);
+                peptideFormatter.DisplayModificationOption = DisplayModificationOption.Current;
+                peptideFormatter.DeviceContext = g;
+                string pepSequence = peptideFormatter.UnmodifiedSequence;
                 int startPep = label.IndexOf(pepSequence, StringComparison.Ordinal);
                 int endPep = startPep + pepSequence.Length;
 
+
+                IEnumerable<TextSequence> rawTextSequences = new TextSequence[0];
                 // Add prefix plain-text if necessary
                 if (startPep > 0)
                 {
                     string prefix = label.Substring(0, startPep);
-                    listTextSequences.Add(CreatePlainTextSequence(prefix, fonts));
+                    rawTextSequences = rawTextSequences.Append(CreatePlainTextSequence(prefix, fonts));
                 }
-
-                // Enumerate amino acid characters coallescing their font information
-                // into text sequences.
-                var prevCharFont = new CharFont('.', fonts.Plain, Color.Black); // Amino acid format
-                var indexes = new int[listTypeSequences.Count];
-
-                CharFont charFont;
-                var sb = new StringBuilder();
-                while ((charFont = GetCharFont(indexes, listTypeSequences, fonts)) != null)
-                {
-                    if (!charFont.IsSameDisplay(prevCharFont) && sb.Length > 0)
-                    {
-                        listTextSequences.Add(CreateTextSequence(sb, prevCharFont));
-                        sb.Remove(0, sb.Length);
-                    }
-                    sb.Append(charFont.Character);
-                    prevCharFont = charFont;
-                }
-                // Add the last segment
-                if (sb.Length > 0)
-                    listTextSequences.Add(CreateTextSequence(sb, prevCharFont));
-
-                // Add suffix plain-text if necessary
+                    
+                rawTextSequences = rawTextSequences.Concat(Enumerable.Range(0, pepSequence.Length).Select(aaIndex=>peptideFormatter.GetTextSequenceAtAaIndex(aaIndex)));
                 if (endPep < label.Length)
                 {
                     string suffix = label.Substring(endPep);
-                    listTextSequences.Add(CreatePlainTextSequence(suffix, fonts));
+                    rawTextSequences = rawTextSequences.Append(CreatePlainTextSequence(suffix, fonts));
                 }
+
+                listTextSequences.AddRange(TextSequence.Coalesce(rawTextSequences));
             }
 
             if (g != null)
@@ -333,45 +319,6 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
 
             return listTextSequences.ToArray();            
-        }
-
-        /// <summary>
-        /// Calculates font information for a single amino acid character in
-        /// the peptide, and increments indexes to next amino acid character.
-        /// </summary>
-        /// <param name="indexes">Index locations of the amino acid in each text sequence</param>
-        /// <param name="textSequences">List of text sequences for all label types being considered</param>
-        /// <param name="fonts">Modifications fonts</param>
-        /// <returns>The amino acid character and its font information</returns>
-        private static CharFont GetCharFont(int[] indexes, IList<TextSequence> textSequences, ModFontHolder fonts)
-        {
-            int iChar = indexes[0];
-            string text = textSequences[0].Text;
-            if (iChar >= text.Length)
-                return null;
-
-            char c = text[iChar];
-            Font font = fonts.Plain;
-            Color color = Color.Black;
-
-            string modString = NextAA(0, indexes, textSequences);
-            if (modString != null)
-                font = textSequences[0].Font;                
-
-            for (int i = 1; i < indexes.Length; i++)
-            {
-                string modStringHeavy = NextAA(i, indexes, textSequences);
-                if (modStringHeavy == null)
-                    continue;
-
-                if (Equals(color, Color.Black) && !Equals(modString, modStringHeavy))
-                {
-                    color = textSequences[i].Color;
-                    font = modString == null ? textSequences[i].Font : fonts.LightAndHeavy;
-                }
-            }
-
-            return new CharFont(c, font, color);
         }
 
         /// <summary>
@@ -442,42 +389,6 @@ namespace pwiz.Skyline.Controls.SeqNode
                        };
         }
         
-        /// <summary>
-        /// Creates a text sequence for a peptide sequence with modifications
-        /// </summary>
-        private static TextSequence CreateTextSequence(StringBuilder sb, CharFont charFont)
-        {
-            return new TextSequence
-            {
-                Text = sb.ToString(),
-                Font = charFont.Font,
-                Color = charFont.Color
-            };
-        }
-
-        /// <summary>
-        /// Font and color for a single amino acid character in the peptide sequence
-        /// </summary>
-        private sealed class CharFont
-        {
-            public CharFont(char character, Font font, Color color)
-            {
-                Character = character;
-                Font = font;
-                Color = color;
-            }
-
-            public char Character { get; private set; }
-            public Font Font { get; private set; }
-            public Color Color { get; private set; }
-
-            public bool IsSameDisplay(CharFont charFont)
-            {
-                return ReferenceEquals(Font, charFont.Font) &&
-                       Equals(Color, charFont.Color);
-            }
-        }
-
         protected override int WidthCustom
         {
             get

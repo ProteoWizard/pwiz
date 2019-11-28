@@ -1083,11 +1083,6 @@ namespace pwiz.Skyline
             return graphChrom.GetChromFileInfoId();
         }
 
-        private void viewToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            ranksMenuItem.Checked = ranksContextMenuItem.Checked = Settings.Default.ShowRanks;
-        }
-
         private void ranksMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ShowRanks = !Settings.Default.ShowRanks;

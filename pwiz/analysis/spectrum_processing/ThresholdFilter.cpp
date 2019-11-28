@@ -125,6 +125,13 @@ void setXYPlusPairs(Spectrum& s, XYPlusPair* input, size_t size, CVID yUnits, co
 
     double* bdX = &x[0];
     double* bdY = &y[0];
+    vector<double*> bdExtra(extraArrays.size());
+    for (size_t i = 0; i < extraArrays.size(); ++i)
+    {
+        extraArrays[i]->resize(size);
+        bdExtra[i] = &(*extraArrays[i])[0];
+    }
+
     for (const XYPlusPair& pair : boost::iterator_range<XYPlusPair*>(input, input+size))
     {
         *bdX++ = pair.x;
@@ -132,7 +139,7 @@ void setXYPlusPairs(Spectrum& s, XYPlusPair* input, size_t size, CVID yUnits, co
         if (pair.extra.size() != end)
             throw runtime_error("[setXYPlusPairs] pair has mismatched number of extra values");
         for (size_t i = 0; i < end; ++i)
-            extraArrays[i]->push_back(pair.extra[i]);
+            (*bdExtra[i] = pair.extra[i])++;
     }
 
     s.defaultArrayLength = size;
