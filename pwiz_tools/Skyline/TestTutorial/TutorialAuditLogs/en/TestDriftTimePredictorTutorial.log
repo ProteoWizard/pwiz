@@ -32,7 +32,7 @@ All Info  :
 Peptide Settings -- Prediction > Ion mobility predictor changed from "None" to "BSA"
 Settings > Peptide Settings -- Prediction > Ion mobility predictor changed from "None" to "BSA"
 Settings > Peptide Settings -- Prediction > Ion mobility predictor > Resolving power is "50"
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "AEFVEVTK", Charge = "2", Ion mobility units = "Drift Time (ms)", Ion Mobility = "22.709264", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376000000003" }
+Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "AEFVEVTK", Charge = "2", Ion mobility units = "Drift Time (ms)", Ion Mobility = "22.709264", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
 Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "C[+57.021464]C[+57.021464]AADDKEAC[+57.021464]FAVEGPK", Charge = "3", Ion mobility units = "Drift Time (ms)", Ion Mobility = "25.976784", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
 Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "C[+57.021464]C[+57.021464]TESLVNR", Charge = "2", Ion mobility units = "Drift Time (ms)", Ion Mobility = "25.486656", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
 Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "DAFLGSFLYEYSR", Charge = "2", Ion mobility units = "Drift Time (ms)", Ion Mobility = "30.387936", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
@@ -55,7 +55,7 @@ Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured io
 Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "LKEC[+57.021464]C[+57.021464]DKPLLEK", Charge = "3", Ion mobility units = "Drift Time (ms)", Ion Mobility = "24.016272", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
 Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "LKPDPNTLC[+57.021464]DEFK", Charge = "2", Ion mobility units = "Drift Time (ms)", Ion Mobility = "29.40768", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
 Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "LKPDPNTLC[+57.021464]DEFK", Charge = "3", Ion mobility units = "Drift Time (ms)", Ion Mobility = "22.219136", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "LKPDPNTLC[+57.021464]DEFKADEK", Charge = "3", Ion mobility units = "Drift Time (ms)", Ion Mobility = "25.813408", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.326751999999999" }
+Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "LKPDPNTLC[+57.021464]DEFKADEK", Charge = "3", Ion mobility units = "Drift Time (ms)", Ion Mobility = "25.813408", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.326752" }
 Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "LVNELTEFAK", Charge = "2", Ion mobility units = "Drift Time (ms)", Ion Mobility = "25.650032", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
 Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "MPC[+57.021464]TEDYLSLILNR", Charge = "3", Ion mobility units = "Drift Time (ms)", Ion Mobility = "24.016272", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
 Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "NEC[+57.021464]FLSHKDDSPDLPK", Charge = "3", Ion mobility units = "Drift Time (ms)", Ion Mobility = "24.5064", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
@@ -66,7 +66,7 @@ Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured io
 Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "SHC[+57.021464]IAEVEK", Charge = "2", Ion mobility units = "Drift Time (ms)", Ion Mobility = "24.996528", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "-0.163376" }
 Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "SLHTLFGDELC[+57.021464]K", Charge = "2", Ion mobility units = "Drift Time (ms)", Ion Mobility = "28.264048", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
 Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "SLHTLFGDELC[+57.021464]K", Charge = "3", Ion mobility units = "Drift Time (ms)", Ion Mobility = "22.87264", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
-Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "TC[+57.021464]VADESHAGC[+57.021464]EK", Charge = "2", Ion mobility units = "Drift Time (ms)", Ion Mobility = "28.754176", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376000000003" }
+Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "TC[+57.021464]VADESHAGC[+57.021464]EK", Charge = "2", Ion mobility units = "Drift Time (ms)", Ion Mobility = "28.754176", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
 Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "TVMENFVAFVDK", Charge = "2", Ion mobility units = "Drift Time (ms)", Ion Mobility = "28.264048", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0" }
 Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "VPQVSTPTLVEVSR", Charge = "2", Ion mobility units = "Drift Time (ms)", Ion Mobility = "28.917552", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "1.960512" }
 Settings > Peptide Settings -- Prediction > Ion mobility predictor > Measured ion mobilities : contains { Modified Sequence = "YIC[+57.021464]DNQDTISSK", Charge = "2", Ion mobility units = "Drift Time (ms)", Ion Mobility = "28.427424", CCS (sqA) = "0", Offset ion mobility values for high energy spectra = "0.163376" }
@@ -96,4 +96,9 @@ Replicates =
 [
     "BSA_Frag_100nM_18May15_Fir_15-04-02"
 ]
+
+Undo Redo : Managed results
+Summary   : Managed results
+All Info  :
+Managed results
 

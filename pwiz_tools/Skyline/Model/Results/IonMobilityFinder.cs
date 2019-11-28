@@ -134,7 +134,8 @@ namespace pwiz.Skyline.Model.Results
                     var ms2IonMobility = _ms2IonMobilities.TryGetValue(dt.Key, out listDt)
                         ? listDt.OrderByDescending(p => p.Intensity).First().IonMobility
                         : ms1IonMobility;
-                    var value =  IonMobilityAndCCS.GetIonMobilityAndCCS(ms1IonMobility.IonMobility, ms1IonMobility.CollisionalCrossSectionSqA, ms2IonMobility.IonMobility.Mobility.Value - ms1IonMobility.IonMobility.Mobility.Value);
+                    var highEnergyIonMobilityValueOffset = Math.Round(ms2IonMobility.IonMobility.Mobility.Value - ms1IonMobility.IonMobility.Mobility.Value, 6); // Excessive precision is just distracting noise TODO(bspratt) ask vendors what "excessive" means here
+                    var value =  IonMobilityAndCCS.GetIonMobilityAndCCS(ms1IonMobility.IonMobility, ms1IonMobility.CollisionalCrossSectionSqA, highEnergyIonMobilityValueOffset);
                     if (!measured.ContainsKey(dt.Key))
                         measured.Add(dt.Key, value);
                     else
