@@ -1393,8 +1393,7 @@ namespace pwiz.SkylineTestFunctional
             var precursorCount = SkylineWindow.Document.PeptideTransitionGroupCount;
 
             const int notSupportedCount = 3;
-            // - 1 because of heavy precursor, which doesn't seem to be counted
-            WaitForLibrary(precursorCount - notSupportedCount - 1, SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs.IndexOf(l => l.Name == "Prosit"));
+            WaitForLibrary(precursorCount - notSupportedCount, SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs.IndexOf(l => l.Name == "Prosit"));
 
             var prositLib = SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Last();
 

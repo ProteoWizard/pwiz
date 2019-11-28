@@ -50,6 +50,7 @@ namespace pwiz.Skyline.Model.Prosit
             int precursorIndex, PrositIntensityModel.PrositIntensityOutput prositIntensityOutput, IsotopeLabelType labelTypeOverride = null)
         {
             PeptidePrecursorNCE = peptidePrecursorNCE;
+            Settings = settings;
             var precursor = peptidePrecursorNCE.NodeGroup;
             var peptide = peptidePrecursorNCE.NodePep;
 
@@ -111,6 +112,8 @@ namespace pwiz.Skyline.Model.Prosit
         public PrositIntensityModel.PeptidePrecursorNCE PeptidePrecursorNCE { get; private set; }
         public SpectrumPeaksInfo SpectrumPeaks { get; private set; }
 
+        private SrmSettings Settings { get; }
+
         public SpectrumMzInfo SpecMzInfo
         {
             get
@@ -120,7 +123,9 @@ namespace pwiz.Skyline.Model.Prosit
                 SpectrumMzInfo info = new SpectrumMzInfo();
                 info.SpectrumPeaks = SpectrumPeaks;
                 info.IonMobility = IonMobilityAndCCS.EMPTY;
-                info.Key = new LibKey(peptide.ModifiedTarget, precursor.PrecursorCharge);
+                info.Key = new LibKey(
+                    Settings.GetModifiedSequence(peptide.Target, precursor.LabelType, peptide.ExplicitMods),
+                    precursor.PrecursorCharge);
                 info.Label = precursor.LabelType;
                 info.PrecursorMz = precursor.PrecursorMz;
                 info.RetentionTime = null;

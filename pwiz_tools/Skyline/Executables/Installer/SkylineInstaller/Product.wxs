@@ -372,6 +372,18 @@
       <Component Id="Google.Protobuf.dll">
         <File Source="$(var.Skyline.TargetDir)/Google.Protobuf.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="Grpc.Core.Api.dll">
+        <File Source="$(var.Skyline.TargetDir)/Grpc.Core.Api.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Grpc.Core.dll">
+        <File Source="$(var.Skyline.TargetDir)/Grpc.Core.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="grpc_csharp_ext.x64.dll">
+        <File Source="$(var.Skyline.TargetDir)/grpc_csharp_ext.x64.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="grpc_csharp_ext.x86.dll">
+        <File Source="$(var.Skyline.TargetDir)/grpc_csharp_ext.x86.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="IdentityModel.dll">
         <File Source="$(var.Skyline.TargetDir)/IdentityModel.dll" KeyPath="yes"/>
       </Component>
@@ -585,13 +597,6 @@
       </Component>
       <Component Id="Skyline.exe.config">
         <File Source="$(var.Skyline.TargetDir)/$(var.Skyline.TargetName).exe.config" KeyPath="yes" Id="Skyline_exe_config"/>
-        <util:XmlFile Id="SetInstalledVersion" 
-                      Action="setValue"
-                      ElementPath="//applicationSettings/pwiz.Skyline.Properties.Settings/setting[\[]@name='InstalledVersion'[\]]/value" 
-                      Value="$(var.ProductVersion)"
-                      File="[#Skyline_exe_config]"
-                      SelectionLanguage="XPath"
-                      />
       </Component>
       <Component Id="Skyline.exe.manifest">
         <File Source="$(var.Skyline.TargetDir)/$(var.Skyline.TargetName).exe.manifest" KeyPath="yes"/>
@@ -623,8 +628,17 @@
       <Component Id="System.Data.SQLite.dll">
         <File Source="$(var.Skyline.TargetDir)/System.Data.SQLite.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="System.Interactive.Async.dll">
+        <File Source="$(var.Skyline.TargetDir)/System.Interactive.Async.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="System.Memory.dll">
+        <File Source="$(var.Skyline.TargetDir)/System.Memory.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="System.Runtime.Caching.Generic.dll">
         <File Source="$(var.Skyline.TargetDir)/System.Runtime.Caching.Generic.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="System.Runtime.CompilerServices.Unsafe.dll">
+        <File Source="$(var.Skyline.TargetDir)/System.Runtime.CompilerServices.Unsafe.dll" KeyPath="yes"/>
       </Component>
       <?if $(sys.BUILDARCH) = x64?>
       <Component Id="ThermoFisher.CommonCore.Data.dll">

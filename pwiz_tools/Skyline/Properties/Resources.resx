@@ -10727,6 +10727,21 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="IrtDb_MakeDocumentXml_iRT_standards" xml:space="preserve">
     <value>iRT standards</value>
   </data>
+  <data name="DisplayModificationOption_NOT_SHOWN_Not_Shown" xml:space="preserve">
+    <value>Not Shown</value>
+  </data>
+  <data name="DisplayModificationOption_MASS_DELTA_Mass_Difference" xml:space="preserve">
+    <value>Mass Difference</value>
+  </data>
+  <data name="DisplayModificationOption_THREE_LETTER_CODE_Three_Letter_Code" xml:space="preserve">
+    <value>Three Letter Code</value>
+  </data>
+  <data name="DisplayModificationOption_FULL_NAME_Full_Name" xml:space="preserve">
+    <value>Full Name</value>
+  </data>
+  <data name="DisplayModificationOption_UNIMOD_ID_Unimod_ID" xml:space="preserve">
+    <value>Unimod ID</value>
+  </data>
   <data name="RefineDlg_RefineDlg_all" xml:space="preserve">
     <value>all</value>
   </data>
@@ -10798,5 +10813,68 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="CommandLine_SetImsSettings_Error__Failed_attempting_to_change_the_ion_mobility_settings_" xml:space="preserve">
     <value>Error: Failed attempting to change the ion mobility settings.</value>
+  </data>
+  <data name="SkypFile_FILTER_SKYP_Skyline_Document_Pointer" xml:space="preserve">
+    <value>Skyline Document Pointer</value>
+  </data>
+  <data name="SkypSupport_Open_Downloading_Skyline_Document_Archive" xml:space="preserve">
+    <value>Downloading Skyline Document Archive</value>
+  </data>
+  <data name="SkypSupport_Open_Failure_opening_skyp_file_" xml:space="preserve">
+    <value>Failure opening skyp file.</value>
+  </data>
+  <data name="SkypSupport_Download_There_was_an_error_downloading_the_Skyline_document_specified_in_the_skyp_file___0__" xml:space="preserve">
+    <value>There was an error downloading the Skyline document specified in the skyp file: {0}.</value>
+  </data>
+  <data name="SkypSupport_Download_You_may_have_to_add__0__as_a_Panorama_server_from_the_Tools___Options_menu_in_Skyline_" xml:space="preserve">
+    <value>You may have to add {0} as a Panorama server from the Tools &gt; Options menu in Skyline.</value>
+  </data>
+  <data name="SkypSupport_Download_You_do_not_have_permissions_to_download_this_file_from__0__" xml:space="preserve">
+    <value>You do not have permissions to download this file from {0}.</value>
+  </data>
+  <data name="SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive___0___in_the_skyp_file__Found__1__instead_" xml:space="preserve">
+    <value>Expected the URL of a shared Skyline document archive ({0}) in the skyp file. Found {1} instead.</value>
+  </data>
+  <data name="SkypFile_GetNonExistentPath_Name_of_shared_Skyline_archive_cannot_be_null_or_empty_" xml:space="preserve">
+    <value>Name of shared Skyline archive cannot be null or empty.</value>
+  </data>
+  <data name="SkypSupport_Download_Downloading__0_" xml:space="preserve">
+    <value>Downloading {0}</value>
+  </data>
+  <data name="SkypFile_GetSkyFileUrl_File_does_not_contain_the_URL_of_a_shared_Skyline_archive_file___0___on_a_Panorama_server_" xml:space="preserve">
+    <value>File does not contain the URL of a shared Skyline archive file ({0}) on a Panorama server.</value>
+  </data>
+  <data name="SkypFile_GetSkyFileUrl__0__is_not_a_valid_URL_on_a_Panorama_server_" xml:space="preserve">
+    <value>{0} is not a valid URL on a Panorama server.</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_The_document_contains_a_decoy_that_does_not_match_the_targets_" xml:space="preserve">
+    <value>The document contains a decoy that does not match the targets:</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_The_document_contains_decoys_that_do_not_match_the_targets__Out_of__0__decoys_" xml:space="preserve">
+    <value>The document contains decoys that do not match the targets. Out of {0} decoys:</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Continue" xml:space="preserve">
+    <value>Continue</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Generate" xml:space="preserve">
+    <value>Generate</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_1_decoy_does_not_have_a_matching_target" xml:space="preserve">
+    <value>1 decoy does not have a matching target</value>
+  </data>
+  <data name="SkylineWindow_ImportResults__0__decoys_do_not_have_a_matching_target" xml:space="preserve">
+    <value>{0} decoys do not have a matching target</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_1_decoy_does_not_have_the_same_number_of_transitions_as_its_matching_target" xml:space="preserve">
+    <value>1 decoy does not have the same number of transitions as its matching target</value>
+  </data>
+  <data name="SkylineWindow_ImportResults__0__decoys_do_not_have_the_same_number_of_transitions_as_their_matching_targets" xml:space="preserve">
+    <value>{0} decoys do not have the same number of transitions as their matching targets</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Do_you_want_to_generate_new_decoys_or_continue_with_the_current_decoys_" xml:space="preserve">
+    <value>Do you want to generate new decoys or continue with the current decoys?</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Are_you_sure__Peak_scoring_models_trained_with_non_matching_targets_and_decoys_may_produce_incorrect_results_" xml:space="preserve">
+    <value>Are you sure? Peak scoring models trained with non-matching targets and decoys may produce incorrect results.</value>
   </data>
 </root>

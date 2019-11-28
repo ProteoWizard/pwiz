@@ -323,6 +323,10 @@ namespace pwiz.Skyline
             {
                 return OpenSharedFile(pathOpen, parentWindow);
             }
+            else if (pathOpen.EndsWith(SkypFile.EXT))
+            {
+                return OpenSkypFile(pathOpen, parentWindow);
+            }
             else
             {
                 return OpenFile(pathOpen, parentWindow);
@@ -2710,11 +2714,11 @@ namespace pwiz.Skyline
             ShowGenerateDecoysDlg();
         }
 
-        public void ShowGenerateDecoysDlg()
+        public bool ShowGenerateDecoysDlg(IWin32Window owner = null)
         {
             using (var decoysDlg = new GenerateDecoysDlg(DocumentUI))
             {
-                if (decoysDlg.ShowDialog(this) == DialogResult.OK)
+                if (decoysDlg.ShowDialog(owner ?? this) == DialogResult.OK)
                 {
                     var refinementSettings = new RefinementSettings { NumberOfDecoys = decoysDlg.NumDecoys, DecoysMethod = decoysDlg.DecoysMethod };
                     ModifyDocument(Resources.SkylineWindow_ShowGenerateDecoysDlg_Generate_Decoys, refinementSettings.GenerateDecoys,
@@ -2729,8 +2733,10 @@ namespace pwiz.Skyline
 
                     var nodePepGroup = DocumentUI.PeptideGroups.First(nodePeptideGroup => nodePeptideGroup.IsDecoy);
                     SelectedPath = DocumentUI.GetPathTo((int)SrmDocument.Level.MoleculeGroups, DocumentUI.FindNodeIndex(nodePepGroup.Id));
+                    return true;
                 }
             }
+            return false;
         }
 
         #endregion // Edit menu
@@ -5739,6 +5745,27 @@ namespace pwiz.Skyline
         {
             mirrorMenuItem.Checked = !mirrorMenuItem.Checked;
             _graphSpectrumSettings.Mirror = mirrorMenuItem.Checked;
+        }
+
+        private void viewToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            viewModificationsMenuItem.DropDownItems.Clear();
+            var currentOption = DisplayModificationOption.Current;
+            foreach (var opt in DisplayModificationOption.All)
+            {
+                var menuItem = new ToolStripMenuItem(opt.MenuItemText);
+                menuItem.Click += (s, a) => SetModifiedSequenceDisplayOption(opt);
+                menuItem.Checked = Equals(currentOption, opt);
+                viewModificationsMenuItem.DropDownItems.Add(menuItem);
+            }
+            ranksMenuItem.Checked = ranksContextMenuItem.Checked = Settings.Default.ShowRanks;
+        }
+
+        public void SetModifiedSequenceDisplayOption(DisplayModificationOption displayModificationOption)
+        {
+            DisplayModificationOption.Current = displayModificationOption;
+            ShowSequenceTreeForm(true, true);
+            UpdateGraphPanes();
         }
     }
 }

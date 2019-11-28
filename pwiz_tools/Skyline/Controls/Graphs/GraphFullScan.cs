@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _documentContainer = documentUIContainer;
             _documentContainer.ListenUI(OnDocumentUIChanged);
 
-            _msDataFileScanHelper = new MsDataFileScanHelper(SetSpectra, HandleLoadScanException);
+            _msDataFileScanHelper = new MsDataFileScanHelper(SetSpectra, HandleLoadScanException, false); // We need zero intensity points for proper display
 
             GraphPane.Title.IsVisible = true;
             GraphPane.Legend.IsVisible = false;
@@ -94,12 +94,6 @@ namespace pwiz.Skyline.Controls.Graphs
             _heatMapData = null;
             if (_msDataFileScanHelper.MsDataSpectra == null)
                 return;
-
-            foreach (var spectrum in spectra)
-            {
-                if (spectrum.IonMobilities != null)
-                    ArrayUtil.Sort(spectrum.Mzs, spectrum.Intensities, spectrum.IonMobilities);
-            }
 
             // Find max values.
             _maxMz = 0;
@@ -318,15 +312,19 @@ namespace pwiz.Skyline.Controls.Graphs
             GraphPane.Title.Text = string.Format(Resources.GraphFullScan_CreateGraph__0_____1_F2__min_, _msDataFileScanHelper.FileName, retentionTime);
             if (Settings.Default.ShowFullScanNumber && _msDataFileScanHelper.MsDataSpectra.Any())
             {
-                if (_msDataFileScanHelper.MsDataSpectra.Length > 1) // For ion mobility, show the overall range
+                if (_msDataFileScanHelper.MsDataSpectra.Length > 1) // For 2-array ion mobility, show the overall range
                 {
                     GraphPane.Title.Text = TextUtil.SpaceSeparate(GraphPane.Title.Text,
                         Resources.GraphFullScan_CreateGraph_IM_Scan_Range_, _msDataFileScanHelper.MsDataSpectra[0].Id, @"-", _msDataFileScanHelper.MsDataSpectra.Last().Id); 
                 }
                 else
                 {
+                    var parts = _msDataFileScanHelper.MsDataSpectra[0].Id.Split('.'); // Check for merge.frame.start.stop from 3-array IMS data
+                    var id = parts.Length < 4
+                        ? _msDataFileScanHelper.MsDataSpectra[0].Id
+                        : string.Format(@"{0}.{1}-{0}.{2}", parts[1], parts[2], parts[3]);
                     GraphPane.Title.Text = TextUtil.SpaceSeparate(GraphPane.Title.Text,
-                        Resources.GraphFullScan_CreateGraph_Scan_Number_, _msDataFileScanHelper.MsDataSpectra[0].Id);
+                        Resources.GraphFullScan_CreateGraph_Scan_Number_, id);
                 }
             }
 
