@@ -22,6 +22,7 @@ using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Web.ModelBinding;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -482,6 +483,24 @@ namespace pwiz.Skyline.Util
             {
                 _atomicMasses.Add(kvp.Key, _atomicMasses[kvp.Value]);
             }
+        }
+
+        /// <summary>
+        /// Ensure that the entries for D and T are the same as the entries for H' and H".
+        /// </summary>
+        public static IsotopeAbundances AddHeavyNicknames(IsotopeAbundances isotopeAbundances)
+        {
+            var changes = new Dictionary<string, MassDistribution>();
+            foreach (var kvp in DICT_HEAVYSYMBOL_NICKNAMES)
+            {
+                MassDistribution massDistribution;
+                if (isotopeAbundances.TryGetValue(kvp.Value, out massDistribution))
+                {
+                    changes.Add(kvp.Key, massDistribution);
+                }
+            }
+
+            return isotopeAbundances.SetAbundances(changes);
         }
 
         public MassType MassType { get; private set; }
