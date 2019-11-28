@@ -22,7 +22,6 @@ using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Web.ModelBinding;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
