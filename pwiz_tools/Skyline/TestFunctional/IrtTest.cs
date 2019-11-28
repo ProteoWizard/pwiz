@@ -227,19 +227,35 @@ namespace pwiz.SkylineTestFunctional
             // Change peptides
             var changePeptides = irtDlg1.LibraryPeptides.Where((p, i) => i%2 == 0).ToArray();
             var resetPeptides = irtDlg1.StandardPeptides.ToArray();
-            RunDlg<ChangeIrtPeptidesDlg>(irtDlg1.ChangeStandardPeptides, changeDlg =>
+            var changeDlg1 = ShowDialog<ChangeIrtPeptidesDlg>(irtDlg1.ChangeStandardPeptides);
+            RunUI(() =>
             {
-                Assert.IsTrue(ArrayUtil.ReferencesEqual(SkylineWindow.DocumentUI.MoleculeGroups.ToArray(), changeDlg.Proteins.ToArray()));
-                foreach (var protein in changeDlg.Proteins)
+                // Check that the dialog detected that all of the standards are in a protein and selected it
+                var standards = new TargetMap<bool>(irtDlg1.StandardPeptides.Select(pep => new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)));
+                Assert.IsTrue(changeDlg1.SelectedProtein.Peptides.All(pep => standards.ContainsKey(pep.ModifiedTarget)));
+
+                // Check that selecting each protein correctly sets the text
+                Assert.IsTrue(ArrayUtil.ReferencesEqual(SkylineWindow.DocumentUI.MoleculeGroups.ToArray(), changeDlg1.Proteins.ToArray()));
+                foreach (var protein in changeDlg1.Proteins)
                 {
-                    changeDlg.SelectedProtein = protein;
-                    CollectionAssert.AreEqual(protein.Molecules.Select(pep => pep.ModifiedSequenceDisplay).ToArray(), changeDlg.PeptideLines);
+                    changeDlg1.SelectedProtein = protein;
+                    CollectionAssert.AreEqual(protein.Molecules.Select(pep => pep.ModifiedSequenceDisplay).ToArray(), changeDlg1.PeptideLines);
                 }
-                changeDlg.SelectedProtein = null;
-                Assert.IsTrue(string.IsNullOrEmpty(changeDlg.PeptidesText));
-                changeDlg.Peptides = changePeptides;
-                changeDlg.OkDialog();
+
+                changeDlg1.SelectedProtein = null;
+                Assert.IsTrue(string.IsNullOrEmpty(changeDlg1.PeptidesText));
             });
+            const int useResultsCount = 12;
+            RunDlg<AddIrtStandardsDlg>(changeDlg1.UseResults, dlg =>
+            {
+                dlg.StandardCount = useResultsCount;
+                dlg.OkDialog();
+            });
+            RunUI(() => {
+                Assert.AreEqual(useResultsCount, changeDlg1.PeptideLines.Length);
+                changeDlg1.Peptides = changePeptides;
+            });
+            OkDialog(changeDlg1, changeDlg1.OkDialog);
             Assert.IsTrue(ArrayUtil.EqualsDeep(changePeptides.Select(p => p.Target).ToArray(),
                 irtDlg1.StandardPeptides.Select(p => p.Target).ToArray()));
             Assert.IsTrue(ArrayUtil.EqualsDeep(changePeptides.Select(p => p.Irt).ToArray(),
