@@ -1,160 +1,160 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd" id="091204_NFDM_008" version="1.1.0">
   <cvList count="2">
-    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.0.14" URI="http://psidev.cvs.sourceforge.net/*checkout*/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo"/>
-    <cv id="UO" fullName="Unit Ontology" version="12:10:2011" URI="http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo"/>
+    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.30" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
+    <cv id="UO" fullName="Unit Ontology" version="09:04:2014" URI="https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/unit.obo"/>
   </cvList>
   <fileDescription>
     <fileContent>
     </fileContent>
     <sourceFileList count="35">
-      <sourceFile id="_FUNC001.DAT" name="_FUNC001.DAT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNC001.DAT" name="_FUNC001.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="11483cd447d79616e2dc89c9feee504f17cdde41"/>
       </sourceFile>
-      <sourceFile id="_FUNC002.DAT" name="_FUNC002.DAT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNC002.DAT" name="_FUNC002.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="f17781c340a74d4fd4f854a68c76ee754c345def"/>
       </sourceFile>
-      <sourceFile id="_FUNC003.DAT" name="_FUNC003.DAT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNC003.DAT" name="_FUNC003.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="d7f859c5f7473929df5b36bb9cb0e2b9582854fd"/>
       </sourceFile>
-      <sourceFile id="_FUNC004.DAT" name="_FUNC004.DAT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNC004.DAT" name="_FUNC004.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="2cb77057b7806a53c48ba4e4bff9811935acc48a"/>
       </sourceFile>
-      <sourceFile id="_FUNC005.DAT" name="_FUNC005.DAT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNC005.DAT" name="_FUNC005.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="0d609452b8803a5af5a1b8d7be3b64772b1c867f"/>
       </sourceFile>
-      <sourceFile id="_FUNC006.DAT" name="_FUNC006.DAT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNC006.DAT" name="_FUNC006.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="5d91309832bb4eca331908419504f6ddc80923e5"/>
       </sourceFile>
-      <sourceFile id="_FUNC007.DAT" name="_FUNC007.DAT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNC007.DAT" name="_FUNC007.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="5292a7b06797c4e998160dad42d2ad327009da65"/>
       </sourceFile>
-      <sourceFile id="_FUNC008.DAT" name="_FUNC008.DAT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNC008.DAT" name="_FUNC008.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="36a6eaa043ccac459c357957bdd92d57f7bee114"/>
       </sourceFile>
-      <sourceFile id="_FUNC009.DAT" name="_FUNC009.DAT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNC009.DAT" name="_FUNC009.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="ac32ed2c46db43b565f175e190fc7262e7e49e1e"/>
       </sourceFile>
-      <sourceFile id="_FUNC010.DAT" name="_FUNC010.DAT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNC010.DAT" name="_FUNC010.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="3f12182cdd49904cdfecf669cadeade9ddec0f3e"/>
       </sourceFile>
-      <sourceFile id="_auto.txt" name="_auto.txt" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_auto.txt" name="_auto.txt" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="7c4dc7c2895a85e21ca25195626f6960c4ab12f3"/>
       </sourceFile>
-      <sourceFile id="_extern.inf" name="_extern.inf" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_extern.inf" name="_extern.inf" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="badf3a442243426de9235fe41543a432b819a642"/>
       </sourceFile>
-      <sourceFile id="_FUNC001.IDX" name="_FUNC001.IDX" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNC001.IDX" name="_FUNC001.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="9fa35528c9bb1ecdfc943b4d6908772f5d488596"/>
       </sourceFile>
-      <sourceFile id="_FUNC001.STS" name="_FUNC001.STS" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNC001.STS" name="_FUNC001.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="b2605ae5a093398f39f7d5528532c831f85fc4f5"/>
       </sourceFile>
-      <sourceFile id="_FUNC002.IDX" name="_FUNC002.IDX" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNC002.IDX" name="_FUNC002.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="cceb86e6ed3d74eba6d62d4c1ae035a92e0b7bd2"/>
       </sourceFile>
-      <sourceFile id="_FUNC002.STS" name="_FUNC002.STS" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNC002.STS" name="_FUNC002.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="cd62e441c866052fae8ae9dbfaf10221a5ac0130"/>
       </sourceFile>
-      <sourceFile id="_FUNC003.IDX" name="_FUNC003.IDX" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNC003.IDX" name="_FUNC003.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="126746bfe19bbe3d17844cc381ef14c61ab93db5"/>
       </sourceFile>
-      <sourceFile id="_FUNC003.STS" name="_FUNC003.STS" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNC003.STS" name="_FUNC003.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="01b5958a27f935dbe28b9f9b280d09d5abc401cb"/>
       </sourceFile>
-      <sourceFile id="_FUNC004.IDX" name="_FUNC004.IDX" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNC004.IDX" name="_FUNC004.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="d8a40a13c1b00b0fda2777625ed748949173d24c"/>
       </sourceFile>
-      <sourceFile id="_FUNC004.STS" name="_FUNC004.STS" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNC004.STS" name="_FUNC004.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="9ff040be7665f8c930ad44e548e83a97b4763a2d"/>
       </sourceFile>
-      <sourceFile id="_FUNC005.IDX" name="_FUNC005.IDX" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNC005.IDX" name="_FUNC005.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="ff14ded93d66fcc60cd30a71a0f6730c686f9083"/>
       </sourceFile>
-      <sourceFile id="_FUNC005.STS" name="_FUNC005.STS" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNC005.STS" name="_FUNC005.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="d2ba2ed51d8ba5bde90ccca9c752cc2a294db00e"/>
       </sourceFile>
-      <sourceFile id="_FUNC006.IDX" name="_FUNC006.IDX" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNC006.IDX" name="_FUNC006.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="8aa240b3f69cf0d9b1ed1c115d384cf9ca769b0a"/>
       </sourceFile>
-      <sourceFile id="_FUNC006.STS" name="_FUNC006.STS" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNC006.STS" name="_FUNC006.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="7b14b17dd771ac408e509b6c114edf1b0958f12f"/>
       </sourceFile>
-      <sourceFile id="_FUNC007.IDX" name="_FUNC007.IDX" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNC007.IDX" name="_FUNC007.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="c44780c76c7c67a51f80f1ec19f4a2c1e44ca0c0"/>
       </sourceFile>
-      <sourceFile id="_FUNC007.STS" name="_FUNC007.STS" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNC007.STS" name="_FUNC007.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="f5475116ea31386d4f25b73f81af2caf69266f71"/>
       </sourceFile>
-      <sourceFile id="_FUNC008.IDX" name="_FUNC008.IDX" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNC008.IDX" name="_FUNC008.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="d7b6b7f3ae85ae9d78846dcd67911f4b2066054e"/>
       </sourceFile>
-      <sourceFile id="_FUNC008.STS" name="_FUNC008.STS" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNC008.STS" name="_FUNC008.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="64b4773597ad43328c857c7fc118cebc8a0e5a36"/>
       </sourceFile>
-      <sourceFile id="_FUNC009.IDX" name="_FUNC009.IDX" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNC009.IDX" name="_FUNC009.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="d36aa9eeb45f2c224e26bc5e4e57fa31df054a6d"/>
       </sourceFile>
-      <sourceFile id="_FUNC009.STS" name="_FUNC009.STS" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNC009.STS" name="_FUNC009.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="9a400b57fefe25d9f80b509cbb3195b876a3e60c"/>
       </sourceFile>
-      <sourceFile id="_FUNC010.IDX" name="_FUNC010.IDX" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNC010.IDX" name="_FUNC010.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="6870978d70e8df2672b07ee774000dd17cd132c2"/>
       </sourceFile>
-      <sourceFile id="_FUNC010.STS" name="_FUNC010.STS" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNC010.STS" name="_FUNC010.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="6b619006b902b6ea3a480ecd6483ce34ab6dbc7f"/>
       </sourceFile>
-      <sourceFile id="_FUNCTNS.INF" name="_FUNCTNS.INF" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_FUNCTNS.INF" name="_FUNCTNS.INF" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="b44c629884d23744ec6046013c73f78260a1fd76"/>
       </sourceFile>
-      <sourceFile id="_HEADER.TXT" name="_HEADER.TXT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_HEADER.TXT" name="_HEADER.TXT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="717e286b76014db6b7d08195e9235001f3316c99"/>
       </sourceFile>
-      <sourceFile id="_INLET.INF" name="_INLET.INF" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
+      <sourceFile id="_INLET.INF" name="_INLET.INF" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\091204_NFDM_008.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="c6322cd4b68a09cb857ab60567a79d93388dff57"/>
       </sourceFile>
@@ -164,7 +164,7 @@
     <software id="MassLynx" version="4.1">
       <cvParam cvRef="MS" accession="MS:1000534" name="MassLynx" value=""/>
     </software>
-    <software id="pwiz_Reader_Waters" version="3.0.11537">
+    <software id="pwiz_Reader_Waters" version="3.0.19304">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -194,7 +194,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="10"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.021916667" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.021916666999" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -230,7 +230,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="1"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.0399166681" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.039916668087" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -266,7 +266,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="1"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.0568833351" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.056883335114" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -302,7 +302,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="3"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.0655833334" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.065583333373" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -354,7 +354,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="4"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.0742833316" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.074283331633" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -406,7 +406,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="5"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.0829000026" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.082900002599" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -458,7 +458,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="6"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.0916166678" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.091616667807" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -510,7 +510,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="7"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.100316666" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.100316666067" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -562,7 +562,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="8"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.109033331" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.109033331275" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -614,7 +614,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="9"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.117733337" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.117733336985" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -666,7 +666,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="2"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.126450002" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.126450002193" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -718,7 +718,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="2"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.135049999" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.13504999876" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -770,7 +770,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="1"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.152033329" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.15203332901" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -806,7 +806,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="1"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.169100001" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.169100001454" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -842,7 +842,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="2"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.1778" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.177799999714" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -894,7 +894,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="3"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.186416671" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.18641667068" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -946,7 +946,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="3"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.195116669" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.19511666894" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -998,7 +998,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="1"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.212183326" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.212183326483" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1034,7 +1034,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="1"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.229133338" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.229133337736" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1070,7 +1070,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="10"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.234133333" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.234133332968" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1106,7 +1106,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="1"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.25243333" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.252433329821" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1142,7 +1142,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="1"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.269483328" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.269483327866" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1178,7 +1178,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="2"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.278183341" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.278183341026" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1230,7 +1230,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="3"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.286900014" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.286900013685" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1282,7 +1282,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="4"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.295599997" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.295599997044" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1334,7 +1334,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="5"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.30431667" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.304316669703" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1386,7 +1386,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="6"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.313016653" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.313016653061" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1438,7 +1438,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="7"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.321733326" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.32173332572" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1490,7 +1490,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="8"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.330433339" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.330433338881" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1542,7 +1542,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="9"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.339133322" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.339133322239" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1594,7 +1594,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="9"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.347733319" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.347733318806" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1646,7 +1646,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="1"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.364716679" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.364716678858" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1682,7 +1682,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="1"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.381766677" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.381766676903" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1718,7 +1718,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="1"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.398716658" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.398716658354" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1754,7 +1754,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="1"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.415783346" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.415783345699" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1790,7 +1790,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="1"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.432749987" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.432749986649" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1826,7 +1826,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="1"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.449800014" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.449800014496" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1862,7 +1862,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="1"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.466749996" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.466749995947" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1898,7 +1898,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="10"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.47176668" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.471766680479" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1934,7 +1934,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="1"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.490049988" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.490049988031" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1970,7 +1970,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="1"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.507099986" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.507099986076" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="300.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>

@@ -32,6 +32,7 @@
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/utility/misc/automation_vector.h"
 #include "pwiz/utility/misc/BinaryData.hpp"
+#include "pwiz/utility/chemistry/MzMobilityWindow.hpp"
 #include <string>
 #include <vector>
 #include <set>
@@ -258,11 +259,17 @@ struct PWIZ_API_DECL Frame
 {
     virtual int getFrameIndex() const = 0;
     virtual TimeRange getDriftTimeRange() const = 0;
+    virtual MassRange getMzRange() const = 0;
     virtual double getRetentionTime() const = 0;
+    virtual double getTic() const = 0;
     virtual int getDriftBinsPresent() const = 0;
     virtual const std::vector<short>& getNonEmptyDriftBins() const = 0;
     virtual DriftScanPtr getScan(int driftBinIndex) const = 0;
     virtual DriftScanPtr getTotalScan() const = 0;
+
+    virtual void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities,
+                                         bool ignoreZeroIntensityPoints, const std::vector<pwiz::chemistry::MzMobilityWindow>& mzMobilityFilter) const = 0;
+    virtual size_t getCombinedSpectrumDataSize(bool ignoreZeroIntensityPoints, const std::vector<pwiz::chemistry::MzMobilityWindow>& mzMobilityFilter) const = 0;
 
     virtual ~Frame() {}
 };

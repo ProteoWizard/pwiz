@@ -486,6 +486,9 @@ public ref class SpectrumList_IonMobility : public msdata::SpectrumList
 
     virtual IonMobilityUnits getIonMobilityUnits();
 
+    // returns true if 3-array IMS representation is in use
+    virtual bool hasCombinedIonMobility(); 
+
     // returns true if the data file actually has necessary info for CCS/ion mobility conversion handling
     virtual bool canConvertIonMobilityAndCCS(IonMobilityUnits units);
 

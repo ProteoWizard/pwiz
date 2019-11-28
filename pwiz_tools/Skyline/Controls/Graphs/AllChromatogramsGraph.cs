@@ -476,7 +476,7 @@ namespace pwiz.Skyline.Controls.Graphs
             flowFileStatus.Controls.AddRange(controlsToAdd.ToArray());
             foreach (var control in controlsToAdd)
             {
-                _fileProgressControls.Add(control.FilePath, control);
+                _fileProgressControls.Add(control.FilePath.GetLocation(), control);
             }
         }
 
@@ -501,7 +501,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private FileProgressControl FindProgressControl(MsDataFileUri filePath)
         {
             FileProgressControl fileProgressControl;
-            _fileProgressControls.TryGetValue(filePath, out fileProgressControl);
+            _fileProgressControls.TryGetValue(filePath.GetLocation(), out fileProgressControl);
             return fileProgressControl;
         }
 

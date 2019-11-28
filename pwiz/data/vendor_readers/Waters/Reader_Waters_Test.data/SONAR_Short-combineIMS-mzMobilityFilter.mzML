@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd" id="SONAR_Short" version="1.1.0">
+  <cvList count="2">
+    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.30" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
+    <cv id="UO" fullName="Unit Ontology" version="09:04:2014" URI="https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/unit.obo"/>
+  </cvList>
+  <fileDescription>
+    <fileContent>
+    </fileContent>
+    <sourceFileList count="19">
+      <sourceFile id="_FUNC001.DAT" name="_FUNC001.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\SONAR_Short.raw">
+        <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="d05b979bf50902986f2637da0fbb3a5b3629a7c1"/>
+      </sourceFile>
+      <sourceFile id="_FUNC002.DAT" name="_FUNC002.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\SONAR_Short.raw">
+        <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="765f58832d498acb171b8572d60cdadf33a98315"/>
+      </sourceFile>
+      <sourceFile id="_FUNC003.DAT" name="_FUNC003.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\SONAR_Short.raw">
+        <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="94e9d70d8ee90b11b93e1cfbdb90cde4aa1992fa"/>
+      </sourceFile>
+      <sourceFile id="_extern.inf" name="_extern.inf" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\SONAR_Short.raw">
+        <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="1ea7323a4e4fb279ea0f57d5e7f6010b16a33e3b"/>
+      </sourceFile>
+      <sourceFile id="_func001.cdt" name="_func001.cdt" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\SONAR_Short.raw">
+        <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="09ff4567910309b1614a9a31e29ad3035eae4be8"/>
+      </sourceFile>
+      <sourceFile id="_FUNC001.IDX" name="_FUNC001.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\SONAR_Short.raw">
+        <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="c401796c784155c459bdea7f5deaf8e0db88702e"/>
+      </sourceFile>
+      <sourceFile id="_func001.ind" name="_func001.ind" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\SONAR_Short.raw">
+        <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="e244f4b354e56bd04ff053c39613de449aa61689"/>
+      </sourceFile>
+      <sourceFile id="_FUNC001.STS" name="_FUNC001.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\SONAR_Short.raw">
+        <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="857dacfff60725c753c96483a922ed7d956d9118"/>
+      </sourceFile>
+      <sourceFile id="_func002.cdt" name="_func002.cdt" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\SONAR_Short.raw">
+        <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="f79fa4514b0be4739cb8f6de693da9777f11872e"/>
+      </sourceFile>
+      <sourceFile id="_FUNC002.IDX" name="_FUNC002.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\SONAR_Short.raw">
+        <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="5fa4c516cca44e202c212bb5801cd54cce4890fd"/>
+      </sourceFile>
+      <sourceFile id="_func002.ind" name="_func002.ind" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\SONAR_Short.raw">
+        <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="4ef6b6252463ac44c58059b007358fd84faa86e9"/>
+      </sourceFile>
+      <sourceFile id="_FUNC002.STS" name="_FUNC002.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\SONAR_Short.raw">
+        <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="aab55deb2383994b64b63e9d639bdd09145c8dbd"/>
+      </sourceFile>
+      <sourceFile id="_func003.cdt" name="_func003.cdt" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\SONAR_Short.raw">
+        <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="2da55c039f09001c316e039faefea5c462502069"/>
+      </sourceFile>
+      <sourceFile id="_FUNC003.IDX" name="_FUNC003.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\SONAR_Short.raw">
+        <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="d99a97a3488bf0eca75ff4b2c928a5986c3819f7"/>
+      </sourceFile>
+      <sourceFile id="_func003.ind" name="_func003.ind" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\SONAR_Short.raw">
+        <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="eaaf44baf556546165a673f6b342966dd0c862ea"/>
+      </sourceFile>
+      <sourceFile id="_FUNC003.STS" name="_FUNC003.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\SONAR_Short.raw">
+        <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="add5850a8e6dfcea9fc7eeaf95015b437d28b606"/>
+      </sourceFile>
+      <sourceFile id="_FUNCTNS.INF" name="_FUNCTNS.INF" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\SONAR_Short.raw">
+        <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="9f7573b8596b1d316dbf6911305883be9b33d2b7"/>
+      </sourceFile>
+      <sourceFile id="_HEADER.TXT" name="_HEADER.TXT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\SONAR_Short.raw">
+        <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="c296c2ccd314750818c70b7f00ac76b924a5d313"/>
+      </sourceFile>
+      <sourceFile id="_TYPES.INF" name="_TYPES.INF" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\SONAR_Short.raw">
+        <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="20f501aa63c995e5742e14fcf90d3b065a38afd9"/>
+      </sourceFile>
+    </sourceFileList>
+  </fileDescription>
+  <softwareList count="2">
+    <software id="MassLynx" version="4.1">
+      <cvParam cvRef="MS" accession="MS:1000534" name="MassLynx" value=""/>
+    </software>
+    <software id="pwiz_Reader_Waters" version="3.0.19304">
+      <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
+    </software>
+  </softwareList>
+  <instrumentConfigurationList count="1">
+    <instrumentConfiguration id="IC">
+      <cvParam cvRef="MS" accession="MS:1000126" name="Waters instrument model" value=""/>
+    </instrumentConfiguration>
+  </instrumentConfigurationList>
+  <dataProcessingList count="1">
+    <dataProcessing id="pwiz_Reader_Waters_conversion">
+      <processingMethod order="0" softwareRef="pwiz_Reader_Waters">
+        <cvParam cvRef="MS" accession="MS:1000544" name="Conversion to mzML" value=""/>
+      </processingMethod>
+    </dataProcessing>
+  </dataProcessingList>
+  <run id="SONAR_Short" defaultInstrumentConfigurationRef="IC" startTimeStamp="2018-05-17T08:00:59Z" defaultSourceFileRef="_FUNC001.DAT">
+    <spectrumList count="3" defaultDataProcessingRef="pwiz_Reader_Waters_conversion">
+      <spectrum index="0" id="merged=1 function=3 block=1" defaultArrayLength="24">
+        <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000504" name="base peak m/z" value="1818.745728"/>
+        <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="156.0"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="8178.0"/>
+        <scanList count="1">
+          <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
+          <scan>
+            <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="3"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.026783334091" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1002476" name="ion mobility drift time" value="7.599939346313" unitCvRef="UO" unitAccession="UO:0000028" unitName="millisecond"/>
+            <scanWindowList count="1">
+              <scanWindow>
+                <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="50.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000500" name="scan window upper limit" value="2000.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              </scanWindow>
+            </scanWindowList>
+          </scan>
+        </scanList>
+        <binaryDataArrayList count="3">
+          <binaryDataArray encodedLength="132">
+            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000514" name="m/z array" value="" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+            <binary>eJybJlronCZW6Lw3q83lCxCzPmB1if/O5nLGV91F2U/dZcWRQy6msj+dDZ1FXZqBuFbrocsRIP61T8tla/MRJzEveZdsINbQi3TpBuLzv9a48P1e45Jw9KjLIiAGAB/MJ3o=</binary>
+          </binaryDataArray>
+          <binaryDataArray encodedLength="80">
+            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+            <binary>eJxjYBBwZGBYAMQNIOwAYc8A4h1Q/gyo/AEg2wFIPwDSCVA1IJwAFQOpBZnhAFUbAKQvOAIAhToTOg==</binary>
+          </binaryDataArray>
+          <binaryDataArray arrayLength="24" encodedLength="44">
+            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1003007" name="raw ion mobility array" value=""/>
+            <binary>eJx7yF/h8BAJ876twcCyTxsw8ObgZgfPQ60EMQDZNioS</binary>
+          </binaryDataArray>
+        </binaryDataArrayList>
+      </spectrum>
+      <spectrum index="1" id="merged=2 function=1 block=1" defaultArrayLength="99">
+        <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000504" name="base peak m/z" value="349.002472"/>
+        <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="783.0"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="67953.0"/>
+        <scanList count="1">
+          <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
+          <scan>
+            <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="1"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.036800000817" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1002476" name="ion mobility drift time" value="7.599939346313" unitCvRef="UO" unitAccession="UO:0000028" unitName="millisecond"/>
+            <scanWindowList count="1">
+              <scanWindow>
+                <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="50.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000500" name="scan window upper limit" value="2000.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              </scanWindow>
+            </scanWindowList>
+          </scan>
+        </scanList>
+        <binaryDataArrayList count="3">
+          <binaryDataArray encodedLength="476">
+            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000514" name="m/z array" value="" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+            <binary>eJw9zk9Ik3EcgPGLFXgJDaJp0EWYtE2lY0ggD5HaoR1CO4hEkQhS24iwnJAJauQlodEfJ0Eb+O5d/YzVWO87f++fnaQuScegED0MooUXY+io78nD5/rwXHuWYVO8r5mcr37AEsnEJ/aFTltcWLHYylvU22ym2m1+ZMpcz5Z5/kbTltHoFy59L12CZzxMUa0Z3Pxj8G9SMX1fcTtR4JfobymyIS7HS3wR3w9KjDRKjJoWP0UwbGOII681j8XJgkfPcZ+P4u8pn2TAZ+FsjOFQjHJdsdVic6PVpjMlPyc026IWcUh0OVx65fBZ3HvnURfNzT759grdpyukQnFuheMETIPOeZOs2HikuDiruDJu81Us5WwaT9aZyK7zWzhPNX1LmuicwzfxYNflQPgDq/QOrjI+k2NHhBtvyYmxacXQQ0V0Rh22946ucffYGoVIkXNdRe50uOyKzWWXq2mXpkWP/4dnwrA=</binary>
+          </binaryDataArray>
+          <binaryDataArray encodedLength="216">
+            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+            <binary>eJxjYEhwZGB44MDAsANIOwDpGUCaAYgPgPggGiq2AEgvQBITANITkMRBep45QeRAakDmGgBxA5DfAKRtgHIPnBD6YfQBqJoCIK2ApH6FI8LeBKh5DVD5GVC5AEeI3cjmOUDN+QHlX3CE+A0kVoBk/gwkN8L0PYDatQJq7gkgFkHy0waoPlg4gcx7gKQf2WyY+5H98ACqjsERlYaEMQD5v0rL</binary>
+          </binaryDataArray>
+          <binaryDataArray arrayLength="99" encodedLength="48">
+            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1003007" name="raw ion mobility array" value=""/>
+            <binary>eJx7yF/h8JCKmPdtDc2w7NMGivHm4GaqYc9DrVTFAIZCrIg=</binary>
+          </binaryDataArray>
+        </binaryDataArrayList>
+      </spectrum>
+      <spectrum index="2" id="merged=3 function=2 block=1" defaultArrayLength="52">
+        <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000504" name="base peak m/z" value="98.986732"/>
+        <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="435.0"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="33802.0"/>
+        <scanList count="1">
+          <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
+          <scan>
+            <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="2"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.045366667211" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1002476" name="ion mobility drift time" value="7.599939346313" unitCvRef="UO" unitAccession="UO:0000028" unitName="millisecond"/>
+            <scanWindowList count="1">
+              <scanWindow>
+                <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="50.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000500" name="scan window upper limit" value="2000.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              </scanWindow>
+            </scanWindowList>
+          </scan>
+        </scanList>
+        <precursorList count="1">
+          <precursor>
+            <isolationWindow>
+              <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="975.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="975.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="1025.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+            </isolationWindow>
+            <selectedIonList count="1">
+              <selectedIon>
+                <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="1025.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              </selectedIon>
+            </selectedIonList>
+            <activation>
+              <cvParam cvRef="MS" accession="MS:1000422" name="beam-type collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="14.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            </activation>
+          </precursor>
+        </precursorList>
+        <binaryDataArrayList count="3">
+          <binaryDataArray encodedLength="284">
+            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000514" name="m/z array" value="" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+            <binary>eJwLNyh21jAsdu6vW+zMUb/Y+dSELc5eE7c4/1t00Llp8UHnKYa/nA4Y/XK6zC3uXMEj7iwnZu18DYj12VydXwNxalWj8wUgbq1rc/7ys9dZP3uq82Ig7mxa6MzYvNA5ivmgcydXjHMAd4zzVMY451imOGd17krnX0D85+Ui59JXi5zX1i51Vq9b6nxXaYtzjPIW56lGp5wWG59y2vgn0bn6b6JzRVqH83MgDvnU4XwYiNdXdjo/q5nuHFU73fni3MXOXvMWO1+uX+cc0LDOGQCJoVsk</binary>
+          </binaryDataArray>
+          <binaryDataArray encodedLength="120">
+            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+            <binary>eJxjYNjixMDwwZGBwQGKFaD4gQMDQwKQbgDSDY5Q7IAq/wBJ/QpHCH8BCDsg9IHEXwCxAVR8AdSeA1DzHyCpBYkzQOUckNzggCQGkv+AxFeAykPsBQCl2yZj</binary>
+          </binaryDataArray>
+          <binaryDataArray arrayLength="52" encodedLength="48">
+            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1003007" name="raw ion mobility array" value=""/>
+            <binary>eJx7yF/h8BAP5n1bQzGWfdqAF28ObkbBnodaycYAbtdauw==</binary>
+          </binaryDataArray>
+        </binaryDataArrayList>
+      </spectrum>
+    </spectrumList>
+    <chromatogramList count="1" defaultDataProcessingRef="pwiz_Reader_Waters_conversion">
+      <chromatogram index="0" id="TIC" defaultArrayLength="3">
+        <cvParam cvRef="MS" accession="MS:1000235" name="total ion current chromatogram" value=""/>
+        <binaryDataArrayList count="2">
+          <binaryDataArray encodedLength="28">
+            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000595" name="time array" value="" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <binary>eJzbmXHbZuZuMdu0S5a2ACgxBY4=</binary>
+          </binaryDataArray>
+          <binaryDataArray encodedLength="28">
+            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+            <binary>eJxjmPDftWFHizsDF4s7ACCPBC0=</binary>
+          </binaryDataArray>
+        </binaryDataArrayList>
+      </chromatogram>
+    </chromatogramList>
+  </run>
+</mzML>

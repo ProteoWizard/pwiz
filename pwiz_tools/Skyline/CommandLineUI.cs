@@ -72,7 +72,7 @@ namespace pwiz.Skyline
             OpenDocument(_commandArgs.SkylineFile);
             foreach (var replicateFile in _commandArgs.ReplicateFile)
             {
-                ImportResults(replicateFile);
+                ImportResults(replicateFile.ChangeCombineIonMobilitySpectra(true)); // If this is ion mobility data, try to open in 3-array mode for efficiency
             }
             SkylineWindow.DiscardChanges = true;
             RunUI(SkylineWindow.Close);
