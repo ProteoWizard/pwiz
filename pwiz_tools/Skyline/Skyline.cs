@@ -2714,11 +2714,11 @@ namespace pwiz.Skyline
             ShowGenerateDecoysDlg();
         }
 
-        public void ShowGenerateDecoysDlg()
+        public bool ShowGenerateDecoysDlg(IWin32Window owner = null)
         {
             using (var decoysDlg = new GenerateDecoysDlg(DocumentUI))
             {
-                if (decoysDlg.ShowDialog(this) == DialogResult.OK)
+                if (decoysDlg.ShowDialog(owner ?? this) == DialogResult.OK)
                 {
                     var refinementSettings = new RefinementSettings { NumberOfDecoys = decoysDlg.NumDecoys, DecoysMethod = decoysDlg.DecoysMethod };
                     ModifyDocument(Resources.SkylineWindow_ShowGenerateDecoysDlg_Generate_Decoys, refinementSettings.GenerateDecoys,
@@ -2733,8 +2733,10 @@ namespace pwiz.Skyline
 
                     var nodePepGroup = DocumentUI.PeptideGroups.First(nodePeptideGroup => nodePeptideGroup.IsDecoy);
                     SelectedPath = DocumentUI.GetPathTo((int)SrmDocument.Level.MoleculeGroups, DocumentUI.FindNodeIndex(nodePepGroup.Id));
+                    return true;
                 }
             }
+            return false;
         }
 
         #endregion // Edit menu

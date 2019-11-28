@@ -176,6 +176,7 @@
     <Compile Include="ChromDataSetMatchingTest.cs" />
     <Compile Include="ChromGraphTransformTest.cs" />
     <Compile Include="ChromUITest.cs" />
+    <Compile Include="DecoyTargetMatchTest.cs" />
     <Compile Include="DisplayLanguageTest.cs" />
     <Compile Include="DocumentGridChromatogramDataTest.cs" />
     <Compile Include="DuplicateTransitionGroupTest.cs" />
