@@ -186,7 +186,7 @@ namespace pwiz.Skyline
                 CheckPathExists = true,
                 SupportMultiDottedExtensions = true,
                 DefaultExt = SrmDocument.EXT,
-                Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC_AND_SKY_ZIP, SrmDocumentSharing.FILTER_SHARING)
+                Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC_AND_SKY_ZIP, SrmDocumentSharing.FILTER_SHARING, SkypFile.FILTER_SKYP)
             })
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
@@ -196,6 +196,10 @@ namespace pwiz.Skyline
                     if (dlg.FileName.EndsWith(SrmDocumentSharing.EXT))
                     {
                         OpenSharedFile(dlg.FileName);
+                    }
+                    else if (dlg.FileName.EndsWith(SkypFile.EXT))
+                    {
+                        OpenSkypFile(dlg.FileName);
                     }
                     else
                     {
@@ -241,6 +245,12 @@ namespace pwiz.Skyline
                 MessageDlg.ShowWithException(parentWindow ?? this, message, e);
                 return false;
             }
+        }
+
+        public bool OpenSkypFile(string skypPath, FormEx parentWindow = null)
+        {
+            var skypSupport = new SkypSupport(this);
+            return skypSupport.Open(skypPath, Settings.Default.ServerList, parentWindow);
         }
 
         private AuditLogEntry AskForLogEntry()

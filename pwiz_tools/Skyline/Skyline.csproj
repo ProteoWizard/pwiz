@@ -473,6 +473,7 @@
     <Compile Include="Model\Serialization\AnnotationScrubber.cs" />
     <Compile Include="Model\Serialization\Pre372CustomIonTransitionGroupHandler.cs" />
     <Compile Include="Model\Serialization\XmlReadAhead.cs" />
+    <Compile Include="Model\SkypFile.cs" />
     <Compile Include="Model\TargetMap.cs" />
     <Compile Include="Controls\Databinding\ChooseFormatDlg.cs">
       <SubType>Form</SubType>
@@ -2958,6 +2959,7 @@
     <EmbeddedResource Include="Resources\MoleculeIrt.bmp" />
     <EmbeddedResource Include="Resources\MoleculeIrtLib.bmp" />
     <EmbeddedResource Include="Resources\MoleculeStandardLib.bmp" />
+    <Content Include="SkylineDocPointer.ico" />
     <EmbeddedResource Include="Resources\prosit_logo_dark_blue.png" />
     <Content Include="SkylineProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -3888,6 +3890,12 @@
       <Description>Skyline Chromatogram Data</Description>
       <Progid>Skyline.Data.0</Progid>
       <DefaultIcon>SkylineData.ico</DefaultIcon>
+    </FileAssociation>
+    <FileAssociation Include=".skyp">
+      <Visible>False</Visible>
+      <Description>Skyline Document Pointer</Description>
+      <Progid>Skyline.Pointer.0</Progid>
+      <DefaultIcon>SkylineDocPointer.ico</DefaultIcon>
     </FileAssociation>
   </ItemGroup>
   <ItemGroup>

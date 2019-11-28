@@ -323,6 +323,10 @@ namespace pwiz.Skyline
             {
                 return OpenSharedFile(pathOpen, parentWindow);
             }
+            else if (pathOpen.EndsWith(SkypFile.EXT))
+            {
+                return OpenSkypFile(pathOpen, parentWindow);
+            }
             else
             {
                 return OpenFile(pathOpen, parentWindow);
