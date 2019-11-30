@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -88,7 +89,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 dictSymDist.Add(symbol, new IsotopeEnrichmentItem(symbol, 1.0).CalcDistribution(isotopes));
             }
 
-            IsotopeAbundances = isotopes.SetAbundances(dictSymDist);
+            IsotopeAbundances = BioMassCalc.AddHeavyNicknames(isotopes.SetAbundances(dictSymDist));
         }
 
         public static IsotopeEnrichments Deserialize(XmlReader reader)
