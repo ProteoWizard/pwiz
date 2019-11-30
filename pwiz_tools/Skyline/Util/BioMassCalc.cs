@@ -484,6 +484,24 @@ namespace pwiz.Skyline.Util
             }
         }
 
+        /// <summary>
+        /// Ensure that the entries for D and T are the same as the entries for H' and H".
+        /// </summary>
+        public static IsotopeAbundances AddHeavyNicknames(IsotopeAbundances isotopeAbundances)
+        {
+            var changes = new Dictionary<string, MassDistribution>();
+            foreach (var kvp in DICT_HEAVYSYMBOL_NICKNAMES)
+            {
+                MassDistribution massDistribution;
+                if (isotopeAbundances.TryGetValue(kvp.Value, out massDistribution))
+                {
+                    changes.Add(kvp.Key, massDistribution);
+                }
+            }
+
+            return isotopeAbundances.SetAbundances(changes);
+        }
+
         public MassType MassType { get; private set; }
 
         public string FormatArgumentExceptionMessage(string desc)
