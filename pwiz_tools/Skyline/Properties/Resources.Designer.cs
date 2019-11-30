@@ -25594,6 +25594,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Opening a document inside a ZIP file is not supported..
+        /// </summary>
+        public static string SkylineWindow_HasFileToOpen_Opening_a_document_inside_a_ZIP_file_is_not_supported_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_HasFileToOpen_Opening_a_document_inside_a_ZIP_file_is_not_supported" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unzip the file {0} first and then open the extracted file {1}..
         /// </summary>
         public static string SkylineWindow_HasFileToOpen_Unzip_the_file__0__first_and_then_open_the_extracted_file__1__ {

@@ -300,7 +300,7 @@ namespace pwiz.Skyline
             if (parentDir != null && PathEx.HasExtension(parentDir, @".zip") &&
                 parentDir.ToLower().Contains(@"appdata\local\temp"))
             {
-                MessageDlg.Show(this, TextUtil.LineSeparate("Opening a document inside a ZIP file is not supported.",
+                MessageDlg.Show(this, TextUtil.LineSeparate(Resources.SkylineWindow_HasFileToOpen_Opening_a_document_inside_a_ZIP_file_is_not_supported_,
                     string.Format(Resources.SkylineWindow_HasFileToOpen_Unzip_the_file__0__first_and_then_open_the_extracted_file__1__, Path.GetFileName(parentDir), Path.GetFileName(_fileToOpen))));
                 return false;
             }
