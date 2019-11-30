@@ -219,13 +219,14 @@ namespace pwiz.SkylineTestUtil
             {
                 var librarySettings = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
                 return librarySettings.IsLoaded &&
-                       librarySettings.Libraries.Count > 0 &&
+                       librarySettings.Libraries.Count > libIndex &&
                        librarySettings.Libraries[libIndex].Keys.Count() == expectedSpectra;
             });
             var librarySettingsFinal = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
-            Assert.IsTrue(librarySettingsFinal.IsLoaded);
-            Assert.IsTrue(librarySettingsFinal.Libraries.Count > 0);
-            Assert.AreEqual(expectedSpectra, librarySettingsFinal.Libraries[libIndex].Keys.Count());
+            var libraries = librarySettingsFinal.Libraries;
+            Assert.IsTrue(librarySettingsFinal.IsLoaded, string.Format("Libraries not loaded: {0}", librarySettingsFinal.IsNotLoadedExplained));
+            Assert.IsTrue(libraries.Count > libIndex, string.Format("Library count {0} does not support the index {1}.", libraries.Count, libIndex));
+            Assert.AreEqual(expectedSpectra, libraries[libIndex].Keys.Count());
         }
 
         public static void AddLibrary(LibrarySpec libSpec, Library lib)
