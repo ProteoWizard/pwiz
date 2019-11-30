@@ -10877,4 +10877,10 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="SkylineWindow_ImportResults_Are_you_sure__Peak_scoring_models_trained_with_non_matching_targets_and_decoys_may_produce_incorrect_results_" xml:space="preserve">
     <value>Are you sure? Peak scoring models trained with non-matching targets and decoys may produce incorrect results.</value>
   </data>
+  <data name="SkylineWindow_HasFileToOpen_Unzip_the_file__0__first_and_then_open_the_extracted_file__1__" xml:space="preserve">
+    <value>Unzip the file {0} first and then open the extracted file {1}.</value>
+  </data>
+  <data name="SkylineWindow_HasFileToOpen_Opening_a_document_inside_a_ZIP_file_is_not_supported_" xml:space="preserve">
+    <value>Opening a document inside a ZIP file is not supported.</value>
+  </data>
 </root>
