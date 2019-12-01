@@ -10892,4 +10892,10 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_Document_import_was_cancelled_on_the_server__Would_you_like_to_go_to_Panorama_" xml:space="preserve">
     <value>Document import was cancelled on the server. Would you like to go to Panorama?</value>
   </data>
+  <data name="WebPanoramaPublishClient_updateProgressAndWait_Importing_data___0___complete_" xml:space="preserve">
+    <value>Importing data. {0}% complete.</value>
+  </data>
+  <data name="WebPanoramaPublishClient_SendZipFile_Status_on_server_is___0_" xml:space="preserve">
+    <value>Status on server is: {0}</value>
+  </data>
 </root>
