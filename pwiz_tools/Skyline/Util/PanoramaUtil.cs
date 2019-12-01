@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
@@ -64,7 +65,7 @@ namespace pwiz.Skyline.Util
         {
             const string https = "https://";
             const string http = "http://";
-            
+
             var httpsIndex = serverName.IndexOf(https, StringComparison.Ordinal);
             var httpIndex = serverName.IndexOf(http, StringComparison.Ordinal);
 
@@ -106,7 +107,7 @@ namespace pwiz.Skyline.Util
         public static UserState ValidateServerAndUser(ref Uri serverUri, string username, string password)
         {
             var pServer = new PanoramaServer(serverUri, username, password);
-           
+
             try
             {
                 var userState = EnsureLogin(pServer);
@@ -312,7 +313,7 @@ namespace pwiz.Skyline.Util
         {
             byte[] authBytes = Encoding.UTF8.GetBytes(String.Format(@"{0}:{1}", username, password));
             var authHeader = @"Basic " + Convert.ToBase64String(authBytes);
-            return authHeader;   
+            return authHeader;
         }
 
         #region Implementation of IXmlSerializable
@@ -447,7 +448,7 @@ namespace pwiz.Skyline.Util
 
         public WebPanoramaClient(Uri server)
         {
-            ServerUri = server;       
+            ServerUri = server;
         }
 
         public ServerState GetServerState()
@@ -487,7 +488,7 @@ namespace pwiz.Skyline.Util
         private bool TryNewProtocol(Func<bool> testFunc)
         {
             Uri currentUri = ServerUri;
-            
+
             // try again using https
             if (ServerUri.Scheme.Equals(@"http"))
             {
@@ -549,7 +550,7 @@ namespace pwiz.Skyline.Util
                 return PanoramaState.unknown;
             }
 
-            return PanoramaState.unknown;  
+            return PanoramaState.unknown;
         }
 
         public UserState IsValidUser(string username, string password)
@@ -565,7 +566,7 @@ namespace pwiz.Skyline.Util
 
         public FolderState IsValidFolder(string folderPath, string username, string password)
         {
-           try
+            try
             {
                 var uri = PanoramaUtil.GetContainersUri(ServerUri, folderPath, false);
 
@@ -595,7 +596,7 @@ namespace pwiz.Skyline.Util
                 }
                 else throw;
             }
-           return FolderState.valid;
+            return FolderState.valid;
         }
     }
 
@@ -641,7 +642,7 @@ namespace pwiz.Skyline.Util
         public ShareType DecideShareType(FolderInformation folderInfo, SrmDocument document)
         {
             ShareType shareType = ShareType.DEFAULT;
-            
+
             var settings = document.Settings;
             Assume.IsTrue(document.IsLoaded);
             var cacheVersion = settings.HasResults ? settings.MeasuredResults.CacheVersion : null;
@@ -698,7 +699,11 @@ namespace pwiz.Skyline.Util
                 var panoramaEx = x.InnerException as PanoramaImportErrorException;
                 if (panoramaEx != null)
                 {
-                    var message = Resources.AbstractPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_uploading_to_Panorama__would_you_like_to_go_to_Panorama_;
+                    var message = panoramaEx.JobCancelled
+                        ? Resources.AbstractPanoramaPublishClient_UploadSharedZipFile_Document_import_was_cancelled_on_the_server__Would_you_like_to_go_to_Panorama_
+                        : Resources
+                            .AbstractPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_uploading_to_Panorama__would_you_like_to_go_to_Panorama_;
+
                     if (MultiButtonMsgDlg.Show(parent, message, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false)
                         == DialogResult.Yes)
                         Process.Start(panoramaEx.JobUrl.ToString());
@@ -726,6 +731,9 @@ namespace pwiz.Skyline.Util
         private IProgressMonitor _progressMonitor;
         private IProgressStatus _progressStatus;
 
+        private readonly Regex _runningStatusRegex = new Regex(@"RUNNING, (\d+)%");
+        private int _waitTime = 1;
+
         public void EnsureLogin(Server server)
         {
             var refServerUri = server.URI;
@@ -742,7 +750,7 @@ namespace pwiz.Skyline.Util
                     throw new PanoramaServerException(Resources.EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_the_panorama_server);
                 case UserState.unknown:
                     throw new PanoramaServerException(string.Format(Resources.EditServerDlg_OkDialog_Unknown_error_connecting_to_the_server__0__, refServerUri.AbsoluteUri));
-            } 
+            }
         }
 
         public override JToken GetInfoForFolders(Server server, string folder)
@@ -826,23 +834,22 @@ namespace pwiz.Skyline.Util
 
                 // Need to tell server which uploaded file to import.
                 var dataImportInformation = new NameValueCollection
-                                                {
-                                                    // For now, we only have one root that user can upload to
-                                                    {@"path", @"./"},
-                                                    {@"file", zipFileName}
-                                                };
-                
+                {
+                    // For now, we only have one root that user can upload to
+                    {@"path", @"./"},
+                    {@"file", zipFileName}
+                };
+
                 JToken importResponse = _webClient.Post(importUrl, dataImportInformation);
 
                 // ID to check import status.
                 var details = importResponse[@"UploadedJobDetails"];
                 int rowId = (int)details[0][@"RowId"];
                 Uri statusUri = PanoramaUtil.Call(server.URI, @"query", folderPath, @"selectRows",
-                                     @"query.queryName=job&schemaName=pipeline&query.rowId~eq=" + rowId);
-                bool complete = false;
+                    @"query.queryName=job&schemaName=pipeline&query.rowId~eq=" + rowId);
                 // Wait for import to finish before returning.
-                Uri result = null;
-                while (!complete)
+                var startTime = DateTime.Now;
+                while (true)
                 {
                     if (progressMonitor.IsCanceled)
                         return null;
@@ -853,23 +860,80 @@ namespace pwiz.Skyline.Util
                     if (row == null)
                         continue;
 
-                    string status = (string)row[@"Status"];
-                    result = new Uri(server.URI, (string)row[@"_labkeyurl_Description"]);
-                    if (string.Equals(status, @"ERROR"))
+                    var status = new ImportStatus((string) row[@"Status"]);
+                    if (status.IsComplete)
                     {
-                        var jobUrl = new Uri(server.URI, (string)row[@"_labkeyurl_RowId"]);
-                        var e = new PanoramaImportErrorException(server.URI, jobUrl); 
+                        progressMonitor.UpdateProgress(_progressStatus.Complete());
+                        return new Uri(server.URI, (string)row[@"_labkeyurl_Description"]); ;
+                    }
+                  
+                    else if (status.IsError || status.IsCancelled)
+                    {
+                        var jobUrl = new Uri(server.URI, (string) row[@"_labkeyurl_RowId"]);
+                        var e = new PanoramaImportErrorException(server.URI, jobUrl, status.IsCancelled);
                         progressMonitor.UpdateProgress(
                             _progressStatus = _progressStatus.ChangeErrorException(e));
                         throw e;
                     }
+                   
+                    else if (!status.IsRunning)
+                    {
+                        _progressMonitor.UpdateProgress(_progressStatus = _progressStatus =
+                            _progressStatus.ChangeMessage($"Status on server is: {status.StatusString}"));
+                    }
 
-                    complete = string.Equals(status, @"COMPLETE");
+                    updateProgressAndWait(status, progressMonitor, _progressStatus, startTime);
                 }
-
-                progressMonitor.UpdateProgress(_progressStatus.Complete());
-                return result;
             }
+        }
+
+        private class ImportStatus
+        {
+            public string StatusString { get; }
+            public bool IsComplete => string.Equals(@"COMPLETE", StatusString);
+            public bool IsRunning => StatusString.StartsWith(@"RUNNING");
+            public bool IsError => string.Equals(@"ERROR", StatusString);
+            public bool IsCancelled => string.Equals(@"CANCELLED", StatusString);
+
+            public ImportStatus(string status)
+            {
+                StatusString = status;
+            }
+        }
+
+        private void updateProgressAndWait(ImportStatus jobStatus, IProgressMonitor progressMonitor, IProgressStatus status, DateTime startTime)
+        {
+            var match = _runningStatusRegex.Match(jobStatus.StatusString);
+            if (match.Success)
+            {
+                var currentProgress = _progressStatus.PercentComplete;
+
+                if (int.TryParse(match.Groups[1].Value, out var progress))
+                {
+                    progress = Math.Max(progress, currentProgress);
+                    _progressStatus = _progressStatus.ChangeMessage($"Importing data. {progress}% complete.");
+                    _progressMonitor.UpdateProgress(_progressStatus = _progressStatus.ChangePercentComplete(progress));
+
+                    var delta = progress - currentProgress;
+                    if (delta > 1)
+                    {
+                        _waitTime = Math.Max(1, _waitTime / 2);
+                    }
+                    else if (delta < 1)
+                    {
+                        _waitTime = Math.Min(10, _waitTime * 2);
+                    }
+
+                    Thread.Sleep(_waitTime * 1000);
+                    return;
+                }
+            }
+
+            // If this is an older server that does not include the progress percent in the status
+            // wait between 1 and 5 seconds
+            var elapsed = (DateTime.Now - startTime).TotalMinutes;
+            var sleepTime = elapsed > 5 ? 5 * 1000 : (int)(Math.Max(1, elapsed % 5) * 1000);
+            Thread.Sleep(sleepTime);
         }
 
         public override JObject SupportedVersionsJson(Server server)
@@ -1016,14 +1080,16 @@ namespace pwiz.Skyline.Util
 
     public class PanoramaImportErrorException : Exception
     {
-        public PanoramaImportErrorException(Uri serverUrl, Uri jobUrl)
+        public PanoramaImportErrorException(Uri serverUrl, Uri jobUrl, bool jobCancelled = false)
         {
             ServerUrl = serverUrl;
             JobUrl = jobUrl;
+            JobCancelled = jobCancelled;
         }
 
         public Uri ServerUrl { get; private set; }
         public Uri JobUrl { get; private set; }
+        public bool JobCancelled { get; private set; }
     }
 
     public class PanoramaServerException : Exception
@@ -1083,7 +1149,7 @@ namespace pwiz.Skyline.Util
             Headers.Add(HttpRequestHeader.Authorization, Server.GetBasicAuthHeader(username, password));
             _serverUri = serverUri;
         }
-        
+
         public JObject Post(Uri uri, NameValueCollection postData)
         {
             if (string.IsNullOrEmpty(_csrfToken))
@@ -1160,7 +1226,7 @@ namespace pwiz.Skyline.Util
             Password = password;
 
             var path = serverUri.AbsolutePath;
-            
+
             if (path.Length > 1)
             {
                 // Get the context path (e.g. /labkey) from the path

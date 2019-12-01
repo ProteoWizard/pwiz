@@ -329,6 +329,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Document import was cancelled on the server. Would you like to go to Panorama?.
+        /// </summary>
+        public static string AbstractPanoramaPublishClient_UploadSharedZipFile_Document_import_was_cancelled_on_the_server__Would_you_like_to_go_to_Panorama_ {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaPublishClient_UploadSharedZipFile_Document_import_was_cancelled_o" +
+                        "n_the_server__Would_you_like_to_go_to_Panorama_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Upload succeeded, would you like to view the file in Panorama?.
         /// </summary>
         public static string AbstractPanoramaPublishClient_UploadSharedZipFile_Upload_succeeded__would_you_like_to_view_the_file_in_Panorama_ {
@@ -18973,11 +18983,30 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Document import was cancelled on the Panorama server {0}..
+        /// </summary>
+        public static string PanoramaPublishHelper_PublishDocToPanorama_Document_import_was_cancelled_on_the_Panorama_server__0__ {
+            get {
+                return ResourceManager.GetString("PanoramaPublishHelper_PublishDocToPanorama_Document_import_was_cancelled_on_the_P" +
+                        "anorama_server__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error details can be found at {0}.
         /// </summary>
         public static string PanoramaPublishHelper_PublishDocToPanorama_Error_details_can_be_found_at__0_ {
             get {
                 return ResourceManager.GetString("PanoramaPublishHelper_PublishDocToPanorama_Error_details_can_be_found_at__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Job details can be found at {0}..
+        /// </summary>
+        public static string PanoramaPublishHelper_PublishDocToPanorama_Job_details_can_be_found_at__0__ {
+            get {
+                return ResourceManager.GetString("PanoramaPublishHelper_PublishDocToPanorama_Job_details_can_be_found_at__0__", resourceCulture);
             }
         }
         
