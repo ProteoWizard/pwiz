@@ -864,7 +864,7 @@ namespace pwiz.Skyline.Util
                     if (status.IsComplete)
                     {
                         progressMonitor.UpdateProgress(_progressStatus.Complete());
-                        return new Uri(server.URI, (string)row[@"_labkeyurl_Description"]); ;
+                        return new Uri(server.URI, (string)row[@"_labkeyurl_Description"]);
                     }
                   
                     else if (status.IsError || status.IsCancelled)
@@ -878,8 +878,10 @@ namespace pwiz.Skyline.Util
                    
                     else if (!status.IsRunning)
                     {
+                        // Display the status since we don't recognize it.  This could be, for example, an "Import Waiting" status if another 
+                        // Skyline document is currently being imported on the server. 
                         _progressMonitor.UpdateProgress(_progressStatus = _progressStatus =
-                            _progressStatus.ChangeMessage($"Status on server is: {status.StatusString}"));
+                            _progressStatus.ChangeMessage(string.Format(Resources.WebPanoramaPublishClient_SendZipFile_Status_on_server_is___0_, status.StatusString)));
                     }
 
                     updateProgressAndWait(status, progressMonitor, _progressStatus, startTime);
@@ -911,16 +913,18 @@ namespace pwiz.Skyline.Util
                 if (int.TryParse(match.Groups[1].Value, out var progress))
                 {
                     progress = Math.Max(progress, currentProgress);
-                    _progressStatus = _progressStatus.ChangeMessage($"Importing data. {progress}% complete.");
+                    _progressStatus = _progressStatus.ChangeMessage(string.Format(Resources.WebPanoramaPublishClient_updateProgressAndWait_Importing_data___0___complete_, progress));
                     _progressMonitor.UpdateProgress(_progressStatus = _progressStatus.ChangePercentComplete(progress));
 
                     var delta = progress - currentProgress;
                     if (delta > 1)
                     {
+                        // If progress is > 1% half the wait time
                         _waitTime = Math.Max(1, _waitTime / 2);
                     }
                     else if (delta < 1)
                     {
+                        // If progress is < 1% double the wait time, up to a max of 10 seconds.
                         _waitTime = Math.Min(10, _waitTime * 2);
                     }
 
@@ -929,8 +933,8 @@ namespace pwiz.Skyline.Util
                 }
             }
 
-            // If this is an older server that does not include the progress percent in the status
-            // wait between 1 and 5 seconds
+            // If this is an older server that does not include the progress percent in the status,
+            // wait between 1 and 5 seconds before checking status again.
             var elapsed = (DateTime.Now - startTime).TotalMinutes;
             var sleepTime = elapsed > 5 ? 5 * 1000 : (int)(Math.Max(1, elapsed % 5) * 1000);
             Thread.Sleep(sleepTime);

@@ -32875,11 +32875,29 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Status on server is: {0}.
+        /// </summary>
+        public static string WebPanoramaPublishClient_SendZipFile_Status_on_server_is___0_ {
+            get {
+                return ResourceManager.GetString("WebPanoramaPublishClient_SendZipFile_Status_on_server_is___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Waiting for data import completion....
         /// </summary>
         public static string WebPanoramaPublishClient_SendZipFile_Waiting_for_data_import_completion___ {
             get {
                 return ResourceManager.GetString("WebPanoramaPublishClient_SendZipFile_Waiting_for_data_import_completion___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Importing data. {0}% complete..
+        /// </summary>
+        public static string WebPanoramaPublishClient_updateProgressAndWait_Importing_data___0___complete_ {
+            get {
+                return ResourceManager.GetString("WebPanoramaPublishClient_updateProgressAndWait_Importing_data___0___complete_", resourceCulture);
             }
         }
         
