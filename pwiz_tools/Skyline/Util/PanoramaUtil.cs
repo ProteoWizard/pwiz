@@ -65,7 +65,7 @@ namespace pwiz.Skyline.Util
         {
             const string https = "https://";
             const string http = "http://";
-
+            
             var httpsIndex = serverName.IndexOf(https, StringComparison.Ordinal);
             var httpIndex = serverName.IndexOf(http, StringComparison.Ordinal);
 
@@ -107,7 +107,7 @@ namespace pwiz.Skyline.Util
         public static UserState ValidateServerAndUser(ref Uri serverUri, string username, string password)
         {
             var pServer = new PanoramaServer(serverUri, username, password);
-
+           
             try
             {
                 var userState = EnsureLogin(pServer);
@@ -313,7 +313,7 @@ namespace pwiz.Skyline.Util
         {
             byte[] authBytes = Encoding.UTF8.GetBytes(String.Format(@"{0}:{1}", username, password));
             var authHeader = @"Basic " + Convert.ToBase64String(authBytes);
-            return authHeader;
+            return authHeader;   
         }
 
         #region Implementation of IXmlSerializable
@@ -448,7 +448,7 @@ namespace pwiz.Skyline.Util
 
         public WebPanoramaClient(Uri server)
         {
-            ServerUri = server;
+            ServerUri = server;       
         }
 
         public ServerState GetServerState()
@@ -488,7 +488,7 @@ namespace pwiz.Skyline.Util
         private bool TryNewProtocol(Func<bool> testFunc)
         {
             Uri currentUri = ServerUri;
-
+            
             // try again using https
             if (ServerUri.Scheme.Equals(@"http"))
             {
@@ -550,7 +550,7 @@ namespace pwiz.Skyline.Util
                 return PanoramaState.unknown;
             }
 
-            return PanoramaState.unknown;
+            return PanoramaState.unknown;  
         }
 
         public UserState IsValidUser(string username, string password)
@@ -566,7 +566,7 @@ namespace pwiz.Skyline.Util
 
         public FolderState IsValidFolder(string folderPath, string username, string password)
         {
-            try
+           try
             {
                 var uri = PanoramaUtil.GetContainersUri(ServerUri, folderPath, false);
 
@@ -596,7 +596,7 @@ namespace pwiz.Skyline.Util
                 }
                 else throw;
             }
-            return FolderState.valid;
+           return FolderState.valid;
         }
     }
 
@@ -642,7 +642,7 @@ namespace pwiz.Skyline.Util
         public ShareType DecideShareType(FolderInformation folderInfo, SrmDocument document)
         {
             ShareType shareType = ShareType.DEFAULT;
-
+            
             var settings = document.Settings;
             Assume.IsTrue(document.IsLoaded);
             var cacheVersion = settings.HasResults ? settings.MeasuredResults.CacheVersion : null;
@@ -750,7 +750,7 @@ namespace pwiz.Skyline.Util
                     throw new PanoramaServerException(Resources.EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_the_panorama_server);
                 case UserState.unknown:
                     throw new PanoramaServerException(string.Format(Resources.EditServerDlg_OkDialog_Unknown_error_connecting_to_the_server__0__, refServerUri.AbsoluteUri));
-            }
+            } 
         }
 
         public override JToken GetInfoForFolders(Server server, string folder)
@@ -834,12 +834,12 @@ namespace pwiz.Skyline.Util
 
                 // Need to tell server which uploaded file to import.
                 var dataImportInformation = new NameValueCollection
-                {
-                    // For now, we only have one root that user can upload to
-                    {@"path", @"./"},
-                    {@"file", zipFileName}
-                };
-
+                                                {
+                                                    // For now, we only have one root that user can upload to
+                                                    {@"path", @"./"},
+                                                    {@"file", zipFileName}
+                                                };
+                
                 JToken importResponse = _webClient.Post(importUrl, dataImportInformation);
 
                 // ID to check import status.
@@ -1149,7 +1149,7 @@ namespace pwiz.Skyline.Util
             Headers.Add(HttpRequestHeader.Authorization, Server.GetBasicAuthHeader(username, password));
             _serverUri = serverUri;
         }
-
+        
         public JObject Post(Uri uri, NameValueCollection postData)
         {
             if (string.IsNullOrEmpty(_csrfToken))
@@ -1226,7 +1226,7 @@ namespace pwiz.Skyline.Util
             Password = password;
 
             var path = serverUri.AbsolutePath;
-
+            
             if (path.Length > 1)
             {
                 // Get the context path (e.g. /labkey) from the path
