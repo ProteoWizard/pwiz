@@ -136,6 +136,7 @@
     <Compile Include="Collections\UniqueList.cs" />
     <Compile Include="SystemUtil\CenterWinDialog.cs" />
     <Compile Include="SystemUtil\CommonException.cs" />
+    <Compile Include="SystemUtil\MemoryBlockingCollection.cs" />
     <Compile Include="SystemUtil\TrackAttribute.cs" />
     <Compile Include="SystemUtil\CommonActionUtil.cs" />
     <Compile Include="SystemUtil\ValueCache.cs" />

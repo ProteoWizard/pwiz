@@ -87,7 +87,7 @@ namespace pwiz.SkylineTestUtil
     /// in the TestPerf namespace, where they receive special handling so as
     /// to not disturb the normal, frequent use of the main body of tests.
     /// </summary>
-    public abstract class AbstractFunctionalTest : AbstractUnitTest
+    public abstract class AbstractFunctionalTest : AbstractUnitTestEx
     {
         private const int SLEEP_INTERVAL = 100;
         public const int WAIT_TIME = 3 * 60 * 1000;    // 3 minutes (was 1 minute, but in code coverage testing that may be too impatient)
@@ -1128,9 +1128,12 @@ namespace pwiz.SkylineTestUtil
             var log = SkylineWindow.Document.AuditLog;
             if (e.IsOpeningFile)
             {
-                _setSeenEntries.Clear();
-                for (var entry = log.AuditLogEntries; !entry.IsRoot; entry = entry.Parent)
-                    _setSeenEntries.Add(entry);
+                lock (_setSeenEntries)
+                {
+                    _setSeenEntries.Clear();
+                    for (var entry = log.AuditLogEntries; !entry.IsRoot; entry = entry.Parent)
+                        _setSeenEntries.Add(entry);
+                }
                 // Avoid logging newly deserialized entries
                 return;
             }
@@ -1139,9 +1142,15 @@ namespace pwiz.SkylineTestUtil
 
         private void LogNewEntries(AuditLogEntry entry)
         {
-            if (entry.IsRoot || _setSeenEntries.Contains(entry))
+            if (entry.IsRoot)
                 return;
-            _setSeenEntries.Add(entry);
+
+            lock (_setSeenEntries)
+            {
+                if (_setSeenEntries.Contains(entry))
+                    return;
+                _setSeenEntries.Add(entry);
+            }
 
             LogNewEntries(entry.Parent);
             WriteEntryToFile(AuditLogDir, entry);

@@ -476,6 +476,11 @@ SpectrumList_IonMobility::IonMobilityUnits SpectrumList_IonMobility::getIonMobil
     try { return static_cast<SpectrumList_IonMobility::IonMobilityUnits>(base_->getIonMobilityUnits()); } CATCH_AND_FORWARD
 }
 
+bool SpectrumList_IonMobility::hasCombinedIonMobility()
+{
+    try { return base_->hasCombinedIonMobility(); } CATCH_AND_FORWARD
+}
+
 bool SpectrumList_IonMobility::canConvertIonMobilityAndCCS(IonMobilityUnits units)
 {
     try { return base_->canConvertIonMobilityAndCCS(static_cast<b::SpectrumList_IonMobility::IonMobilityUnits>(units)); } CATCH_AND_FORWARD

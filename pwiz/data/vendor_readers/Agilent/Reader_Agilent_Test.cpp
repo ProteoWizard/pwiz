@@ -34,6 +34,14 @@ struct IsDirectory : public pwiz::util::TestPathPredicate
     }
 };
 
+struct IsIonMobility : public pwiz::util::TestPathPredicate
+{
+    bool operator() (const string& rawpath) const
+    {
+        return bfs::is_directory(rawpath) && bfs::exists(bfs::path(rawpath) / "AcqData" / "IMSFrame.bin");
+    }
+};
+
 int main(int argc, char* argv[])
 {
     TEST_PROLOG(argc, argv)
@@ -48,6 +56,16 @@ int main(int argc, char* argv[])
     {
         bool requireUnicodeSupport = true;
         pwiz::util::testReader(pwiz::msdata::Reader_Agilent(), testArgs, testAcceptOnly, requireUnicodeSupport, IsDirectory());
+
+        pwiz::util::ReaderTestConfig config;
+        config.combineIonMobilitySpectra = true;
+        pwiz::util::testReader(pwiz::msdata::Reader_Agilent(), testArgs, testAcceptOnly, requireUnicodeSupport, IsIonMobility(), config);
+
+        config.ignoreZeroIntensityPoints = true;
+        pwiz::util::testReader(pwiz::msdata::Reader_Agilent(), testArgs, testAcceptOnly, requireUnicodeSupport, IsIonMobility(), config);
+
+        config.isolationMzAndMobilityFilter.emplace_back(40, 1);
+        pwiz::util::testReader(pwiz::msdata::Reader_Agilent(), testArgs, testAcceptOnly, requireUnicodeSupport, IsIonMobility(), config);
     }
     catch (exception& e)
     {

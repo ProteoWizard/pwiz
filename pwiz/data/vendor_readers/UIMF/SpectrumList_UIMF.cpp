@@ -189,6 +189,11 @@ PWIZ_API_DECL bool SpectrumList_UIMF::canConvertIonMobilityAndCCS() const
     return rawfile_->canConvertIonMobilityAndCCS();
 }
 
+PWIZ_API_DECL bool SpectrumList_UIMF::hasCombinedIonMobility() const
+{
+    return false;
+}
+
 
 PWIZ_API_DECL double SpectrumList_UIMF::ionMobilityToCCS(double driftTime, double mz, int charge) const
 {
@@ -273,6 +278,7 @@ PWIZ_API_DECL size_t SpectrumList_UIMF::find(const std::string& id) const {retur
 PWIZ_API_DECL SpectrumPtr SpectrumList_UIMF::spectrum(size_t index, bool getBinaryData) const {return SpectrumPtr();}
 PWIZ_API_DECL SpectrumPtr SpectrumList_UIMF::spectrum(size_t index, DetailLevel detailLevel) const {return SpectrumPtr();}
 //PWIZ_API_DECL pwiz::analysis::Spectrum3DPtr SpectrumList_UIMF::spectrum3d(double scanStartTime, const boost::icl::interval_set<double>& driftTimeRanges) const {return pwiz::analysis::Spectrum3DPtr();}
+PWIZ_API_DECL bool SpectrumList_UIMF::hasCombinedIonMobility() const { return false; }
 
 } // detail
 } // msdata

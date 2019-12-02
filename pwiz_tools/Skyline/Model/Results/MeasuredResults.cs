@@ -83,7 +83,7 @@ namespace pwiz.Skyline.Model.Results
                     dictNameToIndex.Add(set.Name, i);
                     dictIdToIndex.Add(set.Id.GlobalIndex, i);
                     foreach (var path in set.MSDataFilePaths)
-                        _setFiles.Add(path);
+                        _setFiles.Add(path.GetLocation());
                 }
                 _dictNameToIndex = new ImmutableDictionary<string, int>(dictNameToIndex);
                 _dictIdToIndex = new ImmutableDictionary<int, int>(dictIdToIndex);
@@ -173,7 +173,7 @@ namespace pwiz.Skyline.Model.Results
 
         public bool IsCachedFile(MsDataFileUri filePath)
         {
-            return _setCachedFiles.Contains(filePath);
+            return _setCachedFiles.Contains(filePath.GetLocation()); // Search filename only, ignoring centroiding, combineIM etc
         }
 
         public IEnumerable<Type> CachedScoreTypes
@@ -246,7 +246,7 @@ namespace pwiz.Skyline.Model.Results
 
         public bool IsDataFilePath(MsDataFileUri path)
         {
-            return _setFiles.Contains(path);
+            return _setFiles.Contains(path.GetLocation());
         }
 
         public ChromFileInfo GetChromFileInfo<TChromInfo>(Results<TChromInfo> results, int replicateIndex)
@@ -294,7 +294,7 @@ namespace pwiz.Skyline.Model.Results
         public ChromSetFileMatch FindMatchingMSDataFile(MsDataFileUri filePathFind)
         {
             // First look for an exact match
-            var exactMatch = FindExactMatchingMSDataFile(filePathFind);
+            var exactMatch = FindExactNameMatchingMSDataFile(filePathFind);
             if (exactMatch != null)
                 return exactMatch;
             // Then look for a basename match
@@ -314,8 +314,8 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromSetFileMatch FindMatchingOrExistingMSDataFile(MsDataFileUri filePathFind)
         {
-            // First look for an exact match
-            var exactMatch = FindExactMatchingMSDataFile(filePathFind);
+            // First look for an exact match, ignoring any details like centroid or combineIMS settins
+            var exactMatch = FindExactNameMatchingMSDataFile(filePathFind);
             if (exactMatch != null)
                 return exactMatch;
             // Then look for an existing file
@@ -333,14 +333,18 @@ namespace pwiz.Skyline.Model.Results
             return null;
         }
 
-        private ChromSetFileMatch FindExactMatchingMSDataFile(MsDataFileUri filePathFind)
+        /// <summary>
+        /// Look for this file in the list, ignoring details like centroiding, combineIonMobilitySpectra etc
+        /// </summary>
+        private ChromSetFileMatch FindExactNameMatchingMSDataFile(MsDataFileUri fileUri)
         {
+            var filePathFind = fileUri.GetFilePath();
             int fileOrder = 0;
             foreach (ChromatogramSet chromSet in Chromatograms)
             {
                 foreach (var filePath in chromSet.MSDataFilePaths)
                 {
-                    if (Equals(filePath, filePathFind))
+                    if (Equals(filePath.GetFilePath(), filePathFind))
                         return new ChromSetFileMatch(chromSet, filePath, fileOrder);
                     fileOrder++;
                 }
@@ -426,7 +430,7 @@ namespace pwiz.Skyline.Model.Results
         {
             _cacheFinal = cacheFinal;
             _listPartialCaches = MakeReadOnly(partialCaches);
-            _setCachedFiles = new HashSet<MsDataFileUri>(CachedFilePaths);
+            _setCachedFiles = new HashSet<MsDataFileUri>(CachedFilePaths.Select(p => p.GetLocation()));
         }
 
         public MeasuredResults UpdateCaches(string documentPath, MeasuredResults resultsCache)
@@ -448,7 +452,7 @@ namespace pwiz.Skyline.Model.Results
 
             string cachePath = ChromatogramCache.FinalPathForName(documentPath, null);
             var cachedFiles = results.CachedFileInfos.Distinct(new PathComparer<ChromCachedFile>()).ToArray();
-            var dictCachedFiles = cachedFiles.ToDictionary(cachedFile => cachedFile.FilePath);
+            var dictCachedFiles = cachedFiles.ToDictionary(cachedFile => cachedFile.FilePath.GetLocation()); // Ignore centroiding, combineIMS etc for key purposes
             var enumCachedNames = cachedFiles.Select(cachedFile => cachedFile.FilePath.GetFileName());
             var setCachedFileNames = new HashSet<string>(enumCachedNames);
             var chromatogramSets = new List<ChromatogramSet>();

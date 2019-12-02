@@ -534,7 +534,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             var skylineWindow = Program.MainWindow;
             lock (skylineWindow.GetDocumentChangeLock())
             {
-                using (var changeDlg = new ChangeIrtPeptidesDlg(AllPeptides.ToArray(), skylineWindow.Document.MoleculeGroups))
+                using (var changeDlg = new ChangeIrtPeptidesDlg(skylineWindow.Document, AllPeptides.ToArray()))
                 {
                     if (changeDlg.ShowDialog(this) != DialogResult.OK)
                         return;

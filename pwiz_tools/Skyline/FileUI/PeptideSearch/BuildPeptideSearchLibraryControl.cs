@@ -391,6 +391,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 MessageDlg.Show(WizardForm, builder.AmbiguousMatchesMessage);
             }
+            ImportPeptideSearch.IrtStandard = selectedIrtStandard;
             return true;
         }
 

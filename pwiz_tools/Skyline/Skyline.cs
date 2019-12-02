@@ -273,7 +273,7 @@ namespace pwiz.Skyline
         {
             base.OnShown(e);
 
-            if (_fileToOpen != null)
+            if (HasFileToOpen())
             {
                 try
                 {
@@ -281,12 +281,31 @@ namespace pwiz.Skyline
                 }
                 catch (UriFormatException)
                 {
-                    MessageBox.Show(this, Resources.SkylineWindow_SkylineWindow_Invalid_file_specified, Program.Name);
+                    MessageDlg.Show(this, Resources.SkylineWindow_SkylineWindow_Invalid_file_specified);
                 }
-                _fileToOpen = null;
             }
+            _fileToOpen = null;
 
             EnsureUIModeSet();
+        }
+
+        private bool HasFileToOpen()
+        {
+            if (_fileToOpen == null)
+                return false;
+
+            string parentDir = Path.GetDirectoryName(_fileToOpen);
+            // If the parent directory ends with .zip and lives in AppData\Local\Temp
+            // then the user has double-clicked a file in Windows Explorer inside a ZIP file
+            if (parentDir != null && PathEx.HasExtension(parentDir, @".zip") &&
+                parentDir.ToLower().Contains(@"appdata\local\temp"))
+            {
+                MessageDlg.Show(this, TextUtil.LineSeparate(Resources.SkylineWindow_HasFileToOpen_Opening_a_document_inside_a_ZIP_file_is_not_supported_,
+                    string.Format(Resources.SkylineWindow_HasFileToOpen_Unzip_the_file__0__first_and_then_open_the_extracted_file__1__, Path.GetFileName(parentDir), Path.GetFileName(_fileToOpen))));
+                return false;
+            }
+
+            return true;
         }
 
         public void OpenPasteFileDlg(PasteFormat pf)
@@ -322,6 +341,10 @@ namespace pwiz.Skyline
             if (pathOpen.EndsWith(SrmDocumentSharing.EXT))
             {
                 return OpenSharedFile(pathOpen, parentWindow);
+            }
+            else if (pathOpen.EndsWith(SkypFile.EXT))
+            {
+                return OpenSkypFile(pathOpen, parentWindow);
             }
             else
             {
@@ -2710,11 +2733,11 @@ namespace pwiz.Skyline
             ShowGenerateDecoysDlg();
         }
 
-        public void ShowGenerateDecoysDlg()
+        public bool ShowGenerateDecoysDlg(IWin32Window owner = null)
         {
             using (var decoysDlg = new GenerateDecoysDlg(DocumentUI))
             {
-                if (decoysDlg.ShowDialog(this) == DialogResult.OK)
+                if (decoysDlg.ShowDialog(owner ?? this) == DialogResult.OK)
                 {
                     var refinementSettings = new RefinementSettings { NumberOfDecoys = decoysDlg.NumDecoys, DecoysMethod = decoysDlg.DecoysMethod };
                     ModifyDocument(Resources.SkylineWindow_ShowGenerateDecoysDlg_Generate_Decoys, refinementSettings.GenerateDecoys,
@@ -2729,8 +2752,10 @@ namespace pwiz.Skyline
 
                     var nodePepGroup = DocumentUI.PeptideGroups.First(nodePeptideGroup => nodePeptideGroup.IsDecoy);
                     SelectedPath = DocumentUI.GetPathTo((int)SrmDocument.Level.MoleculeGroups, DocumentUI.FindNodeIndex(nodePepGroup.Id));
+                    return true;
                 }
             }
+            return false;
         }
 
         #endregion // Edit menu

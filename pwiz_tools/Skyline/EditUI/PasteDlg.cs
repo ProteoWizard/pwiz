@@ -230,8 +230,9 @@ namespace pwiz.Skyline.EditUI
         private SrmDocument GetNewDocument(SrmDocument document, bool validating, ref IdentityPath selectedPath, out List<PeptideGroupDocNode> newPeptideGroups)
         {
             var fastaHelper = new ImportFastaHelper(tbxFasta, tbxError, panelError, toolTip1);
-            if ((document = fastaHelper.AddFasta(document, null, ref selectedPath, out newPeptideGroups)) == null)
+            if ((document = fastaHelper.AddFasta(document, null, ref selectedPath, out newPeptideGroups, out var error)) == null)
             {
+                fastaHelper.ShowFastaError(error);
                 tabControl1.SelectedTab = tabPageFasta;  // To show fasta errors
                 return null;
             }
@@ -1953,23 +1954,24 @@ namespace pwiz.Skyline.EditUI
         private readonly ToolTip _helpTip;
         private ToolTip HelpTip { get { return _helpTip; } }
 
-        public SrmDocument AddFasta(SrmDocument document, IProgressMonitor monitor, ref IdentityPath selectedPath, out List<PeptideGroupDocNode> newPeptideGroups)
+        public SrmDocument AddFasta(SrmDocument document, IProgressMonitor monitor, ref IdentityPath selectedPath, out List<PeptideGroupDocNode> newPeptideGroups, out PasteError error)
         {
             newPeptideGroups = new List<PeptideGroupDocNode>();
             var text = TbxFasta.Text;
             if (text.Length == 0)
             {
+                error = null;
                 return document;
             }
             if (!text.StartsWith(@">"))
             {
-                ShowFastaError(new PasteError
+                error = new PasteError
                 {
                     Message = Resources.ImportFastaHelper_AddFasta_This_must_start_with____,
                     Column = 0,
                     Length = 1,
                     Line = 0,
-                });
+                };
                 return null;
             }
             string[] lines = text.Split('\n');
@@ -1982,16 +1984,16 @@ namespace pwiz.Skyline.EditUI
                 {
                     if (line.Trim().Length == 1)
                     {
-                        ShowFastaError(new PasteError
+                        error = new PasteError
                         {
                             Message = Resources.ImportFastaHelper_AddFasta_There_is_no_name_for_this_protein,
                             Column = 0,
                             Line = i,
                             Length = 1
-                        });
+                        };
                         return null;
                     }
-                    if (!CheckSequence(aa, lastNameLine, lines))
+                    if ((error = CheckSequence(aa, lastNameLine, lines)) != null)
                         return null;
                     lastNameLine = i;
                     aa = 0;
@@ -2003,22 +2005,22 @@ namespace pwiz.Skyline.EditUI
                     char c = line[column];
                     if (AminoAcid.IsExAA(c))
                         aa++;
-                    else if (!Char.IsWhiteSpace(c) && c != '*')
+                    else if (!char.IsWhiteSpace(c) && c != '*')
                     {
-                        ShowFastaError(new PasteError
+                        error = new PasteError
                         {
                             Message =
-                                String.Format(Resources.ImportFastaHelper_AddFasta___0___is_not_a_capital_letter_that_corresponds_to_an_amino_acid_, c),
+                                string.Format(Resources.ImportFastaHelper_AddFasta___0___is_not_a_capital_letter_that_corresponds_to_an_amino_acid_, c),
                             Column = column,
                             Line = i,
                             Length = 1,
-                        });
+                        };
                         return null;
                     }
                 }
             }
 
-            if (!CheckSequence(aa, lastNameLine, lines))
+            if ((error = CheckSequence(aa, lastNameLine, lines)) != null)
                 return null;
 
             var importer = new FastaImporter(document, false);
@@ -2033,16 +2035,16 @@ namespace pwiz.Skyline.EditUI
             }
             catch (Exception exception)
             {
-                ShowFastaError(new PasteError
+                error = new PasteError
                 {
                     Message = Resources.ImportFastaHelper_AddFasta_An_unexpected_error_occurred__ + exception.Message + @" (" + exception.GetType() + @")"
-                });
+                };
                 return null;
             }
             return document;
         }
 
-        private void ShowFastaError(PasteError pasteError)
+        public void ShowFastaError(PasteError pasteError)
         {
             PanelError.Visible = true;
             if (pasteError == null)
@@ -2073,20 +2075,19 @@ namespace pwiz.Skyline.EditUI
             PanelError.Visible = false;
         }
 
-        private bool CheckSequence(int aa, int lastNameLine, string[] lines)
+        private static PasteError CheckSequence(int aa, int lastNameLine, string[] lines)
         {
             if (aa == 0 && lastNameLine >= 0)
             {
-                ShowFastaError(new PasteError
+                return new PasteError
                 {
                     Message = Resources.ImportFastaHelper_CheckSequence_There_is_no_sequence_for_this_protein,
                     Column = 0,
                     Line = lastNameLine,
                     Length = lines[lastNameLine].Length
-                });
-                return false;
+                };
             }
-            return true;
+            return null;
         }
 
         public static SrmDocument HandleEmptyPeptideGroups(IWin32Window parent, int emptyPeptideGroups, SrmDocument docCurrent, AuditLogEntryCreatorList entryCreatorList = null)
