@@ -2656,7 +2656,12 @@ namespace pwiz.Skyline
 
         public static bool CheckDecoys(SrmDocument document, out int numDecoys, out int numNoSource, out int numWrongTransitionCount)
         {
-            var targets = document.Peptides.Where(pep => !pep.IsDecoy).ToLookup(pep => pep.ModifiedTarget);
+            var targets = document.Peptides.Where(pep => !pep.IsDecoy).ToArray();
+            var targetMap = new TargetMap<HashSet<int>>(targets.Select(target =>
+                new KeyValuePair<Target, HashSet<int>>(target.ModifiedTarget, new HashSet<int>())));
+            foreach (var target in targets)
+            foreach (var nodeTranGroup in target.TransitionGroups)
+                targetMap[target.ModifiedTarget].Add(nodeTranGroup.TransitionCount);
 
             numDecoys = 0;
             numNoSource = 0;
@@ -2665,10 +2670,10 @@ namespace pwiz.Skyline
             foreach (var decoy in document.Peptides.Where(pep => pep.IsDecoy))
             {
                 numDecoys++;
-                var sources = targets[decoy.SourceModifiedTarget].ToArray();
-                if (sources.Length == 0)
+                if (!targetMap.TryGetValue(decoy.SourceModifiedTarget, out var transitionCounts))
                     numNoSource++;
-                else if (sources.All(target => target.TransitionCount != decoy.TransitionCount))
+                else if (decoy.TransitionGroupCount > 0 &&
+                         decoy.TransitionGroups.All(nodeTranGroup => !transitionCounts.Contains(nodeTranGroup.TransitionCount)))
                     numWrongTransitionCount++;
             }
 
