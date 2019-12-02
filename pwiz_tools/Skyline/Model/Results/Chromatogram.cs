@@ -397,7 +397,7 @@ namespace pwiz.Skyline.Model.Results
 
         public string IsLoadedExplained() // For test and debug purposes, gives a descriptive string for IsLoaded failure
         {
-            return IsLoaded ? string.Empty : @"No ChromFileInfo.FileWriteTime for " + string.Join(@",", MSDataFileInfos.Where(info => !info.FileWriteTime.HasValue).Select(f => f.FilePath.GetFilePath()));
+            return IsLoaded ? string.Empty : @"No ChromFileInfo.FileWriteTime for " + string.Join(@",", MSDataFileInfos.Where(info => !info.FileWriteTime.HasValue).Select(f => f.FilePath.GetLocation().GetFilePath()));
         }
 
         public Annotations Annotations { get; private set; }
