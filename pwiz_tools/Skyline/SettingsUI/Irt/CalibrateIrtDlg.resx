@@ -346,7 +346,7 @@
     <value>gridViewCalibrate</value>
   </data>
   <data name="&gt;&gt;gridViewCalibrate.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=19.1.1.294, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=19.1.1.294, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridViewCalibrate.Parent" xml:space="preserve">
     <value>panelPeptides</value>
