@@ -501,6 +501,10 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
 
+            var processedDbIrtPeptides = processed.DbIrtPeptides.ToArray();
+            if (!processedDbIrtPeptides.Any())
+                return false;
+
             using (var longWait = new LongWaitDlg {Text = Resources.LibraryBuildNotificationHandler_AddIrts_Adding_iRTs_to_library})
             {
                 try
