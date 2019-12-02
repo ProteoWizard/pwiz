@@ -33,7 +33,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class DecoyTargetMatchTest : AbstractFunctionalTest
     {
-        [TestMethod]
+        //[TestMethod]  TODO(kaipot): Enable this when checking is re-enabled
         public void TestDecoyTargetMatching()
         {
             RunFunctionalTest();

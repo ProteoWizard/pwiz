@@ -2671,7 +2671,9 @@ namespace pwiz.Skyline
                 else if (sources.All(target => target.TransitionCount != decoy.TransitionCount))
                     numWrongTransitionCount++;
             }
-            return numNoSource == 0 && numWrongTransitionCount == 0;
+
+            // TODO(kaipot): Not quite ready for general use - failing existing documents which may not be broken
+            return true; // numNoSource == 0 && numWrongTransitionCount == 0;
         }
 
         public SrmDocument ImportResults(SrmDocument doc, List<KeyValuePair<string, MsDataFileUri[]>> namedResults, string optimize)
