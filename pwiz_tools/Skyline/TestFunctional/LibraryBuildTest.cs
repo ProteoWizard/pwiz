@@ -504,9 +504,11 @@ namespace pwiz.SkylineTestFunctional
                 });
             }
 
-            Assert.IsTrue(WaitForCondition(() =>
+            Assert.IsTrue(WaitForConditionUI(() =>
                 PeptideSettingsUI.AvailableLibraries.Contains(_libraryName)));
             RunUI(() => PeptideSettingsUI.PickedLibraries = new[] { _libraryName });
+            // Check this worked, because setting a non-existent name silently leaves nothing checked
+            RunUI(() => Assert.IsTrue(PeptideSettingsUI.PickedLibraries.Contains(_libraryName)));
             OkDialog(PeptideSettingsUI, PeptideSettingsUI.OkDialog);
 
             // Wait for the library to load

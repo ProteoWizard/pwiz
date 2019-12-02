@@ -664,7 +664,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return base.Equals(other) &&
+            var result =  base.Equals(other) &&
                    Equals(other.MassError, MassError) &&
                    other.RetentionTime == RetentionTime &&
                    other.StartRetentionTime == StartRetentionTime &&
@@ -685,6 +685,7 @@ namespace pwiz.Skyline.Model.Results
                    Equals(other.IonMobility, IonMobility) &&
                    other.PointsAcrossPeak.Equals(PointsAcrossPeak) &&
                    Equals(IsForcedIntegration, other.IsForcedIntegration);
+            return result; // For ease of breakpoint setting
         }
 
         public override bool Equals(object obj)

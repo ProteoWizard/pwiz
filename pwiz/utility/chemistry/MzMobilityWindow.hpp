@@ -21,6 +21,7 @@
 
 #include <boost/optional.hpp>
 #include <utility>
+#include <vector>
 
 namespace pwiz {
 namespace chemistry {
@@ -28,10 +29,30 @@ namespace chemistry {
 struct MzMobilityWindow
 {
     MzMobilityWindow(double mz) : mz(mz) {}
+    MzMobilityWindow(const std::pair<double, double>& mobilityBounds) : mobilityBounds(mobilityBounds) {}
     MzMobilityWindow(double mz, const std::pair<double, double>& mobilityBounds) : mz(mz), mobilityBounds(mobilityBounds) {}
+    MzMobilityWindow(double mobility, double mobilityTolerance) : MzMobilityWindow(std::make_pair(mobility - mobilityTolerance, mobility + mobilityTolerance)) {}
     MzMobilityWindow(double mz, double mobility, double mobilityTolerance) : MzMobilityWindow(mz, std::make_pair(mobility - mobilityTolerance, mobility + mobilityTolerance)) {}
 
-    double mz;
+    bool mobilityValueInBounds(double mobilityValue) const
+    {
+        return !mobilityBounds ||
+               mobilityBounds.get().first < mobilityValue && mobilityValue < mobilityBounds.get().second;
+    }
+
+    static bool mobilityValueInBounds(const std::vector<MzMobilityWindow>& windows, double mobilityValue)
+    {
+        if (windows.empty())
+            return true;
+
+        for (const auto& window : windows)
+            if (window.mobilityValueInBounds(mobilityValue))
+                return true;
+
+        return false;
+    }
+
+    boost::optional<double> mz;
     boost::optional<std::pair<double, double>> mobilityBounds;
 };
 

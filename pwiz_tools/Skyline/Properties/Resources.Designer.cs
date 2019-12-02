@@ -25594,6 +25594,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Opening a document inside a ZIP file is not supported..
+        /// </summary>
+        public static string SkylineWindow_HasFileToOpen_Opening_a_document_inside_a_ZIP_file_is_not_supported_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_HasFileToOpen_Opening_a_document_inside_a_ZIP_file_is_not_supported" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unzip the file {0} first and then open the extracted file {1}..
+        /// </summary>
+        public static string SkylineWindow_HasFileToOpen_Unzip_the_file__0__first_and_then_open_the_extracted_file__1__ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_HasFileToOpen_Unzip_the_file__0__first_and_then_open_the_extracted_" +
+                        "file__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Import Annotations.
         /// </summary>
         public static string SkylineWindow_ImportAnnotations_Import_Annotations {
@@ -26048,6 +26068,44 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} decoys do not have a matching target.
+        /// </summary>
+        public static string SkylineWindow_ImportResults__0__decoys_do_not_have_a_matching_target {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportResults__0__decoys_do_not_have_a_matching_target", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} decoys do not have the same number of transitions as their matching targets.
+        /// </summary>
+        public static string SkylineWindow_ImportResults__0__decoys_do_not_have_the_same_number_of_transitions_as_their_matching_targets {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportResults__0__decoys_do_not_have_the_same_number_of_transitions" +
+                        "_as_their_matching_targets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 1 decoy does not have a matching target.
+        /// </summary>
+        public static string SkylineWindow_ImportResults_1_decoy_does_not_have_a_matching_target {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportResults_1_decoy_does_not_have_a_matching_target", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 1 decoy does not have the same number of transitions as its matching target.
+        /// </summary>
+        public static string SkylineWindow_ImportResults_1_decoy_does_not_have_the_same_number_of_transitions_as_its_matching_target {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportResults_1_decoy_does_not_have_the_same_number_of_transitions_" +
+                        "as_its_matching_target", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A maximum of {0} may be missing or outliers for a successful import..
         /// </summary>
         public static string SkylineWindow_ImportResults_A_maximum_of__0__may_be_missing_and_or_outliers_for_a_successful_import_ {
@@ -26079,11 +26137,49 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Are you sure? Peak scoring models trained with non-matching targets and decoys may produce incorrect results..
+        /// </summary>
+        public static string SkylineWindow_ImportResults_Are_you_sure__Peak_scoring_models_trained_with_non_matching_targets_and_decoys_may_produce_incorrect_results_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportResults_Are_you_sure__Peak_scoring_models_trained_with_non_ma" +
+                        "tching_targets_and_decoys_may_produce_incorrect_results_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Continue.
+        /// </summary>
+        public static string SkylineWindow_ImportResults_Continue {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportResults_Continue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Do you want to continue?.
         /// </summary>
         public static string SkylineWindow_ImportResults_Do_you_want_to_continue_ {
             get {
                 return ResourceManager.GetString("SkylineWindow_ImportResults_Do_you_want_to_continue_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do you want to generate new decoys or continue with the current decoys?.
+        /// </summary>
+        public static string SkylineWindow_ImportResults_Do_you_want_to_generate_new_decoys_or_continue_with_the_current_decoys_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportResults_Do_you_want_to_generate_new_decoys_or_continue_with_t" +
+                        "he_current_decoys_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Generate.
+        /// </summary>
+        public static string SkylineWindow_ImportResults_Generate {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportResults_Generate", resourceCulture);
             }
         }
         
@@ -26122,6 +26218,26 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SkylineWindow_ImportResults_The_document_contains__0__of_these_iRT_standard_pepti" +
                         "des_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document contains a decoy that does not match the targets:.
+        /// </summary>
+        public static string SkylineWindow_ImportResults_The_document_contains_a_decoy_that_does_not_match_the_targets_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportResults_The_document_contains_a_decoy_that_does_not_match_the" +
+                        "_targets_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document contains decoys that do not match the targets. Out of {0} decoys:.
+        /// </summary>
+        public static string SkylineWindow_ImportResults_The_document_contains_decoys_that_do_not_match_the_targets__Out_of__0__decoys_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportResults_The_document_contains_decoys_that_do_not_match_the_ta" +
+                        "rgets__Out_of__0__decoys_", resourceCulture);
             }
         }
         
@@ -27445,6 +27561,110 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SkylineWindow_ViewSpectralLibraries_No_libraries_to_show_Would_you_like_to_add_a_" +
                         "library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skyline Document Pointer.
+        /// </summary>
+        public static string SkypFile_FILTER_SKYP_Skyline_Document_Pointer {
+            get {
+                return ResourceManager.GetString("SkypFile_FILTER_SKYP_Skyline_Document_Pointer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name of shared Skyline archive cannot be null or empty..
+        /// </summary>
+        public static string SkypFile_GetNonExistentPath_Name_of_shared_Skyline_archive_cannot_be_null_or_empty_ {
+            get {
+                return ResourceManager.GetString("SkypFile_GetNonExistentPath_Name_of_shared_Skyline_archive_cannot_be_null_or_empt" +
+                        "y_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is not a valid URL on a Panorama server..
+        /// </summary>
+        public static string SkypFile_GetSkyFileUrl__0__is_not_a_valid_URL_on_a_Panorama_server_ {
+            get {
+                return ResourceManager.GetString("SkypFile_GetSkyFileUrl__0__is_not_a_valid_URL_on_a_Panorama_server_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected the URL of a shared Skyline document archive ({0}) in the skyp file. Found {1} instead..
+        /// </summary>
+        public static string SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive___0___in_the_skyp_file__Found__1__instead_ {
+            get {
+                return ResourceManager.GetString("SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive___0_" +
+                        "__in_the_skyp_file__Found__1__instead_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File does not contain the URL of a shared Skyline archive file ({0}) on a Panorama server..
+        /// </summary>
+        public static string SkypFile_GetSkyFileUrl_File_does_not_contain_the_URL_of_a_shared_Skyline_archive_file___0___on_a_Panorama_server_ {
+            get {
+                return ResourceManager.GetString("SkypFile_GetSkyFileUrl_File_does_not_contain_the_URL_of_a_shared_Skyline_archive_" +
+                        "file___0___on_a_Panorama_server_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading {0}.
+        /// </summary>
+        public static string SkypSupport_Download_Downloading__0_ {
+            get {
+                return ResourceManager.GetString("SkypSupport_Download_Downloading__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was an error downloading the Skyline document specified in the skyp file: {0}..
+        /// </summary>
+        public static string SkypSupport_Download_There_was_an_error_downloading_the_Skyline_document_specified_in_the_skyp_file___0__ {
+            get {
+                return ResourceManager.GetString("SkypSupport_Download_There_was_an_error_downloading_the_Skyline_document_specifie" +
+                        "d_in_the_skyp_file___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You do not have permissions to download this file from {0}..
+        /// </summary>
+        public static string SkypSupport_Download_You_do_not_have_permissions_to_download_this_file_from__0__ {
+            get {
+                return ResourceManager.GetString("SkypSupport_Download_You_do_not_have_permissions_to_download_this_file_from__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You may have to add {0} as a Panorama server from the Tools &gt; Options menu in Skyline..
+        /// </summary>
+        public static string SkypSupport_Download_You_may_have_to_add__0__as_a_Panorama_server_from_the_Tools___Options_menu_in_Skyline_ {
+            get {
+                return ResourceManager.GetString("SkypSupport_Download_You_may_have_to_add__0__as_a_Panorama_server_from_the_Tools_" +
+                        "__Options_menu_in_Skyline_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading Skyline Document Archive.
+        /// </summary>
+        public static string SkypSupport_Open_Downloading_Skyline_Document_Archive {
+            get {
+                return ResourceManager.GetString("SkypSupport_Open_Downloading_Skyline_Document_Archive", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failure opening skyp file..
+        /// </summary>
+        public static string SkypSupport_Open_Failure_opening_skyp_file_ {
+            get {
+                return ResourceManager.GetString("SkypSupport_Open_Failure_opening_skyp_file_", resourceCulture);
             }
         }
         

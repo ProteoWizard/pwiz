@@ -3287,7 +3287,7 @@ namespace pwiz.Skyline
             do
             {
                 docOriginal= docContainer.Document;
-
+                dataFile = dataFile.ChangeCombineIonMobilitySpectra(true); // Try to load as 3-array IMS data if that happens to be supported
                 var listChromatograms = new List<ChromatogramSet>();
 
                 if (docOriginal.Settings.HasResults)
