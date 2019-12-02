@@ -1128,9 +1128,12 @@ namespace pwiz.SkylineTestUtil
             var log = SkylineWindow.Document.AuditLog;
             if (e.IsOpeningFile)
             {
-                _setSeenEntries.Clear();
-                for (var entry = log.AuditLogEntries; !entry.IsRoot; entry = entry.Parent)
-                    _setSeenEntries.Add(entry);
+                lock (_setSeenEntries)
+                {
+                    _setSeenEntries.Clear();
+                    for (var entry = log.AuditLogEntries; !entry.IsRoot; entry = entry.Parent)
+                        _setSeenEntries.Add(entry);
+                }
                 // Avoid logging newly deserialized entries
                 return;
             }
@@ -1139,9 +1142,15 @@ namespace pwiz.SkylineTestUtil
 
         private void LogNewEntries(AuditLogEntry entry)
         {
-            if (entry.IsRoot || _setSeenEntries.Contains(entry))
+            if (entry.IsRoot)
                 return;
-            _setSeenEntries.Add(entry);
+
+            lock (_setSeenEntries)
+            {
+                if (_setSeenEntries.Contains(entry))
+                    return;
+                _setSeenEntries.Add(entry);
+            }
 
             LogNewEntries(entry.Parent);
             WriteEntryToFile(AuditLogDir, entry);
