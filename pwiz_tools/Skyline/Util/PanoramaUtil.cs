@@ -875,14 +875,6 @@ namespace pwiz.Skyline.Util
                             _progressStatus = _progressStatus.ChangeErrorException(e));
                         throw e;
                     }
-                   
-                    else if (!status.IsRunning)
-                    {
-                        // Display the status since we don't recognize it.  This could be, for example, an "Import Waiting" status if another 
-                        // Skyline document is currently being imported on the server. 
-                        _progressMonitor.UpdateProgress(_progressStatus = _progressStatus =
-                            _progressStatus.ChangeMessage(string.Format(Resources.WebPanoramaPublishClient_SendZipFile_Status_on_server_is___0_, status.StatusString)));
-                    }
 
                     updateProgressAndWait(status, progressMonitor, _progressStatus, startTime);
                 }
@@ -893,7 +885,7 @@ namespace pwiz.Skyline.Util
         {
             public string StatusString { get; }
             public bool IsComplete => string.Equals(@"COMPLETE", StatusString);
-            public bool IsRunning => StatusString.StartsWith(@"RUNNING");
+            public bool IsRunning => StatusString.Contains(@"RUNNING"); // "IMPORT RUNNING" pre LK19.3, RUNNING, x% in LK19.3
             public bool IsError => string.Equals(@"ERROR", StatusString);
             public bool IsCancelled => string.Equals(@"CANCELLED", StatusString);
 
@@ -933,8 +925,25 @@ namespace pwiz.Skyline.Util
                 }
             }
 
-            // If this is an older server that does not include the progress percent in the status,
-            // wait between 1 and 5 seconds before checking status again.
+            if (!jobStatus.IsRunning)
+            {
+                // Display the status since we don't recognize it.  This could be, for example, an "Import Waiting" status if another 
+                // Skyline document is currently being imported on the server. 
+                _progressMonitor.UpdateProgress(_progressStatus = _progressStatus =
+                    _progressStatus.ChangeMessage(string.Format(Resources.WebPanoramaPublishClient_SendZipFile_Status_on_server_is___0_, jobStatus.StatusString)));
+            }
+
+            else if (!_progressStatus.Message.Equals(Resources
+                .WebPanoramaPublishClient_SendZipFile_Waiting_for_data_import_completion___))
+            {
+                // Import is running now. Reset the progress message in case it had been set to something else (e.g. "Import Waiting") in a previous iteration.  
+                progressMonitor.UpdateProgress(_progressStatus =
+                    _progressStatus.ChangeMessage(Resources
+                        .WebPanoramaPublishClient_SendZipFile_Waiting_for_data_import_completion___));
+            }
+
+            // This is probably an older server (pre LK19.3) that does not include the progress percent in the status.
+            // Wait between 1 and 5 seconds before checking status again.
             var elapsed = (DateTime.Now - startTime).TotalMinutes;
             var sleepTime = elapsed > 5 ? 5 * 1000 : (int)(Math.Max(1, elapsed % 5) * 1000);
             Thread.Sleep(sleepTime);
