@@ -22,6 +22,7 @@
 #define PWIZ_SOURCE
 
 #include "BinaryData.hpp"
+#include "optimized_lexical_cast.hpp"
 
 #ifdef __cplusplus_cli
 #define PWIZ_MANAGED_PASSTHROUGH
@@ -72,6 +73,7 @@ class BinaryData<T>::Impl
 #ifdef PWIZ_MANAGED_PASSTHROUGH
         GCHandle handle = __VOIDPTR_TO_GCHANDLE(cliNumericArray); // freed by caller
         managedStorage_ = (cli::array<T>^) handle.Target;
+        nativeStorage_.clear();
         return *this;
 #else
         throw std::runtime_error("[BinaryData<T>::operator=(void*)] only supported with MSVC C++/CLI");
@@ -86,6 +88,7 @@ class BinaryData<T>::Impl
             managedStorage_ = gcnew array<T>((int)elements);
             if (t != T())
                 std::fill(begin_, begin_ + elements, t);
+            nativeStorage_.clear();
             return;
         }
 #endif
@@ -100,6 +103,7 @@ class BinaryData<T>::Impl
             cli::array<T>^% storageRef = (array<T>^) managedStorage_;
             System::Array::Resize<T>(storageRef, (int)elements);
             managedStorage_ = storageRef;
+            nativeStorage_.clear();
             return;
         }
 #endif
@@ -115,6 +119,7 @@ class BinaryData<T>::Impl
             System::Array::Resize<T>(storageRef, (int)elements);
             managedStorage_ = storageRef;
             std::fill(begin_, end_, FillWith);
+            nativeStorage_.clear();
             return;
         }
 #endif
@@ -139,7 +144,9 @@ class BinaryData<T>::Impl
                 auto tmp = gcnew cli::array<T>((int)that.size());
                 {
                     pin_ptr<T> pinnedTmpPtr = &tmp[0];
-                    memcpy(&pinnedTmpPtr[0], &that[0], that.size());
+                    //memcpy(&pinnedTmpPtr[0], &that[0], that.size());
+                    for (int i = 0; i < that.size(); ++i)
+                        pinnedTmpPtr[i] = that[i];
                 }
 
                 // copy the managed array's contents to the native array
@@ -152,6 +159,8 @@ class BinaryData<T>::Impl
                 // replace the managed array with the temporary one
                 managedStorage_ = tmp;
             }
+
+            nativeStorage_.clear();
             return;
         }
 #endif
@@ -210,6 +219,7 @@ class BinaryData<T>::Impl
             // copy the source native array's contents to the target managed array
             pin_ptr<T> pinnedArrayPtr = &managedStorage_[0];
             memcpy(&pinnedArrayPtr[0], &that[0], that.size() * sizeof(T));
+            nativeStorage_.clear();
             return;
         }
 #endif
@@ -244,7 +254,9 @@ class BinaryData<T>::Impl
             if (nativeStorage_.empty())
                 nativeStorage_.insert(nativeStorage_.end(), cbegin_, cend_);
             else if (managedStorage_->Length != nativeStorage_.size())
-                throw std::length_error("managed and native storage have different sizes");
+                throw std::length_error("managed and native storage have different sizes (" +
+                                        boost::lexical_cast<std::string>(managedStorage_->Length) +
+                                        " vs. " + boost::lexical_cast<std::string>(nativeStorage_.size()) + ")");
         }
 #endif
         return nativeStorage_;
