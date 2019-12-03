@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
+using pwiz.Skyline;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.Graphs.Calibration;
@@ -50,7 +51,7 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
             // IsPauseForScreenShots = true;
 
-            ForceMzml = false;   // Mzml is ~8x faster for this test.
+            ForceMzml = (Program.PauseSeconds != 0);   // Mzml is ~8x faster for this test.
                                                     
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/AbsoluteQuant-1_4.pdf";
 

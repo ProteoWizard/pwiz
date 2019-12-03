@@ -31,40 +31,40 @@ Undo Redo : Imported results from 8 files
 Summary   : Imported results from 8 files
 All Info  :
 Imported results from 8 files
-Import results settings > File names : contains "Standard_1.RAW"
-Import results settings > File names : contains "Standard_2.RAW"
-Import results settings > File names : contains "Standard_3.RAW"
-Import results settings > File names : contains "Standard_4.RAW"
-Import results settings > File names : contains "Standard_5.RAW"
-Import results settings > File names : contains "Standard_6.RAW"
-Import results settings > File names : contains "Standard_7.RAW"
-Import results settings > File names : contains "Standard_8.RAW"
+Import results settings > File names : contains "Standard_1.mzML"
+Import results settings > File names : contains "Standard_2.mzML"
+Import results settings > File names : contains "Standard_3.mzML"
+Import results settings > File names : contains "Standard_4.mzML"
+Import results settings > File names : contains "Standard_5.mzML"
+Import results settings > File names : contains "Standard_6.mzML"
+Import results settings > File names : contains "Standard_7.mzML"
+Import results settings > File names : contains "Standard_8.mzML"
 Import results settings > Add single-injection replicates in files is True
 Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
-    "Standard_1.RAW",
-    "Standard_2.RAW",
-    "Standard_3.RAW",
-    "Standard_4.RAW",
-    "Standard_5.RAW",
-    "Standard_6.RAW",
-    "Standard_7.RAW",
-    "Standard_8.RAW"
+    "Standard_1.mzML",
+    "Standard_2.mzML",
+    "Standard_3.mzML",
+    "Standard_4.mzML",
+    "Standard_5.mzML",
+    "Standard_6.mzML",
+    "Standard_7.mzML",
+    "Standard_8.mzML"
 ],
 Add single-injection replicates in files = True,
 Files to import simultaneously = "Many"
 
-Undo Redo : Imported results from "FOXN1-GST.RAW"
-Summary   : Imported results from "FOXN1-GST.RAW"
+Undo Redo : Imported results from "FOXN1-GST.mzML"
+Summary   : Imported results from "FOXN1-GST.mzML"
 All Info  :
-Imported results from "FOXN1-GST.RAW"
-Import results settings > File names : contains "FOXN1-GST.RAW"
+Imported results from "FOXN1-GST.mzML"
+Import results settings > File names : contains "FOXN1-GST.mzML"
 Import results settings > Add single-injection replicates in files is True
 Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
-    "FOXN1-GST.RAW"
+    "FOXN1-GST.mzML"
 ],
 Add single-injection replicates in files = True,
 Files to import simultaneously = "Many"
