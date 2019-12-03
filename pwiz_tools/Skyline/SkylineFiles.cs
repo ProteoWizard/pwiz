@@ -1759,7 +1759,7 @@ namespace pwiz.Skyline
                     selectPath = null;
                     using (var longWaitDlg = new LongWaitDlg(this) {Text = description})
                     {
-                        var smallMoleculeTransitionListReader = new SmallMoleculeTransitionListCSVReader(csvText);
+                        var smallMoleculeTransitionListReader = new SmallMoleculeTransitionListCSVReader(MassListInputs.ReadLinesFromText(csvText));
                         IdentityPath firstAdded;
                         longWaitDlg.PerformWork(this, 1000,
                             () => docNew = smallMoleculeTransitionListReader.CreateTargets(doc, null, out firstAdded));
