@@ -111,6 +111,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         public IrtStandard IrtStandard { get; private set; }
 
         public SortableBindingList<StandardPeptide> StandardPeptideList { get { return _gridViewDriver.Items; } }
+        public StandardPeptide[] StandardPeptidesSorted => StandardPeptideList.OrderBy(pep => pep.RetentionTime).ToArray();
 
         public int StandardPeptideCount { get { return StandardPeptideList.Count; } }
 
@@ -208,8 +209,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
             double minRt, maxRt;
             if (!IsRecalibration)
             {
-                minRt = StandardPeptideList[comboMinIdx].RetentionTime;
-                maxRt = StandardPeptideList[comboMaxIdx].RetentionTime;
+                minRt = StandardPeptidesSorted[comboMinIdx].RetentionTime;
+                maxRt = StandardPeptidesSorted[comboMaxIdx].RetentionTime;
             }
             else
             {
@@ -407,7 +408,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 return;
 
             var oldPeps = comboMinPeptide.Items.Cast<string>().ToArray();
-            var newPeps = StandardPeptideList.Select(pep => pep.Sequence).ToArray();
+            var newPeps = StandardPeptidesSorted.Select(pep => pep.Sequence).ToArray();
 
             if (oldPeps.SequenceEqual(newPeps))
                 return;
@@ -465,8 +466,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 double pepMinTime, pepMaxTime;
                 if (!IsRecalibration)
                 {
-                    var pepMin = StandardPeptideList[comboMinPeptide.SelectedIndex];
-                    var pepMax = StandardPeptideList[comboMaxPeptide.SelectedIndex];
+                    var pepMin = StandardPeptidesSorted[comboMinPeptide.SelectedIndex];
+                    var pepMax = StandardPeptidesSorted[comboMaxPeptide.SelectedIndex];
                     pepMinTime = pepMin.RetentionTime;
                     pepMaxTime = pepMax.RetentionTime;
                     tooltips = new Dictionary<int, string> {{0, pepMin.Sequence}, {1, pepMax.Sequence}};
