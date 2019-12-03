@@ -62,6 +62,7 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListIonMobilityBase
     virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
     virtual bool hasIonMobility() const;
     virtual bool canConvertIonMobilityAndCCS() const;
+    virtual bool hasCombinedIonMobility() const;
     virtual double ionMobilityToCCS(double ionMobility, double mz, int charge) const;
     virtual double ccsToIonMobility(double ccs, double mz, int charge) const;
 

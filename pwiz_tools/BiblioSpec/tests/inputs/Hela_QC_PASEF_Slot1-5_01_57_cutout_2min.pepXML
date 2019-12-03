@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="pepXML_std.xsl"?>
+<msms_pipeline_analysis date="2019-11-21T15:49:59" xmlns="http://regis-web.systemsbiology.net/pepXML" summary_xml="d:\test\bruker\tims\Hela_QC_PASEF_Slot1-5_01_57_cutout_2min.pepXML" xsi:schemaLocation="http://sashimi.sourceforge.net/schema_revision/pepXML/pepXML_v118.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<msms_run_summary base_name="Hela_QC_PASEF_Slot1-5_01_57_cutout_2min" raw_data_type="raw" raw_data="mzBIN">
+<sample_enzyme name="trypsin">
+<specificity cut="KR" no_cut="P" sense="C"/>
+</sample_enzyme>
+<search_summary base_name="Hela_QC_PASEF_Slot1-5_01_57_cutout_2min" precursor_mass_type="monoisotopic" search_engine="X! Tandem" search_engine_version="MSFragger-2.2" fragment_mass_type="monoisotopic" search_id="1">
+<search_database local_path="D:\oldD\fasta\20150928-RefSeq-human.protein.revCat.fasta" type="AA"/>
+<enzymatic_search_constraint enzyme="default" min_number_termini="2" max_num_internal_cleavages="1"/>
+<aminoacid_modification aminoacid="C" massdiff="57.0215" mass="160.0307" variable="N"/>
+<aminoacid_modification aminoacid="M" massdiff="15.9949" mass="147.0354" variable="Y"/>
+<terminal_modification massdiff="42.0106" protein_terminus="Y" mass="43.0184" terminus="N" variable="Y"/>
+<parameter name="# MSFragger.build" value="MSFragger-2.2"/>
+<parameter name="database_name" value="D:\oldD\fasta\20150928-RefSeq-human.protein.revCat.fasta"/>
+<parameter name="decoy_prefix" value="XXX_"/>
+<parameter name="num_threads" value="15"/>
+<parameter name="precursor_mass_lower" value="-50.0"/>
+<parameter name="precursor_mass_upper" value="50.0"/>
+<parameter name="precursor_mass_units" value="1"/>
+<parameter name="precursor_true_tolerance" value="20.0"/>
+<parameter name="precursor_true_units" value="1"/>
+<parameter name="fragment_mass_tolerance" value="20.0"/>
+<parameter name="fragment_mass_units" value="1"/>
+<parameter name="calibrate_mass" value="2"/>
+<parameter name="write_calibrated_mgf" value="1"/>
+<parameter name="isotope_error" value="0/1/2"/>
+<parameter name="mass_offsets" value="0"/>
+<parameter name="precursor_mass_mode" value="SELECTED"/>
+<parameter name="localize_delta_mass" value="0"/>
+<parameter name="intensity_transform" value="0"/>
+<parameter name="remove_precursor_peak" value="1"/>
+<parameter name="remove_precursor_range" value="-1.50,1.50"/>
+<parameter name="delta_mass_exclude_ranges" value="(-1.5,3.5)"/>
+<parameter name="fragment_ion_series" value="b,y"/>
+<parameter name="search_enzyme_name" value="trypsin"/>
+<parameter name="search_enzyme_cutafter" value="KR"/>
+<parameter name="search_enzyme_butnotafter" value="P"/>
+<parameter name="num_enzyme_termini" value="2"/>
+<parameter name="allowed_missed_cleavage" value="1"/>
+<parameter name="clip_nTerm_M" value="1"/>
+<parameter name="allow_multiple_variable_mods_on_residue" value="0"/>
+<parameter name="max_variable_mods_per_mod" value="3"/>
+<parameter name="max_variable_mods_combinations" value="5000"/>
+<parameter name="output_file_extension" value="pepXML"/>
+<parameter name="output_format" value="pepXML"/>
+<parameter name="output_report_topN" value="1"/>
+<parameter name="output_max_expect" value="50.0"/>
+<parameter name="report_alternative_proteins" value="0"/>
+<parameter name="override_charge" value="0"/>
+<parameter name="precursor_charge" value="1 4"/>
+<parameter name="digest_min_length" value="7"/>
+<parameter name="digest_max_length" value="50"/>
+<parameter name="digest_mass_range" value="500.0 5000.0"/>
+<parameter name="max_fragment_charge" value="2"/>
+<parameter name="track_zero_topN" value="0"/>
+<parameter name="zero_bin_accept_expect" value="0.0"/>
+<parameter name="zero_bin_mult_expect" value="1.0"/>
+<parameter name="add_topN_complementary" value="0"/>
+<parameter name="minimum_peaks" value="15"/>
+<parameter name="use_topN_peaks" value="200"/>
+<parameter name="min_fragments_modelling" value="2"/>
+<parameter name="min_matched_fragments" value="4"/>
+<parameter name="minimum_ratio" value="0.0"/>
+<parameter name="clear_mz_range" value="0.0 0.0"/>
+<parameter name="excluded_scan_list_file" value=""/>
+<parameter name="variable_mod_01" value="15.99490 M"/>
+<parameter name="variable_mod_02" value="42.01060 [^"/>
+<parameter name="add_A_alanine" value="0.000000"/>
+<parameter name="add_B_user_amino_acid" value="0.000000"/>
+<parameter name="add_C_cysteine" value="57.021464"/>
+<parameter name="add_Cterm_peptide" value="0.0"/>
+<parameter name="add_Cterm_protein" value="0.0"/>
+<parameter name="add_D_aspartic_acid" value="0.000000"/>
+<parameter name="add_E_glutamic_acid" value="0.000000"/>
+<parameter name="add_F_phenylalanine" value="0.000000"/>
+<parameter name="add_G_glycine" value="0.000000"/>
+<parameter name="add_H_histidine" value="0.000000"/>
+<parameter name="add_I_isoleucine" value="0.000000"/>
+<parameter name="add_J_user_amino_acid" value="0.000000"/>
+<parameter name="add_K_lysine" value="0.000000"/>
+<parameter name="add_L_leucine" value="0.000000"/>
+<parameter name="add_M_methionine" value="0.000000"/>
+<parameter name="add_N_asparagine" value="0.000000"/>
+<parameter name="add_Nterm_peptide" value="0.0"/>
+<parameter name="add_Nterm_protein" value="0.0"/>
+<parameter name="add_O_user_amino_acid" value="0.000000"/>
+<parameter name="add_P_proline" value="0.000000"/>
+<parameter name="add_Q_glutamine" value="0.000000"/>
+<parameter name="add_R_arginine" value="0.000000"/>
+<parameter name="add_S_serine" value="0.000000"/>
+<parameter name="add_T_threonine" value="0.000000"/>
+<parameter name="add_U_user_amino_acid" value="0.000000"/>
+<parameter name="add_V_valine" value="0.000000"/>
+<parameter name="add_W_tryptophan" value="0.000000"/>
+<parameter name="add_X_user_amino_acid" value="0.000000"/>
+<parameter name="add_Y_tyrosine" value="0.000000"/>
+<parameter name="add_Z_user_amino_acid" value="0.000000"/>
+</search_summary>
+<spectrum_query start_scan="1" ion_mobility="1.2009081" assumed_charge="2" spectrum="Hela_QC_PASEF_Slot1-5_01_57_cutout_2min.1.1.2" end_scan="1" index="1" precursor_neutral_mass="2317.9421" retention_time_sec="3600.674">
+<search_result>
+<search_hit peptide="NTAAMVCSLENRDECLMCGS" massdiff="1.0156" calc_neutral_pep_mass="2316.9265" peptide_next_aa="-" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="38" hit_rank="1" num_matched_ions="12" protein="NP_001024.1" peptide_prev_aa="R" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="7"/>
+<mod_aminoacid_mass mass="160.0307" position="15"/>
+<mod_aminoacid_mass mass="160.0307" position="18"/>
+</modification_info>
+<search_score name="hyperscore" value="23.270"/>
+<search_score name="nextscore" value="8.785"/>
+<search_score name="expect" value="3.610e-04"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="2" ion_mobility="1.0267171" assumed_charge="2" spectrum="Hela_QC_PASEF_Slot1-5_01_57_cutout_2min.2.2.2" end_scan="2" index="2" precursor_neutral_mass="1533.6818" retention_time_sec="3600.674">
+<search_result>
+<search_hit peptide="EYTACELMNIYK" massdiff="-0.0026" calc_neutral_pep_mass="1533.6843" peptide_next_aa="T" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="22" hit_rank="1" num_matched_ions="8" protein="XP_006712233.1" peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="5"/>
+</modification_info>
+<search_score name="hyperscore" value="16.791"/>
+<search_score name="nextscore" value="8.503"/>
+<search_score name="expect" value="1.690e-03"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="3" ion_mobility="0.85685045" assumed_charge="3" spectrum="Hela_QC_PASEF_Slot1-5_01_57_cutout_2min.3.3.3" end_scan="3" index="3" precursor_neutral_mass="1776.8328" retention_time_sec="3600.674">
+<search_result>
+<search_hit peptide="MLHFLTAVVGSTCDVK" massdiff="-0.0575" calc_neutral_pep_mass="1776.8903" peptide_next_aa="V" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="60" hit_rank="1" num_matched_ions="9" protein="NP_663760.1" peptide_prev_aa="R" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="13"/>
+</modification_info>
+<search_score name="hyperscore" value="18.616"/>
+<search_score name="nextscore" value="18.616"/>
+<search_score name="expect" value="9.354e-03"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="4" ion_mobility="0.79972166" assumed_charge="3" spectrum="Hela_QC_PASEF_Slot1-5_01_57_cutout_2min.4.4.3" end_scan="4" index="4" precursor_neutral_mass="1668.8376" retention_time_sec="3600.674">
+<search_result>
+<search_hit peptide="LFPLIQTMHSNLAGK" massdiff="-0.0645" calc_neutral_pep_mass="1668.9021" peptide_next_aa="I" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="56" hit_rank="1" num_matched_ions="4" protein="NP_001129125.1" peptide_prev_aa="R" is_rejected="0">
+<search_score name="hyperscore" value="8.473"/>
+<search_score name="nextscore" value="8.473"/>
+<search_score name="expect" value="3.212e+00"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="6" ion_mobility="0.90289825" assumed_charge="3" spectrum="Hela_QC_PASEF_Slot1-5_01_57_cutout_2min.6.6.3" end_scan="6" index="6" precursor_neutral_mass="2062.8899" retention_time_sec="3600.674">
+<search_result>
+<search_hit peptide="EFHDVTLGNPWAGTKMDK" massdiff="1.9275" calc_neutral_pep_mass="2060.9624" peptide_next_aa="Y" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="68" hit_rank="1" num_matched_ions="6" protein="XXX_XP_011509654.1" peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="147.0354" position="16"/>
+</modification_info>
+<search_score name="hyperscore" value="10.267"/>
+<search_score name="nextscore" value="9.823"/>
+<search_score name="expect" value="2.481e+00"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="7" ion_mobility="1.0246093" assumed_charge="2" spectrum="Hela_QC_PASEF_Slot1-5_01_57_cutout_2min.7.7.2" end_scan="7" index="7" precursor_neutral_mass="1509.7432" retention_time_sec="3600.674">
+<search_result>
+<search_hit peptide="YQLEIPENFTTR" massdiff="-0.0031" calc_neutral_pep_mass="1509.7462" peptide_next_aa="N" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="22" hit_rank="1" num_matched_ions="10" protein="XP_011531100.1" peptide_prev_aa="R" is_rejected="0">
+<search_score name="hyperscore" value="18.993"/>
+<search_score name="nextscore" value="8.168"/>
+<search_score name="expect" value="4.377e-05"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="8" ion_mobility="1.1342232" assumed_charge="2" spectrum="Hela_QC_PASEF_Slot1-5_01_57_cutout_2min.8.8.2" end_scan="8" index="8" precursor_neutral_mass="1914.9641" retention_time_sec="3600.674">
+<search_result>
+<search_hit peptide="LQQTQNQVDEVVDIMR" massdiff="0.0172" calc_neutral_pep_mass="1914.9469" peptide_next_aa="V" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="30" hit_rank="1" num_matched_ions="13" protein="NP_004772.1" peptide_prev_aa="R" is_rejected="0">
+<search_score name="hyperscore" value="26.288"/>
+<search_score name="nextscore" value="9.657"/>
+<search_score name="expect" value="8.699e-07"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="9" ion_mobility="1.086622" assumed_charge="2" spectrum="Hela_QC_PASEF_Slot1-5_01_57_cutout_2min.9.9.2" end_scan="9" index="9" precursor_neutral_mass="1672.8044" retention_time_sec="3600.674">
+<search_result>
+<search_hit peptide="LQLVTQKMQYFEK" massdiff="1.9344" calc_neutral_pep_mass="1670.8700" peptide_next_aa="C" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="24" hit_rank="1" num_matched_ions="5" protein="XXX_NP_597716.1" peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="147.0354" position="8"/>
+</modification_info>
+<search_score name="hyperscore" value="11.396"/>
+<search_score name="nextscore" value="10.214"/>
+<search_score name="expect" value="2.535e+00"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="10" ion_mobility="1.1805618" assumed_charge="2" spectrum="Hela_QC_PASEF_Slot1-5_01_57_cutout_2min.10.10.2" end_scan="10" index="10" precursor_neutral_mass="2062.9375" retention_time_sec="3600.674">
+<search_result>
+<search_hit peptide="SPNAYSGGHNSSSRNDPCR" massdiff="1.0703" calc_neutral_pep_mass="2061.8672" peptide_next_aa="G" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="36" hit_rank="1" num_matched_ions="4" protein="NP_001138818.1" peptide_prev_aa="R" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="18"/>
+</modification_info>
+<search_score name="hyperscore" value="4.825"/>
+<search_score name="nextscore" value="4.646"/>
+<search_score name="expect" value="2.623e+00"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+</msms_run_summary>
+</msms_pipeline_analysis>

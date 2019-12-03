@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -28,6 +29,14 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
+
+    public interface ISequenceContainer
+    {
+        Target Target { get; }
+        Target ModifiedTarget { get; }
+        ExplicitMods ExplicitMods { get; }
+    }
+
     /// <summary>
     /// Holds an unmodified sequence and a list of explicit modifications (i.e. StatidMod and AminoAcid index).
     /// This enables the sequence to be formatted in a number of ways, including mass deltas, or modification names.
@@ -39,13 +48,13 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// Constructs a ModifiedSequence from SrmSettings and PeptideDocNode.
         /// </summary>
-        public static ModifiedSequence GetModifiedSequence(SrmSettings settings, PeptideDocNode docNode, IsotopeLabelType labelType)
+        public static ModifiedSequence GetModifiedSequence(SrmSettings settings, ISequenceContainer peptide, IsotopeLabelType labelType)
         {
-            if (docNode.Peptide.IsCustomMolecule)
+            if (!peptide.Target.IsProteomic)
             {
                 return null;
             }
-            var unmodifiedSequence = docNode.Peptide.Sequence;
+            var unmodifiedSequence = peptide.Target.Sequence;
             List<IsotopeLabelType> implicitLabelTypes = new List<IsotopeLabelType>();
             implicitLabelTypes.Add(IsotopeLabelType.light);
             if (!labelType.IsLight)
@@ -53,25 +62,25 @@ namespace pwiz.Skyline.Model
                 implicitLabelTypes.Add(labelType);
             }
             List<Modification> explicitMods = new List<Modification>();
-            if (null != docNode.ExplicitMods)
+            if (null != peptide.ExplicitMods)
             {
-                var staticBaseMods = docNode.ExplicitMods.GetStaticBaseMods(labelType);
+                var staticBaseMods = peptide.ExplicitMods.GetStaticBaseMods(labelType);
                 if (staticBaseMods != null)
                 {
                     implicitLabelTypes.Clear();
                 }
-                var labelMods = docNode.ExplicitMods.GetModifications(labelType);
+                var labelMods = peptide.ExplicitMods.GetModifications(labelType);
                 if (labelMods != null)
                 {
-                    if (!docNode.ExplicitMods.IsVariableStaticMods)
+                    if (!peptide.ExplicitMods.IsVariableStaticMods)
                     {
                         implicitLabelTypes.Remove(labelType);
                     }
                 }
                 else if (!labelType.IsLight)
                 {
-                    labelMods = docNode.ExplicitMods.GetModifications(IsotopeLabelType.light);
-                    if (labelMods != null && !docNode.ExplicitMods.IsVariableStaticMods)
+                    labelMods = peptide.ExplicitMods.GetModifications(IsotopeLabelType.light);
+                    if (labelMods != null && !peptide.ExplicitMods.IsVariableStaticMods)
                     {
                         implicitLabelTypes.Remove(IsotopeLabelType.light);
                     }
@@ -133,6 +142,12 @@ namespace pwiz.Skyline.Model
             _defaultMassType = defaultMassType;
         }
 
+        [Browsable(false)]
+        public ImmutableList<Modification> ExplicitMods
+        {
+            get { return _explicitMods; }
+        }
+
        public string MonoisotopicMasses
         {
             get { return Format(mods => FormatMassModification(mods, MassType.Monoisotopic, true)); }
@@ -172,7 +187,7 @@ namespace pwiz.Skyline.Model
         {
             StringBuilder result = new StringBuilder();
             int seqCharsReturned = 0;
-            foreach (var modGroup in _explicitMods.GroupBy(mod=>mod.IndexAA))
+            foreach (var modGroup in _explicitMods.GroupBy(mod => mod.IndexAA))
             {
                 result.Append(_unmodifiedSequence.Substring(seqCharsReturned,
                     modGroup.Key + 1 - seqCharsReturned));
@@ -181,6 +196,16 @@ namespace pwiz.Skyline.Model
             }
             result.Append(_unmodifiedSequence.Substring(seqCharsReturned));
             return result.ToString();
+        }
+
+        public IEnumerable<Modification> GetModifications()
+        {
+            return _explicitMods;
+        }
+
+        public string GetUnmodifiedSequence()
+        {
+            return _unmodifiedSequence;
         }
 
         public static string FormatThreeLetterCode(Modification modification)
@@ -360,7 +385,7 @@ namespace pwiz.Skyline.Model
                 return hashCode;
             }
         }
-        private static Modification MakeModification(string unmodifiedSequence, ExplicitMod explicitMod)
+        public static Modification MakeModification(string unmodifiedSequence, ExplicitMod explicitMod)
         {
             var staticMod = explicitMod.Modification;
             int i = explicitMod.IndexAA;

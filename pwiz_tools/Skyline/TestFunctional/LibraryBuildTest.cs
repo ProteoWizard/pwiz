@@ -62,6 +62,12 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            MainTest();
+            CirtLibraryBuildTest();
+        }
+
+        private void MainTest()
+        {
             // Clean-up before running the test
             RunUI(() => SkylineWindow.ModifyDocument("Set default settings",
                             doc => doc.ChangeSettings(SrmSettingsList.GetDefault())));
@@ -415,6 +421,45 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(PeptideSettingsUI, PeptideSettingsUI.CancelDialog);
         }
 
+        private void CirtLibraryBuildTest()
+        {
+            RunUI(() =>
+            {
+                SkylineWindow.NewDocument(true);
+                SkylineWindow.ModifyDocument("Set default settings", doc => doc.ChangeSettings(SrmSettingsList.GetDefault()));
+            });
+
+            var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+
+            // build a library with CiRT peptides
+            BuildLibrary(TestFilesDir.GetTestPath("maxquant_cirt"), null, null, false, true,
+                false, false, IrtStandard.CIRT_SHORT);
+            var addIrtStandardsDlg = WaitForOpenForm<AddIrtStandardsDlg>();
+
+            // use 15 CiRT peptides as standards
+            const int numStandards = 15;
+            RunUI(() => addIrtStandardsDlg.StandardCount = numStandards);
+            var addIrtPeptidesDlg = ShowDialog<AddIrtPeptidesDlg>(addIrtStandardsDlg.OkDialog);
+
+            // don't recalibrate; add RT predictor
+            var recalibrateDlg = ShowDialog<MultiButtonMsgDlg>(addIrtPeptidesDlg.OkDialog);
+            var addRetentionTimePredictorDlg = ShowDialog<AddRetentionTimePredictorDlg>(recalibrateDlg.ClickNo);
+            OkDialog(addRetentionTimePredictorDlg, addRetentionTimePredictorDlg.OkDialog);
+
+            // verify that there are 15 CiRT peptides as standards in the calculator
+            var editIrtCalcDlg = ShowDialog<EditIrtCalcDlg>(peptideSettingsDlg.EditCalculator);
+            var cirtPeptides = new TargetMap<bool>(IrtStandard.CIRT.Peptides.Select(pep => new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)));
+            RunUI(() =>
+            {
+                Assert.AreEqual(numStandards, editIrtCalcDlg.StandardPeptideCount);
+                Assert.IsTrue(editIrtCalcDlg.StandardPeptides.All(pep => cirtPeptides.ContainsKey(pep.ModifiedTarget)));
+            });
+
+            OkDialog(editIrtCalcDlg, editIrtCalcDlg.CancelDialog);
+            OkDialog(peptideSettingsDlg, peptideSettingsDlg.CancelDialog);
+            RunUI(() => SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("cirt_test.sky")));
+        }
+
         private static void PastePeptideList(string peptideList, bool keep,
             int filteredPeptideCount, int missingSpectraCount, bool expectMessage = false)
         {
@@ -492,7 +537,7 @@ namespace pwiz.SkylineTestFunctional
         private void BuildLibraryValid(string inputDir, IEnumerable<string> inputFiles,
             bool keepRedundant, bool filterPeptides, bool append, int expectedSpectra, int expectedAmbiguous = 0)
         {
-            BuildLibrary(inputDir, inputFiles, null, keepRedundant, filterPeptides, append, null);
+            BuildLibrary(inputDir, inputFiles, null, keepRedundant, false, filterPeptides, append, null);
 
             if (expectedAmbiguous > 0)
             {
@@ -504,9 +549,11 @@ namespace pwiz.SkylineTestFunctional
                 });
             }
 
-            Assert.IsTrue(WaitForCondition(() =>
+            Assert.IsTrue(WaitForConditionUI(() =>
                 PeptideSettingsUI.AvailableLibraries.Contains(_libraryName)));
             RunUI(() => PeptideSettingsUI.PickedLibraries = new[] { _libraryName });
+            // Check this worked, because setting a non-existent name silently leaves nothing checked
+            RunUI(() => Assert.IsTrue(PeptideSettingsUI.PickedLibraries.Contains(_libraryName)));
             OkDialog(PeptideSettingsUI, PeptideSettingsUI.OkDialog);
 
             // Wait for the library to load
@@ -525,7 +572,8 @@ namespace pwiz.SkylineTestFunctional
             string nonredundantBuildPath = TestFilesDir.GetTestPath(_libraryName + BiblioSpecLiteSpec.EXT);
             FileEx.SafeDelete(nonredundantBuildPath);
 
-            BuildLibrary(TestFilesDir.GetTestPath("library_errors"), new[] { inputFile }, libraryPath, false, false, false, null);
+            BuildLibrary(TestFilesDir.GetTestPath("library_errors"), new[] {inputFile}, libraryPath, false, false,
+                false, false, null);
 
             var messageDlg = WaitForOpenForm<MessageDlg>();
             Assert.IsNotNull(messageDlg, "No message box shown");
@@ -541,7 +589,8 @@ namespace pwiz.SkylineTestFunctional
 
         private void BuildLibraryIrt(bool addIrts, bool recalibrate, bool addPredictor)
         {
-            BuildLibrary(TestFilesDir.GetTestPath("maxquant_irt"), new[] { "irt_test.msms.txt" }, null, false, false, false, IrtStandard.BIOGNOSYS_10);
+            BuildLibrary(TestFilesDir.GetTestPath("maxquant_irt"), new[] {"irt_test.msms.txt"}, null, false, false,
+                false, false, IrtStandard.BIOGNOSYS_10);
             var addIrtDlg = WaitForOpenForm<AddIrtPeptidesDlg>();
             if (!addIrts)
             {
@@ -564,8 +613,8 @@ namespace pwiz.SkylineTestFunctional
                                 ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
         }
 
-        private void BuildLibrary(string inputDir, IEnumerable<string> inputFiles,
-            string libraryPath, bool keepRedundant, bool filterPeptides, bool append, IrtStandard irtStandard)
+        private void BuildLibrary(string inputDir, IEnumerable<string> inputFiles, string libraryPath,
+            bool keepRedundant, bool includeAmbiguous, bool filterPeptides, bool append, IrtStandard irtStandard)
         {
             EnsurePeptideSettings();
 
@@ -581,6 +630,7 @@ namespace pwiz.SkylineTestFunctional
                 buildLibraryDlg.LibraryName = _libraryName;
                 autoLibPath = buildLibraryDlg.LibraryPath;
                 buildLibraryDlg.LibraryKeepRedundant = keepRedundant;
+                buildLibraryDlg.IncludeAmbiguousMatches = includeAmbiguous;
                 buildLibraryDlg.LibraryFilterPeptides = filterPeptides;
                 buildLibraryDlg.LibraryBuildAction = (append ?
                     LibraryBuildAction.Append : LibraryBuildAction.Create);

@@ -40,13 +40,12 @@ namespace TestPerf
             new AreaCVGraphDataStatistics(5847, 5847, 3.1, 7.45, 18608, 1.71, 0, 17, 0.50598024141351039, 0.53897463456577754, 0.13392089423903697),
             new AreaCVGraphDataStatistics(2494, 2494, 3.6500000000000004, 8.5, 13187, 1.56, 0, 42, 0.10081781341883254, 0.14358231591719073, 0.78357473269128686),
             new AreaCVGraphDataStatistics(2129, 2129, 3.9000000000000004, 8.5, 11312, 1.56, 0, 40, 0.095865665157771063, 0.13204738330975938, 0.81108557284299854),
-            new AreaCVGraphDataStatistics(50, 51, 0, 0, 247, 3.63, 0.28, 22, 2.2389780027334241, 2.2399595141700406, 0),
-            new AreaCVGraphDataStatistics(50, 51, 0, 0, 246, 2.1, 0.06, 24, 0.15889170898788108, 0.27004065040650405, 0.64634146341463417),
-            new AreaCVGraphDataStatistics(97, 99, 0, 0, 250, 3.63, 0.06, 12, 1.2490041523697495, 1.26328, 0.32),
-            new AreaCVGraphDataStatistics(201, 201, 3.7, 7, 247, 3.63, 0.28, 4, 2.2389780027334241, 2.239959514170041, 0),
-            new AreaCVGraphDataStatistics(203, 203, 3.7, 7, 246, 2.1, 0.06, 4, 0.15889170898788108, 0.2700406504065041, 0.64634146341463417),
-            new AreaCVGraphDataStatistics(233, 233, 3.7, 7, 250, 3.63, 0.06, 3, 1.2490041523697495, 1.2632800000000002, 0.32),
-            new AreaCVGraphDataStatistics(20, 20, 0, 0, 9175, 0.19, 0, 758, 0.078742215784859834, 0.0809133514986376, 1), 
+            new AreaCVGraphDataStatistics(87, 88, 0, 0, 125, 6.63, 0.53, 4, 1.6731671213240806, 1.908, 0),
+            new AreaCVGraphDataStatistics(40, 41, 0, 0, 125, 6.55, 0.57000000000000006, 19, 2.1899170913612949, 2.21816, 0),
+            new AreaCVGraphDataStatistics(0, 0, 1.7976931348623157E+308, 0, 0, 0, 0, 0, 0, 0, 0),
+            new AreaCVGraphDataStatistics(123, 123, 4.45, 7, 125, 6.63, 0.53, 2, 1.6731671213240806, 1.9080000000000001, 0),
+            new AreaCVGraphDataStatistics(111, 111, 3.7, 7, 125, 6.55, 0.57000000000000006, 3, 2.1899170913612949, 2.21816, 0),
+            new AreaCVGraphDataStatistics(0, 111, 1.7976931348623157E+308, 0, 0, 0, 0, 0, 0, 0, 0),
         };
 
         private bool RecordData { get { return false; } }
@@ -177,7 +176,7 @@ namespace TestPerf
 
             RunUI(() => SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.ratio, 2));
             WaitForGraphs();
-            AssertDataCorrect(pane, statsStartIndex++); // All 15N
+            AssertDataCorrect(pane, statsStartIndex++, allowInvalid: true); // All 15N
         }
 
         private void TestRefinementQvalue()
@@ -258,7 +257,7 @@ namespace TestPerf
 
         private void TestRefinementRatios()
         {
-            var graphStates = new[] { (34, 112, 224, 672), (34, 80, 159, 477), (34, 80, 80, 240) };
+            var graphStates = new[] { (34, 111, 111, 333), (34, 0, 0, 0), (34, 0, 0, 0) };
 
             // Normalize to light reference type
             var refineDlg = ShowDialog<RefineDlg>(() => SkylineWindow.ShowRefineDlg());
@@ -320,10 +319,10 @@ namespace TestPerf
             return null;
         }
 
-        private void AssertDataCorrect(SummaryGraphPane pane, int statsIndex, bool record = true)
+        private void AssertDataCorrect(SummaryGraphPane pane, int statsIndex, bool record = true, bool allowInvalid = false)
         {
             AreaCVGraphData data = null;
-            WaitForConditionUI(() => (data = GetCurrentData(pane)) != null && data.IsValid);
+            WaitForConditionUI(() => (data = GetCurrentData(pane)) != null && (allowInvalid || data.IsValid));
             WaitForGraphs();
 
             RunUI(() =>

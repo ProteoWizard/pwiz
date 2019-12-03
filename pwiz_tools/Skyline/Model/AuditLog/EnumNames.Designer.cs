@@ -97,6 +97,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Precursors.
+        /// </summary>
+        public static string AreaCVMsLevel_precursors {
+            get {
+                return ResourceManager.GetString("AreaCVMsLevel_precursors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Products.
+        /// </summary>
+        public static string AreaCVMsLevel_products {
+            get {
+                return ResourceManager.GetString("AreaCVMsLevel_products", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Global Standards.
         /// </summary>
         public static string AreaCVNormalizationMethod_global_standards {
@@ -129,6 +147,33 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string AreaCVNormalizationMethod_ratio {
             get {
                 return ResourceManager.GetString("AreaCVNormalizationMethod_ratio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All.
+        /// </summary>
+        public static string AreaCVTransitions_all {
+            get {
+                return ResourceManager.GetString("AreaCVTransitions_all", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Best.
+        /// </summary>
+        public static string AreaCVTransitions_best {
+            get {
+                return ResourceManager.GetString("AreaCVTransitions_best", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Count.
+        /// </summary>
+        public static string AreaCVTransitions_count {
+            get {
+                return ResourceManager.GetString("AreaCVTransitions_count", resourceCulture);
             }
         }
         

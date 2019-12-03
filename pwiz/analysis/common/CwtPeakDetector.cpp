@@ -24,8 +24,18 @@
 #include "CwtPeakDetector.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 
-// Predicate for sorting vectors of ridgeLines 
-bool sortFinalCol (ridgeLine i, ridgeLine j) { return (i.Col<j.Col); } 
+
+namespace {
+    // Predicate for sorting vectors of ridgeLines 
+    bool sortFinalCol(ridgeLine i, ridgeLine j) { return (i.Col < j.Col); }
+
+    // Helper functions used by detect. The client does not need to see these.
+    void ricker2d(const std::vector <double> &, const int, const int, const int, const double, const double, const double, std::vector <double> &);
+    int getColLowBound(const std::vector <double> &, const double);
+    int    getColHighBound(const std::vector <double> &, const double);
+    double scoreAtPercentile(const double, const std::vector <double> &, const int);
+    double convertColToMZ(const std::vector <double> &, const int);
+}
 
 namespace pwiz {
 namespace analysis {
@@ -507,6 +517,8 @@ void CwtPeakDetector::refinePeaks( const vector <double> & noisyX, const vector 
 } // namespace msdata
 
 
+namespace {
+
 // helper function that calculates the ricker (mexican hat) wavelet.
 // Designed to handle irregularly spaced data.
 void ricker2d(const vector <double> & Pad_mz, const int col, const int rickerPointsLeft, const int rickerPointsRight, 
@@ -579,3 +591,5 @@ double convertColToMZ( const vector <double> & mzs, const int Col )
     else
         return mzs[ mapIndex ];
 }
+
+} // namespace

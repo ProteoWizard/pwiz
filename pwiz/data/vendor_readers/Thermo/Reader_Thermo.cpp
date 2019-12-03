@@ -97,7 +97,7 @@ void initializeInstrumentConfigurationPtrs(MSData& msd,
     commonInstrumentParams->id = "CommonInstrumentParams";
     msd.paramGroupPtrs.push_back(commonInstrumentParams);
 
-    if (cvidModel == MS_Thermo_Electron_instrument_model)
+    if (cvidModel == MS_Thermo_Electron_instrument_model && !instData.Model.empty())
         commonInstrumentParams->userParams.push_back(UserParam("instrument model", instData.Model));
     commonInstrumentParams->set(cvidModel);
 
@@ -234,7 +234,7 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd, const
     initializeInstrumentConfigurationPtrs(msd, rawfile, softwareXcalibur, instData);
     if (!msd.instrumentConfigurationPtrs.empty())
         msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
-    else
+    else if (!instData.Model.empty() && !instData.Name.empty())
     {
         if (config.unknownInstrumentIsError)
             throw runtime_error("[Reader_Thermo::fillInMetadata] unable to parse instrument model; please report this error to the ProteoWizard developers with this information: model(" + instData.Model + ") name(" + instData.Name + "); if want to convert the file anyway, use the ignoreUnknownInstrumentError flag");

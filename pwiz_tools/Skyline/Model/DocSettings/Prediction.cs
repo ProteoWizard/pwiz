@@ -998,6 +998,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public const string SSRCALC_300_A = "SSRCalc 3.0 (300A)";
         public const string SSRCALC_100_A = "SSRCalc 3.0 (100A)";
+        // public const string PROSITRTCALC = "Prosit RT Calc";
 
         public static IRetentionScoreCalculator GetCalculatorByName(string calcName)
         {
@@ -1007,6 +1008,9 @@ namespace pwiz.Skyline.Model.DocSettings
                     return new SSRCalc3(SSRCALC_300_A, SSRCalc3.Column.A300);
                 case SSRCALC_100_A:
                     return new SSRCalc3(SSRCALC_100_A, SSRCalc3.Column.A100);
+                // case PROSITRTCALC:
+                //    return new PrositRetentionScoreCalculator(PROSITRTCALC);
+
             }
             return null;
         }
@@ -1144,6 +1148,8 @@ namespace pwiz.Skyline.Model.DocSettings
         IEnumerable<Target> ChooseRegressionPeptides(IEnumerable<Target> peptides, out int minCount);
 
         IEnumerable<Target> GetStandardPeptides(IEnumerable<Target> peptides);
+
+        RetentionScoreProvider ScoreProvider { get; }
     }
 
     public abstract class RetentionScoreCalculatorSpec : XmlNamedElement, IRetentionScoreCalculator
@@ -1160,6 +1166,11 @@ namespace pwiz.Skyline.Model.DocSettings
         public abstract IEnumerable<Target> ChooseRegressionPeptides(IEnumerable<Target> peptides, out int minCount);
 
         public abstract IEnumerable<Target> GetStandardPeptides(IEnumerable<Target> peptides);
+
+        public virtual RetentionScoreProvider ScoreProvider
+        {
+            get { return null; }
+        }
 
         public virtual bool IsUsable { get { return true; } }
 
@@ -1191,6 +1202,116 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #endregion
+    }
+
+    public interface IRetentionScoreSource
+    {
+        /// <summary>
+        /// Make sure that the current retention scores are still valid
+        /// (Not by actually looking at the scores, but by checking
+        /// that the state required to calculate the scores has not changed)
+        /// If invalid, false should be returned, prompting the score provider
+        /// to clear its cache
+        /// </summary>
+        /// <returns>True if still valid, false if not valid</returns>
+        bool ValidateSource();
+
+        /// <summary>
+        /// Called if no score for the given target is cached.
+        /// Should return the new score or null if no score can be
+        /// calculated.
+        /// </summary>
+        /// <param name="target">The sequence to score</param>
+        /// <returns></returns>
+        double? GetScore(Target target);
+    }
+
+    public class RetentionScoreProvider
+    {
+        private readonly Dictionary<Target, double> _scoreCache;
+        private readonly object _cacheLock = new object();
+        private IRetentionScoreSource _scoreSource;
+
+        public RetentionScoreProvider()
+        {
+            _scoreCache = new Dictionary<Target, double>();
+            _scoreSource = null;
+        }
+
+
+        public void Attach(IRetentionScoreSource source)
+        {
+            _scoreSource = source;
+            if (source == null)
+            {
+                lock (_cacheLock)
+                {
+                    _scoreCache.Clear();
+                }
+            }
+        }
+
+        public void AddScores(Dictionary<Target, double> scores, bool replace)
+        {
+            foreach (var kvp in scores)
+                AddScore(kvp.Key, kvp.Value, replace);
+        }
+
+        public void AddScore(Target target, double score, bool replace)
+        {
+            lock (_cacheLock)
+            {
+                if (!replace && _scoreCache.TryGetValue(target, out _))
+                    return; // Already exists and don't replace
+
+                // Add new iRT or replace
+                _scoreCache[target] = score;
+            }
+        }
+
+        public double? GetScore(Target target)
+        {
+            if (_scoreSource == null)
+                return null;
+            var valid = _scoreSource.ValidateSource();
+
+            lock (_cacheLock)
+            {
+                if (!valid)
+                    _scoreCache.Clear();
+
+                if (_scoreCache.TryGetValue(target, out var iRT))
+                    return iRT;
+            }
+
+            var score = _scoreSource.GetScore(target);
+            if (score != null)
+                AddScore(target, score.Value, true);
+
+            return score;
+        }
+
+        public class GetScoreEventArgs : EventArgs
+        {
+            public GetScoreEventArgs(Target target)
+            {
+                Target = target;
+                Score = null;
+            }
+
+            public Target Target { get; private set; }
+            public double? Score { get; set; }
+        }
+
+        public class ValidateEventArgs : EventArgs
+        {
+            public ValidateEventArgs()
+            {
+                Valid = false;
+            }
+
+            public bool Valid { get; set; }
+        }
     }
 
     [XmlRoot("retention_score_calculator")]
@@ -1233,6 +1354,11 @@ namespace pwiz.Skyline.Model.DocSettings
             _impl = RetentionTimeRegression.GetCalculatorByName(Name);
             if (_impl == null)
                 throw new InvalidDataException(string.Format(Resources.RetentionScoreCalculator_Validate_The_retention_time_calculator__0__is_not_valid, Name));
+        }
+
+        public override RetentionScoreProvider ScoreProvider
+        {
+            get { return _impl.ScoreProvider; }
         }
 
         public override void ReadXml(XmlReader reader)
@@ -3202,6 +3328,11 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public static readonly IonMobilityWindowWidthCalculator EMPTY = new IonMobilityWindowWidthCalculator(IonMobilityPeakWidthType.resolving_power, 0, 0, 0);
+
+        public IonMobilityWindowWidthCalculator(double resolvingPower)
+            : this(IonMobilityPeakWidthType.resolving_power, resolvingPower, 0, 0)
+        {
+        }
 
         public IonMobilityWindowWidthCalculator(IonMobilityPeakWidthType peakWidthMode,
                                     double resolvingPower,
