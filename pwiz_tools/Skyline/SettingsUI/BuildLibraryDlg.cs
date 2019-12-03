@@ -691,6 +691,12 @@ namespace pwiz.Skyline.SettingsUI
             set { cbKeepRedundant.Checked = value; }
         }
 
+        public bool IncludeAmbiguousMatches
+        {
+            get { return cbIncludeAmbiguousMatches.Checked; }
+            set { cbIncludeAmbiguousMatches.Checked = value; }
+        }
+
         public bool LibraryFilterPeptides
         {
             get { return cbFilter.Checked; }

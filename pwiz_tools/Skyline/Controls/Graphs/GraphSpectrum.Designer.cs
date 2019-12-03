@@ -47,7 +47,6 @@
             // toolBar
             // 
             this.toolBar.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-            this.toolBar.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.toolBar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.labelSpectrum,
             this.comboSpectrum,
