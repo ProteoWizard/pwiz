@@ -47,6 +47,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         private bool FireStandardsChanged { get; set; }
 
         private readonly IrtStandard _standard;
+        private readonly DbIrtPeptide[] _standardPeptidesSorted;
         private readonly IEnumerable<IrtStandard> _existing;
         private readonly DbIrtPeptide[] _updatePeptides;
 
@@ -57,6 +58,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             Icon = Resources.Skyline;
 
             _standard = standard;
+            _standardPeptidesSorted = standard != null ? standard.Peptides.OrderBy(pep => pep.Irt).ToArray() : new DbIrtPeptide[0];
             _existing = existing;
             _updatePeptides = updatePeptides;
 
@@ -70,29 +72,29 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             if (IsRecalibration)
             {
-                textName.Text = standard.Name;
+                textName.Text = standard?.Name;
                 FormBorderStyle = FormBorderStyle.Fixed3D;
                 panelPeptides.Hide();
                 btnUseCurrent.Hide();
                 Height -= panelPeptides.Height;
-                var standardPeptides = standard.Peptides.Select(pep => pep.PeptideModSeq).ToArray();
+                var standardPeptides = _standardPeptidesSorted.Select(pep => pep.PeptideModSeq).ToArray();
                 comboMinPeptide.Items.AddRange(standardPeptides);
                 comboMaxPeptide.Items.AddRange(standardPeptides);
                 if (standardPeptides.Length > 0)
                 {
                     // Look for standard peptides with whole number values as the suggested fixed points
-                    var iFixed1 = standard.Peptides.IndexOf(pep => Math.Round(pep.Irt, 8) == Math.Round(pep.Irt));
-                    var iFixed2 = standard.Peptides.LastIndexOf(pep => Math.Round(pep.Irt, 8) == Math.Round(pep.Irt));
+                    var iFixed1 = _standardPeptidesSorted.IndexOf(pep => Math.Round(pep.Irt, 8) == Math.Round(pep.Irt));
+                    var iFixed2 = _standardPeptidesSorted.LastIndexOf(pep => Math.Round(pep.Irt, 8) == Math.Round(pep.Irt));
                     if (iFixed1 == -1 || iFixed2 == -1)
                     {
                         iFixed1 = 0;
-                        iFixed2 = standardPeptides.Length - 1;
+                        iFixed2 = _standardPeptidesSorted.Length - 1;
                     }
                     else if (iFixed1 == iFixed2)
                     {
-                        if (iFixed1 < standardPeptides.Length / 2)
+                        if (iFixed1 < _standardPeptidesSorted.Length / 2)
                         {
-                            iFixed2 = standardPeptides.Length - 1;
+                            iFixed2 = _standardPeptidesSorted.Length - 1;
                         }
                         else
                         {
@@ -101,7 +103,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     }
                     comboMinPeptide.SelectedIndex = iFixed1;
                     comboMaxPeptide.SelectedIndex = iFixed2;
-                    SetIrtRange(standard.Peptides[iFixed1].Irt, standard.Peptides[iFixed2].Irt);
+                    SetIrtRange(_standardPeptidesSorted[iFixed1].Irt, _standardPeptidesSorted[iFixed2].Irt);
                 }
             }
         }
@@ -211,8 +213,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
             }
             else
             {
-                minRt = _standard.Peptides[comboMinIdx].Irt;
-                maxRt = _standard.Peptides[comboMaxIdx].Irt;
+                minRt = _standardPeptidesSorted[comboMinIdx].Irt;
+                maxRt = _standardPeptidesSorted[comboMaxIdx].Irt;
             }
 
             if (minRt >= maxRt)
@@ -471,8 +473,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 }
                 else
                 {
-                    var pepMin = _standard.Peptides[comboMinPeptide.SelectedIndex];
-                    var pepMax = _standard.Peptides[comboMaxPeptide.SelectedIndex];
+                    var pepMin = _standardPeptidesSorted[comboMinPeptide.SelectedIndex];
+                    var pepMax = _standardPeptidesSorted[comboMaxPeptide.SelectedIndex];
                     pepMinTime = pepMin.Irt;
                     pepMaxTime = pepMax.Irt;
                     tooltips = new Dictionary<int, string> {{0, pepMin.PeptideModSeq}, {1, pepMax.PeptideModSeq}};
