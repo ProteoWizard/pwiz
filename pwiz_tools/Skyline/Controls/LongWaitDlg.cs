@@ -155,7 +155,7 @@ namespace pwiz.Skyline.Controls
                 // Return without notifying the user, if the operation completed
                 // before the wait expired.
 //                if (_result.IsCompleted)
-                if (_completionEvent.WaitOne(delayMillis))
+                if (completionEvent.WaitOne(delayMillis))
                     return;
 
                 progressBar.Value = Math.Max(0, _progressValue);
