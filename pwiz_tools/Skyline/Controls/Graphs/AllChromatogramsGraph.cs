@@ -470,14 +470,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 progressControl.ShowGraph += (sender, args) => ShowGraph();
                 progressControl.ShowLog += (sender, args) => ShowLog();
                 controlsToAdd.Add(progressControl);
+                _fileProgressControls.Add(filePath.GetLocation(), progressControl);
                 first = false;
             }
 
             flowFileStatus.Controls.AddRange(controlsToAdd.ToArray());
-            foreach (var control in controlsToAdd)
-            {
-                _fileProgressControls.Add(control.FilePath.GetLocation(), control);
-            }
         }
 
         private void CancelMissingFiles(MultiProgressStatus status)

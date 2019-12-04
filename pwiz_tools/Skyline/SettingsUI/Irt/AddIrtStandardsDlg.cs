@@ -38,6 +38,15 @@ namespace pwiz.Skyline.SettingsUI.Irt
             labelMessage.Text = string.Format(!peptidesExcluded ? labelMessage.Text : Resources.AddIrtStandardsDlg_AddIrtStandardsDlg_MessagePeptidesExcluded, peptideCount);
         }
 
+        public AddIrtStandardsDlg(int peptideCount, string message)
+        {
+            _peptideCount = peptideCount;
+
+            InitializeComponent();
+
+            labelMessage.Text = message;
+        }
+
         public int StandardCount
         {
             get => int.TryParse(textPeptideCount.Text, out var count) ? count : 0;

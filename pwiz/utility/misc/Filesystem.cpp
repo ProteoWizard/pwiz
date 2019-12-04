@@ -237,11 +237,20 @@ namespace pwiz {
 namespace util {
 
 
+PWIZ_API_DECL bool running_on_wine()
+{
+#ifdef WIN32
+    return GetLibraryProcAddress("ntdll.dll", "wine_get_version") != NULL;
+#else
+    return false;
+#endif
+}
+
+
 PWIZ_API_DECL void force_close_handles_to_filepath(const std::string& filepath, bool closeMemoryMappedSections) noexcept(true)
 {
 #ifdef WIN32
-    bool runningUnderWine = GetLibraryProcAddress("ntdll.dll", "wine_get_version") != NULL;
-    if (runningUnderWine)
+    if (running_on_wine())
         return;
 
     _NtQuerySystemInformation NtQuerySystemInformation = (_NtQuerySystemInformation)GetLibraryProcAddress("ntdll.dll", "NtQuerySystemInformation");
