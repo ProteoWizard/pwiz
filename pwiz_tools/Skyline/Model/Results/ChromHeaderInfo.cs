@@ -2609,6 +2609,17 @@ namespace pwiz.Skyline.Model.Results
             {
                 times = TimeIntensities.Times.Select(time => (double) time).ToArray();
                 intensities = TimeIntensities.Intensities.Select(intensity => (double) intensity).ToArray();
+                var timeIntervals = (GroupInfo?.TimeIntensitiesGroup as RawTimeIntensities)?.TimeIntervals;
+                if (timeIntervals != null)
+                {
+                    for (int i = 0; i < times.Length; i++)
+                    {
+                        if (!timeIntervals.ContainsTime((float) times[i]))
+                        {
+                            intensities[i] = double.NaN;
+                        }
+                    }
+                }
             }
         }
 

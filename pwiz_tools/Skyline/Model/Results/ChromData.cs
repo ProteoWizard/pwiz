@@ -130,13 +130,54 @@ namespace pwiz.Skyline.Model.Results
             return newChromData;
         }
 
-        public void FindPeaks(double[] retentionTimes)
+        public void FindPeaks(double[] retentionTimes, TimeIntervals timeIntervals)
         {
             Finder = Crawdads.NewCrawdadPeakFinder();
             Finder.SetChromatogram(Times, Intensities);
-            RawPeaks = Finder.CalcPeaks(MAX_PEAKS, TimesToIndices(retentionTimes));
+            if (timeIntervals == null)
+            {
+                RawPeaks = Finder.CalcPeaks(MAX_PEAKS, TimesToIndices(retentionTimes));
+            }
+            else
+            {
+                var identifiedIndices = TimesToIndices(retentionTimes);
+                var allPeaks = timeIntervals.Intervals.SelectMany(interval =>
+                    FindIntervalPeaks(interval.Key, interval.Value, identifiedIndices));
+                RawPeaks = allPeaks.OrderByDescending(peak => Tuple.Create(peak.Identified, peak.Area))
+                    .Take(MAX_PEAKS).ToArray();
+            }
             // Calculate smoothing for later use in extending the Crawdad peaks
             IntensitiesSmooth = ChromatogramInfo.SavitzkyGolaySmooth(Intensities.ToArray());
+        }
+
+        private IEnumerable<IFoundPeak> FindIntervalPeaks(float intervalStart, float intervalEnd, IList<int> identifiedIndices)
+        {
+            int startIndex = Times.BinarySearch(intervalStart);
+            if (startIndex < 0)
+            {
+                startIndex = Math.Max(0, ~startIndex - 1);
+            }
+
+            int endIndex = Times.BinarySearch(intervalEnd);
+            if (endIndex < 0)
+            {
+                endIndex = Math.Min(Times.Count - 1, ~endIndex);
+            }
+
+            if (endIndex <= startIndex)
+            {
+                yield break;
+            }
+
+            var times = Times.Skip(startIndex).Take(endIndex - startIndex + 1).ToArray();
+            var intensities = Intensities.Skip(startIndex).Take(endIndex - startIndex + 1).ToArray();
+            var subIdentifiedIndices = identifiedIndices.Select(index => index - startIndex).ToArray();
+            var subFinder = Crawdads.NewCrawdadPeakFinder();
+            subFinder.SetChromatogram(times, intensities);
+            foreach (var peak in subFinder.CalcPeaks(MAX_PEAKS, subIdentifiedIndices))
+            {
+                yield return Finder.GetPeak(peak.StartIndex + startIndex, peak.EndIndex + startIndex);
+            }
         }
 
         public void SkipFindingPeaks(double[] retentionTimes)

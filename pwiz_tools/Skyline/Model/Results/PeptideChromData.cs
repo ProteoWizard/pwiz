@@ -92,8 +92,6 @@ namespace pwiz.Skyline.Model.Results
 
         public int IndexInFile { get; set; }
 
-        public TimeIntervals TimeIntervals { get; private set; }
-
         private IEnumerable<IEnumerable<ChromDataSet>> ComparableDataSets
         {
             get
@@ -155,8 +153,12 @@ namespace pwiz.Skyline.Model.Results
             if (_document.Settings.TransitionSettings.Instrument.TriggeredAcquisition)
             {
                 var triggeredAcquisition = new TriggeredAcquisition();
-                TimeIntervals = triggeredAcquisition.InferTimeIntervals(
+                var timeIntervals = triggeredAcquisition.InferTimeIntervals(
                     _dataSets.SelectMany(dataSet => dataSet.Chromatograms.Select(chrom=>chrom.RawTimes)));
+                foreach (var chromDataSet in _dataSets)
+                {
+                    chromDataSet.TimeIntervals = timeIntervals;
+                }
             }
             // Make sure times are evenly spaced before doing any peak detection.
             EvenlySpaceTimes();
@@ -282,7 +284,7 @@ namespace pwiz.Skyline.Model.Results
             while (ThermoZerosFix())
             {
             }
-            if (null == TimeIntervals && !FullScanAcquisitionMethod.DDA.Equals(_document.Settings.TransitionSettings.FullScan.AcquisitionMethod))
+            if (!FullScanAcquisitionMethod.DDA.Equals(_document.Settings.TransitionSettings.FullScan.AcquisitionMethod))
             {
                 ChromDataSet.TruncateMs1ForScheduledMs2(_dataSets);
             }

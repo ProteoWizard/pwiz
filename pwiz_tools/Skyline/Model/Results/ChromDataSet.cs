@@ -484,7 +484,7 @@ namespace pwiz.Skyline.Model.Results
                 }
                 if (doFindPeaks)
                 {
-                    chromData.FindPeaks(retentionTimes);
+                    chromData.FindPeaks(retentionTimes, TimeIntervals);
                 }
                 else
                 {
@@ -690,6 +690,13 @@ namespace pwiz.Skyline.Model.Results
                         flags |= ChromPeak.FlagValues.contains_id;
                     if (peakSet.IsAlignedIdentified)
                         flags |= ChromPeak.FlagValues.used_id_alignment;
+                    if (TimeIntervals != null)
+                    {
+                        if (!TimeIntervals.ContainsTime(peak.StartTime) || !TimeIntervals.ContainsTime(peak.EndTime))
+                        {
+                            flags |= ChromPeak.FlagValues.peak_truncated;
+                        }
+                    }
                     peak.CalcChromPeak(peakMax, flags);
                 }
             }
@@ -1249,6 +1256,10 @@ namespace pwiz.Skyline.Model.Results
                 {
                     return;
                 }
+                if (chromDataSet.TimeIntervals != null)
+                {
+                    return;
+                }
             }
             float minFragmentTime = float.MaxValue;
             float maxFragmentTime = float.MinValue;
@@ -1290,12 +1301,20 @@ namespace pwiz.Skyline.Model.Results
         {
             if (useRawTimes)
             {
-                return new RawTimeIntensities(_listChromData.Select(chromData => chromData.RawTimeIntensities),
+                var rawTimeIntensities = new RawTimeIntensities(_listChromData.Select(chromData => chromData.RawTimeIntensities),
                     InterpolationParams);
+                if (TimeIntervals != null)
+                {
+                    rawTimeIntensities = rawTimeIntensities.ChangeTimeIntervals(TimeIntervals);
+                }
+
+                return rawTimeIntensities;
             }
             return new InterpolatedTimeIntensities(_listChromData.Select(chromData=>chromData.TimeIntensities), 
                 _listChromData.Select(chromData=>chromData.PrimaryKey.Source));
         }
+
+        public TimeIntervals TimeIntervals { get; set; }
     }
 }
 
