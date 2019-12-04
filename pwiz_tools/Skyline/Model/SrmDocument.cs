@@ -516,7 +516,7 @@ namespace pwiz.Skyline.Model
             get
             {
                 return Molecules.SelectMany(
-                    node => node.TransitionGroups.Select(nodeGroup => nodeGroup.GetLibKey(node)));
+                    node => node.TransitionGroups.Select(nodeGroup => nodeGroup.GetLibKey(Settings, node)));
             }
         }
 

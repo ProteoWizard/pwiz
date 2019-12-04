@@ -145,6 +145,7 @@
     <Compile Include="CommandLineImportAnnotationsTest.cs" />
     <Compile Include="CommandLineImportDocTest.cs" />
     <Compile Include="CommandLineMProphetTest.cs" />
+    <Compile Include="CreateTextSequencesTest.cs" />
     <Compile Include="CustomMoleculeTest.cs" />
     <Compile Include="DecoysTest.cs" />
     <Compile Include="DigestionTest.cs" />
