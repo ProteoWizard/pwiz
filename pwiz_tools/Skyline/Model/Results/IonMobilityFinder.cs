@@ -177,7 +177,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 var nodePep = pair.NodePep;
                 var nodeGroup = pair.NodeGroup;
-                var libKey = nodeGroup.GetLibKey(nodePep);
+                var libKey = nodeGroup.GetLibKey(_document.Settings, nodePep);
                 if (key.Equals(libKey))
                 {
                     return nodeGroup.PrecursorMz;
@@ -202,7 +202,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 var nodePep = pair.NodePep;
                 var nodeGroup = pair.NodeGroup;
-                var libKey = nodeGroup.GetLibKey(nodePep);
+                var libKey = nodeGroup.GetLibKey(_document.Settings, nodePep);
                 // Across all replicates for this precursor, note the ion mobility at max intensity for this mz
                 for (var i = 0; i < results.Chromatograms.Count; i++)
                 {
