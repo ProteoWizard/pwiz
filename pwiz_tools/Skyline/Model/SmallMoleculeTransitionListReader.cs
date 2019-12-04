@@ -1596,7 +1596,7 @@ namespace pwiz.Skyline.Model
                 MassListImporter.IsColumnar(line.Replace(separator,'_'), out formatProvider, out separator, out columnTypes);
             }
             _cultureInfo = formatProvider;
-            _csvReader = new DsvFileReader(new StringListReader(csvText), separator, SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms);
+            _csvReader = new DsvFileReader(CharEnumeratorReader.FromLines(csvText), separator, SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms);
             // Do we recognize all the headers?
             var badHeaders =
                 _csvReader.FieldNames.Where(

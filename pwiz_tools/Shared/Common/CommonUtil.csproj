@@ -135,6 +135,7 @@
     <Compile Include="Collections\StructSerializer.cs" />
     <Compile Include="Collections\UniqueList.cs" />
     <Compile Include="SystemUtil\CenterWinDialog.cs" />
+    <Compile Include="SystemUtil\CharEnumeratorReader.cs" />
     <Compile Include="SystemUtil\CommonException.cs" />
     <Compile Include="SystemUtil\MemoryBlockingCollection.cs" />
     <Compile Include="SystemUtil\TrackAttribute.cs" />
