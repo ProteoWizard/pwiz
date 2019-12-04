@@ -129,6 +129,8 @@ namespace pwiz.Skyline.Controls
         {
             var progressWaitBroker = new ProgressWaitBroker(performWork);
             PerformWork(parent, delayMillis, progressWaitBroker.PerformWork);
+            if (progressWaitBroker.IsCanceled)
+                return progressWaitBroker.Status.Cancel();
             return progressWaitBroker.Status;
         }
 

@@ -1909,11 +1909,13 @@ namespace pwiz.Skyline
             SrmDocument docNew = null;
             using (var longWaitDlg = new LongWaitDlg(this) {Text = description})
             {
-                longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
+                var status = longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
                 {
                     docNew = docCurrent.ImportMassList(inputs, longWaitBroker,
                         insertPath, out selectPath, out irtPeptides, out librarySpectra, out errorList, out peptideGroups);
                 });
+                if (status.IsCanceled)
+                    return;
             }
             if (assayLibrary)
             {

@@ -586,14 +586,9 @@ namespace pwiz.Skyline.Model
                     peptideGroupsNew.Add(groupsToMerge[0]);
                 else
                 {
-                    var childrenNew = groupsToMerge.SelectMany(g => g.Children).ToArray();
-                    if (childrenNew.Cast<PeptideDocNode>().All(nodePep => nodePep.Peptide.Begin.HasValue))
-                    {
-                        Array.Sort(childrenNew, (g1, g2) =>
-                            Comparer<int>.Default.Compare(((PeptideDocNode)g1).Peptide.Begin ?? 0,
-                                                          ((PeptideDocNode)g2).Peptide.Begin ?? 0));
-                    }
-                    var nodeGroupNew = (PeptideGroupDocNode) groupsToMerge[0].ChangeChildren(childrenNew);
+                    var nodeGroupNew = groupsToMerge[0];
+                    foreach (var peptideGroupDocNode in groupsToMerge.Skip(1))
+                        nodeGroupNew = nodeGroupNew.Merge(peptideGroupDocNode);
                     peptideGroupsNew.Add(nodeGroupNew);
                 }
             }
@@ -2497,7 +2492,7 @@ namespace pwiz.Skyline.Model
             // peptide and transition counts.
             nodePepGroup = nodePepGroup.ChangeSettings(_settings, diff);
 
-            List<DocNode> newChildren = new List<DocNode>();
+            List<DocNode> newChildren = new List<DocNode>(nodePepGroup.Children.Count);
             foreach (PeptideDocNode nodePep in nodePepGroup.Children)
             {
                 var nodePepAdd = nodePep;
