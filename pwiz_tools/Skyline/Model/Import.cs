@@ -1444,7 +1444,7 @@ namespace pwiz.Skyline.Model
 
             private static IEnumerable<string> GetSequencesFromLines(IEnumerable<string> lines, char separator, ColumnIndices indices)
             {
-                return lines.Select(line => RemoveModifiedSequenceNotes(line.ParseDsvFields(separator)[indices.PeptideColumn]));
+                return lines.Select(line => RemoveModifiedSequenceNotes(line.ParseDsvField(separator, indices.PeptideColumn)));
             }
         }
 
