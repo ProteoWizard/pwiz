@@ -74,7 +74,6 @@ namespace pwiz.Skyline.Model
 
         public SrmDocument RemoveBelowCutoffs(SrmDocument document)
         {
-
             var union = new List<int>();
 
             foreach (var data in Data)
@@ -82,15 +81,16 @@ namespace pwiz.Skyline.Model
                 var filterByCutoff = data.ToArray();
 
                 var toRemove = filterByCutoff.Where(r =>
+                        r.MsLevel == _msLevel &&
                         (!double.IsNaN(_adjustedPValCutoff) &&
                          r.FoldChangeResult.AdjustedPValue >= _adjustedPValCutoff) ||
                         (!double.IsNaN(_foldChangeCutoff) &&
-                         r.FoldChangeResult.AbsLog2FoldChange <= _foldChangeCutoff) || r.MsLevel != _msLevel)
+                         r.FoldChangeResult.AbsLog2FoldChange <= _foldChangeCutoff))
                     .Select(r => r.Peptide != null ? r.Peptide.Id.GlobalIndex : r.Protein.Id.GlobalIndex)
                     .Distinct()
                     .ToArray();
 
-                var result = document.RemoveAll(toRemove).Children.Select(n => n.Id.GlobalIndex).Distinct();
+                var result = ((SrmDocument) document.RemoveAll(toRemove)).Peptides.Select(p => p.Id.GlobalIndex);
                 union.AddRange(result);
             }
 
