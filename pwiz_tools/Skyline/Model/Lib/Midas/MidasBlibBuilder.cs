@@ -77,7 +77,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
                             SourceFile = bestSpectrum.ResultsFile.FilePath,
                             PrecursorMz = bestSpectrum.PrecursorMz,
                             SpectrumPeaks = _library.LoadSpectrum(bestSpectrum),
-                            Key = nodeTranGroup.GetLibKey(nodePep),
+                            Key = nodeTranGroup.GetLibKey(_doc.Settings, nodePep),
                             RetentionTimes = new[] { new SpectrumMzInfo.IonMobilityAndRT(bestSpectrum.ResultsFile.FilePath, IonMobilityAndCCS.EMPTY, bestSpectrum.RetentionTime, true) }.ToList()
                         });
                     }
