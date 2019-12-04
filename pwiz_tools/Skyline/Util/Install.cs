@@ -39,8 +39,8 @@ namespace pwiz.Skyline.Util
             }
         }
 
-        private static bool IsDeveloperInstall { get; set; }
-        private static bool IsAutomatedBuild { get; set; }
+        public static bool IsDeveloperInstall { get; private set; }
+        public static bool IsAutomatedBuild { get; private set; }
 
         public static bool Is64Bit
         {

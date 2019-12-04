@@ -86,11 +86,7 @@ namespace pwiz.Skyline.Model
             ProgressMonitor = progressMonitor;
             ProgressMonitor.UpdateProgress(_progressStatus = new ProgressStatus(DefaultMessage));
 
-            string extractDir = Path.GetFileName(SharedPath) ?? string.Empty;
-            if (PathEx.HasExtension(extractDir, EXT_SKY_ZIP))
-                extractDir = extractDir.Substring(0, extractDir.Length - EXT_SKY_ZIP.Length);
-            else if (PathEx.HasExtension(extractDir, EXT))
-                extractDir = extractDir.Substring(0, extractDir.Length - EXT.Length);
+            var extractDir = ExtractDir(SharedPath);
 
             using (ZipFile zip = ZipFile.Read(SharedPath))
             {
@@ -130,6 +126,16 @@ namespace pwiz.Skyline.Model
             {
                 DirectoryEx.SafeDelete(extractDir);
             }
+        }
+
+        public static string ExtractDir(string sharedPath)
+        {
+            string extractDir = Path.GetFileName(sharedPath) ?? string.Empty;
+            if (PathEx.HasExtension(extractDir, EXT_SKY_ZIP))
+                extractDir = extractDir.Substring(0, extractDir.Length - EXT_SKY_ZIP.Length);
+            else if (PathEx.HasExtension(extractDir, EXT))
+                extractDir = extractDir.Substring(0, extractDir.Length - EXT.Length);
+            return extractDir;
         }
 
         private static string GetNonExistentDir(string dirPath)

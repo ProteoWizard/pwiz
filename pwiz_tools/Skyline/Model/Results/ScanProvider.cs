@@ -25,6 +25,7 @@ using pwiz.Common.Chemistry;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -48,7 +49,7 @@ namespace pwiz.Skyline.Model.Results
         ChromSource Source { get; }
         IList<float> Times { get; }
         TransitionFullScanInfo[] Transitions { get; }
-        MsDataSpectrum[] GetMsDataFileSpectraWithCommonRetentionTime(int dataFileSpectrumStartIndex); // Return a collection of consecutive scans with common retention time and changing ion mobility (or a single scan if no drift info in file)
+        MsDataSpectrum[] GetMsDataFileSpectraWithCommonRetentionTime(int dataFileSpectrumStartIndex, bool ignoreZeroIntensityPoints); // Return a collection of consecutive scans with common retention time and changing ion mobility (or a single scan if no drift info in file)
         bool ProvidesCollisionalCrossSectionConverter { get; }
         double? CCSFromIonMobility(IonMobilityValue ionMobilityValue, double mz, int charge); // Return a collisional cross section for this ion mobility value at this mz and charge, if reader supports this
         eIonMobilityUnits IonMobilityUnits { get; } 
@@ -127,8 +128,9 @@ namespace pwiz.Skyline.Model.Results
         /// Retrieve a run of raw spectra with common retention time and changing ion mobility, or a single raw spectrum if no drift info
         /// </summary>
         /// <param name="internalScanIndex">an index in pwiz.Skyline.Model.Results space</param>
+        /// <param name="ignoreZeroIntensityPoints">display uses want zero intensity points, data processing uses typically do not</param>
         /// <returns>Array of spectra with the same retention time (potentially different ion mobility values for IMS, or just one spectrum)</returns>
-        public MsDataSpectrum[] GetMsDataFileSpectraWithCommonRetentionTime(int internalScanIndex)
+        public MsDataSpectrum[] GetMsDataFileSpectraWithCommonRetentionTime(int internalScanIndex, bool ignoreZeroIntensityPoints)
         {
             var spectra = new List<MsDataSpectrum>();
             if (_getMsDataFileScanIds != null)
@@ -141,19 +143,22 @@ namespace pwiz.Skyline.Model.Results
             if (_msDataFileScanIds != null)
             {
                 var scanIdText = _msDataFileScanIds.GetMsDataFileSpectrumId(internalScanIndex);
-                dataFileSpectrumStartIndex = GetDataFile().GetSpectrumIndex(scanIdText);
-                if (dataFileSpectrumStartIndex == -1)
-                    throw new IOException(string.Format(Resources.ScanProvider_GetScans_The_scan_ID__0__was_not_found_in_the_file__1__, scanIdText, DataFilePath.GetFileName()));
+                dataFileSpectrumStartIndex = GetDataFile(ignoreZeroIntensityPoints).GetSpectrumIndex(scanIdText);
             }
-            var currentSpectrum = GetDataFile().GetSpectrum(dataFileSpectrumStartIndex);
+            var currentSpectrum = GetDataFile(ignoreZeroIntensityPoints).GetSpectrum(dataFileSpectrumStartIndex);
+            if (currentSpectrum.IonMobilities != null)
+            {
+                ArrayUtil.Sort(currentSpectrum.Mzs, currentSpectrum.Intensities, currentSpectrum.IonMobilities); // Sort in m/z order
+            }
             spectra.Add(currentSpectrum);
-            if (currentSpectrum.IonMobility.HasValue)
+            if (currentSpectrum.IonMobilities == null && // No need to look ahead for 3-array IMS representation
+                currentSpectrum.IonMobility.HasValue)
             {
                 // Look for spectra with identical retention time and changing ion mobility values
                 while (true)
                 {
                     dataFileSpectrumStartIndex++;
-                    var nextSpectrum = GetDataFile().GetSpectrum(dataFileSpectrumStartIndex);
+                    var nextSpectrum = GetDataFile(ignoreZeroIntensityPoints).GetSpectrum(dataFileSpectrumStartIndex);
                     if (!nextSpectrum.IonMobility.HasValue ||
                         nextSpectrum.RetentionTime != currentSpectrum.RetentionTime)
                     {
@@ -166,7 +171,7 @@ namespace pwiz.Skyline.Model.Results
             return spectra.ToArray();
         }
 
-        private MsDataFileImpl GetDataFile()
+        private MsDataFileImpl GetDataFile( bool ignoreZeroIntensityPoints)
         {
             if (_dataFile == null)
             {
@@ -184,12 +189,14 @@ namespace pwiz.Skyline.Model.Results
                         sampleIndex = 0;
                     // Full-scan extraction always uses SIM as spectra
                     _dataFile = new MsDataFileImpl(dataFilePath, sampleIndex, lockMassParameters, true,
+                        combineIonMobilitySpectra: DataFilePath.GetCombineIonMobilitySpectra(),
                         requireVendorCentroidedMS1: DataFilePath.GetCentroidMs1(),
-                        requireVendorCentroidedMS2: DataFilePath.GetCentroidMs2());
+                        requireVendorCentroidedMS2: DataFilePath.GetCentroidMs2(),
+                        ignoreZeroIntensityPoints: ignoreZeroIntensityPoints);
                 }
                 else
                 {
-                    _dataFile = DataFilePath.OpenMsDataFile(true, 0);
+                    _dataFile = DataFilePath.OpenMsDataFile(true, 0, null, ignoreZeroIntensityPoints);
                 }
             }
             return _dataFile;

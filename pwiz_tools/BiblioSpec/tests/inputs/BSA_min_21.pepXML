@@ -1,0 +1,1075 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="pepXML_std.xsl"?>
+<msms_pipeline_analysis date="2019-11-22T11:23:09" xmlns="http://regis-web.systemsbiology.net/pepXML" summary_xml="D:\test\Thermo\BSA_min_21.pepXML" xsi:schemaLocation="http://sashimi.sourceforge.net/schema_revision/pepXML/pepXML_v118.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<msms_run_summary base_name="BSA_min_21" raw_data_type="raw" raw_data="raw">
+<sample_enzyme name="stricttrypsin">
+<specificity cut="KR" no_cut="" sense="C"/>
+</sample_enzyme>
+<search_summary base_name="BSA_min_21" precursor_mass_type="monoisotopic" search_engine="X! Tandem" search_engine_version="MSFragger-2.2" fragment_mass_type="monoisotopic" search_id="1">
+<search_database local_path="D:\oldD\fasta\20090814-BSA-Cntms-reverse.fasta" type="AA"/>
+<enzymatic_search_constraint enzyme="default" min_number_termini="2" max_num_internal_cleavages="1"/>
+<aminoacid_modification aminoacid="C" massdiff="57.0215" mass="160.0307" variable="N"/>
+<aminoacid_modification aminoacid="M" massdiff="15.9949" mass="147.0354" variable="Y"/>
+<terminal_modification massdiff="42.0106" protein_terminus="Y" mass="43.0184" terminus="N" variable="Y"/>
+<parameter name="# MSFragger.build" value="MSFragger-2.2"/>
+<parameter name="database_name" value="D:\oldD\fasta\20090814-BSA-Cntms-reverse.fasta"/>
+<parameter name="decoy_prefix" value="rev_"/>
+<parameter name="num_threads" value="15"/>
+<parameter name="precursor_mass_lower" value="-50.0"/>
+<parameter name="precursor_mass_upper" value="50.0"/>
+<parameter name="precursor_mass_units" value="1"/>
+<parameter name="precursor_true_tolerance" value="20.0"/>
+<parameter name="precursor_true_units" value="1"/>
+<parameter name="fragment_mass_tolerance" value="300.0"/>
+<parameter name="fragment_mass_units" value="1"/>
+<parameter name="calibrate_mass" value="2"/>
+<parameter name="write_calibrated_mgf" value="1"/>
+<parameter name="isotope_error" value="0/1/2"/>
+<parameter name="mass_offsets" value="0"/>
+<parameter name="precursor_mass_mode" value="SELECTED"/>
+<parameter name="localize_delta_mass" value="0"/>
+<parameter name="intensity_transform" value="1"/>
+<parameter name="remove_precursor_peak" value="1"/>
+<parameter name="remove_precursor_range" value="-1.50,1.50"/>
+<parameter name="delta_mass_exclude_ranges" value="(-1.5,3.5)"/>
+<parameter name="fragment_ion_series" value="b,y"/>
+<parameter name="search_enzyme_name" value="stricttrypsin"/>
+<parameter name="search_enzyme_cutafter" value="KR"/>
+<parameter name="search_enzyme_butnotafter" value=""/>
+<parameter name="num_enzyme_termini" value="2"/>
+<parameter name="allowed_missed_cleavage" value="1"/>
+<parameter name="clip_nTerm_M" value="1"/>
+<parameter name="allow_multiple_variable_mods_on_residue" value="0"/>
+<parameter name="max_variable_mods_per_mod" value="3"/>
+<parameter name="max_variable_mods_combinations" value="5000"/>
+<parameter name="output_file_extension" value="pepXML"/>
+<parameter name="output_format" value="pepXML"/>
+<parameter name="output_report_topN" value="1"/>
+<parameter name="output_max_expect" value="50.0"/>
+<parameter name="report_alternative_proteins" value="0"/>
+<parameter name="override_charge" value="0"/>
+<parameter name="precursor_charge" value="1 4"/>
+<parameter name="digest_min_length" value="7"/>
+<parameter name="digest_max_length" value="50"/>
+<parameter name="digest_mass_range" value="500.0 5000.0"/>
+<parameter name="max_fragment_charge" value="2"/>
+<parameter name="track_zero_topN" value="0"/>
+<parameter name="zero_bin_accept_expect" value="0.0"/>
+<parameter name="zero_bin_mult_expect" value="1.0"/>
+<parameter name="add_topN_complementary" value="0"/>
+<parameter name="minimum_peaks" value="15"/>
+<parameter name="use_topN_peaks" value="200"/>
+<parameter name="min_fragments_modelling" value="2"/>
+<parameter name="min_matched_fragments" value="4"/>
+<parameter name="minimum_ratio" value="0.0"/>
+<parameter name="clear_mz_range" value="0.0 0.0"/>
+<parameter name="excluded_scan_list_file" value=""/>
+<parameter name="variable_mod_01" value="15.99490 M"/>
+<parameter name="variable_mod_02" value="42.01060 [^"/>
+<parameter name="add_A_alanine" value="0.000000"/>
+<parameter name="add_B_user_amino_acid" value="0.000000"/>
+<parameter name="add_C_cysteine" value="57.021464"/>
+<parameter name="add_Cterm_peptide" value="0.0"/>
+<parameter name="add_Cterm_protein" value="0.0"/>
+<parameter name="add_D_aspartic_acid" value="0.000000"/>
+<parameter name="add_E_glutamic_acid" value="0.000000"/>
+<parameter name="add_F_phenylalanine" value="0.000000"/>
+<parameter name="add_G_glycine" value="0.000000"/>
+<parameter name="add_H_histidine" value="0.000000"/>
+<parameter name="add_I_isoleucine" value="0.000000"/>
+<parameter name="add_J_user_amino_acid" value="0.000000"/>
+<parameter name="add_K_lysine" value="0.000000"/>
+<parameter name="add_L_leucine" value="0.000000"/>
+<parameter name="add_M_methionine" value="0.000000"/>
+<parameter name="add_N_asparagine" value="0.000000"/>
+<parameter name="add_Nterm_peptide" value="0.0"/>
+<parameter name="add_Nterm_protein" value="0.0"/>
+<parameter name="add_O_user_amino_acid" value="0.000000"/>
+<parameter name="add_P_proline" value="0.000000"/>
+<parameter name="add_Q_glutamine" value="0.000000"/>
+<parameter name="add_R_arginine" value="0.000000"/>
+<parameter name="add_S_serine" value="0.000000"/>
+<parameter name="add_T_threonine" value="0.000000"/>
+<parameter name="add_U_user_amino_acid" value="0.000000"/>
+<parameter name="add_V_valine" value="0.000000"/>
+<parameter name="add_W_tryptophan" value="0.000000"/>
+<parameter name="add_X_user_amino_acid" value="0.000000"/>
+<parameter name="add_Y_tyrosine" value="0.000000"/>
+<parameter name="add_Z_user_amino_acid" value="0.000000"/>
+</search_summary>
+<spectrum_query start_scan="2" assumed_charge="2" spectrum="BSA_min_21.2.2.2" end_scan="2" index="1" precursor_neutral_mass="1443.6202" retention_time_sec="0.733">
+<search_result>
+<search_hit peptide="YICDNQDTISSK" massdiff="0.9855" calc_neutral_pep_mass="1442.6348" peptide_next_aa="L" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="22" hit_rank="1" num_matched_ions="9" protein="sp|P02769|ALBU_BOVIN Serum albumin OS=Bos taurus GN=ALB PE=1 SV=4" peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="3"/>
+</modification_info>
+<search_score name="hyperscore" value="18.168"/>
+<search_score name="nextscore" value="10.358"/>
+<search_score name="expect" value="1.211e-03"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="5" assumed_charge="2" spectrum="BSA_min_21.5.5.2" end_scan="5" index="4" precursor_neutral_mass="973.4509" retention_time_sec="1.742">
+<search_result>
+<search_hit peptide="DLGEEHFK" massdiff="0.0004" calc_neutral_pep_mass="973.4505" peptide_next_aa="G" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="14" hit_rank="1" num_matched_ions="11" protein="sp|P02769|ALBU_BOVIN Serum albumin OS=Bos taurus GN=ALB PE=1 SV=4" peptide_prev_aa="K" is_rejected="0">
+<search_score name="hyperscore" value="21.426"/>
+<search_score name="nextscore" value="12.518"/>
+<search_score name="expect" value="1.856e-04"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="8" assumed_charge="2" spectrum="BSA_min_21.8.8.2" end_scan="8" index="6" precursor_neutral_mass="942.4557" retention_time_sec="2.809">
+<search_result>
+<search_hit peptide="SSSTTSVFK" massdiff="-0.0101" calc_neutral_pep_mass="942.4658" peptide_next_aa="V" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="16" hit_rank="1" num_matched_ions="5" protein="rev_Cntm_P13647|K2C5_HUMAN" peptide_prev_aa="R" is_rejected="0">
+<search_score name="hyperscore" value="8.716"/>
+<search_score name="nextscore" value="8.716"/>
+<search_score name="expect" value="1.570e-02"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="11" assumed_charge="2" spectrum="BSA_min_21.11.11.2" end_scan="11" index="9" precursor_neutral_mass="1075.5219" retention_time_sec="3.747">
+<search_result>
+<search_hit peptide="ALCGMAVLNK" massdiff="-0.0299" calc_neutral_pep_mass="1075.5518" peptide_next_aa="D" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="18" hit_rank="1" num_matched_ions="5" protein="rev_Cntm_P01873|MUCM_MOUSE" peptide_prev_aa="R" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="3"/>
+</modification_info>
+<search_score name="hyperscore" value="9.153"/>
+<search_score name="nextscore" value="8.227"/>
+<search_score name="expect" value="2.171e+00"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="12" assumed_charge="2" spectrum="BSA_min_21.12.12.2" end_scan="12" index="10" precursor_neutral_mass="1033.4650" retention_time_sec="4.058">
+<search_result>
+<search_hit peptide="NECFLSHK" massdiff="-0.0001" calc_neutral_pep_mass="1033.4651" peptide_next_aa="D" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="14" hit_rank="1" num_matched_ions="5" protein="sp|P02769|ALBU_BOVIN Serum albumin OS=Bos taurus GN=ALB PE=1 SV=4" peptide_prev_aa="R" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="3"/>
+</modification_info>
+<search_score name="hyperscore" value="11.586"/>
+<search_score name="nextscore" value="11.586"/>
+<search_score name="expect" value="5.352e-02"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="17" assumed_charge="2" spectrum="BSA_min_21.17.17.2" end_scan="17" index="13" precursor_neutral_mass="1469.5985" retention_time_sec="5.815">
+<search_result>
+<search_hit peptide="SSSHSRITTSTSAM" massdiff="1.9363" calc_neutral_pep_mass="1467.6622" peptide_next_aa="-" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="26" hit_rank="1" num_matched_ions="6" protein="rev_Cntm_P02538|K2C6A_HUMAN" peptide_prev_aa="R" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="147.0354" position="14"/>
+</modification_info>
+<search_score name="hyperscore" value="11.166"/>
+<search_score name="nextscore" value="11.166"/>
+<search_score name="expect" value="3.833e-03"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="18" assumed_charge="2" spectrum="BSA_min_21.18.18.2" end_scan="18" index="14" precursor_neutral_mass="1138.4749" retention_time_sec="6.149">
+<search_result>
+<search_hit peptide="CCTESLVNR" massdiff="0.9843" calc_neutral_pep_mass="1137.4906" peptide_next_aa="R" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="16" hit_rank="1" num_matched_ions="7" protein="sp|P02769|ALBU_BOVIN Serum albumin OS=Bos taurus GN=ALB PE=1 SV=4" peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="1"/>
+<mod_aminoacid_mass mass="160.0307" position="2"/>
+</modification_info>
+<search_score name="hyperscore" value="14.751"/>
+<search_score name="nextscore" value="14.751"/>
+<search_score name="expect" value="4.867e-04"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="21" assumed_charge="2" spectrum="BSA_min_21.21.21.2" end_scan="21" index="16" precursor_neutral_mass="1501.6064" retention_time_sec="7.269">
+<search_result>
+<search_hit peptide="EYEATLEECCAK" massdiff="0.0000" calc_neutral_pep_mass="1501.6064" peptide_next_aa="D" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="22" hit_rank="1" num_matched_ions="10" protein="sp|P02769|ALBU_BOVIN Serum albumin OS=Bos taurus GN=ALB PE=1 SV=4" peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="9"/>
+<mod_aminoacid_mass mass="160.0307" position="10"/>
+</modification_info>
+<search_score name="hyperscore" value="20.439"/>
+<search_score name="nextscore" value="9.097"/>
+<search_score name="expect" value="1.842e-05"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="22" assumed_charge="5" spectrum="BSA_min_21.22.22.5" end_scan="22" index="17" precursor_neutral_mass="3358.4512" retention_time_sec="7.607">
+<search_result>
+<search_hit peptide="QVLDNLTMEKSDLEMQYETLQEELMALK" massdiff="0.8484" calc_neutral_pep_mass="3357.6028" peptide_next_aa="K" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="216" hit_rank="1" num_matched_ions="5" protein="Cntm_P35527|K1C9_HUMAN Keratin, type I cytoskeletal 9 - Homo sapiens (Human)." peptide_prev_aa="R" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="147.0354" position="8"/>
+</modification_info>
+<search_score name="hyperscore" value="10.321"/>
+<search_score name="nextscore" value="10.063"/>
+<search_score name="expect" value="6.234e-03"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="26" assumed_charge="2" spectrum="BSA_min_21.26.26.2" end_scan="26" index="20" precursor_neutral_mass="1034.4520" retention_time_sec="9.150">
+<search_result>
+<search_hit peptide="NECFLSHK" massdiff="0.9869" calc_neutral_pep_mass="1033.4651" peptide_next_aa="D" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="14" hit_rank="1" num_matched_ions="7" protein="sp|P02769|ALBU_BOVIN Serum albumin OS=Bos taurus GN=ALB PE=1 SV=4" peptide_prev_aa="R" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="3"/>
+</modification_info>
+<search_score name="hyperscore" value="14.907"/>
+<search_score name="nextscore" value="14.907"/>
+<search_score name="expect" value="4.449e-03"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="27" assumed_charge="2" spectrum="BSA_min_21.27.27.2" end_scan="27" index="21" precursor_neutral_mass="912.4927" retention_time_sec="9.465">
+<search_result>
+<search_hit peptide="GQLLPQEK" massdiff="0.9850" calc_neutral_pep_mass="911.5076" peptide_next_aa="Y" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="14" hit_rank="1" num_matched_ions="5" protein="Cntm_P01873|MUCM_MOUSE Ig mu chain C region membrane-bound form - Mus musculus (Mouse)." peptide_prev_aa="R" is_rejected="0">
+<search_score name="hyperscore" value="10.157"/>
+<search_score name="nextscore" value="8.203"/>
+<search_score name="expect" value="1.218e+00"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="32" assumed_charge="2" spectrum="BSA_min_21.32.32.2" end_scan="32" index="25" precursor_neutral_mass="898.4589" retention_time_sec="11.274">
+<search_result>
+<search_hit peptide="LCVLHEK" massdiff="0.9847" calc_neutral_pep_mass="897.4742" peptide_next_aa="T" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="12" hit_rank="1" num_matched_ions="6" protein="sp|P02769|ALBU_BOVIN Serum albumin OS=Bos taurus GN=ALB PE=1 SV=4" peptide_prev_aa="R" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="2"/>
+</modification_info>
+<search_score name="hyperscore" value="12.671"/>
+<search_score name="nextscore" value="12.671"/>
+<search_score name="expect" value="1.612e-03"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="33" assumed_charge="5" spectrum="BSA_min_21.33.33.5" end_scan="33" index="26" precursor_neutral_mass="3531.5083" retention_time_sec="11.569">
+<search_result>
+<search_hit peptide="NHEEEMKEFSNQVVGQVNVEMDATPGIDLTR" massdiff="-0.1162" calc_neutral_pep_mass="3531.6245" peptide_next_aa="V" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="240" hit_rank="1" num_matched_ions="6" protein="Cntm_P13646|K1C13_HUMAN Keratin, type I cytoskeletal 13 - Homo sapiens (Human)." peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="147.0354" position="21"/>
+</modification_info>
+<search_score name="hyperscore" value="12.428"/>
+<search_score name="nextscore" value="12.428"/>
+<search_score name="expect" value="5.861e-02"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="36" assumed_charge="2" spectrum="BSA_min_21.36.36.2" end_scan="36" index="29" precursor_neutral_mass="1502.6116" retention_time_sec="12.592">
+<search_result>
+<search_hit peptide="EYEATLEECCAK" massdiff="1.0051" calc_neutral_pep_mass="1501.6064" peptide_next_aa="D" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="22" hit_rank="1" num_matched_ions="7" protein="sp|P02769|ALBU_BOVIN Serum albumin OS=Bos taurus GN=ALB PE=1 SV=4" peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="9"/>
+<mod_aminoacid_mass mass="160.0307" position="10"/>
+</modification_info>
+<search_score name="hyperscore" value="15.255"/>
+<search_score name="nextscore" value="15.255"/>
+<search_score name="expect" value="3.641e-04"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="38" assumed_charge="2" spectrum="BSA_min_21.38.38.2" end_scan="38" index="30" precursor_neutral_mass="1386.6191" retention_time_sec="13.415">
+<search_result>
+<search_hit peptide="NWRCPELCPR" massdiff="-0.0093" calc_neutral_pep_mass="1386.6284" peptide_next_aa="T" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="18" hit_rank="1" num_matched_ions="4" protein="Cntm_Q9HC84|MUC5B_HUMAN Mucin-5B - Homo sapiens (Human)." peptide_prev_aa="R" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="4"/>
+<mod_aminoacid_mass mass="160.0307" position="8"/>
+</modification_info>
+<search_score name="hyperscore" value="8.215"/>
+<search_score name="nextscore" value="8.215"/>
+<search_score name="expect" value="1.178e+00"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="40" assumed_charge="2" spectrum="BSA_min_21.40.40.2" end_scan="40" index="32" precursor_neutral_mass="1160.6486" retention_time_sec="14.039">
+<search_result>
+<search_hit peptide="DNGLTDLQKR" massdiff="2.0493" calc_neutral_pep_mass="1158.5992" peptide_next_aa="L" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="18" hit_rank="1" num_matched_ions="6" protein="rev_Cntm_P19013|K2C4_HUMAN" peptide_prev_aa="K" is_rejected="0">
+<search_score name="hyperscore" value="12.357"/>
+<search_score name="nextscore" value="7.549"/>
+<search_score name="expect" value="1.086e-01"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="44" assumed_charge="2" spectrum="BSA_min_21.44.44.2" end_scan="44" index="35" precursor_neutral_mass="1442.6379" retention_time_sec="15.496">
+<search_result>
+<search_hit peptide="YICDNQDTISSK" massdiff="0.0032" calc_neutral_pep_mass="1442.6348" peptide_next_aa="L" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="22" hit_rank="1" num_matched_ions="13" protein="sp|P02769|ALBU_BOVIN Serum albumin OS=Bos taurus GN=ALB PE=1 SV=4" peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="3"/>
+</modification_info>
+<search_score name="hyperscore" value="25.544"/>
+<search_score name="nextscore" value="25.544"/>
+<search_score name="expect" value="9.750e-06"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="46" assumed_charge="2" spectrum="BSA_min_21.46.46.2" end_scan="46" index="37" precursor_neutral_mass="1087.5507" retention_time_sec="16.180">
+<search_result>
+<search_hit peptide="PTLSIMLADK" massdiff="-0.0439" calc_neutral_pep_mass="1087.5946" peptide_next_aa="P" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="18" hit_rank="1" num_matched_ions="4" protein="rev_Cntm_P03987|GC3M_MOUSE" peptide_prev_aa="K" is_rejected="0">
+<search_score name="hyperscore" value="8.751"/>
+<search_score name="nextscore" value="8.751"/>
+<search_score name="expect" value="1.539e+00"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="47" assumed_charge="3" spectrum="BSA_min_21.47.47.3" end_scan="47" index="38" precursor_neutral_mass="1531.7745" retention_time_sec="16.493">
+<search_result>
+<search_hit peptide="WMRQEQYYVGR" massdiff="1.0709" calc_neutral_pep_mass="1530.7036" peptide_next_aa="G" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="40" hit_rank="1" num_matched_ions="6" protein="Cntm_Q9XEG1|Q9XEG1_GOSHI Putative callose synthase catalytic subunit - Gossypium hirsutum (Upland cotton)." peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="147.0354" position="2"/>
+</modification_info>
+<search_score name="hyperscore" value="12.019"/>
+<search_score name="nextscore" value="10.173"/>
+<search_score name="expect" value="1.319e+00"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="49" assumed_charge="5" spectrum="BSA_min_21.49.49.5" end_scan="49" index="39" precursor_neutral_mass="3355.4514" retention_time_sec="17.305">
+<search_result>
+<search_hit peptide="WQYHNVGGTVDNTKDFWSDLLEFWNGVK" massdiff="0.8782" calc_neutral_pep_mass="3354.5732" peptide_next_aa="N" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="216" hit_rank="1" num_matched_ions="5" protein="rev_Cntm_P09870|CLOS_CLOHI" peptide_prev_aa="-" is_rejected="0">
+<search_score name="hyperscore" value="11.177"/>
+<search_score name="nextscore" value="11.177"/>
+<search_score name="expect" value="2.142e-01"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="52" assumed_charge="2" spectrum="BSA_min_21.52.52.2" end_scan="52" index="42" precursor_neutral_mass="1088.5536" retention_time_sec="18.287">
+<search_result>
+<search_hit peptide="QFSSRSGYR" massdiff="2.0331" calc_neutral_pep_mass="1086.5205" peptide_next_aa="S" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="16" hit_rank="1" num_matched_ions="4" protein="Cntm_P04264|K2C1_HUMAN Keratin, type II cytoskeletal 1 - Homo sapiens (Human)." peptide_prev_aa="R" is_rejected="0">
+<search_score name="hyperscore" value="8.621"/>
+<search_score name="nextscore" value="8.621"/>
+<search_score name="expect" value="9.327e-01"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="53" assumed_charge="2" spectrum="BSA_min_21.53.53.2" end_scan="53" index="43" precursor_neutral_mass="1071.4952" retention_time_sec="18.600">
+<search_result>
+<search_hit peptide="SHCIAEVEK" massdiff="-0.0066" calc_neutral_pep_mass="1071.5018" peptide_next_aa="D" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="16" hit_rank="1" num_matched_ions="5" protein="sp|P02769|ALBU_BOVIN Serum albumin OS=Bos taurus GN=ALB PE=1 SV=4" peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="3"/>
+</modification_info>
+<search_score name="hyperscore" value="12.035"/>
+<search_score name="nextscore" value="12.035"/>
+<search_score name="expect" value="2.324e-03"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="55" assumed_charge="2" spectrum="BSA_min_21.55.55.2" end_scan="55" index="44" precursor_neutral_mass="889.5039" retention_time_sec="19.389">
+<search_result>
+<search_hit peptide="EDLAALEK" massdiff="2.0439" calc_neutral_pep_mass="887.4600" peptide_next_aa="D" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="14" hit_rank="1" num_matched_ions="6" protein="Cntm_Q9SQ71|Q9SQ71_GOSHI Alpha-tubulin (Fragment) - Gossypium hirsutum (Upland cotton)." peptide_prev_aa="R" is_rejected="0">
+<search_score name="hyperscore" value="10.954"/>
+<search_score name="nextscore" value="9.555"/>
+<search_score name="expect" value="7.700e-02"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="63" assumed_charge="4" spectrum="BSA_min_21.63.63.4" end_scan="63" index="51" precursor_neutral_mass="3533.5073" retention_time_sec="22.185">
+<search_result>
+<search_hit peptide="NHEEEMKEFSNQVVGQVNVEMDATPGIDLTR" massdiff="1.8828" calc_neutral_pep_mass="3531.6245" peptide_next_aa="V" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="180" hit_rank="1" num_matched_ions="4" protein="Cntm_P13646|K1C13_HUMAN Keratin, type I cytoskeletal 13 - Homo sapiens (Human)." peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="147.0354" position="21"/>
+</modification_info>
+<search_score name="hyperscore" value="10.546"/>
+<search_score name="nextscore" value="10.050"/>
+<search_score name="expect" value="5.476e-03"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="65" assumed_charge="2" spectrum="BSA_min_21.65.65.2" end_scan="65" index="53" precursor_neutral_mass="913.4667" retention_time_sec="22.859">
+<search_result>
+<search_hit peptide="EPPGQVASK" massdiff="1.9955" calc_neutral_pep_mass="911.4712" peptide_next_aa="G" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="16" hit_rank="1" num_matched_ions="7" protein="rev_Cntm_P01876|IGHA1_HUMAN" peptide_prev_aa="R" is_rejected="0">
+<search_score name="hyperscore" value="13.799"/>
+<search_score name="nextscore" value="13.799"/>
+<search_score name="expect" value="2.662e-02"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="67" assumed_charge="3" spectrum="BSA_min_21.67.67.3" end_scan="67" index="54" precursor_neutral_mass="1388.6681" retention_time_sec="23.633">
+<search_result>
+<search_hit peptide="GACLLPKIETMR" massdiff="0.9365" calc_neutral_pep_mass="1387.7316" peptide_next_aa="E" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="44" hit_rank="1" num_matched_ions="8" protein="sp|P02769|ALBU_BOVIN Serum albumin OS=Bos taurus GN=ALB PE=1 SV=4" peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="3"/>
+</modification_info>
+<search_score name="hyperscore" value="16.056"/>
+<search_score name="nextscore" value="12.464"/>
+<search_score name="expect" value="2.296e-02"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="70" assumed_charge="2" spectrum="BSA_min_21.70.70.2" end_scan="70" index="57" precursor_neutral_mass="1388.6676" retention_time_sec="24.611">
+<search_result>
+<search_hit peptide="GACLLPKIETMR" massdiff="0.9360" calc_neutral_pep_mass="1387.7316" peptide_next_aa="E" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="22" hit_rank="1" num_matched_ions="4" protein="sp|P02769|ALBU_BOVIN Serum albumin OS=Bos taurus GN=ALB PE=1 SV=4" peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="3"/>
+</modification_info>
+<search_score name="hyperscore" value="7.448"/>
+<search_score name="nextscore" value="7.448"/>
+<search_score name="expect" value="1.030e+00"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="71" assumed_charge="5" spectrum="BSA_min_21.71.71.5" end_scan="71" index="58" precursor_neutral_mass="3143.3667" retention_time_sec="24.937">
+<search_result>
+<search_hit peptide="EASSGGGGSSSNFHINVEESVDGQVVSSHKR" massdiff="-0.0835" calc_neutral_pep_mass="3143.4502" peptide_next_aa="E" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="240" hit_rank="1" num_matched_ions="5" protein="Cntm_P19012|K1C15_HUMAN Keratin, type I cytoskeletal 15 - Homo sapiens (Human)." peptide_prev_aa="R" is_rejected="0">
+<search_score name="hyperscore" value="11.096"/>
+<search_score name="nextscore" value="10.661"/>
+<search_score name="expect" value="3.990e-03"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="73" assumed_charge="3" spectrum="BSA_min_21.73.73.3" end_scan="73" index="59" precursor_neutral_mass="1522.7384" retention_time_sec="25.779">
+<search_result>
+<search_hit peptide="DLIAKIDGPWMHK" massdiff="-0.0581" calc_neutral_pep_mass="1522.7965" peptide_next_aa="S" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="48" hit_rank="1" num_matched_ions="5" protein="rev_Cntm_P04745|AMYS_HUMAN" peptide_prev_aa="K" is_rejected="0">
+<search_score name="hyperscore" value="9.966"/>
+<search_score name="nextscore" value="8.857"/>
+<search_score name="expect" value="1.360e+00"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="75" assumed_charge="2" spectrum="BSA_min_21.75.75.2" end_scan="75" index="61" precursor_neutral_mass="1258.6832" retention_time_sec="26.423">
+<search_result>
+<search_hit peptide="GLPSSIEKTISK" massdiff="-0.0299" calc_neutral_pep_mass="1258.7131" peptide_next_aa="A" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="22" hit_rank="1" num_matched_ions="4" protein="Cntm_P01861|IGHG4_HUMAN Ig gamma-4 chain C region - Homo sapiens (Human)." peptide_prev_aa="K" is_rejected="0">
+<search_score name="hyperscore" value="10.235"/>
+<search_score name="nextscore" value="8.912"/>
+<search_score name="expect" value="1.165e+00"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="79" assumed_charge="2" spectrum="BSA_min_21.79.79.2" end_scan="79" index="64" precursor_neutral_mass="1316.6129" retention_time_sec="27.845">
+<search_result>
+<search_hit peptide="EENPTVLPYQK" massdiff="-0.0482" calc_neutral_pep_mass="1316.6611" peptide_next_aa="A" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="20" hit_rank="1" num_matched_ions="4" protein="rev_sp|P35605|COPB2_BOVIN" peptide_prev_aa="R" is_rejected="0">
+<search_score name="hyperscore" value="7.178"/>
+<search_score name="nextscore" value="6.772"/>
+<search_score name="expect" value="2.140e+00"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="81" assumed_charge="3" spectrum="BSA_min_21.81.81.3" end_scan="81" index="66" precursor_neutral_mass="1674.7288" retention_time_sec="28.508">
+<search_result>
+<search_hit peptide="QEPERNECFLSHK" massdiff="1.9661" calc_neutral_pep_mass="1672.7627" peptide_next_aa="D" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="48" hit_rank="1" num_matched_ions="7" protein="sp|P02769|ALBU_BOVIN Serum albumin OS=Bos taurus GN=ALB PE=1 SV=4" peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="8"/>
+</modification_info>
+<search_score name="hyperscore" value="13.410"/>
+<search_score name="nextscore" value="13.217"/>
+<search_score name="expect" value="1.053e-03"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="82" assumed_charge="2" spectrum="BSA_min_21.82.82.2" end_scan="82" index="67" precursor_neutral_mass="1553.6555" retention_time_sec="28.853">
+<search_result>
+<search_hit peptide="NWGEGWGFMPSDR" massdiff="0.0199" calc_neutral_pep_mass="1553.6356" peptide_next_aa="A" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="24" hit_rank="1" num_matched_ions="4" protein="Cntm_P04745|AMYS_HUMAN Salivary alpha-amylase - Homo sapiens (Human)." peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="147.0354" position="9"/>
+</modification_info>
+<search_score name="hyperscore" value="9.228"/>
+<search_score name="nextscore" value="8.946"/>
+<search_score name="expect" value="1.169e-02"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="83" assumed_charge="3" spectrum="BSA_min_21.83.83.3" end_scan="83" index="68" precursor_neutral_mass="1440.8230" retention_time_sec="29.196">
+<search_result>
+<search_hit peptide="DSPNLNLIALVDR" massdiff="2.0452" calc_neutral_pep_mass="1438.7778" peptide_next_aa="S" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="48" hit_rank="1" num_matched_ions="5" protein="Cntm_P09870|CLOS_CLOHI Clostripain - Clostridium histolyticum." peptide_prev_aa="K" is_rejected="0">
+<search_score name="hyperscore" value="10.949"/>
+<search_score name="nextscore" value="9.037"/>
+<search_score name="expect" value="4.343e-03"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="85" assumed_charge="2" spectrum="BSA_min_21.85.85.2" end_scan="85" index="69" precursor_neutral_mass="921.4814" retention_time_sec="30.027">
+<search_result>
+<search_hit peptide="AEFVEVTK" massdiff="0.0007" calc_neutral_pep_mass="921.4807" peptide_next_aa="L" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="14" hit_rank="1" num_matched_ions="8" protein="sp|P02769|ALBU_BOVIN Serum albumin OS=Bos taurus GN=ALB PE=1 SV=4" peptide_prev_aa="K" is_rejected="0">
+<search_score name="hyperscore" value="16.690"/>
+<search_score name="nextscore" value="10.600"/>
+<search_score name="expect" value="1.594e-04"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="87" assumed_charge="3" spectrum="BSA_min_21.87.87.3" end_scan="87" index="71" precursor_neutral_mass="1946.9551" retention_time_sec="30.681">
+<search_result>
+<search_hit peptide="TVAAPSVFIFPPSDEQLK" massdiff="1.9355" calc_neutral_pep_mass="1945.0195" peptide_next_aa="S" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="68" hit_rank="1" num_matched_ions="4" protein="Cntm_P01834|KAC_HUMAN Ig kappa chain C region - Homo sapiens (Human)." peptide_prev_aa="-" is_rejected="0">
+<search_score name="hyperscore" value="10.217"/>
+<search_score name="nextscore" value="9.725"/>
+<search_score name="expect" value="2.093e+00"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="88" assumed_charge="2" spectrum="BSA_min_21.88.88.2" end_scan="88" index="72" precursor_neutral_mass="1173.5637" retention_time_sec="31.041">
+<search_result>
+<search_hit peptide="GDHVDMVKTR" massdiff="1.0031" calc_neutral_pep_mass="1172.5607" peptide_next_aa="I" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="18" hit_rank="1" num_matched_ions="4" protein="rev_Cntm_P02533|K1C14_HUMAN" peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="147.0354" position="6"/>
+</modification_info>
+<search_score name="hyperscore" value="9.541"/>
+<search_score name="nextscore" value="8.930"/>
+<search_score name="expect" value="1.737e+00"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="91" assumed_charge="2" spectrum="BSA_min_21.91.91.2" end_scan="91" index="74" precursor_neutral_mass="920.5099" retention_time_sec="32.160">
+<search_result>
+<search_hit peptide="TEGRLFAK" massdiff="0.0020" calc_neutral_pep_mass="920.5079" peptide_next_aa="L" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="14" hit_rank="1" num_matched_ions="4" protein="Cntm_Q9XEG1|Q9XEG1_GOSHI Putative callose synthase catalytic subunit - Gossypium hirsutum (Upland cotton)." peptide_prev_aa="R" is_rejected="0">
+<search_score name="hyperscore" value="8.077"/>
+<search_score name="nextscore" value="8.077"/>
+<search_score name="expect" value="2.269e-02"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="94" assumed_charge="3" spectrum="BSA_min_21.94.94.3" end_scan="94" index="76" precursor_neutral_mass="1764.6516" retention_time_sec="33.300">
+<search_result>
+<search_hit peptide="SGFGGGAGFSGGGGGCSSFR" massdiff="-0.0757" calc_neutral_pep_mass="1764.7273" peptide_next_aa="G" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="76" hit_rank="1" num_matched_ions="7" protein="rev_Cntm_P04264|K2C1_HUMAN" peptide_prev_aa="R" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="16"/>
+</modification_info>
+<search_score name="hyperscore" value="14.685"/>
+<search_score name="nextscore" value="11.057"/>
+<search_score name="expect" value="5.055e-04"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="96" assumed_charge="3" spectrum="BSA_min_21.96.96.3" end_scan="96" index="78" precursor_neutral_mass="1945.9402" retention_time_sec="34.002">
+<search_result>
+<search_hit peptide="CTPQCADVVYAYRQSK" massdiff="1.0580" calc_neutral_pep_mass="1944.8822" peptide_next_aa="P" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="60" hit_rank="1" num_matched_ions="6" protein="rev_Cntm_Q9HC84|MUC5B_HUMAN" peptide_prev_aa="R" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="1"/>
+<mod_aminoacid_mass mass="160.0307" position="5"/>
+</modification_info>
+<search_score name="hyperscore" value="13.622"/>
+<search_score name="nextscore" value="10.661"/>
+<search_score name="expect" value="9.322e-04"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="97" assumed_charge="3" spectrum="BSA_min_21.97.97.3" end_scan="97" index="79" precursor_neutral_mass="1721.6699" retention_time_sec="34.360">
+<search_result>
+<search_hit peptide="DDACELLDGHCCEK" massdiff="1.0210" calc_neutral_pep_mass="1720.6489" peptide_next_aa="H" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="52" hit_rank="1" num_matched_ions="5" protein="rev_sp|P02769|ALBU_BOVIN" peptide_prev_aa="R" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="4"/>
+<mod_aminoacid_mass mass="160.0307" position="11"/>
+<mod_aminoacid_mass mass="160.0307" position="12"/>
+</modification_info>
+<search_score name="hyperscore" value="11.380"/>
+<search_score name="nextscore" value="11.380"/>
+<search_score name="expect" value="3.388e-03"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="98" assumed_charge="3" spectrum="BSA_min_21.98.98.3" end_scan="98" index="80" precursor_neutral_mass="1389.6777" retention_time_sec="34.709">
+<search_result>
+<search_hit peptide="MFADPFEEFLK" massdiff="1.0457" calc_neutral_pep_mass="1388.6321" peptide_next_aa="Q" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="40" hit_rank="1" num_matched_ions="4" protein="rev_Cntm_Q9XEG1|Q9XEG1_GOSHI" peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="147.0354" position="1"/>
+</modification_info>
+<search_score name="hyperscore" value="10.650"/>
+<search_score name="nextscore" value="9.346"/>
+<search_score name="expect" value="1.631e+00"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="101" assumed_charge="2" spectrum="BSA_min_21.101.101.2" end_scan="101" index="82" precursor_neutral_mass="1426.5957" retention_time_sec="35.871">
+<search_result>
+<search_hit peptide="GSSGLGGGSSRTSCR" massdiff="1.9531" calc_neutral_pep_mass="1424.6426" peptide_next_aa="L" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="28" hit_rank="1" num_matched_ions="5" protein="Cntm_Q04695|K1C17_HUMAN Keratin, type I cytoskeletal 17 - Homo sapiens (Human)." peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="14"/>
+</modification_info>
+<search_score name="hyperscore" value="10.413"/>
+<search_score name="nextscore" value="10.413"/>
+<search_score name="expect" value="3.325e-01"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="102" assumed_charge="3" spectrum="BSA_min_21.102.102.3" end_scan="102" index="83" precursor_neutral_mass="1920.8273" retention_time_sec="36.200">
+<search_result>
+<search_hit peptide="TMEEQSPPLTYVQPER" massdiff="0.9340" calc_neutral_pep_mass="1919.8933" peptide_next_aa="P" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="60" hit_rank="1" num_matched_ions="4" protein="rev_Cntm_P01861|IGHG4_HUMAN" peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="147.0354" position="2"/>
+</modification_info>
+<search_score name="hyperscore" value="9.480"/>
+<search_score name="nextscore" value="8.153"/>
+<search_score name="expect" value="1.799e+00"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="103" assumed_charge="3" spectrum="BSA_min_21.103.103.3" end_scan="103" index="84" precursor_neutral_mass="1841.8868" retention_time_sec="36.555">
+<search_result>
+<search_hit peptide="ACCEELTAEYEKALR" massdiff="0.0581" calc_neutral_pep_mass="1841.8287" peptide_next_aa="L" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="56" hit_rank="1" num_matched_ions="5" protein="rev_sp|P02769|ALBU_BOVIN" peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="2"/>
+<mod_aminoacid_mass mass="160.0307" position="3"/>
+</modification_info>
+<search_score name="hyperscore" value="11.057"/>
+<search_score name="nextscore" value="10.284"/>
+<search_score name="expect" value="2.295e+00"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="105" assumed_charge="2" spectrum="BSA_min_21.105.105.2" end_scan="105" index="85" precursor_neutral_mass="1398.6493" retention_time_sec="37.405">
+<search_result>
+<search_hit peptide="AMDKCSAATTGDR" massdiff="0.0626" calc_neutral_pep_mass="1398.5867" peptide_next_aa="Q" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="24" hit_rank="1" num_matched_ions="4" protein="rev_Cntm_Q9HC84|MUC5B_HUMAN" peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="147.0354" position="2"/>
+<mod_aminoacid_mass mass="160.0307" position="5"/>
+</modification_info>
+<search_score name="hyperscore" value="9.738"/>
+<search_score name="nextscore" value="9.354"/>
+<search_score name="expect" value="8.720e-01"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="106" assumed_charge="3" spectrum="BSA_min_21.106.106.3" end_scan="106" index="86" precursor_neutral_mass="1623.7760" retention_time_sec="37.735">
+<search_result>
+<search_hit peptide="SSVCVNVSGVGECLR" massdiff="2.0208" calc_neutral_pep_mass="1621.7552" peptide_next_aa="Q" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="56" hit_rank="1" num_matched_ions="8" protein="rev_Cntm_P25691|K2M3_SHEEP" peptide_prev_aa="R" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="4"/>
+<mod_aminoacid_mass mass="160.0307" position="13"/>
+</modification_info>
+<search_score name="hyperscore" value="14.742"/>
+<search_score name="nextscore" value="11.207"/>
+<search_score name="expect" value="1.547e-01"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="107" assumed_charge="3" spectrum="BSA_min_21.107.107.3" end_scan="107" index="87" precursor_neutral_mass="1889.9207" retention_time_sec="38.080">
+<search_result>
+<search_hit peptide="PALYRECELAIDVWR" massdiff="-0.0250" calc_neutral_pep_mass="1889.9457" peptide_next_aa="W" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="56" hit_rank="1" num_matched_ions="7" protein="rev_Cntm_P04745|AMYS_HUMAN" peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="7"/>
+</modification_info>
+<search_score name="hyperscore" value="14.385"/>
+<search_score name="nextscore" value="11.922"/>
+<search_score name="expect" value="3.379e-01"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="108" assumed_charge="2" spectrum="BSA_min_21.108.108.2" end_scan="108" index="88" precursor_neutral_mass="1323.6506" retention_time_sec="38.432">
+<search_result>
+<search_hit peptide="GYSGGSGGRGGLGIK" massdiff="1.9769" calc_neutral_pep_mass="1321.6737" peptide_next_aa="G" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="28" hit_rank="1" num_matched_ions="4" protein="rev_Cntm_P35527|K1C9_HUMAN" peptide_prev_aa="R" is_rejected="0">
+<search_score name="hyperscore" value="7.714"/>
+<search_score name="nextscore" value="7.714"/>
+<search_score name="expect" value="1.572e+00"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="110" assumed_charge="2" spectrum="BSA_min_21.110.110.2" end_scan="110" index="89" precursor_neutral_mass="1139.4622" retention_time_sec="39.228">
+<search_result>
+<search_hit peptide="CCTESLVNR" massdiff="1.9716" calc_neutral_pep_mass="1137.4906" peptide_next_aa="R" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="16" hit_rank="1" num_matched_ions="4" protein="sp|P02769|ALBU_BOVIN Serum albumin OS=Bos taurus GN=ALB PE=1 SV=4" peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="1"/>
+<mod_aminoacid_mass mass="160.0307" position="2"/>
+</modification_info>
+<search_score name="hyperscore" value="8.465"/>
+<search_score name="nextscore" value="8.465"/>
+<search_score name="expect" value="1.814e-02"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="119" assumed_charge="3" spectrum="BSA_min_21.119.119.3" end_scan="119" index="97" precursor_neutral_mass="1754.7366" retention_time_sec="42.415">
+<search_result>
+<search_hit peptide="MTTCSRQFTSSSSMK" massdiff="0.9933" calc_neutral_pep_mass="1753.7433" peptide_next_aa="G" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="56" hit_rank="1" num_matched_ions="6" protein="Cntm_P02533|K1C14_HUMAN Keratin, type I cytoskeletal 14 - Homo sapiens (Human)." peptide_prev_aa="-" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="147.0354" position="1"/>
+<mod_aminoacid_mass mass="160.0307" position="4"/>
+</modification_info>
+<search_score name="hyperscore" value="12.311"/>
+<search_score name="nextscore" value="10.943"/>
+<search_score name="expect" value="1.983e-03"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="122" assumed_charge="5" spectrum="BSA_min_21.122.122.5" end_scan="122" index="99" precursor_neutral_mass="3357.4719" retention_time_sec="43.554">
+<search_result>
+<search_hit peptide="QVLDNLTMEKSDLEMQYETLQEELMALK" massdiff="-0.1309" calc_neutral_pep_mass="3357.6028" peptide_next_aa="K" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="216" hit_rank="1" num_matched_ions="4" protein="Cntm_P35527|K1C9_HUMAN Keratin, type I cytoskeletal 9 - Homo sapiens (Human)." peptide_prev_aa="R" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="147.0354" position="8"/>
+</modification_info>
+<search_score name="hyperscore" value="9.134"/>
+<search_score name="nextscore" value="9.134"/>
+<search_score name="expect" value="1.235e-02"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="137" assumed_charge="2" spectrum="BSA_min_21.137.137.2" end_scan="137" index="112" precursor_neutral_mass="1443.6355" retention_time_sec="48.765">
+<search_result>
+<search_hit peptide="YICDNQDTISSK" massdiff="1.0007" calc_neutral_pep_mass="1442.6348" peptide_next_aa="L" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="22" hit_rank="1" num_matched_ions="7" protein="sp|P02769|ALBU_BOVIN Serum albumin OS=Bos taurus GN=ALB PE=1 SV=4" peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="3"/>
+</modification_info>
+<search_score name="hyperscore" value="14.651"/>
+<search_score name="nextscore" value="14.651"/>
+<search_score name="expect" value="5.155e-04"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="143" assumed_charge="3" spectrum="BSA_min_21.143.143.3" end_scan="143" index="117" precursor_neutral_mass="1833.9100" retention_time_sec="50.920">
+<search_result>
+<search_hit peptide="MLSHLLHAVAGDDNGNK" massdiff="1.0261" calc_neutral_pep_mass="1832.8839" peptide_next_aa="K" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="64" hit_rank="1" num_matched_ions="6" protein="Cntm_Q93WZ2|Q93WZ2_GOSHI Bacterial-induced lipoxygenase - Gossypium hirsutum (Upland cotton)." peptide_prev_aa="-" is_rejected="0">
+<modification_info mod_nterm_mass="43.0184">
+</modification_info>
+<search_score name="hyperscore" value="13.227"/>
+<search_score name="nextscore" value="9.661"/>
+<search_score name="expect" value="2.081e-01"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="144" assumed_charge="2" spectrum="BSA_min_21.144.144.2" end_scan="144" index="118" precursor_neutral_mass="987.5140" retention_time_sec="51.269">
+<search_result>
+<search_hit peptide="FRHAIESK" massdiff="0.9843" calc_neutral_pep_mass="986.5297" peptide_next_aa="H" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="14" hit_rank="1" num_matched_ions="5" protein="rev_sp|P02769|ALBU_BOVIN" peptide_prev_aa="K" is_rejected="0">
+<search_score name="hyperscore" value="11.325"/>
+<search_score name="nextscore" value="10.222"/>
+<search_score name="expect" value="1.967e+00"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="146" assumed_charge="3" spectrum="BSA_min_21.146.146.3" end_scan="146" index="119" precursor_neutral_mass="1314.7422" retention_time_sec="52.036">
+<search_result>
+<search_hit peptide="QMLLAIDAAEPK" massdiff="0.0570" calc_neutral_pep_mass="1314.6852" peptide_next_aa="Q" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="44" hit_rank="1" num_matched_ions="7" protein="rev_Cntm_Q9XEG1|Q9XEG1_GOSHI" peptide_prev_aa="R" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="147.0354" position="2"/>
+</modification_info>
+<search_score name="hyperscore" value="11.325"/>
+<search_score name="nextscore" value="7.130"/>
+<search_score name="expect" value="1.967e-01"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="152" assumed_charge="2" spectrum="BSA_min_21.152.152.2" end_scan="152" index="124" precursor_neutral_mass="973.4510" retention_time_sec="54.178">
+<search_result>
+<search_hit peptide="DLGEEHFK" massdiff="0.0005" calc_neutral_pep_mass="973.4505" peptide_next_aa="G" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="14" hit_rank="1" num_matched_ions="6" protein="sp|P02769|ALBU_BOVIN Serum albumin OS=Bos taurus GN=ALB PE=1 SV=4" peptide_prev_aa="K" is_rejected="0">
+<search_score name="hyperscore" value="13.318"/>
+<search_score name="nextscore" value="11.394"/>
+<search_score name="expect" value="3.512e-02"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="154" assumed_charge="3" spectrum="BSA_min_21.154.154.3" end_scan="154" index="126" precursor_neutral_mass="1649.8158" retention_time_sec="54.840">
+<search_result>
+<search_hit peptide="LGEHRVNCSFSDTK" massdiff="1.0531" calc_neutral_pep_mass="1648.7627" peptide_next_aa="E" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="52" hit_rank="1" num_matched_ions="6" protein="rev_Cntm_P01867|GCBM_MOUSE" peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="8"/>
+</modification_info>
+<search_score name="hyperscore" value="13.094"/>
+<search_score name="nextscore" value="10.804"/>
+<search_score name="expect" value="3.995e-01"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="156" assumed_charge="2" spectrum="BSA_min_21.156.156.2" end_scan="156" index="128" precursor_neutral_mass="1051.5826" retention_time_sec="55.526">
+<search_result>
+<search_hit peptide="TYLPSQVSR" massdiff="2.0321" calc_neutral_pep_mass="1049.5505" peptide_next_aa="V" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="16" hit_rank="1" num_matched_ions="4" protein="sp|P35605|COPB2_BOVIN Coatomer subunit beta&apos; OS=Bos taurus GN=COPB2 PE=1 SV=3" peptide_prev_aa="R" is_rejected="0">
+<search_score name="hyperscore" value="8.094"/>
+<search_score name="nextscore" value="8.094"/>
+<search_score name="expect" value="2.246e-02"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="158" assumed_charge="5" spectrum="BSA_min_21.158.158.5" end_scan="158" index="129" precursor_neutral_mass="3356.4604" retention_time_sec="56.314">
+<search_result>
+<search_hit peptide="WQYHNVGGTVDNTKDFWSDLLEFWNGVK" massdiff="1.8872" calc_neutral_pep_mass="3354.5732" peptide_next_aa="N" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="216" hit_rank="1" num_matched_ions="4" protein="rev_Cntm_P09870|CLOS_CLOHI" peptide_prev_aa="-" is_rejected="0">
+<search_score name="hyperscore" value="7.885"/>
+<search_score name="nextscore" value="7.885"/>
+<search_score name="expect" value="2.534e-02"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="159" assumed_charge="2" spectrum="BSA_min_21.159.159.2" end_scan="159" index="130" precursor_neutral_mass="1034.4504" retention_time_sec="56.676">
+<search_result>
+<search_hit peptide="NECFLSHK" massdiff="0.9854" calc_neutral_pep_mass="1033.4651" peptide_next_aa="D" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="14" hit_rank="1" num_matched_ions="6" protein="sp|P02769|ALBU_BOVIN Serum albumin OS=Bos taurus GN=ALB PE=1 SV=4" peptide_prev_aa="R" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="3"/>
+</modification_info>
+<search_score name="hyperscore" value="12.385"/>
+<search_score name="nextscore" value="8.576"/>
+<search_score name="expect" value="3.379e-02"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="163" assumed_charge="3" spectrum="BSA_min_21.163.163.3" end_scan="163" index="133" precursor_neutral_mass="1398.6448" retention_time_sec="58.100">
+<search_result>
+<search_hit peptide="PSPFVSFTLMTR" massdiff="0.9436" calc_neutral_pep_mass="1397.7012" peptide_next_aa="D" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="44" hit_rank="1" num_matched_ions="5" protein="rev_Cntm_Q6VAF4|TBB9_GOSHI" peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="147.0354" position="10"/>
+</modification_info>
+<search_score name="hyperscore" value="10.266"/>
+<search_score name="nextscore" value="9.021"/>
+<search_score name="expect" value="2.035e+00"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="164" assumed_charge="3" spectrum="BSA_min_21.164.164.3" end_scan="164" index="134" precursor_neutral_mass="1316.6121" retention_time_sec="58.427">
+<search_result>
+<search_hit peptide="EENPTVLPYQK" massdiff="-0.0491" calc_neutral_pep_mass="1316.6611" peptide_next_aa="A" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="40" hit_rank="1" num_matched_ions="6" protein="rev_sp|P35605|COPB2_BOVIN" peptide_prev_aa="R" is_rejected="0">
+<search_score name="hyperscore" value="11.473"/>
+<search_score name="nextscore" value="9.260"/>
+<search_score name="expect" value="3.212e-03"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="165" assumed_charge="2" spectrum="BSA_min_21.165.165.2" end_scan="165" index="135" precursor_neutral_mass="1526.6949" retention_time_sec="58.749">
+<search_result>
+<search_hit peptide="IDGPWMHKSADIR" massdiff="1.9443" calc_neutral_pep_mass="1524.7506" peptide_next_aa="F" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="24" hit_rank="1" num_matched_ions="7" protein="rev_Cntm_P04745|AMYS_HUMAN" peptide_prev_aa="K" is_rejected="0">
+<search_score name="hyperscore" value="13.362"/>
+<search_score name="nextscore" value="10.039"/>
+<search_score name="expect" value="3.424e-02"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="169" assumed_charge="2" spectrum="BSA_min_21.169.169.2" end_scan="169" index="138" precursor_neutral_mass="1160.6504" retention_time_sec="60.286">
+<search_result>
+<search_hit peptide="DNGLTDLQKR" massdiff="2.0511" calc_neutral_pep_mass="1158.5992" peptide_next_aa="L" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="18" hit_rank="1" num_matched_ions="4" protein="rev_Cntm_P19013|K2C4_HUMAN" peptide_prev_aa="K" is_rejected="0">
+<search_score name="hyperscore" value="9.831"/>
+<search_score name="nextscore" value="8.955"/>
+<search_score name="expect" value="8.265e-03"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="170" assumed_charge="2" spectrum="BSA_min_21.170.170.2" end_scan="170" index="139" precursor_neutral_mass="1033.4629" retention_time_sec="60.599">
+<search_result>
+<search_hit peptide="SEEGELLTR" massdiff="0.9542" calc_neutral_pep_mass="1032.5087" peptide_next_aa="Y" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="16" hit_rank="1" num_matched_ions="6" protein="rev_Cntm_P04264|K2C1_HUMAN" peptide_prev_aa="R" is_rejected="0">
+<search_score name="hyperscore" value="11.633"/>
+<search_score name="nextscore" value="11.633"/>
+<search_score name="expect" value="9.263e-02"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="175" assumed_charge="3" spectrum="BSA_min_21.175.175.3" end_scan="175" index="143" precursor_neutral_mass="1701.7407" retention_time_sec="62.376">
+<search_result>
+<search_hit peptide="TFGYPHALMFGVAMK" massdiff="0.9354" calc_neutral_pep_mass="1700.8053" peptide_next_aa="Y" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="56" hit_rank="1" num_matched_ions="4" protein="rev_Cntm_P04745|AMYS_HUMAN" peptide_prev_aa="R" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="147.0354" position="9"/>
+<mod_aminoacid_mass mass="147.0354" position="14"/>
+</modification_info>
+<search_score name="hyperscore" value="9.340"/>
+<search_score name="nextscore" value="9.340"/>
+<search_score name="expect" value="1.096e-02"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="176" assumed_charge="2" spectrum="BSA_min_21.176.176.2" end_scan="176" index="144" precursor_neutral_mass="788.4655" retention_time_sec="62.723">
+<search_result>
+<search_hit peptide="LVTDLTK" massdiff="0.0011" calc_neutral_pep_mass="788.4644" peptide_next_aa="V" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="12" hit_rank="1" num_matched_ions="5" protein="sp|P02769|ALBU_BOVIN Serum albumin OS=Bos taurus GN=ALB PE=1 SV=4" peptide_prev_aa="K" is_rejected="0">
+<search_score name="hyperscore" value="11.445"/>
+<search_score name="nextscore" value="11.445"/>
+<search_score name="expect" value="1.032e-01"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="177" assumed_charge="3" spectrum="BSA_min_21.177.177.3" end_scan="177" index="145" precursor_neutral_mass="1380.6328" retention_time_sec="63.015">
+<search_result>
+<search_hit peptide="VNYNFCMNFR" massdiff="1.0579" calc_neutral_pep_mass="1379.5750" peptide_next_aa="G" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="36" hit_rank="1" num_matched_ions="6" protein="rev_Cntm_Q9HC84|MUC5B_HUMAN" peptide_prev_aa="R" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="6"/>
+<mod_aminoacid_mass mass="147.0354" position="7"/>
+</modification_info>
+<search_score name="hyperscore" value="12.372"/>
+<search_score name="nextscore" value="10.219"/>
+<search_score name="expect" value="6.053e-02"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="178" assumed_charge="2" spectrum="BSA_min_21.178.178.2" end_scan="178" index="146" precursor_neutral_mass="1701.7308" retention_time_sec="63.341">
+<search_result>
+<search_hit peptide="TFGYPHALMFGVAMK" massdiff="0.9255" calc_neutral_pep_mass="1700.8053" peptide_next_aa="Y" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="28" hit_rank="1" num_matched_ions="4" protein="rev_Cntm_P04745|AMYS_HUMAN" peptide_prev_aa="R" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="147.0354" position="9"/>
+<mod_aminoacid_mass mass="147.0354" position="14"/>
+</modification_info>
+<search_score name="hyperscore" value="9.706"/>
+<search_score name="nextscore" value="9.706"/>
+<search_score name="expect" value="8.882e-03"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="182" assumed_charge="5" spectrum="BSA_min_21.182.182.5" end_scan="182" index="149" precursor_neutral_mass="3355.4536" retention_time_sec="64.808">
+<search_result>
+<search_hit peptide="TMQELEIELQSQLSMKAGLENSLAETECR" massdiff="1.8748" calc_neutral_pep_mass="3353.5789" peptide_next_aa="Y" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="224" hit_rank="1" num_matched_ions="4" protein="Cntm_P19012|K1C15_HUMAN Keratin, type I cytoskeletal 15 - Homo sapiens (Human)." peptide_prev_aa="R" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="147.0354" position="2"/>
+<mod_aminoacid_mass mass="160.0307" position="28"/>
+</modification_info>
+<search_score name="hyperscore" value="8.116"/>
+<search_score name="nextscore" value="7.991"/>
+<search_score name="expect" value="2.218e+00"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="185" assumed_charge="3" spectrum="BSA_min_21.185.185.3" end_scan="185" index="152" precursor_neutral_mass="1422.6062" retention_time_sec="65.847">
+<search_result>
+<search_hit peptide="GGVVCGDLCVSGSR" massdiff="0.9670" calc_neutral_pep_mass="1421.6392" peptide_next_aa="P" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="52" hit_rank="1" num_matched_ions="8" protein="Cntm_P15241|K2M2_SHEEP Keratin, type II microfibrillar, component 7C - Ovis aries (Sheep)." peptide_prev_aa="R" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="5"/>
+<mod_aminoacid_mass mass="160.0307" position="9"/>
+</modification_info>
+<search_score name="hyperscore" value="14.513"/>
+<search_score name="nextscore" value="8.018"/>
+<search_score name="expect" value="5.581e-04"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="187" assumed_charge="2" spectrum="BSA_min_21.187.187.2" end_scan="187" index="153" precursor_neutral_mass="1422.6027" retention_time_sec="66.633">
+<search_result>
+<search_hit peptide="DLNMDCVVAEIK" massdiff="0.9497" calc_neutral_pep_mass="1421.6530" peptide_next_aa="A" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="22" hit_rank="1" num_matched_ions="5" protein="Cntm_P25691|K2M3_SHEEP Keratin, type II microfibrillar, component 5 - Ovis aries (Sheep)." peptide_prev_aa="R" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="147.0354" position="4"/>
+<mod_aminoacid_mass mass="160.0307" position="6"/>
+</modification_info>
+<search_score name="hyperscore" value="10.196"/>
+<search_score name="nextscore" value="8.048"/>
+<search_score name="expect" value="6.699e-03"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="188" assumed_charge="2" spectrum="BSA_min_21.188.188.2" end_scan="188" index="154" precursor_neutral_mass="1166.6287" retention_time_sec="66.962">
+<search_result>
+<search_hit peptide="EATLGDLYRK" massdiff="2.0149" calc_neutral_pep_mass="1164.6138" peptide_next_aa="L" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="18" hit_rank="1" num_matched_ions="4" protein="rev_Cntm_P35908|K22E_HUMAN" peptide_prev_aa="R" is_rejected="0">
+<search_score name="hyperscore" value="7.150"/>
+<search_score name="nextscore" value="7.150"/>
+<search_score name="expect" value="2.175e+00"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="191" assumed_charge="2" spectrum="BSA_min_21.191.191.2" end_scan="191" index="156" precursor_neutral_mass="1248.6177" retention_time_sec="68.078">
+<search_result>
+<search_hit peptide="FKDLGEEHFK" massdiff="0.0039" calc_neutral_pep_mass="1248.6138" peptide_next_aa="G" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="18" hit_rank="1" num_matched_ions="11" protein="sp|P02769|ALBU_BOVIN Serum albumin OS=Bos taurus GN=ALB PE=1 SV=4" peptide_prev_aa="R" is_rejected="0">
+<search_score name="hyperscore" value="22.535"/>
+<search_score name="nextscore" value="9.315"/>
+<search_score name="expect" value="5.511e-05"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="192" assumed_charge="2" spectrum="BSA_min_21.192.192.2" end_scan="192" index="157" precursor_neutral_mass="1455.6669" retention_time_sec="68.392">
+<search_result>
+<search_hit peptide="CQYTEGEIWDR" massdiff="0.0581" calc_neutral_pep_mass="1455.6088" peptide_next_aa="T" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="20" hit_rank="1" num_matched_ions="4" protein="rev_Cntm_P01854|IGHE_HUMAN" peptide_prev_aa="R" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="1"/>
+</modification_info>
+<search_score name="hyperscore" value="10.915"/>
+<search_score name="nextscore" value="9.171"/>
+<search_score name="expect" value="1.400e+00"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="195" assumed_charge="4" spectrum="BSA_min_21.195.195.4" end_scan="195" index="160" precursor_neutral_mass="2485.0996" retention_time_sec="69.376">
+<search_result>
+<search_hit peptide="YCIGDGESMIVSVSVNTPKGSLR" massdiff="0.9009" calc_neutral_pep_mass="2484.1987" peptide_next_aa="D" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="132" hit_rank="1" num_matched_ions="5" protein="rev_Cntm_P01878|IGHA_MOUSE" peptide_prev_aa="-" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="2"/>
+<mod_aminoacid_mass mass="147.0354" position="9"/>
+</modification_info>
+<search_score name="hyperscore" value="10.281"/>
+<search_score name="nextscore" value="8.554"/>
+<search_score name="expect" value="6.379e-01"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="197" assumed_charge="3" spectrum="BSA_min_21.197.197.3" end_scan="197" index="161" precursor_neutral_mass="1248.6158" retention_time_sec="70.194">
+<search_result>
+<search_hit peptide="FKDLGEEHFK" massdiff="0.0021" calc_neutral_pep_mass="1248.6138" peptide_next_aa="G" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="36" hit_rank="1" num_matched_ions="12" protein="sp|P02769|ALBU_BOVIN Serum albumin OS=Bos taurus GN=ALB PE=1 SV=4" peptide_prev_aa="R" is_rejected="0">
+<search_score name="hyperscore" value="24.189"/>
+<search_score name="nextscore" value="12.691"/>
+<search_score name="expect" value="3.782e-04"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="198" assumed_charge="3" spectrum="BSA_min_21.198.198.3" end_scan="198" index="162" precursor_neutral_mass="1166.6310" retention_time_sec="70.476">
+<search_result>
+<search_hit peptide="VVSTHEQVLR" massdiff="-0.0098" calc_neutral_pep_mass="1166.6407" peptide_next_aa="T" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="36" hit_rank="1" num_matched_ions="7" protein="Cntm_P02533|K1C14_HUMAN Keratin, type I cytoskeletal 14 - Homo sapiens (Human)." peptide_prev_aa="K" is_rejected="0">
+<search_score name="hyperscore" value="12.088"/>
+<search_score name="nextscore" value="11.169"/>
+<search_score name="expect" value="7.129e-02"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="200" assumed_charge="3" spectrum="BSA_min_21.200.200.3" end_scan="200" index="164" precursor_neutral_mass="1593.8010" retention_time_sec="71.089">
+<search_result>
+<search_hit peptide="FTNGSKTINATLPTK" massdiff="1.9441" calc_neutral_pep_mass="1591.8569" peptide_next_aa="L" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="56" hit_rank="1" num_matched_ions="5" protein="rev_Cntm_P01877|IGHA2_HUMAN" peptide_prev_aa="R" is_rejected="0">
+<search_score name="hyperscore" value="10.664"/>
+<search_score name="nextscore" value="8.938"/>
+<search_score name="expect" value="5.117e-03"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="203" assumed_charge="2" spectrum="BSA_min_21.203.203.2" end_scan="203" index="166" precursor_neutral_mass="1197.6392" retention_time_sec="72.189">
+<search_result>
+<search_hit peptide="FISKPNEVHK" massdiff="-0.0114" calc_neutral_pep_mass="1197.6505" peptide_next_aa="H" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="18" hit_rank="1" num_matched_ions="6" protein="Cntm_P01873|MUCM_MOUSE Ig mu chain C region membrane-bound form - Mus musculus (Mouse)." peptide_prev_aa="K" is_rejected="0">
+<search_score name="hyperscore" value="11.996"/>
+<search_score name="nextscore" value="11.996"/>
+<search_score name="expect" value="2.377e-01"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="205" assumed_charge="2" spectrum="BSA_min_21.205.205.2" end_scan="205" index="168" precursor_neutral_mass="1444.6121" retention_time_sec="72.859">
+<search_result>
+<search_hit peptide="YICDNQDTISSK" massdiff="1.9773" calc_neutral_pep_mass="1442.6348" peptide_next_aa="L" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="22" hit_rank="1" num_matched_ions="8" protein="sp|P02769|ALBU_BOVIN Serum albumin OS=Bos taurus GN=ALB PE=1 SV=4" peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="3"/>
+</modification_info>
+<search_score name="hyperscore" value="16.952"/>
+<search_score name="nextscore" value="12.279"/>
+<search_score name="expect" value="1.371e-02"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="208" assumed_charge="2" spectrum="BSA_min_21.208.208.2" end_scan="208" index="170" precursor_neutral_mass="1501.6061" retention_time_sec="73.967">
+<search_result>
+<search_hit peptide="EYEATLEECCAK" massdiff="-0.0004" calc_neutral_pep_mass="1501.6064" peptide_next_aa="D" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="22" hit_rank="1" num_matched_ions="14" protein="sp|P02769|ALBU_BOVIN Serum albumin OS=Bos taurus GN=ALB PE=1 SV=4" peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="9"/>
+<mod_aminoacid_mass mass="160.0307" position="10"/>
+</modification_info>
+<search_score name="hyperscore" value="28.672"/>
+<search_score name="nextscore" value="28.672"/>
+<search_score name="expect" value="2.864e-06"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="209" assumed_charge="2" spectrum="BSA_min_21.209.209.2" end_scan="209" index="171" precursor_neutral_mass="1414.6471" retention_time_sec="74.303">
+<search_result>
+<search_hit peptide="GAGGSMSVSSFAGRK" massdiff="0.9802" calc_neutral_pep_mass="1413.6669" peptide_next_aa="G" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="28" hit_rank="1" num_matched_ions="4" protein="rev_Cntm_P19013|K2C4_HUMAN" peptide_prev_aa="R" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="147.0354" position="6"/>
+</modification_info>
+<search_score name="hyperscore" value="7.596"/>
+<search_score name="nextscore" value="7.596"/>
+<search_score name="expect" value="1.683e+00"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="210" assumed_charge="2" spectrum="BSA_min_21.210.210.2" end_scan="210" index="172" precursor_neutral_mass="1102.5547" retention_time_sec="74.631">
+<search_result>
+<search_hit peptide="PVANVTCVNK" massdiff="1.9899" calc_neutral_pep_mass="1100.5648" peptide_next_aa="H" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="18" hit_rank="1" num_matched_ions="4" protein="Cntm_Q9HC84|MUC5B_HUMAN Mucin-5B - Homo sapiens (Human)." peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="7"/>
+</modification_info>
+<search_score name="hyperscore" value="8.331"/>
+<search_score name="nextscore" value="8.331"/>
+<search_score name="expect" value="1.102e+00"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="214" assumed_charge="2" spectrum="BSA_min_21.214.214.2" end_scan="214" index="175" precursor_neutral_mass="1272.5847" retention_time_sec="76.104">
+<search_result>
+<search_hit peptide="LDKMEEEHNK" massdiff="1.0032" calc_neutral_pep_mass="1271.5815" peptide_next_aa="K" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="18" hit_rank="1" num_matched_ions="4" protein="rev_Cntm_P13645|K1C10_HUMAN" peptide_prev_aa="R" is_rejected="0">
+<search_score name="hyperscore" value="8.781"/>
+<search_score name="nextscore" value="8.781"/>
+<search_score name="expect" value="1.513e+00"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="216" assumed_charge="4" spectrum="BSA_min_21.216.216.4" end_scan="216" index="176" precursor_neutral_mass="2148.1184" retention_time_sec="76.891">
+<search_result>
+<search_hit peptide="PLCTLLLLMATLAGALASSSK" massdiff="1.9443" calc_neutral_pep_mass="2146.1741" peptide_next_aa="E" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="120" hit_rank="1" num_matched_ions="6" protein="Cntm_P01036|CYTS_HUMAN Cystatin-S - Homo sapiens (Human)." peptide_prev_aa="R" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="3"/>
+<mod_aminoacid_mass mass="147.0354" position="9"/>
+</modification_info>
+<search_score name="hyperscore" value="11.621"/>
+<search_score name="nextscore" value="11.621"/>
+<search_score name="expect" value="1.659e-01"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="217" assumed_charge="2" spectrum="BSA_min_21.217.217.2" end_scan="217" index="177" precursor_neutral_mass="1442.6472" retention_time_sec="77.256">
+<search_result>
+<search_hit peptide="YICDNQDTISSK" massdiff="0.0125" calc_neutral_pep_mass="1442.6348" peptide_next_aa="L" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="22" hit_rank="1" num_matched_ions="10" protein="sp|P02769|ALBU_BOVIN Serum albumin OS=Bos taurus GN=ALB PE=1 SV=4" peptide_prev_aa="K" is_rejected="0">
+<modification_info>
+<mod_aminoacid_mass mass="160.0307" position="3"/>
+</modification_info>
+<search_score name="hyperscore" value="20.105"/>
+<search_score name="nextscore" value="20.105"/>
+<search_score name="expect" value="1.255e-03"/>
+</search_hit>
+</search_result>
+</spectrum_query>
+</msms_run_summary>
+</msms_pipeline_analysis>

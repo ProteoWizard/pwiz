@@ -249,6 +249,10 @@ class SpectrumList_MGF_Filter : public SpectrumListWrapper
             }
         }
 
+        // MGF only supports 1 precursor
+        if (result->precursors.size() > 1)
+            result->precursors.resize(1);
+
         return result;
     }
 };
@@ -260,6 +264,10 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
 
     Reader::Config readerConfig(config);
     readerConfig.adjustUnknownTimeZonesToHostTimeZone = false; // do not adjust times, because we don't want the test to depend on the time zone of the test agent
+
+    DiffConfig diffConfig;
+    if (config.diffPrecision)
+        diffConfig.precision = config.diffPrecision.get();
 
     // read file into MSData object
     vector<MSDataPtr> msds;
@@ -286,7 +294,7 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
         hackInMemoryMSData(sourceName, targetResult, config);
 
         // test for 1:1 equality with the target mzML
-        Diff<MSData, DiffConfig> diff(msd, targetResult);
+        Diff<MSData, DiffConfig> diff(msd, targetResult, diffConfig);
         if (diff) cerr << headDiff(diff, 5000) << endl;
         unit_assert(!diff);
 
@@ -305,7 +313,7 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
                 serializer_mz5.write(targetResultFilename_mz5, msd);
                 serializer_mz5.read(targetResultFilename_mz5, msd_mz5);
 
-                DiffConfig diffConfig_mz5;
+                DiffConfig diffConfig_mz5(diffConfig);
                 diffConfig_mz5.ignoreExtraBinaryDataArrays = true;
                 Diff<MSData, DiffConfig> diff_mz5(msd, msd_mz5, diffConfig_mz5);
                 if (diff_mz5) cerr << headDiff(diff_mz5, 5000) << endl;
@@ -314,7 +322,7 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
             bfs::remove(targetResultFilename_mz5);
         }
 #endif
-        DiffConfig diffConfig_non_mzML;
+        DiffConfig diffConfig_non_mzML(diffConfig);
         diffConfig_non_mzML.ignoreMetadata = true;
         diffConfig_non_mzML.ignoreExtraBinaryDataArrays = true;
         diffConfig_non_mzML.ignoreChromatograms = true;
@@ -458,7 +466,7 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
             hackInMemoryMSData(sourceNameAsPath.string(), targetResult, config, newSourceName.string());
 
             // test for 1:1 equality with the target mzML
-            Diff<MSData, DiffConfig> diff(msd, targetResult);
+            Diff<MSData, DiffConfig> diff(msd, targetResult, diffConfig);
             if (diff) cerr << headDiff(diff, 5000) << endl;
             unit_assert(!diff);
 
@@ -476,7 +484,9 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
                     serializer_mz5.write(targetResultFilename_mz5, msd);
                     serializer_mz5.read(targetResultFilename_mz5, msd_mz5);
 
-                    Diff<MSData, DiffConfig> diff_mz5(msd, msd_mz5);
+                    DiffConfig diffConfig_mz5(diffConfig);
+                    diffConfig_mz5.ignoreExtraBinaryDataArrays = true;
+                    Diff<MSData, DiffConfig> diff_mz5(msd, msd_mz5, diffConfig_mz5);
                     if (diff_mz5) cerr << headDiff(diff_mz5, 5000) << endl;
                     unit_assert(!diff_mz5);
                 }
@@ -609,6 +619,7 @@ string ReaderTestConfig::resultFilename(const string& baseFilename) const
     if (preferOnlyMsLevel) bal::replace_all(result, ".mzML", "-ms" + lexical_cast<string>(preferOnlyMsLevel) + ".mzML");
     if (!allowMsMsWithoutPrecursor) bal::replace_all(result, ".mzML", "-noMsMsWithoutPrecursor.mzML");
     if (peakPicking) bal::replace_all(result, ".mzML", "-centroid.mzML");
+    if (!isolationMzAndMobilityFilter.empty()) bal::replace_all(result, ".mzML", "-mzMobilityFilter.mzML");
     //if (thresholdCount > 0) bal::replace_all(result, ".mzML", "-top" + lexical_cast<string>(thresholdCount) + ".mzML");
     return result;
 }

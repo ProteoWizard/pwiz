@@ -291,7 +291,7 @@ namespace pwiz.Skyline.Model
                     diff.DiffTransitions || diff.DiffTransitionProps ||
                     diff.DiffResults)
                 {
-                    IList<DocNode> childrenNew = new List<DocNode>();
+                    IList<DocNode> childrenNew = new List<DocNode>(nodeResult.Children.Count);
 
                     // Enumerate the nodes making necessary changes.
                     foreach (PeptideDocNode nodePeptide in nodeResult.Children)

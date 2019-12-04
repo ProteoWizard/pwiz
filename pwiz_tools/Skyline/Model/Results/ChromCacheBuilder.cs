@@ -162,8 +162,6 @@ namespace pwiz.Skyline.Model.Results
             try
             {
                 var dataFilePath = MSDataFilePath;
-                var centroidMS1 = MSDataFilePath.GetCentroidMs1();
-                var centroidMS2 = MSDataFilePath.GetCentroidMs2();
                 var msDataFilePath = MSDataFilePath as MsDataFilePath;
                 if (msDataFilePath != null)
                 {
@@ -188,14 +186,11 @@ namespace pwiz.Skyline.Model.Results
                         var fullScan = _document.Settings.TransitionSettings.FullScan;
                         var enableSimSpectrum = fullScan.IsEnabled;
                         var preferOnlyMsLevel = fullScan.IsEnabled && !fullScan.IsEnabledMsMs ? 1 : 0; // If we don't want MS2, ask reader to totally skip it (not guaranteed)
-                        inFile = MSDataFilePath.OpenMsDataFile(enableSimSpectrum, preferOnlyMsLevel);
-                        // Preserve centroiding info as part of MsDataFileUri string in chromdata only if it will be used
-                        // CONSIDER: Dangerously high knowledge of future control flow required for making this decision
-                        if (!ChromatogramDataProvider.HasChromatogramData(inFile) && !inFile.HasSrmSpectra)
-                            MSDataFilePath = dataFilePath = MSDataFilePath.ChangeCentroiding(centroidMS1, centroidMS2);
+                        var precursorIonMobility = GetPrecursorMzAndIonMobilityWindows(fullScan, dataFilePath); // A list of m/z and/or IM window values for pre-filtering by pwiz (not guaranteed)
+                        inFile = MSDataFilePath.OpenMsDataFile(enableSimSpectrum, preferOnlyMsLevel, precursorIonMobility, true); // Omit zero intensity points
                     }
 
-                    // Check for cancelation
+                    // Check for cancellation
                     if (_loader.IsCanceled)
                     {
                         _loader.UpdateProgress(_status = _status.Cancel());
@@ -314,6 +309,55 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        // Construct a list of target precursor mz and (optional) ion mobility windows for pwiz to prefilter (not guaranteed)
+        // N.B. This is most properly done per file in case files have different associated libraries
+        // TODO (bsratt): More care needs to be taken not to duplicate effort with SpectrumFilter which also calls GetIonMobilities which can take seconds in large documents
+        private IList<MsDataFileImpl.PrecursorMzAndIonMobilityWindow> GetPrecursorMzAndIonMobilityWindows(
+            TransitionFullScan fullScan, MsDataFileUri dataFilePath)
+        {
+            return null; // GetPrecursorMzAndIonMobilityWindowsSlow(fullScan, dataFilePath);
+        }
+        private IList<MsDataFileImpl.PrecursorMzAndIonMobilityWindow> GetPrecursorMzAndIonMobilityWindowsSlow(
+            TransitionFullScan fullScan, MsDataFileUri dataFilePath)
+        {
+            List<MsDataFileImpl.PrecursorMzAndIonMobilityWindow> precursorIonMobility = null;
+            if (fullScan.IsEnabled || fullScan.IsEnabledMsMs)
+            {
+                var libraryIonMobilityInfo = _document.Settings.PeptideSettings.Prediction.UseLibraryIonMobilityValues
+                    ? _document.Settings.GetIonMobilities(_document.MoleculeLibKeys.ToArray(), dataFilePath) // N.B. Make sure this doesn't ever  actually open the file, that would miss the pre-filtering point
+                    : null;
+                precursorIonMobility = new List<MsDataFileImpl.PrecursorMzAndIonMobilityWindow>();
+                // In cases where IM window is linear relative to max IM in file, we'd have to open the file to see it, which misses the point. Rare, anyway.
+                var getIonMobility =
+                    (_document.Settings.PeptideSettings.Prediction.IonMobilityPredictor == null || // Using library values only
+                     _document.Settings.PeptideSettings.Prediction.IonMobilityPredictor.WindowWidthCalculator.PeakWidthMode !=
+                     IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.linear_range)
+                    && (libraryIonMobilityInfo == null || 
+                        _document.Settings.PeptideSettings.Prediction.LibraryIonMobilityWindowWidthCalculator.PeakWidthMode != 
+                        IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.linear_range);
+                double windowIM = 0;
+                double minIM = double.MaxValue, maxIM = 0;
+                foreach (var pair in _document.MoleculePrecursorPairs)
+                {
+                    var imValue = getIonMobility
+                        ? _document.Settings.GetIonMobility(pair.NodePep, pair.NodeGroup, null, libraryIonMobilityInfo,
+                            null, // If CCS conversion is needed, that will have to be done at file open time by vendor reader
+                            0, // This value is for cases where IM window is linear relative to max IM in file, but we can't open the file to see it. Rare, anyway.
+                            out windowIM)
+                        : IonMobilityAndCCS.EMPTY;
+                    minIM = Math.Min(minIM, imValue.IonMobility.Mobility.GetValueOrDefault(minIM));
+                    maxIM = Math.Max(maxIM, imValue.IonMobility.Mobility.GetValueOrDefault(maxIM));
+                    /*precursorIonMobility.Add(new MsDataFileImpl.PrecursorMzAndIonMobilityWindow(
+                        pair.NodeGroup.PrecursorMz, imValue.CollisionalCrossSectionSqA,
+                        imValue.IonMobility.Mobility, windowIM));*/
+                    //precursorIonMobility.Add(new MsDataFileImpl.PrecursorMzAndIonMobilityWindow(null, null, imValue.IonMobility.Mobility.GetValueOrDefault(), windowIM));
+                }
+                precursorIonMobility.Add(new MsDataFileImpl.PrecursorMzAndIonMobilityWindow(null, null, (minIM+maxIM)/2, maxIM+windowIM-minIM));
+            }
+
+            return precursorIonMobility;
+        }
+
         private void CheckForProviderErrors(ChromDataProvider provider)
         {
             // Check for attempts to load negative data into an all-postive document, and vice versa
@@ -336,7 +380,7 @@ namespace pwiz.Skyline.Model.Results
 
         private MsDataFileUri GetRecalcDataFilePath(MsDataFileUri dataFilePath, out string dataFilePathPart)
         {
-            if (_cacheRecalc == null || !_cacheRecalc.CachedFilePaths.Contains(dataFilePath))
+            if (_cacheRecalc == null || !_cacheRecalc.CachedFilePaths.Contains(dataFilePath.GetLocation()))
             {
                 dataFilePathPart = null;
                 return null;
@@ -479,7 +523,8 @@ namespace pwiz.Skyline.Model.Results
             {
                 throw new ChromCacheBuildException(MSDataFilePath, _chromDataSets.Exception);
             }
-            _listCachedFiles.Add(new ChromCachedFile(MSDataFilePath,
+
+            _listCachedFiles.Add(new ChromCachedFile(MSDataFilePath.ChangeCombineIonMobilitySpectra(provider.SourceHasCombinedIonMobilitySpectra),
                                      _currentFileInfo.Flags,
                                      _currentFileInfo.LastWriteTime,
                                      _currentFileInfo.StartTime,
@@ -785,7 +830,7 @@ namespace pwiz.Skyline.Model.Results
         /// <summary>
         /// Used for retentiont time prediction during import
         /// </summary>
-        private class RetentionTimePredictor : IRetentionTimePredictor
+        public class RetentionTimePredictor : IRetentionTimePredictor
         {
             private readonly RetentionScoreCalculatorSpec _calculator;
             private readonly double _timeWindow;

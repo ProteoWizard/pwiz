@@ -431,7 +431,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                         // Set up full scan settings page
                         TransitionSettingsControl.Initialize(WorkflowType);
-                        FullScanSettingsControl.ModifyOptionsForImportPeptideSearchWizard(WorkflowType);
+                        FullScanSettingsControl.ModifyOptionsForImportPeptideSearchWizard(WorkflowType, BuildPepSearchLibControl.ImportPeptideSearch.DocLib);
 
                         if (!MatchModificationsControl.Initialize(Document))
                             _pagesToSkip.Add(Pages.match_modifications_page);
@@ -522,7 +522,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     break;
 
                 case Pages.import_fasta_page: // This is the last page
-                    if (FastaOptional && !ImportFastaControl.ContainsFastaContent || ImportFastaControl.ImportFasta())
+                    if (FastaOptional && !ImportFastaControl.ContainsFastaContent || ImportFastaControl.ImportFasta(ImportPeptideSearch.IrtStandard))
                     {
                         WizardFinish();
                     }

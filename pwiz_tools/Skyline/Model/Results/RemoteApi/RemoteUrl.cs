@@ -41,6 +41,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             server,
             username,
             modified_time,
+            // CONSIDER: 3-array ion mobility?
         }
 
         public abstract RemoteAccountType AccountType { get; }
@@ -236,6 +237,16 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 return false;
             }
 
+            public override bool GetCombineIonMobilitySpectra()
+            {
+                return false;
+            }
+
+            public override MsDataFileUri ChangeCombineIonMobilitySpectra(bool combineIonMobilitySpectra)
+            {
+                return this; // Not supported
+            }
+
             public override RemoteAccountType AccountType
             {
                 get { return null; }
@@ -246,7 +257,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 return string.Empty;
             }
 
-            public override MsDataFileImpl OpenMsDataFile(bool simAsSpectra, int preferOnlyMsLevel)
+            public override MsDataFileImpl OpenMsDataFile(bool simAsSpectra, int preferOnlyMsLevel, IEnumerable<MsDataFileImpl.PrecursorMzAndIonMobilityWindow> precursorMzAndIonMobilityWindows, bool ignoreZeroIntensityPoints)
             {
                 throw new InvalidOperationException();
             }

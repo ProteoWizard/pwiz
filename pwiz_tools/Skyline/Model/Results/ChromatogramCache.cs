@@ -149,7 +149,7 @@ namespace pwiz.Skyline.Model.Results
 
         public IEnumerable<MsDataFileUri> CachedFilePaths
         {
-            get { return CachedFiles.Select(cachedFile => cachedFile.FilePath); }
+            get { return CachedFiles.Select(cachedFile => cachedFile.FilePath.GetLocation()); } // Strip any "?combine_ims=true" etc decoration
         }
 
         /// <summary>
@@ -223,7 +223,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private static bool IsCovered(MsDataFileUri path, IEnumerable<ChromatogramCache> caches)
         {
-            return caches.Any(cache => cache.CachedFilePaths.Contains(path));
+            return caches.Any(cache => cache.CachedFilePaths.Contains(path.GetLocation())); // Strip any "?combine_ims=true" etc decoration
         }
 
         public MsDataFileScanIds LoadMSDataFileScanIds(int fileIndex)
@@ -1078,7 +1078,7 @@ namespace pwiz.Skyline.Model.Results
                     {
                         Buffer.BlockCopy(bytes, offset, scanIds[source], 0, sizeArrayScanIds);
                         offset += sizeArrayScanIds;
-        }
+                    }
                 }
             }
         }

@@ -31,6 +31,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
@@ -530,11 +531,21 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         public void ChangeStandardPeptides()
         {
-            using (var changeDlg = new ChangeIrtPeptidesDlg(AllPeptides.ToArray()))
+            var skylineWindow = Program.MainWindow;
+            lock (skylineWindow.GetDocumentChangeLock())
             {
-                if (changeDlg.ShowDialog(this) == DialogResult.OK)
+                using (var changeDlg = new ChangeIrtPeptidesDlg(skylineWindow.Document, AllPeptides.ToArray()))
                 {
+                    if (changeDlg.ShowDialog(this) != DialogResult.OK)
+                        return;
                     _gridViewStandardDriver.Reset(changeDlg.Peptides.OrderBy(peptide => peptide.Irt).ToArray());
+                    if (changeDlg.ReplacementProtein != null)
+                    {
+                        skylineWindow.ModifyDocument(Resources.EditIrtCalcDlg_ChangeStandardPeptides_Removed_peptides_on_iRT_standard_protein,
+                            document => (SrmDocument) document.ReplaceChild(IdentityPath.ROOT,
+                                changeDlg.ReplacementProtein), docPair => AuditLogEntry.DiffDocNodes(MessageType.modified, docPair,
+                                AuditLogEntry.GetNodeName(docPair.OldDoc, changeDlg.ReplacementProtein)));
+                    }
                 }
             }
         }
@@ -650,24 +661,24 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     GridLibrary.CurrentCell = GridLibrary.Rows[0].Cells[0];
                 }
 
+                var existingStandard = new TargetMap<DbIrtPeptide>(Items.Select(pep =>
+                    new KeyValuePair<Target, DbIrtPeptide>(pep.ModifiedTarget, pep)));
+                var existingLibrary = new TargetMap<DbIrtPeptide>(LibraryPeptideList.Select(pep =>
+                    new KeyValuePair<Target, DbIrtPeptide>(pep.ModifiedTarget, pep)));
+                var libraryRemoved = new List<Target>();
+
                 // Make sure to use existing peptides where possible
-                for (int i = 0; i < standardPeptidesNew.Count; i++)
+                for (var i = 0; i < standardPeptidesNew.Count; i++)
                 {
                     var peptide = standardPeptidesNew[i];
-                    var sequence = peptide.ModifiedTarget;
-                    DbIrtPeptide peptideExist;
-                    int iPep;
-                    if ((iPep = LibraryPeptideList.IndexOf(p => Equals(p.ModifiedTarget, sequence))) != -1)
+                    var target = peptide.ModifiedTarget;
+
+                    if (existingLibrary.TryGetValue(target, out var peptideExist))
                     {
-                        peptideExist = new DbIrtPeptide(LibraryPeptideList[iPep]);
-                        // Remove from the library list, so that it is in only one list
-                        LibraryPeptideList.RemoveAt(iPep);
+                        // Mark for removal from the library list, so that it will be in only one list
+                        libraryRemoved.Add(target);
                     }
-                    else if ((iPep = Items.IndexOf(p => Equals(p.ModifiedTarget, sequence))) != -1)
-                    {
-                        peptideExist = new DbIrtPeptide(Items[iPep]);
-                    }
-                    else
+                    else if (!existingStandard.TryGetValue(target, out peptideExist))
                     {
                         continue;
                     }
@@ -679,16 +690,17 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     standardPeptidesNew[i] = peptideExist;
                 }
 
-                // Add all standard peptides not included in the new list to the general library list
-                foreach (var peptide in from standardPeptide in Items
-                                        let sequence = standardPeptide.ModifiedTarget
-                                        where sequence != null &&
-                                            !standardPeptidesNew.Any(p => Equals(p.ModifiedTarget, sequence))
-                                        select standardPeptide)
+                var libraryRemovedMap = new TargetMap<bool>(libraryRemoved.Select(target => new KeyValuePair<Target, bool>(target, true)));
+                for (var i = LibraryPeptideList.Count - 1; i >= 0; i--)
                 {
-                    peptide.Standard = false;
-                    LibraryPeptideList.Add(new DbIrtPeptide(peptide));
+                    if (libraryRemovedMap.ContainsKey(LibraryPeptideList[i].ModifiedTarget))
+                        LibraryPeptideList.RemoveAt(i);
                 }
+
+                // Add all standard peptides not included in the new list to the general library list
+                var newStandard = new TargetMap<bool>(standardPeptidesNew.Select(pep => new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)));
+                foreach (var pep in Items.Where(oldPep => !newStandard.ContainsKey(oldPep.ModifiedTarget)))
+                    LibraryPeptideList.Add(new DbIrtPeptide(pep) {Standard = false});
 
                 Items.Clear();
                 foreach (var peptide in standardPeptidesNew)
@@ -732,7 +744,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
                 AddToLibrary(new ProcessedIrtAverages(
                     libraryPeptidesNew.ToDictionary(pep => pep.ModifiedTarget, pep => new IrtPeptideAverages(pep.ModifiedTarget, pep.Irt, TimeSource.peak)),
-                    new KeyValuePair<string, RetentionTimeProviderData>[0]));
+                    new List<RetentionTimeProviderData>()));
             }
 
             public void AddResults()
@@ -756,9 +768,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     try
                     {
                         var status = longWait.PerformWork(MessageParent, 800, monitor =>
-                            irtAverages = ProcessRetentionTimes(monitor,
-                                              GetRetentionTimeProviders(document),
-                                              document.Settings.MeasuredResults.MSDataFileInfos.Count()));
+                            irtAverages = ProcessRetentionTimes(monitor, GetRetentionTimeProviders(document).ToArray()));
                         if (status.IsError)
                         {
                             MessageBox.Show(MessageParent, status.ErrorException.Message, Program.Name);
@@ -871,7 +881,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                                 var irtProvider = library.RetentionTimeProvidersIrt.ToArray();
                                 if (irtProvider.Any())
                                 {
-                                    irtAverages = ProcessRetentionTimes(monitor, irtProvider, 1);
+                                    irtAverages = ProcessRetentionTimes(monitor, irtProvider);
                                 }
                                 else
                                 {
@@ -884,7 +894,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                                         return;
                                     }
 
-                                    irtAverages = ProcessRetentionTimes(monitor, library.RetentionTimeProviders, fileCount);
+                                    irtAverages = ProcessRetentionTimes(monitor, library.RetentionTimeProviders.ToArray());
                                 }
                             });
                             if (status.IsError)
@@ -918,6 +928,23 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 AddToLibrary(irtAverages);
             }
 
+            public class NopProgressMonitor : IProgressMonitor
+            {
+                public bool IsCanceled
+                {
+                    get { return false; }
+                }
+                public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+                {
+                    return UpdateProgressResponse.normal;
+                }
+
+                public bool HasUI
+                {
+                    get { return false; }
+                }
+            }
+
             public void AddIrtDatabase()
             {
                 var irtCalcs = Settings.Default.RTScoreCalculatorList.Where(calc => calc is RCalcIrt).Cast<RCalcIrt>();
@@ -947,7 +974,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                             var irtDb = IrtDb.GetIrtDb(irtCalc.DatabasePath, monitor);
 
                             irtAverages = ProcessRetentionTimes(monitor,
-                                new[] { new IrtRetentionTimeProvider(!irtCalc.Name.Equals(AddIrtCalculatorDlg.DEFAULT_NAME) ? irtCalc.Name : Path.GetFileName(irtCalc.DatabasePath), irtDb) }, 1);
+                                new[] { new IrtRetentionTimeProvider(!irtCalc.Name.Equals(AddIrtCalculatorDlg.DEFAULT_NAME) ? irtCalc.Name : Path.GetFileName(irtCalc.DatabasePath), irtDb) });
                         });
                         if (status.IsError)
                         {
@@ -1006,11 +1033,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 }
             }
 
-            private ProcessedIrtAverages ProcessRetentionTimes(IProgressMonitor monitor,
-                                          IEnumerable<IRetentionTimeProvider> providers,
-                                          int countProviders)
+            private ProcessedIrtAverages ProcessRetentionTimes(IProgressMonitor monitor, IRetentionTimeProvider[] providers)
             {
-                return RCalcIrt.ProcessRetentionTimes(monitor, providers, countProviders, StandardPeptideList.ToArray(), Items.ToArray());
+                return RCalcIrt.ProcessRetentionTimes(monitor, providers, StandardPeptideList.ToArray(), Items.ToArray());
             }
 
             private void AddToLibrary(ProcessedIrtAverages irtAverages)
@@ -1057,10 +1082,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
                                 {
                                     try
                                     {
-                                        newStandards = irtAverages.RecalibrateStandards(StandardPeptideList);
-                                        var status = longWait.PerformWork(MessageParent, 800, monitor => irtAverages = RCalcIrt.ProcessRetentionTimes(
-                                            monitor, irtAverages.ProviderData.Select(data => data.Value.RetentionTimeProvider),
-                                            irtAverages.ProviderData.Count, newStandards.ToArray(), Items.ToArray()));
+                                        newStandards = irtAverages.RecalibrateStandards(StandardPeptideList.ToArray());
+                                        var status = longWait.PerformWork(MessageParent, 800,
+                                            monitor => irtAverages = RCalcIrt.ProcessRetentionTimes(monitor,
+                                                irtAverages.ProviderData.Select(data => data.RetentionTimeProvider).ToArray(),
+                                                newStandards.ToArray(), Items.ToArray()));
                                         if (status.IsError)
                                         {
                                             MessageDlg.ShowWithException(MessageParent, Resources.LibraryGridViewDriver_AddToLibrary_An_error_occurred_while_recalibrating_, status.ErrorException);

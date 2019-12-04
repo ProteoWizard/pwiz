@@ -898,7 +898,7 @@ namespace pwiz.Skyline.Util
             
         }
 
-    /// <summary>
+        /// <summary>
         /// Enumerates two lists assigning references from the second list to
         /// entries in the first list, where they are equal.  Useful for maintaining
         /// reference equality when recalculating values. Similar to <see cref="Helpers.AssignIfEquals{T}"/>.
@@ -934,16 +934,39 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
+        /// Use when you have more than just one other array to sort. Otherwise, consider using Linq
+        /// </summary>
+        public static void Sort<TItem>(TItem[] array, params TItem[][] secondaryArrays)
+        {
+            int[] sortIndexes;
+            Sort(array, out sortIndexes);
+            int len = array.Length;
+            TItem[] buffer = new TItem[len];
+            foreach (var secondaryArray in secondaryArrays.Where(a => a != null))
+                ApplyOrder(sortIndexes, secondaryArray, buffer);
+        }
+
+        /// <summary>
         /// Apply the ordering gotten from the sorting of an array (see Sort method above)
         /// to a new array.
         /// </summary>
         /// <typeparam name="TItem">Type of array elements</typeparam>
         /// <param name="sortIndexes">Array of indexes that recorded sort operations</param>
         /// <param name="array">Array to be reordered using the index array</param>
-        /// <returns></returns>
-        public static TItem[] ApplyOrder<TItem>(int[] sortIndexes, TItem[] array)
+        /// <param name="buffer">An optional buffer to use to avoid allocating a new array and force in-place sorting</param>
+        /// <returns>A sorted version of the original array</returns>
+        public static TItem[] ApplyOrder<TItem>(int[] sortIndexes, TItem[] array, TItem[] buffer = null)
         {
-            var ordered = new TItem[array.Length];
+            TItem[] ordered;
+            int len = array.Length;
+            if (buffer == null)
+                ordered = new TItem[len];
+            else
+            {
+                Array.Copy(array, buffer, len);
+                ordered = array;
+                array = buffer;
+            }
             for (int i = 0; i < array.Length; i++)
                 ordered[i] = array[sortIndexes[i]];
             return ordered;

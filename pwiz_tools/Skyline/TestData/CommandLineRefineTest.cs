@@ -267,7 +267,22 @@ namespace pwiz.SkylineTestData
             output = Run(args.ToArray());
             parts.Add(PropertyNames.RefinementSettings_NormalizationMethod);
             AssertEx.Contains(output, parts.ToArray());
-            IsDocumentState(OutPath, 48, 0, 10, 0, 10, 58);
+            IsDocumentState(OutPath, 48, 0, 10, 0, 10, 58, output);
+
+            // Test best transitions
+            args[1] = CommandArgs.ARG_REFINE_CV_TRANSITIONS.GetArgumentTextWithValue("best");
+            output = Run(args.ToArray());
+            parts[1] = PropertyNames.RefinementSettings_Transitions;
+            AssertEx.Contains(output, parts.ToArray());
+            IsDocumentState(OutPath, 48, 0, 3, 0, 3, 18, output);
+
+            // Test count transitions
+            args[1] = CommandArgs.ARG_REFINE_CV_TRANSITIONS_COUNT.GetArgumentTextWithValue(4.ToString());
+            args.Add(CommandArgs.ARG_REFINE_CV_MS_LEVEL.GetArgumentTextWithValue("products"));
+            output = Run(args.ToArray());
+            parts[1] = PropertyNames.RefinementSettings_CountTransitions;
+            AssertEx.Contains(output, parts.ToArray());
+            IsDocumentState(OutPath, 48, 0, 3, 0, 3, 18, output);
 
             // Make sure error is recorded when peptide have only 1 replicate
             TestFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineRefine.zip");
