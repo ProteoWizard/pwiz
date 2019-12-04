@@ -545,7 +545,7 @@ namespace pwiz.Skyline.EditUI
             if (!string.IsNullOrEmpty(textPValue.Text))
             {
                 double adjustedPval;
-                if (!helper.ValidateDecimalTextBox(textPValue, 0.0, checkBoxLog.Checked ? (double?) null : 1.0, out adjustedPval))
+                if (!helper.ValidateDecimalTextBox(textPValue, 0.0, checkBoxLog.Checked ? (double?) null : 1.0, out adjustedPval, checkBoxLog.Checked))
                     return;
                 adjustedPValueCutoff = checkBoxLog.Checked ? Math.Pow(10, -adjustedPval) : adjustedPval;
             }
