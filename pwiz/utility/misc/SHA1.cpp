@@ -21,7 +21,7 @@
 #include <boost/interprocess/mapped_region.hpp>
 
 #ifdef SHA1_UTILITY_FUNCTIONS
-#define SHA1_MAX_FILE_BUFFER 8000
+#define SHA1_MAX_FILE_BUFFER (32 * 20 * 820)
 #endif
 
 // Rotate x bits to the left
@@ -156,7 +156,7 @@ bool CSHA1::HashFile(const TCHAR* tszFileName)
 		const INT_64 fileSize = (INT_64)boost::filesystem::file_size(tszFileName);
 
 		// don't use a 32-bit process's entire address space, but 64-bit processes can just use the file size
-		const INT_64 maxRegionSize = sizeof(void*) == 8 ? fileSize : (1 << 30);
+        const INT_64 maxRegionSize = std::min(fileSize, (1ll << 30));
 		const INT_64 lMaxBuf = SHA1_MAX_FILE_BUFFER;
 
 		using namespace boost::interprocess;

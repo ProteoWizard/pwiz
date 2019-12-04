@@ -19,6 +19,7 @@
 
 using System;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
@@ -68,6 +69,22 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             UpdateLibraryDriftPeakWidthControls();
 
         }
+
+        public void HideControls()
+        {
+            foreach (var control in groupBoxUseSpectralLibraryIonMolbilityInfo.Controls.Cast<Control>())
+            {
+                if (control != cbUseSpectralLibraryIonMobilityValues &&
+                    control != labelResolvingPower &&
+                    control != textSpectralLibraryIonMobilityValuesResolvingPower)
+                {
+                    groupBoxUseSpectralLibraryIonMolbilityInfo.Controls.Remove(control);
+                }
+            }
+            Height -= cbLinear.Height;
+            groupBoxUseSpectralLibraryIonMolbilityInfo.Height -= cbLinear.Height;
+        }
+
         public PeptidePrediction Prediction { get; set;} 
 
         public PeptidePrediction ValidateNewSettings(bool showMessages)

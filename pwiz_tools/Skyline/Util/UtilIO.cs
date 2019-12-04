@@ -1031,6 +1031,24 @@ namespace pwiz.Skyline.Util
         }
     }
 
+    public sealed class StringListReader : TextReader
+    {
+        private readonly IList<string> _lines;
+        private int _currentLine;
+
+        public StringListReader(IList<string> lines)
+        {
+            _lines = lines;
+        }
+
+        public override string ReadLine()
+        {
+            if (_currentLine < _lines.Count)
+                return _lines[_currentLine++];
+            return null;
+        }
+    }
+
 
     public sealed class FileSaver : IDisposable
     {

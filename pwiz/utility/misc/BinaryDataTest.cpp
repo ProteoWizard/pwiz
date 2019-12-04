@@ -24,6 +24,12 @@
 #include "BinaryData.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 
+#ifdef __cplusplus_cli
+#include <gcroot.h>
+#include <vcclr.h>
+typedef System::Runtime::InteropServices::GCHandle GCHandle;
+#endif
+
 using namespace pwiz::util;
 
 
@@ -135,6 +141,7 @@ void test()
 
         std::swap(vStd, v);
 
+        unit_assert(vStd.empty());
         unit_assert(!v.empty());
         unit_assert_operator_equal(10, v.size());
         unit_assert(equals(v.front(), testValue));
@@ -190,6 +197,83 @@ void test()
         unit_assert(equals(*vStd.begin(), vStd.front()));
         unit_assert(equals(*vStd.rbegin(), vStd.back()));
     }
+
+#ifdef __cplusplus_cli
+    // test swap with std::vector<T> with managed array
+    {
+        std::vector<T> vStd(10, testValue);
+
+        unit_assert(!vStd.empty());
+        unit_assert(equals(vStd.front(), testValue));
+
+        GCHandle handle = GCHandle::Alloc(gcnew cli::array<T> { (T) 1.23, (T) 2.34, (T) 3.45, (T) 4.56 });
+        TestVector v = ((System::IntPtr)handle).ToPointer();
+        handle.Free();
+        unit_assert(!v.empty());
+        unit_assert_operator_equal(4, v.size());
+
+        std::swap(vStd, v);
+
+        unit_assert(!v.empty());
+        unit_assert_operator_equal(10, v.size());
+        unit_assert(equals(v.front(), testValue));
+        unit_assert_operator_equal(testValue, v.back());
+        unit_assert(equals(*v.begin(), v.front()));
+        unit_assert(equals(*v.rbegin(), v.back()));
+
+        unit_assert(!vStd.empty());
+        unit_assert_operator_equal(4, vStd.size());
+
+        std::swap(vStd, v);
+
+        unit_assert(!v.empty());
+        unit_assert_operator_equal(4, v.size());
+
+        unit_assert(!vStd.empty());
+        unit_assert_operator_equal(10, vStd.size());
+        unit_assert(equals(vStd.front(), testValue));
+        unit_assert(equals(vStd.back(), testValue));
+    }
+
+    // test implicit cast to const std::vector<T>& with managed array and then a swap
+    {
+        GCHandle handle = GCHandle::Alloc(gcnew cli::array<T> { (T) 1.23, (T) 2.34, (T) 3.45, (T) 4.56 });
+        TestVector v = ((System::IntPtr)handle).ToPointer();
+        handle.Free();
+
+        {
+            const std::vector<T>& vStd2 = v;
+
+            unit_assert(!vStd2.empty());
+            unit_assert_operator_equal(4, vStd2.size());
+            unit_assert(equals(vStd2.front(), v.front()));
+            unit_assert(equals(vStd2.back(), v.back()));
+            unit_assert(equals(*vStd2.begin(), vStd2.front()));
+            unit_assert(equals(*vStd2.rbegin(), vStd2.back()));
+        }
+
+        std::vector<T> vStd(10, testValue);
+        std::swap(vStd, v);
+
+        unit_assert(!v.empty());
+        unit_assert_operator_equal(10, v.size());
+        unit_assert(equals(v.front(), testValue));
+        unit_assert(equals(v.back(), testValue));
+        unit_assert(equals(*v.begin(), v.front()));
+        unit_assert(equals(*v.rbegin(), v.back()));
+
+        {
+            const std::vector<T>& vStd2 = v;
+
+            unit_assert(!vStd2.empty());
+            unit_assert_operator_equal(10, vStd2.size());
+            unit_assert(equals(v.front(), vStd2.front()));
+            unit_assert(equals(v.back(), vStd2.back()));
+            unit_assert(equals(*vStd2.begin(), vStd2.front()));
+            unit_assert(equals(*vStd2.rbegin(), vStd2.back()));
+        }
+    }
+#endif
 }
 
 

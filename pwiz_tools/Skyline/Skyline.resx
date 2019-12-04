@@ -121,7 +121,7 @@
     <value>17, 17</value>
   </metadata>
   <metadata name="contextMenuTreeNode.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>581, 17</value>
+    <value>17, 173</value>
   </metadata>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="cutContextMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
@@ -137,7 +137,7 @@
     <value>Fuchsia</value>
   </data>
   <data name="copyContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>226, 22</value>
+    <value>229, 22</value>
   </data>
   <data name="copyContextMenuItem.Text" xml:space="preserve">
     <value>Copy</value>
@@ -146,7 +146,7 @@
     <value>Fuchsia</value>
   </data>
   <data name="pasteContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>226, 22</value>
+    <value>229, 22</value>
   </data>
   <data name="pasteContextMenuItem.Text" xml:space="preserve">
     <value>Paste</value>
@@ -155,107 +155,43 @@
     <value>Fuchsia</value>
   </data>
   <data name="deleteContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>226, 22</value>
+    <value>229, 22</value>
   </data>
   <data name="deleteContextMenuItem.Text" xml:space="preserve">
     <value>Delete</value>
   </data>
   <data name="toolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>223, 6</value>
+    <value>226, 6</value>
   </data>
   <data name="pickChildrenContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>226, 22</value>
+    <value>229, 22</value>
   </data>
   <data name="pickChildrenContextMenuItem.Text" xml:space="preserve">
     <value>Pick Children</value>
   </data>
   <data name="addMoleculeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>226, 22</value>
+    <value>229, 22</value>
   </data>
   <data name="addMoleculeContextMenuItem.Text" xml:space="preserve">
     <value>Add Molecule...</value>
   </data>
   <data name="addSmallMoleculePrecursorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>226, 22</value>
+    <value>229, 22</value>
   </data>
   <data name="addSmallMoleculePrecursorContextMenuItem.Text" xml:space="preserve">
     <value>Add Precursor...</value>
   </data>
   <data name="addTransitionMoleculeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>226, 22</value>
+    <value>229, 22</value>
   </data>
   <data name="addTransitionMoleculeContextMenuItem.Text" xml:space="preserve">
     <value>Add Transition...</value>
   </data>
   <data name="removePeakContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>226, 22</value>
+    <value>229, 22</value>
   </data>
   <data name="removePeakContextMenuItem.Text" xml:space="preserve">
     <value>Remove Peak</value>
-  </data>
-  <data name="setStandardTypeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>226, 22</value>
-  </data>
-  <data name="setStandardTypeContextMenuItem.Text" xml:space="preserve">
-    <value>Set Standard Type</value>
-  </data>
-  <data name="modifyPeptideContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>226, 22</value>
-  </data>
-  <data name="modifyPeptideContextMenuItem.Text" xml:space="preserve">
-    <value>Modify...</value>
-  </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="modifyPeptideContextMenuItem.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="toggleQuantitativeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>226, 22</value>
-  </data>
-  <data name="toggleQuantitativeContextMenuItem.Text" xml:space="preserve">
-    <value>Quantitative</value>
-  </data>
-  <data name="markTransitionsQuantitativeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>229, 22</value>
-  </data>
-  <data name="markTransitionsQuantitativeContextMenuItem.Text" xml:space="preserve">
-    <value>Mark Transitions Quantitative</value>
-  </data>
-  <data name="toolStripSeparator7.Size" type="System.Drawing.Size, System.Drawing">
-    <value>223, 6</value>
-  </data>
-  <data name="editNoteContextMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Fuchsia</value>
-  </data>
-  <data name="editNoteContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>226, 22</value>
-  </data>
-  <data name="editNoteContextMenuItem.Text" xml:space="preserve">
-    <value>Edit Note</value>
-  </data>
-  <data name="toolStripSeparatorRatios.Size" type="System.Drawing.Size, System.Drawing">
-    <value>223, 6</value>
-  </data>
-  <data name="ratiosContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>226, 22</value>
-  </data>
-  <data name="ratiosContextMenuItem.Text" xml:space="preserve">
-    <value>Ratios To</value>
-  </data>
-  <data name="replicatesTreeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>226, 22</value>
-  </data>
-  <data name="replicatesTreeContextMenuItem.Text" xml:space="preserve">
-    <value>Replicates</value>
-  </data>
-  <data name="contextMenuTreeNode.Size" type="System.Drawing.Size, System.Drawing">
-    <value>230, 396</value>
-  </data>
-  <data name="&gt;&gt;contextMenuTreeNode.Name" xml:space="preserve">
-    <value>contextMenuTreeNode</value>
-  </data>
-  <data name="&gt;&gt;contextMenuTreeNode.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="noStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>175, 22</value>
@@ -287,11 +223,60 @@
   <data name="irtStandardContextMenuItem.Text" xml:space="preserve">
     <value>iRT</value>
   </data>
+  <data name="setStandardTypeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 22</value>
+  </data>
+  <data name="setStandardTypeContextMenuItem.Text" xml:space="preserve">
+    <value>Set Standard Type</value>
+  </data>
+  <data name="modifyPeptideContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 22</value>
+  </data>
+  <data name="modifyPeptideContextMenuItem.Text" xml:space="preserve">
+    <value>Modify...</value>
+  </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="modifyPeptideContextMenuItem.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="toggleQuantitativeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 22</value>
+  </data>
+  <data name="toggleQuantitativeContextMenuItem.Text" xml:space="preserve">
+    <value>Quantitative</value>
+  </data>
+  <data name="markTransitionsQuantitativeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 22</value>
+  </data>
+  <data name="markTransitionsQuantitativeContextMenuItem.Text" xml:space="preserve">
+    <value>Mark Transitions Quantitative</value>
+  </data>
+  <data name="toolStripSeparator7.Size" type="System.Drawing.Size, System.Drawing">
+    <value>226, 6</value>
+  </data>
+  <data name="editNoteContextMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Fuchsia</value>
+  </data>
+  <data name="editNoteContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 22</value>
+  </data>
+  <data name="editNoteContextMenuItem.Text" xml:space="preserve">
+    <value>Edit Note</value>
+  </data>
+  <data name="toolStripSeparatorRatios.Size" type="System.Drawing.Size, System.Drawing">
+    <value>226, 6</value>
+  </data>
   <data name="ratiosToGlobalStandardsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>163, 22</value>
   </data>
   <data name="ratiosToGlobalStandardsMenuItem.Text" xml:space="preserve">
     <value>Global Standards</value>
+  </data>
+  <data name="ratiosContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 22</value>
+  </data>
+  <data name="ratiosContextMenuItem.Text" xml:space="preserve">
+    <value>Ratios To</value>
   </data>
   <data name="singleReplicateTreeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>106, 22</value>
@@ -305,18 +290,24 @@
   <data name="bestReplicateTreeContextMenuItem.Text" xml:space="preserve">
     <value>Best</value>
   </data>
-  <metadata name="contextMenuSpectrum.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>588, 56</value>
-  </metadata>
-  <data name="contextMenuSpectrum.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 414</value>
+  <data name="replicatesTreeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 22</value>
   </data>
-  <data name="&gt;&gt;contextMenuSpectrum.Name" xml:space="preserve">
-    <value>contextMenuSpectrum</value>
+  <data name="replicatesTreeContextMenuItem.Text" xml:space="preserve">
+    <value>Replicates</value>
   </data>
-  <data name="&gt;&gt;contextMenuSpectrum.Type" xml:space="preserve">
+  <data name="contextMenuTreeNode.Size" type="System.Drawing.Size, System.Drawing">
+    <value>230, 374</value>
+  </data>
+  <data name="&gt;&gt;contextMenuTreeNode.Name" xml:space="preserve">
+    <value>contextMenuTreeNode</value>
+  </data>
+  <data name="&gt;&gt;contextMenuTreeNode.Type" xml:space="preserve">
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <metadata name="contextMenuSpectrum.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 329</value>
+  </metadata>
   <data name="aionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
   </data>
@@ -368,12 +359,6 @@
   <data name="toolStripSeparator11.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 6</value>
   </data>
-  <data name="chargesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
-  </data>
-  <data name="chargesContextMenuItem.Text" xml:space="preserve">
-    <value>Charges</value>
-  </data>
   <data name="charge1ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>80, 22</value>
   </data>
@@ -397,6 +382,12 @@
   </data>
   <data name="charge4ContextMenuItem.Text" xml:space="preserve">
     <value>4</value>
+  </data>
+  <data name="chargesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>193, 22</value>
+  </data>
+  <data name="chargesContextMenuItem.Text" xml:space="preserve">
+    <value>Charges</value>
   </data>
   <data name="toolStripSeparator12.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 6</value>
@@ -482,18 +473,18 @@
   <data name="showLibraryChromatogramsSpectrumContextMenuItem.Text" xml:space="preserve">
     <value>Show Chromatograms</value>
   </data>
-  <metadata name="contextMenuChromatogram.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>155, 17</value>
-  </metadata>
-  <data name="contextMenuChromatogram.Size" type="System.Drawing.Size, System.Drawing">
-    <value>213, 414</value>
+  <data name="contextMenuSpectrum.Size" type="System.Drawing.Size, System.Drawing">
+    <value>194, 436</value>
   </data>
-  <data name="&gt;&gt;contextMenuChromatogram.Name" xml:space="preserve">
-    <value>contextMenuChromatogram</value>
+  <data name="&gt;&gt;contextMenuSpectrum.Name" xml:space="preserve">
+    <value>contextMenuSpectrum</value>
   </data>
-  <data name="&gt;&gt;contextMenuChromatogram.Type" xml:space="preserve">
+  <data name="&gt;&gt;contextMenuSpectrum.Type" xml:space="preserve">
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <metadata name="contextMenuChromatogram.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 56</value>
+  </metadata>
   <data name="applyPeakAllGraphMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>212, 22</value>
   </data>
@@ -539,12 +530,6 @@
   <data name="massErrorContextMenuItem.Text" xml:space="preserve">
     <value>Mass Error</value>
   </data>
-  <data name="retentionTimesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="retentionTimesContextMenuItem.Text" xml:space="preserve">
-    <value>Retention Times</value>
-  </data>
   <data name="allRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>173, 22</value>
   </data>
@@ -578,17 +563,17 @@
   <data name="rawTimesContextMenuItem.Text" xml:space="preserve">
     <value>Show Raw Times</value>
   </data>
+  <data name="retentionTimesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>212, 22</value>
+  </data>
+  <data name="retentionTimesContextMenuItem.Text" xml:space="preserve">
+    <value>Retention Times</value>
+  </data>
   <data name="retentionTimePredContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>212, 22</value>
   </data>
   <data name="retentionTimePredContextMenuItem.Text" xml:space="preserve">
     <value>Retention Time Prediction</value>
-  </data>
-  <data name="peptideIDTimesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="peptideIDTimesContextMenuItem.Text" xml:space="preserve">
-    <value>Peptide ID Times</value>
   </data>
   <data name="idTimesNoneContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>164, 22</value>
@@ -614,14 +599,14 @@
   <data name="idTimesOtherContextMenuItem.Text" xml:space="preserve">
     <value>From Other Runs</value>
   </data>
-  <data name="toolStripSeparator16.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 6</value>
-  </data>
-  <data name="transitionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="peptideIDTimesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>212, 22</value>
   </data>
-  <data name="transitionsContextMenuItem.Text" xml:space="preserve">
-    <value>Transitions</value>
+  <data name="peptideIDTimesContextMenuItem.Text" xml:space="preserve">
+    <value>Peptide ID Times</value>
+  </data>
+  <data name="toolStripSeparator16.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 6</value>
   </data>
   <data name="allTranContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>167, 22</value>
@@ -692,11 +677,11 @@
   <data name="splitGraphContextMenuItem.Text" xml:space="preserve">
     <value>Split Graph</value>
   </data>
-  <data name="transformChromContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="transitionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>212, 22</value>
   </data>
-  <data name="transformChromContextMenuItem.Text" xml:space="preserve">
-    <value>Transform</value>
+  <data name="transitionsContextMenuItem.Text" xml:space="preserve">
+    <value>Transitions</value>
   </data>
   <data name="transformChromNoneContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>213, 22</value>
@@ -728,14 +713,14 @@
   <data name="smoothSGChromContextMenuItem.Text" xml:space="preserve">
     <value>Savitzky-Golay Smoothing</value>
   </data>
-  <data name="toolStripSeparator17.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 6</value>
-  </data>
-  <data name="autoZoomContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="transformChromContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>212, 22</value>
   </data>
-  <data name="autoZoomContextMenuItem.Text" xml:space="preserve">
-    <value>Auto-zoom X-axis</value>
+  <data name="transformChromContextMenuItem.Text" xml:space="preserve">
+    <value>Transform</value>
+  </data>
+  <data name="toolStripSeparator17.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 6</value>
   </data>
   <data name="autoZoomNoneContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>202, 22</value>
@@ -760,6 +745,12 @@
   </data>
   <data name="autoZoomBothContextMenuItem.Text" xml:space="preserve">
     <value>Both</value>
+  </data>
+  <data name="autoZoomContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>212, 22</value>
+  </data>
+  <data name="autoZoomContextMenuItem.Text" xml:space="preserve">
+    <value>Auto-zoom X-axis</value>
   </data>
   <data name="lockYChromContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>212, 22</value>
@@ -794,24 +785,18 @@
   <data name="toolStripSeparator26.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 6</value>
   </data>
-  <metadata name="contextMenuRetentionTimes.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 56</value>
-  </metadata>
-  <data name="contextMenuRetentionTimes.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 430</value>
+  <data name="contextMenuChromatogram.Size" type="System.Drawing.Size, System.Drawing">
+    <value>213, 414</value>
   </data>
-  <data name="&gt;&gt;contextMenuRetentionTimes.Name" xml:space="preserve">
-    <value>contextMenuRetentionTimes</value>
+  <data name="&gt;&gt;contextMenuChromatogram.Name" xml:space="preserve">
+    <value>contextMenuChromatogram</value>
   </data>
-  <data name="&gt;&gt;contextMenuRetentionTimes.Type" xml:space="preserve">
+  <data name="&gt;&gt;contextMenuChromatogram.Type" xml:space="preserve">
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="timeGraphContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
-  </data>
-  <data name="timeGraphContextMenuItem.Text" xml:space="preserve">
-    <value>Graph</value>
-  </data>
+  <metadata name="contextMenuRetentionTimes.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 212</value>
+  </metadata>
   <data name="replicateComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
   </data>
@@ -823,12 +808,6 @@
   </data>
   <data name="timePeptideComparisonContextMenuItem.Text" xml:space="preserve">
     <value>Peptide Comparison</value>
-  </data>
-  <data name="regressionContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
-  </data>
-  <data name="regressionContextMenuItem.Text" xml:space="preserve">
-    <value>Regression</value>
   </data>
   <data name="scoreToRunToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>143, 22</value>
@@ -842,17 +821,23 @@
   <data name="runToRunToolStripMenuItem.Text" xml:space="preserve">
     <value>Run To Run</value>
   </data>
+  <data name="regressionContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="regressionContextMenuItem.Text" xml:space="preserve">
+    <value>Regression</value>
+  </data>
   <data name="schedulingContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
   </data>
   <data name="schedulingContextMenuItem.Text" xml:space="preserve">
     <value>Scheduling</value>
   </data>
-  <data name="timePlotContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="timeGraphContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
   </data>
-  <data name="timePlotContextMenuItem.Text" xml:space="preserve">
-    <value>Plot</value>
+  <data name="timeGraphContextMenuItem.Text" xml:space="preserve">
+    <value>Graph</value>
   </data>
   <data name="timeCorrelationContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>133, 22</value>
@@ -866,11 +851,11 @@
   <data name="timeResidualsContextMenuItem.Text" xml:space="preserve">
     <value>Residuals</value>
   </data>
-  <data name="timePointsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="timePlotContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
   </data>
-  <data name="timePointsContextMenuItem.Text" xml:space="preserve">
-    <value>Points</value>
+  <data name="timePlotContextMenuItem.Text" xml:space="preserve">
+    <value>Plot</value>
   </data>
   <data name="timeTargetsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>168, 22</value>
@@ -896,11 +881,11 @@
   <data name="timeDecoysContextMenuItem.Text" xml:space="preserve">
     <value>Decoys</value>
   </data>
-  <data name="rtValueMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="timePointsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
   </data>
-  <data name="rtValueMenuItem.Text" xml:space="preserve">
-    <value>Value</value>
+  <data name="timePointsContextMenuItem.Text" xml:space="preserve">
+    <value>Points</value>
   </data>
   <data name="allRTValueContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>155, 22</value>
@@ -925,6 +910,12 @@
   </data>
   <data name="fwbRTValueContextMenuItem.Text" xml:space="preserve">
     <value>FWB</value>
+  </data>
+  <data name="rtValueMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="rtValueMenuItem.Text" xml:space="preserve">
+    <value>Value</value>
   </data>
   <data name="showRTLegendContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
@@ -956,12 +947,6 @@
   <data name="predictionRTContextMenuItem.Text" xml:space="preserve">
     <value>Prediction</value>
   </data>
-  <data name="replicatesRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
-  </data>
-  <data name="replicatesRTContextMenuItem.Text" xml:space="preserve">
-    <value>Replicates</value>
-  </data>
   <data name="averageReplicatesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>106, 22</value>
   </data>
@@ -980,17 +965,17 @@
   <data name="bestReplicateRTContextMenuItem.Text" xml:space="preserve">
     <value>Best</value>
   </data>
+  <data name="replicatesRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="replicatesRTContextMenuItem.Text" xml:space="preserve">
+    <value>Replicates</value>
+  </data>
   <data name="setRTThresholdContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
   </data>
   <data name="setRTThresholdContextMenuItem.Text" xml:space="preserve">
     <value>Set Threshold...</value>
-  </data>
-  <data name="setRegressionMethodContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
-  </data>
-  <data name="setRegressionMethodContextMenuItem.Text" xml:space="preserve">
-    <value>Regression Method</value>
   </data>
   <data name="linearRegressionContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>208, 22</value>
@@ -1010,6 +995,12 @@
   <data name="loessContextMenuItem.Text" xml:space="preserve">
     <value>LOESS</value>
   </data>
+  <data name="setRegressionMethodContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="setRegressionMethodContextMenuItem.Text" xml:space="preserve">
+    <value>Regression Method</value>
+  </data>
   <data name="toolStripSeparator22.Size" type="System.Drawing.Size, System.Drawing">
     <value>187, 6</value>
   </data>
@@ -1018,12 +1009,6 @@
   </data>
   <data name="createRTRegressionContextMenuItem.Text" xml:space="preserve">
     <value>Create Regression...</value>
-  </data>
-  <data name="chooseCalculatorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
-  </data>
-  <data name="chooseCalculatorContextMenuItem.Text" xml:space="preserve">
-    <value>Calculator</value>
   </data>
   <data name="placeholderToolStripMenuItem1.Size" type="System.Drawing.Size, System.Drawing">
     <value>152, 22</value>
@@ -1045,6 +1030,12 @@
   </data>
   <data name="updateCalculatorContextMenuItem.Text" xml:space="preserve">
     <value>Edit Current...</value>
+  </data>
+  <data name="chooseCalculatorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="chooseCalculatorContextMenuItem.Text" xml:space="preserve">
+    <value>Calculator</value>
   </data>
   <data name="toolStripSeparator23.Size" type="System.Drawing.Size, System.Drawing">
     <value>187, 6</value>
@@ -1082,24 +1073,18 @@
   <data name="toolStripSeparator25.Size" type="System.Drawing.Size, System.Drawing">
     <value>187, 6</value>
   </data>
-  <metadata name="contextMenuPeakAreas.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>408, 56</value>
-  </metadata>
-  <data name="contextMenuPeakAreas.Size" type="System.Drawing.Size, System.Drawing">
-    <value>210, 434</value>
+  <data name="contextMenuRetentionTimes.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 430</value>
   </data>
-  <data name="&gt;&gt;contextMenuPeakAreas.Name" xml:space="preserve">
-    <value>contextMenuPeakAreas</value>
+  <data name="&gt;&gt;contextMenuRetentionTimes.Name" xml:space="preserve">
+    <value>contextMenuRetentionTimes</value>
   </data>
-  <data name="&gt;&gt;contextMenuPeakAreas.Type" xml:space="preserve">
+  <data name="&gt;&gt;contextMenuRetentionTimes.Type" xml:space="preserve">
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="areaGraphContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 22</value>
-  </data>
-  <data name="areaGraphContextMenuItem.Text" xml:space="preserve">
-    <value>Graph</value>
-  </data>
+  <metadata name="contextMenuPeakAreas.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 290</value>
+  </metadata>
   <data name="areaReplicateComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
   </data>
@@ -1124,11 +1109,11 @@
   <data name="areaCVHistogram2DContextMenuItem.Text" xml:space="preserve">
     <value>CV 2D Histogram</value>
   </data>
-  <data name="graphTypeToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="areaGraphContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
   </data>
-  <data name="graphTypeToolStripMenuItem.Text" xml:space="preserve">
-    <value>Graph Type</value>
+  <data name="areaGraphContextMenuItem.Text" xml:space="preserve">
+    <value>Graph</value>
   </data>
   <data name="barAreaGraphDisplayTypeMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>96, 22</value>
@@ -1142,11 +1127,11 @@
   <data name="lineAreaGraphDisplayTypeMenuItem.Text" xml:space="preserve">
     <value>Line</value>
   </data>
-  <data name="peptideOrderContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="graphTypeToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
   </data>
-  <data name="peptideOrderContextMenuItem.Text" xml:space="preserve">
-    <value>Order</value>
+  <data name="graphTypeToolStripMenuItem.Text" xml:space="preserve">
+    <value>Graph Type</value>
   </data>
   <data name="peptideOrderDocumentContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>155, 22</value>
@@ -1172,10 +1157,10 @@
   <data name="peptideOrderMassErrorContextMenuItem.Text" xml:space="preserve">
     <value>Mass Error</value>
   </data>
-  <data name="replicateOrderContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="peptideOrderContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
   </data>
-  <data name="replicateOrderContextMenuItem.Text" xml:space="preserve">
+  <data name="peptideOrderContextMenuItem.Text" xml:space="preserve">
     <value>Order</value>
   </data>
   <data name="replicateOrderDocumentContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
@@ -1190,11 +1175,11 @@
   <data name="replicateOrderAcqTimeContextMenuItem.Text" xml:space="preserve">
     <value>Acquired Time</value>
   </data>
-  <data name="areaNormalizeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="replicateOrderContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
   </data>
-  <data name="areaNormalizeContextMenuItem.Text" xml:space="preserve">
-    <value>Normalized To</value>
+  <data name="replicateOrderContextMenuItem.Text" xml:space="preserve">
+    <value>Order</value>
   </data>
   <data name="areaNormalizeGlobalContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>163, 22</value>
@@ -1223,11 +1208,11 @@
   <data name="areaNormalizeNoneContextMenuItem.Text" xml:space="preserve">
     <value>None</value>
   </data>
-  <data name="scopeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="areaNormalizeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
   </data>
-  <data name="scopeContextMenuItem.Text" xml:space="preserve">
-    <value>Scope</value>
+  <data name="areaNormalizeContextMenuItem.Text" xml:space="preserve">
+    <value>Normalized To</value>
   </data>
   <data name="documentScopeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>130, 22</value>
@@ -1240,6 +1225,12 @@
   </data>
   <data name="proteinScopeContextMenuItem.Text" xml:space="preserve">
     <value>Protein</value>
+  </data>
+  <data name="scopeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="scopeContextMenuItem.Text" xml:space="preserve">
+    <value>Scope</value>
   </data>
   <data name="showPeakAreaLegendContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
@@ -1280,23 +1271,17 @@
   <data name="areaPropsContextMenuItem.Text" xml:space="preserve">
     <value>Properties...</value>
   </data>
-  <data name="groupReplicatesByContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 22</value>
-  </data>
-  <data name="groupReplicatesByContextMenuItem.Text" xml:space="preserve">
-    <value>Group By</value>
-  </data>
   <data name="groupByReplicateContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>122, 22</value>
   </data>
   <data name="groupByReplicateContextMenuItem.Text" xml:space="preserve">
     <value>Replicate</value>
   </data>
-  <data name="areaCVbinWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="groupReplicatesByContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
   </data>
-  <data name="areaCVbinWidthToolStripMenuItem.Text" xml:space="preserve">
-    <value>Bin Width</value>
+  <data name="groupReplicatesByContextMenuItem.Text" xml:space="preserve">
+    <value>Group By</value>
   </data>
   <data name="areaCV05binWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>67, 22</value>
@@ -1310,11 +1295,11 @@
   <data name="areaCV20binWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>67, 22</value>
   </data>
-  <data name="pointsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="areaCVbinWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
   </data>
-  <data name="pointsToolStripMenuItem.Text" xml:space="preserve">
-    <value>Points</value>
+  <data name="areaCVbinWidthToolStripMenuItem.Text" xml:space="preserve">
+    <value>Bin Width</value>
   </data>
   <data name="areaCVtargetsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>112, 22</value>
@@ -1325,11 +1310,11 @@
   <data name="areaCVdecoysToolStripMenuItem.Text" xml:space="preserve">
     <value>Decoys</value>
   </data>
-  <data name="areaCVTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="pointsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
   </data>
-  <data name="areaCVTransitionsToolStripMenuItem.Text" xml:space="preserve">
-    <value>Transitions</value>
+  <data name="pointsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Points</value>
   </data>
   <data name="areaCVAllTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>129, 22</value>
@@ -1364,11 +1349,11 @@
   <data name="areaCVProductsToolStripMenuItem.Text" xml:space="preserve">
     <value>Products</value>
   </data>
-  <data name="areaCVNormalizedToToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="areaCVTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
   </data>
-  <data name="areaCVNormalizedToToolStripMenuItem.Text" xml:space="preserve">
-    <value>Normalized To</value>
+  <data name="areaCVTransitionsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Transitions</value>
   </data>
   <data name="areaCVGlobalStandardsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>163, 22</value>
@@ -1391,6 +1376,12 @@
   <data name="areaCVNoneToolStripMenuItem.Text" xml:space="preserve">
     <value>None</value>
   </data>
+  <data name="areaCVNormalizedToToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="areaCVNormalizedToToolStripMenuItem.Text" xml:space="preserve">
+    <value>Normalized To</value>
+  </data>
   <data name="areaCVLogScaleToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
   </data>
@@ -1406,43 +1397,16 @@
   <data name="toolStripSeparator57.Size" type="System.Drawing.Size, System.Drawing">
     <value>206, 6</value>
   </data>
-  <data name="&gt;&gt;dockPanel.Name" xml:space="preserve">
-    <value>dockPanel</value>
+  <data name="contextMenuPeakAreas.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 434</value>
   </data>
-  <data name="&gt;&gt;dockPanel.Type" xml:space="preserve">
-    <value>DigitalRune.Windows.Docking.DockPanel, DigitalRune.Windows.Docking, Version=1.3.5.0, Culture=neutral, PublicKeyToken=null</value>
+  <data name="&gt;&gt;contextMenuPeakAreas.Name" xml:space="preserve">
+    <value>contextMenuPeakAreas</value>
   </data>
-  <data name="&gt;&gt;dockPanel.Parent" xml:space="preserve">
-    <value>panel1</value>
-  </data>
-  <data name="&gt;&gt;dockPanel.ZOrder" xml:space="preserve">
-    <value>0</value>
+  <data name="&gt;&gt;contextMenuPeakAreas.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="panel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="panel1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 49</value>
-  </data>
-  <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>734, 443</value>
-  </data>
-  <data name="panel1.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;panel1.Name" xml:space="preserve">
-    <value>panel1</value>
-  </data>
-  <data name="&gt;&gt;panel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
   <data name="dockPanel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
@@ -1467,32 +1431,35 @@
   <data name="&gt;&gt;dockPanel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="panel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="panel1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 49</value>
+  </data>
+  <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>734, 443</value>
+  </data>
+  <data name="panel1.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;panel1.Name" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
   <metadata name="statusStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>472, 17</value>
+    <value>17, 134</value>
   </metadata>
   <data name="statusStrip.AutoSize" type="System.Boolean, mscorlib">
     <value>False</value>
-  </data>
-  <data name="statusStrip.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 492</value>
-  </data>
-  <data name="statusStrip.Size" type="System.Drawing.Size, System.Drawing">
-    <value>734, 22</value>
-  </data>
-  <data name="statusStrip.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;statusStrip.Name" xml:space="preserve">
-    <value>statusStrip</value>
-  </data>
-  <data name="&gt;&gt;statusStrip.Type" xml:space="preserve">
-    <value>System.Windows.Forms.StatusStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;statusStrip.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;statusStrip.ZOrder" xml:space="preserve">
-    <value>7</value>
   </data>
   <data name="statusGeneral.Size" type="System.Drawing.Size, System.Drawing">
     <value>569, 17</value>
@@ -1554,33 +1521,30 @@
   <data name="statusIons.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleRight</value>
   </data>
-  <metadata name="mainToolStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 95</value>
-  </metadata>
-  <data name="mainToolStrip.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 24</value>
+  <data name="statusStrip.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 492</value>
   </data>
-  <data name="mainToolStrip.Size" type="System.Drawing.Size, System.Drawing">
-    <value>734, 25</value>
+  <data name="statusStrip.Size" type="System.Drawing.Size, System.Drawing">
+    <value>734, 22</value>
   </data>
-  <data name="mainToolStrip.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+  <data name="statusStrip.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
   </data>
-  <data name="mainToolStrip.Text" xml:space="preserve">
-    <value>toolStrip1</value>
+  <data name="&gt;&gt;statusStrip.Name" xml:space="preserve">
+    <value>statusStrip</value>
   </data>
-  <data name="&gt;&gt;mainToolStrip.Name" xml:space="preserve">
-    <value>mainToolStrip</value>
+  <data name="&gt;&gt;statusStrip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.StatusStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;mainToolStrip.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;mainToolStrip.Parent" xml:space="preserve">
+  <data name="&gt;&gt;statusStrip.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;mainToolStrip.ZOrder" xml:space="preserve">
-    <value>8</value>
+  <data name="&gt;&gt;statusStrip.ZOrder" xml:space="preserve">
+    <value>7</value>
   </data>
+  <metadata name="mainToolStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 368</value>
+  </metadata>
   <data name="newToolBarButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
@@ -1689,42 +1653,33 @@
   <data name="modeUIToolBarDropDownButton.Text" xml:space="preserve">
     <value>User interface selection</value>
   </data>
-  <metadata name="menuMain.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>362, 17</value>
-  </metadata>
-  <data name="menuMain.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
+  <data name="mainToolStrip.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 24</value>
   </data>
-  <data name="menuMain.Size" type="System.Drawing.Size, System.Drawing">
-    <value>734, 24</value>
+  <data name="mainToolStrip.Size" type="System.Drawing.Size, System.Drawing">
+    <value>734, 25</value>
   </data>
-  <data name="menuMain.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+  <data name="mainToolStrip.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
   </data>
-  <data name="menuMain.Text" xml:space="preserve">
-    <value>menuStrip1</value>
+  <data name="mainToolStrip.Text" xml:space="preserve">
+    <value>toolStrip1</value>
   </data>
-  <data name="&gt;&gt;menuMain.Name" xml:space="preserve">
-    <value>menuMain</value>
+  <data name="&gt;&gt;mainToolStrip.Name" xml:space="preserve">
+    <value>mainToolStrip</value>
   </data>
-  <data name="&gt;&gt;menuMain.Type" xml:space="preserve">
-    <value>System.Windows.Forms.MenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;mainToolStrip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;menuMain.Parent" xml:space="preserve">
+  <data name="&gt;&gt;mainToolStrip.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;menuMain.ZOrder" xml:space="preserve">
-    <value>9</value>
+  <data name="&gt;&gt;mainToolStrip.ZOrder" xml:space="preserve">
+    <value>8</value>
   </data>
-  <data name="fileToolStripMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
-    <value>Ctrl+N</value>
-  </data>
-  <data name="fileToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>37, 20</value>
-  </data>
-  <data name="fileToolStripMenuItem.Text" xml:space="preserve">
-    <value>&amp;File</value>
-  </data>
+  <metadata name="menuMain.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 95</value>
+  </metadata>
   <data name="startPageMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Fuchsia</value>
   </data>
@@ -1803,12 +1758,6 @@
   <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
     <value>194, 6</value>
   </data>
-  <data name="importToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>197, 22</value>
-  </data>
-  <data name="importToolStripMenuItem.Text" xml:space="preserve">
-    <value>&amp;Import</value>
-  </data>
   <data name="importResultsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>170, 22</value>
   </data>
@@ -1863,11 +1812,11 @@
   <data name="importAnnotationsMenuItem.Text" xml:space="preserve">
     <value>Annotations...</value>
   </data>
-  <data name="exportToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="importToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>197, 22</value>
   </data>
-  <data name="exportToolStripMenuItem.Text" xml:space="preserve">
-    <value>&amp;Export</value>
+  <data name="importToolStripMenuItem.Text" xml:space="preserve">
+    <value>&amp;Import</value>
   </data>
   <data name="exportTransitionListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
@@ -1932,6 +1881,12 @@
   <data name="exportAnnotationsMenuItem.Text" xml:space="preserve">
     <value>Annotations...</value>
   </data>
+  <data name="exportToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>197, 22</value>
+  </data>
+  <data name="exportToolStripMenuItem.Text" xml:space="preserve">
+    <value>&amp;Export</value>
+  </data>
   <data name="mruBeforeToolStripSeparator.Size" type="System.Drawing.Size, System.Drawing">
     <value>194, 6</value>
   </data>
@@ -1947,14 +1902,14 @@
   <data name="exitMenuItem.Text" xml:space="preserve">
     <value>E&amp;xit</value>
   </data>
-  <data name="editToolStripMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Fuchsia</value>
+  <data name="fileToolStripMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>Ctrl+N</value>
   </data>
-  <data name="editToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>39, 20</value>
+  <data name="fileToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>37, 20</value>
   </data>
-  <data name="editToolStripMenuItem.Text" xml:space="preserve">
-    <value>&amp;Edit</value>
+  <data name="fileToolStripMenuItem.Text" xml:space="preserve">
+    <value>&amp;File</value>
   </data>
   <data name="undoMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -2088,12 +2043,6 @@
   <data name="toolStripSeparator42.Size" type="System.Drawing.Size, System.Drawing">
     <value>204, 6</value>
   </data>
-  <data name="integrationToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>207, 22</value>
-  </data>
-  <data name="integrationToolStripMenuItem.Text" xml:space="preserve">
-    <value>Inte&amp;gration</value>
-  </data>
   <data name="applyPeakAllToolStripMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Ctrl+Shift+A</value>
   </data>
@@ -2121,11 +2070,11 @@
   <data name="removePeakToolStripMenuItem.Text" xml:space="preserve">
     <value>Remove Peak</value>
   </data>
-  <data name="insertToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="integrationToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>207, 22</value>
   </data>
-  <data name="insertToolStripMenuItem.Text" xml:space="preserve">
-    <value>&amp;Insert</value>
+  <data name="integrationToolStripMenuItem.Text" xml:space="preserve">
+    <value>Inte&amp;gration</value>
   </data>
   <data name="insertFASTAMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>156, 22</value>
@@ -2151,14 +2100,14 @@
   <data name="insertTransitionListMenuItem.Text" xml:space="preserve">
     <value>&amp;Transition List...</value>
   </data>
-  <data name="toolStripSeparator6.Size" type="System.Drawing.Size, System.Drawing">
-    <value>204, 6</value>
-  </data>
-  <data name="expandAllToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="insertToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>207, 22</value>
   </data>
-  <data name="expandAllToolStripMenuItem.Text" xml:space="preserve">
-    <value>E&amp;xpand All</value>
+  <data name="insertToolStripMenuItem.Text" xml:space="preserve">
+    <value>&amp;Insert</value>
+  </data>
+  <data name="toolStripSeparator6.Size" type="System.Drawing.Size, System.Drawing">
+    <value>204, 6</value>
   </data>
   <data name="expandProteinsMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Ctrl+E</value>
@@ -2187,11 +2136,11 @@
   <data name="expandPrecursorsMenuItem.Text" xml:space="preserve">
     <value>P&amp;recursors</value>
   </data>
-  <data name="collapseAllToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="expandAllToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>207, 22</value>
   </data>
-  <data name="collapseAllToolStripMenuItem.Text" xml:space="preserve">
-    <value>C&amp;ollapse All</value>
+  <data name="expandAllToolStripMenuItem.Text" xml:space="preserve">
+    <value>E&amp;xpand All</value>
   </data>
   <data name="collapseProteinsMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Ctrl+Shift+E</value>
@@ -2220,14 +2169,14 @@
   <data name="collapsePrecursorsMenuItem.Text" xml:space="preserve">
     <value>P&amp;recursors</value>
   </data>
-  <data name="toolStripSeparator5.Size" type="System.Drawing.Size, System.Drawing">
-    <value>204, 6</value>
-  </data>
-  <data name="setStandardTypeMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="collapseAllToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>207, 22</value>
   </data>
-  <data name="setStandardTypeMenuItem.Text" xml:space="preserve">
-    <value>Set Standard T&amp;ype</value>
+  <data name="collapseAllToolStripMenuItem.Text" xml:space="preserve">
+    <value>C&amp;ollapse All</value>
+  </data>
+  <data name="toolStripSeparator5.Size" type="System.Drawing.Size, System.Drawing">
+    <value>204, 6</value>
   </data>
   <data name="noStandardMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>175, 22</value>
@@ -2262,6 +2211,12 @@
   <data name="irtStandardMenuItem.Text" xml:space="preserve">
     <value>i&amp;RT</value>
   </data>
+  <data name="setStandardTypeMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>207, 22</value>
+  </data>
+  <data name="setStandardTypeMenuItem.Text" xml:space="preserve">
+    <value>Set Standard T&amp;ype</value>
+  </data>
   <data name="modifyPeptideMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>207, 22</value>
   </data>
@@ -2286,11 +2241,14 @@
   <data name="manageResultsMenuItem.Text" xml:space="preserve">
     <value>Manage Re&amp;sults...</value>
   </data>
-  <data name="refineToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>52, 20</value>
+  <data name="editToolStripMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Fuchsia</value>
   </data>
-  <data name="refineToolStripMenuItem.Text" xml:space="preserve">
-    <value>&amp;Refine</value>
+  <data name="editToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>39, 20</value>
+  </data>
+  <data name="editToolStripMenuItem.Text" xml:space="preserve">
+    <value>&amp;Edit</value>
   </data>
   <data name="reintegrateToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
@@ -2349,12 +2307,6 @@
   <data name="renameProteinsMenuItem.Text" xml:space="preserve">
     <value>Re&amp;name Proteins...</value>
   </data>
-  <data name="sortProteinsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>218, 22</value>
-  </data>
-  <data name="sortProteinsMenuItem.Text" xml:space="preserve">
-    <value>&amp;Sort Proteins</value>
-  </data>
   <data name="sortProteinsByNameToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>173, 22</value>
   </data>
@@ -2378,6 +2330,12 @@
   </data>
   <data name="sortProteinsByGeneToolStripMenuItem.Text" xml:space="preserve">
     <value>By &amp;Gene</value>
+  </data>
+  <data name="sortProteinsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>218, 22</value>
+  </data>
+  <data name="sortProteinsMenuItem.Text" xml:space="preserve">
+    <value>&amp;Sort Proteins</value>
   </data>
   <data name="toolStripSeparator43.Size" type="System.Drawing.Size, System.Drawing">
     <value>215, 6</value>
@@ -2423,17 +2381,11 @@ first occurrence of any peptide.</value>
   <data name="refineAdvancedMenuItem.Text" xml:space="preserve">
     <value>&amp;Advanced...</value>
   </data>
-  <data name="viewToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>44, 20</value>
+  <data name="refineToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>52, 20</value>
   </data>
-  <data name="viewToolStripMenuItem.Text" xml:space="preserve">
-    <value>&amp;View</value>
-  </data>
-  <data name="peptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 22</value>
-  </data>
-  <data name="peptidesMenuItem.Text" xml:space="preserve">
-    <value>Targ&amp;ets</value>
+  <data name="refineToolStripMenuItem.Text" xml:space="preserve">
+    <value>&amp;Refine</value>
   </data>
   <data name="showTargetsByNameToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>173, 22</value>
@@ -2459,11 +2411,17 @@ first occurrence of any peptide.</value>
   <data name="showTargetsByGeneToolStripMenuItem.Text" xml:space="preserve">
     <value>By &amp;Gene</value>
   </data>
-  <data name="textZoomToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="viewProteinsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
-  <data name="textZoomToolStripMenuItem.Text" xml:space="preserve">
-    <value>Te&amp;xt Zoom</value>
+  <data name="viewProteinsMenuItem.Text" xml:space="preserve">
+    <value>&amp;Proteins</value>
+  </data>
+  <data name="viewModificationsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 22</value>
+  </data>
+  <data name="viewModificationsMenuItem.Text" xml:space="preserve">
+    <value>Modifications</value>
   </data>
   <data name="defaultTextToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>131, 22</value>
@@ -2483,11 +2441,11 @@ first occurrence of any peptide.</value>
   <data name="extraLargeToolStripMenuItem.Text" xml:space="preserve">
     <value>E&amp;xtra Large</value>
   </data>
-  <data name="userInterfaceToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="textZoomToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
-  <data name="userInterfaceToolStripMenuItem.Text" xml:space="preserve">
-    <value>&amp;User Interface</value>
+  <data name="textZoomToolStripMenuItem.Text" xml:space="preserve">
+    <value>Te&amp;xt Zoom</value>
   </data>
   <data name="proteomicsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>134, 22</value>
@@ -2507,6 +2465,12 @@ first occurrence of any peptide.</value>
   <data name="mixedToolStripMenuItem.Text" xml:space="preserve">
     <value>Mi&amp;xed</value>
   </data>
+  <data name="userInterfaceToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 22</value>
+  </data>
+  <data name="userInterfaceToolStripMenuItem.Text" xml:space="preserve">
+    <value>&amp;User Interface</value>
+  </data>
   <data name="toolStripSeparator41.Size" type="System.Drawing.Size, System.Drawing">
     <value>188, 6</value>
   </data>
@@ -2518,12 +2482,6 @@ first occurrence of any peptide.</value>
   </data>
   <data name="toolStripSeparator32.Size" type="System.Drawing.Size, System.Drawing">
     <value>188, 6</value>
-  </data>
-  <data name="arrangeGraphsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 22</value>
-  </data>
-  <data name="arrangeGraphsToolStripMenuItem.Text" xml:space="preserve">
-    <value>&amp;Arrange Graphs</value>
   </data>
   <data name="arrangeTiledMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Ctrl+T</value>
@@ -2567,6 +2525,12 @@ first occurrence of any peptide.</value>
   <data name="groupedMenuItem.Text" xml:space="preserve">
     <value>&amp;Grouped...</value>
   </data>
+  <data name="arrangeGraphsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 22</value>
+  </data>
+  <data name="arrangeGraphsToolStripMenuItem.Text" xml:space="preserve">
+    <value>&amp;Arrange Graphs</value>
+  </data>
   <data name="toolStripSeparator39.Size" type="System.Drawing.Size, System.Drawing">
     <value>188, 6</value>
   </data>
@@ -2581,15 +2545,6 @@ first occurrence of any peptide.</value>
   </data>
   <data name="graphsToolStripMenuItem.Text" xml:space="preserve">
     <value>Library &amp;Match</value>
-  </data>
-  <data name="ionTypesMenuItem.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="ionTypesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 22</value>
-  </data>
-  <data name="ionTypesMenuItem.Text" xml:space="preserve">
-    <value>&amp;Ion Types</value>
   </data>
   <data name="aMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>130, 22</value>
@@ -2639,14 +2594,14 @@ first occurrence of any peptide.</value>
   <data name="precursorIonMenuItem.Text" xml:space="preserve">
     <value>&amp;Precursor</value>
   </data>
-  <data name="chargesMenuItem.Enabled" type="System.Boolean, mscorlib">
+  <data name="ionTypesMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="chargesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="ionTypesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
-  <data name="chargesMenuItem.Text" xml:space="preserve">
-    <value>&amp;Charges</value>
+  <data name="ionTypesMenuItem.Text" xml:space="preserve">
+    <value>&amp;Ion Types</value>
   </data>
   <data name="charge1MenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>80, 22</value>
@@ -2672,6 +2627,15 @@ first occurrence of any peptide.</value>
   <data name="charge4MenuItem.Text" xml:space="preserve">
     <value>&amp;4</value>
   </data>
+  <data name="chargesMenuItem.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="chargesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 22</value>
+  </data>
+  <data name="chargesMenuItem.Text" xml:space="preserve">
+    <value>&amp;Charges</value>
+  </data>
   <data name="ranksMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
@@ -2683,15 +2647,6 @@ first occurrence of any peptide.</value>
   </data>
   <data name="toolStripSeparator9.Size" type="System.Drawing.Size, System.Drawing">
     <value>188, 6</value>
-  </data>
-  <data name="chromatogramsMenuItem.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="chromatogramsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 22</value>
-  </data>
-  <data name="chromatogramsMenuItem.Text" xml:space="preserve">
-    <value>Chr&amp;omatograms</value>
   </data>
   <data name="showChromMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>219, 22</value>
@@ -2729,14 +2684,14 @@ first occurrence of any peptide.</value>
   <data name="closeAllChromatogramsMenuItem.Text" xml:space="preserve">
     <value>Close &amp;All</value>
   </data>
-  <data name="transitionsMenuItem.Enabled" type="System.Boolean, mscorlib">
+  <data name="chromatogramsMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="transitionsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="chromatogramsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
-  <data name="transitionsMenuItem.Text" xml:space="preserve">
-    <value>Tra&amp;nsitions</value>
+  <data name="chromatogramsMenuItem.Text" xml:space="preserve">
+    <value>Chr&amp;omatograms</value>
   </data>
   <data name="allTranMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Shift+F10</value>
@@ -2828,14 +2783,14 @@ first occurrence of any peptide.</value>
   <data name="splitGraphMenuItem.Text" xml:space="preserve">
     <value>Split &amp;Graph</value>
   </data>
-  <data name="transformChromMenuItem.Enabled" type="System.Boolean, mscorlib">
+  <data name="transitionsMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="transformChromMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="transitionsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
-  <data name="transformChromMenuItem.Text" xml:space="preserve">
-    <value>Trans&amp;form</value>
+  <data name="transitionsMenuItem.Text" xml:space="preserve">
+    <value>Tra&amp;nsitions</value>
   </data>
   <data name="transformChromNoneMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Shift+F12</value>
@@ -2879,14 +2834,14 @@ first occurrence of any peptide.</value>
   <data name="smoothSGChromMenuItem.Text" xml:space="preserve">
     <value>Savitzky-&amp;Golay Smoothing</value>
   </data>
-  <data name="autoZoomMenuItem.Enabled" type="System.Boolean, mscorlib">
+  <data name="transformChromMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="autoZoomMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="transformChromMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
-  <data name="autoZoomMenuItem.Text" xml:space="preserve">
-    <value>Auto-&amp;Zoom</value>
+  <data name="transformChromMenuItem.Text" xml:space="preserve">
+    <value>Trans&amp;form</value>
   </data>
   <data name="autoZoomNoneMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Shift+F11</value>
@@ -2924,17 +2879,17 @@ first occurrence of any peptide.</value>
   <data name="autoZoomBothMenuItem.Text" xml:space="preserve">
     <value>B&amp;oth</value>
   </data>
-  <data name="toolStripSeparator10.Size" type="System.Drawing.Size, System.Drawing">
-    <value>188, 6</value>
-  </data>
-  <data name="retentionTimesMenuItem.Enabled" type="System.Boolean, mscorlib">
+  <data name="autoZoomMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="retentionTimesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="autoZoomMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
-  <data name="retentionTimesMenuItem.Text" xml:space="preserve">
-    <value>Retention &amp;Times</value>
+  <data name="autoZoomMenuItem.Text" xml:space="preserve">
+    <value>Auto-&amp;Zoom</value>
+  </data>
+  <data name="toolStripSeparator10.Size" type="System.Drawing.Size, System.Drawing">
+    <value>188, 6</value>
   </data>
   <data name="replicateComparisonMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>F8</value>
@@ -2954,12 +2909,6 @@ first occurrence of any peptide.</value>
   <data name="timePeptideComparisonMenuItem.Text" xml:space="preserve">
     <value>&amp;Peptide Comparison</value>
   </data>
-  <data name="regressionMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>228, 22</value>
-  </data>
-  <data name="regressionMenuItem.Text" xml:space="preserve">
-    <value>&amp;Regression</value>
-  </data>
   <data name="scoreToRunMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>143, 22</value>
   </data>
@@ -2971,6 +2920,12 @@ first occurrence of any peptide.</value>
   </data>
   <data name="runToRunMenuItem.Text" xml:space="preserve">
     <value>Run To Run</value>
+  </data>
+  <data name="regressionMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="regressionMenuItem.Text" xml:space="preserve">
+    <value>&amp;Regression</value>
   </data>
   <data name="retentionTimeAlignmentsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>228, 22</value>
@@ -2984,14 +2939,14 @@ first occurrence of any peptide.</value>
   <data name="schedulingMenuItem.Text" xml:space="preserve">
     <value>&amp;Scheduling</value>
   </data>
-  <data name="peakAreasMenuItem.Enabled" type="System.Boolean, mscorlib">
+  <data name="retentionTimesMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="peakAreasMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="retentionTimesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
-  <data name="peakAreasMenuItem.Text" xml:space="preserve">
-    <value>Pea&amp;k Areas</value>
+  <data name="retentionTimesMenuItem.Text" xml:space="preserve">
+    <value>Retention &amp;Times</value>
   </data>
   <data name="areaReplicateComparisonMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>F7</value>
@@ -3023,14 +2978,14 @@ first occurrence of any peptide.</value>
   <data name="areaCVHistogram2DMenuItem.Text" xml:space="preserve">
     <value>CV 2&amp;D Histogram</value>
   </data>
-  <data name="massErrorsMenuItem.Enabled" type="System.Boolean, mscorlib">
+  <data name="peakAreasMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="massErrorsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="peakAreasMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
-  <data name="massErrorsMenuItem.Text" xml:space="preserve">
-    <value>Ma&amp;ss Errors</value>
+  <data name="peakAreasMenuItem.Text" xml:space="preserve">
+    <value>Pea&amp;k Areas</value>
   </data>
   <data name="massErrorReplicateComparisonMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>F6</value>
@@ -3062,6 +3017,15 @@ first occurrence of any peptide.</value>
   <data name="massErrorHistogram2DMenuItem.Text" xml:space="preserve">
     <value>2&amp;D Histogram</value>
   </data>
+  <data name="massErrorsMenuItem.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="massErrorsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 22</value>
+  </data>
+  <data name="massErrorsMenuItem.Text" xml:space="preserve">
+    <value>Ma&amp;ss Errors</value>
+  </data>
   <data name="calibrationCurveMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
@@ -3077,12 +3041,6 @@ first occurrence of any peptide.</value>
   <data name="documentGridMenuItem.Text" xml:space="preserve">
     <value>&amp;Document Grid</value>
   </data>
-  <data name="otherGridsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 22</value>
-  </data>
-  <data name="otherGridsMenuItem.Text" xml:space="preserve">
-    <value>Ot&amp;her Grids</value>
-  </data>
   <data name="resultsGridMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
@@ -3094,12 +3052,6 @@ first occurrence of any peptide.</value>
   </data>
   <data name="resultsGridMenuItem.Text" xml:space="preserve">
     <value>&amp;Results Grid</value>
-  </data>
-  <data name="groupComparisonsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>180, 22</value>
-  </data>
-  <data name="groupComparisonsMenuItem.Text" xml:space="preserve">
-    <value>&amp;Group Comparisons</value>
   </data>
   <data name="addGroupComparisonMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>124, 22</value>
@@ -3113,17 +3065,23 @@ first occurrence of any peptide.</value>
   <data name="editGroupComparisonListMenuItem.Text" xml:space="preserve">
     <value>&amp;Edit List...</value>
   </data>
-  <data name="listsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="groupComparisonsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>180, 22</value>
   </data>
-  <data name="listsMenuItem.Text" xml:space="preserve">
-    <value>&amp;Lists</value>
+  <data name="groupComparisonsMenuItem.Text" xml:space="preserve">
+    <value>&amp;Group Comparisons</value>
   </data>
   <data name="defineNewListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>165, 22</value>
   </data>
   <data name="defineNewListMenuItem.Text" xml:space="preserve">
     <value>Define &amp;New List...</value>
+  </data>
+  <data name="listsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="listsMenuItem.Text" xml:space="preserve">
+    <value>&amp;Lists</value>
   </data>
   <data name="auditLogMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Alt+4</value>
@@ -3133,6 +3091,12 @@ first occurrence of any peptide.</value>
   </data>
   <data name="auditLogMenuItem.Text" xml:space="preserve">
     <value>&amp;Audit Log</value>
+  </data>
+  <data name="otherGridsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 22</value>
+  </data>
+  <data name="otherGridsMenuItem.Text" xml:space="preserve">
+    <value>Ot&amp;her Grids</value>
   </data>
   <data name="toolStripSeparator36.Size" type="System.Drawing.Size, System.Drawing">
     <value>188, 6</value>
@@ -3149,11 +3113,11 @@ first occurrence of any peptide.</value>
   <data name="statusToolStripMenuItem.Text" xml:space="preserve">
     <value>Stat&amp;us Bar</value>
   </data>
-  <data name="settingsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>61, 20</value>
+  <data name="viewToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>44, 20</value>
   </data>
-  <data name="settingsToolStripMenuItem.Text" xml:space="preserve">
-    <value>&amp;Settings</value>
+  <data name="viewToolStripMenuItem.Text" xml:space="preserve">
+    <value>&amp;View</value>
   </data>
   <data name="toolStripSeparatorSettings.Size" type="System.Drawing.Size, System.Drawing">
     <value>181, 6</value>
@@ -3218,11 +3182,11 @@ first occurrence of any peptide.</value>
   <data name="integrateAllMenuItem.Text" xml:space="preserve">
     <value>I&amp;ntegrate All</value>
   </data>
-  <data name="toolsMenu.Size" type="System.Drawing.Size, System.Drawing">
-    <value>47, 20</value>
+  <data name="settingsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>61, 20</value>
   </data>
-  <data name="toolsMenu.Text" xml:space="preserve">
-    <value>&amp;Tools</value>
+  <data name="settingsToolStripMenuItem.Text" xml:space="preserve">
+    <value>&amp;Settings</value>
   </data>
   <data name="placeholderToolsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>178, 22</value>
@@ -3275,11 +3239,11 @@ first occurrence of any peptide.</value>
   <data name="optionsToolStripMenuItem.Text" xml:space="preserve">
     <value>&amp;Options...</value>
   </data>
-  <data name="helpToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>44, 20</value>
+  <data name="toolsMenu.Size" type="System.Drawing.Size, System.Drawing">
+    <value>47, 20</value>
   </data>
-  <data name="helpToolStripMenuItem.Text" xml:space="preserve">
-    <value>&amp;Help</value>
+  <data name="toolsMenu.Text" xml:space="preserve">
+    <value>&amp;Tools</value>
   </data>
   <data name="homeMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>171, 22</value>
@@ -3305,12 +3269,6 @@ first occurrence of any peptide.</value>
   <data name="tutorialsMenuItem.Text" xml:space="preserve">
     <value>&amp;Tutorials</value>
   </data>
-  <data name="documentationToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>171, 22</value>
-  </data>
-  <data name="documentationToolStripMenuItem.Text" xml:space="preserve">
-    <value>Documentation</value>
-  </data>
   <data name="reportsHelpMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>156, 22</value>
   </data>
@@ -3328,6 +3286,12 @@ first occurrence of any peptide.</value>
   </data>
   <data name="otherDocsHelpMenuItem.Text" xml:space="preserve">
     <value>Other</value>
+  </data>
+  <data name="documentationToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>171, 22</value>
+  </data>
+  <data name="documentationToolStripMenuItem.Text" xml:space="preserve">
+    <value>Documentation</value>
   </data>
   <data name="supportMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>171, 22</value>
@@ -3359,24 +3323,39 @@ first occurrence of any peptide.</value>
   <data name="aboutMenuItem.Text" xml:space="preserve">
     <value>&amp;About</value>
   </data>
+  <data name="helpToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>44, 20</value>
+  </data>
+  <data name="helpToolStripMenuItem.Text" xml:space="preserve">
+    <value>&amp;Help</value>
+  </data>
+  <data name="menuMain.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="menuMain.Size" type="System.Drawing.Size, System.Drawing">
+    <value>734, 24</value>
+  </data>
+  <data name="menuMain.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="menuMain.Text" xml:space="preserve">
+    <value>menuStrip1</value>
+  </data>
+  <data name="&gt;&gt;menuMain.Name" xml:space="preserve">
+    <value>menuMain</value>
+  </data>
+  <data name="&gt;&gt;menuMain.Type" xml:space="preserve">
+    <value>System.Windows.Forms.MenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;menuMain.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;menuMain.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
   <metadata name="contextMenuMassErrors.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>225, 56</value>
+    <value>17, 251</value>
   </metadata>
-  <data name="contextMenuMassErrors.Size" type="System.Drawing.Size, System.Drawing">
-    <value>137, 180</value>
-  </data>
-  <data name="&gt;&gt;contextMenuMassErrors.Name" xml:space="preserve">
-    <value>contextMenuMassErrors</value>
-  </data>
-  <data name="&gt;&gt;contextMenuMassErrors.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="massErrorGraphContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>136, 22</value>
-  </data>
-  <data name="massErrorGraphContextMenuItem.Text" xml:space="preserve">
-    <value>Graph</value>
-  </data>
   <data name="massErrorReplicateComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
   </data>
@@ -3401,6 +3380,12 @@ first occurrence of any peptide.</value>
   <data name="massErrorHistogram2DContextMenuItem.Text" xml:space="preserve">
     <value>2D Histogram</value>
   </data>
+  <data name="massErrorGraphContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>136, 22</value>
+  </data>
+  <data name="massErrorGraphContextMenuItem.Text" xml:space="preserve">
+    <value>Graph</value>
+  </data>
   <data name="massErrorPropsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>136, 22</value>
   </data>
@@ -3412,12 +3397,6 @@ first occurrence of any peptide.</value>
   </data>
   <data name="showMassErrorLegendContextMenuItem.Text" xml:space="preserve">
     <value>Legend</value>
-  </data>
-  <data name="massErrorPointsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>136, 22</value>
-  </data>
-  <data name="massErrorPointsContextMenuItem.Text" xml:space="preserve">
-    <value>Points</value>
   </data>
   <data name="massErrorTargetsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>168, 22</value>
@@ -3437,11 +3416,11 @@ first occurrence of any peptide.</value>
   <data name="massErrorDecoysContextMenuItem.Text" xml:space="preserve">
     <value>Decoys</value>
   </data>
-  <data name="binCountContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="massErrorPointsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>136, 22</value>
   </data>
-  <data name="binCountContextMenuItem.Text" xml:space="preserve">
-    <value>Bin Width</value>
+  <data name="massErrorPointsContextMenuItem.Text" xml:space="preserve">
+    <value>Points</value>
   </data>
   <data name="ppm05ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>117, 22</value>
@@ -3467,11 +3446,11 @@ first occurrence of any peptide.</value>
   <data name="ppm20ContextMenuItem.Text" xml:space="preserve">
     <value>2.0 ppm</value>
   </data>
-  <data name="massErrorTransitionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="binCountContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>136, 22</value>
   </data>
-  <data name="massErrorTransitionsContextMenuItem.Text" xml:space="preserve">
-    <value>Transitions</value>
+  <data name="binCountContextMenuItem.Text" xml:space="preserve">
+    <value>Bin Width</value>
   </data>
   <data name="massErrorAllTransitionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>129, 22</value>
@@ -3500,11 +3479,11 @@ first occurrence of any peptide.</value>
   <data name="MassErrorProductsContextMenuItem.Text" xml:space="preserve">
     <value>Products</value>
   </data>
-  <data name="massErrorXAxisContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="massErrorTransitionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>136, 22</value>
   </data>
-  <data name="massErrorXAxisContextMenuItem.Text" xml:space="preserve">
-    <value>X-Axis</value>
+  <data name="massErrorTransitionsContextMenuItem.Text" xml:space="preserve">
+    <value>Transitions</value>
   </data>
   <data name="massErorrRetentionTimeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>156, 22</value>
@@ -3518,11 +3497,26 @@ first occurrence of any peptide.</value>
   <data name="massErrorMassToChargContextMenuItem.Text" xml:space="preserve">
     <value>Mass to Charge</value>
   </data>
+  <data name="massErrorXAxisContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>136, 22</value>
+  </data>
+  <data name="massErrorXAxisContextMenuItem.Text" xml:space="preserve">
+    <value>X-Axis</value>
+  </data>
   <data name="massErrorlogScaleContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>136, 22</value>
   </data>
   <data name="massErrorlogScaleContextMenuItem.Text" xml:space="preserve">
     <value>Log Scale</value>
+  </data>
+  <data name="contextMenuMassErrors.Size" type="System.Drawing.Size, System.Drawing">
+    <value>137, 180</value>
+  </data>
+  <data name="&gt;&gt;contextMenuMassErrors.Name" xml:space="preserve">
+    <value>contextMenuMassErrors</value>
+  </data>
+  <data name="&gt;&gt;contextMenuMassErrors.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -3543,7 +3537,7 @@ first occurrence of any peptide.</value>
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;cutContextMenuItem.Name" xml:space="preserve">
     <value>cutContextMenuItem</value>
@@ -5609,10 +5603,10 @@ first occurrence of any peptide.</value>
   <data name="&gt;&gt;viewToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;peptidesMenuItem.Name" xml:space="preserve">
-    <value>peptidesMenuItem</value>
+  <data name="&gt;&gt;viewProteinsMenuItem.Name" xml:space="preserve">
+    <value>viewProteinsMenuItem</value>
   </data>
-  <data name="&gt;&gt;peptidesMenuItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;viewProteinsMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;showTargetsByNameToolStripMenuItem.Name" xml:space="preserve">
@@ -5637,6 +5631,12 @@ first occurrence of any peptide.</value>
     <value>showTargetsByGeneToolStripMenuItem</value>
   </data>
   <data name="&gt;&gt;showTargetsByGeneToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;viewModificationsMenuItem.Name" xml:space="preserve">
+    <value>viewModificationsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;viewModificationsMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textZoomToolStripMenuItem.Name" xml:space="preserve">
@@ -6621,6 +6621,6 @@ first occurrence of any peptide.</value>
     <value>SkylineWindow</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

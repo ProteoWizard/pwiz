@@ -3287,7 +3287,7 @@ namespace pwiz.Skyline
             do
             {
                 docOriginal= docContainer.Document;
-
+                dataFile = dataFile.ChangeCombineIonMobilitySpectra(true); // Try to load as 3-array IMS data if that happens to be supported
                 var listChromatograms = new List<ChromatogramSet>();
 
                 if (docOriginal.Settings.HasResults)
@@ -3428,12 +3428,21 @@ namespace pwiz.Skyline
                     }
                     else
                     {
-                        _statusWriter.WriteLine(
-                            Resources.PanoramaPublishHelper_PublishDocToPanorama_An_error_occurred_on_the_Panorama_server___0___importing_the_file_, 
-                            panoramaEx.ServerUrl);
-                        _statusWriter.WriteLine(
-                            Resources.PanoramaPublishHelper_PublishDocToPanorama_Error_details_can_be_found_at__0_,
-                            panoramaEx.JobUrl);
+                        if (panoramaEx.JobCancelled)
+                        {
+                            _statusWriter.WriteLine(Resources.PanoramaPublishHelper_PublishDocToPanorama_Document_import_was_cancelled_on_the_Panorama_server__0__, panoramaEx.ServerUrl);
+                            _statusWriter.WriteLine(Resources.PanoramaPublishHelper_PublishDocToPanorama_Job_details_can_be_found_at__0__, panoramaEx.JobUrl);
+                        }
+                        else
+                        {
+                            _statusWriter.WriteLine(
+                                Resources
+                                    .PanoramaPublishHelper_PublishDocToPanorama_An_error_occurred_on_the_Panorama_server___0___importing_the_file_,
+                                panoramaEx.ServerUrl);
+                            _statusWriter.WriteLine(
+                                Resources.PanoramaPublishHelper_PublishDocToPanorama_Error_details_can_be_found_at__0_,
+                                panoramaEx.JobUrl);
+                        }
                     }
                 }
             }
