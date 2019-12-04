@@ -220,7 +220,7 @@ namespace pwiz.Skyline.Model
         [Track]
         public int? MSLevelGroupComparisons { get; set; }
         [Track]
-        public GroupComparisonDef GroupComparisonDef { get; set; }
+        public List<GroupComparisonDef> GroupComparisonDefs { get; set; }
 
         public SrmDocument Refine(SrmDocument document)
         {
@@ -361,7 +361,7 @@ namespace pwiz.Skyline.Model
                 var foldChangeCutoff = FoldChangeCutoff.HasValue ? FoldChangeCutoff.Value : double.NaN;
                 var msLevel = MSLevelGroupComparisons.HasValue ? MSLevelGroupComparisons.Value : 1;
                 var groupComparisonData = new GroupComparisonRefinementData(refined, pValueCutoff, foldChangeCutoff,
-                    msLevel, GroupComparisonDef);
+                    msLevel, GroupComparisonDefs);
                 refined = groupComparisonData.RemoveBelowCutoffs(refined);
             }
 

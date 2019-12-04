@@ -547,7 +547,7 @@ namespace pwiz.Skyline.EditUI
                 double adjustedPval;
                 if (!helper.ValidateDecimalTextBox(textPValue, 0.0, checkBoxLog.Checked ? (double?) null : 1.0, out adjustedPval))
                     return;
-                adjustedPValueCutoff = adjustedPval;
+                adjustedPValueCutoff = checkBoxLog.Checked ? Math.Pow(10, -adjustedPval) : adjustedPval;
             }
 
             double? foldChangeCutoff = null;
@@ -556,13 +556,13 @@ namespace pwiz.Skyline.EditUI
                 double foldChange;
                 if (!helper.ValidateDecimalTextBox(textFoldChange, checkBoxLog.Checked ? (double?) null : 0.0, null, out foldChange, false))
                     return;
-                foldChangeCutoff = foldChange;
+                foldChangeCutoff = Math.Abs(checkBoxLog.Checked ? foldChange : Math.Log(foldChange, 2));
             }
 
-            GroupComparisonDef groupComparisonDef = null;
+            var groupComparisonDefs = new List<GroupComparisonDef>();
             if (_groupComparisonsListBoxDriver.Chosen.Length > 0)
             {
-                groupComparisonDef = _groupComparisonsListBoxDriver.Chosen[0];
+                groupComparisonDefs = _groupComparisonsListBoxDriver.Chosen.ToList();
             }
 
             int msLevelGroupComparison = int.Parse(comboMSGroupComparisons.SelectedItem.ToString());
@@ -601,7 +601,7 @@ namespace pwiz.Skyline.EditUI
                                          AdjustedPValueCutoff = adjustedPValueCutoff,
                                          FoldChangeCutoff = foldChangeCutoff,
                                          MSLevelGroupComparisons = msLevelGroupComparison,
-                                         GroupComparisonDef = groupComparisonDef
+                                         GroupComparisonDefs = groupComparisonDefs
                                      };
 
             DialogResult = DialogResult.OK;
