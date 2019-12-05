@@ -119,6 +119,19 @@ project
 ;
 
 
+# all the pwiz and boost libraries required
+pwiz-boost-libraries = <library>/ext/boost//program_options
+                       <library>/ext/boost//filesystem
+                       <library>/ext/boost//thread
+                       <library>/ext/boost//iostreams
+                       <library>/ext/boost//system
+                       <library>/ext/expat//expat
+                       <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+                       <library>$(PWIZ_ROOT_PATH)/pwiz/data/identdata//pwiz_data_identdata
+                       <library>$(PWIZ_ROOT_PATH)/pwiz/utility/minimxml//pwiz_utility_minimxml
+                       <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc ;
+
+
 # the main BiblioSpec library
 lib blibbuild
   : # sources
@@ -151,6 +164,7 @@ lib blibbuild
     <conditional>@mascot-api-requirements
     <conditional>@waters-define
     <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3
+    $(pwiz-boost-libraries)
     <dependency>modifications.xml # required file for running BlibBuild with MaxQuant support
     <dependency>unimod.xml # required file for running BlibBuild with OpenSWATH support
   : # default-build
@@ -158,6 +172,7 @@ lib blibbuild
     <conditional>@mascot-api-usage-requirements
     <conditional>@waters-api-usage-requirements
     <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3
+    $(pwiz-boost-libraries)
     <dependency>unimod.xml
     <dependency>modifications.xml
  ;
@@ -186,26 +201,12 @@ lib blib
   : # requirements
     <link>static
     <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3
-    <library>pwiz-boost-libraries
+    $(pwiz-boost-libraries)
   : # default-build
   : # usage-requirements
     <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3
-    <library>pwiz-boost-libraries
+    $(pwiz-boost-libraries)
  ;
-
-# all the pwiz and boost libraries required
-alias pwiz-boost-libraries 
-  : /ext/boost//program_options
-    /ext/boost//filesystem
-    /ext/boost//thread
-    /ext/boost//iostreams
-    /ext/boost//system
-    /ext/expat//expat
-    $(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
-    $(PWIZ_ROOT_PATH)/pwiz/data/identdata//pwiz_data_identdata
-    $(PWIZ_ROOT_PATH)/pwiz/utility/minimxml//pwiz_utility_minimxml
-    $(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
-;
 
 
  
@@ -229,27 +230,27 @@ exe BlibFilter
   : # sources
     BlibFilter.cpp
     blib
-    pwiz-boost-libraries
   : # requirements
     <link>static  
+    $(pwiz-boost-libraries)
 ;
 
 exe BlibSearch
   : # sources
     BlibSearch.cpp
     blib
-    pwiz-boost-libraries
   : # requirements
-    <link>static  
+    <link>static
+    $(pwiz-boost-libraries)
 ;
 
 exe BlibToMs2
   : # sources
     BlibToMs2.cpp
     blib
-    pwiz-boost-libraries
   : # requirements
-    <link>static  
+    <link>static
+    $(pwiz-boost-libraries)
 ;
 
 # code from BiblioSpec version 1 for converter
