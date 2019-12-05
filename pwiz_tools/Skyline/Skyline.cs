@@ -3390,17 +3390,7 @@ namespace pwiz.Skyline
         }
         public static List<PrositIntensityModel.PeptidePrecursorNCE> ReadStandardPeptides(IrtStandard standard)
         {
-            SrmDocument docImport;
-            using (var standardDocReader = standard.GetDocumentReader())
-            {
-                if (standardDocReader == null)
-                    return null;
-
-                var ser = new XmlSerializer(typeof(SrmDocument));
-                docImport = (SrmDocument) ser.Deserialize(standardDocReader);
-            }
-
-            var peps = docImport.Peptides.ToList();
+            var peps = standard.GetDocument().Peptides.ToList();
             var precs = peps.Select(p => p.TransitionGroups.First());
             /*for (var i = 0; i < peps.Count; i++)
             {
@@ -3413,7 +3403,8 @@ namespace pwiz.Skyline
                 (pep, prec) => new PrositIntensityModel.PeptidePrecursorNCE(pep, prec)).ToList();
         }
 
-        private void HandleStandardsChanged(ICollection<Target> oldStandard)        {
+        private void HandleStandardsChanged(ICollection<Target> oldStandard)
+        {
             var calc = RCalcIrt.Calculator(Document);
             if (calc == null)
                 return;
@@ -3428,64 +3419,77 @@ namespace pwiz.Skyline
             }
             
             // Determine which peptides are in the standard, but not in the document
-            var missingPeptides = newStandard.Except(Document.Peptides.Select(pep => pep.Peptide.Target)).ToHashSet();
+            var missingPeptides = new TargetMap<bool>(newStandard
+                .Except(Document.Peptides.Select(pep => pep.Peptide.Target))
+                .Select(target => new KeyValuePair<Target, bool>(target, true)));
             if (missingPeptides.Count == 0)
                 return;
 
+            SrmDocument newDoc = null;
+            IdentityPath firstAdded = null;
+            var numTransitions = 0;
+            Func<SrmDocumentPair, AuditLogEntry> dlgCreate = null;
             if (!string.IsNullOrEmpty(calc.DocumentXml))
             {
                 using (var reader = new StringReader(calc.DocumentXml))
+                using (var dlg = new AddIrtStandardsToDocumentDlg())
                 {
-                    AddStandardsToDocument(reader, missingPeptides);
+                    if (dlg.ShowDialog(this) == DialogResult.Yes)
+                    {
+                        newDoc = Document.ImportDocumentXml(reader,
+                            string.Empty,
+                            MeasuredResults.MergeAction.remove,
+                            false,
+                            FindSpectralLibrary,
+                            Settings.Default.StaticModList,
+                            Settings.Default.HeavyModList,
+                            Document.Children.Any() ? new IdentityPath(Document.Children.First().Id) : null,
+                            out firstAdded,
+                            out _,
+                            false);
+                        numTransitions = dlg.NumTransitions;
+                        dlgCreate = dlg.FormSettings.EntryCreator.Create;
+                    }
                 }
             }
             else
             {
-                using (var reader = IrtStandard.WhichStandard(newStandard).GetDocumentReader())
+                var matchingStandard = IrtStandard.WhichStandard(newStandard);
+                if (matchingStandard != null && matchingStandard.HasDocument)
                 {
-                    if (reader != null)
-                        AddStandardsToDocument(reader, missingPeptides);
+                    using (var dlg = new AddIrtStandardsToDocumentDlg())
+                    {
+                        if (dlg.ShowDialog(this) == DialogResult.Yes)
+                        {
+                            newDoc = matchingStandard.ImportTo(Document, FindSpectralLibrary, out firstAdded);
+                            numTransitions = dlg.NumTransitions;
+                            dlgCreate = dlg.FormSettings.EntryCreator.Create;
+                        }
+                    }
                 }
             }
-        }
-
-        private void AddStandardsToDocument(TextReader reader, ICollection<Target> missingPeptides)
-        {
-            using (var dlg = new AddIrtStandardsToDocumentDlg())
+            if (newDoc != null)
             {
-                if (dlg.ShowDialog(this) == DialogResult.Yes)
+                ModifyDocument(Resources.SkylineWindow_AddStandardsToDocument_Add_standard_peptides, _ =>
                 {
-                    ModifyDocument(Resources.SkylineWindow_AddStandardsToDocument_Add_standard_peptides, doc =>
+                    var standardPepGroup = newDoc.PeptideGroups.First(nodePepGroup => new IdentityPath(nodePepGroup.Id).Equals(firstAdded));
+                    var pepList = new List<DocNode>();
+                    foreach (var nodePep in standardPepGroup.Peptides.Where(pep => missingPeptides.ContainsKey(pep.ModifiedTarget)))
                     {
-                        doc = doc.ImportDocumentXml(reader,
-                                                    string.Empty,
-                                                    MeasuredResults.MergeAction.remove,
-                                                    false,
-                                                    FindSpectralLibrary,
-                                                    Settings.Default.StaticModList,
-                                                    Settings.Default.HeavyModList,
-                                                    doc.Children.Any() ? new IdentityPath(doc.Children.First().Id) : null,
-                                                    out var firstAdded,
-                                                    out _,
-                                                    false);
-
-                        var standardPepGroup = doc.PeptideGroups.First(nodePepGroup => new IdentityPath(nodePepGroup.Id).Equals(firstAdded));
-                        var pepList = new List<DocNode>();
-                        foreach (var nodePep in standardPepGroup.Peptides.Where(pep => missingPeptides.Contains(pep.ModifiedTarget)))
+                        var tranGroupList = new List<DocNode>();
+                        foreach (TransitionGroupDocNode nodeTranGroup in nodePep.Children)
                         {
-                            var tranGroupList = new List<DocNode>();
-                            foreach (TransitionGroupDocNode nodeTranGroup in nodePep.Children)
-                            {
-                                var transitions = nodeTranGroup.Transitions.Take(dlg.NumTransitions).ToArray();
-                                Array.Sort(transitions, TransitionGroup.CompareTransitions);
-                                tranGroupList.Add(nodeTranGroup.ChangeChildren(transitions.Cast<DocNode>().ToList()));
-                            }
-                            pepList.Add(nodePep.ChangeChildren(tranGroupList));
+                            var transitions = nodeTranGroup.Transitions.Take(numTransitions).ToArray();
+                            Array.Sort(transitions, TransitionGroup.CompareTransitions);
+                            tranGroupList.Add(nodeTranGroup.ChangeChildren(transitions.Cast<DocNode>().ToList()));
                         }
-                        var newStandardPepGroup = standardPepGroup.ChangeChildren(pepList);
-                        return (SrmDocument) doc.ReplaceChild(newStandardPepGroup);
-                    }, dlg.FormSettings.EntryCreator.Create);
-                }
+
+                        pepList.Add(nodePep.ChangeChildren(tranGroupList));
+                    }
+
+                    var newStandardPepGroup = standardPepGroup.ChangeChildren(pepList);
+                    return (SrmDocument) newDoc.ReplaceChild(newStandardPepGroup);
+                }, dlgCreate);
             }
         }
 
