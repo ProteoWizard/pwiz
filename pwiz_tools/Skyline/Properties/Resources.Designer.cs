@@ -15082,6 +15082,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No document to import.
+        /// </summary>
+        public static string IrtStandard_DocumentStream_No_document_to_import {
+            get {
+                return ResourceManager.GetString("IrtStandard_DocumentStream_No_document_to_import", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to iRT Standards.
         /// </summary>
         public static string IrtStandardList_Label_iRT_Standards {
