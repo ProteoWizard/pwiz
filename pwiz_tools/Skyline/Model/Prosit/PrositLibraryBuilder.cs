@@ -65,6 +65,18 @@ namespace pwiz.Skyline.Model.Prosit
 
         public bool BuildLibrary(IProgressMonitor progress)
         {
+            try
+            {
+                return BuildLibraryOrThrow(progress);
+            }
+            catch (Exception exception)
+            {
+                progress.UpdateProgress(new ProgressStatus().ChangeErrorException(exception));
+                return false;
+            }
+        }
+        private bool BuildLibraryOrThrow(IProgressMonitor progress)
+        {
             RetentionTimeRegression regr = null;
             var standardSpectra = new List<SpectrumMzInfo>();
 
