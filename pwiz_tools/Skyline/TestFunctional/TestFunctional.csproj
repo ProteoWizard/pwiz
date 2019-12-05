@@ -175,6 +175,7 @@
     <Compile Include="ExpressionAnnotationsTest.cs" />
     <Compile Include="FormUtilTest.cs" />
     <Compile Include="FullScanFilterInteractionTest.cs" />
+    <Compile Include="GroupComparisonRefineTest.cs" />
     <Compile Include="HighReplicateCountTest.cs" />
     <Compile Include="ImportAnnotationsTest.cs" />
     <Compile Include="ClearAllSettingsTest.cs" />

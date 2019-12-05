@@ -1,15 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using NHibernate.Mapping;
 using pwiz.Common.DataAnalysis;
 using pwiz.Common.DataAnalysis.Matrices;
-using pwiz.Skyline.Controls.Graphs;
-using pwiz.Skyline.Controls.GroupComparison;
-using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
 
 namespace pwiz.Skyline.Model
@@ -17,7 +9,6 @@ namespace pwiz.Skyline.Model
     class GroupComparisonRefinementData
     {
         private List<List<GroupComparisonRow>> Data { get; set; }
-        private SrmDocument _document;
 
         private readonly double _adjustedPValCutoff;
         private readonly double _foldChangeCutoff;
@@ -27,7 +18,6 @@ namespace pwiz.Skyline.Model
         public GroupComparisonRefinementData(SrmDocument document, double adjustedPValCutoff,
             double foldChangeCutoff, int msLevel, List<GroupComparisonDef> groupComparisonDefs)
         {
-            _document = document;
             _foldChangeCutoff = foldChangeCutoff;
             _adjustedPValCutoff = adjustedPValCutoff;
             _msLevel = msLevel;
@@ -35,10 +25,10 @@ namespace pwiz.Skyline.Model
 
             foreach (var groupComparisonDef in groupComparisonDefs)
             {
-                var groupComparer = new GroupComparer(groupComparisonDef, _document, _qrFactorizationCache);
+                var groupComparer = new GroupComparer(groupComparisonDef, document, _qrFactorizationCache);
                 List<GroupComparisonResult> results = new List<GroupComparisonResult>();
 
-                foreach (var protein in _document.MoleculeGroups)
+                foreach (var protein in document.MoleculeGroups)
                 {
                     IEnumerable<PeptideDocNode> peptides;
                     if (groupComparer.ComparisonDef.PerProtein)

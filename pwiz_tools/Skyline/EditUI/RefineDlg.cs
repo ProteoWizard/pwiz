@@ -33,6 +33,7 @@ using System.Windows.Forms;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.GroupComparison;
+using Enum = System.Enum;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -164,13 +165,13 @@ namespace pwiz.Skyline.EditUI
 
             if (_document.PeptideTransitions.Any(t => t.IsMs1))
             {
-                comboMSGroupComparisons.Items.Add("1");
+                comboMSGroupComparisons.Items.Add(1.ToString());
                 comboMSGroupComparisons.SelectedIndex = comboMSGroupComparisons.Items.Count - 1;
             }
 
             if (_document.PeptideTransitions.Any(t => !t.IsMs1))
             {
-                comboMSGroupComparisons.Items.Add("2");
+                comboMSGroupComparisons.Items.Add(2.ToString());
                 comboMSGroupComparisons.SelectedIndex = comboMSGroupComparisons.Items.Count - 1;
             }
 
@@ -374,6 +375,30 @@ namespace pwiz.Skyline.EditUI
         {
             get { return cbAdd.Checked; }
             set { cbAdd.Checked = value; }
+        }
+
+        public double AdjustedPValueCutoff
+        {
+            get { return Convert.ToDouble(textPValue.Text); }
+            set { textPValue.Text = value.ToString(LocalizationHelper.CurrentCulture); }
+        }
+
+        public double FoldChangeCutoff
+        {
+            get { return Convert.ToDouble(textFoldChange.Text); }
+            set { textFoldChange.Text = value.ToString(LocalizationHelper.CurrentCulture); }
+        }
+
+        public int MSLevelGroupComparison
+        {
+            get { return Convert.ToInt32(comboMSGroupComparisons.SelectedItem); }
+            set { comboMSGroupComparisons.SelectedItem = value.ToString(LocalizationHelper.CurrentCulture); }
+        }
+
+        public bool Log
+        {
+            get { return checkBoxLog.Checked; }
+            set { checkBoxLog.Checked = value; }
         }
 
         public void OkDialog()
