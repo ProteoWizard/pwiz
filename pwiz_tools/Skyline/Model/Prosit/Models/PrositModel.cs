@@ -315,8 +315,12 @@ namespace pwiz.Skyline.Model.Prosit.Models
                 prositOutputAll = prositOutputAll.MergeOutputs(prositOutput);
 
                 processed += prositIn.InputRows.Count;
-                progressMonitor.UpdateProgress(progressStatus =
-                    progressStatus.ChangePercentComplete(CONSTRUCTING_INPUTS_FRACTION + REQUESTING_INPUTS_FRACTION * processed / totalCount));
+                progressStatus = progressStatus.ChangeMessage(TextUtil.SpaceSeparate(
+                        PrositResources.PrositModel_BatchPredict_Requesting_predictions_from_Prosit,
+                        processed.ToString(), @"/", totalCount.ToString()))
+                    .ChangePercentComplete(CONSTRUCTING_INPUTS_FRACTION +
+                                           REQUESTING_INPUTS_FRACTION * processed / totalCount);
+                progressMonitor.UpdateProgress(progressStatus);
             }
 
             return CreateSkylineOutput(settings, validInputsList.SelectMany(i => i).ToArray(), prositOutputAll);

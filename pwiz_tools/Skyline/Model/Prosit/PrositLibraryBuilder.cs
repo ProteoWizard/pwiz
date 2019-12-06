@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
@@ -31,6 +30,7 @@ using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Prosit.Communication;
 using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Model.RetentionTimes;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using Tensorflow.Serving;
 
@@ -131,9 +131,15 @@ namespace pwiz.Skyline.Model.Prosit
             var specMzInfo = ms.Spectra.Select(m => m.SpecMzInfo).ToList();
 
             // Predict iRTs for peptides
-            var distinctPeps = _peptides.Select(p => (PrositRetentionTimeModel.PeptideDocNodeWrapper) p).Distinct(
-                new SystemLinqExtensionMethods.FuncEqualityComparer<PrositRetentionTimeModel.PeptideDocNodeWrapper>(
-                    (p1, p2) => p1.Node.ModifiedSequence == p2.Node.ModifiedSequence)).ToArray();
+            var distinctModifiedSequences = new HashSet<string>();
+            var distinctPeps = new List<PrositRetentionTimeModel.PeptideDocNodeWrapper>();
+            foreach (var p in _peptides)
+            {
+                if (distinctModifiedSequences.Add(p.ModifiedSequence))
+                {
+                    distinctPeps.Add(new PrositRetentionTimeModel.PeptideDocNodeWrapper(p));
+                }
+            }
             var iRTMap = _rtModel.PredictBatches(_prositClient, progress, ref progressStatus, _document.Settings,
                 distinctPeps, CancellationToken.None);
             progressStatus = progressStatus.NextSegment();
@@ -160,7 +166,7 @@ namespace pwiz.Skyline.Model.Prosit
             if (!librarySpectra.Any())
                 return true;
 
-            progressStatus = progressStatus.NextSegment();
+            progressStatus = progressStatus.NextSegment().ChangeMessage(Resources.SkylineWindow_SaveDocument_Saving___);
             // Build the library
             using (var blibDb = BlibDb.CreateBlibDb(LibrarySpec.FilePath))
             {
