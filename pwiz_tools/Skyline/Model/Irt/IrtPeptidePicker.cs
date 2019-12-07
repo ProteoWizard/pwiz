@@ -26,7 +26,6 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
-using ZedGraph;
 
 namespace pwiz.Skyline.Model.Irt
 {
