@@ -54,7 +54,10 @@ namespace pwiz.Skyline.Model
             {
                 if (i != 0) // Avoid z=0 if we're entertaining negative charge states
                 {
-                    double delta = mz - ( isCustomIon ? Adduct.FromChargeProtonated(i).MzFromNeutralMass(mass) : SequenceMassCalc.GetMZ(mass, i) );
+                    double calculatedMz = isCustomIon
+                        ? Adduct.FromChargeProtonated(i).MzFromNeutralMass(mass)
+                        : SequenceMassCalc.GetMZ(mass, i);
+                    double delta = mz - calculatedMz;
                     double deltaAbs = Math.Abs(delta);
                     int potentialShift = (int) Math.Round(deltaAbs);
                     double fractionalDelta = deltaAbs - potentialShift;
@@ -72,6 +75,10 @@ namespace pwiz.Skyline.Model
                         nearestDelta = deltaAbs;
                         nearestCharge = i;
                     }
+                    // If the charge is positive and the calculated m/z is smaller than the desired m/z
+                    // increasing the charge further cannot possibly produce a match
+                    if (massShiftType == MassShiftType.none && minCharge > 0 && delta > 0)
+                        break;
                 }
             }
 
@@ -92,6 +99,7 @@ namespace pwiz.Skyline.Model
         }
 
         public static Adduct CalcPrecursorCharge(TypedMass precursorMassH,
+                                              int? precursorZ,
                                               double precursorMz,
                                               double tolerance,
                                               bool isCustomIon,
@@ -100,19 +108,19 @@ namespace pwiz.Skyline.Model
                                               out int nearestCharge)
         {
             return CalcCharge(precursorMassH, precursorMz, tolerance, isCustomIon,
-                TransitionGroup.MIN_PRECURSOR_CHARGE,
-                TransitionGroup.MAX_PRECURSOR_CHARGE,
+                precursorZ ?? TransitionGroup.MIN_PRECURSOR_CHARGE,
+                precursorZ ?? TransitionGroup.MAX_PRECURSOR_CHARGE,
                 TransitionGroup.MassShifts,
                 isDecoy ? MassShiftType.shift_only : MassShiftType.none,
                 out massShift, out nearestCharge);
         }
 
-        private static Adduct CalcProductCharge(TypedMass productMassH, double productMz, double tolerance, bool isCustomIon,
+        private static Adduct CalcProductCharge(TypedMass productMassH, int? productZ, double productMz, double tolerance, bool isCustomIon,
                                              Adduct maxCharge, MassShiftType massShiftType, out int massShift, out int nearestCharge)
         {
             return CalcCharge(productMassH, productMz, tolerance, isCustomIon,
-                Transition.MIN_PRODUCT_CHARGE,
-                Math.Min(maxCharge.AdductCharge, Transition.MAX_PRODUCT_CHARGE),
+                productZ ?? Transition.MIN_PRODUCT_CHARGE,
+                productZ ?? Math.Min(maxCharge.AdductCharge, Transition.MAX_PRODUCT_CHARGE),
                 Transition.MassShifts,
                 massShiftType,
                 out massShift,
@@ -122,18 +130,19 @@ namespace pwiz.Skyline.Model
         public enum MassShiftType { none, shift_only, either }
 
         public static Adduct CalcProductCharge(TypedMass productPrecursorMass,
-                                            Adduct precursorCharge,
-                                            IList<IonType> acceptedIonTypes,
-                                            IonTable<TypedMass> productMasses,
-                                            IList<IList<ExplicitLoss>> potentialLosses,
-                                            double productMz,
-                                            double tolerance,
-                                            MassType massType,
-                                            MassShiftType massShiftType,
-                                            out IonType? ionType,
-                                            out int? ordinal,
-                                            out TransitionLosses losses,
-                                            out int massShift)
+            int? productZ,
+            Adduct precursorCharge,
+            IList<IonType> acceptedIonTypes,
+            IonTable<TypedMass> productMasses,
+            IList<IList<ExplicitLoss>> potentialLosses,
+            double productMz,
+            double tolerance,
+            MassType massType,
+            MassShiftType massShiftType,
+            out IonType? ionType,
+            out int? ordinal,
+            out TransitionLosses losses,
+            out int massShift)
         {
             // Get length of fragment ion mass array
             int len = productMasses.GetLength(1);
@@ -152,7 +161,7 @@ namespace pwiz.Skyline.Model
                 var productMass = productPrecursorMass - (lossesTrial != null ? lossesTrial.Mass : 0);
                 int potentialMassShift;
                 int nearestCharge;
-                var charge = CalcProductCharge(productMass, productMz, tolerance, false, precursorCharge,
+                var charge = CalcProductCharge(productMass, productZ, productMz, tolerance, false, precursorCharge,
                                                massShiftType, out potentialMassShift, out nearestCharge);
                 if (Equals(charge, precursorCharge))
                 {
@@ -194,7 +203,7 @@ namespace pwiz.Skyline.Model
                             productMass -= lossesTrial.Mass;
                         int potentialMassShift;
                         int nearestCharge;
-                        var chargeFound = CalcProductCharge(productMass, productMz, tolerance, false, precursorCharge,
+                        var chargeFound = CalcProductCharge(productMass, productZ, productMz, tolerance, false, precursorCharge,
                                                        massShiftType, out potentialMassShift, out nearestCharge);
                         if (!chargeFound.IsEmpty)
                         {
