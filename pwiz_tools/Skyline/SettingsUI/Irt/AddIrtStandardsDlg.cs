@@ -19,6 +19,7 @@
 using System;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -38,13 +39,19 @@ namespace pwiz.Skyline.SettingsUI.Irt
             labelMessage.Text = string.Format(!peptidesExcluded ? labelMessage.Text : Resources.AddIrtStandardsDlg_AddIrtStandardsDlg_MessagePeptidesExcluded, peptideCount);
         }
 
-        public AddIrtStandardsDlg(int peptideCount, string message)
+        public AddIrtStandardsDlg(int peptideCount, string message, bool yesNo = false)
         {
             _peptideCount = peptideCount;
 
             InitializeComponent();
 
             labelMessage.Text = message;
+
+            if (yesNo)
+            {
+                btnOk.Text = MultiButtonMsgDlg.BUTTON_YES;
+                btnCancel.Text = MultiButtonMsgDlg.BUTTON_NO;
+            }
         }
 
         public int StandardCount

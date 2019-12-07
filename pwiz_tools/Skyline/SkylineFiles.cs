@@ -56,6 +56,7 @@ using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using DatabaseOpeningException = pwiz.Skyline.Model.Irt.DatabaseOpeningException;
@@ -2121,26 +2122,73 @@ namespace pwiz.Skyline
                 db = IrtDb.CreateIrtDb(AssayLibraryFileName);
 
                 // Try to guess iRT standards
-                var matchingStandards = IrtStandard.ALL.Where(standard => standard.IsSubset(dbIrtPeptides, null)).ToArray();
-                if (matchingStandards.Length == 2 && matchingStandards.Contains(IrtStandard.BIOGNOSYS_10) && matchingStandards.Contains(IrtStandard.BIOGNOSYS_11))
-                    matchingStandards = new[] {IrtStandard.BIOGNOSYS_11};
-                if (matchingStandards.Length == 1)
+                var matchingStandards = IrtStandard.ALL.Where(standard => standard.IsSubset(dbIrtPeptides, null)).ToList();
+                if (matchingStandards.Count == 2 && matchingStandards.Contains(IrtStandard.BIOGNOSYS_10) && matchingStandards.Contains(IrtStandard.BIOGNOSYS_11))
+                    matchingStandards = new List<IrtStandard> { IrtStandard.BIOGNOSYS_11 };
+
+                // Remove standards that don't actually match (heavy label check with precursor m/zs)
+                for (var i = matchingStandards.Count - 1; i >= 0; i--)
                 {
-                    foreach (var peptide in dbIrtPeptides.Where(peptide => matchingStandards[0].Contains(peptide, null)))
-                        peptide.Standard = true;
+                    var standardDoc = matchingStandards[i].GetDocument();
+                    if (standardDoc == null || standardDoc.Peptides.All(nodePep => nodePep.ExplicitModsHeavy.Count == 0))
+                        continue;
+
+                    var docPeps = new TargetMap<PeptideDocNode>(standardDoc.Peptides.Select(pep => new KeyValuePair<Target, PeptideDocNode>(pep.ModifiedTarget, pep)));
+                    var matchTargets = standardDoc.Peptides.Select(pep => pep.ModifiedTarget).ToHashSet();
+                    // Compare precursor m/z to see if heavy labeled
+                    foreach (var spec in librarySpectra)
+                    {
+                        if (!docPeps.TryGetValue(spec.Key.Target, out var nodePep))
+                            continue;
+
+                        var docPrecursors = nodePep.TransitionGroups.ToDictionary(nodeTranGroup => nodeTranGroup.PrecursorCharge, nodeTranGroup => nodeTranGroup.PrecursorMz);
+                        if (docPrecursors.TryGetValue(spec.Key.Charge, out var docPrecursorMz) && Math.Abs(docPrecursorMz - spec.PrecursorMz) < 1)
+                            matchTargets.Remove(nodePep.ModifiedTarget);
+                    }
+                    if (matchTargets.Count > 0)
+                        matchingStandards.RemoveAt(i);
+                }
+
+                if (matchingStandards.Count == 1)
+                {
+                    IrtPeptidePicker.SetStandards(dbIrtPeptides, matchingStandards[0]);
                 }
                 else
                 {
-                    // Ask for standards
-                    using (var dlg = new ChooseIrtStandardPeptidesDlg(doc, DocumentFilePath, peptideGroups))
+                    // Check for CiRT
+                    var knownIrts = new TargetMap<double>(IrtStandard.CIRT.Peptides.Select(pep => new KeyValuePair<Target, double>(pep.ModifiedTarget, pep.Irt)));
+                    var cirtPeptides = dbIrtPeptides.Where(pep => knownIrts.ContainsKey(pep.ModifiedTarget)).ToArray();
+                    var foundCirts = cirtPeptides.Select(pep => pep.ModifiedTarget).Distinct().Count();
+                    var standardCount = 0;
+                    if (foundCirts > RCalcIrt.MIN_PEPTIDES_COUNT)
                     {
-                        if (dlg.ShowDialog(this) != DialogResult.OK)
-                            return false;
+                        using (var dlg = new AddIrtStandardsDlg(foundCirts,
+                            string.Format(
+                                Resources.SkylineWindow_ImportMassListIrts__0__distinct_CiRT_peptides_were_found__Would_you_like_to_use_them_as_iRT_standards__If_so__how_many_,
+                                foundCirts), true))
+                        {
+                            if (dlg.ShowDialog(this) == DialogResult.OK)
+                                standardCount = dlg.StandardCount;
+                        }
+                    }
 
-                        doc = dlg.Document;
-                        dlg.UpdateLists(librarySpectra, dbIrtPeptides);
-                        if (!string.IsNullOrEmpty(dlg.IrtFile))
-                            irtInputs = new MassListInputs(dlg.IrtFile);
+                    if (standardCount > 0)
+                    {
+                        IrtPeptidePicker.SetStandards(dbIrtPeptides, IrtPeptidePicker.Pick(standardCount, cirtPeptides));
+                    }
+                    else
+                    {
+                        // Ask for standards
+                        using (var dlg = new ChooseIrtStandardPeptidesDlg(doc, DocumentFilePath, peptideGroups))
+                        {
+                            if (dlg.ShowDialog(this) != DialogResult.OK)
+                                return false;
+
+                            doc = dlg.Document;
+                            dlg.UpdateLists(librarySpectra, dbIrtPeptides);
+                            if (!string.IsNullOrEmpty(dlg.IrtFile))
+                                irtInputs = new MassListInputs(dlg.IrtFile);
+                        }
                     }
                 }
 
