@@ -252,20 +252,23 @@ namespace pwiz.Skyline.Model
 
         private static IEnumerable<IonTypeAccepted> GetIonTypes(IList<IonType> acceptedIonTypes)
         {
-            foreach (var ionType in acceptedIonTypes)
-            {
-                if (ionType != IonType.precursor)   // Precursor is handled separately
-                    yield return new IonTypeAccepted { IonType = ionType, Accepted = true };
-            }
+            // RECONSIDERED: Let's try only ion type pairs which are possible together
+//            foreach (var ionType in acceptedIonTypes)
+//            {
+//                if (ionType != IonType.precursor)   // Precursor is handled separately
+//                    yield return new IonTypeAccepted { IonType = ionType, Accepted = true };
+//            }
             // CONSIDER: Should we allow types other than the ones in the settings?
             //           We always have, but this also makes it impossible to keep Skyline from
             //           guessing weird types like c, x and z, when the problem is something else
-            // RECONSIDERED: Let's try not for a while. This just leads to strange results and slows things down
-//            foreach (var ionType in Transition.PEPTIDE_ION_TYPES)
-//            {
-//                if (!acceptedIonTypes.Contains(ionType))
-//                    yield return new IonTypeAccepted { IonType = ionType };
-//            }
+            for (int i = 0; i < Transition.PEPTIDE_ION_TYPES.Length; i++)
+            {
+                var ionType = Transition.PEPTIDE_ION_TYPES[i];
+                int pairIndex = i % 2 == 0 ? i + 1 : i - 1;
+                var ionTypePair = Transition.PEPTIDE_ION_TYPES[pairIndex];
+                if (acceptedIonTypes.Contains(ionType) || acceptedIonTypes.Contains(ionTypePair))
+                    yield return new IonTypeAccepted { IonType = ionType };
+            }
         }
 
         private struct IonTypeAccepted
