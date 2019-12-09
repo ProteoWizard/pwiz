@@ -259,12 +259,13 @@ namespace pwiz.Skyline.Model
             }
             // CONSIDER: Should we allow types other than the ones in the settings?
             //           We always have, but this also makes it impossible to keep Skyline from
-            //           guessing wierd types like c, x and z, when the problem is something else
-            foreach (var ionType in Transition.PEPTIDE_ION_TYPES)
-            {
-                if (!acceptedIonTypes.Contains(ionType))
-                    yield return new IonTypeAccepted { IonType = ionType };
-            }
+            //           guessing weird types like c, x and z, when the problem is something else
+            // RECONSIDERED: Let's try not for a while. This just leads to strange results and slows things down
+//            foreach (var ionType in Transition.PEPTIDE_ION_TYPES)
+//            {
+//                if (!acceptedIonTypes.Contains(ionType))
+//                    yield return new IonTypeAccepted { IonType = ionType };
+//            }
         }
 
         private struct IonTypeAccepted
