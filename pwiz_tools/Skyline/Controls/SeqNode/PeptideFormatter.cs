@@ -84,6 +84,10 @@ namespace pwiz.Skyline.Controls.SeqNode
             GetModificationsAtResidue(int residue)
         {
             var mods = ImmutableList.ValueOf(_lightSequenceInfo.ModificationsByResidue[residue]);
+            if (DisplayModificationOption.IgnoreZeroMassMods)
+            {
+                mods = ImmutableList.ValueOf(mods.Where(mod=>mod.MonoisotopicMass != 0 || mod.AverageMass != 0));
+            }
             if (mods.Any())
             {
                 yield return Tuple.Create(IsotopeLabelType.light, mods);
@@ -118,7 +122,8 @@ namespace pwiz.Skyline.Controls.SeqNode
 
             var firstEntry = modsAtResidue[0];
             color = ModFontHolder.GetModColor(firstEntry.Item1);
-            if (modsAtResidue.Skip(1).All(entry=>entry.Item2.Equals(firstEntry.Item2)))
+            var firstMismatch = modsAtResidue.Skip(1).FirstOrDefault(entry => !entry.Item2.Equals(firstEntry.Item2));
+            if (firstMismatch == null)
             {
                 font = ModFontHolder.GetModFont(firstEntry.Item1);
                 return new TextSequence
@@ -129,9 +134,15 @@ namespace pwiz.Skyline.Controls.SeqNode
                 };
             }
 
-            font = IsotopeLabelType.light.Equals(firstEntry.Item1)
-                ? ModFontHolder.LightAndHeavy
-                : ModFontHolder.GetModFont(firstEntry.Item1);
+            if (IsotopeLabelType.light.Equals(firstEntry.Item1))
+            {
+                font = ModFontHolder.LightAndHeavy;
+                color = ModFontHolder.GetModColor(firstMismatch.Item1);
+            }
+            else
+            {
+                font = ModFontHolder.LightAndHeavy;
+            }
             string modText;
             if (DisplayModificationOption == DisplayModificationOption.NOT_SHOWN)
             {

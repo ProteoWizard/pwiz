@@ -1759,7 +1759,7 @@ namespace pwiz.Skyline
                     selectPath = null;
                     using (var longWaitDlg = new LongWaitDlg(this) {Text = description})
                     {
-                        var smallMoleculeTransitionListReader = new SmallMoleculeTransitionListCSVReader(csvText);
+                        var smallMoleculeTransitionListReader = new SmallMoleculeTransitionListCSVReader(MassListInputs.ReadLinesFromText(csvText));
                         IdentityPath firstAdded;
                         longWaitDlg.PerformWork(this, 1000,
                             () => docNew = smallMoleculeTransitionListReader.CreateTargets(doc, null, out firstAdded));
@@ -1909,11 +1909,13 @@ namespace pwiz.Skyline
             SrmDocument docNew = null;
             using (var longWaitDlg = new LongWaitDlg(this) {Text = description})
             {
-                longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
+                var status = longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
                 {
                     docNew = docCurrent.ImportMassList(inputs, longWaitBroker,
                         insertPath, out selectPath, out irtPeptides, out librarySpectra, out errorList, out peptideGroups);
                 });
+                if (status.IsCanceled)
+                    return;
             }
             if (assayLibrary)
             {
@@ -2963,14 +2965,16 @@ namespace pwiz.Skyline
                     }
                     // Restore the original set, updating those to be reimported  with current centroiding
                     // settings and requesting 3-array IM format
-                    var isCentroidMs = document.Settings.TransitionSettings.FullScan.IsCentroidedMs;
-                    var isCentroidMsMs = document.Settings.TransitionSettings.FullScan.IsCentroidedMsMs;
+                    var isFullScan = document.Settings.TransitionSettings.FullScan.IsEnabled;  // TODO(bspratt) formerly we didn't check this - doing so may mask problems we'd rather fix
+                    var isCentroidMs = isFullScan && document.Settings.TransitionSettings.FullScan.IsCentroidedMs;
+                    var isCentroidMsMs = isFullScan && document.Settings.TransitionSettings.FullScan.IsCentroidedMsMs;
+                    var attemptCombineIonMobilitySpectra = isFullScan;
                     var chromatograms = new List<ChromatogramSet>();
                     foreach (var c in results.Chromatograms)
                     {
                         chromatograms.Add(setReimport.Contains(c) ?
                             c.ChangeMSDataFilePaths(c.MSDataFilePaths.Select(p =>
-                                p.ChangeCentroiding(isCentroidMs, isCentroidMsMs).ChangeCombineIonMobilitySpectra(true)).ToList()) :
+                                p.ChangeCentroiding(isCentroidMs, isCentroidMsMs).ChangeCombineIonMobilitySpectra(attemptCombineIonMobilitySpectra)).ToList()) :
                             c);
                     }
                     resultsNew = resultsNew.ChangeChromatograms(chromatograms);

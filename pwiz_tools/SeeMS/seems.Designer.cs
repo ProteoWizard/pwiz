@@ -74,6 +74,9 @@ namespace seems
             this.decimalPlaces3 = new System.Windows.Forms.ToolStripMenuItem();
             this.decimalPlaces4 = new System.Windows.Forms.ToolStripMenuItem();
             this.decimalPlaces5 = new System.Windows.Forms.ToolStripMenuItem();
+            this.combineIonMobilitySpectraToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ignoreZeroIntensityPointsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.acceptZeroLengthSpectraToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.windowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.cascadeWindowMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tileVerticalWindowMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -90,6 +93,7 @@ namespace seems
             this.annotationButton = new System.Windows.Forms.ToolStripButton();
             this.toolStripPanel2 = new System.Windows.Forms.ToolStripPanel();
             this.dockPanel = new DigitalRune.Windows.Docking.DockPanel();
+            this.timeInMinutesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1.SuspendLayout();
             this.toolStripPanel1.SuspendLayout();
             this.menuStrip1.SuspendLayout();
@@ -207,7 +211,11 @@ namespace seems
             this.timeToMzHeatmapsToolStripMenuItem,
             this.previewAsMzMLToolStripMenuItem,
             this.eventLogToolStripMenuItem,
-            this.decimalPlacesToolStripMenuItem});
+            this.decimalPlacesToolStripMenuItem,
+            this.combineIonMobilitySpectraToolStripMenuItem,
+            this.ignoreZeroIntensityPointsToolStripMenuItem,
+            this.acceptZeroLengthSpectraToolStripMenuItem,
+            this.timeInMinutesToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.viewToolStripMenuItem.Text = "View";
@@ -215,14 +223,14 @@ namespace seems
             // timeToMzHeatmapsToolStripMenuItem
             // 
             this.timeToMzHeatmapsToolStripMenuItem.Name = "timeToMzHeatmapsToolStripMenuItem";
-            this.timeToMzHeatmapsToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
+            this.timeToMzHeatmapsToolStripMenuItem.Size = new System.Drawing.Size(231, 22);
             this.timeToMzHeatmapsToolStripMenuItem.Text = "Time to m/z Heatmaps";
             this.timeToMzHeatmapsToolStripMenuItem.Click += new System.EventHandler(this.timeToMzHeatmapsToolStripMenuItem_Click);
             // 
             // previewAsMzMLToolStripMenuItem
             // 
             this.previewAsMzMLToolStripMenuItem.Name = "previewAsMzMLToolStripMenuItem";
-            this.previewAsMzMLToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
+            this.previewAsMzMLToolStripMenuItem.Size = new System.Drawing.Size(231, 22);
             this.previewAsMzMLToolStripMenuItem.Text = "Preview as mzML";
             this.previewAsMzMLToolStripMenuItem.Visible = false;
             this.previewAsMzMLToolStripMenuItem.Click += new System.EventHandler(this.previewAsMzMLToolStripMenuItem_Click);
@@ -230,7 +238,7 @@ namespace seems
             // eventLogToolStripMenuItem
             // 
             this.eventLogToolStripMenuItem.Name = "eventLogToolStripMenuItem";
-            this.eventLogToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
+            this.eventLogToolStripMenuItem.Size = new System.Drawing.Size(231, 22);
             this.eventLogToolStripMenuItem.Text = "Event Log";
             this.eventLogToolStripMenuItem.Click += new System.EventHandler(this.eventLogToolStripMenuItem_Click);
             // 
@@ -244,14 +252,14 @@ namespace seems
             this.decimalPlaces4,
             this.decimalPlaces5});
             this.decimalPlacesToolStripMenuItem.Name = "decimalPlacesToolStripMenuItem";
-            this.decimalPlacesToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
+            this.decimalPlacesToolStripMenuItem.Size = new System.Drawing.Size(231, 22);
             this.decimalPlacesToolStripMenuItem.Text = "Decimal places";
             // 
             // decimalPlaces0
             // 
             this.decimalPlaces0.CheckOnClick = true;
             this.decimalPlaces0.Name = "decimalPlaces0";
-            this.decimalPlaces0.Size = new System.Drawing.Size(180, 22);
+            this.decimalPlaces0.Size = new System.Drawing.Size(80, 22);
             this.decimalPlaces0.Text = "0";
             this.decimalPlaces0.Click += new System.EventHandler(this.decimalPlaces_Click);
             // 
@@ -259,7 +267,7 @@ namespace seems
             // 
             this.decimalPlaces1.CheckOnClick = true;
             this.decimalPlaces1.Name = "decimalPlaces1";
-            this.decimalPlaces1.Size = new System.Drawing.Size(180, 22);
+            this.decimalPlaces1.Size = new System.Drawing.Size(80, 22);
             this.decimalPlaces1.Text = "1";
             this.decimalPlaces1.Click += new System.EventHandler(this.decimalPlaces_Click);
             // 
@@ -267,7 +275,7 @@ namespace seems
             // 
             this.decimalPlaces2.CheckOnClick = true;
             this.decimalPlaces2.Name = "decimalPlaces2";
-            this.decimalPlaces2.Size = new System.Drawing.Size(180, 22);
+            this.decimalPlaces2.Size = new System.Drawing.Size(80, 22);
             this.decimalPlaces2.Text = "2";
             this.decimalPlaces2.Click += new System.EventHandler(this.decimalPlaces_Click);
             // 
@@ -275,7 +283,7 @@ namespace seems
             // 
             this.decimalPlaces3.CheckOnClick = true;
             this.decimalPlaces3.Name = "decimalPlaces3";
-            this.decimalPlaces3.Size = new System.Drawing.Size(180, 22);
+            this.decimalPlaces3.Size = new System.Drawing.Size(80, 22);
             this.decimalPlaces3.Text = "3";
             this.decimalPlaces3.Click += new System.EventHandler(this.decimalPlaces_Click);
             // 
@@ -283,7 +291,7 @@ namespace seems
             // 
             this.decimalPlaces4.CheckOnClick = true;
             this.decimalPlaces4.Name = "decimalPlaces4";
-            this.decimalPlaces4.Size = new System.Drawing.Size(180, 22);
+            this.decimalPlaces4.Size = new System.Drawing.Size(80, 22);
             this.decimalPlaces4.Text = "4";
             this.decimalPlaces4.Click += new System.EventHandler(this.decimalPlaces_Click);
             // 
@@ -291,9 +299,33 @@ namespace seems
             // 
             this.decimalPlaces5.CheckOnClick = true;
             this.decimalPlaces5.Name = "decimalPlaces5";
-            this.decimalPlaces5.Size = new System.Drawing.Size(180, 22);
+            this.decimalPlaces5.Size = new System.Drawing.Size(80, 22);
             this.decimalPlaces5.Text = "5";
             this.decimalPlaces5.Click += new System.EventHandler(this.decimalPlaces_Click);
+            // 
+            // combineIonMobilitySpectraToolStripMenuItem
+            // 
+            this.combineIonMobilitySpectraToolStripMenuItem.CheckOnClick = true;
+            this.combineIonMobilitySpectraToolStripMenuItem.Name = "combineIonMobilitySpectraToolStripMenuItem";
+            this.combineIonMobilitySpectraToolStripMenuItem.Size = new System.Drawing.Size(231, 22);
+            this.combineIonMobilitySpectraToolStripMenuItem.Text = "Combine ion mobility spectra";
+            this.combineIonMobilitySpectraToolStripMenuItem.Click += new System.EventHandler(this.combineIonMobilitySpectraToolStripMenuItem_Click);
+            // 
+            // ignoreZeroIntensityPointsToolStripMenuItem
+            // 
+            this.ignoreZeroIntensityPointsToolStripMenuItem.CheckOnClick = true;
+            this.ignoreZeroIntensityPointsToolStripMenuItem.Name = "ignoreZeroIntensityPointsToolStripMenuItem";
+            this.ignoreZeroIntensityPointsToolStripMenuItem.Size = new System.Drawing.Size(231, 22);
+            this.ignoreZeroIntensityPointsToolStripMenuItem.Text = "Ignore zero intensity points";
+            this.ignoreZeroIntensityPointsToolStripMenuItem.Click += new System.EventHandler(this.ignoreZeroIntensityPointsToolStripMenuItem_Click);
+            // 
+            // acceptZeroLengthSpectraToolStripMenuItem
+            // 
+            this.acceptZeroLengthSpectraToolStripMenuItem.CheckOnClick = true;
+            this.acceptZeroLengthSpectraToolStripMenuItem.Name = "acceptZeroLengthSpectraToolStripMenuItem";
+            this.acceptZeroLengthSpectraToolStripMenuItem.Size = new System.Drawing.Size(231, 22);
+            this.acceptZeroLengthSpectraToolStripMenuItem.Text = "Accept zero length spectra";
+            this.acceptZeroLengthSpectraToolStripMenuItem.Click += new System.EventHandler(this.acceptZeroLengthSpectraToolStripMenuItem_Click);
             // 
             // windowToolStripMenuItem
             // 
@@ -442,6 +474,14 @@ namespace seems
             this.dockPanel.Size = new System.Drawing.Size(792, 495);
             this.dockPanel.TabIndex = 7;
             // 
+            // timeInMinutesToolStripMenuItem
+            // 
+            this.timeInMinutesToolStripMenuItem.CheckOnClick = true;
+            this.timeInMinutesToolStripMenuItem.Name = "timeInMinutesToolStripMenuItem";
+            this.timeInMinutesToolStripMenuItem.Size = new System.Drawing.Size(231, 22);
+            this.timeInMinutesToolStripMenuItem.Text = "Time in minutes";
+            this.timeInMinutesToolStripMenuItem.Click += new System.EventHandler(this.timeInMinutesToolStripMenuItem_Click);
+            // 
             // seemsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -519,5 +559,9 @@ namespace seems
         private System.Windows.Forms.ToolStripMenuItem decimalPlaces3;
         private System.Windows.Forms.ToolStripMenuItem decimalPlaces4;
         private System.Windows.Forms.ToolStripMenuItem decimalPlaces5;
+        private System.Windows.Forms.ToolStripMenuItem combineIonMobilitySpectraToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem ignoreZeroIntensityPointsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem acceptZeroLengthSpectraToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem timeInMinutesToolStripMenuItem;
     }
 }

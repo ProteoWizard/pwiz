@@ -206,6 +206,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PrositBuildLibraryTest.cs" />
     <Compile Include="PrositConnectionTest.cs" />
     <Compile Include="UnifiFunctionalTest.cs" />
     <Compile Include="Results\RemoteApi\UnifiTest.cs" />

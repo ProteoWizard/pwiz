@@ -129,6 +129,8 @@ namespace pwiz.Skyline.Controls
         {
             var progressWaitBroker = new ProgressWaitBroker(performWork);
             PerformWork(parent, delayMillis, progressWaitBroker.PerformWork);
+            if (progressWaitBroker.IsCanceled)
+                return progressWaitBroker.Status.Cancel();
             return progressWaitBroker.Status;
         }
 
@@ -155,7 +157,7 @@ namespace pwiz.Skyline.Controls
                 // Return without notifying the user, if the operation completed
                 // before the wait expired.
 //                if (_result.IsCompleted)
-                if (_completionEvent.WaitOne(delayMillis))
+                if (completionEvent.WaitOne(delayMillis))
                     return;
 
                 progressBar.Value = Math.Max(0, _progressValue);

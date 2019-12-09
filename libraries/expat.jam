@@ -109,6 +109,7 @@ rule init ( version ? : location : options * )
             <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
             <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
             <define>HAVE_EXPAT_CONFIG_H
+            <define>XML_LARGE_SIZE
             <implicit-dependency>expat_config.h
             <dependency>expat_config.h
             #~ <link>shared:<define>EXPAT_EXPORTS
@@ -118,6 +119,7 @@ rule init ( version ? : location : options * )
         :
         :   <include>$(location)/lib
             <define>HAVE_EXPAT_CONFIG_H
+            <define>XML_LARGE_SIZE
             <implicit-dependency>expat_config.h
             <dependency>expat_config.h
             <link>static:<define>XML_STATIC
