@@ -979,6 +979,7 @@ namespace pwiz.Skyline.Model
             private static double ColumnMz(string[] fields, int column, IFormatProvider provider)
             {
                 double result;
+                // CONSIDER: This does not allow exponents or thousands separators like the default double.Parse(). Should it?
                 if (double.TryParse(fields[column], NumberStyles.Number, provider, out result))
                     return result;
                 return 0;   // Invalid m/z
@@ -987,7 +988,7 @@ namespace pwiz.Skyline.Model
             private static double? ColumnDouble(string[] fields, int column, IFormatProvider provider)
             {
                 double result;
-                if (column != -1 && double.TryParse(fields[column], NumberStyles.Number, provider, out result))
+                if (column != -1 && double.TryParse(fields[column], NumberStyles.Float|NumberStyles.AllowThousands, provider, out result))
                     return result;
                 return null;
             }
