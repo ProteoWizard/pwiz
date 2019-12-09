@@ -218,9 +218,7 @@ public:
     /**
      * Returns the current position in the file in bytes.
      */
-    int getCurrentByteIndex(){
-        return XML_GetCurrentByteIndex(m_parser_);
-    }
+    boost::int64_t getCurrentByteIndex();
 
 protected:
     XML_Parser m_parser_;
@@ -236,6 +234,7 @@ protected:
      * Sax parsers can throw this error to be caught in parse() where
      * filename and line number info is added.
      */
+    [[ noreturn ]]
     void throwParseError(const char* format, ...)
     {
         va_list args;
