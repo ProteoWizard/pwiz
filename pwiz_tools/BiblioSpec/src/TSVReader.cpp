@@ -303,7 +303,6 @@ namespace {
     };
 
 
-
     class OpenSwathAssayReader : public TSVReader
     {
         public:
@@ -436,6 +435,13 @@ namespace {
         }
 
     };
+
+    // TODO: remove when switching to C++17
+    constexpr const TSVColumnTranslator OpenSwathResultReader::requiredColumns[];
+    constexpr const TSVColumnTranslator OpenSwathResultReader::optionalColumns[];
+    constexpr const TSVColumnTranslator OpenSwathAssayReader::requiredColumns[];
+    constexpr const TSVColumnTranslator OpenSwathAssayReader::optionalColumns[];
+
 } // namespace
 
 TSVReader::TSVReader(BlibBuilder& maker, const char* tsvName, const ProgressIndicator* parentProgress)
