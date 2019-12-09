@@ -84,12 +84,10 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        
        if (analysis.find("interprophet") == 0) {
            analysisType_ = INTER_PROPHET_ANALYSIS;
-           // Unfortunately, there is no way to get a file count
-           // from this element.
-           struct stat filestatus;
-           stat(getFileName().c_str(), &filestatus);
+           // Unfortunately, there is no way to get a file count from this element.
+
            // work in bytes / 1000 to avoid overflow
-           initSpecFileProgress(filestatus.st_size / 1000);
+           initSpecFileProgress(bfs::file_size(getFileName()) / 1000);
        }
    } else if(state == STATE_PROPHET_SUMMARY && isElement("inputfile",name)) {
       // Count files for use in reporting percent complete
