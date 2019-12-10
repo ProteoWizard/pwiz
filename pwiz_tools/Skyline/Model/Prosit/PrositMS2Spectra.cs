@@ -46,6 +46,12 @@ namespace pwiz.Skyline.Model.Prosit
 
     public class PrositMS2Spectrum : IEquatable<PrositMS2Spectrum>
     {
+        /// <summary>
+        /// Prosit only ever requests the light versions of spectra. Usages of this constant
+        /// would need to be changed if we ever wanted to support heavy spectra.
+        /// </summary>
+        public static readonly IsotopeLabelType PROSIT_LABEL_TYPE = IsotopeLabelType.light;
+
         public PrositMS2Spectrum(SrmSettings settings, PrositIntensityModel.PeptidePrecursorNCE peptidePrecursorNCE,
             int precursorIndex, PrositIntensityModel.PrositIntensityOutput prositIntensityOutput, IsotopeLabelType labelTypeOverride = null)
         {
@@ -54,7 +60,7 @@ namespace pwiz.Skyline.Model.Prosit
             var precursor = peptidePrecursorNCE.NodeGroup;
             var peptide = peptidePrecursorNCE.NodePep;
 
-            var calc = settings.GetFragmentCalc(IsotopeLabelType.light, peptide.ExplicitMods);
+            var calc = settings.GetFragmentCalc(PROSIT_LABEL_TYPE, peptide.ExplicitMods);
             var ionTable = calc.GetFragmentIonMasses(peptide.Target); // TODO: get mods and pass them as explicit mods above?
             var ions = ionTable.GetLength(1);
 
@@ -124,7 +130,7 @@ namespace pwiz.Skyline.Model.Prosit
                 info.SpectrumPeaks = SpectrumPeaks;
                 info.IonMobility = IonMobilityAndCCS.EMPTY;
                 info.Key = new LibKey(
-                    Settings.GetModifiedSequence(peptide.Target, precursor.LabelType, peptide.ExplicitMods),
+                    Settings.GetModifiedSequence(peptide.Target, PROSIT_LABEL_TYPE, peptide.ExplicitMods),
                     precursor.PrecursorCharge);
                 info.Label = precursor.LabelType;
                 info.PrecursorMz = precursor.PrecursorMz;
