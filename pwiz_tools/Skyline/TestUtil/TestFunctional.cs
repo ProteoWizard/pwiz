@@ -1315,8 +1315,9 @@ namespace pwiz.SkylineTestUtil
                 {
                     SkylineWindow.UseKeysOverride = true;
                     SkylineWindow.Icon = Skyline.Properties.Resources.Skyline_Release1;
+                    SkylineWindow.Text = @"Skyline";
                 });
-
+                 
                 // Make sure the background proteome and sequence tree protein metadata loaders don't hit the web (unless they are meant to)
                 bool allowInternetAccess = AllowInternetAccess; // Local copy for easy change in debugger when needed
                 if (!allowInternetAccess)
