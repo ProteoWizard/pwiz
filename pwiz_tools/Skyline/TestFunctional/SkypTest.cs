@@ -52,13 +52,13 @@ namespace pwiz.SkylineTestFunctional
                 DownloadClient = downloadClient
             };
 
-            var errDlg = ShowDialog<MessageDlg>(() => skypSupport.Open(skypPath, null));
+            var errDlg = ShowDialog<AlertDlg>(() => skypSupport.Open(skypPath, null));
             Assert.IsTrue(errDlg.Message.Contains(string.Format(
                 Resources
                     .SkypSupport_Download_You_may_have_to_add__0__as_a_Panorama_server_from_the_Tools___Options_menu_in_Skyline_,
                 skyp.SkylineDocUri.Host)));
 
-            RunUI(() => { errDlg.ClickOk();});
+            RunUI(() => { errDlg.ClickCancel();});
             WaitForClosedForm(errDlg);
 
             skypSupport.DownloadClient = new TestDownladClient(skyZipPath, skyp.DownloadPath);
