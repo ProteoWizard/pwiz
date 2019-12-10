@@ -199,13 +199,26 @@ public:
         
         return value;
     }
+
+    double getDoubleAttrValueOr(const char* name, const XML_Char **attr, double defaultValue) {
+
+        const char* value = getAttrValue(name, attr);
+        if (strlen(value) == 0)
+            return defaultValue;
+        try
+        {
+            return lexical_cast<double>(value);
+        }
+        catch (bad_lexical_cast&)
+        {
+            throwParseError("The value '%s' in attribute '%s' could not be cast to .", value, name);
+        }
+    }
     
     /**
      * Returns the current position in the file in bytes.
      */
-    int getCurrentByteIndex(){
-        return XML_GetCurrentByteIndex(m_parser_);
-    }
+    boost::int64_t getCurrentByteIndex();
 
 protected:
     XML_Parser m_parser_;
@@ -221,6 +234,7 @@ protected:
      * Sax parsers can throw this error to be caught in parse() where
      * filename and line number info is added.
      */
+    [[ noreturn ]]
     void throwParseError(const char* format, ...)
     {
         va_list args;

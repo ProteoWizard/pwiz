@@ -53,7 +53,9 @@ namespace pwiz.Skyline.Model
                 return false;
             // Skip sequences that can be created from the current settings.
             TransitionGroupDocNode nodeGroup;
-            while (CreateDocNodeFromSettings(new Target(_sequences.Current), null, DIFF_GROUPS, out nodeGroup) != null)
+            // Check first if the sequence has any modifications, because creating doc nodes is expensive
+            while (!HasMods(_sequences.Current) ||
+                   CreateDocNodeFromSettings(new Target(_sequences.Current), null, DIFF_GROUPS, out nodeGroup) != null)
             {
                 if (!_sequences.MoveNext())
                     return false;

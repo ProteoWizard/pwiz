@@ -34,12 +34,16 @@ using ZedGraph;
 
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.Caching.Generic;
+using JWC;
+using pwiz.CLI.cv;
+using pwiz.CLI.msdata;
 using pwiz.Common.Collections;
 using SpyTools;
 
 namespace seems
 {
-    public partial class HeatmapForm : DockableForm
+    public partial class HeatmapForm : ManagedDockableForm
     {
         public pwiz.MSGraph.MSGraphControl ZedGraphControl { get { return msGraphControl; } }
 
@@ -51,16 +55,81 @@ namespace seems
             public double MaxY { get; set; }
         }
 
-        private struct MobilityBin
+        private struct MobilityData
         {
-            public MobilityBin(double ionMobility, int binIndex) : this()
+            public MobilityData(SpectrumList spectrumList, double scanTime, int startIndex, int endIndex) : this()
             {
-                IonMobility = ionMobility;
-                BinIndex = binIndex;
+                SpectrumList = spectrumList;
+                ScanTime = scanTime;
+                StartIndex = startIndex;
+                EndIndex = endIndex;
             }
 
-            public double IonMobility { get; private set; }
-            public int BinIndex { get; private set; }
+            public SpectrumList SpectrumList { get; private set; }
+            public double ScanTime { get; private set; }
+            public int StartIndex { get; private set; }
+            public int EndIndex { get; private set; }
+
+            public Tuple<List<Point3D>, BoundingBox> Get3dSpectrum()
+            {
+                var result = new Tuple<List<Point3D>, BoundingBox>(new List<Point3D>(),
+                    new BoundingBox
+                    {
+                        MinX = Double.MaxValue, MaxX = Double.MinValue, MinY = Double.MaxValue, MaxY = Double.MinValue
+                    });
+
+                var bounds = result.Item2;
+
+                if (StartIndex == EndIndex)
+                {
+                    var s = SpectrumList.spectrum(StartIndex, true);
+                    var mzArray = s.getMZArray().data.Storage();
+                    var intensityArray = s.getIntensityArray().data.Storage();
+                    var mobilityArray = s.GetIonMobilityArray();
+
+                    if (mobilityArray == null)
+                        throw new NullReferenceException("mobilityBDA");
+
+                    for (int j = 0, end = mzArray.Length; j < end; ++j)
+                    {
+                        double mz = mzArray[j];
+                        double intensity = intensityArray[j];
+                        double mobility = mobilityArray[j];
+
+                        bounds.MinX = Math.Min(bounds.MinX, mz);
+                        bounds.MinY = Math.Min(bounds.MinY, mobility);
+                        bounds.MaxX = Math.Max(bounds.MaxX, mz);
+                        bounds.MaxY = Math.Max(bounds.MaxY, mobility);
+
+                        result.Item1.Add(new Point3D(mz, mobility, intensity));
+                    }
+                }
+                else
+                {
+                    for (int i = StartIndex, end = EndIndex; i <= end; ++i)
+                    {
+                        var s = SpectrumList.spectrum(i, true);
+                        var mzArray = s.getMZArray().data.Storage();
+                        var intensityArray = s.getIntensityArray().data.Storage();
+                        var mobilityArray = s.GetIonMobilityArray();
+                        for (int j = 0; j < mzArray.Length; ++j)
+                        {
+                            double mz = mzArray[j];
+                            double intensity = intensityArray[j];
+                            double mobility = mobilityArray?.ElementAt(j) ?? (double) s.scanList.scans[0].cvParamChild(CVID.MS_ion_mobility_attribute).value;
+
+                            bounds.MinX = Math.Min(bounds.MinX, mz);
+                            bounds.MinY = Math.Min(bounds.MinY, mobility);
+                            bounds.MaxX = Math.Max(bounds.MaxX, mz);
+                            bounds.MaxY = Math.Max(bounds.MaxY, mobility);
+
+                            result.Item1.Add(new Point3D(mz, mobility, intensity));
+                        }
+                    }
+                }
+
+                return result;
+            }
         }
 
         private class ChromatogramControl : IMSGraphItemExtended
@@ -74,13 +143,14 @@ namespace seems
                 var ticColumn = dgv.Columns["TotalIonCurrent"];
                 var msLevelColumn = dgv.Columns["MsLevel"];
                 var ionMobilityColumn = dgv.Columns["IonMobility"];
+                var dataPointsColumn = dgv.Columns["DataPoints"];
 
                 IntensityByScanTime = new SortedList<double, double>(dgv.RowCount / 200);
 
                 for (int i = 0; i < dgv.RowCount; ++i)
                 {
                     int msLevel = (int) dgv[msLevelColumn.Index, i].Value;
-                    if (targetMsLevel != msLevel || (double) dgv[ionMobilityColumn.Index, i].Value == 0)
+                    if (targetMsLevel != msLevel || (double) dgv[ionMobilityColumn.Index, i].Value == 0 || Convert.ToInt32(dgv[dataPointsColumn.Index, i].Value) == 0)
                         continue;
 
                     double scanTime = (double) dgv[scanTimeColumn.Index, i].Value;
@@ -161,24 +231,22 @@ namespace seems
             public double SelectedTime { get; private set; }
         }
 
-        private List<BoundingBox> heatmapBoundsByMsLevel; // updated when scan time changes
         private List<ChromatogramControl> ticChromatogramByMsLevel; // 1 chromatogram per ms level
         private List<HeatMapGraphPane> heatmapGraphPaneByMsLevel; // 1 heatmap per ms level
-        private List<Map<double, List<MobilityBin>>> ionMobilityBinsByMsLevelAndScanTime;
-
-        private ManagedDataSource source;
-        private Manager manager;
+        private List<Map<double, MobilityData>> ionMobilityBinsByMsLevelAndScanTime;
+        private MemoryCache<MobilityData, Tuple<List<Point3D>, BoundingBox>> heatmapPointsCache;
+        private Map<double, List<string>> isolationMzByScanTime;
 
         public HeatmapForm(Manager manager, ManagedDataSource source)
         {
             InitializeComponent();
 
-            this.manager = manager;
-            this.source = source;
+            Manager = manager;
+            Source = source;
             heatmapGraphPaneByMsLevel = new List<HeatMapGraphPane>();
             ticChromatogramByMsLevel = new List<ChromatogramControl>();
-            heatmapBoundsByMsLevel = new List<BoundingBox>();
-            ionMobilityBinsByMsLevelAndScanTime = new List<Map<double, List<MobilityBin>>>();
+            ionMobilityBinsByMsLevelAndScanTime = new List<Map<double, MobilityData>>();
+            isolationMzByScanTime = new Map<double, List<string>>();
 
             msGraphControl.BorderStyle = BorderStyle.None;
 
@@ -205,7 +273,7 @@ namespace seems
             msGraphControl.ZoomEvent += msGraphControl_ZoomEvent;
             msGraphControl.IsEnableVZoom = msGraphControl.IsEnableVPan = true;
 
-            Text = TabText = source.Source.Name + " Heatmaps";
+            Text = TabText = source.Source.Name + " Ion Mobility Heatmaps";
 
             ContextMenuStrip dummyMenu = new ContextMenuStrip();
             dummyMenu.Opening += foo_Opening;
@@ -229,12 +297,12 @@ namespace seems
 
         void msGraphControl_ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState, PointF mousePosition)
         {
-            for (int i = 0; i < heatmapGraphPaneByMsLevel.Count; ++i)
+            /*for (int i = 0; i < heatmapGraphPaneByMsLevel.Count; ++i)
             {
                 var bounds = heatmapBoundsByMsLevel[i];
                 setScale(heatmapGraphPaneByMsLevel[i].XAxis.Scale, bounds.MinX, bounds.MaxX, true);
                 setScale(heatmapGraphPaneByMsLevel[i].YAxis.Scale, bounds.MinY, bounds.MaxY, true);
-            }
+            }*/
         }
 
         private void ShowHeatmap(double scanTime, int msLevel)
@@ -244,68 +312,27 @@ namespace seems
             var ionMobilityBinsByScanTime = ionMobilityBinsByMsLevelAndScanTime[msLevel];
             if (!ionMobilityBinsByScanTime.Contains(scanTime)) throw new ArgumentOutOfRangeException("scanTime", "no ion mobility bins for scan time " + scanTime);
 
-            var ionMobilityBins = ionMobilityBinsByScanTime[scanTime];
-            var heatmapPoints = new List<Point3D>(ionMobilityBins.Count);
 
             var heatmapGraphPane = heatmapGraphPaneByMsLevel[msLevel];
             heatmapGraphPane.CurveList.Clear();
             heatmapGraphPane.GraphObjList.Add(new TextObj("Loading...", 0.5, 0.5, CoordType.ChartFraction) {FontSpec = new FontSpec {Border = new Border {IsVisible = false}, IsBold = true, Size = 24}});
             msGraphControl.Refresh();
-            
-            var mainSpectrumList = source.Source.MSDataFile.run.spectrumList;
-            var bounds = heatmapBoundsByMsLevel[msLevel];
-            int lastBinIndex = -1;
-            foreach (var bin in ionMobilityBins)
-            {
-                // skip bins where the spectrum is the same as the last bin (that spectrum's points were added from its mobility array)
-                if (bin.BinIndex == lastBinIndex)
-                    continue;
-                lastBinIndex = bin.BinIndex;
 
-                var s = mainSpectrumList.spectrum(bin.BinIndex, true);
-                var mzArray = s.getMZArray().data;
-                var intensityArray = s.getIntensityArray().data;
-                var mobilityBDA = s.getArrayByCVID(pwiz.CLI.cv.CVID.MS_mean_drift_time_array);
-                if (mobilityBDA == null)
-                    mobilityBDA = s.getArrayByCVID(pwiz.CLI.cv.CVID.MS_mean_inverse_reduced_ion_mobility_array);
-
-                if (mobilityBDA != null)
-                {
-                    var mobilityArray = mobilityBDA.data;
-                    for (int j = 0, end = mzArray.Count; j < end; ++j)
-                    {
-                        double mz = mzArray[j];
-                        double intensity = intensityArray[j];
-                        double mobility = mobilityArray[j];
-                        bounds.MinX = Math.Min(bounds.MinX, mz);
-                        bounds.MinY = Math.Min(bounds.MinY, mobility);
-                        bounds.MaxX = Math.Max(bounds.MaxX, mz);
-                        bounds.MaxY = Math.Max(bounds.MaxY, mobility);
-
-                        heatmapPoints.Add(new Point3D(mz, mobility, intensity));
-                    }
-                }
-                else
-                {
-                    for (int j = 0, end = mzArray.Count; j < end; ++j)
-                    {
-                        double mz = mzArray[j];
-                        double intensity = intensityArray[j];
-                        bounds.MinX = Math.Min(bounds.MinX, mz);
-                        bounds.MinY = Math.Min(bounds.MinY, bin.IonMobility);
-                        bounds.MaxX = Math.Max(bounds.MaxX, mz);
-                        bounds.MaxY = Math.Max(bounds.MaxY, bin.IonMobility);
-
-                        heatmapPoints.Add(new Point3D(mz, bin.IonMobility, intensity));
-                    }
-                }
-            }
+            var mobilityData = ionMobilityBinsByScanTime[scanTime];
+            var heatmapPointsTuple = heatmapPointsCache.GetOrAdd(mobilityData, o => o.Get3dSpectrum(), mobilityData);
+            var bounds = heatmapPointsTuple.Item2;
 
             var g = msGraphControl.CreateGraphics();
-            var heatmapData = new HeatMapData(heatmapPoints);
+            var heatmapData = new HeatMapData(heatmapPointsTuple.Item1);
             heatmapGraphPane.GraphObjList.Clear(); // remove "Loading..."
             heatmapGraphPane.SetPoints(heatmapData, bounds.MinY, bounds.MaxY);
-            heatmapGraphPane.Title.Text = String.Format("Ion Mobility Heatmap (ms{0} @ {1:F4} min.)", msLevel + 1, scanTime);
+
+            string isolationMzTitle = String.Empty;
+            if (msLevel + 1 == 2)
+                isolationMzTitle = " for isolation m/z " + String.Join(", ", isolationMzByScanTime[scanTime].Distinct());
+
+            heatmapGraphPane.Title.Text = String.Format("Ion Mobility Heatmap (ms{0} @ {1:F4} {3}{2})", msLevel + 1, scanTime, isolationMzTitle,
+                Properties.Settings.Default.TimeInMinutes ? "min." : "sec.");
 
             setScale(heatmapGraphPane.XAxis.Scale, bounds.MinX, bounds.MaxX);
             setScale(heatmapGraphPane.YAxis.Scale, bounds.MinY, bounds.MaxY);
@@ -315,31 +342,60 @@ namespace seems
             msGraphControl.Refresh();
         }
 
+        private IEnumerable<DataGridViewRow> GetIonMobilityRows()
+        {
+            var dgv = Source.SpectrumListForm.GridView;
+            var ionMobilityColumn = dgv.Columns["IonMobility"];
+            var scanTimeColumn = dgv.Columns["ScanTime"];
+            var dataPointsColumn = dgv.Columns["DataPoints"];
+
+            foreach (DataGridViewRow row in dgv.Rows)
+            {
+                if ((ulong) row.Cells[dataPointsColumn.Index].Value == 0 ||
+                    (double) row.Cells[ionMobilityColumn.Index].Value == 0)
+                    continue;
+                yield return row;
+            }
+        }
+
+
+        private double ToDoubleOrDefault(object value, double defaultValue = 0)
+        {
+            double result;
+            if (Double.TryParse(value.ToString(), out result) == false)
+                result = defaultValue;
+
+            return result;
+        }
+
         protected override void OnShown(EventArgs e)
         {
-            var dgv = source.SpectrumListForm.GridView;
+            var dgv = Source.SpectrumListForm.GridView;
 
             var ionMobilityColumn = dgv.Columns["IonMobility"];
-            if (ionMobilityColumn == null || !ionMobilityColumn.Visible)
-                throw new InvalidOperationException("cannot show heatmap if SpectrumListForm doesn't have an IonMobility column");
+            //if (ionMobilityColumn == null || !ionMobilityColumn.Visible)
+            //    throw new InvalidOperationException("cannot show heatmap if SpectrumListForm doesn't have an IonMobility column");
 
             var scanTimeColumn = dgv.Columns["ScanTime"];
             var ticColumn = dgv.Columns["TotalIonCurrent"];
             var msLevelColumn = dgv.Columns["MsLevel"];
+            var isolationMzColumn = dgv.Columns["PrecursorInfo"];
             var dataPointsColumn = dgv.Columns["DataPoints"];
+            var indexColumn = dgv.Columns["Index"];
             var idColumn = dgv.Columns["Id"];
-            var mainSpectrumList = source.Source.MSDataFile.run.spectrumList;
+            var mainSpectrumList = Source.Source.MSDataFile.run.spectrumList;
             if (scanTimeColumn == null || ticColumn == null || msLevelColumn == null || dataPointsColumn == null)
                 throw new InvalidOperationException("scan time, TIC, ms level, and data points columns should never be null");
 
-            // build map of ms levels, to scan times, to scan indices
-
-            for (int i = 0; i < dgv.RowCount; ++i)
+            // build map of ms levels, to scan times, to scan indices;
+            // group keys are ms level and scan time, aggregated values are isolation m/z and spectrum index
+            var ionMobilityRows = GetIonMobilityRows().GroupBy(r => new Tuple<int, double>((int) r.Cells[msLevelColumn.Index].Value, (double) r.Cells[scanTimeColumn.Index].Value),
+                                                               r => new Tuple<double, int>(ToDoubleOrDefault(r.Cells[isolationMzColumn.Index].Value), r.Index));
+            foreach (var group in ionMobilityRows)
             {
-                int msLevel = (int) dgv[msLevelColumn.Index, i].Value - 1;
+                int msLevel = group.Key.Item1 - 1;
                 while (heatmapGraphPaneByMsLevel.Count <= msLevel)
                 {
-                    heatmapBoundsByMsLevel.Add(new BoundingBox { MinX = Double.MaxValue, MaxX = Double.MinValue, MinY = Double.MaxValue, MaxY = Double.MinValue });
                     heatmapGraphPaneByMsLevel.Add(new HeatMapGraphPane()
                     {
                         ShowHeatMap = true,
@@ -352,31 +408,16 @@ namespace seems
                         Title = {Text = String.Format("Ion Mobility Heatmap (ms{0})", msLevel+1), IsVisible = true},
                         LockYAxisAtZero = false
                     });
-                    ionMobilityBinsByMsLevelAndScanTime.Add(new Map<double, List<MobilityBin>>());
+                    ionMobilityBinsByMsLevelAndScanTime.Add(new Map<double, MobilityData>());
                 }
 
-                int dataPoints = Convert.ToInt32(dgv[dataPointsColumn.Index, i].Value);
-                if (dataPoints == 0)
-                    continue;
+                double scanTime = group.Key.Item2;
 
-                double scanTime = (double) dgv[scanTimeColumn.Index, i].Value;
-                double ionMobility = (double) dgv[ionMobilityColumn.Index, i].Value;
-                if (ionMobility == 0)
-                {
-                    var s = mainSpectrumList.spectrum(i, true);
-                    var mobilityArray = s.getArrayByCVID(pwiz.CLI.cv.CVID.MS_mean_drift_time_array);
-                    if (mobilityArray == null)
-                    {
-                        mobilityArray = s.getArrayByCVID(pwiz.CLI.cv.CVID.MS_mean_inverse_reduced_ion_mobility_array);
-                        if (mobilityArray == null)
-                            continue;
-                    }
-                    var mobilityBins = mobilityArray.data;
-                    foreach (double bin in mobilityBins)
-                        ionMobilityBinsByMsLevelAndScanTime[msLevel][scanTime].Add(new MobilityBin(bin, i));
-                }
-                else
-                    ionMobilityBinsByMsLevelAndScanTime[msLevel][scanTime].Add(new MobilityBin(ionMobility, i));
+                ionMobilityBinsByMsLevelAndScanTime[msLevel][scanTime] = new MobilityData(mainSpectrumList, scanTime,
+                                                                                          (int) group.Min(o => o.Item2),
+                                                                                          (int) group.Max(o => o.Item2));
+                if (msLevel + 1 == 2)
+                    isolationMzByScanTime[scanTime] = group.Select(o => o.Item1.ToString()).ToList();
 
                 //double intensity = (double) dgv[ticColumn.Index, i].Value;
             }
@@ -386,6 +427,8 @@ namespace seems
             int numColumns = ionMobilityBinsByMsLevelAndScanTime.Count(o => !o.IsNullOrEmpty()); // skip empty MS levels (e.g. files with only MS2)
             var rowCounts = new int[2] {numColumns, numColumns};
             msGraphControl.MasterPane.SetLayout(g, true, rowCounts, new float[2] {0.25f, 0.75f});
+
+            heatmapPointsCache = new MemoryCache<MobilityData, Tuple<List<Point3D>, BoundingBox>>(ionMobilityBinsByMsLevelAndScanTime.Count);
 
             // first row is control chromatograms
             for (int i = 0; i < heatmapGraphPaneByMsLevel.Count; ++i)
@@ -404,7 +447,7 @@ namespace seems
                 };
                 msGraphControl.MasterPane.Add(chromatogramPane);
 
-                ticChromatogramByMsLevel.Add(new ChromatogramControl(source, i + 1, chromatogramPane));
+                ticChromatogramByMsLevel.Add(new ChromatogramControl(Source, i + 1, chromatogramPane));
                 msGraphControl.AddGraphItem(chromatogramPane, ticChromatogramByMsLevel[i], true);
             }
 
@@ -419,7 +462,6 @@ namespace seems
 
                 heatmapGraphPane.GraphObjList.Add(new TextObj("Click on a chromatogram point to generate an IMS heatmap...", 0.5, 0.5, CoordType.ChartFraction) { FontSpec = new FontSpec { Border = new Border { IsVisible = false }, IsBold = true, Size = 16 } });
 
-                var bounds = heatmapBoundsByMsLevel[i];
                 setScale(heatmapGraphPane.XAxis.Scale, 0, 2000);
                 setScale(heatmapGraphPane.YAxis.Scale, 0, 100);
                 heatmapGraphPane.AxisChange(g);

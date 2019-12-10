@@ -239,7 +239,7 @@ namespace pwiz.Skyline.Model
             get
             {
                 return TextUtil.FileDialogFilter(Resources.SrmDocument_FILTER_DOC_AND_SKY_ZIP_Skyline_Files, EXT,
-                                                 SrmDocumentSharing.EXT_SKY_ZIP);
+                                                 SrmDocumentSharing.EXT_SKY_ZIP, SkypFile.EXT);
             }    
         }
 
@@ -516,7 +516,7 @@ namespace pwiz.Skyline.Model
             get
             {
                 return Molecules.SelectMany(
-                    node => node.TransitionGroups.Select(nodeGroup => nodeGroup.GetLibKey(node)));
+                    node => node.TransitionGroups.Select(nodeGroup => nodeGroup.GetLibKey(Settings, node)));
             }
         }
 

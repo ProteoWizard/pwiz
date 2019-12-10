@@ -71,6 +71,10 @@ namespace pwiz {
 namespace util {
 
 
+/// returns true iff process is Windows executable running under Wine
+PWIZ_API_DECL bool running_on_wine();
+
+
 /// on Windows, closes all file handles and memory mapped sections relating to the given filepath
 PWIZ_API_DECL void force_close_handles_to_filepath(const std::string& filepath, bool closeMemoryMappedSections = false) noexcept(true);
 

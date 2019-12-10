@@ -72,7 +72,7 @@ namespace TestRunner
         };
 
         // These tests are allowed to fail the total memory leak threshold, and extra iterations are not done to stabilize a spiky total memory distribution
-        public static string[] MutedTotalMemoryLeakTestNames = { "TestMs1Tutorial" };
+        public static string[] MutedTotalMemoryLeakTestNames = { "TestMs1Tutorial", "TestGroupStudiesTutorial" };
 
         private static int GetLeakCheckIterations(TestInfo test)
         {

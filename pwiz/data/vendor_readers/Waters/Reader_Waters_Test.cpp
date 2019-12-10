@@ -65,6 +65,9 @@ int main(int argc, char* argv[])
 
         config.combineIonMobilitySpectra = true;
         pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsIMSData(), config);
+
+        config.isolationMzAndMobilityFilter.emplace_back(4, 0.2);
+        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsIMSData(), config);
     }
     catch (exception& e)
     {
