@@ -359,7 +359,7 @@ namespace {
             collectPsms(proteins);
 
             // insert last PSM
-            if (currentPrecursorMz > 0)
+            if (!currentSequence.empty())
             {
                 auto& filePsms = fileMap_[tsvName_];
                 filePsms.push_back(currentPsm.release());
@@ -387,16 +387,18 @@ namespace {
                 return;
             }
 
-            if (line.mz != currentPrecursorMz || line.sequence != currentSequence)
+            if (!currentPsm)
+                throw std::runtime_error("NULL currentPsm");
+
+            if (line.mz != currentPsm->mz || line.sequence != currentSequence)
             {
-                if (currentPrecursorMz > 0 || currentSequence != "")
+                if (!currentSequence.empty())
                 {
                     // insert current PSM and start a new one
                     auto& filePsms = fileMap_[tsvName_];
                     filePsms.push_back(currentPsm.release());
                     currentPsm.reset(new TSVPSM);
                 }
-                currentPrecursorMz = line.mz;
                 currentSequence = line.sequence;
 
                 // store peptide-level attributes
