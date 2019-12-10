@@ -1808,8 +1808,7 @@ namespace pwiz.SkylineTestFunctional
 
             var fakePrositOutput = new PrositIntensityModel.PrositIntensityOutput(fakePrositOutputTensors);
             var ms2Spectrum = new PrositMS2Spectrum(Program.MainWindow.Document.Settings,
-                peptidePrecursorNCE.WithNCE((int) (input.NormalizedCollisionEnergy * 100.0f)), 0, fakePrositOutput,
-                spectrumDisplayInfo.SpectrumInfo is SpectrumInfoLibrary ? IsotopeLabelType.light : null);
+                peptidePrecursorNCE.WithNCE((int) (input.NormalizedCollisionEnergy * 100.0f)), 0, fakePrositOutput);
 
             // Compare the spectra
             AssertEx.AreEqualDeep(ms2Spectrum.SpectrumPeaks.Peaks, spectrumDisplayInfo.SpectrumPeaksInfo.Peaks);
