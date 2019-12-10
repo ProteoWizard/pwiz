@@ -323,7 +323,7 @@ namespace {
         {
             {"ProteinId", -1, TSVLine::insertProteinName},
             {"CollisionEnergy", -1, TSVLine::insertCE},
-            {"PrecursorIonMobility", -1, TSVLine::insertScore}
+            {"PrecursorIonMobility", -1, TSVLine::insertIonMobility}
         };
 
         OpenSwathAssayReader(BlibBuilder& maker, const char* tsvName, const ProgressIndicator* parentProgress)
@@ -378,6 +378,7 @@ namespace {
 
         private:
         double currentPrecursorMz = 0;
+        std::string currentSequence = "";
         unique_ptr<TSVPSM> currentPsm;
         void storeLine(const TSVLine& line, std::map<std::string, Protein>& proteins)
         {
@@ -386,9 +387,9 @@ namespace {
                 return;
             }
 
-            if (line.mz != currentPrecursorMz)
+            if (line.mz != currentPrecursorMz || line.sequence != currentSequence)
             {
-                if (currentPrecursorMz > 0)
+                if (currentPrecursorMz > 0 || currentSequence != "")
                 {
                     // insert current PSM and start a new one
                     auto& filePsms = fileMap_[tsvName_];
@@ -396,6 +397,7 @@ namespace {
                     currentPsm.reset(new TSVPSM);
                 }
                 currentPrecursorMz = line.mz;
+                currentSequence = line.sequence;
 
                 // store peptide-level attributes
 
@@ -422,9 +424,9 @@ namespace {
                     }
                 }
 
-                if (line.score > 0)
+                if (line.ionMobility > 0)
                 {
-                    currentPsm->ionMobility = line.score;
+                    currentPsm->ionMobility = line.ionMobility;
                     currentPsm->ionMobilityType = IONMOBILITY_DRIFTTIME_MSEC;
                 }
             }
