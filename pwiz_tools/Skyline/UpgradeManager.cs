@@ -56,7 +56,7 @@ namespace pwiz.Skyline
 
         private readonly Control _parentWindow;
         private readonly bool _startup;
-        private readonly AutoResetEvent _endUpdateEvent;
+        private AutoResetEvent _endUpdateEvent;
         private UpdateCheckDetails _updateInfo;
         private UpdateCompletedDetails _completeArgs;
 
@@ -79,7 +79,6 @@ namespace pwiz.Skyline
         {
             _parentWindow = parentWindow;
             _startup = startup;
-            _endUpdateEvent = new AutoResetEvent(false);
         }
 
         private Control ParentWindow
@@ -141,13 +140,33 @@ namespace pwiz.Skyline
                     ProgressValue = 0
                 })
                 {
-                    longWaitUpdate.PerformWork(ParentWindow, 500, broker =>
+                    AutoResetEvent endUpdateEvent = null;
+                    try
                     {
-                        BeginUpdate(broker);
-                        _endUpdateEvent.WaitOne();
-                        _endUpdateEvent.Dispose();
-                        broker.ProgressValue = 100;
-                    });
+                        lock (this)
+                        {
+                            Assume.IsNull(_endUpdateEvent);
+                            _endUpdateEvent = endUpdateEvent = new AutoResetEvent(false);
+                        }
+
+                        longWaitUpdate.PerformWork(ParentWindow, 500, broker =>
+                        {
+                            BeginUpdate(broker);
+                            endUpdateEvent.WaitOne();
+                            broker.ProgressValue = 100;
+                        });
+                    }
+                    finally
+                    {
+                        lock (this)
+                        {
+                            if (endUpdateEvent != null)
+                            {
+                                _endUpdateEvent = null;
+                            }
+                        }
+                        endUpdateEvent?.Dispose();
+                    }
                 }
                 if (_completeArgs == null || _completeArgs.Cancelled)
                     return;
@@ -229,7 +248,10 @@ namespace pwiz.Skyline
         private void update_Complete(UpdateCompletedDetails e)
         {
             _completeArgs = e;
-            _endUpdateEvent.Set();
+            lock (this)
+            {
+                _endUpdateEvent?.Set();
+            }
         }
 
         public interface IDeployment
