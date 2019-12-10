@@ -10907,4 +10907,10 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="IrtStandard_DocumentStream_No_document_to_import" xml:space="preserve">
     <value>No document to import</value>
   </data>
+  <data name="Skyline_Release" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Skyline_Release.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Skyline_Release1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Skyline_Release.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>

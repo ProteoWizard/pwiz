@@ -2783,6 +2783,7 @@
     <EmbeddedResource Include="Resources\PeptideIrt.bmp" />
     <EmbeddedResource Include="Resources\PeptideQc.bmp" />
     <EmbeddedResource Include="Resources\PeptideQcLib.bmp" />
+    <EmbeddedResource Include="Resources\Skyline_Release.bmp" />
     <EmbeddedResource Include="Resources\ToolUpdateAvailable.bmp" />
     <EmbeddedResource Include="Resources\directoryicon.png" />
     <EmbeddedResource Include="Model\IonMobility\mapping.xml">
@@ -2959,6 +2960,7 @@
     <EmbeddedResource Include="Resources\MoleculeIrt.bmp" />
     <EmbeddedResource Include="Resources\MoleculeIrtLib.bmp" />
     <EmbeddedResource Include="Resources\MoleculeStandardLib.bmp" />
+    <EmbeddedResource Include="Resources\Skyline_Release.ico" />
     <Content Include="SkylineDocPointer.ico" />
     <EmbeddedResource Include="Resources\prosit_logo_dark_blue.png" />
     <Content Include="SkylineProcessRunner.exe">

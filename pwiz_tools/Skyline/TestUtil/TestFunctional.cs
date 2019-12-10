@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -143,6 +144,18 @@ namespace pwiz.SkylineTestUtil
             test();
         }
 
+        private static Icon _defaultFormIcon;
+        public static Icon DefaultFormIcon
+        {
+            get
+            {
+                if (_defaultFormIcon == null)
+                    _defaultFormIcon = (Icon)typeof(Form).
+                        GetProperty("DefaultIcon", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)?.GetValue(null, null);
+
+                return _defaultFormIcon;
+            }
+        }
         protected static TDlg ShowDialog<TDlg>(Action act, int millis = -1) where TDlg : Form
         {
             var existingDialog = FindOpenForm<TDlg>();
@@ -156,6 +169,12 @@ namespace pwiz.SkylineTestUtil
             else
                 dlg = WaitForOpenForm<TDlg>(millis);
             Assert.IsNotNull(dlg);
+            //Making sure if the form has a visible icon it's Skyline release icon, not daily one.
+            if (dlg.Icon.Handle != DefaultFormIcon.Handle)
+                RunUI(() =>
+                {
+                    dlg.Icon = Skyline.Properties.Resources.Skyline_Release1;
+                });
             return dlg;
         }
 
@@ -1292,7 +1311,11 @@ namespace pwiz.SkylineTestUtil
             if (null != SkylineWindow)
             {
                 // Clean-up before running the test
-                RunUI(() => SkylineWindow.UseKeysOverride = true);
+                RunUI(() =>
+                {
+                    SkylineWindow.UseKeysOverride = true;
+                    SkylineWindow.Icon = Skyline.Properties.Resources.Skyline_Release1;
+                });
 
                 // Make sure the background proteome and sequence tree protein metadata loaders don't hit the web (unless they are meant to)
                 bool allowInternetAccess = AllowInternetAccess; // Local copy for easy change in debugger when needed

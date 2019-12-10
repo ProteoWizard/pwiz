@@ -182,15 +182,18 @@ namespace pwiz.SkylineTestTutorial
             WaitForCondition(() => Equals(8, SkylineWindow.GraphChromatograms.Count(graphChrom => !graphChrom.IsHidden)),
                 "unexpected visible graphChromatogram count");
 
-            RunUI( () => 
-                        {   //resize the window and activate the first standard chromatogram pane.
-                            RunUI(() => SkylineWindow.Size = new Size(1330, 720));
-                            var chrom = SkylineWindow.GraphChromatograms.First();
-                            chrom.Select();
-                        });
-
             WaitForCondition(10 * 60 * 1000,    // ten minutes
                 () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+
+            RunUI(() =>
+            {   //resize the window and activate the first standard chromatogram pane.
+                RunUI(() => SkylineWindow.Size = new Size(1330, 720));
+                var chrom = SkylineWindow.GraphChromatograms.First(
+                        (ch) => Equals("Standard_1", ch.NameSet)
+                ); 
+                chrom.Select();
+            });
+
             PauseForScreenShot("Main window with imported data", 9);
 
             // Analyzing SRM Data from FOXN1-GST Sample p. 9
