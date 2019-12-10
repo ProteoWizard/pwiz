@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
@@ -367,6 +368,11 @@ namespace pwiz.Skyline.Model.Irt
             }
         }
 
+        public SrmDocument ImportTo(SrmDocument document)
+        {
+            return ImportTo(document, null, out _);
+        }
+
         public SrmDocument ImportTo(SrmDocument document, PeptideLibraries.FindLibrary findLibrary, out IdentityPath firstAdded)
         {
             firstAdded = null;
@@ -389,6 +395,39 @@ namespace pwiz.Skyline.Model.Irt
                         false);
                 }
             }
+        }
+
+        public bool InDocument(SrmDocument document)
+        {
+            return !MissingPeptides(document).Any();
+        }
+
+        public IEnumerable<Target> MissingPeptides(SrmDocument document)
+        {
+            var standardDoc = GetDocument();
+            var docPeps = new TargetMap<Dictionary<int, SignedMz>>(standardDoc != null
+                ? standardDoc.Peptides.Select(pep =>
+                    new KeyValuePair<Target, Dictionary<int, SignedMz>>(pep.ModifiedTarget,
+                        pep.TransitionGroups.ToDictionary(nodeTranGroup => nodeTranGroup.PrecursorCharge, nodeTranGroup => nodeTranGroup.PrecursorMz)))
+                : Peptides.Select(pep => new KeyValuePair<Target, Dictionary<int, SignedMz>>(pep.ModifiedTarget, null)));
+            var docPepsFound = new TargetMap<int[]>(docPeps.Keys.Select(target => new KeyValuePair<Target, int[]>(target, new[] {0})));
+            var numDocPepsFound = 0;
+            // Compare precursor m/z to see if heavy labeled
+            foreach (var nodePep in document.Peptides)
+            {
+                var key = nodePep.ModifiedTarget;
+                if (!docPeps.TryGetValue(key, out var precursors) || docPepsFound[key][0] > 0)
+                    continue;
+
+                if (precursors == null || nodePep.TransitionGroups.Any(nodeTranGroup =>
+                        precursors.TryGetValue(nodeTranGroup.PrecursorCharge, out var mz) && Math.Abs(mz - nodeTranGroup.PrecursorMz) < 1))
+                {
+                    docPepsFound[key][0] = 1;
+                    if (++numDocPepsFound == docPeps.Count)
+                        return new Target[0];
+                }
+            }
+            return docPepsFound.Where(pep => pep.Value[0] == 0).Select(pep => pep.Key);
         }
 
         /// <summary>

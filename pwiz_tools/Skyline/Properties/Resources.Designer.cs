@@ -26020,16 +26020,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} distinct CiRT peptides were found. Would you like to use them as iRT standards? If so, how many?.
-        /// </summary>
-        public static string SkylineWindow_ImportMassListIrts__0__distinct_CiRT_peptides_were_found__Would_you_like_to_use_them_as_iRT_standards__If_so__how_many_ {
-            get {
-                return ResourceManager.GetString("SkylineWindow_ImportMassListIrts__0__distinct_CiRT_peptides_were_found__Would_you" +
-                        "_like_to_use_them_as_iRT_standards__If_so__how_many_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Data columns not found in first line..
         /// </summary>
         public static string SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line {

@@ -27,6 +27,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -36,22 +37,27 @@ namespace pwiz.Skyline.FileUI
     {
         public SrmDocument Document { get; private set; }
         private readonly string _documentFilePath;
+        private readonly ICollection<DbIrtPeptide> _dbIrtPeptides;
 
         public string IrtFile { get; private set; }
         private List<MeasuredRetentionTime> _irtPeptides;
         private List<SpectrumMzInfo> _librarySpectra;
-        private HashSet<string> _irtPeptideSequences;
+        private TargetMap<bool> _irtTargets;
 
-        public ChooseIrtStandardPeptidesDlg(SrmDocument document, string documentFilePath, IEnumerable<PeptideGroupDocNode> peptideGroups)
+        public ChooseIrtStandardPeptidesDlg(SrmDocument document, string documentFilePath, ICollection<DbIrtPeptide> dbIrtPeptides, IEnumerable<PeptideGroupDocNode> peptideGroups)
         {
             InitializeComponent();
 
             Document = document;
             _documentFilePath = documentFilePath;
+            _dbIrtPeptides = dbIrtPeptides;
 
             _librarySpectra = new List<SpectrumMzInfo>();
             _irtPeptides = new List<MeasuredRetentionTime>();
-            _irtPeptideSequences = null;
+            _irtTargets = null;
+
+            comboExisting.Items.AddRange(IrtStandard.ALL.Where(standard => !standard.Name.Equals(IrtStandard.EMPTY.Name)).Cast<object>().ToArray());
+            comboExisting.SelectedIndex = 0;
 
             PeptideGroupDocNode[] proteinsContainingCommonIrts, proteinsNotContainingCommonIrts;
             CreateIrtCalculatorDlg.SeparateProteinGroups(peptideGroups, out proteinsContainingCommonIrts, out proteinsNotContainingCommonIrts);
@@ -68,8 +74,8 @@ namespace pwiz.Skyline.FileUI
         {
             librarySpectra.AddRange(_librarySpectra);
             dbIrtPeptides.AddRange(_irtPeptides.Select(rt => new DbIrtPeptide(rt.PeptideSequence, rt.RetentionTime, true, TimeSource.scan)));
-            if (_irtPeptideSequences != null)
-                dbIrtPeptides.ForEach(pep => pep.Standard = _irtPeptideSequences.Contains(pep.PeptideModSeq));
+            if (_irtTargets != null)
+                dbIrtPeptides.ForEach(pep => pep.Standard = _irtTargets.ContainsKey(pep.ModifiedTarget));
         }
 
         private void btnOk_Click(object sender, EventArgs e)
@@ -79,7 +85,39 @@ namespace pwiz.Skyline.FileUI
 
         public void OkDialog()
         {
-            if (radioProtein.Checked)
+            if (radioExisting.Checked)
+            {
+                var standard = (IrtStandard) comboExisting.SelectedItem;
+
+                var usingCirtAll = false;
+                if (ReferenceEquals(standard, IrtStandard.CIRT_SHORT))
+                {
+                    var knownIrts = new TargetMap<double>(IrtStandard.CIRT.Peptides.Select(pep => new KeyValuePair<Target, double>(pep.ModifiedTarget, pep.Irt)));
+                    var cirtPeptides = _dbIrtPeptides.Where(pep => knownIrts.ContainsKey(pep.ModifiedTarget)).ToArray();
+                    var foundCirts = cirtPeptides.Select(pep => pep.ModifiedTarget).Distinct().Count();
+                    if (foundCirts > RCalcIrt.MIN_PEPTIDES_COUNT)
+                    {
+                        using (var dlg = new AddIrtStandardsDlg(foundCirts,
+                            string.Format(
+                                Resources.LibraryBuildNotificationHandler_AddIrts__0__distinct_CiRT_peptides_were_found__How_many_would_you_like_to_use_as_iRT_standards_, foundCirts)))
+                        {
+                            if (dlg.ShowDialog(this) != DialogResult.OK)
+                                return;
+
+                            _irtPeptides.AddRange(IrtPeptidePicker.Pick(dlg.StandardCount, cirtPeptides)
+                                .Select(pep => new MeasuredRetentionTime(pep, knownIrts[pep], true, true)));
+                            usingCirtAll = true;
+                        }
+                    }
+                }
+
+                if (!usingCirtAll && standard.HasDocument && !standard.InDocument(Document))
+                {
+                    _irtPeptides.AddRange(standard.Peptides.Select(pep => new MeasuredRetentionTime(pep.ModifiedTarget, pep.Irt, true, true)));
+                    Document = standard.ImportTo(Document);
+                }
+            }
+            else if (radioProtein.Checked)
             {
                 if (comboProteins.SelectedIndex == -1)
                 {
@@ -87,22 +125,15 @@ namespace pwiz.Skyline.FileUI
                     comboProteins.Focus();
                     return;
                 }
-                var peptideGroupItem = comboProteins.SelectedItem as PeptideGroupItem;
-                if (peptideGroupItem != null)
+                var protein = ((PeptideGroupItem) comboProteins.SelectedItem).PeptideGroup;
+                _irtTargets = new TargetMap<bool>(protein.Peptides.Select(pep => new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)));
+                if (Document.PeptideGroupCount > 0)
                 {
-                    var protein = peptideGroupItem.PeptideGroup;
-                    _irtPeptideSequences = new HashSet<string>();
-                    foreach (var peptide in protein.Peptides)
-                        _irtPeptideSequences.Add(peptide.ModifiedSequence);
-                    if (Document.PeptideGroupCount > 0)
+                    var pathFrom = Document.GetPathTo(Document.FindNodeIndex(protein.Id));
+                    var pathTo = Document.GetPathTo(Document.FindNodeIndex(Document.PeptideGroups.First().Id));
+                    if (!Equals(pathFrom, pathTo))
                     {
-                        var pathFrom = Document.GetPathTo(Document.FindNodeIndex(protein.Id));
-                        var pathTo = Document.GetPathTo(Document.FindNodeIndex(Document.PeptideGroups.First().Id));
-                        if (!Equals(pathFrom, pathTo))
-                        {
-                            IdentityPath newLocation;
-                            Document = Document.MoveNode(pathFrom, pathTo, out newLocation);
-                        }
+                        Document = Document.MoveNode(pathFrom, pathTo, out _);
                     }
                 }
             }
@@ -116,10 +147,8 @@ namespace pwiz.Skyline.FileUI
                 }
                 try
                 {
-                    IdentityPath selectPath;
-                    List<TransitionImportErrorInfo> errorList;
                     var inputs = new MassListInputs(txtTransitionList.Text);
-                    Document = Document.ImportMassList(inputs, new IdentityPath(Document.PeptideGroups.First().Id), out selectPath, out _irtPeptides, out _librarySpectra, out errorList);
+                    Document = Document.ImportMassList(inputs, new IdentityPath(Document.PeptideGroups.First().Id), out _, out _irtPeptides, out _librarySpectra, out var errorList);
                     if (errorList.Any())
                         throw new InvalidDataException(errorList[0].ErrorMessage);
                     IrtFile = txtTransitionList.Text;
@@ -135,10 +164,9 @@ namespace pwiz.Skyline.FileUI
 
         private void UpdateSelection(object sender, EventArgs e)
         {
-            var protein = radioProtein.Checked;
-            comboProteins.Enabled = protein;
-            txtTransitionList.Enabled = !protein;
-            btnBrowseTransitionList.Enabled = !protein;
+            comboExisting.Enabled = radioExisting.Checked;
+            comboProteins.Enabled = radioProtein.Checked;
+            txtTransitionList.Enabled = btnBrowseTransitionList.Enabled = radioTransitionList.Checked;
         }
 
         private void btnBrowseTransitionList_Click(object sender, EventArgs e)

@@ -2123,8 +2123,6 @@ namespace pwiz.Skyline
 
                 // Try to guess iRT standards
                 var matchingStandards = IrtStandard.ALL.Where(standard => standard.IsSubset(dbIrtPeptides, null)).ToList();
-                if (matchingStandards.Count == 2 && matchingStandards.Contains(IrtStandard.BIOGNOSYS_10) && matchingStandards.Contains(IrtStandard.BIOGNOSYS_11))
-                    matchingStandards = new List<IrtStandard> { IrtStandard.BIOGNOSYS_11 };
 
                 // Remove standards that don't actually match (heavy label check with precursor m/zs)
                 for (var i = matchingStandards.Count - 1; i >= 0; i--)
@@ -2149,46 +2147,25 @@ namespace pwiz.Skyline
                         matchingStandards.RemoveAt(i);
                 }
 
+                if (matchingStandards.Count == 2 && matchingStandards.Contains(IrtStandard.BIOGNOSYS_10) && matchingStandards.Contains(IrtStandard.BIOGNOSYS_11))
+                    matchingStandards = new List<IrtStandard> { IrtStandard.BIOGNOSYS_11 };
+
                 if (matchingStandards.Count == 1)
                 {
                     IrtPeptidePicker.SetStandards(dbIrtPeptides, matchingStandards[0]);
                 }
                 else
                 {
-                    // Check for CiRT
-                    var knownIrts = new TargetMap<double>(IrtStandard.CIRT.Peptides.Select(pep => new KeyValuePair<Target, double>(pep.ModifiedTarget, pep.Irt)));
-                    var cirtPeptides = dbIrtPeptides.Where(pep => knownIrts.ContainsKey(pep.ModifiedTarget)).ToArray();
-                    var foundCirts = cirtPeptides.Select(pep => pep.ModifiedTarget).Distinct().Count();
-                    var standardCount = 0;
-                    if (foundCirts > RCalcIrt.MIN_PEPTIDES_COUNT)
+                    // Ask for standards
+                    using (var dlg = new ChooseIrtStandardPeptidesDlg(doc, DocumentFilePath, dbIrtPeptides, peptideGroups))
                     {
-                        using (var dlg = new AddIrtStandardsDlg(foundCirts,
-                            string.Format(
-                                Resources.SkylineWindow_ImportMassListIrts__0__distinct_CiRT_peptides_were_found__Would_you_like_to_use_them_as_iRT_standards__If_so__how_many_,
-                                foundCirts), true))
-                        {
-                            if (dlg.ShowDialog(this) == DialogResult.OK)
-                                standardCount = dlg.StandardCount;
-                        }
-                    }
+                        if (dlg.ShowDialog(this) != DialogResult.OK)
+                            return false;
 
-                    if (standardCount > 0)
-                    {
-                        IrtPeptidePicker.SetStandards(dbIrtPeptides, IrtPeptidePicker.Pick(standardCount, cirtPeptides));
-                    }
-                    else
-                    {
-                        // Ask for standards
-                        using (var dlg = new ChooseIrtStandardPeptidesDlg(doc, DocumentFilePath, peptideGroups))
-                        {
-                            if (dlg.ShowDialog(this) != DialogResult.OK)
-                                return false;
-
-                            doc = dlg.Document;
-                            dlg.UpdateLists(librarySpectra, dbIrtPeptides);
-                            if (!string.IsNullOrEmpty(dlg.IrtFile))
-                                irtInputs = new MassListInputs(dlg.IrtFile);
-                        }
+                        doc = dlg.Document;
+                        dlg.UpdateLists(librarySpectra, dbIrtPeptides);
+                        if (!string.IsNullOrEmpty(dlg.IrtFile))
+                            irtInputs = new MassListInputs(dlg.IrtFile);
                     }
                 }
 
@@ -2211,7 +2188,8 @@ namespace pwiz.Skyline
                     TextUtil.LineSeparate(messageOverwrite, conflicts.Count == 1
                         ? Resources.SkylineWindow_ImportMassList_Keep_the_existing_iRT_value_or_overwrite_with_the_imported_value_
                         : Resources.SkylineWindow_ImportMassList_Keep_the_existing_iRT_values_or_overwrite_with_imported_values_),
-                        Resources.SkylineWindow_ImportMassList__Keep, Resources.SkylineWindow_ImportMassList__Overwrite, true);
+                    Resources.SkylineWindow_ImportMassList__Keep, Resources.SkylineWindow_ImportMassList__Overwrite,
+                    true);
                 if (overwriteResult == DialogResult.Cancel)
                     return false;
                 overwriteExisting = overwriteResult == DialogResult.No;

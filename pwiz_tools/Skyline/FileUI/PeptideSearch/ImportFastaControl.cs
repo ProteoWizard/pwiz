@@ -412,17 +412,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return false;
 
                 // Add iRT standards if not present
-                if (irtStandard != null && irtStandard.HasDocument)
-                {
-                    var standardMap = new TargetMap<bool>(irtStandard.Peptides.Select(pep => new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)));
-                    var docStandards = new TargetMap<bool>(docNew.Peptides
-                        .Where(nodePep => standardMap.ContainsKey(nodePep.ModifiedTarget)).Select(nodePep =>
-                            new KeyValuePair<Target, bool>(nodePep.ModifiedTarget, true)));
-                    if (irtStandard.Peptides.Any(pep => !docStandards.ContainsKey(pep.ModifiedTarget)))
-                    {
-                        docNew = irtStandard.ImportTo(docNew, null, out _);
-                    }
-                }
+                if (irtStandard != null && irtStandard.HasDocument && !irtStandard.InDocument(docNew))
+                    docNew = irtStandard.ImportTo(docNew);
 
                 if (AutoTrain)
                 {

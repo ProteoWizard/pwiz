@@ -39,19 +39,13 @@ namespace pwiz.Skyline.SettingsUI.Irt
             labelMessage.Text = string.Format(!peptidesExcluded ? labelMessage.Text : Resources.AddIrtStandardsDlg_AddIrtStandardsDlg_MessagePeptidesExcluded, peptideCount);
         }
 
-        public AddIrtStandardsDlg(int peptideCount, string message, bool yesNo = false)
+        public AddIrtStandardsDlg(int peptideCount, string message)
         {
             _peptideCount = peptideCount;
 
             InitializeComponent();
 
             labelMessage.Text = message;
-
-            if (yesNo)
-            {
-                btnOk.Text = MultiButtonMsgDlg.BUTTON_YES;
-                btnCancel.Text = MultiButtonMsgDlg.BUTTON_NO;
-            }
         }
 
         public int StandardCount
