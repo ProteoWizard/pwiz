@@ -313,7 +313,7 @@ namespace {
             {"PrecursorCharge", -1, TSVLine::insertCharge},
             {"PrecursorMz", -1, TSVLine::insertMz},
             {"Decoy", -1, TSVLine::insertDecoy},
-            {"ProductMz", -1, TSVLine::insertLeftWidth},
+            {"ProductMz", -1, TSVLine::insertProductMz}, // populates leftWidth field
             {"LibraryIntensity", -1, TSVLine::insertPeakArea},
             {"FragmentType", -1, TSVLine::insertFragmentAnnotation},
             {"FragmentSeriesNumber", -1, TSVLine::insertFragmentSeriesNumber}
