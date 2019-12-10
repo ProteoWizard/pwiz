@@ -125,14 +125,16 @@ namespace pwiz.Skyline.Model
     {
         private SkylineWindow _skyline;
 
-        public IDownloadClient DownloadClient { get; set; }
+        public DownloadClientCreator DownloadClientCreator { private get; set; }
 
         public const string ERROR401 = "(401) Unauthorized";
         public const string ERROR403 = "(403) Forbidden";
+        private int _retryRemaining = 3;
 
         public SkypSupport(SkylineWindow skyline)
         {
             _skyline = skyline;
+            DownloadClientCreator = new DownloadClientCreator();
         }
 
         public bool Open(string skypPath, IEnumerable<Server> servers, FormEx parentWindow = null)
@@ -155,7 +157,7 @@ namespace pwiz.Skyline.Model
             }
             catch (Exception e)
             {
-                if (skyp != null && e.Message.Contains(AddPanoramaServerMessage(skyp)))
+                if (_retryRemaining-- > 0 && skyp != null && e.Message.Contains(AddPanoramaServerMessage(skyp)))
                 {
                     return AddServerAndOpen(skypPath, e.Message, parentWindow);
                 }
@@ -198,18 +200,15 @@ namespace pwiz.Skyline.Model
                 new ProgressStatus(string.Format(Resources.SkypSupport_Download_Downloading__0_, skyp.SkylineDocUri));
             progressMonitor.UpdateProgress(progressStatus);
 
-            if (DownloadClient == null || DownloadClient is WebDownloadClient)
-            {
-                DownloadClient = new WebDownloadClient(progressMonitor, progressStatus);
-            }
+            var downloadClient = DownloadClientCreator.Create(progressMonitor, progressStatus);
 
-            DownloadClient.Download(skyp.SkylineDocUri, skyp.DownloadPath, skyp.Server?.Username, skyp.Server?.Password);
+            downloadClient.Download(skyp.SkylineDocUri, skyp.DownloadPath, skyp.Server?.Username, skyp.Server?.Password);
 
-            if (progressMonitor.IsCanceled || DownloadClient.IsError)
+            if (progressMonitor.IsCanceled || downloadClient.IsError)
             {
                 FileEx.SafeDelete(skyp.DownloadPath, true);
             }
-            if (DownloadClient.IsError)
+            if (downloadClient.IsError)
             {
                 var message =
                     string.Format(
@@ -217,9 +216,9 @@ namespace pwiz.Skyline.Model
                             .SkypSupport_Download_There_was_an_error_downloading_the_Skyline_document_specified_in_the_skyp_file___0__,
                         skyp.SkylineDocUri);
 
-                if (DownloadClient.Error != null)
+                if (downloadClient.Error != null)
                 {
-                    var exceptionMsg = DownloadClient.Error.Message;
+                    var exceptionMsg = downloadClient.Error.Message;
                     message = TextUtil.LineSeparate(message, exceptionMsg);
 
                     if (exceptionMsg.Contains(ERROR401))
@@ -235,7 +234,7 @@ namespace pwiz.Skyline.Model
                     }
                 }
 
-                throw new Exception(message, DownloadClient.Error);
+                throw new Exception(message, downloadClient.Error);
             }
         }
 
@@ -258,7 +257,7 @@ namespace pwiz.Skyline.Model
         public bool IsError => ProgressStatus != null && ProgressStatus.IsError;
         public Exception Error => ProgressStatus?.ErrorException;
 
-        public WebDownloadClient(IProgressMonitor progressMonitor, ProgressStatus progressStatus)
+        public WebDownloadClient(IProgressMonitor progressMonitor, IProgressStatus progressStatus)
         {
             ProgressMonitor = progressMonitor;
             ProgressStatus = progressStatus;
@@ -311,5 +310,13 @@ namespace pwiz.Skyline.Model
         bool IsCancelled { get; }
         bool IsError { get; }
         Exception Error { get; }
+    }
+
+    public class DownloadClientCreator
+    {
+        public virtual IDownloadClient Create(IProgressMonitor progressMonitor, IProgressStatus progressStatus)
+        {
+            return new WebDownloadClient(progressMonitor, progressStatus);
+        }
     }
 }
