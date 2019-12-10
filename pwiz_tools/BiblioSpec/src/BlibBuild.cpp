@@ -173,8 +173,8 @@ int main(int argc, char* argv[])
                     ShimadzuMLBReader mlbReader(builder, result_file, progress_cptr);
                     success = mlbReader.parseFile();
                 } else if (has_extension(result_file, ".tsv")) {
-                    TSVReader tsvReader(builder, result_file, progress_cptr);
-                    success = tsvReader.parseFile();
+                    auto tsvReader = TSVReader::create(builder, result_file, progress_cptr);
+                    success = tsvReader->parseFile();
                 } else if (has_extension(result_file, ".osw")) {
                     OSWReader oswReader(builder, result_file, progress_cptr);
                     success = oswReader.parseFile();
