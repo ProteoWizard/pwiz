@@ -10904,4 +10904,7 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="WebPanoramaPublishClient_SendZipFile_Status_on_server_is___0_" xml:space="preserve">
     <value>Status on server is: {0}</value>
   </data>
+  <data name="IrtStandard_DocumentStream_No_document_to_import" xml:space="preserve">
+    <value>No document to import</value>
+  </data>
 </root>

@@ -360,6 +360,7 @@ namespace pwiz.SkylineTestFunctional
             // 16. Attempt to create iRT calculator, then cancel, leaves the document the same
             var documentBlank = TestFilesDir.GetTestPath("AQUA4_Human_Blank.sky");
             var docCreateIrtCancel = LoadDocument(documentBlank);
+            docCreateIrtCancel = AllowAllIonTypes();
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textConflict), importIrt =>
             {
                 Assert.AreEqual(importIrt.Message,
@@ -494,6 +495,7 @@ namespace pwiz.SkylineTestFunctional
             // 355 transitions, libraries, and iRT times are imported, including libraries for the iRT times
             var docCalcGood = LoadDocument(documentBlank);
             Assert.AreEqual(0, docCalcGood.PeptideTransitions.Count());
+            AllowAllIonTypes();
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textConflict), importIrt => importIrt.Btn0Click());
             var createIrtCalcGood = WaitForOpenForm<CreateIrtCalculatorDlg>();
             RunUI(() =>
@@ -865,6 +867,16 @@ namespace pwiz.SkylineTestFunctional
 
         }
 
+        private static SrmDocument AllowAllIonTypes()
+        {
+            RunUI(() => SkylineWindow.ModifyDocument("Allow all fragment ions - because test file contains a2", doc =>
+            {
+                return doc.ChangeSettings(doc.Settings.ChangeTransitionFilter(f =>
+                    f.ChangePeptideIonTypes(Transition.PEPTIDE_ION_TYPES)));
+            }));
+            return SkylineWindow.Document;
+        }
+
         private static void VerifyEmptyRTRegression()
         {
             RetentionTimeRegression rtRegression;
@@ -1036,6 +1048,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var documentBlank = TestFilesDir.GetTestPath("AQUA4_Human_Blank.sky");
             LoadDocument(documentBlank);
+            AllowAllIonTypes();
             string textEmbedded = TestFilesDir.GetTestPath("OpenSWATH_SM4_Combined.csv");
             RemoveColumn(textEmbedded, 11); // Remove bad modified sequence column that import would use
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textEmbedded), importIrt => importIrt.Btn0Click());
@@ -1108,6 +1121,7 @@ namespace pwiz.SkylineTestFunctional
             doc = WaitForDocumentChange(doc);
 
             // Import assay library and choose a file
+            AllowAllIonTypes();
             var irtCsvFile = TestFilesDir.GetTestPath("OpenSWATH_SM4_iRT.csv");
             var overwriteDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ImportAssayLibrary(csvFile));
             var chooseIrt2 = ShowDialog<ChooseIrtStandardPeptidesDlg>(overwriteDlg.BtnYesClick);

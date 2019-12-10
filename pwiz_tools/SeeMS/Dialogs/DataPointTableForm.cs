@@ -29,6 +29,8 @@ using System.Text;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using ZedGraph;
+using pwiz.CLI.cv;
+using pwiz.CLI.msdata;
 
 namespace seems
 {
@@ -36,14 +38,22 @@ namespace seems
     {
         private GraphItem item;
         private IPointList pointList;
+        private MassSpectrum spectrum;
+        private double[] mobilityArray;
 
         public DataPointTableForm(GraphItem graphItem)
         {
             InitializeComponent();
 
             item = graphItem;
-            pointList = item.Points;
-            dataGridView.Rows.Insert( 0, pointList.Count );
+            spectrum = item as MassSpectrum;
+            dataGridView.VirtualMode = true;
+            //dataGridView.Rows.Insert( 0, pointList.Count );
+
+            Refresh();
+
+            if (mobilityArray != null)
+                dataGridView.Columns.Add("mobility", "Ion Mobility");
         }
 
         private void dataGridView_CellValueNeeded( object sender, DataGridViewCellValueEventArgs e )
@@ -53,8 +63,12 @@ namespace seems
 
             if( e.ColumnIndex == 0 )
                 e.Value = pointList[e.RowIndex].X;
-            else
+            else if (e.ColumnIndex == 1)
                 e.Value = pointList[e.RowIndex].Y;
+            else
+            {
+                e.Value = mobilityArray[e.RowIndex];
+            }
         }
 
         /// <summary>
@@ -63,6 +77,13 @@ namespace seems
         public override void Refresh()
         {
             pointList = item.Points;
+            dataGridView.RowCount = pointList.Count;
+
+            if (item.Id.StartsWith("merged="))
+            {
+                var s = item.Source.Source.MSDataFile.run.spectrumList.spectrum(spectrum.Index, true);
+                mobilityArray = s.GetIonMobilityArray();
+            }
             base.Refresh();
         }
 
