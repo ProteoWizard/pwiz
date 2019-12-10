@@ -98,6 +98,9 @@ public:
     static void insertRightWidth(TSVLine& line, const std::string& value) {
         line.rightWidth = value.empty() ? 0 : lexical_cast<double>(value) / 60;
     }
+    static void insertProductMz(TSVLine& line, const std::string& value) {
+        line.leftWidth = value.empty() ? 0 : lexical_cast<double>(value);
+    }
     static void insertPeakArea(TSVLine& line, const std::string& value) {
         line.peakArea = value;
     }
