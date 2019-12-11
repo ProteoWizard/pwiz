@@ -323,7 +323,7 @@ namespace {
         {
             {"ProteinId", -1, TSVLine::insertProteinName},
             {"CollisionEnergy", -1, TSVLine::insertCE},
-            {"PrecursorIonMobility", -1, TSVLine::insertScore}
+            {"PrecursorIonMobility", -1, TSVLine::insertIonMobility}
         };
 
         OpenSwathAssayReader(BlibBuilder& maker, const char* tsvName, const ProgressIndicator* parentProgress)
@@ -359,7 +359,7 @@ namespace {
             collectPsms(proteins);
 
             // insert last PSM
-            if (currentPrecursorMz > 0)
+            if (!currentSequence.empty())
             {
                 auto& filePsms = fileMap_[tsvName_];
                 filePsms.push_back(currentPsm.release());
@@ -370,7 +370,7 @@ namespace {
             for (map< string, vector<TSVPSM*> >::iterator i = fileMap_.begin(); i != fileMap_.end(); ++i) {
                 psms_.assign(i->second.begin(), i->second.end());
                 setSpecFileName(i->first.c_str(), false);
-                buildTables(GENERIC_QVALUE, i->first, false);
+                buildTables(UNKNOWN_SCORE_TYPE, i->first, false);
             }
 
             return true;
@@ -378,6 +378,7 @@ namespace {
 
         private:
         double currentPrecursorMz = 0;
+        std::string currentSequence = "";
         unique_ptr<TSVPSM> currentPsm;
         void storeLine(const TSVLine& line, std::map<std::string, Protein>& proteins)
         {
@@ -386,16 +387,19 @@ namespace {
                 return;
             }
 
-            if (line.mz != currentPrecursorMz)
+            if (!currentPsm)
+                throw std::runtime_error("NULL currentPsm");
+
+            if (line.mz != currentPsm->mz || line.sequence != currentSequence)
             {
-                if (currentPrecursorMz > 0)
+                if (!currentSequence.empty())
                 {
                     // insert current PSM and start a new one
                     auto& filePsms = fileMap_[tsvName_];
                     filePsms.push_back(currentPsm.release());
                     currentPsm.reset(new TSVPSM);
                 }
-                currentPrecursorMz = line.mz;
+                currentSequence = line.sequence;
 
                 // store peptide-level attributes
 
@@ -422,9 +426,9 @@ namespace {
                     }
                 }
 
-                if (line.score > 0)
+                if (line.ionMobility > 0)
                 {
-                    currentPsm->ionMobility = line.score;
+                    currentPsm->ionMobility = line.ionMobility;
                     currentPsm->ionMobilityType = IONMOBILITY_DRIFTTIME_MSEC;
                 }
             }
