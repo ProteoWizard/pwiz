@@ -245,6 +245,7 @@ namespace pwiz.Skyline.Model.Irt
             var matchedStandard = IrtStandard.WhichStandard(standardPeptideList.Select(pep => pep.ModifiedTarget));
             if (matchedStandard != null && matchedStandard.HasDocument)
             {
+                // Import iRT standard document into an empty document (rather than just getting the document), because importing also imports the modifications
                 var standardDoc = matchedStandard.ImportTo(new SrmDocument(SrmSettingsList.GetDefault()), null, out _);
                 standardPeptideList = standardPeptideList.Select(pep => new DbIrtPeptide(pep)).ToArray();
                 foreach (var dummyPep in standardDoc.Molecules.Where(pep => pep.HasExplicitMods))
