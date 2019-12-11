@@ -361,7 +361,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
                     try
                     {
                         var skyIn = new PrositIntensityModel.PeptidePrecursorNCE(Peptide,
-                            Precursor, NCE);
+                            Precursor, Precursor.LabelType, NCE);
                         var massSpectrum = IntensityModel.PredictSingle(Client,
                             Settings, skyIn,
                             _tokenSource.Token);

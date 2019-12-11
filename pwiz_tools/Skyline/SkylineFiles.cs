@@ -2990,16 +2990,14 @@ namespace pwiz.Skyline
                     }
                     // Restore the original set, updating those to be reimported  with current centroiding
                     // settings and requesting 3-array IM format
-                    var isFullScan = document.Settings.TransitionSettings.FullScan.IsEnabled;  // TODO(bspratt) formerly we didn't check this - doing so may mask problems we'd rather fix
-                    var isCentroidMs = isFullScan && document.Settings.TransitionSettings.FullScan.IsCentroidedMs;
-                    var isCentroidMsMs = isFullScan && document.Settings.TransitionSettings.FullScan.IsCentroidedMsMs;
-                    var attemptCombineIonMobilitySpectra = isFullScan;
+                    var isCentroidMs = document.Settings.TransitionSettings.FullScan.IsCentroidedMs;
+                    var isCentroidMsMs = document.Settings.TransitionSettings.FullScan.IsCentroidedMsMs;
                     var chromatograms = new List<ChromatogramSet>();
                     foreach (var c in results.Chromatograms)
                     {
                         chromatograms.Add(setReimport.Contains(c) ?
                             c.ChangeMSDataFilePaths(c.MSDataFilePaths.Select(p =>
-                                p.ChangeCentroiding(isCentroidMs, isCentroidMsMs).ChangeCombineIonMobilitySpectra(attemptCombineIonMobilitySpectra)).ToList()) :
+                                p.ChangeCentroiding(isCentroidMs, isCentroidMsMs).ChangeCombineIonMobilitySpectra(true)).ToList()) :
                             c);
                     }
                     resultsNew = resultsNew.ChangeChromatograms(chromatograms);
