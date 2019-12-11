@@ -41,7 +41,7 @@ namespace pwiz.Skyline.FileUI
         private readonly ICollection<DbIrtPeptide> _dbIrtPeptides;
 
         public string IrtFile { get; private set; }
-        private List<MeasuredRetentionTime> _irtPeptides;
+        private List<MeasuredRetentionTime> _irtAdd;
         private List<SpectrumMzInfo> _librarySpectra;
         private TargetMap<bool> _irtTargets;
 
@@ -54,7 +54,7 @@ namespace pwiz.Skyline.FileUI
             _dbIrtPeptides = dbIrtPeptides;
 
             _librarySpectra = new List<SpectrumMzInfo>();
-            _irtPeptides = new List<MeasuredRetentionTime>();
+            _irtAdd = new List<MeasuredRetentionTime>();
             _irtTargets = null;
 
             comboExisting.Items.AddRange(IrtStandard.ALL.Where(standard => !standard.Name.Equals(IrtStandard.EMPTY.Name)).Cast<object>().ToArray());
@@ -74,7 +74,7 @@ namespace pwiz.Skyline.FileUI
         public void UpdateLists(List<SpectrumMzInfo> librarySpectra, List<DbIrtPeptide> dbIrtPeptides)
         {
             librarySpectra.AddRange(_librarySpectra);
-            dbIrtPeptides.AddRange(_irtPeptides.Select(rt => new DbIrtPeptide(rt.PeptideSequence, rt.RetentionTime, true, TimeSource.scan)));
+            dbIrtPeptides.AddRange(_irtAdd.Select(rt => new DbIrtPeptide(rt.PeptideSequence, rt.RetentionTime, true, TimeSource.scan)));
             if (_irtTargets != null)
                 dbIrtPeptides.ForEach(pep => pep.Standard = _irtTargets.ContainsKey(pep.ModifiedTarget));
         }
@@ -86,122 +86,141 @@ namespace pwiz.Skyline.FileUI
 
         public void OkDialog()
         {
-            if (radioExisting.Checked)
+            if ((radioExisting.Checked && ProcessStandard()) ||
+                (radioProtein.Checked && ProcessProtein()) ||
+                (radioTransitionList.Checked && ProcessTransitionList()))
             {
-                var standard = (IrtStandard) comboExisting.SelectedItem;
+                DialogResult = DialogResult.OK;
+            }
+        }
 
-                var usingCirtAll = false;
-                if (ReferenceEquals(standard, IrtStandard.CIRT_SHORT))
+        private bool ProcessStandard()
+        {
+            var standard = (IrtStandard)comboExisting.SelectedItem;
+
+            if (ReferenceEquals(standard, IrtStandard.CIRT_SHORT))
+            {
+                var knownIrts = new TargetMap<double>(IrtStandard.CIRT.Peptides.Select(pep => new KeyValuePair<Target, double>(pep.ModifiedTarget, pep.Irt)));
+                var cirtPeptides = _dbIrtPeptides.Where(pep => knownIrts.ContainsKey(pep.ModifiedTarget)).ToArray();
+                var importCirts = new TargetMap<List<double>>(cirtPeptides.Select(pep =>
+                    new KeyValuePair<Target, List<double>>(pep.ModifiedTarget, new List<double>())));
+                var numCirts = 0;
+                foreach (var pep in cirtPeptides)
                 {
-                    var knownIrts = new TargetMap<double>(IrtStandard.CIRT.Peptides.Select(pep => new KeyValuePair<Target, double>(pep.ModifiedTarget, pep.Irt)));
-                    var cirtPeptides = _dbIrtPeptides.Where(pep => knownIrts.ContainsKey(pep.ModifiedTarget)).ToArray();
-                    var importCirts = new TargetMap<List<double>>(cirtPeptides.Select(pep =>
-                        new KeyValuePair<Target, List<double>>(pep.ModifiedTarget, new List<double>())));
-                    var numCirts = 0;
-                    foreach (var pep in cirtPeptides)
-                    {
-                        var list = importCirts[pep.ModifiedTarget];
-                        if (list.Count == 0)
-                            numCirts++;
-                        list.Add(pep.Irt);
-                    }
-                    var listX = new List<double>();
-                    var listY = new List<double>();
-                    var targets = new Dictionary<int, Target>();
-                    var i = 0;
-                    foreach (var kvp in importCirts.Where(kvp => kvp.Value.Count > 0))
-                    {
-                        targets[i++] = kvp.Key;
-                        listX.Add(new Statistics(kvp.Value).Median());
-                        listY.Add(knownIrts[kvp.Key]);
-                    }
-                    const int minPoints = RCalcIrt.MIN_PEPTIDES_COUNT;
-                    if (RCalcIrt.TryGetRegressionLine(listX, listY, minPoints, out var regression, out var removed))
-                    {
-                        var outliers = new HashSet<int>();
-                        for (var j = 0; j < listX.Count; j++)
-                        {
-                            if (removed.Contains(Tuple.Create(listX[j], listY[j])))
-                                outliers.Add(j);
-                        }
-                        var graphData = new RegressionGraphData
-                        {
-                            Title = Resources.ChooseIrtStandardPeptidesDlg_OkDialog_Linear_regression,
-                            LabelX = Resources.ChooseIrtStandardPeptidesDlg_OkDialog_Library_iRTs,
-                            LabelY = Resources.ChooseIrtStandardPeptidesDlg_OkDialog_Known_iRTs,
-                            XValues = listX.ToArray(),
-                            YValues = listY.ToArray(),
-                            Tooltips = targets.ToDictionary(target => target.Key, target => target.Value.ToString()),
-                            OutlierIndices = outliers,
-                            RegressionLine = regression,
-                            MinR = RCalcIrt.MIN_IRT_TO_TIME_CORRELATION,
-                            MinPoints = minPoints,
-                        };
-                        using (var dlg = new AddIrtStandardsDlg(numCirts,
-                            string.Format(Resources.LibraryBuildNotificationHandler_AddIrts__0__distinct_CiRT_peptides_were_found__How_many_would_you_like_to_use_as_iRT_standards_,
-                                numCirts), graphData))
-                        {
-                            if (dlg.ShowDialog(this) != DialogResult.OK)
-                                return;
-
-                            var outlierTargets = outliers.Select(idx => targets[idx]).ToHashSet();
-                            _irtPeptides.AddRange(IrtPeptidePicker.Pick(dlg.StandardCount,
-                                    cirtPeptides.Where(pep => !outlierTargets.Contains(pep.ModifiedTarget)).ToArray())
-                                .Select(pep => new MeasuredRetentionTime(pep, knownIrts[pep], true, true)));
-                        }
-                        usingCirtAll = true;
-                    }
+                    var list = importCirts[pep.ModifiedTarget];
+                    if (list.Count == 0)
+                        numCirts++;
+                    list.Add(pep.Irt);
                 }
-
-                if (!usingCirtAll && standard.HasDocument && !standard.InDocument(Document))
+                var listX = new List<double>();
+                var listY = new List<double>();
+                var targets = new Dictionary<int, Target>();
+                foreach (var (i, kvp) in importCirts.Where(kvp => kvp.Value.Count > 0).Select((kvp, i) => Tuple.Create(i, kvp)))
                 {
-                    _irtPeptides.AddRange(standard.Peptides.Select(pep => new MeasuredRetentionTime(pep.ModifiedTarget, pep.Irt, true, true)));
-                    Document = standard.ImportTo(Document);
+                    targets[i] = kvp.Key;
+                    listX.Add(new Statistics(kvp.Value).Median());
+                    listY.Add(knownIrts[kvp.Key]);
+                }
+                const int minPoints = RCalcIrt.MIN_PEPTIDES_COUNT;
+                if (RCalcIrt.TryGetRegressionLine(listX, listY, minPoints, out var regression, out var removed))
+                {
+                    var outliers = new HashSet<int>();
+                    for (var j = 0; j < listX.Count; j++)
+                    {
+                        if (removed.Contains(Tuple.Create(listX[j], listY[j])))
+                            outliers.Add(j);
+                    }
+                    var graphData = new RegressionGraphData
+                    {
+                        Title = Resources.ChooseIrtStandardPeptidesDlg_OkDialog_Linear_regression,
+                        LabelX = Resources.ChooseIrtStandardPeptidesDlg_OkDialog_Library_iRTs,
+                        LabelY = Resources.ChooseIrtStandardPeptidesDlg_OkDialog_Known_iRTs,
+                        XValues = listX.ToArray(),
+                        YValues = listY.ToArray(),
+                        Tooltips = targets.ToDictionary(target => target.Key, target => target.Value.ToString()),
+                        OutlierIndices = outliers,
+                        RegressionLine = regression,
+                        MinR = RCalcIrt.MIN_IRT_TO_TIME_CORRELATION,
+                        MinPoints = minPoints,
+                    };
+                    var outlierTargets = outliers.Select(idx => targets[idx]).ToHashSet();
+                    numCirts -= outlierTargets.Count;
+                    using (var dlg = new AddIrtStandardsDlg(numCirts,
+                        string.Format(Resources.LibraryBuildNotificationHandler_AddIrts__0__distinct_CiRT_peptides_were_found__How_many_would_you_like_to_use_as_iRT_standards_,
+                            numCirts), graphData))
+                    {
+                        if (dlg.ShowDialog(this) != DialogResult.OK)
+                            return false;
+
+                        SetStandards(IrtPeptidePicker.Pick(dlg.StandardCount, cirtPeptides.Where(pep => !outlierTargets.Contains(pep.ModifiedTarget)).ToArray()));
+                    }
+                    return true;
                 }
             }
-            else if (radioProtein.Checked)
+
+            if (standard.HasDocument && !standard.InDocument(Document))
             {
-                if (comboProteins.SelectedIndex == -1)
-                {
-                    MessageDlg.Show(this, Resources.ChooseIrtStandardPeptidesDlg_OkDialog_Please_select_a_protein_containing_the_list_of_standard_peptides_for_the_iRT_calculator_);
-                    comboProteins.Focus();
-                    return;
-                }
-                var protein = ((PeptideGroupItem) comboProteins.SelectedItem).PeptideGroup;
-                _irtTargets = new TargetMap<bool>(protein.Peptides.Select(pep => new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)));
-                if (Document.PeptideGroupCount > 0)
-                {
-                    var pathFrom = Document.GetPathTo(Document.FindNodeIndex(protein.Id));
-                    var pathTo = Document.GetPathTo(Document.FindNodeIndex(Document.PeptideGroups.First().Id));
-                    if (!Equals(pathFrom, pathTo))
-                    {
-                        Document = Document.MoveNode(pathFrom, pathTo, out _);
-                    }
-                }
+                _irtAdd.AddRange(standard.Peptides.Select(pep => new MeasuredRetentionTime(pep.ModifiedTarget, pep.Irt, true, true)));
+                Document = standard.ImportTo(Document);
             }
             else
             {
-                if (!File.Exists(txtTransitionList.Text))
+                SetStandards(standard.Peptides.Select(pep => pep.ModifiedTarget));
+            }
+            return true;
+        }
+
+        private bool ProcessProtein()
+        {
+            if (comboProteins.SelectedIndex == -1)
+            {
+                MessageDlg.Show(this, Resources.ChooseIrtStandardPeptidesDlg_OkDialog_Please_select_a_protein_containing_the_list_of_standard_peptides_for_the_iRT_calculator_);
+                comboProteins.Focus();
+                return false;
+            }
+
+            var protein = ((PeptideGroupItem)comboProteins.SelectedItem).PeptideGroup;
+            SetStandards(protein.Peptides.Select(pep => pep.ModifiedTarget));
+            if (Document.PeptideGroupCount > 0)
+            {
+                var pathFrom = Document.GetPathTo(Document.FindNodeIndex(protein.Id));
+                var pathTo = Document.GetPathTo(Document.FindNodeIndex(Document.PeptideGroups.First().Id));
+                if (!Equals(pathFrom, pathTo))
                 {
-                    MessageDlg.Show(this, Resources.ChooseIrtStandardPeptides_OkDialog_Transition_list_field_must_contain_a_path_to_a_valid_file_);
-                    txtTransitionList.Focus();
-                    return;
-                }
-                try
-                {
-                    var inputs = new MassListInputs(txtTransitionList.Text);
-                    Document = Document.ImportMassList(inputs, new IdentityPath(Document.PeptideGroups.First().Id), out _, out _irtPeptides, out _librarySpectra, out var errorList);
-                    if (errorList.Any())
-                        throw new InvalidDataException(errorList[0].ErrorMessage);
-                    IrtFile = txtTransitionList.Text;
-                }
-                catch (Exception x)
-                {
-                    MessageDlg.ShowWithException(this, string.Format(Resources.CreateIrtCalculatorDlg_OkDialog_Error_reading_iRT_standards_transition_list___0_, x.Message), x);
-                    return;
+                    Document = Document.MoveNode(pathFrom, pathTo, out _);
                 }
             }
-            DialogResult = DialogResult.OK;
+            return true;
+        }
+
+        private bool ProcessTransitionList()
+        {
+            if (!File.Exists(txtTransitionList.Text))
+            {
+                MessageDlg.Show(this, Resources.ChooseIrtStandardPeptides_OkDialog_Transition_list_field_must_contain_a_path_to_a_valid_file_);
+                txtTransitionList.Focus();
+                return false;
+            }
+
+            try
+            {
+                var inputs = new MassListInputs(txtTransitionList.Text);
+                Document = Document.ImportMassList(inputs, new IdentityPath(Document.PeptideGroups.First().Id), out _, out _irtAdd, out _librarySpectra, out var errorList);
+                if (errorList.Any())
+                    throw new InvalidDataException(errorList[0].ErrorMessage);
+                IrtFile = txtTransitionList.Text;
+            }
+            catch (Exception x)
+            {
+                MessageDlg.ShowWithException(this, string.Format(Resources.CreateIrtCalculatorDlg_OkDialog_Error_reading_iRT_standards_transition_list___0_, x.Message), x);
+                return false;
+            }
+            return true;
+        }
+
+        private void SetStandards(IEnumerable<Target> targets)
+        {
+            _irtTargets = new TargetMap<bool>(targets.Select(target => new KeyValuePair<Target, bool>(target, true)));
         }
 
         private void UpdateSelection(object sender, EventArgs e)
