@@ -1057,7 +1057,7 @@ namespace pwiz.SkylineTestUtil
                     var retry = false;
                     try
                     {
-                        retry = TestDataDownloadRetries != 0 && FreshenTestDataDownloads(); // If we find any stale downloads, let's retry
+                        retry = TestDataDownloadRetries != 0 && RetryDataDownloads && FreshenTestDataDownloads(); // If we find any stale downloads, let's retry
                     }
                     catch (Exception xx)
                     {

@@ -67,6 +67,12 @@ namespace pwiz.SkylineTestUtil
             set { TestContext.Properties["RunPerfTests"] = value ? "true" : "false"; }
         }
 
+        protected bool RetryDataDownloads
+        {
+            get { return GetBoolValue("RetryDataDownloads", false); }  // When true, re-download data sets on test failure in case it's due to stale data
+            set { TestContext.Properties["RetryDataDownloads"] = value ? "true" : "false"; }
+        }
+
         /// <summary>
         /// Determines whether or not to (re)record audit logs for tests.
         /// </summary>

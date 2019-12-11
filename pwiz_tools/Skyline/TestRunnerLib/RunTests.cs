@@ -84,6 +84,7 @@ namespace TestRunnerLib
         public long ManagedMemoryBytes { get; private set; }
         public bool AccessInternet { get; set; }
         public bool RunPerfTests { get; set; }
+        public bool RetryDataDownloads { get; set; }
         public bool RecordAuditLogs { get; set; }
         public bool RunsSmallMoleculeVersions { get; set; }
         public bool LiveReports { get; set; }
@@ -109,6 +110,7 @@ namespace TestRunnerLib
             bool runsmallmoleculeversions,
             bool recordauditlogs,
             bool teamcityTestDecoration,
+            bool retrydatadownloads,
             IEnumerable<string> pauseForms,
             int pauseSeconds = 0,
             bool useVendorReaders = true,
@@ -139,6 +141,7 @@ namespace TestRunnerLib
 
             AccessInternet = internet;
             RunPerfTests = perftests;
+            RetryDataDownloads = retrydatadownloads; // When true, try re-downloading data files on test failure, in case the failure is due to stale data
             RunsSmallMoleculeVersions = runsmallmoleculeversions;  // Run the small molecule version of various tests?
             RecordAuditLogs = recordauditlogs; // Replace or create audit logs for tutorial tests
             LiveReports = true;
@@ -244,6 +247,7 @@ namespace TestRunnerLib
                 // Set the TestContext.
                 TestContext.Properties["AccessInternet"] = AccessInternet.ToString();
                 TestContext.Properties["RunPerfTests"] = RunPerfTests.ToString();
+                TestContext.Properties["RetryDataDownloads"] = RetryDataDownloads.ToString();
                 TestContext.Properties["RunSmallMoleculeTestVersions"] = RunsSmallMoleculeVersions.ToString(); // Run the AsSmallMolecule version of tests when available?
                 TestContext.Properties["LiveReports"] = LiveReports.ToString();
                 TestContext.Properties["TestName"] = test.TestMethod.Name;
