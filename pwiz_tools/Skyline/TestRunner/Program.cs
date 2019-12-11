@@ -1072,6 +1072,10 @@ Here is a list of recognized arguments:
                                     file for the ""test"" or ""skip"" options in a subsequent
                                     run.
 
+    retrydatadownloads=[on|off]     Set retrydatadownloads=on to enable retry of data downloads
+                                    on test failures, with the idea that the failure might be due
+                                    to stale data sets.
+
     profile=[on|off]                Set profile=on to enable memory profiling mode.
                                     TestRunner will pause for 10 seconds after the first
                                     test is run to allow you to take a memory snapshot.
