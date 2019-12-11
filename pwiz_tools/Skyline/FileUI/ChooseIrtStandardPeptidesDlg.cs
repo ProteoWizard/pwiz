@@ -126,9 +126,9 @@ namespace pwiz.Skyline.FileUI
                         }
                         var graphData = new RegressionGraphData
                         {
-                            Title = "Linear regression",
-                            LabelX = "Library iRT values",
-                            LabelY = "Known iRT values",
+                            Title = Resources.ChooseIrtStandardPeptidesDlg_OkDialog_Linear_regression,
+                            LabelX = Resources.ChooseIrtStandardPeptidesDlg_OkDialog_Library_iRTs,
+                            LabelY = Resources.ChooseIrtStandardPeptidesDlg_OkDialog_Known_iRTs,
                             XValues = listX.ToArray(),
                             YValues = listY.ToArray(),
                             Tooltips = targets.ToDictionary(target => target.Key, target => target.Value.ToString()),
