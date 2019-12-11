@@ -124,7 +124,7 @@ namespace pwiz.Skyline.Model.Prosit
             PrositMS2Spectra ms = _intensityModel.PredictBatches(_prositClient, progress, ref progressStatus, _document.Settings,
                 _peptides.Zip(_precursors,
                     (pep, prec) =>
-                        new PrositIntensityModel.PeptidePrecursorNCE(pep, prec, _nce)).ToArray(),
+                        new PrositIntensityModel.PeptidePrecursorNCE(pep, prec, IsotopeLabelType.light, _nce)).ToArray(),
                 CancellationToken.None);
             progressStatus = progressStatus.NextSegment();
 

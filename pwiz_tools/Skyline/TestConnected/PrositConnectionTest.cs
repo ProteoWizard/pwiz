@@ -55,7 +55,7 @@ namespace pwiz.SkylineTestConnected
             var peptide = new PeptideDocNode(pingPep);
             var precursor = new TransitionGroupDocNode(new TransitionGroup(pingPep, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light),
                 new TransitionDocNode[0]);
-            var input = new PrositIntensityModel.PeptidePrecursorNCE(peptide, precursor, 32);
+            var input = new PrositIntensityModel.PeptidePrecursorNCE(peptide, precursor, IsotopeLabelType.light, 32);
             var intensityModel = PrositIntensityModel.GetInstance("intensity");
             try
             {
