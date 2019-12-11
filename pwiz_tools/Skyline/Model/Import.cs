@@ -2295,7 +2295,8 @@ namespace pwiz.Skyline.Model
                     Label = groupLibTriple.SpectrumInfo.Label,
                     PrecursorMz = groupLibTriple.SpectrumInfo.PrecursorMz,
                     IonMobility = groupLibTriple.SpectrumInfo.IonMobility,
-                    SpectrumPeaks = groupLibTriple.SpectrumInfo.SpectrumPeaks
+                    SpectrumPeaks = groupLibTriple.SpectrumInfo.SpectrumPeaks,
+                    RetentionTime = peptideIrt
                 }); 
             }
             _librarySpectra.AddRange(finalLibrarySpectra);
