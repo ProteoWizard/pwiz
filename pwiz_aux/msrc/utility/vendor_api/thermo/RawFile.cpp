@@ -939,12 +939,22 @@ MassListPtr RawFileImpl::getMassList(long scanNumber,
         if (centroidResult && raw_->GetFilterForScanNumber(scanNumber)->MassAnalyzer == ThermoEnum::MassAnalyzerType::MassAnalyzerFTMS)
         {
             auto centroidStream = raw_->GetCentroidStream(scanNumber, false);
-            ToBinaryData(centroidStream->Masses, result->mzArray);
-            ToBinaryData(centroidStream->Intensities, result->intensityArray);
+            if (centroidStream != nullptr && centroidStream->Length > 0)
+            {
+                ToBinaryData(centroidStream->Masses, result->mzArray);
+                ToBinaryData(centroidStream->Intensities, result->intensityArray);
+                return result;
+            }
         }
-        else if (centroidResult)
+
+        if (centroidResult)
         {
-            auto centroidScan = Thermo::Scan::ToCentroid(Thermo::Scan::FromFile(raw_.get(), scanNumber));
+            auto scan = Thermo::Scan::FromFile(raw_.get(), scanNumber);
+            if (scan->SegmentedScanAccess->Positions->Length == 0 || scan->ScanStatistics->BasePeakIntensity == 0)
+                return result;
+            auto centroidScan = Thermo::Scan::ToCentroid(scan);
+            if (centroidScan == nullptr || centroidScan->SegmentedScanAccess->Positions->Length == 0)
+                throw gcnew System::Exception("failed to centroid scan");
             ToBinaryData(centroidScan->SegmentedScanAccess->Positions, result->mzArray);
             ToBinaryData(centroidScan->SegmentedScanAccess->Intensities, result->intensityArray);
         }
@@ -2548,7 +2558,7 @@ MassListPtr RawFileThreadImpl::getMassList(long scanNumber,
         if (centroidResult)
         {
             auto scan = Thermo::Scan::FromFile(raw_.get(), scanNumber);
-            if (scan->SegmentedScanAccess->Positions->Length == 0)
+            if (scan->SegmentedScanAccess->Positions->Length == 0 || scan->ScanStatistics->BasePeakIntensity == 0)
                 return result;
             auto centroidScan = Thermo::Scan::ToCentroid(scan);
             if (centroidScan == nullptr || centroidScan->SegmentedScanAccess->Positions->Length == 0)
