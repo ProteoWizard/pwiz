@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
@@ -94,20 +95,61 @@ namespace pwiz.Skyline.FileUI
                 {
                     var knownIrts = new TargetMap<double>(IrtStandard.CIRT.Peptides.Select(pep => new KeyValuePair<Target, double>(pep.ModifiedTarget, pep.Irt)));
                     var cirtPeptides = _dbIrtPeptides.Where(pep => knownIrts.ContainsKey(pep.ModifiedTarget)).ToArray();
-                    var foundCirts = cirtPeptides.Select(pep => pep.ModifiedTarget).Distinct().Count();
-                    if (foundCirts > RCalcIrt.MIN_PEPTIDES_COUNT)
+                    var importCirts = new TargetMap<List<double>>(cirtPeptides.Select(pep =>
+                        new KeyValuePair<Target, List<double>>(pep.ModifiedTarget, new List<double>())));
+                    var numCirts = 0;
+                    foreach (var pep in cirtPeptides)
                     {
-                        using (var dlg = new AddIrtStandardsDlg(foundCirts,
-                            string.Format(
-                                Resources.LibraryBuildNotificationHandler_AddIrts__0__distinct_CiRT_peptides_were_found__How_many_would_you_like_to_use_as_iRT_standards_, foundCirts)))
+                        var list = importCirts[pep.ModifiedTarget];
+                        if (list.Count == 0)
+                            numCirts++;
+                        list.Add(pep.Irt);
+                    }
+                    var listX = new List<double>();
+                    var listY = new List<double>();
+                    var targets = new Dictionary<int, Target>();
+                    var i = 0;
+                    foreach (var kvp in importCirts.Where(kvp => kvp.Value.Count > 0))
+                    {
+                        targets[i++] = kvp.Key;
+                        listX.Add(new Statistics(kvp.Value).Median());
+                        listY.Add(knownIrts[kvp.Key]);
+                    }
+                    const int minPoints = RCalcIrt.MIN_PEPTIDES_COUNT;
+                    if (RCalcIrt.TryGetRegressionLine(listX, listY, minPoints, out var regression, out var removed))
+                    {
+                        var outliers = new HashSet<int>();
+                        for (var j = 0; j < listX.Count; j++)
+                        {
+                            if (removed.Contains(Tuple.Create(listX[j], listY[j])))
+                                outliers.Add(j);
+                        }
+                        var graphData = new RegressionGraphData
+                        {
+                            Title = "Linear regression",
+                            LabelX = "Library iRT values",
+                            LabelY = "Known iRT values",
+                            XValues = listX.ToArray(),
+                            YValues = listY.ToArray(),
+                            Tooltips = targets.ToDictionary(target => target.Key, target => target.Value.ToString()),
+                            OutlierIndices = outliers,
+                            RegressionLine = regression,
+                            MinR = RCalcIrt.MIN_IRT_TO_TIME_CORRELATION,
+                            MinPoints = minPoints,
+                        };
+                        using (var dlg = new AddIrtStandardsDlg(numCirts,
+                            string.Format(Resources.LibraryBuildNotificationHandler_AddIrts__0__distinct_CiRT_peptides_were_found__How_many_would_you_like_to_use_as_iRT_standards_,
+                                numCirts), graphData))
                         {
                             if (dlg.ShowDialog(this) != DialogResult.OK)
                                 return;
 
-                            _irtPeptides.AddRange(IrtPeptidePicker.Pick(dlg.StandardCount, cirtPeptides)
+                            var outlierTargets = outliers.Select(idx => targets[idx]).ToHashSet();
+                            _irtPeptides.AddRange(IrtPeptidePicker.Pick(dlg.StandardCount,
+                                    cirtPeptides.Where(pep => !outlierTargets.Contains(pep.ModifiedTarget)).ToArray())
                                 .Select(pep => new MeasuredRetentionTime(pep, knownIrts[pep], true, true)));
-                            usingCirtAll = true;
                         }
+                        usingCirtAll = true;
                     }
                 }
 

@@ -10907,4 +10907,13 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="IrtStandard_DocumentStream_No_document_to_import" xml:space="preserve">
     <value>No document to import</value>
   </data>
+  <data name="ChooseIrtStandardPeptidesDlg_OkDialog_Linear_regression" xml:space="preserve">
+    <value>Linear regression</value>
+  </data>
+  <data name="ChooseIrtStandardPeptidesDlg_OkDialog_Library_iRTs" xml:space="preserve">
+    <value>Library iRTs</value>
+  </data>
+  <data name="ChooseIrtStandardPeptidesDlg_OkDialog_Known_iRTs" xml:space="preserve">
+    <value>Known iRTs</value>
+  </data>
 </root>
