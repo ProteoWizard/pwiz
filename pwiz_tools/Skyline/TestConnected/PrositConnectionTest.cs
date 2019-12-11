@@ -38,9 +38,13 @@ namespace pwiz.SkylineTestConnected
         /// <summary>
         /// Tests that a connection can successfully be made to the server specified in PrositConfig.GetPrositConfig().
         /// </summary>
-        //[TestMethod]
+        [TestMethod]
         public void TestPrositConnection()
         {
+            if (!HasPrositServer())
+            {
+                return;
+            }
             PrositPredictionClient client = PrositPredictionClient.CreateClient(PrositConfig.GetPrositConfig());
             Assert.IsTrue(TestClient(client));
         }
@@ -51,7 +55,7 @@ namespace pwiz.SkylineTestConnected
             var peptide = new PeptideDocNode(pingPep);
             var precursor = new TransitionGroupDocNode(new TransitionGroup(pingPep, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light),
                 new TransitionDocNode[0]);
-            var input = new PrositIntensityModel.PeptidePrecursorNCE(peptide, precursor, 32);
+            var input = new PrositIntensityModel.PeptidePrecursorNCE(peptide, precursor, IsotopeLabelType.light, 32);
             var intensityModel = PrositIntensityModel.GetInstance("intensity");
             try
             {
@@ -110,6 +114,14 @@ Even More Stuff
             var prositConfig = PrositConfig.GetPrositConfig();
             Assert.IsNotNull(prositConfig);
             Assert.IsFalse(string.IsNullOrEmpty(prositConfig.Server));
+        }
+
+        /// <summary>
+        /// Returns true if Skyline was compiled with a prosit config file that enables connecting to a real server.
+        /// </summary>
+        public static bool HasPrositServer()
+        {
+            return !string.IsNullOrEmpty(PrositConfig.GetPrositConfig().RootCertificate);
         }
     }
 }

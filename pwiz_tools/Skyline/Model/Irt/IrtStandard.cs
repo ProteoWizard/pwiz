@@ -2,9 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Irt
 {
@@ -340,16 +343,51 @@ namespace pwiz.Skyline.Model.Irt
         public override string AuditLogText { get { return Equals(this, EMPTY) ? LogMessage.NONE : Name; } }
         public override bool IsName { get { return !Equals(this, EMPTY); } } // So EMPTY logs as None (unquoted) rather than "None"
 
-        public TextReader GetDocumentReader()
+        public bool HasDocument => !string.IsNullOrEmpty(_resourceSkyFile);
+
+        private Stream DocumentStream()
         {
-            try
-            {
-                var stream = typeof(IrtStandard).Assembly.GetManifestResourceStream(typeof(IrtStandard), @"StandardsDocuments." + _resourceSkyFile);
-                return stream != null ? new StreamReader(stream) : null;
-            }
-            catch (Exception)
-            {
+            if (!HasDocument)
+                throw new Exception(Resources.IrtStandard_DocumentStream_No_document_to_import);
+            return typeof(IrtStandard).Assembly.GetManifestResourceStream(typeof(IrtStandard), @"StandardsDocuments." + _resourceSkyFile);
+        }
+
+        public SrmDocument GetDocument()
+        {
+            if (!HasDocument)
                 return null;
+            using (var stream = DocumentStream())
+            {
+                if (stream == null)
+                    return null;
+                using (var reader = new StreamReader(stream))
+                {
+                    return (SrmDocument) new XmlSerializer(typeof(SrmDocument)).Deserialize(reader);
+                }
+            }
+        }
+
+        public SrmDocument ImportTo(SrmDocument document, PeptideLibraries.FindLibrary findLibrary, out IdentityPath firstAdded)
+        {
+            firstAdded = null;
+            using (var stream = DocumentStream())
+            {
+                if (stream == null)
+                    return null;
+                using (TextReader reader = new StreamReader(stream))
+                {
+                    return document.ImportDocumentXml(reader,
+                        string.Empty,
+                        MeasuredResults.MergeAction.remove,
+                        false,
+                        findLibrary,
+                        Settings.Default.StaticModList,
+                        Settings.Default.HeavyModList,
+                        document.Children.Any() ? new IdentityPath(document.Children.First().Id) : null,
+                        out firstAdded,
+                        out _,
+                        false);
+                }
             }
         }
 
