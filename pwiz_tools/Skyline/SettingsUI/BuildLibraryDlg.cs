@@ -245,8 +245,8 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     // TODO: Need to figure out a better way to do this, use PrositPeptidePrecursorPair?
                     var doc = _documentUiContainer.DocumentUI;
-                    var peptides = doc.Peptides.ToArray();
-                    var precursorCount = doc.PeptideTransitionGroupCount;
+                    var peptides = doc.Peptides.Where(pep=>!pep.IsDecoy).ToArray();
+                    var precursorCount = peptides.Sum(pep=>pep.TransitionGroupCount);
                     var peptidesPerPrecursor = new PeptideDocNode[precursorCount];
                     var precursors = new TransitionGroupDocNode[precursorCount];
                     int index = 0;
