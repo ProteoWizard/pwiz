@@ -1391,9 +1391,13 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(peptideSettings, peptideSettings.OkDialog);
 
             var precursorCount = SkylineWindow.Document.PeptideTransitionGroupCount;
+            var distinctPrecursorCount = 
+                SkylineWindow.Document.Peptides.SelectMany(pep => pep.TransitionGroups
+                    .Select(tg => Tuple.Create(pep.ModifiedTarget, tg.PrecursorCharge)))
+                .Distinct().Count();
 
             const int notSupportedCount = 3;
-            WaitForLibrary(precursorCount - notSupportedCount, SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs.IndexOf(l => l.Name == "Prosit"));
+            WaitForLibrary(distinctPrecursorCount - notSupportedCount, SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs.IndexOf(l => l.Name == "Prosit"));
 
             var prositLib = SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Last();
 
@@ -1409,8 +1413,8 @@ namespace pwiz.SkylineTestFunctional
                 var precursors = peptides[i].TransitionGroups.ToArray();
                 for (var j = 0; j < precursors.Length; ++j)
                 {
-                    var libKey = precursors[j].GetLibKey(SkylineWindow.Document.Settings, peptides[i]);
-                    var spectra = prositLib.GetSpectra(libKey, precursors[j].LabelType, LibraryRedundancy.all).ToArray();
+                    var libKey = new LibKey(peptides[i].ModifiedSequence, precursors[j].PrecursorAdduct);
+                    var spectra = prositLib.GetSpectra(libKey, IsotopeLabelType.light, LibraryRedundancy.all).ToArray();
                     if (spectra.Length == 0)
                     {
                         ++noMatchCount;
@@ -1421,7 +1425,7 @@ namespace pwiz.SkylineTestFunctional
                         spectrumDisplayInfos[idx] = new SpectrumDisplayInfo(spectra[0], precursors[j], spectra[0].RetentionTime);
                     }
 
-                    peptidesRepeat[idx++] = new PrositIntensityModel.PeptidePrecursorNCE(peptides[i], precursors[j]);
+                    peptidesRepeat[idx++] = new PrositIntensityModel.PeptidePrecursorNCE(peptides[i], precursors[j], IsotopeLabelType.light, null);
                 }
             }
 
@@ -1868,7 +1872,7 @@ namespace pwiz.SkylineTestFunctional
             var iRTIndex = 0;
             foreach (var info in spectrumDisplayInfos.Where(i => i != null))
             {
-                if (Equals(info.LabelType, IsotopeLabelType.heavy))
+                if (Equals(info.Precursor.LabelType, IsotopeLabelType.heavy))
                     --iRTIndex; // Reuse previous iRT, since we only made a single iRT prediction for heavy and light
 
                 AssertMatchesSpectrum(_iRTs[iRTIndex++], info);
@@ -1882,9 +1886,10 @@ namespace pwiz.SkylineTestFunctional
 
         public static void AssertMatchesSpectrum(float iRT, SpectrumDisplayInfo spectrumDisplayInfo)
         {
-            Assert.AreEqual(
-                iRT * Math.Sqrt(PrositRetentionTimeModel.PrositRTOutput.iRT_VARIANCE) +
-                PrositRetentionTimeModel.PrositRTOutput.iRT_MEAN, spectrumDisplayInfo.RetentionTime);
+            var expected = iRT * Math.Sqrt(PrositRetentionTimeModel.PrositRTOutput.iRT_VARIANCE) +
+                           PrositRetentionTimeModel.PrositRTOutput.iRT_MEAN;
+
+            Assert.AreEqual(expected, spectrumDisplayInfo.RetentionTime);
         }
 
         public override string Model => "iRT";
