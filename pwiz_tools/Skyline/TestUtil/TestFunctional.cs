@@ -1003,77 +1003,93 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         protected void RunFunctionalTest(string defaultUiMode = UiModes.PROTEOMIC)
         {
-            try
+            for (var TestDataDownloadRetries = 1; TestDataDownloadRetries >= 0; TestDataDownloadRetries--)
             {
-
-                if (IsPerfTest && !RunPerfTests)
+                try
                 {
-                    return;  // Don't want to run this lengthy test right now
-                }
 
-                Program.FunctionalTest = true;
-                Program.DefaultUiMode = defaultUiMode;
-                Program.TestExceptions = new List<Exception>();
-                LocalizationHelper.InitThread();
-
-                // Unzip test files.
-                if (TestFilesZipPaths != null)
-                {
-                    TestFilesDirs = new TestFilesDir[TestFilesZipPaths.Length];
-                    for (int i = 0; i < TestFilesZipPaths.Length; i++)
+                    if (IsPerfTest && !RunPerfTests)
                     {
-                        TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName,
-                            TestFilesPersistent, IsExtractHere(i));
+                        return;  // Don't want to run this lengthy test right now
                     }
+
+                    Program.FunctionalTest = true;
+                    Program.DefaultUiMode = defaultUiMode;
+                    Program.TestExceptions = new List<Exception>();
+                    LocalizationHelper.InitThread();
+
+                    // Unzip test files.
+                    if (TestFilesZipPaths != null)
+                    {
+                        TestFilesDirs = new TestFilesDir[TestFilesZipPaths.Length];
+                        for (int i = 0; i < TestFilesZipPaths.Length; i++)
+                        {
+                            TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName,
+                                TestFilesPersistent, IsExtractHere(i));
+                        }
+                    }
+                    // Run test in new thread (Skyline on main thread).
+                    Program.Init();
+                    Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault();
+                    // Reset defaults with names from resources for testing different languages
+                    Settings.Default.BackgroundProteomeList[0] = BackgroundProteomeList.GetDefault();
+                    Settings.Default.DeclusterPotentialList[0] = DeclusterPotentialList.GetDefault();
+                    Settings.Default.RetentionTimeList[0] = RetentionTimeList.GetDefault();
+                    Settings.Default.ShowStartupForm = ShowStartPage;
+                    Settings.Default.MruList = SetMru;
+                    // For automated demos, start with the main window maximized
+                    if (IsDemoMode)
+                        Settings.Default.MainWindowMaximized = true;
+                    var threadTest = new Thread(WaitForSkyline) { Name = @"Functional test thread" };
+                    LocalizationHelper.InitThread(threadTest);
+                    threadTest.Start();
+                    Program.Main();
+                    threadTest.Join();
+
+                    // Were all windows disposed?
+                    FormEx.CheckAllFormsDisposed();
+                    CommonFormEx.CheckAllFormsDisposed();
+
                 }
-                // Run test in new thread (Skyline on main thread).
-                Program.Init();
-                Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault();
-                // Reset defaults with names from resources for testing different languages
-                Settings.Default.BackgroundProteomeList[0] = BackgroundProteomeList.GetDefault();
-                Settings.Default.DeclusterPotentialList[0] = DeclusterPotentialList.GetDefault();
-                Settings.Default.RetentionTimeList[0] = RetentionTimeList.GetDefault();
-                Settings.Default.ShowStartupForm = ShowStartPage;
-                Settings.Default.MruList = SetMru;
-                // For automated demos, start with the main window maximized
-                if (IsDemoMode)
-                    Settings.Default.MainWindowMaximized = true;
-                var threadTest = new Thread(WaitForSkyline) { Name = @"Functional test thread" };
-                LocalizationHelper.InitThread(threadTest);
-                threadTest.Start();
-                Program.Main();
-                threadTest.Join();
-
-                // Were all windows disposed?
-                FormEx.CheckAllFormsDisposed();
-                CommonFormEx.CheckAllFormsDisposed();
-
-                Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault(); // Release memory held in settings
-            }
-            catch (Exception x)
-            {
-                Program.AddTestException(x);
-            }
-
-            // Delete unzipped test files.
-            if (TestFilesDirs != null)
-            {
-                foreach (TestFilesDir dir in TestFilesDirs)
+                catch (Exception x)
                 {
-                    if (dir == null)
-                        continue;
+                    // Check to see if the error was due to stale test data downloads
+                    var retry = false;
                     try
                     {
-                        dir.Dispose();
+                        retry = TestDataDownloadRetries != 0 && FreshenTestDataDownloads(); // If we find any stale downloads, let's retry
                     }
-                    catch (Exception x)
+                    catch (Exception xx)
+                    {
+                        Program.AddTestException(xx); // Some trouble with data download, make a note of it
+                    }
+                    if (!retry)
                     {
                         Program.AddTestException(x);
-                        FileStreamManager.Default.CloseAllStreams();
+                        TestDataDownloadRetries = 0;
+                    }
+                }
+
+                Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault(); // Release memory held in settings
+                // Delete unzipped test files.
+                if (TestFilesDirs != null)
+                {
+                    foreach (TestFilesDir dir in TestFilesDirs)
+                    {
+                        if (dir == null)
+                            continue;
+                        try
+                        {
+                            dir.Dispose();
+                        }
+                        catch (Exception x)
+                        {
+                            Program.AddTestException(x);
+                            FileStreamManager.Default.CloseAllStreams();
+                        }
                     }
                 }
             }
-
             if (Program.TestExceptions.Count > 0)
             {
                 //Log<AbstractFunctionalTest>.Exception(@"Functional test exception", Program.TestExceptions[0]);
