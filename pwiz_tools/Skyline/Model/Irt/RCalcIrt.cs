@@ -245,7 +245,7 @@ namespace pwiz.Skyline.Model.Irt
             var matchedStandard = IrtStandard.WhichStandard(standardPeptideList.Select(pep => pep.ModifiedTarget));
             if (matchedStandard != null && matchedStandard.HasDocument)
             {
-                var standardDoc = matchedStandard.GetDocument();
+                var standardDoc = matchedStandard.ImportTo(new SrmDocument(SrmSettingsList.GetDefault()), null, out _);
                 standardPeptideList = standardPeptideList.Select(pep => new DbIrtPeptide(pep)).ToArray();
                 foreach (var dummyPep in standardDoc.Molecules.Where(pep => pep.HasExplicitMods))
                 {
