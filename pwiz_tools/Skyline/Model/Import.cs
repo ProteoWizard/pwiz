@@ -2286,7 +2286,7 @@ namespace pwiz.Skyline.Model
                 var sequence = groupLibTriple.NodeGroup.TransitionGroup.Peptide.Target;
                 var mods = docNode.ExplicitMods;
                 var calcPre = _settings.GetPrecursorCalc(groupLibTriple.SpectrumInfo.Label, mods);
-                var modifiedSequenceWithIsotopes = calcPre.GetModifiedSequence(sequence, false);
+                var modifiedSequenceWithIsotopes = calcPre.GetModifiedSequence(sequence, SequenceModFormatType.lib_precision, false);
 
                 finalLibrarySpectra.Add(new SpectrumMzInfo
                 {
