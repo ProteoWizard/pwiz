@@ -177,7 +177,6 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 var sourceFiles = new Dictionary<string, long>();
                 foreach (var spectrum in listSpectra)
                 {
-                    ++i;
                     var dbRefSpectrum = RefSpectrumFromPeaks(session, spectrum, sourceFiles);
                     session.Save(dbRefSpectrum);
                     listLibrary.Add(new BiblioLiteSpectrumInfo(spectrum.Key, 
@@ -195,6 +194,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                             progressPercent = progressNew;
                         }
                     }
+                    ++i;
                 }
 
                 session.Flush();
@@ -214,6 +214,11 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 session.Flush();
                 session.Clear();
                 transaction.Commit();
+
+                if (progressMonitor != null)
+                {
+                    progressMonitor.UpdateProgress(status = status.Complete());
+                }
             }
 
             var libraryEntries = listLibrary.ToArray();

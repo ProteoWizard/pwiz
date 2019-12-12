@@ -76,6 +76,8 @@ namespace BiblioSpec {
         vector<PEAK_T> curPeaks_;
         string peaksStr_;
         size_t expectedNumPeaks_;
+        int lastFilePosition_;
+        ProgressIndicator* readSpecProgress_; // each spec read from file
         double curSpecMz_;
         double probCutOff_;
         bool skipMods_;
