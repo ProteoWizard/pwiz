@@ -2048,7 +2048,7 @@ namespace pwiz.Skyline.Model.DocSettings
     /// <summary>
     /// Enum used to specify the representation of modifications in a sequence
     /// </summary>
-    public enum SequenceModFormatType { mass_diff, mass_diff_narrow, three_letter_code, full_precision }
+    public enum SequenceModFormatType { mass_diff, mass_diff_narrow, three_letter_code, full_precision, lib_precision }
 
     public interface IPrecursorMassCalc
     {
