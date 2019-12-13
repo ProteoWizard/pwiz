@@ -150,7 +150,6 @@ namespace pwiz.SkylineTestUtil
         /// <summary>
         /// Returns full path to the Skyline directory (assuming current assembly is running in bin/[platform]/[configuration])
         /// </summary>
-        /// <returns></returns>
         public static string GetSkylineDir()
         {
             var exeLocation = Assembly.GetExecutingAssembly().Location;
@@ -169,6 +168,10 @@ namespace pwiz.SkylineTestUtil
             Waters
         }
 
+        /// <summary>
+        /// Returns full path to a file in the specified vendor reader's test data directory
+        /// (e.g. pwiz/data/vendor_readers/Thermo/Reader_Thermo_Test.data)
+        /// </summary>
         public static string GetVendorTestData(VendorDir vendorDir, string rawname)
         {
             string vendorReaderPath = Path.Combine(GetSkylineDir(), @"..\..\pwiz\data\vendor_readers");
