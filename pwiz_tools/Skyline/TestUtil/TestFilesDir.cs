@@ -154,7 +154,7 @@ namespace pwiz.SkylineTestUtil
         public static string GetSkylineDir()
         {
             var exeLocation = Assembly.GetExecutingAssembly().Location;
-            return exeLocation.Substring(0, exeLocation.IndexOf(@"Skyline")) + @"Skyline\";
+            return exeLocation.Substring(0, exeLocation.IndexOf(@"Skyline", StringComparison.InvariantCulture)) + @"Skyline\";
         }
 
         public enum VendorDir
