@@ -19,6 +19,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -144,6 +145,35 @@ namespace pwiz.SkylineTestUtil
             if (TextUtil.CsvSeparator == TextUtil.SEPARATOR_CSV)
                 return GetTestPath(relativePath);
             return GetTestPathIntl(relativePath);
+        }
+
+        /// <summary>
+        /// Returns full path to the Skyline directory (assuming current assembly is running in bin/[platform]/[configuration])
+        /// </summary>
+        /// <returns></returns>
+        public static string GetSkylineDir()
+        {
+            var exeLocation = Assembly.GetExecutingAssembly().Location;
+            return exeLocation.Substring(0, exeLocation.IndexOf(@"Skyline")) + @"Skyline\";
+        }
+
+        public enum VendorDir
+        {
+            ABI,
+            Agilent,
+            Bruker,
+            Shimadzu,
+            Thermo,
+            UIMF,
+            UNIFI,
+            Waters
+        }
+
+        public static string GetVendorTestData(VendorDir vendorDir, string rawname)
+        {
+            string vendorReaderPath = Path.Combine(GetSkylineDir(), @"..\..\pwiz\data\vendor_readers");
+            string vendorStr = Enum.GetName(typeof(VendorDir), vendorDir) ?? throw new ArgumentException(@"VendorDir value unknown");
+            return Path.Combine(vendorReaderPath, vendorStr, $"Reader_{vendorStr}_Test.data", rawname);
         }
 
         /// <summary>
