@@ -85,20 +85,16 @@ namespace pwiz.Common.Collections
             {
                 return immutableList;
             }
-            var elements = values as IList<T>;
-            T[] arrayCopy = null;
-            if (elements == null)
-                elements = arrayCopy = values.ToArray();
-            int length = elements.Count;
-            if (length == 0)
+            var arrayValues = values.ToArray();
+            if (arrayValues.Length == 0)
             {
                 return EMPTY;
             }
-            if (length == 1)
+            if (arrayValues.Length == 1)
             {
-                return Singleton(elements[0]);
+                return Singleton(arrayValues[0]);
             }
-            return new Impl(arrayCopy ?? elements.ToArray());
+            return new Impl(arrayValues);
         }
 
         public static ImmutableList<T> ValueOf(T[] values, bool takeBuffer)

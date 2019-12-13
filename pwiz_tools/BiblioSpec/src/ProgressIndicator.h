@@ -34,7 +34,7 @@ namespace BiblioSpec {
 class ProgressIndicator
 {
  public:
-  ProgressIndicator(boost::int64_t total)
+  ProgressIndicator(long total)
   {
     // Assume a header message was just output
     _lastOutput = time(NULL);
@@ -56,12 +56,12 @@ class ProgressIndicator
    * current+1/total. Promise that the parent ProgressIndicator is
    * unchanged.  
    */
-  ProgressIndicator* newNestedIndicator(boost::int64_t inner_total) const
+  ProgressIndicator* newNestedIndicator(long inner_total) const
   {
     // Make sure inner indicator never outputs 100%
     inner_total++;
     ProgressIndicator* inner = new ProgressIndicator( inner_total * _total );
-    inner->add(max((boost::int64_t)0, _current-1) * inner_total);
+    inner->add(max((long)0, _current-1) * inner_total);
     return inner;
   }
   
@@ -70,11 +70,11 @@ class ProgressIndicator
     add(1);
   }
   
-  void add(boost::int64_t n)
+  void add(long n)
   {
     _current += n;
     // This function never outputs 100%
-    int percentCurrent = min((boost::int64_t)99, 100*max((boost::int64_t)0, _current - 1)/_total);
+    int percentCurrent = min((long)99, 100*max((long)0, _current - 1)/_total);
     if (percentCurrent != _percent) {
         _percent = percentCurrent;
         // If more than 1 second has elapsed, show output
@@ -87,7 +87,7 @@ class ProgressIndicator
     }
   }
   
-  boost::int64_t processed()
+  long processed()
   {
     return _current;
   }
@@ -103,8 +103,8 @@ class ProgressIndicator
 
 
  private:
-  boost::int64_t _total;
-  boost::int64_t _current;
+  long _total;
+  long _current;
   int _percent;
   time_t _lastOutput;
 };
