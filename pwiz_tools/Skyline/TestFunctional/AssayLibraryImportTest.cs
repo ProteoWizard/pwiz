@@ -1118,10 +1118,10 @@ namespace pwiz.SkylineTestFunctional
 
             // Undo import
             RunUI(SkylineWindow.Undo);
-            doc = WaitForDocumentChange(doc);
+            WaitForDocumentChange(doc);
 
             // Import assay library and choose a file
-            AllowAllIonTypes();
+            doc = AllowAllIonTypes();
             var irtCsvFile = TestFilesDir.GetTestPath("OpenSWATH_SM4_iRT.csv");
             var overwriteDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ImportAssayLibrary(csvFile));
             var chooseIrt2 = ShowDialog<ChooseIrtStandardPeptidesDlg>(overwriteDlg.BtnYesClick);
