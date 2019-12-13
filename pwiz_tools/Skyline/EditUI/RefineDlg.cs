@@ -121,19 +121,19 @@ namespace pwiz.Skyline.EditUI
                 comboTransitions.Items.Add(Resources.RefineDlg_RefineDlg_best);
                 comboTransitions.SelectedIndex = 0;
 
-                var maxTrans = document.PeptideTransitionGroups.Max(g => g.TransitionCount);
+                var maxTrans = document.MoleculeTransitionGroups.Select(g => g.TransitionCount).DefaultIfEmpty().Max();
                 for (int i = 1; i <= maxTrans; i++)
                 {
                     comboTransitions.Items.Add(i);
                 }
 
-                if (document.PeptideTransitions.Any(t => t.IsMs1))
+                if (document.MoleculeTransitions.Any(t => t.IsMs1))
                 {
                     comboTransType.Items.Add(Resources.RefineDlg_RefineDlg_Precursors);
                     comboTransType.SelectedIndex = comboTransType.Items.Count - 1;
                 }
 
-                if (document.PeptideTransitions.Any(t => !t.IsMs1))
+                if (document.MoleculeTransitions.Any(t => !t.IsMs1))
                 {
                     comboTransType.Items.Add(Resources.RefineDlg_RefineDlg_Products);
                     comboTransType.SelectedIndex = comboTransType.Items.Count - 1;
