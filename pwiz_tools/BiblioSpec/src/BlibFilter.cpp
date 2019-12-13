@@ -627,7 +627,8 @@ void BlibFilter::buildNonRedundantLib() {
         clearVector(oneIon);
     }
 
-    transferSpectra(redundantDbName_, bestSpectraIdAndCount, tableVersion_);
+    if (useBestScoring_)
+        transferSpectra(redundantDbName_, bestSpectraIdAndCount, tableVersion_);
 
     // we may have selected fewer spectra than were in the library
     // update the progress indicator
@@ -705,13 +706,21 @@ void BlibFilter::compAndInsert(vector<RefSpectrum*>& oneIon, vector<pair<int, in
     if(!useBestScoring_) { // choose the one with more peaks
 
         if (num_spec == 1) { // add that one spectrum
-            bestSpectraIdAndCount.push_back(make_pair(oneIon.at(0)->getLibSpecID(), 1));
+            specID = transferSpectrum(redundantDbName_,
+                oneIon.at(0)->getLibSpecID(),
+                num_spec,
+                tableVersion_);
         } else if (num_spec == 2) {
             // in the future, pick the one with the best search score
             if( oneIon.at(0)->getNumRawPeaks() < oneIon.at(1)->getNumRawPeaks() ) {
                 bestIndex = 1;
             }
-            bestSpectraIdAndCount.push_back(make_pair(oneIon.at(bestIndex)->getLibSpecID(), 2));
+            // cerr << "selecting index " << bestIndex << ", scan " << oneIon.at(bestIndex)->getScanNumber() << " from " << oneIon.at(0)->getScanNumber() << " and " << oneIon.at(1)->getScanNumber() << endl;
+
+            specID = transferSpectrum(redundantDbName_, 
+                                      oneIon.at(bestIndex)->getLibSpecID(), 
+                                      num_spec,
+                                      tableVersion_);
         } else { // compute all-by-all dot-products
 
                 // preprocess all RefSpectrum in oneIon
@@ -756,7 +765,10 @@ void BlibFilter::compAndInsert(vector<RefSpectrum*>& oneIon, vector<pair<int, in
 
                 // If best average score is too low, don't include it 
                 if ( bestAverageScore >= minAverageScore_ ){
-                    bestSpectraIdAndCount.push_back(make_pair(oneIon.at(bestIndex)->getLibSpecID(), oneIon.size()));
+                    specID = transferSpectrum(redundantDbName_, 
+                                              oneIon.at(bestIndex)->getLibSpecID(), 
+                                              oneIon.size(),
+                                              tableVersion_);
                 } else {
                     Verbosity::warn("Best score is %f for %s, charge %d after "
                                     "comparing %i spectra.  This sequence will not be "
@@ -786,7 +798,8 @@ void BlibFilter::compAndInsert(vector<RefSpectrum*>& oneIon, vector<pair<int, in
 
             if (possibleWinners.size() == 1) {
                 winner = possibleWinners.front();
-            } else {
+            }
+            else {
                 // find highest TIC to determine final winner
                 double winningValue = -1.0;
                 for (vector<RefSpectrum*>::iterator i = possibleWinners.begin(); i != possibleWinners.end(); ++i) {
@@ -822,12 +835,13 @@ void BlibFilter::compAndInsert(vector<RefSpectrum*>& oneIon, vector<pair<int, in
             }
 
             bestSpectraIdAndCount.push_back(make_pair(winner->getLibSpecID(), oneIon.size()));
+
             bestIndex = indices[winner];
         }
-    }
 
-    if (!bestSpectraIdAndCount.empty())
+        //specID = transferSpectrum(redundantDbName_, winner->getLibSpecID(), oneIon.size(), tableVersion_);
         specID = bestSpectraIdAndCount.back().first;
+    }
 
     // add rt, RefSpectraId for all refspec
     for (int i = 0; i < num_spec; i++) {

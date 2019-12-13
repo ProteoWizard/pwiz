@@ -273,6 +273,24 @@ namespace pwiz.Skyline.EditUI
                 }
                 return true;
             }
+
+            public void Populate(IEnumerable<RenameProteins> values)
+            {
+                Items.RaiseListChangedEvents = false;
+                try
+                {
+                    Items.Clear();
+                    foreach (var value in values)
+                    {
+                        Items.Add(value);
+                    }
+                }
+                finally
+                {
+                    Items.RaiseListChangedEvents = true;
+                }
+                Items.ResetBindings();
+            }
         }
 
         public class RenameProteins

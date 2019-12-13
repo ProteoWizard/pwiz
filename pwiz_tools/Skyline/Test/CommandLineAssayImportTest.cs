@@ -163,10 +163,8 @@ namespace pwiz.SkylineTest
             string irtDatabasePath = Path.ChangeExtension(documentUpdated, IrtDb.EXT) ?? IrtDb.EXT; // Not null for ReSharper
             string textIrt = TestFilesDir.GetTestPath("OpenSWATH_SM4_iRT.csv");
             File.WriteAllText(irtDatabasePath, irtDatabasePath); // Dummy file containing its own path
-            string allIonsArgument = "--tran-product-ion-types=" + string.Join(",", Transition.PEPTIDE_ION_TYPES);  // For when more than y- and b-ions are used (a2 in OpenSWATH_SM4_iRT.csv)
             output = RunCommand("--in=" + documentBlank,
                 "--import-assay-library=" + textNoError,
-                allIonsArgument,
                 CommandArgs.ARG_IRT_STANDARDS_FILE.ArgumentText + "=" + textIrt,
                 "--out=" + documentUpdated);
             AssertEx.Contains(output,
@@ -219,7 +217,6 @@ namespace pwiz.SkylineTest
             string newIrtDatabasePath = TestFilesDir.GetTestPath("irtNew.irtdb");
             output = RunCommand("--in=" + documentBlank,
                 "--import-assay-library=" + textNoError,
-                allIonsArgument,
                 CommandArgs.ARG_IRT_DATABASE_PATH.ArgumentText + "=" + newIrtDatabasePath,
                 CommandArgs.ARG_IRT_STANDARDS_FILE.ArgumentText + "=" + textIrt,
                 "--out=" + documentUpdated);
