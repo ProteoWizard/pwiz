@@ -420,7 +420,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                             if (nodePep.IsProteomic)
                             {
                                 var calcPre = document.Settings.GetPrecursorCalc(labelType, nodePep.SourceExplicitMods);
-                                peptideModSeq = calcPre.GetModifiedSequence(peptideSeq, SequenceModFormatType.full_precision, false);
+                                peptideModSeq = calcPre.GetModifiedSequence(peptideSeq, SequenceModFormatType.lib_precision, false);
                             }
                             else
                             {
