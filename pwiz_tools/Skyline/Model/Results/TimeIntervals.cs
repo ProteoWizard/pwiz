@@ -108,28 +108,39 @@ namespace pwiz.Skyline.Model.Results
         private static IEnumerable<KeyValuePair<float, float>> Intersect(IEnumerator<KeyValuePair<float, float>> en1,
             IEnumerator<KeyValuePair<float, float>> en2)
         {
-            bool f1 = en1.MoveNext();
-            bool f2 = en2.MoveNext();
-            while (f1 && f2)
+            if (!en1.MoveNext() || !en2.MoveNext())
             {
-                var interval1 = en1.Current;
-                var interval2 = en2.Current;
-                if (interval1.Key <= interval2.Key)
+                yield break;
+            }
+
+            KeyValuePair<float, float> interval1 = en1.Current;
+            KeyValuePair<float, float> interval2 = en2.Current;
+            while (true)
+            {
+                var intersection = new KeyValuePair<float, float>(
+                    Math.Max(interval1.Key, interval2.Key),
+                    Math.Min(interval1.Value, interval2.Value));
+                if (intersection.Key < intersection.Value)
                 {
-                    if (interval1.Value > interval2.Key)
+                    yield return intersection;
+                }
+                if (interval1.Value <= interval2.Value)
+                {
+                    if (!en1.MoveNext())
                     {
-                        yield return new KeyValuePair<float, float>(interval2.Key, Math.Min(interval1.Value, interval2.Value));
+                        yield break;
                     }
-                    f1 = en1.MoveNext();
+
+                    interval1 = en1.Current;
                 }
                 else
                 {
-                    if (interval2.Value > interval1.Key)
+                    if (!en2.MoveNext())
                     {
-                        yield return new KeyValuePair<float, float>(interval1.Key, Math.Min(interval1.Value, interval2.Value));
+                        yield break;
                     }
 
-                    f2 = en2.MoveNext();
+                    interval2 = en2.Current;
                 }
             }
         }

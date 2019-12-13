@@ -37,7 +37,8 @@ namespace pwiz.Skyline.Model.Results
                 }
                 else
                 {
-                    result = result.Intersect(timeIntervals);
+                    var newResult = result.Intersect(timeIntervals);
+                    result = newResult;
                 }
             }
 

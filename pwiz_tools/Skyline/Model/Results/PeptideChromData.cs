@@ -150,13 +150,14 @@ namespace pwiz.Skyline.Model.Results
 
         public void PickChromatogramPeaks()
         {
-            if (_document.Settings.TransitionSettings.Instrument.TriggeredAcquisition)
+            if (_document.Settings.TransitionSettings.Instrument.TriggeredAcquisition && NodePep != null)
             {
                 var triggeredAcquisition = new TriggeredAcquisition();
-                var timeIntervals = triggeredAcquisition.InferTimeIntervals(
-                    _dataSets.SelectMany(dataSet => dataSet.Chromatograms.Select(chrom=>chrom.RawTimes)));
                 foreach (var chromDataSet in _dataSets)
                 {
+                    var timeIntervals = triggeredAcquisition.InferTimeIntervals(
+                        chromDataSet.Chromatograms.Where(chrom => null != chrom.DocNode)
+                            .Select(chrom => chrom.RawTimes));
                     chromDataSet.TimeIntervals = timeIntervals;
                 }
             }
