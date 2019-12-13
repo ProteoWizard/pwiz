@@ -203,7 +203,7 @@ int main(int argc, char* argv[])
         auto newConfig = config;
         newConfig.globalChromatogramsAreMs1Only = true;
         newConfig.indexRange = make_pair(0, 0);
-        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsNamedRawFile("090701-LTQVelos-unittest-01.raw"), newConfig);
+        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile("090701-LTQVelos-unittest-01.raw"), newConfig);
 
         #ifdef PWIZ_READER_THERMO
         // CONSIDER: do this test in VendorReaderTestHarness for all vendor readers?
