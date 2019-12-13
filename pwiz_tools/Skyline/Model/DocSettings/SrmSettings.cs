@@ -2048,7 +2048,7 @@ namespace pwiz.Skyline.Model.DocSettings
     /// <summary>
     /// Enum used to specify the representation of modifications in a sequence
     /// </summary>
-    public enum SequenceModFormatType { mass_diff, mass_diff_narrow, three_letter_code, full_precision }
+    public enum SequenceModFormatType { mass_diff, mass_diff_narrow, three_letter_code, full_precision, lib_precision }
 
     public interface IPrecursorMassCalc
     {
@@ -2129,23 +2129,32 @@ namespace pwiz.Skyline.Model.DocSettings
         private int _seenGroupCount;
         private int _seenMoleculeCount;
 
-        public SrmSettingsChangeMonitor(IProgressMonitor progressMonitor, string formatString,
-            IDocumentContainer documentContainer = null, SrmDocument startDocument = null)
+        public SrmSettingsChangeMonitor(IProgressMonitor progressMonitor, string formatString, IProgressStatus status)
         {
             _progressMonitor = progressMonitor;
+            if (formatString.Contains('{'))
+                _formatString = formatString;
+            _status = status;
+            if (_status == null)
+            {
+                if (_formatString == null)
+                    _status = new ProgressStatus(formatString);
+                else
+                {
+                    // Set status string to empty, since it should be reset very quickly
+                    _status = new ProgressStatus(string.Empty);
+                }
+            }
+        }
+
+        public SrmSettingsChangeMonitor(IProgressMonitor progressMonitor, string formatString,
+            IDocumentContainer documentContainer = null, SrmDocument startDocument = null)
+            :this(progressMonitor, formatString, null)
+        {
             _documentContainer = documentContainer;
             _startDocument = startDocument;
             if (_startDocument == null && documentContainer != null)
                 _startDocument = documentContainer.Document;
-
-            if (!formatString.Contains('{'))
-                _status = new ProgressStatus(formatString);
-            else
-            {
-                _formatString = formatString;
-                // Set status string to empty, since it should be reset very quickly
-                _status = new ProgressStatus(string.Empty);
-            }
         }
 
         public void ProcessGroup(PeptideGroupDocNode nodeGroup)
