@@ -28,6 +28,8 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
+        private static bool IsRecordMode { get { return false; } }
+
         protected override void DoTest()
         {
             // Export and check spectral library
@@ -74,7 +76,8 @@ namespace pwiz.SkylineTestFunctional
                 refSpectra = GetRefSpectra(connection);
                 irtLibrary = GetIrtLibrary(connection);
             }
-            CheckRefSpectraAll(refSpectra);
+            if (!IsRecordMode)
+                CheckRefSpectraAll(refSpectra); // Only record once
             foreach (var peptide in irtLibrary)
                 CheckIrtPeptide(irtPeptides, peptide.PeptideModSeq, peptide.Irt, peptide.Standard);
             Assert.IsTrue(!irtPeptides.Any());
@@ -94,47 +97,58 @@ namespace pwiz.SkylineTestFunctional
             var errDlg2 = ShowDialog<MessageDlg>(SkylineWindow.ShowExportSpectralLibraryDialog);
             Assert.AreEqual(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_at_least_one_peptide_precursor_to_export_a_spectral_library_, errDlg2.Message);
             OkDialog(errDlg2, errDlg2.OkDialog);
+
+            Assert.IsFalse(IsRecordMode);   // Don't commit in record mode
         }
 
 
         private static void CheckRefSpectraAll(IList<DbRefSpectra> refSpectra)
         {
+            if (IsRecordMode)
+            {
+                foreach (var refSpec in refSpectra)
+                {
+                    Console.WriteLine(@"CheckRefSpectra(refSpectra, ""{0}"", ""{1}"", {2}, {3:F03}, {4}, {5:F03});", 
+                        refSpec.PeptideSeq, refSpec.PeptideModSeq, refSpec.PrecursorCharge, refSpec.PrecursorMZ, refSpec.NumPeaks, refSpec.RetentionTime);
+                }
+                return;
+            }
             CheckRefSpectra(refSpectra, "APVPTGEVYFADSFDR", "APVPTGEVYFADSFDR", 2, 885.920, 4, 24.366);
-            CheckRefSpectra(refSpectra, "APVPTGEVYFADSFDR", "APVPTGEVYFADSFDR[+10.0]", 2, 890.924, 4, 24.532);
+            CheckRefSpectra(refSpectra, "APVPTGEVYFADSFDR", "APVPTGEVYFADSFDR[+10.00827]", 2, 890.924, 4, 24.532);
             CheckRefSpectra(refSpectra, "AVTELNEPLSNEDR", "AVTELNEPLSNEDR", 2, 793.886, 4, 17.095);
-            CheckRefSpectra(refSpectra, "AVTELNEPLSNEDR", "AVTELNEPLSNEDR[+10.0]", 2, 798.891, 4, 17.095);
+            CheckRefSpectra(refSpectra, "AVTELNEPLSNEDR", "AVTELNEPLSNEDR[+10.00827]", 2, 798.891, 4, 17.095);
             CheckRefSpectra(refSpectra, "DQGGELLSLR", "DQGGELLSLR", 2, 544.291, 4, 20.355);
-            CheckRefSpectra(refSpectra, "DQGGELLSLR", "DQGGELLSLR[+10.0]", 2, 549.295, 4, 20.311);
+            CheckRefSpectra(refSpectra, "DQGGELLSLR", "DQGGELLSLR[+10.00827]", 2, 549.295, 4, 20.311);
             CheckRefSpectra(refSpectra, "ELLTTMGDR", "ELLTTMGDR", 2, 518.261, 4, 16.904);
-            CheckRefSpectra(refSpectra, "ELLTTMGDR", "ELLTTMGDR[+10.0]", 2, 523.265, 4, 16.904);
+            CheckRefSpectra(refSpectra, "ELLTTMGDR", "ELLTTMGDR[+10.00827]", 2, 523.265, 4, 16.904);
             CheckRefSpectra(refSpectra, "FEELNADLFR", "FEELNADLFR", 2, 627.312, 3, 24.324);
-            CheckRefSpectra(refSpectra, "FEELNADLFR", "FEELNADLFR[+10.0]", 2, 632.316, 4, 24.283);
+            CheckRefSpectra(refSpectra, "FEELNADLFR", "FEELNADLFR[+10.00827]", 2, 632.316, 4, 24.283);
             CheckRefSpectra(refSpectra, "FHQLDIDDLQSIR", "FHQLDIDDLQSIR", 2, 800.410, 3, 22.960);
-            CheckRefSpectra(refSpectra, "FHQLDIDDLQSIR", "FHQLDIDDLQSIR[+10.0]", 2, 805.414, 4, 22.919);
+            CheckRefSpectra(refSpectra, "FHQLDIDDLQSIR", "FHQLDIDDLQSIR[+10.00827]", 2, 805.414, 4, 22.919);
             CheckRefSpectra(refSpectra, "FLIPNASQAESK", "FLIPNASQAESK", 2, 652.846, 4, 18.956);
-            CheckRefSpectra(refSpectra, "FLIPNASQAESK", "FLIPNASQAESK[+8.0]", 2, 656.853, 4, 19.001);
+            CheckRefSpectra(refSpectra, "FLIPNASQAESK", "FLIPNASQAESK[+8.0142]", 2, 656.853, 4, 19.001);
             CheckRefSpectra(refSpectra, "FTPGTFTNQIQAAFR", "FTPGTFTNQIQAAFR", 2, 849.934, 4, 26.833);
-            CheckRefSpectra(refSpectra, "FTPGTFTNQIQAAFR", "FTPGTFTNQIQAAFR[+10.0]", 2, 854.938, 4, 26.833);
+            CheckRefSpectra(refSpectra, "FTPGTFTNQIQAAFR", "FTPGTFTNQIQAAFR[+10.00827]", 2, 854.938, 4, 26.833);
             CheckRefSpectra(refSpectra, "ILTFDQLALDSPK", "ILTFDQLALDSPK", 2, 730.903, 4, 25.962);
-            CheckRefSpectra(refSpectra, "ILTFDQLALDSPK", "ILTFDQLALDSPK[+8.0]", 2, 734.910, 4, 25.962);
+            CheckRefSpectra(refSpectra, "ILTFDQLALDSPK", "ILTFDQLALDSPK[+8.0142]", 2, 734.910, 4, 25.962);
             CheckRefSpectra(refSpectra, "LSSEMNTSTVNSAR", "LSSEMNTSTVNSAR", 2, 748.854, 4, 14.068);
-            CheckRefSpectra(refSpectra, "LSSEMNTSTVNSAR", "LSSEMNTSTVNSAR[+10.0]", 2, 753.858, 4, 14.068);
+            CheckRefSpectra(refSpectra, "LSSEMNTSTVNSAR", "LSSEMNTSTVNSAR[+10.00827]", 2, 753.858, 4, 14.068);
             CheckRefSpectra(refSpectra, "NIVEAAAVR", "NIVEAAAVR", 2, 471.772, 4, 15.444);
-            CheckRefSpectra(refSpectra, "NIVEAAAVR", "NIVEAAAVR[+10.0]", 2, 476.776, 4, 15.444);
+            CheckRefSpectra(refSpectra, "NIVEAAAVR", "NIVEAAAVR[+10.00827]", 2, 476.776, 4, 15.444);
             CheckRefSpectra(refSpectra, "NLQYYDISAK", "NLQYYDISAK", 2, 607.806, 4, 18.204);
-            CheckRefSpectra(refSpectra, "NLQYYDISAK", "NLQYYDISAK[+8.0]", 2, 611.813, 4, 18.204);
+            CheckRefSpectra(refSpectra, "NLQYYDISAK", "NLQYYDISAK[+8.0142]", 2, 611.813, 4, 18.204);
             CheckRefSpectra(refSpectra, "TSAALSTVGSAISR", "TSAALSTVGSAISR", 2, 660.860, 4, 18.403);
-            CheckRefSpectra(refSpectra, "TSAALSTVGSAISR", "TSAALSTVGSAISR[+10.0]", 2, 665.864, 4, 18.403);
+            CheckRefSpectra(refSpectra, "TSAALSTVGSAISR", "TSAALSTVGSAISR[+10.00827]", 2, 665.864, 4, 18.403);
             CheckRefSpectra(refSpectra, "VHIEIGPDGR", "VHIEIGPDGR", 2, 546.793, 4, 15.672);
-            CheckRefSpectra(refSpectra, "VHIEIGPDGR", "VHIEIGPDGR[+10.0]", 2, 551.798, 4, 15.672);
+            CheckRefSpectra(refSpectra, "VHIEIGPDGR", "VHIEIGPDGR[+10.00827]", 2, 551.798, 4, 15.672);
             CheckRefSpectra(refSpectra, "VLTPELYAELR", "VLTPELYAELR", 2, 652.366, 4, 23.642);
-            CheckRefSpectra(refSpectra, "VLTPELYAELR", "VLTPELYAELR[+10.0]", 2, 657.371, 4, 23.683);
+            CheckRefSpectra(refSpectra, "VLTPELYAELR", "VLTPELYAELR[+10.00827]", 2, 657.371, 4, 23.683);
             CheckRefSpectra(refSpectra, "VNLAELFK", "VNLAELFK", 2, 467.274, 4, 25.787);
-            CheckRefSpectra(refSpectra, "VNLAELFK", "VNLAELFK[+8.0]", 2, 471.281, 4, 25.829);
+            CheckRefSpectra(refSpectra, "VNLAELFK", "VNLAELFK[+8.0142]", 2, 471.281, 4, 25.829);
             CheckRefSpectra(refSpectra, "VPDFSEYR", "VPDFSEYR", 2, 506.740, 4, 17.826);
-            CheckRefSpectra(refSpectra, "VPDFSEYR", "VPDFSEYR[+10.0]", 2, 511.744, 4, 17.826);
+            CheckRefSpectra(refSpectra, "VPDFSEYR", "VPDFSEYR[+10.00827]", 2, 511.744, 4, 17.826);
             CheckRefSpectra(refSpectra, "VPDGMVGFIIGR", "VPDGMVGFIIGR", 2, 630.842, 4, 26.775);
-            CheckRefSpectra(refSpectra, "VPDGMVGFIIGR", "VPDGMVGFIIGR[+10.0]", 2, 635.846, 4, 26.734);
+            CheckRefSpectra(refSpectra, "VPDGMVGFIIGR", "VPDGMVGFIIGR[+10.00827]", 2, 635.846, 4, 26.734);
             CheckRefSpectra(refSpectra, "ADVTPADFSEWSK", "ADVTPADFSEWSK", 2, 726.836, 3, 22.100);
             CheckRefSpectra(refSpectra, "DGLDAASYYAPVR", "DGLDAASYYAPVR", 2, 699.338, 3, 20.500);
             CheckRefSpectra(refSpectra, "GAGSSEPVTGLDAK", "GAGSSEPVTGLDAK", 2, 644.823, 3, 14.563);
