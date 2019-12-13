@@ -826,8 +826,8 @@ void BlibFilter::compAndInsert(vector<RefSpectrum*>& oneIon, vector<pair<int, in
         }
     }
 
-	if (!bestSpectraIdAndCount.empty())
-		specID = bestSpectraIdAndCount.back().first;
+    if (!bestSpectraIdAndCount.empty())
+        specID = bestSpectraIdAndCount.back().first;
 
     // add rt, RefSpectraId for all refspec
     for (int i = 0; i < num_spec; i++) {
