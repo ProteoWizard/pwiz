@@ -27,6 +27,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Prosit;
@@ -236,7 +237,8 @@ namespace pwiz.Skyline.SettingsUI
                                 continue;
                             targetPeptidesChosen.Add(doc.Settings.GetModifiedSequence(nodePep.Peptide.Target,
                                                                                       nodeGroup.TransitionGroup.LabelType,
-                                                                                      nodePep.ExplicitMods));
+                                                                                      nodePep.ExplicitMods,
+                                                                                      SequenceModFormatType.lib_precision));
                         }
                     }
                 }
@@ -251,7 +253,8 @@ namespace pwiz.Skyline.SettingsUI
                     var precursors = new TransitionGroupDocNode[precursorCount];
                     int index = 0;
 
-                    for (var i = 0; i < peptides.Length; ++i) {
+                    for (var i = 0; i < peptides.Length; ++i)
+                    {
                         var groups = peptides[i].TransitionGroups.ToArray();
                         Array.Copy(Enumerable.Repeat(peptides[i], groups.Length).ToArray(), 0, peptidesPerPrecursor, index,
                             groups.Length);
