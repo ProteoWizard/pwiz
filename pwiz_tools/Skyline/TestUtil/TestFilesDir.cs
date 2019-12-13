@@ -147,14 +147,6 @@ namespace pwiz.SkylineTestUtil
             return GetTestPathIntl(relativePath);
         }
 
-        /// <summary>
-        /// Returns full path to the Skyline directory (assuming current assembly is running in bin/[platform]/[configuration])
-        /// </summary>
-        public static string GetSkylineDir()
-        {
-            var exeLocation = Assembly.GetExecutingAssembly().Location;
-            return exeLocation.Substring(0, exeLocation.IndexOf(@"Skyline", StringComparison.InvariantCulture)) + @"Skyline\";
-        }
 
         public enum VendorDir
         {
@@ -169,14 +161,34 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
-        /// Returns full path to a file in the specified vendor reader's test data directory
+        /// Returns full path to the specified vendor reader's test data directory
         /// (e.g. pwiz/data/vendor_readers/Thermo/Reader_Thermo_Test.data)
+        /// </summary>
+        public static string GetVendorTestData(VendorDir vendorDir)
+        {
+            string projectDir = ExtensionTestContext.GetProjectDirectory("");
+            string vendorReaderPath;
+            string vendorStr = Enum.GetName(typeof(VendorDir), vendorDir) ?? throw new ArgumentException(@"VendorDir value unknown");
+            if (File.Exists(Path.Combine(projectDir, @"Skyline.sln")))
+            {
+                vendorReaderPath = Path.Combine(projectDir, @"..\..\pwiz\data\vendor_readers");
+                return Path.Combine(vendorReaderPath, vendorStr, $"Reader_{vendorStr}_Test.data");
+            }
+            else
+            {
+                vendorReaderPath = Path.Combine(projectDir, @".."); // one up from TestZipFiles, and no vendorStr intermediate directory
+                return Path.Combine(vendorReaderPath, $"Reader_{vendorStr}_Test.data");
+            }
+
+        }
+
+        /// <summary>
+        /// Returns full path to a file in the specified vendor reader's test data directory
+        /// (e.g. pwiz/data/vendor_readers/Thermo/Reader_Thermo_Test.data/test_file.raw)
         /// </summary>
         public static string GetVendorTestData(VendorDir vendorDir, string rawname)
         {
-            string vendorReaderPath = Path.Combine(GetSkylineDir(), @"..\..\pwiz\data\vendor_readers");
-            string vendorStr = Enum.GetName(typeof(VendorDir), vendorDir) ?? throw new ArgumentException(@"VendorDir value unknown");
-            return Path.Combine(vendorReaderPath, vendorStr, $"Reader_{vendorStr}_Test.data", rawname);
+            return Path.Combine(GetVendorTestData(vendorDir), rawname);
         }
 
         /// <summary>
