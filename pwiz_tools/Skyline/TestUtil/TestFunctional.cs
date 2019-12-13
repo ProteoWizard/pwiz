@@ -1003,7 +1003,10 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         protected void RunFunctionalTest(string defaultUiMode = UiModes.PROTEOMIC)
         {
-            for (var TestDataDownloadRetries = 1; TestDataDownloadRetries >= 0; TestDataDownloadRetries--)
+            // Be prepared to re-run test in the event that a previously downloaded data file is damaged or stale
+            for (var testDataDownloadRetries = RetryDataDownloads && DictZipFileIsKnownCurrent != null && DictZipFileIsKnownCurrent.Any(kvp=> !kvp.Value) ? 1 : 0; 
+                testDataDownloadRetries >= 0; 
+                testDataDownloadRetries--)
             {
                 try
                 {
@@ -1049,7 +1052,7 @@ namespace pwiz.SkylineTestUtil
                     // Were all windows disposed?
                     FormEx.CheckAllFormsDisposed();
                     CommonFormEx.CheckAllFormsDisposed();
-
+                    testDataDownloadRetries = 0; // Success, no retry needed
                 }
                 catch (Exception x)
                 {
@@ -1057,7 +1060,7 @@ namespace pwiz.SkylineTestUtil
                     var retry = false;
                     try
                     {
-                        retry = TestDataDownloadRetries != 0 && RetryDataDownloads && FreshenTestDataDownloads(); // If we find any stale downloads, let's retry
+                        retry = testDataDownloadRetries != 0 && FreshenTestDataDownloads(); // If we find any stale downloads, let's retry
                     }
                     catch (Exception xx)
                     {
@@ -1066,7 +1069,7 @@ namespace pwiz.SkylineTestUtil
                     if (!retry)
                     {
                         Program.AddTestException(x);
-                        TestDataDownloadRetries = 0;
+                        testDataDownloadRetries = 0; // Failure, but no more retries
                     }
                 }
 
