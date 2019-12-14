@@ -368,17 +368,23 @@ namespace pwiz.Skyline.Model.Results
                 return false;
             if (name.Length == prefix.Length || name[prefix.Length] == '.')
                 return true;
-            // Check for Waters MSe
+            // Check for special suffixes we know get added to the basename by other tools
             string suffix = name.Substring(prefix.Length);
             if (suffix[0] == '_' && IsUnderscoreSuffix(suffix))
                 return true;
             return false;
         }
 
-        public static bool IsUnderscoreSuffix(string name)
+        public static bool IsUnderscoreSuffix(string suffix)
         {
-            return name.ToLowerInvariant().EndsWith(@"_ia_final_fragment") ||
-                   name.EndsWith(@"_final_fragment");
+            string suffixLower = suffix.ToLowerInvariant();
+            return
+                // Waters MSe
+                suffixLower.EndsWith(@"_ia_final_fragment") ||
+                suffixLower.EndsWith(@"_final_fragment") ||
+                // MSFragger
+                suffixLower.EndsWith(@"_calibrated") ||
+                suffixLower.EndsWith(@"_uncalibrated");
         }
 
 // ReSharper disable MemberCanBeMadeStatic.Local
