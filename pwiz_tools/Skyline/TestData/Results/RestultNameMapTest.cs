@@ -45,10 +45,13 @@ namespace pwiz.SkylineTestData.Results
             Assert.AreEqual("January", resultNameMap.Find("january"));
             Assert.AreEqual("Jan", resultNameMap.Find("jAN"));
             Assert.IsNull(resultNameMap.Find("Janu"));
-            // Test when searching for something ending with "_final_fragment"
             Assert.IsNull(resultNameMap.Find("jan_"));
+            // Test when searching for something ending with "_final_fragment" (Waters MSe)
             Assert.AreEqual("Jan", resultNameMap.Find("jan_January_final_fragment"));
-            Assert.IsNull(resultNameMap.Find("jan_January_final_Fragment"));
+            Assert.AreEqual("Jan", resultNameMap.Find("jan_January_final_Fragment"));
+            // Test when searching for something ending with "_calibrated" and "_uncalibrated" (MSFragger)
+            Assert.AreEqual("Jan", resultNameMap.Find("jan_January_calibrated"));
+            Assert.AreEqual("Jan", resultNameMap.Find("jan_January_UNCALIBRATED"));
             // Test when searching for something ending with a dot.
             Assert.AreEqual("Jan", resultNameMap.Find("jAn.foo"));
             Assert.AreEqual("January", resultNameMap.Find("january.foo"));
@@ -60,6 +63,8 @@ namespace pwiz.SkylineTestData.Results
             var formatInfo = DateTimeFormatInfo.InvariantInfo;
             var testNames = formatInfo.DayNames
                 .Concat(formatInfo.AbbreviatedDayNames.Select(s => s + "_final_fragment"))
+                .Concat(formatInfo.AbbreviatedDayNames.Select(s => s + "_calibrated"))
+                .Concat(formatInfo.AbbreviatedDayNames.Select(s => s + "_uncalibrated"))
                 .Concat(formatInfo.MonthNames)
                 .Concat(formatInfo.AbbreviatedMonthNames.Select(s => s + ".ext")).ToArray();
             var resultNameMap = ResultMapFromStrings(testNames);
@@ -68,6 +73,8 @@ namespace pwiz.SkylineTestData.Results
 
             Assert.AreEqual("Tue_final_fragment", resultNameMap.Find("Tue_final_fragment"));
             Assert.AreEqual("Tue_final_fragment", resultNameMap.FindExact("tuE_final_fragment"));
+            Assert.AreEqual("Tue_calibrated", resultNameMap.Find("Tue_CALIBRATED"));
+            Assert.AreEqual("Tue_uncalibrated", resultNameMap.FindExact("tuE_uncalibrated"));
 
             Assert.AreEqual("Jan.ext", resultNameMap.Find("jan"));
             Assert.IsNull(resultNameMap.FindExact("jan"));
