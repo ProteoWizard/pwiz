@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
@@ -174,17 +173,7 @@ namespace pwiz.Skyline.Model.Prosit
 
         public static List<PrositIntensityModel.PeptidePrecursorNCE> ReadStandardPeptides(IrtStandard standard)
         {
-            SrmDocument docImport;
-            using (var standardDocReader = standard.GetDocumentReader())
-            {
-                if (standardDocReader == null)
-                    return null;
-
-                var ser = new XmlSerializer(typeof(SrmDocument));
-                docImport = (SrmDocument)ser.Deserialize(standardDocReader);
-            }
-
-            var peps = docImport.Peptides.ToList();
+            var peps = standard.GetDocument().Peptides.ToList();
             var precs = peps.Select(p => p.TransitionGroups.First());
             /*for (var i = 0; i < peps.Count; i++)
             {
