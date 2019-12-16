@@ -57,6 +57,11 @@ namespace pwiz.SkylineTestUtil
                 if (File.Exists(Path.Combine(directory, "Skyline.sln")))
                     return Path.Combine(directory, relativePath);
             }
+
+            // as last resort, check if current directory is the pwiz repository root (e.g. when running TestRunner in Docker container)
+            if (File.Exists(Path.Combine("pwiz_tools", "Skyline", "Skyline.sln")))
+                return Path.Combine("pwiz_tools", "Skyline", relativePath);
+
             return null;
         }
 

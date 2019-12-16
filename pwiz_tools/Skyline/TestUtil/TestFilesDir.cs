@@ -166,6 +166,9 @@ namespace pwiz.SkylineTestUtil
         public static string GetVendorTestData(VendorDir vendorDir)
         {
             string projectDir = ExtensionTestContext.GetProjectDirectory("");
+            if (projectDir == null)
+                throw new InvalidOperationException("unable to find project directory with Skyline test files");
+
             string vendorReaderPath;
             string vendorStr = Enum.GetName(typeof(VendorDir), vendorDir) ?? throw new ArgumentException(@"VendorDir value unknown");
             if (File.Exists(Path.Combine(projectDir, @"Skyline.sln")))
