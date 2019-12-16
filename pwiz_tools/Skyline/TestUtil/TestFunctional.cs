@@ -151,7 +151,7 @@ namespace pwiz.SkylineTestUtil
             {
                 if (_defaultFormIcon == null)
                     _defaultFormIcon = (Icon)typeof(Form).
-                        GetProperty("DefaultIcon", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)?.GetValue(null, null);
+                        GetProperty("DefaultIcon", BindingFlags.NonPublic | BindingFlags.Static)?.GetValue(null, null);
 
                 return _defaultFormIcon;
             }
@@ -173,7 +173,7 @@ namespace pwiz.SkylineTestUtil
             if (dlg.Icon.Handle != DefaultFormIcon.Handle)
                 RunUI(() =>
                 {
-                    dlg.Icon = Skyline.Properties.Resources.Skyline_Release1;
+                    dlg.Icon = Resources.Skyline_Release1;
                 });
             return dlg;
         }
@@ -1314,7 +1314,7 @@ namespace pwiz.SkylineTestUtil
                 RunUI(() =>
                 {
                     SkylineWindow.UseKeysOverride = true;
-                    SkylineWindow.Icon = Skyline.Properties.Resources.Skyline_Release1;
+                    SkylineWindow.Icon = Resources.Skyline_Release1;
                     SkylineWindow.Text = @"Skyline";
                 });
                  
