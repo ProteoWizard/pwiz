@@ -83,6 +83,7 @@ class PepXMLreader : public BuildParser{
   double aminoacidmass[128];
   int massType; //1 is mono, 0 is avg
   ANALYSIS analysisType_;  ///< e.g. Peptide Prophet
+  ANALYSIS parentAnalysisType_; ///< e.g. MSFragger run through Peptide Prophet
   PSM_SCORE_TYPE scoreType_;
   int lastFilePosition_;
   map<PSM*, double> precursorMap_;
