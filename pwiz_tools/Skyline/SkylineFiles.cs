@@ -56,7 +56,6 @@ using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using DatabaseOpeningException = pwiz.Skyline.Model.Irt.DatabaseOpeningException;
@@ -2167,8 +2166,21 @@ namespace pwiz.Skyline
                         if (dlg.ShowDialog(this) != DialogResult.OK)
                             return false;
 
+                        const double slopeTolerance = 0.05;
+                        var rescale = false;
+                        if (dlg.Regression != null && !(1 - slopeTolerance <= dlg.Regression.Slope && dlg.Regression.Slope <= 1 + slopeTolerance))
+                        {
+                            using (var scaleDlg = new MultiButtonMsgDlg(
+                                Resources.SkylineWindow_ImportMassListIrts_The_standard_peptides_do_not_appear_to_be_on_the_iRT_C18_scale__Would_you_like_to_recalibrate_them_to_this_scale_,
+                                MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
+                            {
+                                if (scaleDlg.ShowDialog(this) == DialogResult.Yes)
+                                    rescale = true;
+                            }
+                        }
+
                         doc = dlg.Document;
-                        dlg.UpdateLists(librarySpectra, dbIrtPeptides);
+                        dlg.UpdateLists(librarySpectra, dbIrtPeptides, rescale);
                         if (!string.IsNullOrEmpty(dlg.IrtFile))
                             irtInputs = new MassListInputs(dlg.IrtFile);
                     }

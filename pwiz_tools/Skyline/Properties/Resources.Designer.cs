@@ -26047,6 +26047,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The standard peptides do not appear to be on the iRT-C18 scale. Would you like to recalibrate them to this scale?.
+        /// </summary>
+        public static string SkylineWindow_ImportMassListIrts_The_standard_peptides_do_not_appear_to_be_on_the_iRT_C18_scale__Would_you_like_to_recalibrate_them_to_this_scale_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportMassListIrts_The_standard_peptides_do_not_appear_to_be_on_the" +
+                        "_iRT_C18_scale__Would_you_like_to_recalibrate_them_to_this_scale_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Data columns not found in first line..
         /// </summary>
         public static string SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line {

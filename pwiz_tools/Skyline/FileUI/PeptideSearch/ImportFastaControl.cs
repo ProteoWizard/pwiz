@@ -412,7 +412,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return false;
 
                 // Add iRT standards if not present
-                if (irtStandard != null && irtStandard.HasDocument && !irtStandard.InDocument(docNew))
+                if (irtStandard != null && irtStandard.HasDocument && irtStandard.MissingFromDocument(docNew).Any())
                     docNew = irtStandard.ImportTo(docNew);
 
                 if (AutoTrain)

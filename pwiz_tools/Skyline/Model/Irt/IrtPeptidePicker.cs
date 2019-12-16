@@ -163,17 +163,18 @@ namespace pwiz.Skyline.Model.Irt
             return bestPeptides.Select(pep => new MeasuredPeptide(pep)).ToList();
         }
 
-        public static IEnumerable<Target> Pick(int count, DbIrtPeptide[] peptides)
+        public static IEnumerable<Target> Pick(int count, DbIrtPeptide[] peptides, IEnumerable<Target> outliers)
         {
             var targets = new TargetMap<List<DbIrtPeptide>>(peptides.Select(pep =>
                 new KeyValuePair<Target, List<DbIrtPeptide>>(pep.ModifiedTarget, new List<DbIrtPeptide>())));
             foreach (var pep in peptides)
                 targets[pep.ModifiedTarget].Add(pep);
             var distinctPeps = new List<DbIrtPeptide>();
-            var minIrt = double.MaxValue;
-            var maxIrt = double.MinValue;
             foreach (var list in targets.Values)
             {
+                if (list.Count == 0)
+                    continue;
+
                 var median = new Statistics(list.Select(pep => pep.Irt)).Median();
                 DbIrtPeptide best = null;
                 var minDiff = double.MaxValue;
@@ -186,17 +187,19 @@ namespace pwiz.Skyline.Model.Irt
                         best = pep;
                     }
                 }
-
-                if (best != null)
-                {
-                    distinctPeps.Add(best);
-                    if (best.Irt < minIrt)
-                        minIrt = best.Irt;
-                    if (best.Irt > maxIrt)
-                        maxIrt = best.Irt;
-                }
+                distinctPeps.Add(best);
             }
+
+            var outlierMap = new TargetMap<bool>(outliers.Select(target => new KeyValuePair<Target, bool>(target, true)));
+            if (distinctPeps.Count(pep => !outlierMap.ContainsKey(pep.ModifiedTarget)) >= count)
+            {
+                // don't use outliers if we have enough other values
+                distinctPeps.RemoveAll(pep => outlierMap.ContainsKey(pep.ModifiedTarget));
+            }
+
             distinctPeps.Sort((x, y) => x.Irt.CompareTo(y.Irt));
+            var minIrt = distinctPeps.First().Irt;
+            var maxIrt = distinctPeps.Last().Irt;
             var gradientLength = maxIrt - minIrt;
             for (var i = 0; i < count; i++)
             {

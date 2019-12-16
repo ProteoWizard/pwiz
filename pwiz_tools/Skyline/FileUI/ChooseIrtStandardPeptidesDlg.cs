@@ -41,6 +41,7 @@ namespace pwiz.Skyline.FileUI
         private readonly ICollection<DbIrtPeptide> _dbIrtPeptides;
 
         public string IrtFile { get; private set; }
+        public RegressionLine Regression { get; private set; } // x = library irt, y = known irt
         private List<MeasuredRetentionTime> _irtAdd;
         private List<SpectrumMzInfo> _librarySpectra;
         private TargetMap<bool> _irtTargets;
@@ -50,6 +51,7 @@ namespace pwiz.Skyline.FileUI
             InitializeComponent();
 
             Document = document;
+            Regression = null;
             _documentFilePath = documentFilePath;
             _dbIrtPeptides = dbIrtPeptides;
 
@@ -71,12 +73,14 @@ namespace pwiz.Skyline.FileUI
             UpdateSelection(this, null);
         }
 
-        public void UpdateLists(List<SpectrumMzInfo> librarySpectra, List<DbIrtPeptide> dbIrtPeptides)
+        public void UpdateLists(List<SpectrumMzInfo> librarySpectra, List<DbIrtPeptide> dbIrtPeptides, bool rescale)
         {
             librarySpectra.AddRange(_librarySpectra);
             dbIrtPeptides.AddRange(_irtAdd.Select(rt => new DbIrtPeptide(rt.PeptideSequence, rt.RetentionTime, true, TimeSource.scan)));
             if (_irtTargets != null)
                 dbIrtPeptides.ForEach(pep => pep.Standard = _irtTargets.ContainsKey(pep.ModifiedTarget));
+            if (rescale && Regression != null)
+                dbIrtPeptides.ForEach(pep => pep.Irt = Regression.GetY(pep.Irt));
         }
 
         private void btnOk_Click(object sender, EventArgs e)
@@ -94,78 +98,96 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        private static RegressionLine GetRegression(TargetMap<double> knownIrts, DbIrtPeptide[] matchingPeptides, int? minPoints, out RegressionGraphData graphData)
+        {
+            graphData = null;
+
+            var matchingPeptideIrts = new TargetMap<List<double>>(matchingPeptides.Select(pep =>
+                new KeyValuePair<Target, List<double>>(pep.ModifiedTarget, new List<double>())));
+            foreach (var pep in matchingPeptides)
+            {
+                var list = matchingPeptideIrts[pep.ModifiedTarget];
+                list.Add(pep.Irt);
+            }
+            var listX = new List<double>();
+            var listY = new List<double>();
+            var targets = new Dictionary<int, Target>();
+            foreach (var (i, kvp) in matchingPeptideIrts.Where(kvp => kvp.Value.Count > 0).Select((kvp, i) => Tuple.Create(i, kvp)))
+            {
+                targets[i] = kvp.Key;
+                listX.Add(new Statistics(kvp.Value).Median());
+                listY.Add(knownIrts[kvp.Key]);
+            }
+
+            var regressionMinPoints = minPoints ?? RCalcIrt.MinStandardCount(knownIrts.Count);
+            if (!RCalcIrt.TryGetRegressionLine(listX, listY, regressionMinPoints, out var regression, out var removed))
+                return null;
+
+            var outliers = new HashSet<int>();
+            for (var i = 0; i < listX.Count; i++)
+            {
+                if (removed.Contains(Tuple.Create(listX[i], listY[i])))
+                    outliers.Add(i);
+            }
+
+            graphData = new RegressionGraphData
+            {
+                Title = Resources.ChooseIrtStandardPeptidesDlg_OkDialog_Linear_regression,
+                LabelX = Resources.ChooseIrtStandardPeptidesDlg_OkDialog_Library_iRTs,
+                LabelY = Resources.ChooseIrtStandardPeptidesDlg_OkDialog_Known_iRTs,
+                XValues = listX.ToArray(),
+                YValues = listY.ToArray(),
+                Tooltips = targets.ToDictionary(target => target.Key, target => target.Value.ToString()),
+                OutlierIndices = outliers,
+                RegressionLine = regression,
+                MinR = RCalcIrt.MIN_IRT_TO_TIME_CORRELATION,
+                MinPoints = regressionMinPoints,
+            };
+            return regression;
+        }
+
         private bool ProcessStandard()
         {
-            var standard = (IrtStandard)comboExisting.SelectedItem;
+            var standard = (IrtStandard) comboExisting.SelectedItem;
 
             if (ReferenceEquals(standard, IrtStandard.CIRT_SHORT))
             {
                 var knownIrts = new TargetMap<double>(IrtStandard.CIRT.Peptides.Select(pep => new KeyValuePair<Target, double>(pep.ModifiedTarget, pep.Irt)));
-                var cirtPeptides = _dbIrtPeptides.Where(pep => knownIrts.ContainsKey(pep.ModifiedTarget)).ToArray();
-                var importCirts = new TargetMap<List<double>>(cirtPeptides.Select(pep =>
-                    new KeyValuePair<Target, List<double>>(pep.ModifiedTarget, new List<double>())));
-                var numCirts = 0;
-                foreach (var pep in cirtPeptides)
+                var matchingPeptides = _dbIrtPeptides.Where(pep => knownIrts.ContainsKey(pep.ModifiedTarget)).ToArray();
+                var regression = GetRegression(knownIrts, matchingPeptides, RCalcIrt.MIN_PEPTIDES_COUNT, out var graphData);
+                if (regression != null)
                 {
-                    var list = importCirts[pep.ModifiedTarget];
-                    if (list.Count == 0)
-                        numCirts++;
-                    list.Add(pep.Irt);
-                }
-                var listX = new List<double>();
-                var listY = new List<double>();
-                var targets = new Dictionary<int, Target>();
-                foreach (var (i, kvp) in importCirts.Where(kvp => kvp.Value.Count > 0).Select((kvp, i) => Tuple.Create(i, kvp)))
-                {
-                    targets[i] = kvp.Key;
-                    listX.Add(new Statistics(kvp.Value).Median());
-                    listY.Add(knownIrts[kvp.Key]);
-                }
-                const int minPoints = RCalcIrt.MIN_PEPTIDES_COUNT;
-                if (RCalcIrt.TryGetRegressionLine(listX, listY, minPoints, out var regression, out var removed))
-                {
-                    var outliers = new HashSet<int>();
-                    for (var j = 0; j < listX.Count; j++)
-                    {
-                        if (removed.Contains(Tuple.Create(listX[j], listY[j])))
-                            outliers.Add(j);
-                    }
-                    var graphData = new RegressionGraphData
-                    {
-                        Title = Resources.ChooseIrtStandardPeptidesDlg_OkDialog_Linear_regression,
-                        LabelX = Resources.ChooseIrtStandardPeptidesDlg_OkDialog_Library_iRTs,
-                        LabelY = Resources.ChooseIrtStandardPeptidesDlg_OkDialog_Known_iRTs,
-                        XValues = listX.ToArray(),
-                        YValues = listY.ToArray(),
-                        Tooltips = targets.ToDictionary(target => target.Key, target => target.Value.ToString()),
-                        OutlierIndices = outliers,
-                        RegressionLine = regression,
-                        MinR = RCalcIrt.MIN_IRT_TO_TIME_CORRELATION,
-                        MinPoints = minPoints,
-                    };
-                    var outlierTargets = outliers.Select(idx => targets[idx]).ToHashSet();
-                    numCirts -= outlierTargets.Count;
+                    var numCirts = graphData.XValues.Length;
+                    int cirtCount;
                     using (var dlg = new AddIrtStandardsDlg(numCirts,
                         string.Format(Resources.LibraryBuildNotificationHandler_AddIrts__0__distinct_CiRT_peptides_were_found__How_many_would_you_like_to_use_as_iRT_standards_,
                             numCirts), graphData))
                     {
                         if (dlg.ShowDialog(this) != DialogResult.OK)
                             return false;
-
-                        SetStandards(IrtPeptidePicker.Pick(dlg.StandardCount, cirtPeptides.Where(pep => !outlierTargets.Contains(pep.ModifiedTarget)).ToArray()));
+                        cirtCount = dlg.StandardCount;
                     }
+                    Regression = regression;
+                    var outlierTargets = graphData.OutlierIndices.Select(idx => new Target(graphData.Tooltips[idx])).ToArray();
+                    SetStandards(IrtPeptidePicker.Pick(cirtCount, matchingPeptides, outlierTargets));
                     return true;
                 }
             }
 
-            if (standard.HasDocument && !standard.InDocument(Document))
-            {
-                _irtAdd.AddRange(standard.Peptides.Select(pep => new MeasuredRetentionTime(pep.ModifiedTarget, pep.Irt, true, true)));
-                Document = standard.ImportTo(Document);
-            }
-            else
+            var irts = new TargetMap<double>(standard.Peptides.Select(pep => new KeyValuePair<Target, double>(pep.ModifiedTarget, pep.Irt)));
+            var peptides = _dbIrtPeptides.Where(pep => irts.ContainsKey(pep.ModifiedTarget)).ToArray();
+            Regression = GetRegression(irts, peptides, null, out _);
+
+            if (Regression != null)
             {
                 SetStandards(standard.Peptides.Select(pep => pep.ModifiedTarget));
+            }
+            else if (standard.HasDocument)
+            {
+                var missing = new TargetMap<bool>(standard.MissingFromDocument(Document).Select(target => new KeyValuePair<Target, bool>(target, true)));
+                _irtAdd.AddRange(standard.Peptides.Where(pep => missing.ContainsKey(pep.ModifiedTarget))
+                    .Select(pep => new MeasuredRetentionTime(pep.ModifiedTarget, pep.Irt, true, true)));
+                Document = standard.ImportTo(Document);
             }
             return true;
         }

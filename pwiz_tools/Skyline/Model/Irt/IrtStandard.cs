@@ -397,12 +397,13 @@ namespace pwiz.Skyline.Model.Irt
             }
         }
 
-        public bool InDocument(SrmDocument document)
+        public IEnumerable<Target> MissingFromDocument(SrmDocument document)
         {
-            return !MissingPeptides(document).Any();
+            var found = new TargetMap<bool>(FindInDocument(document).Select(nodePep => new KeyValuePair<Target, bool>(nodePep.ModifiedTarget, true)));
+            return Peptides.Where(pep => !found.ContainsKey(pep.ModifiedTarget)).Select(pep => pep.ModifiedTarget);
         }
 
-        public IEnumerable<Target> MissingPeptides(SrmDocument document)
+        public IEnumerable<PeptideDocNode> FindInDocument(SrmDocument document)
         {
             var standardDoc = GetDocument();
             var docPeps = new TargetMap<Dictionary<int, SignedMz>>(standardDoc != null
@@ -410,24 +411,15 @@ namespace pwiz.Skyline.Model.Irt
                     new KeyValuePair<Target, Dictionary<int, SignedMz>>(pep.ModifiedTarget,
                         pep.TransitionGroups.ToDictionary(nodeTranGroup => nodeTranGroup.PrecursorCharge, nodeTranGroup => nodeTranGroup.PrecursorMz)))
                 : Peptides.Select(pep => new KeyValuePair<Target, Dictionary<int, SignedMz>>(pep.ModifiedTarget, null)));
-            var docPepsFound = new TargetMap<int[]>(docPeps.Keys.Select(target => new KeyValuePair<Target, int[]>(target, new[] {0})));
-            var numDocPepsFound = 0;
             // Compare precursor m/z to see if heavy labeled
             foreach (var nodePep in document.Peptides)
             {
-                var key = nodePep.ModifiedTarget;
-                if (!docPeps.TryGetValue(key, out var precursors) || docPepsFound[key][0] > 0)
-                    continue;
-
-                if (precursors == null || nodePep.TransitionGroups.Any(nodeTranGroup =>
-                        precursors.TryGetValue(nodeTranGroup.PrecursorCharge, out var mz) && Math.Abs(mz - nodeTranGroup.PrecursorMz) < 1))
+                if (docPeps.TryGetValue(nodePep.ModifiedTarget, out var precursors) &&
+                    (precursors == null || nodePep.TransitionGroups.Any(nodeTranGroup => precursors.TryGetValue(nodeTranGroup.PrecursorCharge, out var mz) && Math.Abs(mz - nodeTranGroup.PrecursorMz) < 1)))
                 {
-                    docPepsFound[key][0] = 1;
-                    if (++numDocPepsFound == docPeps.Count)
-                        return new Target[0];
+                    yield return nodePep;
                 }
             }
-            return docPepsFound.Where(pep => pep.Value[0] == 0).Select(pep => pep.Key);
         }
 
         /// <summary>
