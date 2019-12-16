@@ -1451,12 +1451,14 @@ namespace pwiz.SkylineTestFunctional
             // For now just set all Prosit settings
             var toolOptions = ShowDialog<ToolOptionsUI>(() => SkylineWindow.ShowToolOptionsUI(ToolOptionsUI.TABS.Prosit));
 
+            var intensityModel = PrositIntensityModel.Models.First();
+            var rtModel = PrositRetentionTimeModel.Models.First();
             RunUI(() =>
             {
                 // Also set ip, otherwise we will keep getting exceptions about the server not being set,
                 // although we are using the fake test client
-                toolOptions.PrositIntensityModelCombo = "intensity_2";
-                toolOptions.PrositRetentionTimeModelCombo = "iRT";
+                toolOptions.PrositIntensityModelCombo = intensityModel;
+                toolOptions.PrositRetentionTimeModelCombo = rtModel;
                 toolOptions.CECombo = 28;
             });
 
@@ -1464,8 +1466,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => toolOptions.DialogResult = DialogResult.OK);
             WaitForClosedForm(toolOptions);
 
-            Assert.AreEqual("intensity_2", Settings.Default.PrositIntensityModel);
-            Assert.AreEqual("iRT", Settings.Default.PrositRetentionTimeModel);
+            Assert.AreEqual(intensityModel, Settings.Default.PrositIntensityModel);
+            Assert.AreEqual(rtModel, Settings.Default.PrositRetentionTimeModel);
             Assert.AreEqual(28, Settings.Default.PrositNCE);
         }
 
@@ -1740,7 +1742,7 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
-        public override string Model => "intensity_2";
+        public override string Model => PrositIntensityModel.Models.First();
 
         public override void AssertMatchesQuery(PredictRequest pr)
         {
@@ -1892,7 +1894,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(expected, spectrumDisplayInfo.RetentionTime);
         }
 
-        public override string Model => "iRT";
+        public override string Model => PrositRetentionTimeModel.Models.First();
 
         public override PredictResponse Response
         {
@@ -1980,9 +1982,9 @@ namespace pwiz.SkylineTestFunctional
 
         private void LogQuery(PredictRequest request, PredictResponse response)
         {
-            if (request.ModelSpec.Name.StartsWith(@"intensity"))
+            if (request.ModelSpec.Name.StartsWith(PrositIntensityModel.Models.First()))
                 Console.WriteLine(@"    " + PrositIntensityQuery.FromTensors(request, response).ToCode().Replace("\n", "\n    "));
-            else if (request.ModelSpec.Name.StartsWith("iRT"))
+            else if (request.ModelSpec.Name.StartsWith(PrositRetentionTimeModel.Models.First()))
                 Console.WriteLine(@"    " +
                     PrositRetentionTimeQuery.FromTensors(request, response).ToCode().Replace("\n", "\n    "));
             else
