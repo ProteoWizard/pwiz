@@ -132,7 +132,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 peptideSettings.SelectedTab = PeptideSettingsUI.TABS.Library;
-                Assert.AreEqual(1, peptideSettings.LibraryDriver.Chosen.OfType<MidasLibSpec>().Count());
+                Assert.AreEqual(1, peptideSettings.PickedLibrarySpecs.OfType<MidasLibSpec>().Count());
                 Assert.IsTrue(peptideSettings.FilterLibraryEnabled);
             });
             var filterDlg = ShowDialog<FilterMidasLibraryDlg>(peptideSettings.ShowFilterMidasDlg);
