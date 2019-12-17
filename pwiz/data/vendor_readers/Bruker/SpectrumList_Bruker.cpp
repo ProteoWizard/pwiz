@@ -272,15 +272,15 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
         {
             Precursor precursor;
 
-            vector<double> fragMZs, isolMZs;
+            vector<double> fragMZs;
             vector<FragmentationMode> fragModes;
-            vector<IsolationMode> isolModes;
+            vector<IsolationInfo> isolationInfo;
 
             spectrum->getFragmentationData(fragMZs, fragModes);
 
             if (!fragMZs.empty())
             {
-                spectrum->getIsolationData(isolMZs, isolModes);
+                spectrum->getIsolationData(isolationInfo);
 
                 for (size_t i = 0; i < fragMZs.size(); ++i)
                 {
@@ -320,14 +320,13 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
                             case FragmentationMode_PTR:
                                 break;
                         }
-                        //precursor.activation.set(MS_collision_energy, pExScanStats_->CollisionEnergy);
 
                         precursor.selectedIons.push_back(selectedIon);
                     }
 
-                    if (isolMZs[i] > 0)
+                    if (isolationInfo[i].isolationMz > 0)
                     {
-                        precursor.isolationWindow.set(MS_isolation_window_target_m_z, isolMZs[i], MS_m_z);
+                        precursor.isolationWindow.set(MS_isolation_window_target_m_z, isolationInfo[i].isolationMz, MS_m_z);
 
                         double isolationWidth = spectrum->getIsolationWidth();
                         if (isolationWidth > 0)
@@ -335,6 +334,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
                             precursor.isolationWindow.set(MS_isolation_window_lower_offset, isolationWidth / 2, MS_m_z);
                             precursor.isolationWindow.set(MS_isolation_window_upper_offset, isolationWidth / 2, MS_m_z);
                         }
+
+                        if (isolationInfo[i].collisionEnergy > 0)
+                            precursor.activation.set(MS_collision_energy, isolationInfo[i].collisionEnergy);
                     }
                 }
             }
@@ -348,7 +350,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
 
         // Enumerating merged scan numbers is not instant.
         IntegerSet scanNumbers = spectrum->getMergedScanNumbers();
-        if (config_.combineIonMobilitySpectra)
+        if (config_.combineIonMobilitySpectra && format_ == Reader_Bruker_Format_TDF)
         {
             result->scanList.set(MS_sum_of_spectra);
             if (scanNumbers.size() < 100)
@@ -722,10 +724,16 @@ PWIZ_API_DECL bool SpectrumList_Bruker::canConvertIonMobilityAndCCS() const
     return format_ == Reader_Bruker_Format_TDF;
 }
 
+PWIZ_API_DECL bool SpectrumList_Bruker::hasCombinedIonMobility() const
+{
+    return format_ == Reader_Bruker_Format_TDF && config_.combineIonMobilitySpectra;
+}
+
 // Per email thread Aug 22 2017 bpratt, mattc, Bruker's SvenB:
 // The gas is nitrogen(14.0067 AMU) and the temperature is(according to Sven) assumed to be 305K.
+// Turns out it's N2, actually, which seems obvious in retrospect (bpratt Dec 2 2019)
 static const double ccs_conversion_factor = 18509.863216340458;
-static const double MolWeightGas = 14.0067;
+static const double MolWeightGas =  2.0 * 14.0067;
 static const double Temperature = 305;
 
 PWIZ_API_DECL double SpectrumList_Bruker::ionMobilityToCCS(double inverseK0, double mz, int charge) const
@@ -772,6 +780,7 @@ SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLevel detailLevel)
 SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
 SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
 bool SpectrumList_Bruker::hasIonMobility() const { return false; }
+bool SpectrumList_Bruker::hasCombinedIonMobility() const { return false; }
 bool SpectrumList_Bruker::hasPASEF() const { return false; }
 bool SpectrumList_Bruker::canConvertIonMobilityAndCCS() const { return false; }
 double SpectrumList_Bruker::ionMobilityToCCS(double ionMobility, double mz, int charge) const {return 0;}

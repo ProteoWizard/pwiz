@@ -774,7 +774,7 @@
     <value>アクセッション番号</value>
   </data>
   <data name="ProteinMetadata_Description" xml:space="preserve">
-    <value>説明</value>
+    <value>表記</value>
   </data>
   <data name="ProteinMetadata_Gene" xml:space="preserve">
     <value>遺伝子</value>

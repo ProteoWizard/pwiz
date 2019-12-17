@@ -120,7 +120,7 @@
     <value>完了。</value>
   </data>
   <data name="Program_ParseCsv_System_IO_Exception__cannot_access__0_" xml:space="preserve">
-    <value>キャッシュ読み取り時の例外：{0}</value>
+    <value>システムIOの例外、{0}にアクセスできません</value>
   </data>
   <data name="Program_ParseCsv_Double_check_that__0__is_not_open_in_another_program_" xml:space="preserve">
     <value>{0}が別のプログラムで開かれていないか、再確認します。</value>

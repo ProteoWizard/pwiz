@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
@@ -56,6 +57,24 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         public SortableBindingList<TItem> Items { get; private set; }
+
+        public void Populate(IEnumerable<TItem> values)
+        {
+            Items.RaiseListChangedEvents = false;
+            try
+            {
+                Items.Clear();
+                foreach (var value in values)
+                {
+                    Items.Add(value);
+                }
+            }
+            finally
+            {
+                Items.RaiseListChangedEvents = true;
+            }
+            Items.ResetBindings();
+        }
 
         private void gridView_KeyDown(object sender, KeyEventArgs e)
         {

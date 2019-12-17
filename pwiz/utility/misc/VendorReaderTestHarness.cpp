@@ -163,6 +163,9 @@ void hackInMemoryMSData(const string& sourceName, MSData& msd, const ReaderTestC
         bal::replace_all(msd.run.id, sourceName, newSourceName);
     }
 
+    if (config.peakPickingCWT)
+        pwiz::analysis::SpectrumListFactory::wrap(msd, "peakPicking cwt msLevel=1-");
+
     if (config.thresholdCount > 0)
         pwiz::analysis::SpectrumListFactory::wrap(msd, "threshold count " + lexical_cast<string>(config.thresholdCount) + " most-intense");
 
@@ -249,6 +252,10 @@ class SpectrumList_MGF_Filter : public SpectrumListWrapper
             }
         }
 
+        // MGF only supports 1 precursor
+        if (result->precursors.size() > 1)
+            result->precursors.resize(1);
+
         return result;
     }
 };
@@ -260,6 +267,10 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
 
     Reader::Config readerConfig(config);
     readerConfig.adjustUnknownTimeZonesToHostTimeZone = false; // do not adjust times, because we don't want the test to depend on the time zone of the test agent
+
+    DiffConfig diffConfig;
+    if (config.diffPrecision)
+        diffConfig.precision = config.diffPrecision.get();
 
     // read file into MSData object
     vector<MSDataPtr> msds;
@@ -286,7 +297,7 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
         hackInMemoryMSData(sourceName, targetResult, config);
 
         // test for 1:1 equality with the target mzML
-        Diff<MSData, DiffConfig> diff(msd, targetResult);
+        Diff<MSData, DiffConfig> diff(msd, targetResult, diffConfig);
         if (diff) cerr << headDiff(diff, 5000) << endl;
         unit_assert(!diff);
 
@@ -305,7 +316,7 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
                 serializer_mz5.write(targetResultFilename_mz5, msd);
                 serializer_mz5.read(targetResultFilename_mz5, msd_mz5);
 
-                DiffConfig diffConfig_mz5;
+                DiffConfig diffConfig_mz5(diffConfig);
                 diffConfig_mz5.ignoreExtraBinaryDataArrays = true;
                 Diff<MSData, DiffConfig> diff_mz5(msd, msd_mz5, diffConfig_mz5);
                 if (diff_mz5) cerr << headDiff(diff_mz5, 5000) << endl;
@@ -314,7 +325,7 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
             bfs::remove(targetResultFilename_mz5);
         }
 #endif
-        DiffConfig diffConfig_non_mzML;
+        DiffConfig diffConfig_non_mzML(diffConfig);
         diffConfig_non_mzML.ignoreMetadata = true;
         diffConfig_non_mzML.ignoreExtraBinaryDataArrays = true;
         diffConfig_non_mzML.ignoreChromatograms = true;
@@ -458,7 +469,7 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
             hackInMemoryMSData(sourceNameAsPath.string(), targetResult, config, newSourceName.string());
 
             // test for 1:1 equality with the target mzML
-            Diff<MSData, DiffConfig> diff(msd, targetResult);
+            Diff<MSData, DiffConfig> diff(msd, targetResult, diffConfig);
             if (diff) cerr << headDiff(diff, 5000) << endl;
             unit_assert(!diff);
 
@@ -476,7 +487,9 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
                     serializer_mz5.write(targetResultFilename_mz5, msd);
                     serializer_mz5.read(targetResultFilename_mz5, msd_mz5);
 
-                    Diff<MSData, DiffConfig> diff_mz5(msd, msd_mz5);
+                    DiffConfig diffConfig_mz5(diffConfig);
+                    diffConfig_mz5.ignoreExtraBinaryDataArrays = true;
+                    Diff<MSData, DiffConfig> diff_mz5(msd, msd_mz5, diffConfig_mz5);
                     if (diff_mz5) cerr << headDiff(diff_mz5, 5000) << endl;
                     unit_assert(!diff_mz5);
                 }
@@ -610,6 +623,7 @@ string ReaderTestConfig::resultFilename(const string& baseFilename) const
     if (!allowMsMsWithoutPrecursor) bal::replace_all(result, ".mzML", "-noMsMsWithoutPrecursor.mzML");
     if (peakPicking) bal::replace_all(result, ".mzML", "-centroid.mzML");
     if (!isolationMzAndMobilityFilter.empty()) bal::replace_all(result, ".mzML", "-mzMobilityFilter.mzML");
+    if (globalChromatogramsAreMs1Only) bal::replace_all(result, ".mzML", "-globalChromatogramsAreMs1Only.mzML");
     //if (thresholdCount > 0) bal::replace_all(result, ".mzML", "-top" + lexical_cast<string>(thresholdCount) + ".mzML");
     return result;
 }
@@ -620,19 +634,22 @@ void ReaderTestConfig::wrap(MSData& msd) const
     using pwiz::analysis::SpectrumListFactory;
     if (peakPicking) SpectrumListFactory::wrap(msd, "peakPicking true 1-");
     if (indexRange) SpectrumListFactory::wrap(msd, "index " + lexical_cast<string>(indexRange.get().first) + "-" + lexical_cast<string>(indexRange.get().second));
-    if (thresholdCount > 0)
-    {
-        SpectrumListFactory::wrap(msd, "threshold count " + lexical_cast<string>(thresholdCount) + " most-intense");
+    if (peakPickingCWT) SpectrumListFactory::wrap(msd, "peakPicking cwt msLevel=1-");
+    if (thresholdCount > 0) SpectrumListFactory::wrap(msd, "threshold count " + lexical_cast<string>(thresholdCount) + " most-intense");
 
+    msd.dataProcessingPtrs = msd.allDataProcessingPtrs();
+    if (peakPickingCWT)
         // remove processingMethod added by thresholding
-        msd.dataProcessingPtrs = msd.allDataProcessingPtrs();
         msd.dataProcessingPtrs[0]->processingMethods.pop_back();
-    }
+
+    if (thresholdCount > 0)
+        // remove processingMethod added by thresholding
+        msd.dataProcessingPtrs[0]->processingMethods.pop_back();
 }
 
 
 PWIZ_API_DECL
-int testReader(const Reader& reader, const vector<string>& args, bool testAcceptOnly, bool requireUnicodeSupport, const TestPathPredicate& isPathTestable, const ReaderTestConfig& config)
+pair<int, int> testReader(const Reader& reader, const vector<string>& args, bool testAcceptOnly, bool requireUnicodeSupport, const TestPathPredicate& isPathTestable, const ReaderTestConfig& config)
 {
     bool generateMzML;
     vector<string> rawpaths;
@@ -681,7 +698,9 @@ int testReader(const Reader& reader, const vector<string>& args, bool testAccept
             ++totalTests;
             const string& rawpath = testpaths[i];
             const string& parentPath = parentPaths[i];
-            if (generateMzML && !testAcceptOnly)
+            if (generateMzML && config.autoTest)
+                continue;
+            else if (generateMzML && !testAcceptOnly)
                 generate(reader, rawpath, parentPath, config);
             else
             {
@@ -691,7 +710,10 @@ int testReader(const Reader& reader, const vector<string>& args, bool testAccept
                 }
                 catch (exception& e)
                 {
-                    cerr << "Error testing on " << rawpath << " (" << config.resultFilename("config.mzML") + (config.thresholdCount > 0 ? "-threshold-top3" : "") << "): " << e.what() << endl;
+                    cerr << "Error testing on " << rawpath << " (" << config.resultFilename("config.mzML") <<
+                        (config.peakPickingCWT ? "-cwt" : "") <<
+                        (config.thresholdCount > 0 ? "-threshold-top3" : "") <<
+                        "): " << e.what() << endl;
                     ++failedTests;
                 }
 
@@ -721,20 +743,38 @@ int testReader(const Reader& reader, const vector<string>& args, bool testAccept
         }
     }
 
-    if (totalTests == 0)
-        throw runtime_error("no vendor test data found (try running without --incremental)");
-
-    if (failedTests > 0)
-        throw runtime_error("failed " + lexical_cast<string>(failedTests) + " of " + lexical_cast<string>(totalTests) + " tests");
-
-    if (!generateMzML && config.thresholdCount == 0)
+    // run auto tests (e.g. thresholding)
+    if (!config.autoTest)
     {
         ReaderTestConfig newConfig = config;
         newConfig.thresholdCount = 3;
-        return testReader(reader, args, testAcceptOnly, requireUnicodeSupport, isPathTestable, newConfig);
+        newConfig.autoTest = true;
+
+        // thresholding is always tested to check that mutating SpectrumListWrappers work as expected;
+        // thresholding by itself does not create a separate mzML file
+        auto result = testReader(reader, args, testAcceptOnly, requireUnicodeSupport, isPathTestable, newConfig);
+        failedTests += result.first;
+        totalTests += result.second;
+    }
+    else // manual tests currently throw for failed tests (TODO: refactor to a list of configs to run in order to get a grand total of all tests and failed tests)
+    {
+        if (totalTests == 0)
+            throw runtime_error("no vendor test data found (try running without --incremental)");
+
+        if (failedTests > 0)
+            throw runtime_error("failed " + lexical_cast<string>(failedTests) + " of " + lexical_cast<string>(totalTests) + " tests");
     }
 
-    return 0;
+    /*if (!generateMzML && config.peakPicking)
+    {
+        // the config should also have thresholding (per above recursive call)
+        ReaderTestConfig newConfig = config;
+        newConfig.peakPicking = false;
+        newConfig.peakPickingCWT = true;
+        return testReader(reader, args, testAcceptOnly, requireUnicodeSupport, isPathTestable, newConfig);
+    }*/
+
+    return make_pair(failedTests, totalTests);
 }
 
 

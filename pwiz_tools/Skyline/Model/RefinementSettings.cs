@@ -66,6 +66,7 @@ namespace pwiz.Skyline.Model
         public RefinementSettings()
         {
             NormalizationMethod = AreaCVNormalizationMethod.none;
+            MSLevel = AreaCVMsLevel.products;
         }
 
         public override MessageInfo MessageInfo
@@ -205,6 +206,12 @@ namespace pwiz.Skyline.Model
         public AreaCVNormalizationMethod NormalizationMethod { get; set; }
         [Track]
         public IsotopeLabelType NormalizationLabelType { get; set; }
+        [Track]
+        public AreaCVTransitions Transitions { get; set; }
+        [Track]
+        public int? CountTransitions { get; set; }
+        [Track]
+        public AreaCVMsLevel MSLevel { get; set; }
 
         public SrmDocument Refine(SrmDocument document)
         {
@@ -333,12 +340,13 @@ namespace pwiz.Skyline.Model
                 double qvalue = QValueCutoff.HasValue ? QValueCutoff.Value : double.NaN;
                 int minDetections = MinimumDetections.HasValue ? MinimumDetections.Value : -1;
                 int ratioIndex = GetLabelIndex(NormalizationLabelType, document);
-                var data = new AreaCVRefinementData(refined, new AreaCVRefinementSettings(cvcutoff, qvalue, minDetections, NormalizationMethod, ratioIndex));
+                int countTransitions = CountTransitions.HasValue ? CountTransitions.Value : -1;
+                var data = new AreaCVRefinementData(refined, new AreaCVRefinementSettings(cvcutoff, qvalue, minDetections, NormalizationMethod, ratioIndex,
+                    Transitions, countTransitions, MSLevel));
                 refined = data.RemoveAboveCVCutoff(refined);
             }
 
             return refined;
-//            return (SrmDocument) document.ChangeChildrenChecked(listPepGroups.ToArray(), true);
         }
 
         private int GetLabelIndex(IsotopeLabelType type, SrmDocument doc)
@@ -866,7 +874,7 @@ namespace pwiz.Skyline.Model
                     customMolecule.AverageMass, customMolecule.Name);
             }
             // Collect information for converting libraries
-            var chargeAndModifiedSequence = new LibKey(masscalc.GetModifiedSequence(peptideTarget, SequenceModFormatType.full_precision, false), precursorCharge);
+            var chargeAndModifiedSequence = new LibKey(masscalc.GetModifiedSequence(peptideTarget, SequenceModFormatType.lib_precision, false), precursorCharge);
             if (smallMoleculeConversionPrecursorMap != null && !smallMoleculeConversionPrecursorMap.ContainsKey(chargeAndModifiedSequence))
             {
                 smallMoleculeConversionPrecursorMap.Add(chargeAndModifiedSequence, new LibKey(customMolecule.GetSmallMoleculeLibraryAttributes(), adduct));

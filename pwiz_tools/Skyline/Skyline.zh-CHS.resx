@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -2949,7 +2949,7 @@
     <value>191, 22</value>
   </data>
   <data name="massErrorsMenuItem.Text" xml:space="preserve">
-    <value>批量错误(&amp;S)</value>
+    <value>质量偏差(&amp;S)</value>
   </data>
   <data name="calibrationCurveMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
@@ -2964,7 +2964,7 @@
     <value>191, 22</value>
   </data>
   <data name="documentGridMenuItem.Text" xml:space="preserve">
-    <value>＆Document Grid</value>
+    <value>文件栅格(&amp;D)</value>
   </data>
   <data name="resultsGridMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -2988,13 +2988,13 @@
     <value>124, 22</value>
   </data>
   <data name="editGroupComparisonListMenuItem.Text" xml:space="preserve">
-    <value>和编辑列表(&amp;E)…</value>
+    <value>编辑列表(&amp;E)…</value>
   </data>
   <data name="groupComparisonsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>180, 22</value>
   </data>
   <data name="groupComparisonsMenuItem.Text" xml:space="preserve">
-    <value>小组比较(&amp;G)</value>
+    <value>组比较(&amp;G)</value>
   </data>
   <data name="defineNewListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>165, 22</value>
@@ -3006,7 +3006,7 @@
     <value>180, 22</value>
   </data>
   <data name="listsMenuItem.Text" xml:space="preserve">
-    <value>＆名单</value>
+    <value>名单(&amp;L)</value>
   </data>
   <data name="auditLogMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Alt+4</value>
@@ -3030,7 +3030,7 @@
     <value>191, 22</value>
   </data>
   <data name="toolBarToolStripMenuItem.Text" xml:space="preserve">
-    <value>工具栏(&amp;B)</value>
+    <value>工具和酒吧(&amp;B)</value>
   </data>
   <data name="statusToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
@@ -3192,7 +3192,7 @@
     <value>171, 22</value>
   </data>
   <data name="tutorialsMenuItem.Text" xml:space="preserve">
-    <value>与教程</value>
+    <value>教程(&amp;T)</value>
   </data>
   <data name="reportsHelpMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>171, 22</value>

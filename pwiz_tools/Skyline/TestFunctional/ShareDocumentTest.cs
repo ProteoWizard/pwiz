@@ -309,7 +309,6 @@ namespace pwiz.SkylineTestFunctional
             SelectNode(SrmDocument.Level.Molecules, 0);
             WaitForGraphs();
             string prefix = Path.GetFileNameWithoutExtension(DOCUMENT_NAME);
-
             RunUI(() =>
             {
                 Assert.AreEqual("Michrom_QTRAP_v4 (" + prefix + ")", SkylineWindow.GraphSpectrum.LibraryName);

@@ -39,12 +39,13 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     [TestClass]
     public class PerfImportBrukerDiaPasefTest : AbstractFunctionalTestEx
     {
+        private bool IsRecordMode { get { return false; } }
 
         [TestMethod]
         [Timeout(6000000)]  // Initial download can take a long time
         public void BrukerDiaPasefImportTest()
         {
-            // RunPerfTests = true; // Uncomment this to force test to run in IDE TODO re-comment this
+            // RunPerfTests = true; // Uncomment this to force test to run in IDE
             Log.AddMemoryAppender();
             TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfImportBrukerDiaPasef_v2.zip";
             TestFilesPersistent = new[] { ".d" }; // List of file basenames that we'd like to unzip alongside parent zipFile, and (re)use in place
@@ -69,6 +70,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             
             // Update the paths to the .d files mentioned in the skyline doc
             string text = File.ReadAllText(skyfile);
+            // Update to indicate that file should be loaded with combined ion mobility
+            text = text.Replace(@"&amp;centroid_ms2=true", @"&amp;centroid_ms2=true&amp;combine_ims=true");
             text = text.Replace(@"PerfImportBrukerDiaPasef", TestFilesDir.PersistentFilesDir);
             text = RemoveReplicateReference(text, @"diagonalSWATH_MSMS_Slot1-10_1_3420"); // Remove reference to replicate with file type that we don't need to handle at this time
             text = RemoveReplicateReference(text, @"SWATHlike_MSMS_Slot1-10_1_3421"); // Remove reference to replicate with file type that we don't need to handle at this time
@@ -147,7 +150,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             CheckFieldByName(documentGrid, "PrecursorResult.IonMobilityFragment", row, 1.1732, msg); 
             CheckFieldByName(documentGrid, "PrecursorResult.IonMobilityUnits", row, IonMobilityValue.GetUnitsString(eIonMobilityUnits.inverse_K0_Vsec_per_cm2), msg);
             CheckFieldByName(documentGrid, "PrecursorResult.IonMobilityWindow", row, 0.12, msg);
-            CheckFieldByName(documentGrid, "PrecursorResult.CollisionalCrossSection", row, 666.9175, msg);
+            CheckFieldByName(documentGrid, "PrecursorResult.CollisionalCrossSection", row, 473.2742, msg);
             EnableDocumentGridColumns(documentGrid,
                 Resources.ReportSpecList_GetDefaults_Peptide_RT_Results,
                 doc1.PeptideCount * doc1.MeasuredResults.Chromatograms.Count, null);
@@ -155,21 +158,23 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 14.35, 14.34, 14.33, 14.33, 14.15, 14.12, 14.11, 14.11, 14.63, 14.61, 14.61, 14.61, 14.75, 14.74, 14.72, 14.73, 14.06, 14.04,
                 14.03, 14.03, 14.43, 14.43, 14.42, 14.43, 14.36, 14.37, 14.35, 14.35, 14.31, 14.31, 14.29, 14.28, 14.48, 14.49, 14.47, 14.48,
                 14.69, 14.67, 14.67, 14.67, 14.61, 14.34, 14.34, 14.35, 14.25, 14.25, 14.22, 14.23, 14.37, 14.36, 14.35, 14.35, 14.51, 14.52,
-                14.5, 14.5, 14.24, 14.25, 14.22, 14.23, 14.81, 14.8, 14.78, 14.78, 14.63, 14.61, 14.61, 14.61, 14.48, 14.46, 14.46, 14.47, 14.52,
-                14.49, 14.49, 14.49, 14.67, 14.65, 14.65, 14.65, 14.46, 14.45, 14.45, 14.45, 14.44, 14.43, 14.42, 14.43, 14.24, 14.24, 14.25,
-                14.25, 14.48, 14.46, 14.45, 14.44, 14.19, 14.16, 14.16, 14.17, 14.38, 14.34, 14.34, 14.36, 14.88, 14.86, 14.86, 14.85, 14.22,
-                14.22, 14.21, 14.21, 14.19, 14.19, 14.18, 14.18, 14.11, 14.09, 14.09, 14.1, 14.72, 14.7, 14.71, 14.71, 14.64, 14.61, 14.62, 14.61,
-                14.12, 14.1, 14.1, 14.1, 14.23, 14.21, 14.2, 14.2
+                14.5, 14.5, 14.24, 14.25, 14.22, 14.23, 14.81, 14.78, 14.78, 14.78, 14.63, 14.61, 14.61, 14.61, 14.48, 14.46, 14.46, 14.47,
+                14.52, 14.49, 14.49, 14.49, 14.67, 14.65, 14.65, 14.65, 14.46, 14.45, 14.45, 14.45, 14.44, 14.43, 14.42, 14.43, 14.24, 14.24,
+                14.25, 14.25, 14.48, 14.46, 14.45, 14.44, 14.19, 14.16, 14.16, 14.17, 14.38, 14.34, 14.34, 14.36, 14.88, 14.86, 14.86, 14.85,
+                14.22, 14.22, 14.21, 14.21, 14.19, 14.19, 14.18, 14.18, 14.11, 14.09, 14.09, 14.1, 14.72, 14.7, 14.71, 14.71, 14.64, 14.61,
+                14.62, 14.61, 14.12, 14.1, 14.1, 14.1, 14.23, 14.21, 14.2, 14.2
             })
             {
-                CheckFieldByName(documentGrid, "PeptideRetentionTime", row++, rt, msg);
+                CheckFieldByName(documentGrid, "PeptideRetentionTime", row++, rt, msg, true);
             }
 
             // And clean up after ourselves
             RunUI(() => documentGrid.Close());
         }
 
-        private void CheckFieldByName(DocumentGridForm documentGrid, string name, int row, double? expected, string msg = null)
+        private static int ValuesRecordedCount;
+
+        private void CheckFieldByName(DocumentGridForm documentGrid, string name, int row, double? expected, string msg = null, bool recordValues = false)
         {
             var col = FindDocumentGridColumn(documentGrid, "Results!*.Value." + name);
             RunUI(() =>
@@ -177,7 +182,14 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 // By checking the 1th row we check both the single file and two file cases
                 var val = documentGrid.DataGridView.Rows[row].Cells[col.Index].Value as double?;
                 Assert.AreEqual(expected.HasValue, val.HasValue, name + (msg ?? string.Empty));
-                Assert.AreEqual(expected ?? 0, val ?? 0, 0.005, name + (msg ?? string.Empty));
+                if (!IsRecordMode || !recordValues)
+                    Assert.AreEqual(expected ?? 0, val ?? 0, 0.005, name + (msg ?? string.Empty));
+                else
+                {
+                    Console.Write(@"{0:0.##}, ", val);
+                    if (++ValuesRecordedCount % 18 == 0)
+                        Console.WriteLine();
+                }
             });
         }
 

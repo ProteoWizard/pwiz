@@ -238,6 +238,10 @@ void testAbbreviateByteSize()
     unit_assert_operator_equal("1 MB", abbreviate_byte_size(1000000));
     unit_assert_operator_equal("999 MB", abbreviate_byte_size(999000000));
     unit_assert_operator_equal("1 GB", abbreviate_byte_size(1000000000));
+    unit_assert_operator_equal("100 GB", abbreviate_byte_size(100000000000));
+    unit_assert_operator_equal("1.23 KB", abbreviate_byte_size(1230));
+    unit_assert_operator_equal("12.3 KB", abbreviate_byte_size(12300));
+    unit_assert_operator_equal("123 KB", abbreviate_byte_size(123000));
 
     unit_assert_operator_equal("1 B", abbreviate_byte_size(1, ByteSizeAbbreviation_IEC));
     unit_assert_operator_equal("1023 B", abbreviate_byte_size(1023, ByteSizeAbbreviation_IEC));

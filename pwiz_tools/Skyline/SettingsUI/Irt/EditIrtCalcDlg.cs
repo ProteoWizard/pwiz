@@ -534,7 +534,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             var skylineWindow = Program.MainWindow;
             lock (skylineWindow.GetDocumentChangeLock())
             {
-                using (var changeDlg = new ChangeIrtPeptidesDlg(AllPeptides.ToArray(), skylineWindow.Document.MoleculeGroups))
+                using (var changeDlg = new ChangeIrtPeptidesDlg(skylineWindow.Document, AllPeptides.ToArray()))
                 {
                     if (changeDlg.ShowDialog(this) != DialogResult.OK)
                         return;
@@ -744,7 +744,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
                 AddToLibrary(new ProcessedIrtAverages(
                     libraryPeptidesNew.ToDictionary(pep => pep.ModifiedTarget, pep => new IrtPeptideAverages(pep.ModifiedTarget, pep.Irt, TimeSource.peak)),
-                    new KeyValuePair<string, RetentionTimeProviderData>[0]));
+                    new List<RetentionTimeProviderData>()));
             }
 
             public void AddResults()
@@ -768,9 +768,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     try
                     {
                         var status = longWait.PerformWork(MessageParent, 800, monitor =>
-                            irtAverages = ProcessRetentionTimes(monitor,
-                                              GetRetentionTimeProviders(document),
-                                              document.Settings.MeasuredResults.MSDataFileInfos.Count()));
+                            irtAverages = ProcessRetentionTimes(monitor, GetRetentionTimeProviders(document).ToArray()));
                         if (status.IsError)
                         {
                             MessageBox.Show(MessageParent, status.ErrorException.Message, Program.Name);
@@ -883,7 +881,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                                 var irtProvider = library.RetentionTimeProvidersIrt.ToArray();
                                 if (irtProvider.Any())
                                 {
-                                    irtAverages = ProcessRetentionTimes(monitor, irtProvider, 1);
+                                    irtAverages = ProcessRetentionTimes(monitor, irtProvider);
                                 }
                                 else
                                 {
@@ -896,7 +894,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                                         return;
                                     }
 
-                                    irtAverages = ProcessRetentionTimes(monitor, library.RetentionTimeProviders, fileCount);
+                                    irtAverages = ProcessRetentionTimes(monitor, library.RetentionTimeProviders.ToArray());
                                 }
                             });
                             if (status.IsError)
@@ -930,6 +928,23 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 AddToLibrary(irtAverages);
             }
 
+            public class NopProgressMonitor : IProgressMonitor
+            {
+                public bool IsCanceled
+                {
+                    get { return false; }
+                }
+                public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+                {
+                    return UpdateProgressResponse.normal;
+                }
+
+                public bool HasUI
+                {
+                    get { return false; }
+                }
+            }
+
             public void AddIrtDatabase()
             {
                 var irtCalcs = Settings.Default.RTScoreCalculatorList.Where(calc => calc is RCalcIrt).Cast<RCalcIrt>();
@@ -959,7 +974,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                             var irtDb = IrtDb.GetIrtDb(irtCalc.DatabasePath, monitor);
 
                             irtAverages = ProcessRetentionTimes(monitor,
-                                new[] { new IrtRetentionTimeProvider(!irtCalc.Name.Equals(AddIrtCalculatorDlg.DEFAULT_NAME) ? irtCalc.Name : Path.GetFileName(irtCalc.DatabasePath), irtDb) }, 1);
+                                new[] { new IrtRetentionTimeProvider(!irtCalc.Name.Equals(AddIrtCalculatorDlg.DEFAULT_NAME) ? irtCalc.Name : Path.GetFileName(irtCalc.DatabasePath), irtDb) });
                         });
                         if (status.IsError)
                         {
@@ -1018,11 +1033,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 }
             }
 
-            private ProcessedIrtAverages ProcessRetentionTimes(IProgressMonitor monitor,
-                                          IEnumerable<IRetentionTimeProvider> providers,
-                                          int countProviders)
+            private ProcessedIrtAverages ProcessRetentionTimes(IProgressMonitor monitor, IRetentionTimeProvider[] providers)
             {
-                return RCalcIrt.ProcessRetentionTimes(monitor, providers, countProviders, StandardPeptideList.ToArray(), Items.ToArray());
+                return RCalcIrt.ProcessRetentionTimes(monitor, providers, StandardPeptideList.ToArray(), Items.ToArray());
             }
 
             private void AddToLibrary(ProcessedIrtAverages irtAverages)
@@ -1069,10 +1082,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
                                 {
                                     try
                                     {
-                                        newStandards = irtAverages.RecalibrateStandards(StandardPeptideList);
-                                        var status = longWait.PerformWork(MessageParent, 800, monitor => irtAverages = RCalcIrt.ProcessRetentionTimes(
-                                            monitor, irtAverages.ProviderData.Select(data => data.Value.RetentionTimeProvider),
-                                            irtAverages.ProviderData.Count, newStandards.ToArray(), Items.ToArray()));
+                                        newStandards = irtAverages.RecalibrateStandards(StandardPeptideList.ToArray());
+                                        var status = longWait.PerformWork(MessageParent, 800,
+                                            monitor => irtAverages = RCalcIrt.ProcessRetentionTimes(monitor,
+                                                irtAverages.ProviderData.Select(data => data.RetentionTimeProvider).ToArray(),
+                                                newStandards.ToArray(), Items.ToArray()));
                                         if (status.IsError)
                                         {
                                             MessageDlg.ShowWithException(MessageParent, Resources.LibraryGridViewDriver_AddToLibrary_An_error_occurred_while_recalibrating_, status.ErrorException);
