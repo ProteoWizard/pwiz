@@ -96,6 +96,8 @@ namespace SkylineTester
                 // DotNetZip has a _bug_ which causes an extraction error without this
                 // (see http://stackoverflow.com/questions/15337186/dotnetzip-badreadexception-on-extract)
                 zipFile.ParallelDeflateThreshold = -1;
+                zipFile.AlternateEncodingUsage = ZipOption.Always;
+                zipFile.AlternateEncoding = System.Text.Encoding.UTF8;
 
                 if ((String.Empty + Path.GetFileName(zipPath)).ToLower() == "skylinenightly.zip")
                 {

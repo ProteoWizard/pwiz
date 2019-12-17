@@ -475,9 +475,9 @@ namespace SkylineNightly
                     Log("Unzip SkylineTester");
                     zipFile.ExtractAll(skylineTesterDir, ExtractExistingFileAction.OverwriteSilently);
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    Log("Error attempting to unzip SkylineTester");
+                    Log("Error attempting to unzip SkylineTester: " + e.ToString());
                     return false;
                 }
             }
