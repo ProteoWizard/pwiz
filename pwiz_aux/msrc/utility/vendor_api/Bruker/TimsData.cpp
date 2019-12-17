@@ -380,7 +380,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                 auto& frame = findItr->second;
 
                 int scanBegin = row.get<int>(colScanBegin);
-                int scanEnd = row.get<int>(colScanEnd); // scan end in DiaFrameMsMsInfo is inclusive same as pwiz;
+                int scanEnd = row.get<int>(colScanEnd) - 1; // scan end in TDF is exclusive, but in pwiz is inclusive
 
                 info.isolationMz = row.get<double>(colIsolationMz);
                 info.isolationWidth = row.get<double>(colIsolationWidth);
@@ -436,13 +436,6 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
 
                 frame->windowGroup_ = windowGroup; 
                 frame->diaPasefIsolationInfoByScanNumber_[scanBegin] = info;
-            }
-
-            for (const auto& kvp : frames_)
-            {
-                const auto& frame = kvp.second;
-                if (frame->windowGroup_) // if windowGroup is unset for DIA, the frame is filtered out
-                    frame->diaPasefIsolationInfoByScanNumber_.rbegin()->second.numScans--; // the last ScanNumEnd for each DIA window seems to be exclusive rather than inclusive
             }
         }
     }
