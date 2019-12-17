@@ -83,6 +83,9 @@ class PWIZ_API_DECL Reader
         /// when non-empty, only scans from precursors matching one of the included m/z and/or mobility windows will be enumerated; MS1 scans are affected only by the mobility filter
         std::vector<chemistry::MzMobilityWindow> isolationMzAndMobilityFilter;
 
+        /// when true, global TIC and BPC chromatograms consist of only MS1 spectra (thus the number of time points cannot be assumed to be equal to the number of spectra)
+        bool globalChromatogramsAreMs1Only;
+
         Config();
         Config(const Config& rhs);
     };
