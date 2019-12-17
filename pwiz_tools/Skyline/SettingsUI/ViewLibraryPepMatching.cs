@@ -605,6 +605,22 @@ namespace pwiz.Skyline.SettingsUI
                     // Look for the protein in the document.
                     string name = protein.ProteinMetadata.Name;
                     var peptideGroupDocNode = FindPeptideGroupDocNode(document, name);
+                    if (peptideGroupDocNode != null)
+                    {
+                        var pgFastaSequence = peptideGroupDocNode.PeptideGroup as FastaSequence;
+                        if (pgFastaSequence == null)
+                        {
+                            peptideGroupDocNode = null;
+                        }
+                        else
+                        {
+                            if (pgFastaSequence.Sequence.IndexOf(pepMatch.NodePep.Peptide.Target.Sequence,
+                                    StringComparison.Ordinal) < 0)
+                            {
+                                peptideGroupDocNode = null;
+                            }
+                        }
+                    }
                     bool foundInDoc = peptideGroupDocNode != null;
                     bool foundInList = false;
                     if (!foundInDoc)
