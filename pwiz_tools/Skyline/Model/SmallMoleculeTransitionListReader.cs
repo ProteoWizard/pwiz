@@ -1680,34 +1680,24 @@ namespace pwiz.Skyline.Model
     {
         private readonly DsvFileReader _csvReader;
 
-        public SmallMoleculeTransitionListCSVReader(IEnumerable<string> csvText) : 
-            // ReSharper disable LocalizableElement
-            this(string.Join("\n", csvText))
-            // ReSharper restore LocalizableElement
-        {
-
-        }
-
-        public SmallMoleculeTransitionListCSVReader(string csvText)
+        public SmallMoleculeTransitionListCSVReader(IList<string> csvText)
         {
             // Accept either true CSV or currentculture equivalent
             Type[] columnTypes;
             IFormatProvider formatProvider;
             char separator;
+            var header = csvText[0];
             // Skip over header line to deduce decimal format
-            var endLine = csvText.IndexOf('\n');
-            var line = (endLine != -1 ? csvText.Substring(endLine+1) : csvText);
+            string line = csvText.Count > 1 ? csvText[1] : header;
             MassListImporter.IsColumnar(line, out formatProvider, out separator, out columnTypes);
             // Double check that separator - does it appear in header row, or was it just an unlucky hit in a text field?
-            var header = (endLine != -1 ? csvText.Substring(0, endLine) : csvText);
             if (!header.Contains(separator))
             {
                 // Try again, this time without the distraction of a plausible but clearly incorrect seperator
                 MassListImporter.IsColumnar(line.Replace(separator,'_'), out formatProvider, out separator, out columnTypes);
             }
             _cultureInfo = formatProvider;
-            var reader = new StringReader(csvText);
-            _csvReader = new DsvFileReader(reader, separator, SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms);
+            _csvReader = new DsvFileReader(new StringListReader(csvText), separator, SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms);
             // Do we recognize all the headers?
             var badHeaders =
                 _csvReader.FieldNames.Where(
@@ -1736,14 +1726,12 @@ namespace pwiz.Skyline.Model
             get { return Rows.Count; }
         }
 
-        public static bool IsPlausibleSmallMoleculeTransitionList(IEnumerable<string> csvText)
+        public static bool IsPlausibleSmallMoleculeTransitionList(string csvText)
         {
-            // ReSharper disable LocalizableElement
-            return IsPlausibleSmallMoleculeTransitionList(string.Join("\n", csvText));
-            // ReSharper restore LocalizableElement
+            return IsPlausibleSmallMoleculeTransitionList(MassListInputs.ReadLinesFromText(csvText));
         }
 
-        public static bool IsPlausibleSmallMoleculeTransitionList(string csvText)
+        public static bool IsPlausibleSmallMoleculeTransitionList(IList<string> csvText)
         {
             try
             {
@@ -1755,7 +1743,7 @@ namespace pwiz.Skyline.Model
             catch
             {
                 // Not a proper small molecule transition list, but was it trying to be one?
-                var header = csvText.Split('\n')[0];
+                var header = csvText.First();
                 if (header.ToLowerInvariant().Contains(@"peptide"))
                 {
                     return false;
