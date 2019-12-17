@@ -110,6 +110,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var docEmpty = NewDocument();
 
+            TestUnsortedMzPrecursors();
             TestNameCollisions();
             TestAmbiguousPrecursorFragment();
             TestPerTransitionValues();
@@ -1187,6 +1188,61 @@ namespace pwiz.SkylineTestFunctional
             Assume.AreEqual(2, transitions.Count(t => t.IsMs1));
             NewDocument();
         }
+
+        // We want to preserve order while dealing with lists that show heavy versions before light
+        private void TestUnsortedMzPrecursors()
+        {
+            // Version with light mz presented first
+            const string precursorsTransitionListSorted =
+                "Molecule List Name\tPrecursor Name\tPrecursor Formula\tPrecursor Adduct\tPrecursor m/z\tPrecursor Charge\tProduct Formula\tProduct Adduct\tProduct m/z\tProduct Charge\n" +
+                "Pyr-Glu\tPyr-Glu\t\tM+\t230.1\t1\t\tM+\t73.1\t1\n" +
+                "Pyr-Glu\tPyr-Glu\t\tM+\t234.1\t1\t\tM+\t73.1\t1\n" +
+                "Pyr-Glu\tPyr-Glu\t\tM+\t263.1\t1\t\tM+\t147.1\t1\n" +
+                "Pyr-Glu\tPyr-Glu\t\tM+\t258.1\t1\t\tM+\t147.1\t1\n" +
+                "aPyr-GluB\taPyr-GluB\t\tM+\t130.1\t1\t\tM+\t73.1\t1\n" +
+                "aPyr-GluB\taPyr-GluB\t\tM+\t134.1\t1\t\tM+\t73.1\t1\n" +
+                "aPyr-GluB\taPyr-GluB\t\tM+\t163.1\t1\t\tM+\t147.1\t1\n" +
+                "aPyr-GluB\taPyr-GluB\t\tM+\t158.1\t1\t\tM+\t147.1\t1\n";
+
+            // Version with heavy mz presented first - this used to screw us up
+            const string precursorsTransitionListUnsorted =
+                "Molecule List Name\tPrecursor Name\tPrecursor Formula\tPrecursor Adduct\tPrecursor m/z\tPrecursor Charge\tProduct Formula\tProduct Adduct\tProduct m/z\tProduct Charge\n" +
+                "Pyr-Glu\tPyr-Glu\t\tM+\t234.1\t1\t\tM+\t73.1\t1\n" +
+                "Pyr-Glu\tPyr-Glu\t\tM+\t263.1\t1\t\tM+\t147.1\t1\n" +
+                "Pyr-Glu\tPyr-Glu\t\tM+\t230.1\t1\t\tM+\t73.1\t1\n" +
+                "Pyr-Glu\tPyr-Glu\t\tM+\t258.1\t1\t\tM+\t147.1\t1\n" +
+                "aPyr-GluB\taPyr-GluB\t\tM+\t134.1\t1\t\tM+\t73.1\t1\n" +
+                "aPyr-GluB\taPyr-GluB\t\tM+\t163.1\t1\t\tM+\t147.1\t1\n" +
+                "aPyr-GluB\taPyr-GluB\t\tM+\t130.1\t1\t\tM+\t73.1\t1\n" +
+                "aPyr-GluB\taPyr-GluB\t\tM+\t158.1\t1\t\tM+\t147.1\t1\n";
+
+            var docOrig = NewDocument();
+            SetClipboardText(precursorsTransitionListSorted);
+            // Paste directly into targets area
+            RunUI(() => SkylineWindow.Paste());
+            var pastedDocSorted = WaitForDocumentChange(docOrig);
+
+            docOrig = NewDocument();
+            SetClipboardText(precursorsTransitionListUnsorted);
+            // Paste directly into targets area
+            RunUI(() => SkylineWindow.Paste());
+            var pastedDocUnsorted = WaitForDocumentChange(docOrig);
+
+            Assume.AreEqual(2, pastedDocUnsorted.MoleculeGroupCount);
+            Assume.AreEqual(2, pastedDocUnsorted.MoleculeCount);
+            Assume.AreEqual(pastedDocSorted, pastedDocUnsorted);
+            var precursors = pastedDocUnsorted.MoleculeTransitionGroups.ToArray();
+            Assume.IsTrue(!precursors[0].PrecursorAdduct.HasIsotopeLabels);
+            Assume.AreEqual(precursors[0].PrecursorMz.Value, 230.1);
+            Assume.IsTrue(precursors[1].PrecursorAdduct.HasIsotopeLabels);
+            Assume.IsTrue(!precursors[4].PrecursorAdduct.HasIsotopeLabels);
+            Assume.IsTrue(precursors[5].PrecursorAdduct.HasIsotopeLabels);
+            Assume.IsTrue(precursors[6].PrecursorAdduct.HasIsotopeLabels);
+            Assume.IsTrue(precursors[7].PrecursorAdduct.HasIsotopeLabels);
+            NewDocument();
+
+        }
+
 
         private void TestPerTransitionValues()
         {
