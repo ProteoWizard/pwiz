@@ -102,6 +102,9 @@ public ref class ReaderConfig
     /// when non-empty, only scans from precursors matching one of the included m/z and/or mobility windows will be enumerated; MS1 scans are affected only by the mobility filter
     System::Collections::Generic::IList<MzMobilityWindow^>^ isolationMzAndMobilityFilter;
 
+    /// when true, global TIC and BPC chromatograms consist of only MS1 spectra (thus the number of time points cannot be assumed to be equal to the number of spectra)
+    bool globalChromatogramsAreMs1Only;
+
     ReaderConfig()
     : simAsSpectra(false)
     , srmAsSpectra(false)
@@ -113,6 +116,7 @@ public ref class ReaderConfig
     , preferOnlyMsLevel(0)
     , allowMsMsWithoutPrecursor(true)
     , sortAndJitter(false)
+    , globalChromatogramsAreMs1Only(false)
     {
     }
 };

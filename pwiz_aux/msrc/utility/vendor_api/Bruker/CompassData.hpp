@@ -315,10 +315,10 @@ struct PWIZ_API_DECL CompassData
     virtual LCSpectrumPtr getLCSpectrum(int source, int scan) const = 0;
 
     /// returns a chromatogram with times and total ion currents of all spectra, or a null pointer if the format doesn't support fast access to TIC
-    virtual ChromatogramPtr getTIC() const = 0;
+    virtual ChromatogramPtr getTIC(bool ms1Only = false) const = 0;
 
     /// returns a chromatogram with times and base peak intensities of all spectra, or a null pointer if the format doesn't support fast access to BPC
-    virtual ChromatogramPtr getBPC() const = 0;
+    virtual ChromatogramPtr getBPC(bool ms1Only = false) const = 0;
 
     virtual std::string getOperatorName() const = 0;
     virtual std::string getAnalysisName() const = 0;

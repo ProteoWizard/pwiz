@@ -182,10 +182,10 @@ class MassHunterDataImpl : public MassHunterData
     virtual const set<Transition>& getTransitions() const;
     virtual ChromatogramPtr getChromatogram(const Transition& transition) const;
 
-    virtual const automation_vector<double>& getTicTimes() const;
-    virtual const automation_vector<double>& getBpcTimes() const;
-    virtual const automation_vector<float>& getTicIntensities() const;
-    virtual const automation_vector<float>& getBpcIntensities() const;
+    virtual const automation_vector<double>& getTicTimes(bool ms1Only) const;
+    virtual const automation_vector<double>& getBpcTimes(bool ms1Only) const;
+    virtual const automation_vector<float>& getTicIntensities(bool ms1Only) const;
+    virtual const automation_vector<float>& getBpcIntensities(bool ms1Only) const;
 
     virtual ScanRecordPtr getScanRecord(int row) const;
     virtual SpectrumPtr getProfileSpectrumByRow(int row) const;
@@ -198,8 +198,8 @@ class MassHunterDataImpl : public MassHunterData
     gcroot<MHDAC::IMsdrDataReader^> reader_;
     gcroot<MIDAC::IMidacImsReader^> imsReader_;
     gcroot<MHDAC::IBDAMSScanFileInformation^> scanFileInfo_;
-    automation_vector<double> ticTimes_, bpcTimes_;
-    automation_vector<float> ticIntensities_, bpcIntensities_;
+    automation_vector<double> ticTimes_, ticTimesMs1_, bpcTimes_, bpcTimesMs1_;
+    automation_vector<float> ticIntensities_, ticIntensitiesMs1_, bpcIntensities_, bpcIntensitiesMs1_;
     set<Transition> transitions_;
     map<Transition, int> transitionToChromatogramIndexMap_;
 
@@ -362,6 +362,18 @@ MassHunterDataImpl::MassHunterDataImpl(const std::string& path)
         MHDAC::IBDAChromData^ bpc = reader_->GetChromatogram(filter)[0];
         ToAutomationVector(bpc->XArray, bpcTimes_);
         ToAutomationVector(bpc->YArray, bpcIntensities_);
+
+        filter->MSLevelFilter = MHDAC::MSLevel::MS;
+        filter->ChromatogramType = MHDAC::ChromType::TotalIon;
+        tic = reader_->GetChromatogram(filter)[0];
+        ToAutomationVector(tic->XArray, ticTimesMs1_);
+        ToAutomationVector(tic->YArray, ticIntensitiesMs1_);
+
+        // set filter for BPC
+        filter->ChromatogramType = MHDAC::ChromType::BasePeak;
+        bpc = reader_->GetChromatogram(filter)[0];
+        ToAutomationVector(bpc->XArray, bpcTimesMs1_);
+        ToAutomationVector(bpc->YArray, bpcIntensitiesMs1_);
 
         // chromatograms are always read completely into memory, and failing
         // to store them on this object after reading cost a 50x performance
@@ -552,24 +564,24 @@ const set<Transition>& MassHunterDataImpl::getTransitions() const
     return transitions_;
 }
 
-const automation_vector<double>& MassHunterDataImpl::getTicTimes() const
+const automation_vector<double>& MassHunterDataImpl::getTicTimes(bool ms1Only) const
 {
-    return ticTimes_;
+    return ms1Only ? ticTimesMs1_ : ticTimes_;
 }
 
-const automation_vector<double>& MassHunterDataImpl::getBpcTimes() const
+const automation_vector<double>& MassHunterDataImpl::getBpcTimes(bool ms1Only) const
 {
-    return bpcTimes_;
+    return ms1Only ? bpcTimesMs1_ : bpcTimes_;
 }
 
-const automation_vector<float>& MassHunterDataImpl::getTicIntensities() const
+const automation_vector<float>& MassHunterDataImpl::getTicIntensities(bool ms1Only) const
 {
-    return ticIntensities_;
+    return ms1Only ? ticIntensitiesMs1_ : ticIntensities_;
 }
 
-const automation_vector<float>& MassHunterDataImpl::getBpcIntensities() const
+const automation_vector<float>& MassHunterDataImpl::getBpcIntensities(bool ms1Only) const
 {
-    return bpcIntensities_;
+    return ms1Only ? bpcIntensitiesMs1_ : bpcIntensities_;
 }
 
 ChromatogramPtr MassHunterDataImpl::getChromatogram(const Transition& transition) const
