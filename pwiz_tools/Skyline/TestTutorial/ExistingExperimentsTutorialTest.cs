@@ -249,7 +249,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
                       {
                           peptideSettingsUI1.PickedHeavyMods = new[] { "Label:13C(6) (C-term R)", HEAVY_K };
-                          peptideSettingsUI1.PickedLibraries = new[] { "" };
+                          peptideSettingsUI1.PickedLibraries = new string[0];
                           peptideSettingsUI1.SelectedBackgroundProteome = Resources.SettingsList_ELEMENT_NONE_None;
                           peptideSettingsUI1.OkDialog();
                       });

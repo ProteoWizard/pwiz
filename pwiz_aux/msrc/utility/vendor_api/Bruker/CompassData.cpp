@@ -607,12 +607,12 @@ struct CompassDataImpl : public CompassData
         CATCH_AND_FORWARD
     }
 
-    virtual ChromatogramPtr getTIC() const
+    virtual ChromatogramPtr getTIC(bool ms1Only) const
     {
         return ChromatogramPtr();
     }
 
-    virtual ChromatogramPtr getBPC() const
+    virtual ChromatogramPtr getBPC(bool ms1Only) const
     {
         return ChromatogramPtr();
     }

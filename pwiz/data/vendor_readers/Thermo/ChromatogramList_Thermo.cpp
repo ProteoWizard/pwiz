@@ -116,7 +116,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
                     return result;
 
                 CVID intensityUnits = ci.controllerType == Controller_MS ? MS_number_of_detector_counts : UO_microampere;
-                ChromatogramDataPtr cd = rawfile_->getChromatogramData(Type_TIC, "", 0, 0, 0, rawfile_->getFirstScanTime(), rawfile_->getLastScanTime());
+                ChromatogramDataPtr cd = rawfile_->getChromatogramData(Type_TIC, ci.filter, 0, 0, 0, rawfile_->getFirstScanTime(), rawfile_->getLastScanTime());
                 if (getBinaryData)
                 {
                     result->setTimeIntensityArrays(cd->times(), cd->intensities(), UO_minute, intensityUnits);
@@ -288,7 +288,8 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                 case Controller_MS:
                 {
                     // support file-level TIC for all file types
-                    addChromatogram("TIC", (ControllerType) controllerType, n, MS_TIC_chromatogram, "");
+                    string globalFilter = config_.globalChromatogramsAreMs1Only ? "Full ms" : "";
+                    addChromatogram("TIC", (ControllerType) controllerType, n, MS_TIC_chromatogram, globalFilter);
 
                     // for certain filter types, support additional chromatograms
                     vector<string> filterArray = rawfile_->getFilters();
