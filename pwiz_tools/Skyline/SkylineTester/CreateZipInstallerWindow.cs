@@ -22,6 +22,7 @@ using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 using Ionic.Zip;
+using pwiz.SkylineTestUtil;
 
 namespace SkylineTester
 {
@@ -194,6 +195,21 @@ namespace SkylineTester
                         AddFile(testZipFile, zipFile, testZipDirectory);
                     }
 
+                    // Add pwiz vendor reader test data
+                    var vendorTestData = new List<string>();
+                    foreach (TestFilesDir.VendorDir vendorDir in Enum.GetValues(typeof(TestFilesDir.VendorDir)))
+                        FindVendorReaderTestData(TestFilesDir.GetVendorTestData(vendorDir), vendorTestData);
+                    foreach (var file in vendorTestData)
+                    {
+                        var parentDirectory = Path.GetDirectoryName(file);
+                        if (string.IsNullOrEmpty(parentDirectory))
+                            continue;
+                        int relativePathStart = parentDirectory.LastIndexOf('\\',
+                            parentDirectory.IndexOf(@"Test.data", StringComparison.InvariantCulture));
+                        parentDirectory = parentDirectory.Substring(relativePathStart + 1);
+                        AddFile(file, zipFile, Path.Combine(SkylineTesterWindow.SkylineTesterFiles, parentDirectory));
+                    }
+
                     // Add the file that we use to determine which branch this is from
                     AddFile(Path.Combine(solutionDirectory,"..\\..\\pwiz\\Version.cpp"), zipFile);
 
@@ -247,6 +263,17 @@ namespace SkylineTester
             foreach (string subDirectory in subDirectories)
             {
                 FindZipFiles(subDirectory, zipFilesList);
+            }
+        }
+
+        static void FindVendorReaderTestData(string directory, List<string> vendorReaderTestData)
+        {
+            foreach (var entry in Directory.GetFileSystemEntries(directory))
+            {
+                if (!entry.EndsWith(".mzML") && !entry.EndsWith(".gitattributes") && File.Exists(entry))
+                    vendorReaderTestData.Add(Path.GetFullPath(entry));
+                else if (Directory.Exists(entry))
+                    FindVendorReaderTestData(entry, vendorReaderTestData);
             }
         }
     }
