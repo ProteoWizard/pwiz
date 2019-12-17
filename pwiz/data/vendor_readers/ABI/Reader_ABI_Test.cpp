@@ -88,7 +88,16 @@ int main(int argc, char* argv[])
         #endif
 
         bool requireUnicodeSupport = true;
-        pwiz::util::testReader(pwiz::msdata::Reader_ABI(), testArgs, testAcceptOnly, requireUnicodeSupport, IsWiffFile());
+        pwiz::msdata::Reader_ABI reader;
+        pwiz::util::ReaderTestConfig config;
+
+        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsWiffFile(), config);
+
+        // test globalChromatogramsAreMs1Only, but don't need to test spectra here
+        auto newConfig = config;
+        newConfig.globalChromatogramsAreMs1Only = true;
+        newConfig.indexRange = make_pair(0, 0);
+        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile("PressureTrace1.wiff"), newConfig);
     }
     catch (exception& e)
     {

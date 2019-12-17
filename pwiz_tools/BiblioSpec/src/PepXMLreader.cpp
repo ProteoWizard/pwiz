@@ -84,12 +84,10 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        
        if (analysis.find("interprophet") == 0) {
            analysisType_ = INTER_PROPHET_ANALYSIS;
-           // Unfortunately, there is no way to get a file count
-           // from this element.
-           struct stat filestatus;
-           stat(getFileName().c_str(), &filestatus);
+           // Unfortunately, there is no way to get a file count from this element.
+
            // work in bytes / 1000 to avoid overflow
-           initSpecFileProgress(filestatus.st_size / 1000);
+           initSpecFileProgress(bfs::file_size(getFileName()) / 1000);
        }
    } else if(state == STATE_PROPHET_SUMMARY && isElement("inputfile",name)) {
       // Count files for use in reporting percent complete
@@ -115,14 +113,16 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
 
    //get massType and search engine
    else if(isElement("search_summary",name)) {
+       string search_engine_version = getAttrValue("search_engine_version", attr);
+       std::transform(search_engine_version.begin(), search_engine_version.end(), search_engine_version.begin(), ::tolower);
+       bal::replace_all(search_engine_version, " ", ""); // remove spaces
+
        if (analysisType_ == UNKNOWN_ANALYSIS ||
            analysisType_ == PROTEOME_DISCOVERER_ANALYSIS) {
            string search_engine = getAttrValue("search_engine", attr);
-           string search_engine_version = getAttrValue("search_engine_version", attr);
            std::transform(search_engine.begin(), search_engine.end(), search_engine.begin(), ::tolower);
-           std::transform(search_engine_version.begin(), search_engine_version.end(), search_engine_version.begin(), ::tolower);
            bal::replace_all(search_engine, " ", ""); // remove spaces
-           bal::replace_all(search_engine_version, " ", ""); // remove spaces
+
            if(search_engine.find("spectrummill") == 0) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from Spectrum Mill.");
                analysisType_ = SPECTRUM_MILL_ANALYSIS;
@@ -177,10 +177,6 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
                if (search_engine_version.find("msfragger") == 0) {
                    Verbosity::comment(V_DEBUG, "Pepxml file is from MSFragger.");
                    analysisType_ = MSFRAGGER_ANALYSIS;
-                   extensions.push_back("_calibrated.mgf");
-                   extensions.push_back("_uncalibrated.mgf");
-                   lookUpBy_ = NAME_ID;
-                   specReader_->setIdType(NAME_ID);
                }
                else {
                    Verbosity::comment(V_DEBUG, "Pepxml file is from X! Tandem.");
@@ -216,6 +212,17 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            }
        }
 
+       // handle msfragger source extensions for both native msfragger pepXMLs or PeptideProphet-analyzed pep.xmls
+       if (search_engine_version.find("msfragger") == 0)
+       {
+           if (analysisType_ != MSFRAGGER_ANALYSIS)
+               parentAnalysisType_ = MSFRAGGER_ANALYSIS;
+           extensions.push_back("_calibrated.mgf");
+           extensions.push_back("_uncalibrated.mgf");
+           lookUpBy_ = NAME_ID;
+           specReader_->setIdType(NAME_ID);
+       }
+
        massType = (boost::iequals("average", getAttrValue("fragment_mass_type", attr))) ? 0 : 1;       
        AminoAcidMasses::initializeMass(aminoacidmass, massType);
    } else if(isElement("spectrum_query", name)) {
@@ -244,7 +251,7 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            scanNumber = getIntRequiredAttrValue("start_scan", attr);
            scanIndex = scanNumber - 1;
        }
-       else if (analysisType_ == MSFRAGGER_ANALYSIS) {
+       else if (analysisType_ == MSFRAGGER_ANALYSIS || parentAnalysisType_ == MSFRAGGER_ANALYSIS) {
            spectrumName = getRequiredAttrValue("spectrum", attr);
        }
        // this should never happen, error should have been thrown earlier
@@ -367,7 +374,8 @@ void PepXMLreader::endElement(const XML_Char* name)
             throw BlibException(false, "The .pep.xml file is not from one of "
                                 "the recognized sources (PeptideProphet, "
                                 "iProphet, SpectrumMill, OMSSA, Protein Prospector, "
-                                "X! Tandem, Proteome Discoverer, Morpheus, MSGF+).");
+                                "X! Tandem, Proteome Discoverer, Morpheus, MSGF+, "
+                                "Comet, Crux, MSFragger).");
         }
 
         setSpecFileName(fileroot_.c_str(), extensions, dirs);

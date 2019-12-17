@@ -574,6 +574,11 @@ namespace pwiz.Skyline.Model
             return null;
         }
 
+        protected bool HasMods(string sequence)
+        {
+            return FastaSequence.RGX_ALL.IsMatch(sequence);
+        }
+
         public PeptideDocNode CreateDocNodeFromSettings(Target target, Peptide peptide, SrmSettingsDiff diff,
                 out TransitionGroupDocNode nodeGroupMatched)
         {

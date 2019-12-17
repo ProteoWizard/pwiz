@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
@@ -432,8 +433,9 @@ namespace pwiz.Skyline.SettingsUI
 
                     if (ReferenceEquals(standard, IrtStandard.CIRT_SHORT))
                     {
-                        var libPeptides = irtProviders.SelectMany(provider => provider.PeptideRetentionTimes).Select(rt => rt.PeptideSequence).ToHashSet();
-                        cirtPeptides = IrtStandard.CIRT.Peptides.Where(pep => libPeptides.Contains(pep.ModifiedTarget)).ToArray();
+                        var libPeptides = new TargetMap<bool>(irtProviders
+                            .SelectMany(provider => provider.PeptideRetentionTimes).Select(rt => new KeyValuePair<Target, bool>(rt.PeptideSequence, true)));
+                        cirtPeptides = IrtStandard.CIRT.Peptides.Where(pep => libPeptides.ContainsKey(pep.ModifiedTarget)).ToArray();
                     }
                 });
                 if (status.IsCanceled)

@@ -78,6 +78,12 @@ int main(int argc, char* argv[])
         pwiz::msdata::Reader_Bruker_BAF reader; // actually handles all file types
         pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsDirectory(), config);
 
+        // test globalChromatogramsAreMs1Only, but don't need to test spectra here
+        auto newConfig = config;
+        newConfig.globalChromatogramsAreMs1Only = true;
+        newConfig.indexRange = make_pair(0, 0);
+        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile("Hela_QC_PASEF_Slot1-first-6-frames.d"), newConfig);
+
         config.doublePrecision = true;
         config.preferOnlyMsLevel = 1;
         pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsTDF(), config);

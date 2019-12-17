@@ -1391,9 +1391,13 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(peptideSettings, peptideSettings.OkDialog);
 
             var precursorCount = SkylineWindow.Document.PeptideTransitionGroupCount;
+            var distinctPrecursorCount = 
+                SkylineWindow.Document.Peptides.SelectMany(pep => pep.TransitionGroups
+                    .Select(tg => Tuple.Create(pep.ModifiedTarget, tg.PrecursorCharge)))
+                .Distinct().Count();
 
             const int notSupportedCount = 3;
-            WaitForLibrary(precursorCount - notSupportedCount, SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs.IndexOf(l => l.Name == "Prosit"));
+            WaitForLibrary(distinctPrecursorCount - notSupportedCount, SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs.IndexOf(l => l.Name == "Prosit"));
 
             var prositLib = SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Last();
 
@@ -1409,8 +1413,8 @@ namespace pwiz.SkylineTestFunctional
                 var precursors = peptides[i].TransitionGroups.ToArray();
                 for (var j = 0; j < precursors.Length; ++j)
                 {
-                    var libKey = precursors[j].GetLibKey(peptides[i]);
-                    var spectra = prositLib.GetSpectra(libKey, precursors[j].LabelType, LibraryRedundancy.all).ToArray();
+                    var libKey = new LibKey(peptides[i].ModifiedSequence, precursors[j].PrecursorAdduct);
+                    var spectra = prositLib.GetSpectra(libKey, IsotopeLabelType.light, LibraryRedundancy.all).ToArray();
                     if (spectra.Length == 0)
                     {
                         ++noMatchCount;
@@ -1421,7 +1425,7 @@ namespace pwiz.SkylineTestFunctional
                         spectrumDisplayInfos[idx] = new SpectrumDisplayInfo(spectra[0], precursors[j], spectra[0].RetentionTime);
                     }
 
-                    peptidesRepeat[idx++] = new PrositIntensityModel.PeptidePrecursorNCE(peptides[i], precursors[j]);
+                    peptidesRepeat[idx++] = new PrositIntensityModel.PeptidePrecursorNCE(peptides[i], precursors[j], IsotopeLabelType.light, null);
                 }
             }
 
@@ -1447,12 +1451,14 @@ namespace pwiz.SkylineTestFunctional
             // For now just set all Prosit settings
             var toolOptions = ShowDialog<ToolOptionsUI>(() => SkylineWindow.ShowToolOptionsUI(ToolOptionsUI.TABS.Prosit));
 
+            var intensityModel = PrositIntensityModel.Models.First();
+            var rtModel = PrositRetentionTimeModel.Models.First();
             RunUI(() =>
             {
                 // Also set ip, otherwise we will keep getting exceptions about the server not being set,
                 // although we are using the fake test client
-                toolOptions.PrositIntensityModelCombo = "intensity_2";
-                toolOptions.PrositRetentionTimeModelCombo = "iRT";
+                toolOptions.PrositIntensityModelCombo = intensityModel;
+                toolOptions.PrositRetentionTimeModelCombo = rtModel;
                 toolOptions.CECombo = 28;
             });
 
@@ -1460,8 +1466,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => toolOptions.DialogResult = DialogResult.OK);
             WaitForClosedForm(toolOptions);
 
-            Assert.AreEqual("intensity_2", Settings.Default.PrositIntensityModel);
-            Assert.AreEqual("iRT", Settings.Default.PrositRetentionTimeModel);
+            Assert.AreEqual(intensityModel, Settings.Default.PrositIntensityModel);
+            Assert.AreEqual(rtModel, Settings.Default.PrositRetentionTimeModel);
             Assert.AreEqual(28, Settings.Default.PrositNCE);
         }
 
@@ -1736,7 +1742,7 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
-        public override string Model => "intensity_2";
+        public override string Model => PrositIntensityModel.Models.First();
 
         public override void AssertMatchesQuery(PredictRequest pr)
         {
@@ -1808,8 +1814,7 @@ namespace pwiz.SkylineTestFunctional
 
             var fakePrositOutput = new PrositIntensityModel.PrositIntensityOutput(fakePrositOutputTensors);
             var ms2Spectrum = new PrositMS2Spectrum(Program.MainWindow.Document.Settings,
-                peptidePrecursorNCE.WithNCE((int) (input.NormalizedCollisionEnergy * 100.0f)), 0, fakePrositOutput,
-                spectrumDisplayInfo.SpectrumInfo is SpectrumInfoLibrary ? IsotopeLabelType.light : null);
+                peptidePrecursorNCE.WithNCE((int) (input.NormalizedCollisionEnergy * 100.0f)), 0, fakePrositOutput);
 
             // Compare the spectra
             AssertEx.AreEqualDeep(ms2Spectrum.SpectrumPeaks.Peaks, spectrumDisplayInfo.SpectrumPeaksInfo.Peaks);
@@ -1869,7 +1874,7 @@ namespace pwiz.SkylineTestFunctional
             var iRTIndex = 0;
             foreach (var info in spectrumDisplayInfos.Where(i => i != null))
             {
-                if (Equals(info.LabelType, IsotopeLabelType.heavy))
+                if (Equals(info.Precursor.LabelType, IsotopeLabelType.heavy))
                     --iRTIndex; // Reuse previous iRT, since we only made a single iRT prediction for heavy and light
 
                 AssertMatchesSpectrum(_iRTs[iRTIndex++], info);
@@ -1883,12 +1888,13 @@ namespace pwiz.SkylineTestFunctional
 
         public static void AssertMatchesSpectrum(float iRT, SpectrumDisplayInfo spectrumDisplayInfo)
         {
-            Assert.AreEqual(
-                iRT * Math.Sqrt(PrositRetentionTimeModel.PrositRTOutput.iRT_VARIANCE) +
-                PrositRetentionTimeModel.PrositRTOutput.iRT_MEAN, spectrumDisplayInfo.RetentionTime);
+            var expected = iRT * Math.Sqrt(PrositRetentionTimeModel.PrositRTOutput.iRT_VARIANCE) +
+                           PrositRetentionTimeModel.PrositRTOutput.iRT_MEAN;
+
+            Assert.AreEqual(expected, spectrumDisplayInfo.RetentionTime);
         }
 
-        public override string Model => "iRT";
+        public override string Model => PrositRetentionTimeModel.Models.First();
 
         public override PredictResponse Response
         {
@@ -1976,9 +1982,9 @@ namespace pwiz.SkylineTestFunctional
 
         private void LogQuery(PredictRequest request, PredictResponse response)
         {
-            if (request.ModelSpec.Name.StartsWith(@"intensity"))
+            if (request.ModelSpec.Name.StartsWith(PrositIntensityModel.Models.First()))
                 Console.WriteLine(@"    " + PrositIntensityQuery.FromTensors(request, response).ToCode().Replace("\n", "\n    "));
-            else if (request.ModelSpec.Name.StartsWith("iRT"))
+            else if (request.ModelSpec.Name.StartsWith(PrositRetentionTimeModel.Models.First()))
                 Console.WriteLine(@"    " +
                     PrositRetentionTimeQuery.FromTensors(request, response).ToCode().Replace("\n", "\n    "));
             else

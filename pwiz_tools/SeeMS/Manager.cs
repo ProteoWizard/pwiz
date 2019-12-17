@@ -150,7 +150,13 @@ namespace seems
         }
     }
 
-	/// <summary>
+    public class ManagedDockableForm : DockableForm
+    {
+        public ManagedDataSource Source { get; protected set; }
+        public Manager Manager { get; protected set; }
+    }
+
+    /// <summary>
 	/// Manages the application
 	/// Tracks data sources, their spectrum/chromatogram lists, and any associated graph forms
 	/// Handles events from sources, lists, and graph forms
@@ -264,27 +270,27 @@ namespace seems
             LoadDefaultAnnotationSettings();
         }
 
-        public void OpenFile( string filepath )
+        public void OpenFile( string filepath, bool closeIfOpen = false )
         {
-            OpenFile( filepath, -1 );
+            OpenFile(filepath, -1, closeIfOpen);
         }
 
-        public void OpenFile( string filepath, int index )
+        public void OpenFile( string filepath, int index, bool closeIfOpen = false )
         {
-            OpenFile(filepath, index > 0 ? new List<object> { index } : null, null);
+            OpenFile(filepath, index > 0 ? new List<object> { index } : null, null, closeIfOpen);
         }
 
-        public void OpenFile( string filepath, string id )
+        public void OpenFile( string filepath, string id, bool closeIfOpen = false )
         {
-            OpenFile(filepath, new List<object> { id }, null);
+            OpenFile(filepath, new List<object> { id }, null, closeIfOpen);
         }
 
-        public void OpenFile (string filepath, IList<object> idOrIndexList, IAnnotation annotation)
+        public void OpenFile (string filepath, IList<object> idOrIndexList, IAnnotation annotation, bool closeIfOpen = false )
         {
-            OpenFile(filepath, idOrIndexList, annotation, "");
+            OpenFile(filepath, idOrIndexList, annotation, "", closeIfOpen);
         }
 
-        public void OpenFile(string filepath, IList<object> idOrIndexList, IAnnotation annotation, string spectrumListFilters)
+        public void OpenFile(string filepath, IList<object> idOrIndexList, IAnnotation annotation, string spectrumListFilters, bool closeIfOpen = false)
         {
 			try
 			{
@@ -292,7 +298,24 @@ namespace seems
 
                 string[] spectrumListFilterList = spectrumListFilters.Split(';');
 
-                if (!dataSourceMap.ContainsKey(filepath))
+			    bool fileAlreadyOpen = dataSourceMap.ContainsKey(filepath);
+
+                if (closeIfOpen && fileAlreadyOpen)
+                {
+                    ManagedDataSource source = dataSourceMap[filepath];
+                    source.SpectrumListForm.Close();
+                    source.ChromatogramListForm.Close();
+                    foreach (var form in CurrentGraphFormList.Where(g => g.Sources.Any(s => s.Source == source.Source)))
+                        form.Close();
+                    foreach (var form in dockPanel.Contents.ToArray())
+                        if (((form as ManagedDockableForm)?.Source ?? null) == source)
+                            (form as DockableForm)?.Close();
+                    source.Source.MSDataFile.Dispose();
+                    dataSourceMap.Remove(filepath);
+                    fileAlreadyOpen = false;
+                }
+
+                if (!fileAlreadyOpen)
                 {
                     var newSource = new ManagedDataSource(new SpectrumSource(filepath));
                     dataSourceMap.Add(filepath, newSource);
@@ -752,7 +775,7 @@ namespace seems
             Application.DoEvents();
 
             var ionMobilityColumn = spectrumListForm.GridView.Columns["IonMobility"];
-            if (ionMobilityColumn != null && ionMobilityColumn.Visible)
+            if (ionMobilityColumn != null && ionMobilityColumn.Visible || sl.spectrum(0, true).GetIonMobilityArray() != null)
             {
                 var heatmapForm = new HeatmapForm(this, managedDataSource);
                 heatmapForm.Show(DockPanel, DockState.Document);

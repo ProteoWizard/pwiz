@@ -150,7 +150,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             CheckFieldByName(documentGrid, "PrecursorResult.IonMobilityFragment", row, 1.1732, msg); 
             CheckFieldByName(documentGrid, "PrecursorResult.IonMobilityUnits", row, IonMobilityValue.GetUnitsString(eIonMobilityUnits.inverse_K0_Vsec_per_cm2), msg);
             CheckFieldByName(documentGrid, "PrecursorResult.IonMobilityWindow", row, 0.12, msg);
-            CheckFieldByName(documentGrid, "PrecursorResult.CollisionalCrossSection", row, 666.9175, msg);
+            CheckFieldByName(documentGrid, "PrecursorResult.CollisionalCrossSection", row, 473.2742, msg);
             EnableDocumentGridColumns(documentGrid,
                 Resources.ReportSpecList_GetDefaults_Peptide_RT_Results,
                 doc1.PeptideCount * doc1.MeasuredResults.Chromatograms.Count, null);

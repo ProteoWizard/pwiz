@@ -22,15 +22,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Prosit.Communication;
 using pwiz.Skyline.Model.Prosit.Models;
-using pwiz.Skyline.Model.RetentionTimes;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using Tensorflow.Serving;
 
@@ -48,8 +46,7 @@ namespace pwiz.Skyline.Model.Prosit
         private readonly int _nce;
 
         public PrositLibraryBuilder(SrmDocument doc, string name, string outPath, Func<bool> replaceLibrary,
-            IrtStandard irtStandard,
-            IList<PeptideDocNode> peptides, IList<TransitionGroupDocNode> precursors, int nce)
+            IrtStandard irtStandard, IList<PeptideDocNode> peptides, IList<TransitionGroupDocNode> precursors, int nce)
         {
             _prositClient = PrositPredictionClient.Current;
             _intensityModel = PrositIntensityModel.Instance;
@@ -65,14 +62,29 @@ namespace pwiz.Skyline.Model.Prosit
 
         public bool BuildLibrary(IProgressMonitor progress)
         {
-            RetentionTimeRegression regr = null;
+            IProgressStatus progressStatus = new ProgressStatus();
+            try
+            {
+                var result = BuildLibraryOrThrow(progress, ref progressStatus);
+                progress.UpdateProgress(progressStatus = progressStatus.Complete());
+                return result;
+            }
+            catch (Exception exception)
+            {
+                progress.UpdateProgress(progressStatus.ChangeErrorException(exception));
+                return false;
+            }
+        }
+
+        private bool BuildLibraryOrThrow(IProgressMonitor progress, ref IProgressStatus progressStatus)
+        {
+            progressStatus = progressStatus.ChangeSegments(0, 5);
             var standardSpectra = new List<SpectrumMzInfo>();
 
+            // First get predictions for iRT standards specified by the user which may or may not be in the document
             if (IrtStandard != null && !ReferenceEquals(IrtStandard, IrtStandard.EMPTY))
             {
-                // Align Prosit iRTs with iRT standard
-                var standardPeptidesToAdd = SkylineWindow.ReadStandardPeptides(IrtStandard);
-
+                var standardPeptidesToAdd = ReadStandardPeptides(IrtStandard);
                 if (standardPeptidesToAdd != null && standardPeptidesToAdd.Count > 0)
                 {
                     // Get iRTs
@@ -80,15 +92,8 @@ namespace pwiz.Skyline.Model.Prosit
                         standardPeptidesToAdd.Select(p => (PrositRetentionTimeModel.PeptideDocNodeWrapper)p.NodePep).ToArray(),
                         CancellationToken.None);
 
-                    var original = standardIRTMap.ToDictionary(p => p.Key.ModifiedTarget, p => p.Value);
-                    var target = IrtStandard.Peptides.ToDictionary(p => p.ModifiedTarget, p => p.Irt);
-
-                    var aligned = AlignedRetentionTimes.AlignLibraryRetentionTimes(target, original, 0.0, RegressionMethodRT.linear,
-                        CancellationToken.None);
-                    regr = aligned.Regression;
-
                     // Get spectra
-                    var standardMS = _intensityModel.PredictBatches(_prositClient, progress, _document.Settings,
+                    var standardMS = _intensityModel.PredictBatches(_prositClient, progress, ref progressStatus, _document.Settings,
                         standardPeptidesToAdd.Select(p => p.WithNCE(_nce)).ToArray(),
                         CancellationToken.None);
 
@@ -102,26 +107,35 @@ namespace pwiz.Skyline.Model.Prosit
                 }
             }
 
+            progressStatus = progressStatus.NextSegment();
             // Predict fragment intensities
-            PrositMS2Spectra ms = _intensityModel.PredictBatches(_prositClient, progress, _document.Settings,
+            PrositMS2Spectra ms = _intensityModel.PredictBatches(_prositClient, progress, ref progressStatus, _document.Settings,
                 _peptides.Zip(_precursors,
                     (pep, prec) =>
-                        new PrositIntensityModel.PeptidePrecursorNCE(pep, prec, _nce)).ToArray(),
+                        new PrositIntensityModel.PeptidePrecursorNCE(pep, prec, IsotopeLabelType.light, _nce)).ToArray(),
                 CancellationToken.None);
+            progressStatus = progressStatus.NextSegment();
 
             var specMzInfo = ms.Spectra.Select(m => m.SpecMzInfo).ToList();
 
             // Predict iRTs for peptides
-            var distinctPeps = _peptides.Select(p => (PrositRetentionTimeModel.PeptideDocNodeWrapper) p).Distinct(
-                new SystemLinqExtensionMethods.FuncEqualityComparer<PrositRetentionTimeModel.PeptideDocNodeWrapper>(
-                    (p1, p2) => p1.Node.ModifiedSequence == p2.Node.ModifiedSequence)).ToArray();
-            var iRTMap = _rtModel.PredictBatches(_prositClient, progress, _document.Settings,
+            var distinctModifiedSequences = new HashSet<string>();
+            var distinctPeps = new List<PrositRetentionTimeModel.PeptideDocNodeWrapper>();
+            foreach (var p in _peptides)
+            {
+                if (distinctModifiedSequences.Add(p.ModifiedSequence))
+                {
+                    distinctPeps.Add(new PrositRetentionTimeModel.PeptideDocNodeWrapper(p));
+                }
+            }
+            var iRTMap = _rtModel.PredictBatches(_prositClient, progress, ref progressStatus, _document.Settings,
                 distinctPeps, CancellationToken.None);
+            progressStatus = progressStatus.NextSegment();
 
             for (var i = 0; i < specMzInfo.Count; ++i)
             {
                 if (iRTMap.TryGetValue(ms.Spectra[i].PeptidePrecursorNCE.NodePep, out var iRT))
-                    specMzInfo[i].RetentionTime = regr?.Conversion?.GetY(iRT) ?? iRT;
+                    specMzInfo[i].RetentionTime = iRT;
             }
 
             // Build library
@@ -140,6 +154,7 @@ namespace pwiz.Skyline.Model.Prosit
             if (!librarySpectra.Any())
                 return true;
 
+            progressStatus = progressStatus.NextSegment().ChangeMessage(Resources.SkylineWindow_SaveDocument_Saving___);
             // Build the library
             using (var blibDb = BlibDb.CreateBlibDb(LibrarySpec.FilePath))
             {
@@ -148,12 +163,27 @@ namespace pwiz.Skyline.Model.Prosit
                 var docLibrarySpec2 = docLibrarySpec;
 
                 docLibraryNew =
-                    blibDb.CreateLibraryFromSpectra(docLibrarySpec2, librarySpectra, LibrarySpec.Name, progress);
+                    blibDb.CreateLibraryFromSpectra(docLibrarySpec2, librarySpectra, LibrarySpec.Name, progress, ref progressStatus);
                 if (docLibraryNew == null)
                     return false;
             }
 
             return true;
+        }
+
+        public static List<PrositIntensityModel.PeptidePrecursorNCE> ReadStandardPeptides(IrtStandard standard)
+        {
+            var peps = standard.GetDocument().Peptides.ToList();
+            var precs = peps.Select(p => p.TransitionGroups.First());
+            /*for (var i = 0; i < peps.Count; i++)
+            {
+                var modSeq = ModifiedSequence.GetModifiedSequence(docImport.Settings, peps[i], IsotopeLabelType.light);
+                peps[i] = peps[i].ChangeExplicitMods(new ExplicitMods(peps[i].Peptide,
+                    modSeq.ExplicitMods.Select(m => m.ExplicitMod).ToArray(),
+                    new TypedExplicitModifications[0]));
+            }*/
+            return Enumerable.Zip(peps, precs,
+                (pep, prec) => new PrositIntensityModel.PeptidePrecursorNCE(pep, prec)).ToList();
         }
 
         public LibrarySpec LibrarySpec { get; private set; }
