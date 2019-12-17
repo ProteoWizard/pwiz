@@ -18,6 +18,7 @@
  */
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Xml.Serialization;
@@ -56,7 +57,7 @@ namespace pwiz.SkylineTestConnected
             var precursor = new TransitionGroupDocNode(new TransitionGroup(pingPep, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light),
                 new TransitionDocNode[0]);
             var input = new PrositIntensityModel.PeptidePrecursorNCE(peptide, precursor, IsotopeLabelType.light, 32);
-            var intensityModel = PrositIntensityModel.GetInstance("intensity");
+            var intensityModel = PrositIntensityModel.GetInstance(PrositIntensityModel.Models.First());
             try
             {
                 intensityModel.PredictSingle(client, SrmSettingsList.GetDefault(), input, CancellationToken.None);

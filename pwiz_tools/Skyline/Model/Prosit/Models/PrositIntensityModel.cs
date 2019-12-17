@@ -101,8 +101,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
         {
             get
             {
-                yield return @"intensity";
-                yield return @"intensity_2";
+                yield return @"intensity_prosit_publication";
             }
         }
 
