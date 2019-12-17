@@ -443,6 +443,10 @@ namespace pwiz.Skyline
             get { return _immediateWindow; }
         }
 
+        public DockPanel DockPanel
+        {
+            get { return dockPanel; }
+        }
         public bool DiscardChanges { get; set; }
 
         /// <summary>
