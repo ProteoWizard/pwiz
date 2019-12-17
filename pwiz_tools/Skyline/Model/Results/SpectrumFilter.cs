@@ -110,7 +110,7 @@ namespace pwiz.Skyline.Model.Results
             // TODO(bspratt): Should be queried out of the libraries as needed, as with RT not bulk copied all at once
             var libraryIonMobilityInfo = document.Settings.PeptideSettings.Prediction.UseLibraryIonMobilityValues
                 ? document.Settings.GetIonMobilities(moleculesThisPass.SelectMany(
-                    node => node.TransitionGroups.Select(nodeGroup => nodeGroup.GetLibKey(node))).ToArray(), msDataFileUri)
+                    node => node.TransitionGroups.Select(nodeGroup => nodeGroup.GetLibKey(document.Settings, node))).ToArray(), msDataFileUri)
                 : null;
             var ionMobilityMax = maxObservedIonMobilityValue ?? 0;
 

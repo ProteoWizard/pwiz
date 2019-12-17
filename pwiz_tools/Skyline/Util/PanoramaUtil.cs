@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
@@ -698,7 +699,11 @@ namespace pwiz.Skyline.Util
                 var panoramaEx = x.InnerException as PanoramaImportErrorException;
                 if (panoramaEx != null)
                 {
-                    var message = Resources.AbstractPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_uploading_to_Panorama__would_you_like_to_go_to_Panorama_;
+                    var message = panoramaEx.JobCancelled
+                        ? Resources.AbstractPanoramaPublishClient_UploadSharedZipFile_Document_import_was_cancelled_on_the_server__Would_you_like_to_go_to_Panorama_
+                        : Resources
+                            .AbstractPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_uploading_to_Panorama__would_you_like_to_go_to_Panorama_;
+
                     if (MultiButtonMsgDlg.Show(parent, message, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false)
                         == DialogResult.Yes)
                         Process.Start(panoramaEx.JobUrl.ToString());
@@ -725,6 +730,9 @@ namespace pwiz.Skyline.Util
         private WebClientWithCredentials _webClient;
         private IProgressMonitor _progressMonitor;
         private IProgressStatus _progressStatus;
+
+        private readonly Regex _runningStatusRegex = new Regex(@"RUNNING, (\d+)%");
+        private int _waitTime = 1;
 
         public void EnsureLogin(Server server)
         {
@@ -838,11 +846,10 @@ namespace pwiz.Skyline.Util
                 var details = importResponse[@"UploadedJobDetails"];
                 int rowId = (int)details[0][@"RowId"];
                 Uri statusUri = PanoramaUtil.Call(server.URI, @"query", folderPath, @"selectRows",
-                                     @"query.queryName=job&schemaName=pipeline&query.rowId~eq=" + rowId);
-                bool complete = false;
+                    @"query.queryName=job&schemaName=pipeline&query.rowId~eq=" + rowId);
                 // Wait for import to finish before returning.
-                Uri result = null;
-                while (!complete)
+                var startTime = DateTime.Now;
+                while (true)
                 {
                     if (progressMonitor.IsCanceled)
                         return null;
@@ -853,23 +860,93 @@ namespace pwiz.Skyline.Util
                     if (row == null)
                         continue;
 
-                    string status = (string)row[@"Status"];
-                    result = new Uri(server.URI, (string)row[@"_labkeyurl_Description"]);
-                    if (string.Equals(status, @"ERROR"))
+                    var status = new ImportStatus((string) row[@"Status"]);
+                    if (status.IsComplete)
                     {
-                        var jobUrl = new Uri(server.URI, (string)row[@"_labkeyurl_RowId"]);
-                        var e = new PanoramaImportErrorException(server.URI, jobUrl); 
+                        progressMonitor.UpdateProgress(_progressStatus.Complete());
+                        return new Uri(server.URI, (string)row[@"_labkeyurl_Description"]);
+                    }
+                  
+                    else if (status.IsError || status.IsCancelled)
+                    {
+                        var jobUrl = new Uri(server.URI, (string) row[@"_labkeyurl_RowId"]);
+                        var e = new PanoramaImportErrorException(server.URI, jobUrl, status.IsCancelled);
                         progressMonitor.UpdateProgress(
                             _progressStatus = _progressStatus.ChangeErrorException(e));
                         throw e;
                     }
 
-                    complete = string.Equals(status, @"COMPLETE");
+                    updateProgressAndWait(status, progressMonitor, _progressStatus, startTime);
                 }
-
-                progressMonitor.UpdateProgress(_progressStatus.Complete());
-                return result;
             }
+        }
+
+        private class ImportStatus
+        {
+            public string StatusString { get; }
+            public bool IsComplete => string.Equals(@"COMPLETE", StatusString);
+            public bool IsRunning => StatusString.Contains(@"RUNNING"); // "IMPORT RUNNING" pre LK19.3, RUNNING, x% in LK19.3
+            public bool IsError => string.Equals(@"ERROR", StatusString);
+            public bool IsCancelled => string.Equals(@"CANCELLED", StatusString);
+
+            public ImportStatus(string status)
+            {
+                StatusString = status;
+            }
+        }
+
+        private void updateProgressAndWait(ImportStatus jobStatus, IProgressMonitor progressMonitor, IProgressStatus status, DateTime startTime)
+        {
+            var match = _runningStatusRegex.Match(jobStatus.StatusString);
+            if (match.Success)
+            {
+                var currentProgress = _progressStatus.PercentComplete;
+
+                if (int.TryParse(match.Groups[1].Value, out var progress))
+                {
+                    progress = Math.Max(progress, currentProgress);
+                    _progressStatus = _progressStatus.ChangeMessage(string.Format(Resources.WebPanoramaPublishClient_updateProgressAndWait_Importing_data___0___complete_, progress));
+                    _progressMonitor.UpdateProgress(_progressStatus = _progressStatus.ChangePercentComplete(progress));
+
+                    var delta = progress - currentProgress;
+                    if (delta > 1)
+                    {
+                        // If progress is > 1% half the wait time
+                        _waitTime = Math.Max(1, _waitTime / 2);
+                    }
+                    else if (delta < 1)
+                    {
+                        // If progress is < 1% double the wait time, up to a max of 10 seconds.
+                        _waitTime = Math.Min(10, _waitTime * 2);
+                    }
+
+                    Thread.Sleep(_waitTime * 1000);
+                    return;
+                }
+            }
+
+            if (!jobStatus.IsRunning)
+            {
+                // Display the status since we don't recognize it.  This could be, for example, an "Import Waiting" status if another 
+                // Skyline document is currently being imported on the server. 
+                _progressMonitor.UpdateProgress(_progressStatus = _progressStatus =
+                    _progressStatus.ChangeMessage(string.Format(Resources.WebPanoramaPublishClient_SendZipFile_Status_on_server_is___0_, jobStatus.StatusString)));
+            }
+
+            else if (!_progressStatus.Message.Equals(Resources
+                .WebPanoramaPublishClient_SendZipFile_Waiting_for_data_import_completion___))
+            {
+                // Import is running now. Reset the progress message in case it had been set to something else (e.g. "Import Waiting") in a previous iteration.  
+                progressMonitor.UpdateProgress(_progressStatus =
+                    _progressStatus.ChangeMessage(Resources
+                        .WebPanoramaPublishClient_SendZipFile_Waiting_for_data_import_completion___));
+            }
+
+            // This is probably an older server (pre LK19.3) that does not include the progress percent in the status.
+            // Wait between 1 and 5 seconds before checking status again.
+            var elapsed = (DateTime.Now - startTime).TotalMinutes;
+            var sleepTime = elapsed > 5 ? 5 * 1000 : (int)(Math.Max(1, elapsed % 5) * 1000);
+            Thread.Sleep(sleepTime);
         }
 
         public override JObject SupportedVersionsJson(Server server)
@@ -1016,14 +1093,16 @@ namespace pwiz.Skyline.Util
 
     public class PanoramaImportErrorException : Exception
     {
-        public PanoramaImportErrorException(Uri serverUrl, Uri jobUrl)
+        public PanoramaImportErrorException(Uri serverUrl, Uri jobUrl, bool jobCancelled = false)
         {
             ServerUrl = serverUrl;
             JobUrl = jobUrl;
+            JobCancelled = jobCancelled;
         }
 
         public Uri ServerUrl { get; private set; }
         public Uri JobUrl { get; private set; }
+        public bool JobCancelled { get; private set; }
     }
 
     public class PanoramaServerException : Exception

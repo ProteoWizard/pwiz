@@ -196,7 +196,7 @@ void Reader_ABI::read(const string& filename,
         cacheExperiments(wifffile, experimentsMap, runIndex);
 
         SpectrumList_ABI* sl = new SpectrumList_ABI(result, wifffile, experimentsMap, runIndex, config);
-        ChromatogramList_ABI* cl = new ChromatogramList_ABI(result, wifffile, experimentsMap, runIndex);
+        ChromatogramList_ABI* cl = new ChromatogramList_ABI(result, wifffile, experimentsMap, runIndex, config);
         result.run.spectrumListPtr = SpectrumListPtr(sl);
         result.run.chromatogramListPtr = ChromatogramListPtr(cl);
 
@@ -235,7 +235,7 @@ void Reader_ABI::read(const string& filename,
                 cacheExperiments(wifffile, experimentsMap, i);
 
                 SpectrumList_ABI* sl = new SpectrumList_ABI(result, wifffile, experimentsMap, i, config);
-                ChromatogramList_ABI* cl = new ChromatogramList_ABI(result, wifffile, experimentsMap, i);
+                ChromatogramList_ABI* cl = new ChromatogramList_ABI(result, wifffile, experimentsMap, i, config);
                 result.run.spectrumListPtr = SpectrumListPtr(sl);
                 result.run.chromatogramListPtr = ChromatogramListPtr(cl);
 

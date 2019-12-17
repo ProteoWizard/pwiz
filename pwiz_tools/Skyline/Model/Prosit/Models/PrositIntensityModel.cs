@@ -101,8 +101,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
         {
             get
             {
-                yield return @"intensity";
-                yield return @"intensity_2";
+                yield return @"intensity_prosit_publication";
             }
         }
 
@@ -134,20 +133,25 @@ namespace pwiz.Skyline.Model.Prosit.Models
 
         public class PeptidePrecursorNCE : SkylineInputRow
         {
-            public PeptidePrecursorNCE(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, int? nce = null)
+            public PeptidePrecursorNCE(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup) : this(nodePep, nodeGroup, nodeGroup.LabelType, null)
+            {
+            }
+            public PeptidePrecursorNCE(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, IsotopeLabelType labelType, int? nce)
             {
                 NodePep = nodePep;
                 NodeGroup = nodeGroup;
+                LabelType = labelType;
                 NCE = nce;
             }
 
             public PeptideDocNode NodePep { get; private set; }
             public TransitionGroupDocNode NodeGroup { get; private set; }
+            public IsotopeLabelType LabelType { get; private set; }
             public int? NCE { get; private set; }
 
             public PeptidePrecursorNCE WithNCE(int nce)
             {
-                return new PeptidePrecursorNCE(NodePep, NodeGroup, nce);
+                return new PeptidePrecursorNCE(NodePep, NodeGroup, LabelType, nce);
             }
 
             public override bool Equals(SkylineInputRow other)
@@ -158,7 +162,8 @@ namespace pwiz.Skyline.Model.Prosit.Models
                     return false;
                 return ReferenceEquals(NodePep, peptidePrecursorPair.NodePep)
                        && ReferenceEquals(NodeGroup, peptidePrecursorPair.NodeGroup)
-                       && NCE == peptidePrecursorPair.NCE;
+                       && NCE == peptidePrecursorPair.NCE
+                       && Equals(LabelType, peptidePrecursorPair.LabelType);
             }
         }
 

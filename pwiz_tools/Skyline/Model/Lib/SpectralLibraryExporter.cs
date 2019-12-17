@@ -88,7 +88,8 @@ namespace pwiz.Skyline.Model.Lib
             LibKey key;
             if (nodePep.IsProteomic)
             {
-                var sequence = Document.Settings.GetPrecursorCalc(nodeTranGroup.TransitionGroup.LabelType, nodePep.ExplicitMods).GetModifiedSequence(nodePep.Peptide.Target, false);
+                var sequence = Document.Settings.GetPrecursorCalc(nodeTranGroup.TransitionGroup.LabelType, nodePep.ExplicitMods)
+                    .GetModifiedSequence(nodePep.Peptide.Target, SequenceModFormatType.lib_precision, false);
                 key = new LibKey(sequence, nodeTranGroup.PrecursorAdduct.AdductCharge);
             }
             else

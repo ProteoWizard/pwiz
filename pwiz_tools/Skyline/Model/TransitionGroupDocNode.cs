@@ -181,11 +181,18 @@ namespace pwiz.Skyline.Model
             get { return TransitionGroup.CustomMolecule;  }
         }
 
-        public LibKey GetLibKey(PeptideDocNode nodePeptideDocNode)
+        public LibKey GetLibKey(SrmSettings settings, PeptideDocNode nodePep)
         {
-            return IsCustomIon
-                ? new LibKey(nodePeptideDocNode.CustomMolecule.GetSmallMoleculeLibraryAttributes(), PrecursorAdduct)
-                : new LibKey(nodePeptideDocNode.ModifiedSequence, PrecursorAdduct.AdductCharge);
+            if (IsCustomIon)
+            {
+                return new LibKey(nodePep.CustomMolecule.GetSmallMoleculeLibraryAttributes(),
+                    PrecursorAdduct);
+            }
+
+            var modifiedSequence = settings
+                .GetPrecursorCalc(TransitionGroup.LabelType, nodePep.ExplicitMods)
+                .GetModifiedSequence(nodePep.Peptide.Target, SequenceModFormatType.full_precision, false).ToString();
+            return new LibKey(modifiedSequence, PrecursorAdduct.AdductCharge);
         }
 
         /// <summary>

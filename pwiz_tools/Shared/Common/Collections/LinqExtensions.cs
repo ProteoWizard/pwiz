@@ -159,29 +159,6 @@ namespace pwiz.Common.Collections
             }
         }
 
-        public class FuncEqualityComparer<T> : IEqualityComparer<T>
-        {
-            private readonly Func<T, T, bool> comparer;
-
-            public FuncEqualityComparer(Func<T, T, bool> comparer)
-            {
-                if (comparer == null)
-                    throw new ArgumentNullException(nameof(comparer));
-
-                this.comparer = comparer;
-            }
-
-            public bool Equals(T x, T y)
-            {
-                return comparer(x, y);
-            }
-
-            public int GetHashCode(T obj)
-            {
-                return obj.ToString().ToLower().GetHashCode();
-            }
-        }
-
         public static bool Contains<T>(this IEnumerable<T> list, T item, Func<T, T, bool> compareFunc)
         {
             return list.Any(x => compareFunc(x, item));

@@ -350,7 +350,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
 
         // Enumerating merged scan numbers is not instant.
         IntegerSet scanNumbers = spectrum->getMergedScanNumbers();
-        if (config_.combineIonMobilitySpectra)
+        if (config_.combineIonMobilitySpectra && format_ == Reader_Bruker_Format_TDF)
         {
             result->scanList.set(MS_sum_of_spectra);
             if (scanNumbers.size() < 100)
@@ -731,8 +731,9 @@ PWIZ_API_DECL bool SpectrumList_Bruker::hasCombinedIonMobility() const
 
 // Per email thread Aug 22 2017 bpratt, mattc, Bruker's SvenB:
 // The gas is nitrogen(14.0067 AMU) and the temperature is(according to Sven) assumed to be 305K.
+// Turns out it's N2, actually, which seems obvious in retrospect (bpratt Dec 2 2019)
 static const double ccs_conversion_factor = 18509.863216340458;
-static const double MolWeightGas = 14.0067;
+static const double MolWeightGas =  2.0 * 14.0067;
 static const double Temperature = 305;
 
 PWIZ_API_DECL double SpectrumList_Bruker::ionMobilityToCCS(double inverseK0, double mz, int charge) const

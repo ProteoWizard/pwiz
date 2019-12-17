@@ -338,10 +338,10 @@ namespace pwiz.SkylineTestTutorial
                     const string sourceFirst = "100803_0005b_MCF7_TiTip3.wiff";
                     const double timeFirst = 35.2128;
                     Assert.AreEqual(sourceFirst, libraryExplorer.SourceFile);
-                    Assert.AreEqual(timeFirst, libraryExplorer.RetentionTime, 0.0001);
+                    Assert.AreEqual(timeFirst, libraryExplorer.RetentionTime, 0.01);
                     libraryExplorer.SelectedIndex++;
                     Assert.AreNotEqual(sourceFirst, libraryExplorer.SourceFile);
-                    Assert.AreNotEqual(timeFirst, libraryExplorer.RetentionTime, 0.0001);
+                    Assert.AreNotEqual(timeFirst, libraryExplorer.RetentionTime, 0.01);
                 });
             OkDialog(libraryExplorer, libraryExplorer.CancelDialog);
 
