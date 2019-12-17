@@ -41,6 +41,22 @@ namespace pwiz.Skyline.SettingsUI
 
         public TItem[] Chosen { get { return GetChosen(null); } }
 
+        public TItem[] Choices
+        {
+            get
+            {
+                var listChoices = new List<TItem>();
+                foreach (var listItem in ListBox.Items)
+                {
+                    TItem item;
+                    if (List.TryGetValue(listItem.ToString(), out item))
+                        listChoices.Add(item);
+                }
+
+                return listChoices.ToArray();
+            }
+        }
+
         public virtual TItem[] GetChosen(ItemCheckEventArgs e)
         {
             if (CheckedListBox == null)
@@ -148,10 +164,17 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (CheckedListBox != null)
                 {
+                    // First check that all of the names are in the list
+                    foreach (var checkName in value)
+                    {
+                        Assume.IsTrue(Choices.Contains(c => Equals(checkName, c.ToString())),
+                            string.Format(@"Attempting to set checked state for missing name {0}", checkName));
+                    }
+                    // Set the checked state of the provided names
                     for (int i = 0; i < ListBox.Items.Count; i++)
                     {
-                        CheckedListBox.SetItemChecked(i,
-                                               value.Contains(ListBox.Items[i].ToString()));
+                        bool checkedState = value.Contains(ListBox.Items[i].ToString());
+                        CheckedListBox.SetItemChecked(i, checkedState);
                     }
                 }
             }

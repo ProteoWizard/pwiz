@@ -131,6 +131,14 @@ PWIZ_API_DECL bool SpectrumList_IonMobility::canConvertIonMobilityAndCCS(IonMobi
     return sl_->canConvertIonMobilityAndCCS();
 }
 
+PWIZ_API_DECL bool SpectrumList_IonMobility::hasCombinedIonMobility() const
+{
+    if (sl_ == nullptr)
+        return false;
+
+    return sl_->hasCombinedIonMobility();
+}
+
 PWIZ_API_DECL double SpectrumList_IonMobility::ionMobilityToCCS(double ionMobility, double mz, int charge) const
 {
     switch (equipment_)

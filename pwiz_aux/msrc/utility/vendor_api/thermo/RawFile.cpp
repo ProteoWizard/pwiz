@@ -939,12 +939,22 @@ MassListPtr RawFileImpl::getMassList(long scanNumber,
         if (centroidResult && raw_->GetFilterForScanNumber(scanNumber)->MassAnalyzer == ThermoEnum::MassAnalyzerType::MassAnalyzerFTMS)
         {
             auto centroidStream = raw_->GetCentroidStream(scanNumber, false);
-            ToBinaryData(centroidStream->Masses, result->mzArray);
-            ToBinaryData(centroidStream->Intensities, result->intensityArray);
+            if (centroidStream != nullptr && centroidStream->Length > 0)
+            {
+                ToBinaryData(centroidStream->Masses, result->mzArray);
+                ToBinaryData(centroidStream->Intensities, result->intensityArray);
+                return result;
+            }
         }
-        else if (centroidResult)
+
+        if (centroidResult)
         {
-            auto centroidScan = Thermo::Scan::ToCentroid(Thermo::Scan::FromFile(raw_.get(), scanNumber));
+            auto scan = Thermo::Scan::FromFile(raw_.get(), scanNumber);
+            if (scan->SegmentedScanAccess->Positions->Length == 0 || scan->ScanStatistics->BasePeakIntensity == 0)
+                return result;
+            auto centroidScan = Thermo::Scan::ToCentroid(scan);
+            if (centroidScan == nullptr || centroidScan->SegmentedScanAccess->Positions->Length == 0)
+                throw gcnew System::Exception("failed to centroid scan");
             ToBinaryData(centroidScan->SegmentedScanAccess->Positions, result->mzArray);
             ToBinaryData(centroidScan->SegmentedScanAccess->Intensities, result->intensityArray);
         }
@@ -1645,7 +1655,7 @@ void ScanInfoImpl::parseFilterString()
     if (hasMultiplePrecursors_ && spsMasses_.empty()) // MSX mode means there can be more than 1 filter line m/z for the current ms level
     {
         for (size_t i = msLevel_ - 1; i < precursorMZs_.size(); ++i)
-            precursorInfo_.push_back(PrecursorInfo{ msLevel_ - 1, precursorMZs_[i], precursorMZs_[i], isolationWidths[i], precursorActivationEnergies_[i], activationType_, 0, 0 });
+            precursorInfo_.push_back(PrecursorInfo{ msLevel_ - 1, precursorMZs_[i], precursorMZs_[i], isolationWidths.back(), precursorActivationEnergies_[i], activationType_, 0, 0 });
     }
 }
 
@@ -2548,7 +2558,7 @@ MassListPtr RawFileThreadImpl::getMassList(long scanNumber,
         if (centroidResult)
         {
             auto scan = Thermo::Scan::FromFile(raw_.get(), scanNumber);
-            if (scan->SegmentedScanAccess->Positions->Length == 0)
+            if (scan->SegmentedScanAccess->Positions->Length == 0 || scan->ScanStatistics->BasePeakIntensity == 0)
                 return result;
             auto centroidScan = Thermo::Scan::ToCentroid(scan);
             if (centroidScan == nullptr || centroidScan->SegmentedScanAccess->Positions->Length == 0)

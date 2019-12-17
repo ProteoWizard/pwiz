@@ -62,7 +62,7 @@ namespace TestPerf
             RunUI(() => SkylineWindow.OpenSharedFile(filePathDda));
             var doc = WaitForDocumentLoaded();
             int expectedDecoys = RefinementSettings.SuggestDecoyCount(doc);
-            RunDlg<GenerateDecoysDlg>(SkylineWindow.ShowGenerateDecoysDlg, decoysDlg =>
+            RunDlg<GenerateDecoysDlg>(() => SkylineWindow.ShowGenerateDecoysDlg(), decoysDlg =>
             {
                 decoysDlg.DecoysMethod = DecoyGeneration.SHUFFLE_SEQUENCE;
                 decoysDlg.OkDialog();
@@ -119,7 +119,7 @@ namespace TestPerf
             RunUI(() => SkylineWindow.OpenSharedFile(filePathDia));
             doc = WaitForDocumentLoaded();
             expectedDecoys = RefinementSettings.SuggestDecoyCount(doc);
-            RunDlg<GenerateDecoysDlg>(SkylineWindow.ShowGenerateDecoysDlg, decoysDlg =>
+            RunDlg<GenerateDecoysDlg>(() => SkylineWindow.ShowGenerateDecoysDlg(), decoysDlg =>
             {
                 decoysDlg.DecoysMethod = DecoyGeneration.REVERSE_SEQUENCE;
                 decoysDlg.OkDialog();
@@ -156,7 +156,7 @@ namespace TestPerf
             RunUI(() => SkylineWindow.OpenSharedFile(filePathDiaIrt));
             doc = WaitForDocumentLoaded();
             expectedDecoys = RefinementSettings.SuggestDecoyCount(doc);
-            RunDlg<GenerateDecoysDlg>(SkylineWindow.ShowGenerateDecoysDlg, decoysDlg =>
+            RunDlg<GenerateDecoysDlg>(() => SkylineWindow.ShowGenerateDecoysDlg(), decoysDlg =>
             {
                 decoysDlg.DecoysMethod = DecoyGeneration.SHUFFLE_SEQUENCE;
                 decoysDlg.OkDialog();

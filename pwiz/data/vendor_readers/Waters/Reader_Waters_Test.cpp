@@ -63,7 +63,16 @@ int main(int argc, char* argv[])
         pwiz::msdata::Reader_Waters reader;
         pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsRawData(), config);
 
+        // test globalChromatogramsAreMs1Only, but don't need to test spectra here
+        auto newConfig = config;
+        newConfig.globalChromatogramsAreMs1Only = true;
+        newConfig.indexRange = make_pair(0, 0);
+        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile({ "MSe_Short.raw", "HDMRM_Short_noLM.raw", "HDDDA_Short_noLM.raw" }), newConfig);
+
         config.combineIonMobilitySpectra = true;
+        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsIMSData(), config);
+
+        config.isolationMzAndMobilityFilter.emplace_back(4, 0.2);
         pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsIMSData(), config);
     }
     catch (exception& e)

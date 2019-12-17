@@ -80,8 +80,11 @@ class PWIZ_API_DECL Reader
         /// temporary(?) variable to avoid needing to regenerate Bruker test data
         bool sortAndJitter;
 
-        // when non-empty, only MS2 scans from precursors matching one of the included m/z, and optionally mobility, (i.e. within a precursor isolation window) will be enumerated (currently only affects Bruker PASEF data)
+        /// when non-empty, only scans from precursors matching one of the included m/z and/or mobility windows will be enumerated; MS1 scans are affected only by the mobility filter
         std::vector<chemistry::MzMobilityWindow> isolationMzAndMobilityFilter;
+
+        /// when true, global TIC and BPC chromatograms consist of only MS1 spectra (thus the number of time points cannot be assumed to be equal to the number of spectra)
+        bool globalChromatogramsAreMs1Only;
 
         Config();
         Config(const Config& rhs);

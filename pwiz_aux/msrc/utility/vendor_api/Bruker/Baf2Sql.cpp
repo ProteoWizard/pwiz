@@ -135,6 +135,14 @@ Baf2SqlImpl::Baf2SqlImpl(const string& rawpath) : rawpath_(rawpath), bafFilepath
     tic_->intensities.reserve(numSpectra);
     bpi_->times.reserve(numSpectra);
     bpi_->intensities.reserve(numSpectra);
+
+    ticMs1_.reset(new Chromatogram);
+    bpiMs1_.reset(new Chromatogram);
+    ticMs1_->times.reserve(numSpectra / 2);
+    ticMs1_->intensities.reserve(numSpectra / 2);
+    bpiMs1_->times.reserve(numSpectra / 2);
+    bpiMs1_->intensities.reserve(numSpectra / 2);
+
     spectra_.reserve(numSpectra);
     for (sqlite::query::iterator itr = q.begin(); itr != q.end(); ++itr)
     {
@@ -165,6 +173,14 @@ Baf2SqlImpl::Baf2SqlImpl(const string& rawpath) : rawpath_(rawpath), bafFilepath
         bpi_->times.push_back(rt);
         tic_->intensities.push_back(tic);
         bpi_->intensities.push_back(bpi);
+
+        if (msLevel == 1)
+        {
+            ticMs1_->times.push_back(rt);
+            bpiMs1_->times.push_back(rt);
+            ticMs1_->intensities.push_back(tic);
+            bpiMs1_->intensities.push_back(bpi);
+        }
 
         spectra_.emplace_back(MSSpectrumPtr(new Baf2SqlSpectrum(bafStorage_, id,
                                                                 msLevel, rt, segment, ak, startMz, endMz,
@@ -208,8 +224,8 @@ size_t Baf2SqlImpl::getLCSpectrumCount(int source) const { return 0; }
 LCSpectrumSourcePtr Baf2SqlImpl::getLCSource(int source) const { return 0; }
 LCSpectrumPtr Baf2SqlImpl::getLCSpectrum(int source, int scan) const { return LCSpectrumPtr(); }
 
-ChromatogramPtr Baf2SqlImpl::getTIC() const { return tic_; }
-ChromatogramPtr Baf2SqlImpl::getBPC() const { return bpi_; }
+ChromatogramPtr Baf2SqlImpl::getTIC(bool ms1Only) const { return ms1Only ? ticMs1_ : tic_; }
+ChromatogramPtr Baf2SqlImpl::getBPC(bool ms1Only) const { return ms1Only ? bpiMs1_ : bpi_; }
 
 std::string Baf2SqlImpl::getOperatorName() const { return operatorName_; }
 std::string Baf2SqlImpl::getAnalysisName() const { return ""; }

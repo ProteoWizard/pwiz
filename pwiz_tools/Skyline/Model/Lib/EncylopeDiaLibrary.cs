@@ -565,12 +565,12 @@ namespace pwiz.Skyline.Model.Lib
             return null;
         }
 
-        public override IEnumerable<SpectrumInfo> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
+        public override IEnumerable<SpectrumInfoLibrary> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
         {
             int iEntry = FindEntry(key);
             if (iEntry < 0)
             {
-                return new SpectrumInfo[0];
+                return new SpectrumInfoLibrary[0];
             }
             var entry = _libraryEntries[iEntry];
             return entry.FileDatas.Where(kvp =>
@@ -586,7 +586,7 @@ namespace pwiz.Skyline.Model.Lib
                     return true;
                 })
                 .Select(kvp =>
-                    new SpectrumInfo(this, labelType, _sourceFiles[kvp.Key], kvp.Value.ApexTime, null,
+                    new SpectrumInfoLibrary(this, labelType, _sourceFiles[kvp.Key], kvp.Value.ApexTime, null,
                         kvp.Key == entry.BestFileId, new ElibSpectrumKey(iEntry, kvp.Key))
                     {
                         SpectrumHeaderInfo = CreateSpectrumHeaderInfo(entry)
