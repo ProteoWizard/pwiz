@@ -126,9 +126,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     if (!peptide.Id.HasValue)
                         return true;
                     // Any peptide that was not in the original set, or that has changed
-                    DbIrtPeptide originalPeptide;
-                    if (!dictOriginalPeptides.TryGetValue(peptide.Id, out originalPeptide) ||
-                            !Equals(peptide, originalPeptide))
+                    if (!dictOriginalPeptides.TryGetValue(peptide.Id, out var originalPeptide) || !Equals(peptide, originalPeptide))
                         return true;
                 }
                 // Finally, check for peptides removed
@@ -136,9 +134,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
             }
         }
 
-        private BindingList<DbIrtPeptide> StandardPeptideList { get { return _gridViewStandardDriver.Items; } }
+        private BindingList<DbIrtPeptide> StandardPeptideList => _gridViewStandardDriver.Items;
 
-        private BindingList<DbIrtPeptide> LibraryPeptideList { get { return _gridViewLibraryDriver.Items; } }
+        private BindingList<DbIrtPeptide> LibraryPeptideList => _gridViewLibraryDriver.Items;
 
         public void ResetPeptideListBindings()
         {
@@ -146,38 +144,17 @@ namespace pwiz.Skyline.SettingsUI.Irt
             LibraryPeptideList.ResetBindings();
         }
 
-        private int CurrentStandardIndex
-        {
-            get
-            {
-                for (var i = 0; i < _driverStandards.List.Count; i++)
-                {
-                    if (_driverStandards.List[i].IsMatch(StandardPeptideList, IRT_TOLERANCE))
-                    {
-                        return i;
-                    }
-                }
-                return -1;
-            }
-        }
+        public IEnumerable<DbIrtPeptide> StandardPeptides => StandardPeptideList;
 
-        public IEnumerable<DbIrtPeptide> StandardPeptides
-        {
-            get { return StandardPeptideList; }
-        }
-
-        public IEnumerable<DbIrtPeptide> LibraryPeptides
-        {
-            get { return LibraryPeptideList; }
-        }
+        public IEnumerable<DbIrtPeptide> LibraryPeptides => LibraryPeptideList;
 
         public IEnumerable<DbIrtPeptide> AllPeptides
         {
             get { return new[] {StandardPeptideList, LibraryPeptideList}.SelectMany(list => list); }
         }
 
-        public int StandardPeptideCount { get { return StandardPeptideList.Count; } }
-        public int LibraryPeptideCount { get { return LibraryPeptideList.Count; } }
+        public int StandardPeptideCount => StandardPeptideList.Count;
+        public int LibraryPeptideCount => LibraryPeptideList.Count;
 
         public void ClearStandardPeptides()
         {
@@ -928,23 +905,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 AddToLibrary(irtAverages);
             }
 
-            public class NopProgressMonitor : IProgressMonitor
-            {
-                public bool IsCanceled
-                {
-                    get { return false; }
-                }
-                public UpdateProgressResponse UpdateProgress(IProgressStatus status)
-                {
-                    return UpdateProgressResponse.normal;
-                }
-
-                public bool HasUI
-                {
-                    get { return false; }
-                }
-            }
-
             public void AddIrtDatabase()
             {
                 var irtCalcs = Settings.Default.RTScoreCalculatorList.Where(calc => calc is RCalcIrt).Cast<RCalcIrt>();
@@ -1355,15 +1315,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 {
                     // Update standard
                     _driverStandards.List[comboStandards.SelectedIndex] = _driverStandards.SelectedItem.ChangePeptides(StandardPeptides);
-                }
-                else if (selectedName.Equals(IrtStandard.EMPTY.Name))
-                {
-                    // Set ComboBox from None to the matching standard, if any
-                    var current = CurrentStandardIndex;
-                    if (current != -1)
-                    {
-                        comboStandards.SelectedIndex = current;
-                    }
                 }
             }
 
