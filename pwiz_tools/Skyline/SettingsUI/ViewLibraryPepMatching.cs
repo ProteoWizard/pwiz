@@ -604,23 +604,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     // Look for the protein in the document.
                     string name = protein.ProteinMetadata.Name;
-                    var peptideGroupDocNode = FindPeptideGroupDocNode(document, name);
-                    if (peptideGroupDocNode != null)
-                    {
-                        var pgFastaSequence = peptideGroupDocNode.PeptideGroup as FastaSequence;
-                        if (pgFastaSequence == null)
-                        {
-                            peptideGroupDocNode = null;
-                        }
-                        else
-                        {
-                            if (pgFastaSequence.Sequence.IndexOf(pepMatch.NodePep.Peptide.Target.Sequence,
-                                    StringComparison.Ordinal) < 0)
-                            {
-                                peptideGroupDocNode = null;
-                            }
-                        }
-                    }
+                    var peptideGroupDocNode = FindPeptideGroupDocNode(document, name, pepMatch.NodePep.Peptide.Sequence);
                     bool foundInDoc = peptideGroupDocNode != null;
                     bool foundInList = false;
                     if (!foundInDoc)
@@ -767,7 +751,7 @@ namespace pwiz.Skyline.SettingsUI
             var nodeName = hasSmallMolecules
                 ? Resources.ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Molecules
                 : Resources.ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Peptides;
-            var nodePepGroupNew = FindPeptideGroupDocNode(document, nodeName);
+            var nodePepGroupNew = FindPeptideGroupDocNode(document, nodeName, null);
             if(nodePepGroupNew != null)
             {
                 var newChildren = nodePepGroupNew.Children.ToList();
@@ -793,14 +777,29 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        private static PeptideGroupDocNode FindPeptideGroupDocNode(SrmDocument document, String name)
+        /// <summary>
+        /// Returns the first PeptideGroupDocNode with a given name, and, optionally,
+        /// which also contains a particular peptide sequence.
+        /// </summary>
+        private static PeptideGroupDocNode FindPeptideGroupDocNode(SrmDocument document, string proteinName, string peptideSequence)
         {
             foreach (PeptideGroupDocNode peptideGroupDocNode in document.MoleculeGroups)
             {
-                if (peptideGroupDocNode.Name == name)
+                if (proteinName != peptideGroupDocNode.Name)
                 {
-                    return peptideGroupDocNode;
+                    continue;
                 }
+
+                if (peptideSequence != null)
+                {
+                    string proteinSequence = peptideGroupDocNode.Sequence;
+                    if (null == proteinSequence || proteinSequence.IndexOf(peptideSequence, StringComparison.Ordinal) < 0)
+                    {
+                        continue;
+                    }
+                }
+
+                return peptideGroupDocNode;
             }
             return null;
         }

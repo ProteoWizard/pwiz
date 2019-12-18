@@ -48,6 +48,7 @@ namespace pwiz.SkylineTestFunctional
         {
             const string firstPeptideSequence = "PEPTIDEA";
             const string secondPeptideSequence = "PEPTIDEC";
+            const string thirdPeptideSequence = "PEPTIDED";
             var peptideSettingsUi = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             RunUI(() =>
             {
@@ -60,14 +61,24 @@ namespace pwiz.SkylineTestFunctional
             var addLibDlg = ShowDialog<EditLibraryDlg>(libListDlg.AddItem);
             RunUI(() =>
             {
-                addLibDlg.LibraryName = "MyLibrary";
+                addLibDlg.LibraryName = "peptides";
                 addLibDlg.LibraryPath = TestFilesDir.GetTestPath("peptides.blib");
             });
             OkDialog(addLibDlg, addLibDlg.OkDialog);
+
+            addLibDlg = ShowDialog<EditLibraryDlg>(libListDlg.AddItem);
+            RunUI(() =>
+            {
+                addLibDlg.LibraryName = "peptided";
+                addLibDlg.LibraryPath = TestFilesDir.GetTestPath("peptided.blib");
+            });
+            OkDialog(addLibDlg, addLibDlg.OkDialog);
+
             OkDialog(libListDlg, libListDlg.OkDialog);
             RunUI(()=>
             {
                 peptideSettingsUi.SetLibraryChecked(0, true);
+                peptideSettingsUi.SetLibraryChecked(1, true);
                 peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Digest;
                 peptideSettingsUi.PeptidePick = PeptidePick.either;
             });
@@ -100,10 +111,10 @@ namespace pwiz.SkylineTestFunctional
             var libraryViewer = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             RunUI(() =>
             {
+                libraryViewer.ChangeSelectedLibrary("peptides");
                 libraryViewer.AssociateMatchingProteins = true;
             });
-            var alertDlg = ShowDialog<AlertDlg>(libraryViewer.AddAllPeptides);
-            OkDialog(alertDlg, ()=>alertDlg.DialogResult = DialogResult.Yes);
+            RunDlg<AlertDlg>(libraryViewer.AddAllPeptides, alertDlg => alertDlg.DialogResult = DialogResult.Yes);
 
             // Verify that "PEPTIDEA" got added to the first protein, and that a new protein had to be created for "PEPTIDEC" since
             // the first protein's sequence did not contain it.
@@ -111,6 +122,8 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(2, doc.Children.Count);
             firstProtein = (PeptideGroupDocNode) doc.Children[0];
             PeptideGroupDocNode secondProtein = (PeptideGroupDocNode) doc.Children[1];
+            Assert.AreEqual(1, secondProtein.Children.Count);
+
             StringAssert.Contains(firstProtein.PeptideGroup.Sequence, firstPeptideSequence);
             Assert.IsFalse(firstProtein.PeptideGroup.Sequence.Contains(secondPeptideSequence));
             StringAssert.Contains(secondProtein.PeptideGroup.Sequence, secondPeptideSequence);
@@ -121,6 +134,15 @@ namespace pwiz.SkylineTestFunctional
             var secondPeptide = secondProtein.Peptides.FirstOrDefault(pep => secondPeptideSequence.Equals(pep.Peptide.Sequence));
             Assert.IsNotNull(secondPeptide);
             Assert.IsNull(firstProtein.Peptides.FirstOrDefault(pep=>pep.Peptide.Sequence == secondPeptide.Peptide.Sequence));
+
+            // Now add just the peptide "PEPTIDED" and make sure it gets added to the second protein in the document.
+            RunUI(()=>libraryViewer.ChangeSelectedLibrary("peptided"));
+            RunDlg<AlertDlg>(libraryViewer.AddAllPeptides, alertDlg=>alertDlg.DialogResult = DialogResult.Yes);
+            secondProtein = (PeptideGroupDocNode) SkylineWindow.Document.Children[1];
+            Assert.AreEqual(2, secondProtein.Children.Count);
+            var thirdPeptide = (PeptideDocNode) secondProtein.Children[1];
+            Assert.AreEqual(thirdPeptideSequence, thirdPeptide.Peptide.Sequence);
+
             OkDialog(libraryViewer, libraryViewer.Close);
         }
     }
