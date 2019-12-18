@@ -4,10 +4,12 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using Path = System.IO.Path;
@@ -123,21 +125,24 @@ namespace pwiz.Skyline.Model
     {
         private SkylineWindow _skyline;
 
-        public IDownloadClient DownloadClient { get; set; }
+        public DownloadClientCreator DownloadClientCreator { private get; set; }
 
         public const string ERROR401 = "(401) Unauthorized";
         public const string ERROR403 = "(403) Forbidden";
+        private int _retryRemaining = 3;
 
         public SkypSupport(SkylineWindow skyline)
         {
             _skyline = skyline;
+            DownloadClientCreator = new DownloadClientCreator();
         }
 
         public bool Open(string skypPath, IEnumerable<Server> servers, FormEx parentWindow = null)
         {
+            SkypFile skyp = null;
             try
             {
-                var skyp = SkypFile.Create(skypPath, servers);
+                skyp = SkypFile.Create(skypPath, servers);
                 
                 using (var longWaitDlg = new LongWaitDlg
                 {
@@ -152,12 +157,42 @@ namespace pwiz.Skyline.Model
             }
             catch (Exception e)
             {
-                var message = TextUtil.LineSeparate(Resources.SkypSupport_Open_Failure_opening_skyp_file_, e.Message);
-                MessageDlg.ShowWithException(parentWindow ?? _skyline, message, e);
-                return false;
+                if (_retryRemaining-- > 0 && skyp != null && e.Message.Contains(AddPanoramaServerMessage(skyp)))
+                {
+                    return AddServerAndOpen(skypPath, e.Message, parentWindow);
+                }
+                else
+                {
+                    var message = TextUtil.LineSeparate(Resources.SkypSupport_Open_Failure_opening_skyp_file_, e.Message);
+                    MessageDlg.ShowWithException(parentWindow ?? _skyline, message, e);
+                    return false;
+                }
             }
         }
 
+        private bool AddServerAndOpen(string skypPath, String message, FormEx parentWindow)
+        {
+            using (var alertDlg = new AlertDlg(message, MessageBoxButtons.OKCancel))
+            {
+                alertDlg.ShowDialog(parentWindow ?? _skyline);
+                if (alertDlg.DialogResult == DialogResult.OK)
+                {
+                    using (var dlg = new ToolOptionsUI(_skyline.Document.Settings))
+                    {
+                        // Let the user add a Panorama server.
+                        dlg.NavigateToTab(ToolOptionsUI.TABS.Panorama);
+                        dlg.ShowDialog(alertDlg);
+                        if (dlg.DialogResult != DialogResult.OK)
+                        {
+                            return false;
+                        }
+                    }
+                    return Open(skypPath, Settings.Default.ServerList /*get the updated server list*/, parentWindow);
+                }
+
+                return false;
+            }
+        }
 
         private void Download(SkypFile skyp, IProgressMonitor progressMonitor, FormEx parentWindow = null)
         {
@@ -165,18 +200,15 @@ namespace pwiz.Skyline.Model
                 new ProgressStatus(string.Format(Resources.SkypSupport_Download_Downloading__0_, skyp.SkylineDocUri));
             progressMonitor.UpdateProgress(progressStatus);
 
-            if (DownloadClient == null)
-            {
-                DownloadClient = new WebDownloadClient(progressMonitor, progressStatus);
-            }
+            var downloadClient = DownloadClientCreator.Create(progressMonitor, progressStatus);
 
-            DownloadClient.Download(skyp.SkylineDocUri, skyp.DownloadPath, skyp.Server?.Username, skyp.Server?.Password);
+            downloadClient.Download(skyp.SkylineDocUri, skyp.DownloadPath, skyp.Server?.Username, skyp.Server?.Password);
 
-            if (progressMonitor.IsCanceled || DownloadClient.IsError)
+            if (progressMonitor.IsCanceled || downloadClient.IsError)
             {
                 FileEx.SafeDelete(skyp.DownloadPath, true);
             }
-            if (DownloadClient.IsError)
+            if (downloadClient.IsError)
             {
                 var message =
                     string.Format(
@@ -184,18 +216,14 @@ namespace pwiz.Skyline.Model
                             .SkypSupport_Download_There_was_an_error_downloading_the_Skyline_document_specified_in_the_skyp_file___0__,
                         skyp.SkylineDocUri);
 
-                if (DownloadClient.Error != null)
+                if (downloadClient.Error != null)
                 {
-                    var exceptionMsg = DownloadClient.Error.Message;
+                    var exceptionMsg = downloadClient.Error.Message;
                     message = TextUtil.LineSeparate(message, exceptionMsg);
 
                     if (exceptionMsg.Contains(ERROR401))
                     {
-                        message = TextUtil.LineSeparate(message,
-                            string.Format(
-                                Resources
-                                    .SkypSupport_Download_You_may_have_to_add__0__as_a_Panorama_server_from_the_Tools___Options_menu_in_Skyline_,
-                                skyp.SkylineDocUri.Host));
+                        message = TextUtil.LineSeparate(message, AddPanoramaServerMessage(skyp));
                     }
                     else if (exceptionMsg.Contains(ERROR403))
                     {
@@ -206,9 +234,17 @@ namespace pwiz.Skyline.Model
                     }
                 }
 
-                throw new Exception(message, DownloadClient.Error);
+                throw new Exception(message, downloadClient.Error);
             }
-        }     
+        }
+
+        private static string AddPanoramaServerMessage(SkypFile skyp)
+        {
+            return string.Format(
+                Resources
+                    .SkypSupport_Download_You_may_have_to_add__0__as_a_Panorama_server_from_the_Tools___Options_menu_in_Skyline_,
+                skyp.SkylineDocUri.Host);
+        }
     }
 
     public class WebDownloadClient : IDownloadClient
@@ -221,7 +257,7 @@ namespace pwiz.Skyline.Model
         public bool IsError => ProgressStatus != null && ProgressStatus.IsError;
         public Exception Error => ProgressStatus?.ErrorException;
 
-        public WebDownloadClient(IProgressMonitor progressMonitor, ProgressStatus progressStatus)
+        public WebDownloadClient(IProgressMonitor progressMonitor, IProgressStatus progressStatus)
         {
             ProgressMonitor = progressMonitor;
             ProgressStatus = progressStatus;
@@ -274,5 +310,13 @@ namespace pwiz.Skyline.Model
         bool IsCancelled { get; }
         bool IsError { get; }
         Exception Error { get; }
+    }
+
+    public class DownloadClientCreator
+    {
+        public virtual IDownloadClient Create(IProgressMonitor progressMonitor, IProgressStatus progressStatus)
+        {
+            return new WebDownloadClient(progressMonitor, progressStatus);
+        }
     }
 }

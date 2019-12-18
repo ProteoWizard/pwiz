@@ -125,7 +125,7 @@ public:
     virtual const std::set<SRMTransition>& getTransitions() const = 0;
     virtual SRMChromatogramPtr getSRM(const SRMTransition& transition) const = 0;
 
-    virtual ChromatogramPtr getTIC() const = 0;
+    virtual ChromatogramPtr getTIC(bool ms1Only = false) const = 0;
 
     virtual int getScanCount() const = 0;
     virtual SpectrumPtr getSpectrum(int scanNumber) const = 0;

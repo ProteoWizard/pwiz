@@ -234,7 +234,7 @@ void Reader_Bruker::read(const string& filename,
         config.preferOnlyMsLevel, config.allowMsMsWithoutPrecursor, config.isolationMzAndMobilityFilter));
 
     SpectrumList_Bruker* sl = new SpectrumList_Bruker(result, rootpath.string(), format, compassDataPtr, config);
-    ChromatogramList_Bruker* cl = new ChromatogramList_Bruker(result, rootpath.string(), format, compassDataPtr);
+    ChromatogramList_Bruker* cl = new ChromatogramList_Bruker(result, rootpath.string(), format, compassDataPtr, config);
     result.run.spectrumListPtr = SpectrumListPtr(sl);
     result.run.chromatogramListPtr = ChromatogramListPtr(cl);
 
