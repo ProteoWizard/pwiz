@@ -74,10 +74,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             Icon = Resources.Skyline;
 
-            _gridViewStandardDriver = new StandardGridViewDriver(this, gridViewStandard, bindingSourceStandard,
-                                                                 new SortableBindingList<DbIrtPeptide>());
-            _gridViewLibraryDriver = new LibraryGridViewDriver(gridViewLibrary, bindingSourceLibrary,
-                                                               new SortableBindingList<DbIrtPeptide>());
+            _gridViewStandardDriver = new StandardGridViewDriver(this, gridViewStandard, bindingSourceStandard, new SortableBindingList<DbIrtPeptide>());
+            _gridViewLibraryDriver = new LibraryGridViewDriver(gridViewLibrary, bindingSourceLibrary, new SortableBindingList<DbIrtPeptide>());
             _gridViewStandardDriver.GridLibrary = gridViewLibrary;
             _gridViewStandardDriver.LibraryPeptideList = _gridViewLibraryDriver.Items;
             _gridViewLibraryDriver.StandardPeptideList = _gridViewStandardDriver.Items;
@@ -88,7 +86,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             if (calc != null)
             {
                 textCalculatorName.Text = _editingName = calc.Name;
-                string databaseStartPath = calc.DatabasePath;
+                var databaseStartPath = calc.DatabasePath;
 
                 OpenDatabase(databaseStartPath);
             }
@@ -126,9 +124,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     if (!peptide.Id.HasValue)
                         return true;
                     // Any peptide that was not in the original set, or that has changed
-                    DbIrtPeptide originalPeptide;
-                    if (!dictOriginalPeptides.TryGetValue(peptide.Id, out originalPeptide) ||
-                            !Equals(peptide, originalPeptide))
+                    if (!dictOriginalPeptides.TryGetValue(peptide.Id, out var originalPeptide) || !Equals(peptide, originalPeptide))
                         return true;
                 }
                 // Finally, check for peptides removed
@@ -242,8 +238,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
             }
             catch (Exception x)
             {
-                var message = TextUtil.LineSeparate(string.Format(Resources.EditIrtCalcDlg_CreateDatabase_The_file__0__could_not_be_created, path),
-                                                    x.Message);
+                var message = TextUtil.LineSeparate(
+                    string.Format(Resources.EditIrtCalcDlg_CreateDatabase_The_file__0__could_not_be_created, path),
+                    x.Message);
                 MessageDlg.Show(this, message);
             }
         }
@@ -259,7 +256,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     return;
             }
 
-            using (OpenFileDialog dlg = new OpenFileDialog
+            using (var dlg = new OpenFileDialog
             {
                 Title = Resources.EditIrtCalcDlg_btnBrowseDb_Click_Open_iRT_Database,
                 InitialDirectory = Settings.Default.ActiveDirectory,
@@ -281,8 +278,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             if (!File.Exists(path))
             {
-                MessageDlg.Show(this, String.Format(Resources.EditIrtCalcDlg_OpenDatabase_The_file__0__does_not_exist__Click_the_Create_button_to_create_a_new_database_or_the_Open_button_to_find_the_missing_file_,
-                                                    path));
+                MessageDlg.Show(this, string.Format(
+                    Resources.EditIrtCalcDlg_OpenDatabase_The_file__0__does_not_exist__Click_the_Create_button_to_create_a_new_database_or_the_Open_button_to_find_the_missing_file_,
+                    path));
                 return;
             }
 
@@ -328,9 +326,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 {
                     if (Equals(existingCalc.Name, textCalculatorName.Text) && !Equals(existingCalc.Name, _editingName))
                     {
-                        if (MessageBox.Show(this, string.Format(Resources.EditIrtCalcDlg_OkDialog_A_calculator_with_the_name__0__already_exists_Do_you_want_to_overwrite_it,
-                                                                textCalculatorName.Text),
-                                            Program.Name, MessageBoxButtons.YesNo) != DialogResult.Yes)
+                        if (MessageBox.Show(this, string.Format(
+                                Resources.EditIrtCalcDlg_OkDialog_A_calculator_with_the_name__0__already_exists_Do_you_want_to_overwrite_it,
+                                textCalculatorName.Text), Program.Name, MessageBoxButtons.YesNo) != DialogResult.Yes)
                         {
                             textCalculatorName.Focus();
                             return;
@@ -343,23 +341,23 @@ namespace pwiz.Skyline.SettingsUI.Irt
             if (string.IsNullOrEmpty(textDatabase.Text))
             {
                 message = TextUtil.LineSeparate(Resources.EditIrtCalcDlg_OkDialog_Please_choose_a_database_file_for_the_iRT_calculator,
-                                                Resources.EditIrtCalcDlg_OkDialog_Click_the_Create_button_to_create_a_new_database_or_the_Open_button_to_open_an_existing_database_file);
+                    Resources.EditIrtCalcDlg_OkDialog_Click_the_Create_button_to_create_a_new_database_or_the_Open_button_to_open_an_existing_database_file);
                 MessageDlg.Show(this, message);
                 textDatabase.Focus();
                 return;
             }
-            string path = Path.GetFullPath(textDatabase.Text);
+            var path = Path.GetFullPath(textDatabase.Text);
             if (!Equals(path, textDatabase.Text))
             {
                 message = TextUtil.LineSeparate(Resources.EditIrtCalcDlg_OkDialog_Please_use_a_full_path_to_a_database_file_for_the_iRT_calculator,
-                                                Resources.EditIrtCalcDlg_OkDialog_Click_the_Create_button_to_create_a_new_database_or_the_Open_button_to_open_an_existing_database_file);
+                    Resources.EditIrtCalcDlg_OkDialog_Click_the_Create_button_to_create_a_new_database_or_the_Open_button_to_open_an_existing_database_file);
                 MessageDlg.Show(this, message);
                 textDatabase.Focus();
                 return;
             }
-            string ext = Path.GetExtension(path);
-            bool chromLib = string.Equals(ext, ChromatogramLibrarySpec.EXT);
-            bool specLib = string.Equals(ext, BiblioSpecLiteSpec.EXT);
+            var ext = Path.GetExtension(path);
+            var chromLib = string.Equals(ext, ChromatogramLibrarySpec.EXT);
+            var specLib = string.Equals(ext, BiblioSpecLiteSpec.EXT);
             if ((chromLib || specLib) && DatabaseChanged)
             {
                 string pathNew;
@@ -397,15 +395,15 @@ namespace pwiz.Skyline.SettingsUI.Irt
             if (StandardPeptideList.Count < CalibrateIrtDlg.MIN_STANDARD_PEPTIDES)
             {
                 MessageDlg.Show(this, ModeUIAwareStringFormat(Resources.EditIrtCalcDlg_OkDialog_Please_enter_at_least__0__standard_peptides,
-                                                    CalibrateIrtDlg.MIN_STANDARD_PEPTIDES));
+                    CalibrateIrtDlg.MIN_STANDARD_PEPTIDES));
                 gridViewStandard.Focus();
                 return;
             }
 
             if (StandardPeptideList.Count < CalibrateIrtDlg.MIN_SUGGESTED_STANDARD_PEPTIDES)
             {
-                string messageTooFewPeptides = ModeUIAwareStringFormat(Resources
-                   .EditIrtCalcDlg_OkDialog_Using_fewer_than__0__standard_peptides_is_not_recommended_Are_you_sure_you_want_to_continue_with_only__1__,
+                var messageTooFewPeptides = ModeUIAwareStringFormat(Resources
+                        .EditIrtCalcDlg_OkDialog_Using_fewer_than__0__standard_peptides_is_not_recommended_Are_you_sure_you_want_to_continue_with_only__1__,
                     CalibrateIrtDlg.MIN_SUGGESTED_STANDARD_PEPTIDES, StandardPeptideList.Count);
 
                 DialogResult result = MultiButtonMsgDlg.Show(this, messageTooFewPeptides, MultiButtonMsgDlg.BUTTON_YES,
@@ -462,14 +460,14 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 if (seqModified.IsProteomic && !FastaSequence.IsExSequence(seqModified.Sequence))
                 {
                     MessageDlg.Show(this, ModeUIAwareStringFormat(Resources.EditIrtCalcDlg_ValidatePeptideList_The_value__0__is_not_a_valid_modified_peptide_sequence,
-                                                        seqModified));
+                        seqModified));
                     return false;
                 }
 
                 if (sequenceSet.Contains(seqModified))
                 {
                     MessageDlg.Show(this, ModeUIAwareStringFormat(Resources.EditIrtCalcDlg_ValidatePeptideList_The_peptide__0__appears_in_the__1__table_more_than_once,
-                                                        seqModified, tableName));
+                        seqModified, tableName));
                     return false;
                 }
                 sequenceSet.Add(seqModified);
@@ -562,7 +560,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             if (StandardPeptideCount < CalibrateIrtDlg.MIN_STANDARD_PEPTIDES)
             {
                 MessageDlg.Show(this, ModeUIAwareStringFormat(Resources.EditIrtCalcDlg_OkDialog_Please_enter_at_least__0__standard_peptides,
-                                                    CalibrateIrtDlg.MIN_STANDARD_PEPTIDES));
+                    CalibrateIrtDlg.MIN_STANDARD_PEPTIDES));
                 return;
             }
             contextMenuAdd.Show(btnAddResults, 0, btnAddResults.Height + 2);
@@ -601,7 +599,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         private void ReplaceItems<T>(BindingList<T> bindingList, IEnumerable<T> newItems)
         {
-            bool raiseEventsOld = bindingList.RaiseListChangedEvents;
+            var raiseEventsOld = bindingList.RaiseListChangedEvents;
             try
             {
                 bindingList.RaiseListChangedEvents = false;
@@ -703,8 +701,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         private class LibraryGridViewDriver : PeptideGridViewDriver<DbIrtPeptide>
         {
-            public LibraryGridViewDriver(DataGridViewEx gridView, BindingSource bindingSource,
-                                         SortableBindingList<DbIrtPeptide> items)
+            public LibraryGridViewDriver(DataGridViewEx gridView, BindingSource bindingSource, SortableBindingList<DbIrtPeptide> items)
                 : base(gridView, bindingSource, items)
             {
                 AllowNegativeTime = true;
@@ -727,10 +724,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     if (StandardPeptideList.Any(p => Equals(p.ModifiedTarget, sequence)))
                     {
                         MessageDlg.Show(MessageParent,
-                                        ModeUIHelper.Format(Resources.LibraryGridViewDriver_DoPaste_The_peptide__0__is_already_present_in_the__1__table__and_may_not_be_pasted_into_the__2__table,
-                                                      sequence,
-                                                      Resources.EditIrtCalcDlg_OkDialog_standard_table_name,
-                                                      Resources.EditIrtCalcDlg_OkDialog_library_table_name));
+                            ModeUIHelper.Format(Resources.LibraryGridViewDriver_DoPaste_The_peptide__0__is_already_present_in_the__1__table__and_may_not_be_pasted_into_the__2__table,
+                                sequence, Resources.EditIrtCalcDlg_OkDialog_standard_table_name, Resources.EditIrtCalcDlg_OkDialog_library_table_name));
                         return;
                     }
                 }
@@ -770,8 +765,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     }
                     catch (Exception x)
                     {
-                        var message = TextUtil.LineSeparate(Resources.LibraryGridViewDriver_AddResults_An_error_occurred_attempting_to_add_results_from_current_document,
-                                                            x.Message);
+                        var message = TextUtil.LineSeparate(
+                            Resources.LibraryGridViewDriver_AddResults_An_error_occurred_attempting_to_add_results_from_current_document,
+                            x.Message);
                         MessageDlg.ShowWithException(MessageParent, message, x);
                         return;
                     }
@@ -782,8 +778,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             private static IEnumerable<IRetentionTimeProvider> GetRetentionTimeProviders(SrmDocument document)
             {
-                return document.Settings.MeasuredResults.MSDataFileInfos.Select(fileInfo =>
-                            new DocumentRetentionTimeProvider(document, fileInfo));
+                return document.Settings.MeasuredResults.MSDataFileInfos.Select(fileInfo => new DocumentRetentionTimeProvider(document, fileInfo));
             }
 
             private sealed class DocumentRetentionTimeProvider : IRetentionTimeProvider
@@ -806,21 +801,18 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         var modSeq = document.Settings.GetModifiedSequence(nodePep);
                         if (!targets.Add(modSeq))
                             continue;
-                        float? centerTime = nodePep.GetSchedulingTime(fileInfo.FileId);
+                        var centerTime = nodePep.GetSchedulingTime(fileInfo.FileId);
                         if (!centerTime.HasValue)
                             continue;
                         yield return new KeyValuePair<Target, double>(modSeq, centerTime.Value);
                     }
                 }
 
-                public string Name { get; private set; }
+                public string Name { get; }
 
                 public double? GetRetentionTime(Target sequence)
                 {
-                    double time;
-                    if (_dictPeptideRetentionTime.TryGetValue(sequence, out time))
-                        return time;
-                    return null;
+                    return _dictPeptideRetentionTime.TryGetValue(sequence, out var time) ? (double?) time : null;
                 }
 
                 public TimeSource? GetTimeSource(Target sequence)
@@ -878,11 +870,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
                                 }
                                 else
                                 {
-                                    int fileCount = library.FileCount ?? 0;
+                                    var fileCount = library.FileCount ?? 0;
                                     if (fileCount == 0)
                                     {
-                                        string message = string.Format(Resources.LibraryGridViewDriver_AddSpectralLibrary_The_library__0__does_not_contain_retention_time_information,
-                                                                       librarySpec.FilePath);
+                                        var message = string.Format(
+                                            Resources.LibraryGridViewDriver_AddSpectralLibrary_The_library__0__does_not_contain_retention_time_information,
+                                            librarySpec.FilePath);
                                         monitor.UpdateProgress(new ProgressStatus(string.Empty).ChangeErrorException(new IOException(message)));
                                         return;
                                     }
@@ -898,9 +891,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         }
                         catch (Exception x)
                         {
-                            var message = TextUtil.LineSeparate(string.Format(Resources.LibraryGridViewDriver_AddSpectralLibrary_An_error_occurred_attempting_to_load_the_library_file__0__,
-                                                                              librarySpec.FilePath),
-                                                                x.Message);
+                            var message = TextUtil.LineSeparate(string.Format(
+                                Resources.LibraryGridViewDriver_AddSpectralLibrary_An_error_occurred_attempting_to_load_the_library_file__0__,
+                                librarySpec.FilePath), x.Message);
                             MessageDlg.Show(MessageParent, message);
                             return;
                         }
@@ -913,7 +906,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         // (ReSharper 2019.1 seems not to notice the check that's already here)
                         // ReSharper disable PossibleNullReferenceException
                         foreach (var pooledStream in library.ReadStreams)
-                        // ReSharper restore PossibleNullReferenceException
+                            // ReSharper restore PossibleNullReferenceException
                             pooledStream.CloseStream();
                     }
                 }
@@ -960,9 +953,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     }
                     catch (Exception x)
                     {
-                        var message = TextUtil.LineSeparate(string.Format(Resources.LibraryGridViewDriver_AddIrtDatabase_An_error_occurred_attempting_to_load_the_iRT_database_file__0__,
-                                                                          irtCalc.DatabasePath),
-                                                            x.Message);
+                        var message = TextUtil.LineSeparate(string.Format(
+                            Resources.LibraryGridViewDriver_AddIrtDatabase_An_error_occurred_attempting_to_load_the_iRT_database_file__0__,
+                            irtCalc.DatabasePath), x.Message);
                         MessageDlg.Show(MessageParent, message);
                         return;
                     }
@@ -973,18 +966,13 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             private sealed class IrtRetentionTimeProvider : IRetentionTimeProvider
             {
-                private readonly string _name;
+                public string Name { get; }
                 private readonly TargetMap<DbIrtPeptide> _dictSequenceToPeptide;
 
                 public IrtRetentionTimeProvider(string name, IrtDb irtDb)
                 {
-                    _name = name;
+                    Name = name;
                     _dictSequenceToPeptide = new TargetMap<DbIrtPeptide>(irtDb.GetPeptides().ToDictionary(peptide => peptide.ModifiedTarget));
-                }
-
-                public string Name
-                {
-                    get { return _name; }
                 }
 
                 public double? GetRetentionTime(Target sequence)
@@ -1026,11 +1014,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
                 // If there were any matches, get user feedback
                 AddIrtPeptidesAction action;
-                using (var dlg = new AddIrtPeptidesDlg(AddIrtPeptidesLocation.irt_database,
-                                                       irtAverages,
-                                                       listChangedPeptides,
-                                                       listOverwritePeptides,
-                                                       listKeepPeptides))
+                using (var dlg = new AddIrtPeptidesDlg(AddIrtPeptidesLocation.irt_database, irtAverages, listChangedPeptides, listOverwritePeptides, listKeepPeptides))
                 {
                     if (dlg.ShowDialog(MessageParent) != DialogResult.OK)
                         return;
@@ -1283,7 +1267,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 var standardCopy =
                     new IrtStandard(
                         Helpers.GetUniqueName(comboStandards.Items[lastIdx].ToString(),
-                            _driverStandards.List.Select(standard => standard.Name).ToArray()), null, StandardPeptides);
+                            _driverStandards.List.Select(standard => standard.Name).ToArray()), null, null, StandardPeptides);
                 using (var calibrateIrtDlg = new CalibrateIrtDlg(standardCopy, _driverStandards.List, LibraryPeptides.ToArray()))
                 {
                     if (calibrateIrtDlg.ShowDialog(this) == DialogResult.OK)
@@ -1297,6 +1281,27 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     }
                 }
                 return;
+            }
+
+            if (comboStandards.SelectedItem.ToString().Equals(Resources.SettingsListComboDriver_Add) &&
+                StandardPeptideList.Count > 0 &&
+                ReferenceEquals(_driverStandards.List[lastIdx], IrtStandard.EMPTY))
+            {
+                using (var dlg = new UseCurrentCalculatorDlg(_driverStandards.List))
+                {
+                    if (dlg.ShowDialog(this) == DialogResult.Cancel)
+                    {
+                        comboStandards.SelectedIndex = lastIdx;
+                        return;
+                    }
+                    else if (dlg.UseCurrent)
+                    {
+                        var newStandard = new IrtStandard(dlg.StandardName, null, null, StandardPeptideList);
+                        _driverStandards.List.Add(newStandard);
+                        _driverStandards.LoadList(newStandard.GetKey());
+                        return;
+                    }
+                }
             }
 
             if (selected == null || comboStandards.SelectedIndex == lastIdx || selected.IsMatch(StandardPeptideList, IRT_TOLERANCE))
