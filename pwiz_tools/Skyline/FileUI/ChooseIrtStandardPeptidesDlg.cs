@@ -297,7 +297,21 @@ namespace pwiz.Skyline.FileUI
         }
 
         #region Functional test support
-        public IEnumerable<string> ProteinNames { get { return from PeptideGroupItem protein in comboProteins.Items select protein.PeptideGroup.Name; } }
+        public IEnumerable<string> ProteinNames => from PeptideGroupItem protein in comboProteins.Items select protein.PeptideGroup.Name;
+
+        public void OkDialogStandard(IrtStandard standard)
+        {
+            for (var i = 0; i < comboExisting.Items.Count; i++)
+            {
+                if (ReferenceEquals((IrtStandard) comboExisting.Items[i], standard))
+                {
+                    radioExisting.Checked = true;
+                    comboExisting.SelectedIndex = i;
+                    OkDialog();
+                    return;
+                }
+            }
+        }
 
         public void OkDialogProtein(string proteinName)
         {
@@ -308,6 +322,7 @@ namespace pwiz.Skyline.FileUI
                     radioProtein.Checked = true;
                     comboProteins.SelectedIndex = i;
                     OkDialog();
+                    return;
                 }
             }
         }

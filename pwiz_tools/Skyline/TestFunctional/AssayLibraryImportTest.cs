@@ -33,6 +33,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
@@ -1131,6 +1132,41 @@ namespace pwiz.SkylineTestFunctional
             CollectionUtil.ForEach(SkylineWindow.Document.PeptideGroups.Take(10), protein => Assert.IsTrue(protein.Name.StartsWith("AQRT_")));
             CheckAssayLibrarySettings();
 
+            // Import assay library and choose CiRTs
+            RunUI(() =>
+            {
+                SkylineWindow.NewDocument(true);
+                SkylineWindow.ResetDefaultSettings();
+                Assert.IsTrue(SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("assay_import_cirt.sky")));
+            });
+            doc = SkylineWindow.Document;
+            var transitionErrs = ShowDialog<ImportTransitionListErrorDlg>(() => SkylineWindow.ImportAssayLibrary(TestFilesDir.GetTestPath("cirts.tsv")));
+            var chooseIrt3 = ShowDialog<ChooseIrtStandardPeptidesDlg>(transitionErrs.AcceptButton.PerformClick);
+            var useCirtsDlg = ShowDialog<AddIrtStandardsDlg>(() => chooseIrt3.OkDialogStandard(IrtStandard.CIRT_SHORT));
+            RunUI(() => useCirtsDlg.StandardCount = 12);
+            OkDialog(useCirtsDlg, useCirtsDlg.OkDialog);
+            doc = WaitForDocumentChange(doc);
+            AssertEx.IsDocumentState(doc, null, 63, 120, 202, 1574);
+            CheckAssayLibrarySettings();
+
+            // Undo import
+            RunUI(SkylineWindow.Undo);
+            doc = WaitForDocumentChange(doc);
+
+            // Import assay library and choose a standard
+            var chooseStandard = IrtStandard.BIOGNOSYS_11;
+            var overwriteDlg2 = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ImportAssayLibrary(TestFilesDir.GetTestPath("cirts.tsv")));
+            var transitionErrs2 = ShowDialog<ImportTransitionListErrorDlg>(() => overwriteDlg2.BtnYesClick());
+            var chooseIrt4 = ShowDialog<ChooseIrtStandardPeptidesDlg>(transitionErrs2.AcceptButton.PerformClick);
+            OkDialog(chooseIrt4, () => chooseIrt4.OkDialogStandard(chooseStandard));
+            doc = WaitForDocumentChange(doc);
+            // We should have an extra peptide group and extra peptides since the standard peptides should've been added to the document
+            AssertEx.IsDocumentState(doc, null, 64, 120 + chooseStandard.Peptides.Count, null, null);
+            var biognosysTargets = new TargetMap<bool>(chooseStandard.Peptides.Select(pep => new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)));
+            var standardGroup = doc.PeptideGroups.First();
+            Assert.AreEqual(chooseStandard.Peptides.Count, standardGroup.PeptideCount);
+            foreach (var nodePep in standardGroup.Peptides)
+                Assert.IsTrue(biognosysTargets.ContainsKey(nodePep.ModifiedTarget));
             RunUI(() => SkylineWindow.SaveDocument());
         }
 
