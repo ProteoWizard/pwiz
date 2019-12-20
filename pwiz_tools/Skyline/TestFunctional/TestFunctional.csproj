@@ -158,6 +158,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AccessServerTest.cs" />
+    <Compile Include="AssociateProteinVariantTest.cs" />
     <Compile Include="SkypTest.cs" />
     <Compile Include="AddLibraryTest.cs" />
     <Compile Include="AreaCVHistogramTest.cs" />
@@ -383,6 +384,7 @@
     <None Include="AnnotationTest.zip" />
     <None Include="AreaCVHistogramTest.zip" />
     <None Include="AssayLibraryImportTest.zip" />
+    <None Include="AssociateProteinVariantTest.zip" />
     <None Include="AuditLogSavingTest.zip" />
     <None Include="AuditLogValidationTest.zip" />
     <None Include="BackgroundProteomeTest.zip" />
