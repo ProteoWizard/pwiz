@@ -1932,5 +1932,11 @@ namespace pwiz.Skyline.SettingsUI
             cbLinear.Checked = checkedState;
             UpdateLibraryDriftPeakWidthControls();
         }
+
+        public PeptidePick PeptidePick
+        {
+            get { return (PeptidePick) comboMatching.SelectedIndex; }
+            set { comboMatching.SelectedIndex = (int) value; }
+        }
     }
 }
