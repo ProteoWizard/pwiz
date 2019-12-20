@@ -250,29 +250,13 @@ namespace pwiz.Skyline.Model.Results
 
         protected bool Equals(MsDataFilePath other)
         {
-            if (!(string.Equals(FilePath, other.FilePath) &&
+            return string.Equals(FilePath, other.FilePath) &&
                 string.Equals(SampleName, other.SampleName) &&
-                SampleIndex == other.SampleIndex))
-                return false;
-            if (!(CentroidMs1 == other.CentroidMs1 &&
-                  CentroidMs2 == other.CentroidMs2 &&
-                  CombineIonMobilitySpectra == other.CombineIonMobilitySpectra &&
-                  LockMassParameters.Equals(other.LockMassParameters)))
-            {
-                if (CombineIonMobilitySpectra != other.CombineIonMobilitySpectra) // TODO(bspratt) remove this diagnostic
-                {
-                    var stack = Environment.StackTrace;
-                    if (!stack.Contains(@"ManageResults")
-                        && !stack.Contains(@"CalcCachedFlags"))
-                    {
-                        Console.WriteLine();
-                        Console.WriteLine(@"CombineIonMobilitySpectra diff {0}", stack );
-                    }
-                }
-                return false;
-            }
-
-            return true;
+                SampleIndex == other.SampleIndex &&
+                CentroidMs1 == other.CentroidMs1 &&
+                CentroidMs2 == other.CentroidMs2 &&
+                CombineIonMobilitySpectra == other.CombineIonMobilitySpectra &&
+                LockMassParameters.Equals(other.LockMassParameters);
         }
 
         public override bool Equals(object obj)
