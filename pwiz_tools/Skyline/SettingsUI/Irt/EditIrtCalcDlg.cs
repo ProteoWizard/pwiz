@@ -45,9 +45,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
 {
     public partial class EditIrtCalcDlg : FormEx
     {
-        //private const string STANDARD_TABLE_NAME = "standard";
-        //private const string LIBRARY_TABLE_NAME = "library";
-
         private const double IRT_TOLERANCE = 0.01;
 
         private readonly IEnumerable<RetentionScoreCalculatorSpec> _existingCalcs;
@@ -142,6 +139,16 @@ namespace pwiz.Skyline.SettingsUI.Irt
             LibraryPeptideList.ResetBindings();
         }
 
+        private bool BuiltinStandardSelected
+        {
+            get
+            {
+                var selectedItem = _driverStandards.SelectedItem;
+                return selectedItem != null && Settings.Default.IrtStandardList.GetDefaults()
+                           .Any(standard => ReferenceEquals(standard, selectedItem));
+            }
+        }
+
         private int CurrentStandardIndex
         {
             get
@@ -229,7 +236,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
             try
             {
                 IrtDb.CreateIrtDb(path);
-
                 textDatabase.Text = path;
             }
             catch (DatabaseOpeningException x)
@@ -267,7 +273,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     Settings.Default.ActiveDirectory = Path.GetDirectoryName(dlg.FileName);
-
                     OpenDatabase(dlg.FileName);
                     textDatabase.Focus();
                 }
@@ -313,7 +318,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         public void OkDialog()
         {
-            if(string.IsNullOrEmpty(textCalculatorName.Text))
+            if (string.IsNullOrEmpty(textCalculatorName.Text))
             {
                 MessageDlg.Show(this, Resources.EditIrtCalcDlg_OkDialog_Please_enter_a_name_for_the_iRT_calculator);
                 textCalculatorName.Focus();
@@ -386,7 +391,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 gridViewStandard.Focus();
                 return;
             }
-            if(!ValidatePeptideList(LibraryPeptideList, Resources.EditIrtCalcDlg_OkDialog_library_table_name))
+            if (!ValidatePeptideList(LibraryPeptideList, Resources.EditIrtCalcDlg_OkDialog_library_table_name))
             {
                 gridViewLibrary.Focus();
                 return;                
@@ -406,9 +411,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         .EditIrtCalcDlg_OkDialog_Using_fewer_than__0__standard_peptides_is_not_recommended_Are_you_sure_you_want_to_continue_with_only__1__,
                     CalibrateIrtDlg.MIN_SUGGESTED_STANDARD_PEPTIDES, StandardPeptideList.Count);
 
-                DialogResult result = MultiButtonMsgDlg.Show(this, messageTooFewPeptides, MultiButtonMsgDlg.BUTTON_YES,
-                    MultiButtonMsgDlg.BUTTON_NO, false);
-                if (result != DialogResult.Yes)
+                if (MultiButtonMsgDlg.Show(this, messageTooFewPeptides, MultiButtonMsgDlg.BUTTON_YES,
+                        MultiButtonMsgDlg.BUTTON_NO, false) != DialogResult.Yes)
                 {
                     gridViewStandard.Focus();
                     return;
@@ -417,15 +421,37 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             try
             {
+                var docXml = _originalDocumentXml;
                 if (DatabaseChanged)
                 {
                     using (var fileSaver = new FileSaver(path))
                     {
                         var db = IrtDb.CreateIrtDb(fileSaver.SafeName);
                         db = db.AddPeptides(null, AllPeptides.ToArray());
-                        db.SetDocumentXml(Program.ActiveDocumentUI, _originalDocumentXml);
+                        var putDocXml = string.IsNullOrEmpty(docXml); // Add docxml to database if it didn't have any
+                        if (!putDocXml)
+                        {
+                            // Also add docxml to database if there are new standard peptides
+                            var originalTargets = new TargetMap<bool>(_originalPeptides.Select(pep =>
+                                new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)));
+                            putDocXml = StandardPeptides.Any(pep => !originalTargets.ContainsKey(pep.ModifiedTarget));
+                        }
+                        if (putDocXml)
+                        {
+                            db = db.SetDocumentXml(Program.ActiveDocumentUI, docXml);
+                            docXml = db.DocumentXml;
+                        }
                         fileSaver.Commit();
                     }
+                }
+                var selected = _driverStandards.SelectedItem;
+                if (selected != null && !BuiltinStandardSelected)
+                {
+                    // Set docxml on standard
+                    if (string.IsNullOrEmpty(docXml))
+                        docXml = IrtDb.GenerateDocumentXml(StandardPeptides.Select(pep => pep.ModifiedTarget), Program.MainWindow.Document, null);
+                    if (!string.IsNullOrEmpty(docXml) && !Equals(docXml, selected.DocXml))
+                        _driverStandards.List[comboStandards.SelectedIndex] = selected.ChangeDocXml(docXml);
                 }
                 Calculator = new RCalcIrt(textCalculatorName.Text, path).ChangeDatabase(IrtDb.GetIrtDb(path, null));
             }
@@ -453,7 +479,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         private bool ValidatePeptideList(IEnumerable<DbIrtPeptide> peptideList, string tableName)
         {
             var sequenceSet = new HashSet<Target>();
-            foreach(DbIrtPeptide peptide in peptideList)
+            foreach (var peptide in peptideList)
             {
                 var seqModified = peptide.ModifiedTarget;
                 // CONSIDER: Select the peptide row
@@ -597,7 +623,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             _gridViewLibraryDriver.AddIrtDatabase();
         }
 
-        private void ReplaceItems<T>(BindingList<T> bindingList, IEnumerable<T> newItems)
+        private static void ReplaceItems<T>(BindingList<T> bindingList, IEnumerable<T> newItems)
         {
             var raiseEventsOld = bindingList.RaiseListChangedEvents;
             try
@@ -694,8 +720,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     LibraryPeptideList.Add(new DbIrtPeptide(pep) {Standard = false});
 
                 Items.Clear();
-                foreach (var peptide in standardPeptidesNew)
-                    Items.Add(peptide);
+                Items.AddRange(standardPeptidesNew);
             }
         }
 
@@ -977,18 +1002,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
                 public double? GetRetentionTime(Target sequence)
                 {
-                    DbIrtPeptide peptide;
-                    if (_dictSequenceToPeptide.TryGetValue(sequence, out peptide))
-                        return peptide.Irt;
-                    return null;
+                    return _dictSequenceToPeptide.TryGetValue(sequence, out var peptide) ? (double?) peptide.Irt : null;
                 }
 
                 public TimeSource? GetTimeSource(Target sequence)
                 {
-                    DbIrtPeptide peptide;
-                    if (_dictSequenceToPeptide.TryGetValue(sequence, out peptide))
-                        return (TimeSource?) peptide.TimeSource;
-                    return null;
+                    return _dictSequenceToPeptide.TryGetValue(sequence, out var peptide) ? (TimeSource?) peptide.TimeSource : null;
                 }
 
                 public IEnumerable<MeasuredRetentionTime> PeptideRetentionTimes
@@ -1008,9 +1027,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     return; // Canceled
 
                 var listPeptidesNew = irtAverages.DbIrtPeptides.ToList();
-                LibKeyMap<int> dictLibraryIndices;
-                List<Target> listChangedPeptides, listOverwritePeptides, listKeepPeptides;
-                GetPeptideLists(listPeptidesNew, out dictLibraryIndices, out listChangedPeptides, out listOverwritePeptides, out listKeepPeptides);
+                GetPeptideLists(listPeptidesNew, out var dictLibraryIndices, out var listChangedPeptides, out var listOverwritePeptides, out var listKeepPeptides);
 
                 // If there were any matches, get user feedback
                 AddIrtPeptidesAction action;
@@ -1072,8 +1089,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
                     StandardPeptideList.RaiseListChangedEvents = false;
                     StandardPeptideList.Clear();
-                    foreach (var newStandard in newStandards)
-                        StandardPeptideList.Add(newStandard);
+                    StandardPeptideList.AddRange(newStandards);
                     StandardPeptideList.RaiseListChangedEvents = true;
                     StandardPeptideList.ResetBindings();
                 }
@@ -1087,9 +1103,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     foreach (var peptide in listPeptidesNew)
                     {
                         var seq = peptide.ModifiedTarget;
-                        int peptideIndex;
                         // Add any peptides not yet in the library
-                        if (!dictLibraryIndices.TryGetValue(seq, out peptideIndex))
+                        if (!dictLibraryIndices.TryGetValue(seq, out var peptideIndex))
                         {
                             Items.Add(peptide);
                             continue;
@@ -1143,8 +1158,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 // Check for existing matching peptides
                 foreach (var peptide in peptidesNew)
                 {
-                    int peptideIndex;
-                    if (!libraryIndices.TryGetValue(peptide.ModifiedTarget, out peptideIndex))
+                    if (!libraryIndices.TryGetValue(peptide.ModifiedTarget, out var peptideIndex))
                         continue;
                     var peptideExist = Items[peptideIndex];
                     if (Equals(peptide, peptideExist))
@@ -1287,6 +1301,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 StandardPeptideList.Count > 0 &&
                 ReferenceEquals(_driverStandards.List[lastIdx], IrtStandard.EMPTY))
             {
+                // Offer to create a new standard from the standard peptides currently in the calculator
                 using (var dlg = new UseCurrentCalculatorDlg(_driverStandards.List))
                 {
                     if (dlg.ShowDialog(this) == DialogResult.Cancel)
@@ -1332,7 +1347,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             if (selectedItem != null)
             {
                 var selectedName = selectedItem.Name;
-                if (!Settings.Default.IrtStandardList.GetDefaults().Any(standard => standard.Name.Equals(selectedName)))
+                if (!BuiltinStandardSelected)
                 {
                     // Update standard
                     _driverStandards.List[comboStandards.SelectedIndex] = _driverStandards.SelectedItem.ChangePeptides(StandardPeptides);

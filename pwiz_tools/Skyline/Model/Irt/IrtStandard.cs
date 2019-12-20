@@ -335,17 +335,17 @@ namespace pwiz.Skyline.Model.Irt
         {
             Peptides = ImmutableList.ValueOf(peptides);
             _resourceSkyFile = skyFile;
-            _docXml = docXml;
+            DocXml = docXml;
         }
 
         private readonly string _resourceSkyFile;
-        private readonly string _docXml;
+        public string DocXml { get; private set; }
         public ImmutableList<DbIrtPeptide> Peptides { get; private set; }
 
-        public override string AuditLogText { get { return Equals(this, EMPTY) ? LogMessage.NONE : Name; } }
-        public override bool IsName { get { return !Equals(this, EMPTY); } } // So EMPTY logs as None (unquoted) rather than "None"
+        public override string AuditLogText => Equals(this, EMPTY) ? LogMessage.NONE : Name;
+        public override bool IsName => !Equals(this, EMPTY); // So EMPTY logs as None (unquoted) rather than "None"
 
-        public bool HasDocument => !string.IsNullOrEmpty(_resourceSkyFile) || !string.IsNullOrEmpty(_docXml);
+        public bool HasDocument => !string.IsNullOrEmpty(_resourceSkyFile) || !string.IsNullOrEmpty(DocXml);
 
         public TextReader GetReader()
         {
@@ -355,7 +355,7 @@ namespace pwiz.Skyline.Model.Irt
                 if (stream != null)
                     return new StreamReader(stream);
             }
-            return !string.IsNullOrEmpty(_docXml) ? new StringReader(_docXml) : null;
+            return !string.IsNullOrEmpty(DocXml) ? new StringReader(DocXml) : null;
         }
 
         public SrmDocument GetDocument()
@@ -499,9 +499,36 @@ namespace pwiz.Skyline.Model.Irt
             return ChangeProp(ImClone(this), im => im.Peptides = ImmutableList.ValueOf(peptides));
         }
 
+        public IrtStandard ChangeDocXml(string docXml)
+        {
+            return ChangeProp(ImClone(this), im => im.DocXml = docXml);
+        }
+
         public override string ToString()
         {
             return Name;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (!(obj is IrtStandard other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(other) &&
+                   Equals(_resourceSkyFile, other._resourceSkyFile) &&
+                   Equals(DocXml, other.DocXml) &&
+                   CollectionUtil.EqualsDeep(Peptides, other.Peptides);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var result = base.GetHashCode();
+                result = (result * 397) ^ (_resourceSkyFile != null ? _resourceSkyFile.GetHashCode() : 0);
+                result = (result * 397) ^ (DocXml != null ? DocXml.GetHashCode() : 0);
+                result = (result * 397) ^ (Peptides != null ? CollectionUtil.GetHashCodeDeep(Peptides) : 0);
+                return result;
+            }
         }
     }
 }
