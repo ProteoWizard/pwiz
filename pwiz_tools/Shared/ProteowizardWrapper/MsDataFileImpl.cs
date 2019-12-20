@@ -188,7 +188,8 @@ namespace pwiz.ProteowizardWrapper
                     preferOnlyMsLevel = !ForceUncombinedIonMobility && combineIonMobilitySpectra ? 0 : preferOnlyMsLevel,
                     allowMsMsWithoutPrecursor = false,
                     combineIonMobilitySpectra = !ForceUncombinedIonMobility && combineIonMobilitySpectra,
-                    isolationMzAndMobilityFilter = GetMzMobilityWindows(precursorMzAndIonMobilityWindows)
+                    isolationMzAndMobilityFilter = GetMzMobilityWindows(precursorMzAndIonMobilityWindows),
+                    globalChromatogramsAreMs1Only = true
                 };
                 _lockmassParameters = lockmassParameters;
                 FULL_READER_LIST.read(path, _msDataFile, sampleIndex, _config);

@@ -283,7 +283,7 @@ namespace pwiz.Skyline.ToolsUI
                     Settings.Default.ShowStartupForm = checkBoxShowWizard.Checked;
                     Settings.Default.DisplayLanguage = displayLanguageItem.Key;
                     Settings.Default.UsePowerOfTen = powerOfTenCheckBox.Checked;
-                    Program.MainWindow.UpdateGraphPanes();
+                    Program.MainWindow?.UpdateGraphPanes();
                 }
                 CompactFormatOption compactFormatOption = comboCompactFormatOption.SelectedItem as CompactFormatOption;
                 if (null != compactFormatOption)
@@ -390,7 +390,7 @@ namespace pwiz.Skyline.ToolsUI
             if (newColorScheme != null)
             {
                 Settings.Default.CurrentColorScheme = newColorScheme.Name;
-                Program.MainWindow.ChangeColorScheme();
+                Program.MainWindow?.ChangeColorScheme();
             }
             _driverColorSchemes.SelectedIndexChangedEvent(sender, e);
         }

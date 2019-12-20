@@ -82,6 +82,7 @@ static void copyReaderConfig(pwiz::msdata::Reader::Config& config, ReaderConfig^
     config.preferOnlyMsLevel = readerConfig->preferOnlyMsLevel;
     config.allowMsMsWithoutPrecursor = readerConfig->allowMsMsWithoutPrecursor;
     config.sortAndJitter = readerConfig->sortAndJitter;
+    config.globalChromatogramsAreMs1Only = readerConfig->globalChromatogramsAreMs1Only;
 
     if (readerConfig->isolationMzAndMobilityFilter != nullptr)
         for each (MzMobilityWindow^ filter in readerConfig->isolationMzAndMobilityFilter)

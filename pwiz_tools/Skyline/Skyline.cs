@@ -3388,20 +3388,6 @@ namespace pwiz.Skyline
             // Explorer's spectrum graph pane.
             UpdateGraphPanes();
         }
-        public static List<PrositIntensityModel.PeptidePrecursorNCE> ReadStandardPeptides(IrtStandard standard)
-        {
-            var peps = standard.GetDocument().Peptides.ToList();
-            var precs = peps.Select(p => p.TransitionGroups.First());
-            /*for (var i = 0; i < peps.Count; i++)
-            {
-                var modSeq = ModifiedSequence.GetModifiedSequence(docImport.Settings, peps[i], IsotopeLabelType.light);
-                peps[i] = peps[i].ChangeExplicitMods(new ExplicitMods(peps[i].Peptide,
-                    modSeq.ExplicitMods.Select(m => m.ExplicitMod).ToArray(),
-                    new TypedExplicitModifications[0]));
-            }*/
-            return Enumerable.Zip(peps, precs,
-                (pep, prec) => new PrositIntensityModel.PeptidePrecursorNCE(pep, prec)).ToList();
-        }
 
         private void HandleStandardsChanged(ICollection<Target> oldStandard)
         {

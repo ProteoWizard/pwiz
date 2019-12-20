@@ -199,6 +199,12 @@ int main(int argc, char* argv[])
         config.peakPicking = true;
         pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsRawFile(), config);
 
+        // test globalChromatogramsAreMs1Only, but don't need to test spectra here
+        auto newConfig = config;
+        newConfig.globalChromatogramsAreMs1Only = true;
+        newConfig.indexRange = make_pair(0, 0);
+        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile("090701-LTQVelos-unittest-01.raw"), newConfig);
+
         #ifdef PWIZ_READER_THERMO
         // CONSIDER: do this test in VendorReaderTestHarness for all vendor readers?
         ::SetThreadLocale(LANG_TURKISH);
