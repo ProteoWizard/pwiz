@@ -524,7 +524,10 @@ namespace pwiz.Skyline.Model.Results
                 throw new ChromCacheBuildException(MSDataFilePath, _chromDataSets.Exception);
             }
 
-            _listCachedFiles.Add(new ChromCachedFile(MSDataFilePath.ChangeCombineIonMobilitySpectra(provider.SourceHasCombinedIonMobilitySpectra),
+            if (provider.HasCombinedIonMobility)
+                _currentFileInfo.HasCombinedIonMobility = true;
+
+            _listCachedFiles.Add(new ChromCachedFile(MSDataFilePath,
                                      _currentFileInfo.Flags,
                                      _currentFileInfo.LastWriteTime,
                                      _currentFileInfo.StartTime,
@@ -1536,6 +1539,18 @@ namespace pwiz.Skyline.Model.Results
                     Flags |= ChromCachedFile.FlagValues.has_midas_spectra;
                 else
                     Flags &= ~ChromCachedFile.FlagValues.has_midas_spectra;
+            }
+        }
+
+        public bool HasCombinedIonMobility
+        {
+            get { return (Flags & ChromCachedFile.FlagValues.has_combined_ion_mobility) != 0; }
+            set
+            {
+                if (value)
+                    Flags |= ChromCachedFile.FlagValues.has_combined_ion_mobility;
+                else
+                    Flags &= ~ChromCachedFile.FlagValues.has_combined_ion_mobility;
             }
         }
 

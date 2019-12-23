@@ -344,7 +344,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 });
             }
             var measuredResults = DocumentUI.Settings.MeasuredResults;
-            IScanProvider scanProvider = new ScanProvider(_documentContainer.DocumentFilePath, FilePath,
+            IScanProvider scanProvider = new ScanProvider(_documentContainer.DocumentFilePath,
+                FilePath, CachedFile.HasCombinedIonMobility,
                 chromatogramGroupInfo.Source, chromatogramGroupInfo.Times, transitions.ToArray(),
                 measuredResults,
                 () => measuredResults.LoadMSDataFileScanIds(FilePath));
@@ -647,10 +648,24 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                var chromGroupInfos = ChromGroupInfos;
-                int i = chromGroupInfos.IndexOf(info => info != null);
+                return ChromGroupInfo?.FilePath;
+            }
+        }
 
-                return (i != -1 ? chromGroupInfos[i].FilePath : null);
+        public ChromCachedFile CachedFile
+        {
+            get
+            {
+                return ChromGroupInfo?.CachedFile;
+            }
+        }
+
+        private ChromatogramGroupInfo ChromGroupInfo
+        {
+            get
+            {
+                // CONSIDER: Is this really the selected file?
+                return ChromGroupInfos.FirstOrDefault(info => info != null);
             }
         }
 

@@ -2688,9 +2688,7 @@ namespace pwiz.Skyline
             OptimizableRegression optimizationFunction = doc.Settings.TransitionSettings.Prediction.GetOptimizeFunction(optimize);
 
             if (namedResults.Count == 1)
-                return ImportResults(doc, namedResults[0].Key, 
-                    namedResults[0].Value.Select(p => p.ChangeCombineIonMobilitySpectra(true)), // Try to load as 3-array IMS data if that happens to be supported
-                    optimizationFunction);
+                return ImportResults(doc, namedResults[0].Key, namedResults[0].Value, optimizationFunction);
 
             // Add all chosen files as separate result sets.
             var results = doc.Settings.MeasuredResults;
@@ -2709,9 +2707,7 @@ namespace pwiz.Skyline
                 // Delete caches that will be overwritten
                 FileEx.SafeDelete(ChromatogramCache.FinalPathForName(DocumentFilePath, nameResult), true);
 
-                listChrom.Add(new ChromatogramSet(nameResult, 
-                    namedResult.Value.Select(m => m.ChangeCombineIonMobilitySpectra(true)), // Try to load as 3-array IMS data if that happens to be supported
-                    Annotations.EMPTY, optimizationFunction));
+                listChrom.Add(new ChromatogramSet(nameResult, namedResult.Value, Annotations.EMPTY, optimizationFunction));
             }
 
             var arrayChrom = listChrom.ToArray();
@@ -2971,7 +2967,7 @@ namespace pwiz.Skyline
                     {
                         chromatograms.Add(setReimport.Contains(c) ?
                             c.ChangeMSDataFilePaths(c.MSDataFilePaths.Select(p =>
-                                p.ChangeCentroiding(isCentroidMs, isCentroidMsMs).ChangeCombineIonMobilitySpectra(true)).ToList()) :
+                                p.ChangeCentroiding(isCentroidMs, isCentroidMsMs)).ToList()) :
                             c);
                     }
                     resultsNew = resultsNew.ChangeChromatograms(chromatograms);

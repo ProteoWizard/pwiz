@@ -237,16 +237,6 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 return false;
             }
 
-            public override bool GetCombineIonMobilitySpectra()
-            {
-                return false;
-            }
-
-            public override MsDataFileUri ChangeCombineIonMobilitySpectra(bool combineIonMobilitySpectra)
-            {
-                return this; // Not supported
-            }
-
             public override RemoteAccountType AccountType
             {
                 get { return null; }

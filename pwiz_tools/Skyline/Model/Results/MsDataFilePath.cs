@@ -22,6 +22,7 @@ using System.IO;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -46,13 +47,10 @@ namespace pwiz.Skyline.Model.Results
         public abstract MsDataFileUri ChangeLockMassParameters(LockMassParameters lockMassParameters);
         public abstract bool GetCentroidMs1();
         public abstract bool GetCentroidMs2();
-        public abstract bool GetCombineIonMobilitySpectra();
         /// <summary>
         /// Returns a copy of itself with updated centroiding parameters
         /// </summary>
         public abstract MsDataFileUri ChangeCentroiding(bool centroidMS1, bool centroidMS2);
-
-        public abstract MsDataFileUri ChangeCombineIonMobilitySpectra(bool combineIonMobilitySpectra);
 
         public MsDataFileUri ChangeParameters(SrmDocument doc, LockMassParameters lockMassParameters)
         {
@@ -133,7 +131,7 @@ namespace pwiz.Skyline.Model.Results
         public LockMassParameters LockMassParameters { get; private set; }
         public bool CentroidMs1 { get; private set; }
         public bool CentroidMs2 { get; private set; }
-        public bool CombineIonMobilitySpectra { get; private set; } // When true, ask for IMS data in 3-array format
+        public bool CombineIonMobilitySpectra { get; private set; } // BACKWARD COMPATIBILITY: Skyline-daily 19.1.9.338 & 350 stored URLs with this parameter
 
         public override MsDataFileUri GetLocation()
         {
@@ -213,19 +211,9 @@ namespace pwiz.Skyline.Model.Results
             return new MsDataFilePath(FilePath, SampleName, SampleIndex, LockMassParameters, centroidMS1, centroidMS2);
         }
 
-        public override bool GetCombineIonMobilitySpectra()
-        {
-            return CombineIonMobilitySpectra;
-        }
-
-        public override MsDataFileUri ChangeCombineIonMobilitySpectra(bool combineIonMobilitySpectra)
-        {
-            return Equals(combineIonMobilitySpectra, CombineIonMobilitySpectra) ? this : new MsDataFilePath(FilePath, SampleName, SampleIndex, LockMassParameters, CentroidMs1, CentroidMs2, combineIonMobilitySpectra);
-        }
-
         public override string ToString()
         {
-            return SampleHelp.EncodePath(FilePath, SampleName, SampleIndex, LockMassParameters, CentroidMs1, CentroidMs2, CombineIonMobilitySpectra);
+            return SampleHelp.EncodePath(FilePath, SampleName, SampleIndex, LockMassParameters, CentroidMs1, CentroidMs2);
         }
 
         public override DateTime GetFileLastWriteTime()
@@ -284,11 +272,21 @@ namespace pwiz.Skyline.Model.Results
 
         public override MsDataFileImpl OpenMsDataFile(bool simAsSpectra, int preferOnlyMsLevel, IEnumerable<MsDataFileImpl.PrecursorMzAndIonMobilityWindow> precursorMzAndIonMobilityWindows, bool ignoreZeroIntensityPoints)
         {
+            Assume.IsFalse(CombineIonMobilitySpectra);  // Only for backward compatibility. We are not expecting to use this value to open MsDataFileImpl objects
             return new MsDataFileImpl(FilePath, Math.Max(SampleIndex, 0), LockMassParameters, simAsSpectra,
                 requireVendorCentroidedMS1: CentroidMs1, requireVendorCentroidedMS2: CentroidMs2,
                 ignoreZeroIntensityPoints: ignoreZeroIntensityPoints, preferOnlyMsLevel: preferOnlyMsLevel,
-                combineIonMobilitySpectra: CombineIonMobilitySpectra,
-                precursorMzAndIonMobilityWindows:precursorMzAndIonMobilityWindows);
+                precursorMzAndIonMobilityWindows: precursorMzAndIonMobilityWindows);
+        }
+
+        public MsDataFileUri RemoveLegacyParameters()
+        {
+            // Remove CombineIonMobilitySpectra
+            if (!CombineIonMobilitySpectra)
+                return this;
+
+            // FUTURE: Remove LockMassParameters, CentroidMs1, CentroidMs2
+            return new MsDataFilePath(FilePath, SampleName, SampleIndex, LockMassParameters, CentroidMs1, CentroidMs2);
         }
     }
 }

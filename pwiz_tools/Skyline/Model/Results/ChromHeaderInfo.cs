@@ -1370,6 +1370,7 @@ namespace pwiz.Skyline.Model.Results
             single_match_mz_known = 0x01,
             single_match_mz = 0x02,
             has_midas_spectra = 0x04,
+            has_combined_ion_mobility = 0x08,
             // One extra bit available
             ion_mobility_type_bitmask = 0x70, // 3 bits for ion mobility type drift, inverse_mobility, spares
         }
@@ -1391,6 +1392,11 @@ namespace pwiz.Skyline.Model.Results
             return (flags & FlagValues.has_midas_spectra) != 0;
         }
 
+        private static bool HasCombinedIonMobilityFlags(FlagValues flags)
+        {
+            return (flags & FlagValues.has_combined_ion_mobility) != 0;
+        }
+
         public static eIonMobilityUnits IonMobilityUnitsFromFlags(FlagValues flags)
         {
             return (eIonMobilityUnits)((int)(flags & FlagValues.ion_mobility_type_bitmask) >> 4);
@@ -1403,7 +1409,7 @@ namespace pwiz.Skyline.Model.Results
         {
         }
 
-        public ChromCachedFile(MsDataFileUri filePath,
+        public ChromCachedFile(MsDataFileUri fileUri,
                                FlagValues flags,
                                DateTime fileWriteTime,
                                DateTime? runStartTime,
@@ -1417,7 +1423,15 @@ namespace pwiz.Skyline.Model.Results
                                string instrumentSerialNumber,
                                IEnumerable<MsInstrumentConfigInfo> instrumentInfoList)
         {
-            FilePath = filePath;
+            // BACKWARD COMPATIBILITY: Deal with legacy parameters which got stored on the file_path URI
+            var filePath = fileUri as MsDataFilePath;
+            if (filePath != null)
+            {
+                if (filePath.CombineIonMobilitySpectra)   // Skyline-daily 19.1.9.338 or 350
+                    flags |= FlagValues.has_combined_ion_mobility;
+                fileUri = filePath.RemoveLegacyParameters();
+            }
+            FilePath = fileUri;
             Flags = (flags & ~FlagValues.ion_mobility_type_bitmask) | (FlagValues)((int)ionMobilityUnits << 4);
             FileWriteTime = fileWriteTime;
             RunStartTime = runStartTime;
@@ -1458,6 +1472,11 @@ namespace pwiz.Skyline.Model.Results
         public bool HasMidasSpectra
         {
             get { return HasMidasSpectraFlags(Flags); }
+        }
+
+        public bool HasCombinedIonMobility
+        {
+            get { return HasCombinedIonMobilityFlags(Flags); }
         }
 
         public ChromCachedFile RelocateScanIds(long locationScanIds)
@@ -2082,6 +2101,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
         public double? PrecursorCollisionalCrossSection { get { return _groupHeaderInfo.CollisionalCrossSection; } }
+        public ChromCachedFile CachedFile { get { return _allFiles[_groupHeaderInfo.FileIndex]; } }
         public MsDataFileUri FilePath { get { return _allFiles[_groupHeaderInfo.FileIndex].FilePath; } }
         public DateTime FileWriteTime { get { return _allFiles[_groupHeaderInfo.FileIndex].FileWriteTime; } }
         public DateTime? RunStartTime { get { return _allFiles[_groupHeaderInfo.FileIndex].RunStartTime; } }

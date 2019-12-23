@@ -47,6 +47,7 @@ namespace pwiz.Skyline.Model.Results
         string DocFilePath { get; }
         MsDataFileUri DataFilePath { get; }
         ChromSource Source { get; }
+        bool HasCombinedIonMobility { get; }
         IList<float> Times { get; }
         TransitionFullScanInfo[] Transitions { get; }
         MsDataSpectrum[] GetMsDataFileSpectraWithCommonRetentionTime(int dataFileSpectrumStartIndex, bool ignoreZeroIntensityPoints); // Return a collection of consecutive scans with common retention time and changing ion mobility (or a single scan if no drift info in file)
@@ -63,11 +64,12 @@ namespace pwiz.Skyline.Model.Results
         private Func<MsDataFileScanIds> _getMsDataFileScanIds;
         private WeakReference<MeasuredResults> _measuredResultsReference;
 
-        public ScanProvider(string docFilePath, MsDataFileUri dataFilePath, ChromSource source,
+        public ScanProvider(string docFilePath, MsDataFileUri dataFilePath, bool combinedIonMobility, ChromSource source,
             IList<float> times, TransitionFullScanInfo[] transitions, MeasuredResults measuredResults, Func<MsDataFileScanIds> getMsDataFileScanIds)
         {
             DocFilePath = docFilePath;
             DataFilePath = dataFilePath;
+            HasCombinedIonMobility = combinedIonMobility;
             Source = source;
             Times = times;
             Transitions = transitions;
@@ -121,6 +123,7 @@ namespace pwiz.Skyline.Model.Results
         public string DocFilePath { get; private set; }
         public MsDataFileUri DataFilePath { get; private set; }
         public ChromSource Source { get; private set; }
+        public bool HasCombinedIonMobility { get; private set; }
         public IList<float> Times { get; private set; }
         public TransitionFullScanInfo[] Transitions { get; private set; }
 
@@ -171,7 +174,7 @@ namespace pwiz.Skyline.Model.Results
             return spectra.ToArray();
         }
 
-        private MsDataFileImpl GetDataFile( bool ignoreZeroIntensityPoints)
+        private MsDataFileImpl GetDataFile(bool ignoreZeroIntensityPoints)
         {
             if (_dataFile == null)
             {
@@ -189,7 +192,7 @@ namespace pwiz.Skyline.Model.Results
                         sampleIndex = 0;
                     // Full-scan extraction always uses SIM as spectra
                     _dataFile = new MsDataFileImpl(dataFilePath, sampleIndex, lockMassParameters, true,
-                        combineIonMobilitySpectra: DataFilePath.GetCombineIonMobilitySpectra(),
+                        combineIonMobilitySpectra: HasCombinedIonMobility,
                         requireVendorCentroidedMS1: DataFilePath.GetCentroidMs1(),
                         requireVendorCentroidedMS2: DataFilePath.GetCentroidMs2(),
                         ignoreZeroIntensityPoints: ignoreZeroIntensityPoints);

@@ -706,6 +706,7 @@ namespace pwiz.Skyline.Model.Results
             batch_name,
             sample_id,
             instrument_serial_number,
+            has_combined_ims,
         }
 
         private static readonly IXmlElementHelper<OptimizableRegression>[] OPTIMIZATION_HELPERS =
@@ -743,8 +744,18 @@ namespace pwiz.Skyline.Model.Results
                     reader.IsStartElement(EL.chromatogram_file))
             {
                 // Note that the file path may actually be a URI that encodes things like lockmass correction as well as filename
-                ChromFileInfo chromFileInfo = new ChromFileInfo(MsDataFileUri.Parse(reader.GetAttribute(ATTR.file_path)));
+                var fileUri = MsDataFileUri.Parse(reader.GetAttribute(ATTR.file_path));
+                // BACKWARD COMPATIBILITY: Deal with legacy parameters which got stored on the file_path URI
+                var filePath = fileUri as MsDataFilePath;
+                bool combinedIonMobility = false;
+                if (filePath != null)
+                {
+                    combinedIonMobility = filePath.CombineIonMobilitySpectra;   // Skyline-daily 19.1.9.338 or 350
+                    fileUri = filePath.RemoveLegacyParameters();
+                }
+                ChromFileInfo chromFileInfo = new ChromFileInfo(fileUri);
                 chromFileInfo = chromFileInfo.ChangeHasMidasSpectra(reader.GetBoolAttribute(ATTR.has_midas_spectra, false));
+                chromFileInfo = chromFileInfo.ChangeHasCombinedIonMobility(combinedIonMobility || reader.GetBoolAttribute(ATTR.has_combined_ims, false));
                 var imUnitsStr = reader.GetAttribute(ATTR.ion_mobility_type);
                 var imUnits = SmallMoleculeTransitionListReader.IonMobilityUnitsFromAttributeValue(imUnitsStr);
                 chromFileInfo = chromFileInfo.ChangeIonMobilityUnits(imUnits);
@@ -814,6 +825,7 @@ namespace pwiz.Skyline.Model.Results
                     writer.WriteAttribute(ATTR.modified_time, XmlConvert.ToString((DateTime)fileInfo.FileWriteTime, @"yyyy-MM-ddTHH:mm:ss"));
                 }
                 writer.WriteAttribute(ATTR.has_midas_spectra, fileInfo.HasMidasSpectra, false);
+                writer.WriteAttribute(ATTR.has_combined_ims, fileInfo.HasCombinedIonMobility ?? false, false);    // CONSIDER: For backward compatibility?
                 writer.WriteAttributeNullable(ATTR.explicit_global_standard_area, fileInfo.ExplicitGlobalStandardArea);
                 writer.WriteAttributeNullable(ATTR.tic_area, fileInfo.TicArea);
                 if (fileInfo.IonMobilityUnits != eIonMobilityUnits.none)
@@ -963,6 +975,7 @@ namespace pwiz.Skyline.Model.Results
         public eIonMobilityUnits IonMobilityUnits { get; private set; }
         public string SampleId { get; private set; }
         public string InstrumentSerialNumber { get; private set; }
+        public bool? HasCombinedIonMobility { get; private set; }
 
         public IList<MsInstrumentConfigInfo> InstrumentInfoList
         {
@@ -996,7 +1009,7 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromFileInfo ChangeHasCombinedIonMobility(bool prop)
         {
-            return ChangeProp(ImClone(this), im => im.FilePath = im.FilePath.ChangeCombineIonMobilitySpectra(prop));
+            return ChangeProp(ImClone(this), im => im.HasCombinedIonMobility = prop);
         }
 
         public ChromFileInfo ChangeInfo(ChromCachedFile fileInfo)
@@ -1010,6 +1023,7 @@ namespace pwiz.Skyline.Model.Results
                                                      im.MaxRetentionTime = fileInfo.MaxRetentionTime;
                                                      im.MaxIntensity = fileInfo.MaxIntensity;
                                                      im.HasMidasSpectra = fileInfo.HasMidasSpectra;
+                                                     im.HasCombinedIonMobility = fileInfo.HasCombinedIonMobility;
                                                      im.TicArea = fileInfo.TicArea;
                                                      im.IonMobilityUnits = fileInfo.IonMobilityUnits;
                                                      im.SampleId = fileInfo.SampleId;
@@ -1142,7 +1156,7 @@ namespace pwiz.Skyline.Model.Results
     /// the simplest solution is to encode the necessary information into the
     /// existing path string used to identify a single sample file.
     /// 
-    /// It's now (v3.5) being expanded to include other information needed to reproducably 
+    /// It's now (v3.5) being expanded to include other information needed to reproducibly 
     /// read raw data - lockmass settings, for example.  Probably ought to be moved out to 
     /// MSDataFileUri, really
     /// 
@@ -1154,10 +1168,19 @@ namespace pwiz.Skyline.Model.Results
         private const string TAG_LOCKMASS_TOL = "lockmass_tol";
         private const string TAG_CENTROID_MS1 = "centroid_ms1";
         private const string TAG_CENTROID_MS2 = "centroid_ms2";
-        private const string TAG_COMBINE_IMS = "combine_ims";
+        private const string TAG_COMBINE_IMS = "combine_ims";   // LEGACY: Introduced temporarily in 19.1.9.338 and 350
         private const string VAL_TRUE = "true";
 
         public static string EncodePath(string filePath, string sampleName, int sampleIndex, LockMassParameters lockMassParameters,
+            bool centroidMS1, bool centroidMS2)
+        {
+            return LegacyEncodePath(filePath, sampleName, sampleIndex, lockMassParameters, centroidMS1, centroidMS2, false);
+        }
+
+        /// <summary>
+        /// Use directly only when access to combineIonMobilitySpectra is required for legacy testing
+        /// </summary>
+        public static string LegacyEncodePath(string filePath, string sampleName, int sampleIndex, LockMassParameters lockMassParameters,
             bool centroidMS1, bool centroidMS2, bool combineIonMobilitySpectra)
         {
             var parameters = new List<string>();
