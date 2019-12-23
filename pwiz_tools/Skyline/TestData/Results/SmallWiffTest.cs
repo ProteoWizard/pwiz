@@ -127,14 +127,14 @@ namespace pwiz.SkylineTestData.Results
             Assert.AreEqual(fname, c.MSDataFilePaths.First().GetFilePath());
             Assert.IsTrue(c.MSDataFilePaths.First().GetCentroidMs1());
             Assert.IsFalse(c.MSDataFilePaths.First().GetCentroidMs2());
-            Assert.IsFalse(c.MSDataFilePaths.Cast<MsDataFilePath>().First().CombineIonMobilitySpectra);
+            Assert.IsFalse(c.MSDataFilePaths.Cast<MsDataFilePath>().First().LegacyCombineIonMobilitySpectra);
 
             pathSample = SampleHelp.EncodePath(fname, null, -1, lockmassParametersA,false,true);
             c = new ChromatogramSet("test", new[] { MsDataFileUri.Parse(pathSample) });
             Assert.AreEqual(lockmassParametersA, c.MSDataFilePaths.First().GetLockMassParameters());
             Assert.IsTrue(c.MSDataFilePaths.First().GetCentroidMs2());
             Assert.IsFalse(c.MSDataFilePaths.First().GetCentroidMs1());
-            Assert.IsFalse(c.MSDataFilePaths.Cast<MsDataFilePath>().First().CombineIonMobilitySpectra);
+            Assert.IsFalse(c.MSDataFilePaths.Cast<MsDataFilePath>().First().LegacyCombineIonMobilitySpectra);
 
             pathSample = SampleHelp.LegacyEncodePath(fname, "test_0", 1, lockmassParametersB,false,false, true);
             c = new ChromatogramSet("test", new[] { MsDataFileUri.Parse(pathSample) });
@@ -143,7 +143,7 @@ namespace pwiz.SkylineTestData.Results
             Assert.AreEqual(1, c.MSDataFilePaths.First().GetSampleIndex());
             Assert.IsFalse(c.MSDataFilePaths.First().GetCentroidMs1());
             Assert.IsFalse(c.MSDataFilePaths.First().GetCentroidMs2());
-            Assert.IsTrue(c.MSDataFilePaths.Cast<MsDataFilePath>().First().CombineIonMobilitySpectra);
+            Assert.IsTrue(c.MSDataFilePaths.Cast<MsDataFilePath>().First().LegacyCombineIonMobilitySpectra);
         }
 
         [TestMethod]

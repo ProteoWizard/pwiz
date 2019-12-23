@@ -1427,7 +1427,7 @@ namespace pwiz.Skyline.Model.Results
             var filePath = fileUri as MsDataFilePath;
             if (filePath != null)
             {
-                if (filePath.CombineIonMobilitySpectra)   // Skyline-daily 19.1.9.338 or 350
+                if (filePath.LegacyCombineIonMobilitySpectra)   // Skyline-daily 19.1.9.338 or 350
                     flags |= FlagValues.has_combined_ion_mobility;
                 fileUri = filePath.RemoveLegacyParameters();
             }

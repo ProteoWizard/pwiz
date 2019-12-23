@@ -750,7 +750,7 @@ namespace pwiz.Skyline.Model.Results
                 bool combinedIonMobility = false;
                 if (filePath != null)
                 {
-                    combinedIonMobility = filePath.CombineIonMobilitySpectra;   // Skyline-daily 19.1.9.338 or 350
+                    combinedIonMobility = filePath.LegacyCombineIonMobilitySpectra;   // Skyline-daily 19.1.9.338 or 350
                     fileUri = filePath.RemoveLegacyParameters();
                 }
                 ChromFileInfo chromFileInfo = new ChromFileInfo(fileUri);
