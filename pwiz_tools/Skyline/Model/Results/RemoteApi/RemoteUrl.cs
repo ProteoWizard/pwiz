@@ -41,7 +41,6 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             server,
             username,
             modified_time,
-            // CONSIDER: 3-array ion mobility?
         }
 
         public abstract RemoteAccountType AccountType { get; }

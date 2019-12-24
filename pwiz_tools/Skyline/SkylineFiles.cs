@@ -2958,8 +2958,7 @@ namespace pwiz.Skyline
                         string cachePath = ChromatogramCache.FinalPathForName(DocumentFilePath, null);
                         FileEx.SafeDelete(cachePath, true);
                     }
-                    // Restore the original set, updating those to be reimported  with current centroiding
-                    // settings and requesting 3-array IM format
+                    // Restore the original set, updating those to be reimported with current centroiding settings
                     var isCentroidMs = document.Settings.TransitionSettings.FullScan.IsCentroidedMs;
                     var isCentroidMsMs = document.Settings.TransitionSettings.FullScan.IsCentroidedMsMs;
                     var chromatograms = new List<ChromatogramSet>();

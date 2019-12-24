@@ -344,11 +344,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 });
             }
             var measuredResults = DocumentUI.Settings.MeasuredResults;
-            IScanProvider scanProvider = new ScanProvider(_documentContainer.DocumentFilePath,
-                FilePath, CachedFile.HasCombinedIonMobility,
-                chromatogramGroupInfo.Source, chromatogramGroupInfo.Times, transitions.ToArray(),
-                measuredResults,
-                () => measuredResults.LoadMSDataFileScanIds(FilePath));
+            IScanProvider scanProvider = new ScanProvider(_documentContainer.DocumentFilePath, FilePath, 
+                chromatogramGroupInfo.Source, chromatogramGroupInfo.Times, transitions.ToArray(), measuredResults);
             var e = new ClickedChromatogramEventArgs(
                 scanProvider,
                 transitionIndex, 
@@ -649,14 +646,6 @@ namespace pwiz.Skyline.Controls.Graphs
             get
             {
                 return ChromGroupInfo?.FilePath;
-            }
-        }
-
-        public ChromCachedFile CachedFile
-        {
-            get
-            {
-                return ChromGroupInfo?.CachedFile;
             }
         }
 

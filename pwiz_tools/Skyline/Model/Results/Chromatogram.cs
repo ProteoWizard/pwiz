@@ -706,7 +706,6 @@ namespace pwiz.Skyline.Model.Results
             batch_name,
             sample_id,
             instrument_serial_number,
-            has_combined_ims,
         }
 
         private static readonly IXmlElementHelper<OptimizableRegression>[] OPTIMIZATION_HELPERS =
@@ -747,15 +746,10 @@ namespace pwiz.Skyline.Model.Results
                 var fileUri = MsDataFileUri.Parse(reader.GetAttribute(ATTR.file_path));
                 // BACKWARD COMPATIBILITY: Deal with legacy parameters which got stored on the file_path URI
                 var filePath = fileUri as MsDataFilePath;
-                bool combinedIonMobility = false;
                 if (filePath != null)
-                {
-                    combinedIonMobility = filePath.LegacyCombineIonMobilitySpectra;   // Skyline-daily 19.1.9.338 or 350
                     fileUri = filePath.RemoveLegacyParameters();
-                }
                 ChromFileInfo chromFileInfo = new ChromFileInfo(fileUri);
                 chromFileInfo = chromFileInfo.ChangeHasMidasSpectra(reader.GetBoolAttribute(ATTR.has_midas_spectra, false));
-                chromFileInfo = chromFileInfo.ChangeHasCombinedIonMobility(combinedIonMobility || reader.GetBoolAttribute(ATTR.has_combined_ims, false));
                 var imUnitsStr = reader.GetAttribute(ATTR.ion_mobility_type);
                 var imUnits = SmallMoleculeTransitionListReader.IonMobilityUnitsFromAttributeValue(imUnitsStr);
                 chromFileInfo = chromFileInfo.ChangeIonMobilityUnits(imUnits);
@@ -825,7 +819,6 @@ namespace pwiz.Skyline.Model.Results
                     writer.WriteAttribute(ATTR.modified_time, XmlConvert.ToString((DateTime)fileInfo.FileWriteTime, @"yyyy-MM-ddTHH:mm:ss"));
                 }
                 writer.WriteAttribute(ATTR.has_midas_spectra, fileInfo.HasMidasSpectra, false);
-                writer.WriteAttribute(ATTR.has_combined_ims, fileInfo.HasCombinedIonMobility ?? false, false);    // CONSIDER: For backward compatibility?
                 writer.WriteAttributeNullable(ATTR.explicit_global_standard_area, fileInfo.ExplicitGlobalStandardArea);
                 writer.WriteAttributeNullable(ATTR.tic_area, fileInfo.TicArea);
                 if (fileInfo.IonMobilityUnits != eIonMobilityUnits.none)
@@ -975,7 +968,6 @@ namespace pwiz.Skyline.Model.Results
         public eIonMobilityUnits IonMobilityUnits { get; private set; }
         public string SampleId { get; private set; }
         public string InstrumentSerialNumber { get; private set; }
-        public bool? HasCombinedIonMobility { get; private set; }
 
         public IList<MsInstrumentConfigInfo> InstrumentInfoList
         {
@@ -1007,11 +999,6 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im.IonMobilityUnits = prop);
         }
 
-        public ChromFileInfo ChangeHasCombinedIonMobility(bool prop)
-        {
-            return ChangeProp(ImClone(this), im => im.HasCombinedIonMobility = prop);
-        }
-
         public ChromFileInfo ChangeInfo(ChromCachedFile fileInfo)
         {
             return ChangeProp(ImClone(this), im =>
@@ -1023,7 +1010,6 @@ namespace pwiz.Skyline.Model.Results
                                                      im.MaxRetentionTime = fileInfo.MaxRetentionTime;
                                                      im.MaxIntensity = fileInfo.MaxIntensity;
                                                      im.HasMidasSpectra = fileInfo.HasMidasSpectra;
-                                                     im.HasCombinedIonMobility = fileInfo.HasCombinedIonMobility;
                                                      im.TicArea = fileInfo.TicArea;
                                                      im.IonMobilityUnits = fileInfo.IonMobilityUnits;
                                                      im.SampleId = fileInfo.SampleId;

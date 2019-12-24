@@ -562,14 +562,19 @@ namespace pwiz.Skyline.Model.Results
             return index != -1;            
         }
 
-        public MsDataFileScanIds LoadMSDataFileScanIds(MsDataFileUri dataFilePath)
+        public MsDataFileScanIds LoadMSDataFileScanIds(MsDataFileUri dataFilePath, out ChromCachedFile cachedFile)
         {
             foreach (var cache in Caches)
             {
                 int fileIndex = cache.CachedFiles.IndexOf(f => Equals(f.FilePath, dataFilePath));
                 if (fileIndex != -1)
+                {
+                    cachedFile = cache.CachedFiles[fileIndex];
                     return cache.LoadMSDataFileScanIds(fileIndex);
+                }
             }
+
+            cachedFile = null;
             return null;
         }
 

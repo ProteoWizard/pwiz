@@ -214,7 +214,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var encodePath = SampleHelp.EncodePath(filePath, null, -1, null, false, false);
             var lineFilePath = lines.FirstOrDefault(l => l.Contains(encodePath + '"'));
             Assert.IsNotNull(lineFilePath);
-            Assert.AreEqual(combinedIms, lineFilePath.Contains(ChromatogramSet.ATTR.has_combined_ims.ToString() + "=\"true\""));
+            // Nothing gets serialized to the XML about whether the MsData had combined spectra - can only be found in the SKYD file
         }
     }
 }

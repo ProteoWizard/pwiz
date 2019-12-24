@@ -320,12 +320,12 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
 
         private void VerifyCombinedIonMobility(SrmDocument doc)
         {
-            // Check ChromCachedFile (GraphChromatogram/GraphFullScan)
+            // Check ChromCachedFile
             var cachedFile = doc.MeasuredResults.CachedFileInfos.First();
             VerifyCombinedIonMobilityMoved(cachedFile.FilePath, cachedFile.HasCombinedIonMobility);
-            // Check ChromFileInfo (IonMobilityFinder)
+            // Check ChromFileInfo.FilePath
             var chromFileInfo = doc.MeasuredResults.Chromatograms[0].MSDataFileInfos[0];
-            VerifyCombinedIonMobilityMoved(chromFileInfo.FilePath, chromFileInfo.HasCombinedIonMobility ?? false);
+            VerifyCombinedIonMobilityMoved(chromFileInfo.FilePath, true);
         }
 
         private void VerifyCombinedIonMobilityMoved(MsDataFileUri fileUri, bool hasCombinedIonMobility)

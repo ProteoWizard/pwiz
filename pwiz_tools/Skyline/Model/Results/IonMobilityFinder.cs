@@ -307,11 +307,8 @@ namespace pwiz.Skyline.Model.Results
             }
 
             var filePath = fileInfo.FilePath;
-            IScanProvider scanProvider = new ScanProvider(_documentFilePath,
-                // TODO(brendanx): Decide whether to default to combined IMS or throw when IMS combining is not set
-                filePath, fileInfo.HasCombinedIonMobility ?? false, chromSource, times, transitions.ToArray(),
-                _document.Settings.MeasuredResults,
-                () => _document.Settings.MeasuredResults.LoadMSDataFileScanIds(filePath));
+            IScanProvider scanProvider = new ScanProvider(_documentFilePath, filePath,
+                chromSource, times, transitions.ToArray(), _document.Settings.MeasuredResults);
 
             // Across all spectra at the peak retention time, find the one with max total 
             // intensity for the mz's of interest (ie the isotopic distribution) and note its ion mobility.
