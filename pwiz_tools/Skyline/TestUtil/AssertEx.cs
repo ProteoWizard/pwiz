@@ -114,6 +114,18 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static void FileExists(string filePath, string message = null)
+        {
+            if (!File.Exists(filePath))
+                Assert.Fail(TextUtil.LineSeparate(string.Format("Missing file {0}", filePath), message ?? string.Empty));
+        }
+
+        public static void FileNotExists(string filePath, string message = null)
+        {
+            if (File.Exists(filePath))
+                Assert.Fail(TextUtil.LineSeparate(string.Format("Unexpected file exists {0}", filePath), message ?? string.Empty));
+        }
+
         public static TObj Deserialize<TObj>(string s)
         {
             s = XmlUtil.XML_DIRECTIVE + s;

@@ -147,7 +147,13 @@ namespace pwiz.SkylineTestUtil
         {
             var existingDialog = FindOpenForm<TDlg>();
             if (existingDialog != null)
-                Assert.IsNull(existingDialog, typeof(TDlg) + " is already open");
+            {
+                var messageDlg = existingDialog as MessageDlg;
+                if (messageDlg == null)
+                    Assert.IsNull(existingDialog, typeof(TDlg) + " is already open");
+                else
+                    Assert.Fail(typeof(TDlg) + " is already open with the message: " + messageDlg.Message);
+            }
 
             SkylineBeginInvoke(act);
             TDlg dlg;

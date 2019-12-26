@@ -66,13 +66,12 @@ namespace pwiz.Skyline.Model
                 {
                     DocumentChangedEvent(this, new DocumentChangedEventArgs(docOriginal));
 
-                    bool complete = IsFinal(docNew);
                     if (wait)
                     {
-                        if (!complete)
+                        while (!IsFinal(Document))
                             Monitor.Wait(CHANGE_EVENT_LOCK);    // Wait for completing document changed event
                     }
-                    else if (complete)
+                    else if (IsFinal(docNew))
                     {
                         Monitor.Pulse(CHANGE_EVENT_LOCK);
                     }
