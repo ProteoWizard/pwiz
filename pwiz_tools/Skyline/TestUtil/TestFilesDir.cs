@@ -146,6 +146,53 @@ namespace pwiz.SkylineTestUtil
             return GetTestPathIntl(relativePath);
         }
 
+
+        public enum VendorDir
+        {
+            ABI,
+            Agilent,
+            Bruker,
+            Shimadzu,
+            Thermo,
+            UIMF,
+            UNIFI,
+            Waters
+        }
+
+        /// <summary>
+        /// Returns full path to the specified vendor reader's test data directory
+        /// (e.g. pwiz/data/vendor_readers/Thermo/Reader_Thermo_Test.data)
+        /// </summary>
+        public static string GetVendorTestData(VendorDir vendorDir)
+        {
+            string projectDir = ExtensionTestContext.GetProjectDirectory("");
+            if (projectDir == null)
+                throw new InvalidOperationException("unable to find project directory with Skyline test files");
+
+            string vendorReaderPath;
+            string vendorStr = Enum.GetName(typeof(VendorDir), vendorDir) ?? throw new ArgumentException(@"VendorDir value unknown");
+            if (File.Exists(Path.Combine(projectDir, @"Skyline.sln")))
+            {
+                vendorReaderPath = Path.Combine(projectDir, @"..\..\pwiz\data\vendor_readers");
+                return Path.Combine(vendorReaderPath, vendorStr, $"Reader_{vendorStr}_Test.data");
+            }
+            else
+            {
+                vendorReaderPath = Path.Combine(projectDir, @".."); // one up from TestZipFiles, and no vendorStr intermediate directory
+                return Path.Combine(vendorReaderPath, $"Reader_{vendorStr}_Test.data");
+            }
+
+        }
+
+        /// <summary>
+        /// Returns full path to a file in the specified vendor reader's test data directory
+        /// (e.g. pwiz/data/vendor_readers/Thermo/Reader_Thermo_Test.data/test_file.raw)
+        /// </summary>
+        public static string GetVendorTestData(VendorDir vendorDir, string rawname)
+        {
+            return Path.Combine(GetVendorTestData(vendorDir), rawname);
+        }
+
         /// <summary>
         /// Attempts to move the directory to make sure no file handles are open.
         /// Used to delete the directory, but it can be useful to look at test
