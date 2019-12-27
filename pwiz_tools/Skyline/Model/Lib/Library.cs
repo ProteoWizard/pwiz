@@ -1408,21 +1408,21 @@ namespace pwiz.Skyline.Model.Lib
         public static LibrarySpec CreateFromPath(string name, string path)
         {
             string ext = Path.GetExtension(path);
-            if (Equals(ext, BiblioSpecLiteSpec.EXT))
+            if (string.Equals(ext, BiblioSpecLiteSpec.EXT, StringComparison.CurrentCultureIgnoreCase))
                 return new BiblioSpecLiteSpec(name, path);
-            else if (Equals(ext, BiblioSpecLibSpec.EXT))
+            else if (string.Equals(ext, BiblioSpecLibSpec.EXT, StringComparison.CurrentCultureIgnoreCase))
                 return new BiblioSpecLibSpec(name, path);
-            else if (Equals(ext, ChromatogramLibrarySpec.EXT))
+            else if (string.Equals(ext, ChromatogramLibrarySpec.EXT, StringComparison.CurrentCultureIgnoreCase))
                 return new ChromatogramLibrarySpec(name, path);
-            else if (Equals(ext, XHunterLibSpec.EXT))
+            else if (string.Equals(ext, XHunterLibSpec.EXT, StringComparison.CurrentCultureIgnoreCase))
                 return new XHunterLibSpec(name, path);
-            else if (Equals(ext, NistLibSpec.EXT))
+            else if (string.Equals(ext, NistLibSpec.EXT, StringComparison.CurrentCultureIgnoreCase))
                 return new NistLibSpec(name, path);
-            else if (Equals(ext, SpectrastSpec.EXT))
+            else if (string.Equals(ext, SpectrastSpec.EXT, StringComparison.CurrentCultureIgnoreCase))
                 return new SpectrastSpec(name, path);
-            else if (Equals(ext, MidasLibSpec.EXT))
+            else if (string.Equals(ext, MidasLibSpec.EXT, StringComparison.CurrentCultureIgnoreCase))
                 return new MidasLibSpec(name, path);
-            else if (Equals(ext, EncyclopeDiaSpec.EXT))
+            else if (string.Equals(ext, EncyclopeDiaSpec.EXT, StringComparison.CurrentCultureIgnoreCase))
                 return new EncyclopeDiaSpec(name, path);
             return null;
         }
