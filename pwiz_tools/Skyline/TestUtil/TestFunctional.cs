@@ -33,6 +33,7 @@ using JetBrains.Annotations;
 // using Microsoft.Diagnostics.Runtime; only needed for stack dump logic, which is currently disabled
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Controls;
+using pwiz.Common.Database;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.Fasta;
@@ -1798,7 +1799,8 @@ namespace pwiz.SkylineTestUtil
         public static IList<DbRefSpectra> GetRefSpectra(SQLiteConnection connection)
         {
             var list = new List<DbRefSpectra>();
-            using (var select = new SQLiteCommand(connection) {CommandText = "SELECT * FROM RefSpectra"})
+            var hasAnnotations = SqliteOperations.TableExists(connection, @"RefSpectraPeakAnnotations");
+            using (var select = new SQLiteCommand(connection) { CommandText = "SELECT * FROM RefSpectra" })
             using (var reader = @select.ExecuteReader())
             {
                 var iAdduct = reader.GetOrdinal("precursorAdduct");
@@ -1806,7 +1808,7 @@ namespace pwiz.SkylineTestUtil
                 var iCCS = reader.GetOrdinal("collisionalCrossSectionSqA");
                 while (reader.Read())
                 {
-                    list.Add(new DbRefSpectra
+                    var refSpectrum = new DbRefSpectra
                     {
                         PeptideSeq = reader["peptideSeq"].ToString(),
                         PeptideModSeq = reader["peptideModSeq"].ToString(),
@@ -1816,7 +1818,48 @@ namespace pwiz.SkylineTestUtil
                         RetentionTime = double.Parse(reader["retentionTime"].ToString()),
                         IonMobility = ParseNullable(reader, iIonMobility),
                         CollisionalCrossSectionSqA = ParseNullable(reader, iCCS),
+                        MoleculeName = reader["moleculeName"].ToString(),
+                        ChemicalFormula = reader["chemicalFormula"].ToString(),
+                        InChiKey = reader["inchiKey"].ToString(),
+                        OtherKeys = reader["otherKeys"].ToString(),
                         NumPeaks = ushort.Parse(reader["numPeaks"].ToString())
+                    };
+                    if (hasAnnotations)
+                    {
+                        var id = int.Parse(reader["id"].ToString());
+                        var annotations = GetRefSpectraPeakAnnotations(connection, refSpectrum, id);
+                        refSpectrum.PeakAnnotations = annotations;
+                    }
+                    list.Add(refSpectrum);
+                }
+
+                return list;
+            }
+        }
+
+        private static IList<DbRefSpectraPeakAnnotations> GetRefSpectraPeakAnnotations(SQLiteConnection connection, DbRefSpectra refSpectrum, int refSpectraId)
+        {
+            var list = new List<DbRefSpectraPeakAnnotations>();
+            using (var select = new SQLiteCommand(connection) { CommandText = "SELECT * FROM RefSpectraPeakAnnotations WHERE RefSpectraId = " + refSpectraId })
+            using (var reader = @select.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    list.Add(new DbRefSpectraPeakAnnotations
+                    {
+
+                        RefSpectra = refSpectrum,
+                        Id = int.Parse(reader["id"].ToString()),
+                        PeakIndex = int.Parse(reader["peakIndex"].ToString()),
+                        Charge = int.Parse(reader["charge"].ToString()),
+                        Adduct = reader["adduct"].ToString(),
+                        mzTheoretical = double.Parse(reader["mzTheoretical"].ToString()),
+                        mzObserved = double.Parse(reader["mzObserved"].ToString()),
+                        Name = reader["name"].ToString(),
+                        Formula = reader["formula"].ToString(),
+                        InchiKey = reader["inchiKey"].ToString(),
+                        OtherKeys = reader["otherKeys"].ToString(),
+                        Comment = reader["comment"].ToString(),
                     });
                 }
                 return list;
