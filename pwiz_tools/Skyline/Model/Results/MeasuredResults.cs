@@ -1529,9 +1529,9 @@ namespace pwiz.Skyline.Model.Results
                             }
                         }
 
-                        // If there is only one result path, then just create the cache directly to its
-                        // final destination.
-                        if (dataFileReplicatesList.Count == 1 && !_resultsClone.IsJoiningDisabled)
+                        // If there is only one result path and joining is not disabled and no prior caches exist,
+                        // then just create the cache directly to its final destination.
+                        if (dataFileReplicatesList.Count == 1 && !_resultsClone.IsJoiningDisabled && _resultsClone._listPartialCaches == null)
                             dataFileReplicates.PartPath = cachePath;
                         else
                         {
