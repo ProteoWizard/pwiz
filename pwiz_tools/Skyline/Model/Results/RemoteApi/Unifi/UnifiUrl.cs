@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -63,7 +62,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
             return result;
         }
 
-        public override MsDataFileImpl OpenMsDataFile(bool simAsSpectra, int preferOnlyMsLevel, IEnumerable<MsDataFileImpl.PrecursorMzAndIonMobilityWindow> precursorMzAndIonMobilityWindows, bool ignoreZeroIntensityPoints)
+        public override MsDataFileImpl OpenMsDataFile(bool simAsSpectra, int preferOnlyMsLevel, bool ignoreZeroIntensityPoints)
         {
             var account = FindMatchingAccount(Settings.Default.RemoteAccountList) as UnifiAccount;
             if (account == null)
@@ -81,8 +80,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
             return new MsDataFileImpl(serverUrl, 0, LockMassParameters, simAsSpectra,
                 requireVendorCentroidedMS1: CentroidMs1, requireVendorCentroidedMS2: CentroidMs2,
                 ignoreZeroIntensityPoints: ignoreZeroIntensityPoints, preferOnlyMsLevel: preferOnlyMsLevel,
-                combineIonMobilitySpectra: false, // CONSIDER: 3-array ims for unifi?
-                precursorMzAndIonMobilityWindows: precursorMzAndIonMobilityWindows);
+                combineIonMobilitySpectra: false); // CONSIDER: 3-array ims for unifi?
         }
     }
 }

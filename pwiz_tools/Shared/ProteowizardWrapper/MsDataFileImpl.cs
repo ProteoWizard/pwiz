@@ -125,22 +125,6 @@ namespace pwiz.ProteowizardWrapper
         public const string TIC = "TIC";
         public const string BPC = "BPC";
 
-        public class PrecursorMzAndIonMobilityWindow
-        {
-            public PrecursorMzAndIonMobilityWindow(double? mz, double? ccs, double? ionMobility, double? ionMobilityWindow)
-            {
-                MZ = mz;
-                CCS = ccs;
-                IonMobility = ionMobility;
-                IonMobilityWindow = ionMobilityWindow;
-            }
-
-            public double? MZ { get; }
-            public double? CCS { get; }  // TODO: make this useful on vendor side
-            public double? IonMobility { get; }
-            public double? IonMobilityWindow { get; }
-        }
-
         public static bool? IsNegativeChargeIdNullable(string id)
         {
             if (id.StartsWith(@"+ "))
@@ -164,8 +148,7 @@ namespace pwiz.ProteowizardWrapper
             bool requireVendorCentroidedMS1 = false, bool requireVendorCentroidedMS2 = false,
             bool ignoreZeroIntensityPoints = false, 
             int preferOnlyMsLevel = 0,
-            bool combineIonMobilitySpectra = true, // Ask for IMS data in 3-array format by default (not guaranteed)
-            IEnumerable<PrecursorMzAndIonMobilityWindow> precursorMzAndIonMobilityWindows = null)
+            bool combineIonMobilitySpectra = true) // Ask for IMS data in 3-array format by default (not guaranteed)
         {
 
             // see note above on enabling performance measurement
@@ -188,7 +171,6 @@ namespace pwiz.ProteowizardWrapper
                     preferOnlyMsLevel = !ForceUncombinedIonMobility && combineIonMobilitySpectra ? 0 : preferOnlyMsLevel,
                     allowMsMsWithoutPrecursor = false,
                     combineIonMobilitySpectra = !ForceUncombinedIonMobility && combineIonMobilitySpectra,
-                    isolationMzAndMobilityFilter = GetMzMobilityWindows(precursorMzAndIonMobilityWindows),
                     globalChromatogramsAreMs1Only = true
                 };
                 _lockmassParameters = lockmassParameters;
@@ -196,38 +178,6 @@ namespace pwiz.ProteowizardWrapper
                 _requireVendorCentroidedMS1 = requireVendorCentroidedMS1;
                 _requireVendorCentroidedMS2 = requireVendorCentroidedMS2;
             }
-        }
-
-        public void Reindex(bool simAsSpectra = false, bool srmAsSpectra = false, bool acceptZeroLengthSpectra = true,
-                            bool ignoreZeroIntensityPoints = false,
-                            int preferOnlyMsLevel = 0,
-                            bool combineIonMobilitySpectra = true,
-                            IEnumerable<PrecursorMzAndIonMobilityWindow> precursorMzAndIonMobilityWindows = null)
-        {
-            _msDataFile = new MSData();
-            _config = new ReaderConfig
-            {
-                simAsSpectra = simAsSpectra,
-                srmAsSpectra = srmAsSpectra,
-                acceptZeroLengthSpectra = acceptZeroLengthSpectra,
-                ignoreZeroIntensityPoints = ignoreZeroIntensityPoints,
-                preferOnlyMsLevel = preferOnlyMsLevel,
-                allowMsMsWithoutPrecursor = false,
-                combineIonMobilitySpectra = combineIonMobilitySpectra,
-                isolationMzAndMobilityFilter = GetMzMobilityWindows(precursorMzAndIonMobilityWindows)
-            };
-            _spectrumList = null;
-            _ionMobilitySpectrumList = null;
-            _chromatogramList = null;
-            FULL_READER_LIST.read(FilePath, _msDataFile, SampleIndex, _config);
-        }
-
-        private IList<MzMobilityWindow> GetMzMobilityWindows(IEnumerable<PrecursorMzAndIonMobilityWindow> precursorMzAndIonMobilityWindows)
-        {
-            return precursorMzAndIonMobilityWindows?.Select(w =>
-                w.MZ.HasValue && w.IonMobility.HasValue ? new MzMobilityWindow(w.MZ.Value, w.IonMobility.Value, (w.IonMobilityWindow ?? 0) / 2) :
-                w.MZ.HasValue ? new MzMobilityWindow(w.MZ.Value) :
-                new MzMobilityWindow(w.IonMobility.Value, (w.IonMobilityWindow ?? 0) / 2)).ToList();
         }
 
         /// <summary>

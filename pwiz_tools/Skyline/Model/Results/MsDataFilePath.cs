@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
 using System.IO;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
@@ -72,7 +71,7 @@ namespace pwiz.Skyline.Model.Results
             return MsDataFilePath.ParseUri(url);
         }
 
-        public abstract MsDataFileImpl OpenMsDataFile(bool simAsSpectra, int preferOnlyMsLevel, IEnumerable<MsDataFileImpl.PrecursorMzAndIonMobilityWindow> precursorMzAndIonMobilityWindows, bool ignoreZeroIntensityPoints);
+        public abstract MsDataFileImpl OpenMsDataFile(bool simAsSpectra, int preferOnlyMsLevel, bool ignoreZeroIntensityPoints);
         public int CompareTo(object obj)
         {
             if (obj == null)
@@ -280,13 +279,12 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public override MsDataFileImpl OpenMsDataFile(bool simAsSpectra, int preferOnlyMsLevel, IEnumerable<MsDataFileImpl.PrecursorMzAndIonMobilityWindow> precursorMzAndIonMobilityWindows, bool ignoreZeroIntensityPoints)
+        public override MsDataFileImpl OpenMsDataFile(bool simAsSpectra, int preferOnlyMsLevel, bool ignoreZeroIntensityPoints)
         {
             Assume.IsFalse(LegacyCombineIonMobilitySpectra);  // Only for backward compatibility. We are not expecting to use this value to open MsDataFileImpl objects
             return new MsDataFileImpl(FilePath, Math.Max(SampleIndex, 0), LockMassParameters, simAsSpectra,
                 requireVendorCentroidedMS1: CentroidMs1, requireVendorCentroidedMS2: CentroidMs2,
-                ignoreZeroIntensityPoints: ignoreZeroIntensityPoints, preferOnlyMsLevel: preferOnlyMsLevel,
-                precursorMzAndIonMobilityWindows: precursorMzAndIonMobilityWindows);
+                ignoreZeroIntensityPoints: ignoreZeroIntensityPoints, preferOnlyMsLevel: preferOnlyMsLevel);
         }
 
         public MsDataFileUri RemoveLegacyParameters()

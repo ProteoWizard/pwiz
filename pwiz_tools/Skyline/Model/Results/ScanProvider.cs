@@ -199,7 +199,7 @@ namespace pwiz.Skyline.Model.Results
                 }
                 else
                 {
-                    _dataFile = DataFilePath.OpenMsDataFile(true, 0, null, ignoreZeroIntensityPoints);
+                    _dataFile = DataFilePath.OpenMsDataFile(true, 0, ignoreZeroIntensityPoints);
                 }
             }
             return _dataFile;
