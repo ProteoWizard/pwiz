@@ -468,6 +468,7 @@ namespace pwiz.Skyline.Model.Tools
                             throw new ToolExecutionException(
                                 TextUtil.LineSeparate(
                                     Resources.ToolDescription_RunTool_File_not_found_,
+                                    command,
                                     Resources
                                         .ToolDescription_RunTool_Please_check_the_command_location_is_correct_for_this_tool_),
                                 ex);
@@ -476,8 +477,7 @@ namespace pwiz.Skyline.Model.Tools
                         {
                             throw new ToolExecutionException(
                                 TextUtil.LineSeparate(
-                                    Resources
-                                        .ToolDescription_RunTool_Please_reconfigure_that_tool__it_failed_to_execute__,
+                                    Resources.ToolDescription_RunTool_Please_reconfigure_that_tool__it_failed_to_execute__,
                                     ex.Message),
                                 ex);
                         }
