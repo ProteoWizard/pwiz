@@ -178,6 +178,9 @@ namespace pwiz.Skyline.Model.Results
         {
             if (_dataFile == null)
             {
+                const bool simAsSpectra = true; // SIM always as spectra here
+                const bool preferOnlyMs1 = false; // Open with all available spectra indexed
+
                 if (DataFilePath is MsDataFilePath)
                 {
                     string dataFilePath = FindDataFilePath();
@@ -191,15 +194,18 @@ namespace pwiz.Skyline.Model.Results
                     if (sampleIndex == -1)
                         sampleIndex = 0;
                     // Full-scan extraction always uses SIM as spectra
-                    _dataFile = new MsDataFileImpl(dataFilePath, sampleIndex, lockMassParameters, true,
+                    _dataFile = new MsDataFileImpl(dataFilePath, sampleIndex,
+                        lockMassParameters,
+                        simAsSpectra,
                         combineIonMobilitySpectra: _cachedFile.HasCombinedIonMobility,
-                        requireVendorCentroidedMS1: DataFilePath.GetCentroidMs1(),
-                        requireVendorCentroidedMS2: DataFilePath.GetCentroidMs2(),
+                        requireVendorCentroidedMS1: _cachedFile.UsedMs1Centroids,
+                        requireVendorCentroidedMS2: _cachedFile.UsedMs2Centroids,
                         ignoreZeroIntensityPoints: ignoreZeroIntensityPoints);
                 }
                 else
                 {
-                    _dataFile = DataFilePath.OpenMsDataFile(true, 0, ignoreZeroIntensityPoints);
+                    _dataFile = DataFilePath.OpenMsDataFile(simAsSpectra, preferOnlyMs1,
+                        _cachedFile.UsedMs1Centroids, _cachedFile.UsedMs2Centroids, ignoreZeroIntensityPoints);
                 }
             }
             return _dataFile;

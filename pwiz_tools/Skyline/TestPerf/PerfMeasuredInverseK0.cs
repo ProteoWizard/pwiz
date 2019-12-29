@@ -211,7 +211,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         private void VerifyFileInfoSerialization(string[] lines, string filePath, bool combinedIms)
         {
-            var encodePath = SampleHelp.EncodePath(filePath, null, -1, null, false, false);
+            var encodePath = SampleHelp.EncodePath(filePath, null, -1, null);
             var lineFilePath = lines.FirstOrDefault(l => l.Contains(encodePath + '"'));
             Assert.IsNotNull(lineFilePath);
             // Nothing gets serialized to the XML about whether the MsData had combined spectra - can only be found in the SKYD file

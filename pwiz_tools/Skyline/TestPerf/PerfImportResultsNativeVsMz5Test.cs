@@ -331,13 +331,14 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             Stopwatch loadStopwatch = new Stopwatch();
             loadStopwatch.Start();
             var doc = ResultsUtil.DeserializeDocument(_skyFile);
+            // TODO(brendanx): Do something about centroiding and _centroided
             doc = ConnectLibrarySpecs(doc, _skyFile);
             using (var docContainer = new ResultsTestDocumentContainer(doc, _skyFile))
             {
                 var chromSets = new[]
                 {
                     new ChromatogramSet(_replicateName, new[]
-                        { new MsDataFilePath(_dataFile, null, _centroided, _centroided),  }),
+                        { new MsDataFilePath(_dataFile),  }),
                 };
                 var docResults = doc.ChangeMeasuredResults(new MeasuredResults(chromSets));
                 Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));

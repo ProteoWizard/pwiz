@@ -2958,18 +2958,6 @@ namespace pwiz.Skyline
                         string cachePath = ChromatogramCache.FinalPathForName(DocumentFilePath, null);
                         FileEx.SafeDelete(cachePath, true);
                     }
-                    // Restore the original set, updating those to be reimported with current centroiding settings
-                    var isCentroidMs = document.Settings.TransitionSettings.FullScan.IsCentroidedMs;
-                    var isCentroidMsMs = document.Settings.TransitionSettings.FullScan.IsCentroidedMsMs;
-                    var chromatograms = new List<ChromatogramSet>();
-                    foreach (var c in results.Chromatograms)
-                    {
-                        chromatograms.Add(setReimport.Contains(c) ?
-                            c.ChangeMSDataFilePaths(c.MSDataFilePaths.Select(p =>
-                                p.ChangeCentroiding(isCentroidMs, isCentroidMsMs)).ToList()) :
-                            c);
-                    }
-                    resultsNew = resultsNew.ChangeChromatograms(chromatograms);
 
                     // Update the document without adding an undo record, because the only information
                     // to change should be cache related.

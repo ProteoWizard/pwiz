@@ -1157,10 +1157,9 @@ namespace pwiz.Skyline.Model.Results
         private const string TAG_COMBINE_IMS = "combine_ims";   // LEGACY: Introduced temporarily in 19.1.9.338 and 350
         private const string VAL_TRUE = "true";
 
-        public static string EncodePath(string filePath, string sampleName, int sampleIndex, LockMassParameters lockMassParameters,
-            bool centroidMS1, bool centroidMS2)
+        public static string EncodePath(string filePath, string sampleName, int sampleIndex, LockMassParameters lockMassParameters)
         {
-            return LegacyEncodePath(filePath, sampleName, sampleIndex, lockMassParameters, centroidMS1, centroidMS2, false);
+            return LegacyEncodePath(filePath, sampleName, sampleIndex, lockMassParameters, false, false, false);
         }
 
         /// <summary>

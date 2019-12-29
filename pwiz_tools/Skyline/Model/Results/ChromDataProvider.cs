@@ -97,8 +97,6 @@ namespace pwiz.Skyline.Model.Results
 
         public virtual bool HasMidasSpectra { get { return false; } }
 
-        public virtual bool HasCombinedIonMobility { get { return false; } }
-
         // Used for offering hints to user when document transition polarities don't agree with the raw data
         public abstract bool SourceHasPositivePolarityData { get; }
         public abstract bool SourceHasNegativePolarityData { get; }

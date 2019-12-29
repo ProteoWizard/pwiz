@@ -211,6 +211,9 @@ namespace pwiz.ProteowizardWrapper
 
         public string RunId { get { return _msDataFile.run.id; } }
 
+        public bool RequireVendorCentoridedMs1 => _requireVendorCentroidedMS1;
+        public bool RequireVendorCentoridedMs2 => _requireVendorCentroidedMS2;
+
         public DateTime? RunStartTime
         {
             get
