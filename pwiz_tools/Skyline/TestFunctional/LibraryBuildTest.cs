@@ -549,8 +549,11 @@ namespace pwiz.SkylineTestFunctional
                 });
             }
 
-            Assert.IsTrue(WaitForConditionUI(() =>
-                PeptideSettingsUI.AvailableLibraries.Contains(_libraryName)));
+            TryWaitForConditionUI(() => PeptideSettingsUI.AvailableLibraries.Contains(_libraryName));
+            WaitForConditionUI(() => !PeptideSettingsUI.IsBuildingLibrary);
+            var messageDlg = FindOpenForm<MessageDlg>();
+            if (messageDlg != null)
+                Assert.Fail("Unexpected MessageDlg: " + messageDlg.DetailedMessage);
             RunUI(() => PeptideSettingsUI.PickedLibraries = new[] { _libraryName });
             OkDialog(PeptideSettingsUI, PeptideSettingsUI.OkDialog);
 
