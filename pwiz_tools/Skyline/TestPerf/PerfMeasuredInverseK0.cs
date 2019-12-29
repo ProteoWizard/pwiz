@@ -191,13 +191,16 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 File.Delete(testPath);
 
             // Show anyone watching that work is being performed
-            using (var longWait = new LongWaitDlg(SkylineWindow) {Message = "Running command-line import"})
-            {
-                longWait.PerformWork(SkylineWindow, 500, () =>
-                    RunCommand("--in=" + skyFile,
-                        "--import-file=" + TestFilesDir.GetTestPath(BSA_50fmol_TIMS_InfusionESI_10precd),
-                        "--out=" + testPath));
-            }
+            RunUI(() => {
+                using (var longWait = new LongWaitDlg(SkylineWindow) { Message = "Running command-line import" })
+                {
+                    longWait.PerformWork(SkylineWindow, 500, () =>
+                        RunCommand("--in=" + skyFile,
+                            "--import-file=" + TestFilesDir.GetTestPath(BSA_50fmol_TIMS_InfusionESI_10precd),
+                            "--out=" + testPath));
+                }
+            });
+            
             VerifySerialization(testPath, false);
         }
 

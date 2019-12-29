@@ -2886,16 +2886,25 @@ namespace pwiz.Skyline
                         }
 
                         var results = doc.Settings.MeasuredResults;
-                        if (results == null)
+                        var listChrom = dlg.Chromatograms.ToArray();
+                        if (results == null && listChrom.Length == 0)
                             return doc;
 
                         // Set HasMidasSpectra = false for file infos
-                        var listChrom = MidasLibrary.UnflagFiles(dlg.Chromatograms, dlg.LibraryRunsRemovedList.Select(Path.GetFileName)).ToList();
+                        listChrom = MidasLibrary.UnflagFiles(listChrom, dlg.LibraryRunsRemovedList.Select(Path.GetFileName)).ToArray();
 
-                        if (ArrayUtil.ReferencesEqual(results.Chromatograms, listChrom))
+                        if (ArrayUtil.ReferencesEqual(results?.Chromatograms, listChrom))
                             return doc;
-                        results = listChrom.Count > 0 ? results.ChangeChromatograms(listChrom.ToArray()) : null;
-                        doc = doc.ChangeMeasuredResults(results);
+
+                        MeasuredResults resultsNew = null;
+                        if (listChrom.Length > 0)
+                        {
+                            if (results == null)
+                                resultsNew = new MeasuredResults(listChrom);
+                            else
+                                resultsNew = results.ChangeChromatograms(listChrom.ToArray());
+                        }
+                        doc = doc.ChangeMeasuredResults(resultsNew);
                         doc.ValidateResults();
 
                         return doc;
@@ -2943,9 +2952,10 @@ namespace pwiz.Skyline
                     // Remove all replicates to be re-imported
                     var results = document.Settings.MeasuredResults;
                     var chromRemaining = results.Chromatograms.Where(chrom => !setReimport.Contains(chrom)).ToArray();
-                    var resultsNew = results.ChangeChromatograms(chromRemaining);
+                    MeasuredResults resultsNew = null;
                     if (chromRemaining.Length > 0)
                     {
+                        resultsNew = results.ChangeChromatograms(chromRemaining);
                         // Optimize the cache using this reduced set to remove their data from the cache
                         resultsNew = resultsNew.OptimizeCache(DocumentFilePath, _chromatogramManager.StreamManager, longWaitBroker);
                     }
