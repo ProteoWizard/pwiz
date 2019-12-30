@@ -39,7 +39,6 @@ using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
-using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
