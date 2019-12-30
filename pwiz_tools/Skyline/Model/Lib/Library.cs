@@ -1407,22 +1407,21 @@ namespace pwiz.Skyline.Model.Lib
 
         public static LibrarySpec CreateFromPath(string name, string path)
         {
-            string ext = Path.GetExtension(path);
-            if (Equals(ext, BiblioSpecLiteSpec.EXT))
+            if (PathEx.HasExtension(path, BiblioSpecLiteSpec.EXT))
                 return new BiblioSpecLiteSpec(name, path);
-            else if (Equals(ext, BiblioSpecLibSpec.EXT))
+            else if (PathEx.HasExtension(path, BiblioSpecLibSpec.EXT))
                 return new BiblioSpecLibSpec(name, path);
-            else if (Equals(ext, ChromatogramLibrarySpec.EXT))
+            else if (PathEx.HasExtension(path, ChromatogramLibrarySpec.EXT))
                 return new ChromatogramLibrarySpec(name, path);
-            else if (Equals(ext, XHunterLibSpec.EXT))
+            else if (PathEx.HasExtension(path, XHunterLibSpec.EXT))
                 return new XHunterLibSpec(name, path);
-            else if (Equals(ext, NistLibSpec.EXT))
+            else if (PathEx.HasExtension(path, NistLibSpec.EXT))
                 return new NistLibSpec(name, path);
-            else if (Equals(ext, SpectrastSpec.EXT))
+            else if (PathEx.HasExtension(path, SpectrastSpec.EXT))
                 return new SpectrastSpec(name, path);
-            else if (Equals(ext, MidasLibSpec.EXT))
+            else if (PathEx.HasExtension(path, MidasLibSpec.EXT))
                 return new MidasLibSpec(name, path);
-            else if (Equals(ext, EncyclopeDiaSpec.EXT))
+            else if (PathEx.HasExtension(path, EncyclopeDiaSpec.EXT))
                 return new EncyclopeDiaSpec(name, path);
             return null;
         }
