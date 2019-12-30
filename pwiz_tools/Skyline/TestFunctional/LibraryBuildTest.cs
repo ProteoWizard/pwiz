@@ -612,6 +612,12 @@ namespace pwiz.SkylineTestFunctional
         {
             PeptideSettingsUI = FindOpenForm<PeptideSettingsUI>() ??
                                 ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            // Allow a person watching to see what is going on in the Library tab
+            RunUI(() =>
+            {
+                if (PeptideSettingsUI.SelectedTab != PeptideSettingsUI.TABS.Library)
+                    PeptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Library;
+            });
         }
 
         private void BuildLibrary(string inputDir, IEnumerable<string> inputFiles, string libraryPath,
