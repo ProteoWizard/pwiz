@@ -840,6 +840,8 @@ namespace pwiz.Skyline.SettingsUI
             ShowBuildLibraryDlg();
         }
 
+        public bool IsBuildingLibrary { get; private set; }
+
         public void ShowBuildLibraryDlg()
         {
             CheckDisposed();
@@ -850,6 +852,8 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
+                    IsBuildingLibrary = true;
+
                     var builder = dlg.Builder;
 
                     // assume success and cleanup later
@@ -881,6 +885,7 @@ namespace pwiz.Skyline.SettingsUI
                                     listLibraries.Items.Remove(builder.LibrarySpec.Name);
                                 }));
                         }
+                        IsBuildingLibrary = false;
                     });
                 }
             }
