@@ -1482,7 +1482,7 @@ namespace pwiz.Skyline.Model.Results
         public bool UsedMs1Centroids
         {
             get { return (Flags & ChromCachedFile.FlagValues.used_ms1_centroids) != 0; }
-            set { SetFlag(value, ChromCachedFile.FlagValues.used_ms2_centroids); }
+            set { SetFlag(value, ChromCachedFile.FlagValues.used_ms1_centroids); }
         }
 
         public bool UsedMs2Centroids
