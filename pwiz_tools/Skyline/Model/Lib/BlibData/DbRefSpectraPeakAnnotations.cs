@@ -78,6 +78,10 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             return resultList;
         }
 
+        public override string ToString()
+        {
+            return (Name ?? @"(null)") + @" #" + PeakIndex; // For debugging convenience
+        }
     }
 
     // CONSIDER(bspratt) : this pattern where we have largely identical class definitions for redundant vs nr seems clunky and hard to maintain
