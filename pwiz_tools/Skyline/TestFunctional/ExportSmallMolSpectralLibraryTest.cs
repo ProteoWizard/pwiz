@@ -31,46 +31,25 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("msstatstest.sky")));
             var docOrig = WaitForDocumentLoaded();
             var refine = new RefinementSettings();
-            var doc = refine.ConvertToSmallMolecules(docOrig, TestFilesDirs[0].FullPath); 
+            var doc = refine.ConvertToSmallMolecules(docOrig, TestFilesDirs[0].FullPath, addAnnotations:false); 
             SkylineWindow.SetDocument(doc, docOrig);
             var exported = TestFilesDir.GetTestPath("exportSM.blib");
             var libraryExporter = new SpectralLibraryExporter(SkylineWindow.Document, SkylineWindow.DocumentFilePath);
             libraryExporter.ExportSpectralLibrary(exported, null);
             Assert.IsTrue(File.Exists(exported));
-
-            var refSpectra = new List<DbRefSpectra>();
+            IList<DbRefSpectra> refSpectra = null;
             using (var connection = new SQLiteConnection(string.Format("Data Source='{0}';Version=3", exported)))
             {
                 connection.Open();
-                using (var select = new SQLiteCommand(connection)
-                {
-                    CommandText = "SELECT * FROM RefSpectra"
-                })
-                using (var reader = select.ExecuteReader())
-                {
-                    var iAdduct = reader.GetOrdinal("precursorAdduct");
-                    while (reader.Read())
-                    {
-                        refSpectra.Add(new DbRefSpectra
-                        {
-                            PeptideSeq = reader["peptideSeq"].ToString(),
-                            PeptideModSeq = reader["peptideModSeq"].ToString(),
-                            PrecursorCharge = int.Parse(reader["precursorCharge"].ToString()),
-                            PrecursorAdduct = reader[iAdduct].ToString(),
-                            MoleculeName = reader["moleculeName"].ToString(),
-                            ChemicalFormula = reader["chemicalFormula"].ToString(),
-                            PrecursorMZ = double.Parse(reader["precursorMZ"].ToString()),
-                            NumPeaks = ushort.Parse(reader["numPeaks"].ToString())
-                        });
-                    }
-                }
+                refSpectra = GetRefSpectra(connection);
             }
-            CheckRefSpectra(refSpectra, "APVPTGEVYFADSFDR", "C81H115N19O26", "[M+2H]", 885.9203087025, 4);
+
+            CheckRefSpectra(refSpectra, "APVPTGEVYFADSFDR", "C81H115N19O26", "[M+2H]", 885.9203087025, 4, new[]{"y7", "y6", "y5", "y13"});
             CheckRefSpectra(refSpectra, "APVPTGEVYFADSFDR", "C81H115N19O26", "[M6C134N15+2H]", 890.9244430127, 4);
             CheckRefSpectra(refSpectra, "AVTELNEPLSNEDR", "C65H107N19O27", "[M+2H]", 793.8864658775, 4);
             CheckRefSpectra(refSpectra, "AVTELNEPLSNEDR", "C65H107N19O27", "[M6C134N15+2H]", 798.8906001877, 4);
             CheckRefSpectra(refSpectra, "DQGGELLSLR", "C45H78N14O17", "[M+2H]", 544.29074472, 4);
-            CheckRefSpectra(refSpectra, "DQGGELLSLR", "C45H78N14O17", "[M6C134N15+2H]", 549.2948790302, 4);
+            CheckRefSpectra(refSpectra, "DQGGELLSLR", "C45H78N14O17", "[M6C134N15+2H]", 549.2948790302, 4, new[] { "y8", "y5", "y4", "y3" });
             CheckRefSpectra(refSpectra, "ELLTTMGDR", "C42H74N12O16S", "[M+2H]", 518.260598685, 4);
             CheckRefSpectra(refSpectra, "ELLTTMGDR", "C42H74N12O16S", "[M6C134N15+2H]", 523.2647329952, 4);
             CheckRefSpectra(refSpectra, "FEELNADLFR", "C57H84N14O18", "[M+2H]", 627.31167714, 3);
@@ -131,7 +110,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(errDlg2, errDlg2.OkDialog);
         }
 
-        private static void CheckRefSpectra(IList<DbRefSpectra> spectra, string name, string formula, string precursorAdduct, double precursorMz, ushort numPeaks)
+        private static void CheckRefSpectra(IList<DbRefSpectra> spectra, string name, string formula, string precursorAdduct, double precursorMz, ushort numPeaks, string[] fragmentNames = null)
         {
             name = RefinementSettings.TestingConvertedFromProteomicPeptideNameDecorator + name;
             for (var i = 0; i < spectra.Count; i++)
@@ -144,6 +123,20 @@ namespace pwiz.SkylineTestFunctional
                     Math.Abs(spectrum.PrecursorMZ - precursorMz) < 0.001 &&
                     spectrum.NumPeaks.Equals(numPeaks))
                 {
+                    // Found the item - check its fragment info if provided
+                    // This demonstrates fix for "Issue 689: File > Export > Spectral Library losing information from small molecule documents",
+                    // point 3 "Ion annotations do not preserve the ion names from the document but instead always use 'ion[mass]' for the annotations
+                    // when the document gave them names."
+                    if (fragmentNames != null)
+                    {
+                        Assume.AreEqual(fragmentNames.Length, spectrum.PeakAnnotations.Count);
+                        foreach (var annotation in spectrum.PeakAnnotations)
+                        {
+                            Assume.IsTrue(fragmentNames.Contains(annotation.Name));
+                        }
+                    }
+
+                    // Item is OK, remove from further searches
                     spectra.RemoveAt(i);
                     return;
                 }
