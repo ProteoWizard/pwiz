@@ -778,6 +778,11 @@ namespace pwiz.Skyline.Model.Results
             reader.ReadEndElement();
         }
 
+        public ChromatogramSet RestoreLegacyUriParameters()
+        {
+            return ChangeMSDataFileInfos(MSDataFileInfos.Select(fi => fi.RestoreLegacyUriParameters()).ToArray());
+        }
+
         public override void WriteXml(XmlWriter writer)
         {
             // Write tag attributes
@@ -963,6 +968,10 @@ namespace pwiz.Skyline.Model.Results
         public double MaxRetentionTime { get; private set; }
         public double MaxIntensity { get; private set; }
         public bool HasMidasSpectra { get; private set; }
+        // Only used for File > Share to older versions, use ChromCachedFile versions instead in other cases
+        public bool? UsedMs1Centroids { get; private set; }
+        // Only used for File > Share to older versions, use ChromCachedFile versions instead in other cases
+        public bool? UsedMs2Centroids { get; private set; }
         public double? ExplicitGlobalStandardArea { get; private set; }
         public double? TicArea { get; private set; }
         public eIonMobilityUnits IonMobilityUnits { get; private set; }
@@ -1010,6 +1019,8 @@ namespace pwiz.Skyline.Model.Results
                                                      im.MaxRetentionTime = fileInfo.MaxRetentionTime;
                                                      im.MaxIntensity = fileInfo.MaxIntensity;
                                                      im.HasMidasSpectra = fileInfo.HasMidasSpectra;
+                                                     im.UsedMs1Centroids = fileInfo.UsedMs1Centroids;
+                                                     im.UsedMs2Centroids = fileInfo.UsedMs2Centroids;
                                                      im.TicArea = fileInfo.TicArea;
                                                      im.IonMobilityUnits = fileInfo.IonMobilityUnits;
                                                      im.SampleId = fileInfo.SampleId;
@@ -1068,6 +1079,10 @@ namespace pwiz.Skyline.Model.Results
                 return false;
             if (HasMidasSpectra != other.HasMidasSpectra)
                 return false;
+            if (!Equals(UsedMs1Centroids, other.UsedMs1Centroids))
+                return false;
+            if (!Equals(UsedMs2Centroids, other.UsedMs2Centroids))
+                return false;
             if (!Equals(ExplicitGlobalStandardArea, other.ExplicitGlobalStandardArea))
                 return false;
             if (!Equals(TicArea, other.TicArea))
@@ -1106,19 +1121,29 @@ namespace pwiz.Skyline.Model.Results
                          (InstrumentInfoList != null ? InstrumentInfoList.GetHashCodeDeep() : 0);
                 result = (result*397) ^
                          (RetentionTimeAlignments == null ? 0 : RetentionTimeAlignments.GetHashCodeDeep());
-                result = (result * 397) ^ MaxIntensity.GetHashCode();
-                result = (result * 397) ^ MaxRetentionTime.GetHashCode();
+                result = (result*397) ^ MaxIntensity.GetHashCode();
+                result = (result*397) ^ MaxRetentionTime.GetHashCode();
                 result = (result*397) ^ HasMidasSpectra.GetHashCode();
+                result = (result*397) ^ UsedMs1Centroids.GetHashCode();
+                result = (result*397) ^ UsedMs2Centroids.GetHashCode();
                 result = (result*397) ^ ExplicitGlobalStandardArea.GetHashCode();
-                result = (result * 397) ^ TicArea.GetHashCode();
-                result = (result * 397) ^ IonMobilityUnits.GetHashCode();
-                result = (result * 397) ^ SampleId?.GetHashCode() ?? 0;
-                result = (result * 397) ^ InstrumentSerialNumber?.GetHashCode() ?? 0;
+                result = (result*397) ^ TicArea.GetHashCode();
+                result = (result*397) ^ IonMobilityUnits.GetHashCode();
+                result = (result*397) ^ SampleId?.GetHashCode() ?? 0;
+                result = (result*397) ^ InstrumentSerialNumber?.GetHashCode() ?? 0;
                 return result;
             }
         }
 
         #endregion
+
+        public ChromFileInfo RestoreLegacyUriParameters()
+        {
+            var filePath = FilePath.RestoreLegacyParameters(UsedMs1Centroids ?? false, UsedMs2Centroids ?? false);
+            if (!ReferenceEquals(filePath, FilePath))
+                return ChangeFilePath(filePath);
+            return this;
+        }
     }
 
     /// <summary>

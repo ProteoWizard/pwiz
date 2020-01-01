@@ -52,6 +52,13 @@ namespace pwiz.Skyline.Model.Results
         public abstract bool LegacyGetCentroidMs2();
         public abstract MsDataFileUri RemoveLegacyParameters();
 
+        public virtual MsDataFileUri RestoreLegacyParameters(bool centroidMs1, bool centroidMs2)
+        {
+            // Edge case where File > Share to an earlier version code end up without centroiding
+            // on the URIs in XML and SKYD. Not worth supporting on UNIFI URIs
+            return this;
+        }
+
         public string GetSampleOrFileName()
         {
             return GetSampleName() ?? GetFileNameWithoutExtension();
@@ -289,6 +296,15 @@ namespace pwiz.Skyline.Model.Results
 
             // FUTURE: Remove LockMassParameters
             return new MsDataFilePath(FilePath, SampleName, SampleIndex, LockMassParameters);
+        }
+
+        public override MsDataFileUri RestoreLegacyParameters(bool centroidMs1, bool centroidMs2)
+        {
+            if (!centroidMs1 && !centroidMs2)
+                return this;
+
+            return new MsDataFilePath(FilePath, SampleName, SampleIndex, LockMassParameters,
+                centroidMs1, centroidMs2, false);
         }
     }
 }

@@ -962,6 +962,9 @@ namespace pwiz.SkylineTestUtil
             Assert.AreEqual(target.DataSettings, copy.DataSettings);  // Might both by DataSettings.DEFAULT
             if (!DataSettings.DEFAULT.Equals(target.DataSettings))
                 Assert.AreNotSame(target.DataSettings, copy.DataSettings);
+            Assert.AreEqual(target.MeasuredResults, copy.MeasuredResults);
+            if (target.MeasuredResults != null)
+                Assert.AreNotSame(target.MeasuredResults, copy.MeasuredResults);
             Cloned(target, copy);
         }
 
