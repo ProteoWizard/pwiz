@@ -1283,7 +1283,7 @@ namespace pwiz.Skyline
             for (int i = 0; i < namesAndFilePaths.Length; i++)
             {
                 var namePath = namesAndFilePaths[i];
-                if (!ImportResultsFile(namePath.FilePath.ChangeParameters(_doc, lockMassParameters), namePath.ReplicateName, importBefore, importOnOrAfter, optimize))
+                if (!ImportResultsFile(namePath.FilePath.ChangeLockMassParameters(lockMassParameters), namePath.ReplicateName, importBefore, importOnOrAfter, optimize))
                     return false;
                 _out.WriteLine(@"{0}. {1}", i + 1, namePath.FilePath);
             }
@@ -3271,7 +3271,6 @@ namespace pwiz.Skyline
             do
             {
                 docOriginal= docContainer.Document;
-                dataFile = dataFile.ChangeCombineIonMobilitySpectra(true); // Try to load as 3-array IMS data if that happens to be supported
                 var listChromatograms = new List<ChromatogramSet>();
 
                 if (docOriginal.Settings.HasResults)
