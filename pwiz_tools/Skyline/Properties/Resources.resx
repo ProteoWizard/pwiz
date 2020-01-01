@@ -10904,4 +10904,7 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="WebPanoramaPublishClient_SendZipFile_Status_on_server_is___0_" xml:space="preserve">
     <value>Status on server is: {0}</value>
   </data>
+  <data name="SkylineVersion_V20_1_Skyline_20_1" xml:space="preserve">
+    <value>Skyline 20.1</value>
+  </data>
 </root>
