@@ -70,8 +70,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             
             // Update the paths to the .d files mentioned in the skyline doc
             string text = File.ReadAllText(skyfile);
-            // Update to indicate that file should be loaded with combined ion mobility
-            text = text.Replace(@"&amp;centroid_ms2=true", @"&amp;centroid_ms2=true&amp;combine_ims=true");
             text = text.Replace(@"PerfImportBrukerDiaPasef", TestFilesDir.PersistentFilesDir);
             text = RemoveReplicateReference(text, @"diagonalSWATH_MSMS_Slot1-10_1_3420"); // Remove reference to replicate with file type that we don't need to handle at this time
             text = RemoveReplicateReference(text, @"SWATHlike_MSMS_Slot1-10_1_3421"); // Remove reference to replicate with file type that we don't need to handle at this time
@@ -108,6 +106,21 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 }
             }
             Assert.AreEqual(205688.75, maxHeight, 1); 
+
+            // Test isolation scheme import (combined mode only)
+            if (!MsDataFileImpl.ForceUncombinedIonMobility)
+            {
+                var tranSettings = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+                RunUI(() => tranSettings.TabControlSel = TransitionSettingsUI.TABS.FullScan);
+                var isoEditor = ShowDialog<EditIsolationSchemeDlg>(tranSettings.AddIsolationScheme);
+                RunUI(() => isoEditor.UseResults = false);
+                ValidateIsolationSchemeImport(isoEditor, "190314_TEN_175mingr_7-35_500nL_HeLa_diaPASEFdouble_py3_MSMS_Slot1-10_1_3426.d",
+                    32, 25, null);
+                ValidateIsolationSchemeImport(isoEditor, "190314_TEN_175mingr_7-35_500nL_HeLa_SWATHlike_MSMS_Slot1-10_1_3421.d",
+                    24, 25, 0.5);
+                OkDialog(isoEditor, isoEditor.CancelDialog);
+                OkDialog(tranSettings, tranSettings.CancelDialog);
+            }
 
             // Does CCS show up in reports?
             TestReports(doc1);
