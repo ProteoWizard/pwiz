@@ -10916,4 +10916,7 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="SmallMoleculeTransitionListReader_ProcessNeutralLoss_Cannot_use_product_neutral_loss_chemical_formula_without_a_precursor_chemical_formula" xml:space="preserve">
     <value>Cannot use product neutral loss chemical formula without a precursor chemical formula</value>
   </data>
+  <data name="SkylineVersion_V20_1_Skyline_20_1" xml:space="preserve">
+    <value>Skyline 20.1</value>
+  </data>
 </root>

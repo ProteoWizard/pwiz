@@ -23,7 +23,7 @@ namespace pwiz.Skyline.Model.Databinding
                 return null;
             }
 
-            var msDataFileScanIds = measuredResults.LoadMSDataFileScanIds(msDataFileUri);
+            var msDataFileScanIds = measuredResults.LoadMSDataFileScanIds(msDataFileUri, out _);
             _scanIds = Tuple.Create(key, msDataFileScanIds);
             return msDataFileScanIds;
         }
