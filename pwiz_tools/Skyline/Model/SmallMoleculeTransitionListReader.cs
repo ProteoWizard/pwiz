@@ -1178,10 +1178,10 @@ namespace pwiz.Skyline.Model
                 return null;
             }
 
-            if (ProcessAdduct(row, indexAdduct, indexFormula, getPrecursorColumns, ref formula, ref adduct, ref charge))
+            if (!ProcessAdduct(row, indexAdduct, indexFormula, getPrecursorColumns, ref formula, ref adduct, ref charge))
                 return null;
 
-            if (ProcessNeutralLoss(row, indexNeutralLoss, ref formula))
+            if (!ProcessNeutralLoss(row, indexNeutralLoss, ref formula))
                 return null;
 
             int errColumn = indexFormula;
@@ -1425,28 +1425,25 @@ namespace pwiz.Skyline.Model
             var neutralLoss = GetCellTrimmed(row, indexNeutralLoss);
             if (!string.IsNullOrEmpty(neutralLoss))
             {
-                string precursorFormula = GetCellTrimmed(row, INDEX_MOLECULE_FORMULA);
-                Adduct precursorAdduct = Adduct.EMPTY;
-                int? precursorCharge = null;
-                if (ProcessAdduct(row, INDEX_PRECURSOR_ADDUCT, INDEX_MOLECULE_FORMULA, true, ref precursorFormula,
-                    ref precursorAdduct, ref precursorCharge))
-                    return true;
+
+                var precursorFormula = Adduct.SplitFormulaAndTrailingAdduct(GetCellTrimmed(row, INDEX_MOLECULE_FORMULA), out _); // Removes any adduct description e.g. C12H5[M+H] => C12H5
+                if (string.IsNullOrEmpty(precursorFormula))
+                {
+                    // There's no use for a loss formula if there's no precursor formula
+                    ShowTransitionError(new PasteError
+                    {
+                        Column = indexNeutralLoss,
+                        Line = row.Index,
+                        Message = Resources.SmallMoleculeTransitionListReader_ProcessNeutralLoss_Cannot_use_product_neutral_loss_chemical_formula_without_a_precursor_chemical_formula
+                    });
+                    return false;
+                }
+
+                // Get neutral loss formula
                 try
                 {
-                    BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(neutralLoss); // For syntax check
-
-                    if (string.IsNullOrEmpty(precursorFormula))
-                    {
-                        ShowTransitionError(new PasteError
-                        {
-                            Column = indexNeutralLoss,
-                            Line = row.Index,
-                            Message = Resources.SmallMoleculeTransitionListReader_ProcessNeutralLoss_Cannot_use_product_neutral_loss_chemical_formula_without_a_precursor_chemical_formula
-                        });
-                        return true;
-                    }
-
-                    var molecule = Molecule.Parse(precursorFormula);
+                    BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(neutralLoss); // For syntax check - throws ArgumentException if there's a problem
+                    var molecule = Molecule.Parse(precursorFormula); // This is presumed to have been checked by the time we're called here
                     var loss = Molecule.Parse(neutralLoss);
                     var fragmentMolecule = molecule.Difference(loss);
                     if (fragmentMolecule.Values.Any(v => v < 0))
@@ -1459,7 +1456,7 @@ namespace pwiz.Skyline.Model
                                 Resources.SmallMoleculeTransitionListReader_ProcessNeutralLoss_Precursor_molecular_formula__0__does_not_contain_sufficient_atoms_to_be_used_with_neutral_loss__1_,
                                 precursorFormula, neutralLoss)
                         });
-                        return true;
+                        return false;
                     }
 
                     formula = fragmentMolecule.ToDisplayString();
@@ -1472,11 +1469,11 @@ namespace pwiz.Skyline.Model
                         Line = row.Index,
                         Message = e.Message
                     });
-                    return true;
+                    return false;
                 }
             }
 
-            return false;
+            return true; // Success
         }
 
         private bool ProcessAdduct(Row row, int indexAdduct, int indexFormula, bool getPrecursorColumns,
@@ -1484,21 +1481,18 @@ namespace pwiz.Skyline.Model
         {
             // Do we have an adduct description?  If so, pull charge from that.
             var adductText = GetCellTrimmed(row, indexAdduct);
-            if ((!string.IsNullOrEmpty(formula) && formula.Contains('[') && formula.Contains(']')) || !string.IsNullOrEmpty(adductText))
+            if (Adduct.ContainsBrackets(formula) || !string.IsNullOrEmpty(adductText))
             {
                 if (!string.IsNullOrEmpty(formula))
                 {
-                    var parts = formula.Split('[');
-                    var formulaAdduct = formula.Substring(parts[0].Length);
+                    // If formula also contains an adduct description, use that. If there's also an adduct declared they must agree.
+                    formula = Adduct.SplitFormulaAndTrailingAdduct(formula, out var formulaAdduct);
                     if (string.IsNullOrEmpty(adductText))
                     {
                         adductText = formulaAdduct;
                     }
                     else if (!string.IsNullOrEmpty(formulaAdduct) &&
-                             // ReSharper disable LocalizableElement
-                             !Equals(adductText.Replace("[", "").Replace("]", ""),
-                                 formulaAdduct.Replace("[", "").Replace("]", "")))
-                        // ReSharper restore LocalizableElement
+                             !Equals(Adduct.StripBrackets(adductText), Adduct.StripBrackets(formulaAdduct)))
                     {
                         ShowTransitionError(new PasteError
                         {
@@ -1507,10 +1501,8 @@ namespace pwiz.Skyline.Model
                             Message = Resources
                                 .SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Formula_already_contains_an_adduct_description__and_it_does_not_match_
                         });
-                        return true;
+                        return false;
                     }
-
-                    formula = parts[0];
                 }
 
                 try
@@ -1522,11 +1514,11 @@ namespace pwiz.Skyline.Model
                 {
                     ShowTransitionError(new PasteError
                     {
-                        Column = indexFormula,
+                        Column = indexAdduct,
                         Line = row.Index,
                         Message = x.Message
                     });
-                    return true;
+                    return false;
                 }
 
                 if (charge.HasValue && charge.Value != adduct.AdductCharge)
@@ -1548,7 +1540,7 @@ namespace pwiz.Skyline.Model
                                     .SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Adduct__0__charge__1__does_not_agree_with_declared_charge__2_,
                                 adductText, adduct.AdductCharge, charge.Value)
                         });
-                        return true;
+                        return false;
                     }
                 }
                 else
@@ -1564,11 +1556,11 @@ namespace pwiz.Skyline.Model
                         Line = row.Index,
                         Message = errMessage
                     });
-                    return true;
+                    return false;
                 }
             }
 
-            return false;
+            return true; // Success
         }
 
         // When a charge but no adduct is given, either it's implied (de)protonation, or formula is inherently charged. Formula and mz are a clue.

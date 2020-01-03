@@ -703,6 +703,38 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
+        /// Changes text like "[M+H]" to just "M+H"
+        /// </summary>
+        public static string StripBrackets(string adductText)
+        {
+            return string.IsNullOrEmpty(adductText) ? adductText : adductText.Replace(@"[", string.Empty).Replace(@"]", string.Empty);
+        }
+
+        /// <summary>
+        /// Returns true if text contains at least one opening bracket and one closing bracket. N.B. doesn't check for balance.
+        /// </summary>
+        public static bool ContainsBrackets(string formula)
+        {
+            return (!string.IsNullOrEmpty(formula) && formula.Contains('[') && formula.Contains(']'));
+        }
+
+        /// <summary>
+        /// Splits a string which might be a formula and adduct (e.g. C12H5[M+H]) into two parts (e.g. returns C12H5 and sets adductText to [M+H]
+        /// </summary>
+        public static string SplitFormulaAndTrailingAdduct(string formulaAndAdductTest, out string adductText)
+        {
+            if (string.IsNullOrEmpty(formulaAndAdductTest))
+            {
+                adductText = string.Empty;
+                return string.Empty;
+            }
+            var parts = formulaAndAdductTest.Split('[');
+            adductText = formulaAndAdductTest.Substring(parts[0].Length);
+            return parts[0];
+        }
+
+
+        /// <summary>
         /// Replace, for example, the "2" in "[2M+H]"
         /// </summary>
         public Adduct ChangeMassMultiplier(int value)
