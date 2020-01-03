@@ -1426,7 +1426,7 @@ namespace pwiz.Skyline.Model
             if (!string.IsNullOrEmpty(neutralLoss))
             {
 
-                var precursorFormula = Adduct.SplitFormulaAndTrailingAdduct(GetCellTrimmed(row, INDEX_MOLECULE_FORMULA), out _); // Removes any adduct description e.g. C12H5[M+H] => C12H5
+                var precursorFormula = Adduct.SplitFormulaAndTrailingAdduct(GetCellTrimmed(row, INDEX_MOLECULE_FORMULA), Adduct.ADDUCT_TYPE.charge_only, out _); // Removes any adduct description e.g. C12H5[M+H] => C12H5
                 if (string.IsNullOrEmpty(precursorFormula))
                 {
                     // There's no use for a loss formula if there's no precursor formula
@@ -1479,85 +1479,91 @@ namespace pwiz.Skyline.Model
         private bool ProcessAdduct(Row row, int indexAdduct, int indexFormula, bool getPrecursorColumns,
             ref string formula, ref Adduct adduct, ref int? charge)
         {
+            if (indexAdduct < 0 && string.IsNullOrEmpty(formula))
+            {
+                return true; // No parsing to be done (row probably has only a "charge" column) but that's not an error
+            }
+
             // Do we have an adduct description?  If so, pull charge from that.
             var adductText = GetCellTrimmed(row, indexAdduct);
-            if (Adduct.ContainsBrackets(formula) || !string.IsNullOrEmpty(adductText))
+
+            // If formula also contains an adduct description, use that. If there's also an adduct declared they must agree.
+            formula = Adduct.SplitFormulaAndTrailingAdduct(formula, Adduct.ADDUCT_TYPE.charge_only, out var formulaAdduct); // Adduct may be declared in formula e.g "C12H5[M+H]"
+            if (string.IsNullOrEmpty(adductText) && !formulaAdduct.IsEmpty)
             {
-                if (!string.IsNullOrEmpty(formula))
-                {
-                    // If formula also contains an adduct description, use that. If there's also an adduct declared they must agree.
-                    formula = Adduct.SplitFormulaAndTrailingAdduct(formula, out var formulaAdduct);
-                    if (string.IsNullOrEmpty(adductText))
-                    {
-                        adductText = formulaAdduct;
-                    }
-                    else if (!string.IsNullOrEmpty(formulaAdduct) &&
-                             !Equals(Adduct.StripBrackets(adductText), Adduct.StripBrackets(formulaAdduct)))
-                    {
-                        ShowTransitionError(new PasteError
-                        {
-                            Column = indexAdduct,
-                            Line = row.Index,
-                            Message = Resources
-                                .SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Formula_already_contains_an_adduct_description__and_it_does_not_match_
-                        });
-                        return false;
-                    }
-                }
+                adductText = formulaAdduct.AdductFormula;
+            }
 
-                try
-                {
-                    adduct = Adduct.FromStringAssumeChargeOnly(adductText);
-                    IonInfo.ApplyAdductToFormula(formula ?? string.Empty, adduct); // Just to see if it throws
-                }
-                catch (InvalidOperationException x)
-                {
-                    ShowTransitionError(new PasteError
-                    {
-                        Column = indexAdduct,
-                        Line = row.Index,
-                        Message = x.Message
-                    });
-                    return false;
-                }
+            // If we have no adduct text, base on charge value if any
+            if (string.IsNullOrEmpty(adductText) && charge.HasValue)
+            {
+                adduct = Adduct.FromCharge(charge.Value, Adduct.ADDUCT_TYPE.non_proteomic);
+                return true;
+            }
 
-                if (charge.HasValue && charge.Value != adduct.AdductCharge)
+            try
+            {
+                adduct = Adduct.FromStringAssumeChargeOnly(adductText);
+                IonInfo.ApplyAdductToFormula(formula ?? string.Empty, adduct); // Just to see if it throws
+            }
+            catch (InvalidOperationException x)
+            {
+                ShowTransitionError(new PasteError
                 {
-                    // Explict charge disagrees with adduct - is this because adduct charge is not recognized?
-                    if (adduct.AdductCharge == 0)
-                    {
-                        // Update the adduct to contain the explicit charge
-                        adduct = adduct.ChangeCharge(charge.Value);
-                    }
-                    else
-                    {
-                        ShowTransitionError(new PasteError
-                        {
-                            Column = indexAdduct >= 0 ? indexAdduct : indexFormula,
-                            Line = row.Index,
-                            Message = string.Format(
-                                Resources
-                                    .SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Adduct__0__charge__1__does_not_agree_with_declared_charge__2_,
-                                adductText, adduct.AdductCharge, charge.Value)
-                        });
-                        return false;
-                    }
+                    Column = indexAdduct,
+                    Line = row.Index,
+                    Message = x.Message
+                });
+                return false;
+            }
+            if (!formulaAdduct.IsEmpty && !Equals(adduct, formulaAdduct))
+            {
+                ShowTransitionError(new PasteError
+                {
+                    Column = indexAdduct,
+                    Line = row.Index,
+                    Message = Resources
+                        .SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Formula_already_contains_an_adduct_description__and_it_does_not_match_
+                });
+                return false;
+            }
+
+            if (charge.HasValue && charge.Value != adduct.AdductCharge)
+            {
+                // Explicit charge disagrees with adduct - is this because adduct charge is not recognized?
+                if (adduct.AdductCharge == 0)
+                {
+                    // Update the adduct to contain the explicit charge
+                    adduct = adduct.ChangeCharge(charge.Value);
                 }
                 else
-                {
-                    charge = adduct.AdductCharge;
-                }
-
-                if (!ValidateCharge(charge, getPrecursorColumns, out var errMessage))
                 {
                     ShowTransitionError(new PasteError
                     {
                         Column = indexAdduct >= 0 ? indexAdduct : indexFormula,
                         Line = row.Index,
-                        Message = errMessage
+                        Message = string.Format(
+                            Resources
+                                .SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Adduct__0__charge__1__does_not_agree_with_declared_charge__2_,
+                            adductText, adduct.AdductCharge, charge.Value)
                     });
                     return false;
                 }
+            }
+            else
+            {
+                charge = adduct.AdductCharge;
+            }
+
+            if (!ValidateCharge(charge, getPrecursorColumns, out var errMessage))
+            {
+                ShowTransitionError(new PasteError
+                {
+                    Column = indexAdduct >= 0 ? indexAdduct : indexFormula,
+                    Line = row.Index,
+                    Message = errMessage
+                });
+                return false;
             }
 
             return true; // Success
