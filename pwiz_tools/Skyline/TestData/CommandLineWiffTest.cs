@@ -47,7 +47,7 @@ namespace pwiz.SkylineTestData
         {
             var testFilesDir = new TestFilesDir(TestContext, ZIP_PATH);
             string docPath = testFilesDir.GetTestPath(DOC_NAME);
-            string rawPath = testFilesDir.GetTestPath(WIFF_NAME);
+            string rawPath = testFilesDir.GetTestPath(WIFF_NAME) ?? string.Empty;
             
             RunCommand("--in=" + docPath,
                 "--import-file=" + rawPath,

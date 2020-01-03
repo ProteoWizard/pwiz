@@ -2443,7 +2443,7 @@ namespace pwiz.Skyline
 
             private static string HtmlEncode(string str)
             {
-                string encodedText = HttpUtility.HtmlEncode(str) ?? string.Empty;
+                string encodedText = HttpUtility.HtmlEncode(str ?? string.Empty);
                 return encodedText.Replace(@"-", @"&#8209;");   // Use non-breaking hyphens
             }
         }

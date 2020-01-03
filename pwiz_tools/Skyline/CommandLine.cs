@@ -1806,7 +1806,7 @@ namespace pwiz.Skyline
             {
                 _out.WriteLine(Resources.SkylineWindow_ImportFiles_Importing__0__, Path.GetFileName(filePath));
 
-                using (var reader = new StreamReader(filePath))
+                using (var reader = new StreamReader(filePath ?? string.Empty))
                 {
                     IdentityPath firstAddedForFile, nextAdd;
                     _doc = _doc.ImportDocumentXml(reader,
@@ -2073,7 +2073,7 @@ namespace pwiz.Skyline
         public void ImportFasta(string path, bool keepEmptyProteins)
         {
             _out.WriteLine(Resources.CommandLine_ImportFasta_Importing_FASTA_file__0____, Path.GetFileName(path));
-            using (var readerFasta = new StreamReader(path))
+            using (var readerFasta = new StreamReader(path ?? string.Empty))
             {
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
                 IdentityPath selectPath;

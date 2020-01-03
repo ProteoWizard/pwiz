@@ -73,6 +73,8 @@ namespace SkylineTester
 
         public static void CreateZipFile(string zipPath)
         {
+            zipPath = zipPath ?? string.Empty; // For quiet ReSharper code inspection
+
             Console.WriteLine();
             Console.WriteLine("# Creating " + Path.GetFileName(zipPath) + "...");
             Console.WriteLine();

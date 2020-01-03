@@ -2386,8 +2386,9 @@ namespace pwiz.Skyline
 
             // Add files in reverse order, so their nodes will end up in the right order.
             IdentityPath first = null;
-            foreach (var filePath in filePaths)
+            foreach (var fp in filePaths)
             {
+                var filePath = fp ?? string.Empty; // For quiet ReSharper code inspection
                 if (longWaitBroker != null)
                 {
                     if (longWaitBroker.IsCanceled || longWaitBroker.IsDocumentChanged(docOrig))

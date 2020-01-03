@@ -768,9 +768,11 @@ namespace pwiz.Skyline.Util
 
         public override Uri  SendZipFile(Server server, string folderPath, string zipFilePath, IProgressMonitor progressMonitor)
         {
+            zipFilePath = zipFilePath ?? string.Empty; // For quiet ReSharper code inspection
+
             _progressMonitor = progressMonitor;
             _progressStatus = new ProgressStatus(String.Empty);
-            var zipFileName = Path.GetFileName(zipFilePath) ?? string.Empty;
+            var zipFileName = Path.GetFileName(zipFilePath);
 
             // Upload zip file to pipeline folder.
             using (_webClient = new NonStreamBufferingWebClient(server.URI, server.Username, server.Password))

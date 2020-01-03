@@ -139,6 +139,7 @@ namespace pwiz.Skyline.Model.Lib
             return new LibKeyMap<TItem>(newItems, newKeys);
         }
 
+        /* Unused code commented out for quiet code inspection
         private class ItemIndexList : AbstractReadOnlyList<TItem>
         {
             private IList<TItem> _allItems;
@@ -159,6 +160,7 @@ namespace pwiz.Skyline.Model.Lib
                 get { return _allItems[_indexItems[index].OriginalIndex]; }
             }
         }
+        */
 
         private class LibKeyDictionary : AbstractReadOnlyDictionary<LibKey, TItem>
         {

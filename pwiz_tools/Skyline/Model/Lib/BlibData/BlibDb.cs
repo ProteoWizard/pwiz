@@ -1022,7 +1022,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                         listLibrarySpecs.Add(librarySpec);
                         listLibraries.Add(pepLibraries.Libraries[i]);
                         fileName += MidasLibSpec.EXT;
-                        File.Copy(librarySpec.FilePath, Path.Combine(pathDirectory, fileName));
+                        File.Copy(librarySpec.FilePath ?? string.Empty, Path.Combine(pathDirectory, fileName));
                         dictOldNameToNew.Add(librarySpec.Name, librarySpec.Name);
                         continue;
                     }

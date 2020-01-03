@@ -363,6 +363,8 @@ namespace pwiz.SkylineTestFunctional
             string documentName,
             bool expectAuditLog = true)
         {
+            documentName = documentName ?? string.Empty; // For quiet ReSharper code inspection
+
             var shareType = new ShareType(completeSharing, null);
             RunUI(() => SkylineWindow.ShareDocument(zipPath, shareType));
 

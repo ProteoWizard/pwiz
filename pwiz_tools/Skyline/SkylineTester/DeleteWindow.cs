@@ -42,7 +42,7 @@ namespace SkylineTester
         private void OnLoad(object sender, EventArgs eventArgs)
         {
             Text = "Deleting {0}...".With(Path.GetFileName(_deletePath));
-            _allFiles = Directory.GetFiles(_deletePath, "*.*", SearchOption.AllDirectories);
+            _allFiles = Directory.GetFiles(_deletePath ?? string.Empty, "*.*", SearchOption.AllDirectories);
             progressBarDelete.Maximum = _allFiles.Length;
 
             _deleteWorker = new BackgroundWorker {WorkerSupportsCancellation = true};

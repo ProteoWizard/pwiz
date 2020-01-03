@@ -98,12 +98,12 @@ namespace pwiz.SkylineTestFunctional
                 "NoClass",  // Not L10N
                 Resources.ToolDescription_RunExecutableBackground_Error_running_the_installed_tool_0_It_seems_to_be_missing_a_file__Please_reinstall_the_tool_and_try_again_);
 
-            string dllPath = TestFilesDir.GetTestPath("ExampleArgCollector.dll"); // Not L10N
+            string dllPath = TestFilesDir.GetTestPath(@"ExampleArgCollector.dll") ?? string.Empty;
             // Copy to bin directory rather than loading an assembly in the TestFilesDir, because we can't
             // unlock the file once we load the assembly, and the unit test base class tries to delete
             // TestFilesDir when the test is done.
             var skylineDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty;
-            string dllCopyPath = Path.Combine(skylineDir, Path.GetFileName(dllPath) ?? string.Empty);
+            string dllCopyPath = Path.Combine(skylineDir, Path.GetFileName(dllPath));
             try
             {
                 File.Copy(dllPath, dllCopyPath, true);

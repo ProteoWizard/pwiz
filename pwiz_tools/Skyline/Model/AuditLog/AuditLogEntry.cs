@@ -753,6 +753,7 @@ namespace pwiz.Skyline.Model.AuditLog
                     .ChangeAllInfo(ImmutableList.Singleton(new MessageInfo(MessageType.log_unlogged_changes, 0)));
                 countEntry.CountEntryType = MessageType.log_unlogged_changes;
             }
+            // ReSharper disable once PossibleNullReferenceException
             return countEntry.ChangeUndoRedo(GetUnloggedMessages(int.Parse(countEntry.UndoRedo.Names[0]) + 1))
                 .ChangeSummary(GetUnloggedMessages(int.Parse(countEntry.Summary.Names[0]) + 1))
                 .ChangeAllInfo(ImmutableList.Singleton(GetUnloggedMessages(
