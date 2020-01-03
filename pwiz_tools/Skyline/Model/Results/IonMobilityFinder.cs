@@ -97,8 +97,8 @@ namespace pwiz.Skyline.Model.Results
             if (_document.Settings.MeasuredResults == null)
                 return measured;
 
-            var filepaths = _document.Settings.MeasuredResults.MSDataFilePaths.ToArray();
-            _totalSteps = filepaths.Length * _document.MoleculeTransitionGroupCount;
+            var fileInfos = _document.Settings.MeasuredResults.MSDataFileInfos.ToArray();
+            _totalSteps = fileInfos.Length * _document.MoleculeTransitionGroupCount;
             if (_totalSteps == 0)
                 return measured;
 
@@ -115,12 +115,12 @@ namespace pwiz.Skyline.Model.Results
                 _currentStep = twopercent;
                 if (_progressMonitor != null)
                 {
-                    _progressStatus = new ProgressStatus(filepaths.First().GetFileName());
+                    _progressStatus = new ProgressStatus(fileInfos.First().FilePath.GetFileName());
                     _progressStatus = _progressStatus.UpdatePercentCompleteProgress(_progressMonitor, _currentStep, _totalSteps); // Make that initial lag seem less dismal to the user
                 }
-                foreach (var fp in filepaths)
+                foreach (var fileInfo in fileInfos)
                 {
-                    if (!ProcessFile(fp))
+                    if (!ProcessFile(fileInfo))
                         return null; // User cancelled
                 }
                 // Find ion mobilities based on MS1 data
@@ -187,11 +187,12 @@ namespace pwiz.Skyline.Model.Results
         }
 
         // Returns false on cancellation
-        private bool ProcessFile(MsDataFileUri filePath)
+        private bool ProcessFile(ChromFileInfo fileInfo)
         {
             var results = _document.Settings.MeasuredResults;
-            if (!results.MSDataFilePaths.Contains(filePath))
+            if (!results.MSDataFileInfos.Contains(fileInfo))
                 return true; // Nothing to do
+            var filePath = fileInfo.FilePath;
             if (_progressStatus != null)
             {
                 _progressStatus = _progressStatus.ChangeMessage(filePath.GetFileName());
@@ -213,7 +214,7 @@ namespace pwiz.Skyline.Model.Results
                     results.TryLoadChromatogram(i, nodePep, nodeGroup, tolerance, true, out chromGroupInfos);
                     foreach (var chromInfo in chromGroupInfos.Where(c => Equals(filePath, c.FilePath)))
                     {
-                        if (!ProcessChromInfo(filePath, chromInfo, pair, nodeGroup, tolerance, libKey)) 
+                        if (!ProcessChromInfo(fileInfo, chromInfo, pair, nodeGroup, tolerance, libKey)) 
                             return false; // User cancelled
                     }
                 }
@@ -221,12 +222,13 @@ namespace pwiz.Skyline.Model.Results
             return true;
         }
 
-        private bool ProcessChromInfo(MsDataFileUri filePath, ChromatogramGroupInfo chromInfo, PeptidePrecursorPair pair,
+        private bool ProcessChromInfo(ChromFileInfo fileInfo, ChromatogramGroupInfo chromInfo, PeptidePrecursorPair pair,
             TransitionGroupDocNode nodeGroup, float tolerance, LibKey libKey)
         {
             if (chromInfo.NumPeaks == 0)  // Due to data polarity mismatch, probably
                 return true;
             Assume.IsTrue(chromInfo.BestPeakIndex != -1);
+            var filePath = fileInfo.FilePath;
             var resultIndex = _document.Settings.MeasuredResults.Chromatograms.IndexOf(c => c.GetFileInfo(filePath) != null);
             if (resultIndex == -1)
                 return true;
@@ -250,7 +252,7 @@ namespace pwiz.Skyline.Model.Results
 
             for (var msLevel = 1; msLevel <= 2; msLevel++)
             {
-                if (!ProcessMSLevel(filePath, msLevel, transitionPointSets, chromInfo, apexRT, nodeGroup, libKey, tolerance))
+                if (!ProcessMSLevel(fileInfo, msLevel, transitionPointSets, chromInfo, apexRT, nodeGroup, libKey, tolerance))
                     return false; // User cancelled
             }
             return true;
@@ -278,7 +280,7 @@ namespace pwiz.Skyline.Model.Results
             return apexRT;
         }
 
-        private bool ProcessMSLevel(MsDataFileUri filePath, int msLevel, IEnumerable<ChromatogramInfo> transitionPointSets,
+        private bool ProcessMSLevel(ChromFileInfo fileInfo, int msLevel, IEnumerable<ChromatogramInfo> transitionPointSets,
             ChromatogramGroupInfo chromInfo, double? apexRT, TransitionGroupDocNode nodeGroup, LibKey libKey, float tolerance)
         {
             var transitions = new List<TransitionFullScanInfo>();
@@ -304,11 +306,9 @@ namespace pwiz.Skyline.Model.Results
                 return true; // Nothing to do at this ms level
             }
 
-            IScanProvider scanProvider = new ScanProvider(_documentFilePath,
-                filePath,
-                chromSource, times, transitions.ToArray(),
-                _document.Settings.MeasuredResults,
-                () => _document.Settings.MeasuredResults.LoadMSDataFileScanIds(filePath));
+            var filePath = fileInfo.FilePath;
+            IScanProvider scanProvider = new ScanProvider(_documentFilePath, filePath,
+                chromSource, times, transitions.ToArray(), _document.Settings.MeasuredResults);
 
             // Across all spectra at the peak retention time, find the one with max total 
             // intensity for the mz's of interest (ie the isotopic distribution) and note its ion mobility.

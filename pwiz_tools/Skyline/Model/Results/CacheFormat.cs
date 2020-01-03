@@ -36,8 +36,8 @@ namespace pwiz.Skyline.Model.Results
         Ten = 10, // Introduces waters lockmass correction in MSDataFileUri syntax
         Eleven = 11, // Adds chromatogram start, stop times, and uncompressed size info, and new flag bit for SignedMz
         Twelve = 12, // Adds structure sizes to CacheHeaderStruct
-        Thirteen = 13,
-        Fourteen = 14,
+        Thirteen = 13,  // Adds TIC to CachedFileHeaderStruct
+        Fourteen = 14,  // Adds SampleId and SerialNumber to CachedFileHeaderStruct and moves centroiding from ChromCachedFile.FilePath to Flags
         CURRENT = Fourteen,
     }
     
