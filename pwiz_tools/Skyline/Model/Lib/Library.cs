@@ -2017,6 +2017,12 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         public static SmallMoleculeLibraryAttributes Create(string moleculeName, string chemicalFormulaOrMassesString,
+            string inChiKey, IDictionary<string, string> otherKeys)
+        {
+            return Create(moleculeName, chemicalFormulaOrMassesString, inChiKey, otherKeys == null ? string.Empty : string.Join(@"\t", otherKeys.Select(kvp => kvp.Key + @":" + kvp.Value)));
+        }
+
+        public static SmallMoleculeLibraryAttributes Create(string moleculeName, string chemicalFormulaOrMassesString,
             string inChiKey, string otherKeys)
         {
             ParseMolecularFormulaOrMassesString(chemicalFormulaOrMassesString,
@@ -2579,7 +2585,7 @@ namespace pwiz.Skyline.Model.Lib
             }
             else
             {
-                LibraryKey = new MoleculeLibraryKey(SmallMoleculeLibraryAttributes.Create(primaryKey, null, null, null), adduct);
+                LibraryKey = new MoleculeLibraryKey(SmallMoleculeLibraryAttributes.Create(primaryKey, null, null, string.Empty), adduct);
             }
         }
 
