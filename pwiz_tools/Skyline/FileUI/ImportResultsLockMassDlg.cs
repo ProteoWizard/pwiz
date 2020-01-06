@@ -82,9 +82,9 @@ namespace pwiz.Skyline.FileUI
             {
                 var msDataFileUri = result.Value[i];
                 if (lockMassParameters == null || lockMassParameters.IsEmpty || !msDataFileUri.IsWatersLockmassCorrectionCandidate())
-                    result.Value[i] = msDataFileUri.ChangeParameters(doc, LockMassParameters.EMPTY);
+                    result.Value[i] = msDataFileUri.ChangeLockMassParameters(LockMassParameters.EMPTY);
                 else
-                    result.Value[i] = msDataFileUri.ChangeParameters(doc, lockMassParameters);
+                    result.Value[i] = msDataFileUri.ChangeLockMassParameters(lockMassParameters);
             }
             return result;
         }

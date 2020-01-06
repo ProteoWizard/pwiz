@@ -620,7 +620,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 lock (data)
                 {
                     data.Add(regressionInfo);
-                    longWaitBroker?.SetProgressCheckCancel(i + 1, calculators.Count);
+                    longWaitBroker?.SetProgressCheckCancel(data.Count, calculators.Count);
                 }
             });
 
