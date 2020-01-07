@@ -877,7 +877,9 @@ namespace pwiz.Skyline.Model.Lib
                         match = REGEX_RI_LINE.Match(line);
                         if (match.Success)
                         {
-                            rt = GetRetentionTime(match.Groups[1].Value, true); // Note using RT as stand-in for RI (retention Time vs retention Index, LC vs GC)
+                            // Note using RT as stand-in for RI (retention Time vs retention Index, LC vs GC)
+                            // CONSIDER: track RT and RI simultaneously so lib is useful for GC and LC?
+                            rt = GetRetentionTime(match.Groups[1].Value, true); 
                             isGC = true;
                             continue;
                         }
@@ -998,7 +1000,7 @@ namespace pwiz.Skyline.Model.Lib
                                 // Looks like a Golm GMD file e.g. "70:10 76:35 77:1000 78:110 79:42 \n80:4 81:7 86:6 87:5 88:21 " etc
                                 sep = ':';
                                 lines = linePeaks.Split(' ');
-                                iSeperator1 = linePeaks.IndexOf(sep); ;
+                                iSeperator1 = linePeaks.IndexOf(sep);
                             }
                         }
 
@@ -1033,9 +1035,15 @@ namespace pwiz.Skyline.Model.Lib
                             string intensityField = linePeak.Substring(iSeperator1, iSeperator2 - iSeperator1);
 
                             int offset = i*4;
-                            TryParseFloatUncertainCulture(mzField, out var mz);
+                            if (!TryParseFloatUncertainCulture(mzField, out var mz))
+                            {
+                                ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_Invalid_format_at_peak__0__for__1__, i + 1, sequence));
+                            }
                             Array.Copy(BitConverter.GetBytes(mz), 0, peaks, offset, 4);
-                            TryParseFloatUncertainCulture(intensityField, out var intensity);
+                            if (!TryParseFloatUncertainCulture(intensityField, out var intensity))
+                            {
+                                ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_Invalid_format_at_peak__0__for__1__, i + 1, sequence));
+                            }
                             Array.Copy(BitConverter.GetBytes(intensity), 0, peaks, mzBytes + offset, 4);
                             totalIntensity += intensity;
                             if (!isPeptide)
@@ -1264,17 +1272,23 @@ namespace pwiz.Skyline.Model.Lib
 
         private static bool TryParseDoubleUncertainCulture(string valString, out double dval)
         {
-            if (!double.TryParse(valString, NumberStyles.Float, CultureInfo.InvariantCulture, out dval))
-                if (!double.TryParse(valString.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out dval)) // .MSP from Golm GMD may have European decimals
-                    return false;
+            // .MSP from Golm GMD may have European decimals
+            if (!double.TryParse(valString, NumberStyles.Float, CultureInfo.InvariantCulture, out dval) &&
+                !double.TryParse(valString.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out dval))
+            {
+                return false;
+            }
             return true;
         }
 
         private static bool TryParseFloatUncertainCulture(string valString, out float fval)
         {
-            if (!float.TryParse(valString, NumberStyles.Float, CultureInfo.InvariantCulture, out fval))
-                if (!float.TryParse(valString.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out fval)) // .MSP from Golm GMD may have European decimals
-                    return false;
+            // .MSP from Golm GMD may have European decimals
+            if (!float.TryParse(valString, NumberStyles.Float, CultureInfo.InvariantCulture, out fval) &&
+                !float.TryParse(valString.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out fval))
+            {
+                return false;
+            }
             return true;
         }
 
