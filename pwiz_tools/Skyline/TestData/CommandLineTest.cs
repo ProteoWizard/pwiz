@@ -521,11 +521,10 @@ namespace pwiz.SkylineTestData
             var xml = string.Empty;
             AssertEx.RoundTrip(docMixed, ref xml);
             var skyExt = Path.GetExtension(inPath) ?? string.Empty;
-            inPath = inPath ?? string.Empty; // For quiet ReSharper code inspection
+            inPath = PathEx.SafePath(inPath);
             var docPathMixed = inPath.Replace(skyExt, "_mixed_polarity"+skyExt);
             File.WriteAllText(docPathMixed, xml);
-            var ext =  Path.GetExtension(outPath)??string.Empty;
-            outPath = outPath ?? string.Empty; // For quiet ReSharper code inspection
+            var ext =  Path.GetExtension(PathEx.SafePath(outPath))??string.Empty;
             foreach (var polarityFilter in Helpers.GetEnumValues<ExportPolarity>().Reverse())
             {
                 var outname = "polarity_test_" + polarityFilter + ext;
@@ -569,8 +568,9 @@ namespace pwiz.SkylineTestData
             {
                 expected += nPositive;
             }
-            var ext = Path.GetExtension(path) ?? string.Empty;
-            path = path ?? String.Empty; // For quiet ReSharper code inspection
+
+            path = PathEx.SafePath(path) ?? string.Empty;
+            var ext = Path.GetExtension(path);
             if (mode == ExportPolarity.separate)
             {
                 // Expect a pair of files

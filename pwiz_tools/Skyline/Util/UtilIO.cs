@@ -1010,10 +1010,9 @@ namespace pwiz.Skyline.Util
         public HashingStreamReaderWithProgress(string path, IProgressMonitor progressMonitor)
             : base(HashingStream.CreateReadStream(path), Encoding.UTF8)
         {
-            path = path ?? string.Empty; // For quiet ReSharper code inspection
             _progressMonitor = progressMonitor;
             _status = new ProgressStatus(Path.GetFileName(path));
-            _totalChars = new FileInfo(path).Length;
+            _totalChars = new FileInfo(PathEx.SafePath(path)).Length;
         }
 
         public HashingStream Stream

@@ -22,6 +22,7 @@ using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 using Ionic.Zip;
+using pwiz.Common.SystemUtil;
 using pwiz.SkylineTestUtil;
 
 namespace SkylineTester
@@ -230,7 +231,7 @@ namespace SkylineTester
                 Console.WriteLine("# Saving...");
                 zipFile.Save();
                 Console.WriteLine();
-                Console.WriteLine("# {0} size: {1:F1} MB", Path.GetFileName(zipPath), new FileInfo(zipPath).Length / (1024.0*1024));
+                Console.WriteLine("# {0} size: {1:F1} MB", Path.GetFileName(zipPath), new FileInfo(PathEx.SafePath(zipPath)).Length / (1024.0*1024));
                 Console.WriteLine("# Done.");
                 Console.WriteLine();
             }

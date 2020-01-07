@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using Ionic.Zip;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -363,8 +364,6 @@ namespace pwiz.SkylineTestFunctional
             string documentName,
             bool expectAuditLog = true)
         {
-            documentName = documentName ?? string.Empty; // For quiet ReSharper code inspection
-
             var shareType = new ShareType(completeSharing, null);
             RunUI(() => SkylineWindow.ShareDocument(zipPath, shareType));
 
@@ -407,7 +406,7 @@ namespace pwiz.SkylineTestFunctional
             }
 
             if (extract)
-                RunUI(() => SkylineWindow.OpenFile(Path.Combine(extractDir, documentName)));
+                RunUI(() => SkylineWindow.OpenFile(Path.Combine(extractDir, PathEx.SafePath(documentName))));
         }
 
         private static void WaitForLibraries()

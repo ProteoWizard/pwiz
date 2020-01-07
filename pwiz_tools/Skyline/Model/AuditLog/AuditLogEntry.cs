@@ -741,6 +741,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 unloggedCount);
         }
 
+        /*
         private AuditLogEntry CreateUnloggedEntry(SrmDocument doc, out bool replace)
         {
             var countEntry = doc.AuditLog.AuditLogEntries;
@@ -753,12 +754,13 @@ namespace pwiz.Skyline.Model.AuditLog
                     .ChangeAllInfo(ImmutableList.Singleton(new MessageInfo(MessageType.log_unlogged_changes, 0)));
                 countEntry.CountEntryType = MessageType.log_unlogged_changes;
             }
-            // ReSharper disable once PossibleNullReferenceException
-            return countEntry.ChangeUndoRedo(GetUnloggedMessages(int.Parse(countEntry.UndoRedo.Names[0]) + 1))
+
+            return countEntry?.ChangeUndoRedo(GetUnloggedMessages(int.Parse(countEntry.UndoRedo.Names[0]) + 1))
                 .ChangeSummary(GetUnloggedMessages(int.Parse(countEntry.Summary.Names[0]) + 1))
                 .ChangeAllInfo(ImmutableList.Singleton(GetUnloggedMessages(
                     int.Parse(countEntry._allInfoNoUndoRedo.First().Names[0]) + _allInfoNoUndoRedo.Count())));
         }
+        */
 
         public static AuditLogEntry GetAuditLoggingStartExistingDocEntry(SrmDocument doc, SrmDocument.DOCUMENT_TYPE defaultDocumentType)
         {

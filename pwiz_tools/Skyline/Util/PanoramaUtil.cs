@@ -768,11 +768,9 @@ namespace pwiz.Skyline.Util
 
         public override Uri  SendZipFile(Server server, string folderPath, string zipFilePath, IProgressMonitor progressMonitor)
         {
-            zipFilePath = zipFilePath ?? string.Empty; // For quiet ReSharper code inspection
-
             _progressMonitor = progressMonitor;
             _progressStatus = new ProgressStatus(String.Empty);
-            var zipFileName = Path.GetFileName(zipFilePath);
+            var zipFileName = Path.GetFileName(zipFilePath) ?? string.Empty;
 
             // Upload zip file to pipeline folder.
             using (_webClient = new NonStreamBufferingWebClient(server.URI, server.Username, server.Password))
@@ -799,7 +797,7 @@ namespace pwiz.Skyline.Util
                     // Add a "Temporary" header so that LabKey marks this as a temporary file.
                     // https://www.labkey.org/issues/home/Developer/issues/details.view?issueId=19220
                     _webClient.Headers.Add(@"Temporary", @"T");
-                    _webClient.UploadFileAsync(tmpUploadUri, @"PUT", zipFilePath);
+                    _webClient.UploadFileAsync(tmpUploadUri, @"PUT", PathEx.SafePath(zipFilePath));
 
                     // Wait for the upload to complete
                     Monitor.Wait(this);

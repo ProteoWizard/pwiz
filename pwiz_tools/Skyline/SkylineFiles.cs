@@ -2386,9 +2386,8 @@ namespace pwiz.Skyline
 
             // Add files in reverse order, so their nodes will end up in the right order.
             IdentityPath first = null;
-            foreach (var fp in filePaths)
+            foreach (var filePath in filePaths)
             {
-                var filePath = fp ?? string.Empty; // For quiet ReSharper code inspection
                 if (longWaitBroker != null)
                 {
                     if (longWaitBroker.IsCanceled || longWaitBroker.IsDocumentChanged(docOrig))
@@ -2397,7 +2396,7 @@ namespace pwiz.Skyline
                     longWaitBroker.Message = string.Format(Resources.SkylineWindow_ImportFiles_Importing__0__, Path.GetFileName(filePath));
                 }
 
-                using (var reader = new StreamReader(filePath))
+                using (var reader = new StreamReader(PathEx.SafePath(filePath)))
                 {
                     IdentityPath firstAddedForFile, nextAdd;
                     docResult = docResult.ImportDocumentXml(reader,
