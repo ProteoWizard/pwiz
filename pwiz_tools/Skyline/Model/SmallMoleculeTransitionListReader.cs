@@ -1439,38 +1439,45 @@ namespace pwiz.Skyline.Model
                     return false;
                 }
 
-                // Get neutral loss formula
-                try
+                // Parse molecule and neutral loss formulas to dictionaries, with syntax checking
+                // N.B. here we use pwiz.Skyline.Util.BioMassCalc rather than pwiz.Common.Chemistry.Molecule because it
+                // understands Skyline isotope symbols (e.g. H', C" etc) while pwiz.Common.Chemistry.Molecule does not
+                if (!BioMassCalc.TryParseFormula(precursorFormula, out var precursorMolecule, out var errMessage))
                 {
-                    BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(neutralLoss); // For syntax check - throws ArgumentException if there's a problem
-                    var molecule = Molecule.Parse(precursorFormula); // This is presumed to have been checked by the time we're called here
-                    var loss = Molecule.Parse(neutralLoss);
-                    var fragmentMolecule = molecule.Difference(loss);
-                    if (fragmentMolecule.Values.Any(v => v < 0))
+                    ShowTransitionError(new PasteError
                     {
-                        ShowTransitionError(new PasteError
-                        {
-                            Column = indexNeutralLoss,
-                            Line = row.Index,
-                            Message = string.Format(
-                                Resources.SmallMoleculeTransitionListReader_ProcessNeutralLoss_Precursor_molecular_formula__0__does_not_contain_sufficient_atoms_to_be_used_with_neutral_loss__1_,
-                                precursorFormula, neutralLoss)
-                        });
-                        return false;
-                    }
-
-                    formula = fragmentMolecule.ToDisplayString();
+                        Column = INDEX_MOLECULE_FORMULA,
+                        Line = row.Index,
+                        Message = errMessage
+                    });
+                    return false;
                 }
-                catch (Exception e)
+                if (!BioMassCalc.TryParseFormula(neutralLoss, out var lossMolecule, out errMessage))
                 {
                     ShowTransitionError(new PasteError
                     {
                         Column = indexNeutralLoss,
                         Line = row.Index,
-                        Message = e.Message
+                        Message = errMessage
                     });
                     return false;
                 }
+                // Calculate the resulting fragment as precursor-loss, checking to see that we're not losing atoms that aren't there in the first place
+                var fragmentMolecule = precursorMolecule.Difference(lossMolecule);
+                if (fragmentMolecule.Values.Any(v => v < 0))
+                {
+                    ShowTransitionError(new PasteError
+                    {
+                        Column = indexNeutralLoss,
+                        Line = row.Index,
+                        Message = string.Format(
+                            Resources.SmallMoleculeTransitionListReader_ProcessNeutralLoss_Precursor_molecular_formula__0__does_not_contain_sufficient_atoms_to_be_used_with_neutral_loss__1_,
+                            precursorFormula, neutralLoss)
+                    });
+                    return false;
+                }
+
+                formula = fragmentMolecule.ToDisplayString();
             }
 
             return true; // Success
@@ -1494,11 +1501,9 @@ namespace pwiz.Skyline.Model
                 adductText = formulaAdduct.AdductFormula;
             }
 
-            // If we have no adduct text, base on charge value if any
             if (string.IsNullOrEmpty(adductText) && charge.HasValue)
             {
-                adduct = Adduct.FromCharge(charge.Value, Adduct.ADDUCT_TYPE.non_proteomic);
-                return true;
+                return true; // No further work to do here - caller will have to work out meaning of charge without adduct description
             }
 
             try
