@@ -37,7 +37,7 @@ namespace pwiz {
 
 			using namespace pwiz::msdata::mz5;
 
-			pwiz::util::IterationListener::Status ReferenceWrite_triMS5::readAndWriteSpectra(Connection_triMS5& connection, std::vector<BinaryDataMZ5>& bdl, std::vector<SpectrumMZ5>& spl, unsigned int presetScanConfiguration, const pwiz::util::IterationListenerRegistry* iterationListenerRegistry)
+			pwiz::util::IterationListener::Status ReferenceWrite_triMS5::readAndWriteSpectra(Connection_triMS5& connection, std::vector<BinaryDataMZ5>& bdl, std::vector<SpectrumMZ5>& spl, int presetScanConfiguration, const pwiz::util::IterationListenerRegistry* iterationListenerRegistry)
 			{
 				pwiz::util::IterationListener::Status status = pwiz::util::IterationListener::Status_Ok;
 
@@ -80,16 +80,15 @@ namespace pwiz {
 					mz.clear();
 					if (sp.get())
 					{
-						spl.push_back(SpectrumMZ5(*sp.get(), ref_mz5_));
+				//		spl.push_back(SpectrumMZ5(*sp.get(), ref_mz5_));
 						if (sp->getMZArray().get() && sp->getIntensityArray().get())
 						{
 							mz = sp->getMZArray().get()->data;
-							bdl.push_back(BinaryDataMZ5(*sp->getMZArray().get(), *sp->getIntensityArray().get(), ref_mz5_));
-
+					//		bdl.push_back(BinaryDataMZ5(*sp->getMZArray().get(), *sp->getIntensityArray().get(), ref_mz5_));
 
 							if (mz.size() > 0)
 							{
-								accIndex += (unsigned long)mz.size();
+								accIndex += static_cast<unsigned long>(mz.size());
 								connection.extendData(sp->getIntensityArray().get()->data, DataSetType_triMS5::SpectrumIntensity, presetScanConfiguration);
 
 								//add data to axis dictionary 
@@ -101,29 +100,27 @@ namespace pwiz {
 							}
 						}
 
-						else
+		/*				else
 						{
 							bdl.push_back(BinaryDataMZ5());
-						}
-						//get the chromatogram time:
-						for (auto e : sp->scanList.scans)
-						{
-							//if we found the retention time
-							if (e.hasCVParam(CVID::MS_scan_start_time))
-							{
-								double rt = e.cvParam(CVID::MS_scan_start_time).valueAs<double>();
-								rtAxis.insert(rt);
-							}
-							///TODO: search for different dt bins
+						}*/
+						////get the chromatogram time:
+						//for (auto e : sp->scanList.scans)
+						//{
+						//	//if we found the retention time
+						//	if (e.hasCVParam(CVID::MS_scan_start_time))
+						//	{
+						//		double rt = e.cvParam(CVID::MS_scan_start_time).valueAs<double>();
+						//		rtAxis.insert(rt);
+						//	}
+						//	///TODO: search for different dt bins
 
-							if (e.hasCVParam(CVID::MS_ion_mobility_drift_time) || e.hasCVParam(CVID::MS_inverse_reduced_ion_mobility))
-							{
-
-								double dt = e.hasCVParam(CVID::MS_ion_mobility_drift_time) ? e.cvParam(CVID::MS_ion_mobility_drift_time).valueAs<double>() : e.cvParam(CVID::MS_inverse_reduced_ion_mobility).valueAs<double>();
-								dtAxis.insert(dt);
-							}
-
-						}
+						//	if (e.hasCVParam(CVID::MS_ion_mobility_drift_time) || e.hasCVParam(CVID::MS_inverse_reduced_ion_mobility))
+						//	{
+						//		double dt = e.hasCVParam(CVID::MS_ion_mobility_drift_time) ? e.cvParam(CVID::MS_ion_mobility_drift_time).valueAs<double>() : e.cvParam(CVID::MS_inverse_reduced_ion_mobility).valueAs<double>();
+						//		dtAxis.insert(dt);
+						//	}
+						//}
 
 						sindex.push_back(accIndex);
 					}
@@ -167,18 +164,17 @@ namespace pwiz {
 				connection.writeAttributesToGroup(GroupType_triMS5::Spectrum, presetScanConfiguration, H5::PredType::NATIVE_ULONG, "NumberOfRawDataPoints", datapoints);
 				connection.writeAttributesToGroup(GroupType_triMS5::Spectrum, presetScanConfiguration, H5::PredType::NATIVE_ULONG, "MassAxisLength", massAxis.size());
 				connection.writeAttributesToGroup(GroupType_triMS5::Chromatogram, presetScanConfiguration, H5::PredType::NATIVE_ULONG, "ChromatogramLength", rtAxis.size());
-
 				connection.writeAttributesToGroup(GroupType_triMS5::Spectrum, presetScanConfiguration, H5::PredType::NATIVE_ULONG, "NumberOfDTbins", dtAxis.size());
-
-
 
 				if (sindex.size() > 0)
 					connection.createAndWrite1DDataSet(sindex.size(), sindex.data(), DataSetType_triMS5::SpectrumIndex, presetScanConfiguration);
 
 				if (spl.size() > 0)
 					connection.createAndWrite1DDataSet(spl.size(), spl.data(), DataSetType_triMS5::SpectrumMetaData, presetScanConfiguration);
+
 				if (bdl.size() > 0)
 					connection.createAndWrite1DDataSet(bdl.size(), bdl.data(), DataSetType_triMS5::SpectrumBinaryMetaData, presetScanConfiguration);
+
 				spl.clear();
 				bdl.clear();
 
@@ -198,7 +194,7 @@ namespace pwiz {
 				pwiz::util::IterationListener::Status status = pwiz::util::IterationListener::Status_Ok;
 
 
-				std::vector<std::pair<unsigned int, unsigned int>> spectrumListIndices; // holding the global spectrum list indices
+				std::vector<std::pair<int, unsigned long>> spectrumListIndices; // holding the global spectrum list indices
 
 				//check if the numberOfPresetScanConfigurations has been initialized
 				if (numberOfPresetScanConfigurations_ < 0)
@@ -211,7 +207,7 @@ namespace pwiz {
 				connection.writeFileStructure(numberOfPresetScanConfigurations_);
 
 
-				connection.writeAttributesToGroup(GroupType_triMS5::RawData, -1, H5::PredType::NATIVE_ULONG, "NumberOfPresetScanConfigurations", numberOfPresetScanConfigurations_);
+				connection.writeAttributesToGroup(GroupType_triMS5::RawData, -1, H5::PredType::NATIVE_INT, "NumberOfPresetScanConfigurations", numberOfPresetScanConfigurations_);
 
 				//write the spectrumListIndices data set
 				if (!spectrumListIndices.empty())
@@ -295,7 +291,7 @@ namespace pwiz {
 							connection.createAndWrite1DDataSet(ref_mz5_.refParms_.size(), ref_mz5_.refParms_.data(), DataSetType_triMS5::RefParam, 0);
 
 						std::vector<FileInformation_triMS5> fi;
-						fi.push_back(FileInformation_triMS5(connection.getConfiguration()));
+						fi.push_back(FileInformation_triMS5());
 						if (fi.size() > 0)
 							connection.createAndWrite1DDataSet(fi.size(), fi.data(), DataSetType_triMS5::FileInformation, 0);
 					}
@@ -354,7 +350,7 @@ namespace pwiz {
 			}
 
 
-			int ReferenceWrite_triMS5::init(std::set<unsigned int>& presetScanConfigurationIndices_, std::vector<std::pair<unsigned int, unsigned int>>& global)
+			int ReferenceWrite_triMS5::init(std::set<int>& presetScanConfigurationIndices_, std::vector<std::pair<int, unsigned long>>& global)
 			{
 				//iterate over the spectrum list to generate the spectrumList indices (and get the number of presetScanConfiguration indices)
 
@@ -362,11 +358,11 @@ namespace pwiz {
 				*/
 				pwiz::msdata::SpectrumListPtr sl_ptr = ref_mz5_.msd_.run.spectrumListPtr;
 				pwiz::msdata::SpectrumPtr sp;
-				unsigned int preset;
+				int preset;
 				bool found = false;
 
 				//counts for each preset the number of spectra --> creation of cluster-specific index
-				std::map<unsigned int, unsigned int> counter;
+				std::map<int, unsigned long> counter;
 
 				for (size_t i = 0; i < sl_ptr->size(); i++)
 				{
@@ -376,7 +372,7 @@ namespace pwiz {
 					{
 						if (e.hasCVParam(CVID::MS_preset_scan_configuration))
 						{
-							preset = e.cvParam(CVID::MS_preset_scan_configuration).valueAs<unsigned int>();
+							preset = e.cvParam(CVID::MS_preset_scan_configuration).valueAs<int>();
 							found = true;
 							break;
 						}
@@ -417,7 +413,7 @@ namespace pwiz {
 					global.push_back({ preset, i });
 			}
 
-			return presetScanConfigurationIndices_.size();
+			return static_cast<int>(presetScanConfigurationIndices_.size());
 		}
 
 	}

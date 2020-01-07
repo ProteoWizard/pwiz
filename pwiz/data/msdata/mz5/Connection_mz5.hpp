@@ -33,11 +33,19 @@ namespace pwiz {
 namespace msdata {
 namespace mz5 {
 
+
+	class Connection_HDF5 {
+		public:
+			virtual const FileInformationMZ5& getFileInformation() const = 0;
+	};
+
+
+
 /**
  * This class is used for reading and writing information to a mz5 file.
  * On destruction it will automatically close all existing datasets and flush the file.
  */
-class Connection_mz5
+class Connection_mz5 : public Connection_HDF5
 {
 public:
     /**

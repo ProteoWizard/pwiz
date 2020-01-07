@@ -2083,7 +2083,7 @@ void PrecursorMZ5::init(const ParamListMZ5& params,
 }
 
 void PrecursorMZ5::fillPrecursor(pwiz::msdata::Precursor& p,
-        const ReferenceRead_mz5& rref, const Connection_mz5& conn)
+        const ReferenceRead_mz5& rref, const Connection_HDF5& conn)
 {
     if (conn.getFileInformation().minorVersion >= 10)
         this->paramList.fillParamContainer(dynamic_cast<pwiz::msdata::ParamContainer&> (p), rref);
@@ -2191,7 +2191,7 @@ void PrecursorListMZ5::init(const PrecursorMZ5* list, const size_t len)
 }
 
 void PrecursorListMZ5::fill(std::vector<pwiz::msdata::Precursor>& l,
-        const ReferenceRead_mz5& rref, const Connection_mz5& conn)
+        const ReferenceRead_mz5& rref, const Connection_HDF5& conn)
 {
     l.reserve(static_cast<hsize_t> (len));
     for (unsigned long i = 0; i < len; ++i)
@@ -2271,7 +2271,7 @@ void ChromatogramMZ5::init(const ParamListMZ5& params,
 }
 
 pwiz::msdata::Chromatogram* ChromatogramMZ5::getChromatogram(
-        const ReferenceRead_mz5& rref, const Connection_mz5& conn)
+        const ReferenceRead_mz5& rref, const Connection_HDF5& conn)
 {
     pwiz::msdata::Chromatogram* c = new pwiz::msdata::Chromatogram();
     std::string sid(id);
@@ -2410,7 +2410,7 @@ void SpectrumMZ5::init(const ParamListMZ5& params, const ScansMZ5& scanList,
     this->spotID = strcpyi(spotID);
 }
 
-pwiz::msdata::Spectrum* SpectrumMZ5::getSpectrum(const ReferenceRead_mz5& rref, const Connection_mz5& conn)
+pwiz::msdata::Spectrum* SpectrumMZ5::getSpectrum(const ReferenceRead_mz5& rref, const Connection_HDF5& conn)
 {
     pwiz::msdata::Spectrum* s = new pwiz::msdata::Spectrum();
     std::string sid = id;

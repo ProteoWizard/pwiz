@@ -20,6 +20,7 @@
 //
 
 #include "Connection_triMS5.hpp"
+#include "Datastructures_triMS5.hpp"
 #include "../mz5/ReferenceWrite_mz5.hpp"
 #include "../mz5/ReferenceRead_mz5.hpp"
 
@@ -111,7 +112,7 @@ namespace msdata {
 		}
 
 
-		void Connection_triMS5::createAndWriteGroup(const GroupType_triMS5& v, const std::string& name, unsigned int presetScanConfiguration)
+		void Connection_triMS5::createAndWriteGroup(const GroupType_triMS5& v, const std::string& name, int presetScanConfiguration)
 		{
 			boost::mutex::scoped_lock lock(connectionWriteMutex_);
 			H5::Group group, father_group;
@@ -173,7 +174,7 @@ namespace msdata {
 			return cparm;
 		}
 
-		DataSet Connection_triMS5::createDataSet(H5::Group father, int rank, hsize_t* dim, hsize_t* maxdim, const DataSetType_triMS5& v, unsigned int presetScanConfiguration)
+		DataSet Connection_triMS5::createDataSet(H5::Group father, int rank, hsize_t* dim, hsize_t* maxdim, const DataSetType_triMS5& v, int presetScanConfiguration)
 		{
 			DSetCreatPropList cparms = getCParm(rank, v, maxdim[0]);
 			DataSpace dataSpace(rank, dim, maxdim);
@@ -184,7 +185,7 @@ namespace msdata {
 			return dataset;
 		}
 
-		void Connection_triMS5::createAndWrite1DDataSet(hsize_t size, void* data, const DataSetType_triMS5& v, unsigned int presetScanConfiguration)
+		void Connection_triMS5::createAndWrite1DDataSet(hsize_t size, void* data, const DataSetType_triMS5& v, int presetScanConfiguration)
 		{
 			boost::mutex::scoped_lock lock(connectionWriteMutex_);
 			if (size > 0)
@@ -202,7 +203,7 @@ namespace msdata {
 
 
 
-		void Connection_triMS5::readElementsInGroup(const H5::Group& g, const GroupType_triMS5& group_type, unsigned int level)
+		void Connection_triMS5::readElementsInGroup(const H5::Group& g, const GroupType_triMS5& group_type, int level)
 		{
 			//now get elements in the group
 			for (hsize_t i = 0; i < g.getNumObjs(); ++i)
@@ -216,7 +217,7 @@ namespace msdata {
 					dspace.getSelectBounds(start, end);
 					size_t dsend = (static_cast<size_t> (end[0])) + 1;
 
-					unsigned int presetScanConfig = level;
+					int presetScanConfig = level;
 					availDataSets_[{config_.getDataSetTypeFor(g.getObjnameByIdx(i)), presetScanConfig}] = dsend;
 					dset.close();
 					dspace.close();
@@ -227,7 +228,7 @@ namespace msdata {
 					std::string name = g.getObjnameByIdx(i);
 					H5::Group sub = g.openGroup(name);
 					GroupType_triMS5 gt;  // the group type of the sub group
-					unsigned int preset = 0;
+					int preset = 0;
 
 					//Check if it is a cluster Group
 					if (name.find(config_.getNameFor(GroupType_triMS5::Cluster)) != std::string::npos)
@@ -250,12 +251,11 @@ namespace msdata {
 		}
 		
 
-#include <iostream>
 		void Connection_triMS5::readFile()
 		{
 			/*find the triMS5Attribut at the root group --> used to distinguish mz5 and triMS5 files
 			*/
-			H5::Group root = openGroup(GroupType_triMS5::Root);
+			H5::Group root = openGroup(GroupType_triMS5::Root, 1);
 			if (root.getNumAttrs() > 0)
 			{
 				//try to open the triMS5 attribute
@@ -269,6 +269,19 @@ namespace msdata {
 				{
 					readElementsInGroup(root, GroupType_triMS5::Root, -1);
 					root.close();
+
+					auto it = availDataSets_.find({ DataSetType_triMS5::FileInformation, 0 });
+					size_t dsend = 0;
+					if (it != availDataSets_.end()) 
+					{
+						FileInformation_triMS5* fi = (FileInformation_triMS5*)readDataSet(DataSetType_triMS5::FileInformation, dsend, 0);
+						fileInfo_.majorVersion = fi->majorVersion;
+						fileInfo_.minorVersion = fi->minorVersion;
+						fileInfo_.didFiltering = 0;
+						fileInfo_.deltaMZ = 0;
+						fileInfo_.translateInten = 0;
+						clean(DataSetType_triMS5::FileInformation, fi, dsend);
+					}
 				}
 			}
 			else
@@ -326,7 +339,7 @@ namespace msdata {
 		}
 
 
-		void Connection_triMS5::extendData(const std::vector<double>& d1, const DataSetType_triMS5& v, unsigned int presetScanConfigurationIndex)
+		void Connection_triMS5::extendData(const std::vector<double>& d1, const DataSetType_triMS5& v, int presetScanConfigurationIndex)
 		{
 			boost::mutex::scoped_lock lock(connectionWriteMutex_);
 			
@@ -374,7 +387,7 @@ namespace msdata {
 			}
 		}
 
-		void Connection_triMS5::flush(const DataSetType_triMS5& v, unsigned int presetScanConfigurationIndex)
+		void Connection_triMS5::flush(const DataSetType_triMS5& v, int presetScanConfigurationIndex)
 		{
 			auto  it2 = buffers_.find({ v, presetScanConfigurationIndex });
 			if (it2 == buffers_.end())
@@ -417,7 +430,7 @@ namespace msdata {
 			}
 		}
 
-		void * Connection_triMS5::readDataSet(const DataSetType_triMS5 v, size_t & dsend, unsigned int presetScanConfigurationIndex, void * ptr)
+		void * Connection_triMS5::readDataSet(const DataSetType_triMS5 v, size_t & dsend, int presetScanConfigurationIndex, void * ptr)
 		{
 			boost::mutex::scoped_lock lock(connectionReadMutex_);
 
@@ -452,6 +465,11 @@ namespace msdata {
 			buffer = 0;
 			dsp.close();
 		}
+
+		const FileInformationMZ5 & pwiz::msdata::triMS5::Connection_triMS5::getFileInformation() const
+		{
+			return fileInfo_;
+		} 
 	}
 }
 }

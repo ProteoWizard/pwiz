@@ -92,17 +92,21 @@ namespace pwiz {
 				void createAndWriteTIC() const;
 
 				/**
+				* Helper class to read triMS5 files. This reference is used to resolve for example CVParams.
+				*/
+				boost::shared_ptr<ReferenceRead_triMS5> rref_;
+
+
+				/**
+				* Connection to the triMS5 file used to get raw data.
+				*/
+				boost::shared_ptr<Connection_triMS5> conn_;
+
+				/**
 				 * MSData object.
 				 */
 				const MSData& msd_;
-				/**
-				 * Helper class to read triMS5 files. This reference is used to resolve for example CVParams.
-				 */
-				boost::shared_ptr<ReferenceRead_triMS5> rref_;
-				/**
-				 * Connection to the triMS5 file used to get raw data.
-				 */
-				boost::shared_ptr<Connection_triMS5> conn_;
+	
 				/**
 				 * List of binary data meta information.
 				 */
@@ -245,7 +249,7 @@ namespace pwiz {
 				initialize();
 				if (numberOfChromatograms_ > index)
 				{
-					ChromatogramPtr ptr(chromatogramData_[index].getChromatogram(*rref_->getRefMZ5()));
+					ChromatogramPtr ptr(chromatogramData_[index].getChromatogram(*rref_->getRefMZ5(), *conn_));
 					std::pair<hsize_t, hsize_t> bounds = chromatogramRanges_.find(index)->second;
 					hsize_t start = bounds.first;
 					hsize_t end = bounds.second;

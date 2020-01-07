@@ -83,13 +83,13 @@ private:
 	/**
 	* Set of used preset scan configurations (clusters) indizes
 	*/
-	std::set<unsigned int> presetScanConfigurationIndices_;
+	std::set<int> presetScanConfigurationIndices_;
 
 	/** 
 	* Detects  and sets the number of used presetScanConfigurationIndices
 	* if no such terms is found attached to the spectrum, by default there will only be one presetScanConfiguration
 	*/
-	int init(std::set<unsigned int> & presetScanConfigurationIndizes_, std::vector<std::pair<unsigned int, unsigned int>>& spectrumListIndices);
+	int init(std::set<int> & presetScanConfigurationIndizes_, std::vector<std::pair<int, unsigned long>>& spectrumListIndices);
 	
 	/**
 	* Reads and writes all raw spectra using an existing triMS5 connection.
@@ -101,7 +101,7 @@ private:
 		readAndWriteSpectra(
 			Connection_triMS5& connection,
 			std::vector<mz5::BinaryDataMZ5>& bdl,
-			std::vector<mz5::SpectrumMZ5>& spl, unsigned int presetScanConfiguration,
+			std::vector<mz5::SpectrumMZ5>& spl, int presetScanConfiguration,
 			const pwiz::util::IterationListenerRegistry* iterationListenerRegistry);
 
 };

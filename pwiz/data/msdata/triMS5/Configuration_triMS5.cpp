@@ -28,7 +28,7 @@ namespace triMS5 {
 using namespace H5;
 
 unsigned short Configuration_triMS5::triMS5_FILE_MAJOR_VERSION = 0;
-unsigned short Configuration_triMS5::triMS5_FILE_MINOR_VERSION = 9;
+unsigned short Configuration_triMS5::triMS5_FILE_MINOR_VERSION = 1;
 
 Configuration_triMS5::Configuration_triMS5() : config_mz5_(Configuration_mz5())
 {

@@ -56,7 +56,7 @@ void ReferenceRead_triMS5::fill(boost::shared_ptr<Connection_triMS5>& connection
 
 	size_t dsend;
 
-	unsigned int preSetConfigIdx = 0; //all meta data sets here are not specific to a presetScanConfigurationIndex
+	int preSetConfigIdx = 0; //all meta data sets here are not specific to a presetScanConfigurationIndex
 	it = fields.find({ DataSetType_triMS5::ControlledVocabulary, preSetConfigIdx });
 
 

@@ -141,10 +141,10 @@ namespace pwiz {
 				mutable std::map<std::string, IndexList> spotMap_;
 				size_t numberOfSpectra_;
 				std::vector<size_t> spectraPerCluster_;
-
+				mutable bool initSpectra_;
 				mutable std::vector<SpectrumListIndices_triMS5> spectrumListIndices_;
 				mutable std::map<unsigned int, std::vector<double>> massAxis_;
-				mutable bool initSpectra_;
+				
 				mutable boost::mutex readMutex;
 				/**
 				* internal methods used for initializing spectra data and required mapping
@@ -348,7 +348,7 @@ namespace pwiz {
 				{
 					SpectrumListIndices_triMS5 idx = spectrumListIndices_[index];
 					const ReferenceRead_mz5* ref = rref_->getRefMZ5();
-					SpectrumPtr ptr(spectrumData_[idx.presetScanConfigurationIndex - 1][idx.localSpectrumIndex].getSpectrum(*ref));
+					SpectrumPtr ptr(spectrumData_[idx.presetScanConfigurationIndex - 1][idx.localSpectrumIndex].getSpectrum(*ref, *conn_));
 					std::pair<hsize_t, hsize_t> bounds = spectrumRanges_[idx.presetScanConfigurationIndex - 1].find(idx.localSpectrumIndex)->second;
 					hsize_t start = bounds.first;
 					hsize_t end = bounds.second;

@@ -34,18 +34,18 @@ namespace msdata {
 namespace triMS5 {
 
 //useful typdefs for handling presetScanConfigIndices with associated H5::DataSets
-using DataSetIdPair = std::pair<DataSetType_triMS5, unsigned int>;
+using DataSetIdPair = std::pair<DataSetType_triMS5, int>;
 using DataSetIdPairToSizeMap = std::map<DataSetIdPair, size_t>;
 
 /**
  * This class is used for reading and writing information to a triMS5 file.
  * On destruction it will automatically close all existing datasets and flush the file.
  */
-class Connection_triMS5 final
+class Connection_triMS5 final : public pwiz::msdata::mz5::Connection_HDF5
 {
 public:
 	/**
-	*mz5's file open policy.
+	*triMS5's file open policy (same as mz5).
 	*/
 	enum class OpenPolicy
 	{
@@ -80,7 +80,7 @@ public:
 	Connection_triMS5(const std::string filename, const OpenPolicy op = OpenPolicy::ReadOnly, const Configuration_triMS5 config = Configuration_triMS5());
 	
 
-	H5::Group openGroup(const GroupType_triMS5& v, int presetScanConfiguration=-1);
+	H5::Group openGroup(const GroupType_triMS5& v, int presetScanConfiguration = -1);
 
 	template <typename T>
 	void writeAttributesToGroup(GroupType_triMS5 v, int presetScanConfiguration, const H5::DataType& datatype, const std::string& attName, T data)
@@ -116,7 +116,7 @@ public:
      * @param data void pointer to the dataset beginning
      * @param v dataset enumeration value
      */
-    void createAndWrite1DDataSet(hsize_t size, void* data, const DataSetType_triMS5& v, unsigned int presetScanConfiguration);
+    void createAndWrite1DDataSet(hsize_t size, void* data, const DataSetType_triMS5& v, int presetScanConfiguration);
 
 
 
@@ -126,7 +126,7 @@ public:
      * @param d1 data
      * @param v dataset enumeration value
      */
-	void extendData(const std::vector<double>& d1, const DataSetType_triMS5& v, unsigned int presetScanConfigurationIndex);
+	void extendData(const std::vector<double>& d1, const DataSetType_triMS5& v, int presetScanConfigurationIndex);
 
 
 
@@ -142,7 +142,7 @@ public:
 	* @param presetScanConfigurationIndex index of the scan to be read
 	* @param ptr buffer to be filled with data
 	*/
-	void * readDataSet(const DataSetType_triMS5 v, size_t& dsend, unsigned int presetScanConfigurationIndex, void* ptr = 0);
+	void * readDataSet(const DataSetType_triMS5 v, size_t& dsend, int presetScanConfigurationIndex, void* ptr = 0);
 
 	/**
 	* Cleans buffers (of variable length data sets)
@@ -160,7 +160,7 @@ public:
 	* @param end end index
 	*/
 	template <typename T>
-	void getData(std::vector<T>& buffer, const DataSetType_triMS5 v, unsigned int presetScanConfigurationIndex, const hsize_t start, const hsize_t end)
+	void getData(std::vector<T>& buffer, const DataSetType_triMS5 v, int presetScanConfigurationIndex, const hsize_t start, const hsize_t end)
 	{
 		boost::mutex::scoped_lock lock(connectionReadMutex_);
 
@@ -220,7 +220,11 @@ public:
      */
      const Configuration_triMS5& getConfiguration(){ return config_;  }
 
-
+	 /**
+	 * Getter inherited from Connection_HDF5; 
+	 * @return file version of mz5  
+	 */
+	 const FileInformationMZ5& getFileInformation() const;
 
 private:
 	/**
@@ -229,7 +233,7 @@ private:
 	* @param name name of the group
 	* @param presetScanConfiguration index of the scan if group is scan specific
 	*/
-	void createAndWriteGroup(const GroupType_triMS5& v, const std::string& name, unsigned int presetScanConfiguration);
+	void createAndWriteGroup(const GroupType_triMS5& v, const std::string& name, int presetScanConfiguration);
 
 	/**
 	* Reads all elements of the group
@@ -237,7 +241,7 @@ private:
 	* @param group_type type of the group to be read
 	* @param level regarding preset scan indices
 	*/
-	void readElementsInGroup(const H5::Group& g, const GroupType_triMS5& group_type, unsigned int level);
+	void readElementsInGroup(const H5::Group& g, const GroupType_triMS5& group_type, int level);
 
     /**
      * Creates a DSetCreatPropList for a dataset.
@@ -257,7 +261,7 @@ private:
 	 * @param presetScanConfiguration the one-based scan index 
      * @return dataset
      */
-    H5::DataSet createDataSet(H5::Group father, int rank, hsize_t* dim, hsize_t* maxdim, const DataSetType_triMS5& v, unsigned int presetScanConfiguration);
+    H5::DataSet createDataSet(H5::Group father, int rank, hsize_t* dim, hsize_t* maxdim, const DataSetType_triMS5& v, int presetScanConfiguration);
 
     /**
      * Initializes a file and read internal triMS5 information.
@@ -284,7 +288,7 @@ private:
      * Flushes all data to the hard drive.
      * @param id dataset id value
      */
-    void flush(const DataSetType_triMS5& v, unsigned int presetScanConfigurationIndex);
+    void flush(const DataSetType_triMS5& v, int presetScanConfigurationIndex);
 
     /**
      * Closes the file and flushes all open buffers/datasets.
@@ -319,6 +323,12 @@ private:
      * Flag whether file is closed or not.
      */
 	bool closed_;
+
+	/**
+	* File information required for creation of spectra and chromatogram
+	*/
+	FileInformationMZ5 fileInfo_;
+
 };
 
 }

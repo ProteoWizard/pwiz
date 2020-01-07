@@ -21,7 +21,6 @@
 #ifndef _Datastructures_triMS5_HPP_
 #define _Datastructures_triMS5_HPP_
 
-//#include "../mz5/Datastructures_mz5.hpp"
 #include "Configuration_triMS5.hpp"
 #include "../MSDataFile.hpp"
 #include <string>
@@ -34,22 +33,20 @@ namespace triMS5 {
 
 /**
 * General triMS5 file information.
-* This struct contains information about the mz5 version, and how to handle specific data sets.
+* This struct contains information about the mz5 and triMS5 version, and how to handle specific data sets.
 */
-struct FileInformation_triMS5_Data
+struct FileInformation_triMS5_Data : public FileInformationMZ5
 {
-	FileInformation_triMS5_Data() : majorVersion(Configuration_triMS5::triMS5_FILE_MAJOR_VERSION), minorVersion(Configuration_triMS5::triMS5_FILE_MINOR_VERSION) {}
-	unsigned short majorVersion;
-	unsigned short minorVersion;
+	FileInformation_triMS5_Data() : FileInformationMZ5(), triMS5_majorVersion(Configuration_triMS5::triMS5_FILE_MAJOR_VERSION), triMS5_minorVersion(Configuration_triMS5::triMS5_FILE_MINOR_VERSION){}
+	unsigned short triMS5_majorVersion;
+	unsigned short triMS5_minorVersion;
 };
+
 
 struct FileInformation_triMS5 : public FileInformation_triMS5_Data
 {
 	FileInformation_triMS5() : FileInformation_triMS5_Data() {}
-	~FileInformation_triMS5() = default;
-	FileInformation_triMS5(const FileInformation_triMS5& fi);
-	FileInformation_triMS5(const Configuration_triMS5& c);
-	FileInformation_triMS5& operator=(const FileInformation_triMS5& fi);
+
 	static H5::CompType getType();
 };
 
@@ -57,21 +54,22 @@ struct FileInformation_triMS5 : public FileInformation_triMS5_Data
 struct SpectrumListIndices_triMS5_Data
 {
 	SpectrumListIndices_triMS5_Data() = default;
-	SpectrumListIndices_triMS5_Data(unsigned int p, unsigned int l): presetScanConfigurationIndex(p), localSpectrumIndex(l){}
-	unsigned int presetScanConfigurationIndex;
-	unsigned int localSpectrumIndex;
+	SpectrumListIndices_triMS5_Data(int p, unsigned long l): presetScanConfigurationIndex(p), localSpectrumIndex(l){}
+	int presetScanConfigurationIndex;
+	unsigned long localSpectrumIndex;
 };
+
 
 struct SpectrumListIndices_triMS5 : public SpectrumListIndices_triMS5_Data
 {
 	SpectrumListIndices_triMS5() = default;
-	SpectrumListIndices_triMS5(unsigned int p, unsigned int l) : SpectrumListIndices_triMS5_Data(p, l) {}
-	~SpectrumListIndices_triMS5() = default;
+	SpectrumListIndices_triMS5(int p, unsigned long l) : SpectrumListIndices_triMS5_Data(p, l) {}
 	
 	bool operator==(const SpectrumListIndices_triMS5& other) const
 	{
 		return presetScanConfigurationIndex == other.presetScanConfigurationIndex && localSpectrumIndex == other.localSpectrumIndex;
 	}
+
 	static H5::CompType getType();
 };
 }
