@@ -2688,9 +2688,7 @@ namespace pwiz.Skyline
             OptimizableRegression optimizationFunction = doc.Settings.TransitionSettings.Prediction.GetOptimizeFunction(optimize);
 
             if (namedResults.Count == 1)
-                return ImportResults(doc, namedResults[0].Key, 
-                    namedResults[0].Value.Select(p => p.ChangeCombineIonMobilitySpectra(true)), // Try to load as 3-array IMS data if that happens to be supported
-                    optimizationFunction);
+                return ImportResults(doc, namedResults[0].Key, namedResults[0].Value, optimizationFunction);
 
             // Add all chosen files as separate result sets.
             var results = doc.Settings.MeasuredResults;
@@ -2709,9 +2707,7 @@ namespace pwiz.Skyline
                 // Delete caches that will be overwritten
                 FileEx.SafeDelete(ChromatogramCache.FinalPathForName(DocumentFilePath, nameResult), true);
 
-                listChrom.Add(new ChromatogramSet(nameResult, 
-                    namedResult.Value.Select(m => m.ChangeCombineIonMobilitySpectra(true)), // Try to load as 3-array IMS data if that happens to be supported
-                    Annotations.EMPTY, optimizationFunction));
+                listChrom.Add(new ChromatogramSet(nameResult, namedResult.Value, Annotations.EMPTY, optimizationFunction));
             }
 
             var arrayChrom = listChrom.ToArray();
@@ -2890,16 +2886,25 @@ namespace pwiz.Skyline
                         }
 
                         var results = doc.Settings.MeasuredResults;
-                        if (results == null)
+                        var listChrom = dlg.Chromatograms.ToArray();
+                        if (results == null && listChrom.Length == 0)
                             return doc;
 
                         // Set HasMidasSpectra = false for file infos
-                        var listChrom = MidasLibrary.UnflagFiles(dlg.Chromatograms, dlg.LibraryRunsRemovedList.Select(Path.GetFileName)).ToList();
+                        listChrom = MidasLibrary.UnflagFiles(listChrom, dlg.LibraryRunsRemovedList.Select(Path.GetFileName)).ToArray();
 
-                        if (ArrayUtil.ReferencesEqual(results.Chromatograms, listChrom))
+                        if (ArrayUtil.ReferencesEqual(results?.Chromatograms, listChrom))
                             return doc;
-                        results = listChrom.Count > 0 ? results.ChangeChromatograms(listChrom.ToArray()) : null;
-                        doc = doc.ChangeMeasuredResults(results);
+
+                        MeasuredResults resultsNew = null;
+                        if (listChrom.Length > 0)
+                        {
+                            if (results == null)
+                                resultsNew = new MeasuredResults(listChrom);
+                            else
+                                resultsNew = results.ChangeChromatograms(listChrom.ToArray());
+                        }
+                        doc = doc.ChangeMeasuredResults(resultsNew);
                         doc.ValidateResults();
 
                         return doc;
@@ -2947,9 +2952,10 @@ namespace pwiz.Skyline
                     // Remove all replicates to be re-imported
                     var results = document.Settings.MeasuredResults;
                     var chromRemaining = results.Chromatograms.Where(chrom => !setReimport.Contains(chrom)).ToArray();
-                    var resultsNew = results.ChangeChromatograms(chromRemaining);
+                    MeasuredResults resultsNew = null;
                     if (chromRemaining.Length > 0)
                     {
+                        resultsNew = results.ChangeChromatograms(chromRemaining);
                         // Optimize the cache using this reduced set to remove their data from the cache
                         resultsNew = resultsNew.OptimizeCache(DocumentFilePath, _chromatogramManager.StreamManager, longWaitBroker);
                     }
@@ -2962,19 +2968,6 @@ namespace pwiz.Skyline
                         string cachePath = ChromatogramCache.FinalPathForName(DocumentFilePath, null);
                         FileEx.SafeDelete(cachePath, true);
                     }
-                    // Restore the original set, updating those to be reimported  with current centroiding
-                    // settings and requesting 3-array IM format
-                    var isCentroidMs = document.Settings.TransitionSettings.FullScan.IsCentroidedMs;
-                    var isCentroidMsMs = document.Settings.TransitionSettings.FullScan.IsCentroidedMsMs;
-                    var chromatograms = new List<ChromatogramSet>();
-                    foreach (var c in results.Chromatograms)
-                    {
-                        chromatograms.Add(setReimport.Contains(c) ?
-                            c.ChangeMSDataFilePaths(c.MSDataFilePaths.Select(p =>
-                                p.ChangeCentroiding(isCentroidMs, isCentroidMsMs).ChangeCombineIonMobilitySpectra(true)).ToList()) :
-                            c);
-                    }
-                    resultsNew = resultsNew.ChangeChromatograms(chromatograms);
 
                     // Update the document without adding an undo record, because the only information
                     // to change should be cache related.

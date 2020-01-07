@@ -35,11 +35,13 @@
             this.labelMessage = new System.Windows.Forms.Label();
             this.timerUpdate = new System.Windows.Forms.Timer(this.components);
             this.timerClose = new System.Windows.Forms.Timer(this.components);
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.SuspendLayout();
             // 
             // btnCancel
             // 
             resources.ApplyResources(this.btnCancel, "btnCancel");
+            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
@@ -52,6 +54,7 @@
             // labelMessage
             // 
             resources.ApplyResources(this.labelMessage, "labelMessage");
+            this.labelMessage.AutoEllipsis = true;
             this.labelMessage.Name = "labelMessage";
             // 
             // timerUpdate
@@ -72,13 +75,12 @@
             this.Controls.Add(this.labelMessage);
             this.Controls.Add(this.progressBar);
             this.Controls.Add(this.btnCancel);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "LongWaitDlg";
             this.ShowInTaskbar = false;
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
