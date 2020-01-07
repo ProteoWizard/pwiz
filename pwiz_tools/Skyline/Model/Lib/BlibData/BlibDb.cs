@@ -172,7 +172,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             using (ISession session = OpenWriteSession())
             using (ITransaction transaction = session.BeginTransaction())
             {
-                int progressPercent = 0;
+                int progressPercent = -1;
                 int i = 0;
                 var sourceFiles = new Dictionary<string, long>();
                 foreach (var spectrum in listSpectra)
@@ -420,7 +420,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                             if (nodePep.IsProteomic)
                             {
                                 var calcPre = document.Settings.GetPrecursorCalc(labelType, nodePep.SourceExplicitMods);
-                                peptideModSeq = calcPre.GetModifiedSequence(peptideSeq, SequenceModFormatType.full_precision, false);
+                                peptideModSeq = calcPre.GetModifiedSequence(peptideSeq, SequenceModFormatType.lib_precision, false);
                             }
                             else
                             {

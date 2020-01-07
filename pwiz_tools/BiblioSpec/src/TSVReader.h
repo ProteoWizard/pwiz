@@ -64,12 +64,13 @@ public:
     double leftWidth;
     double rightWidth;
     double ce;
+    double ionMobility;
     std::string peakArea;
     std::string fragmentAnnotation;
     int fragmentSeriesNumber;
     double score;
 
-    TSVLine() : rt(0), charge(0), mz(0), decoy(false), leftWidth(0), rightWidth(0), ce(0), score(0) {}
+    TSVLine() : rt(0), charge(0), mz(0), decoy(false), leftWidth(0), rightWidth(0), ce(0), ionMobility(0), score(0) {}
 
     static void insertFilename(TSVLine& line, const std::string& value) {
         line.filename = value;
@@ -115,6 +116,9 @@ public:
     }
     static void insertCE(TSVLine& line, const std::string& value) {
         line.ce = lexical_cast<double>(value);
+    }
+    static void insertIonMobility(TSVLine& line, const std::string& value) {
+        line.ionMobility = lexical_cast<double>(value);
     }
 };
 

@@ -10912,5 +10912,7 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="Skyline_Release1" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Skyline_Release.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="SkylineVersion_V20_1_Skyline_20_1" xml:space="preserve">
+    <value>Skyline 20.1</value>
   </data>
 </root>

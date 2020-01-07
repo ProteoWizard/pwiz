@@ -309,10 +309,10 @@ class PWIZ_API_DECL MassHunterData
     virtual const std::set<Transition>& getTransitions() const = 0;
     virtual ChromatogramPtr getChromatogram(const Transition& transition) const = 0;
 
-    virtual const automation_vector<double>& getTicTimes() const = 0;
-    virtual const automation_vector<double>& getBpcTimes() const = 0;
-    virtual const automation_vector<float>& getTicIntensities() const = 0;
-    virtual const automation_vector<float>& getBpcIntensities() const = 0;
+    virtual const automation_vector<double>& getTicTimes(bool ms1Only = false) const = 0;
+    virtual const automation_vector<double>& getBpcTimes(bool ms1Only = false) const = 0;
+    virtual const automation_vector<float>& getTicIntensities(bool ms1Only = false) const = 0;
+    virtual const automation_vector<float>& getBpcIntensities(bool ms1Only = false) const = 0;
 
     /// rowNumber is a 0-based index
     virtual ScanRecordPtr getScanRecord(int rowNumber) const = 0;

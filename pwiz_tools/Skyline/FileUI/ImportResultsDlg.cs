@@ -384,7 +384,7 @@ namespace pwiz.Skyline.FileUI
                 else
                     listPaths.Add(dataSource);
             }
-            return new[] { new KeyValuePair<string, MsDataFileUri[]>(name, listPaths.Select(p => p.ChangeCombineIonMobilitySpectra(true)).ToArray()) }; // Try to load as 3-array IMS if possible
+            return new[] { new KeyValuePair<string, MsDataFileUri[]>(name, listPaths.ToArray()) };
         }
 
         public KeyValuePair<string, MsDataFileUri[]>[] GetDataSourcePathsFileReplicates(IEnumerable<MsDataFileUri> dataSources)
@@ -409,13 +409,13 @@ namespace pwiz.Skyline.FileUI
                         foreach (var path in paths)
                         {
                             listNamedPaths.Add(new KeyValuePair<string, MsDataFileUri[]>(
-                                                   path.SampleName, new[]{ path.ChangeCombineIonMobilitySpectra(true) }));  // Try to load as 3-array IMS if possible
+                                                   path.SampleName, new[]{ path }));
                         }
                         continue;
                     }
                 }
                 listNamedPaths.Add(new KeyValuePair<string, MsDataFileUri[]>(
-                                       dataSource.GetFileNameWithoutExtension(), new[] { dataSource.ChangeCombineIonMobilitySpectra(true) })); // Try to load as 3-array IMS if possible
+                                       dataSource.GetFileNameWithoutExtension(), new[] { dataSource }));
             }
             return listNamedPaths.ToArray();
         }

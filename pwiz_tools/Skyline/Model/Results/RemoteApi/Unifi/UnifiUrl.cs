@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -51,16 +50,6 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
             return true;
         }
 
-        public override bool GetCombineIonMobilitySpectra()
-        {
-            return false;
-        }
-
-        public override MsDataFileUri ChangeCombineIonMobilitySpectra(bool combineIonMobilitySpectra)
-        {
-            return this; // Don't bother trying, it's not supported.  CONSIDER: combined IMS in unifi, eventually
-        }
-
         public override RemoteAccountType AccountType
         {
             get { return RemoteAccountType.UNIFI; }
@@ -73,7 +62,8 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
             return result;
         }
 
-        public override MsDataFileImpl OpenMsDataFile(bool simAsSpectra, int preferOnlyMsLevel, IEnumerable<MsDataFileImpl.PrecursorMzAndIonMobilityWindow> precursorMzAndIonMobilityWindows, bool ignoreZeroIntensityPoints)
+        public override MsDataFileImpl OpenMsDataFile(bool simAsSpectra, bool preferOnlyMs1,
+            bool centroidMs1, bool centroidMs2, bool ignoreZeroIntensityPoints)
         {
             var account = FindMatchingAccount(Settings.Default.RemoteAccountList) as UnifiAccount;
             if (account == null)
@@ -89,10 +79,8 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
                          Uri.EscapeDataString(account.ClientSecret);
             // ReSharper restore LocalizableElement
             return new MsDataFileImpl(serverUrl, 0, LockMassParameters, simAsSpectra,
-                requireVendorCentroidedMS1: CentroidMs1, requireVendorCentroidedMS2: CentroidMs2,
-                ignoreZeroIntensityPoints: ignoreZeroIntensityPoints, preferOnlyMsLevel: preferOnlyMsLevel,
-                combineIonMobilitySpectra: false, // CONSIDER: 3-array ims for unifi?
-                precursorMzAndIonMobilityWindows: precursorMzAndIonMobilityWindows);
+                requireVendorCentroidedMS1: centroidMs1, requireVendorCentroidedMS2: centroidMs2,
+                ignoreZeroIntensityPoints: ignoreZeroIntensityPoints, preferOnlyMsLevel: preferOnlyMs1 ? 1 : 0);
         }
     }
 }

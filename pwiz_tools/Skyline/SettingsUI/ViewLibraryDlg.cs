@@ -44,6 +44,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Proteome;
 using ZedGraph;
@@ -725,7 +726,7 @@ namespace pwiz.Skyline.SettingsUI
                             }
                             if (rt.HasValue)
                             {
-                                labelRT.Text = Resources.ViewLibraryDlg_UpdateUI_RT + COLON_SEP + rt;
+                                labelRT.Text = Resources.ViewLibraryDlg_UpdateUI_RT + COLON_SEP + rt.Value.ToString(Formats.RETENTION_TIME);
                             }
                             IonMobilityAndCCS dt = bestSpectrum.IonMobilityInfo;
                             if (dt != null && !dt.IsEmpty)

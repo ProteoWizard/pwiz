@@ -89,8 +89,9 @@ namespace pwiz.SkylineTestConnected
             var addRetentionTimePredictorDlg = WaitForOpenForm<AddRetentionTimePredictorDlg>();
             OkDialog(addRetentionTimePredictorDlg, addRetentionTimePredictorDlg.NoDialog);
             OkDialog(peptideSettings, peptideSettings.OkDialog);
+
             var spectralLibraryViewer = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
-            RunUI(()=>
+            RunUI(() =>
             {
                 spectralLibraryViewer.ChangeSelectedLibrary(libraryWithoutIrt);
                 spectralLibraryViewer.ChangeSelectedLibrary(libraryWithIrt);
