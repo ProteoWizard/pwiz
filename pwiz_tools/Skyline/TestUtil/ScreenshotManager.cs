@@ -6,9 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 using DigitalRune.Windows.Docking;
@@ -56,8 +54,8 @@ namespace pwiz.SkylineTestUtil
 
         private abstract class SkylineScreenshot
         {
-            private ShotType _type;
-            private SkylineWindow _skylineWindow;
+            private readonly ShotType _type;
+            private readonly SkylineWindow _skylineWindow;
 
             protected const string SHOT_ELEMENT = "shot";
             protected const string SHOT_TYPE_ATTRIBUTE = "type";
@@ -111,7 +109,7 @@ namespace pwiz.SkylineTestUtil
                 int LogicalScreenHeight = GetDeviceCaps(desktop, (int)DeviceCap.VERTRES);
                 int PhysicalScreenHeight = GetDeviceCaps(desktop, (int)DeviceCap.DESKTOPVERTRES);
 
-                float ScreenScalingFactor = (float)PhysicalScreenHeight / (float)LogicalScreenHeight;
+                float ScreenScalingFactor = PhysicalScreenHeight / (float)LogicalScreenHeight;
 
                 return new PointFactor(ScreenScalingFactor); // 1.25 = 125%
             }
@@ -234,7 +232,12 @@ namespace pwiz.SkylineTestUtil
 
             public override Bitmap Take(Form activeWindow)
             {
-                throw new NotImplementedException();
+                Bitmap bmCapture = new Bitmap(_shotFrame.Width, _shotFrame.Height, PixelFormat.Format32bppArgb);
+                Graphics graphCapture = Graphics.FromImage(bmCapture);
+                graphCapture.CopyFromScreen(_shotFrame.Location,
+                    new Point(0, 0), _shotFrame.Size);
+                graphCapture.Dispose();
+                return bmCapture;
             }
 
         }
