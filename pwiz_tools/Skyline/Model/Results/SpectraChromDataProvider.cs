@@ -1121,7 +1121,7 @@ namespace pwiz.Skyline.Model.Results
                     catch (Exception e)
                     {
                         if (e.Message.Contains(@"NoVendorPeakPickingException"))
-                            throw e;
+                            throw;
                         throw new Exception($@"error reading spectrum {_dataFile.GetSpectrumId(i)}", e);
                     }
                 }
