@@ -508,27 +508,5 @@ namespace pwiz.Skyline.Model.Irt
         {
             return Name;
         }
-
-        public override bool Equals(object obj)
-        {
-            if (!(obj is IrtStandard other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            return Equals(other) &&
-                   Equals(_resourceSkyFile, other._resourceSkyFile) &&
-                   Equals(DocXml, other.DocXml) &&
-                   CollectionUtil.EqualsDeep(Peptides, other.Peptides);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                var result = base.GetHashCode();
-                result = (result * 397) ^ (_resourceSkyFile != null ? _resourceSkyFile.GetHashCode() : 0);
-                result = (result * 397) ^ (DocXml != null ? DocXml.GetHashCode() : 0);
-                result = (result * 397) ^ (Peptides != null ? CollectionUtil.GetHashCodeDeep(Peptides) : 0);
-                return result;
-            }
-        }
     }
 }
