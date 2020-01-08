@@ -1028,7 +1028,7 @@ namespace pwiz.Skyline.Model.Lib
                                 }
                                 else
                                 {
-                                    ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_Invalid_format_at_peak__0__for__1__, i + 1, sequence));
+                                    ThrowIoExceptionInvalidPeakFormat(lineCount, i, sequence);
                                 }
                             }
                             string mzField = linePeak.Substring(0, iSeperator1++);
@@ -1037,12 +1037,12 @@ namespace pwiz.Skyline.Model.Lib
                             int offset = i*4;
                             if (!TryParseFloatUncertainCulture(mzField, out var mz))
                             {
-                                ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_Invalid_format_at_peak__0__for__1__, i + 1, sequence));
+                                ThrowIoExceptionInvalidPeakFormat(lineCount, i, sequence);
                             }
                             Array.Copy(BitConverter.GetBytes(mz), 0, peaks, offset, 4);
                             if (!TryParseFloatUncertainCulture(intensityField, out var intensity))
                             {
-                                ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_Invalid_format_at_peak__0__for__1__, i + 1, sequence));
+                                ThrowIoExceptionInvalidPeakFormat(lineCount, i, sequence);
                             }
                             Array.Copy(BitConverter.GetBytes(intensity), 0, peaks, mzBytes + offset, 4);
                             totalIntensity += intensity;
@@ -1146,6 +1146,12 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             return true;
+        }
+
+        private void ThrowIoExceptionInvalidPeakFormat(long lineCount, int i, string sequence)
+        {
+            ThrowIOException(lineCount,
+                string.Format(Resources.NistLibraryBase_CreateCache_Invalid_format_at_peak__0__for__1__, i + 1, sequence));
         }
 
         private static void ParseFragmentAnnotation(int iTab2, List<List<SpectrumPeakAnnotation>> annotations, int i, string line, Adduct adduct, int charge,
