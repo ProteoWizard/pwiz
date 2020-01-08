@@ -1175,7 +1175,10 @@ namespace pwiz.SkylineTestUtil
                 if (IsDemoMode)
                     Settings.Default.MainWindowMaximized = true;
 
-                ForceMzml = (Program.PauseSeconds == 0);   // Mzml is ~8x faster for this test.
+                if (Program.PauseSeconds != 0)
+                {
+                    ForceMzml = false;
+                }
 
                 var threadTest = new Thread(WaitForSkyline) { Name = @"Functional test thread" };
                 LocalizationHelper.InitThread(threadTest);

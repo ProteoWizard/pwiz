@@ -1409,8 +1409,7 @@ namespace pwiz.Skyline.Model
             if (!InitExport(fileName, progressMonitor))
                 return;
 
-            string baseName = Path.Combine(Path.GetDirectoryName(fileName) ?? string.Empty,
-                                           Path.GetFileNameWithoutExtension(fileName) ?? string.Empty);
+            string baseName = Path.Combine(Path.GetDirectoryName(fileName) ?? string.Empty, Path.GetFileNameWithoutExtension(fileName) ?? string.Empty);
             string ext = Path.GetExtension(fileName);
 
             var methodConverter = new MassMethodConverter();
@@ -1424,17 +1423,24 @@ namespace pwiz.Skyline.Model
                 {
                     string tranList = pair.Value.ToString();
                     var result = methodConverter.ConvertMethod(fs.SafeName, tranList);
-                    switch (result)
+                    if (result != ConverterResult.OK)
                     {
-                        case ConverterResult.CannotOpenOutputFile:
-                            throw new IOException(string.Format(Resources.ShimadzuNativeMassListExporter_ExportNativeList_Failure_attempting_to_save_to_the_temporary_file__0_, fs.SafeName));
-                        case ConverterResult.MaxTransitionError:
-                            throw new ArgumentException(string.Format(Resources.ShimadzuNativeMassListExporter_ExportNativeList_The_transition_count__0__exceeds_the_maximum_allowed_for_this_instrument_type, tranList.Split('\n').Length));
-                        case ConverterResult.InputCannotBeParsed:
-                        case ConverterResult.InputIsEmpty:
-                        case ConverterResult.InvalidParameter:
-                            Assume.Fail(string.Format(Resources.ShimadzuNativeMassListExporter_ExportNativeList_Unexpected_response__0__from_Shimadzu_method_converter, result));
-                            break;
+                        var errorMessages = new Dictionary<ConverterResult, string>
+                        {
+                            {ConverterResult.InputIsEmpty, Resources.ShimadzuNativeMassListExporter_ExportNativeList_Input_string_is_empty_},
+                            {ConverterResult.InputCannotBeParsed, Resources.ShimadzuNativeMassListExporter_ExportNativeList_Input_string_cannot_be_parsed_},
+                            {ConverterResult.CannotOpenOutputFile, Resources.ShimadzuNativeMassListExporter_ExportNativeList_Cannot_open_output_file_},
+                            {ConverterResult.InvalidParameter, Resources.ShimadzuNativeMassListExporter_ExportNativeList_Invalid_parameter__Cannot_create_output_method_},
+                            {ConverterResult.OutOfRangeEventNoError, Resources.ShimadzuNativeMassListExporter_ExportNativeList_Number_of_events_exceed_maximum_allowed_by_LabSolutions__1000__},
+                            {ConverterResult.EventNotContiguous, Resources.ShimadzuNativeMassListExporter_ExportNativeList_Input_events_are_not_contiguous_},
+                            {ConverterResult.EventNotAscending, Resources.ShimadzuNativeMassListExporter_ExportNativeList_Input_events_are_not_in_ascending_order},
+                            {ConverterResult.MaxTransitionError, string.Format(
+                                Resources.ShimadzuNativeMassListExporter_ExportNativeList_The_transition_count__0__exceeds_the_maximum_allowed_for_this_instrument_type,
+                                tranList.Split('\n').Length)},
+                        };
+                        if (!errorMessages.TryGetValue(result, out var errorMessage))
+                            errorMessage = string.Format(Resources.ShimadzuNativeMassListExporter_ExportNativeList_Unexpected_response__0__from_Shimadzu_method_converter, result);
+                        Assume.Fail(TextUtil.LineSeparate(Resources.ShimadzuNativeMassListExporter_ExportNativeList_Shimadzu_method_converter_encountered_an_error_, errorMessage));
                     }
                     fs.Commit();
                 }
@@ -1454,8 +1460,7 @@ namespace pwiz.Skyline.Model
             if (!InitExport(fileName, progressMonitor))
                 return;
 
-            string baseName = Path.Combine(Path.GetDirectoryName(fileName) ?? string.Empty,
-                                           Path.GetFileNameWithoutExtension(fileName) ?? string.Empty);
+            string baseName = Path.Combine(Path.GetDirectoryName(fileName) ?? string.Empty, Path.GetFileNameWithoutExtension(fileName) ?? string.Empty);
             string ext = Path.GetExtension(fileName);
 
             var methodWriter = new MassMethodWriter();
@@ -1505,14 +1510,26 @@ namespace pwiz.Skyline.Model
                         }
                     }
 
-                    switch (result)
+                    var errorMessages = new Dictionary<WriterResult, string>
                     {
-                        case WriterResult.MaxTransitionError:
-                            throw new ArgumentException(string.Format(Resources.ShimadzuMethodExporter_ExportMethod_The_transition_count__0__exceeds_the_maximum_allowed_for_this_instrument_type_, tranList.Split('\n').Length));
-                        default:
-                            Assume.Fail(string.Format(Resources.ShimadzuMethodExporter_ExportMethod_Unexpected_response__0__from_Shimadzu_method_writer_,result));
-                            break;
-                    }
+                        {WriterResult.InputIsEmpty, Resources.ShimadzuMethodExporter_ExportMethod_Input_string_is_empty_},
+                        {WriterResult.InputCannotBeParsed, Resources.ShimadzuMethodExporter_ExportMethod_Input_string_cannot_be_parsed_},
+                        {WriterResult.OutputIsEmpty, Resources.ShimadzuMethodExporter_ExportMethod_Output_path_is_not_specified_},
+                        {WriterResult.CannotOpenFile, Resources.ShimadzuMethodExporter_ExportMethod_Cannot_open_output_file_},
+                        {WriterResult.InvalidParameter, Resources.ShimadzuMethodExporter_ExportMethod_Invalid_parameter__Cannot_create_output_method_},
+                        {WriterResult.UnsupportedFile, Resources.ShimadzuMethodExporter_ExportMethod_Output_file_type_is_not_supported_},
+                        {WriterResult.SerializeIOException, Resources.ShimadzuMethodExporter_ExportMethod_Exception_raised_during_output_serialization_},
+                        {WriterResult.OutOfRangeEventNoError, Resources.ShimadzuMethodExporter_ExportMethod_Number_of_events_exceed_the_maximum_allowed_by_LabSolutions__1000__},
+                        {WriterResult.OutputMethodEmpty, Resources.ShimadzuMethodExporter_ExportMethod_Output_method_does_not_contain_any_events_},
+                        {WriterResult.EventNotContiguous, Resources.ShimadzuMethodExporter_ExportMethod_Input_events_are_not_contiguous_},
+                        {WriterResult.EventNotAscending, Resources.ShimadzuMethodExporter_ExportMethod_Input_events_are_not_in_ascending_order},
+                        {WriterResult.MaxTransitionError, string.Format(
+                            Resources.ShimadzuMethodExporter_ExportMethod_The_transition_count__0__exceeds_the_maximum_allowed_for_this_instrument_type_,
+                            tranList.Split('\n').Length)},
+                    };
+                    if (!errorMessages.TryGetValue(result, out var errorMessage))
+                        errorMessage = string.Format(Resources.ShimadzuMethodExporter_ExportMethod_Unexpected_response__0__from_Shimadzu_method_writer_, result);
+                    Assume.Fail(TextUtil.LineSeparate(Resources.ShimadzuMethodExporter_ExportMethod_Shimadzu_method_writer_encountered_an_error_, errorMessage));
                 }
             }
         }
