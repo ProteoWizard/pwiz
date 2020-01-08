@@ -25,6 +25,7 @@ using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
@@ -188,24 +189,35 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         {
             if (File.Exists(testPath))
                 File.Delete(testPath);
-            RunCommand("--in=" + skyFile,
-                "--import-file=" + TestFilesDir.GetTestPath(BSA_50fmol_TIMS_InfusionESI_10precd),
-                "--out=" + testPath);
+
+            // Show anyone watching that work is being performed
+            RunUI(() => {
+                using (var longWait = new LongWaitDlg(SkylineWindow) { Message = "Running command-line import" })
+                {
+                    longWait.PerformWork(SkylineWindow, 500, () =>
+                        RunCommand("--in=" + skyFile,
+                            "--import-file=" + TestFilesDir.GetTestPath(BSA_50fmol_TIMS_InfusionESI_10precd),
+                            "--out=" + testPath));
+                }
+            });
+            
             VerifySerialization(testPath, false);
         }
 
         private void VerifySerialization(string testPath, bool expect_mz5)
         {
-            var text = File.ReadAllText(testPath);
-            var filePath = TestFilesDir.GetTestPath(BSA_50fmol_TIMS_InfusionESI_10precd);
-            var encodePath = SampleHelp.EncodePath(filePath, null, -1, null, false, false, !MsDataFileImpl.ForceUncombinedIonMobility);
-            Assert.IsTrue(text.Contains(encodePath + '"'));
+            var lines = File.ReadAllLines(testPath);
+            VerifyFileInfoSerialization(lines, TestFilesDir.GetTestPath(BSA_50fmol_TIMS_InfusionESI_10precd), !MsDataFileImpl.ForceUncombinedIonMobility);
             if (expect_mz5)
-            {
-                filePath = TestFilesDir.GetTestPath(bsaFmolTimsInfusionesiPrecMz5Mz5);
-                encodePath = SampleHelp.EncodePath(filePath, null, -1, null, false, false, false);
-                Assert.IsTrue(text.Contains(encodePath + '"'));
-            }
+                VerifyFileInfoSerialization(lines, TestFilesDir.GetTestPath(bsaFmolTimsInfusionesiPrecMz5Mz5), false);
+        }
+
+        private void VerifyFileInfoSerialization(string[] lines, string filePath, bool combinedIms)
+        {
+            var encodePath = SampleHelp.EncodePath(filePath, null, -1, null);
+            var lineFilePath = lines.FirstOrDefault(l => l.Contains(encodePath + '"'));
+            Assert.IsNotNull(lineFilePath);
+            // Nothing gets serialized to the XML about whether the MsData had combined spectra - can only be found in the SKYD file
         }
     }
 }

@@ -947,11 +947,12 @@ namespace pwiz.SkylineTestFunctional
             {
                 AssertEx.AreComparableStrings(TextUtil.LineSeparate(
                         Resources.ToolDescription_RunTool_File_not_found_,
+                        "{0}",
                         Resources.ToolDescription_RunTool_Please_check_the_command_location_is_correct_for_this_tool_), 
-                        messageDlg.Message, 0);
+                    messageDlg.Message, 1);
                 messageDlg.OkDialog();
             });
-          }
+        }
 
         private void TestNewToolName()
         {
