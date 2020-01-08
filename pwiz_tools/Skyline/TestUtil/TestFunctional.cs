@@ -36,6 +36,7 @@ using JetBrains.Annotations;
 // using Microsoft.Diagnostics.Runtime; only needed for stack dump logic, which is currently disabled
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Controls;
+using pwiz.Common.Database;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.Fasta;
@@ -161,7 +162,13 @@ namespace pwiz.SkylineTestUtil
         {
             var existingDialog = FindOpenForm<TDlg>();
             if (existingDialog != null)
-                Assert.IsNull(existingDialog, typeof(TDlg) + " is already open");
+            {
+                var messageDlg = existingDialog as MessageDlg;
+                if (messageDlg == null)
+                    Assert.IsNull(existingDialog, typeof(TDlg) + " is already open");
+                else
+                    Assert.Fail(typeof(TDlg) + " is already open with the message: " + messageDlg.Message);
+            }
 
             SkylineBeginInvoke(act);
             TDlg dlg;
@@ -969,7 +976,7 @@ namespace pwiz.SkylineTestUtil
 
         public bool IsPauseForScreenShots
         {
-            get { return _isPauseForScreenShots || Program.PauseSeconds < 0; }
+            get { return _isPauseForScreenShots || Program.PauseSeconds != 0; }
             set
             {
                 _isPauseForScreenShots = value;
@@ -1029,6 +1036,10 @@ namespace pwiz.SkylineTestUtil
         {
             PauseForScreenShot(description, pageNum, null, screenshotForm);
         }
+        public void PauseForScreenShot(Form screenshotForm, string description = null, int? pageNum = null)
+        {
+            PauseForScreenShot(description, pageNum, null, screenshotForm);
+        }
 
         public void PauseForScreenShot<TView>(string description, int? pageNum = null)
             where TView : IFormView
@@ -1051,14 +1062,13 @@ namespace pwiz.SkylineTestUtil
             {
                 if (screenshotForm == null)
                 {
-                    screenshotForm = SkylineWindow;
                     if (formType != null)
-                        screenshotForm = TryWaitForOpenForm(formType);
-                    else if (SkylineWindow.DockPanel.FloatingWindows.Count > 0)
                     {
-                        screenshotForm = SkylineWindow.DockPanel.FloatingWindows[0];
+                        screenshotForm = TryWaitForOpenForm(formType) ?? SkylineWindow;
                     }
-                    RunUI(() => screenshotForm.Update());
+                    else
+                        screenshotForm = SkylineWindow;
+                    RunUI(() => screenshotForm?.Update());
                 }
 
                 Thread.Sleep(300);
@@ -1154,6 +1164,8 @@ namespace pwiz.SkylineTestUtil
                             TestFilesPersistent, IsExtractHere(i));
                     }
                 }
+                _shotManager = new ScreenshotManager(TestContext, SkylineWindow);
+
                 // Run test in new thread (Skyline on main thread).
                 Program.Init();
                 Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault();
@@ -1166,6 +1178,9 @@ namespace pwiz.SkylineTestUtil
                 // For automated demos, start with the main window maximized
                 if (IsDemoMode)
                     Settings.Default.MainWindowMaximized = true;
+
+                ForceMzml = (Program.PauseSeconds == 0);   // Mzml is ~8x faster for this test.
+
                 var threadTest = new Thread(WaitForSkyline) { Name = @"Functional test thread" };
                 LocalizationHelper.InitThread(threadTest);
                 threadTest.Start();
@@ -1935,15 +1950,17 @@ namespace pwiz.SkylineTestUtil
         public static IList<DbRefSpectra> GetRefSpectra(SQLiteConnection connection)
         {
             var list = new List<DbRefSpectra>();
-            using (var select = new SQLiteCommand(connection) {CommandText = "SELECT * FROM RefSpectra"})
+            var hasAnnotations = SqliteOperations.TableExists(connection, @"RefSpectraPeakAnnotations");
+            using (var select = new SQLiteCommand(connection) { CommandText = "SELECT * FROM RefSpectra" })
             using (var reader = @select.ExecuteReader())
             {
                 var iAdduct = reader.GetOrdinal("precursorAdduct");
                 var iIonMobility = reader.GetOrdinal("ionMobility");
                 var iCCS = reader.GetOrdinal("collisionalCrossSectionSqA");
+                var noMoleculeDetails = reader.GetOrdinal("moleculeName") < 0; // Also a cue for presence of chemicalFormula, inchiKey, and otherKeys
                 while (reader.Read())
                 {
-                    list.Add(new DbRefSpectra
+                    var refSpectrum = new DbRefSpectra
                     {
                         PeptideSeq = reader["peptideSeq"].ToString(),
                         PeptideModSeq = reader["peptideModSeq"].ToString(),
@@ -1953,7 +1970,48 @@ namespace pwiz.SkylineTestUtil
                         RetentionTime = double.Parse(reader["retentionTime"].ToString()),
                         IonMobility = ParseNullable(reader, iIonMobility),
                         CollisionalCrossSectionSqA = ParseNullable(reader, iCCS),
+                        MoleculeName = noMoleculeDetails ? string.Empty : reader["moleculeName"].ToString(),
+                        ChemicalFormula = noMoleculeDetails ? string.Empty : reader["chemicalFormula"].ToString(),
+                        InChiKey = noMoleculeDetails ? string.Empty : reader["inchiKey"].ToString(),
+                        OtherKeys = noMoleculeDetails ? string.Empty : reader["otherKeys"].ToString(),
                         NumPeaks = ushort.Parse(reader["numPeaks"].ToString())
+                    };
+                    if (hasAnnotations)
+                    {
+                        var id = int.Parse(reader["id"].ToString());
+                        var annotations = GetRefSpectraPeakAnnotations(connection, refSpectrum, id);
+                        refSpectrum.PeakAnnotations = annotations;
+                    }
+                    list.Add(refSpectrum);
+                }
+
+                return list;
+            }
+        }
+
+        private static IList<DbRefSpectraPeakAnnotations> GetRefSpectraPeakAnnotations(SQLiteConnection connection, DbRefSpectra refSpectrum, int refSpectraId)
+        {
+            var list = new List<DbRefSpectraPeakAnnotations>();
+            using (var select = new SQLiteCommand(connection) { CommandText = "SELECT * FROM RefSpectraPeakAnnotations WHERE RefSpectraId = " + refSpectraId })
+            using (var reader = @select.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    list.Add(new DbRefSpectraPeakAnnotations
+                    {
+
+                        RefSpectra = refSpectrum,
+                        Id = int.Parse(reader["id"].ToString()),
+                        PeakIndex = int.Parse(reader["peakIndex"].ToString()),
+                        Charge = int.Parse(reader["charge"].ToString()),
+                        Adduct = reader["adduct"].ToString(),
+                        mzTheoretical = double.Parse(reader["mzTheoretical"].ToString()),
+                        mzObserved = double.Parse(reader["mzObserved"].ToString()),
+                        Name = reader["name"].ToString(),
+                        Formula = reader["formula"].ToString(),
+                        InchiKey = reader["inchiKey"].ToString(),
+                        OtherKeys = reader["otherKeys"].ToString(),
+                        Comment = reader["comment"].ToString(),
                     });
                 }
                 return list;

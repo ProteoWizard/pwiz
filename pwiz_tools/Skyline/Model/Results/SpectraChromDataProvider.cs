@@ -47,7 +47,6 @@ namespace pwiz.Skyline.Model.Results
         private bool _isSingleMzMatch;
         private bool _sourceHasPositivePolarityData;
         private bool _sourceHasNegativePolarityData;
-        private bool _sourceHasCombinedIonMobilitySpectra;
         private double? _ticArea;
 
         private readonly ChromatogramLoadingStatus.TransitionData _allChromData;
@@ -111,7 +110,6 @@ namespace pwiz.Skyline.Model.Results
 
             if (NeedMaxIonMobilityValue(dataFile))
                 _maxIonMobilityValue = dataFile.GetMaxIonMobility();
-            _sourceHasCombinedIonMobilitySpectra = dataFile.HasCombinedIonMobilitySpectra;
 
             // Create the filter responsible for chromatogram extraction
             bool firstPass = (_retentionTimePredictor != null);
@@ -222,8 +220,6 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public override eIonMobilityUnits IonMobilityUnits { get { return _filter.IonMobilityUnits; } }
-
-        public override bool SourceHasCombinedIonMobilitySpectra { get { return _sourceHasCombinedIonMobilitySpectra; } }
 
         private void ExtractionComplete()
         {

@@ -5081,9 +5081,12 @@ namespace pwiz.Skyline
                 // Add the error to the ImportingResultsWindow before calling "ShowAllChromatogramsGraph" 
                 // because "ShowAllChromatogramsGraph" may destroy the window if the job is done and there are
                 // no errors yet.
-                ImportingResultsWindow.UpdateStatus((MultiProgressStatus) e.Progress);
+                var multiProgress = (MultiProgressStatus) e.Progress;
+                ImportingResultsWindow.UpdateStatus(multiProgress);
                 ShowAllChromatogramsGraph();
-                return;
+                // Make sure user is actually seeing an error
+                if (ImportingResultsWindow != null && ImportingResultsWindow.HasErrors)
+                    return;
             }
 
             // TODO: replace this with more generic logic fed from IProgressMonitor

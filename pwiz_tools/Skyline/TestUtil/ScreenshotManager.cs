@@ -6,13 +6,12 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 using DigitalRune.Windows.Docking;
 using JetBrains.Annotations;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 
 namespace pwiz.SkylineTestUtil
@@ -22,10 +21,10 @@ namespace pwiz.SkylineTestUtil
         protected const string ROOT_ELEMENT = "shot_list";
 
         private List<SkylineScreenshot> _shotSequence = new List<SkylineScreenshot>();
-        private ShotType _defaultShotType = ShotType.ActiveWindow;
+//        private ShotType _defaultShotType = ShotType.ActiveWindow;
         private SkylineWindow _skylineWindow;
         private int _currentShotIndex;
-        private string _tutorialName;
+        private TestContext _ctx;
         private XmlDocument _storage;
 
 
@@ -46,15 +45,17 @@ namespace pwiz.SkylineTestUtil
             private Point _add;
             public PointAdditive(Point pAdd) { _add = pAdd; }
             public PointAdditive(int pX, int pY) { _add = new Point(pX, pY); }
-            public static Point operator +(Point pt, PointAdditive pAdd) => new Point(pt.X + pAdd._add.X, pt.Y + pAdd._add.Y);
+            public static PointAdditive operator +(Point pt, PointAdditive pAdd) => new PointAdditive(new Point(pt.X + pAdd._add.X, pt.Y + pAdd._add.Y));
             public static Size operator +(Size sz, PointAdditive pAdd) => new Size(sz.Width + pAdd._add.X, sz.Height + pAdd._add.Y);
+
+            public static implicit operator Point(PointAdditive add) => add._add;
         }
         public enum ShotType{ ActiveWindow, SkylineWindow, SkylineCustomArea}
 
         private abstract class SkylineScreenshot
         {
-            private ShotType _type;
-            private SkylineWindow _skylineWindow;
+//            private readonly ShotType _type;
+//            private readonly SkylineWindow _skylineWindow;
 
             protected const string SHOT_ELEMENT = "shot";
             protected const string SHOT_TYPE_ATTRIBUTE = "type";
@@ -97,34 +98,47 @@ namespace pwiz.SkylineTestUtil
 
             public SkylineScreenshot(ShotType pShotType, SkylineWindow pSkylineWindow)
             {
-                _type = pShotType;
-                _skylineWindow = pSkylineWindow;
+//                _type = pShotType;
+//                _skylineWindow = pSkylineWindow;
             }
 
-            protected float getScalingFactor()
+            protected PointFactor GetScalingFactor()
             {
                 Graphics g = Graphics.FromHwnd(IntPtr.Zero);
                 IntPtr desktop = g.GetHdc();
                 int LogicalScreenHeight = GetDeviceCaps(desktop, (int)DeviceCap.VERTRES);
                 int PhysicalScreenHeight = GetDeviceCaps(desktop, (int)DeviceCap.DESKTOPVERTRES);
 
-                float ScreenScalingFactor = (float)PhysicalScreenHeight / (float)LogicalScreenHeight;
+                float ScreenScalingFactor = PhysicalScreenHeight / (float)LogicalScreenHeight;
 
-                return ScreenScalingFactor; // 1.25 = 125%
+                return new PointFactor(ScreenScalingFactor); // 1.25 = 125%
             }
 
 
             protected Rectangle GetWindowRectangle(Form frm)
             {
-                if (frm.ParentForm is FloatingWindow)
-                    frm = frm.ParentForm;
-                int frameWidth = (frm.DesktopBounds.Width - frm.ClientRectangle.Width) / 2 - SystemInformation.Border3DSize.Width;
-                Size imageSize = frm.Size + new PointAdditive(-2 * frameWidth, -frameWidth - 1);
-                Point sourcePoint = frm.Location + new PointAdditive(frameWidth, 0);
-                Rectangle snapshotBounds =  new Rectangle(sourcePoint, imageSize);
+                Rectangle snapshotBounds = Rectangle.Empty;
 
-                PointFactor res = new PointFactor(getScalingFactor());
-                return snapshotBounds * res;
+                DockState[] dockedStates = new DockState[]{DockState.DockBottom, DockState.DockLeft, DockState.DockBottom, DockState.DockTop, DockState.Document};
+                if (frm is DockableForm && dockedStates.Any((state) => ((frm as DockableForm).DockState == state) )  )
+                {
+                    Point origin = Point.Empty;
+                    frm.Invoke(new Action(() => { origin = frm.PointToScreen(new Point(0, 0)); }));
+                    PointAdditive frameOffset = new PointAdditive(-((frm as DockableForm).Pane.Width - frm.Width) / 2,
+                        -((frm as DockableForm).Pane.Height - frm.Height));
+                    snapshotBounds = new Rectangle(origin + frameOffset, (frm as DockableForm).Pane.Size);
+                }
+                else
+                {
+                    if (frm.ParentForm is FloatingWindow)
+                        frm = frm.ParentForm;
+                    int frameWidth = (frm.DesktopBounds.Width - frm.ClientRectangle.Width) / 2 - SystemInformation.Border3DSize.Width;
+                    Size imageSize = frm.Size + new PointAdditive(-2 * frameWidth, -frameWidth - 1);
+                    Point sourcePoint = frm.Location + new PointAdditive(frameWidth, 0);
+                    snapshotBounds = new Rectangle(sourcePoint, imageSize);
+
+                }
+                return snapshotBounds * GetScalingFactor();
             }
 
             /**
@@ -218,7 +232,12 @@ namespace pwiz.SkylineTestUtil
 
             public override Bitmap Take(Form activeWindow)
             {
-                throw new NotImplementedException();
+                Bitmap bmCapture = new Bitmap(_shotFrame.Width, _shotFrame.Height, PixelFormat.Format32bppArgb);
+                Graphics graphCapture = Graphics.FromImage(bmCapture);
+                graphCapture.CopyFromScreen(_shotFrame.Location,
+                    new Point(0, 0), _shotFrame.Size);
+                graphCapture.Dispose();
+                return bmCapture;
             }
 
         }
@@ -231,15 +250,15 @@ namespace pwiz.SkylineTestUtil
             get
             {
                 var exeDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                return Path.Combine(exeDir ?? "", _tutorialName + "_shots");
+                return Path.Combine(exeDir ?? "", _ctx.TestName + "_shots");
             }
         }
 
-        public ScreenshotManager([NotNull] string pTutorialName, [NotNull] SkylineWindow pSkylineWindow)
+        public ScreenshotManager([NotNull] TestContext ctx, [NotNull] SkylineWindow pSkylineWindow)
         {
             //look up the settings file, read and parse if found
             //set up defaults otherwise
-            _tutorialName = pTutorialName;
+            _ctx = ctx;
 
 
 
@@ -296,7 +315,7 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public void SaveToFile()
+        private void SaveToFile()
         {
             if(File.Exists(filePath))
                 File.Delete(filePath);
