@@ -10907,4 +10907,7 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="IrtStandard_DocumentStream_No_document_to_import" xml:space="preserve">
     <value>No document to import</value>
   </data>
+  <data name="SkylineVersion_V20_1_Skyline_20_1" xml:space="preserve">
+    <value>Skyline 20.1</value>
+  </data>
 </root>

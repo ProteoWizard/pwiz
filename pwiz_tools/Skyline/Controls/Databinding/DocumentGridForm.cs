@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
@@ -187,6 +188,18 @@ namespace pwiz.Skyline.Controls.Databinding
             }
 
             return true;
+        }
+
+        //Adjusts column width to make sure the headers are displayed in a single line. Used for tutorials testing.
+        public void ExpandColumns()
+        {
+            using (Graphics g = DataGridView.CreateGraphics())
+            {
+                foreach (DataGridViewColumn col in DataGridView.Columns)
+                {
+                    col.Width = (int)g.MeasureString(col.HeaderText, DataGridView.Font).Width + 40;
+                }
+            }
         }
 
         private void DocumentGridForm_KeyDown(object sender, KeyEventArgs e)

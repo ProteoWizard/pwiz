@@ -60,19 +60,22 @@ namespace pwiz.Skyline.Model
             if (!ReferenceEquals(docResult, docOriginal))
                 return false;
 
+            // If the document is changing, clear progress for the previous document
+            if (docOriginal != null && docNew.Id.GlobalIndex != docOriginal.Id.GlobalIndex)
+                _backgroundLoaders.ForEach(l => l.ResetProgress(docOriginal));
+                
             if (DocumentChangedEvent != null)
             {
                 lock (CHANGE_EVENT_LOCK)
                 {
                     DocumentChangedEvent(this, new DocumentChangedEventArgs(docOriginal));
 
-                    bool complete = IsFinal(docNew);
                     if (wait)
                     {
-                        if (!complete)
+                        while (!IsFinal(Document))
                             Monitor.Wait(CHANGE_EVENT_LOCK);    // Wait for completing document changed event
                     }
-                    else if (complete)
+                    else if (IsFinal(docNew))
                     {
                         Monitor.Pulse(CHANGE_EVENT_LOCK);
                     }
