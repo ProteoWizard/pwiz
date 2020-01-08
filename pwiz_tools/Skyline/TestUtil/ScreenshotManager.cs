@@ -54,8 +54,8 @@ namespace pwiz.SkylineTestUtil
 
         private abstract class SkylineScreenshot
         {
-            private readonly ShotType _type;
-            private readonly SkylineWindow _skylineWindow;
+//            private readonly ShotType _type;
+//            private readonly SkylineWindow _skylineWindow;
 
             protected const string SHOT_ELEMENT = "shot";
             protected const string SHOT_TYPE_ATTRIBUTE = "type";
@@ -98,8 +98,8 @@ namespace pwiz.SkylineTestUtil
 
             public SkylineScreenshot(ShotType pShotType, SkylineWindow pSkylineWindow)
             {
-                _type = pShotType;
-                _skylineWindow = pSkylineWindow;
+//                _type = pShotType;
+//                _skylineWindow = pSkylineWindow;
             }
 
             protected PointFactor GetScalingFactor()

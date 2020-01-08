@@ -1022,7 +1022,7 @@ namespace pwiz.SkylineTestUtil
 
         public void PauseForScreenShot(string description = null, int? pageNum = null)
         {
-            PauseForScreenShot(description, pageNum, null, null);
+            PauseForScreenShot(description, pageNum, null);
         }
         public void PauseForScreenShot(Form screenshotForm, string description = null, int? pageNum = null)
         {
