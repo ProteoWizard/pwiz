@@ -220,7 +220,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(confirmIrtDlg, confirmIrtDlg.Btn0Click);
             var libraryAcceptDlg = WaitForOpenForm<MultiButtonMsgDlg>();
             OkDialog(libraryAcceptDlg, libraryAcceptDlg.Btn0Click);
-            WaitForCondition(3000, () => SkylineWindow.Document.PeptideCount == 16);
+            WaitForConditionUI(6000, () => SkylineWindow.DocumentUI.PeptideCount == 16);
             RunUI(() =>
             {
                 var docCurrent = SkylineWindow.DocumentUI;
@@ -516,7 +516,7 @@ namespace pwiz.SkylineTestFunctional
                 return doc;
             }));
             OkDialog(libraryDlgAll, libraryDlgAll.Btn0Click);
-            TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 355); // Was 3sec wait, but that timed out under dotCover
+            TryWaitForConditionUI(6000, () => SkylineWindow.DocumentUI.PeptideCount == 355); // Was 3sec wait, but that timed out under dotCover
             WaitForDocumentLoaded();
             RunUI(() =>
             {
@@ -586,7 +586,7 @@ namespace pwiz.SkylineTestFunctional
             var libraryDlgOverwriteYes = WaitForOpenForm<MultiButtonMsgDlg>();
             RunUI(() => AssertEx.AreComparableStrings(Resources.SkylineWindow_ImportMassList_There_is_an_existing_library_with_the_same_name__0__as_the_document_library_to_be_created___Overwrite_this_library_or_skip_import_of_library_intensities_, libraryDlgOverwriteYes.Message));
             OkDialog(libraryDlgOverwriteYes, libraryDlgOverwriteYes.Btn0Click);
-            TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 345);    // Peptide count checked below
+            TryWaitForConditionUI(6000, () => SkylineWindow.DocumentUI.PeptideCount == 345);    // Peptide count checked below
             WaitForDocumentLoaded();
             RunUI(() =>
             {
@@ -662,7 +662,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => Assert.AreEqual(string.Format(Resources.SkylineWindow_ImportMassList_There_is_an_existing_library_with_the_same_name__0__as_the_document_library_to_be_created___Overwrite_this_library_or_skip_import_of_library_intensities_, libraryName),
                 libraryDlgOverwrite.Message));
             OkDialog(libraryDlgOverwrite, libraryDlgOverwrite.Btn0Click);
-            TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 345); // Peptide count checked below
+            TryWaitForConditionUI(6000, () => SkylineWindow.DocumentUI.PeptideCount == 345); // Peptide count checked below
             WaitForDocumentLoaded();
             var openAlert = FindOpenForm<AlertDlg>();
             if (openAlert != null)
@@ -706,7 +706,7 @@ namespace pwiz.SkylineTestFunctional
 
             // 28.  Do exactly the same thing over again, should happen silently, with only a prompt to add library info
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textConflict), libraryDlgRepeat => libraryDlgRepeat.Btn0Click());
-            TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 690); // Peptide count checked below
+            TryWaitForConditionUI(6000, () => SkylineWindow.DocumentUI.PeptideCount == 690); // Peptide count checked below
             WaitForDocumentLoaded();
             RunUI(() =>
             {
@@ -807,7 +807,7 @@ namespace pwiz.SkylineTestFunctional
                 return doc;
             }));
             OkDialog(libraryInterleaved, libraryInterleaved.Btn0Click);
-            TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 6);  // Peptide count checked below
+            TryWaitForConditionUI(6000, () => SkylineWindow.DocumentUI.PeptideCount == 6);  // Peptide count checked below
             WaitForDocumentLoaded();
             RunUI(() =>
             {
@@ -845,7 +845,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(libraryInterleavedIrt, libraryInterleavedIrt.Btn0Click);
             var libraryDlgOverwriteIrt = WaitForOpenForm<MultiButtonMsgDlg>();
             RunUI(libraryDlgOverwriteIrt.Btn0Click);
-            TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 6);
+            TryWaitForConditionUI(6000, () => SkylineWindow.DocumentUI.PeptideCount == 6);
             WaitForDocumentLoaded();
             Assert.AreEqual(6, SkylineWindow.Document.PeptideCount);
             var irtValue = SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator.ScoreSequence(new Target("AAAAAAAAAAAAAAAGAAGK"));
@@ -859,7 +859,7 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textInterleavedIrtNoLib), addIrtDlg => addIrtDlg.Btn0Click());
             var irtOverwriteNoLib = WaitForOpenForm<MultiButtonMsgDlg>();
             OkDialog(irtOverwriteNoLib, irtOverwriteNoLib.Btn1Click);
-            TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 6);
+            TryWaitForConditionUI(6000, () => SkylineWindow.DocumentUI.PeptideCount == 6);
             WaitForDocumentLoaded();
             Assert.AreEqual(6, SkylineWindow.Document.PeptideCount);
             var irtValueNoLib = SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator.ScoreSequence(new Target("AAAAAAAAAAAAAAAGAAGK"));
@@ -999,7 +999,7 @@ namespace pwiz.SkylineTestFunctional
                 importResultsDlg.NamedPathSets = path;
             });
             OkDialog(importResultsDlg, importResultsDlg.OkDialog);
-            WaitForCondition(2 * 60 * 1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);    // 2 minutes
+            WaitForConditionUI(2 * 60 * 1000, () => SkylineWindow.DocumentUI.Settings.MeasuredResults.IsLoaded);    // 2 minutes
             RunUI(() => SkylineWindow.SaveDocument());
 
             // Show data can be imported with modified sequence column following bare sequence column
@@ -1017,7 +1017,7 @@ namespace pwiz.SkylineTestFunctional
         private static void PasteOnePeptide(string textModifiedSeqExpected)
         {
             SkylineWindow.Paste();
-            TryWaitForCondition(3000, () => SkylineWindow.DocumentUI.PeptideCount == 1);
+            TryWaitForConditionUI(3000, () => SkylineWindow.DocumentUI.PeptideCount == 1);
             Assert.AreEqual(1, SkylineWindow.DocumentUI.PeptideCount);
             var peptideNode = SkylineWindow.DocumentUI.Peptides.First();
             Assert.AreEqual(textModifiedSeqExpected, peptideNode.ModifiedSequence);

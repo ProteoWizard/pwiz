@@ -109,6 +109,196 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
+        private static void TestNotInstalledTool()
+        {
+            var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
+            RunUI(() =>
+            {
+                configureToolsDlg.RemoveAllTools();
+                configureToolsDlg.AddDialog("NEwTool", "$(ToolDir)\\Test.exe", string.Empty, string.Empty);
+                Assert.AreEqual("NEwTool", configureToolsDlg.textTitle.Text);
+                Assert.AreEqual("$(ToolDir)\\Test.exe", configureToolsDlg.textCommand.Text);
+            });
+            RunDlg<MessageDlg>(configureToolsDlg.Add, dlg =>
+            {
+                AssertEx.AreComparableStrings(
+                    Resources.ConfigureToolsDlg_CheckPassToolInternal__ToolDir__is_not_a_valid_macro_for_a_tool_that_was_not_installed_and_therefore_does_not_have_a_Tool_Directory_,
+                    dlg.Message, 0);
+                dlg.OkDialog();
+            });
+            RunUI(configureToolsDlg.Remove);
+            OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
+        }
+
+        private void TestLocateFileDlg()
+        {
+            var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
+            string path = TestFilesDir.GetTestPath("TestLocateFileDlg.zip");
+            RunUI(configureToolsDlg.RemoveAllTools);
+            var locateFileDlg1 = ShowDialog<LocateFileDlg>(() => configureToolsDlg.InstallZipTool(path));
+            RunUI(() =>
+            {
+                AssertEx.AreComparableStrings(TextUtil.LineSeparate(
+                    Resources.LocateFileDlg_LocateFileDlg_This_tool_requires_0_version_1,
+                    Resources.LocateFileDlg_LocateFileDlg_If_you_have_it_installed_please_provide_the_path_below,
+                    Resources.LocateFileDlg_LocateFileDlg_Otherwise__please_cancel_and_install__0__version__1__first,
+                    Resources.LocateFileDlg_LocateFileDlg_then_run_the_tool_again), locateFileDlg1.Message, 4);
+                Assert.AreEqual(String.Empty, locateFileDlg1.Path);
+            });
+            OkDialog(locateFileDlg1, locateFileDlg1.OkDialog);
+            // ReSharper disable LocalizableElement
+            WaitForConditionUI(2 * 1000, () => configureToolsDlg.textTitle.Text == "TestTool1"); //Not L10N                                      
+            // ReSharper restore LocalizableElement
+            // CONSIDER(brendanx): Not sure why, but this was causing a failure in my laptop
+            var messageDlgNotFound = FindOpenForm<MessageDlg>();
+            if (messageDlgNotFound != null)
+            {
+                RunUI(() => AssertEx.AreComparableStrings(TextUtil.LineSeparate(
+                        Resources.ToolDescription_RunTool_File_not_found_,
+                        "{0}",
+                        Resources.ToolDescription_RunTool_Please_check_the_command_location_is_correct_for_this_tool_),
+                    messageDlgNotFound.Message, 1));
+                OkDialog(messageDlgNotFound, messageDlgNotFound.OkDialog);
+            }
+            RunUI(() =>
+            {
+                Assert.AreEqual("TestTool1", configureToolsDlg.textTitle.Text);
+                Assert.AreEqual("$(ProgramPath(TESTPROGRAM,1))", configureToolsDlg.textCommand.Text);
+                Assert.AreEqual("TestArgs", configureToolsDlg.textArguments.Text);
+                Assert.AreEqual(CheckState.Checked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
+                Assert.AreEqual(string.Empty, configureToolsDlg.comboReport.SelectedItem);
+            });
+
+            {
+                LocateFileDlg locateFileDlg = ShowDialog<LocateFileDlg>(configureToolsDlg.EditMacro);
+                RunUI(() =>
+                {
+                    AssertEx.AreComparableStrings(TextUtil.LineSeparate(
+                        Resources.LocateFileDlg_LocateFileDlg_This_tool_requires_0_version_1,
+                        Resources.LocateFileDlg_LocateFileDlg_If_you_have_it_installed_please_provide_the_path_below,
+                        Resources.LocateFileDlg_LocateFileDlg_Otherwise__please_cancel_and_install__0__version__1__first,
+                        Resources.LocateFileDlg_LocateFileDlg_then_run_the_tool_again), locateFileDlg.Message, 4);
+                    Assert.AreEqual(String.Empty, locateFileDlg.Path);
+                    locateFileDlg.Path = "invalidPath";
+                });
+                RunDlg<MessageDlg>(locateFileDlg.OkDialog, messageDlg =>
+                {
+                    AssertEx.AreComparableStrings(Resources.LocateFileDlg_PathPasses_You_have_not_provided_a_valid_path_, messageDlg.Message);
+                    messageDlg.OkDialog();
+                });
+                RunUI(() => locateFileDlg.CancelButton.PerformClick());
+                WaitForClosedForm(locateFileDlg);
+            }
+            OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
+            RunUI(() => SkylineWindow.PopulateToolsMenu());
+            string validpath = TestFilesDir.GetTestPath("ShortStdinToStdout.exe");
+            RunDlg<LocateFileDlg>(() => SkylineWindow.RunTool(0), lfd =>
+            {
+                Assert.AreEqual(String.Empty, lfd.Path);
+                lfd.Path = validpath;
+                lfd.OkDialog();
+            });
+
+            var ctd = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
+            RunDlg<LocateFileDlg>(ctd.EditMacro, locate =>
+            {
+                AssertEx.AreComparableStrings(TextUtil.LineSeparate(
+                    Resources.LocateFileDlg_LocateFileDlg_This_tool_requires_0_version_1,
+                    Resources.LocateFileDlg_LocateFileDlg_Below_is_the_saved_value_for_the_path_to_the_executable,
+                    Resources.LocateFileDlg_LocateFileDlg_Please_verify_and_update_if_incorrect), locate.Message, 2);
+                Assert.AreEqual(validpath, locate.Path);
+                locate.OkDialog();
+            });
+            RunUI(ctd.RemoveAllTools);
+            OkDialog(ctd, ctd.OkDialog);
+        }
+
+        private void TestToolVersioning()
+        {
+            string version1 = TestFilesDir.GetTestPath("TestToolVersioning\\1.0\\Counter.zip");
+            {
+                RunDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, configureToolsDlg =>
+                {
+                    configureToolsDlg.RemoveAllTools();
+                    configureToolsDlg.SaveTools();
+                    configureToolsDlg.InstallZipTool(version1);
+                    Assert.AreEqual("Counter", configureToolsDlg.textTitle.Text);
+                    Assert.AreEqual("$(ToolDir)\\NumberWriter.exe", configureToolsDlg.textCommand.Text);
+                    Assert.AreEqual("100 100", configureToolsDlg.textArguments.Text);
+                    Assert.AreEqual(string.Empty, configureToolsDlg.textInitialDirectory.Text);
+                    Assert.AreEqual(CheckState.Checked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
+                    configureToolsDlg.OkDialog();
+                });
+                ToolDescription newtool = Settings.Default.ToolList[0];
+                Assert.AreEqual("Counter", newtool.PackageName);
+                Assert.AreEqual("uw.genomesciences.macosslabs.skyline.externaltools.test.countertool", newtool.PackageIdentifier);
+                Assert.AreEqual("1.0", newtool.PackageVersion);
+            }
+            {
+                var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
+                RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(version1), messageDlg =>
+                {
+                    string messageForm =
+                        TextUtil.LineSeparate(
+                            Resources.ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_already_installed_,
+                            string.Empty,
+                            Resources
+                                .ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_reinstall_or_install_in_parallel_);
+                    AssertEx.AreComparableStrings(messageForm, messageDlg.Message, 1);
+
+                    messageDlg.Btn1Click(); // In Parallel
+                });
+                WaitForConditionUI(3 * 1000, () => configureToolsDlg.ToolList.Count == 2);
+                string version2 = TestFilesDir.GetTestPath("TestToolVersioning\\1.0.2\\Counter.zip");
+                RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(version2), messageDlg =>
+                {
+
+                    string messageForm = TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_currently_installed_, string.Empty,
+                        Resources.ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_upgrade_to__0__or_install_in_parallel_);
+                    AssertEx.AreComparableStrings(messageForm, messageDlg.Message, 2);
+
+                    messageDlg.Btn0Click(); // Update/Overwrite
+                });
+                WaitForConditionUI(3 * 1000, () => configureToolsDlg.ToolList.Count == 2);
+                OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
+                ToolDescription newtool = Settings.Default.ToolList[1];
+                Assert.AreEqual("Counter", newtool.PackageName);
+                Assert.AreEqual("uw.genomesciences.macosslabs.skyline.externaltools.test.countertool", newtool.PackageIdentifier);
+                Assert.AreEqual("1.0.2", newtool.PackageVersion);
+            }
+            {
+                var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
+                RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(version1), messageDlg =>
+                {
+                    string messageForm = TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteOrInParallel_This_is_an_older_installation_v_0__of_the_tool__1_,
+                                string.Empty, Resources.ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_with_the_older_version__0__or_install_in_parallel_);
+                    AssertEx.AreComparableStrings(messageForm, messageDlg.Message, 3);
+
+                    messageDlg.Btn1Click(); // In Parallel
+                });
+                WaitForConditionUI(3 * 1000, () => configureToolsDlg.ToolList.Count == 3);
+                string versionDifferent = TestFilesDir.GetTestPath("TestToolVersioning\\Differentidentifier\\Counter.zip");
+
+                //Testing recognition of a different unique identifier when zip has the same name
+                RunUI(() => configureToolsDlg.InstallZipTool(versionDifferent));
+                WaitForConditionUI(3 * 1000, () => configureToolsDlg.ToolList.Count == 4);
+                string version3 = TestFilesDir.GetTestPath("TestToolVersioning\\1.2.0\\Counter.zip");
+                RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(version3), messageDlg =>
+                {
+                    string messageForm = TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_currently_installed_, string.Empty,
+                            Resources.ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_upgrade_to__0__or_install_in_parallel_);
+                    AssertEx.AreComparableStrings(messageForm, messageDlg.Message, 2);
+                    messageDlg.Btn0Click(); // Upgrade
+                });
+                WaitForConditionUI(3 * 1000, () => configureToolsDlg.ToolList.Count == 4);
+                RunUI(configureToolsDlg.RemoveAllTools);
+                WaitForConditionUI(3 * 1000, () => configureToolsDlg.ToolList.Count == 0);
+                OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
+            }
+            //Settings.Default.ToolList.Clear();
+        }
+
+
         private void TestPackageVersioning()
         {
             IUnpackZipToolSupport support = new UnpackZipToolTestSupport();
@@ -142,185 +332,6 @@ namespace pwiz.SkylineTestFunctional
             DirectoryEx.SafeDelete(toolsDir);
         }
 
-
-        private void TestToolVersioning()
-        {
-            string version1 = TestFilesDir.GetTestPath("TestToolVersioning\\1.0\\Counter.zip");
-            {
-                RunDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, configureToolsDlg =>
-                {
-                        configureToolsDlg.RemoveAllTools();
-                        configureToolsDlg.SaveTools();
-                        configureToolsDlg.InstallZipTool(version1);
-                        Assert.AreEqual("Counter", configureToolsDlg.textTitle.Text);
-                        Assert.AreEqual("$(ToolDir)\\NumberWriter.exe", configureToolsDlg.textCommand.Text);
-                        Assert.AreEqual("100 100", configureToolsDlg.textArguments.Text);
-                        Assert.AreEqual(string.Empty, configureToolsDlg.textInitialDirectory.Text);
-                        Assert.AreEqual(CheckState.Checked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
-                        configureToolsDlg.OkDialog();
-                    });
-                ToolDescription newtool = Settings.Default.ToolList[0];
-                Assert.AreEqual("Counter", newtool.PackageName);
-                Assert.AreEqual("uw.genomesciences.macosslabs.skyline.externaltools.test.countertool", newtool.PackageIdentifier);
-                Assert.AreEqual("1.0", newtool.PackageVersion);
-            }
-            {
-                var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
-                RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(version1), messageDlg =>
-                    {
-                        string messageForm =
-                            TextUtil.LineSeparate(
-                                Resources.ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_already_installed_,
-                                string.Empty,
-                                Resources
-                                    .ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_reinstall_or_install_in_parallel_);
-                        AssertEx.AreComparableStrings(messageForm, messageDlg.Message, 1);
-
-                        messageDlg.Btn1Click(); // In Parallel
-                    });
-                WaitForConditionUI(3*1000, () => configureToolsDlg.ToolList.Count == 2);
-                string version2 = TestFilesDir.GetTestPath("TestToolVersioning\\1.0.2\\Counter.zip");
-                RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(version2), messageDlg =>
-                    {
-
-                        string messageForm =TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_currently_installed_, string.Empty,
-                            Resources.ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_upgrade_to__0__or_install_in_parallel_);
-                        AssertEx.AreComparableStrings(messageForm, messageDlg.Message,2);
-                       
-                        messageDlg.Btn0Click(); // Update/Overwrite
-                    });
-                WaitForConditionUI(3*1000, () => configureToolsDlg.ToolList.Count == 2);
-                OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
-                ToolDescription newtool = Settings.Default.ToolList[1];
-                Assert.AreEqual("Counter", newtool.PackageName);
-                Assert.AreEqual("uw.genomesciences.macosslabs.skyline.externaltools.test.countertool", newtool.PackageIdentifier);
-                Assert.AreEqual("1.0.2", newtool.PackageVersion); 
-            }
-            {
-                var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
-                RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(version1), messageDlg =>
-                {
-                    string messageForm = TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteOrInParallel_This_is_an_older_installation_v_0__of_the_tool__1_,
-                                string.Empty, Resources.ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_with_the_older_version__0__or_install_in_parallel_);
-                    AssertEx.AreComparableStrings(messageForm, messageDlg.Message, 3);
-                    
-                    messageDlg.Btn1Click(); // In Parallel
-                });
-                WaitForConditionUI(3 * 1000, () => configureToolsDlg.ToolList.Count == 3);
-                string versionDifferent = TestFilesDir.GetTestPath("TestToolVersioning\\Differentidentifier\\Counter.zip");
-                
-                //Testing recognition of a different unique identifier when zip has the same name
-                RunUI(()=>configureToolsDlg.InstallZipTool(versionDifferent)); 
-                WaitForConditionUI(3 * 1000, () => configureToolsDlg.ToolList.Count == 4);
-                string version3 = TestFilesDir.GetTestPath("TestToolVersioning\\1.2.0\\Counter.zip");
-                RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(version3), messageDlg =>
-                {
-                    string messageForm = TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_currently_installed_, string.Empty,
-                            Resources.ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_upgrade_to__0__or_install_in_parallel_);
-                    AssertEx.AreComparableStrings(messageForm, messageDlg.Message, 2);
-                    messageDlg.Btn0Click(); // Upgrade
-                });
-                WaitForConditionUI(3 * 1000, () => configureToolsDlg.ToolList.Count == 4);
-                RunUI(configureToolsDlg.RemoveAllTools);
-                WaitForConditionUI(3 * 1000, () => configureToolsDlg.ToolList.Count == 0);
-                OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
-            }
-            //Settings.Default.ToolList.Clear();
-        }
-
-
-        private void TestLocateFileDlg()
-        {
-            var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
-            string path = TestFilesDir.GetTestPath("TestLocateFileDlg.zip");
-            RunUI(configureToolsDlg.RemoveAllTools);
-            RunDlg<LocateFileDlg>(() => configureToolsDlg.InstallZipTool(path), locateFileDlg =>
-                {
-                    AssertEx.AreComparableStrings(TextUtil.LineSeparate(
-                        Resources.LocateFileDlg_LocateFileDlg_This_tool_requires_0_version_1,
-                        Resources.LocateFileDlg_LocateFileDlg_If_you_have_it_installed_please_provide_the_path_below,
-                        Resources.LocateFileDlg_LocateFileDlg_Otherwise__please_cancel_and_install__0__version__1__first,
-                        Resources.LocateFileDlg_LocateFileDlg_then_run_the_tool_again), locateFileDlg.Message, 4);
-                    Assert.AreEqual(String.Empty, locateFileDlg.Path);
-                    locateFileDlg.OkDialog();
-                });
-// ReSharper disable LocalizableElement
-            WaitForConditionUI(2 * 1000, ()=> configureToolsDlg.textTitle.Text == "TestTool1"); //Not L10N            
-// ReSharper restore LocalizableElement
-
-            RunUI(() =>
-                {
-                    Assert.AreEqual("TestTool1", configureToolsDlg.textTitle.Text);
-                    Assert.AreEqual("$(ProgramPath(TESTPROGRAM,1))", configureToolsDlg.textCommand.Text);
-                    Assert.AreEqual("TestArgs", configureToolsDlg.textArguments.Text);
-                    Assert.AreEqual(CheckState.Checked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
-                    Assert.AreEqual(string.Empty, configureToolsDlg.comboReport.SelectedItem);
-                });
-
-            {
-                LocateFileDlg locateFileDlg = ShowDialog<LocateFileDlg>(configureToolsDlg.EditMacro);
-                RunUI(() =>
-                    {
-                        AssertEx.AreComparableStrings(TextUtil.LineSeparate(
-                            Resources.LocateFileDlg_LocateFileDlg_This_tool_requires_0_version_1,
-                            Resources.LocateFileDlg_LocateFileDlg_If_you_have_it_installed_please_provide_the_path_below,
-                            Resources.LocateFileDlg_LocateFileDlg_Otherwise__please_cancel_and_install__0__version__1__first,
-                            Resources.LocateFileDlg_LocateFileDlg_then_run_the_tool_again), locateFileDlg.Message, 4);
-                        Assert.AreEqual(String.Empty, locateFileDlg.Path);
-                        locateFileDlg.Path = "invalidPath";
-                    });
-                RunDlg<MessageDlg>(locateFileDlg.OkDialog, messageDlg =>
-                    {
-                        AssertEx.AreComparableStrings(Resources.LocateFileDlg_PathPasses_You_have_not_provided_a_valid_path_, messageDlg.Message);
-                        messageDlg.OkDialog();
-                    });
-                RunUI(() => locateFileDlg.CancelButton.PerformClick());
-                WaitForClosedForm(locateFileDlg);
-            }
-            OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
-            RunUI(()=> SkylineWindow.PopulateToolsMenu());
-            string validpath = TestFilesDir.GetTestPath("ShortStdinToStdout.exe"); 
-            RunDlg<LocateFileDlg>(() => SkylineWindow.RunTool(0), lfd =>
-                {
-                    Assert.AreEqual(String.Empty, lfd.Path);
-                    lfd.Path = validpath;
-                    lfd.OkDialog();
-                });            
-
-            var ctd = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);            
-            RunDlg<LocateFileDlg>(ctd.EditMacro, locate =>
-                {
-                    AssertEx.AreComparableStrings(TextUtil.LineSeparate(
-                        Resources.LocateFileDlg_LocateFileDlg_This_tool_requires_0_version_1,
-                        Resources.LocateFileDlg_LocateFileDlg_Below_is_the_saved_value_for_the_path_to_the_executable,
-                        Resources.LocateFileDlg_LocateFileDlg_Please_verify_and_update_if_incorrect), locate.Message, 2);
-                    Assert.AreEqual(validpath, locate.Path);
-                    locate.OkDialog();
-                });
-            RunUI(ctd.RemoveAllTools);
-            OkDialog(ctd, ctd.OkDialog);
-        }
-
-        private static void TestNotInstalledTool()
-        {            
-            var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
-            RunUI(() =>
-                {
-                    configureToolsDlg.RemoveAllTools();                
-                    configureToolsDlg.AddDialog("NEwTool", "$(ToolDir)\\Test.exe", string.Empty, string.Empty);
-                    Assert.AreEqual("NEwTool", configureToolsDlg.textTitle.Text);
-                    Assert.AreEqual("$(ToolDir)\\Test.exe", configureToolsDlg.textCommand.Text);                
-                });
-            RunDlg<MessageDlg>(configureToolsDlg.Add, dlg =>
-                {
-                    AssertEx.AreComparableStrings(
-                        Resources.ConfigureToolsDlg_CheckPassToolInternal__ToolDir__is_not_a_valid_macro_for_a_tool_that_was_not_installed_and_therefore_does_not_have_a_Tool_Directory_,
-                        dlg.Message, 0);
-                    dlg.OkDialog();
-                });
-            RunUI(configureToolsDlg.Remove);
-            OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
-        }        
 
         private void ZipTestInvalidPropertiesFiles()
         {

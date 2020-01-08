@@ -86,13 +86,19 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             UpdateAll();
         }
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            _cancellationTokenSource.Cancel();
+
+            base.OnClosing(e);
+        }
+
         protected override void OnHandleDestroyed(EventArgs e)
         {
             if (SkylineWindow != null)
             {
                 SkylineWindow.DocumentUIChangedEvent -= SkylineWindowOnDocumentUIChangedEvent;
             }
-            _cancellationTokenSource.Cancel();
             _rowUpdateQueue.Dispose();
             base.OnHandleDestroyed(e);
         }

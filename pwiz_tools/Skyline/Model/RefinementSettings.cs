@@ -889,12 +889,12 @@ namespace pwiz.Skyline.Model
             string pathForLibraryFiles, // In case we translate libraries etc
             ConvertToSmallMoleculesMode mode = ConvertToSmallMoleculesMode.formulas, 
             ConvertToSmallMoleculesChargesMode invertChargesMode = ConvertToSmallMoleculesChargesMode.none, 
-            bool ignoreDecoys=false)
+            bool ignoreDecoys=false, bool addAnnotations = true)
         {
             if (mode == ConvertToSmallMoleculesMode.none)
                 return document;
             var newdoc = new SrmDocument(document.Settings);
-            var note = new Annotations(TestingConvertedFromProteomic, null, 1); // Mark this as a testing node so we don't sort it
+            var note = addAnnotations ? new Annotations(TestingConvertedFromProteomic, null, 1) : Annotations.EMPTY; // Optionally mark this as a testing node so we don't sort it
             var precursorMap = new Dictionary<LibKey, LibKey>(); // Map int,modSeq to adduct,molecule
 
             var invertCharges = invertChargesMode == ConvertToSmallMoleculesChargesMode.invert;

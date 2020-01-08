@@ -96,7 +96,7 @@ namespace pwiz.Skyline.Model
         {
             Assume.IsTrue(Transition.IsCustom() || MzMassType.IsMassH());
             return Transition.IsCustom()
-                ? Transition.Adduct.MassFromMz(Mz, MzMassType)
+                ? Transition.CustomIon.GetMass(MzMassType)
                 : new TypedMass(SequenceMassCalc.GetMH(Mz, Transition.Charge), MzMassType);            
         }
 

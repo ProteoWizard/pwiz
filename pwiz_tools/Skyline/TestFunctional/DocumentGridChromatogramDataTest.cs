@@ -172,7 +172,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(strRawSpectrumIds);
             var rawSpectrumIds = strRawSpectrumIds.Split(csvSeparator).ToArray();
             var msDataFileScanIds = SkylineWindow.Document.Settings.MeasuredResults.LoadMSDataFileScanIds(
-                chromatogram.FilePath);
+                chromatogram.FilePath, out _);
             var expectedSpectrumIds = chromatogram.TimeIntensities.ScanIds
                 .Select(msDataFileScanIds.GetMsDataFileSpectrumId).ToArray();
             CollectionAssert.AreEqual(expectedSpectrumIds, rawSpectrumIds);
