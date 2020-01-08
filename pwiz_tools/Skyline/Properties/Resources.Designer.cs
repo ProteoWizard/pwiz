@@ -24999,6 +24999,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Skyline 20.1.
+        /// </summary>
+        public static string SkylineVersion_V20_1_Skyline_20_1 {
+            get {
+                return ResourceManager.GetString("SkylineVersion_V20_1_Skyline_20_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Skyline 3.6.
         /// </summary>
         public static string SkylineVersion_V3_6_Skyline_3_6 {

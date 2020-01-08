@@ -10964,4 +10964,7 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="ShimadzuNativeMassListExporter_ExportNativeList_Shimadzu_method_converter_encountered_an_error_" xml:space="preserve">
     <value>Shimadzu method converter encountered an error:</value>
   </data>
+  <data name="SkylineVersion_V20_1_Skyline_20_1" xml:space="preserve">
+    <value>Skyline 20.1</value>
+  </data>
 </root>

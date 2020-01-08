@@ -26,6 +26,7 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
@@ -145,7 +146,9 @@ namespace pwiz.Skyline.Model
             var listRanges = new List<IsolationRange>(isolationRanges);
             double minStart = double.MaxValue, maxStart = double.MinValue;
 
-            using (var dataFile = new MsDataFileImpl(dataSource.GetFilePath(), simAsSpectra: true))
+            string path = dataSource.GetFilePath();
+            bool isPasef = Equals(DataSourceUtil.GetSourceType(new DirectoryInfo(path)), DataSourceUtil.TYPE_BRUKER);
+            using (var dataFile = new MsDataFileImpl(path, simAsSpectra: true))
             {
                 int lookAheadCount = Math.Min(MAX_MULTI_CYCLE, dataFile.SpectrumCount);
                 for (int i = 0; i < lookAheadCount; i++)
@@ -154,6 +157,7 @@ namespace pwiz.Skyline.Model
                         continue;
 
                     var spectrum = dataFile.GetSpectrum(i);
+                    isPasef = isPasef && spectrum.IonMobilities != null;
                     foreach (var precursor in spectrum.Precursors)
                     {
                         if (!precursor.IsolationWindowLower.HasValue || !precursor.IsolationWindowUpper.HasValue)
@@ -192,6 +196,10 @@ namespace pwiz.Skyline.Model
                 if (dictRangeCounts.Values.Any(c => c == 1))
                     throw new IOException(string.Format(Resources.EditIsolationSchemeDlg_ReadIsolationRanges_No_repeating_isolation_scheme_found_in__0_, dataSource));
             }
+            // diaPASEF comes in out of order and will be misinterpreted unless ordered
+            // Multiplexing, however, requires that the acquired order by maintained
+            if (isPasef)
+                listRanges.Sort((r1, r2) => r1.Start.CompareTo(r2.Start));
             return listRanges.ToArray();
         }
 

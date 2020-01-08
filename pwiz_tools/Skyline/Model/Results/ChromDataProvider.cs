@@ -91,8 +91,6 @@ namespace pwiz.Skyline.Model.Results
 
         public abstract eIonMobilityUnits IonMobilityUnits { get; }
 
-        public abstract bool SourceHasCombinedIonMobilitySpectra { get; } // When true, data source provides IMS data in 3-array format, which affects spectrum ID format
-
         public abstract bool IsProcessedScans { get; }
 
         public abstract bool IsSingleMzMatch { get; }
@@ -194,7 +192,6 @@ namespace pwiz.Skyline.Model.Results
         private readonly bool _hasMidasSpectra;
         private readonly bool _sourceHasNegativePolarityData;
         private readonly bool _sourceHasPositivePolarityData;
-        private readonly bool _hasIonMobilityCombined;
         private readonly eIonMobilityUnits _ionMobilityUnits;
 
         /// <summary>
@@ -290,7 +287,6 @@ namespace pwiz.Skyline.Model.Results
             _hasMidasSpectra = (dataFile.IsABFile) && SpectraChromDataProvider.HasSpectrumData(dataFile);
 
             _ionMobilityUnits = dataFile.IonMobilityUnits;
-            _hasIonMobilityCombined = dataFile.HasCombinedIonMobilitySpectra;  // When true, data source provides IMS data in 3-array format, which affects spectrum ID format
 
             SetPercentComplete(50);
         }
@@ -369,8 +365,6 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public override eIonMobilityUnits IonMobilityUnits { get { return _ionMobilityUnits; } }
-
-        public override bool SourceHasCombinedIonMobilitySpectra { get { return _hasIonMobilityCombined; } }
 
         public override bool GetChromatogram(int id, Target modifiedSequence, Color color, out ChromExtra extra, out TimeIntensities timeIntensities)
         {
