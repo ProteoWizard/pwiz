@@ -10,6 +10,7 @@ using pwiz.Common.DataAnalysis.Matrices;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
 
 namespace pwiz.Skyline.Model
@@ -23,11 +24,13 @@ namespace pwiz.Skyline.Model
         private readonly double _foldChangeCutoff;
         private readonly int _msLevel;
         private readonly QrFactorizationCache _qrFactorizationCache = new QrFactorizationCache();
+        private SrmSettingsChangeMonitor _progressMonitor;
 
         public GroupComparisonRefinementData(SrmDocument document, double adjustedPValCutoff,
-            double foldChangeCutoff, int msLevel, List<GroupComparisonDef> groupComparisonDefs)
+            double foldChangeCutoff, int msLevel, List<GroupComparisonDef> groupComparisonDefs, SrmSettingsChangeMonitor progressMonitor)
         {
             _document = document;
+            _progressMonitor = progressMonitor;
             _foldChangeCutoff = foldChangeCutoff;
             _adjustedPValCutoff = adjustedPValCutoff;
             _msLevel = msLevel;
@@ -36,7 +39,7 @@ namespace pwiz.Skyline.Model
             foreach (var groupComparisonDef in groupComparisonDefs)
             {
                 var groupComparer = new GroupComparer(groupComparisonDef, _document, _qrFactorizationCache);
-                List<GroupComparisonResult> results = new List<GroupComparisonResult>();
+                var results = new List<GroupComparisonResult>();
 
                 foreach (var protein in _document.MoleculeGroups)
                 {
@@ -52,6 +55,16 @@ namespace pwiz.Skyline.Model
 
                     foreach (var peptide in peptides)
                     {
+                        if (_progressMonitor != null && _progressMonitor.IsCanceled())
+                        {
+                            throw new OperationCanceledException();
+                        }
+
+                        if (progressMonitor != null)
+                        {
+                            progressMonitor.ProcessMolecule(peptide);
+                        }
+
                         results.AddRange(groupComparer.CalculateFoldChanges(protein, peptide));
                     }
                 }
@@ -72,15 +85,26 @@ namespace pwiz.Skyline.Model
             }
         }
 
+
         public SrmDocument RemoveBelowCutoffs(SrmDocument document)
         {
             var union = new List<int>();
-
             foreach (var data in Data)
             {
+                if (_progressMonitor != null && _progressMonitor.IsCanceled())
+                {
+                    throw new OperationCanceledException();
+                }
+
+                if (_progressMonitor != null)
+                    _progressMonitor.ProcessMolecule(null);
+
                 var filterByCutoff = data.ToArray();
 
+                // Remove based on p value and fold change cutoffs
+                // Retain all standard types
                 var toRemove = filterByCutoff.Where(r =>
+                        r.Peptide == null || r.Peptide != null && r.Peptide.GlobalStandardType == null &&
                         r.MsLevel == _msLevel &&
                         (!double.IsNaN(_adjustedPValCutoff) &&
                          r.FoldChangeResult.AdjustedPValue >= _adjustedPValCutoff) ||

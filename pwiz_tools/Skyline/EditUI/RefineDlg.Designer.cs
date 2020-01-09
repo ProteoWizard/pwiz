@@ -31,29 +31,17 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RefineDlg));
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
-            this.btnOK = new System.Windows.Forms.Button();
-            this.btnCancel = new System.Windows.Forms.Button();
-            this.tabControl1 = new System.Windows.Forms.TabControl();
-            this.tabDocument = new System.Windows.Forms.TabPage();
             this.cbRemovePeptidesMissingLibrary = new System.Windows.Forms.CheckBox();
             this.cbAutoTransitions = new System.Windows.Forms.CheckBox();
             this.cbAutoPrecursors = new System.Windows.Forms.CheckBox();
             this.cbAutoPeptides = new System.Windows.Forms.CheckBox();
-            this.label7 = new System.Windows.Forms.Label();
             this.cbAdd = new System.Windows.Forms.CheckBox();
-            this.labelLabelType = new System.Windows.Forms.Label();
             this.comboRefineLabelType = new System.Windows.Forms.ComboBox();
             this.cbRemoveRepeatedPeptides = new System.Windows.Forms.CheckBox();
             this.cbRemoveDuplicatePeptides = new System.Windows.Forms.CheckBox();
             this.textMinTransitions = new System.Windows.Forms.TextBox();
-            this.label2 = new System.Windows.Forms.Label();
             this.textMinPeptides = new System.Windows.Forms.TextBox();
-            this.label1 = new System.Windows.Forms.Label();
-            this.tabResults = new System.Windows.Forms.TabPage();
-            this.cbMaxPrecursorOnly = new System.Windows.Forms.CheckBox();
             this.textMaxPepPeakRank = new System.Windows.Forms.TextBox();
-            this.label8 = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
             this.comboReplicateUse = new System.Windows.Forms.ComboBox();
             this.cbPreferLarger = new System.Windows.Forms.CheckBox();
             this.textMaxPeakRank = new System.Windows.Forms.TextBox();
@@ -64,6 +52,18 @@
             this.textMinIdotProduct = new System.Windows.Forms.TextBox();
             this.textMinDotProduct = new System.Windows.Forms.TextBox();
             this.textRTRegressionThreshold = new System.Windows.Forms.TextBox();
+            this.btnOK = new System.Windows.Forms.Button();
+            this.btnCancel = new System.Windows.Forms.Button();
+            this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.tabDocument = new System.Windows.Forms.TabPage();
+            this.label7 = new System.Windows.Forms.Label();
+            this.labelLabelType = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
+            this.tabResults = new System.Windows.Forms.TabPage();
+            this.cbMaxPrecursorOnly = new System.Windows.Forms.CheckBox();
+            this.label8 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
             this.labelMaxPeakRank = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
@@ -121,50 +121,6 @@
             this.helpTip.InitialDelay = 500;
             this.helpTip.ReshowDelay = 100;
             // 
-            // btnOK
-            // 
-            resources.ApplyResources(this.btnOK, "btnOK");
-            this.btnOK.Name = "btnOK";
-            this.btnOK.UseVisualStyleBackColor = true;
-            this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
-            // 
-            // btnCancel
-            // 
-            resources.ApplyResources(this.btnCancel, "btnCancel");
-            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Name = "btnCancel";
-            this.btnCancel.UseVisualStyleBackColor = true;
-            // 
-            // tabControl1
-            // 
-            resources.ApplyResources(this.tabControl1, "tabControl1");
-            this.tabControl1.Controls.Add(this.tabDocument);
-            this.tabControl1.Controls.Add(this.tabResults);
-            this.tabControl1.Controls.Add(this.tabConsistency);
-            this.tabControl1.Controls.Add(this.tabGroupComparisons);
-            this.tabControl1.Name = "tabControl1";
-            this.tabControl1.SelectedIndex = 0;
-            // 
-            // tabDocument
-            // 
-            this.tabDocument.Controls.Add(this.cbRemovePeptidesMissingLibrary);
-            this.tabDocument.Controls.Add(this.cbAutoTransitions);
-            this.tabDocument.Controls.Add(this.cbAutoPrecursors);
-            this.tabDocument.Controls.Add(this.cbAutoPeptides);
-            this.tabDocument.Controls.Add(this.label7);
-            this.tabDocument.Controls.Add(this.cbAdd);
-            this.tabDocument.Controls.Add(this.labelLabelType);
-            this.tabDocument.Controls.Add(this.comboRefineLabelType);
-            this.tabDocument.Controls.Add(this.cbRemoveRepeatedPeptides);
-            this.tabDocument.Controls.Add(this.cbRemoveDuplicatePeptides);
-            this.tabDocument.Controls.Add(this.textMinTransitions);
-            this.tabDocument.Controls.Add(this.label2);
-            this.tabDocument.Controls.Add(this.textMinPeptides);
-            this.tabDocument.Controls.Add(this.label1);
-            resources.ApplyResources(this.tabDocument, "tabDocument");
-            this.tabDocument.Name = "tabDocument";
-            this.tabDocument.UseVisualStyleBackColor = true;
-            // 
             // cbRemovePeptidesMissingLibrary
             // 
             resources.ApplyResources(this.cbRemovePeptidesMissingLibrary, "cbRemovePeptidesMissingLibrary");
@@ -193,11 +149,6 @@
             this.helpTip.SetToolTip(this.cbAutoPeptides, resources.GetString("cbAutoPeptides.ToolTip"));
             this.cbAutoPeptides.UseVisualStyleBackColor = true;
             // 
-            // label7
-            // 
-            resources.ApplyResources(this.label7, "label7");
-            this.label7.Name = "label7";
-            // 
             // cbAdd
             // 
             resources.ApplyResources(this.cbAdd, "cbAdd");
@@ -205,11 +156,6 @@
             this.helpTip.SetToolTip(this.cbAdd, resources.GetString("cbAdd.ToolTip"));
             this.cbAdd.UseVisualStyleBackColor = true;
             this.cbAdd.CheckedChanged += new System.EventHandler(this.cbAdd_CheckedChanged);
-            // 
-            // labelLabelType
-            // 
-            resources.ApplyResources(this.labelLabelType, "labelLabelType");
-            this.labelLabelType.Name = "labelLabelType";
             // 
             // comboRefineLabelType
             // 
@@ -239,65 +185,17 @@
             this.textMinTransitions.Name = "textMinTransitions";
             this.helpTip.SetToolTip(this.textMinTransitions, resources.GetString("textMinTransitions.ToolTip"));
             // 
-            // label2
-            // 
-            resources.ApplyResources(this.label2, "label2");
-            this.label2.Name = "label2";
-            // 
             // textMinPeptides
             // 
             resources.ApplyResources(this.textMinPeptides, "textMinPeptides");
             this.textMinPeptides.Name = "textMinPeptides";
             this.helpTip.SetToolTip(this.textMinPeptides, resources.GetString("textMinPeptides.ToolTip"));
             // 
-            // label1
-            // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
-            // 
-            // tabResults
-            // 
-            this.tabResults.Controls.Add(this.cbMaxPrecursorOnly);
-            this.tabResults.Controls.Add(this.textMaxPepPeakRank);
-            this.tabResults.Controls.Add(this.label8);
-            this.tabResults.Controls.Add(this.label4);
-            this.tabResults.Controls.Add(this.comboReplicateUse);
-            this.tabResults.Controls.Add(this.cbPreferLarger);
-            this.tabResults.Controls.Add(this.textMaxPeakRank);
-            this.tabResults.Controls.Add(this.labelMaxPeakRank);
-            this.tabResults.Controls.Add(this.textMaxPeakFoundRatio);
-            this.tabResults.Controls.Add(this.label6);
-            this.tabResults.Controls.Add(this.radioRemoveMissing);
-            this.tabResults.Controls.Add(this.radioIgnoreMissing);
-            this.tabResults.Controls.Add(this.textMinPeakFoundRatio);
-            this.tabResults.Controls.Add(this.label5);
-            this.tabResults.Controls.Add(this.groupLibCorr);
-            this.tabResults.Controls.Add(this.groupBox1);
-            resources.ApplyResources(this.tabResults, "tabResults");
-            this.tabResults.Name = "tabResults";
-            this.tabResults.UseVisualStyleBackColor = true;
-            // 
-            // cbMaxPrecursorOnly
-            // 
-            resources.ApplyResources(this.cbMaxPrecursorOnly, "cbMaxPrecursorOnly");
-            this.cbMaxPrecursorOnly.Name = "cbMaxPrecursorOnly";
-            this.cbMaxPrecursorOnly.UseVisualStyleBackColor = true;
-            // 
             // textMaxPepPeakRank
             // 
             resources.ApplyResources(this.textMaxPepPeakRank, "textMaxPepPeakRank");
             this.textMaxPepPeakRank.Name = "textMaxPepPeakRank";
             this.helpTip.SetToolTip(this.textMaxPepPeakRank, resources.GetString("textMaxPepPeakRank.ToolTip"));
-            // 
-            // label8
-            // 
-            resources.ApplyResources(this.label8, "label8");
-            this.label8.Name = "label8";
-            // 
-            // label4
-            // 
-            resources.ApplyResources(this.label4, "label4");
-            this.label4.Name = "label4";
             // 
             // comboReplicateUse
             // 
@@ -370,6 +268,108 @@
             resources.ApplyResources(this.textRTRegressionThreshold, "textRTRegressionThreshold");
             this.textRTRegressionThreshold.Name = "textRTRegressionThreshold";
             this.helpTip.SetToolTip(this.textRTRegressionThreshold, resources.GetString("textRTRegressionThreshold.ToolTip"));
+            // 
+            // btnOK
+            // 
+            resources.ApplyResources(this.btnOK, "btnOK");
+            this.btnOK.Name = "btnOK";
+            this.btnOK.UseVisualStyleBackColor = true;
+            this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
+            // 
+            // btnCancel
+            // 
+            resources.ApplyResources(this.btnCancel, "btnCancel");
+            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.btnCancel.Name = "btnCancel";
+            this.btnCancel.UseVisualStyleBackColor = true;
+            // 
+            // tabControl1
+            // 
+            resources.ApplyResources(this.tabControl1, "tabControl1");
+            this.tabControl1.Controls.Add(this.tabDocument);
+            this.tabControl1.Controls.Add(this.tabResults);
+            this.tabControl1.Controls.Add(this.tabConsistency);
+            this.tabControl1.Controls.Add(this.tabGroupComparisons);
+            this.tabControl1.Name = "tabControl1";
+            this.tabControl1.SelectedIndex = 0;
+            // 
+            // tabDocument
+            // 
+            this.tabDocument.Controls.Add(this.cbRemovePeptidesMissingLibrary);
+            this.tabDocument.Controls.Add(this.cbAutoTransitions);
+            this.tabDocument.Controls.Add(this.cbAutoPrecursors);
+            this.tabDocument.Controls.Add(this.cbAutoPeptides);
+            this.tabDocument.Controls.Add(this.label7);
+            this.tabDocument.Controls.Add(this.cbAdd);
+            this.tabDocument.Controls.Add(this.labelLabelType);
+            this.tabDocument.Controls.Add(this.comboRefineLabelType);
+            this.tabDocument.Controls.Add(this.cbRemoveRepeatedPeptides);
+            this.tabDocument.Controls.Add(this.cbRemoveDuplicatePeptides);
+            this.tabDocument.Controls.Add(this.textMinTransitions);
+            this.tabDocument.Controls.Add(this.label2);
+            this.tabDocument.Controls.Add(this.textMinPeptides);
+            this.tabDocument.Controls.Add(this.label1);
+            resources.ApplyResources(this.tabDocument, "tabDocument");
+            this.tabDocument.Name = "tabDocument";
+            this.tabDocument.UseVisualStyleBackColor = true;
+            // 
+            // label7
+            // 
+            resources.ApplyResources(this.label7, "label7");
+            this.label7.Name = "label7";
+            // 
+            // labelLabelType
+            // 
+            resources.ApplyResources(this.labelLabelType, "labelLabelType");
+            this.labelLabelType.Name = "labelLabelType";
+            // 
+            // label2
+            // 
+            resources.ApplyResources(this.label2, "label2");
+            this.label2.Name = "label2";
+            // 
+            // label1
+            // 
+            resources.ApplyResources(this.label1, "label1");
+            this.label1.Name = "label1";
+            // 
+            // tabResults
+            // 
+            this.tabResults.Controls.Add(this.cbMaxPrecursorOnly);
+            this.tabResults.Controls.Add(this.textMaxPepPeakRank);
+            this.tabResults.Controls.Add(this.label8);
+            this.tabResults.Controls.Add(this.label4);
+            this.tabResults.Controls.Add(this.comboReplicateUse);
+            this.tabResults.Controls.Add(this.cbPreferLarger);
+            this.tabResults.Controls.Add(this.textMaxPeakRank);
+            this.tabResults.Controls.Add(this.labelMaxPeakRank);
+            this.tabResults.Controls.Add(this.textMaxPeakFoundRatio);
+            this.tabResults.Controls.Add(this.label6);
+            this.tabResults.Controls.Add(this.radioRemoveMissing);
+            this.tabResults.Controls.Add(this.radioIgnoreMissing);
+            this.tabResults.Controls.Add(this.textMinPeakFoundRatio);
+            this.tabResults.Controls.Add(this.label5);
+            this.tabResults.Controls.Add(this.groupLibCorr);
+            this.tabResults.Controls.Add(this.groupBox1);
+            resources.ApplyResources(this.tabResults, "tabResults");
+            this.tabResults.Name = "tabResults";
+            this.tabResults.UseVisualStyleBackColor = true;
+            // 
+            // cbMaxPrecursorOnly
+            // 
+            resources.ApplyResources(this.cbMaxPrecursorOnly, "cbMaxPrecursorOnly");
+            this.cbMaxPrecursorOnly.Name = "cbMaxPrecursorOnly";
+            this.cbMaxPrecursorOnly.UseVisualStyleBackColor = true;
+            // 
+            // label8
+            // 
+            resources.ApplyResources(this.label8, "label8");
+            this.label8.Name = "label8";
+            // 
+            // label4
+            // 
+            resources.ApplyResources(this.label4, "label4");
+            this.label4.Name = "label4";
             // 
             // labelMaxPeakRank
             // 

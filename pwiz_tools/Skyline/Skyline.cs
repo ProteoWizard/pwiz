@@ -2566,7 +2566,22 @@ namespace pwiz.Skyline
                 if (refineDlg.ShowDialog(this) == DialogResult.OK)
                 {
                     ModifyDocument(Resources.SkylineWindow_ShowRefineDlg_Refine,
-                        doc => refineDlg.RefinementSettings.Refine(doc), refineDlg.FormSettings.EntryCreator.Create);
+                        doc =>
+                        {
+                            using (var longWaitDlg = new LongWaitDlg(this, true))
+                            {
+                                longWaitDlg.Message = "Refining document";
+                                longWaitDlg.PerformWork(refineDlg, 1000, progressMonitor =>
+                                {
+                                    var srmSettingsChangeMonitor =
+                                        new SrmSettingsChangeMonitor(progressMonitor, "Refining document", this, doc);
+
+                                        doc = refineDlg.RefinementSettings.Refine(doc, srmSettingsChangeMonitor);
+                                    });
+                            }
+
+                            return doc;
+                        }, refineDlg.FormSettings.EntryCreator.Create);
                 }
             }
         }
