@@ -789,6 +789,13 @@ namespace pwiz.Skyline
             (c, p) => c.Refinement.QValueCutoff = p.ValueDouble);
         public static readonly Argument ARG_REFINE_MINIMUM_DETECTIONS = new RefineArgument(@"refine-minimum-detections", INT_VALUE,
             (c, p) => c.Refinement.MinimumDetections = p.ValueInt);
+        // Refinement Group Comparison Tab
+        public static readonly Argument ARG_REFINE_GC_ADJUSTED_P_VALUE = new RefineArgument(
+            @"refine-gc-adjusted-p-value-cutoff", NUM_VALUE,
+            (c, p) => c.Refinement.AdjustedPValueCutoff = p.ValueDouble);
+        public static readonly Argument ARG_REFINE_GC_FOLD_CHANGE = new RefineArgument(@"refine-gc-fold-change-cutoff",
+            NUM_VALUE,
+            (c, p) => c.Refinement.FoldChangeCutoff = p.ValueDouble);
 
         private static readonly ArgumentGroup GROUP_REFINEMENT = new ArgumentGroup(
             () => CommandArgUsage.CommandArgs_GROUP_REFINEMENT, false,

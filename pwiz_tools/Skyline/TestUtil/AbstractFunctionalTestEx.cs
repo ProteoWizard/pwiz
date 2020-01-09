@@ -362,6 +362,32 @@ namespace pwiz.SkylineTestUtil
             return FindGroupComparison(name);
         }
 
+        public GroupComparisonDef CreateGroupComparison(string name, string controlGroupAnnotation,
+            string controlGroupValue, string compareValue, string identityAnnotation)
+        {
+            var dialog = ShowDialog<EditGroupComparisonDlg>(SkylineWindow.AddGroupComparison);
+
+            RunUI(() =>
+            {
+                dialog.TextBoxName.Text = name;
+                dialog.ComboControlAnnotation.SelectedItem = controlGroupAnnotation;
+            });
+
+            WaitForConditionUI(() => dialog.ComboControlValue.Items.Count > 0);
+
+            RunUI(() =>
+            {
+                dialog.ComboControlValue.SelectedItem = controlGroupValue;
+                dialog.ComboCaseValue.SelectedItem = compareValue;
+                dialog.ComboIdentityAnnotation.SelectedItem = identityAnnotation;
+                dialog.RadioScopePerProtein.Checked = false;
+            });
+
+            OkDialog(dialog, dialog.OkDialog);
+
+            return FindGroupComparison(name);
+        }
+
         public void ChangeGroupComparison(Control owner, string name, Action<EditGroupComparisonDlg> action)
         {
             GroupComparisonDef def = null;

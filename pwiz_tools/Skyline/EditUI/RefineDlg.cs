@@ -612,7 +612,7 @@ namespace pwiz.Skyline.EditUI
                                          MSLevel = msLevel,
                                          AdjustedPValueCutoff = adjustedPValueCutoff,
                                          FoldChangeCutoff = foldChangeCutoff,
-                                         MSLevelGroupComparisons = msLevelGroupComparison,
+                                         MSLevelGroupComparison = msLevelGroupComparison,
                                          GroupComparisonDefs = groupComparisonDefs
                                      };
 

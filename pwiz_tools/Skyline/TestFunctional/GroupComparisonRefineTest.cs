@@ -22,7 +22,7 @@ namespace pwiz.SkylineTestFunctional
 
             CreateGroupComparison("Test Group Comparison", "Condition", "Healthy", "Diseased");
 
-            var graphStates = new[] { (26, 42, 42, 242), (14, 19, 19, 108), (44, 102, 102, 591) };
+            var graphStates = new[] { (26, 42, 42, 242), (14, 19, 19, 108), (44, 102, 102, 591), (26, 44, 44, 255) };
 
             // Verify that bad inputs show error message
             var refineDlg = ShowDialog<RefineDlg>(() => SkylineWindow.ShowRefineDlg());
@@ -88,6 +88,23 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(graphStates[2], refineDocState);
             RunUI(SkylineWindow.Undo);
 
+            // Verify the union of 2 group comparisons works
+            CreateGroupComparison("Test Group Comparison 2", "Condition", "Healthy", "Diseased", "BioReplicate");
+
+            refineDlg = ShowDialog<RefineDlg>(() => SkylineWindow.ShowRefineDlg());
+            RunUI(() =>
+            {
+                refineDlg.Log = false;
+                refineDlg.AdjustedPValueCutoff = 0.05;
+                refineDlg.FoldChangeCutoff = 2;
+            });
+
+            OkDialog(refineDlg, refineDlg.OkDialog);
+            doc = SkylineWindow.Document;
+            refineDocState = (doc.PeptideGroupCount, doc.PeptideCount, doc.PeptideTransitionGroupCount,
+                doc.PeptideTransitionCount);
+            Assert.AreEqual(graphStates[3], refineDocState);
+            RunUI(SkylineWindow.Undo);
         }
     }
 }

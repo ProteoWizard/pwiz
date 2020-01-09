@@ -218,7 +218,7 @@ namespace pwiz.Skyline.Model
         [Track]
         public double? AdjustedPValueCutoff { get; set; }
         [Track]
-        public int? MSLevelGroupComparisons { get; set; }
+        public int? MSLevelGroupComparison { get; set; }
         [Track]
         public List<GroupComparisonDef> GroupComparisonDefs { get; set; }
 
@@ -229,6 +229,22 @@ namespace pwiz.Skyline.Model
 
         public SrmDocument Refine(SrmDocument document, SrmSettingsChangeMonitor progressMonitor)
         {
+            if (progressMonitor != null)
+            {
+                int molCount = document.PeptideCount;
+                if (CVCutoff.HasValue || QValueCutoff.HasValue)
+                {
+                    molCount *= 2;
+                }
+
+                if (AdjustedPValueCutoff.HasValue || FoldChangeCutoff.HasValue)
+                {
+                    molCount *= 4;
+                }
+
+                progressMonitor.MoleculeCount = molCount;
+            }
+
             HashSet<int> outlierIds = new HashSet<int>();
             if (RTRegressionThreshold.HasValue)
             {
@@ -272,8 +288,8 @@ namespace pwiz.Skyline.Model
             int minPeptides = MinPeptidesPerProtein ?? 0;
             foreach (PeptideGroupDocNode nodePepGroup in document.Children)
             {
-                if (progressMonitor != null)
-                    progressMonitor.ProcessGroup(nodePepGroup);
+//                if (progressMonitor != null)
+//                    progressMonitor.ProcessGroup(nodePepGroup);
 
                 if (acceptedProteins != null && !acceptedProteins.Contains(GetAcceptProteinKey(nodePepGroup)))
                     continue;
@@ -345,13 +361,13 @@ namespace pwiz.Skyline.Model
                     throw new Exception(Resources.RefinementSettings_Refine_The_document_does_not_have_a_global_standard_to_normalize_by_);
                 }
 
-                double cvcutoff = CVCutoff.HasValue ? CVCutoff.Value : double.NaN;
-                double qvalue = QValueCutoff.HasValue ? QValueCutoff.Value : double.NaN;
-                int minDetections = MinimumDetections.HasValue ? MinimumDetections.Value : -1;
-                int ratioIndex = GetLabelIndex(NormalizationLabelType, document);
-                int countTransitions = CountTransitions.HasValue ? CountTransitions.Value : -1;
+                var cvcutoff = CVCutoff.HasValue ? CVCutoff.Value : double.NaN;
+                var qvalue = QValueCutoff.HasValue ? QValueCutoff.Value : double.NaN;
+                var minDetections = MinimumDetections.HasValue ? MinimumDetections.Value : -1;
+                var ratioIndex = GetLabelIndex(NormalizationLabelType, document);
+                var countTransitions = CountTransitions.HasValue ? CountTransitions.Value : -1;
                 var data = new AreaCVRefinementData(refined, new AreaCVRefinementSettings(cvcutoff, qvalue, minDetections, NormalizationMethod, ratioIndex,
-                    Transitions, countTransitions, MSLevel));
+                    Transitions, countTransitions, MSLevel), null, progressMonitor);
                 refined = data.RemoveAboveCVCutoff(refined);
             }
 
@@ -359,9 +375,9 @@ namespace pwiz.Skyline.Model
             {
                 var pValueCutoff = AdjustedPValueCutoff.HasValue ? AdjustedPValueCutoff.Value : double.NaN;
                 var foldChangeCutoff = FoldChangeCutoff.HasValue ? FoldChangeCutoff.Value : double.NaN;
-                var msLevel = MSLevelGroupComparisons.HasValue ? MSLevelGroupComparisons.Value : 1;
+                var msLevel = MSLevelGroupComparison.HasValue ? MSLevelGroupComparison.Value : 1;
                 var groupComparisonData = new GroupComparisonRefinementData(refined, pValueCutoff, foldChangeCutoff,
-                    msLevel, GroupComparisonDefs);
+                    msLevel, GroupComparisonDefs, progressMonitor);
                 refined = groupComparisonData.RemoveBelowCutoffs(refined);
             }
 
