@@ -472,6 +472,10 @@ namespace pwiz.Skyline
             get { return _immediateWindow; }
         }
 
+        public DockPanel DockPanel
+        {
+            get { return dockPanel; }
+        }
         public bool DiscardChanges { get; set; }
 
         /// <summary>
@@ -3388,20 +3392,6 @@ namespace pwiz.Skyline
             // Explorer's spectrum graph pane.
             UpdateGraphPanes();
         }
-        public static List<PrositIntensityModel.PeptidePrecursorNCE> ReadStandardPeptides(IrtStandard standard)
-        {
-            var peps = standard.GetDocument().Peptides.ToList();
-            var precs = peps.Select(p => p.TransitionGroups.First());
-            /*for (var i = 0; i < peps.Count; i++)
-            {
-                var modSeq = ModifiedSequence.GetModifiedSequence(docImport.Settings, peps[i], IsotopeLabelType.light);
-                peps[i] = peps[i].ChangeExplicitMods(new ExplicitMods(peps[i].Peptide,
-                    modSeq.ExplicitMods.Select(m => m.ExplicitMod).ToArray(),
-                    new TypedExplicitModifications[0]));
-            }*/
-            return Enumerable.Zip(peps, precs,
-                (pep, prec) => new PrositIntensityModel.PeptidePrecursorNCE(pep, prec)).ToList();
-        }
 
         private void HandleStandardsChanged(ICollection<Target> oldStandard)
         {
@@ -5091,9 +5081,12 @@ namespace pwiz.Skyline
                 // Add the error to the ImportingResultsWindow before calling "ShowAllChromatogramsGraph" 
                 // because "ShowAllChromatogramsGraph" may destroy the window if the job is done and there are
                 // no errors yet.
-                ImportingResultsWindow.UpdateStatus((MultiProgressStatus) e.Progress);
+                var multiProgress = (MultiProgressStatus) e.Progress;
+                ImportingResultsWindow.UpdateStatus(multiProgress);
                 ShowAllChromatogramsGraph();
-                return;
+                // Make sure user is actually seeing an error
+                if (ImportingResultsWindow != null && ImportingResultsWindow.HasErrors)
+                    return;
             }
 
             // TODO: replace this with more generic logic fed from IProgressMonitor

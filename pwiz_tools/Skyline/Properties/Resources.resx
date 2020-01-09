@@ -1004,9 +1004,6 @@
   <data name="SkylineWindow_FindIonMobilityLibrary_Ion_Mobility_Library" xml:space="preserve">
     <value>Ion Mobility Library</value>
   </data>
-  <data name="ShimadzuNativeMassListExporter_ExportNativeList_Failure_attempting_to_save_to_the_temporary_file__0_" xml:space="preserve">
-    <value>Failure attempting to save to the temporary file {0}</value>
-  </data>
   <data name="SkylineWindow_CreateRegression_Set_regression__0__" xml:space="preserve">
     <value>Set regression {0}</value>
   </data>
@@ -10906,5 +10903,68 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="IrtStandard_DocumentStream_No_document_to_import" xml:space="preserve">
     <value>No document to import</value>
+  </data>
+  <data name="ShimadzuMethodExporter_ExportMethod_Input_string_is_empty_" xml:space="preserve">
+    <value>Input string is empty.</value>
+  </data>
+  <data name="ShimadzuMethodExporter_ExportMethod_Input_string_cannot_be_parsed_" xml:space="preserve">
+    <value>Input string cannot be parsed.</value>
+  </data>
+  <data name="ShimadzuMethodExporter_ExportMethod_Output_path_is_not_specified_" xml:space="preserve">
+    <value>Output path is not specified.</value>
+  </data>
+  <data name="ShimadzuMethodExporter_ExportMethod_Cannot_open_output_file_" xml:space="preserve">
+    <value>Cannot open output file.</value>
+  </data>
+  <data name="ShimadzuMethodExporter_ExportMethod_Invalid_parameter__Cannot_create_output_method_" xml:space="preserve">
+    <value>Invalid parameter. Cannot create output method.</value>
+  </data>
+  <data name="ShimadzuMethodExporter_ExportMethod_Output_file_type_is_not_supported_" xml:space="preserve">
+    <value>Output file type is not supported.</value>
+  </data>
+  <data name="ShimadzuMethodExporter_ExportMethod_Exception_raised_during_output_serialization_" xml:space="preserve">
+    <value>Exception raised during output serialization.</value>
+  </data>
+  <data name="ShimadzuMethodExporter_ExportMethod_Number_of_events_exceed_the_maximum_allowed_by_LabSolutions__1000__" xml:space="preserve">
+    <value>Number of events exceed the maximum allowed by LabSolutions (1000).</value>
+  </data>
+  <data name="ShimadzuMethodExporter_ExportMethod_Output_method_does_not_contain_any_events_" xml:space="preserve">
+    <value>Output method does not contain any events.</value>
+  </data>
+  <data name="ShimadzuMethodExporter_ExportMethod_Input_events_are_not_contiguous_" xml:space="preserve">
+    <value>Input events are not contiguous.</value>
+  </data>
+  <data name="ShimadzuMethodExporter_ExportMethod_Input_events_are_not_in_ascending_order" xml:space="preserve">
+    <value>Input events are not in ascending order</value>
+  </data>
+  <data name="ShimadzuMethodExporter_ExportMethod_Shimadzu_method_writer_encountered_an_error_" xml:space="preserve">
+    <value>Shimadzu method writer encountered an error:</value>
+  </data>
+  <data name="ShimadzuNativeMassListExporter_ExportNativeList_Input_string_is_empty_" xml:space="preserve">
+    <value>Input string is empty.</value>
+  </data>
+  <data name="ShimadzuNativeMassListExporter_ExportNativeList_Input_string_cannot_be_parsed_" xml:space="preserve">
+    <value>Input string cannot be parsed.</value>
+  </data>
+  <data name="ShimadzuNativeMassListExporter_ExportNativeList_Cannot_open_output_file_" xml:space="preserve">
+    <value>Cannot open output file.</value>
+  </data>
+  <data name="ShimadzuNativeMassListExporter_ExportNativeList_Invalid_parameter__Cannot_create_output_method_" xml:space="preserve">
+    <value>Invalid parameter. Cannot create output method.</value>
+  </data>
+  <data name="ShimadzuNativeMassListExporter_ExportNativeList_Number_of_events_exceed_maximum_allowed_by_LabSolutions__1000__" xml:space="preserve">
+    <value>Number of events exceed maximum allowed by LabSolutions (1000).</value>
+  </data>
+  <data name="ShimadzuNativeMassListExporter_ExportNativeList_Input_events_are_not_contiguous_" xml:space="preserve">
+    <value>Input events are not contiguous.</value>
+  </data>
+  <data name="ShimadzuNativeMassListExporter_ExportNativeList_Input_events_are_not_in_ascending_order" xml:space="preserve">
+    <value>Input events are not in ascending order</value>
+  </data>
+  <data name="ShimadzuNativeMassListExporter_ExportNativeList_Shimadzu_method_converter_encountered_an_error_" xml:space="preserve">
+    <value>Shimadzu method converter encountered an error:</value>
+  </data>
+  <data name="SkylineVersion_V20_1_Skyline_20_1" xml:space="preserve">
+    <value>Skyline 20.1</value>
   </data>
 </root>

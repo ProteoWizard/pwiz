@@ -21,21 +21,25 @@
           <precursor_mz>560.759474</precursor_mz>
           <product_mz>1021.443259</product_mz>
           <collision_energy>19.936495</collision_energy>
+          <transition_lib_info rank="4" intensity="258205.531" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="10" calc_neutral_mass="919.388304" product_charge="1" cleavage_aa="A" loss_neutral_mass="0">
           <precursor_mz>560.759474</precursor_mz>
           <product_mz>920.39558</product_mz>
           <collision_energy>19.936495</collision_energy>
+          <transition_lib_info rank="1" intensity="1745350" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="9" calc_neutral_mass="848.351191" product_charge="1" cleavage_aa="S" loss_neutral_mass="0">
           <precursor_mz>560.759474</precursor_mz>
           <product_mz>849.358467</product_mz>
           <collision_energy>19.936495</collision_energy>
+          <transition_lib_info rank="2" intensity="973779.3" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="8" calc_neutral_mass="761.319162" product_charge="1" cleavage_aa="G" loss_neutral_mass="0">
           <precursor_mz>560.759474</precursor_mz>
           <product_mz>762.326438</product_mz>
           <collision_energy>19.936495</collision_energy>
+          <transition_lib_info rank="3" intensity="655767.6" />
         </transition>
       </precursor>
     </peptide>
@@ -45,21 +49,25 @@
           <precursor_mz>452.224539</precursor_mz>
           <product_mz>719.320624</product_mz>
           <collision_energy>14.835353</collision_energy>
+          <transition_lib_info rank="1" intensity="3.265816E+07" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="647.276235" product_charge="1" cleavage_aa="E" loss_neutral_mass="0">
           <precursor_mz>452.224539</precursor_mz>
           <product_mz>648.283511</product_mz>
           <collision_energy>14.835353</collision_energy>
+          <transition_lib_info rank="2" intensity="4786977" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="5" calc_neutral_mass="518.233641" product_charge="1" cleavage_aa="D" loss_neutral_mass="0">
           <precursor_mz>452.224539</precursor_mz>
           <product_mz>519.240917</product_mz>
           <collision_energy>14.835353</collision_energy>
+          <transition_lib_info rank="3" intensity="2104673.25" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="4" calc_neutral_mass="403.206698" product_charge="1" cleavage_aa="E" loss_neutral_mass="0">
           <precursor_mz>452.224539</precursor_mz>
           <product_mz>404.213974</product_mz>
           <collision_energy>14.835353</collision_energy>
+          <transition_lib_info rank="4" intensity="1029489.88" />
         </transition>
       </precursor>
     </peptide>
@@ -69,16 +77,19 @@
           <precursor_mz>580.283117</precursor_mz>
           <product_mz>1001.489815</product_mz>
           <collision_energy>20.854106</collision_energy>
+          <transition_lib_info rank="4" intensity="2103368.75" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="8" calc_neutral_mass="929.445425" product_charge="1" cleavage_aa="D" loss_neutral_mass="0">
           <precursor_mz>580.283117</precursor_mz>
           <product_mz>930.452701</product_mz>
           <collision_energy>20.854106</collision_energy>
+          <transition_lib_info rank="2" intensity="3115971.5" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="814.418482" product_charge="1" cleavage_aa="L" loss_neutral_mass="0">
           <precursor_mz>580.283117</precursor_mz>
           <product_mz>815.425758</product_mz>
           <collision_energy>20.854106</collision_energy>
+          <transition_lib_info rank="3" intensity="2923146" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="684.307869" product_charge="1" cleavage_aa="Q" loss_neutral_mass="17.026549">
           <precursor_mz>580.283117</precursor_mz>
@@ -87,6 +98,7 @@
           <losses>
             <neutral_loss modification_name="Ammonia loss" />
           </losses>
+          <transition_lib_info rank="1" intensity="3575647" />
         </transition>
       </precursor>
     </peptide>
@@ -96,21 +108,25 @@
           <precursor_mz>565.254025</precursor_mz>
           <product_mz>955.436717</product_mz>
           <collision_energy>20.147739</collision_energy>
+          <transition_lib_info rank="3" intensity="3068036.5" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="8" calc_neutral_mass="791.366112" product_charge="1" cleavage_aa="V" loss_neutral_mass="0">
           <precursor_mz>565.254025</precursor_mz>
           <product_mz>792.373388</product_mz>
           <collision_energy>20.147739</collision_energy>
+          <transition_lib_info rank="2" intensity="8283374" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="692.297698" product_charge="1" cleavage_aa="G" loss_neutral_mass="0">
           <precursor_mz>565.254025</precursor_mz>
           <product_mz>693.304974</product_mz>
           <collision_energy>20.147739</collision_energy>
+          <transition_lib_info rank="1" intensity="1.855489E+07" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="5" calc_neutral_mass="520.249292" product_charge="1" cleavage_aa="E" loss_neutral_mass="0">
           <precursor_mz>565.254025</precursor_mz>
           <product_mz>521.256568</product_mz>
           <collision_energy>20.147739</collision_energy>
+          <transition_lib_info rank="4" intensity="1194568.25" />
         </transition>
       </precursor>
     </peptide>
@@ -120,11 +136,13 @@
           <precursor_mz>774.357207</precursor_mz>
           <product_mz>1108.500439</product_mz>
           <collision_energy>29.975589</collision_energy>
+          <transition_lib_info rank="1" intensity="6897628.5" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="8" calc_neutral_mass="881.397806" product_charge="1" cleavage_aa="T" loss_neutral_mass="0">
           <precursor_mz>774.357207</precursor_mz>
           <product_mz>882.405082</product_mz>
           <collision_energy>29.975589</collision_energy>
+          <transition_lib_info rank="2" intensity="892379.2" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="13" calc_neutral_mass="1404.625634" product_charge="2" cleavage_aa="A" loss_neutral_mass="0">
           <precursor_mz>774.357207</precursor_mz>
@@ -144,11 +162,13 @@
           <precursor_mz>454.26601</precursor_mz>
           <product_mz>695.372266</product_mz>
           <collision_energy>14.931302</collision_energy>
+          <transition_lib_info rank="1" intensity="34488076" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="5" calc_neutral_mass="597.312226" product_charge="1" cleavage_aa="E" loss_neutral_mass="0">
           <precursor_mz>454.26601</precursor_mz>
           <product_mz>598.319502</product_mz>
           <collision_energy>14.931302</collision_energy>
+          <transition_lib_info rank="3" intensity="399405.031" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="5" calc_neutral_mass="579.301661" product_charge="1" cleavage_aa="E" loss_neutral_mass="18.010565">
           <precursor_mz>454.26601</precursor_mz>
@@ -157,11 +177,13 @@
           <losses>
             <neutral_loss modification_name="Water loss" />
           </losses>
+          <transition_lib_info rank="4" intensity="149491.563" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="4" calc_neutral_mass="468.269633" product_charge="1" cleavage_aa="P" loss_neutral_mass="0">
           <precursor_mz>454.26601</precursor_mz>
           <product_mz>469.276909</product_mz>
           <collision_energy>14.931302</collision_energy>
+          <transition_lib_info rank="2" intensity="3995174" />
         </transition>
       </precursor>
     </peptide>
@@ -171,21 +193,25 @@
           <precursor_mz>507.776939</precursor_mz>
           <product_mz>886.488024</product_mz>
           <collision_energy>17.446316</collision_energy>
+          <transition_lib_info rank="4" intensity="1714541.25" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="772.396684" product_charge="1" cleavage_aa="E" loss_neutral_mass="0">
           <precursor_mz>507.776939</precursor_mz>
           <product_mz>773.40396</product_mz>
           <collision_energy>17.446316</collision_energy>
+          <transition_lib_info rank="1" intensity="17705668" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="643.354091" product_charge="1" cleavage_aa="T" loss_neutral_mass="0">
           <precursor_mz>507.776939</precursor_mz>
           <product_mz>644.361367</product_mz>
           <collision_energy>17.446316</collision_energy>
+          <transition_lib_info rank="2" intensity="16622156" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="4" calc_neutral_mass="413.263819" product_charge="1" cleavage_aa="P" loss_neutral_mass="0">
           <precursor_mz>507.776939</precursor_mz>
           <product_mz>414.271095</product_mz>
           <collision_energy>17.446316</collision_energy>
+          <transition_lib_info rank="3" intensity="6445065.5" />
         </transition>
       </precursor>
     </peptide>
@@ -195,21 +221,25 @@
           <precursor_mz>746.838787</precursor_mz>
           <product_mz>1208.542973</product_mz>
           <collision_energy>28.682223</collision_energy>
+          <transition_lib_info rank="1" intensity="855430.8" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="837.386848" product_charge="1" cleavage_aa="E" loss_neutral_mass="0">
           <precursor_mz>746.838787</precursor_mz>
           <product_mz>838.394124</product_mz>
           <collision_energy>28.682223</collision_energy>
+          <transition_lib_info rank="3" intensity="72941.02" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="708.344255" product_charge="1" cleavage_aa="G" loss_neutral_mass="0">
           <precursor_mz>746.838787</precursor_mz>
           <product_mz>709.351531</product_mz>
           <collision_energy>28.682223</collision_energy>
+          <transition_lib_info rank="4" intensity="56288.0352" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="4" calc_neutral_mass="536.295848" product_charge="1" cleavage_aa="Y" loss_neutral_mass="0">
           <precursor_mz>746.838787</precursor_mz>
           <product_mz>537.303124</product_mz>
           <collision_energy>28.682223</collision_energy>
+          <transition_lib_info rank="2" intensity="175807.047" />
         </transition>
       </precursor>
       <precursor charge="3" calc_neutral_mass="1491.663023" precursor_mz="498.228284" auto_manage_children="false" collision_energy="15.677256" modified_sequence="FHPGTDEGDYQVK">
@@ -241,16 +271,19 @@
           <precursor_mz>424.72926</precursor_mz>
           <product_mz>749.382831</product_mz>
           <collision_energy>13.543075</collision_energy>
+          <transition_lib_info rank="1" intensity="23959892" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="691.354091" product_charge="1" cleavage_aa="Y" loss_neutral_mass="0">
           <precursor_mz>424.72926</precursor_mz>
           <product_mz>692.361367</product_mz>
           <collision_energy>13.543075</collision_energy>
+          <transition_lib_info rank="2" intensity="15258506" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="5" calc_neutral_mass="528.290762" product_charge="1" cleavage_aa="D" loss_neutral_mass="0">
           <precursor_mz>424.72926</precursor_mz>
           <product_mz>529.298038</product_mz>
           <collision_energy>13.543075</collision_energy>
+          <transition_lib_info rank="3" intensity="6642187.5" />
         </transition>
         <transition fragment_type="b" fragment_ordinal="5" calc_neutral_mass="547.264213" product_charge="1" cleavage_aa="L" loss_neutral_mass="0">
           <precursor_mz>424.72926</precursor_mz>
@@ -265,21 +298,25 @@
           <precursor_mz>560.785295</precursor_mz>
           <product_mz>962.494172</product_mz>
           <collision_energy>19.937709</collision_energy>
+          <transition_lib_info rank="3" intensity="10569454" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="776.406855" product_charge="1" cleavage_aa="F" loss_neutral_mass="0">
           <precursor_mz>560.785295</precursor_mz>
           <product_mz>777.414131</product_mz>
           <collision_energy>19.937709</collision_energy>
+          <transition_lib_info rank="2" intensity="14100348" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="629.338441" product_charge="1" cleavage_aa="G" loss_neutral_mass="0">
           <precursor_mz>560.785295</precursor_mz>
           <product_mz>630.345717</product_mz>
           <collision_energy>19.937709</collision_energy>
+          <transition_lib_info rank="1" intensity="15074604" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="5" calc_neutral_mass="572.316977" product_charge="1" cleavage_aa="P" loss_neutral_mass="0">
           <precursor_mz>560.785295</precursor_mz>
           <product_mz>573.324253</product_mz>
           <collision_energy>19.937709</collision_energy>
+          <transition_lib_info rank="4" intensity="2536922.25" />
         </transition>
       </precursor>
     </peptide>
@@ -289,21 +326,25 @@
           <precursor_mz>698.833171</precursor_mz>
           <product_mz>1224.574273</product_mz>
           <collision_energy>26.425959</collision_energy>
+          <transition_lib_info rank="4" intensity="2629233" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="9" calc_neutral_mass="1007.492375" product_charge="1" cleavage_aa="F" loss_neutral_mass="0">
           <precursor_mz>698.833171</precursor_mz>
           <product_mz>1008.499651</product_mz>
           <collision_energy>26.425959</collision_energy>
+          <transition_lib_info rank="2" intensity="4300890" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="8" calc_neutral_mass="860.423962" product_charge="1" cleavage_aa="E" loss_neutral_mass="0">
           <precursor_mz>698.833171</precursor_mz>
           <product_mz>861.431238</product_mz>
           <collision_energy>26.425959</collision_energy>
+          <transition_lib_info rank="3" intensity="3879221" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="731.381368" product_charge="1" cleavage_aa="S" loss_neutral_mass="0">
           <precursor_mz>698.833171</precursor_mz>
           <product_mz>732.388644</product_mz>
           <collision_energy>26.425959</collision_energy>
+          <transition_lib_info rank="1" intensity="5127346" />
         </transition>
       </precursor>
     </peptide>
@@ -313,21 +354,25 @@
           <precursor_mz>707.317688</precursor_mz>
           <product_mz>1028.468351</product_mz>
           <collision_energy>26.824731</collision_energy>
+          <transition_lib_info rank="4" intensity="1488811.5" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="784.375555" product_charge="1" cleavage_aa="E" loss_neutral_mass="0">
           <precursor_mz>707.317688</precursor_mz>
           <product_mz>785.382831</product_mz>
           <collision_energy>26.824731</collision_energy>
+          <transition_lib_info rank="3" intensity="2895579.75" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="655.332962" product_charge="1" cleavage_aa="G" loss_neutral_mass="0">
           <precursor_mz>707.317688</precursor_mz>
           <product_mz>656.340238</product_mz>
           <collision_energy>26.824731</collision_energy>
+          <transition_lib_info rank="1" intensity="3485379.25" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="4" calc_neutral_mass="451.243084" product_charge="1" cleavage_aa="F" loss_neutral_mass="0">
           <precursor_mz>707.317688</precursor_mz>
           <product_mz>452.25036</product_mz>
           <collision_energy>26.824731</collision_energy>
+          <transition_lib_info rank="2" intensity="3405402" />
         </transition>
       </precursor>
     </peptide>
@@ -337,21 +382,25 @@
           <precursor_mz>488.284734</precursor_mz>
           <product_mz>876.493778</product_mz>
           <collision_energy>16.530183</collision_energy>
+          <transition_lib_info rank="3" intensity="7864313" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="9" calc_neutral_mass="818.465038" product_charge="1" cleavage_aa="L" loss_neutral_mass="0">
           <precursor_mz>488.284734</precursor_mz>
           <product_mz>819.472314</product_mz>
           <collision_energy>16.530183</collision_energy>
+          <transition_lib_info rank="4" intensity="3875456.25" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="8" calc_neutral_mass="705.380974" product_charge="1" cleavage_aa="F" loss_neutral_mass="0">
           <precursor_mz>488.284734</precursor_mz>
           <product_mz>706.38825</product_mz>
           <collision_energy>16.530183</collision_energy>
+          <transition_lib_info rank="1" intensity="23101456" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="558.312561" product_charge="1" cleavage_aa="A" loss_neutral_mass="0">
           <precursor_mz>488.284734</precursor_mz>
           <product_mz>559.319837</product_mz>
           <collision_energy>16.530183</collision_energy>
+          <transition_lib_info rank="2" intensity="12654403" />
         </transition>
       </precursor>
     </peptide>
@@ -361,21 +410,25 @@
           <precursor_mz>565.326796</precursor_mz>
           <product_mz>900.54006</product_mz>
           <collision_energy>20.151159</collision_energy>
+          <transition_lib_info rank="1" intensity="19110804" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="786.44872" product_charge="1" cleavage_aa="I" loss_neutral_mass="0">
           <precursor_mz>565.326796</precursor_mz>
           <product_mz>787.455996</product_mz>
           <collision_energy>20.151159</collision_energy>
+          <transition_lib_info rank="2" intensity="10023155" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="673.364656" product_charge="1" cleavage_aa="D" loss_neutral_mass="0">
           <precursor_mz>565.326796</precursor_mz>
           <product_mz>674.371932</product_mz>
           <collision_energy>20.151159</collision_energy>
+          <transition_lib_info rank="3" intensity="6572818" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="4" calc_neutral_mass="459.269299" product_charge="1" cleavage_aa="E" loss_neutral_mass="0">
           <precursor_mz>565.326796</precursor_mz>
           <product_mz>460.276575</product_mz>
           <collision_energy>20.151159</collision_energy>
+          <transition_lib_info rank="4" intensity="1318701.63" />
         </transition>
       </precursor>
     </peptide>
@@ -385,21 +438,25 @@
           <precursor_mz>495.297507</precursor_mz>
           <product_mz>876.503674</product_mz>
           <collision_energy>16.859783</collision_energy>
+          <transition_lib_info rank="3" intensity="5713429" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="774.44872" product_charge="1" cleavage_aa="V" loss_neutral_mass="0">
           <precursor_mz>495.297507</precursor_mz>
           <product_mz>775.455996</product_mz>
           <collision_energy>16.859783</collision_energy>
+          <transition_lib_info rank="1" intensity="27191584" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="675.380306" product_charge="1" cleavage_aa="L" loss_neutral_mass="0">
           <precursor_mz>495.297507</precursor_mz>
           <product_mz>676.387582</product_mz>
           <collision_energy>16.859783</collision_energy>
+          <transition_lib_info rank="2" intensity="14727813" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="5" calc_neutral_mass="562.296242" product_charge="1" cleavage_aa="E" loss_neutral_mass="0">
           <precursor_mz>495.297507</precursor_mz>
           <product_mz>563.303518</product_mz>
           <collision_energy>16.859783</collision_energy>
+          <transition_lib_info rank="4" intensity="5414283.5" />
         </transition>
       </precursor>
     </peptide>
@@ -409,16 +466,19 @@
           <precursor_mz>691.406109</precursor_mz>
           <product_mz>759.435929</product_mz>
           <collision_energy>26.076887</collision_energy>
+          <transition_lib_info rank="1" intensity="12038536" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="659.360239" product_charge="1" cleavage_aa="V" loss_neutral_mass="0">
           <precursor_mz>691.406109</precursor_mz>
           <product_mz>660.367515</product_mz>
           <collision_energy>26.076887</collision_energy>
+          <transition_lib_info rank="2" intensity="7519226" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="560.291825" product_charge="1" cleavage_aa="A" loss_neutral_mass="0">
           <precursor_mz>691.406109</precursor_mz>
           <product_mz>561.299101</product_mz>
           <collision_energy>26.076887</collision_energy>
+          <transition_lib_info rank="3" intensity="5903183.5" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="12" calc_neutral_mass="1196.676488" product_charge="2" cleavage_aa="P" loss_neutral_mass="0">
           <precursor_mz>691.406109</precursor_mz>
@@ -433,21 +493,25 @@
           <precursor_mz>470.315503</precursor_mz>
           <product_mz>826.539666</product_mz>
           <collision_energy>15.685629</collision_energy>
+          <transition_lib_info rank="4" intensity="6429493" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="724.484711" product_charge="1" cleavage_aa="I" loss_neutral_mass="0">
           <precursor_mz>470.315503</precursor_mz>
           <product_mz>725.491987</product_mz>
           <collision_energy>15.685629</collision_energy>
+          <transition_lib_info rank="1" intensity="41420616" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="611.400647" product_charge="1" cleavage_aa="A" loss_neutral_mass="0">
           <precursor_mz>470.315503</precursor_mz>
           <product_mz>612.407923</product_mz>
           <collision_energy>15.685629</collision_energy>
+          <transition_lib_info rank="2" intensity="19161632" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="5" calc_neutral_mass="540.363533" product_charge="1" cleavage_aa="P" loss_neutral_mass="0">
           <precursor_mz>470.315503</precursor_mz>
           <product_mz>541.370809</product_mz>
           <collision_energy>15.685629</collision_energy>
+          <transition_lib_info rank="3" intensity="8974108" />
         </transition>
       </precursor>
     </peptide>
@@ -457,16 +521,19 @@
           <precursor_mz>732.937242</precursor_mz>
           <product_mz>909.540394</product_mz>
           <collision_energy>28.02885</collision_energy>
+          <transition_lib_info rank="2" intensity="6797176.5" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="8" calc_neutral_mass="809.464704" product_charge="1" cleavage_aa="G" loss_neutral_mass="0">
           <precursor_mz>732.937242</precursor_mz>
           <product_mz>810.47198</product_mz>
           <collision_energy>28.02885</collision_energy>
+          <transition_lib_info rank="1" intensity="11495016" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="752.44324" product_charge="1" cleavage_aa="P" loss_neutral_mass="0">
           <precursor_mz>732.937242</precursor_mz>
           <product_mz>753.450516</product_mz>
           <collision_energy>28.02885</collision_energy>
+          <transition_lib_info rank="3" intensity="4557926" />
         </transition>
         <transition fragment_type="b" fragment_ordinal="6" calc_neutral_mass="654.395228" product_charge="1" cleavage_aa="V" loss_neutral_mass="0">
           <precursor_mz>732.937242</precursor_mz>
@@ -481,21 +548,25 @@
           <precursor_mz>496.786775</precursor_mz>
           <product_mz>879.482211</product_mz>
           <collision_energy>16.929778</collision_energy>
+          <transition_lib_info rank="3" intensity="8388612" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="777.427256" product_charge="1" cleavage_aa="I" loss_neutral_mass="0">
           <precursor_mz>496.786775</precursor_mz>
           <product_mz>778.434532</product_mz>
           <collision_energy>16.929778</collision_energy>
+          <transition_lib_info rank="1" intensity="26840332" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="5" calc_neutral_mass="664.343192" product_charge="1" cleavage_aa="E" loss_neutral_mass="0">
           <precursor_mz>496.786775</precursor_mz>
           <product_mz>665.350468</product_mz>
           <collision_energy>16.929778</collision_energy>
+          <transition_lib_info rank="2" intensity="8778453" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="4" calc_neutral_mass="535.300599" product_charge="1" cleavage_aa="E" loss_neutral_mass="0">
           <precursor_mz>496.786775</precursor_mz>
           <product_mz>536.307875</product_mz>
           <collision_energy>16.929778</collision_energy>
+          <transition_lib_info rank="4" intensity="2699184.25" />
         </transition>
       </precursor>
     </peptide>
@@ -505,21 +576,25 @@
           <precursor_mz>955.564066</precursor_mz>
           <product_mz>1208.761286</product_mz>
           <collision_energy>38.492311</collision_energy>
+          <transition_lib_info rank="3" intensity="268386.938" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="11" calc_neutral_mass="1106.706331" product_charge="1" cleavage_aa="T" loss_neutral_mass="0">
           <precursor_mz>955.564066</precursor_mz>
           <product_mz>1107.713607</product_mz>
           <collision_energy>38.492311</collision_energy>
+          <transition_lib_info rank="4" intensity="245661.484" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="10" calc_neutral_mass="1005.658653" product_charge="1" cleavage_aa="G" loss_neutral_mass="0">
           <precursor_mz>955.564066</precursor_mz>
           <product_mz>1006.665929</product_mz>
           <collision_energy>38.492311</collision_energy>
+          <transition_lib_info rank="2" intensity="461536.938" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="653.447597" product_charge="1" cleavage_aa="P" loss_neutral_mass="0">
           <precursor_mz>955.564066</precursor_mz>
           <product_mz>654.454873</product_mz>
           <collision_energy>38.492311</collision_energy>
+          <transition_lib_info rank="1" intensity="646319.063" />
         </transition>
       </precursor>
     </peptide>
@@ -529,21 +604,25 @@
           <precursor_mz>1151.623038</precursor_mz>
           <product_mz>1487.795165</product_mz>
           <collision_energy>47.707083</collision_energy>
+          <transition_lib_info rank="4" intensity="23638.4023" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="14" calc_neutral_mass="1373.703825" product_charge="1" cleavage_aa="D" loss_neutral_mass="0">
           <precursor_mz>1151.623038</precursor_mz>
           <product_mz>1374.711101</product_mz>
           <collision_energy>47.707083</collision_energy>
+          <transition_lib_info rank="3" intensity="24109.9258" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="12" calc_neutral_mass="1171.644853" product_charge="1" cleavage_aa="P" loss_neutral_mass="0">
           <precursor_mz>1151.623038</precursor_mz>
           <product_mz>1172.652129</product_mz>
           <collision_energy>47.707083</collision_energy>
+          <transition_lib_info rank="2" intensity="60516.08" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="9" calc_neutral_mass="848.423962" product_charge="1" cleavage_aa="P" loss_neutral_mass="0">
           <precursor_mz>1151.623038</precursor_mz>
           <product_mz>849.431238</product_mz>
           <collision_energy>47.707083</collision_energy>
+          <transition_lib_info rank="1" intensity="397854.2" />
         </transition>
       </precursor>
     </peptide>
@@ -553,11 +632,13 @@
           <precursor_mz>1124.18769</precursor_mz>
           <product_mz>1159.526595</product_mz>
           <collision_energy>36.396513</collision_energy>
+          <transition_lib_info rank="1" intensity="246259.109" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="9" calc_neutral_mass="1029.476725" product_charge="1" cleavage_aa="T" loss_neutral_mass="0">
           <precursor_mz>1124.18769</precursor_mz>
           <product_mz>1030.484001</product_mz>
           <collision_energy>36.396513</collision_energy>
+          <transition_lib_info rank="2" intensity="240677.453" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="23" calc_neutral_mass="2593.170774" product_charge="2" cleavage_aa="P" loss_neutral_mass="0">
           <precursor_mz>1124.18769</precursor_mz>
@@ -577,21 +658,25 @@
           <precursor_mz>693.868828</precursor_mz>
           <product_mz>1188.593552</product_mz>
           <collision_energy>26.192635</collision_energy>
+          <transition_lib_info rank="2" intensity="5650558.5" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="8" calc_neutral_mass="987.470183" product_charge="1" cleavage_aa="P" loss_neutral_mass="0">
           <precursor_mz>693.868828</precursor_mz>
           <product_mz>988.477459</product_mz>
           <collision_energy>26.192635</collision_energy>
+          <transition_lib_info rank="1" intensity="10085989" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="775.390477" product_charge="1" cleavage_aa="F" loss_neutral_mass="0">
           <precursor_mz>693.868828</precursor_mz>
           <product_mz>776.397753</product_mz>
           <collision_energy>26.192635</collision_energy>
+          <transition_lib_info rank="3" intensity="1168299.13" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="4" calc_neutral_mass="481.253649" product_charge="1" cleavage_aa="T" loss_neutral_mass="0">
           <precursor_mz>693.868828</precursor_mz>
           <product_mz>482.260925</product_mz>
           <collision_energy>26.192635</collision_energy>
+          <transition_lib_info rank="4" intensity="764571.7" />
         </transition>
       </precursor>
     </peptide>
@@ -601,21 +686,25 @@
           <precursor_mz>806.469437</precursor_mz>
           <product_mz>1126.64665</product_mz>
           <collision_energy>31.484864</collision_energy>
+          <transition_lib_info rank="1" intensity="1149503.25" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="9" calc_neutral_mass="854.522553" product_charge="1" cleavage_aa="V" loss_neutral_mass="0">
           <precursor_mz>806.469437</precursor_mz>
           <product_mz>855.529829</product_mz>
           <collision_energy>31.484864</collision_energy>
+          <transition_lib_info rank="4" intensity="816038.75" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="8" calc_neutral_mass="755.454139" product_charge="1" cleavage_aa="V" loss_neutral_mass="0">
           <precursor_mz>806.469437</precursor_mz>
           <product_mz>756.461415</product_mz>
           <collision_energy>31.484864</collision_energy>
+          <transition_lib_info rank="2" intensity="1039915.75" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="656.385725" product_charge="1" cleavage_aa="A" loss_neutral_mass="0">
           <precursor_mz>806.469437</precursor_mz>
           <product_mz>657.393001</product_mz>
           <collision_energy>31.484864</collision_energy>
+          <transition_lib_info rank="3" intensity="839180.25" />
         </transition>
       </precursor>
     </peptide>
@@ -625,16 +714,19 @@
           <precursor_mz>776.408317</precursor_mz>
           <product_mz>1220.619767</product_mz>
           <collision_energy>30.071991</collision_energy>
+          <transition_lib_info rank="3" intensity="298241.844" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="9" calc_neutral_mass="1072.544077" product_charge="1" cleavage_aa="E" loss_neutral_mass="0">
           <precursor_mz>776.408317</precursor_mz>
           <product_mz>1073.551353</product_mz>
           <collision_energy>30.071991</collision_energy>
+          <transition_lib_info rank="1" intensity="461996.063" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="8" calc_neutral_mass="943.501484" product_charge="1" cleavage_aa="S" loss_neutral_mass="0">
           <precursor_mz>776.408317</precursor_mz>
           <product_mz>944.50876</product_mz>
           <collision_energy>30.071991</collision_energy>
+          <transition_lib_info rank="2" intensity="394875.4" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="11" calc_neutral_mass="1366.680905" product_charge="2" cleavage_aa="F" loss_neutral_mass="0">
           <precursor_mz>776.408317</precursor_mz>
@@ -649,16 +741,19 @@
           <precursor_mz>963.550959</precursor_mz>
           <product_mz>1295.756929</product_mz>
           <collision_energy>38.867695</collision_energy>
+          <transition_lib_info rank="3" intensity="299212.719" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="11" calc_neutral_mass="1138.659775" product_charge="1" cleavage_aa="D" loss_neutral_mass="0">
           <precursor_mz>963.550959</precursor_mz>
           <product_mz>1139.667051</product_mz>
           <collision_energy>38.867695</collision_energy>
+          <transition_lib_info rank="2" intensity="394747.656" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="8" calc_neutral_mass="839.511654" product_charge="1" cleavage_aa="P" loss_neutral_mass="0">
           <precursor_mz>963.550959</precursor_mz>
           <product_mz>840.51893</product_mz>
           <collision_energy>38.867695</collision_energy>
+          <transition_lib_info rank="1" intensity="947161.438" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="16" calc_neutral_mass="1637.939245" product_charge="2" cleavage_aa="P" loss_neutral_mass="0">
           <precursor_mz>963.550959</precursor_mz>
@@ -673,21 +768,25 @@
           <precursor_mz>935.011469</precursor_mz>
           <product_mz>1434.799128</product_mz>
           <collision_energy>37.526339</collision_energy>
+          <transition_lib_info rank="4" intensity="141158.1" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="11" calc_neutral_mass="1118.63356" product_charge="1" cleavage_aa="V" loss_neutral_mass="0">
           <precursor_mz>935.011469</precursor_mz>
           <product_mz>1119.640836</product_mz>
           <collision_energy>37.526339</collision_energy>
+          <transition_lib_info rank="3" intensity="152506.281" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="10" calc_neutral_mass="1019.565147" product_charge="1" cleavage_aa="A" loss_neutral_mass="0">
           <precursor_mz>935.011469</precursor_mz>
           <product_mz>1020.572423</product_mz>
           <collision_energy>37.526339</collision_energy>
+          <transition_lib_info rank="1" intensity="340211.625" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="720.417026" product_charge="1" cleavage_aa="F" loss_neutral_mass="0">
           <precursor_mz>935.011469</precursor_mz>
           <product_mz>721.424302</product_mz>
           <collision_energy>37.526339</collision_energy>
+          <transition_lib_info rank="2" intensity="178193.7" />
         </transition>
       </precursor>
     </peptide>

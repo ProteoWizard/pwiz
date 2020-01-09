@@ -1848,16 +1848,23 @@ namespace pwiz.Skyline.Model.DocSettings
 
         /// <summary>
         /// Removes features from the SrmSettings that are not supported by the particular DocumentFormat.
+        /// Only used during DocumentSerializer.WriteXml(). So it is not important that the settings remain
+        /// usable to the current implementation.
         /// </summary>
         public SrmSettings RemoveUnsupportedFeatures(DocumentFormat documentFormat)
         {
-            var dataSettings = DataSettings;
+            var result = this;
             if (documentFormat <= DocumentFormat.VERSION_4_2)
             {
-                dataSettings = dataSettings.ChangeListDefs(new ListData[0]);
+                result = result.ChangeDataSettings(DataSettings.ChangeListDefs(new ListData[0]));
+            }
+            if (documentFormat < DocumentFormat.VERSION_20_1)
+            {
+                result = result.ChangeMeasuredResults(MeasuredResults.ChangeChromatograms(
+                    MeasuredResults.Chromatograms.Select(c => c.RestoreLegacyUriParameters()).ToArray()));
             }
 
-            return ChangeDataSettings(dataSettings);
+            return result;
         }
 
         #region Implementation of IXmlSerializable

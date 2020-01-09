@@ -88,7 +88,8 @@ namespace pwiz.Skyline.Model.Lib
             LibKey key;
             if (nodePep.IsProteomic)
             {
-                var sequence = Document.Settings.GetPrecursorCalc(nodeTranGroup.TransitionGroup.LabelType, nodePep.ExplicitMods).GetModifiedSequence(nodePep.Peptide.Target, false);
+                var sequence = Document.Settings.GetPrecursorCalc(nodeTranGroup.TransitionGroup.LabelType, nodePep.ExplicitMods)
+                    .GetModifiedSequence(nodePep.Peptide.Target, SequenceModFormatType.lib_precision, false);
                 key = new LibKey(sequence, nodeTranGroup.PrecursorAdduct.AdductCharge);
             }
             else
@@ -129,10 +130,7 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     var smallMoleculeLibraryAttributes = nodeTran.Transition.CustomIon.GetSmallMoleculeLibraryAttributes();
                     var ion = new CustomIon(smallMoleculeLibraryAttributes, nodeTran.Transition.Adduct, nodeTran.GetMoleculeMass());
-                    if (!string.IsNullOrEmpty(nodeTran.Annotations.Note))
-                    {
-                        annotations = new List<SpectrumPeakAnnotation> { SpectrumPeakAnnotation.Create(ion, nodeTran.Annotations.Note) };
-                    }
+                    annotations = new List<SpectrumPeakAnnotation> { SpectrumPeakAnnotation.Create(ion, nodeTran.Annotations.Note) };
                 }
                 mi.Add(new SpectrumPeaksInfo.MI { Mz = nodeTran.Mz, Intensity = chromInfo.Area, Quantitative = nodeTran.ExplicitQuantitative, Annotations = annotations });
                 if (chromInfo.Height > maxApex)

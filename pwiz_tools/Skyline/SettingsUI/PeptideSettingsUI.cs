@@ -830,11 +830,6 @@ namespace pwiz.Skyline.SettingsUI
             btnExplore.Enabled = listLibraries.Items.Count > 0;
         }
 
-        public SettingsListBoxDriver<LibrarySpec> LibraryDriver
-        {
-            get { return _driverLibrary; }
-        }
-
         public void SetIsotopeModifications(int index, bool check)
         {
             listHeavyMods.SetItemChecked(index, check);
@@ -844,6 +839,8 @@ namespace pwiz.Skyline.SettingsUI
         {
             ShowBuildLibraryDlg();
         }
+
+        public bool IsBuildingLibrary { get; private set; }
 
         public void ShowBuildLibraryDlg()
         {
@@ -855,6 +852,8 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
+                    IsBuildingLibrary = true;
+
                     var builder = dlg.Builder;
 
                     // assume success and cleanup later
@@ -886,6 +885,7 @@ namespace pwiz.Skyline.SettingsUI
                                     listLibraries.Items.Remove(builder.LibrarySpec.Name);
                                 }));
                         }
+                        IsBuildingLibrary = false;
                     });
                 }
             }
@@ -1352,19 +1352,18 @@ namespace pwiz.Skyline.SettingsUI
 
         public string[] AvailableLibraries
         {
-            get
-            {
-                var availableLibraries = new List<string>();
-                foreach (object item in listLibraries.Items)
-                    availableLibraries.Add(item.ToString());
-                return availableLibraries.ToArray();
-            }
+            get { return _driverLibrary.Choices.Select(c => c.Name).ToArray(); }
         }
 
         public string[] PickedLibraries
         {
             get { return _driverLibrary.CheckedNames; }
             set { _driverLibrary.CheckedNames = value; }
+        }
+
+        public LibrarySpec[] PickedLibrarySpecs
+        {
+            get { return _driverLibrary.Chosen; }
         }
 
         public string[] PickedStaticMods
@@ -1937,6 +1936,12 @@ namespace pwiz.Skyline.SettingsUI
         {
             cbLinear.Checked = checkedState;
             UpdateLibraryDriftPeakWidthControls();
+        }
+
+        public PeptidePick PeptidePick
+        {
+            get { return (PeptidePick) comboMatching.SelectedIndex; }
+            set { comboMatching.SelectedIndex = (int) value; }
         }
     }
 }

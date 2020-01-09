@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
@@ -46,22 +47,21 @@ namespace pwiz.SkylineTestFunctional
             var skyZipName = Path.GetFileName(skyZipPath);
             Assert.AreEqual(TestFilesDir.GetTestPath(skyZipName), skyp.DownloadPath);
 
-            var downloadClient = new TestDownladClient(skyZipPath, skyp.DownloadPath, true); // This will throw an error
             var skypSupport = new SkypSupport(SkylineWindow)
             {
-                DownloadClient = downloadClient
+                DownloadClientCreator = new DownloadClientCreatorThrowsError(skyZipPath, skyp.DownloadPath)
             };
 
-            var errDlg = ShowDialog<MessageDlg>(() => skypSupport.Open(skypPath, null));
+            var errDlg = ShowDialog<AlertDlg>(() => skypSupport.Open(skypPath, null));
             Assert.IsTrue(errDlg.Message.Contains(string.Format(
                 Resources
                     .SkypSupport_Download_You_may_have_to_add__0__as_a_Panorama_server_from_the_Tools___Options_menu_in_Skyline_,
                 skyp.SkylineDocUri.Host)));
 
-            RunUI(() => { errDlg.ClickOk();});
+            RunUI(() => { errDlg.ClickCancel();});
             WaitForClosedForm(errDlg);
 
-            skypSupport.DownloadClient = new TestDownladClient(skyZipPath, skyp.DownloadPath);
+            skypSupport.DownloadClientCreator = new TestDownloadClientCreator(skyZipPath, skyp.DownloadPath);
             RunUI(() => skypSupport.Open(skypPath, null));
             WaitForDocumentLoaded();
             var skyZipNoExt = Path.GetFileNameWithoutExtension(skyZipPath);
@@ -123,13 +123,13 @@ namespace pwiz.SkylineTestFunctional
         private const string STR_VALID_SKYP = @"http://panoramaweb.org/_webdav/Project/shared_zip.sky.zip";
     }
 
-    public class TestDownladClient : IDownloadClient
+    public class TestDownloadClient : IDownloadClient
     {
         private readonly string _srcPath;
         private readonly string _downloadPath;
         private readonly bool _error;
 
-        public TestDownladClient(string srcFile, string downloadPath, bool error = false)
+        public TestDownloadClient(string srcFile, string downloadPath, bool error = false)
         {
             _srcPath = srcFile;
             _downloadPath = downloadPath;
@@ -151,5 +151,28 @@ namespace pwiz.SkylineTestFunctional
         public bool IsCancelled { get; }
         public bool IsError => Error != null;
         public Exception Error { get; set; }
+    }
+
+    internal class TestDownloadClientCreator : DownloadClientCreator
+    {
+        public TestDownloadClient TestDownloadClient { get; set; }
+
+        public TestDownloadClientCreator(string skyZipPath, string skypDownloadPath)
+        {
+            TestDownloadClient = new TestDownloadClient(skyZipPath, skypDownloadPath);
+        }
+
+        public override IDownloadClient Create(IProgressMonitor progressMonitor, IProgressStatus progressStatus)
+        {
+            return TestDownloadClient;
+        }
+    }
+
+    internal class DownloadClientCreatorThrowsError : TestDownloadClientCreator
+    {
+        public DownloadClientCreatorThrowsError(string skyZipPath, string skypDownloadPath) : base(skyZipPath, skypDownloadPath)
+        {
+            TestDownloadClient = new TestDownloadClient(skyZipPath, skypDownloadPath, true); // This will throw an error
+        }
     }
 }
