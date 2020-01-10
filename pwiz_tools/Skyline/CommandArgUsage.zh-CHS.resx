@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="_add_library_name" xml:space="preserve">
-    <value>在“-添加-库-路径”操作中提供给谱图库的名称。</value>
+    <value>在“-–add-library-path”操作中提供给谱图库的名称。</value>
   </data>
   <data name="_add_library_path" xml:space="preserve">
     <value>指定要添加到打开文档中的谱图库。</value>

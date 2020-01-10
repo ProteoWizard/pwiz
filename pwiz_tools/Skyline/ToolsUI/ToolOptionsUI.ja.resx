@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="tabControl.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -252,64 +255,64 @@
   <data name="&gt;&gt;listBoxRemoteAccounts.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="lblChorusAccounts.AutoSize" type="System.Boolean, mscorlib">
+  <data name="lblRemoteAccounts.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="lblChorusAccounts.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+  <data name="lblRemoteAccounts.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <data name="lblChorusAccounts.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="lblRemoteAccounts.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 17</value>
   </data>
-  <data name="lblChorusAccounts.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="lblRemoteAccounts.Size" type="System.Drawing.Size, System.Drawing">
     <value>94, 13</value>
   </data>
-  <data name="lblChorusAccounts.TabIndex" type="System.Int32, mscorlib">
+  <data name="lblRemoteAccounts.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
-  <data name="lblChorusAccounts.Text" xml:space="preserve">
+  <data name="lblRemoteAccounts.Text" xml:space="preserve">
     <value>リモートアカウント：</value>
   </data>
-  <data name="&gt;&gt;lblChorusAccounts.Name" xml:space="preserve">
-    <value>lblChorusAccounts</value>
+  <data name="&gt;&gt;lblRemoteAccounts.Name" xml:space="preserve">
+    <value>lblRemoteAccounts</value>
   </data>
-  <data name="&gt;&gt;lblChorusAccounts.Type" xml:space="preserve">
+  <data name="&gt;&gt;lblRemoteAccounts.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;lblChorusAccounts.Parent" xml:space="preserve">
+  <data name="&gt;&gt;lblRemoteAccounts.Parent" xml:space="preserve">
     <value>tabRemote</value>
   </data>
-  <data name="&gt;&gt;lblChorusAccounts.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;lblRemoteAccounts.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="btnEditChorusAccountList.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+  <data name="btnEditRemoteAccountList.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
-  <data name="btnEditChorusAccountList.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+  <data name="btnEditRemoteAccountList.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <data name="btnEditChorusAccountList.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="btnEditRemoteAccountList.Location" type="System.Drawing.Point, System.Drawing">
     <value>308, 33</value>
   </data>
-  <data name="btnEditChorusAccountList.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="btnEditRemoteAccountList.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
-  <data name="btnEditChorusAccountList.TabIndex" type="System.Int32, mscorlib">
+  <data name="btnEditRemoteAccountList.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
-  <data name="btnEditChorusAccountList.Text" xml:space="preserve">
+  <data name="btnEditRemoteAccountList.Text" xml:space="preserve">
     <value>リストを編集(&amp;D)...</value>
   </data>
-  <data name="&gt;&gt;btnEditChorusAccountList.Name" xml:space="preserve">
-    <value>btnEditChorusAccountList</value>
+  <data name="&gt;&gt;btnEditRemoteAccountList.Name" xml:space="preserve">
+    <value>btnEditRemoteAccountList</value>
   </data>
-  <data name="&gt;&gt;btnEditChorusAccountList.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnEditRemoteAccountList.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnEditChorusAccountList.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnEditRemoteAccountList.Parent" xml:space="preserve">
     <value>tabRemote</value>
   </data>
-  <data name="&gt;&gt;btnEditChorusAccountList.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnEditRemoteAccountList.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="tabRemote.Location" type="System.Drawing.Point, System.Drawing">
@@ -338,6 +341,336 @@
   </data>
   <data name="&gt;&gt;tabRemote.ZOrder" xml:space="preserve">
     <value>1</value>
+  </data>
+  <data name="tbxPrositServer.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 108</value>
+  </data>
+  <data name="tbxPrositServer.Size" type="System.Drawing.Size, System.Drawing">
+    <value>122, 20</value>
+  </data>
+  <data name="tbxPrositServer.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="&gt;&gt;tbxPrositServer.Name" xml:space="preserve">
+    <value>tbxPrositServer</value>
+  </data>
+  <data name="&gt;&gt;tbxPrositServer.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxPrositServer.Parent" xml:space="preserve">
+    <value>tabProsit</value>
+  </data>
+  <data name="&gt;&gt;tbxPrositServer.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="ceLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="ceLabel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="ceLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>234, 94</value>
+  </data>
+  <data name="ceLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>32, 13</value>
+  </data>
+  <data name="ceLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="ceLabel.Text" xml:space="preserve">
+    <value>&amp;NCE(&amp;N)：</value>
+  </data>
+  <data name="&gt;&gt;ceLabel.Name" xml:space="preserve">
+    <value>ceLabel</value>
+  </data>
+  <data name="&gt;&gt;ceLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;ceLabel.Parent" xml:space="preserve">
+    <value>tabProsit</value>
+  </data>
+  <data name="&gt;&gt;ceLabel.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="ceCombo.Location" type="System.Drawing.Point, System.Drawing">
+    <value>237, 110</value>
+  </data>
+  <data name="ceCombo.Size" type="System.Drawing.Size, System.Drawing">
+    <value>122, 21</value>
+  </data>
+  <data name="ceCombo.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="&gt;&gt;ceCombo.Name" xml:space="preserve">
+    <value>ceCombo</value>
+  </data>
+  <data name="&gt;&gt;ceCombo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;ceCombo.Parent" xml:space="preserve">
+    <value>tabProsit</value>
+  </data>
+  <data name="&gt;&gt;ceCombo.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="prositServerStatusLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="prositServerStatusLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>137, 111</value>
+  </data>
+  <data name="prositServerStatusLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>1, 0, 1, 0</value>
+  </data>
+  <data name="prositServerStatusLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>97, 13</value>
+  </data>
+  <data name="prositServerStatusLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="prositServerStatusLabel.Text" xml:space="preserve">
+    <value>サーバーステータス</value>
+  </data>
+  <data name="&gt;&gt;prositServerStatusLabel.Name" xml:space="preserve">
+    <value>prositServerStatusLabel</value>
+  </data>
+  <data name="&gt;&gt;prositServerStatusLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;prositServerStatusLabel.Parent" xml:space="preserve">
+    <value>tabProsit</value>
+  </data>
+  <data name="&gt;&gt;prositServerStatusLabel.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="label3.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label3.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 172</value>
+  </data>
+  <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
+    <value>58, 13</value>
+  </data>
+  <data name="label3.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="label3.Text" xml:space="preserve">
+    <value>iRTモデル：</value>
+  </data>
+  <data name="&gt;&gt;label3.Name" xml:space="preserve">
+    <value>label3</value>
+  </data>
+  <data name="&gt;&gt;label3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
+    <value>tabProsit</value>
+  </data>
+  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="iRTModelCombo.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 188</value>
+  </data>
+  <data name="iRTModelCombo.Size" type="System.Drawing.Size, System.Drawing">
+    <value>122, 21</value>
+  </data>
+  <data name="iRTModelCombo.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="&gt;&gt;iRTModelCombo.Name" xml:space="preserve">
+    <value>iRTModelCombo</value>
+  </data>
+  <data name="&gt;&gt;iRTModelCombo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;iRTModelCombo.Parent" xml:space="preserve">
+    <value>tabProsit</value>
+  </data>
+  <data name="&gt;&gt;iRTModelCombo.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="label2.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label2.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 133</value>
+  </data>
+  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>80, 13</value>
+  </data>
+  <data name="label2.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="label2.Text" xml:space="preserve">
+    <value>強度モデル：</value>
+  </data>
+  <data name="&gt;&gt;label2.Name" xml:space="preserve">
+    <value>label2</value>
+  </data>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+    <value>tabProsit</value>
+  </data>
+  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="intensityModelCombo.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 149</value>
+  </data>
+  <data name="intensityModelCombo.Size" type="System.Drawing.Size, System.Drawing">
+    <value>122, 21</value>
+  </data>
+  <data name="intensityModelCombo.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;intensityModelCombo.Name" xml:space="preserve">
+    <value>intensityModelCombo</value>
+  </data>
+  <data name="&gt;&gt;intensityModelCombo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;intensityModelCombo.Parent" xml:space="preserve">
+    <value>tabProsit</value>
+  </data>
+  <data name="&gt;&gt;intensityModelCombo.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="prositServerLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="prositServerLabel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="prositServerLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 94</value>
+  </data>
+  <data name="prositServerLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>41, 13</value>
+  </data>
+  <data name="prositServerLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="prositServerLabel.Text" xml:space="preserve">
+    <value>サーバー（&amp;S）：</value>
+  </data>
+  <data name="&gt;&gt;prositServerLabel.Name" xml:space="preserve">
+    <value>prositServerLabel</value>
+  </data>
+  <data name="&gt;&gt;prositServerLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;prositServerLabel.Parent" xml:space="preserve">
+    <value>tabProsit</value>
+  </data>
+  <data name="&gt;&gt;prositServerLabel.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="prositDescrLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="prositDescrLabel.LinkArea" type="System.Windows.Forms.LinkArea, System.Windows.Forms">
+    <value>0, 6</value>
+  </data>
+  <data name="prositDescrLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>72, 11</value>
+  </data>
+  <data name="prositDescrLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>1, 0, 1, 0</value>
+  </data>
+  <data name="prositDescrLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>322, 55</value>
+  </data>
+  <data name="prositDescrLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="prositDescrLabel.Text" xml:space="preserve">
+    <value>Prositは、iRTの予測のみならず、あらゆる有機体およびプロテ
+アーゼ向けに非常に高品質な予測HCD MS2スペクトルを使用
+してカスタムスペクトルライブラリを自由かつ簡単に作成できる、
+ディープラーニングフレームワークです。</value>
+  </data>
+  <data name="&gt;&gt;prositDescrLabel.Name" xml:space="preserve">
+    <value>prositDescrLabel</value>
+  </data>
+  <data name="&gt;&gt;prositDescrLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;prositDescrLabel.Parent" xml:space="preserve">
+    <value>tabProsit</value>
+  </data>
+  <data name="&gt;&gt;prositDescrLabel.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="pictureBox1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="pictureBox1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>2, 3</value>
+  </data>
+  <data name="pictureBox1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>1, 1, 1, 1</value>
+  </data>
+  <data name="pictureBox1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>48, 73</value>
+  </data>
+  <data name="pictureBox1.SizeMode" type="System.Windows.Forms.PictureBoxSizeMode, System.Windows.Forms">
+    <value>StretchImage</value>
+  </data>
+  <data name="pictureBox1.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;pictureBox1.Name" xml:space="preserve">
+    <value>pictureBox1</value>
+  </data>
+  <data name="&gt;&gt;pictureBox1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.PictureBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;pictureBox1.Parent" xml:space="preserve">
+    <value>tabProsit</value>
+  </data>
+  <data name="&gt;&gt;pictureBox1.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
+  <data name="tabProsit.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabProsit.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>1, 1, 1, 1</value>
+  </data>
+  <data name="tabProsit.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>1, 1, 1, 1</value>
+  </data>
+  <data name="tabProsit.Size" type="System.Drawing.Size, System.Drawing">
+    <value>389, 248</value>
+  </data>
+  <data name="tabProsit.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="tabProsit.Text" xml:space="preserve">
+    <value>Prosit</value>
+  </data>
+  <data name="&gt;&gt;tabProsit.Name" xml:space="preserve">
+    <value>tabProsit</value>
+  </data>
+  <data name="&gt;&gt;tabProsit.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabProsit.Parent" xml:space="preserve">
+    <value>tabControl</value>
+  </data>
+  <data name="&gt;&gt;tabProsit.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
   <data name="labelDisplayLanguage.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -415,7 +748,7 @@
     <value>tabControl</value>
   </data>
   <data name="&gt;&gt;tabLanguage.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="btnResetSettings.Location" type="System.Drawing.Point, System.Drawing">
     <value>134, 165</value>
@@ -544,7 +877,7 @@
     <value>tabControl</value>
   </data>
   <data name="&gt;&gt;tabMisc.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="comboColorScheme.Location" type="System.Drawing.Point, System.Drawing">
     <value>17, 31</value>
@@ -646,7 +979,7 @@
     <value>tabControl</value>
   </data>
   <data name="&gt;&gt;tabDisplay.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="tabControl.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 12</value>
@@ -737,6 +1070,12 @@
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>オプション</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
+    <value>modeUIHandler</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=19.1.1.298, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ToolOptionsUI</value>
