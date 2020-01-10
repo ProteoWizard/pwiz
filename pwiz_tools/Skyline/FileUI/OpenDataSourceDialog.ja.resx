@@ -148,10 +148,10 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="listView.Location" type="System.Drawing.Point, System.Drawing">
-    <value>118, 45</value>
+    <value>130, 45</value>
   </data>
   <data name="listView.Size" type="System.Drawing.Size, System.Drawing">
-    <value>452, 280</value>
+    <value>440, 280</value>
   </data>
   <data name="listView.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -172,7 +172,7 @@
     <value>Top, Left, Right</value>
   </data>
   <data name="lookInComboBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>118, 12</value>
+    <value>130, 12</value>
   </data>
   <data name="lookInComboBox.Size" type="System.Drawing.Size, System.Drawing">
     <value>251, 21</value>
@@ -196,7 +196,7 @@
     <value>True</value>
   </data>
   <data name="labelLookIn.Location" type="System.Drawing.Point, System.Drawing">
-    <value>67, 15</value>
+    <value>73, 15</value>
   </data>
   <data name="labelLookIn.Size" type="System.Drawing.Size, System.Drawing">
     <value>45, 13</value>
@@ -223,10 +223,10 @@
     <value>Bottom, Left, Right</value>
   </data>
   <data name="sourcePathTextBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>208, 331</value>
+    <value>220, 331</value>
   </data>
   <data name="sourcePathTextBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>290, 20</value>
+    <value>278, 20</value>
   </data>
   <data name="sourcePathTextBox.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -250,7 +250,7 @@
     <value>True</value>
   </data>
   <data name="labelSourcePath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>118, 335</value>
+    <value>130, 335</value>
   </data>
   <data name="labelSourcePath.Size" type="System.Drawing.Size, System.Drawing">
     <value>73, 13</value>
@@ -280,10 +280,10 @@
     <value>Bottom, Left, Right</value>
   </data>
   <data name="sourceTypeComboBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>208, 357</value>
+    <value>220, 357</value>
   </data>
   <data name="sourceTypeComboBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>290, 21</value>
+    <value>278, 21</value>
   </data>
   <data name="sourceTypeComboBox.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -307,7 +307,7 @@
     <value>True</value>
   </data>
   <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>118, 361</value>
+    <value>130, 361</value>
   </data>
   <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
     <value>84, 13</value>
@@ -1452,7 +1452,7 @@
     <value>1, 1, 1, 1</value>
   </data>
   <data name="remoteAccountsButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>92, 73</value>
+    <value>104, 73</value>
   </data>
   <data name="remoteAccountsButton.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1494,7 +1494,7 @@
     <value>1, 1, 1, 1</value>
   </data>
   <data name="recentDocumentsButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>92, 73</value>
+    <value>104, 73</value>
   </data>
   <data name="recentDocumentsButton.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -1533,7 +1533,7 @@
     <value>1, 1, 1, 1</value>
   </data>
   <data name="desktopButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>92, 73</value>
+    <value>104, 73</value>
   </data>
   <data name="desktopButton.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1572,7 +1572,7 @@
     <value>1, 1, 1, 1</value>
   </data>
   <data name="myDocumentsButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>92, 73</value>
+    <value>104, 73</value>
   </data>
   <data name="myDocumentsButton.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -1611,7 +1611,7 @@
     <value>1, 1, 1, 1</value>
   </data>
   <data name="myComputerButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>92, 73</value>
+    <value>104, 73</value>
   </data>
   <data name="myComputerButton.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -1638,7 +1638,7 @@
     <value>9, 45</value>
   </data>
   <data name="flowLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 333</value>
+    <value>112, 333</value>
   </data>
   <data name="flowLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
     <value>14</value>

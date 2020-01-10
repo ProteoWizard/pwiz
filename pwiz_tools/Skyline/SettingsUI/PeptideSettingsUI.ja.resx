@@ -126,7 +126,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>227, 506</value>
+    <value>262, 506</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -154,7 +154,7 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>308, 506</value>
+    <value>343, 506</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -698,7 +698,7 @@
     <value>10</value>
   </data>
   <data name="btnExplore.Location" type="System.Drawing.Point, System.Drawing">
-    <value>246, 126</value>
+    <value>266, 126</value>
   </data>
   <data name="btnExplore.Size" type="System.Drawing.Size, System.Drawing">
     <value>112, 23</value>
@@ -725,7 +725,7 @@
     <value>1</value>
   </data>
   <data name="btnBuildLibrary.Location" type="System.Drawing.Point, System.Drawing">
-    <value>246, 66</value>
+    <value>266, 66</value>
   </data>
   <data name="btnBuildLibrary.Size" type="System.Drawing.Size, System.Drawing">
     <value>112, 23</value>
@@ -873,7 +873,7 @@ MS/MSスペクトルライブラリを構築します。</value>
     <value>5</value>
   </data>
   <data name="editLibraries.Location" type="System.Drawing.Point, System.Drawing">
-    <value>246, 36</value>
+    <value>266, 36</value>
   </data>
   <data name="editLibraries.Size" type="System.Drawing.Size, System.Drawing">
     <value>112, 23</value>
@@ -903,7 +903,7 @@ MS/MSスペクトルライブラリを構築します。</value>
     <value>19, 36</value>
   </data>
   <data name="listLibraries.Size" type="System.Drawing.Size, System.Drawing">
-    <value>222, 139</value>
+    <value>242, 139</value>
   </data>
   <data name="listLibraries.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1190,7 +1190,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>NoControl</value>
   </data>
   <data name="btnFilter.Location" type="System.Drawing.Point, System.Drawing">
-    <value>246, 96</value>
+    <value>266, 96</value>
   </data>
   <data name="btnFilter.Size" type="System.Drawing.Size, System.Drawing">
     <value>112, 23</value>
@@ -1539,7 +1539,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabDigestion.Size" type="System.Drawing.Size, System.Drawing">
-    <value>363, 460</value>
+    <value>398, 460</value>
   </data>
   <data name="tabDigestion.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -2829,7 +2829,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>12, 12</value>
   </data>
   <data name="tabControl1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>371, 486</value>
+    <value>406, 486</value>
   </data>
   <data name="tabControl1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -2913,7 +2913,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>395, 541</value>
+    <value>430, 541</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
