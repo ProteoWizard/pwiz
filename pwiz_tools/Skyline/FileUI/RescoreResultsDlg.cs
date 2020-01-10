@@ -88,7 +88,7 @@ namespace pwiz.Skyline.FileUI
             RescoreToFile(targetFile);
         }
 
-        private void RescoreToFile(string targetFile)
+        public void RescoreToFile(string targetFile)
         {
             var skylineWindow = (SkylineWindow)DocumentUIContainer;
             if (!skylineWindow.SaveDocument(targetFile, false))
