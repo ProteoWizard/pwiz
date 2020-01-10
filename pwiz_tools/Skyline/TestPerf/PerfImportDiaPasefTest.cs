@@ -137,7 +137,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 openData.SelectFile(TestFilesDir.GetTestPath(fileName));
                 openData.Open();
             });
-            WaitForConditionUI(() => isoEditor.GetIsolationWindows() != null);
+            WaitForConditionUI(() => windowCount == (isoEditor.GetIsolationWindows()?.Count ?? 0));
             RunUI(() =>
             {
                 var listIsolationWindows = isoEditor.GetIsolationWindows();

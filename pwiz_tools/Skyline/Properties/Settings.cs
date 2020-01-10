@@ -1878,7 +1878,7 @@ namespace pwiz.Skyline.Properties
 
     public sealed class DeclusterPotentialList : SettingsList<DeclusteringPotentialRegression>
     {
-        private static readonly DeclusteringPotentialRegression NONE =
+        public static readonly DeclusteringPotentialRegression NONE =
             new DeclusteringPotentialRegression(ELEMENT_NONE, 0, 0);
 
         public override int RevisionIndexCurrent { get { return 1; } }
@@ -1947,7 +1947,7 @@ namespace pwiz.Skyline.Properties
 
     public sealed class CompensationVoltageList : SettingsList<CompensationVoltageParameters>
     {
-        private static readonly CompensationVoltageParameters NONE = new CompensationVoltageParameters(ELEMENT_NONE, 0, 0, 0, 0, 0);
+        public static readonly CompensationVoltageParameters NONE = new CompensationVoltageParameters(ELEMENT_NONE, 0, 0, 0, 0, 0);
 
         public override int RevisionIndexCurrent { get { return 1; } }
 

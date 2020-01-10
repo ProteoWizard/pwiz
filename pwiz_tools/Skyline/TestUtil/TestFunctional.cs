@@ -616,7 +616,7 @@ namespace pwiz.SkylineTestUtil
             return result;
         }
 
-        private void PauseForForm(Type formType)
+        public void PauseForForm(Type formType)
         {
             if (Program.PauseForms == null)
                 return;

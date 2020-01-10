@@ -147,6 +147,12 @@
   <data name="AreaRatio">
     <value>面積比</value>
   </data>
+  <data name="AttributeAreaProportion">
+    <value>属性面積率</value>
+  </data>
+  <data name="AttributeGroupId">
+    <value>属性グループID</value>
+  </data>
   <data name="AuditLogRow">
     <value>監査ログ行</value>
   </data>
@@ -498,6 +504,9 @@
   <data name="IsotopeLabelType">
     <value>同位体標識タイプ</value>
   </data>
+  <data name="KEGG">
+    <value>KEGG</value>
+  </data>
   <data name="Key">
     <value>キー</value>
   </data>
@@ -509,6 +518,9 @@
   </data>
   <data name="LibraryName">
     <value>ライブラリ名</value>
+  </data>
+  <data name="LibraryProbabilityScore">
+    <value>ライブラリ確率スコア</value>
   </data>
   <data name="LibraryRank">
     <value>ライブラリランク</value>
@@ -801,8 +813,14 @@
   <data name="Precursor">
     <value>プリカーサー</value>
   </data>
+  <data name="PrecursorAccuracy">
+    <value>プリカーサー精度</value>
+  </data>
   <data name="PrecursorAdduct">
     <value>プリカーサー付加物</value>
+  </data>
+  <data name="PrecursorCalculatedConcentration">
+    <value>プリカーサー計算濃度</value>
   </data>
   <data name="PrecursorCharge">
     <value>プリカーサー電荷</value>
@@ -828,11 +846,17 @@
   <data name="PrecursorNeutralMass">
     <value>プリカーサーニュートラル質量</value>
   </data>
+  <data name="PrecursorNormalizedArea">
+    <value>プリカーサー正規化面積</value>
+  </data>
   <data name="PrecursorNote">
     <value>プリカーサーメモ</value>
   </data>
   <data name="PrecursorPeakFoundRatio">
     <value>プリカーサーピーク検出率</value>
+  </data>
+  <data name="PrecursorQuantification">
+    <value>プリカーサー定量化</value>
   </data>
   <data name="PrecursorReplicateNote">
     <value>プリカーサー繰り返し測定メモ</value>
@@ -1193,5 +1217,11 @@
   </data>
   <data name="UTCTime">
     <value>UTC時刻</value>
+  </data>
+  <data name="SampleId" xml:space="preserve">
+    <value>サンプルID</value>
+  </data>
+  <data name="InstrumentSerialNumber" xml:space="preserve">
+    <value>装置のシリアル番号</value>
   </data>
 </root>
