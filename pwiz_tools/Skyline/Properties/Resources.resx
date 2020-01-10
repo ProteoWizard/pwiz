@@ -8043,7 +8043,7 @@ Please contact the Panorama server administrator to upgrade the server.</value>
     <value>Declustering Potential</value>
   </data>
   <data name="EditStaticModDlg_EditStaticModDlg_Chemical_formula_" xml:space="preserve">
-    <value>Chemical formula:</value>
+    <value>&amp;Chemical formula:</value>
   </data>
   <data name="OpenDataSourceDialog_populateListViewFromDirectory_An_error_occurred_attempting_to_retrieve_the_contents_of_this_directory" xml:space="preserve">
     <value>An error occurred attempting to retrieve the contents of this directory.</value>
