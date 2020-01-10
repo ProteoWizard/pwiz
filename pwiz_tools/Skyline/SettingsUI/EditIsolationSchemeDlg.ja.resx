@@ -703,7 +703,7 @@
     <value>2</value>
   </data>
   <data name="rbUseResultsData.Text" xml:space="preserve">
-    <value>単離ターゲットの結果データを使用します(&amp;U)</value>
+    <value>単離ターゲットの結果データを使用(&amp;U)</value>
   </data>
   <data name="&gt;&gt;rbUseResultsData.Name" xml:space="preserve">
     <value>rbUseResultsData</value>
