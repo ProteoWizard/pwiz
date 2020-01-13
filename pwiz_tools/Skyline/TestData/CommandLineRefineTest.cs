@@ -28,6 +28,7 @@ using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -288,7 +289,7 @@ namespace pwiz.SkylineTestData
             TestFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineRefine.zip");
             DocumentPath = InitRefineDocument("SRM_mini_single_replicate.sky", 1, 4, 37, 40, 338);
             output = Run(CommandArgs.ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF.GetArgumentTextWithValue(cvCutoff));
-            AssertEx.Contains(output, "The document must contain at least 2 replicates to refine based on consistency.");
+            AssertEx.Contains(output, Resources.RefinementSettings_Refine_The_document_must_contain_at_least_2_replicates_to_refine_based_on_consistency_);
         }
 
         //        [TestMethod]
@@ -330,17 +331,21 @@ namespace pwiz.SkylineTestData
             string output = Run(CommandArgs.ARG_TRAN_PREDICT_CE.GetArgumentTextWithValue("SCIEX"));
             AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullCollisionEnergy, "Thermo", "SCIEX");
             IsDocumentUnchanged(output);
-            output = Run(CommandArgs.ARG_TRAN_PREDICT_CE.GetArgumentTextWithValue(CollisionEnergyList.ELEMENT_NONE));
-            AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullCollisionEnergy, "Thermo", CollisionEnergyList.ELEMENT_NONE);
+            string ceNoneText = Settings.Default.CollisionEnergyList.GetDisplayName(CollisionEnergyList.NONE);
+            output = Run(CommandArgs.ARG_TRAN_PREDICT_CE.GetArgumentTextWithValue(ceNoneText));
+            AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullCollisionEnergy, "Thermo", AuditLogStrings.None);
             IsDocumentUnchanged(output);
+            string dpNoneText = Settings.Default.DeclusterPotentialList.GetDisplayName(DeclusterPotentialList.NONE);
             output = Run(CommandArgs.ARG_TRAN_PREDICT_DP.GetArgumentTextWithValue("SCIEX"));
-            AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullDeclusteringPotential, DeclusterPotentialList.ELEMENT_NONE, "SCIEX");
+            AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullDeclusteringPotential, AuditLogStrings.None, "SCIEX");
             IsDocumentUnchanged(output);
+            string covNoneText = Settings.Default.CompensationVoltageList.GetDisplayName(CompensationVoltageList.NONE);
             output = Run(CommandArgs.ARG_TRAN_PREDICT_COV.GetArgumentTextWithValue("SCIEX"));
-            AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullCompensationVoltage, CompensationVoltageList.ELEMENT_NONE, "SCIEX");
+            AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullCompensationVoltage, AuditLogStrings.None, "SCIEX");
             IsDocumentUnchanged(output);
             // Only None is possible for optimization libraries without setting one up
-            output = Run(CommandArgs.ARG_TRAN_PREDICT_OPTDB.GetArgumentTextWithValue(OptimizationLibraryList.ELEMENT_NONE));
+            string optLibNoneText = Settings.Default.OptimizationLibraryList.GetDisplayName(OptimizationLibrary.NONE);
+            output = Run(CommandArgs.ARG_TRAN_PREDICT_OPTDB.GetArgumentTextWithValue(optLibNoneText));
             AssertEx.Contains(output, "test2", Resources.CommandLine_LogNewEntries_Document_unchanged);
             IsDocumentUnchanged(output);
 

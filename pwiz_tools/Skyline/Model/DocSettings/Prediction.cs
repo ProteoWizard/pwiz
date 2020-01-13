@@ -1762,6 +1762,11 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return CollisionEnergyList.NONE;
         }
+
+        public override string AuditLogText
+        {
+            get { return ReferenceEquals(this, CollisionEnergyList.NONE) ? LogMessage.NONE : base.AuditLogText; }
+        }
     }
 
     /// <summary>
@@ -2113,7 +2118,12 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public object GetDefaultObject(ObjectInfo<object> info)
         {
-            return DeclusterPotentialList.GetDefault();
+            return DeclusterPotentialList.NONE;
+        }
+
+        public override string AuditLogText
+        {
+            get { return ReferenceEquals(this, DeclusterPotentialList.NONE) ? LogMessage.NONE : base.AuditLogText; }
         }
     }
 
@@ -2331,12 +2341,17 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        #endregion
+
         public object GetDefaultObject(ObjectInfo<object> info)
         {
-            return CompensationVoltageList.GetDefault();
+            return CompensationVoltageList.NONE;
         }
 
-        #endregion
+        public override string AuditLogText
+        {
+            get { return ReferenceEquals(this, CompensationVoltageList.NONE) ? LogMessage.NONE : base.AuditLogText; }
+        }
     }
 
     [XmlRoot("predict_compensation_voltage_rough")]

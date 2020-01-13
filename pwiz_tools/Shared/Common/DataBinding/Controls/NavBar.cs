@@ -613,5 +613,9 @@ namespace pwiz.Common.DataBinding.Controls
         {
             get { return navBarButtonActions; }
         }
+        public ToolStripDropDownButton ReportsButton
+        {
+            get { return navBarButtonViews; }
+        }
     }
 }
