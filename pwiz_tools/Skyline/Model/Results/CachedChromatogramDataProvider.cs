@@ -104,7 +104,7 @@ namespace pwiz.Skyline.Model.Results
                 _lastChromGroupInfo.ReadChromatogram(_cache);
             }
             _lastIndices = chromKeyIndices;
-            var tranInfo = _lastChromGroupInfo.GetTransitionInfo(chromKeyIndices.TranIndex);
+            var tranInfo = _lastChromGroupInfo.GetTransitionInfo(chromKeyIndices.TranIndex, TransformChrom.raw);
             timeIntensities = tranInfo.TimeIntensities;
 
             // Assume that each chromatogram will be read once, though this may
