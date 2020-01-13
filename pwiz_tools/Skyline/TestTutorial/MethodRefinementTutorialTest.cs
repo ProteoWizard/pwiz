@@ -339,15 +339,19 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot("Targetes view clipped from main window and chromatogram graph metafile", 15);
 
             // Automated Refinement, p. 16
-            RunDlg<RefineDlg>(SkylineWindow.ShowRefineDlg, refineDlg =>
+            var refineDlgLoose = ShowDialog<RefineDlg>(SkylineWindow.ShowRefineDlg);
+            RunUI(() =>
             {
-                refineDlg.MaxTransitionPeakRank = 3;
-                refineDlg.PreferLargerIons = true;
-                refineDlg.RemoveMissingResults = true;
-                refineDlg.RTRegressionThreshold = 0.95;
-                refineDlg.DotProductThreshold = 0.8;
-                refineDlg.OkDialog();
+                refineDlgLoose.SelectedTab = RefineDlg.TABS.Results;
+                refineDlgLoose.MaxTransitionPeakRank = 3;
+                refineDlgLoose.PreferLargerIons = true;
+                refineDlgLoose.RemoveMissingResults = true;
+                refineDlgLoose.RTRegressionThreshold = 0.95;
+                refineDlgLoose.DotProductThreshold = 0.8;
             });
+            PauseForForm(typeof(RefineDlg.ResultsTab));
+            OkDialog(refineDlgLoose, refineDlgLoose.OkDialog);
+
             // TODO(nicksh): Update tutorial document: we used to expect 75 peptides
             const int expectedRefinedPeptideCount = 80;
             WaitForCondition(() => SkylineWindow.Document.PeptideCount <= expectedRefinedPeptideCount);
@@ -366,6 +370,7 @@ namespace pwiz.SkylineTestTutorial
             });
             RunDlg<RefineDlg>(SkylineWindow.ShowRefineDlg, refineDlg =>
             {
+                refineDlgLoose.SelectedTab = RefineDlg.TABS.Results;
                 refineDlg.MaxTransitionPeakRank = 6;
                 refineDlg.RemoveMissingResults = true;
                 refineDlg.RTRegressionThreshold = 0.90;
@@ -526,6 +531,12 @@ namespace pwiz.SkylineTestTutorial
             RestoreViewOnScreen(24);
             WaitForGraphs();
             PauseForScreenShot("Main window", 24); // Not L10N
+
+            // Show the RefineDlg.ConsistencyTab for localization text review
+            var refineDlgConsistency = ShowDialog<RefineDlg>(SkylineWindow.ShowRefineDlg);
+            RunUI(() => refineDlgConsistency.SelectedTab = RefineDlg.TABS.Consistency);
+            PauseForForm(typeof(RefineDlg.ConsistencyTab));
+            OkDialog(refineDlgConsistency, refineDlgConsistency.OkDialog);
 
             RunUI(() => SkylineWindow.SaveDocument());
             RunUI(SkylineWindow.NewDocument);

@@ -286,7 +286,7 @@ IPI:IPI00187596.1|SWISS-PROT:P23978|ENSEMBL:ENSRNOP00000009705|REFSEQ:NP_077347	
                         "{3:57.05162}"),
                     new DetailLogMessage(LogLevel.all_info, MessageType.changed_from_to, SrmDocument.DOCUMENT_TYPE.proteomic, string.Empty, false,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullCollisionEnergy}",
-                        "\"None\"",
+                        "\"{2:None}\"",
                         "\"Thermo\""),
                     new DetailLogMessage(LogLevel.all_info, MessageType.contains, SrmDocument.DOCUMENT_TYPE.proteomic, string.Empty, true,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullCollisionEnergy}{2:PropertySeparator}{0:CollisionEnergyRegression_Conversions}",

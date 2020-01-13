@@ -1355,6 +1355,8 @@ namespace pwiz.SkylineTestFunctional
             var client = (FakePrositPredictionClient)PrositPredictionClient.Current;
             var outBlib = TestFilesDir.GetTestPath("Prosit.blib");
 
+            var doc = SkylineWindow.Document;
+
             // Open Peptide Settings -- Library
             var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             var buildLibrary = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
@@ -1389,6 +1391,9 @@ namespace pwiz.SkylineTestFunctional
                 peptideSettings.PickedLibraries.Concat(new[] { "Prosit" }).ToArray());
             // Close pep settings
             OkDialog(peptideSettings, peptideSettings.OkDialog);
+
+            // Wait for stable document
+            WaitForDocumentChangeLoaded(doc);
 
             var precursorCount = SkylineWindow.Document.PeptideTransitionGroupCount;
             var distinctPrecursorCount = 

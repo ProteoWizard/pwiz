@@ -1109,13 +1109,13 @@ namespace pwiz.Skyline
             { WrapValue = true };
         public static readonly Argument ARG_TRAN_FRAGMENT_ION_TYPES = new DocArgument(@"tran-product-ion-types", ION_TYPE_LIST_VALUE,
             (c, p) => c.FilterProductTypes = ParseIonTypes(p)) { WrapValue = true };
-        public static readonly Argument ARG_TRAN_PREDICT_CE = new DocArgument(@"tran-predict-ce", GetDisplayNames(Settings.Default.CollisionEnergyList),
+        public static readonly Argument ARG_TRAN_PREDICT_CE = new DocArgument(@"tran-predict-ce", () => GetDisplayNames(Settings.Default.CollisionEnergyList),
             (c, p) => c.PredictCEName = p.Value) { WrapValue = true };
-        public static readonly Argument ARG_TRAN_PREDICT_DP = new DocArgument(@"tran-predict-dp", GetDisplayNames(Settings.Default.DeclusterPotentialList),
+        public static readonly Argument ARG_TRAN_PREDICT_DP = new DocArgument(@"tran-predict-dp", () => GetDisplayNames(Settings.Default.DeclusterPotentialList),
             (c, p) => c.PredictDPName = p.Value) { WrapValue = true };
-        public static readonly Argument ARG_TRAN_PREDICT_COV = new DocArgument(@"tran-predict-cov", GetDisplayNames(Settings.Default.CompensationVoltageList),
+        public static readonly Argument ARG_TRAN_PREDICT_COV = new DocArgument(@"tran-predict-cov", () => GetDisplayNames(Settings.Default.CompensationVoltageList),
             (c, p) => c.PredictCoVName = p.Value) { WrapValue = true };
-        public static readonly Argument ARG_TRAN_PREDICT_OPTDB = new DocArgument(@"tran-predict-optdb", GetDisplayNames(Settings.Default.OptimizationLibraryList),
+        public static readonly Argument ARG_TRAN_PREDICT_OPTDB = new DocArgument(@"tran-predict-optdb", () => GetDisplayNames(Settings.Default.OptimizationLibraryList),
             (c, p) => c.PredictOpimizationLibraryName = p.Value) { WrapValue = true };
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_RES = new DocArgument(@"full-scan-precursor-res", RP_VALUE,
             (c, p) => c.FullScanPrecursorRes = p.ValueDouble) { WrapValue = true };
@@ -1949,7 +1949,7 @@ namespace pwiz.Skyline
             public Argument(string name, string[] values, Func<CommandArgs, NameValuePair, bool> processValue)
                 : this(name, () => ValuesToExample(values), processValue)
             {
-                Values = values;
+                _fixedValues = values;
             }
 
             public Argument(string name, string[] values, Action<CommandArgs, NameValuePair> processValue)
@@ -1961,6 +1961,24 @@ namespace pwiz.Skyline
             {
             }
 
+            public Argument(string name, Func<string[]> values, Func<CommandArgs, NameValuePair, bool> processValue)
+                : this(name, () => ValuesToExample(values()), processValue)
+            {
+                _dynamicValues = values;
+            }
+
+            public Argument(string name, Func<string[]> values, Action<CommandArgs, NameValuePair> processValue)
+                : this(name, values, (c, p) =>
+                {
+                    processValue(c, p);
+                    return true;
+                })
+            {
+            }
+
+            private string[] _fixedValues;
+            private Func<string[]> _dynamicValues;
+
             public Func<CommandArgs, NameValuePair, bool> ProcessValue;
 
             public string Name { get; private set; }
@@ -1970,7 +1988,13 @@ namespace pwiz.Skyline
                 get { return CommandArgUsage.ResourceManager.GetString("_" + Name.Replace('-', '_')); }
             }
             public Func<string> ValueExample { get; private set; }
-            public string[] Values { get; private set; }
+            public string[] Values
+            {
+                get
+                {
+                    return _dynamicValues?.Invoke() ?? _fixedValues;
+                }
+            }
             public bool WrapValue { get; set; }
             public bool OptionalValue { get; set; }
             public bool InternalUse { get; set; }
@@ -2074,6 +2098,16 @@ namespace pwiz.Skyline
             }
 
             public DocArgument(string name, string[] values, Action<CommandArgs, NameValuePair> processValue)
+                : base(name, values, (c, p) => ProcessValueOverride(c, p, processValue))
+            {
+            }
+
+            public DocArgument(string name, Func<string[]> values, Func<CommandArgs, NameValuePair, bool> processValue)
+                : base(name, values, (c, p) => ProcessValueOverride(c, p, processValue))
+            {
+            }
+
+            public DocArgument(string name, Func<string[]> values, Action<CommandArgs, NameValuePair> processValue)
                 : base(name, values, (c, p) => ProcessValueOverride(c, p, processValue))
             {
             }
