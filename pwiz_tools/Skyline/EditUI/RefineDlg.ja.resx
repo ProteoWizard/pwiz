@@ -775,7 +775,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnOK.Location" type="System.Drawing.Point, System.Drawing">
-    <value>252, 522</value>
+    <value>302, 522</value>
   </data>
   <data name="btnOK.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -805,7 +805,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>333, 522</value>
+    <value>383, 522</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -1315,7 +1315,7 @@
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabResults.Size" type="System.Drawing.Size, System.Drawing">
-    <value>387, 477</value>
+    <value>437, 477</value>
   </data>
   <data name="tabResults.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1588,7 +1588,7 @@
     <value>25, 28</value>
   </data>
   <data name="groupPeakArea.Size" type="System.Drawing.Size, System.Drawing">
-    <value>332, 141</value>
+    <value>372, 141</value>
   </data>
   <data name="groupPeakArea.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1771,7 +1771,7 @@
     <value>2, 2, 2, 2</value>
   </data>
   <data name="groupDetection.Size" type="System.Drawing.Size, System.Drawing">
-    <value>332, 80</value>
+    <value>372, 80</value>
   </data>
   <data name="groupDetection.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1825,7 +1825,7 @@
     <value>13, 13</value>
   </data>
   <data name="tabControl1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>395, 503</value>
+    <value>445, 503</value>
   </data>
   <data name="tabControl1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1849,7 +1849,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>420, 557</value>
+    <value>470, 557</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
