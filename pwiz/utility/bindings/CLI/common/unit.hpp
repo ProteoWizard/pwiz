@@ -121,10 +121,10 @@ inline System::String^ unit_assert_exception_message(const char* filename, int l
         try { (x); } \
         catch (exception^ e) \
         { \
-        if (e->Message == gcnew System::String(whatStr)) \
+            if (e->Message->Contains(gcnew System::String(whatStr))) \
                 threw = true; \
             else \
-            throw gcnew System::Exception(unit_assert_exception_message(__FILE__, __LINE__, #x, System::String::Format("{0} {1}\nBut a different exception was thrown: {2}", gcnew System::String(#exception), gcnew System::String((whatStr)), e->Message))); \
+                throw gcnew System::Exception(unit_assert_exception_message(__FILE__, __LINE__, #x, System::String::Format("{0} {1}\nBut a different exception was thrown: {2}", gcnew System::String(#exception), gcnew System::String((whatStr)), e->Message))); \
         } \
         if (!threw) \
             throw gcnew System::Exception(unit_assert_exception_message(__FILE__, __LINE__, #x, System::String::Format("{0} {1}", gcnew System::String(#exception), gcnew System::String((whatStr))))); \
