@@ -115,6 +115,7 @@ namespace pwiz.Skyline.Model.Serialization
             WriteProteinMetadataXML(writer, node.ProteinMetadataOverrides, true); // write the protein metadata, skipping the name and description we already wrote
             writer.WriteAttribute(ATTR.auto_manage_children, node.AutoManageChildren, true);
             writer.WriteAttribute(ATTR.decoy, node.IsDecoy);
+            writer.WriteAttributeNullable(ATTR.decoy_match_proportion, node.ProportionDecoysMatch);
 
             // Write child elements
             WriteAnnotations(writer, node.Annotations);

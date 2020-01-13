@@ -108,9 +108,11 @@ namespace pwiz.SkylineTestFunctional
 
         private void VerifyDecoyStatus(int expectedDecoys, int expectedNoSource, int expectedWrongTransitionCount)
         {
-            int numDecoys = -1, numNoSource = -1, numWrongTransitionCount = -1;
-            RunUI(() => SkylineWindow.CheckDecoys(SkylineWindow.DocumentUI, out numDecoys, out numNoSource, out numWrongTransitionCount));
-            Assert.AreEqual(expectedDecoys, numDecoys);
+            var decoyGroup = SkylineWindow.DocumentUI.PeptideGroups.FirstOrDefault(group => group.IsDecoy);
+            Assert.IsNotNull(decoyGroup);
+            int numNoSource = 0, numWrongTransitionCount = 0;
+            RunUI(() => decoyGroup.CheckDecoys(SkylineWindow.DocumentUI, out numNoSource, out numWrongTransitionCount, out _));
+            Assert.AreEqual(expectedDecoys, decoyGroup.PeptideCount);
             Assert.AreEqual(expectedNoSource, numNoSource);
             Assert.AreEqual(expectedWrongTransitionCount, numWrongTransitionCount);
 
@@ -120,7 +122,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     Assert.IsTrue(
                         dlg.Message.StartsWith(string.Format(
-                            Resources.SkylineWindow_ImportResults_The_document_contains_decoys_that_do_not_match_the_targets__Out_of__0__decoys_, numDecoys)));
+                            Resources.SkylineWindow_ImportResults_The_document_contains_decoys_that_do_not_match_the_targets__Out_of__0__decoys_, decoyGroup.PeptideCount)));
                     if (numNoSource == 1)
                         Assert.IsTrue(dlg.Message.Contains(Resources.SkylineWindow_ImportResults_1_decoy_does_not_have_a_matching_target));
                     else if (numNoSource > 1)

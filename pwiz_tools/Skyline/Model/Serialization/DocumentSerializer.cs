@@ -142,6 +142,7 @@ namespace pwiz.Skyline.Model.Serialization
             public const string auto_manage_children = "auto_manage_children";
             public const string decoy = "decoy";
             public const string decoy_mass_shift = "decoy_mass_shift";
+            public const string decoy_match_proportion = "decoy_match_proportion";
             public const string isotope_dist_rank = "isotope_dist_rank";
             public const string isotope_dist_proportion = "isotope_dist_proportion";
             public const string ion_formula = "ion_formula";

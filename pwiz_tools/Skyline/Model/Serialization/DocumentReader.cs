@@ -721,6 +721,7 @@ namespace pwiz.Skyline.Model.Serialization
             ProteinMetadata proteinMetadata = ReadProteinMetadataXML(reader, true); // read label_name and label_description
             bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
             bool isDecoy = reader.GetBoolAttribute(ATTR.decoy);
+            var proportionDecoysMatch = reader.GetNullableDoubleAttribute(ATTR.decoy_match_proportion);
 
             PeptideGroup group = new PeptideGroup(isDecoy);
 
@@ -749,7 +750,7 @@ namespace pwiz.Skyline.Model.Serialization
             }
 
             return new PeptideGroupDocNode(group, annotations, proteinMetadata,
-                children ?? new PeptideDocNode[0], autoManageChildren);
+                children ?? new PeptideDocNode[0], autoManageChildren, proportionDecoysMatch);
         }
 
         /// <summary>
