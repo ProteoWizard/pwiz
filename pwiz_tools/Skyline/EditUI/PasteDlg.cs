@@ -1749,6 +1749,7 @@ namespace pwiz.Skyline.EditUI
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.chargePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Charge);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.nameProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Name);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.formulaProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Formula);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.neutralLossProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.adductProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Adduct);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.mzProduct, Resources.PasteDlg_UpdateMoleculeType_Product_m_z);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.chargeProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
@@ -2094,14 +2095,12 @@ namespace pwiz.Skyline.EditUI
         {
             switch (AskWhetherToKeepEmptyProteins(parent, emptyPeptideGroups, entryCreatorList))
             {
-                case null:
-                    return null;
                 case true:
                     return docCurrent;
                 case false:
                     return ImportPeptideSearch.RemoveProteinsByPeptideCount(docCurrent, 1);
                 default:
-                    throw new InvalidOperationException();
+                    return null;
             }
         }
 

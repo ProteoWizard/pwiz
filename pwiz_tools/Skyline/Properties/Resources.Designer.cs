@@ -10713,7 +10713,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Chemical formula:.
+        ///   Looks up a localized string similar to &amp;Chemical formula:.
         /// </summary>
         public static string EditStaticModDlg_EditStaticModDlg_Chemical_formula_ {
             get {
@@ -19739,6 +19739,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Product Neutral Loss.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Product_Neutral_Loss {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Product_Neutral_Loss", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Protein description.
         /// </summary>
         public static string PasteDlg_UpdateMoleculeType_Protein_description {
@@ -28050,6 +28059,26 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders" +
                         "_RT__min_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot use product neutral loss chemical formula without a precursor chemical formula.
+        /// </summary>
+        public static string SmallMoleculeTransitionListReader_ProcessNeutralLoss_Cannot_use_product_neutral_loss_chemical_formula_without_a_precursor_chemical_formula {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListReader_ProcessNeutralLoss_Cannot_use_product_neutral_l" +
+                        "oss_chemical_formula_without_a_precursor_chemical_formula", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor molecular formula {0} does not contain sufficient atoms to be used with neutral loss {1}.
+        /// </summary>
+        public static string SmallMoleculeTransitionListReader_ProcessNeutralLoss_Precursor_molecular_formula__0__does_not_contain_sufficient_atoms_to_be_used_with_neutral_loss__1_ {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListReader_ProcessNeutralLoss_Precursor_molecular_formula_" +
+                        "_0__does_not_contain_sufficient_atoms_to_be_used_with_neutral_loss__1_", resourceCulture);
             }
         }
         
