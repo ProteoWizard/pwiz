@@ -544,7 +544,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Draw background for retention time window
                 if ((RetentionExplicit.RetentionTimeWindow??0) > 0.0)
                 {
-                    var halfwin = RetentionExplicit.RetentionTimeWindow??0 / 2.0;
+                    var halfwin = (RetentionExplicit.RetentionTimeWindow??0) / 2.0;
                     double x1 = ScaleRetentionTime(time - halfwin).DisplayTime;
                     double x2 = ScaleRetentionTime(time + halfwin).DisplayTime;
                     BoxObj box = new BoxObj(x1, 0, x2 - x1, 1,
