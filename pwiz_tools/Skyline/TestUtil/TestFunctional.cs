@@ -20,8 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -30,7 +28,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
-using DigitalRune.Windows.Docking;
 using Excel;
 using JetBrains.Annotations;
 // using Microsoft.Diagnostics.Runtime; only needed for stack dump logic, which is currently disabled
@@ -99,11 +96,6 @@ namespace pwiz.SkylineTestUtil
         static AbstractFunctionalTest()
         {
             IsCheckLiveReportsCompatibility = false;
-        }
-
-        public AbstractFunctionalTest()
-        {
-            _shotManager = new ScreenshotManager(this.GetType().Name, SkylineWindow);
         }
 
         private bool _testCompleted;
@@ -624,7 +616,7 @@ namespace pwiz.SkylineTestUtil
             return result;
         }
 
-        private void PauseForForm(Type formType)
+        public void PauseForForm(Type formType)
         {
             if (Program.PauseForms == null)
                 return;
@@ -1030,11 +1022,7 @@ namespace pwiz.SkylineTestUtil
 
         public void PauseForScreenShot(string description = null, int? pageNum = null)
         {
-            PauseForScreenShot(description, pageNum, null, null);
-        }
-        public void PauseForScreenShot(Form screenshotForm, string description = null, int? pageNum = null)
-        {
-            PauseForScreenShot(description, pageNum, null, screenshotForm);
+            PauseForScreenShot(description, pageNum, null);
         }
         public void PauseForScreenShot(Form screenshotForm, string description = null, int? pageNum = null)
         {
@@ -1084,17 +1072,6 @@ namespace pwiz.SkylineTestUtil
             {
                 PauseForForm(formType);
             }
-        }
-
-        public Form FindFloatingWindow<T>() where T:FloatingWindow
-        {
-            foreach (var panel in SkylineWindow.DockPanel.FloatingWindows)
-            {
-                var res = panel as T;
-                if (res != null)
-                    return res;
-            }
-            return null;
         }
 
         public void PauseForAuditLog()
@@ -1179,7 +1156,10 @@ namespace pwiz.SkylineTestUtil
                 if (IsDemoMode)
                     Settings.Default.MainWindowMaximized = true;
 
-                ForceMzml = (Program.PauseSeconds == 0);   // Mzml is ~8x faster for this test.
+                if (Program.PauseSeconds != 0)
+                {
+                    ForceMzml = false;
+                }
 
                 var threadTest = new Thread(WaitForSkyline) { Name = @"Functional test thread" };
                 LocalizationHelper.InitThread(threadTest);
@@ -1215,15 +1195,6 @@ namespace pwiz.SkylineTestUtil
                         FileStreamManager.Default.CloseAllStreams();
                     }
                 }
-            }
-
-            try
-            {
-                _shotManager.SaveToFile();
-            }
-            catch (Exception e)     //TODO: it probably shouldn't interfere with the test like this, but this exception should be logged somehow.
-            {
-                Program.AddTestException(e);
             }
 
             if (Program.TestExceptions.Count > 0)

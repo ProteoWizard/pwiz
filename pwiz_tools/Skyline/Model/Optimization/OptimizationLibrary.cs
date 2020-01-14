@@ -243,11 +243,16 @@ namespace pwiz.Skyline.Model.Optimization
             }
         }
 
+        #endregion
+
         public object GetDefaultObject(ObjectInfo<object> info)
         {
-            return OptimizationLibraryList.GetDefault();
+            return NONE;
         }
 
-        #endregion
+        public override string AuditLogText
+        {
+            get { return ReferenceEquals(this, NONE) ? LogMessage.NONE : base.AuditLogText; }
+        }
     }
 }

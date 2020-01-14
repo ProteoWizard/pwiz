@@ -214,6 +214,7 @@ Skyline-daily.exe.manifest
 Skyline-daily.pdb
 SkylineData.ico
 SkylineDoc.ico
+SkylineDocPointer.ico
 SkylineProcessRunner.exe
 SkylineTool.dll
 SkylineTool.pdb

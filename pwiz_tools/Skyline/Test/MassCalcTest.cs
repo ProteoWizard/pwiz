@@ -198,7 +198,7 @@ namespace pwiz.SkylineTest
         }
 
         /// <summary>
-        /// Tests that <see cref="BioMassCalc.ParseMass(ref string)"/> works correctly and stops at the first minus sign.
+        /// Tests that <see cref="BioMassCalc.ParseMass(ref string, Dictionary&lt;string, int&gt;)"/> works correctly and stops at the first minus sign.
         /// </summary>
         [TestMethod]
         public void TestParseMass()

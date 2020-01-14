@@ -194,5 +194,19 @@ namespace pwiz.Common.SystemUtil
             }
             return path;
         }
+
+        /// <summary>
+        /// If path is null, throw an ArgumentException
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns>path</returns>
+        public static string SafePath(string path)
+        {
+            if (path == null)
+            {
+                throw new ArgumentException(@"null path name");
+            }
+            return path;
+        }
     }
 }
