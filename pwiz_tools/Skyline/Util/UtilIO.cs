@@ -1039,7 +1039,7 @@ namespace pwiz.Skyline.Util
         {
             _progressMonitor = progressMonitor;
             _status = new ProgressStatus(Path.GetFileName(path));
-            _totalChars = new FileInfo(path).Length;
+            _totalChars = new FileInfo(PathEx.SafePath(path)).Length;
         }
 
         public HashingStream Stream

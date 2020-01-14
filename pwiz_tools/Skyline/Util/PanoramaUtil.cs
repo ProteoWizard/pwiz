@@ -797,7 +797,7 @@ namespace pwiz.Skyline.Util
                     // Add a "Temporary" header so that LabKey marks this as a temporary file.
                     // https://www.labkey.org/issues/home/Developer/issues/details.view?issueId=19220
                     _webClient.Headers.Add(@"Temporary", @"T");
-                    _webClient.UploadFileAsync(tmpUploadUri, @"PUT", zipFilePath);
+                    _webClient.UploadFileAsync(tmpUploadUri, @"PUT", PathEx.SafePath(zipFilePath));
 
                     // Wait for the upload to complete
                     Monitor.Wait(this);

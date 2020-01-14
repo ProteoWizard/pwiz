@@ -2396,7 +2396,7 @@ namespace pwiz.Skyline
                     longWaitBroker.Message = string.Format(Resources.SkylineWindow_ImportFiles_Importing__0__, Path.GetFileName(filePath));
                 }
 
-                using (var reader = new StreamReader(filePath))
+                using (var reader = new StreamReader(PathEx.SafePath(filePath)))
                 {
                     IdentityPath firstAddedForFile, nextAdd;
                     docResult = docResult.ImportDocumentXml(reader,
