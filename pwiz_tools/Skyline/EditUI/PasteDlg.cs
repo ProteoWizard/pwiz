@@ -2095,14 +2095,12 @@ namespace pwiz.Skyline.EditUI
         {
             switch (AskWhetherToKeepEmptyProteins(parent, emptyPeptideGroups, entryCreatorList))
             {
-                case null:
-                    return null;
                 case true:
                     return docCurrent;
                 case false:
                     return ImportPeptideSearch.RemoveProteinsByPeptideCount(docCurrent, 1);
                 default:
-                    throw new InvalidOperationException();
+                    return null;
             }
         }
 
