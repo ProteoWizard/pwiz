@@ -12,13 +12,13 @@ namespace pwiz.Skyline.Model.GroupComparison
     {
         private NormalizationData _normalizationData;
         private Func<NormalizationData> _getNormalizationDataFunc;
-        public PeptideQuantifier(Func<NormalizationData> getNormlizationDataFunc, PeptideGroupDocNode peptideGroup, PeptideDocNode peptideDocNode,
+        public PeptideQuantifier(Func<NormalizationData> getNormalizationDataFunc, PeptideGroupDocNode peptideGroup, PeptideDocNode peptideDocNode,
             QuantificationSettings quantificationSettings)
         {
             PeptideGroupDocNode = peptideGroup;
             PeptideDocNode = peptideDocNode;
             QuantificationSettings = quantificationSettings;
-            _getNormalizationDataFunc = getNormlizationDataFunc;
+            _getNormalizationDataFunc = getNormalizationDataFunc;
         }
 
         public static PeptideQuantifier GetPeptideQuantifier(Func<NormalizationData> getNormalizationDataFunc, SrmSettings srmSettings, PeptideGroupDocNode peptideGroup, PeptideDocNode peptide)
