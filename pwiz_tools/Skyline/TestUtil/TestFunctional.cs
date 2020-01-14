@@ -1130,6 +1130,22 @@ namespace pwiz.SkylineTestUtil
                     {
                         return;  // Don't want to run this lengthy test right now
                     }
+
+                    Program.FunctionalTest = true;
+                    Program.DefaultUiMode = defaultUiMode;
+                    Program.TestExceptions = new List<Exception>();
+                    LocalizationHelper.InitThread();
+
+                    // Unzip test files.
+                    if (TestFilesZipPaths != null)
+                    {
+                        TestFilesDirs = new TestFilesDir[TestFilesZipPaths.Length];
+                        for (int i = 0; i < TestFilesZipPaths.Length; i++)
+                        {
+                            TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName,
+                                TestFilesPersistent, IsExtractHere(i));
+                        }
+                    }
                     _shotManager = new ScreenshotManager(TestContext, SkylineWindow);
 
                     // Run test in new thread (Skyline on main thread).
@@ -1150,43 +1166,6 @@ namespace pwiz.SkylineTestUtil
                         ForceMzml = false;
                     }
 
-                    var threadTest = new Thread(WaitForSkyline) { Name = @"Functional test thread" };
-                    LocalizationHelper.InitThread(threadTest);
-                    threadTest.Start();
-                    Program.Main();
-                    threadTest.Join();
-
-                    // Were all windows disposed?
-                    FormEx.CheckAllFormsDisposed();
-                    CommonFormEx.CheckAllFormsDisposed();
-
-                    Program.FunctionalTest = true;
-                    Program.DefaultUiMode = defaultUiMode;
-                    Program.TestExceptions = new List<Exception>();
-                    LocalizationHelper.InitThread();
-
-                    // Unzip test files.
-                    if (TestFilesZipPaths != null)
-                    {
-                        TestFilesDirs = new TestFilesDir[TestFilesZipPaths.Length];
-                        for (int i = 0; i < TestFilesZipPaths.Length; i++)
-                        {
-                            TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName,
-                                TestFilesPersistent, IsExtractHere(i));
-                        }
-                    }
-                    // Run test in new thread (Skyline on main thread).
-                    Program.Init();
-                    Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault();
-                    // Reset defaults with names from resources for testing different languages
-                    Settings.Default.BackgroundProteomeList[0] = BackgroundProteomeList.GetDefault();
-                    Settings.Default.DeclusterPotentialList[0] = DeclusterPotentialList.GetDefault();
-                    Settings.Default.RetentionTimeList[0] = RetentionTimeList.GetDefault();
-                    Settings.Default.ShowStartupForm = ShowStartPage;
-                    Settings.Default.MruList = SetMru;
-                    // For automated demos, start with the main window maximized
-                    if (IsDemoMode)
-                        Settings.Default.MainWindowMaximized = true;
                     var threadTest = new Thread(WaitForSkyline) { Name = @"Functional test thread" };
                     LocalizationHelper.InitThread(threadTest);
                     threadTest.Start();
