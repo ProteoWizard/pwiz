@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -38,6 +39,7 @@ namespace pwiz.SkylineTest
         public const string PATH_NIST_LIB_CACHE = @"C:\Libraries\NIST_yeast_v2.0_2008-07-11" + NistLibrary.EXT_CACHE;
         public const string PATH_HUNTER_LIB = @"C:\Libraries\yeast_cmp_20.hlf";
         public const string PATH_BIBLIOSPEC_LIB = @"C:\Libraries\yeast.lib";
+        public const string PATH_GMD_LIB = @"C:\Libraries\example_gmd.msp";
         // Cannot find a way to use anything but a file with SQLite
         // public const string _bibliospecLiteLibPath = @"C:\Libraries\yeast.blib";
 
@@ -93,6 +95,33 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(0, lib1.CompareRevisions(lib2));
         }
 
+        [TestMethod]
+        public void GMDLoadLibrary()
+        {
+            var streamManager = new MemoryStreamManager();
+            streamManager.TextFiles.Add(PATH_GMD_LIB, TEXT_LIB_GMD);
+            var loader = new TestLibraryLoader {StreamManager = streamManager};
+
+            var librarySpec = new NistLibSpec("Example GMD", PATH_GMD_LIB);
+
+            Library lib = librarySpec.LoadLibrary(loader);
+
+            var key = new LibKey(SmallMoleculeLibraryAttributes.Create(
+                "M000880_A098001 - 101 - xxx_NA_0_FALSE_MDN35_ALK_Glycine, N, N - dimethyl - (1TMS)", "C7H17NO2Si",
+                "FFDGPVCHZBVARC-UHFFFAOYSA-N",
+                new Dictionary<string, string>()
+                {
+                    { MoleculeAccessionNumbers.TagCAS, "1118-68-9"},
+                    { MoleculeAccessionNumbers.TagKEGG, "C01026"},
+                    { MoleculeAccessionNumbers.TagInChI, "1S/C4H9NO2/c1-5(2)3-4(6)7/h3H2,1-2H3,(H,6,7)"}
+                }), Adduct.M_PLUS);
+
+            Assert.IsTrue(lib.TryLoadSpectrum(key, out var peaksInfo));
+            Assert.AreEqual(70.1, peaksInfo.MZs.FirstOrDefault(), 0.0001);
+            Assert.AreEqual(81.2, peaksInfo.Intensities.FirstOrDefault(), 0.0001);
+
+        }
+        
         [TestMethod]
         public void HunterLoadLibrary()
         {
@@ -922,5 +951,74 @@ namespace pwiz.SkylineTest
             "118.217 6.09 \"86/86\"\n" +
             "128.070 4.10 \"testfrag_next_to_last 83/86 \"\n" +
             "146.081 4.90 \"testfrag_last 85/86 note \"\n";
+
+        public const string TEXT_LIB_GMD =
+            "Name: M000000_A097001-101-xxx_NA_0_FALSE_MDN35_ALK_Unknown#bth-pae-001\n" +
+            "Synon: MST N: Unknown#bth-pae-001\n" +
+            "Synon: RI: 0\n" +
+            "Synon: RI MDN35 ALK: FALSE\n" +
+            "Synon: MST: A097001-101\n" +
+            "Synon: MST ISOTOPE: 101\n" +
+            "Synon: MST ID: A097001-101-xxx_\n" +
+            "Synon: MST SEL MASS: NA\n" +
+            "Synon: GMD LINK: http://gmd.mpimp-golm.mpg.de/Analytes/aea8340f-e606-48c2-8371-dcf3d7d18a77.aspx\n" +
+            "Synon: GMD VERS: 21.Nov.2011 21:54 hummel\n" +
+            "CAS#: NA\n" +
+            "Comment: consensus spectrum of 1 spectra per analyte, MPIMP ID and isotopomer, with majority threshold = 60%\n" +
+            "DB#: 16\n" +
+            "Num Peaks: 50\n" +
+            "70:10 76:35 77:1000 78:110 79:42 \n" +
+            "80:4 81:7 86:6 87:5 88:21 \n" +
+            "90:42 91:40 97:15 100:31 103:213 \n" +
+            "104:27 105:10 107:48 108:6 110:41 \n" +
+            "112:14 118:39 120:79 121:8 122:4 \n" +
+            "130:33 134:589 135:55 136:25 137:3 \n" +
+            "138:2 140:83 141:4 143:104 144:8 \n" +
+            "160:4 184:610 185:58 186:24 187:2 \n" +
+            "198:7 199:3 214:294 215:33 216:12 \n" +
+            "217:1 228:3 229:109 230:12 231:5 \n" +
+            "\n" +
+            "Name: M000880_A098001-101-xxx_NA_0_FALSE_MDN35_ALK_Glycine, N,N-dimethyl- (1TMS)\n" +
+            "Synon: MST N: Glycine, N,N-dimethyl- (1TMS)\n" +
+            "Synon: RI: 10,5\n" +
+            "Synon: RI MDN35 ALK: FALSE\n" +
+            "Synon: MST: A098001-101\n" +
+            "Synon: MST ISOTOPE: 101\n" +
+            "Synon: MST ID: A098001-101-xxx_\n" +
+            "Synon: MST SEL MASS: NA\n" +
+            "Synon: METB: M000880_NA_correct\n" +
+            "Synon: METB N: (dimethylamino)acetic acid\n" +
+            "Synon: METB N: (Dimethylamino)acetic acid\n" +
+            "Synon: METB N: 1,5-Dihydroxynaphthalene\n" +
+            "Synon: METB N: Dimethylglycine\n" +
+            "Synon: METB N: Glycine, N,N-dimethyl-\n" +
+            "Synon: METB N: N,N-dimethylglycine\n" +
+            "Synon: METB N: N,N-Dimethylglycine\n" +
+            "Synon: METB N: N,N-Dimethylglycine hydrochloride\n" +
+            "Synon: METB CAS: 1118-68-9\n" +
+            "Synon: METB KEGG: C01026\n" +
+            "Synon: METB InChI: InChI=1S/C4H9NO2/c1-5(2)3-4(6)7/h3H2,1-2H3,(H,6,7)\n" +
+            "Synon: METB InChIKey: FFDGPVCHZBVARC-UHFFFAOYSA-N\n" +
+            "Synon: GMD LINK: http://gmd.mpimp-golm.mpg.de/Analytes/f8adb36f-eeba-4d1d-a589-c6ebff81f8ea.aspx\n" +
+            "Synon: GMD VERS: 21.Nov.2011 21:54 hummel\n" +
+            "Formula: C7H17NO2Si\n" +
+            "MW: 175,301\n" +
+            "CAS#: NA\n" +
+            "Comment: consensus spectrum of 1 spectra per analyte, MPIMP ID and isotopomer, with majority threshold = 60%\n" +
+            "DB#: 17\n" +
+            "Num Peaks: 64\n" +
+            "70,1:81.2 71:109 72:255 76:122 77:264 \n" +
+            "78:50 79:93 80:87 81:3 82:2 \n" +
+            "83:2 84:155 85:25 86:96 87:10 \n" +
+            "88:56 89:34 90:3 91:2 92:4 \n" +
+            "93:12 95:0 96:0 98:0 99:3 \n" +
+            "100:34 101:110 102:182 103:291 104:30 \n" +
+            "105:3 107:4 108:0 110:0 113:0 \n" +
+            "114:37 115:14 116:129 117:179 118:15 \n" +
+            "120:0 126:1 127:3 128:4 129:2 \n" +
+            "130:254 131:18 132:148 133:7 134:8 \n" +
+            "144:9 145:0 146:31 158:0 160:1000 \n" +
+            "161:106 162:31 163:0 174:9 175:657 \n" +
+            "176:72 177:18 178:0 552:0 \n";
     }
 }

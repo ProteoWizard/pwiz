@@ -234,7 +234,7 @@
     <value>164, 22</value>
   </data>
   <data name="textMaxTransitions.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="textMaxTransitions.ToolTip" xml:space="preserve">
     <value>作成された各ファイルに含まれるトランジション数の最大値はこの値になります。
@@ -265,7 +265,7 @@
     <value>236, 17</value>
   </data>
   <data name="labelMaxTransitions.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="labelMaxTransitions.Text" xml:space="preserve">
     <value>サンプルインジェクション毎の最大トランジション数(&amp;X)：</value>
@@ -378,6 +378,12 @@
   <data name="comboTargetType.TabIndex" type="System.Int32, mscorlib">
     <value>13</value>
   </data>
+  <data name="comboTargetType.ToolTip" xml:space="preserve">
+    <value>エクスポートのメソッドのタイプです。
+標準はスケジュール化されていないメソッドをエクスポートします。
+トリガーはプライマリトランジションが一定の強度閾値に達するまで
+セカンダリトランジションを測定しないメソッドです。</value>
+  </data>
   <data name="&gt;&gt;comboTargetType.Name" xml:space="preserve">
     <value>comboTargetType</value>
   </data>
@@ -401,6 +407,9 @@
   </data>
   <data name="textRunLength.TabIndex" type="System.Int32, mscorlib">
     <value>15</value>
+  </data>
+  <data name="textRunLength.ToolTip" xml:space="preserve">
+    <value>分単位で表したグラジエント全体の実行時間であり、スケジュール化されていないThermoおよびWatersメソッドで必須です。</value>
   </data>
   <data name="textRunLength.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -428,6 +437,9 @@
   </data>
   <data name="textDwellTime.TabIndex" type="System.Int32, mscorlib">
     <value>20</value>
+  </data>
+  <data name="textDwellTime.ToolTip" xml:space="preserve">
+    <value>ミリ秒で表したトランジション毎のドウェル時間であり、スケジュール化されていないAgilentおよびSCIEXメソッドで必要です。</value>
   </data>
   <data name="textDwellTime.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -588,6 +600,10 @@
   <data name="textTemplateFile.TabIndex" type="System.Int32, mscorlib">
     <value>23</value>
   </data>
+  <data name="textTemplateFile.ToolTip" xml:space="preserve">
+    <value>エクスポートされたメソッドで使用される設定を含む既存のメソッドファイルです。
+Skylineで制御されないトランジション値に対しては、単一のテンプレートトランジションも必要となる場合があります。</value>
+  </data>
   <data name="&gt;&gt;textTemplateFile.Name" xml:space="preserve">
     <value>textTemplateFile</value>
   </data>
@@ -643,7 +659,7 @@
     <value>125, 21</value>
   </data>
   <data name="cbIgnoreProteins.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="cbIgnoreProteins.Text" xml:space="preserve">
     <value>タンパク質を無視(&amp;R)</value>
@@ -820,7 +836,7 @@
     <value>173, 24</value>
   </data>
   <data name="comboPolarityFilter.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>12</value>
   </data>
   <data name="comboPolarityFilter.ToolTip" xml:space="preserve">
     <value>陽と陰イオンモードトランジションのドキュメント両方のエクスポートを管理します。陽または陰イオンモードのみのトランジションの出力を許可するか、各極性に対して別々の出力を作成します。</value>
@@ -882,6 +898,10 @@
   <data name="cbSlens.Text" xml:space="preserve">
     <value>S-レンズ値を書き込む(&amp;L)</value>
   </data>
+  <data name="cbSlens.ToolTip" xml:space="preserve">
+    <value>Thermo装置のS-レンズ列に書き込みます。
+明白なS-レンズ値を持たないトランジションについては50を使用します。</value>
+  </data>
   <data name="&gt;&gt;cbSlens.Name" xml:space="preserve">
     <value>cbSlens</value>
   </data>
@@ -931,7 +951,7 @@
     <value>78, 17</value>
   </data>
   <data name="labelOptimizing.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>13</value>
   </data>
   <data name="labelOptimizing.Text" xml:space="preserve">
     <value>最適化(&amp;Z)：</value>
@@ -961,7 +981,7 @@
     <value>66, 17</value>
   </data>
   <data name="labelMethods.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="labelMethods.Text" xml:space="preserve">
     <value>メソッド：</value>
@@ -991,7 +1011,7 @@
     <value>24, 17</value>
   </data>
   <data name="labelMethodNum.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="labelMethodNum.Text" xml:space="preserve">
     <value>##</value>
@@ -1073,6 +1093,9 @@
   </data>
   <data name="textPrimaryCount.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
+  </data>
+  <data name="textPrimaryCount.ToolTip" xml:space="preserve">
+    <value>トリガーメソッドをエクスポートする際にプライマリを作成するトランジションの数です。</value>
   </data>
   <data name="&gt;&gt;textPrimaryCount.Name" xml:space="preserve">
     <value>textPrimaryCount</value>
@@ -1212,6 +1235,9 @@
   <data name="comboTuning.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
+  <data name="comboTuning.ToolTip" xml:space="preserve">
+    <value>補償電圧を最適化する際に使用するチューニングのレベルです。</value>
+  </data>
   <data name="&gt;&gt;comboTuning.Name" xml:space="preserve">
     <value>comboTuning</value>
   </data>
@@ -1299,6 +1325,11 @@
   <data name="cbExportEdcMass.Text" xml:space="preserve">
     <value>EDC質量を書き込む(&amp;W)</value>
   </data>
+  <data name="cbExportEdcMass.ToolTip" xml:space="preserve">
+    <value>選択すると、 Watersメソッド向けに拡張デューティサイクル（EDC）をエクスポートします。
+これらの値はプリカーサーのトップランクトランジションの m/z値となります。
+選択しない場合、この位置にゼロが書き込まれます。</value>
+  </data>
   <data name="&gt;&gt;cbExportEdcMass.Name" xml:space="preserve">
     <value>cbExportEdcMass</value>
   </data>
@@ -1348,7 +1379,7 @@
     <value>117, 17</value>
   </data>
   <data name="labelPolarityFilter.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>11</value>
   </data>
   <data name="labelPolarityFilter.Text" xml:space="preserve">
     <value>極性(&amp;Y)：</value>
@@ -1410,6 +1441,9 @@
   <data name="cbWriteCoV.Text" xml:space="preserve">
     <value>FAIMS CV値を書き込む</value>
   </data>
+  <data name="cbWriteCoV.ToolTip" xml:space="preserve">
+    <value>Thermo TSQ装置のFAIMS補償電圧の列に書き込みます。</value>
+  </data>
   <data name="&gt;&gt;cbWriteCoV.Name" xml:space="preserve">
     <value>cbWriteCoV</value>
   </data>
@@ -1420,6 +1454,39 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbWriteCoV.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="cbSortByMz.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbSortByMz.Location" type="System.Drawing.Point, System.Drawing">
+    <value>226, 115</value>
+  </data>
+  <data name="cbSortByMz.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>1, 1, 1, 1</value>
+  </data>
+  <data name="cbSortByMz.Size" type="System.Drawing.Size, System.Drawing">
+    <value>112, 21</value>
+  </data>
+  <data name="cbSortByMz.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="cbSortByMz.Text" xml:space="preserve">
+    <value>m/zの順に並べる</value>
+  </data>
+  <data name="cbSortByMz.ToolTip" xml:space="preserve">
+    <value>選択した場合、エクスポートされたメソッドは最適化された四重極スイッチング向けにm/z値の昇順に並べ替えられます（プリカーサーm/z、次に該当する場合はプロダクトm/z）。</value>
+  </data>
+  <data name="&gt;&gt;cbSortByMz.Name" xml:space="preserve">
+    <value>cbSortByMz</value>
+  </data>
+  <data name="&gt;&gt;cbSortByMz.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbSortByMz.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;cbSortByMz.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">

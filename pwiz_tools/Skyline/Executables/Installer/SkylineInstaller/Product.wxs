@@ -594,6 +594,11 @@
             <Verb Id="open" Command="Open" TargetFile="Skyline.exe_file" Argument="--opendoc &quot;%1&quot;"/>
           </Extension>
         </ProgId>
+        <ProgId Id="Skyline.Pointer.0" Description="Skyline Document Pointer" Icon="SkylineDocPointer.ico">
+          <Extension Id="skyp" ContentType="application/skyp">
+            <Verb Id="open" Command="Open" TargetFile="Skyline.exe_file" Argument="--opendoc &quot;%1&quot;"/>
+          </Extension>
+        </ProgId>
       </Component>
       <Component Id="Skyline.exe.config">
         <File Source="$(var.Skyline.TargetDir)/$(var.Skyline.TargetName).exe.config" KeyPath="yes" Id="Skyline_exe_config"/>
@@ -615,6 +620,9 @@
       </Component>
       <Component Id="SkylineDoc.ico">
         <File Source="$(var.Skyline.ProjectDir)/SkylineDoc.ico" KeyPath="yes"/>
+      </Component>
+      <Component Id="SkylineDocPointer.ico">
+        <File Source="$(var.Skyline.ProjectDir)/SkylineDocPointer.ico" KeyPath="yes"/>
       </Component>
       <Component Id="SkylineProcessRunner.exe">
         <File Source="$(var.Skyline.TargetDir)/SkylineProcessRunner.exe" KeyPath="yes"/>

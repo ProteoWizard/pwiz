@@ -504,4 +504,43 @@
   <data name="MzFragmentFinder__m_z__gt__precursor___plus__2" xml:space="preserve">
     <value>(m/z &gt; プリカーサー) + 2</value>
   </data>
+  <data name="PeptideUniquenessConstraint_none" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="PeptideUniquenessConstraint_protein" xml:space="preserve">
+    <value>タンパク質</value>
+  </data>
+  <data name="PeptideUniquenessConstraint_gene" xml:space="preserve">
+    <value>遺伝子</value>
+  </data>
+  <data name="PeptideUniquenessConstraint_species" xml:space="preserve">
+    <value>種</value>
+  </data>
+  <data name="AreaCVNormalizationMethod_global_standards" xml:space="preserve">
+    <value>グローバル標準</value>
+  </data>
+  <data name="AreaCVNormalizationMethod_medians" xml:space="preserve">
+    <value>中央値</value>
+  </data>
+  <data name="AreaCVNormalizationMethod_none" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="AreaCVNormalizationMethod_ratio" xml:space="preserve">
+    <value>比率</value>
+  </data>
+  <data name="AreaCVMsLevel_precursors" xml:space="preserve">
+    <value>プリカーサー</value>
+  </data>
+  <data name="AreaCVMsLevel_products" xml:space="preserve">
+    <value>プロダクト</value>
+  </data>
+  <data name="AreaCVTransitions_all" xml:space="preserve">
+    <value>すべて</value>
+  </data>
+  <data name="AreaCVTransitions_best" xml:space="preserve">
+    <value>最良</value>
+  </data>
+  <data name="AreaCVTransitions_count" xml:space="preserve">
+    <value>数</value>
+  </data>
 </root>

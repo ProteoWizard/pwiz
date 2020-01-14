@@ -69,7 +69,8 @@ namespace pwiz.Skyline.SettingsUI
                 Resources.EditMeasuredIonDlg_EditMeasuredIonDlg_A_verage_mass_,
                 Resources.EditMeasuredIonDlg_EditMeasuredIonDlg__Monoisotopic_mass_)
             {
-                Location = location
+                Location = location,
+                TabIndex = cbVariableMod.TabIndex+1
             };
             Controls.Add(_formulaBox);
 

@@ -10713,7 +10713,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Chemical formula:.
+        ///   Looks up a localized string similar to &amp;Chemical formula:.
         /// </summary>
         public static string EditStaticModDlg_EditStaticModDlg_Chemical_formula_ {
             get {

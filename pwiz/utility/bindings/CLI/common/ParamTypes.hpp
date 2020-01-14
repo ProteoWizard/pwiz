@@ -133,9 +133,9 @@ namespace data {
 using namespace cv;
 
 #undef CATCH_AND_FORWARD_CAST
-#define CATCH_AND_FORWARD_CAST(value, typeName) \
+#define CATCH_AND_FORWARD_CAST(value, paramType, typeName) \
     catch (boost::bad_lexical_cast &) { throw gcnew System::InvalidCastException( \
-    System::String::Format("Failed to cast CVParam value '{0}' to " + typeName + ".", value->ToString())); } \
+    System::String::Format("Failed to cast " paramType " value '{0}' to " typeName ".", value->ToString())); }
 
 /// <summary>
 /// A convenient variant type for casting to non-string types
@@ -154,22 +154,22 @@ public ref class CVParamValue
     static explicit operator float(CVParamValue^ value)
     {
         try { return (*value->base_)->valueAs<float>(); }
-        CATCH_AND_FORWARD_CAST(value, "float")
+        CATCH_AND_FORWARD_CAST(value, "CVParam", "float")
     }
     static operator double(CVParamValue^ value)
     {
         try { return (*value->base_)->valueAs<double>(); }
-        CATCH_AND_FORWARD_CAST(value, "double")
+        CATCH_AND_FORWARD_CAST(value, "CVParam", "double")
     }
     static explicit operator int(CVParamValue^ value)
     {
         try { return (*value->base_)->valueAs<int>(); }
-        CATCH_AND_FORWARD_CAST(value, "int")
+        CATCH_AND_FORWARD_CAST(value, "CVParam", "int")
     }
     static explicit operator System::UInt64(CVParamValue^ value)
     {
         try { return (System::UInt64) (*value->base_)->valueAs<size_t>(); }
-        CATCH_AND_FORWARD_CAST(value, "uint-64")
+        CATCH_AND_FORWARD_CAST(value, "CVParam", "uint-64")
     }
     static explicit operator bool(CVParamValue^ value) {return (*value->base_)->value == "true";}
     CVParamValue^ operator=(System::String^ value) {(*base_)->value = ToStdString(value); return this;} 
@@ -285,11 +285,29 @@ public ref class UserParamValue
 
     public:
     virtual System::String^ ToString() override {return (System::String^) this;}
-    static operator System::String^(UserParamValue^ value) {return gcnew System::String((*value->base_)->value.c_str());};
-    static explicit operator float(UserParamValue^ value) {return (*value->base_)->valueAs<float>();}
-    static operator double(UserParamValue^ value) {return (*value->base_)->valueAs<double>();}
-    static explicit operator int(UserParamValue^ value) {return (*value->base_)->valueAs<int>();}
-    static explicit operator System::UInt64(UserParamValue^ value) {return (System::UInt64) (*value->base_)->valueAs<size_t>();}
+    static operator System::String^(UserParamValue^ value) {return gcnew System::String((*value->base_)->value.c_str());}
+
+    static explicit operator float(UserParamValue^ value)
+    {
+        try { return (*value->base_)->valueAs<float>(); }
+        CATCH_AND_FORWARD_CAST(value, "UserParam", "float")
+    }
+    static operator double(UserParamValue^ value)
+    {
+        try { return (*value->base_)->valueAs<double>(); }
+        CATCH_AND_FORWARD_CAST(value, "UserParam", "double")
+    }
+    static explicit operator int(UserParamValue^ value)
+    {
+        try { return (*value->base_)->valueAs<int>(); }
+        CATCH_AND_FORWARD_CAST(value, "UserParam", "int")
+    }
+    static explicit operator System::UInt64(UserParamValue^ value)
+    {
+        try { return (System::UInt64) (*value->base_)->valueAs<size_t>(); }
+        CATCH_AND_FORWARD_CAST(value, "UserParam", "uint-64")
+    }
+
     static explicit operator bool(UserParamValue^ value) {return (*value->base_)->value == "true";}
     UserParamValue^ operator=(System::String^ value) {(*base_)->value = ToStdString(value); return this;} 
 };
