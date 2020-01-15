@@ -169,9 +169,9 @@ Search files =
     "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml",
     "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"
 ],
-iRT standard peptides = None,
+iRT standard molecules = None,
 Include ambiguous matches = False,
-Filter for document peptides = True,
+Filter for document molecules = True,
 Workflow = "PRM"
 
 Undo Redo : Imported a molecule search
