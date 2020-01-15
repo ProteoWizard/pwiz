@@ -122,14 +122,14 @@
     <value>12, 14</value>
   </data>
   <data name="labelMessage.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>370, 66</value>
+    <value>383, 80</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="labelMessage.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
   <data name="labelMessage.Text" xml:space="preserve">
-    <value>当前文件包含 {0}个带有实际检测到保留时间的肽段。建议您使用少量在单次注射过程中容易被检测到的肽段作为iRT标准。您可以通过编辑文件保留所需肽段，或者从下方选择一些肽段，以便让 Skyline 从当前文件中自动选择从而实现这个过程。</value>
+    <value>当前文档包含 {0}个带有实际检测到保留时间的肽段。建议您使用少量在单次注射过程中容易被检测到的肽段作为 iRT 标准。您可以通过编辑文件保留所需肽段，或者从下方选择一些肽段，以便让 Skyline 从当前文档中自动选择从而实现这个过程。</value>
   </data>
   <data name="&gt;&gt;labelMessage.Name" xml:space="preserve">
     <value>labelMessage</value>
@@ -196,7 +196,7 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>226, 149</value>
+    <value>239, 149</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>75, 23</value>
@@ -223,7 +223,7 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>307, 149</value>
+    <value>320, 149</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>75, 23</value>
@@ -253,13 +253,13 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>394, 184</value>
+    <value>407, 184</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>添加标准肽</value>
+    <value>添加标准肽段</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>AddIrtStandardsDlg</value>
