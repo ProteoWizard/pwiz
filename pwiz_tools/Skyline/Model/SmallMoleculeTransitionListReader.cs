@@ -130,12 +130,13 @@ namespace pwiz.Skyline.Model
             // For each row in the grid, add to or begin MoleculeGroup|Molecule|TransitionList tree
             foreach (var row in Rows)
             {
-                var precursor = ReadPrecursorOrProductColumns(document, row, null); // Get molecule values
-                if (precursor == null)
+                var precursor = ReadPrecursorOrProductColumns(document, row, null, out var hasError); // Get molecule values
+                if (hasError)
                     return null;
-                if (_requireProductInfo && ReadPrecursorOrProductColumns(document, row, precursor) == null)
+                if (_requireProductInfo && ReadPrecursorOrProductColumns(document, row, precursor, out hasError) == null)
                 {
-                    return null;
+                    if (hasError)
+                        return null;
                 }
 
                 var groupName = GetCellTrimmed(row, INDEX_MOLECULE_GROUP);
@@ -368,14 +369,14 @@ namespace pwiz.Skyline.Model
                 }
 
                 // More expensive check to see whether calculated precursor mz matches any declared product mz
-                var precursor = ReadPrecursorOrProductColumns(document, row, null); // Get precursor values
+                var precursor = ReadPrecursorOrProductColumns(document, row, null, out var hasError); // Get precursor values
                 if (precursor != null)
                 {
                     try
                     {
                         var product =
-                            ReadPrecursorOrProductColumns(document, row, precursor); // Get product values, if available
-                        if (product != null && (Math.Abs(precursor.Mz.Value - product.Mz.Value) > MzMatchTolerance))
+                            ReadPrecursorOrProductColumns(document, row, precursor, out hasError); // Get product values, if available
+                        if ((product != null && (Math.Abs(precursor.Mz.Value - product.Mz.Value) > MzMatchTolerance)) || hasError)
                         {
                             requireProductInfo = true; // Product list is not completely empty, or not just precursors
                             break;
@@ -469,6 +470,11 @@ namespace pwiz.Skyline.Model
         private int INDEX_PRODUCT_FORMULA
         {
             get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.formulaProduct); }
+        }
+
+        private int INDEX_PRODUCT_NEUTRAL_LOSS
+        {
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.neutralLossProduct); }
         }
 
         private int INDEX_PRODUCT_ADDUCT
@@ -883,18 +889,19 @@ namespace pwiz.Skyline.Model
         //  mz and charge
         private ParsedIonInfo ReadPrecursorOrProductColumns(SrmDocument document,
             Row row,
-            ParsedIonInfo precursorInfo)
+            ParsedIonInfo precursorInfo,
+            out bool hasError)
         {
-
+            hasError = true;
             var getPrecursorColumns = precursorInfo == null;
             int indexName = getPrecursorColumns ? INDEX_MOLECULE_NAME : INDEX_PRODUCT_NAME;
             int indexFormula = getPrecursorColumns ? INDEX_MOLECULE_FORMULA : INDEX_PRODUCT_FORMULA;
             int indexAdduct = getPrecursorColumns ? INDEX_PRECURSOR_ADDUCT : INDEX_PRODUCT_ADDUCT;
             int indexMz = getPrecursorColumns ? INDEX_PRECURSOR_MZ : INDEX_PRODUCT_MZ;
             int indexCharge = getPrecursorColumns ? INDEX_PRECURSOR_CHARGE : INDEX_PRODUCT_CHARGE;
+            int indexNeutralLoss = getPrecursorColumns ? -1 : INDEX_PRODUCT_NEUTRAL_LOSS;
             var name = GetCellTrimmed(row, indexName);
             var formula = GetCellTrimmed(row, indexFormula);
-            var adductText = GetCellTrimmed(row, indexAdduct);
             var note = GetCellTrimmed(row, INDEX_NOTE);
             // TODO(bspratt) use CAS or HMDB etc lookup to fill in missing inchikey - and use any to fill in formula
             var moleculeID = ReadMoleculeAccessionNumberColumns(row); 
@@ -1170,84 +1177,13 @@ namespace pwiz.Skyline.Model
                 });
                 return null;
             }
-            string errMessage = String.Format(getPrecursorColumns
-                ? Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_
-                : Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_, row.Index + 1);
-            // Do we have an adduct description?  If so, pull charge from that.
-            if ((!string.IsNullOrEmpty(formula) && formula.Contains('[') && formula.Contains(']')) || !string.IsNullOrEmpty(adductText))
-            {
-                if (!string.IsNullOrEmpty(formula))
-                {
-                    var parts = formula.Split('[');
-                    var formulaAdduct = formula.Substring(parts[0].Length);
-                    if (string.IsNullOrEmpty(adductText))
-                    {
-                        adductText = formulaAdduct;
-                    }
-                    else if (!string.IsNullOrEmpty(formulaAdduct) &&
-                        // ReSharper disable LocalizableElement
-                        !Equals(adductText.Replace("[", "").Replace("]", ""), formulaAdduct.Replace("[", "").Replace("]", "")))
-                        // ReSharper restore LocalizableElement
-                    {
-                        ShowTransitionError(new PasteError
-                        {
-                            Column = indexAdduct,
-                            Line = row.Index,
-                            Message = Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Formula_already_contains_an_adduct_description__and_it_does_not_match_
-                        });
-                        return null;
-                    }
-                    formula = parts[0];
-                }
-                try
-                {
-                    adduct = Adduct.FromStringAssumeChargeOnly(adductText);
-                    IonInfo.ApplyAdductToFormula(formula??string.Empty, adduct); // Just to see if it throws
-                }
-                catch (InvalidOperationException x)
-                {
-                    ShowTransitionError(new PasteError
-                    {
-                        Column = indexFormula,
-                        Line = row.Index,
-                        Message = x.Message
-                    });
-                    return null;
-                }
-                if (charge.HasValue && charge.Value != adduct.AdductCharge)
-                {
-                    // Explict charge disagrees with adduct - is this because adduct charge is not recognized?
-                    if (adduct.AdductCharge == 0)
-                    {
-                        // Update the adduct to contain the explicit charge
-                        adduct = adduct.ChangeCharge(charge.Value);
-                    }
-                    else
-                    {
-                        ShowTransitionError(new PasteError
-                        {
-                            Column = indexAdduct >=0 ? indexAdduct : indexFormula,
-                            Line = row.Index,
-                            Message = string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Adduct__0__charge__1__does_not_agree_with_declared_charge__2_, adductText, adduct.AdductCharge, charge.Value)
-                        });
-                        return null;
-                    }
-                }
-                else
-                {
-                    charge = adduct.AdductCharge;
-                }
-                if (!ValidateCharge(charge, getPrecursorColumns, out errMessage))
-                {
-                    ShowTransitionError(new PasteError
-                    {
-                        Column = indexAdduct >=0 ? indexAdduct : indexFormula,
-                        Line = row.Index,
-                        Message = errMessage
-                    });
-                    return null;
-                }
-            }
+
+            if (!ProcessAdduct(row, indexAdduct, indexFormula, getPrecursorColumns, ref formula, ref adduct, ref charge))
+                return null;
+
+            if (!ProcessNeutralLoss(row, indexNeutralLoss, ref formula))
+                return null;
+
             int errColumn = indexFormula;
             int countValues = 0;
             if (charge.HasValue && charge.Value != 0)
@@ -1288,8 +1224,11 @@ namespace pwiz.Skyline.Model
                 (string.IsNullOrEmpty(name) || Equals(precursorInfo.Name, name)))
             {
                 // No product info found in this row, assume that this is a precursor declaration
+                hasError = false;
                 return precursorInfo.ChangeNote(note);
             }
+
+            string errMessage = null;
             if (countValues >= 2) // Do we have at least 2 of charge, mz, formula?
             {
                 TypedMass monoMass;
@@ -1369,6 +1308,7 @@ namespace pwiz.Skyline.Model
                                 if (charge.HasValue)
                                 {
                                     row.UpdateCell(indexCharge, charge.Value);
+                                    hasError = false;
                                     return new ParsedIonInfo(name, formula, adduct, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, explicitTransitionValues, note, moleculeID);
                                 }
                                 else if (mzCalc.HasValue)
@@ -1402,7 +1342,10 @@ namespace pwiz.Skyline.Model
                                      !(massTooLow = (monoMass < CustomMolecule.MIN_MASS || averageMmass < CustomMolecule.MIN_MASS));
                             row.UpdateCell(indexMz, mz);
                             if (massOk)
+                            {
+                                hasError = false;
                                 return new ParsedIonInfo(name, formula, adduct, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, explicitTransitionValues, note, moleculeID);
+                            }
                         }
                     }
                     catch (InvalidDataException x)
@@ -1427,7 +1370,10 @@ namespace pwiz.Skyline.Model
                              !(massTooLow = (monoMass < CustomMolecule.MIN_MASS || averageMmass < CustomMolecule.MIN_MASS));
                     errColumn = indexMz;
                     if (massOk)
+                    {
+                        hasError = false;
                         return new ParsedIonInfo(name, formula, adduct, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, explicitTransitionValues, note, moleculeID);
+                    }
                 }
                 if (massTooLow)
                 {
@@ -1452,6 +1398,12 @@ namespace pwiz.Skyline.Model
                     errMessage =
                         string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Cannot_derive_charge_from_adduct_description___0____Use_the_corresponding_Charge_column_to_set_this_explicitly__or_change_the_adduct_description_as_needed_, adduct.AdductFormula);
                 }
+                else if (countValues < 2)
+                {
+                    errMessage = string.Format(getPrecursorColumns
+                            ? Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_
+                            : Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_, row.Index + 1);
+                }
                 else
                 {
                     // Don't just leave it blank
@@ -1465,6 +1417,161 @@ namespace pwiz.Skyline.Model
                 Message = errMessage
             });
             return null;
+        }
+
+        private bool ProcessNeutralLoss(Row row, int indexNeutralLoss, ref string formula)
+        {
+            // Derive product formula from neutral loss?
+            var neutralLoss = GetCellTrimmed(row, indexNeutralLoss);
+            if (!string.IsNullOrEmpty(neutralLoss))
+            {
+
+                var precursorFormula = Adduct.SplitFormulaAndTrailingAdduct(GetCellTrimmed(row, INDEX_MOLECULE_FORMULA), Adduct.ADDUCT_TYPE.charge_only, out _); // Removes any adduct description e.g. C12H5[M+H] => C12H5
+                if (string.IsNullOrEmpty(precursorFormula))
+                {
+                    // There's no use for a loss formula if there's no precursor formula
+                    ShowTransitionError(new PasteError
+                    {
+                        Column = indexNeutralLoss,
+                        Line = row.Index,
+                        Message = Resources.SmallMoleculeTransitionListReader_ProcessNeutralLoss_Cannot_use_product_neutral_loss_chemical_formula_without_a_precursor_chemical_formula
+                    });
+                    return false;
+                }
+
+                // Parse molecule and neutral loss formulas to dictionaries, with syntax checking
+                // N.B. here we use pwiz.Skyline.Util.BioMassCalc rather than pwiz.Common.Chemistry.Molecule because it
+                // understands Skyline isotope symbols (e.g. H', C" etc) while pwiz.Common.Chemistry.Molecule does not
+                if (!BioMassCalc.TryParseFormula(precursorFormula, out var precursorMolecule, out var errMessage))
+                {
+                    ShowTransitionError(new PasteError
+                    {
+                        Column = INDEX_MOLECULE_FORMULA,
+                        Line = row.Index,
+                        Message = errMessage
+                    });
+                    return false;
+                }
+                if (!BioMassCalc.TryParseFormula(neutralLoss, out var lossMolecule, out errMessage))
+                {
+                    ShowTransitionError(new PasteError
+                    {
+                        Column = indexNeutralLoss,
+                        Line = row.Index,
+                        Message = errMessage
+                    });
+                    return false;
+                }
+                // Calculate the resulting fragment as precursor-loss, checking to see that we're not losing atoms that aren't there in the first place
+                var fragmentMolecule = precursorMolecule.Difference(lossMolecule);
+                if (fragmentMolecule.Values.Any(v => v < 0))
+                {
+                    ShowTransitionError(new PasteError
+                    {
+                        Column = indexNeutralLoss,
+                        Line = row.Index,
+                        Message = string.Format(
+                            Resources.SmallMoleculeTransitionListReader_ProcessNeutralLoss_Precursor_molecular_formula__0__does_not_contain_sufficient_atoms_to_be_used_with_neutral_loss__1_,
+                            precursorFormula, neutralLoss)
+                    });
+                    return false;
+                }
+
+                formula = fragmentMolecule.ToDisplayString();
+            }
+
+            return true; // Success
+        }
+
+        private bool ProcessAdduct(Row row, int indexAdduct, int indexFormula, bool getPrecursorColumns,
+            ref string formula, ref Adduct adduct, ref int? charge)
+        {
+            if (indexAdduct < 0 && string.IsNullOrEmpty(formula))
+            {
+                return true; // No parsing to be done (row probably has only a "charge" column) but that's not an error
+            }
+
+            // Do we have an adduct description?  If so, pull charge from that.
+            var adductText = GetCellTrimmed(row, indexAdduct);
+
+            // If formula also contains an adduct description, use that. If there's also an adduct declared they must agree.
+            formula = Adduct.SplitFormulaAndTrailingAdduct(formula, Adduct.ADDUCT_TYPE.charge_only, out var formulaAdduct); // Adduct may be declared in formula e.g "C12H5[M+H]"
+            if (string.IsNullOrEmpty(adductText) && !formulaAdduct.IsEmpty)
+            {
+                adductText = formulaAdduct.AdductFormula;
+            }
+
+            if (string.IsNullOrEmpty(adductText) && charge.HasValue)
+            {
+                return true; // No further work to do here - caller will have to work out meaning of charge without adduct description
+            }
+
+            try
+            {
+                adduct = Adduct.FromStringAssumeChargeOnly(adductText);
+                IonInfo.ApplyAdductToFormula(formula ?? string.Empty, adduct); // Just to see if it throws
+            }
+            catch (InvalidOperationException x)
+            {
+                ShowTransitionError(new PasteError
+                {
+                    Column = indexAdduct,
+                    Line = row.Index,
+                    Message = x.Message
+                });
+                return false;
+            }
+            if (!formulaAdduct.IsEmpty && !Equals(adduct, formulaAdduct))
+            {
+                ShowTransitionError(new PasteError
+                {
+                    Column = indexAdduct,
+                    Line = row.Index,
+                    Message = Resources
+                        .SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Formula_already_contains_an_adduct_description__and_it_does_not_match_
+                });
+                return false;
+            }
+
+            if (charge.HasValue && charge.Value != adduct.AdductCharge)
+            {
+                // Explicit charge disagrees with adduct - is this because adduct charge is not recognized?
+                if (adduct.AdductCharge == 0)
+                {
+                    // Update the adduct to contain the explicit charge
+                    adduct = adduct.ChangeCharge(charge.Value);
+                }
+                else
+                {
+                    ShowTransitionError(new PasteError
+                    {
+                        Column = indexAdduct >= 0 ? indexAdduct : indexFormula,
+                        Line = row.Index,
+                        Message = string.Format(
+                            Resources
+                                .SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Adduct__0__charge__1__does_not_agree_with_declared_charge__2_,
+                            adductText, adduct.AdductCharge, charge.Value)
+                    });
+                    return false;
+                }
+            }
+            else
+            {
+                charge = adduct.AdductCharge;
+            }
+
+            if (!ValidateCharge(charge, getPrecursorColumns, out var errMessage))
+            {
+                ShowTransitionError(new PasteError
+                {
+                    Column = indexAdduct >= 0 ? indexAdduct : indexFormula,
+                    Line = row.Index,
+                    Message = errMessage
+                });
+                return false;
+            }
+
+            return true; // Success
         }
 
         // When a charge but no adduct is given, either it's implied (de)protonation, or formula is inherently charged. Formula and mz are a clue.
@@ -1516,7 +1623,7 @@ namespace pwiz.Skyline.Model
             ParsedIonInfo parsedIonInfo;
             try
             {
-                parsedIonInfo = ReadPrecursorOrProductColumns(document, row, null); // Re-read the precursor columns
+                parsedIonInfo = ReadPrecursorOrProductColumns(document, row, null, out var hasError); // Re-read the precursor columns
                 if (parsedIonInfo == null)
                     return null; // Some failure, but exception was already handled
                 // Identify items with same formula and different adducts
@@ -1563,7 +1670,7 @@ namespace pwiz.Skyline.Model
 
         private TransitionGroupDocNode GetMoleculeTransitionGroup(SrmDocument document, Row row, Peptide pep)
         {
-            var moleculeInfo = ReadPrecursorOrProductColumns(document, row, null); // Re-read the precursor columns
+            var moleculeInfo = ReadPrecursorOrProductColumns(document, row, null, out var hasError); // Re-read the precursor columns
             if (moleculeInfo == null)
             {
                 return null; // Some parsing error, user has already been notified
@@ -1639,9 +1746,13 @@ namespace pwiz.Skyline.Model
 
         private TransitionDocNode GetMoleculeTransition(SrmDocument document, Row row, Peptide pep, TransitionGroup group)
         {
-            var precursorIon = ReadPrecursorOrProductColumns(document, row, null); // Re-read the precursor columns
-            var ion = _requireProductInfo ? ReadPrecursorOrProductColumns(document, row, precursorIon) : precursorIon; // Re-read the product columns, or copy precursor
-            if (_requireProductInfo && ion == null)
+            var precursorIon = ReadPrecursorOrProductColumns(document, row, null, out var hasError); // Re-read the precursor columns
+            if (hasError)
+            {
+                return null;
+            }
+            var ion = _requireProductInfo ? ReadPrecursorOrProductColumns(document, row, precursorIon, out hasError) : precursorIon; // Re-read the product columns, or copy precursor
+            if (hasError || (_requireProductInfo && ion == null))
             {
                 return null;
             }
@@ -1796,6 +1907,7 @@ namespace pwiz.Skyline.Model
         public const string nameProduct = "ProductName";
         public const string formulaPrecursor = "PrecursorFormula";
         public const string formulaProduct = "ProductFormula";
+        public const string neutralLossProduct = "ProductNeutralLoss";
         public const string mzPrecursor = "PrecursorMz";
         public const string mzProduct = "ProductMz";
         public const string chargePrecursor = "PrecursorCharge";
@@ -1865,6 +1977,7 @@ namespace pwiz.Skyline.Model
                 idInChi,
                 idSMILES,
                 idKEGG,
+                neutralLossProduct,
             });
 
             // A dictionary of terms that can be understood as column headers - this includes
@@ -1912,6 +2025,7 @@ namespace pwiz.Skyline.Model
                     Tuple.Create(idInChi, idInChi),
                     Tuple.Create(idSMILES, idSMILES),
                     Tuple.Create(idKEGG, idKEGG),
+                    Tuple.Create(neutralLossProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss),
                 })
                 {
                     if (!knownColumnHeadersAllCultures.ContainsKey(pair.Item2))

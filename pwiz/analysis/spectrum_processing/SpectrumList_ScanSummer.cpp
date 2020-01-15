@@ -375,6 +375,12 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ScanSummer::spectrum(size_t index, Detail
 
             BinaryData<double>& mzs = summedSpectrum->getMZArray()->data;
             BinaryData<double>& intensities = summedSpectrum->getIntensityArray()->data;
+
+            // remove extra arrays that are the same length as the m/z array because the summing will not preserve the one-to-one correspondence
+            for (size_t i = 2; i < summedSpectrum->binaryDataArrayPtrs.size(); ++i)
+                if (summedSpectrum->binaryDataArrayPtrs[i]->data.size() == mzs.size())
+                    summedSpectrum->binaryDataArrayPtrs.erase(summedSpectrum->binaryDataArrayPtrs.begin() + (i--));
+
             sumSubScansNaive(mzs, intensities, precursorGroupPtr, DetailLevel_FullData);
             summedSpectrum->defaultArrayLength = mzs.size();
 

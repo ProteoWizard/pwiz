@@ -741,11 +741,13 @@ namespace pwiz.Skyline.Model.Databinding
         private static readonly IDictionary<string, Tuple<int, int>> _imageIndexes = new Dictionary<string, Tuple<int, int>>
         {
             // ReSharper disable RedundantNameQualifier
+            // ReSharper disable AssignNullToNotNullAttribute
             {typeof (Entities.Protein).FullName, Tuple.Create(1, 6)},
             {typeof (Entities.Peptide).FullName, Tuple.Create(2, 7)},
             {typeof (Entities.Precursor).FullName, Tuple.Create(3, 3)},
             {typeof (Entities.Transition).FullName, Tuple.Create(4, 4)},
             {typeof (Entities.Replicate).FullName, Tuple.Create(5, 5)}
+            // ReSharper restore AssignNullToNotNullAttribute
             // ReSharper restore RedundantNameQualifier
         };
 
