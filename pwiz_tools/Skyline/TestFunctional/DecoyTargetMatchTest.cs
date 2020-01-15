@@ -33,7 +33,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class DecoyTargetMatchTest : AbstractFunctionalTest
     {
-        //[TestMethod]  TODO(kaipot): Enable this when checking is re-enabled
+        [TestMethod]
         public void TestDecoyTargetMatching()
         {
             RunFunctionalTest();
@@ -108,7 +108,8 @@ namespace pwiz.SkylineTestFunctional
 
         private void VerifyDecoyStatus(int expectedDecoys, int expectedNoSource, int expectedWrongTransitionCount)
         {
-            var decoyGroup = SkylineWindow.DocumentUI.PeptideGroups.FirstOrDefault(group => group.IsDecoy);
+            PeptideGroupDocNode decoyGroup = null;
+            RunUI(() => decoyGroup = SkylineWindow.DocumentUI.PeptideGroups.FirstOrDefault(group => group.IsDecoy));
             Assert.IsNotNull(decoyGroup);
             int numNoSource = 0, numWrongTransitionCount = 0;
             RunUI(() => decoyGroup.CheckDecoys(SkylineWindow.DocumentUI, out numNoSource, out numWrongTransitionCount, out _));
