@@ -2260,6 +2260,9 @@
     <EmbeddedResource Include="FileUI\ExportAnnotationsDlg.resx">
       <DependentUpon>ExportAnnotationsDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ExportAnnotationsDlg.zh-CHS.resx">
+      <DependentUpon>ExportAnnotationsDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ImportResultsLockMassDlg.ja.resx">
       <DependentUpon>ImportResultsLockMassDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2557,6 +2560,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\RefineDlg.zh-CHS.resx">
       <DependentUpon>RefineDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\RefineListDlg.ja.resx">
       <DependentUpon>RefineListDlg.cs</DependentUpon>
@@ -2773,9 +2777,17 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\GroupComparison\GroupComparisonStrings.zh-CHS.resx" />
+    <EmbeddedResource Include="Model\Prosit\PrositResources.ja.resx">
+      <DependentUpon>PrositResources.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\Prosit\PrositResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>PrositResources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Prosit\PrositResources.zh-CHS.resx">
+      <DependentUpon>PrositResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\PeptideLib.bmp" />

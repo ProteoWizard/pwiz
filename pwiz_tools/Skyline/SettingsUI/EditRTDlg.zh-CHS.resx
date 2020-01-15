@@ -136,7 +136,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="textName.ToolTip" xml:space="preserve">
-    <value>用于在肽设置分类中列出此方程式的名称</value>
+    <value>用于在肽段设置分类中列出此方程式的名称</value>
   </data>
   <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>
@@ -384,7 +384,7 @@
     <value>12</value>
   </data>
   <data name="labelPeptides.Text" xml:space="preserve">
-    <value>经测量的肽(&amp;M)：</value>
+    <value>经测量的肽段(&amp;M)：</value>
   </data>
   <data name="&gt;&gt;labelPeptides.Name" xml:space="preserve">
     <value>labelPeptides</value>
