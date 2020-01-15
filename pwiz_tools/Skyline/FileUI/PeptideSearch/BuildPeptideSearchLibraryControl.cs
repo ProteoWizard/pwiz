@@ -83,7 +83,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             public BuildPeptideSearchLibrarySettings(BuildPeptideSearchLibraryControl control) : this(control.CutOffScore,
                 control.SearchFilenames, control.IrtStandards, control.IncludeAmbiguousMatches,
-                control.FilterForDocumentPeptides, control.WorkflowType, control.DocumentContainer.Document.DocumentType)
+                control.FilterForDocumentPeptides, control.WorkflowType, control.ModeUI)
             {
             }
 
@@ -98,7 +98,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 IncludeAmbiguousMatches = includeAmbiguousMatches;
                 FilterForDocumentPeptides = filterForDocumentPeptides;
                 WorkFlow = workFlow;
-                _docType = SrmDocument.DOCUMENT_TYPE.none;
+                _docType = docType;
             }
 
             [Track(ignoreDefaultParent: true)]
@@ -130,6 +130,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private IModifyDocumentContainer DocumentContainer { get; set; }
         private LibraryManager LibraryManager { get; set; }
         public ImportPeptideSearch ImportPeptideSearch { get; set; }
+
+        private SrmDocument.DOCUMENT_TYPE ModeUI => (WizardForm is FormEx parent) ? parent.ModeUI : SrmDocument.DOCUMENT_TYPE.none;
 
         private Form WizardForm
         {
