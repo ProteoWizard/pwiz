@@ -234,16 +234,4 @@ namespace pwiz.Skyline.Model.Irt
 
         #endregion
     }
-
-    class PepIrtComparer : Comparer<DbIrtPeptide>
-    {
-        public override int Compare(DbIrtPeptide one, DbIrtPeptide two)
-        {
-            if (one == null)
-                return 1;
-            if (two == null)
-                return -1;
-            return one.Irt.CompareTo(two.Irt);
-        }
-    }
 }
