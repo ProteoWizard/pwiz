@@ -2959,6 +2959,7 @@
     <EmbeddedResource Include="Resources\MoleculeIrt.bmp" />
     <EmbeddedResource Include="Resources\MoleculeIrtLib.bmp" />
     <EmbeddedResource Include="Resources\MoleculeStandardLib.bmp" />
+    <Content Include="Resources\GenerateDecoys.bmp" />
     <Content Include="SkylineDocPointer.ico" />
     <EmbeddedResource Include="Resources\prosit_logo_dark_blue.png" />
     <Content Include="SkylineProcessRunner.exe">
@@ -5004,9 +5005,6 @@
       <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Model\Unifi\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterPublish">
