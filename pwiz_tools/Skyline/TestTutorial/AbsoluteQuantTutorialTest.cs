@@ -17,13 +17,17 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
+using DigitalRune.Windows.Docking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.Graphs.Calibration;
@@ -104,6 +108,10 @@ namespace pwiz.SkylineTestTutorial
                 OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
                 WaitForDocumentChange(doc);
             }
+            RunUI(() =>
+            {
+                SkylineWindow.GraphSpectrum.Hide();
+            });
 
             // Configuring Peptide settings p. 4
             PeptideSettingsUI peptideSettingsUi = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
@@ -134,7 +142,11 @@ namespace pwiz.SkylineTestTutorial
             RunUI(SkylineWindow.ExpandPrecursors);
             RunUI(() => SkylineWindow.SaveDocument(GetTestPath(folderAbsoluteQuant + @"test_file.sky")));
             WaitForCondition(() => File.Exists(GetTestPath(folderAbsoluteQuant + @"test_file.sky")));
-            RunUI( () => SkylineWindow.Size = new Size(840, 410));
+            RunUI( () =>
+            {
+                SkylineWindow.Size = new Size(650, 500);
+                AdjustSequenceTreePanelWidth();
+            });
 
             PauseForScreenShot("Main window with Targets view", 6);
 
@@ -192,6 +204,7 @@ namespace pwiz.SkylineTestTutorial
                         (ch) => Equals("Standard_1", ch.NameSet)
                 ); 
                 chrom.Select();
+                AdjustSequenceTreePanelWidth();
             });
 
             PauseForScreenShot("Main window with imported data", 9);
@@ -222,6 +235,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowPeakAreaReplicateComparison();
                 // Total normalization
                 SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view);
+                AdjustSequenceTreePanelWidth();
             });
 
             RunUI(() => SkylineWindow.ActivateReplicate("FOXN1-GST"));
@@ -312,7 +326,7 @@ namespace pwiz.SkylineTestTutorial
             // View the calibration curve p. 13
             RunUI(()=>SkylineWindow.ShowCalibrationForm());
             var calibrationForm = FindOpenForm<CalibrationForm>();
-            PauseForScreenShot("View calibration curve", 14);
+            PauseForScreenShot<CalibrationForm>("View calibration curve", 14);
 
             Assert.AreEqual(CalibrationCurveFitter.AppendUnits(QuantificationStrings.Analyte_Concentration, quantUnits), calibrationForm.ZedGraphControl.GraphPane.XAxis.Title.Text);
             Assert.AreEqual(string.Format(QuantificationStrings.CalibrationCurveFitter_PeakAreaRatioText__0___1__Peak_Area_Ratio, IsotopeLabelType.light.Title, IsotopeLabelType.heavy.Title),

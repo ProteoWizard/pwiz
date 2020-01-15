@@ -41,6 +41,7 @@ using pwiz.ProteomeDatabase.Fasta;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
@@ -1639,6 +1640,16 @@ namespace pwiz.SkylineTestUtil
                 findPeptideDlg.FindNext();
                 findPeptideDlg.Close();
             });
+        }
+
+        protected void AdjustSequenceTreePanelWidth()
+        {
+            int newWidth = SkylineWindow.SequenceTree.WidthToEnsureAllItemsVisible();
+
+            var seqPanel = SkylineWindow.DockPanel.Contents.OfType<SequenceTreeForm>().FirstOrDefault();
+            var sequencePanel = seqPanel as DockableFormEx;
+            if (sequencePanel != null)
+                sequencePanel.DockPanel.DockLeftPortion = (double)newWidth / sequencePanel.Width * sequencePanel.DockPanel.DockLeftPortion;
         }
 
         public static void RemovePeptide(string peptideSequence, bool isDecoy = false)
