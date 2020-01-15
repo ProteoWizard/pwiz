@@ -240,7 +240,7 @@
     <value>1</value>
   </data>
   <data name="radioAddUnmatched.Text" xml:space="preserve">
-    <value>添加到肽列表</value>
+    <value>添加到肽段列表</value>
   </data>
   <data name="&gt;&gt;radioAddUnmatched.Name" xml:space="preserve">
     <value>radioAddUnmatched</value>
@@ -349,7 +349,7 @@
     <value>2</value>
   </data>
   <data name="radioKeepFiltered.Text" xml:space="preserve">
-    <value>包含所有肽</value>
+    <value>包含所有肽段</value>
   </data>
   <data name="&gt;&gt;radioKeepFiltered.Name" xml:space="preserve">
     <value>radioKeepFiltered</value>
@@ -547,7 +547,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>筛选肽</value>
+    <value>筛选肽段</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>FilterMatchedPeptidesDlg</value>

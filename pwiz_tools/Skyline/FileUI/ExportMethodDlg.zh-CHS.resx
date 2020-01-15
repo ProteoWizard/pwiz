@@ -234,7 +234,7 @@
     <value>164, 22</value>
   </data>
   <data name="textMaxTransitions.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="textMaxTransitions.ToolTip" xml:space="preserve">
     <value>如果肽段或蛋白质范围不允许有最大数量，
@@ -265,7 +265,7 @@
     <value>236, 17</value>
   </data>
   <data name="labelMaxTransitions.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="labelMaxTransitions.Text" xml:space="preserve">
     <value>每次样品允许的最多离子对数(&amp;X)：</value>
@@ -378,6 +378,12 @@
   <data name="comboTargetType.TabIndex" type="System.Int32, mscorlib">
     <value>13</value>
   </data>
+  <data name="comboTargetType.ToolTip" xml:space="preserve">
+    <value>导出方法类别。
+标准导出非预定方法。
+触发将导出一个方法，在这一方法中
+主要离子对达到特定强度阈值后才会测量次要离子对。</value>
+  </data>
   <data name="&gt;&gt;comboTargetType.Name" xml:space="preserve">
     <value>comboTargetType</value>
   </data>
@@ -401,6 +407,9 @@
   </data>
   <data name="textRunLength.TabIndex" type="System.Int32, mscorlib">
     <value>15</value>
+  </data>
+  <data name="textRunLength.ToolTip" xml:space="preserve">
+    <value>运行整个梯度的时间长度以分为单位，对于非预定 Thermo 和 Waters 方法来说是必须的。</value>
   </data>
   <data name="textRunLength.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -428,6 +437,9 @@
   </data>
   <data name="textDwellTime.TabIndex" type="System.Int32, mscorlib">
     <value>20</value>
+  </data>
+  <data name="textDwellTime.ToolTip" xml:space="preserve">
+    <value>离子对驻留时间以毫米为单位，对于非预定 Agilent 和 SCIEX方法来说是必须的。</value>
   </data>
   <data name="textDwellTime.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -588,6 +600,10 @@
   <data name="textTemplateFile.TabIndex" type="System.Int32, mscorlib">
     <value>23</value>
   </data>
+  <data name="textTemplateFile.ToolTip" xml:space="preserve">
+    <value>现有方法文件包含将用在导出方法中的设置。
+对于不受 Skyline 控制的离子对值，也可能需要单一模式离子对。</value>
+  </data>
   <data name="&gt;&gt;textTemplateFile.Name" xml:space="preserve">
     <value>textTemplateFile</value>
   </data>
@@ -643,7 +659,7 @@
     <value>125, 21</value>
   </data>
   <data name="cbIgnoreProteins.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="cbIgnoreProteins.Text" xml:space="preserve">
     <value>忽视蛋白质(&amp;R)</value>
@@ -822,7 +838,7 @@
     <value>173, 24</value>
   </data>
   <data name="comboPolarityFilter.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>12</value>
   </data>
   <data name="comboPolarityFilter.ToolTip" xml:space="preserve">
     <value>控制同时含有阳性和阴性离子对的文档的导出行为。允许输出仅阳性或仅阴性离子对，或为每个极性创建单独的输出。</value>
@@ -884,6 +900,10 @@
   <data name="cbSlens.Text" xml:space="preserve">
     <value>写入 S-&amp;Lens 值(&amp;L)</value>
   </data>
+  <data name="cbSlens.ToolTip" xml:space="preserve">
+    <value>填写 Thermo 仪器的 S-lens 列。
+无明确的 S-lens 值的离子对，使用 50。</value>
+  </data>
   <data name="&gt;&gt;cbSlens.Name" xml:space="preserve">
     <value>cbSlens</value>
   </data>
@@ -933,7 +953,7 @@
     <value>78, 17</value>
   </data>
   <data name="labelOptimizing.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>13</value>
   </data>
   <data name="labelOptimizing.Text" xml:space="preserve">
     <value>最优化(&amp;Z)：</value>
@@ -963,7 +983,7 @@
     <value>66, 17</value>
   </data>
   <data name="labelMethods.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="labelMethods.Text" xml:space="preserve">
     <value>方法：</value>
@@ -993,7 +1013,7 @@
     <value>24, 17</value>
   </data>
   <data name="labelMethodNum.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="labelMethodNum.Text" xml:space="preserve">
     <value>##</value>
@@ -1075,6 +1095,9 @@
   </data>
   <data name="textPrimaryCount.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
+  </data>
+  <data name="textPrimaryCount.ToolTip" xml:space="preserve">
+    <value>导出触发方法时主要离子对的离子对数目。</value>
   </data>
   <data name="&gt;&gt;textPrimaryCount.Name" xml:space="preserve">
     <value>textPrimaryCount</value>
@@ -1214,6 +1237,9 @@
   <data name="comboTuning.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
+  <data name="comboTuning.ToolTip" xml:space="preserve">
+    <value>补偿电压优化时使用的调谐级别。</value>
+  </data>
   <data name="&gt;&gt;comboTuning.Name" xml:space="preserve">
     <value>comboTuning</value>
   </data>
@@ -1301,6 +1327,11 @@
   <data name="cbExportEdcMass.Text" xml:space="preserve">
     <value>写入 EDC 质量(&amp;W)</value>
   </data>
+  <data name="cbExportEdcMass.ToolTip" xml:space="preserve">
+    <value>若核查了，则输出 Waters 方法的 Enhanced Duty Cycle (EDC)。
+这些值将是母离子最高离子对的质荷比。
+若未核查，则应在适当位置上写上零。</value>
+  </data>
   <data name="&gt;&gt;cbExportEdcMass.Name" xml:space="preserve">
     <value>cbExportEdcMass</value>
   </data>
@@ -1350,7 +1381,7 @@
     <value>117, 17</value>
   </data>
   <data name="labelPolarityFilter.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>11</value>
   </data>
   <data name="labelPolarityFilter.Text" xml:space="preserve">
     <value>极性(&amp;Y)：</value>
@@ -1412,6 +1443,9 @@
   <data name="cbWriteCoV.Text" xml:space="preserve">
     <value>写入 FAIMS CV 值</value>
   </data>
+  <data name="cbWriteCoV.ToolTip" xml:space="preserve">
+    <value>填写 Thermo TSQ 仪器的 FAIMS 补偿电压列。</value>
+  </data>
   <data name="&gt;&gt;cbWriteCoV.Name" xml:space="preserve">
     <value>cbWriteCoV</value>
   </data>
@@ -1422,6 +1456,40 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbWriteCoV.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="cbSortByMz.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbSortByMz.Location" type="System.Drawing.Point, System.Drawing">
+    <value>226, 115</value>
+  </data>
+  <data name="cbSortByMz.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>1, 1, 1, 1</value>
+  </data>
+  <data name="cbSortByMz.Size" type="System.Drawing.Size, System.Drawing">
+    <value>112, 21</value>
+  </data>
+  <data name="cbSortByMz.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="cbSortByMz.Text" xml:space="preserve">
+    <value>质荷比排序</value>
+  </data>
+  <data name="cbSortByMz.ToolTip" xml:space="preserve">
+    <value>若核查了，则导出方法按照质荷比进行升序排序
+（母离子质荷比，之后子离子质荷比，若适用）以实现优化的四极转换。</value>
+  </data>
+  <data name="&gt;&gt;cbSortByMz.Name" xml:space="preserve">
+    <value>cbSortByMz</value>
+  </data>
+  <data name="&gt;&gt;cbSortByMz.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbSortByMz.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;cbSortByMz.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
