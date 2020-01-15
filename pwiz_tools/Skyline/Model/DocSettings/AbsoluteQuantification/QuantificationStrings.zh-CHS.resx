@@ -126,7 +126,7 @@
     <value>无可用的结果</value>
   </data>
   <data name="CalibrationForm_DisplayCalibrationCurve_Select_a_peptide_to_see_its_calibration_curve" xml:space="preserve">
-    <value>选择一个肽，查看其校准曲线</value>
+    <value>选择一个肽段，查看其校准曲线</value>
   </data>
   <data name="Normalized_Intensity" xml:space="preserve">
     <value>归一化强度</value>
@@ -204,7 +204,7 @@
     <value>{0}：{1} 峰面积比</value>
   </data>
   <data name="CalibrationForm_DisplayCalibrationCurve_Use_the_Quantification_tab_on_the_Peptide_Settings_dialog_to_control_the_conversion_of_peak_areas_to_concentrations_" xml:space="preserve">
-    <value>使用肽设置对话框的定量标签，控制峰面积向浓度的转换。</value>
+    <value>使用肽段设置对话框的定量标签，控制峰面积向浓度的转换。</value>
   </data>
   <data name="CalibrationForm_DisplayCalibrationCurve_To_convert_peak_area_ratios_to_concentrations__specify_the_internal_standard_concentration_for__0__" xml:space="preserve">
     <value>为将峰面积比转换为浓度，指定{0}的内标浓度。</value>
@@ -240,7 +240,7 @@
     <value>排除标准</value>
   </data>
   <data name="CalibrationForm_DisplayCalibrationCurve_The_selected_peptide_is_no_longer_part_of_the_Skyline_document_" xml:space="preserve">
-    <value>选定的肽不再是 Skyline 文档的一部分。</value>
+    <value>选定的肽段不再是 Skyline 文档的一部分。</value>
   </data>
   <data name="RegressionFit_BILINEAR_Bilinear" xml:space="preserve">
     <value>双线性</value>

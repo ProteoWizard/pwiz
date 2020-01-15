@@ -286,7 +286,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>添加诱饵肽</value>
+    <value>添加诱饵肽段</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>GenerateDecoysDlg</value>
