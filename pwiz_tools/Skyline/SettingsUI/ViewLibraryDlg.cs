@@ -131,6 +131,7 @@ namespace pwiz.Skyline.SettingsUI
         public ViewLibraryDlg(LibraryManager libMgr, String libName, IDocumentUIContainer documentContainer)
         {
             InitializeComponent();
+            prositCheckBox.Visible = false;
             _graphHelper = GraphHelper.Attach(graphControl);
             _libraryManager = libMgr;
             _selectedLibName = libName;
