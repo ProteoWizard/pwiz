@@ -169,9 +169,9 @@ Extra Info: カットオフスコア = "0.99",
     "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml",
     "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"
 ],
-iRT標準分子 = なし,
+iRT標準ペプチド = なし,
 曖昧な一致を含める = 偽,
-ドキュメント内の分子をフィルタリング = 真,
+ドキュメント内のペプチドをフィルタリング = 真,
 ワークフロー = "PRM"
 
 Undo Redo : 分子検索がインポートされました
