@@ -420,7 +420,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             new KeyValuePair<Target, bool>(nodePep.ModifiedTarget, true)));
                     if (irtStandard.Peptides.Any(pep => !docStandards.ContainsKey(pep.ModifiedTarget)))
                     {
-                        docNew = irtStandard.ImportTo(docNew, null, out _);
+                        docNew = irtStandard.ImportTo(docNew);
                     }
                 }
 

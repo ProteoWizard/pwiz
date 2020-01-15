@@ -145,7 +145,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             if (!IsRecalibration)
             {
-                IrtStandard = new IrtStandard(name, null,
+                IrtStandard = new IrtStandard(name, null, null,
                     StandardPeptideList.Select(pep => new DbIrtPeptide(pep.Target, pep.Irt, true, TimeSource.peak)));
             }
             else
@@ -154,7 +154,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 {
                     pep.Irt = linearEquation.GetY(pep.Irt);
                 }
-                IrtStandard = new IrtStandard(name, null,
+                IrtStandard = new IrtStandard(name, null, null,
                     _standard.Peptides.Select(pep =>
                         new DbIrtPeptide(pep.Target, linearEquation.GetY(pep.Irt), true, TimeSource.peak)));
             }
