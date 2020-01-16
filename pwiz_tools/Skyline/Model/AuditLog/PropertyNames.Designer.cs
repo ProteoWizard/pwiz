@@ -2716,6 +2716,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Group comparisons.
+        /// </summary>
+        public static string RefinementSettings_GroupComparisonDefs {
+            get {
+                return ResourceManager.GetString("RefinementSettings_GroupComparisonDefs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Min idotp.
         /// </summary>
         public static string RefinementSettings_IdotProductThreshold {

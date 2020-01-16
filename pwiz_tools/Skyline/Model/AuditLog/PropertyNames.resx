@@ -1457,4 +1457,7 @@
   <data name="RefinementSettings_MSLevelGroupComparison" xml:space="preserve">
     <value>MS Level</value>
   </data>
+  <data name="RefinementSettings_GroupComparisonDefs" xml:space="preserve">
+    <value>Group comparisons</value>
+  </data>
 </root>
