@@ -114,6 +114,18 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static void FileExists(string filePath, string message = null)
+        {
+            if (!File.Exists(filePath))
+                Assert.Fail(TextUtil.LineSeparate(string.Format("Missing file {0}", filePath), message ?? string.Empty));
+        }
+
+        public static void FileNotExists(string filePath, string message = null)
+        {
+            if (File.Exists(filePath))
+                Assert.Fail(TextUtil.LineSeparate(string.Format("Unexpected file exists {0}", filePath), message ?? string.Empty));
+        }
+
         public static TObj Deserialize<TObj>(string s)
         {
             s = XmlUtil.XML_DIRECTIVE + s;
@@ -950,6 +962,9 @@ namespace pwiz.SkylineTestUtil
             Assert.AreEqual(target.DataSettings, copy.DataSettings);  // Might both by DataSettings.DEFAULT
             if (!DataSettings.DEFAULT.Equals(target.DataSettings))
                 Assert.AreNotSame(target.DataSettings, copy.DataSettings);
+            Assert.AreEqual(target.MeasuredResults, copy.MeasuredResults);
+            if (target.MeasuredResults != null)
+                Assert.AreNotSame(target.MeasuredResults, copy.MeasuredResults);
             Cloned(target, copy);
         }
 

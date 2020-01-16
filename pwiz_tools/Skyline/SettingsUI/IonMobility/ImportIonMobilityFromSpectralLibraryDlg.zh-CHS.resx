@@ -196,7 +196,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>导入肽段碰撞横截面值来自：</value>
+    <value>导入肽段碰撞横截面值，来自：</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -457,7 +457,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="gridRegression.ToolTip" xml:space="preserve">
-    <value>斜率和截距值用于从以毫秒为单位的带电肽段之观察到的漂移时间“D”来计算碰撞横截面“C”，借助以下形式的等式：
+    <value>斜度和截距值用于从以毫秒为单位的带电肽段之观察到的漂移时间“D”来计算碰撞横截面“C”，借助以下形式的等式：
 
 C = （D - 截距） / 斜率
 

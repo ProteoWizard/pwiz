@@ -49,11 +49,13 @@ public ref class MzMobilityWindow
 {
     public:
 
-    MzMobilityWindow(double mz) : mz(mz) {}
-    MzMobilityWindow(double mz, System::Tuple<double, double>^ mobilityBounds) : mz(mz), mobilityBounds(mobilityBounds) {}
+    MzMobilityWindow(double mz) : mz(gcnew System::Nullable<double>(mz)) {}
+    MzMobilityWindow(double mz, System::Tuple<double, double>^ mobilityBounds) : mz(gcnew System::Nullable<double>(mz)), mobilityBounds(mobilityBounds) {}
+    MzMobilityWindow(System::Tuple<double, double>^ mobilityBounds) : mobilityBounds(mobilityBounds) {}
     MzMobilityWindow(double mz, double mobility, double mobilityTolerance) : MzMobilityWindow(mz, gcnew System::Tuple<double, double>(mobility - mobilityTolerance, mobility + mobilityTolerance)) {}
+    MzMobilityWindow(double mobility, double mobilityTolerance) : MzMobilityWindow(gcnew System::Tuple<double, double>(mobility - mobilityTolerance, mobility + mobilityTolerance)) {}
 
-    double mz;
+    System::Nullable<double>^ mz;
     System::Tuple<double, double>^ mobilityBounds;
 };
 
@@ -93,8 +95,15 @@ public ref class ReaderConfig
     /// when true, MS2 spectra without precursor/isolation information will be included in the output (currently only affects Bruker PASEF data)
     bool allowMsMsWithoutPrecursor;
 
-    /// when non-empty, only MS2 scans from precursors matching one of the included m/z, and optionally mobility, (i.e. within a precursor isolation window) will be enumerated (currently only affects Bruker PASEF data)
+
+    /// temporary(?) variable to avoid needing to regenerate Bruker test data
+    bool sortAndJitter;
+
+    /// when non-empty, only scans from precursors matching one of the included m/z and/or mobility windows will be enumerated; MS1 scans are affected only by the mobility filter
     System::Collections::Generic::IList<MzMobilityWindow^>^ isolationMzAndMobilityFilter;
+
+    /// when true, global TIC and BPC chromatograms consist of only MS1 spectra (thus the number of time points cannot be assumed to be equal to the number of spectra)
+    bool globalChromatogramsAreMs1Only;
 
     ReaderConfig()
     : simAsSpectra(false)
@@ -106,6 +115,8 @@ public ref class ReaderConfig
     , adjustUnknownTimeZonesToHostTimeZone(true)
     , preferOnlyMsLevel(0)
     , allowMsMsWithoutPrecursor(true)
+    , sortAndJitter(false)
+    , globalChromatogramsAreMs1Only(false)
     {
     }
 };

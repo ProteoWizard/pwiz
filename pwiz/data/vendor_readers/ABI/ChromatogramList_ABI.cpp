@@ -40,11 +40,13 @@ namespace detail {
 
 
 PWIZ_API_DECL ChromatogramList_ABI::ChromatogramList_ABI(const MSData& msd, WiffFilePtr wifffile,
-                                                         const ExperimentsMap& experimentsMap, int sample)
+                                                         const ExperimentsMap& experimentsMap, int sample,
+                                                         const Reader::Config& config)
 :   msd_(msd),
     wifffile_(wifffile),
     experimentsMap_(experimentsMap),
     sample(sample),
+    config_(config),
     size_(0),
     indexInitialized_(util::init_once_flag_proxy)
 {
@@ -123,6 +125,9 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, D
                 for (int iii=1; iii <= experimentCount; ++iii)
                 {
                     ExperimentPtr msExperiment = experimentsMap_.find(pair<int, int>(ii, iii))->second;
+                    
+                    if (config_.globalChromatogramsAreMs1Only && msExperiment->getExperimentType() != MS)
+                        continue;
 
                     // add current experiment TIC to full file TIC
                     vector<double> times, intensities;
@@ -171,7 +176,10 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, D
                 {
                     ExperimentPtr msExperiment = experimentsMap_.find(pair<int, int>(ii, iii))->second;
 
-                    // add current experiment TIC to full file TIC
+                    if (config_.globalChromatogramsAreMs1Only && msExperiment->getExperimentType() != MS)
+                        continue;
+
+                    // add current experiment BPC to full file BPC
                     vector<double> times, intensities;
                     msExperiment->getBPC(times, intensities);
                     for (int iiii = 0, end = intensities.size(); iiii < end; ++iiii)

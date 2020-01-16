@@ -438,6 +438,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void AddProgressControls(MultiProgressStatus status)
         {
+            // Nothing to do if everything is already covered
+            if (status.ProgressList.All(s => FindProgressControl(s.FilePath) != null))
+                return;
+
             // Match each file status with a progress control.
             bool first = true;
             var width = flowFileStatus.Width - 2 -

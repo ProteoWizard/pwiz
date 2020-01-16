@@ -40,9 +40,10 @@ namespace detail {
 
 using namespace Waters;
 
-PWIZ_API_DECL ChromatogramList_Waters::ChromatogramList_Waters(RawDataPtr rawdata)
+PWIZ_API_DECL ChromatogramList_Waters::ChromatogramList_Waters(RawDataPtr rawdata, const Reader::Config& config)
 :   rawdata_(rawdata),
     size_(0),
+    config_(config),
     indexInitialized_(util::init_once_flag_proxy)
 {
 }
@@ -125,6 +126,38 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
 
             for(int function : rawdata_->FunctionIndexList())
             {
+                if (config_.globalChromatogramsAreMs1Only)
+                {
+                    int msLevel;
+                    CVID spectrumType;
+                    try { translateFunctionType(WatersToPwizFunctionType(rawdata_->Info.GetFunctionType(function)), msLevel, spectrumType); }
+                    catch (...) // unable to translate function type
+                    {
+                        cerr << "[ChromatogramList_Waters::createIndex] Unable to translate function type \"" + rawdata_->Info.GetFunctionTypeString(rawdata_->Info.GetFunctionType(function)) + "\"" << endl;
+                        continue;
+                    }
+
+                    if (spectrumType != MS_MS1_spectrum)
+                        continue;
+
+                    // heuristic to detect high-energy MSe function
+                    if (function == 1)
+                    {
+                        double collisionEnergy = 0;
+                        string collisionEnergyStr = rawdata_->GetScanStat(1, 0, MassLynxScanItem::COLLISION_ENERGY);
+                        if (!collisionEnergyStr.empty())
+                            collisionEnergy = lexical_cast<double>(collisionEnergyStr);
+
+                        double collisionEnergyFunction1 = 0;
+                        string collisionEnergyStrFunction1 = rawdata_->GetScanStat(0, 0, MassLynxScanItem::COLLISION_ENERGY);
+                        if (collisionEnergy > collisionEnergyFunction1)
+                        {
+                            // MSe high energy is pseudo-MS2, exclude from MS1-only TIC
+                            continue;
+                        }
+                    }
+                }
+
                 // add current function TIC to full file TIC
                 const vector<float>& times = rawdata_->TimesByFunctionIndex()[function];
                 const vector<float>& intensities = rawdata_->TicByFunctionIndex()[function];

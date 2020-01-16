@@ -305,6 +305,7 @@ blib-test-build mascot_tims : -o : output/mascot_tims.blib : mascot_tims.check :
 
 blib-test-build openswath : --unicode -o : output/openswath.blib : openswath.check openswath.skip-lines : $(TEST_INPUTS_PATH)/openswath_test.tsv ;
 blib-test-build openswath-osw : -o : output/openswath-osw.blib : openswath-osw.check openswath.skip-lines : $(TEST_INPUTS_PATH)/test.osw ;
+blib-test-build openswath-assay : -o : output/openswath-oldos-assay.blib : openswath-oldos-assay.check openswath.skip-lines : $(TEST_INPUTS_PATH)/openswath-oldos-assay.tsv ;
 blib-test-build openswath-invalid-tsv : -o -e@~Only_OpenSWATH~ : output/openswath-invalid-tsv.blib : openswath-invalid-tsv.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/ssl-small-mol.tsv ;
 
 # we expect this one to fail, with the error message 'ERROR: Failure reading TIMS ion mobility value ":0.78079097398941"', so args are "-e 0.78079097398941"

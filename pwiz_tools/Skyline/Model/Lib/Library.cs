@@ -1406,22 +1406,21 @@ namespace pwiz.Skyline.Model.Lib
 
         public static LibrarySpec CreateFromPath(string name, string path)
         {
-            string ext = Path.GetExtension(path);
-            if (Equals(ext, BiblioSpecLiteSpec.EXT))
+            if (PathEx.HasExtension(path, BiblioSpecLiteSpec.EXT))
                 return new BiblioSpecLiteSpec(name, path);
-            else if (Equals(ext, BiblioSpecLibSpec.EXT))
+            else if (PathEx.HasExtension(path, BiblioSpecLibSpec.EXT))
                 return new BiblioSpecLibSpec(name, path);
-            else if (Equals(ext, ChromatogramLibrarySpec.EXT))
+            else if (PathEx.HasExtension(path, ChromatogramLibrarySpec.EXT))
                 return new ChromatogramLibrarySpec(name, path);
-            else if (Equals(ext, XHunterLibSpec.EXT))
+            else if (PathEx.HasExtension(path, XHunterLibSpec.EXT))
                 return new XHunterLibSpec(name, path);
-            else if (Equals(ext, NistLibSpec.EXT))
+            else if (PathEx.HasExtension(path, NistLibSpec.EXT))
                 return new NistLibSpec(name, path);
-            else if (Equals(ext, SpectrastSpec.EXT))
+            else if (PathEx.HasExtension(path, SpectrastSpec.EXT))
                 return new SpectrastSpec(name, path);
-            else if (Equals(ext, MidasLibSpec.EXT))
+            else if (PathEx.HasExtension(path, MidasLibSpec.EXT))
                 return new MidasLibSpec(name, path);
-            else if (Equals(ext, EncyclopeDiaSpec.EXT))
+            else if (PathEx.HasExtension(path, EncyclopeDiaSpec.EXT))
                 return new EncyclopeDiaSpec(name, path);
             return null;
         }
@@ -1968,6 +1967,12 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         public static SmallMoleculeLibraryAttributes Create(string moleculeName, string chemicalFormulaOrMassesString,
+            string inChiKey, IDictionary<string, string> otherKeys)
+        {
+            return Create(moleculeName, chemicalFormulaOrMassesString, inChiKey, otherKeys == null ? string.Empty : string.Join(@"\t", otherKeys.Select(kvp => kvp.Key + @":" + kvp.Value)));
+        }
+
+        public static SmallMoleculeLibraryAttributes Create(string moleculeName, string chemicalFormulaOrMassesString,
             string inChiKey, string otherKeys)
         {
             ParseMolecularFormulaOrMassesString(chemicalFormulaOrMassesString,
@@ -2389,7 +2394,7 @@ namespace pwiz.Skyline.Model.Lib
             }
             else
             {
-                LibraryKey = new MoleculeLibraryKey(SmallMoleculeLibraryAttributes.Create(primaryKey, null, null, null), adduct);
+                LibraryKey = new MoleculeLibraryKey(SmallMoleculeLibraryAttributes.Create(primaryKey, null, null, string.Empty), adduct);
             }
         }
 

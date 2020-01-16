@@ -295,7 +295,7 @@
     <value>7</value>
   </data>
   <data name="cbFilterForDocumentPeptides.Text" xml:space="preserve">
-    <value>ドキュメント内のペプチドのフィルタ(&amp;F)</value>
+    <value>ドキュメント内のペプチドをフィルタリング(&amp;F)</value>
   </data>
   <data name="&gt;&gt;cbFilterForDocumentPeptides.Name" xml:space="preserve">
     <value>cbFilterForDocumentPeptides</value>
@@ -346,7 +346,7 @@
     <value>14, 25</value>
   </data>
   <data name="listSearchFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>245, 199</value>
+    <value>245, 134</value>
   </data>
   <data name="listSearchFiles.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>

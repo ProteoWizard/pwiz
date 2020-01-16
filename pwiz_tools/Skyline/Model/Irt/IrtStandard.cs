@@ -2,17 +2,20 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Irt
 {
     public class IrtStandard : XmlNamedElement
     {
-        public static readonly IrtStandard EMPTY = new IrtStandard(AuditLogStrings.None, null, new DbIrtPeptide[0]);
+        public static readonly IrtStandard EMPTY = new IrtStandard(AuditLogStrings.None, null, null, new DbIrtPeptide[0]);
 
-        public static readonly IrtStandard BIOGNOSYS_10 = new IrtStandard(@"Biognosys-10 (iRT-C18)", @"Biognosys10.sky",
+        public static readonly IrtStandard BIOGNOSYS_10 = new IrtStandard(@"Biognosys-10 (iRT-C18)", @"Biognosys10.sky", null,
             new[] {
                 MakePeptide(@"GAGSSEPVTGLDAK",   0.00),
                 MakePeptide(@"VEATFGVDESNAK",   12.39),
@@ -26,7 +29,7 @@ namespace pwiz.Skyline.Model.Irt
                 MakePeptide(@"LFLQFGAQGSPFLK", 100.00),
             });
 
-        public static readonly IrtStandard BIOGNOSYS_11 = new IrtStandard(@"Biognosys-11 (iRT-C18)", @"Biognosys11.sky",
+        public static readonly IrtStandard BIOGNOSYS_11 = new IrtStandard(@"Biognosys-11 (iRT-C18)", @"Biognosys11.sky", null,
             new[] {
                 MakePeptide(@"LGGNEQVTR",      -24.92),
                 MakePeptide(@"GAGSSEPVTGLDAK",   0.00),
@@ -41,7 +44,7 @@ namespace pwiz.Skyline.Model.Irt
                 MakePeptide(@"LFLQFGAQGSPFLK", 100.00),
             });
 
-        public static readonly IrtStandard PIERCE = new IrtStandard(@"Pierce (iRT-C18)", @"Pierce.sky",
+        public static readonly IrtStandard PIERCE = new IrtStandard(@"Pierce (iRT-C18)", @"Pierce.sky", null,
             new[] {
                 MakePeptide(@"SSAAPPPPPR",       -27.60),
                 MakePeptide(@"GISNEGQNASIK",     -17.47),
@@ -59,7 +62,7 @@ namespace pwiz.Skyline.Model.Irt
                 MakePeptide(@"LSSEAPALFQFDLK",    90.41),
             });
 
-        public static readonly IrtStandard REPLICAL = new IrtStandard(@"RePLiCal (iRT-C18)", @"RePLiCal.sky",
+        public static readonly IrtStandard REPLICAL = new IrtStandard(@"RePLiCal (iRT-C18)", @"RePLiCal.sky", null,
             new[]
             {
                 // Sigma
@@ -92,7 +95,7 @@ namespace pwiz.Skyline.Model.Irt
                 MakePeptide(@"FLSSPFAVAEVFTGIVGK",              139.70),
             });
 
-        public static readonly IrtStandard RTBEADS = new IrtStandard(@"RTBEADS (iRT-C18)", @"RTBEADS.sky",
+        public static readonly IrtStandard RTBEADS = new IrtStandard(@"RTBEADS (iRT-C18)", @"RTBEADS.sky", null,
             new[]
             {
                 MakePeptide(@"NLAVQAQGK",      -19.05),
@@ -111,7 +114,7 @@ namespace pwiz.Skyline.Model.Irt
                 MakePeptide(@"TGQSSLVPALTDFVR", 93.17),
             });
 
-        public static readonly IrtStandard SCIEX = new IrtStandard(@"SCIEX PepCalMix (iRT-C18)", @"Sciex.sky",
+        public static readonly IrtStandard SCIEX = new IrtStandard(@"SCIEX PepCalMix (iRT-C18)", @"Sciex.sky", null,
             new[] {
                 MakePeptide(@"AETSELHTSLK",        -9.99),
                 MakePeptide(@"GAYVEVTAK",          -4.26),
@@ -135,7 +138,7 @@ namespace pwiz.Skyline.Model.Irt
                 MakePeptide(@"YDSINNTEVSGIR",      18.26),
             });
 
-        public static readonly IrtStandard SIGMA = new IrtStandard(@"Sigma (iRT-C18)", @"Sigma.sky",
+        public static readonly IrtStandard SIGMA = new IrtStandard(@"Sigma (iRT-C18)", @"Sigma.sky", null,
             new[] {
                 MakePeptide(@"AEFAEVSK",            -2.71),
                 MakePeptide(@"SGFSSVSVSR",           7.33),
@@ -149,7 +152,7 @@ namespace pwiz.Skyline.Model.Irt
                 MakePeptide(@"AVQQPDGLAVLGIFLK",   125.03),
             });
 
-        public static readonly IrtStandard APOA1 = new IrtStandard(@"APOA1 (iRT-C18)", @"APOA1.sky",
+        public static readonly IrtStandard APOA1 = new IrtStandard(@"APOA1 (iRT-C18)", @"APOA1.sky", null,
             new[] {
                 MakePeptide(@"AELQEGAR",      -30.74),
                 MakePeptide(@"LHELQEK",       -29.14),
@@ -167,7 +170,7 @@ namespace pwiz.Skyline.Model.Irt
                 MakePeptide(@"VSFLSALEEYTK",  106.32),
             });
 
-        public static readonly IrtStandard CIRT_SHORT = new IrtStandard(@"CiRT (iRT-C18)", @"CiRT.sky",
+        public static readonly IrtStandard CIRT_SHORT = new IrtStandard(@"CiRT (iRT-C18)", @"CiRT.sky", null,
             new[] {
                 MakePeptide(@"DSYVGDEAQSK",                -14.83),
                 MakePeptide(@"AGFAGDDAPR",                  -8.72),
@@ -185,7 +188,7 @@ namespace pwiz.Skyline.Model.Irt
                 MakePeptide(@"DSTLIMQLLR",                 101.79),
             });
 
-        public static readonly IrtStandard CIRT = new IrtStandard(@"CiRT", null,
+        public static readonly IrtStandard CIRT = new IrtStandard(@"CiRT", null, null,
             new[] {
                 MakePeptide(@"ADTLDPALLRPGR",               35.99),
                 MakePeptide(@"AFEEAEK",                    -21.36),
@@ -328,28 +331,62 @@ namespace pwiz.Skyline.Model.Irt
             return percentile;
         }
 
-        public IrtStandard(string name, string skyFile, IEnumerable<DbIrtPeptide> peptides) : base(name)
+        public IrtStandard(string name, string skyFile, string docXml, IEnumerable<DbIrtPeptide> peptides) : base(name)
         {
             Peptides = ImmutableList.ValueOf(peptides);
             _resourceSkyFile = skyFile;
+            DocXml = docXml;
         }
 
         private readonly string _resourceSkyFile;
+        public string DocXml { get; private set; }
         public ImmutableList<DbIrtPeptide> Peptides { get; private set; }
 
-        public override string AuditLogText { get { return Equals(this, EMPTY) ? LogMessage.NONE : Name; } }
-        public override bool IsName { get { return !Equals(this, EMPTY); } } // So EMPTY logs as None (unquoted) rather than "None"
+        public override string AuditLogText => Equals(this, EMPTY) ? LogMessage.NONE : Name;
+        public override bool IsName => !Equals(this, EMPTY); // So EMPTY logs as None (unquoted) rather than "None"
 
-        public TextReader GetDocumentReader()
+        public bool HasDocument => !string.IsNullOrEmpty(_resourceSkyFile) || !string.IsNullOrEmpty(DocXml);
+
+        public TextReader GetReader()
         {
-            try
+            if (!string.IsNullOrEmpty(_resourceSkyFile))
             {
                 var stream = typeof(IrtStandard).Assembly.GetManifestResourceStream(typeof(IrtStandard), @"StandardsDocuments." + _resourceSkyFile);
-                return stream != null ? new StreamReader(stream) : null;
+                if (stream != null)
+                    return new StreamReader(stream);
             }
-            catch (Exception)
+            return !string.IsNullOrEmpty(DocXml) ? new StringReader(DocXml) : null;
+        }
+
+        public SrmDocument GetDocument()
+        {
+            using (var reader = GetReader())
+                return reader != null ? (SrmDocument) new XmlSerializer(typeof(SrmDocument)).Deserialize(reader) : null;
+        }
+
+        public SrmDocument ImportTo(SrmDocument document)
+        {
+            return ImportTo(document, null, out _);
+        }
+
+        public SrmDocument ImportTo(SrmDocument document, PeptideLibraries.FindLibrary findLibrary, out IdentityPath firstAdded)
+        {
+            firstAdded = null;
+            using (var reader = GetReader())
             {
-                return null;
+                return reader != null
+                    ? document.ImportDocumentXml(reader,
+                        string.Empty,
+                        MeasuredResults.MergeAction.remove,
+                        false,
+                        findLibrary,
+                        Settings.Default.StaticModList,
+                        Settings.Default.HeavyModList,
+                        document.Children.Any() ? new IdentityPath(document.Children.First().Id) : null,
+                        out firstAdded,
+                        out _,
+                        false)
+                    : null;
             }
         }
 
@@ -460,6 +497,11 @@ namespace pwiz.Skyline.Model.Irt
         public IrtStandard ChangePeptides(IEnumerable<DbIrtPeptide> peptides)
         {
             return ChangeProp(ImClone(this), im => im.Peptides = ImmutableList.ValueOf(peptides));
+        }
+
+        public IrtStandard ChangeDocXml(string docXml)
+        {
+            return ChangeProp(ImClone(this), im => im.DocXml = docXml);
         }
 
         public override string ToString()

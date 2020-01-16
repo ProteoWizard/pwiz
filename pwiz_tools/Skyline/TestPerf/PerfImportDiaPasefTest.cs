@@ -26,8 +26,10 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -106,9 +108,47 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             }
             Assert.AreEqual(205688.75, maxHeight, 1); 
 
+            // Test isolation scheme import (combined mode only)
+            if (!MsDataFileImpl.ForceUncombinedIonMobility)
+            {
+                var tranSettings = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+                RunUI(() => tranSettings.TabControlSel = TransitionSettingsUI.TABS.FullScan);
+                var isoEditor = ShowDialog<EditIsolationSchemeDlg>(tranSettings.AddIsolationScheme);
+                RunUI(() => isoEditor.UseResults = false);
+                ValidateIsolationSchemeImport(isoEditor, "190314_TEN_175mingr_7-35_500nL_HeLa_diaPASEFdouble_py3_MSMS_Slot1-10_1_3426.d",
+                    32, 25, null);
+                ValidateIsolationSchemeImport(isoEditor, "190314_TEN_175mingr_7-35_500nL_HeLa_SWATHlike_MSMS_Slot1-10_1_3421.d",
+                    24, 25, 0.5);
+                OkDialog(isoEditor, isoEditor.CancelDialog);
+                OkDialog(tranSettings, tranSettings.CancelDialog);
+            }
+
             // Does CCS show up in reports?
             TestReports(doc1);
 
+        }
+
+        private void ValidateIsolationSchemeImport(EditIsolationSchemeDlg isoEditor, string fileName,
+            int windowCount, int windowWidth, double? margin)
+        {
+            RunDlg<OpenDataSourceDialog>(isoEditor.ImportRanges, openData =>
+            {
+                openData.SelectFile(TestFilesDir.GetTestPath(fileName));
+                openData.Open();
+            });
+            WaitForConditionUI(() => windowCount == (isoEditor.GetIsolationWindows()?.Count ?? 0));
+            RunUI(() =>
+            {
+                var listIsolationWindows = isoEditor.GetIsolationWindows();
+                Assert.AreEqual(windowCount, listIsolationWindows.Count);
+                foreach (var isolationWindow in listIsolationWindows)
+                {
+                    Assert.AreEqual(windowWidth, isolationWindow.End - isolationWindow.Start, 
+                        string.Format("Range {0} to {1} does not have width {2}", isolationWindow.Start, isolationWindow.End, windowWidth));
+                    Assert.AreEqual(margin, isolationWindow.StartMargin);
+                    Assert.AreEqual(margin, isolationWindow.EndMargin);
+                }
+            });
         }
 
         private string RemoveReplicateReference(string text, string replicateName)

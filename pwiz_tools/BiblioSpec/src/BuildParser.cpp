@@ -530,7 +530,7 @@ void BuildParser::insertSpectrum(PSM* psm,
         map<const Protein*, sqlite3_int64>::const_iterator j = proteins.find(*i);
         sqlite3_int64 proteinId = (j == proteins.end()) ? insertProtein(*i) : j->second;
         sprintf(sql_statement_buf,
-                "INSERT INTO RefSpectraProteins (RefSpectraId, ProteinId) VALUES (%d, %d)",
+                "INSERT INTO RefSpectraProteins (RefSpectraId, ProteinId) VALUES (%d, %lld)",
                 libSpecId, proteinId);
         blibMaker_.sql_stmt(sql_statement_buf);
         sql_statement_buf[0] = '\0';

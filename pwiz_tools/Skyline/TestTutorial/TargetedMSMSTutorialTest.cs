@@ -325,7 +325,7 @@ namespace pwiz.SkylineTestTutorial
             if (AsSmallMolecules && !AsSmallMoleculeMasses)
             {
                 // Reload the original peptide data for the purposes of library building
-                // (workflow being demonstratedis peptide based) CONSIDER small mol workflow eventually
+                // (workflow being demonstrated is peptide based) CONSIDER small mol workflow eventually
                 LowResTestPartOne(RefinementSettings.ConvertToSmallMoleculesMode.none, documentFile);
             }
             if (AsSmallMolecules)
@@ -602,13 +602,22 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => importResultsDlg3.NamedPathSets = importResultsDlg3.GetDataSourcePathsFileReplicates(
                 new[] { MsDataFileUri.Parse(GetTestPath(@"TOF\6-BSA-500fmol" + ExtAgilentRaw)) }));
             var importProgress = ShowDialog<AllChromatogramsGraph>(importResultsDlg3.OkDialog);
-            WaitForDocumentChangeLoaded(docCalibrate1);
+            var docFullScanError = WaitForDocumentChangeLoaded(docCalibrate1);
+//            WaitForConditionUI(() => importProgress.Files.Any());
             WaitForConditionUI(() => importProgress.Finished);
             string expectedErrorFormat = Resources.NoFullScanFilteringException_NoFullScanFilteringException_The_file__0__does_not_contain_SRM_MRM_chromatograms__To_extract_chromatograms_from_its_spectra__go_to_Settings___Transition_Settings___Full_Scan_and_choose_options_appropriate_to_the_acquisition_method_used_;
             if (!TryWaitForConditionUI(() => !string.IsNullOrEmpty(importProgress.Error)))
             {
                 RunUI(() =>
                 {
+                    var messageDlg = FindOpenForm<MessageDlg>();
+                    Assert.IsNull(messageDlg, TextUtil.LineSeparate("Unexpected MessageDlg: ",
+                        messageDlg.DetailedMessage,
+                        TextUtil.LineSeparate(docFullScanError.NonLoadedStateDescriptionsFull)));
+                    Assert.IsTrue(importProgress.IsHandleCreated, "Import progress not created");
+                    Assert.IsFalse(importProgress.IsDisposed, "Import progress destroyed");
+                    Assert.IsTrue(importProgress.Visible, "Import progress hidden");
+
                     string message = "Missing expected error text: " + expectedErrorFormat;
                     if (importProgress.SelectedControl == null)
                         message = string.Format("No selected control. Selected index = {0}", importProgress.Selected);

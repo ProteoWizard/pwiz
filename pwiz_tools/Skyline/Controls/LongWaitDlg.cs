@@ -78,7 +78,11 @@ namespace pwiz.Skyline.Controls
         public int ProgressValue
         {
             get { return _progressValue; }
-            set { _progressValue = value; }
+            set
+            {
+                Assume.IsTrue(value <= 100);
+                _progressValue = value;
+            }
         }
 
         public override string DetailedMessage

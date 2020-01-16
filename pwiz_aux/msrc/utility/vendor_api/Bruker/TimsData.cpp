@@ -188,6 +188,13 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
     bpc_->times.reserve(count);
     bpc_->intensities.reserve(count);
 
+    ticMs1_.reset(new Chromatogram);
+    bpcMs1_.reset(new Chromatogram);
+    ticMs1_->times.reserve(count / 2);
+    ticMs1_->intensities.reserve(count / 2);
+    bpcMs1_->times.reserve(count / 2);
+    bpcMs1_->intensities.reserve(count / 2);
+
     if (!combineIonMobilitySpectra)
     {
         // get anticipated scan count
@@ -227,6 +234,14 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         bpc_->times.push_back(rt);
         tic_->intensities.push_back(tic);
         bpc_->intensities.push_back(bpi);
+
+        if (msmsType == MsMsType::MS1)
+        {
+            ticMs1_->times.push_back(rt);
+            bpcMs1_->times.push_back(rt);
+            ticMs1_->intensities.push_back(tic);
+            bpcMs1_->intensities.push_back(bpi);
+        }
 
         int numScans = row.get<int>(++idx);
         int numPeaks = row.get<int>(++idx);
@@ -363,7 +378,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                 auto& frame = findItr->second;
 
                 int scanBegin = row.get<int>(colScanBegin);
-                int scanEnd = row.get<int>(colScanEnd); // scan end in DiaFrameMsMsInfo is inclusive same as pwiz;
+                int scanEnd = row.get<int>(colScanEnd) - 1; // scan end in TDF is exclusive, but in pwiz is inclusive
 
                 info.isolationMz = row.get<double>(colIsolationMz);
                 info.isolationWidth = row.get<double>(colIsolationWidth);
@@ -419,13 +434,6 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
 
                 frame->windowGroup_ = windowGroup; 
                 frame->diaPasefIsolationInfoByScanNumber_[scanBegin] = info;
-            }
-
-            for (const auto& kvp : frames_)
-            {
-                const auto& frame = kvp.second;
-                if (frame->windowGroup_) // if windowGroup is unset for DIA, the frame is filtered out
-                    frame->diaPasefIsolationInfoByScanNumber_.rbegin()->second.numScans--; // the last ScanNumEnd for each DIA window seems to be exclusive rather than inclusive
             }
         }
     }
@@ -584,8 +592,8 @@ size_t TimsDataImpl::getLCSpectrumCount(int source) const { return 0; }
 LCSpectrumSourcePtr TimsDataImpl::getLCSource(int source) const { return 0; }
 LCSpectrumPtr TimsDataImpl::getLCSpectrum(int source, int scan) const { return LCSpectrumPtr(); }
 
-ChromatogramPtr TimsDataImpl::getTIC() const { return tic_; }
-ChromatogramPtr TimsDataImpl::getBPC() const { return bpc_; }
+ChromatogramPtr TimsDataImpl::getTIC(bool ms1Only) const { return ms1Only ? ticMs1_ : tic_; }
+ChromatogramPtr TimsDataImpl::getBPC(bool ms1Only) const { return ms1Only ? bpcMs1_ : bpc_; }
 
 std::string TimsDataImpl::getOperatorName() const { return operatorName_; }
 std::string TimsDataImpl::getAnalysisName() const { return ""; }

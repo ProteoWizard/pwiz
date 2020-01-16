@@ -631,7 +631,7 @@
     <value>6</value>
   </data>
   <data name="cbVariableMod.Text" xml:space="preserve">
-    <value>Variable</value>
+    <value>&amp;Variable</value>
   </data>
   <data name="&gt;&gt;cbVariableMod.Name" xml:space="preserve">
     <value>cbVariableMod</value>
@@ -682,7 +682,7 @@
     <value>26</value>
   </data>
   <data name="labelLoss.Text" xml:space="preserve">
-    <value>Losses:</value>
+    <value>L&amp;osses:</value>
   </data>
   <data name="&gt;&gt;labelLoss.Name" xml:space="preserve">
     <value>labelLoss</value>

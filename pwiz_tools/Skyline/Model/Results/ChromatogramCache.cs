@@ -985,7 +985,10 @@ namespace pwiz.Skyline.Model.Results
             var cachedFileSerializer = cacheFormat.CachedFileSerializer();
             foreach (var cachedFile in chromCachedFiles)
             {
-                var filePathBytes = Encoding.UTF8.GetBytes(cachedFile.FilePath.ToString());
+                var filePath = cachedFile.FilePath;
+                if (formatVersion < CacheFormatVersion.Fourteen)
+                    filePath = filePath.RestoreLegacyParameters(cachedFile.UsedMs1Centroids, cachedFile.UsedMs2Centroids);
+                var filePathBytes = Encoding.UTF8.GetBytes(filePath.ToString());
                 var instrumentInfoBytes =
                     Encoding.UTF8.GetBytes(InstrumentInfoUtil.GetInstrumentInfoString(cachedFile.InstrumentInfoList));
                 var sampleIdBytes = Encoding.UTF8.GetBytes(cachedFile.SampleId ?? string.Empty);

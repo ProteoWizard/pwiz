@@ -26,6 +26,7 @@ using pwiz.CLI.cv;
 using pwiz.CLI.data;
 using pwiz.CLI.msdata;
 using pwiz.CLI.analysis;
+using pwiz.CLI.util;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -51,7 +52,7 @@ namespace pwiz.ProteowizardWrapper
             get
             {
                 // Forces pwiz_data_cli.dll to be loaded with all its dependencies
-                // Throws and exception if the DLL load failes
+                // Throws and exception if the DLL load fails
                 var test = new MSData();
                 // Return the version string once the load succeeds
                 return Version.ToString();
@@ -70,7 +71,7 @@ namespace pwiz.ProteowizardWrapper
 
         // Cached disposable objects
         private MSData _msDataFile;
-        private readonly ReaderConfig _config;
+        private ReaderConfig _config;
         private SpectrumList _spectrumList;
         private ChromatogramList _chromatogramList;
         private bool _providesConversionCCStoIonMobility;
@@ -92,9 +93,11 @@ namespace pwiz.ProteowizardWrapper
 
         private DetailLevel _detailLevelPrecursors = DetailLevel.InstantMetadata;
 
+        private CVID? _cvidIonMobility;
+
         private static double[] ToArray(BinaryDataArray binaryDataArray)
         {
-            return binaryDataArray.data.ToArray();
+            return binaryDataArray.data.Storage();
         }
 
         public static float[] ToFloatArray(IList<double> list)
@@ -138,21 +141,22 @@ namespace pwiz.ProteowizardWrapper
             return id.StartsWith(PREFIX_SINGLE) || id.StartsWith(PREFIX_PRECURSOR);
         }
 
+        public static bool ForceUncombinedIonMobility { get { return false; } }
+
         public MsDataFileImpl(string path, int sampleIndex = 0, LockMassParameters lockmassParameters = null,
             bool simAsSpectra = false, bool srmAsSpectra = false, bool acceptZeroLengthSpectra = true,
             bool requireVendorCentroidedMS1 = false, bool requireVendorCentroidedMS2 = false,
             bool ignoreZeroIntensityPoints = false, 
             int preferOnlyMsLevel = 0,
-            bool combineIonMobilitySpectra = true)
+            bool combineIonMobilitySpectra = true) // Ask for IMS data in 3-array format by default (not guaranteed)
         {
-            var canCombine = CanCombineIonMobilitySpectra(path); // TODO: Support combined (3-array representation) IM data in all formats
-            combineIonMobilitySpectra &= canCombine; 
-            preferOnlyMsLevel = canCombine ? 0 : preferOnlyMsLevel; // TODO: Support ms level preference in Bruker PASEF data (and any other IMS formats when they are enabled)
 
             // see note above on enabling performance measurement
             _perf = PerfUtilFactory.CreatePerfUtil(@"MsDataFileImpl " +
                 string.Format(@"{0},sampleIndex:{1},lockmassCorrection:{2},simAsSpectra:{3},srmAsSpectra:{4},acceptZeroLengthSpectra:{5},requireVendorCentroidedMS1:{6},requireVendorCentroidedMS2:{7},preferOnlyMsLevel:{8},combineIonMobilitySpectra:{9}",
                 path, sampleIndex, !(lockmassParameters == null || lockmassParameters.IsEmpty), simAsSpectra, srmAsSpectra, acceptZeroLengthSpectra, requireVendorCentroidedMS1, requireVendorCentroidedMS2, preferOnlyMsLevel, combineIonMobilitySpectra));
+//            if (!combineIonMobilitySpectra)
+//                Console.Write(string.Empty);
             using (_perf.CreateTimer(@"open"))
             {
                 FilePath = path;
@@ -164,9 +168,10 @@ namespace pwiz.ProteowizardWrapper
                     srmAsSpectra = srmAsSpectra,
                     acceptZeroLengthSpectra = acceptZeroLengthSpectra,
                     ignoreZeroIntensityPoints = ignoreZeroIntensityPoints,
-                    preferOnlyMsLevel = preferOnlyMsLevel,
+                    preferOnlyMsLevel = !ForceUncombinedIonMobility && combineIonMobilitySpectra ? 0 : preferOnlyMsLevel,
                     allowMsMsWithoutPrecursor = false,
-                    combineIonMobilitySpectra = combineIonMobilitySpectra
+                    combineIonMobilitySpectra = !ForceUncombinedIonMobility && combineIonMobilitySpectra,
+                    globalChromatogramsAreMs1Only = true
                 };
                 _lockmassParameters = lockmassParameters;
                 FULL_READER_LIST.read(path, _msDataFile, sampleIndex, _config);
@@ -205,6 +210,9 @@ namespace pwiz.ProteowizardWrapper
         }
 
         public string RunId { get { return _msDataFile.run.id; } }
+
+        public bool RequireVendorCentoridedMs1 => _requireVendorCentroidedMS1;
+        public bool RequireVendorCentoridedMs2 => _requireVendorCentroidedMS2;
 
         public DateTime? RunStartTime
         {
@@ -342,7 +350,8 @@ namespace pwiz.ProteowizardWrapper
 
         public bool IsWatersLockmassSpectrum(MsDataSpectrum s)
         {
-            return _lockmassFunction.HasValue && (s.WatersFunctionNumber >= _lockmassFunction.Value);
+            return _lockmassFunction.HasValue && 
+                   MsDataSpectrum.WatersFunctionNumberFromId(s.Id, HasIonMobilitySpectra) >= _lockmassFunction.Value;
         }
 
         /// <summary>
@@ -533,6 +542,13 @@ namespace pwiz.ProteowizardWrapper
                             _lockmassParameters.LockmassNegative ?? 0,
                             _lockmassParameters.LockmassTolerance ?? LockMassParameters.LOCKMASS_TOLERANCE_DEFAULT);
                     }
+                    // Ion mobility info
+                    if (_spectrumList != null) // No ion mobility for chromatogram-only files
+                    {
+                        _ionMobilitySpectrumList = new SpectrumList_IonMobility(_spectrumList);
+                        _ionMobilityUnits = _ionMobilitySpectrumList.getIonMobilityUnits();
+                        _providesConversionCCStoIonMobility = _ionMobilitySpectrumList.canConvertIonMobilityAndCCS(_ionMobilityUnits);
+                    }
                     if (IsWatersFile  && _spectrumList != null)
                     {
                         if (_spectrumList.size() > 0 && !hasSrmSpectra)
@@ -545,7 +561,7 @@ namespace pwiz.ProteowizardWrapper
                             {
                                 if (GetMsLevel(spectrum) == 1)
                                 {
-                                    var function = MsDataSpectrum.WatersFunctionNumberFromId(id.abbreviate(spectrum.id));
+                                    var function = MsDataSpectrum.WatersFunctionNumberFromId(id.abbreviate(spectrum.id), HasCombinedIonMobilitySpectra);
                                     if (function > 1)
                                         _lockmassFunction = function; // Ignore all scans in this function for chromatogram extraction purposes
                                 }
@@ -553,13 +569,6 @@ namespace pwiz.ProteowizardWrapper
                         }
                     }
 
-                    // Ion mobility info
-                    if (_spectrumList != null) // No ion mobility for chromatogram-only files
-                    {
-                        _ionMobilitySpectrumList = new SpectrumList_IonMobility(_spectrumList);
-                        _ionMobilityUnits = _ionMobilitySpectrumList.getIonMobilityUnits();
-                        _providesConversionCCStoIonMobility = _ionMobilitySpectrumList.canConvertIonMobilityAndCCS(_ionMobilityUnits);
-                    }
                 }
                 return _spectrumList;
             }
@@ -570,12 +579,7 @@ namespace pwiz.ProteowizardWrapper
             return GetMaxIonMobilityInList();
         }
 
-        public bool CanCombineIonMobilitySpectra(string sourcePath)
-        {
-            return sourcePath.EndsWith(@".d") && File.Exists(Path.Combine(sourcePath, @"analysis.tdf")); // currently only Bruker TDF
-        }
-
-        public bool HasCombinedIonMobilitySpectra => _config.combineIonMobilitySpectra;
+        public bool HasCombinedIonMobilitySpectra => SpectrumList != null && IonMobilityUnits != eIonMobilityUnits.none &&  _ionMobilitySpectrumList != null && _ionMobilitySpectrumList.hasCombinedIonMobility();
 
         /// <summary>
         /// Gets the value of the MS_sample_name CV param of first sample in the MSData object, or null if there is no sample information.
@@ -799,29 +803,57 @@ namespace pwiz.ProteowizardWrapper
                 }
                 var spectrum = GetCachedSpectrum(spectrumIndex, true);
                 {
-                    return GetSpectrum(spectrum, spectrumIndex);
+                    // Avoid wrapping the same cached Spectrum twice
+                    if (_lastSpectrumInfo == null)
+                        _lastSpectrumInfo = GetSpectrum(spectrum, spectrumIndex);
+                    return _lastSpectrumInfo;
                 }
             }
         }
 
         private double[] GetIonMobilityArray(Spectrum s)
         {
-            CLI.util.BinaryData data = null;
-            switch (IonMobilityUnits)
+            BinaryData data = null;
+            // Remember where the ion mobility value came from and continue getting it from the
+            // same place throughout the file. Trying to get an ion mobility value from a CVID
+            // where there is none can be slow.
+            if (_cvidIonMobility.HasValue)
             {
-                case eIonMobilityUnits.drift_time_msec:
-                    data = s.getArrayByCVID(CVID.MS_mean_drift_time_array)?.data ??
-                           s.getArrayByCVID(CVID.MS_raw_ion_mobility_array)?.data;
-                    break;
-                case eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
-                    data = s.getArrayByCVID(CVID.MS_mean_inverse_reduced_ion_mobility_array)?.data ??
-                           s.getArrayByCVID(CVID.MS_raw_inverse_reduced_ion_mobility_array)?.data;
-                    break;
-//                default:
-//                    throw new InvalidDataException(string.Format(@"mobility type {0} does not support ion mobility arrays", IonMobilityUnits));
+                if (_cvidIonMobility.Value != CVID.CVID_Unknown)
+                    data = s.getArrayByCVID(_cvidIonMobility.Value)?.data;
+            }
+            else
+            {
+                switch (IonMobilityUnits)
+                {
+                    case eIonMobilityUnits.drift_time_msec:
+                        data = TryGetIonMobilityData(s, CVID.MS_raw_ion_mobility_array, ref _cvidIonMobility);
+                        if (data == null)
+                            data = TryGetIonMobilityData(s, CVID.MS_mean_drift_time_array, ref _cvidIonMobility);
+                        break;
+                    case eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
+                        data = TryGetIonMobilityData(s, CVID.MS_mean_inverse_reduced_ion_mobility_array, ref _cvidIonMobility);
+                        if (data == null)
+                            data = TryGetIonMobilityData(s, CVID.MS_raw_inverse_reduced_ion_mobility_array, ref _cvidIonMobility);
+                        break;
+//                    default:
+//                        throw new InvalidDataException(string.Format(@"mobility type {0} does not support ion mobility arrays", IonMobilityUnits));
+                }
+
+                if (data == null)
+                    _cvidIonMobility = CVID.CVID_Unknown;
             }
 
             return data?.Storage();
+        }
+
+        private BinaryData TryGetIonMobilityData(Spectrum s, CVID cvid, ref CVID? cvidIonMobility)
+        {
+            var data = s.getArrayByCVID(cvid)?.data;
+            if (data != null)
+                cvidIonMobility = cvid;
+
+            return data;
         }
 
         private MsDataSpectrum GetSpectrum(Spectrum spectrum, int spectrumIndex)
@@ -1013,6 +1045,7 @@ namespace pwiz.ProteowizardWrapper
         private int _lastScanIndex = -1;
         private DetailLevel _lastDetailLevel;
         private Spectrum _lastSpectrum;
+        private MsDataSpectrum _lastSpectrumInfo;
         private Spectrum GetCachedSpectrum(int scanIndex, DetailLevel detailLevel)
         {
             if (scanIndex != _lastScanIndex || detailLevel > _lastDetailLevel)
@@ -1021,6 +1054,7 @@ namespace pwiz.ProteowizardWrapper
                 _lastDetailLevel = detailLevel;
                 _lastSpectrum?.Dispose();
                 _lastSpectrum = SpectrumList.spectrum(_lastScanIndex, _lastDetailLevel);
+                _lastSpectrumInfo = null;
             }
             return _lastSpectrum;
         }
@@ -1492,17 +1526,14 @@ namespace pwiz.ProteowizardWrapper
         public double? MaxIonMobility { get; set; }
         public int WindowGroup { get; set; } // For Bruker diaPASEF
 
-        public static int WatersFunctionNumberFromId(string id)
+        public static int WatersFunctionNumberFromId(string id, bool isCombinedIonMobility)
         {
-            return int.Parse(id.Split('.')[0]); // Yes, this will throw if it's not in dotted format - and that's good
+            return int.Parse(id.Split('.')[isCombinedIonMobility ? 1 :0]); // Yes, this will throw if it's not in dotted format - and that's good
         }
 
-        public int WatersFunctionNumber
+        public override string ToString() // For debugging convenience, not user-facing
         {
-            get 
-            {
-                return WatersFunctionNumberFromId(Id);
-            }
+            return $@"id={Id} idx={Index} mslevel={Level} rt={RetentionTime}";
         }
     }
 

@@ -154,7 +154,7 @@ struct PWIZ_API_DECL RawData
         ticByFunctionIndex.resize(lastFunctionIndex_ + 1);
         for (auto& itr : functionFilepathByNumber)
         {
-            ionMobilityByFunctionIndex[itr.first] = bfs::exists(itr.second.replace_extension(".cdt"));
+            ionMobilityByFunctionIndex[itr.first] = bfs::exists(itr.second.replace_extension(".cdt")) && Info.GetDriftScanCount(itr.first) > 0;
             if (ionMobilityByFunctionIndex[itr.first])
             {
                 hasIonMobility_ = true;

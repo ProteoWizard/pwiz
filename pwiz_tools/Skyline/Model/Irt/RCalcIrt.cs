@@ -24,7 +24,6 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -245,34 +244,18 @@ namespace pwiz.Skyline.Model.Irt
             DbIrtPeptide[] standardPeptideList, DbIrtPeptide[] items)
         {
             var matchedStandard = IrtStandard.WhichStandard(standardPeptideList.Select(pep => pep.ModifiedTarget));
-            if (matchedStandard != null)
+            if (matchedStandard != null && matchedStandard.HasDocument)
             {
-                var dummyDoc = new SrmDocument(SrmSettingsList.GetDefault());
-                using (var reader = matchedStandard.GetDocumentReader())
+                // Import iRT standard document into an empty document (rather than just getting the document), because importing also imports the modifications
+                var standardDoc = matchedStandard.ImportTo(new SrmDocument(SrmSettingsList.GetDefault()));
+                standardPeptideList = standardPeptideList.Select(pep => new DbIrtPeptide(pep)).ToArray();
+                foreach (var dummyPep in standardDoc.Molecules.Where(pep => pep.HasExplicitMods))
                 {
-                    if (reader != null)
+                    var standardPepIdx = standardPeptideList.IndexOf(pep => dummyPep.ModifiedTarget.Equals(pep.ModifiedTarget));
+                    standardPeptideList[standardPepIdx] = new DbIrtPeptide(standardPeptideList[standardPepIdx])
                     {
-                        dummyDoc = dummyDoc.ImportDocumentXml(reader,
-                            string.Empty,
-                            MeasuredResults.MergeAction.remove,
-                            false,
-                            null,
-                            Settings.Default.StaticModList,
-                            Settings.Default.HeavyModList,
-                            null,
-                            out _,
-                            out _,
-                            false);
-                        standardPeptideList = standardPeptideList.Select(pep => new DbIrtPeptide(pep)).ToArray();
-                        foreach (var dummyPep in dummyDoc.Molecules.Where(pep => pep.HasExplicitMods))
-                        {
-                            var standardPepIdx = standardPeptideList.IndexOf(pep => dummyPep.ModifiedTarget.Equals(pep.ModifiedTarget));
-                            standardPeptideList[standardPepIdx] = new DbIrtPeptide(standardPeptideList[standardPepIdx])
-                            {
-                                ModifiedTarget = dummyDoc.Settings.GetModifiedSequence(dummyPep.ModifiedTarget, IsotopeLabelType.heavy, dummyPep.ExplicitMods)
-                            };
-                        }
-                    }
+                        ModifiedTarget = standardDoc.Settings.GetModifiedSequence(dummyPep.ModifiedTarget, IsotopeLabelType.heavy, dummyPep.ExplicitMods)
+                    };
                 }
             }
 

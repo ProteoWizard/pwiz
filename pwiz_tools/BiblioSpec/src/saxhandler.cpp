@@ -137,6 +137,10 @@ bool SAXHandler::parse()
     return true;
 }
 
+boost::int64_t SAXHandler::getCurrentByteIndex() {
+    return XML_GetCurrentByteIndex(m_parser_);
+}
+
 string SAXHandler::generateError(const string& message) {
     stringstream ss;
     ss << m_strFileName_

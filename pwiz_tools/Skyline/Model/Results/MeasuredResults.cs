@@ -364,17 +364,23 @@ namespace pwiz.Skyline.Model.Results
                 return false;
             if (name.Length == prefix.Length || name[prefix.Length] == '.')
                 return true;
-            // Check for Waters MSe
+            // Check for special suffixes we know get added to the basename by other tools
             string suffix = name.Substring(prefix.Length);
             if (suffix[0] == '_' && IsUnderscoreSuffix(suffix))
                 return true;
             return false;
         }
 
-        public static bool IsUnderscoreSuffix(string name)
+        public static bool IsUnderscoreSuffix(string suffix)
         {
-            return name.ToLowerInvariant().EndsWith(@"_ia_final_fragment") ||
-                   name.EndsWith(@"_final_fragment");
+            string suffixLower = suffix.ToLowerInvariant();
+            return
+                // Waters MSe
+                suffixLower.EndsWith(@"_ia_final_fragment") ||
+                suffixLower.EndsWith(@"_final_fragment") ||
+                // MSFragger
+                suffixLower.EndsWith(@"_calibrated") ||
+                suffixLower.EndsWith(@"_uncalibrated");
         }
 
 // ReSharper disable MemberCanBeMadeStatic.Local
@@ -552,14 +558,19 @@ namespace pwiz.Skyline.Model.Results
             return index != -1;            
         }
 
-        public MsDataFileScanIds LoadMSDataFileScanIds(MsDataFileUri dataFilePath)
+        public MsDataFileScanIds LoadMSDataFileScanIds(MsDataFileUri dataFilePath, out ChromCachedFile cachedFile)
         {
             foreach (var cache in Caches)
             {
                 int fileIndex = cache.CachedFiles.IndexOf(f => Equals(f.FilePath, dataFilePath));
                 if (fileIndex != -1)
+                {
+                    cachedFile = cache.CachedFiles[fileIndex];
                     return cache.LoadMSDataFileScanIds(fileIndex);
+                }
             }
+
+            cachedFile = null;
             return null;
         }
 
@@ -1514,9 +1525,9 @@ namespace pwiz.Skyline.Model.Results
                             }
                         }
 
-                        // If there is only one result path, then just create the cache directly to its
-                        // final destination.
-                        if (dataFileReplicatesList.Count == 1 && !_resultsClone.IsJoiningDisabled)
+                        // If there is only one result path and joining is not disabled and no prior caches exist,
+                        // then just create the cache directly to its final destination.
+                        if (dataFileReplicatesList.Count == 1 && !_resultsClone.IsJoiningDisabled && _resultsClone._listPartialCaches == null)
                             dataFileReplicates.PartPath = cachePath;
                         else
                         {

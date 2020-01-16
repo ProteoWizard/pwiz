@@ -117,11 +117,17 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="ModeUIExtender.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <metadata name="toolBar.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>160, 17</value>
+  </metadata>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="toolStripLabel1.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="labelSpectrum.Size" type="System.Drawing.Size, System.Drawing">
     <value>61, 22</value>
   </data>
-  <data name="toolStripLabel1.Text" xml:space="preserve">
+  <data name="labelSpectrum.Text" xml:space="preserve">
     <value>谱图：</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
@@ -131,14 +137,32 @@
   <data name="comboSpectrum.Size" type="System.Drawing.Size, System.Drawing">
     <value>200, 25</value>
   </data>
-  <metadata name="toolBar.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
+  <data name="mirrorLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>43, 22</value>
+  </data>
+  <data name="mirrorLabel.Text" xml:space="preserve">
+    <value>镜像：</value>
+  </data>
+  <data name="comboMirrorSpectrum.MaxDropDownItems" type="System.Int32, mscorlib">
+    <value>15</value>
+  </data>
+  <data name="comboMirrorSpectrum.Size" type="System.Drawing.Size, System.Drawing">
+    <value>200, 25</value>
+  </data>
+  <data name="ceLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>24, 22</value>
+  </data>
+  <data name="ceLabel.Text" xml:space="preserve">
+    <value>CE:</value>
+  </data>
+  <data name="comboCE.Size" type="System.Drawing.Size, System.Drawing">
+    <value>92, 25</value>
+  </data>
   <data name="toolBar.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
   <data name="toolBar.Size" type="System.Drawing.Size, System.Drawing">
-    <value>473, 25</value>
+    <value>716, 25</value>
   </data>
   <data name="toolBar.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -165,8 +189,11 @@
   <data name="graphControl.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
+  <data name="graphControl.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>5, 5, 5, 5</value>
+  </data>
   <data name="graphControl.Size" type="System.Drawing.Size, System.Drawing">
-    <value>473, 386</value>
+    <value>716, 572</value>
   </data>
   <data name="graphControl.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -187,10 +214,10 @@
     <value>Fill</value>
   </data>
   <data name="GraphPanel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
+    <value>0, 25</value>
   </data>
   <data name="GraphPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>473, 386</value>
+    <value>716, 572</value>
   </data>
   <data name="GraphPanel.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -217,21 +244,51 @@
     <value>True</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>473, 386</value>
+    <value>716, 597</value>
   </data>
   <data name="$this.TabText" xml:space="preserve">
     <value>库匹配</value>
   </data>
-  <data name="&gt;&gt;toolStripLabel1.Name" xml:space="preserve">
-    <value>toolStripLabel1</value>
+  <data name="&gt;&gt;ModeUIExtender.Name" xml:space="preserve">
+    <value>ModeUIExtender</value>
   </data>
-  <data name="&gt;&gt;toolStripLabel1.Type" xml:space="preserve">
+  <data name="&gt;&gt;ModeUIExtender.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=19.1.1.311, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;labelSpectrum.Name" xml:space="preserve">
+    <value>labelSpectrum</value>
+  </data>
+  <data name="&gt;&gt;labelSpectrum.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboSpectrum.Name" xml:space="preserve">
     <value>comboSpectrum</value>
   </data>
   <data name="&gt;&gt;comboSpectrum.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;mirrorLabel.Name" xml:space="preserve">
+    <value>mirrorLabel</value>
+  </data>
+  <data name="&gt;&gt;mirrorLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboMirrorSpectrum.Name" xml:space="preserve">
+    <value>comboMirrorSpectrum</value>
+  </data>
+  <data name="&gt;&gt;comboMirrorSpectrum.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;ceLabel.Name" xml:space="preserve">
+    <value>ceLabel</value>
+  </data>
+  <data name="&gt;&gt;ceLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboCE.Name" xml:space="preserve">
+    <value>comboCE</value>
+  </data>
+  <data name="&gt;&gt;comboCE.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">

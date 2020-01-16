@@ -76,7 +76,7 @@ namespace pwiz.SkylineTestFunctional
                                                        new TestLibInfo("LipidCreator", "lc_all.blib", "PE 12:0_12:0[M-H]"),
                                                        new TestLibInfo(SHIMADZU_MLB, "Small_Library-Positive-ions_CE-Merged.blib", "LSD[M+H]"), // Can be found in BiblioSpec test/output directory if update is needed
                                                        new TestLibInfo(NIST_SMALL_MOL+" Redundant", "SmallMolRedundant.msp", ".alpha.-Helical Corticotropin Releasing Factor (9-41)[M+4H]"),
-                                                       new TestLibInfo(NIST_SMALL_MOL, "SmallMol.msp", ".alpha.-Helical Corticotropin Releasing Factor (9-41)[M+4H]")
+                                                       new TestLibInfo(NIST_SMALL_MOL, "SmallMol.MSP", ".alpha.-Helical Corticotropin Releasing Factor (9-41)[M+4H]") // Note .ext is all caps to test case insensitivity
                                                    };
 
         private PeptideSettingsUI PeptideSettingsUI { get; set; }

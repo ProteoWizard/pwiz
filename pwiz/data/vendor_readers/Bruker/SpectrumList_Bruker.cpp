@@ -350,7 +350,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
 
         // Enumerating merged scan numbers is not instant.
         IntegerSet scanNumbers = spectrum->getMergedScanNumbers();
-        if (config_.combineIonMobilitySpectra)
+        if (config_.combineIonMobilitySpectra && format_ == Reader_Bruker_Format_TDF)
         {
             result->scanList.set(MS_sum_of_spectra);
             if (scanNumbers.size() < 100)

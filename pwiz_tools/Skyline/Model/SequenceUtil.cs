@@ -289,6 +289,10 @@ namespace pwiz.Skyline.Model
                 {
                     return @"[" + MassModification.FromMass(massDiff) + @"]";
                 }
+                case SequenceModFormatType.lib_precision:
+                {
+                    return @"[" + MassModification.FromMassForLib(massDiff) + @"]";
+                }
                 case SequenceModFormatType.mass_diff:
                 {
                     string formatString = @"[{0}{1:F0" + precisionRequired + @"}]";
