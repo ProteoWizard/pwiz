@@ -5027,17 +5027,21 @@ namespace pwiz.Skyline
             // make sure user sees the change.
             else if (final)
             {
-                // Import progress needs to know about this status immediately.  It might be gone by
-                // the time the update progress interval comes around next time.
-                if (ImportingResultsWindow != null && status is MultiProgressStatus)
-                    RunUIAction(() => UpdateImportProgress(status as MultiProgressStatus));
-
-                // Only wait for an error, since it is expected that e
-                // may be modified by return of this function call
+                // Only wait for an error, since it is expected that e may be modified by return of this function call
+                // Also, it is important to do this with one update, or a timer tick can destroy the window and this
+                // will recreate it causing tests to fail because they have the wrong Form reference
                 if (status.IsError)
                     RunUIAction(CompleteProgressUI, e);
-                else if (first)
-                    RunUIActionAsync(CompleteProgressUI, e);
+                else
+                {
+                    // Import progress needs to know about this status immediately.  It might be gone by
+                    // the time the update progress interval comes around next time.
+                    if (ImportingResultsWindow != null && status is MultiProgressStatus)
+                        RunUIAction(() => UpdateImportProgress(status as MultiProgressStatus));
+
+                    if (first)
+                        RunUIActionAsync(CompleteProgressUI, e);
+                }
             }
         }
 

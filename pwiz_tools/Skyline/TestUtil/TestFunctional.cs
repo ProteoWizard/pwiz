@@ -1474,7 +1474,8 @@ namespace pwiz.SkylineTestUtil
                 // Release all resources by setting the document to something that
                 // holds no file handles.
                 var docNew = new SrmDocument(SrmSettingsList.GetDefault());
-                RunUI(() => SkylineWindow.SwitchDocument(docNew, null));
+                // Try twice, because this operation can fail due to active background processing
+                RunUI(() => Helpers.TryTwice(() => SkylineWindow.SwitchDocument(docNew, null)));
 
                 WaitForCondition(1000, () => !FileStreamManager.Default.HasPooledStreams, string.Empty, false);
                 if (FileStreamManager.Default.HasPooledStreams)
