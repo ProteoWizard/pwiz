@@ -513,9 +513,14 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         librarySpecs = Libraries.LibrarySpecs;
                         librariesLoaded = Libraries.Libraries;
+                        documentLibrary = Libraries.HasDocumentLibrary;
+                    }
+                    else
+                    {
+                        // Set to true only if one of the selected libraries is a document library.
+                        documentLibrary = librarySpecs.Any(libSpec => libSpec != null && libSpec.IsDocumentLibrary);
                     }
 
-                    documentLibrary = Libraries.HasDocumentLibrary;
                     // Otherwise, leave the list of loaded libraries empty,
                     // and let the LibraryManager refill it.  This ensures a
                     // clean save of library specs only in the user config, rather
