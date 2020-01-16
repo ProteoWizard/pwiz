@@ -234,7 +234,7 @@ namespace pwiz.Skyline.Model
         {
             if (progressMonitor != null)
             {
-                int molCount = document.PeptideCount;
+                var molCount = document.PeptideCount;
                 if (CVCutoff.HasValue || QValueCutoff.HasValue)
                 {
                     molCount *= 2;
