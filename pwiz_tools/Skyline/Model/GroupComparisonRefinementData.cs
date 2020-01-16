@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.DataAnalysis;
 using pwiz.Common.DataAnalysis.Matrices;
+using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
 
@@ -19,7 +20,8 @@ namespace pwiz.Skyline.Model
         private SrmSettingsChangeMonitor _progressMonitor;
 
         public GroupComparisonRefinementData(SrmDocument document, double adjustedPValCutoff,
-            double foldChangeCutoff, int msLevel, List<GroupComparisonDef> groupComparisonDefs, SrmSettingsChangeMonitor progressMonitor)
+            double foldChangeCutoff, int msLevel, List<GroupComparisonDef> groupComparisonDefs,
+            SrmSettingsChangeMonitor progressMonitor)
         {
             _progressMonitor = progressMonitor;
             _foldChangeCutoff = foldChangeCutoff;
@@ -30,35 +32,7 @@ namespace pwiz.Skyline.Model
             foreach (var groupComparisonDef in groupComparisonDefs)
             {
                 var groupComparer = new GroupComparer(groupComparisonDef, document, _qrFactorizationCache);
-                var results = new List<GroupComparisonResult>();
-
-                foreach (var protein in document.MoleculeGroups)
-                {
-                    IEnumerable<PeptideDocNode> peptides;
-                    if (groupComparer.ComparisonDef.PerProtein)
-                    {
-                        peptides = new PeptideDocNode[] { null };
-                    }
-                    else
-                    {
-                        peptides = protein.Molecules;
-                    }
-
-                    foreach (var peptide in peptides)
-                    {
-                        if (_progressMonitor != null && _progressMonitor.IsCanceled())
-                        {
-                            throw new OperationCanceledException();
-                        }
-
-                        if (progressMonitor != null)
-                        {
-                            progressMonitor.ProcessMolecule(peptide);
-                        }
-
-                        results.AddRange(groupComparer.CalculateFoldChanges(protein, peptide));
-                    }
-                }
+                var results = GroupComparisonModel.ComputeResults(groupComparer, document, null, null, progressMonitor);
 
                 var adjustedPValues = PValues.AdjustPValues(results.Select(
                     row => row.LinearFitResult.PValue)).ToArray();
@@ -69,17 +43,18 @@ namespace pwiz.Skyline.Model
                     var resultRow = results[iRow];
                     FoldChangeResult foldChangeResult = new FoldChangeResult(groupComparisonDef.ConfidenceLevel,
                         adjustedPValues[iRow], resultRow.LinearFitResult, double.NaN);
-                    foldChangeList.Add(new GroupComparisonRow(resultRow.Selector.Protein, resultRow.Selector.Peptide, resultRow.Selector.MsLevel,
-                        foldChangeResult, resultRow.Selector.GroupIdentifier));
+                    foldChangeList.Add(new GroupComparisonRow(resultRow.Selector.Protein, resultRow.Selector.Peptide,
+                        resultRow.Selector.MsLevel,
+                        foldChangeResult));
                 }
+
                 Data.Add(foldChangeList);
             }
         }
 
-
         public SrmDocument RemoveBelowCutoffs(SrmDocument document)
         {
-            var union = new List<int>();
+            var intersection = new HashSet<int>();
             foreach (var data in Data)
             {
                 if (_progressMonitor != null && _progressMonitor.IsCanceled())
@@ -92,41 +67,71 @@ namespace pwiz.Skyline.Model
 
                 var filterByCutoff = data.ToArray();
 
-                // Remove based on p value and fold change cutoffs
-                // Retain all standard types
-                var toRemove = filterByCutoff.Where(r =>
-                        r.Peptide == null || r.Peptide != null && r.Peptide.GlobalStandardType == null &&
-                        r.MsLevel == _msLevel &&
-                        (!double.IsNaN(_adjustedPValCutoff) &&
-                         r.FoldChangeResult.AdjustedPValue >= _adjustedPValCutoff) ||
-                        (!double.IsNaN(_foldChangeCutoff) &&
-                         r.FoldChangeResult.AbsLog2FoldChange <= _foldChangeCutoff))
-                    .Select(r => r.Peptide != null ? r.Peptide.Id.GlobalIndex : r.Protein.Id.GlobalIndex)
-                    .Distinct()
-                    .ToArray();
+                var toRemove = IndicesBelowCutoff(_adjustedPValCutoff, _foldChangeCutoff, _msLevel, null,
+                    filterByCutoff);
 
-                var result = ((SrmDocument) document.RemoveAll(toRemove)).Peptides.Select(p => p.Id.GlobalIndex);
-                union.AddRange(result);
+                if (intersection.Count == 0)
+                    intersection.UnionWith(toRemove);
+                else
+                    intersection.IntersectWith(toRemove);
             }
 
-            return (SrmDocument) document.RemoveAllBut(union);
+            return (SrmDocument) document.RemoveAll(intersection);
+        }
+
+        public static List<int> IndicesBelowCutoff(double adjustedPValueCutoff, double foldChangeCutoff, 
+            double msLevel, FoldChangeBindingSource.FoldChangeRow[] foldChangeRows = null, GroupComparisonRow[] groupComparisonRows = null)
+        {
+            GroupComparisonRow[] rows;
+            if (foldChangeRows != null)
+            {
+                var rowList = new List<GroupComparisonRow>();
+                foreach (var row in foldChangeRows)
+                {
+                    rowList.Add(new GroupComparisonRow(row.Protein.DocNode, row.Peptide.DocNode, row.MsLevel, row.FoldChangeResult));
+                }
+
+                rows = rowList.ToArray();
+            }
+            else
+            {
+                if (groupComparisonRows != null)
+                {
+                    rows = groupComparisonRows;
+                }
+                else
+                {
+                    return new List<int>();
+                }
+            }
+
+            // Remove based on p value and fold change cutoffs
+            // Retain all standard types
+            var toRemove = rows.Where(r =>
+                (r.Peptide == null || r.Peptide != null && r.Peptide.GlobalStandardType == null) &&
+                (!double.IsNaN(msLevel) && r.MsLevel == msLevel || double.IsNaN(msLevel)) &&
+                (!double.IsNaN(adjustedPValueCutoff) &&
+                 r.FoldChangeResult.AdjustedPValue >= adjustedPValueCutoff ||
+                 !double.IsNaN(foldChangeCutoff) &&
+                 r.FoldChangeResult.AbsLog2FoldChange <= foldChangeCutoff)).Select(r =>
+                r.Peptide != null ? r.Peptide.Id.GlobalIndex : r.Protein.Id.GlobalIndex);
+
+            return toRemove.Distinct().ToList();
         }
         
-        private class GroupComparisonRow
+        public class GroupComparisonRow
         {
-            public GroupComparisonRow(PeptideGroupDocNode protein, PeptideDocNode peptide, int? msLevel, FoldChangeResult result, GroupIdentifier group)
+            public GroupComparisonRow(PeptideGroupDocNode protein, PeptideDocNode peptide, int? msLevel, FoldChangeResult result)
             {
                 Protein = protein;
                 Peptide = peptide;
                 MsLevel = msLevel;
-                Group = group;
                 FoldChangeResult = result;
             }
 
             public PeptideGroupDocNode Protein { get; private set; }
             public PeptideDocNode Peptide { get; private set; }
             public int? MsLevel { get; private set; }
-            public GroupIdentifier Group { get; private set; }
             public FoldChangeResult FoldChangeResult { get; private set; }
         }
     }

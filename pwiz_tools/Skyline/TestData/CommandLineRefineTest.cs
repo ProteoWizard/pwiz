@@ -255,7 +255,7 @@ namespace pwiz.SkylineTestData
                 PropertyNames.RefinementSettings_CVCutoff
             };
             // Remove all elements above the cv cutoff
-            TestFilesDir = new TestFilesDir(TestContext, @"TestFunctional/AreaCVHistogramTest.zip");
+            TestFilesDir = new TestFilesDir(TestContext, @"TestFunctional\AreaCVHistogramTest.zip");
             DocumentPath = InitRefineDocument("Rat_plasma.sky", 48, 0, 125, 125, 721);
             OutPath = Path.Combine(Path.GetDirectoryName(DocumentPath) ?? string.Empty, "test.sky");
             var output = Run(args.ToArray());
@@ -289,6 +289,63 @@ namespace pwiz.SkylineTestData
             DocumentPath = InitRefineDocument("SRM_mini_single_replicate.sky", 1, 4, 37, 40, 338);
             output = Run(CommandArgs.ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF.GetArgumentTextWithValue(cvCutoff));
             AssertEx.Contains(output, "The document must contain at least 2 replicates to refine based on consistency.");
+        }
+
+        [TestMethod]
+        public void ConsoleRefineGroupComparisonsTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineRefineGroupComparisonTest.zip");
+            DocumentPath = InitRefineDocument("Rat_plasma.sky", 48, 0, 125, 125, 721);
+            OutPath = Path.Combine(Path.GetDirectoryName(DocumentPath) ?? string.Empty, "gctest.sky");
+
+            // Verify pValueCutoff and foldchange cutoff work
+            var pValueCutoff = 0.05.ToString();
+            var foldChangeCutoff = 2.ToString();
+            var msLevel = 2.ToString();
+            var args = new List<string>
+            {
+                CommandArgs.ARG_REFINE_GC_ADJUSTED_P_VALUE.GetArgumentTextWithValue(pValueCutoff),
+                CommandArgs.ARG_REFINE_GC_FOLD_CHANGE_CUTOFF.GetArgumentTextWithValue(foldChangeCutoff),
+                CommandArgs.ARG_REFINE_GROUPS.GetArgumentTextWithValue("Test Group Comparison"),
+                CommandArgs.ARG_REFINE_GC_MS_LEVEL.GetArgumentTextWithValue(msLevel)
+            };
+
+            var parts = new List<string>
+            {
+                PropertyNames.RefinementSettings_AdjustedPValueCutoff,
+                PropertyNames.RefinementSettings_FoldChangeCutoff
+            };
+            var output = Run(args.ToArray());
+            AssertEx.Contains(output, parts.ToArray());
+            IsDocumentState(OutPath, 48, 0, 43, 0, 43, 248, output);
+
+            args.RemoveAt(0);
+            foldChangeCutoff = 3.ToString();
+            args[0] = CommandArgs.ARG_REFINE_GC_FOLD_CHANGE_CUTOFF.GetArgumentTextWithValue(foldChangeCutoff);
+            parts.RemoveAt(0);
+            output = Run(args.ToArray());
+            AssertEx.Contains(output, parts.ToArray());
+            IsDocumentState(OutPath, 48, 0, 20, 0, 20, 114, output);
+
+            pValueCutoff = 0.08.ToString();
+            args[0] = CommandArgs.ARG_REFINE_GC_ADJUSTED_P_VALUE.GetArgumentTextWithValue(pValueCutoff);
+            parts[0] = PropertyNames.RefinementSettings_AdjustedPValueCutoff;
+            output = Run(args.ToArray());
+            AssertEx.Contains(output, parts.ToArray());
+            IsDocumentState(OutPath, 48, 0, 103, 0, 103, 597, output);
+
+            pValueCutoff = 0.05.ToString();
+            foldChangeCutoff = 2.ToString();
+            args.Clear();
+            args.Add(CommandArgs.ARG_REFINE_GC_ADJUSTED_P_VALUE.GetArgumentTextWithValue(pValueCutoff));
+            args.Add(CommandArgs.ARG_REFINE_GC_FOLD_CHANGE_CUTOFF.GetArgumentTextWithValue(foldChangeCutoff));
+            args.Add(CommandArgs.ARG_REFINE_GC_MS_LEVEL.GetArgumentTextWithValue(msLevel));
+            args.Add(CommandArgs.ARG_REFINE_GROUPS.GetArgumentTextWithValue("Test Group Comparison"));
+            args.Add(CommandArgs.ARG_REFINE_GROUPS.GetArgumentTextWithValue("Test Group Comparison 2"));
+            parts.Add(PropertyNames.RefinementSettings_FoldChangeCutoff);
+            output = Run(args.ToArray());
+            AssertEx.Contains(output, parts.ToArray());
+            IsDocumentState(OutPath, 48, 0, 44, 0, 44, 255, output);
         }
 
         //        [TestMethod]

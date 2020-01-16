@@ -68,6 +68,8 @@ namespace pwiz.Skyline.Model
         {
             NormalizationMethod = AreaCVNormalizationMethod.none;
             MSLevel = AreaCVMsLevel.products;
+            GroupComparisonNames = new List<string>();
+            GroupComparisonDefs = new List<GroupComparisonDef>();
         }
 
         public override MessageInfo MessageInfo
@@ -221,6 +223,7 @@ namespace pwiz.Skyline.Model
         public int? MSLevelGroupComparison { get; set; }
         [Track]
         public List<GroupComparisonDef> GroupComparisonDefs { get; set; }
+        public List<string> GroupComparisonNames { get; set; }
 
         public SrmDocument Refine(SrmDocument document)
         {
