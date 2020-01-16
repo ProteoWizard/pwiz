@@ -465,6 +465,16 @@ namespace pwiz.Skyline
                     return false;
             }
 
+            if (!commandArgs.Refinement.GroupComparisonNames.IsNullOrEmpty())
+            {
+                foreach (var name in commandArgs.Refinement.GroupComparisonNames)
+                {
+                    var gc = Document.Settings.DataSettings.GroupComparisonDefs.FirstOrDefault(g => g.Name.Equals(name));
+                    if (gc != null)
+                        commandArgs.Refinement.GroupComparisonDefs.Add(gc);
+                }
+            }
+
             _out.WriteLine(Resources.CommandLine_RefineDocument_Refining_document___);
             try
             {

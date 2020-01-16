@@ -22,7 +22,7 @@ namespace pwiz.SkylineTestFunctional
 
             CreateGroupComparison("Test Group Comparison", "Condition", "Healthy", "Diseased");
 
-            var graphStates = new[] { (26, 42, 42, 242), (14, 19, 19, 108), (44, 102, 102, 591), (26, 44, 44, 255) };
+            var graphStates = new[] { (48, 43, 43, 248), (48, 20, 20, 114), (48, 103, 103, 597), (48, 44, 44, 255) };
 
             // Verify that bad inputs show error message
             var refineDlg = ShowDialog<RefineDlg>(() => SkylineWindow.ShowRefineDlg());
