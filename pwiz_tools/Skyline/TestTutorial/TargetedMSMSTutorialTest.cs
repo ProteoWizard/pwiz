@@ -611,7 +611,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                     var messageDlg = FindOpenForm<MessageDlg>();
-                    Assert.IsNull(messageDlg, TextUtil.LineSeparate("Unexpected MessageDlg: ",
+                    Assert.IsNotNull(messageDlg, TextUtil.LineSeparate("Unexpected MessageDlg: ",
                         messageDlg.DetailedMessage,
                         TextUtil.LineSeparate(docFullScanError.NonLoadedStateDescriptionsFull)));
                     Assert.IsTrue(importProgress.IsHandleCreated, "Import progress not created");
