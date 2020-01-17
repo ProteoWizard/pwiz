@@ -1145,6 +1145,9 @@ namespace pwiz.SkylineTestUtil
 
                 // Run test in new thread (Skyline on main thread).
                 Program.Init();
+                Settings.Default.Reset();
+                Settings.Default.ImportResultsAutoCloseWindow = true;
+                Settings.Default.ImportResultsSimultaneousFiles = (int)MultiFileLoader.ImportResultsSimultaneousFileOptions.many;    // use maximum threads for multiple file import
                 Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault();
                 // Reset defaults with names from resources for testing different languages
                 Settings.Default.BackgroundProteomeList[0] = BackgroundProteomeList.GetDefault();
@@ -1393,9 +1396,6 @@ namespace pwiz.SkylineTestUtil
                     Assert.IsTrue(Program.MainWindow != null && Program.MainWindow.IsHandleCreated,
                     @"Timeout {0} seconds exceeded in WaitForSkyline", waitCycles * SLEEP_INTERVAL / 1000);
                 }
-                Settings.Default.Reset();
-                Settings.Default.ImportResultsAutoCloseWindow = true;
-                Settings.Default.ImportResultsSimultaneousFiles = (int)MultiFileLoader.ImportResultsSimultaneousFileOptions.many;    // use maximum threads for multiple file import
                 BeginAuditLogging();
                 RunTest();
                 EndAuditLogging();
@@ -1406,8 +1406,8 @@ namespace pwiz.SkylineTestUtil
                 Program.AddTestException(x);
             }
 
-            Settings.Default.Reset();
             EndTest();
+            Settings.Default.Reset();
         }
 
         private void RunTest()
