@@ -1059,16 +1059,12 @@ namespace pwiz.SkylineTestUtil
                 }
                 // Run test in new thread (Skyline on main thread).
                 Program.Init();
-                Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault();
-                // Reset defaults with names from resources for testing different languages
-                Settings.Default.BackgroundProteomeList[0] = BackgroundProteomeList.GetDefault();
-                Settings.Default.DeclusterPotentialList[0] = DeclusterPotentialList.GetDefault();
-                Settings.Default.RetentionTimeList[0] = RetentionTimeList.GetDefault();
-                Settings.Default.ShowStartupForm = ShowStartPage;
-                Settings.Default.MruList = SetMru;
-                // For automated demos, start with the main window maximized
-                if (IsDemoMode)
-                    Settings.Default.MainWindowMaximized = true;
+                InitializeSkylineSettings();
+                if (Program.PauseSeconds != 0)
+                {
+                    ForceMzml = false;
+                }
+
                 var threadTest = new Thread(WaitForSkyline) { Name = @"Functional test thread" };
                 LocalizationHelper.InitThread(threadTest);
                 threadTest.Start();
@@ -1121,6 +1117,29 @@ namespace pwiz.SkylineTestUtil
                 //Log<AbstractFunctionalTest>.Fail(@"Functional test did not complete");
                 Assert.Fail("Functional test did not complete");
             }
+        }
+
+        /// <summary>
+        /// Reset the settings for the Skyline application before starting a test.
+        /// Tests can override this method if they have have any settings that need to
+        /// be set before the test's DoTest method gets called (i.e. before the SkylineWindow is created).
+        /// </summary>
+        protected virtual void InitializeSkylineSettings()
+        {
+            Settings.Default.Reset();
+            Settings.Default.ImportResultsAutoCloseWindow = true;
+            Settings.Default.ImportResultsSimultaneousFiles = (int)MultiFileLoader.ImportResultsSimultaneousFileOptions.many;    // use maximum threads for multiple file import
+            Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault();
+            // Reset defaults with names from resources for testing different languages
+            Settings.Default.BackgroundProteomeList[0] = BackgroundProteomeList.GetDefault();
+            Settings.Default.DeclusterPotentialList[0] = DeclusterPotentialList.GetDefault();
+            Settings.Default.RetentionTimeList[0] = RetentionTimeList.GetDefault();
+            Settings.Default.ShowStartupForm = ShowStartPage;
+            Settings.Default.MruList = SetMru;
+            // For automated demos, start with the main window maximized
+            if (IsDemoMode)
+                Settings.Default.MainWindowMaximized = true;
+
         }
 
         private void BeginAuditLogging()
@@ -1300,9 +1319,6 @@ namespace pwiz.SkylineTestUtil
                     Assert.IsTrue(Program.MainWindow != null && Program.MainWindow.IsHandleCreated,
                     @"Timeout {0} seconds exceeded in WaitForSkyline", waitCycles * SLEEP_INTERVAL / 1000);
                 }
-                Settings.Default.Reset();
-                Settings.Default.ImportResultsAutoCloseWindow = true;
-                Settings.Default.ImportResultsSimultaneousFiles = (int)MultiFileLoader.ImportResultsSimultaneousFileOptions.many;    // use maximum threads for multiple file import
                 BeginAuditLogging();
                 RunTest();
                 EndAuditLogging();
@@ -1313,8 +1329,8 @@ namespace pwiz.SkylineTestUtil
                 Program.AddTestException(x);
             }
 
-            Settings.Default.Reset();
             EndTest();
+            Settings.Default.Reset();
         }
 
         private void RunTest()
