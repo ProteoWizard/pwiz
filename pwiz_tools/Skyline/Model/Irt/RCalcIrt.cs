@@ -243,7 +243,6 @@ namespace pwiz.Skyline.Model.Irt
         public static ProcessedIrtAverages ProcessRetentionTimes(IProgressMonitor monitor,
             IRetentionTimeProvider[] providers, DbIrtPeptide[] standardPeptideList, DbIrtPeptide[] items)
         {
-            var standardPeptideListOriginal = standardPeptideList;
             var matchedStandard = IrtStandard.WhichStandard(standardPeptideList.Select(pep => pep.ModifiedTarget));
             if (matchedStandard != null)
             {
@@ -267,13 +266,10 @@ namespace pwiz.Skyline.Model.Irt
                         foreach (var dummyPep in dummyDoc.Molecules.Where(pep => pep.HasExplicitMods))
                         {
                             var standardPepIdx = standardPeptideList.IndexOf(pep => dummyPep.ModifiedTarget.Equals(pep.ModifiedTarget));
-                            if (standardPepIdx != -1)
+                            standardPeptideList[standardPepIdx] = new DbIrtPeptide(standardPeptideList[standardPepIdx])
                             {
-                                standardPeptideList[standardPepIdx] = new DbIrtPeptide(standardPeptideList[standardPepIdx])
-                                {
-                                    ModifiedTarget = dummyDoc.Settings.GetModifiedSequence(dummyPep.ModifiedTarget, IsotopeLabelType.heavy, dummyPep.ExplicitMods)
-                                };
-                            }
+                                ModifiedTarget = dummyDoc.Settings.GetModifiedSequence(dummyPep.ModifiedTarget, IsotopeLabelType.heavy, dummyPep.ExplicitMods)
+                            };
                         }
                     }
                 }
@@ -297,15 +293,6 @@ namespace pwiz.Skyline.Model.Irt
                 if (data.RegressionSuccess || data.CalcRegressionWith(retentionTimeProvider, standardPeptideList, items))
                 {
                     AddRetentionTimesToDict(retentionTimeProvider, data.RegressionRefined, dictPeptideAverages, standardPeptideList);
-                }
-                else
-                {
-                    var dataRetry = new RetentionTimeProviderData(retentionTimeProvider, standardPeptideListOriginal);
-                    if (dataRetry.RegressionSuccess || dataRetry.CalcRegressionWith(retentionTimeProvider, standardPeptideListOriginal, items))
-                    {
-                        AddRetentionTimesToDict(retentionTimeProvider, dataRetry.RegressionRefined, dictPeptideAverages, standardPeptideListOriginal);
-                        data = dataRetry;
-                    }
                 }
                 providerData.Add(data);
 
