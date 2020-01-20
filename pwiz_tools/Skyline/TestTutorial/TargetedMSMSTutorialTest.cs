@@ -617,8 +617,16 @@ namespace pwiz.SkylineTestTutorial
                             messageDlg.DetailedMessage,
                             TextUtil.LineSeparate(docFullScanError.NonLoadedStateDescriptionsFull)));
                     }
-                    Assert.IsTrue(importProgress.IsHandleCreated, "Import progress not created");
+
+                    var importProgress2 = FindOpenForm<AllChromatogramsGraph>();
+                    if (importProgress2 != null && !ReferenceEquals(importProgress, importProgress2))
+                    {
+                        Assert.IsTrue(importProgress2.HasErrors);
+                        AssertEx.AreComparableStrings(expectedErrorFormat, importProgress2.Error, 1);
+                        Assert.Fail("Error message appeared in new instance of progress UI");
+                    }
                     Assert.IsFalse(importProgress.IsDisposed, "Import progress destroyed");
+                    Assert.IsTrue(importProgress.IsHandleCreated, "Import progress not created");
                     Assert.IsTrue(importProgress.Visible, "Import progress hidden");
 
                     string message = "Missing expected error text: " + expectedErrorFormat;
