@@ -8382,6 +8382,9 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="PasteDlg_UpdateMoleculeType_Product_Formula" xml:space="preserve">
     <value>Product Formula</value>
   </data>
+  <data name="PasteDlg_UpdateMoleculeType_Product_Neutral_Loss" xml:space="preserve">
+    <value>Product Neutral Loss</value>
+  </data>
   <data name="TransitionLibraries_DoValidate_Library_ion_count_value__0__must_be_between__1__and__2__" xml:space="preserve">
     <value>Library ion count value {0} must be between {1} and {2}.</value>
   </data>
@@ -10846,6 +10849,12 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="IrtStandard_DocumentStream_No_document_to_import" xml:space="preserve">
     <value>No document to import</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ProcessNeutralLoss_Precursor_molecular_formula__0__does_not_contain_sufficient_atoms_to_be_used_with_neutral_loss__1_" xml:space="preserve">
+    <value>Precursor molecular formula {0} does not contain sufficient atoms to be used with neutral loss {1}</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ProcessNeutralLoss_Cannot_use_product_neutral_loss_chemical_formula_without_a_precursor_chemical_formula" xml:space="preserve">
+    <value>Cannot use product neutral loss chemical formula without a precursor chemical formula</value>
   </data>
   <data name="ShimadzuMethodExporter_ExportMethod_Input_string_is_empty_" xml:space="preserve">
     <value>Input string is empty.</value>
