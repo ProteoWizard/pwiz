@@ -232,7 +232,7 @@
     <value>0</value>
   </data>
   <data name="cbxLimitNoiseTime.Text" xml:space="preserve">
-    <value>将噪音降到色谱图峰值前后的 </value>
+    <value>将噪音降到色谱图峰值前后的</value>
   </data>
   <data name="cbxLimitNoiseTime.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleCenter</value>
