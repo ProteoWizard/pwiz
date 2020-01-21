@@ -756,13 +756,13 @@ PWIZ_API_DECL double SpectrumList_Bruker::ccsToIonMobility(double ccs, double mz
     double MolWeight = mz * abs(charge) + chemistry::Electron * charge;
     double ReducedMass = MolWeight * MolWeightGas / (MolWeight + MolWeightGas);
     double K0 = ccs_conversion_factor * abs(charge) / (sqrt(ReducedMass * Temperature) * ccs);
-    //return K0 == 0 ? 0 : 1 / K0;    // in Vs/cm^2
+    double oneOverK0 = K0 == 0 ? 0 : 1 / K0;    // in Vs/cm^2
 
-    double K0_vendor = compassDataPtr_->ccsToOneOverK0(ccs, mz, charge);
-    if (fabs(K0 - K0_vendor) > 1e-9)
+    double oneOverK0_vendor = compassDataPtr_->ccsToOneOverK0(ccs, mz, charge);
+    if (fabs(oneOverK0 - oneOverK0_vendor) > 1e-9)
         throw runtime_error("[SpectrumList_Bruker::ccsToIonMobility] inconsistent result between vendor and builtin 1/K0 calculation: "
-                            + lexical_cast<string>(K0_vendor) + " + vs. " + lexical_cast<string>(K0));
-    return K0_vendor;
+                            + lexical_cast<string>(oneOverK0_vendor) + " + vs. " + lexical_cast<string>(oneOverK0));
+    return oneOverK0_vendor;
 }
 
 

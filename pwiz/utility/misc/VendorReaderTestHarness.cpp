@@ -301,6 +301,16 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
         if (diff) cerr << headDiff(diff, 5000) << endl;
         unit_assert(!diff);
 
+        // test ion mobility conversion
+        auto imsl = boost::dynamic_pointer_cast<SpectrumListIonMobilityBase>(msd.run.spectrumListPtr);
+        if (imsl != nullptr && imsl->canConvertIonMobilityAndCCS())
+        {
+            double imTestValue = 0.832;
+            double ccs = imsl->ionMobilityToCCS(imTestValue, 678.9, 2);
+            double imValue = imsl->ccsToIonMobility(ccs, 678.9, 2);
+            unit_assert_equal(imValue, imTestValue, 1e-9);
+        }
+
         // test serialization of this vendor format in and out of pwiz's supported open formats
         stringstream* stringstreamPtr = new stringstream;
         boost::shared_ptr<std::iostream> serializedStreamPtr(stringstreamPtr);
@@ -755,9 +765,8 @@ pair<int, int> testReader(const Reader& reader, const vector<string>& args, bool
         auto result = testReader(reader, args, testAcceptOnly, requireUnicodeSupport, isPathTestable, newConfig);
         failedTests += result.first;
         totalTests += result.second;
-    }
-    else // manual tests currently throw for failed tests (TODO: refactor to a list of configs to run in order to get a grand total of all tests and failed tests)
-    {
+
+        // manual tests currently throw for failed tests (TODO: refactor to a list of configs to run in order to get a grand total of all tests and failed tests)
         if (totalTests == 0)
             throw runtime_error("no vendor test data found (try running without --incremental)");
 
