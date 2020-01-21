@@ -1150,7 +1150,7 @@ namespace pwiz.SkylineTestUtil
 
                     // Run test in new thread (Skyline on main thread).
                     Program.Init();
-                    // Reset defaults with names from resources for testing different languages
+                    InitializeSkylineSettings();
                     if (Program.PauseSeconds != 0)
                     {
                         ForceMzml = false;
@@ -1165,6 +1165,7 @@ namespace pwiz.SkylineTestUtil
                     // Were all windows disposed?
                     FormEx.CheckAllFormsDisposed();
                     CommonFormEx.CheckAllFormsDisposed();
+
                     testDataDownloadRetries = 0; // Success, no retry needed
                 }
                 catch (Exception x)
@@ -1187,6 +1188,7 @@ namespace pwiz.SkylineTestUtil
                 }
 
                 Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault(); // Release memory held in settings
+
                 // Delete unzipped test files.
                 if (TestFilesDirs != null)
                 {
