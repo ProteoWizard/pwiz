@@ -246,6 +246,7 @@ namespace pwiz.Skyline.Model.Irt
             var matchedStandard = IrtStandard.WhichStandard(standardPeptideList.Select(pep => pep.ModifiedTarget));
             if (matchedStandard != null && matchedStandard.HasDocument)
             {
+                // Check embedded standard document for known standard to determine if the standard peptides should be heavy
                 // Import iRT standard document into an empty document (rather than just getting the document), because importing also imports the modifications
                 var standardDoc = matchedStandard.ImportTo(new SrmDocument(SrmSettingsList.GetDefault()));
                 standardPeptideList = standardPeptideList.Select(pep => new DbIrtPeptide(pep)).ToArray();
