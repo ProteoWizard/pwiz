@@ -247,6 +247,7 @@ namespace pwiz.Skyline.Model.Irt
             var matchedStandard = IrtStandard.WhichStandard(standardPeptideList.Select(pep => pep.ModifiedTarget));
             if (matchedStandard != null)
             {
+                // Check embedded standard document for known standard to determine if the standard peptides should be heavy
                 var dummyDoc = new SrmDocument(SrmSettingsList.GetDefault());
                 using (var reader = matchedStandard.GetDocumentReader())
                 {
