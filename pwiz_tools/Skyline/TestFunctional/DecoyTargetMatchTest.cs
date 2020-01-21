@@ -20,7 +20,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
