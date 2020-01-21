@@ -144,7 +144,7 @@ namespace timsdata
         /// \param[in] calibrationFileSuffix the suffix of the re-calibration file that shall be used if it is available.
         ///
         /// \throws std::exception in case of an error
-        explicit TimsData(const std::string &analysis_directory_name, std::string calibrationFileSuffix)
+        /*explicit TimsData(const std::string &analysis_directory_name, std::string calibrationFileSuffix)
             : handle(0)
             , initial_frame_buffer_size(128)
             , pData()
@@ -152,7 +152,7 @@ namespace timsdata
         {
             handle = tims_open_using_recalibration(analysis_directory_name.c_str(), calibrationFileSuffix.c_str());
             ctor_complete();
-        }
+        }*/
 
         /// Close TIMS analysis.
         ~TimsData ()

@@ -742,7 +742,13 @@ PWIZ_API_DECL double SpectrumList_Bruker::ionMobilityToCCS(double inverseK0, dou
     double ReducedMass = MolWeight * MolWeightGas / (MolWeight + MolWeightGas);
     double K0 = (inverseK0 == 0) ? 0 : (1.0 / inverseK0);
     double ccs = ccs_conversion_factor * abs(charge) / (sqrt(ReducedMass * Temperature) * K0);
-    return ccs;    // in Angstrom^2
+    //return ccs;    // in Angstrom^2
+
+    double ccs_vendor = compassDataPtr_->oneOverK0ToCCS(inverseK0, mz, charge);
+    if (fabs(ccs - ccs_vendor) > 1e-9)
+        throw runtime_error("[SpectrumList_Bruker::ionMobilityToCCS] inconsistent result between vendor and builtin CCS calculation: "
+                            + lexical_cast<string>(ccs_vendor) + " + vs. " + lexical_cast<string>(ccs));
+    return ccs_vendor;
 }
 
 PWIZ_API_DECL double SpectrumList_Bruker::ccsToIonMobility(double ccs, double mz, int charge) const
@@ -750,7 +756,13 @@ PWIZ_API_DECL double SpectrumList_Bruker::ccsToIonMobility(double ccs, double mz
     double MolWeight = mz * abs(charge) + chemistry::Electron * charge;
     double ReducedMass = MolWeight * MolWeightGas / (MolWeight + MolWeightGas);
     double K0 = ccs_conversion_factor * abs(charge) / (sqrt(ReducedMass * Temperature) * ccs);
-    return K0 == 0 ? 0 : 1 / K0;    // in Vs/cm^2
+    //return K0 == 0 ? 0 : 1 / K0;    // in Vs/cm^2
+
+    double K0_vendor = compassDataPtr_->ccsToOneOverK0(ccs, mz, charge);
+    if (fabs(K0 - K0_vendor) > 1e-9)
+        throw runtime_error("[SpectrumList_Bruker::ccsToIonMobility] inconsistent result between vendor and builtin 1/K0 calculation: "
+                            + lexical_cast<string>(K0_vendor) + " + vs. " + lexical_cast<string>(K0));
+    return K0_vendor;
 }
 
 
