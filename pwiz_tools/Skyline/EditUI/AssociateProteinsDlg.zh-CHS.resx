@@ -268,7 +268,7 @@
     <value>0</value>
   </data>
   <data name="lblDescription.Text" xml:space="preserve">
-    <value>要么使用 FASTA 文件，要么使用当前背景蛋白质组将肽与蛋白质关联。 您将能够在应用这些更改之前确认匹配项。</value>
+    <value>要么使用 FASTA 文件，要么使用当前背景蛋白质组将肽段与蛋白质关联。 您将能够在应用这些更改之前确认匹配项。</value>
   </data>
   <data name="&gt;&gt;lblDescription.Name" xml:space="preserve">
     <value>lblDescription</value>

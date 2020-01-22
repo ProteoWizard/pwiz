@@ -250,7 +250,7 @@
     <value>9, 163</value>
   </data>
   <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>96, 13</value>
+    <value>76, 13</value>
   </data>
   <data name="label3.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -385,7 +385,7 @@
     <value>3, 29</value>
   </data>
   <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 13</value>
+    <value>90, 13</value>
   </data>
   <data name="label4.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -499,10 +499,10 @@
     <value>Top, Right</value>
   </data>
   <data name="btnPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>204, 16</value>
+    <value>148, 16</value>
   </data>
   <data name="btnPeptides.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>131, 23</value>
   </data>
   <data name="btnPeptides.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
