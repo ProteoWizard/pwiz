@@ -606,7 +606,7 @@ namespace pwiz.SkylineTestTutorial
 //            WaitForConditionUI(() => importProgress.Files.Any());
             WaitForConditionUI(() => importProgress.Finished);
             string expectedErrorFormat = Resources.NoFullScanFilteringException_NoFullScanFilteringException_The_file__0__does_not_contain_SRM_MRM_chromatograms__To_extract_chromatograms_from_its_spectra__go_to_Settings___Transition_Settings___Full_Scan_and_choose_options_appropriate_to_the_acquisition_method_used_;
-            if (!TryWaitForConditionUI(() => importProgress.Files.Any(f => !string.IsNullOrEmpty(f.Error))))
+            if (!TryWaitForConditionUI(2000, () => importProgress.Files.Any(f => !string.IsNullOrEmpty(f.Error))))
             {
                 RunUI(() =>
                 {

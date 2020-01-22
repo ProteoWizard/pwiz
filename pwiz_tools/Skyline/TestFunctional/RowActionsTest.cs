@@ -59,6 +59,7 @@ namespace pwiz.SkylineTestFunctional
         private void TestDeletePeptides()
         {
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("RowActionsTest.sky")));
+            WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.ShowDocumentGrid(true));
             var documentGrid = FindOpenForm<DocumentGridForm>();
             RunUI(() => documentGrid.DataboundGridControl.ChooseView(new ViewName(ViewGroup.BUILT_IN.Id,
@@ -91,6 +92,7 @@ namespace pwiz.SkylineTestFunctional
         private void TestRemovePrecursorPeaks()
         {
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("RowActionsTest.sky")));
+            WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.ShowDocumentGrid(true));
             var documentGrid = FindOpenForm<DocumentGridForm>();
             RunUI(() => documentGrid.DataboundGridControl.ChooseView(new ViewName(PersistedViews.MainGroup.Id,
@@ -165,6 +167,7 @@ namespace pwiz.SkylineTestFunctional
         private void TestRemovePivotedPeptides()
         {
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("RowActionsTest.sky")));
+            WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.ShowDocumentGrid(true));
             var documentGrid = FindOpenForm<DocumentGridForm>();
             var viewName = new ViewName(PersistedViews.MainGroup.Id, "TransitionAreas");
