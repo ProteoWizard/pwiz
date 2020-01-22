@@ -1923,13 +1923,12 @@ namespace pwiz.Skyline.Model.Results
                     var str = id.Substring(MsDataFileImpl.PREFIX_PRECURSOR.Length);
                     if (!double.TryParse(str, NumberStyles.Float, CultureInfo.InvariantCulture, out precursor))
                     {
+                        // Perhaps it's Agilent format e.g. "SIM SIC Q1=215.15 start=5.087066667 end=14.497416667"
                         if (str.StartsWith(@"Q1="))
                         {
-                            str = str.Substring(3);
-                            var tail = str.IndexOf(' ');
-                            if (tail > 0)
-                                str = str.Substring(0, tail);
+                            str = str.Substring(3).Split(' ')[0];
                         }
+                        // We're expected to throw if the id is unreadable, so just reparse whether "Q1=" is there or not
                         precursor = double.Parse(str, CultureInfo.InvariantCulture);
                     }
                     product = precursor;
