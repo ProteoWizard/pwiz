@@ -243,9 +243,11 @@ namespace pwiz.Skyline.Model.Irt
         public static ProcessedIrtAverages ProcessRetentionTimes(IProgressMonitor monitor,
             IRetentionTimeProvider[] providers, DbIrtPeptide[] standardPeptideList, DbIrtPeptide[] items)
         {
+            var heavyStandards = new DbIrtPeptide[standardPeptideList.Length];
             var matchedStandard = IrtStandard.WhichStandard(standardPeptideList.Select(pep => pep.ModifiedTarget));
             if (matchedStandard != null)
             {
+                // Check embedded standard document for known standard to determine if the standard peptides should be heavy
                 var dummyDoc = new SrmDocument(SrmSettingsList.GetDefault());
                 using (var reader = matchedStandard.GetDocumentReader())
                 {
@@ -262,14 +264,14 @@ namespace pwiz.Skyline.Model.Irt
                             out _,
                             out _,
                             false);
-                        standardPeptideList = standardPeptideList.Select(pep => new DbIrtPeptide(pep)).ToArray();
                         foreach (var dummyPep in dummyDoc.Molecules.Where(pep => pep.HasExplicitMods))
                         {
                             var standardPepIdx = standardPeptideList.IndexOf(pep => dummyPep.ModifiedTarget.Equals(pep.ModifiedTarget));
-                            standardPeptideList[standardPepIdx] = new DbIrtPeptide(standardPeptideList[standardPepIdx])
-                            {
-                                ModifiedTarget = dummyDoc.Settings.GetModifiedSequence(dummyPep.ModifiedTarget, IsotopeLabelType.heavy, dummyPep.ExplicitMods)
-                            };
+                            if (standardPepIdx < 0)
+                                continue;
+                            var heavyTarget = dummyDoc.Settings.GetModifiedSequence(dummyPep.ModifiedTarget, IsotopeLabelType.heavy, dummyPep.ExplicitMods);
+                            if (!standardPeptideList[standardPepIdx].ModifiedTarget.Equals(heavyTarget))
+                                heavyStandards[standardPepIdx] = new DbIrtPeptide(standardPeptideList[standardPepIdx]) {ModifiedTarget = heavyTarget};
                         }
                     }
                 }
@@ -289,7 +291,7 @@ namespace pwiz.Skyline.Model.Irt
 
                 runCount++;
 
-                var data = new RetentionTimeProviderData(retentionTimeProvider, standardPeptideList);
+                var data = new RetentionTimeProviderData(retentionTimeProvider, standardPeptideList, heavyStandards);
                 if (data.RegressionSuccess || data.CalcRegressionWith(retentionTimeProvider, standardPeptideList, items))
                 {
                     AddRetentionTimesToDict(retentionTimeProvider, data.RegressionRefined, dictPeptideAverages, standardPeptideList);
@@ -696,12 +698,23 @@ namespace pwiz.Skyline.Model.Irt
 
     public sealed class RetentionTimeProviderData
     {
-        public RetentionTimeProviderData(IRetentionTimeProvider retentionTimes, IEnumerable<DbIrtPeptide> standardPeptides)
+        public RetentionTimeProviderData(IRetentionTimeProvider retentionTimes, DbIrtPeptide[] standardPeptides, DbIrtPeptide[] heavyStandardPeptides)
         {
             RetentionTimeProvider = retentionTimes;
 
-            Peptides = standardPeptides.Select(standardPeptide => new Peptide(standardPeptide.ModifiedTarget,
-                retentionTimes.GetRetentionTime(standardPeptide.ModifiedTarget), standardPeptide.Irt)).ToList();
+            Peptides = new List<Peptide>(standardPeptides.Length);
+            for (var i = 0; i < standardPeptides.Length; i++)
+            {
+                var heavy = heavyStandardPeptides[i] != null;
+                var standard = heavy ? heavyStandardPeptides[i] : standardPeptides[i];
+                var rt = retentionTimes.GetRetentionTime(standard.ModifiedTarget);
+                if (!rt.HasValue && heavy)
+                {
+                    standard = standardPeptides[i];
+                    rt = retentionTimes.GetRetentionTime(standard.ModifiedTarget);
+                }
+                Peptides.Add(new Peptide(standard.ModifiedTarget, rt, standard.Irt));
+            }
             Peptides.Sort((x, y) => x.Irt.CompareTo(y.Irt));
 
             if (!FilteredPeptides.Any())
