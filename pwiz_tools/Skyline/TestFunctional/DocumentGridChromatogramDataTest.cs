@@ -49,6 +49,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.OpenFile(TestFilesDir.GetTestPath("DocumentGridChromatogramDataTest.sky"));
                 SkylineWindow.ShowDocumentGrid(true);
             });
+            WaitForDocumentLoaded();
             var documentGrid = FindOpenForm<DocumentGridForm>();
             RunUI(()=>
             {
@@ -119,7 +120,7 @@ namespace pwiz.SkylineTestFunctional
                     var replicate = (Replicate) row.Cells[colReplicate.Index].Value;
 
                     ChromatogramGroupInfo[] chromatogramGroupInfos;
-                    Assert.IsTrue(SkylineWindow.Document.MeasuredResults.TryLoadChromatogram(replicate.ChromatogramSet,
+                    Assert.IsTrue(SkylineWindow.DocumentUI.MeasuredResults.TryLoadChromatogram(replicate.ChromatogramSet,
                         transition.Precursor.Peptide.DocNode, transition.Precursor.DocNode, 0, true,
                         out chromatogramGroupInfos));
                     Assert.AreEqual(1, chromatogramGroupInfos.Length);
