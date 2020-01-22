@@ -1920,7 +1920,18 @@ namespace pwiz.Skyline.Model.Results
                 }
                 else if (id.StartsWith(MsDataFileImpl.PREFIX_PRECURSOR))
                 {
-                    precursor = double.Parse(id.Substring(MsDataFileImpl.PREFIX_TOTAL.Length), CultureInfo.InvariantCulture);
+                    var str = id.Substring(MsDataFileImpl.PREFIX_PRECURSOR.Length);
+                    if (!double.TryParse(str, NumberStyles.Float, CultureInfo.InvariantCulture, out precursor))
+                    {
+                        if (str.StartsWith(@"Q1="))
+                        {
+                            str = str.Substring(3);
+                            var tail = str.IndexOf(' ');
+                            if (tail > 0)
+                                str = str.Substring(0, tail);
+                        }
+                        precursor = double.Parse(str, CultureInfo.InvariantCulture);
+                    }
                     product = precursor;
                 }
                 else if (id.StartsWith(MsDataFileImpl.PREFIX_SINGLE))
