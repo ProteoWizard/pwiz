@@ -132,7 +132,7 @@
     <value>1</value>
   </data>
   <data name="textName.ToolTip" xml:space="preserve">
-    <value>用于在肽设置分类中列出此方程式的名称</value>
+    <value>用于在肽段设置分类中列出此方程式的名称</value>
   </data>
   <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>
@@ -368,7 +368,7 @@
     <value>23, 22</value>
   </data>
   <data name="findPeptidesButton.ToolTipText" xml:space="preserve">
-    <value>查找未知肽</value>
+    <value>查找未知肽段</value>
   </data>
   <data name="toolStripFind.Location" type="System.Drawing.Point, System.Drawing">
     <value>399, 410</value>

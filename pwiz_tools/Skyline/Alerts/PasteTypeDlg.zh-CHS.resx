@@ -186,7 +186,7 @@
     <value>2</value>
   </data>
   <data name="radioPeptides.Text" xml:space="preserve">
-    <value>肽序列列表(&amp;L)</value>
+    <value>肽段序列的列表(&amp;L)</value>
   </data>
   <data name="&gt;&gt;radioPeptides.Name" xml:space="preserve">
     <value>radioPeptides</value>

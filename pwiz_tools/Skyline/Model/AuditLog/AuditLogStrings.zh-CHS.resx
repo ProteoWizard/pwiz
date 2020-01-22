@@ -201,7 +201,7 @@
     <value>已删除蛋白质 {0}</value>
   </data>
   <data name="removed_peptide_from_protein" xml:space="preserve">
-    <value>已从蛋白质 {1} 中删除肽 {0}</value>
+    <value>已从蛋白质 {1} 中删除肽段{0}</value>
   </data>
   <data name="removed_empty_peptides" xml:space="preserve">
     <value>已删除 {0} 空肽段</value>
@@ -369,7 +369,7 @@
     <value>已在 {1} 群组比较中删除阈值以下的 {0} 节点</value>
   </data>
   <data name="excluded_peptides" xml:space="preserve">
-    <value>已排除 {0} 肽段（特异性肽段...）</value>
+    <value>已排除 {0} 肽段（序列特异的肽段...）</value>
   </data>
   <data name="added_spectral_library" xml:space="preserve">
     <value>已添加谱图库“{0}”</value>
@@ -441,7 +441,7 @@
     <value>已更改峰界限</value>
   </data>
   <data name="removed_peptides_above_cutoff" xml:space="preserve">
-    <value>已删除 {0} 峰面积变异系数高于 {1}% 阈值的肽段</value>
+    <value>已删除 {0} 峰面积变异系数高于 {1}% 截止值的肽段</value>
   </data>
   <data name="removed_rt_outliers" xml:space="preserve">
     <value>已删除 {0} RT 异常值</value>
@@ -522,10 +522,10 @@
     <value>已删除库运行“{0}”</value>
   </data>
   <data name="removed_replicate" xml:space="preserve">
-    <value>已删除重复测定 {0}</value>
+    <value>已接受的肽段 {0}</value>
   </data>
   <data name="accepted_peptide" xml:space="preserve">
-    <value>已接受的肽段 {0}</value>
+    <value>已接受的蛋白质 {0}</value>
   </data>
   <data name="accepted_protein" xml:space="preserve">
     <value>已接受的蛋白质 {0}</value>
@@ -594,7 +594,7 @@
     <value>已粘贴 {0} 分子离子对</value>
   </data>
   <data name="removed_empty_peptide" xml:space="preserve">
-    <value>去除了{0}空肽</value>
+    <value>删除了{0}空肽段</value>
   </data>
   <data name="removed_duplicate_peptide" xml:space="preserve">
     <value>已删除 {0} 重复肽段</value>
@@ -606,7 +606,7 @@
     <value>已在 {1} 群组比较中删除阈值以下的 {0} 节点</value>
   </data>
   <data name="removed_peptide_above_cutoff" xml:space="preserve">
-    <value>已删除 {1}% 峰面积 cv 阈值以上的 {0} 肽段</value>
+    <value>已删除 {1}% 峰面积 cv 截止值以上的 {0} 肽段</value>
   </data>
   <data name="LoggableExplicitMod_AuditLogText__0__residue__1__at_position__2_" xml:space="preserve">
     <value>在位置 {2} 有 {0} 残留 {1}</value>
@@ -615,7 +615,7 @@
     <value>已从剪切板导入肽段列表</value>
   </data>
   <data name="excluded_peptide" xml:space="preserve">
-    <value>已排除 {0} 肽段（特异性肽段...）</value>
+    <value>已排除 {0} 肽段（序列特异的肽段...）</value>
   </data>
   <data name="renamed_replicate" xml:space="preserve">
     <value>已将重复测定从 {0} 重新命名为 {1}</value>
@@ -631,6 +631,9 @@
   </data>
   <data name="modified_outside_of_skyline" xml:space="preserve">
     <value>该文档在 Skyline 之外进行了修改：{0}</value>
+  </data>
+  <data name="AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing" xml:space="preserve">
+    <value>审计日志已损坏。审计日志条目时间戳和索引应有序。条目编号 {0} 时间标记 {1:G} 在条目编号之前发生 {2} 时间标记 {3:G}。</value>
   </data>
   <data name="test_only" xml:space="preserve">
     <value>{0}</value>
@@ -652,5 +655,8 @@
 删除、重命名或移动审计日志文件将防止发生此错误。您还可以将审计日志发送到 Skyline 团队，使其尝试手动修复文件。
 
 作为参考，审计日志位于：“{0}”</value>
+  </data>
+  <data name="AuditLogException_Error_when_loading_document_audit_log__0" xml:space="preserve">
+    <value>导入文档审计日记时出错：{0}.</value>
   </data>
 </root>

@@ -433,13 +433,13 @@ namespace pwiz.Skyline.Model.Irt
             }
         }
 
-        public string GenerateDocumentXml(SrmDocument doc, string oldXml)
+        public static string GenerateDocumentXml(IEnumerable<Target> standards, SrmDocument doc, string oldXml)
         {
             if (doc == null)
                 return null;
 
             // Minimize document to only the peptides we need
-            var minimalPeptides = StandardPeptides.ToHashSet();
+            var minimalPeptides = standards.ToHashSet();
 
             var oldPeptides = new Dictionary<Target, PeptideDocNode>();
             if (!string.IsNullOrEmpty(oldXml))
@@ -507,7 +507,7 @@ namespace pwiz.Skyline.Model.Irt
 
         public IrtDb SetDocumentXml(SrmDocument doc, string oldXml)
         {
-            var documentXml = GenerateDocumentXml(doc, oldXml);
+            var documentXml = GenerateDocumentXml(StandardPeptides, doc, oldXml);
             if (string.IsNullOrEmpty(documentXml))
                 return this;
 

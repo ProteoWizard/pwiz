@@ -1118,85 +1118,96 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         protected void RunFunctionalTest(string defaultUiMode = UiModes.PROTEOMIC)
         {
-            try
+            // Be prepared to re-run test in the event that a previously downloaded data file is damaged or stale
+            for (var testDataDownloadRetries = RetryDataDownloads && DictZipFileIsKnownCurrent != null && DictZipFileIsKnownCurrent.Any(kvp=> !kvp.Value) ? 1 : 0; 
+                testDataDownloadRetries >= 0; 
+                testDataDownloadRetries--)
             {
-
-                if (IsPerfTest && !RunPerfTests)
+                try
                 {
-                    return;  // Don't want to run this lengthy test right now
-                }
 
-                Program.FunctionalTest = true;
-                Program.DefaultUiMode = defaultUiMode;
-                Program.TestExceptions = new List<Exception>();
-                LocalizationHelper.InitThread();
-
-                // Unzip test files.
-                if (TestFilesZipPaths != null)
-                {
-                    TestFilesDirs = new TestFilesDir[TestFilesZipPaths.Length];
-                    for (int i = 0; i < TestFilesZipPaths.Length; i++)
+                    if (IsPerfTest && !RunPerfTests)
                     {
-                        TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName,
-                            TestFilesPersistent, IsExtractHere(i));
+                        return;  // Don't want to run this lengthy test right now
                     }
+
+                    Program.FunctionalTest = true;
+                    Program.DefaultUiMode = defaultUiMode;
+                    Program.TestExceptions = new List<Exception>();
+                    LocalizationHelper.InitThread();
+
+                    // Unzip test files.
+                    if (TestFilesZipPaths != null)
+                    {
+                        TestFilesDirs = new TestFilesDir[TestFilesZipPaths.Length];
+                        for (int i = 0; i < TestFilesZipPaths.Length; i++)
+                        {
+                            TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName,
+                                TestFilesPersistent, IsExtractHere(i));
+                        }
+                    }
+                    _shotManager = new ScreenshotManager(TestContext, SkylineWindow);
+
+                    // Run test in new thread (Skyline on main thread).
+                    Program.Init();
+                    InitializeSkylineSettings();
+                    if (Program.PauseSeconds != 0)
+                    {
+                        ForceMzml = false;
+                    }
+
+                    var threadTest = new Thread(WaitForSkyline) { Name = @"Functional test thread" };
+                    LocalizationHelper.InitThread(threadTest);
+                    threadTest.Start();
+                    Program.Main();
+                    threadTest.Join();
+
+                    // Were all windows disposed?
+                    FormEx.CheckAllFormsDisposed();
+                    CommonFormEx.CheckAllFormsDisposed();
+
+                    testDataDownloadRetries = 0; // Success, no retry needed
                 }
-                _shotManager = new ScreenshotManager(TestContext, SkylineWindow);
-
-                // Run test in new thread (Skyline on main thread).
-                Program.Init();
-                Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault();
-                // Reset defaults with names from resources for testing different languages
-                Settings.Default.BackgroundProteomeList[0] = BackgroundProteomeList.GetDefault();
-                Settings.Default.DeclusterPotentialList[0] = DeclusterPotentialList.GetDefault();
-                Settings.Default.RetentionTimeList[0] = RetentionTimeList.GetDefault();
-                Settings.Default.ShowStartupForm = ShowStartPage;
-                Settings.Default.MruList = SetMru;
-                // For automated demos, start with the main window maximized
-                if (IsDemoMode)
-                    Settings.Default.MainWindowMaximized = true;
-
-                if (Program.PauseSeconds != 0)
+                catch (Exception x)
                 {
-                    ForceMzml = false;
-                }
-
-                var threadTest = new Thread(WaitForSkyline) { Name = @"Functional test thread" };
-                LocalizationHelper.InitThread(threadTest);
-                threadTest.Start();
-                Program.Main();
-                threadTest.Join();
-
-                // Were all windows disposed?
-                FormEx.CheckAllFormsDisposed();
-                CommonFormEx.CheckAllFormsDisposed();
-
-                Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault(); // Release memory held in settings
-            }
-            catch (Exception x)
-            {
-                Program.AddTestException(x);
-            }
-
-            // Delete unzipped test files.
-            if (TestFilesDirs != null)
-            {
-                foreach (TestFilesDir dir in TestFilesDirs)
-                {
-                    if (dir == null)
-                        continue;
+                    // Check to see if the error was due to stale test data downloads
+                    var retry = false;
                     try
                     {
-                        dir.Dispose();
+                        retry = testDataDownloadRetries != 0 && FreshenTestDataDownloads(); // If we find any stale downloads, let's retry
                     }
-                    catch (Exception x)
+                    catch (Exception xx)
+                    {
+                        Program.AddTestException(xx); // Some trouble with data download, make a note of it
+                    }
+                    if (!retry)
                     {
                         Program.AddTestException(x);
-                        FileStreamManager.Default.CloseAllStreams();
+                        testDataDownloadRetries = 0; // Failure, but no more retries
+                    }
+                }
+
+                Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault(); // Release memory held in settings
+
+                // Delete unzipped test files.
+                if (TestFilesDirs != null)
+                {
+                    foreach (TestFilesDir dir in TestFilesDirs)
+                    {
+                        if (dir == null)
+                            continue;
+                        try
+                        {
+                            dir.Dispose();
+                        }
+                        catch (Exception x)
+                        {
+                            Program.AddTestException(x);
+                            FileStreamManager.Default.CloseAllStreams();
+                        }
                     }
                 }
             }
-
             if (Program.TestExceptions.Count > 0)
             {
                 //Log<AbstractFunctionalTest>.Exception(@"Functional test exception", Program.TestExceptions[0]);
@@ -1213,6 +1224,29 @@ namespace pwiz.SkylineTestUtil
                 //Log<AbstractFunctionalTest>.Fail(@"Functional test did not complete");
                 Assert.Fail("Functional test did not complete");
             }
+        }
+
+        /// <summary>
+        /// Reset the settings for the Skyline application before starting a test.
+        /// Tests can override this method if they have have any settings that need to
+        /// be set before the test's DoTest method gets called (i.e. before the SkylineWindow is created).
+        /// </summary>
+        protected virtual void InitializeSkylineSettings()
+        {
+            Settings.Default.Reset();
+            Settings.Default.ImportResultsAutoCloseWindow = true;
+            Settings.Default.ImportResultsSimultaneousFiles = (int)MultiFileLoader.ImportResultsSimultaneousFileOptions.many;    // use maximum threads for multiple file import
+            Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault();
+            // Reset defaults with names from resources for testing different languages
+            Settings.Default.BackgroundProteomeList[0] = BackgroundProteomeList.GetDefault();
+            Settings.Default.DeclusterPotentialList[0] = DeclusterPotentialList.GetDefault();
+            Settings.Default.RetentionTimeList[0] = RetentionTimeList.GetDefault();
+            Settings.Default.ShowStartupForm = ShowStartPage;
+            Settings.Default.MruList = SetMru;
+            // For automated demos, start with the main window maximized
+            if (IsDemoMode)
+                Settings.Default.MainWindowMaximized = true;
+
         }
 
         private void BeginAuditLogging()
@@ -1393,9 +1427,6 @@ namespace pwiz.SkylineTestUtil
                     Assert.IsTrue(Program.MainWindow != null && Program.MainWindow.IsHandleCreated,
                     @"Timeout {0} seconds exceeded in WaitForSkyline", waitCycles * SLEEP_INTERVAL / 1000);
                 }
-                Settings.Default.Reset();
-                Settings.Default.ImportResultsAutoCloseWindow = true;
-                Settings.Default.ImportResultsSimultaneousFiles = (int)MultiFileLoader.ImportResultsSimultaneousFileOptions.many;    // use maximum threads for multiple file import
                 BeginAuditLogging();
                 RunTest();
                 EndAuditLogging();
@@ -1406,8 +1437,8 @@ namespace pwiz.SkylineTestUtil
                 Program.AddTestException(x);
             }
 
-            Settings.Default.Reset();
             EndTest();
+            Settings.Default.Reset();
         }
 
         private void RunTest()
@@ -1474,7 +1505,8 @@ namespace pwiz.SkylineTestUtil
                 // Release all resources by setting the document to something that
                 // holds no file handles.
                 var docNew = new SrmDocument(SrmSettingsList.GetDefault());
-                RunUI(() => SkylineWindow.SwitchDocument(docNew, null));
+                // Try twice, because this operation can fail due to active background processing
+                RunUI(() => Helpers.TryTwice(() => SkylineWindow.SwitchDocument(docNew, null)));
 
                 WaitForCondition(1000, () => !FileStreamManager.Default.HasPooledStreams, string.Empty, false);
                 if (FileStreamManager.Default.HasPooledStreams)
