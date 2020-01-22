@@ -18,8 +18,6 @@
  */
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
@@ -364,7 +362,7 @@ namespace pwiz.SkylineTestTutorial
 
                 var i = 0;      //find and select the Summary Statistics item.
                 var items = documentGridForm.NavBar.ReportsButton.DropDown.Items;
-                while (i < items.Count && items[i].Text != "Summary Statistics"){i++;} ;
+                while (i < items.Count && items[i].Text != "Summary Statistics"){i++;}
                 if(i < items.Count)
                     items[i].Select();
             });
