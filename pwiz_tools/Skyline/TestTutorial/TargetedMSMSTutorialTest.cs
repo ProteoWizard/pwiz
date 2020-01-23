@@ -606,7 +606,7 @@ namespace pwiz.SkylineTestTutorial
 //            WaitForConditionUI(() => importProgress.Files.Any());
             WaitForConditionUI(() => importProgress.Finished);
             string expectedErrorFormat = Resources.NoFullScanFilteringException_NoFullScanFilteringException_The_file__0__does_not_contain_SRM_MRM_chromatograms__To_extract_chromatograms_from_its_spectra__go_to_Settings___Transition_Settings___Full_Scan_and_choose_options_appropriate_to_the_acquisition_method_used_;
-            if (!TryWaitForConditionUI(() => importProgress.Files.Any(f => !string.IsNullOrEmpty(f.Error))))
+            if (!TryWaitForConditionUI(2000, () => importProgress.Files.Any(f => !string.IsNullOrEmpty(f.Error))))
             {
                 RunUI(() =>
                 {
@@ -617,8 +617,16 @@ namespace pwiz.SkylineTestTutorial
                             messageDlg.DetailedMessage,
                             TextUtil.LineSeparate(docFullScanError.NonLoadedStateDescriptionsFull)));
                     }
-                    Assert.IsTrue(importProgress.IsHandleCreated, "Import progress not created");
+
+                    var importProgress2 = FindOpenForm<AllChromatogramsGraph>();
+                    if (importProgress2 != null && !ReferenceEquals(importProgress, importProgress2))
+                    {
+                        Assert.IsTrue(importProgress2.HasErrors);
+                        AssertEx.AreComparableStrings(expectedErrorFormat, importProgress2.Error, 1);
+                        Assert.Fail("Error message appeared in new instance of progress UI");
+                    }
                     Assert.IsFalse(importProgress.IsDisposed, "Import progress destroyed");
+                    Assert.IsTrue(importProgress.IsHandleCreated, "Import progress not created");
                     Assert.IsTrue(importProgress.Visible, "Import progress hidden");
 
                     string message = "Missing expected error text: " + expectedErrorFormat;

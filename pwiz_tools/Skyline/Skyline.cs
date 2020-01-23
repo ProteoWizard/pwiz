@@ -268,6 +268,7 @@ namespace pwiz.Skyline
         }
 
         public AllChromatogramsGraph ImportingResultsWindow { get; private set; }
+        public MultiProgressStatus ImportingResultsError { get; private set; }
 
         protected override void OnShown(EventArgs e)
         {
@@ -5015,7 +5016,14 @@ namespace pwiz.Skyline
                 if (final)
                 {
                     if (i != -1)
+                    {
+                        // Avoid a race condition where simply removing the status can cause a update
+                        // caused by a timer tick to remove the ImportingResultsWindow
+                        if (status.IsError)
+                            ImportingResultsError = multiStatus;
+
                         _listProgress.RemoveAt(i);
+                    }
                 }
                 // Otherwise, if present update the status
                 else if (i != -1)
@@ -5030,6 +5038,9 @@ namespace pwiz.Skyline
                 }
                 first = i == 0;
             }
+
+            // A problematic place to put a Thread.Sleep which exposed some race conditions causing failures in nightly tests
+//            Thread.Sleep(100);
 
             // If the status is first in the queue and it is beginning, initialize
             // the progress UI.
@@ -5046,7 +5057,9 @@ namespace pwiz.Skyline
                 // Also, it is important to do this with one update, or a timer tick can destroy the window and this
                 // will recreate it causing tests to fail because they have the wrong Form reference
                 if (status.IsError)
+                {
                     RunUIAction(CompleteProgressUI, e);
+                }
                 else
                 {
                     // Import progress needs to know about this status immediately.  It might be gone by
@@ -5103,6 +5116,8 @@ namespace pwiz.Skyline
                 var multiProgress = (MultiProgressStatus) e.Progress;
                 ImportingResultsWindow.UpdateStatus(multiProgress);
                 ShowAllChromatogramsGraph();
+                // Safe to resume updates based on timer ticks
+                ImportingResultsError = null;
                 // Make sure user is actually seeing an error
                 if (ImportingResultsWindow != null && ImportingResultsWindow.HasErrors)
                     return;
@@ -5168,6 +5183,10 @@ namespace pwiz.Skyline
                 }
                 else if (ImportingResultsWindow != null)
                 {
+                    // If an importing results error is pending, then ignore this update
+                    if (ImportingResultsError != null)
+                        return;
+
                     if (!ImportingResultsWindow.IsUserCanceled)
                         Settings.Default.AutoShowAllChromatogramsGraph = ImportingResultsWindow.Visible;
                     ImportingResultsWindow.Finish();
