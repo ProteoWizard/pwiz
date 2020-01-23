@@ -389,6 +389,24 @@ namespace pwiz.Skyline.EditUI
             set { cbAdd.Checked = value; }
         }
 
+        public bool Log
+        {
+            get { return checkBoxLog.Checked; }
+            set { checkBoxLog.Checked = value; }
+        }
+
+        public double AdjustedPValueCutoff
+        {
+            get { return Convert.ToDouble(textPValue.Text); }
+            set { textPValue.Text = value.ToString(CultureInfo.CurrentCulture); }
+        }
+
+        public double FoldChangeCutoff
+        {
+            get { return Convert.ToDouble(textFoldChange.Text); }
+            set { textFoldChange.Text = value.ToString(CultureInfo.CurrentCulture); }
+        }
+
         public void OkDialog()
         {
             var helper = new MessageBoxHelper(this);
