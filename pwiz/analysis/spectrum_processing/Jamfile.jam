@@ -152,7 +152,7 @@ run-if-exists SpectrumList_3D_Test.cpp pwiz_analysis_spectrum_processing_basic $
                                          $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/UIMF/Reader_UIMF_Test.data/BSA_10ugml_CID.UIMF
       ]
     : # input-files
-    : <vendor-api-support>off:<build>no # requirements
+    : <vendor-api-support>off:<build>no <testing.semaphore>io_semaphore # requirements
     : SpectrumList_3D_Test # target name
     : # default-build
     ;
@@ -165,7 +165,7 @@ run-if-exists SpectrumList_IonMobility_Test.cpp pwiz_analysis_spectrum_processin
                                          $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Waters/Reader_Waters_Test.data/HDMSe_Short_noLM.mzML
       ]
     : # input-files
-    : <vendor-api-support>off:<build>no # requirements
+    : <vendor-api-support>off:<build>no <testing.semaphore>io_semaphore # requirements
     : SpectrumList_IonMobility_Test # target name
     : # default-build
     ;
@@ -173,7 +173,7 @@ run-if-exists SpectrumList_IonMobility_Test.cpp pwiz_analysis_spectrum_processin
 run-if-exists SpectrumList_LockmassRefinerTest.cpp pwiz_analysis_spectrum_processing_basic $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers//pwiz_data_vendor_readers
     : [ path.native $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Waters/Reader_Waters_Test.data/ATEHLSTLSEK_profile.raw ] # args
     : # input-files
-    : <vendor-api-support>off:<build>no # requirements
+    : <vendor-api-support>off:<build>no <testing.semaphore>io_semaphore # requirements
     : SpectrumList_LockmassRefinerTest # target name
     : # default-build
     ;
