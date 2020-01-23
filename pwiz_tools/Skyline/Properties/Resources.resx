@@ -10850,6 +10850,12 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="IrtStandard_DocumentStream_No_document_to_import" xml:space="preserve">
     <value>No document to import</value>
   </data>
+  <data name="Skyline_Release" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Skyline_Release.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Skyline_Release1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Skyline_Release.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="SmallMoleculeTransitionListReader_ProcessNeutralLoss_Precursor_molecular_formula__0__does_not_contain_sufficient_atoms_to_be_used_with_neutral_loss__1_" xml:space="preserve">
     <value>Precursor molecular formula {0} does not contain sufficient atoms to be used with neutral loss {1}</value>
   </data>
