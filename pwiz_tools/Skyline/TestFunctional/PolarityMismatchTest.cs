@@ -162,12 +162,13 @@ namespace pwiz.SkylineTestFunctional
             else
             {
                 ImportResultsAsync(replicatePath);
-                AllChromatogramsGraph importProgress = null;
-                while (importProgress == null)
-                {
-                    importProgress = FindOpenForm<AllChromatogramsGraph>();
-                }
-                WaitForConditionUI(() => !string.IsNullOrEmpty(importProgress.Error) && importProgress.Error.Contains(expectedError),
+                WaitForConditionUI(() =>
+                    {
+                        var importProgress = FindOpenForm<AllChromatogramsGraph>();
+                        return importProgress != null &&
+                               !string.IsNullOrEmpty(importProgress.Error) &&
+                               importProgress.Error.Contains(expectedError);
+                    },
                     string.Format("Timed out waiting for error message containing \"{0}\"", expectedError));
             }
             document = WaitForDocumentChangeLoaded(document);

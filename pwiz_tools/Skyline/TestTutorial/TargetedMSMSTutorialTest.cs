@@ -601,31 +601,14 @@ namespace pwiz.SkylineTestTutorial
             ImportResultsDlg importResultsDlg3 = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             RunUI(() => importResultsDlg3.NamedPathSets = importResultsDlg3.GetDataSourcePathsFileReplicates(
                 new[] { MsDataFileUri.Parse(GetTestPath(@"TOF\6-BSA-500fmol" + ExtAgilentRaw)) }));
-            var importProgress = ShowDialog<AllChromatogramsGraph>(importResultsDlg3.OkDialog);
-            WaitForDocumentChangeLoaded(docCalibrate1);
-            WaitForConditionUI(() => importProgress.Finished);
+            OkDialog(importResultsDlg3, importResultsDlg3.OkDialog);
             string expectedErrorFormat = Resources.NoFullScanFilteringException_NoFullScanFilteringException_The_file__0__does_not_contain_SRM_MRM_chromatograms__To_extract_chromatograms_from_its_spectra__go_to_Settings___Transition_Settings___Full_Scan_and_choose_options_appropriate_to_the_acquisition_method_used_;
-            if (!TryWaitForConditionUI(() => importProgress.Files.Any(f => !string.IsNullOrEmpty(f.Error))))
+            WaitForConditionUI(5000, () =>
             {
-                RunUI(() =>
-                {
-                    string message = "Missing expected error text: " + expectedErrorFormat;
-                    if (!importProgress.Files.Any())
-                        message = "No files found";
-                    else
-                    {
-                        foreach (var importProgressFile in importProgress.Files)
-                            AssertEx.AreComparableStrings(expectedErrorFormat, importProgressFile.Error);
-
-                        if (importProgress.SelectedControl == null)
-                            message = string.Format("No selected control. Selected index = {0}", importProgress.Selected);
-                        else if (!string.IsNullOrEmpty(importProgress.SelectedControl.Error))
-                            message = "Selected control error: " + importProgress.SelectedControl.Error + " not in text control";
-                    }
-
-                    Assert.Fail(TextUtil.LineSeparate(message, "(" + importProgress.DetailedMessage + ")"));
-                });
-            }
+                var importProgressCurrent = FindOpenForm<AllChromatogramsGraph>();
+                return importProgressCurrent != null && importProgressCurrent.Finished && importProgressCurrent.Files.Any(f => !string.IsNullOrEmpty(f.Error));
+            });
+            var importProgress = FindOpenForm<AllChromatogramsGraph>();
             RunUI(() =>
             {
                 foreach (var importProgressFile in importProgress.Files)
