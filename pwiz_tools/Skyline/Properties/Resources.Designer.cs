@@ -22278,6 +22278,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to 1.
+        /// </summary>
+        public static string RefineDlg_MSLevel_1 {
+            get {
+                return ResourceManager.GetString("RefineDlg_MSLevel_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 2.
+        /// </summary>
+        public static string RefineDlg_MSLevel_2 {
+            get {
+                return ResourceManager.GetString("RefineDlg_MSLevel_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Global standards.
         /// </summary>
         public static string RefineDlg_NormalizationMethod_Global_standards {

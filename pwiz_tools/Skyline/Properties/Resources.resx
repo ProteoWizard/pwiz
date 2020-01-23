@@ -10919,4 +10919,10 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="SkylineVersion_V20_1_Skyline_20_1" xml:space="preserve">
     <value>Skyline 20.1</value>
   </data>
+  <data name="RefineDlg_MSLevel_1" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="RefineDlg_MSLevel_2" xml:space="preserve">
+    <value>2</value>
+  </data>
 </root>

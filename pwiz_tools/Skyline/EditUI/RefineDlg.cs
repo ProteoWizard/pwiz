@@ -177,13 +177,13 @@ namespace pwiz.Skyline.EditUI
 
             if (_document.PeptideTransitions.Any(t => t.IsMs1))
             {
-                comboMSGroupComparisons.Items.Add("1");
+                comboMSGroupComparisons.Items.Add(Resources.RefineDlg_MSLevel_1);
                 comboMSGroupComparisons.SelectedIndex = comboMSGroupComparisons.Items.Count - 1;
             }
 
             if (_document.PeptideTransitions.Any(t => !t.IsMs1))
             {
-                comboMSGroupComparisons.Items.Add("2");
+                comboMSGroupComparisons.Items.Add(Resources.RefineDlg_MSLevel_2);
                 comboMSGroupComparisons.SelectedIndex = comboMSGroupComparisons.Items.Count - 1;
             }
 
