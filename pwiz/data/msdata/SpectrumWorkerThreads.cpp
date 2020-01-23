@@ -22,6 +22,7 @@
 #define PWIZ_SOURCE
 
 #include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/data/msdata/SpectrumWorkerThreads.hpp"
 #include "pwiz/data/msdata/SpectrumListWrapper.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Demux.hpp"
@@ -58,6 +59,7 @@ class SpectrumWorkerThreads::Impl
 
         bool isBruker = icPtr.get() && icPtr->hasCVParamChild(MS_Bruker_Daltonics_instrument_model);
         bool isShimadzu = icPtr.get() && icPtr->hasCVParamChild(MS_Shimadzu_instrument_model);
+        bool isThermoOnWine = icPtr.get() && icPtr->hasCVParamChild(MS_Thermo_Fisher_Scientific_instrument_model) && running_on_wine();
 
         bool isDemultiplexed = false;
         const boost::shared_ptr<const DataProcessing> dp = sl.dataProcessingPtr();
@@ -77,8 +79,7 @@ class SpectrumWorkerThreads::Impl
             }
         }
 
-        useThreads_ = useWorkerThreads && !(isBruker || isShimadzu || isDemultiplexed); // Bruker library is not thread-friendly
-        //useThreads_ = !(isBruker); // Bruker library is not thread-friendly
+        useThreads_ = useWorkerThreads && !(isBruker || isShimadzu || isThermoOnWine || isDemultiplexed); // some libraries/platforms are not thread-friendly
 
         if (sl.size() > 0 && useThreads_)
         {

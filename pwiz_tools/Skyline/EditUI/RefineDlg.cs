@@ -30,12 +30,25 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Skyline.Controls.Graphs;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class RefineDlg : FormEx, IAuditLogModifier<RefinementSettings>
+    public partial class RefineDlg : FormEx, IMultipleViewProvider, IAuditLogModifier<RefinementSettings>
     {
+        // ReSharper disable InconsistentNaming
+        public enum TABS { Document, Results, Consistency }
+        // ReSharper restore InconsistentNaming
+        public class DocumentTab : IFormView { }
+        public class ResultsTab : IFormView { }
+        public class ConsistencyTab : IFormView { }
+
+        private static readonly IFormView[] TAB_PAGES =
+        {
+            new DocumentTab(), new ResultsTab(), new ConsistencyTab(),
+        };
+
         private readonly SrmDocument _document;
         private readonly SrmSettings _settings;
 
@@ -121,19 +134,19 @@ namespace pwiz.Skyline.EditUI
                 comboTransitions.Items.Add(Resources.RefineDlg_RefineDlg_best);
                 comboTransitions.SelectedIndex = 0;
 
-                var maxTrans = document.PeptideTransitionGroups.Max(g => g.TransitionCount);
+                var maxTrans = document.MoleculeTransitionGroups.Select(g => g.TransitionCount).DefaultIfEmpty().Max();
                 for (int i = 1; i <= maxTrans; i++)
                 {
                     comboTransitions.Items.Add(i);
                 }
 
-                if (document.PeptideTransitions.Any(t => t.IsMs1))
+                if (document.MoleculeTransitions.Any(t => t.IsMs1))
                 {
                     comboTransType.Items.Add(Resources.RefineDlg_RefineDlg_Precursors);
                     comboTransType.SelectedIndex = comboTransType.Items.Count - 1;
                 }
 
-                if (document.PeptideTransitions.Any(t => !t.IsMs1))
+                if (document.MoleculeTransitions.Any(t => !t.IsMs1))
                 {
                     comboTransType.Items.Add(Resources.RefineDlg_RefineDlg_Products);
                     comboTransType.SelectedIndex = comboTransType.Items.Count - 1;
@@ -250,7 +263,7 @@ namespace pwiz.Skyline.EditUI
         {
             get
             {
-                return (AreaCVMsLevel) Enum.Parse(typeof(AreaCVMsLevel), comboTransType.SelectedItem.ToString(), true);
+                return AreCVMsLevelExtension.GetEnum(comboTransType.SelectedItem.ToString());
             }
             set { comboTransType.SelectedItem = value.ToString(); }
         }
@@ -496,7 +509,7 @@ namespace pwiz.Skyline.EditUI
             if (comboTransitions.Items.Count > 0)
             {
                 var selectedMs = comboTransType.SelectedItem.ToString();
-                msLevel = (AreaCVMsLevel) Enum.Parse(typeof(AreaCVMsLevel), selectedMs, true);
+                msLevel = AreCVMsLevelExtension.GetEnum(selectedMs);
             }
 
             RefinementSettings = new RefinementSettings
@@ -592,6 +605,22 @@ namespace pwiz.Skyline.EditUI
         }
 
         #region Functional Test Support
+
+        public IFormView ShowingFormView
+        {
+            get
+            {
+                int selectedIndex = 0;
+                Invoke(new Action(() => selectedIndex = tabControl1.SelectedIndex));
+                return TAB_PAGES[selectedIndex];
+            }
+        }
+
+        public TABS SelectedTab
+        {
+            get { return (TABS)tabControl1.SelectedIndex; }
+            set { tabControl1.SelectedIndex = (int)value; }
+        }
 
         public int MinTransitions
         {

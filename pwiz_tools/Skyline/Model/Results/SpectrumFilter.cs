@@ -42,6 +42,7 @@ namespace pwiz.Skyline.Model.Results
     {
         bool ProvidesCollisionalCrossSectionConverter { get; }
         eIonMobilityUnits IonMobilityUnits { get; } // Reports ion mobility units in use by the mass spec
+        bool HasCombinedIonMobility { get; } // When true, data source provides IMS data in 3-array format, which affects spectrum ID format
         IonMobilityValue IonMobilityFromCCS(double ccs, double mz, int charge); // Convert from Collisional Cross Section to ion mobility
         double CCSFromIonMobility(IonMobilityValue im, double mz, int charge); // Convert from ion mobility to Collisional Cross Section
     }
@@ -109,7 +110,7 @@ namespace pwiz.Skyline.Model.Results
             // TODO(bspratt): Should be queried out of the libraries as needed, as with RT not bulk copied all at once
             var libraryIonMobilityInfo = document.Settings.PeptideSettings.Prediction.UseLibraryIonMobilityValues
                 ? document.Settings.GetIonMobilities(moleculesThisPass.SelectMany(
-                    node => node.TransitionGroups.Select(nodeGroup => nodeGroup.GetLibKey(node))).ToArray(), msDataFileUri)
+                    node => node.TransitionGroups.Select(nodeGroup => nodeGroup.GetLibKey(document.Settings, node))).ToArray(), msDataFileUri)
                 : null;
             var ionMobilityMax = maxObservedIonMobilityValue ?? 0;
 
@@ -361,7 +362,16 @@ namespace pwiz.Skyline.Model.Results
                 return ProvidesCollisionalCrossSectionConverter
                     ? _ionMobilityFunctionsProvider.IonMobilityUnits
                     : eIonMobilityUnits.none;
-            } }
+            }
+        }
+
+        public bool HasCombinedIonMobility
+        {
+            get
+            {
+                return ProvidesCollisionalCrossSectionConverter && _ionMobilityFunctionsProvider.HasCombinedIonMobility;
+            }
+        }
 
         public IonMobilityValue IonMobilityFromCCS(double ccs, double mz, int charge)
         {
@@ -667,9 +677,10 @@ namespace pwiz.Skyline.Model.Results
 
         private static bool IsSimIsolation(IsolationWindowFilter isoWin)
         {
+            // Consider: Introduce a variable cut-off in the document settings
+            const int SIM_ISOLATION_CUTOFF = 500;
             return isoWin.IsolationMz.HasValue && isoWin.IsolationWidth.HasValue &&
-                // TODO: Introduce a variable cut-off in the document settings
-                isoWin.IsolationWidth.Value <= 200;
+                   isoWin.IsolationWidth.Value <= SIM_ISOLATION_CUTOFF;
         }
 
         public bool IsMsMsSpectrum(MsDataSpectrum dataSpectrum)
@@ -731,7 +742,7 @@ namespace pwiz.Skyline.Model.Results
                 else
                 {
                     // Waters - mse level 1 in raw data "function 1", mse level 2 in raw data "function 2", and "function 3" which we ignore (lockmass?)
-                    _mseLevel = dataSpectrum.WatersFunctionNumber;
+                    _mseLevel = MsDataSpectrum.WatersFunctionNumberFromId(dataSpectrum.Id, HasCombinedIonMobility);
                     returnval = _mseLevel; 
                 }
                 _mseLastSpectrumLevel = returnval;
@@ -888,7 +899,7 @@ namespace pwiz.Skyline.Model.Results
 
             public ExtractedSpectrum Filter(ExtractedSpectrum filteredSrmSpectrum, SpectrumFilterPair filterPair, IsolationWindowFilter isoWin)
             {
-                if (_filteredSpectra == null)
+                if (_filteredSpectra == null || filteredSrmSpectrum == null)
                     return filteredSrmSpectrum;
 
                 if (!_filteredSpectra.TryGetValue(filterPair, out var list))

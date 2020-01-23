@@ -113,7 +113,7 @@ class TOFChromatogramImpl : public SRMChromatogram
 class TICChromatogramImpl : public Chromatogram
 {
     public:
-    TICChromatogramImpl(const ShimadzuReaderImpl& reader, DataObject^ dataObject);
+    TICChromatogramImpl(const ShimadzuReaderImpl& reader, DataObject^ dataObject, bool ms1Only);
 
     virtual int getTotalDataPoints() const { try { return (int) x_.size(); } CATCH_AND_FORWARD }
     virtual void getXArray(pwiz::util::BinaryData<double>& x) const
@@ -129,6 +129,7 @@ class TICChromatogramImpl : public Chromatogram
     private:
     pwiz::util::BinaryData<double> x_;
     pwiz::util::BinaryData<double> y_;
+    bool ms1Only;
 };
 
 
@@ -374,6 +375,12 @@ class ShimadzuReaderImpl : public ShimadzuReader
 
         System::DateTime acquisitionTime = dataObject_->SampleInfo->AnalysisDate.ToUniversalTime();
 
+        // these are Boost.DateTime restrictions enforced because one of the test files had a corrupt date
+        if (acquisitionTime.Year > 10000)
+            acquisitionTime = acquisitionTime.AddYears(10000 - acquisitionTime.Year);
+        else if (acquisitionTime.Year < 1400)
+            acquisitionTime = acquisitionTime.AddYears(1400 - acquisitionTime.Year);
+
         bpt::ptime pt(boost::gregorian::date(acquisitionTime.Year, boost::gregorian::greg_month(acquisitionTime.Month), acquisitionTime.Day),
                       bpt::time_duration(acquisitionTime.Hour, acquisitionTime.Minute, acquisitionTime.Second, bpt::millisec(acquisitionTime.Millisecond).fractional_seconds()));
 
@@ -391,9 +398,9 @@ class ShimadzuReaderImpl : public ShimadzuReader
         try { return SRMChromatogramPtr(new MRMChromatogramImpl(reader_->GetChromatogram(transitions_[transition.id]), transition)); } CATCH_AND_FORWARD
     }
 
-    virtual ChromatogramPtr getTIC() const
+    virtual ChromatogramPtr getTIC(bool ms1Only) const
     {
-        try { return ChromatogramPtr(new TICChromatogramImpl(*this, dataObject_)); } CATCH_AND_FORWARD
+        try { return ChromatogramPtr(new TICChromatogramImpl(*this, dataObject_, ms1Only)); } CATCH_AND_FORWARD
     }
 
     virtual SpectrumPtr getSpectrum(int scanNumber) const
@@ -448,7 +455,7 @@ ShimadzuReaderPtr ShimadzuReader::create(const string& filepath)
 }
 
 
-TICChromatogramImpl::TICChromatogramImpl(const ShimadzuReaderImpl& reader, DataObject^ dataObject)
+TICChromatogramImpl::TICChromatogramImpl(const ShimadzuReaderImpl& reader, DataObject^ dataObject, bool ms1Only)
 {
     auto chromatogramMng = dataObject->MS->Chromatogram;
     auto eventTIC = gcnew ShimadzuGeneric::MassChromatogramObject();
@@ -467,6 +474,10 @@ TICChromatogramImpl::TICChromatogramImpl(const ShimadzuReaderImpl& reader, DataO
                 int rt = eventTIC->RetTimeList[j];
                 fullFileTIC[rt] += eventTIC->ChromIntList[j];
             }
+
+            // assume only first event of each segment is ms1
+            if (ms1Only)
+                break;
         }
     }
 

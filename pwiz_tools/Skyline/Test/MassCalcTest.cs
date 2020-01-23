@@ -198,7 +198,7 @@ namespace pwiz.SkylineTest
         }
 
         /// <summary>
-        /// Tests that <see cref="BioMassCalc.ParseMass(ref string)"/> works correctly and stops at the first minus sign.
+        /// Tests that <see cref="BioMassCalc.ParseMass(ref string, Dictionary&lt;string, int&gt;)"/> works correctly and stops at the first minus sign.
         /// </summary>
         [TestMethod]
         public void TestParseMass()
@@ -282,7 +282,6 @@ namespace pwiz.SkylineTest
             Assert.AreEqual("N'", SequenceMassCalc.GetHeavyFormula("N", LabelAtoms.N15));
             Assert.AreEqual("O'", SequenceMassCalc.GetHeavyFormula("O", LabelAtoms.O18));
             Assert.AreEqual("H'", SequenceMassCalc.GetHeavyFormula("H", LabelAtoms.H2));
-            Assert.AreEqual("H'", SequenceMassCalc.GetHeavyFormula("D", LabelAtoms.H2));
             Assert.AreEqual("Cl'", SequenceMassCalc.GetHeavyFormula("Cl", LabelAtoms.Cl37));
             Assert.AreEqual("Br'", SequenceMassCalc.GetHeavyFormula("Br", LabelAtoms.Br81));
             Assert.AreEqual("P'", SequenceMassCalc.GetHeavyFormula("P", LabelAtoms.P32));

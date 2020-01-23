@@ -374,6 +374,13 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             ListViewHelper.SelectIndex(listViewColumns, index);
             ActivatePropertyPath(VisibleColumns[index].PropertyPath);
         }
+
+        public void ScrollTreeToTop()
+        {
+            availableFieldsTreeColumns.TopNode = availableFieldsTreeColumns.Nodes[0];
+            availableFieldsTreeColumns.Nodes[0].EnsureVisible();
+
+        }
         #endregion
     }
 }

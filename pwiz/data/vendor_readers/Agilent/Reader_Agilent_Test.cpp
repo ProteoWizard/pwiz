@@ -34,6 +34,14 @@ struct IsDirectory : public pwiz::util::TestPathPredicate
     }
 };
 
+struct IsIonMobility : public pwiz::util::TestPathPredicate
+{
+    bool operator() (const string& rawpath) const
+    {
+        return bfs::is_directory(rawpath) && bfs::exists(bfs::path(rawpath) / "AcqData" / "IMSFrame.bin");
+    }
+};
+
 int main(int argc, char* argv[])
 {
     TEST_PROLOG(argc, argv)
@@ -47,7 +55,24 @@ int main(int argc, char* argv[])
     try
     {
         bool requireUnicodeSupport = true;
-        pwiz::util::testReader(pwiz::msdata::Reader_Agilent(), testArgs, testAcceptOnly, requireUnicodeSupport, IsDirectory());
+        pwiz::msdata::Reader_Agilent reader;
+        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsDirectory());
+
+        pwiz::util::ReaderTestConfig config;
+        config.combineIonMobilitySpectra = true;
+        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsIonMobility(), config);
+
+        // test globalChromatogramsAreMs1Only, but don't need to test spectra here
+        auto newConfig = config;
+        newConfig.globalChromatogramsAreMs1Only = true;
+        newConfig.indexRange = make_pair(0, 0);
+        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile({"ImsSynthAllIons.d", "GFb_4Scan_TimeSegs_1530_100ng.d"}), newConfig);
+
+        config.ignoreZeroIntensityPoints = true;
+        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsIonMobility(), config);
+
+        config.isolationMzAndMobilityFilter.emplace_back(40, 1);
+        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsIonMobility(), config);
     }
     catch (exception& e)
     {

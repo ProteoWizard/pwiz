@@ -63,11 +63,4 @@ struct PWIZ_API_DECL CwtPeakDetector : public PeakDetector
 } // namespace analysis
 } // namespace pwiz
 
-// Helper functions used by detect. The client does not need to see these.
-void ricker2d(const std::vector <double> &, const int, const int, const int, const double, const double, const double, std::vector <double> &);
-int getColLowBound(const std::vector <double> &,const double);
-int    getColHighBound(const std::vector <double> &,const double);
-double scoreAtPercentile( const double, const std::vector <double> &, const int );
-double convertColToMZ( const std::vector <double> &, const int );
-
 #endif // _CWTPEAKDETECTOR_HPP_

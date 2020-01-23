@@ -220,7 +220,7 @@
     <value>2</value>
   </data>
   <data name="lblCharge.Text" xml:space="preserve">
-    <value>Charge:</value>
+    <value>C&amp;harge:</value>
   </data>
   <data name="&gt;&gt;lblCharge.Name" xml:space="preserve">
     <value>lblCharge</value>
@@ -294,9 +294,6 @@
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
     <value>354, 182</value>
   </data>
-  <data name="$this.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
   </data>
@@ -307,12 +304,12 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=19.1.1.299, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=19.1.1.299, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditFragmentLossDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=19.1.1.299, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=19.1.1.299, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

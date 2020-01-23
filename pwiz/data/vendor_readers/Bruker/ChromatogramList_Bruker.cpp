@@ -48,10 +48,12 @@ PWIZ_API_DECL
 ChromatogramList_Bruker::ChromatogramList_Bruker(MSData& msd,
                                          const string& rootpath,
                                          Reader_Bruker_Format format,
-                                         CompassDataPtr compassDataPtr)
+                                         CompassDataPtr compassDataPtr,
+                                         const Reader::Config& config)
 :   msd_(msd), rootpath_(rootpath), format_(format),
     compassDataPtr_(compassDataPtr),
-    size_(0)
+    size_(0),
+    config_(config)
 {
     createIndex();
 }
@@ -112,11 +114,11 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Bruker::chromatogram(size_t index
     switch (ci.chromatogramType)
     {
         case MS_TIC_chromatogram:
-            cd = compassDataPtr_->getTIC();
+            cd = compassDataPtr_->getTIC(config_.globalChromatogramsAreMs1Only);
             break;
 
         case MS_basepeak_chromatogram:
-            cd = compassDataPtr_->getBPC();
+            cd = compassDataPtr_->getBPC(config_.globalChromatogramsAreMs1Only);
             break;
 
         default:

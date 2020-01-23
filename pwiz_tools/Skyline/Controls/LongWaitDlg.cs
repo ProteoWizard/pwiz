@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Controls
         private string _message;
         private DateTime _startTime;
         private readonly CancellationTokenSource _cancellationTokenSource;
-        private readonly ManualResetEvent _completionEvent;
+        private ManualResetEvent _completionEvent;
 
         // these members should only be accessed in a block which locks on _lock
         #region synchronized members
@@ -66,7 +66,6 @@ namespace pwiz.Skyline.Controls
             if (!IsCancellable)
                 Height -= Height - btnCancel.Bottom;
             _cancellationTokenSource = new CancellationTokenSource();
-            _completionEvent = new ManualResetEvent(false);
         }
 
         public string Message
@@ -78,7 +77,11 @@ namespace pwiz.Skyline.Controls
         public int ProgressValue
         {
             get { return _progressValue; }
-            set { _progressValue = value; }
+            set
+            {
+                Assume.IsTrue(value <= 100);
+                _progressValue = value;
+            }
         }
 
         public override string DetailedMessage
@@ -130,6 +133,8 @@ namespace pwiz.Skyline.Controls
         {
             var progressWaitBroker = new ProgressWaitBroker(performWork);
             PerformWork(parent, delayMillis, progressWaitBroker.PerformWork);
+            if (progressWaitBroker.IsCanceled)
+                return progressWaitBroker.Status.Cancel();
             return progressWaitBroker.Status;
         }
 
@@ -137,8 +142,14 @@ namespace pwiz.Skyline.Controls
         {
             _startTime = DateTime.UtcNow; // Said to be 117x faster than Now and this is for a delta
             _parentForm = parent;
+            ManualResetEvent completionEvent = null;
             try
             {
+                lock (this)
+                {
+                    Assume.IsNull(_completionEvent);
+                    _completionEvent = completionEvent = new ManualResetEvent(false);
+                }
 //                Action<Action<ILongWaitBroker>> runner = RunWork;
 //                _result = runner.BeginInvoke(performWork, runner.EndInvoke, null);
                 ActionUtil.RunAsync(() => RunWork(performWork));
@@ -150,7 +161,7 @@ namespace pwiz.Skyline.Controls
                 // Return without notifying the user, if the operation completed
                 // before the wait expired.
 //                if (_result.IsCompleted)
-                if (_completionEvent.WaitOne(delayMillis))
+                if (completionEvent.WaitOne(delayMillis))
                     return;
 
                 progressBar.Value = Math.Max(0, _progressValue);
@@ -165,7 +176,14 @@ namespace pwiz.Skyline.Controls
 
                 // Get rid of this window before leaving this function
                 Dispose();
-                _completionEvent.Dispose();
+                lock (this)
+                {
+                    if (completionEvent != null)
+                    {
+                        _completionEvent = null;
+                    }
+                }
+                completionEvent?.Dispose();
 
                 if (IsCanceled && null != x)
                 {
@@ -246,7 +264,10 @@ namespace pwiz.Skyline.Controls
                     }
                 }
 
-                _completionEvent.Set();
+                lock (this)
+                {
+                    _completionEvent?.Set();
+                }
             }
         }
 

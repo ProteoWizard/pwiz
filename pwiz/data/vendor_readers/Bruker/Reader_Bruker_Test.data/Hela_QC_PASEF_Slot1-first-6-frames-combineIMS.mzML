@@ -84,7 +84,7 @@
           <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan spectrumRef="frame=1 scan=229">
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3600.104777103251" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
-            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.383376379421" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
+            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.383376377915" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="100.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -156,6 +156,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.0"/>
             </activation>
           </precursor>
         </precursorList>
@@ -191,7 +192,7 @@
           <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan spectrumRef="frame=1 scan=297">
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3600.104777103251" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
-            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.311488569301" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
+            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.311488568245" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="100.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -263,6 +264,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.0"/>
             </activation>
           </precursor>
         </precursorList>
@@ -298,7 +300,7 @@
           <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan spectrumRef="frame=2 scan=210">
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3600.219602772449" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
-            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.402904710047" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
+            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.402904707999" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="100.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -369,6 +371,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.0"/>
             </activation>
           </precursor>
         </precursorList>
@@ -404,7 +407,7 @@
           <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan spectrumRef="frame=2 scan=251">
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3600.219602772449" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
-            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.360215219474" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
+            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.360215217559" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="100.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -476,6 +479,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.0"/>
             </activation>
           </precursor>
         </precursorList>
@@ -511,7 +515,7 @@
           <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan spectrumRef="frame=2 scan=297">
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3600.219602772449" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
-            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.311488569301" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
+            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.311488568245" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="100.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -583,6 +587,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.0"/>
             </activation>
           </precursor>
         </precursorList>
@@ -618,7 +623,7 @@
           <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan spectrumRef="frame=3 scan=210">
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3600.332630267621" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
-            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.402904710047" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
+            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.402904707999" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="100.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -689,6 +694,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.0"/>
             </activation>
           </precursor>
         </precursorList>
@@ -724,7 +730,7 @@
           <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan spectrumRef="frame=3 scan=251">
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3600.332630267621" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
-            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.360215219474" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
+            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.360215217559" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="100.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -796,6 +802,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.0"/>
             </activation>
           </precursor>
         </precursorList>
@@ -831,7 +838,7 @@
           <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan spectrumRef="frame=3 scan=297">
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3600.332630267621" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
-            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.311488569301" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
+            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.311488568245" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="100.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -903,6 +910,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.0"/>
             </activation>
           </precursor>
         </precursorList>
@@ -938,7 +946,7 @@
           <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan spectrumRef="frame=4 scan=210">
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3600.446653913667" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
-            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.402904710047" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
+            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.402904707999" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="100.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1009,6 +1017,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.0"/>
             </activation>
           </precursor>
         </precursorList>
@@ -1044,7 +1053,7 @@
           <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan spectrumRef="frame=4 scan=251">
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3600.446653913667" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
-            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.360215219474" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
+            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.360215217559" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="100.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1116,6 +1125,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.0"/>
             </activation>
           </precursor>
         </precursorList>
@@ -1151,7 +1161,7 @@
           <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan spectrumRef="frame=4 scan=297">
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3600.446653913667" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
-            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.311488569301" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
+            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.311488568245" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="100.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1223,6 +1233,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.0"/>
             </activation>
           </precursor>
         </precursorList>
@@ -1258,7 +1269,7 @@
           <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan spectrumRef="frame=5 scan=210">
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3600.560795150677" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
-            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.402904710047" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
+            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.402904707999" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="100.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1329,6 +1340,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.0"/>
             </activation>
           </precursor>
         </precursorList>
@@ -1364,7 +1376,7 @@
           <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan spectrumRef="frame=5 scan=251">
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3600.560795150677" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
-            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.360215219474" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
+            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.360215217559" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="100.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1436,6 +1448,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.0"/>
             </activation>
           </precursor>
         </precursorList>
@@ -1471,7 +1484,7 @@
           <cvParam cvRef="MS" accession="MS:1000571" name="sum of spectra" value=""/>
           <scan spectrumRef="frame=5 scan=297">
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3600.560795150677" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
-            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.311488569301" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
+            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.311488568245" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="100.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1543,6 +1556,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.0"/>
             </activation>
           </precursor>
         </precursorList>

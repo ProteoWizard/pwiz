@@ -227,6 +227,81 @@ namespace pwiz.Skyline.Util.Extensions
         }
 
         /// <summary>
+        /// Parses out a particular single DSV field from a line avoiding the expense of parsing all fields into an array
+        /// The function correctly handles quotation marks.
+        /// (N.B. our quotation mark handling now differs from the (March 2018) behavior of Excel and Google Spreadsheets
+        /// when dealing with somewhat absurd uses of quotes as found in our tests, but that seems to be OK for  general use.
+        /// </summary>
+        /// <param name="line">The line containing delimiter separated fields</param>
+        /// <param name="separator">The separator being used</param>
+        /// <param name="index">The index of the field</param>
+        /// <returns>An array of field strings</returns>
+        public static string ParseDsvField(this string line, char separator, int index)
+        {
+            var sbField = new StringBuilder();
+            bool inQuotes = false;
+            for (var chIndex = 0; chIndex < line.Length && index >= 0; chIndex++)
+            {
+                var ch = line[chIndex];
+                if (inQuotes)
+                {
+                    if (ch == '"')
+                    {
+                        // Is this the closing quote, or is this an escaped quote?
+                        if (chIndex + 1 < line.Length && line[chIndex + 1] == '"')
+                        {
+                            if (index == 0)
+                                sbField.Append(ch); // Treat "" as an escaped quote
+                            chIndex++; // Consume both quotes
+                        }
+                        else
+                        {
+                            inQuotes = false;
+                        }
+                    }
+                    else if (index == 0)
+                    {
+                        sbField.Append(ch);
+                    }
+                }
+                else if (ch == '"')
+                {
+                    if (sbField.Length == 0) // Quote at start of field is special case
+                    {
+                        inQuotes = true;
+                    }
+                    else
+                    {
+                        if (chIndex + 1 < line.Length && line[chIndex + 1] == '"')
+                        {
+                            if (index == 0)
+                                sbField.Append(ch); // Treat "" as an escaped quote
+                            chIndex++; // Consume both quotes
+                        }
+                        else
+                        {
+                            // N.B. we effectively ignore a bare quote in an unquoted string. 
+                            // This is technically an undefined behavior, so that's probably OK.
+                            // Excel and Google sheets treat it as a literal quote, but that 
+                            // would be a change in our established behavior
+                            inQuotes = true;
+                        }
+                    }
+                }
+                else if (ch == separator)
+                {
+                    index--;
+                }
+                else if (index == 0)
+                {
+                    sbField.Append(ch);
+                }
+            }
+            return sbField.ToString();
+        }
+
+
+        /// <summary>
         /// Converts an invariant format DSV file to a locale-specific DSV file
         /// </summary>
         /// <param name="filePath">Path to the original file</param>

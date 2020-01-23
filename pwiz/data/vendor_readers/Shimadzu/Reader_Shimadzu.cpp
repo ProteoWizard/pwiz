@@ -186,7 +186,7 @@ void Reader_Shimadzu::read(const string& filename,
     Shimadzu::ShimadzuReaderPtr dataReader(Shimadzu::ShimadzuReader::create(filename));
 
     shared_ptr<SpectrumList_Shimadzu> sl(new SpectrumList_Shimadzu(result, dataReader, config));
-    shared_ptr<ChromatogramList_Shimadzu> cl(new ChromatogramList_Shimadzu(dataReader));
+    shared_ptr<ChromatogramList_Shimadzu> cl(new ChromatogramList_Shimadzu(dataReader, config));
     result.run.spectrumListPtr = sl;
     result.run.chromatogramListPtr = cl;
 

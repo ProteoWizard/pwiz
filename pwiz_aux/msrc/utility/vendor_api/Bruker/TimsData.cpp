@@ -188,6 +188,13 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
     bpc_->times.reserve(count);
     bpc_->intensities.reserve(count);
 
+    ticMs1_.reset(new Chromatogram);
+    bpcMs1_.reset(new Chromatogram);
+    ticMs1_->times.reserve(count / 2);
+    ticMs1_->intensities.reserve(count / 2);
+    bpcMs1_->times.reserve(count / 2);
+    bpcMs1_->intensities.reserve(count / 2);
+
     if (!combineIonMobilitySpectra)
     {
         // get anticipated scan count
@@ -227,6 +234,14 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         bpc_->times.push_back(rt);
         tic_->intensities.push_back(tic);
         bpc_->intensities.push_back(bpi);
+
+        if (msmsType == MsMsType::MS1)
+        {
+            ticMs1_->times.push_back(rt);
+            bpcMs1_->times.push_back(rt);
+            ticMs1_->intensities.push_back(tic);
+            bpcMs1_->intensities.push_back(bpi);
+        }
 
         int numScans = row.get<int>(++idx);
         int numPeaks = row.get<int>(++idx);
@@ -280,24 +295,29 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
             scanNumberByOneOverK0ByCalibrationIndex[i][oneOverK0[j]] = scanNumbers[j];
     }
 
+    bool isDdaPasef = db.has_table("PasefFrameMsMsInfo") && sqlite::query(db, "SELECT COUNT(*) FROM PasefFrameMsMsInfo").begin()->get<int>(0) > 0;
+    bool isDiaPasef = !isDdaPasef && db.has_table("DiaFrameMsMsInfo") && sqlite::query(db, "SELECT COUNT(*) FROM DiaFrameMsMsInfo").begin()->get<int>(0) > 0;
+    hasPASEFData_ = isDdaPasef | isDiaPasef;
+
     string pasefIsolationMzFilter;
-    if (!isolationMzFilter_.empty())
+    if (hasPASEFData_ && !isolationMzFilter_.empty())
     {
         vector<string> isolationMzFilterStrs;
         for (int i=1; i <= isolationMzFilter_.size(); ++i)
         {
             const auto& mzMobilityWindow = isolationMzFilter_[i-1];
-
-            string mzStr = lexical_cast<string>(mzMobilityWindow.mz);
+            if (!mzMobilityWindow.mz)
+                continue;
+            string mzStr = lexical_cast<string>(mzMobilityWindow.mz.get());
             isolationMzFilterStrs.push_back(mzStr + " > IsolationMz-IsolationWidth/2 AND " + mzStr + " < IsolationMz+IsolationWidth/2");
         }
-        pasefIsolationMzFilter = " WHERE (" + bal::join(isolationMzFilterStrs, ") OR (") + ") ";
+        if (!isolationMzFilterStrs.empty())
+            pasefIsolationMzFilter = " WHERE (" + bal::join(isolationMzFilterStrs, ") OR (") + ") ";
     }
 
-    hasPASEFData_ = db.has_table("PasefFrameMsMsInfo") || db.has_table("DiaFrameMsMsInfo");
     if (hasPASEFData_ && preferOnlyMsLevel_ != 1)
     {
-        if (db.has_table("PasefFrameMsMsInfo"))
+        if (isDdaPasef)
         {
             string querySql = "SELECT Frame, ScanNumBegin, ScanNumEnd, IsolationMz, IsolationWidth, CollisionEnergy, MonoisotopicMz, Charge, ScanNumber, Intensity, Parent "
                               "FROM PasefFrameMsMsInfo f "
@@ -333,33 +353,20 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         }
         else // DiaPasef
         {
-            // Check for all-ions data: no variation in IsolationMz, IsolationWidth
-            bool allIonsCombine = false;
-            if (combineIonMobilitySpectra)
-            {
-                sqlite::query qCount(db, "SELECT Count(DISTINCT IsolationMz) from DiaFrameMsMsWindows");
-                int numIsolationMz = qCount.begin()->get<int>(0);
-                if (numIsolationMz == 1)
-                {
-                    sqlite::query qCount2(db, "SELECT Count(DISTINCT IsolationWidth) from DiaFrameMsMsWindows");
-                    int numIsolationWidth = qCount2.begin()->get<int>(0);
-                    allIonsCombine = numIsolationWidth == 1;
-                }
-            }
-
-            string querySql = "SELECT Frame, ScanNumBegin, ScanNumEnd, IsolationMz, IsolationWidth, CollisionEnergy, f.WindowGroup "
+            string querySql = "SELECT Frame, MIN(ScanNumBegin), MAX(ScanNumEnd), IsolationMz, IsolationWidth, AVG(CollisionEnergy), f.WindowGroup "
                               "FROM DiaFrameMsMsInfo f "
                               "JOIN DiaFrameMsMsWindows w ON w.WindowGroup=f.WindowGroup " +
                               pasefIsolationMzFilter +
+                              "GROUP BY Frame, IsolationMz, IsolationWidth "
                               "ORDER BY Frame, ScanNumBegin";
             sqlite::query q(db, querySql.c_str());
             DiaPasefIsolationInfo info;
-            for (sqlite::query::iterator itr = q.begin(); itr != q.end();)
+            for (sqlite::query::iterator itr = q.begin(); itr != q.end(); ++itr)
             {
                 sqlite::query::rows row = *itr;
                 const int colFrameId = 0;
                 const int colScanBegin = 1;
-                const int colScanEnd = 2;;
+                const int colScanEnd = 2;
                 const int colIsolationMz = 3;
                 const int colIsolationWidth = 4;
                 const int colCE = 5;
@@ -373,32 +380,12 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                 auto& frame = findItr->second;
 
                 int scanBegin = row.get<int>(colScanBegin);
-                int scanEnd = row.get<int>(colScanEnd); // scan end in DiaFrameMsMsInfo is inclusive same as pwiz;
+                int scanEnd = row.get<int>(colScanEnd) - 1; // scan end in TDF is exclusive, but in pwiz is inclusive
 
                 info.isolationMz = row.get<double>(colIsolationMz);
                 info.isolationWidth = row.get<double>(colIsolationWidth);
+                info.collisionEnergy = row.get<double>(colCE);
                 int windowGroup = row.get<int>(colWindowGroup);
-                if (allIonsCombine)
-                {
-                    // Locate end of window
-                    while (++itr != q.end())
-                    {
-                        row = *itr;
-                        if (frameId == row.get<sqlite3_int64>(colFrameId))
-                        {
-                            scanEnd = row.get<int>(colScanEnd);
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    info.collisionEnergy = row.get<double>(colCE);
-                    ++itr;
-                }
 
                 info.numScans = 1 + scanEnd - scanBegin;
 
@@ -415,7 +402,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                     // the scan range is set to the superset of all mobility filters that match the frame
                     for (const auto& mzMobilityWindow : isolationMzFilter_)
                     {
-                        if (mzMobilityWindow.mz < isolationLowerBound || mzMobilityWindow.mz > isolationUpperBound)
+                        if (mzMobilityWindow.mz.is_initialized() && (mzMobilityWindow.mz.get() < isolationLowerBound || mzMobilityWindow.mz.get() > isolationUpperBound))
                             continue;
 
                         // if any matching m/z filter has no mobility filter, then all scans must be included
@@ -450,17 +437,8 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                 frame->windowGroup_ = windowGroup; 
                 frame->diaPasefIsolationInfoByScanNumber_[scanBegin] = info;
             }
-
-            for (const auto& kvp : frames_)
-            {
-                const auto& frame = kvp.second;
-                if (frame->windowGroup_) // if windowGroup is unset for DIA, the frame is filtered out
-                    frame->diaPasefIsolationInfoByScanNumber_.rbegin()->second.numScans--; // the last ScanNumEnd for each DIA window seems to be exclusive rather than inclusive
-            }
         }
     }
-
-    bool isDiaPasef = db.has_table("DiaFrameMsMsInfo");
 
     // when combining ion mobility spectra, spectra array is filled after querying PASEF info
     if (combineIonMobilitySpectra)
@@ -616,8 +594,8 @@ size_t TimsDataImpl::getLCSpectrumCount(int source) const { return 0; }
 LCSpectrumSourcePtr TimsDataImpl::getLCSource(int source) const { return 0; }
 LCSpectrumPtr TimsDataImpl::getLCSpectrum(int source, int scan) const { return LCSpectrumPtr(); }
 
-ChromatogramPtr TimsDataImpl::getTIC() const { return tic_; }
-ChromatogramPtr TimsDataImpl::getBPC() const { return bpc_; }
+ChromatogramPtr TimsDataImpl::getTIC(bool ms1Only) const { return ms1Only ? ticMs1_ : tic_; }
+ChromatogramPtr TimsDataImpl::getBPC(bool ms1Only) const { return ms1Only ? bpcMs1_ : bpc_; }
 
 std::string TimsDataImpl::getOperatorName() const { return operatorName_; }
 std::string TimsDataImpl::getAnalysisName() const { return ""; }
@@ -840,25 +818,23 @@ IntegerSet TimsSpectrum::getMergedScanNumbers() const
 int TimsSpectrum::getMSMSStage() const { return frame_.msLevel_; }
 double TimsSpectrum::getRetentionTime() const { return frame_.rt_; }
 
-void TimsSpectrum::getIsolationData(std::vector<double>& isolatedMZs, std::vector<IsolationMode>& isolationModes) const
+void TimsSpectrum::getIsolationData(std::vector<IsolationInfo>& isolationInfo) const
 {
-    isolatedMZs.clear();
-    isolationModes.clear();
+    isolationInfo.clear();
 
     if (HasPasefPrecursorInfo())
     {
-        isolatedMZs.resize(1, GetPasefPrecursorInfo().isolationMz);
-        isolationModes.resize(1, IsolationMode_On);
+        const auto& info = GetPasefPrecursorInfo();
+        isolationInfo.resize(1, IsolationInfo{ info.isolationMz, IsolationMode_On, info.collisionEnergy });
     }
     else if (!frame_.diaPasefIsolationInfoByScanNumber_.empty())
     {
-        isolatedMZs.resize(1, getDiaPasefIsolationInfo().isolationMz);
-        isolationModes.resize(1, IsolationMode_On);
+        const auto& info = getDiaPasefIsolationInfo();
+        isolationInfo.resize(1, IsolationInfo{ info.isolationMz, IsolationMode_On, info.collisionEnergy });
     }
     else if (frame_.precursorMz_.is_initialized())
     {
-        isolatedMZs.resize(1, frame_.precursorMz_.get());
-        isolationModes.resize(1, IsolationMode_On);
+        isolationInfo.resize(1, IsolationInfo{ frame_.precursorMz_.get(), IsolationMode_On, 0 });
     }
 }
 

@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -728,9 +727,12 @@ namespace pwiz.Skyline.Model.Results
             /// an important memory burden.
             /// </summary>
             private const int READ_BUFFER_SIZE = 100;
-            private readonly BlockingCollection<SpectrumInfo> _pendingInfoList =
-                new BlockingCollection<SpectrumInfo>(READ_BUFFER_SIZE);
-            private BlockingCollection<SpectrumInfo> _unprocessedInfoList;
+            private const int MAX_QUEUE_MEMORY = 200 * 1024 * 1024; // 200 MB
+            private readonly MemoryBlockingCollection<SpectrumInfo> _pendingInfoList =
+                new MemoryBlockingCollection<SpectrumInfo>(MAX_QUEUE_MEMORY, READ_BUFFER_SIZE);
+
+            private const int SORT_THREAD_COUNT = 4;
+            private QueueWorker<SpectrumInfo> _unprocessedInfoList;
             private SpectrumInfo _currentInfo;
 
             public Spectra(SrmDocument document, SpectrumFilter filter, ChromatogramLoadingStatus.TransitionData allChromData, MsDataFileImpl dataFile)
@@ -828,11 +830,9 @@ namespace pwiz.Skyline.Model.Results
 
                 if (_runningAsync)
                 {
-                    // Just in case the Read or Sort thread is waiting to add a spectrum to a full pending list
+                    // Just in case the Read thread is waiting to add a spectrum to a full pending list
                     SpectrumInfo info;
                     _pendingInfoList.TryTake(out info);
-                    if (_unprocessedInfoList != null)
-                        _unprocessedInfoList.TryTake(out info);
                 }
                 return dataFile;
             }
@@ -843,8 +843,10 @@ namespace pwiz.Skyline.Model.Results
             public void Dispose()
             {
                 var dataFile = Detach();
-                if (dataFile != null)
-                    dataFile.Dispose();
+                dataFile?.Dispose();
+                _unprocessedInfoList?.Dispose();
+                _pendingInfoList?.Dispose();
+                _currentInfo?.Dispose();
             }
 
             public int PercentComplete
@@ -896,26 +898,35 @@ namespace pwiz.Skyline.Model.Results
             {
                 _exception = exception;
                 if (_unprocessedInfoList != null)
-                    _unprocessedInfoList.Add(SpectrumInfo.LAST);
-                else
-                    _pendingInfoList.Add(SpectrumInfo.LAST);
+                    _unprocessedInfoList.DoneAdding();
+                _pendingInfoList.Add(SpectrumInfo.LAST);
             }
 
             public bool NextSpectrum()
             {
-                if (_runningAsync)
+                var lastInfo = _currentInfo;
+                try
                 {
-                    _currentInfo = _pendingInfoList.Take();
-                    if (_exception != null)
-                        Helpers.WrapAndThrowException(_exception);
-                }
-                else
-                {
-                    lock (_dataFileLock)
+                    if (_runningAsync)
                     {
-                        int i = _currentInfo != null ? _currentInfo.Index : -1;
-                        _currentInfo = ReadSpectrum(ref i);
+                        _currentInfo = _pendingInfoList.Take();
+                        _currentInfo.SortEvent?.WaitOne();   // Until sorted
+                        if (_exception != null)
+                            Helpers.WrapAndThrowException(_exception);
                     }
+                    else
+                    {
+                        lock (_dataFileLock)
+                        {
+                            int i = _currentInfo != null ? _currentInfo.Index : -1;
+                            _currentInfo = ReadSpectrum(ref i);
+                        }
+                    }
+                }
+                finally
+                {
+                    if (!ReferenceEquals(_currentInfo, lastInfo))
+                        lastInfo?.Dispose();
                 }
                 return !_currentInfo.IsLast;
             }
@@ -941,195 +952,223 @@ namespace pwiz.Skyline.Model.Results
                         nextInfo = ReadSpectrum(ref i);
                     }
 
-                    // If the spectrum contains an IMS array, then it needs to be ordered
-                    // Once the sorter thread is created, all spectra must go through it
-                    var spectrum = nextInfo.DataSpectrum;
-                    if (_unprocessedInfoList == null && (spectrum?.IonMobilities == null || !_runningAsync))
-                    {
-                        // If not running async order before adding to the list
-                        if (spectrum?.IonMobilities != null)
-                            ArrayUtil.Sort(spectrum.Mzs, spectrum.Intensities, spectrum.IonMobilities);
-                        _pendingInfoList.Add(nextInfo);
-                    }
+                    EnsureSortedMzs(nextInfo);
+
+                    _pendingInfoList.Add(nextInfo);
+                }
+                while (!nextInfo.IsLast);
+
+                _unprocessedInfoList?.DoneAdding(true);
+            }
+
+            private void EnsureSortedMzs(SpectrumInfo nextInfo)
+            {
+                // If the spectrum contains an IMS array, then it needs to be ordered
+                // Once the sorter thread is created, all spectra must go through it
+                if (nextInfo.DataSpectrum?.IonMobilities != null)
+                {
+                    // If not running async just sort on the current thread
+                    if (!_runningAsync)
+                        SortSpectrum(nextInfo, 0);
                     else
                     {
                         // Defer starting the extra thread until the first case is seen
                         if (_unprocessedInfoList == null)
                         {
-                            _unprocessedInfoList = new BlockingCollection<SpectrumInfo>(READ_BUFFER_SIZE);
-                            ActionUtil.RunAsync(() =>
-                            {
-                                try
-                                {
-                                    SortSpectra();
-                                }
-                                catch (Exception ex)
-                                {
-                                    SetException(ex);
-                                }
-                            }, @"Spectrum sorter");
+                            // Don't let unprocessed spectra get too far ahead, because sorting will
+                            // take a relatively consistent amount of time. So, if it takes longer than
+                            // retrieval, then this queue will just get backed up. Using more than a 
+                            // single thread helps to keep this O(n*log(n)) processing from becoming a
+                            // bottleneck
+                            _unprocessedInfoList = new QueueWorker<SpectrumInfo>(null, SortSpectrum);
+                            _unprocessedInfoList.RunAsync(SORT_THREAD_COUNT, @"Spectrum sorter");
                         }
+
                         _unprocessedInfoList.Add(nextInfo);
                     }
                 }
-                while (!nextInfo.IsLast);
             }
 
-            private void SortSpectra()
+            private void SortSpectrum(SpectrumInfo spectrumInfo, int i)
             {
-                SpectrumInfo nextInfo;
-                while (!(nextInfo = _unprocessedInfoList.Take()).IsLast)
-                {
-                    var spectrum = nextInfo.DataSpectrum;
-                    ArrayUtil.Sort(spectrum.Mzs, spectrum.Intensities, spectrum.IonMobilities);
-                    _pendingInfoList.Add(nextInfo);
-                }
-                _pendingInfoList.Add(nextInfo); // Add the last spectrum to end the Spectrum reader thread
+                var spectrum = spectrumInfo.DataSpectrum;
+                ArrayUtil.Sort(spectrum.Mzs, spectrum.Intensities, spectrum.IonMobilities);
+                spectrumInfo.SortEvent.Set();
             }
 
             private SpectrumInfo ReadSpectrum(ref int i)
             {
                 while ((i = _lookaheadContext.NextIndex(i)) < _countSpectra)
                 {
-
-                    if (HasSrmSpectra)
+                    try
                     {
-                        var nextSpectrum = _dataFile.GetSrmSpectrum(i);
-                        if (nextSpectrum.Level != 2)
-                            continue;
-
-                        if (!nextSpectrum.RetentionTime.HasValue)
+                        if (HasSrmSpectra)
                         {
-                            throw new InvalidDataException(
+                            var nextSpectrum = _dataFile.GetSrmSpectrum(i);
+                            if (nextSpectrum.Level != 2)
+                                continue;
+
+                            if (!nextSpectrum.RetentionTime.HasValue)
+                            {
+                                throw new InvalidDataException(
                                 string.Format(Resources.SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_scan_time,
                                     _dataFile.GetSpectrumId(i)));
-                        }
-                        var precursors = nextSpectrum.Precursors;
-                        if (precursors.Count < 1 || !precursors[0].PrecursorMz.HasValue)
-                        {
+                            }
+                            var precursors = nextSpectrum.Precursors;
+                            if (precursors.Count < 1 || !precursors[0].PrecursorMz.HasValue)
+                            {
                             throw new InvalidDataException(
                                 string.Format(Resources.SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_precursor_mz,
                                     _dataFile.GetSpectrumId(i)));
-                        }
-                        return new SpectrumInfo(i, nextSpectrum, new []{nextSpectrum},
-                            (float) nextSpectrum.RetentionTime.Value);
-                    }
-                    else
-                    {
-                        // CONSIDER: This showed up as 10% in diaPASEF profiling because it requires FullMetaData
-                        // It no longer provides any benefit in that case, because of the use of combined 3D spectra
-                        // Before reinstating this filter, we need a way of deciding whether it will be of any use
-                        // by querying the MsDataFile, did it succeed in producing combined spectra. Otherwise,
-                        // this is a costly operation with little benefit.
-//                        var ionMobility = _filter.HasIonMobilityFilters ? _lookaheadContext.GetIonMobility(i) : null ; // Read this first to take advantage of cache behavior
-
-                        // If MS/MS filtering is not enabled, skip anything that is not a MS1 scan
-                        var msLevel = _lookaheadContext.GetMsLevel(i);
-                        if (!_filter.EnabledMsMs && msLevel != 1)
-                            continue;
-                        // And if full gradient MS1 is not required and MS1 filtering is not enabled, skip MS1 spectra
-                        if (!_filter.EnabledMs && msLevel == 1 && !_filter.IsFilteringFullGradientMs1)
-                            continue;
-
-                        // Skip quickly through the chromatographic lead-in and tail when possible 
-                        if (msLevel > 1 || (_filter.HasRangeRT && !_filter.IsFilteringFullGradientMs1)) // We need all MS1 for TIC and BPC
-                        {
-                            // Only do these checks if we can get the information instantly. Otherwise,
-                            // this will slow down processing in more complex cases.
-                            double? rtCheck = _lookaheadContext.GetRetentionTime(i);
-                            if (_filter.IsOutsideRetentionTimeRange(rtCheck))
-                            {
-                                // Leave an update cue for the chromatogram painter then move on
-                                if (_allChromData != null)
-                                    _allChromData.CurrentTime = (float)rtCheck.Value;
-                                continue;
                             }
+                            return new SpectrumInfo(i, new[] {nextSpectrum}, (float) nextSpectrum.RetentionTime.Value);
+                        }
+                        else
+                        {
+                            // CONSIDER: This showed up as 10% in diaPASEF profiling because it requires FullMetaData
+                            // It no longer provides any benefit in that case, because of the use of combined 3D spectra
+                            // Before reinstating this filter, we need a way of deciding whether it will be of any use
+                            // by querying the MsDataFile, did it succeed in producing combined spectra. Otherwise,
+                            // this is a costly operation with little benefit.
+                            //                        var ionMobility = _filter.HasIonMobilityFilters ? _lookaheadContext.GetIonMobility(i) : null ; // Read this first to take advantage of cache behavior
 
-                            if (msLevel > 1)
+                            // If MS/MS filtering is not enabled, skip anything that is not a MS1 scan
+                            var msLevel = _lookaheadContext.GetMsLevel(i);
+                            if (!_filter.EnabledMsMs && msLevel != 1)
+                                continue;
+                            // And if full gradient MS1 is not required and MS1 filtering is not enabled, skip MS1 spectra
+                            if (!_filter.EnabledMs && msLevel == 1 && !_filter.IsFilteringFullGradientMs1)
+                                continue;
+
+                            // Skip quickly through the chromatographic lead-in and tail when possible 
+                            if (msLevel > 1 || (_filter.HasRangeRT && !_filter.IsFilteringFullGradientMs1)) // We need all MS1 for TIC and BPC
                             {
-                                var precursors = _lookaheadContext.GetPrecursors(i, 1);
-                                if (precursors.Any() && !_filter.HasProductFilterPairs(rtCheck, precursors))
+                                // Only do these checks if we can get the information instantly. Otherwise,
+                                // this will slow down processing in more complex cases.
+                                double? rtCheck = _lookaheadContext.GetRetentionTime(i);
+                                if (_filter.IsOutsideRetentionTimeRange(rtCheck))
                                 {
+                                    // Leave an update cue for the chromatogram painter then move on
+                                    if (_allChromData != null)
+                                        _allChromData.CurrentTime = (float) rtCheck.Value;
                                     continue;
                                 }
+
+                                if (msLevel > 1)
+                                {
+                                    var precursors = _lookaheadContext.GetPrecursors(i, 1);
+                                    if (precursors.Any() && !_filter.HasProductFilterPairs(rtCheck, precursors))
+                                    {
+                                        continue;
+                                    }
+                                }
                             }
-                        }
 
-                        // Ignore uninteresting ion mobility ranges
-//                        if (ionMobility != null && ionMobility.HasValue && _filter.IsOutsideIonMobilityRange(ionMobility))
-//                        {
-//                            continue;
-//                        }
+                            // Ignore uninteresting ion mobility ranges
+                            //                        if (ionMobility != null && ionMobility.HasValue && _filter.IsOutsideIonMobilityRange(ionMobility))
+                            //                        {
+                            //                            continue;
+                            //                        }
 
-                        // Inexpensive checks are complete, now actually get the spectrum data
-                        var nextSpectrum = _lookaheadContext.GetSpectrum(i);
-                        // Assertion for testing ID to spectrum index support
-                        //                        int iFromId = dataFile.GetSpectrumIndex(dataSpectrum.Id);
-                        //                        Assume.IsTrue(i == iFromId);
-                        if (nextSpectrum.Mzs.Length == 0)
-                            continue;
-
-                        double? rt = nextSpectrum.RetentionTime;
-                        if (!rt.HasValue)
-                            continue;
-
-                        // For Waters msE skip any lockspray data
-                        if (_filter.IsWatersMse)
-                        {
-                            // looking for the 3 in 3.0.1 (or the 10 in 10.0.1)
-                            if (nextSpectrum.WatersFunctionNumber > 2)
+                            // Inexpensive checks are complete, now actually get the spectrum data
+                            var nextSpectrum = _lookaheadContext.GetSpectrum(i);
+                            // Assertion for testing ID to spectrum index support
+                            //                        int iFromId = dataFile.GetSpectrumIndex(dataSpectrum.Id);
+                            //                        Assume.IsTrue(i == iFromId);
+                            if (nextSpectrum.Mzs.Length == 0)
                                 continue;
-                        }
-                        else if (_filter.IsWatersFile)
-                        {
-                            // looking for the 3 in id string 3.0.1 (or the 10 in 10.0.1)
-                            if ( _dataFile.IsWatersLockmassSpectrum(nextSpectrum))
+
+                            double? rt = nextSpectrum.RetentionTime;
+                            if (!rt.HasValue)
                                 continue;
+
+                            // For Waters msE skip any lockspray data
+                            if (_filter.IsWatersMse)
+                            {
+                                // looking for the 3 in 3.0.1 (or the 10 in 10.0.1) or the 2 in 1.2.3 if it's combined ion mobility'
+                                if (MsDataSpectrum.WatersFunctionNumberFromId(nextSpectrum.Id, _dataFile.HasCombinedIonMobilitySpectra) > 2)
+                                    continue;
+                            }
+                            else if (_filter.IsWatersFile)
+                            {
+                                // looking for the 3 in id string 3.0.1 (or the 10 in 10.0.1)
+                                if (_dataFile.IsWatersLockmassSpectrum(nextSpectrum))
+                                    continue;
+                            }
+
+                            // Deal with ion mobility data - look ahead for a run of scans all 
+                            // with the same retention time.  For non-IMS data we'll just get
+                            // a single "ion mobility bin" with no ion mobility value.
+                            //
+                            // Also for Agilent ramped-CE msE, gather MS2 scans together
+                            // so they get averaged.
+                            //
+
+                            var nextSpectra = _lookaheadContext.Lookahead(nextSpectrum, out rt);
+                            if (!rt.HasValue)
+                                continue; // Spectrum didn't match filter, probably due to being outside IM range
+
+                            if (!_filter.ContainsTime(rt.Value))
+                            {
+                                if (_allChromData != null)
+                                    _allChromData.CurrentTime = (float) rt.Value;
+                                continue;
+                            }
+
+                            return new SpectrumInfo(i, nextSpectra, rt.Value);
                         }
-
-                        // Deal with ion mobility data - look ahead for a run of scans all 
-                        // with the same retention time.  For non-IMS data we'll just get
-                        // a single "ion mobility bin" with no ion mobility value.
-                        //
-                        // Also for Agilent ramped-CE msE, gather MS2 scans together
-                        // so they get averaged.
-                        //
-
-                        var nextSpectra = _lookaheadContext.Lookahead(nextSpectrum, out rt);
-                        if (!rt.HasValue)
-                            continue; // Spectrum didn't match filter, probably due to being outside IM range
-
-                        if (!_filter.ContainsTime(rt.Value))
-                        {
-                            if (_allChromData != null)
-                                _allChromData.CurrentTime = (float)rt.Value;
-                            continue;
-                        }
-
-                        return new SpectrumInfo(i, nextSpectrum, nextSpectra, rt.Value);
+                    }
+                    catch (Exception e)
+                    {
+                        if (e.Message.Contains(@"NoVendorPeakPickingException"))
+                            throw;
+                        throw new Exception($@"error reading spectrum {_dataFile.GetSpectrumId(i)}", e);
                     }
                 }
                 return SpectrumInfo.LAST;
             }
 
-            private class SpectrumInfo
+            private class SpectrumInfo : IDisposable, IMemSized
             {
-                public static readonly SpectrumInfo LAST = new SpectrumInfo(-1, null, null, 0);
+                public static readonly SpectrumInfo LAST = new SpectrumInfo(-1, null, 0);
 
-                public SpectrumInfo(int index, MsDataSpectrum dataSpectrum, MsDataSpectrum[] allSpectra, double retentionTime)
+                public SpectrumInfo(int index, MsDataSpectrum[] allSpectra, double retentionTime)
                 {
                     Index = index;
-                    DataSpectrum = dataSpectrum;
                     AllSpectra = allSpectra;
                     RetentionTime = retentionTime;
+                    // Size should be dominated by the array lengths
+                    int arrayLen = 0, arrayCount = 0;
+                    if (allSpectra != null)
+                    {
+                        DataSpectrum = allSpectra[0];
+                        arrayLen = allSpectra.Sum(s => s.Intensities.Length);
+                        arrayCount = 2;
+                    }
+
+                    if (DataSpectrum != null && DataSpectrum.IonMobilities != null)
+                    {
+                        SortEvent = new ManualResetEvent(false);
+                        arrayCount++;
+                    }
+
+                    Size = arrayLen * arrayCount * sizeof(double);
                 }
+
+                public ManualResetEvent SortEvent { get; private set; }
 
                 public int Index { get; private set; }
                 public MsDataSpectrum DataSpectrum { get; private set; }
                 public MsDataSpectrum[] AllSpectra { get; private set; }
                 public double RetentionTime { get; private set; }
+                public int Size { get; private set; }
 
                 public bool IsLast { get { return DataSpectrum == null; } }
+
+                public void Dispose()
+                {
+                    SortEvent?.Dispose();
+                }
             }
         }
 
@@ -1521,6 +1560,7 @@ namespace pwiz.Skyline.Model.Results
 
         public bool ProvidesCollisionalCrossSectionConverter { get { return _dataFile.ProvidesCollisionalCrossSectionConverter; } }
         public eIonMobilityUnits IonMobilityUnits { get { return _dataFile.IonMobilityUnits; } }
+        public bool HasCombinedIonMobility { get { return _dataFile.HasCombinedIonMobilitySpectra; } } // When true, data source provides IMS data in 3-array format, which affects spectrum ID format
 
         public IonMobilityValue IonMobilityFromCCS(double ccs, double mz, int charge)
         {

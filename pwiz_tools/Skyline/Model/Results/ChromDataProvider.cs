@@ -192,6 +192,7 @@ namespace pwiz.Skyline.Model.Results
         private readonly bool _hasMidasSpectra;
         private readonly bool _sourceHasNegativePolarityData;
         private readonly bool _sourceHasPositivePolarityData;
+        private readonly eIonMobilityUnits _ionMobilityUnits;
 
         /// <summary>
         /// The number of chromatograms read so far.
@@ -285,6 +286,8 @@ namespace pwiz.Skyline.Model.Results
             // CONSIDER(kaipot): Some way to support mzML files converted from MIDAS wiff files
             _hasMidasSpectra = (dataFile.IsABFile) && SpectraChromDataProvider.HasSpectrumData(dataFile);
 
+            _ionMobilityUnits = dataFile.IonMobilityUnits;
+
             SetPercentComplete(50);
         }
 
@@ -361,7 +364,7 @@ namespace pwiz.Skyline.Model.Results
             get { return _chromIds; }
         }
 
-        public override eIonMobilityUnits IonMobilityUnits { get { return eIonMobilityUnits.none; } }
+        public override eIonMobilityUnits IonMobilityUnits { get { return _ionMobilityUnits; } }
 
         public override bool GetChromatogram(int id, Target modifiedSequence, Color color, out ChromExtra extra, out TimeIntensities timeIntensities)
         {

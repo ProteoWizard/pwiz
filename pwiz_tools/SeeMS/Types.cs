@@ -297,7 +297,7 @@ namespace seems
         {
             source = metaChromatogram.source;
             this.chromatogramList = metaChromatogram.chromatogramList;
-            this.index = index;
+            this.index = chromatogram.index;
             Tag = metaChromatogram.Tag;
             AnnotationSettings = metaChromatogram.AnnotationSettings;
             //element = chromatogram;
@@ -480,8 +480,31 @@ namespace seems
                     IList<double> intensityArray = element.getIntensityArray().data.Storage();
 
                     // only sort centroid spectra; profile spectra are assumed to already be sorted
-                    if (element.hasCVParam(CVID.MS_centroid_spectrum))
+                    if (element.hasCVParam(CVID.MS_centroid_spectrum) || element.id.StartsWith("merged="))
+                    {
                         mzArray.Sort(intensityArray);
+
+                        if (element.id.StartsWith("merged="))
+                        {
+                            var uniqueMz = new List<double>(mzArray.Count);
+                            var summedIntensity = new List<double>(mzArray.Count);
+                            uniqueMz.Add(mzArray[0]);
+                            summedIntensity.Add(intensityArray[0]);
+                            for (int i = 1; i < mzArray.Count; ++i)
+                            {
+                                if (mzArray[i] == uniqueMz[uniqueMz.Count - 1])
+                                    summedIntensity[uniqueMz.Count - 1] += intensityArray[i];
+                                else
+                                {
+                                    uniqueMz.Add(mzArray[i]);
+                                    summedIntensity.Add(intensityArray[i]);
+                                }
+                            }
+
+                            mzArray = uniqueMz;
+                            intensityArray = summedIntensity;
+                        }
+                    }
 
                     return new ZedGraph.PointPairList(mzArray, intensityArray);
                 }

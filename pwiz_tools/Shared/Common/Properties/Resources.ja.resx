@@ -118,7 +118,6 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <!-- ReSharper disable DuplicateResource -->
   <data name="agg_count" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\agg_count.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -198,7 +197,7 @@
     <value>レポート名は空白にはできません。</value>
   </data>
   <data name="CustomizeViewForm_ValidateViewName_There_is_already_a_built_in_view_named___0___" xml:space="preserve">
-    <value>「{0}」という名前のレポートが付属しています。</value>
+    <value>「{0}」という名前のレポートが既に存在しています。</value>
   </data>
   <data name="CustomizeViewForm_ValidateViewName_Do_you_want_to_overwrite_the_existing_view_named___0__" xml:space="preserve">
     <value>「{0}」という名前の既存のレポートに上書きしますか？</value>
@@ -428,7 +427,7 @@
     <value>変動係数</value>
   </data>
   <data name="CountImpl_CountImpl_Count" xml:space="preserve">
-    <value>個数</value>
+    <value>数</value>
   </data>
   <data name="ColumnLimitExceededColumn_TruncatedColumnCount__0__additional_columns_not_shown_" xml:space="preserve">
     <value>残りの{0}列は表示されていません。</value>

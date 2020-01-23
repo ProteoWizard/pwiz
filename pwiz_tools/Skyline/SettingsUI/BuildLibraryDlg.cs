@@ -18,16 +18,21 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.BiblioSpec;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Prosit;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -61,37 +66,52 @@ namespace pwiz.Skyline.SettingsUI
             BiblioSpecLiteBuilder.EXT_OPEN_SWATH,
        };
 
-        private BiblioSpecLiteBuilder _builder;
-
         private string[] _inputFileNames = new string[0];
         private string _dirInputRoot = string.Empty;
 
         private readonly MessageBoxHelper _helper;
         private readonly IDocumentUIContainer _documentUiContainer;
+        private readonly SkylineWindow _skylineWindow;
 
         private readonly SettingsListComboDriver<IrtStandard> _driverStandards;
 
-        public BuildLibraryDlg(IDocumentUIContainer documentContainer)
+        private readonly Point _actionLabelPos;
+        private readonly Point _actionComboPos;
+        private readonly Point _iRTLabelPos;
+        private readonly Point _iRTComboPos;
+
+        public BuildLibraryDlg(SkylineWindow skylineWindow)
         {
             InitializeComponent();
 
             Icon = Resources.Skyline;
 
-            _documentUiContainer = documentContainer;
+            _skylineWindow = skylineWindow;
+            _documentUiContainer = skylineWindow;
+
+            // Store locations of those controls since we move the irt label/combo around
+            _actionLabelPos = actionLabel.Location;
+            _actionComboPos = comboAction.Location;
+            _iRTLabelPos = iRTPeptidesLabel.Location;
+            _iRTComboPos = comboStandards.Location;
 
             panelFiles.Visible = false;
-
             textName.Focus();
             textPath.Text = Settings.Default.LibraryDirectory;
             comboAction.SelectedItem = LibraryBuildAction.Create.GetLocalizedString();
             textCutoff.Text = Settings.Default.LibraryResultCutOff.ToString(LocalizationHelper.CurrentCulture);
 
-            if (documentContainer.Document.PeptideCount == 0)
+            if (_documentUiContainer.Document.PeptideCount == 0)
                 cbFilter.Hide();
             else
                 cbFilter.Checked = Settings.Default.LibraryFilterDocumentPeptides;
 
             cbKeepRedundant.Checked = Settings.Default.LibraryKeepRedundant;
+
+            ceCombo.Items.AddRange(
+                Enumerable.Range(PrositConstants.MIN_NCE, PrositConstants.MAX_NCE - PrositConstants.MIN_NCE + 1).Select(c => (object)c)
+                    .ToArray());
+            ceCombo.SelectedItem = Settings.Default.PrositNCE;
 
             _helper = new MessageBoxHelper(this);
 
@@ -99,7 +119,7 @@ namespace pwiz.Skyline.SettingsUI
             _driverStandards.LoadList(IrtStandard.EMPTY.GetKey());
         }
 
-        public ILibraryBuilder Builder { get { return _builder;  } }
+        public ILibraryBuilder Builder { get; private set; }
 
         public string[] InputFileNames
         {
@@ -217,21 +237,58 @@ namespace pwiz.Skyline.SettingsUI
                                 continue;
                             targetPeptidesChosen.Add(doc.Settings.GetModifiedSequence(nodePep.Peptide.Target,
                                                                                       nodeGroup.TransitionGroup.LabelType,
-                                                                                      nodePep.ExplicitMods));
+                                                                                      nodePep.ExplicitMods,
+                                                                                      SequenceModFormatType.lib_precision));
                         }
                     }
                 }
 
-                _builder = new BiblioSpecLiteBuilder(name, outputPath, inputFilesChosen, targetPeptidesChosen)
-                              {
-                                  Action = libraryBuildAction,
-                                  IncludeAmbiguousMatches = cbIncludeAmbiguousMatches.Checked,
-                                  KeepRedundant = LibraryKeepRedundant,
-                                  CutOffScore = cutOffScore,
-                                  Id = Helpers.MakeId(textName.Text),
-                                  IrtStandard = _driverStandards.SelectedItem,
-                                  PreferEmbeddedSpectra = PreferEmbeddedSpectra
-                              };
+                if (prositDataSourceRadioButton.Checked)
+                {
+                    // TODO: Need to figure out a better way to do this, use PrositPeptidePrecursorPair?
+                    var doc = _documentUiContainer.DocumentUI;
+                    var peptides = doc.Peptides.Where(pep=>!pep.IsDecoy).ToArray();
+                    var precursorCount = peptides.Sum(pep=>pep.TransitionGroupCount);
+                    var peptidesPerPrecursor = new PeptideDocNode[precursorCount];
+                    var precursors = new TransitionGroupDocNode[precursorCount];
+                    int index = 0;
+
+                    for (var i = 0; i < peptides.Length; ++i)
+                    {
+                        var groups = peptides[i].TransitionGroups.ToArray();
+                        Array.Copy(Enumerable.Repeat(peptides[i], groups.Length).ToArray(), 0, peptidesPerPrecursor, index,
+                            groups.Length);
+                        Array.Copy(groups, 0, precursors, index, groups.Length);
+                        index += groups.Length;
+                    }
+                    
+                    try
+                    {
+                        PrositUIHelpers.CheckPrositSettings(this, _skylineWindow);
+                        // Still construct the library builder, otherwise a user might configure Prosit
+                        // incorrectly, causing the build to silently fail
+                        Builder = new PrositLibraryBuilder(doc, name, outputPath, () => true, IrtStandard,
+                            peptidesPerPrecursor, precursors, NCE);
+                    }
+                    catch (Exception ex)
+                    {
+                        _helper.ShowTextBoxError(this, ex.Message);
+                        return false;
+                    }
+                }
+                else
+                {
+                    Builder = new BiblioSpecLiteBuilder(name, outputPath, inputFilesChosen, targetPeptidesChosen)
+                    {
+                        Action = libraryBuildAction,
+                        IncludeAmbiguousMatches = cbIncludeAmbiguousMatches.Checked,
+                        KeepRedundant = LibraryKeepRedundant,
+                        CutOffScore = cutOffScore,
+                        Id = Helpers.MakeId(textName.Text),
+                        IrtStandard = _driverStandards.SelectedItem,
+                        PreferEmbeddedSpectra = PreferEmbeddedSpectra
+                    };
+                }
             }
             return true;
         }
@@ -295,7 +352,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void OkWizardPage()
         {
-            if (!panelProperties.Visible)
+            if (!panelProperties.Visible || prositDataSourceRadioButton.Checked)
             {
                 if (ValidateBuilder(true))
                 {
@@ -619,10 +676,28 @@ namespace pwiz.Skyline.SettingsUI
             set { textCutoff.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
+        public bool Prosit
+        {
+            get { return prositDataSourceRadioButton.Checked; }
+            set { prositDataSourceRadioButton.Checked = value; }
+        }
+
+        public int NCE
+        {
+            get { return (int)ceCombo.SelectedItem; }
+            set { ceCombo.SelectedItem = value; }
+        }
+
         public bool LibraryKeepRedundant
         {
             get { return cbKeepRedundant.Checked; }
             set { cbKeepRedundant.Checked = value; }
+        }
+
+        public bool IncludeAmbiguousMatches
+        {
+            get { return cbIncludeAmbiguousMatches.Checked; }
+            set { cbIncludeAmbiguousMatches.Checked = value; }
         }
 
         public bool LibraryFilterPeptides
@@ -668,11 +743,44 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+
         public bool? PreferEmbeddedSpectra { get; set; }
+
+        
 
         private void comboStandards_SelectedIndexChanged(object sender, EventArgs e)
         {
             _driverStandards.SelectedIndexChangedEvent(sender, e);
+        }
+
+        private void dataSourceFilesRadioButton_CheckedChanged(object sender, EventArgs e)
+        {
+            panelFilesProps.Visible = dataSourceFilesRadioButton.Checked;
+
+            var useFiles = dataSourceFilesRadioButton.Checked;
+            ceCombo.Visible = !useFiles;
+            ceLabel.Visible = !useFiles;
+
+
+            if (useFiles)
+            {
+                iRTPeptidesLabel.Location = _iRTLabelPos;
+                comboStandards.Location = _iRTComboPos;
+            }
+            else
+            {
+                iRTPeptidesLabel.Location = _actionLabelPos;
+                comboStandards.Location = _actionComboPos;
+
+                PrositUIHelpers.CheckPrositSettings(this, _skylineWindow);
+            }
+
+            btnNext.Text = dataSourceFilesRadioButton.Checked ? Resources.BuildLibraryDlg_btnPrevious_Click__Next__ : Resources.BuildLibraryDlg_OkWizardPage_Finish;
+        }
+
+        private void prositInfoSettingsBtn_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            _skylineWindow.ShowToolOptionsUI(ToolOptionsUI.TABS.Prosit);
         }
     }
 }

@@ -241,7 +241,7 @@
     <value>1</value>
   </data>
   <data name="lblNew.Text" xml:space="preserve">
-    <value>{0} 个蛋白质，{1} 个肽，{2} 个母离子，{3} 个离子对</value>
+    <value>{0} 个蛋白质，{1} 个肽段，{2} 个母离子，{3} 个离子对</value>
   </data>
   <data name="&gt;&gt;lblNew.Name" xml:space="preserve">
     <value>lblNew</value>
@@ -295,7 +295,7 @@
     <value>3</value>
   </data>
   <data name="radioKeepMinPeptides.Text" xml:space="preserve">
-    <value>每个蛋白质的最少肽数</value>
+    <value>每个蛋白质的最少肽段数</value>
   </data>
   <data name="&gt;&gt;radioKeepMinPeptides.Name" xml:space="preserve">
     <value>radioKeepMinPeptides</value>
@@ -322,7 +322,7 @@
     <value>1</value>
   </data>
   <data name="lblRemaining.Text" xml:space="preserve">
-    <value>{0} 个蛋白质，{1} 个肽，{2} 个母离子，{3} 个离子对</value>
+    <value>{0} 个蛋白质，{1} 个肽段，{2} 个母离子，{3} 个离子对</value>
   </data>
   <data name="&gt;&gt;lblRemaining.Name" xml:space="preserve">
     <value>lblRemaining</value>

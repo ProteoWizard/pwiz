@@ -289,6 +289,10 @@ namespace pwiz.Skyline.Model
                 {
                     return @"[" + MassModification.FromMass(massDiff) + @"]";
                 }
+                case SequenceModFormatType.lib_precision:
+                {
+                    return @"[" + MassModification.FromMassForLib(massDiff) + @"]";
+                }
                 case SequenceModFormatType.mass_diff:
                 {
                     string formatString = @"[{0}{1:F0" + precisionRequired + @"}]";
@@ -1373,7 +1377,7 @@ namespace pwiz.Skyline.Model
             Tuple.Create(LabelAtoms.Br81, BioMassCalc.Br, BioMassCalc.Br81),
             Tuple.Create(LabelAtoms.P32, BioMassCalc.P, BioMassCalc.P32),
             Tuple.Create(LabelAtoms.S34, BioMassCalc.S, BioMassCalc.S34),
-            Tuple.Create(LabelAtoms.H2, BioMassCalc.D, BioMassCalc.H2), // Accept "D" for Deuterium
+
         });
         public static string GetHeavyFormula(string formula, LabelAtoms labelAtoms)
         {

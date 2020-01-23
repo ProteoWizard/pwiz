@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -190,7 +191,7 @@ namespace pwiz.SkylineTestData.Results
             string fileName = Path.GetFileName(path);
             if (fileName != null && fileName.StartsWith(FileSaver.TEMP_PREFIX))
                 return true;
-            return path.EndsWith(ChromatogramCache.EXT);
+            return PathEx.HasExtension(path, ChromatogramCache.EXT);
         }
 
         /// <summary>

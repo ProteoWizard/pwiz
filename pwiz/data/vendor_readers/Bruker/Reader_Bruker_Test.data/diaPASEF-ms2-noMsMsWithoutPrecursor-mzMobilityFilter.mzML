@@ -34,7 +34,7 @@
     <software id="micrOTOFcontrol" version="6.0.110.229-14868-vc141">
       <cvParam cvRef="MS" accession="MS:1000726" name="micrOTOFcontrol" value=""/>
     </software>
-    <software id="pwiz_Reader_Bruker" version="3.0.19304">
+    <software id="pwiz_Reader_Bruker" version="3.0.19326">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -71,7 +71,7 @@
     </dataProcessing>
   </dataProcessingList>
   <run id="diaPASEF" defaultInstrumentConfigurationRef="IC1" startTimeStamp="2019-08-24T18:27:02Z" defaultSourceFileRef="diaPASEF.d_x005c_Analysis.tdf">
-    <spectrumList count="98" defaultDataProcessingRef="pwiz_Reader_Bruker_conversion">
+    <spectrumList count="99" defaultDataProcessingRef="pwiz_Reader_Bruker_conversion">
       <spectrum index="0" id="frame=5 scan=420" defaultArrayLength="13">
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
@@ -107,6 +107,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -160,6 +161,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -213,6 +215,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -266,6 +269,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -319,6 +323,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -372,6 +377,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -425,6 +431,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -478,6 +485,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -531,6 +539,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -584,6 +593,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -637,6 +647,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -690,6 +701,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -743,6 +755,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -796,6 +809,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -849,6 +863,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -902,6 +917,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -955,6 +971,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -1008,6 +1025,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -1061,6 +1079,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -1114,6 +1133,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -1167,6 +1187,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -1220,6 +1241,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -1273,6 +1295,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -1326,6 +1349,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -1379,6 +1403,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -1432,6 +1457,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -1485,6 +1511,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -1538,6 +1565,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -1591,6 +1619,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -1644,6 +1673,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -1697,6 +1727,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -1750,6 +1781,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -1803,6 +1835,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -1856,6 +1889,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -1909,6 +1943,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -1962,6 +1997,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -2015,6 +2051,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -2068,6 +2105,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -2121,6 +2159,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -2174,6 +2213,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -2227,6 +2267,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -2280,6 +2321,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -2333,6 +2375,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -2386,6 +2429,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -2439,6 +2483,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -2492,6 +2537,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -2545,6 +2591,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -2598,6 +2645,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -2651,6 +2699,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -2704,6 +2753,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -2757,6 +2807,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -2810,6 +2861,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -2863,6 +2915,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -2916,6 +2969,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -2969,6 +3023,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -3022,6 +3077,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -3075,6 +3131,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -3128,6 +3185,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -3181,6 +3239,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -3234,6 +3293,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -3287,6 +3347,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -3340,6 +3401,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -3393,6 +3455,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -3446,6 +3509,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -3499,6 +3563,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -3552,6 +3617,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -3605,6 +3671,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -3658,6 +3725,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -3711,6 +3779,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -3764,6 +3833,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -3817,6 +3887,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -3870,6 +3941,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -3923,6 +3995,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -3976,6 +4049,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -4029,6 +4103,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -4082,6 +4157,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -4135,6 +4211,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -4188,6 +4265,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -4241,6 +4319,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -4294,6 +4373,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -4347,6 +4427,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -4400,6 +4481,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -4453,6 +4535,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -4506,6 +4589,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -4559,6 +4643,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -4612,6 +4697,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -4665,6 +4751,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -4718,6 +4805,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -4771,6 +4859,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -4824,6 +4913,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -4877,6 +4967,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -4930,6 +5021,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -4983,6 +5075,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -5036,6 +5129,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -5089,6 +5183,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -5142,6 +5237,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -5195,6 +5291,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -5248,6 +5345,7 @@
             </selectedIonList>
             <activation>
               <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
             </activation>
           </precursor>
         </precursorList>
@@ -5263,6 +5361,60 @@
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
             <binary>eJxllU9OlEEQxfsIHGEymRDiighGBHTaEWZQARn8G5BkIEqIEBbAzoH0SglhQVyyGm5AXLj+juAR5ggcAWL/Xscqvs1LdddXVf3qdXUId1/qxPAP5zOGOnY7Y7WB/c7uh1VwKePeJfZDcMbZs+Az4r7NWPtK/NfsP8dexl7BJl966fwXwWmwlXG4Y88VyRfa1i/8cucCqy64SZwF4l44/ybrB9iP7X76gD1HHWusq45X1r92iD2BHzz0tqjnI/vwGeEnNDJe/8CezHhz7uoV7rk6VU/DrqtPqrP2E3uX/NqnTvFW4tHPlX7GkSPW1c/PGYfoIDxydUiXOic8ppbze2LrDm+oR/zD16Bv/eIn4gnRV9Fv0+YfP3F56tZ/oHPofNJn1/pV6KBaZ51+hSlQ/FF30rnhO6ED6TtF/IVzDuEjjNn8PXSQvoDkjdKH+FVc6ZK+BeZCtQWqPt3Plq1f8eQ3+SfjzbHNU+aRkD7E9xm//7Z5xPPpVcYd6V56qrvzuPX4jTjwVPQ7CkoXzIHSX/WVPlXUJz3dyyt8AKov8BqeguJL/2t+qj/7oOaj5rPmTwuk3+W+6B51HKq/5C/nX7Z+fzWf4F36TbwDRYe6N+JLcXUfpHe9I3VrJ3/PxccL56/4vCtl3pxhu3kmHEtuX/Nh2/qV+TZq1/VuRvUf/ss81run9wo+/+PpFsFLtX8=</binary>
+          </binaryDataArray>
+        </binaryDataArrayList>
+      </spectrum>
+      <spectrum index="98" id="frame=5 scan=518" defaultArrayLength="245">
+        <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
+        <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="9090.0"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="6.675081e06"/>
+        <cvParam cvRef="MS" accession="MS:1000127" name="centroid spectrum" value=""/>
+        <scanList count="1">
+          <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
+          <scan>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
+            <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.064676649915" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
+            <userParam name="windowGroup" value="4"/>
+            <scanWindowList count="1">
+              <scanWindow>
+                <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="99.998563" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000500" name="scan window upper limit" value="1700.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              </scanWindow>
+            </scanWindowList>
+          </scan>
+        </scanList>
+        <precursorList count="1">
+          <precursor>
+            <isolationWindow>
+              <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="13.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="13.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+            </isolationWindow>
+            <selectedIonList count="1">
+              <selectedIon>
+                <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              </selectedIon>
+            </selectedIonList>
+            <activation>
+              <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42.360582306831"/>
+            </activation>
+          </precursor>
+        </precursorList>
+        <binaryDataArrayList count="2">
+          <binaryDataArray encodedLength="2448">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000514" name="m/z array" value="" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+            <binary>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</binary>
+          </binaryDataArray>
+          <binaryDataArray encodedLength="716">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+            <binary>eJxtlctKnEEQhWuZR3Apg4i4GuL9ktAxmqjjbdTcBUcSYgiBaAKCC6EJIWQjGBGXYZ4gS9fzAD5EHiNLxf5OQxWZzaGq+686p6q6xuz2l9eT3f2WC+an4AJ+bBsDG5wvgs8KLp5zPhOw8X/snvi4+SX2E3AJv7CFH7553vPofPK8c9vrav7Abhb8+87ft3FwIvB6VPDgFP8geN/ryV+xR0I88pvy7BfstQNPdPc28VNX28JWn5RP9d8ueH0Z8g34+x9+YUvfiD9vHmOjr9shfsvfq/ZoiDcFqu/ws9mCfd99HNsomN4U7GHbMDa6LOqe83jws2BH/D97HTbJ/dfEpZ51ruFX51u8W8EvfWvwFj/4dt7iZ47Te/Lq/pHXYY/hs4Mt/QmkP9Jp0+Gc79MLz6vOhXQozrL/LgtXC3b3OF/1evQOEzy1H9T/LD7Kt4KuXWzN97znm5n3zLxr7vUu6vxqTuGhfoxeFTz7Qty2P9e7rXO85vOkP9wP7/jid8Ft7TPq1Dzk++f4ma9a5wl/X/HSR3Az+DU/0il9gY/2gvZV/77Pk5mbvOK/l966J+mT6m6v0BPeX93/fFf7+rDgBvWO777m0fuK+1Hx1J+5grVv8K17peHz1L0e5q/u1QF/34YK/tPe1j5Wf+jfvW/YmjPeWZd6S7/mydgj9iDwHAx6qFcOc1vnRXxVL/3/aQ8o7lS6AVVKuJQ=</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </spectrum>

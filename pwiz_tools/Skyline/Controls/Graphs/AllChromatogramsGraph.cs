@@ -438,6 +438,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void AddProgressControls(MultiProgressStatus status)
         {
+            // Nothing to do if everything is already covered
+            if (status.ProgressList.All(s => FindProgressControl(s.FilePath) != null))
+                return;
+
             // Match each file status with a progress control.
             bool first = true;
             var width = flowFileStatus.Width - 2 -
@@ -470,14 +474,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 progressControl.ShowGraph += (sender, args) => ShowGraph();
                 progressControl.ShowLog += (sender, args) => ShowLog();
                 controlsToAdd.Add(progressControl);
+                _fileProgressControls.Add(filePath.GetLocation(), progressControl);
                 first = false;
             }
 
             flowFileStatus.Controls.AddRange(controlsToAdd.ToArray());
-            foreach (var control in controlsToAdd)
-            {
-                _fileProgressControls.Add(control.FilePath, control);
-            }
         }
 
         private void CancelMissingFiles(MultiProgressStatus status)
@@ -501,7 +502,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private FileProgressControl FindProgressControl(MsDataFileUri filePath)
         {
             FileProgressControl fileProgressControl;
-            _fileProgressControls.TryGetValue(filePath, out fileProgressControl);
+            _fileProgressControls.TryGetValue(filePath.GetLocation(), out fileProgressControl);
             return fileProgressControl;
         }
 

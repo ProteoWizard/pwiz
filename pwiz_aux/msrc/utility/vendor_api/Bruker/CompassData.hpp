@@ -131,6 +131,13 @@ PWIZ_API_DECL enum DetailLevel
     DetailLevel_FullData
 };
 
+struct PWIZ_API_DECL IsolationInfo
+{
+    double isolationMz;
+    IsolationMode isolationMode;
+    double collisionEnergy;
+};
+
 struct PWIZ_API_DECL MSSpectrumParameter
 {
     std::string group;
@@ -196,8 +203,7 @@ struct PWIZ_API_DECL MSSpectrum
 
     virtual int getMSMSStage() const = 0;
     virtual double getRetentionTime() const = 0;
-    virtual void getIsolationData(std::vector<double>& isolatedMZs,
-                                  std::vector<IsolationMode>& isolationModes) const = 0;
+    virtual void getIsolationData(std::vector<IsolationInfo>& isolationInfo) const = 0;
     virtual void getFragmentationData(std::vector<double>& fragmentedMZs,
                                       std::vector<FragmentationMode>& fragmentationModes) const = 0;
     virtual IonPolarity getPolarity() const = 0;
@@ -309,10 +315,10 @@ struct PWIZ_API_DECL CompassData
     virtual LCSpectrumPtr getLCSpectrum(int source, int scan) const = 0;
 
     /// returns a chromatogram with times and total ion currents of all spectra, or a null pointer if the format doesn't support fast access to TIC
-    virtual ChromatogramPtr getTIC() const = 0;
+    virtual ChromatogramPtr getTIC(bool ms1Only = false) const = 0;
 
     /// returns a chromatogram with times and base peak intensities of all spectra, or a null pointer if the format doesn't support fast access to BPC
-    virtual ChromatogramPtr getBPC() const = 0;
+    virtual ChromatogramPtr getBPC(bool ms1Only = false) const = 0;
 
     virtual std::string getOperatorName() const = 0;
     virtual std::string getAnalysisName() const = 0;

@@ -41,6 +41,31 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public enum AreaCVMsLevel { precursors, products }
 
+    public static class AreCVMsLevelExtension
+    {
+        private static string[] LOCALIZED_VALUES
+        {
+            get
+            {
+                return new[]
+                {
+                    Resources.RefineDlg_RefineDlg_Precursors,
+                    Resources.RefineDlg_RefineDlg_Products
+                };
+            }
+        }
+        public static string GetLocalizedString(this AreaCVMsLevel val)
+        {
+            return LOCALIZED_VALUES[(int)val];
+        }
+
+        public static AreaCVMsLevel GetEnum(string enumValue)
+        {
+            return Helpers.EnumFromLocalizedString<AreaCVMsLevel>(enumValue, LOCALIZED_VALUES);
+        }
+
+    }
+
     public enum AreaGraphDisplayType { bars, lines }
 
     public sealed class AreaGraphController : GraphSummary.IControllerSplit
