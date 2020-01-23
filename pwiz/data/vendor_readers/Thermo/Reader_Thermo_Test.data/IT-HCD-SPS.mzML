@@ -25,7 +25,7 @@
     <software id="Xcalibur" version="">
       <cvParam cvRef="MS" accession="MS:1000532" name="Xcalibur" value=""/>
     </software>
-    <software id="pwiz" version="3.0.19304">
+    <software id="pwiz" version="3.0.20022">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -66,6 +66,7 @@
         <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="8.810961722297e06"/>
         <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="107.125" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="605.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <userParam name="scan description" value="sps" type="xsd:string"/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
