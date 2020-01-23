@@ -104,6 +104,10 @@ namespace pwiz.SkylineTestTutorial
                 OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
                 WaitForDocumentChange(doc);
             }
+            RunUI(() =>
+            {
+                SkylineWindow.GraphSpectrum.Hide();
+            });
 
             // Configuring Peptide settings p. 4
             PeptideSettingsUI peptideSettingsUi = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
@@ -134,7 +138,11 @@ namespace pwiz.SkylineTestTutorial
             RunUI(SkylineWindow.ExpandPrecursors);
             RunUI(() => SkylineWindow.SaveDocument(GetTestPath(folderAbsoluteQuant + @"test_file.sky")));
             WaitForCondition(() => File.Exists(GetTestPath(folderAbsoluteQuant + @"test_file.sky")));
-            RunUI( () => SkylineWindow.Size = new Size(840, 410));
+            RunUI( () =>
+            {
+                SkylineWindow.Size = new Size(650, 500);
+                AdjustSequenceTreePanelWidth();
+            });
 
             PauseForScreenShot("Main window with Targets view", 6);
 
@@ -182,15 +190,19 @@ namespace pwiz.SkylineTestTutorial
             WaitForCondition(() => Equals(8, SkylineWindow.GraphChromatograms.Count(graphChrom => !graphChrom.IsHidden)),
                 "unexpected visible graphChromatogram count");
 
-            RunUI( () => 
-                        {   //resize the window and activate the first standard chromatogram pane.
-                            RunUI(() => SkylineWindow.Size = new Size(1330, 720));
-                            var chrom = SkylineWindow.GraphChromatograms.First();
-                            chrom.Select();
-                        });
-
             WaitForCondition(10 * 60 * 1000,    // ten minutes
                 () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+
+            RunUI(() =>
+            {   //resize the window and activate the first standard chromatogram pane.
+                RunUI(() => SkylineWindow.Size = new Size(1330, 720));
+                var chrom = SkylineWindow.GraphChromatograms.First(
+                        (ch) => Equals("Standard_1", ch.NameSet)
+                ); 
+                chrom.Select();
+                AdjustSequenceTreePanelWidth();
+            });
+
             PauseForScreenShot("Main window with imported data", 9);
 
             // Analyzing SRM Data from FOXN1-GST Sample p. 9
@@ -219,6 +231,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowPeakAreaReplicateComparison();
                 // Total normalization
                 SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view);
+                AdjustSequenceTreePanelWidth();
             });
 
             RunUI(() => SkylineWindow.ActivateReplicate("FOXN1-GST"));
@@ -309,7 +322,7 @@ namespace pwiz.SkylineTestTutorial
             // View the calibration curve p. 13
             RunUI(()=>SkylineWindow.ShowCalibrationForm());
             var calibrationForm = FindOpenForm<CalibrationForm>();
-            PauseForScreenShot("View calibration curve", 14);
+            PauseForScreenShot<CalibrationForm>("View calibration curve", 14);
 
             Assert.AreEqual(CalibrationCurveFitter.AppendUnits(QuantificationStrings.Analyte_Concentration, quantUnits), calibrationForm.ZedGraphControl.GraphPane.XAxis.Title.Text);
             Assert.AreEqual(string.Format(QuantificationStrings.CalibrationCurveFitter_PeakAreaRatioText__0___1__Peak_Area_Ratio, IsotopeLabelType.light.Title, IsotopeLabelType.heavy.Title),
