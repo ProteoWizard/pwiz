@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
@@ -161,7 +160,7 @@ namespace pwiz.Skyline.Model.Proteome
                                     if (_processedNodes.ContainsKey(nodePepGroup.Id.GlobalIndex))
                                     {
                                         // We did this before we were interrupted
-                                        progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete(100 * nResolved++ / nUnresolved));
+                                        nResolved++;
                                     }
                                     else if (nodePepGroup.ProteinMetadata.NeedsSearch())
                                     {
@@ -174,16 +173,12 @@ namespace pwiz.Skyline.Model.Proteome
                                         {
                                             // Background proteome has already resolved this
                                             _processedNodes.Add(nodePepGroup.Id.GlobalIndex, proteinMetadata);
-                                            progressMonitor.UpdateProgress(
-                                                progressStatus =
-                                                    progressStatus.ChangePercentComplete(100*nResolved++/nUnresolved));
+                                            nResolved++;
                                         }
                                     }
-                                    if (progressMonitor.IsCanceled)
-                                    {
-                                        progressMonitor.UpdateProgress(progressStatus.Cancel());
+
+                                    if (!UpdatePrecentComplete(progressMonitor, 100 * nResolved / nUnresolved, ref progressStatus))
                                         return null;
-                                    }
                                 }
                             }
                         }
@@ -214,12 +209,8 @@ namespace pwiz.Skyline.Model.Proteome
                                     {
                                         // That didn't parse well enough to make a search term, or didn't add any new info - just set it as searched so we don't keep trying
                                         _processedNodes.Add(node.Id.GlobalIndex, proteinMetadata.SetWebSearchCompleted());
-                                        if (progressMonitor.IsCanceled)
-                                        {
-                                            progressMonitor.UpdateProgress(progressStatus.Cancel());
+                                        if (!UpdatePrecentComplete(progressMonitor, 100 * nResolved++ / nUnresolved, ref progressStatus))
                                             return null;
-                                        }
-                                        progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete(100 * nResolved++ / nUnresolved));
                                         proteinMetadata = null;  // No search to be done
                                     }
                                     else
@@ -236,26 +227,19 @@ namespace pwiz.Skyline.Model.Proteome
                                 }
                             }
                         }
-                        if (progressMonitor.IsCanceled)
-                        {
-                            progressMonitor.UpdateProgress(progressStatus.Cancel());
+
+                        if (!UpdatePrecentComplete(progressMonitor, 100 * nResolved / nUnresolved, ref progressStatus))
                             return null;
-                        }
-                        progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete(100 * nResolved / nUnresolved));
 
                         // Now we actually hit the internet
                         if (proteinsToSearch.Any())
                         {
                             foreach (var result in FastaImporter.DoWebserviceLookup(proteinsToSearch, progressMonitor, false)) // Resolve them all, now
                             {
-                                Debug.Assert(!result.GetProteinMetadata().NeedsSearch());
+                                Assume.IsTrue(!result.GetProteinMetadata().NeedsSearch());
                                 _processedNodes.Add(docNodesWithUnresolvedProteinMetadata[result].Id.GlobalIndex, result.GetProteinMetadata());
-                                if (progressMonitor.IsCanceled)
-                                {
-                                    progressMonitor.UpdateProgress(progressStatus.Cancel());
+                                if (!UpdatePrecentComplete(progressMonitor, 100 * nResolved++ / nUnresolved, ref progressStatus))
                                     return null;
-                                }
-                                progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete(100 * nResolved++ / nUnresolved));
                             }
                         }                        
                     }
@@ -284,6 +268,20 @@ namespace pwiz.Skyline.Model.Proteome
                 progressMonitor.UpdateProgress(progressStatus.Complete());
                 return (SrmDocument)docNew;
             }
+        }
+
+        private static bool UpdatePrecentComplete(IProgressMonitor progressMonitor, int percentComplete,
+            ref IProgressStatus progressStatus)
+        {
+            if (progressMonitor.IsCanceled)
+            {
+                progressMonitor.UpdateProgress(progressStatus.Cancel());
+                return false;
+            }
+
+            if (progressStatus.PercentComplete != percentComplete)
+                progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete(percentComplete));
+            return true;
         }
 
         private void CleanupProcessedNodesDict(SrmDocument doc)
