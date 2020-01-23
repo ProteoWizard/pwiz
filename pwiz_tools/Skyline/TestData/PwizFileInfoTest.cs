@@ -106,7 +106,7 @@ namespace pwiz.SkylineTestData
 
             string path = TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Thermo, "IT-HCD-SPS.raw");
 
-            using (var msDataFile = new MsDataFileImpl(path, 0))
+            using (var msDataFile = new MsDataFileImpl(path))
             {
                 Assert.AreEqual("sps", msDataFile.GetScanDescription(0));
             }

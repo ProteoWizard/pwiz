@@ -1140,7 +1140,7 @@ namespace pwiz.ProteowizardWrapper
 
         public string GetScanDescription(int scanIndex)
         {
-            return (string) GetMetaDataValue(scanIndex, GetScanDescription, v => v.IsNullOrEmpty(), v => v, ref _detailScanDescription, DetailLevel.FastMetadata);
+            return GetMetaDataValue(scanIndex, GetScanDescription, v => v.IsNullOrEmpty(), v => v, ref _detailScanDescription, DetailLevel.FastMetadata);
         }
 
         private static string GetScanDescription(Spectrum spectrum)
