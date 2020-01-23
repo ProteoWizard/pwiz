@@ -1266,7 +1266,7 @@ namespace pwiz.SkylineTestUtil
             // For automated demos, start with the main window maximized
             if (IsDemoMode)
                 Settings.Default.MainWindowMaximized = true;
-
+            Settings.Default.TutorialMode = true;
         }
 
         private void BeginAuditLogging()
@@ -1470,7 +1470,7 @@ namespace pwiz.SkylineTestUtil
                 {
                     SkylineWindow.UseKeysOverride = true;
                     SkylineWindow.Icon = Resources.Skyline_Release1;
-                    SkylineWindow.Text = @"Skyline";
+                    //SkylineWindow.Text = @"Skyline";
                 });
                  
                 // Make sure the background proteome and sequence tree protein metadata loaders don't hit the web (unless they are meant to)
