@@ -286,6 +286,8 @@ void MaxQuantReader::initFixedModifications()
     fixedModBank_[MaxQuantModification::ANYWHERE].clear();
     fixedModBank_[MaxQuantModification::ANY_N_TERM].clear();
     fixedModBank_[MaxQuantModification::ANY_C_TERM].clear();
+    fixedModBank_[MaxQuantModification::NOT_N_TERM].clear();
+    fixedModBank_[MaxQuantModification::NOT_C_TERM].clear();
 
     // add all fixed mods to fixedModBank_
     for (set<string>::iterator iter = fixedMods.begin();
@@ -773,15 +775,15 @@ void MaxQuantReader::addModsToVector(vector<SeqMod>& v, const string& modificati
     const vector<const MaxQuantModification*>& modsAnywhere = fixedModBank_.find(MaxQuantModification::ANYWHERE)->second;
     const vector<const MaxQuantModification*>& modsAnyNTerm = fixedModBank_.find(MaxQuantModification::ANY_N_TERM)->second;
     const vector<const MaxQuantModification*>& modsAnyCTerm = fixedModBank_.find(MaxQuantModification::ANY_C_TERM)->second;
+    const vector<const MaxQuantModification*>& modsNotNTerm = fixedModBank_.find(MaxQuantModification::NOT_N_TERM)->second;
+    const vector<const MaxQuantModification*>& modsNotCTerm = fixedModBank_.find(MaxQuantModification::NOT_C_TERM)->second;
     
     /* Do not use since we don't know where the peptide is in relation to the Protein N-term/C-term
     vector<const MaxQuantModification*> modsProteinNTerm;
     vector<const MaxQuantModification*> modsProteinCTerm;
-    vector<const MaxQuantModification*> modsNotNTerm;
-    vector<const MaxQuantModification*> modsNotCTerm;
     */
 
-    for (const auto& mod : modsAnyNTerm) { v.emplace_back(1, mod->massDelta); }
+    for (const auto& mod : modsAnyNTerm) { if (mod->sites.empty()) v.emplace_back(1, mod->massDelta); }
 
     // iterate over sequence
     int modsFound = 0;
@@ -815,11 +817,21 @@ void MaxQuantReader::addModsToVector(vector<SeqMod>& v, const string& modificati
             }
             // check for fixed mods
             boost::range::insert(v, v.end(), getFixedMods(modSequence[i], i + 1 - modsTotalLength, modsAnywhere));
+            if (i == 0)
+                boost::range::insert(v, v.end(), getFixedMods(modSequence[i], i + 1 - modsTotalLength, modsAnyNTerm));
+            else if (i + 1 == sequenceLength)
+                boost::range::insert(v, v.end(), getFixedMods(modSequence[i], i + 1 - modsTotalLength, modsAnyCTerm));
+
+            if (i > 0)
+                boost::range::insert(v, v.end(), getFixedMods(modSequence[i], i + 1 - modsTotalLength, modsNotNTerm));
+            if (i + 1 < sequenceLength)
+                boost::range::insert(v, v.end(), getFixedMods(modSequence[i], i + 1 - modsTotalLength, modsNotCTerm));
+
             break;
         }
     }
 
-    for (const auto& mod : modsAnyCTerm) { v.emplace_back(sequenceLength - modsTotalLength, mod->massDelta); }
+    for (const auto& mod : modsAnyCTerm) { if (mod->sites.empty()) v.emplace_back(sequenceLength - modsTotalLength, mod->massDelta); }
 
     if (modsFound < (int)modNames.size())
     {
