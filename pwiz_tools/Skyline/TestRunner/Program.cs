@@ -194,6 +194,7 @@ namespace TestRunner
                 "demo=off;showformnames=off;showpages=off;status=off;buildcheck=0;screenshotlist;" +
                 "quality=off;pass0=off;pass1=off;pass2=on;" +
                 "perftests=off;" +
+                "retrydatadownloads=off;" +
                 "runsmallmoleculeversions=off;" +
                 "recordauditlogs=off;" +
                 "clipboardcheck=off;profile=off;vendors=on;language=fr-FR,en-US;" +
@@ -387,6 +388,7 @@ namespace TestRunner
             bool offscreen = commandLineArgs.ArgAsBool("offscreen");
             bool internet = commandLineArgs.ArgAsBool("internet");
             bool perftests = commandLineArgs.ArgAsBool("perftests");
+            bool retrydatadownloads = commandLineArgs.ArgAsBool("retrydatadownloads"); // When true, re-download data files on test failure in case its due to data staleness
             bool runsmallmoleculeversions = commandLineArgs.ArgAsBool("runsmallmoleculeversions"); // Run the various tests that are versions of other tests with the document completely converted to small molecules?
             bool recordauditlogs = commandLineArgs.ArgAsBool("recordauditlogs"); // Replace or create audit logs for tutorial tests
             bool useVendorReaders = commandLineArgs.ArgAsBool("vendors");
@@ -445,6 +447,7 @@ namespace TestRunner
             var runTests = new RunTests(
                 demoMode, buildMode, offscreen, internet, showStatus, perftests,
                 runsmallmoleculeversions, recordauditlogs, teamcityTestDecoration,
+                retrydatadownloads,
                 pauseDialogs, pauseSeconds, useVendorReaders, timeoutMultiplier, 
                 results, log);
             
@@ -1068,6 +1071,10 @@ Here is a list of recognized arguments:
                                     The report is formatted so it can be used as an input
                                     file for the ""test"" or ""skip"" options in a subsequent
                                     run.
+
+    retrydatadownloads=[on|off]     Set retrydatadownloads=on to enable retry of data downloads
+                                    on test failures, with the idea that the failure might be due
+                                    to stale data sets.
 
     profile=[on|off]                Set profile=on to enable memory profiling mode.
                                     TestRunner will pause for 10 seconds after the first

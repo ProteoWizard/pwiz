@@ -23,7 +23,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Windows.Forms;
-using pwiz.Common.SystemUtil;
 
 namespace SkylineTester
 {
@@ -190,14 +189,6 @@ namespace SkylineTester
                     commandShell.Add("cd {0}", buildRoot.Quote());
                     commandShell.Add("{0} pull", git.Quote());
                 }
-            }
-
-            if (nukeBuild || updateBuild)
-            {
-                string tutorialsFolder = Path.Combine(PathEx.GetDownloadsPath(), "Tutorials");
-                commandShell.Add("#@ Deleting Tutorials directory...\n");
-                commandShell.Add("# Deleting Tutorials directory...");
-                commandShell.Add("rmdir /s {0}", tutorialsFolder);
             }
 
             if (nukeBuild)
