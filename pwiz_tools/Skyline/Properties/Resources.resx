@@ -10925,4 +10925,7 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="RefineDlg_MSLevel_2" xml:space="preserve">
     <value>2</value>
   </data>
+  <data name="SkylineWindow_ShowRefineDlg_Refining_document" xml:space="preserve">
+    <value>Refining document</value>
+  </data>
 </root>

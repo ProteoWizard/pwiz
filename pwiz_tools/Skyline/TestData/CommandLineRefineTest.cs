@@ -300,8 +300,8 @@ namespace pwiz.SkylineTestData
             OutPath = Path.Combine(Path.GetDirectoryName(DocumentPath) ?? string.Empty, "gctest.sky");
 
             // Verify pValueCutoff and foldchange cutoff work
-            var pValueCutoff = 0.05.ToString();
-            var foldChangeCutoff = 2.ToString();
+            var pValueCutoff = 0.05.ToString(CultureInfo.CurrentCulture);
+            var foldChangeCutoff = 2.ToString(CultureInfo.CurrentCulture);
             var args = new List<string>
             {
                 CommandArgs.ARG_REFINE_GC_ADJUSTED_P_VALUE.GetArgumentTextWithValue(pValueCutoff),
@@ -326,14 +326,14 @@ namespace pwiz.SkylineTestData
             AssertEx.Contains(output, parts.ToArray());
             IsDocumentState(OutPath, 48, 0, 20, 0, 20, 114, output);
 
-            pValueCutoff = 0.08.ToString();
+            pValueCutoff = 0.08.ToString(CultureInfo.CurrentCulture);
             args[0] = CommandArgs.ARG_REFINE_GC_ADJUSTED_P_VALUE.GetArgumentTextWithValue(pValueCutoff);
             parts[0] = PropertyNames.RefinementSettings_AdjustedPValueCutoff;
             output = Run(args.ToArray());
             AssertEx.Contains(output, parts.ToArray());
             IsDocumentState(OutPath, 48, 0, 103, 0, 103, 597, output);
 
-            pValueCutoff = 0.05.ToString();
+            pValueCutoff = 0.05.ToString(CultureInfo.CurrentCulture);
             foldChangeCutoff = 2.ToString();
             args.Clear();
             args.Add(CommandArgs.ARG_REFINE_GC_ADJUSTED_P_VALUE.GetArgumentTextWithValue(pValueCutoff));

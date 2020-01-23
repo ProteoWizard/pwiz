@@ -583,7 +583,11 @@ namespace pwiz.Skyline.EditUI
                 groupComparisonDefs = _groupComparisonsListBoxDriver.Chosen.ToList();
             }
 
-            int msLevelGroupComparison = int.Parse(comboMSGroupComparisons.SelectedItem.ToString());
+            int? msLevelGroupComparison = null;
+            if (adjustedPValueCutoff.HasValue || foldChangeCutoff.HasValue)
+            {
+                msLevelGroupComparison = int.Parse(comboMSGroupComparisons.SelectedItem.ToString());
+            }
 
             RefinementSettings = new RefinementSettings
                                      {

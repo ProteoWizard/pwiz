@@ -2568,13 +2568,13 @@ namespace pwiz.Skyline
                     ModifyDocument(Resources.SkylineWindow_ShowRefineDlg_Refine,
                         doc =>
                         {
-                            using (var longWaitDlg = new LongWaitDlg(this, true))
+                            using (var longWaitDlg = new LongWaitDlg(this))
                             {
-                                longWaitDlg.Message = "Refining document";
+                                longWaitDlg.Message = Resources.SkylineWindow_ShowRefineDlg_Refining_document;
                                 longWaitDlg.PerformWork(refineDlg, 1000, progressMonitor =>
                                 {
                                     var srmSettingsChangeMonitor =
-                                        new SrmSettingsChangeMonitor(progressMonitor, "Refining document", this, doc);
+                                        new SrmSettingsChangeMonitor(progressMonitor, Resources.SkylineWindow_ShowRefineDlg_Refining_document, this, doc);
 
                                         doc = refineDlg.RefinementSettings.Refine(doc, srmSettingsChangeMonitor);
                                     });
