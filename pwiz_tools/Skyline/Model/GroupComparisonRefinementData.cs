@@ -1,15 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using NHibernate.Mapping;
 using pwiz.Common.DataAnalysis;
 using pwiz.Common.DataAnalysis.Matrices;
-using pwiz.Skyline.Controls.Graphs;
-using pwiz.Skyline.Controls.GroupComparison;
-using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
@@ -19,7 +12,6 @@ namespace pwiz.Skyline.Model
     class GroupComparisonRefinementData
     {
         private List<List<GroupComparisonRow>> Data { get; set; }
-        private SrmDocument _document;
 
         private readonly double _adjustedPValCutoff;
         private readonly double _foldChangeCutoff;
@@ -31,7 +23,6 @@ namespace pwiz.Skyline.Model
             double foldChangeCutoff, int msLevel, List<GroupComparisonDef> groupComparisonDefs,
             SrmSettingsChangeMonitor progressMonitor)
         {
-            _document = document;
             _progressMonitor = progressMonitor;
             _foldChangeCutoff = foldChangeCutoff;
             _adjustedPValCutoff = adjustedPValCutoff;
@@ -40,36 +31,9 @@ namespace pwiz.Skyline.Model
 
             foreach (var groupComparisonDef in groupComparisonDefs)
             {
-                var groupComparer = new GroupComparer(groupComparisonDef, _document, _qrFactorizationCache);
+                var groupComparer = new GroupComparer(groupComparisonDef, document, _qrFactorizationCache);
                 var results = GroupComparisonModel.ComputeResults(groupComparer, document, null, null, progressMonitor);
 
-                foreach (var protein in _document.MoleculeGroups)
-                {
-                    IEnumerable<PeptideDocNode> peptides;
-                    if (groupComparer.ComparisonDef.PerProtein)
-                    {
-                        peptides = new PeptideDocNode[] { null };
-                    }
-                    else
-                    {
-                        peptides = protein.Molecules;
-                    }
-
-                    foreach (var peptide in peptides)
-                    {
-                        if (_progressMonitor != null && _progressMonitor.IsCanceled())
-                        {
-                            throw new OperationCanceledException();
-                        }
-
-                        if (progressMonitor != null)
-                        {
-                            progressMonitor.ProcessMolecule(peptide);
-                        }
-
-                        results.AddRange(groupComparer.CalculateFoldChanges(protein, peptide));
-                    }
-                }
 
                 var adjustedPValues = PValues.AdjustPValues(results.Select(
                     row => row.LinearFitResult.PValue)).ToArray();
@@ -155,22 +119,20 @@ namespace pwiz.Skyline.Model
 
             return toRemove.Distinct().ToList();
         }
-        
-        public class GroupComparisonRow
-        {
-            public GroupComparisonRow(PeptideGroupDocNode protein, PeptideDocNode peptide, int? msLevel, FoldChangeResult result)
-            {
-                Protein = protein;
-                Peptide = peptide;
-                MsLevel = msLevel;
-                FoldChangeResult = result;
-            }
-
-            public PeptideGroupDocNode Protein { get; private set; }
-            public PeptideDocNode Peptide { get; private set; }
-            public int? MsLevel { get; private set; }
-            public FoldChangeResult FoldChangeResult { get; private set; }
-        }
     }
+    public class GroupComparisonRow
+    {
+        public GroupComparisonRow(PeptideGroupDocNode protein, PeptideDocNode peptide, int? msLevel, FoldChangeResult result)
+        {
+            Protein = protein;
+            Peptide = peptide;
+            MsLevel = msLevel;
+            FoldChangeResult = result;
+        }
 
+        public PeptideGroupDocNode Protein { get; private set; }
+        public PeptideDocNode Peptide { get; private set; }
+        public int? MsLevel { get; private set; }
+        public FoldChangeResult FoldChangeResult { get; private set; }
+    }
 }
