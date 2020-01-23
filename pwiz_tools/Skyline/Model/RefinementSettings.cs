@@ -378,9 +378,8 @@ namespace pwiz.Skyline.Model
             {
                 var pValueCutoff = AdjustedPValueCutoff.HasValue ? AdjustedPValueCutoff.Value : double.NaN;
                 var foldChangeCutoff = FoldChangeCutoff.HasValue ? FoldChangeCutoff.Value : double.NaN;
-                var msLevel = MSLevelGroupComparison.HasValue ? MSLevelGroupComparison.Value : 1;
                 var groupComparisonData = new GroupComparisonRefinementData(refined, pValueCutoff, foldChangeCutoff,
-                    msLevel, GroupComparisonDefs, progressMonitor);
+                    MSLevelGroupComparison, GroupComparisonDefs, progressMonitor);
                 refined = groupComparisonData.RemoveBelowCutoffs(refined);
             }
 

@@ -791,14 +791,14 @@ namespace pwiz.Skyline
             (c, p) => c.Refinement.MinimumDetections = p.ValueInt);
         // Refinement Group Comparison Tab
         public static readonly Argument ARG_REFINE_GC_ADJUSTED_P_VALUE = new RefineArgument(
-            @"refine-gc-adjusted-p-value-cutoff", NUM_VALUE,
+            @"refine-gc-p-value-cutoff", NUM_VALUE,
             (c, p) => c.Refinement.AdjustedPValueCutoff = p.ValueDouble);
         public static readonly Argument ARG_REFINE_GC_FOLD_CHANGE_CUTOFF = new RefineArgument(@"refine-gc-fold-change-cutoff",
             NUM_VALUE,
             (c, p) => c.Refinement.FoldChangeCutoff = Math.Log(p.ValueDouble, 2));
         public static readonly Argument ARG_REFINE_GC_MS_LEVEL = new RefineArgument(@"refine-gc-ms-level", NUM_VALUE,
             (c, p) => c.Refinement.MSLevelGroupComparison = p.ValueInt);
-        public static readonly Argument ARG_REFINE_GROUPS = new RefineArgument(@"refine-group-comparisons", LABEL_VALUE,
+        public static readonly Argument ARG_REFINE_GROUP = new RefineArgument(@"refine-gc-name", LABEL_VALUE,
             (c, p) => c.Refinement.GroupComparisonNames.Add(p.Value));
 
         private static readonly ArgumentGroup GROUP_REFINEMENT = new ArgumentGroup(
@@ -818,7 +818,7 @@ namespace pwiz.Skyline
             ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF, ARG_REFINE_CV_GLOBAL_NORMALIZE, ARG_REFINE_CV_REFERENCE_NORMALIZE,
             ARG_REFINE_CV_TRANSITIONS, ARG_REFINE_CV_TRANSITIONS_COUNT, ARG_REFINE_CV_MS_LEVEL,
             ARG_REFINE_QVALUE_CUTOFF, ARG_REFINE_MINIMUM_DETECTIONS,
-            ARG_REFINE_GC_ADJUSTED_P_VALUE, ARG_REFINE_GC_FOLD_CHANGE_CUTOFF, ARG_REFINE_GC_MS_LEVEL, ARG_REFINE_GROUPS);
+            ARG_REFINE_GC_ADJUSTED_P_VALUE, ARG_REFINE_GC_FOLD_CHANGE_CUTOFF, ARG_REFINE_GC_MS_LEVEL, ARG_REFINE_GROUP);
         
 
         public RefinementSettings Refinement { get; private set; }

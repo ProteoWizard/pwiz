@@ -302,13 +302,11 @@ namespace pwiz.SkylineTestData
             // Verify pValueCutoff and foldchange cutoff work
             var pValueCutoff = 0.05.ToString();
             var foldChangeCutoff = 2.ToString();
-            var msLevel = 2.ToString();
             var args = new List<string>
             {
                 CommandArgs.ARG_REFINE_GC_ADJUSTED_P_VALUE.GetArgumentTextWithValue(pValueCutoff),
                 CommandArgs.ARG_REFINE_GC_FOLD_CHANGE_CUTOFF.GetArgumentTextWithValue(foldChangeCutoff),
-                CommandArgs.ARG_REFINE_GROUPS.GetArgumentTextWithValue("Test Group Comparison"),
-                CommandArgs.ARG_REFINE_GC_MS_LEVEL.GetArgumentTextWithValue(msLevel)
+                CommandArgs.ARG_REFINE_GROUP.GetArgumentTextWithValue("Test Group Comparison"),
             };
 
             var parts = new List<string>
@@ -340,9 +338,8 @@ namespace pwiz.SkylineTestData
             args.Clear();
             args.Add(CommandArgs.ARG_REFINE_GC_ADJUSTED_P_VALUE.GetArgumentTextWithValue(pValueCutoff));
             args.Add(CommandArgs.ARG_REFINE_GC_FOLD_CHANGE_CUTOFF.GetArgumentTextWithValue(foldChangeCutoff));
-            args.Add(CommandArgs.ARG_REFINE_GC_MS_LEVEL.GetArgumentTextWithValue(msLevel));
-            args.Add(CommandArgs.ARG_REFINE_GROUPS.GetArgumentTextWithValue("Test Group Comparison"));
-            args.Add(CommandArgs.ARG_REFINE_GROUPS.GetArgumentTextWithValue("Test Group Comparison 2"));
+            args.Add(CommandArgs.ARG_REFINE_GROUP.GetArgumentTextWithValue("Test Group Comparison"));
+            args.Add(CommandArgs.ARG_REFINE_GROUP.GetArgumentTextWithValue("Test Group Comparison 2"));
             parts.Add(PropertyNames.RefinementSettings_FoldChangeCutoff);
             output = Run(args.ToArray());
             AssertEx.Contains(output, parts.ToArray());

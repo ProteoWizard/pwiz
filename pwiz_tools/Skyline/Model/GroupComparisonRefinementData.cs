@@ -20,13 +20,20 @@ namespace pwiz.Skyline.Model
         private SrmSettingsChangeMonitor _progressMonitor;
 
         public GroupComparisonRefinementData(SrmDocument document, double adjustedPValCutoff,
-            double foldChangeCutoff, int msLevel, List<GroupComparisonDef> groupComparisonDefs,
+            double foldChangeCutoff, int? msLevel, List<GroupComparisonDef> groupComparisonDefs,
             SrmSettingsChangeMonitor progressMonitor)
         {
             _progressMonitor = progressMonitor;
             _foldChangeCutoff = foldChangeCutoff;
             _adjustedPValCutoff = adjustedPValCutoff;
-            _msLevel = msLevel;
+            if (msLevel.HasValue)
+            {
+                _msLevel = msLevel.Value;
+            }
+            else
+            {
+                _msLevel = document.PeptideTransitions.Any(t => !t.IsMs1) ? 2 : 1;
+            }
             Data = new List<List<GroupComparisonRow>>();
 
             foreach (var groupComparisonDef in groupComparisonDefs)
