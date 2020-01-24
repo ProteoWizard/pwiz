@@ -77,6 +77,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
             _gridViewStandardDriver.LibraryPeptideList = _gridViewLibraryDriver.Items;
             _gridViewLibraryDriver.StandardPeptideList = _gridViewStandardDriver.Items;
 
+            comboRegressionType.Items.AddRange(IrtRegressionType.All.Cast<object>().ToArray());
+            SelectedRegressionType = IrtRegressionType.Default;
+
             _driverStandards = new SettingsListComboDriver<IrtStandard>(comboStandards, Settings.Default.IrtStandardList);
             _driverStandards.LoadList(IrtStandard.EMPTY.GetKey());
 
@@ -175,6 +178,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         public int StandardPeptideCount => StandardPeptideList.Count;
         public int LibraryPeptideCount => LibraryPeptideList.Count;
+
+        public string SelectedRegressionType
+        {
+            get => comboRegressionType.SelectedItem.ToString();
+            set => comboRegressionType.SelectedItem = value;
+        }
 
         public void ClearStandardPeptides()
         {
@@ -441,6 +450,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                             db = db.SetDocumentXml(Program.ActiveDocumentUI, docXml);
                             docXml = db.DocumentXml;
                         }
+                        db.SetRegressionType(SelectedRegressionType);
                         fileSaver.Commit();
                     }
                 }
@@ -737,6 +747,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
             /// </summary>
             public BindingList<DbIrtPeptide> StandardPeptideList { private get; set; }
 
+            public string RegressionType { private get; set; }
+
             protected override void DoPaste()
             {
                 var libraryPeptidesNew = new List<DbIrtPeptide>();
@@ -781,7 +793,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     try
                     {
                         var status = longWait.PerformWork(MessageParent, 800, monitor =>
-                            irtAverages = ProcessRetentionTimes(monitor, GetRetentionTimeProviders(document).ToArray()));
+                            irtAverages = ProcessRetentionTimes(monitor, GetRetentionTimeProviders(document).ToArray(), RegressionType));
                         if (status.IsError)
                         {
                             MessageBox.Show(MessageParent, status.ErrorException.Message, Program.Name);
@@ -891,7 +903,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                                 var irtProvider = library.RetentionTimeProvidersIrt.ToArray();
                                 if (irtProvider.Any())
                                 {
-                                    irtAverages = ProcessRetentionTimes(monitor, irtProvider);
+                                    irtAverages = ProcessRetentionTimes(monitor, irtProvider, RegressionType);
                                 }
                                 else
                                 {
@@ -905,7 +917,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                                         return;
                                     }
 
-                                    irtAverages = ProcessRetentionTimes(monitor, library.RetentionTimeProviders.ToArray());
+                                    irtAverages = ProcessRetentionTimes(monitor, library.RetentionTimeProviders.ToArray(), RegressionType);
                                 }
                             });
                             if (status.IsError)
@@ -968,7 +980,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                             var irtDb = IrtDb.GetIrtDb(irtCalc.DatabasePath, monitor);
 
                             irtAverages = ProcessRetentionTimes(monitor,
-                                new[] { new IrtRetentionTimeProvider(!irtCalc.Name.Equals(AddIrtCalculatorDlg.DEFAULT_NAME) ? irtCalc.Name : Path.GetFileName(irtCalc.DatabasePath), irtDb) });
+                                new[] { new IrtRetentionTimeProvider(!irtCalc.Name.Equals(AddIrtCalculatorDlg.DEFAULT_NAME) ? irtCalc.Name : Path.GetFileName(irtCalc.DatabasePath), irtDb) },
+                                RegressionType);
                         });
                         if (status.IsError)
                         {
@@ -1016,9 +1029,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 }
             }
 
-            private ProcessedIrtAverages ProcessRetentionTimes(IProgressMonitor monitor, IRetentionTimeProvider[] providers)
+            private ProcessedIrtAverages ProcessRetentionTimes(IProgressMonitor monitor, IRetentionTimeProvider[] providers, string regressionType)
             {
-                return RCalcIrt.ProcessRetentionTimes(monitor, providers, StandardPeptideList.ToArray(), Items.ToArray());
+                return RCalcIrt.ProcessRetentionTimes(monitor, providers, StandardPeptideList.ToArray(), Items.ToArray(), regressionType);
             }
 
             private void AddToLibrary(ProcessedIrtAverages irtAverages)
@@ -1063,7 +1076,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                                         var status = longWait.PerformWork(MessageParent, 800,
                                             monitor => irtAverages = RCalcIrt.ProcessRetentionTimes(monitor,
                                                 irtAverages.ProviderData.Select(data => data.RetentionTimeProvider).ToArray(),
-                                                newStandards.ToArray(), Items.ToArray()));
+                                                newStandards.ToArray(), Items.ToArray(), RegressionType));
                                         if (status.IsError)
                                         {
                                             MessageDlg.ShowWithException(MessageParent, Resources.LibraryGridViewDriver_AddToLibrary_An_error_occurred_while_recalibrating_, status.ErrorException);
@@ -1268,6 +1281,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
         }
 
         #endregion
+
+        private void comboRegressionType_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _gridViewLibraryDriver.RegressionType = SelectedRegressionType;
+        }
 
         private void comboStandards_SelectedIndexChanged(object sender, EventArgs e)
         {

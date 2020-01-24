@@ -378,7 +378,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (!LoadPeptideSearchLibrary(docLibSpec))
                 return false;
 
-            var addedIrts = LibraryBuildNotificationHandler.AddIrts(ImportPeptideSearch.DocLib, docLibSpec, _driverStandards.SelectedItem, WizardForm);
+            var addedIrts = LibraryBuildNotificationHandler.AddIrts(IrtRegressionType.Default, ImportPeptideSearch.DocLib, docLibSpec, _driverStandards.SelectedItem, WizardForm, false);
 
             var docNew = ImportPeptideSearch.AddDocumentSpectralLibrary(DocumentContainer.Document, docLibSpec);
             if (docNew == null)
