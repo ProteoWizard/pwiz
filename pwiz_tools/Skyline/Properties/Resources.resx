@@ -10933,5 +10933,7 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="SkylineWindow_ShowRefineDlg_Refining_document" xml:space="preserve">
     <value>Refining document</value>
+  <data name="SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_" xml:space="preserve">
+    <value>The document must be fully loaded before importing a peptide search.</value>
   </data>
 </root>
