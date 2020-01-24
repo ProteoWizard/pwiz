@@ -27467,6 +27467,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The document must be fully loaded before importing a peptide search..
+        /// </summary>
+        public static string SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before" +
+                        "_importing_a_peptide_search_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You must save this document before importing a peptide search..
         /// </summary>
         public static string SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_ {
