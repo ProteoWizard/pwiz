@@ -33,6 +33,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -308,14 +309,18 @@ namespace pwiz.SkylineTestTutorial
                     Assert.IsTrue(previewReportDlg.ColumnCount > columnCount);
                     Assert.AreEqual((rowCount / 2), previewReportDlg.RowCount);
 
+                    string heightCol = TextUtil.SpaceSeparate("light", ColumnCaptions.Height);
+                    bool foundHeightCol = false;
                     foreach (DataGridViewColumn leftCol in previewReportDlg.DataGridView.Columns)
                     {
-                        if (leftCol.HeaderText == "light Height")
+                        if (leftCol.HeaderText == heightCol)
                         {
                             previewReportDlg.DataGridView.FirstDisplayedScrollingColumnIndex = leftCol.Index;
+                            foundHeightCol = true;
                             break;
                         }
                     }
+                    Assert.IsTrue(foundHeightCol);
                 });
                 PauseForScreenShot<DocumentGridForm>("Adjust the scrollbar so that the first displayed column is \"light Height\" and the last displayed column is \"heavy Product Mz\"", 17);
                 OkDialog(previewReportDlg, previewReportDlg.Close);
@@ -349,33 +354,44 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(manageViewsForm, manageViewsForm.Close);
             Size originalSize = Size.Empty;
             Point formLocation = Point.Empty;
-            RunUI(() =>
+            if (IsPauseForScreenShots)
             {
-                documentGridForm.NavBar.ReportsButton.ShowDropDown();   //we need to expand it to determine its full size
-                int ddHeight = documentGridForm.NavBar.ReportsButton.DropDown.Height;
-                formLocation = new Point(SkylineWindow.DesktopBounds.Left + 200, SkylineWindow.DesktopBounds.Top + 200);
-                documentGridForm.NavBar.ReportsButton.HideDropDown();
-                originalSize = documentGridForm.Size;
-                //make sure the dropdown fits into the window with some margin.
-                documentGridForm.FloatingPane.FloatAt(new Rectangle(formLocation, new Size(documentGridForm.Width, ddHeight + 150)));
-                documentGridForm.NavBar.ReportsButton.ShowDropDown();
+                // CONSIDER: The ShowDropDown() use below causes User+GDI handle leaks
+                RunUI(() =>
+                {
+                    documentGridForm.NavBar.ReportsButton.ShowDropDown();   //we need to expand it to determine its full size
+                    int ddHeight = documentGridForm.NavBar.ReportsButton.DropDown.Height;
+                    formLocation = new Point(SkylineWindow.DesktopBounds.Left + 200, SkylineWindow.DesktopBounds.Top + 200);
+                    documentGridForm.NavBar.ReportsButton.HideDropDown();
+                    originalSize = documentGridForm.Size;
+                    //make sure the dropdown fits into the window with some margin.
+                    documentGridForm.FloatingPane.FloatAt(new Rectangle(formLocation, new Size(documentGridForm.Width, ddHeight + 150)));
+                    documentGridForm.NavBar.ReportsButton.ShowDropDown();
 
-                var i = 0;      //find and select the Summary Statistics item.
-                var items = documentGridForm.NavBar.ReportsButton.DropDown.Items;
-                while (i < items.Count && items[i].Text != "Summary Statistics"){i++;}
-                if(i < items.Count)
-                    items[i].Select();
-            });
-            PauseForScreenShot<DocumentGridForm>("Click the Reports dropdown and highlight 'Summary_stats'", 20);
+                    var i = 0;      //find and select the Summary Statistics item.
+                    var items = documentGridForm.NavBar.ReportsButton.DropDown.Items;
+                    while (i < items.Count && items[i].Text != "Summary Statistics")
+                    {
+                        i++;
+                    }
+                    if (i < items.Count)
+                        items[i].Select();
+                    else
+                    {
+                        Assert.Fail("Summary Statistics not found in Reports menu");
+                    }
+                });
+                PauseForScreenShot<DocumentGridForm>("Click the Reports dropdown and highlight 'Summary_stats'", 20);
 
+                RunUI(() => documentGridForm.NavBar.ReportsButton.HideDropDown());
+            }
             RunUI(() => documentGridForm.ChooseView("Summary Statistics"));
             WaitForConditionUI(() => documentGridForm.IsComplete);
-            RunUI(() =>
-            {
-                documentGridForm.ExpandColumns();
-                documentGridForm.FloatingPane.FloatAt(new Rectangle(formLocation, originalSize));
-            });
+            RunUI(() => documentGridForm.ExpandColumns());
             
+            if (IsPauseForScreenShots)
+                RunUI(() => documentGridForm.FloatingPane.FloatAt(new Rectangle(formLocation, originalSize)));
+
             PauseForScreenShot<DocumentGridForm>("Document Grid with summary statistics", 20);
 
             var viewEditor = ShowDialog<ViewEditor>(documentGridForm.NavBar.CustomizeView);
@@ -424,13 +440,6 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot(SkylineWindow, "Take full screen capture of floating windows", 25);
             RestoreViewOnScreen(26);
 
-            //RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
-            //{
-            //    findPeptideDlg.SearchString = "467.2440+++"; // Not L10N
-            //    findPeptideDlg.FindNext();
-            //    findPeptideDlg.Close();
-            //});
-
             PauseForScreenShot(SkylineWindow, "Main window layout", 26);
 
             // Not understood: WaitForOpenForm occasionally hangs in nightly test runs. Fixed it by calling
@@ -463,7 +472,6 @@ namespace pwiz.SkylineTestTutorial
             WaitForGraphs();
             RunUI(() => SkylineWindow.SelectedResultsIndex = 1);
             WaitForGraphs();
-            //RestoreViewOnScreen(27);
             PauseForScreenShot<LiveResultsGrid>("Results Grid view subsection", 27);
 
             RunDlg<ViewEditor>(resultsGridForm.NavBar.CustomizeView, resultsGridViewEditor =>
@@ -505,7 +513,7 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(defineAnnotationDlg, defineAnnotationDlg.OkDialog);
             OkDialog(editListDlg, editListDlg.OkDialog);
             RunUI(() => chooseAnnotationsDlg.AnnotationsCheckedListBox.SetItemChecked(0, true));
-            PauseForScreenShot<DocumentSettingsDlg>("Annotation Settings form", 29);   // p. 26
+            PauseForScreenShot<DocumentSettingsDlg>("Annotation Settings form", 29);   // p. 29
 
             OkDialog(chooseAnnotationsDlg, chooseAnnotationsDlg.OkDialog);
 
@@ -521,8 +529,7 @@ namespace pwiz.SkylineTestTutorial
             });
             PauseForScreenShot<ViewEditor.ChooseColumnsView>("Customize View form showing Tailing annotation checked", 30);
             OkDialog(viewEditor, viewEditor.OkDialog);
-            //RestoreViewOnScreen(29);
-            PauseForScreenShot(SkylineWindow, "Main window with Tailing column added to Results Grid");   // p. 27
+            PauseForScreenShot(SkylineWindow, "Main window with Tailing column added to Results Grid", 30);   // p. 30
         }
         private string GetLocalizedCaption(string caption)
         {
