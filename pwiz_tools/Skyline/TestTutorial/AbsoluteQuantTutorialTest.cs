@@ -52,7 +52,7 @@ namespace pwiz.SkylineTestTutorial
             // IsPauseForScreenShots = true;
 
             ForceMzml = (Program.PauseSeconds == 0);   // Mzml is ~8x faster for this test.
-                                                    
+
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/AbsoluteQuant-1_4.pdf";
 
             TestFilesZipPaths = new[]
@@ -285,7 +285,7 @@ namespace pwiz.SkylineTestTutorial
                 peptideSettingsUi.QuantNormalizationMethod = new NormalizationMethod.RatioToLabel(IsotopeLabelType.heavy);
                 peptideSettingsUi.QuantUnits = quantUnits;
             });
-            PauseForScreenShot("Peptide Settings Quantification Tab", 12);
+            PauseForScreenShot<PeptideSettingsUI.QuantificationTab>("Peptide Settings Quantification Tab", 12);
             OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
 
             // Specify analyte concentrations of external standards
