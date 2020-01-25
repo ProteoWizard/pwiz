@@ -160,6 +160,7 @@
     <Compile Include="AccessServerTest.cs" />
     <Compile Include="AssociateProteinVariantTest.cs" />
     <Compile Include="GroupComparisonRefineTest.cs" />
+    <Compile Include="RescoreImportDocumentTest.cs" />
     <Compile Include="RescoreRawChromatogramsTest.cs" />
     <Compile Include="SkypTest.cs" />
     <Compile Include="AddLibraryTest.cs" />
@@ -467,6 +468,7 @@
     <None Include="RenameProteinsTest.zip" />
     <None Include="ReportSharingTest.zip" />
     <None Include="ReportSummaryTest.zip" />
+    <None Include="RescoreImportDocumentTest.zip" />
     <None Include="RescoreRawChromatogramsTest.zip" />
     <None Include="RetentionTimeAlignmentTest.zip" />
     <None Include="RetentionTimeFilterTest.zip" />
