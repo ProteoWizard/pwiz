@@ -31,6 +31,7 @@ using System::String;
 void test()
 {
     CVParamList params;
+    UserParamList userParams;
 
     params.Add(gcnew CVParam(CVID::MS_lowest_observed_m_z, 420));
     params.Add(gcnew CVParam(CVID::MS_highest_observed_m_z, 2000.012345));
@@ -38,7 +39,10 @@ void test()
     params.Add(gcnew CVParam(CVID::MS_scan_start_time, 5.890500, CVID::UO_minute)); 
     params.Add(gcnew CVParam(CVID::MS_collision_energy, 35.00, CVID::UO_electronvolt)); 
     params.Add(gcnew CVParam(CVID::MS_deisotoping, true)); 
-    params.Add(gcnew CVParam(CVID::MS_peak_picking, false)); 
+    params.Add(gcnew CVParam(CVID::MS_peak_picking, false));
+
+    userParams.Add(gcnew UserParam("highest m/z", "2000.012345", "xsd:double"));
+    userParams.Add(gcnew UserParam("m/z", "goober", "xsd:string"));
 
     // verify simple things
     unit_assert(420 == (int) params[0]->value);
@@ -56,6 +60,12 @@ void test()
     unit_assert(CV::cvTermInfo("MS:1000447")->cvid == (gcnew CVTermInfo("MS:1000447"))->cvid);
     unit_assert(CV::cvIsA(CVID::MS_LTQ, CVID::MS_Thermo_Scientific_instrument_model));
     unit_assert(!CV::cvIsA(CVID::MS_QSTAR, CVID::MS_Thermo_Scientific_instrument_model));
+
+    unit_assert_throws_what((double) params[2]->value, System::InvalidCastException, "Failed to cast CVParam");
+
+    unit_assert(2000.012345 == (double) userParams[0]->value);
+    unit_assert("goober" == (String^) userParams[1]->value);
+    unit_assert_throws_what((double) userParams[1]->value, System::InvalidCastException, "Failed to cast UserParam");
 
     System::Collections::Generic::IList<CVID>^ cvids = CV::cvids();
     unit_assert(cvids->Count > 0);

@@ -23,6 +23,7 @@ using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
@@ -98,7 +99,7 @@ namespace pwiz.SkylineTestFunctional
                 "NoClass",  // Not L10N
                 Resources.ToolDescription_RunExecutableBackground_Error_running_the_installed_tool_0_It_seems_to_be_missing_a_file__Please_reinstall_the_tool_and_try_again_);
 
-            string dllPath = TestFilesDir.GetTestPath("ExampleArgCollector.dll"); // Not L10N
+            string dllPath = TestFilesDir.GetTestPath(@"ExampleArgCollector.dll");
             // Copy to bin directory rather than loading an assembly in the TestFilesDir, because we can't
             // unlock the file once we load the assembly, and the unit test base class tries to delete
             // TestFilesDir when the test is done.
@@ -106,7 +107,7 @@ namespace pwiz.SkylineTestFunctional
             string dllCopyPath = Path.Combine(skylineDir, Path.GetFileName(dllPath) ?? string.Empty);
             try
             {
-                File.Copy(dllPath, dllCopyPath, true);
+                File.Copy(PathEx.SafePath(dllPath), dllCopyPath, true);
             }
 // ReSharper disable once EmptyGeneralCatchClause
             catch (Exception)

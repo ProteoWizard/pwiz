@@ -2396,7 +2396,7 @@ namespace pwiz.Skyline
                     longWaitBroker.Message = string.Format(Resources.SkylineWindow_ImportFiles_Importing__0__, Path.GetFileName(filePath));
                 }
 
-                using (var reader = new StreamReader(filePath))
+                using (var reader = new StreamReader(PathEx.SafePath(filePath)))
                 {
                     IdentityPath firstAddedForFile, nextAdd;
                     docResult = docResult.ImportDocumentXml(reader,
@@ -2989,6 +2989,11 @@ namespace pwiz.Skyline
         {
             if (!CheckDocumentExists(Resources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_))
             {
+                return;
+            }
+            else if (!Document.IsLoaded)
+            {
+                MessageDlg.Show(this, Resources.SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_);
                 return;
             }
 

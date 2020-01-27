@@ -159,6 +159,8 @@
   <ItemGroup>
     <Compile Include="AccessServerTest.cs" />
     <Compile Include="AssociateProteinVariantTest.cs" />
+    <Compile Include="RescoreImportDocumentTest.cs" />
+    <Compile Include="RescoreRawChromatogramsTest.cs" />
     <Compile Include="SkypTest.cs" />
     <Compile Include="AddLibraryTest.cs" />
     <Compile Include="AreaCVHistogramTest.cs" />
@@ -410,6 +412,7 @@
     <None Include="ExportIsolationListTest.zip" />
     <None Include="ExportMethodDialogTest.zip" />
     <None Include="ExportSpectralLibraryTest.zip" />
+    <None Include="ExpressionAnnotationsTest.zip" />
     <None Include="FiguresOfMeritTest.zip" />
     <None Include="FilterMzTest.zip" />
     <None Include="FullScanIdTest.zip" />
@@ -445,14 +448,17 @@
     <None Include="MidasModificationTest.zip" />
     <None Include="MidasTest.zip" />
     <None Include="ModifiedAreaProportionTest.zip" />
+    <None Include="MultiSelectRetentionTimeTest.zip" />
     <None Include="NegativeIonChromatogramsTest.zip" />
     <None Include="NeutralLossLibraryTest.zip" />
     <None Include="OptimizeTest.zip" />
+    <None Include="OrderByReplicateAnnotationTest.zip" />
     <None Include="PasteMoleculeTest.zip" />
     <None Include="PeakBoundaryCompareTest.zip" />
     <None Include="PeakScoringModelTest.zip" />
     <None Include="PivotEditorTest.zip" />
     <None Include="PrecursorTest.zip" />
+    <None Include="PrositSkylineIntegrationTest.zip" />
     <None Include="ProteinMetadataBackgroundLoaderTest.zip" />
     <None Include="ProteinMetadataFunctionalTest.zip" />
     <None Include="QuantitativeTest.zip" />
@@ -461,13 +467,17 @@
     <None Include="RenameProteinsTest.zip" />
     <None Include="ReportSharingTest.zip" />
     <None Include="ReportSummaryTest.zip" />
+    <None Include="RescoreImportDocumentTest.zip" />
+    <None Include="RescoreRawChromatogramsTest.zip" />
     <None Include="RetentionTimeAlignmentTest.zip" />
     <None Include="RetentionTimeFilterTest.zip" />
     <None Include="RowActionsTest.zip" />
+    <None Include="RunToRunRegressionTest.zip" />
     <None Include="SaveAsPreviousVersionTest.zip" />
     <None Include="ShareSettingsTest.zip" />
     <None Include="SingleReplicateResponseCurveTest.zip" />
     <None Include="SkylineCmdTest.zip" />
+    <None Include="SkypTest.zip" />
     <None Include="SmallMoleculeIrtTest.zip" />
     <None Include="SmallMoleculesDocumentGrid.zip" />
     <None Include="SplitGraphTest.zip" />
@@ -484,6 +494,7 @@
     <None Include="ToolServiceTest.zip" />
     <None Include="ToolStoreDlgTest.zip" />
     <None Include="ToolUpdatesTest.zip" />
+    <None Include="TreeRestorationTest.zip" />
     <None Include="UIModeTest.zip" />
     <None Include="UniquePeptidesDialogTest.zip" />
     <None Include="UpdateGlobalStandardTest.zip" />

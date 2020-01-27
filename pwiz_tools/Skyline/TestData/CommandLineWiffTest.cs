@@ -22,6 +22,7 @@ using System.Linq;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -86,7 +87,7 @@ namespace pwiz.SkylineTestData
             // From the 2nd file: "blank2", "rfp9_after_h_12", "test2", "rfp9_before_h_12"
             var wiffCopy = Path.Combine(testFilesDir.FullPath,
                 Path.GetFileNameWithoutExtension(rawPath) + "_copy.wiff");
-            File.Copy(rawPath, wiffCopy);
+            File.Copy(PathEx.SafePath(rawPath), wiffCopy);
             Assert.IsTrue(File.Exists(wiffCopy));
             var msg = RunCommand("--in=" + docPath,
                 "--import-file=" + wiffCopy,

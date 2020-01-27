@@ -691,7 +691,7 @@ namespace pwiz.Skyline.Model.Lib
                     int rowsRead = 0;
                     while (reader.Read())
                     {
-                        int percentComplete = rowsRead++*100/rows;
+                        int percentComplete = rowsRead++*percent/rows;
                         if (status.PercentComplete != percentComplete)
                         {
                             // Check for cancellation after each integer change in percent loaded.
@@ -702,7 +702,7 @@ namespace pwiz.Skyline.Model.Lib
                             }
 
                             // If not cancelled, update progress.
-                            loader.UpdateProgress(status = status.ChangePercentComplete(percent));
+                            loader.UpdateProgress(status = status.ChangePercentComplete(percentComplete));
                         }
 
                         int id = reader.GetInt32(iId);

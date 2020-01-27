@@ -322,7 +322,7 @@
     <value>5</value>
   </data>
   <data name="cbMergePeptides.Text" xml:space="preserve">
-    <value>合并匹配的肽</value>
+    <value>合并匹配的肽段</value>
   </data>
   <data name="&gt;&gt;cbMergePeptides.Name" xml:space="preserve">
     <value>cbMergePeptides</value>

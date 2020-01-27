@@ -43,10 +43,12 @@ namespace pwiz.Skyline.SettingsUI
             InitializeComponent();
 
             _existing = existing;
-            _formulaBox = new FormulaBox(Resources.EditFragmentLossDlg_EditFragmentLossDlg_Loss__chemical_formula_,Resources.EditFragmentLossDlg_EditFragmentLossDlg__Monoisotopic_loss_,
-                Resources.EditFragmentLossDlg_EditFragmentLossDlg_A_verage_loss_)
+            _formulaBox = new FormulaBox(Resources.EditFragmentLossDlg_EditFragmentLossDlg_Loss__chemical_formula_,
+                Resources.EditFragmentLossDlg_EditFragmentLossDlg_A_verage_loss_,
+                Resources.EditFragmentLossDlg_EditFragmentLossDlg__Monoisotopic_loss_)
             {
-                Location = new Point(12,9)
+                Location = new Point(12,9),
+                TabIndex = 0
             };
             Controls.Add(_formulaBox);
 
