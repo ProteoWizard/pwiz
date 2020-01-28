@@ -24,6 +24,7 @@
     <!-- Vendor readers -->
     <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Waters\vc12_x86\cdt.dll" />
     <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Waters\vc12_x86\MassLynxRaw.dll" />
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\ABI\x86\SQLite.Interop.dll" />
     <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Agilent\x86\BaseDataAccess.dll.config" />
     <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\thermo\x86\MSFileReader.XRawfile2.dll" />
     <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\thermo\x86\MSFileReader.XRawfile2.SxS.manifest" />
