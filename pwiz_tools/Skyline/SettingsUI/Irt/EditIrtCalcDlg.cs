@@ -181,8 +181,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         public string SelectedRegressionType
         {
-            get => comboRegressionType.SelectedItem.ToString();
-            set => comboRegressionType.SelectedItem = value;
+            get => comboRegressionType.SelectedItem?.ToString();
+            set
+            {
+                var i = comboRegressionType.Items.IndexOf(value ?? IrtRegressionType.Default);
+                comboRegressionType.SelectedIndex = i >= 0 ? i : 0;
+            }
         }
 
         public void ClearStandardPeptides()
@@ -304,6 +308,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
                 LoadStandard(dbPeptides);
                 LoadLibrary(dbPeptides);
+                SelectedRegressionType = db.RegressionType;
 
                 // Clone all of the peptides to use for comparison in OkDialog
                 _originalPeptides = dbPeptides.Select(p => new DbIrtPeptide(p)).ToArray();
