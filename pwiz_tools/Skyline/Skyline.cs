@@ -5168,8 +5168,8 @@ namespace pwiz.Skyline
                 }
                 else if (ImportingResultsWindow != null)
                 {
-                    // If an importing results error is pending, then ignore this update
-                    if (ImportingResultsError != null)
+                    // If an importing results error is pending or the window handle is not yet created, then ignore this update
+                    if (ImportingResultsError != null || !ImportingResultsWindow.IsHandleCreated)
                         return;
 
                     if (!ImportingResultsWindow.IsUserCanceled)

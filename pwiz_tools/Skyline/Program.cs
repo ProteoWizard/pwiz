@@ -610,9 +610,12 @@ namespace pwiz.Skyline
         {
             get
             {
-                return _name ??
-                       (_name =
-                        Settings.Default.ProgramName + (Install.Type == Install.InstallType.daily ? @"-daily" : string.Empty));
+                if (Settings.Default.TutorialMode)
+                    return (_name = Settings.Default.ProgramName);
+                else
+                    return _name ??
+                           (_name =
+                            Settings.Default.ProgramName + (Install.Type == Install.InstallType.daily ? @"-daily" : string.Empty));
             }
         }
 
