@@ -435,6 +435,10 @@ namespace pwiz.Skyline.Model.Results
         private void SetClonedCacheState(ChromatogramCache cacheFinal, IList<ChromatogramCache> partialCaches = null)
         {
             _cacheFinal = cacheFinal;
+            if (_cacheFinal != null)
+            {
+                _cacheRecalc = null;
+            }
             _listPartialCaches = MakeReadOnly(partialCaches);
             _setCachedFiles = new HashSet<MsDataFileUri>(CachedFilePaths.Select(p => p.GetLocation()));
         }
