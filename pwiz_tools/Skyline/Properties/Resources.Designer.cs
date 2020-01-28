@@ -15100,20 +15100,20 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Loess.
-        /// </summary>
-        public static string IrtRegressionType_Loess {
-            get {
-                return ResourceManager.GetString("IrtRegressionType_Loess", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Logarithmic.
         /// </summary>
         public static string IrtRegressionType_Logarithmic {
             get {
                 return ResourceManager.GetString("IrtRegressionType_Logarithmic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lowess.
+        /// </summary>
+        public static string IrtRegressionType_Lowess {
+            get {
+                return ResourceManager.GetString("IrtRegressionType_Lowess", resourceCulture);
             }
         }
         

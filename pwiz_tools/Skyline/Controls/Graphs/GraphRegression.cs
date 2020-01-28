@@ -170,8 +170,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 if (!Equals(regressionLine.DisplayEquation, Resources.DisplayEquation_N_A))
                     _labelRegression = regressionLine.DisplayEquation + Environment.NewLine;
-                _labelRegression += string.Format(@"r = {0:F03}", graphData.Correlation);
-                if (graphData.Correlation < graphData.MinCorrelation)
+                _labelRegression += string.Format(@"r = {0:F03}", graphData.R);
+                if (graphData.R < graphData.MinCorrelation)
                 {
                     _labelRegression += string.Format(@" < {0:F03}", graphData.MinCorrelation);
                     if (graphData.MinPoints.HasValue)
@@ -192,7 +192,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (!ReferenceEquals(regressionLineCurrent.DisplayEquation, Resources.DisplayEquation_N_A))
                     _labelRegressionCurrent = regressionLineCurrent.DisplayEquation + Environment.NewLine;
                 if (graphData.ShowCurrentCorrelation)
-                    _labelRegressionCurrent += string.Format(@"r = {0:F03}", graphData.CorrelationCurrent);
+                    _labelRegressionCurrent += string.Format(@"r = {0:F03}", graphData.RCurrent);
             }
         }
 
@@ -339,9 +339,9 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        public double Correlation => RegressionLine.Correlation;
+        public double R => IrtRegression.R(RegressionLine);
 
-        public double CorrelationCurrent => RegressionLineCurrent.Correlation;
+        public double RCurrent => IrtRegression.R(RegressionLineCurrent);
 
         public void GetCurvePoints(bool refined, int numPoints, out double[] x, out double[] y)
         {

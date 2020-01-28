@@ -193,35 +193,35 @@
             // 
             // colFile
             // 
-            this.colFile.FillWeight = 90.71164F;
+            this.colFile.FillWeight = 62.28104F;
             resources.ApplyResources(this.colFile, "colFile");
             this.colFile.Name = "colFile";
             this.colFile.ReadOnly = true;
             // 
             // Points
             // 
-            this.Points.FillWeight = 25F;
+            this.Points.FillWeight = 15F;
             resources.ApplyResources(this.Points, "Points");
             this.Points.Name = "Points";
             this.Points.ReadOnly = true;
             // 
             // Equation
             // 
-            this.Equation.FillWeight = 30F;
+            this.Equation.FillWeight = 69.51659F;
             resources.ApplyResources(this.Equation, "Equation");
             this.Equation.Name = "Equation";
             this.Equation.ReadOnly = true;
             // 
             // R
             // 
-            this.R.FillWeight = 20F;
+            this.R.FillWeight = 25F;
             resources.ApplyResources(this.R, "R");
             this.R.Name = "R";
             this.R.ReadOnly = true;
             // 
             // Result
             // 
-            this.Result.FillWeight = 40F;
+            this.Result.FillWeight = 27.4633F;
             resources.ApplyResources(this.Result, "Result");
             this.Result.Name = "Result";
             this.Result.ReadOnly = true;

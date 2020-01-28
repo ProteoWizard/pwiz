@@ -2875,22 +2875,24 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             Slope = 0;
             Intercept = 0;
+            XValues = new double[0];
+            YValues = new double[0];
         }
 
         public RegressionLine(double slope, double intercept)
         {
             Slope = slope;
             Intercept = intercept;
-            Correlation = double.NaN;
         }
 
-        public RegressionLine(IEnumerable<double> x, IEnumerable<double> y)
+        public RegressionLine(double[] x, double[] y)
         {
             var statX = new Statistics(x);
             var statY = new Statistics(y);
             Slope = statY.Slope(statX);
             Intercept = statY.Intercept(statX);
-            Correlation = statX.R(statY);
+            XValues = x;
+            YValues = y;
         }
 
         // XML Serializable properties
@@ -2900,7 +2902,6 @@ namespace pwiz.Skyline.Model.DocSettings
         [Track]
         public double Intercept { get; private set; }
 
-        public double Correlation { get; }
         public string DisplayEquation => string.Format(@"iRT = {0:F3} + {1:F3} * RT", Intercept, Slope);
 
         /// <summary>
@@ -2918,6 +2919,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return new RegressionLine(x, y);
         }
+        public double[] XValues { get; }
+        public double[] YValues { get; }
 
         public string GetRegressionDescription(double r, double window)
         {

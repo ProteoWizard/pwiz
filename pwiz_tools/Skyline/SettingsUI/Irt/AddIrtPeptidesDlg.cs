@@ -104,7 +104,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     filename,
                     graphData.RegularPoints.Count,
                     data.RegressionRefined != null ? data.RegressionRefined.DisplayEquation : string.Empty,
-                    data.RegressionRefined != null ? data.RegressionRefined.Correlation.ToString(@"F03") : data.Regression.Correlation.ToString(@"F03"),
+                    data.RegressionRefined != null ? IrtRegression.R(data.RegressionRefined).ToString(@"F03") : IrtRegression.R(data.Regression).ToString(@"F03"),
                     data.RegressionSuccess ? Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Success : Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Failed);
                 var lastRow = dataGridView.Rows[dataGridView.RowCount - 1];
                 lastRow.DefaultCellStyle = data.RegressionSuccess ? successStyle : failStyle;

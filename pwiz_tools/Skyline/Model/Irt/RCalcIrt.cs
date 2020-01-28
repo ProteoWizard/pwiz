@@ -527,15 +527,6 @@ namespace pwiz.Skyline.Model.Irt
         #endregion
     }
 
-    public static class IrtRegressionType
-    {
-        public static string Linear => Resources.IrtRegressionType_Linear;
-        public static string Loess => Resources.IrtRegressionType_Loess;
-        public static string Logarithmic => Resources.IrtRegressionType_Logarithmic;
-        public static IEnumerable<string> All => new[] { Linear, Loess, Logarithmic };
-        public static string Default = Linear;
-    }
-
     public sealed class ProcessedIrtAverages
     {
         public ProcessedIrtAverages(Dictionary<Target, IrtPeptideAverages> dictPeptideIrtAverages, IList<RetentionTimeProviderData> providerData)
@@ -683,7 +674,7 @@ namespace pwiz.Skyline.Model.Irt
             var removed = new List<Tuple<double, double>>();
             if (regressionType.Equals(IrtRegressionType.Linear))
             {
-                Regression = new RegressionLine(filteredRt, filteredIrt);
+                Regression = new RegressionLine(filteredRt.ToArray(), filteredIrt.ToArray());
                 RegressionSuccess = IrtRegression.TryGet<RegressionLine>(filteredRt, filteredIrt, MinPoints, out regressionRefined, removed);
             }
             else if (regressionType.Equals(IrtRegressionType.Logarithmic))
@@ -691,7 +682,7 @@ namespace pwiz.Skyline.Model.Irt
                 Regression = new LogRegression(filteredRt, filteredIrt);
                 RegressionSuccess = IrtRegression.TryGet<LogRegression>(filteredRt, filteredIrt, MinPoints, out regressionRefined, removed);
             }
-            else if (regressionType.Equals(IrtRegressionType.Loess))
+            else if (regressionType.Equals(IrtRegressionType.Lowess))
             {
                 Regression = new LoessRegression(filteredRt.ToArray(), filteredIrt.ToArray());
                 RegressionSuccess = IrtRegression.TryGet<LoessRegression>(filteredRt, filteredIrt, MinPoints, out regressionRefined, removed);

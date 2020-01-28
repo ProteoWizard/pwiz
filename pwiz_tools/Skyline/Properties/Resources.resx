@@ -10931,8 +10931,8 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="IrtRegressionType_Linear" xml:space="preserve">
     <value>Linear</value>
   </data>
-  <data name="IrtRegressionType_Loess" xml:space="preserve">
-    <value>Loess</value>
+  <data name="IrtRegressionType_Lowess" xml:space="preserve">
+    <value>Lowess</value>
   </data>
   <data name="IrtRegressionType_Logarithmic" xml:space="preserve">
     <value>Logarithmic</value>

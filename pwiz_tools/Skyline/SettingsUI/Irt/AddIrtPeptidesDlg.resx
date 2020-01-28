@@ -199,7 +199,7 @@
     <value>Points</value>
   </data>
   <data name="Points.MinimumWidth" type="System.Int32, mscorlib">
-    <value>32</value>
+    <value>24</value>
   </data>
   <metadata name="Equation.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -214,7 +214,7 @@
     <value>True</value>
   </metadata>
   <data name="R.HeaderText" xml:space="preserve">
-    <value>Correlation</value>
+    <value>R</value>
   </data>
   <data name="R.MinimumWidth" type="System.Int32, mscorlib">
     <value>25</value>
@@ -251,6 +251,51 @@
   </data>
   <data name="panelKeep.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
+  </data>
+  <data name="&gt;&gt;labelKeep.Name" xml:space="preserve">
+    <value>labelKeep</value>
+  </data>
+  <data name="&gt;&gt;labelKeep.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelKeep.Parent" xml:space="preserve">
+    <value>panelKeep</value>
+  </data>
+  <data name="&gt;&gt;labelKeep.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;listKeep.Name" xml:space="preserve">
+    <value>listKeep</value>
+  </data>
+  <data name="&gt;&gt;listKeep.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;listKeep.Parent" xml:space="preserve">
+    <value>panelKeep</value>
+  </data>
+  <data name="&gt;&gt;listKeep.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="panelKeep.Location" type="System.Drawing.Point, System.Drawing">
+    <value>5, 306</value>
+  </data>
+  <data name="panelKeep.Size" type="System.Drawing.Size, System.Drawing">
+    <value>481, 121</value>
+  </data>
+  <data name="panelKeep.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;panelKeep.Name" xml:space="preserve">
+    <value>panelKeep</value>
+  </data>
+  <data name="&gt;&gt;panelKeep.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelKeep.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelKeep.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="labelKeep.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -305,27 +350,6 @@ and newer iRT values calculated from MS/MS scans ignored:</value>
     <value>panelKeep</value>
   </data>
   <data name="&gt;&gt;listKeep.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="panelKeep.Location" type="System.Drawing.Point, System.Drawing">
-    <value>5, 306</value>
-  </data>
-  <data name="panelKeep.Size" type="System.Drawing.Size, System.Drawing">
-    <value>481, 121</value>
-  </data>
-  <data name="panelKeep.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="&gt;&gt;panelKeep.Name" xml:space="preserve">
-    <value>panelKeep</value>
-  </data>
-  <data name="&gt;&gt;panelKeep.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panelKeep.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;panelKeep.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="labelRunsFailed.AutoSize" type="System.Boolean, mscorlib">
@@ -421,6 +445,51 @@ and newer iRT values calculated from MS/MS scans ignored:</value>
   <data name="panelOverwrite.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
+  <data name="&gt;&gt;labelOverwrite.Name" xml:space="preserve">
+    <value>labelOverwrite</value>
+  </data>
+  <data name="&gt;&gt;labelOverwrite.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelOverwrite.Parent" xml:space="preserve">
+    <value>panelOverwrite</value>
+  </data>
+  <data name="&gt;&gt;labelOverwrite.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;listOverwrite.Name" xml:space="preserve">
+    <value>listOverwrite</value>
+  </data>
+  <data name="&gt;&gt;listOverwrite.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;listOverwrite.Parent" xml:space="preserve">
+    <value>panelOverwrite</value>
+  </data>
+  <data name="&gt;&gt;listOverwrite.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="panelOverwrite.Location" type="System.Drawing.Point, System.Drawing">
+    <value>5, 185</value>
+  </data>
+  <data name="panelOverwrite.Size" type="System.Drawing.Size, System.Drawing">
+    <value>481, 121</value>
+  </data>
+  <data name="panelOverwrite.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;panelOverwrite.Name" xml:space="preserve">
+    <value>panelOverwrite</value>
+  </data>
+  <data name="&gt;&gt;panelOverwrite.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelOverwrite.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelOverwrite.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
   <data name="labelOverwrite.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -476,29 +545,101 @@ with iRT values calculated from chromatogram peaks:</value>
   <data name="&gt;&gt;listOverwrite.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="panelOverwrite.Location" type="System.Drawing.Point, System.Drawing">
-    <value>5, 185</value>
-  </data>
-  <data name="panelOverwrite.Size" type="System.Drawing.Size, System.Drawing">
-    <value>481, 121</value>
-  </data>
-  <data name="panelOverwrite.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;panelOverwrite.Name" xml:space="preserve">
-    <value>panelOverwrite</value>
-  </data>
-  <data name="&gt;&gt;panelOverwrite.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panelOverwrite.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;panelOverwrite.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
   <data name="panelExisting.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="&gt;&gt;radioAverage.Name" xml:space="preserve">
+    <value>radioAverage</value>
+  </data>
+  <data name="&gt;&gt;radioAverage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioAverage.Parent" xml:space="preserve">
+    <value>panelExisting</value>
+  </data>
+  <data name="&gt;&gt;radioAverage.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;radioReplace.Name" xml:space="preserve">
+    <value>radioReplace</value>
+  </data>
+  <data name="&gt;&gt;radioReplace.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioReplace.Parent" xml:space="preserve">
+    <value>panelExisting</value>
+  </data>
+  <data name="&gt;&gt;radioReplace.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;radioSkip.Name" xml:space="preserve">
+    <value>radioSkip</value>
+  </data>
+  <data name="&gt;&gt;radioSkip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioSkip.Parent" xml:space="preserve">
+    <value>panelExisting</value>
+  </data>
+  <data name="&gt;&gt;radioSkip.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;labelChoice.Name" xml:space="preserve">
+    <value>labelChoice</value>
+  </data>
+  <data name="&gt;&gt;labelChoice.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelChoice.Parent" xml:space="preserve">
+    <value>panelExisting</value>
+  </data>
+  <data name="&gt;&gt;labelChoice.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;labelExisting.Name" xml:space="preserve">
+    <value>labelExisting</value>
+  </data>
+  <data name="&gt;&gt;labelExisting.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelExisting.Parent" xml:space="preserve">
+    <value>panelExisting</value>
+  </data>
+  <data name="&gt;&gt;labelExisting.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;listExisting.Name" xml:space="preserve">
+    <value>listExisting</value>
+  </data>
+  <data name="&gt;&gt;listExisting.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;listExisting.Parent" xml:space="preserve">
+    <value>panelExisting</value>
+  </data>
+  <data name="&gt;&gt;listExisting.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="panelExisting.Location" type="System.Drawing.Point, System.Drawing">
+    <value>5, 427</value>
+  </data>
+  <data name="panelExisting.Size" type="System.Drawing.Size, System.Drawing">
+    <value>481, 180</value>
+  </data>
+  <data name="panelExisting.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;panelExisting.Name" xml:space="preserve">
+    <value>panelExisting</value>
+  </data>
+  <data name="&gt;&gt;panelExisting.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelExisting.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelExisting.ZOrder" xml:space="preserve">
+    <value>6</value>
   </data>
   <data name="radioAverage.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -685,27 +826,6 @@ with iRT values calculated from chromatogram peaks:</value>
   </data>
   <data name="&gt;&gt;listExisting.ZOrder" xml:space="preserve">
     <value>5</value>
-  </data>
-  <data name="panelExisting.Location" type="System.Drawing.Point, System.Drawing">
-    <value>5, 427</value>
-  </data>
-  <data name="panelExisting.Size" type="System.Drawing.Size, System.Drawing">
-    <value>481, 180</value>
-  </data>
-  <data name="panelExisting.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="&gt;&gt;panelExisting.Name" xml:space="preserve">
-    <value>panelExisting</value>
-  </data>
-  <data name="&gt;&gt;panelExisting.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panelExisting.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;panelExisting.ZOrder" xml:space="preserve">
-    <value>6</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

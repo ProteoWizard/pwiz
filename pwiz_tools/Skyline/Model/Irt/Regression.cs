@@ -28,10 +28,20 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Irt
 {
+    public static class IrtRegressionType
+    {
+        public static string Linear => Resources.IrtRegressionType_Linear;
+        public static string Lowess => Resources.IrtRegressionType_Lowess;
+        public static string Logarithmic => Resources.IrtRegressionType_Logarithmic;
+        public static IEnumerable<string> All => new[] { Linear, Lowess, Logarithmic };
+        public static string Default = Linear;
+    }
+
     public interface IIrtRegression : IRegressionFunction
     {
         IIrtRegression ChangePoints(double[] x, double[] y);
-        double Correlation { get; }
+        double[] XValues { get; }
+        double[] YValues { get; }
         string DisplayEquation { get; }
     }
 
@@ -52,7 +62,7 @@ namespace pwiz.Skyline.Model.Irt
             while (true)
             {
                 regression = new TRegression().ChangePoints(listX.ToArray(), listY.ToArray());
-                if (regression.Correlation >= RCalcIrt.MIN_IRT_TO_TIME_CORRELATION || listX.Count <= minPoints)
+                if (IrtRegression.R(regression) >= RCalcIrt.MIN_IRT_TO_TIME_CORRELATION || listX.Count <= minPoints)
                     break;
 
                 var furthest = 0;
@@ -72,15 +82,15 @@ namespace pwiz.Skyline.Model.Irt
                 listY.RemoveAt(furthest);
             }
 
-            return regression.Correlation >= RCalcIrt.MIN_IRT_TO_TIME_CORRELATION;
+            return R(regression) >= RCalcIrt.MIN_IRT_TO_TIME_CORRELATION;
         }
 
-        public static double RSquared(IRegressionFunction regression, IEnumerable<double> xValues, IList<double> yValues)
+        public static double R(IIrtRegression regression)
         {
-            var yMean = new Statistics(yValues).Mean();
-            var totalSumOfSquares = yValues.Sum(y => (y - yMean) * (y - yMean));
-            var sumOfSquaresOfResiduals = xValues.Select((x, i) => Math.Pow(yValues[i] - regression.GetY(x), 2)).Sum();
-            return 1 - sumOfSquaresOfResiduals / totalSumOfSquares;
+            var yMean = new Statistics(regression.YValues).Mean();
+            var totalSumOfSquares = regression.YValues.Sum(y => (y - yMean) * (y - yMean));
+            var sumOfSquaresOfResiduals = regression.XValues.Select((x, i) => Math.Pow(regression.YValues[i] - regression.GetY(x), 2)).Sum();
+            return Math.Sqrt(1 - sumOfSquaresOfResiduals / totalSumOfSquares);
         }
     }
 
@@ -90,7 +100,8 @@ namespace pwiz.Skyline.Model.Irt
         {
             Slope = double.NaN;
             Intercept = double.NaN;
-            Correlation = double.NaN;
+            XValues = new double[0];
+            YValues = new double[0];
         }
 
         public LogRegression(IList<double> xValues, IList<double> yValues)
@@ -99,7 +110,8 @@ namespace pwiz.Skyline.Model.Irt
             var statDependent = new Statistics(yValues);
             Slope = statDependent.Slope(statIndependent);
             Intercept = statDependent.Intercept(statIndependent);
-            Correlation = IrtRegression.RSquared(this, xValues, yValues);
+            XValues = xValues.ToArray();
+            YValues = yValues.ToArray();
         }
 
         public double GetY(double x)
@@ -108,13 +120,14 @@ namespace pwiz.Skyline.Model.Irt
         }
         public double Slope { get; }
         public double Intercept { get; }
-        public double Correlation { get; }
         public string DisplayEquation => string.Format(@"iRT = {0:F3} + log(RT) * {1:F3}", Intercept, Slope);
 
         public IIrtRegression ChangePoints(double[] x, double[] y)
         {
             return new LogRegression(x, y);
         }
+        public double[] XValues { get; }
+        public double[] YValues { get; }
 
         public string GetRegressionDescription(double r, double window)
         {
@@ -134,7 +147,8 @@ namespace pwiz.Skyline.Model.Irt
             _linearFit = new RegressionLine();
             _xMin = double.MinValue;
             _loess = null;
-            Correlation = double.NaN;
+            XValues = new double[0];
+            YValues = new double[0];
         }
 
         public LoessRegression(double[] x, double[] y)
@@ -145,7 +159,8 @@ namespace pwiz.Skyline.Model.Irt
             _xMax = statX.Max();
             _loess = new LoessAligner(0.4);
             _loess.Train(x, y, CustomCancellationToken.NONE);
-            Correlation = IrtRegression.RSquared(this, x, y);
+            XValues = x;
+            YValues = y;
         }
 
         public double GetY(double x)
@@ -155,7 +170,6 @@ namespace pwiz.Skyline.Model.Irt
 
         public double Slope => double.NaN;
         public double Intercept => double.NaN;
-        public double Correlation { get; }
         public string DisplayEquation => Resources.DisplayEquation_N_A;
 
         private readonly RegressionLine _linearFit;
@@ -167,6 +181,8 @@ namespace pwiz.Skyline.Model.Irt
         {
             return new LoessRegression(x, y);
         }
+        public double[] XValues { get; }
+        public double[] YValues { get; }
 
         public string GetRegressionDescription(double r, double window)
         {
