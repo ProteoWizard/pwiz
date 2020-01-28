@@ -112,7 +112,9 @@ namespace pwiz.Skyline.Model.Irt
             var rts = _cirtPeptides.Select(pep => pep.Peptide.RetentionTime).ToList();
             var irts = _cirtPeptides.Select(pep => _cirtAll[pep.Peptide.Target]).ToList();
             var removedValues = new List<Tuple<double, double>>();
-            if (!RCalcIrt.TryGetRegressionLine(rts, irts, count, out regression, removedValues))
+            var success = IrtRegression.TryGet<RegressionLine>(rts, irts, count, out var line, removedValues);
+            regression = (RegressionLine) line;
+            if (!success)
                 return false;
 
             for (var i = peptides.Count - 1; i >= 0; i--)

@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -198,29 +201,20 @@
   <data name="Points.MinimumWidth" type="System.Int32, mscorlib">
     <value>32</value>
   </data>
-  <metadata name="Slope.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+  <metadata name="Equation.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
-  <data name="Slope.HeaderText" xml:space="preserve">
-    <value>Slope</value>
+  <data name="Equation.HeaderText" xml:space="preserve">
+    <value>Equation</value>
   </data>
-  <data name="Slope.MinimumWidth" type="System.Int32, mscorlib">
-    <value>38</value>
-  </data>
-  <metadata name="Intercept.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="Intercept.HeaderText" xml:space="preserve">
-    <value>Intercept</value>
-  </data>
-  <data name="Intercept.MinimumWidth" type="System.Int32, mscorlib">
+  <data name="Equation.MinimumWidth" type="System.Int32, mscorlib">
     <value>38</value>
   </data>
   <metadata name="R.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
   <data name="R.HeaderText" xml:space="preserve">
-    <value>R</value>
+    <value>Correlation</value>
   </data>
   <data name="R.MinimumWidth" type="System.Int32, mscorlib">
     <value>25</value>
@@ -728,6 +722,12 @@ with iRT values calculated from chromatogram peaks:</value>
   <data name="$this.Text" xml:space="preserve">
     <value>Add iRT Peptides</value>
   </data>
+  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
+    <value>modeUIHandler</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.1.1.23, Culture=neutral, PublicKeyToken=null</value>
+  </data>
   <data name="&gt;&gt;colFile.Name" xml:space="preserve">
     <value>colFile</value>
   </data>
@@ -740,16 +740,10 @@ with iRT values calculated from chromatogram peaks:</value>
   <data name="&gt;&gt;Points.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;Slope.Name" xml:space="preserve">
-    <value>Slope</value>
+  <data name="&gt;&gt;Equation.Name" xml:space="preserve">
+    <value>Equation</value>
   </data>
-  <data name="&gt;&gt;Slope.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;Intercept.Name" xml:space="preserve">
-    <value>Intercept</value>
-  </data>
-  <data name="&gt;&gt;Intercept.Type" xml:space="preserve">
+  <data name="&gt;&gt;Equation.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;R.Name" xml:space="preserve">
@@ -768,6 +762,6 @@ with iRT values calculated from chromatogram peaks:</value>
     <value>AddIrtPeptidesDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=20.1.1.23, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

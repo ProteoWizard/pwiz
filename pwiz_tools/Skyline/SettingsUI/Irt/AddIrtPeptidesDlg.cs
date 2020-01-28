@@ -86,8 +86,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     RegressionName = data.RegressionSuccess
                         ? Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Refined
                         : Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Attempted,
-                    ShowCurrentR = true,
-                    MinR = RCalcIrt.MIN_IRT_TO_TIME_CORRELATION,
+                    ShowCurrentCorrelation = true,
+                    MinCorrelation = RCalcIrt.MIN_IRT_TO_TIME_CORRELATION,
                     MinPoints = data.MinPoints
                 };
 
@@ -103,9 +103,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 dataGridView.Rows.Add(
                     filename,
                     graphData.RegularPoints.Count,
-                    data.RegressionRefined != null ? data.RegressionRefined.Slope.ToString(@"F04") : string.Empty,
-                    data.RegressionRefined != null ? data.RegressionRefined.Intercept.ToString(@"F04") : string.Empty,
-                    graphData.R.ToString(@"F03"),
+                    data.RegressionRefined != null ? data.RegressionRefined.DisplayEquation : string.Empty,
+                    data.RegressionRefined != null ? data.RegressionRefined.Correlation.ToString(@"F03") : data.Regression.Correlation.ToString(@"F03"),
                     data.RegressionSuccess ? Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Success : Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Failed);
                 var lastRow = dataGridView.Rows[dataGridView.RowCount - 1];
                 lastRow.DefaultCellStyle = data.RegressionSuccess ? successStyle : failStyle;

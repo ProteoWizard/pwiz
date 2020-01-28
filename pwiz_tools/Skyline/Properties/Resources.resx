@@ -10937,4 +10937,7 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="IrtRegressionType_Logarithmic" xml:space="preserve">
     <value>Logarithmic</value>
   </data>
+  <data name="DisplayEquation_N_A" xml:space="preserve">
+    <value>N/A</value>
+  </data>
 </root>

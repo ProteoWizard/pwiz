@@ -2869,12 +2869,28 @@ namespace pwiz.Skyline.Model.DocSettings
     /// element.  Use one of the wrapper classes for full XML
     /// serialization.
     /// </summary>
-    public sealed class RegressionLine : IRegressionFunction
+    public sealed class RegressionLine : IIrtRegression
     {
+        public RegressionLine()
+        {
+            Slope = 0;
+            Intercept = 0;
+        }
+
         public RegressionLine(double slope, double intercept)
         {
             Slope = slope;
             Intercept = intercept;
+            Correlation = double.NaN;
+        }
+
+        public RegressionLine(IEnumerable<double> x, IEnumerable<double> y)
+        {
+            var statX = new Statistics(x);
+            var statY = new Statistics(y);
+            Slope = statY.Slope(statX);
+            Intercept = statY.Intercept(statX);
+            Correlation = statX.R(statY);
         }
 
         // XML Serializable properties
@@ -2883,6 +2899,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
         [Track]
         public double Intercept { get; private set; }
+
+        public double Correlation { get; }
+        public string DisplayEquation => string.Format(@"iRT = {0:F3} + {1:F3} * RT", Intercept, Slope);
 
         /// <summary>
         /// Use the y = m*x + b formula to calculate the desired y
@@ -2893,6 +2912,11 @@ namespace pwiz.Skyline.Model.DocSettings
         public double GetY(double x)
         {
             return Slope * x + Intercept;
+        }
+
+        public IIrtRegression ChangePoints(double[] x, double[] y)
+        {
+            return new RegressionLine(x, y);
         }
 
         public string GetRegressionDescription(double r, double window)
@@ -2948,9 +2972,6 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// For serialization
         /// </summary>
-        private RegressionLine()
-        {
-        }
 
         private enum ATTR
         {

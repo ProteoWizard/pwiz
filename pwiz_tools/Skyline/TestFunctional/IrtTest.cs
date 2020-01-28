@@ -866,7 +866,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(72, data.RegularPoints.Count);
                 Assert.AreEqual(0, data.MissingPoints.Count);
                 Assert.AreEqual(0, data.OutlierPoints.Count);
-                Assert.IsTrue(data.R >= RCalcIrt.MIN_IRT_TO_TIME_CORRELATION);
+                Assert.IsTrue(data.Correlation >= RCalcIrt.MIN_IRT_TO_TIME_CORRELATION);
                 dlg.CloseDialog();
             });
             RunDlg<GraphRegression>(() => calibrateIrtDlg2.GraphIrts(), false, dlg =>
@@ -919,7 +919,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(72, data.RegularPoints.Count);
                 Assert.AreEqual(0, data.MissingPoints.Count);
                 Assert.AreEqual(0, data.OutlierPoints.Count);
-                Assert.IsTrue(data.R >= RCalcIrt.MIN_IRT_TO_TIME_CORRELATION);
+                Assert.IsTrue(data.Correlation >= RCalcIrt.MIN_IRT_TO_TIME_CORRELATION);
                 dlg.CloseDialog();
             });
             RunDlg<GraphRegression>(() => calibrateIrtDlg3.GraphIrts(), false, dlg =>
