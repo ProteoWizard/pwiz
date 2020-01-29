@@ -54,6 +54,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         private DbIrtPeptide[] _originalPeptides;
         private DbIrtPeptide[] _originalKnownPeptides;
         private string _originalDocumentXml;
+        private IrtRegressionType _originalRegressionType;
         private readonly StandardGridViewDriver _gridViewStandardDriver;
         private readonly LibraryGridViewDriver _gridViewLibraryDriver;
 
@@ -111,6 +112,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             get
             {
+                if (!ReferenceEquals(SelectedRegressionType, _originalRegressionType))
+                    return true;
+
                 if (_originalPeptides == null)
                     return AllPeptides.Any();
 
@@ -314,6 +318,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 _originalPeptides = dbPeptides.Select(p => new DbIrtPeptide(p)).ToArray();
                 _originalKnownPeptides = _originalPeptides.Where(p => IrtStandard.AnyContains(p, IRT_TOLERANCE)).ToArray();
                 _originalDocumentXml = db.DocumentXml;
+                _originalRegressionType = db.RegressionType;
 
                 textDatabase.Text = path;
 

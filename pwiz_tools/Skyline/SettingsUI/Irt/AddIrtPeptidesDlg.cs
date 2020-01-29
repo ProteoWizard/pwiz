@@ -71,6 +71,17 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         outlierIndices.Add(i);
                 }
 
+                string regressionName;
+                if (data.RegressionSuccess)
+                {
+                    regressionName = data.Regression == null
+                        ? Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression
+                        : Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Refined;
+                }
+                else
+                {
+                    regressionName = Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Attempted;
+                }
                 var graphData = new RegressionGraphData
                 {
                     Title = data.RetentionTimeProvider.Name,
@@ -83,9 +94,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     OutlierIndices = outlierIndices,
                     RegressionLine = data.RegressionRefined,
                     RegressionLineCurrent = data.Regression,
-                    RegressionName = data.RegressionSuccess
-                        ? Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Refined
-                        : Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Attempted,
+                    RegressionName = regressionName,
                     ShowCurrentCorrelation = true,
                     MinCorrelation = RCalcIrt.MIN_IRT_TO_TIME_CORRELATION,
                     MinPoints = data.MinPoints

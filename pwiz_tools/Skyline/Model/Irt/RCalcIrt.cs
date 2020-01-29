@@ -691,6 +691,13 @@ namespace pwiz.Skyline.Model.Irt
             {
                 throw new ArgumentException();
             }
+
+            if (IrtRegression.Accept(Regression, MinPoints))
+            {
+                regressionRefined = Regression;
+                Regression = null;
+            }
+
             RegressionRefined = regressionRefined;
             foreach (var remove in removed)
             {

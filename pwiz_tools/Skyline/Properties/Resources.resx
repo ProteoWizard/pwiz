@@ -9146,6 +9146,9 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Failed" xml:space="preserve">
     <value>Failed</value>
   </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression" xml:space="preserve">
+    <value>Regression</value>
+  </data>
   <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Refined" xml:space="preserve">
     <value>Regression Refined</value>
   </data>

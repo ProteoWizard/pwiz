@@ -78,7 +78,7 @@ namespace pwiz.Skyline.Model.Irt
             while (true)
             {
                 regression = new TRegression().ChangePoints(listX.ToArray(), listY.ToArray());
-                if (IrtRegression.R(regression) >= RCalcIrt.MIN_IRT_TO_TIME_CORRELATION || listX.Count <= minPoints)
+                if (Accept(regression, minPoints) || listX.Count <= minPoints)
                     break;
 
                 var furthest = 0;
@@ -98,7 +98,12 @@ namespace pwiz.Skyline.Model.Irt
                 listY.RemoveAt(furthest);
             }
 
-            return R(regression) >= RCalcIrt.MIN_IRT_TO_TIME_CORRELATION;
+            return Accept(regression, minPoints);
+        }
+
+        public static bool Accept(IIrtRegression regression, int minPoints)
+        {
+            return regression.XValues != null && regression.XValues.Length >= minPoints && R(regression) >= RCalcIrt.MIN_IRT_TO_TIME_CORRELATION;
         }
 
         public static double R(IIrtRegression regression)
