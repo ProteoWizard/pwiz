@@ -400,7 +400,7 @@ namespace pwiz.Skyline.SettingsUI
                                         throw status.ErrorException;
                                 }
                                 // Add iRTs to library
-                                if (AddIrts(IrtRegressionType.Default, lib, buildState.LibrarySpec, buildState.IrtStandard, NotificationContainerForm, true))
+                                if (AddIrts(IrtRegressionType.DEFAULT, lib, buildState.LibrarySpec, buildState.IrtStandard, NotificationContainerForm, true))
                                     AddRetentionTimePredictor(buildState);
                             }
                         }));
@@ -413,7 +413,7 @@ namespace pwiz.Skyline.SettingsUI
             threadComplete.Start();
         }
 
-        public static bool AddIrts(string regressionType, Library lib, LibrarySpec libSpec, IrtStandard standard, Control parent, bool useTopMostForm)
+        public static bool AddIrts(IrtRegressionType regressionType, Library lib, LibrarySpec libSpec, IrtStandard standard, Control parent, bool useTopMostForm)
         {
             if (lib == null || !lib.IsLoaded || standard == null || standard.Name.Equals(IrtStandard.EMPTY.Name))
                 return false;

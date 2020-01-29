@@ -148,7 +148,7 @@ namespace pwiz.Skyline.Model.Irt
 
         public string DocumentXml { get; private set; }
 
-        public string RegressionType { get; private set; }
+        public IrtRegressionType RegressionType { get; private set; }
 
         public double? ScoreSequence(Target seq)
         {
@@ -181,7 +181,7 @@ namespace pwiz.Skyline.Model.Irt
             }
         }
 
-        public string GetRegressionType()
+        public IrtRegressionType GetRegressionType()
         {
             using (var session = new StatelessSessionWithLock(_sessionFactory.OpenStatelessSession(), _databaseLock,
                 false, CancellationToken.None))
@@ -193,7 +193,7 @@ namespace pwiz.Skyline.Model.Irt
                 using (var cmd = session.Connection.CreateCommand())
                 {
                     cmd.CommandText = @"SELECT RegressionType FROM DocumentXml";
-                    return Convert.ToString(cmd.ExecuteScalar());
+                    return IrtRegressionType.FromName(Convert.ToString(cmd.ExecuteScalar()));
                 }
             }
         }
@@ -539,7 +539,7 @@ namespace pwiz.Skyline.Model.Irt
             return ChangeProp(ImClone(this), im => im.DocumentXml = documentXml);
         }
 
-        public IrtDb SetRegressionType(string regressionType)
+        public IrtDb SetRegressionType(IrtRegressionType regressionType)
         {
             using (var session = OpenWriteSession())
             using (var transaction = session.BeginTransaction())
@@ -573,7 +573,7 @@ namespace pwiz.Skyline.Model.Irt
                     cmd.CommandText = !rowExists
                         ? @"INSERT INTO DocumentXml (RegressionType) VALUES (?)"
                         : @"UPDATE DocumentXml SET RegressionType = ?";
-                    cmd.Parameters.Add(new SQLiteParameter { Value = regressionType });
+                    cmd.Parameters.Add(new SQLiteParameter { Value = regressionType.Name });
                     cmd.ExecuteNonQuery();
                 }
 

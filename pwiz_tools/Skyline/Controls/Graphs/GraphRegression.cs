@@ -339,9 +339,20 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        public double R => IrtRegression.R(RegressionLine);
+        public double R => GetR(RegressionLine, false);
 
-        public double RCurrent => IrtRegression.R(RegressionLineCurrent);
+        public double RCurrent => GetR(RegressionLineCurrent, true);
+
+        private double GetR(IIrtRegression regression, bool includeOutliers)
+        {
+            var r = IrtRegression.R(regression);
+            if (!double.IsNaN(r))
+                return r;
+            var pointSet = !includeOutliers ? RegularPoints.ToArray() : RegularPoints.Concat(OutlierPoints).ToArray();
+            var statsX = new Statistics(pointSet.Select(point => point.X));
+            var statsY = new Statistics(pointSet.Select(point => point.Y));
+            return statsY.R(statsX);
+        }
 
         public void GetCurvePoints(bool refined, int numPoints, out double[] x, out double[] y)
         {

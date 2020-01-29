@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.DataAnalysis;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
@@ -28,13 +29,28 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Irt
 {
-    public static class IrtRegressionType
+    public class IrtRegressionType : LabeledValues<string>
     {
-        public static string Linear => Resources.IrtRegressionType_Linear;
-        public static string Lowess => Resources.IrtRegressionType_Lowess;
-        public static string Logarithmic => Resources.IrtRegressionType_Logarithmic;
-        public static IEnumerable<string> All => new[] { Linear, Lowess, Logarithmic };
-        public static string Default = Linear;
+        public static readonly IrtRegressionType LINEAR = new IrtRegressionType(@"linear", () => Resources.IrtRegressionType_Linear);
+        public static readonly IrtRegressionType LOWESS = new IrtRegressionType(@"lowess", () => Resources.IrtRegressionType_Lowess);
+        public static readonly IrtRegressionType LOGARITHMIC = new IrtRegressionType(@"logarithmic", () => Resources.IrtRegressionType_Logarithmic);
+
+        public static readonly IrtRegressionType DEFAULT = LINEAR;
+        public static IEnumerable<IrtRegressionType> ALL => new[] {LINEAR, LOWESS, LOGARITHMIC};
+
+        public IrtRegressionType(string name, Func<string> getLabelFunc) : base(name, getLabelFunc)
+        {
+        }
+
+        public override string ToString()
+        {
+            return Label;
+        }
+
+        public static IrtRegressionType FromName(string name)
+        {
+            return ALL.FirstOrDefault(t => t.Name.Equals(name)) ?? DEFAULT;
+        }
     }
 
     public interface IIrtRegression : IRegressionFunction
@@ -87,6 +103,8 @@ namespace pwiz.Skyline.Model.Irt
 
         public static double R(IIrtRegression regression)
         {
+            if (regression?.XValues == null || regression.YValues == null || regression.XValues.Length == 0 || regression.YValues.Length == 0)
+                return double.NaN;
             var yMean = new Statistics(regression.YValues).Mean();
             var totalSumOfSquares = regression.YValues.Sum(y => (y - yMean) * (y - yMean));
             var sumOfSquaresOfResiduals = regression.XValues.Select((x, i) => Math.Pow(regression.YValues[i] - regression.GetY(x), 2)).Sum();

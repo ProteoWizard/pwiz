@@ -44,8 +44,10 @@ namespace pwiz.Common.Database
                 using (var reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
+                    {
                         if (columnName.Equals(reader.GetString(1)))
                             return true;
+                    }
                 }
             }
             return false;

@@ -77,8 +77,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
             _gridViewStandardDriver.LibraryPeptideList = _gridViewLibraryDriver.Items;
             _gridViewLibraryDriver.StandardPeptideList = _gridViewStandardDriver.Items;
 
-            comboRegressionType.Items.AddRange(IrtRegressionType.All.Cast<object>().ToArray());
-            SelectedRegressionType = IrtRegressionType.Default;
+            comboRegressionType.Items.AddRange(IrtRegressionType.ALL.Cast<object>().ToArray());
+            SelectedRegressionType = IrtRegressionType.DEFAULT;
 
             _driverStandards = new SettingsListComboDriver<IrtStandard>(comboStandards, Settings.Default.IrtStandardList);
             _driverStandards.LoadList(IrtStandard.EMPTY.GetKey());
@@ -179,12 +179,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
         public int StandardPeptideCount => StandardPeptideList.Count;
         public int LibraryPeptideCount => LibraryPeptideList.Count;
 
-        public string SelectedRegressionType
+        public IrtRegressionType SelectedRegressionType
         {
-            get => comboRegressionType.SelectedItem?.ToString();
+            get => comboRegressionType.SelectedItem as IrtRegressionType;
             set
             {
-                var i = comboRegressionType.Items.IndexOf(value ?? IrtRegressionType.Default);
+                var i = comboRegressionType.Items.IndexOf(value ?? IrtRegressionType.DEFAULT);
                 comboRegressionType.SelectedIndex = i >= 0 ? i : 0;
             }
         }
@@ -752,7 +752,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             /// </summary>
             public BindingList<DbIrtPeptide> StandardPeptideList { private get; set; }
 
-            public string RegressionType { private get; set; }
+            public IrtRegressionType RegressionType { private get; set; }
 
             protected override void DoPaste()
             {
@@ -1034,7 +1034,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 }
             }
 
-            private ProcessedIrtAverages ProcessRetentionTimes(IProgressMonitor monitor, IRetentionTimeProvider[] providers, string regressionType)
+            private ProcessedIrtAverages ProcessRetentionTimes(IProgressMonitor monitor, IRetentionTimeProvider[] providers, IrtRegressionType regressionType)
             {
                 return RCalcIrt.ProcessRetentionTimes(monitor, providers, StandardPeptideList.ToArray(), Items.ToArray(), regressionType);
             }
