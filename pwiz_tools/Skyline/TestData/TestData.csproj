@@ -230,6 +230,7 @@
     <None Include="CommandLineTest.zip" />
     <None Include="CommandLineWiffTest.zip" />
     <None Include="ImportAllCmdLineTest.zip" />
+    <None Include="ImportCommandLineSameName.zip" />
     <None Include="PwizFileInfoTest.zip" />
     <None Include="Refine.zip" />
     <None Include="Results\AgilentCEOpt.zip" />

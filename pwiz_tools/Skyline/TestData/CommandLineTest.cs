@@ -1797,23 +1797,31 @@ namespace pwiz.SkylineTestData
         }
 
         [TestMethod]
-        public void ConsoleImportSameFileNameTest()
+        public void ConsoleImportFileSameNameTest()
         {
             var useRaw = ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportWatersRaw;
 
-            var testZipPath = @"TestData\ImportCmdLineTest2.zip";
+            var testZipPath = @"TestData\ImportCommandLineSameName.zip";
             var testFilesDir = new TestFilesDir(TestContext, testZipPath);
 
-
+            // ImportCommandLineSameName.zip
             // Contents:
-            // ImportCmdLineTest2
             //   -- CE_Vantage_15mTorr_0001_REP1_01.mzML
             //   -- CE_Vantage_15mTorr_0001_REP1_01.raw
+            //   -- Subdir1
+            //        |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
+            //        |-- A
+            //            |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
+            //   -- Subdir2
+            //        |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
+            //        |-- A
+            //            |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
 
             var docPath = testFilesDir.GetTestPath(@"test.sky");
 
             var mzml1 = new MsDataFilePath(testFilesDir.GetTestPath(@"CE_Vantage_15mTorr_0001_REP1_01.mzML"));
             var rawPath1 = new MsDataFilePath(testFilesDir.GetTestPath(@"CE_Vantage_15mTorr_0001_REP1_01.raw"));
+            var mzxml_subdir1 = new MsDataFilePath(testFilesDir.GetTestPath(@"Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
             var defaultReplicateName = mzml1.GetFileNameWithoutExtension();
 
 
@@ -1870,23 +1878,11 @@ namespace pwiz.SkylineTestData
                         .CommandLine_RemoveImportedFiles__0______1___Note__The_file_has_already_been_imported__Ignoring___,
                     defaultReplicateName, mzml1.FilePath)), msg);
 
-            
-            // Copy the file to a subdirectory
-            var subDir1 = testFilesDir.GetTestPath("Subdir1");
-            if (!Directory.Exists(subDir1))
-            {
-                Directory.CreateDirectory(subDir1);
-            }
-            var mzxml_subdir1 = new MsDataFilePath(testFilesDir.GetTestPath(@"Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
-            FileEx.SafeDelete(mzxml_subdir1.FilePath);
-            File.Copy(mzml1.FilePath, mzxml_subdir1.FilePath);
-            Assert.IsTrue(File.Exists(mzxml_subdir1.FilePath));
-
 
             // ------------------------------------------------------------------------------------
-            // 4. Import the same file but from a different path.
-            // The path is different so it will get imported into a new replicate.  Since the default replicate name 
-            // exists in the document, the new replicate name will have a '2' suffix appended - CE_Vantage_15mTorr_0001_REP1_012
+            // 4. Import the same file but from a different path. The file will get imported.
+            // Since the default replicate name exists in the document, the new replicate name
+            // will have a '2' suffix appended - CE_Vantage_15mTorr_0001_REP1_012
             // Expected replicates in document after this command:
             // CE_Vantage_15mTorr_0001_REP1_01  -> CE_Vantage_15mTorr_0001_REP1_01.mzML
             // CE_Vantage_15mTorr_0001_REP1_012 -> Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML
@@ -1920,8 +1916,9 @@ namespace pwiz.SkylineTestData
 
 
             // ------------------------------------------------------------------------------------
-            // 6. Import the file from the second location with --import-append.  A replicate exists with the default replicate name but is has the 
-            // file from the first path.  The file from the second path will get added to the replicate.
+            // 6. Import the file from the second location with --import-append.  A replicate exists
+            // with the default replicate name but it has the file from the first path.
+            // The file from the second path will get added to the replicate.
             // Expected replicates in document after this command:
             // CE_Vantage_15mTorr_0001_REP1_01  -> CE_Vantage_15mTorr_0001_REP1_01.mzML
             //                                  -> Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML
@@ -1940,8 +1937,8 @@ namespace pwiz.SkylineTestData
 
 
             // ------------------------------------------------------------------------------------
-            // 7. Import the file with --import-replicate-name.  Even though this file has already been imported into the document
-            // it will be imported again since we are given a replicate name.
+            // 7. Import the file with --import-replicate-name.  Even though this file has already 
+            // been imported into the document it will be imported again since we are given a replicate name.
             // Expected replicates in document after this command:
             // CE_Vantage_15mTorr_0001_REP1_01  -> CE_Vantage_15mTorr_0001_REP1_01.mzML
             //                                  -> Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML
@@ -2014,14 +2011,44 @@ namespace pwiz.SkylineTestData
                         Resources.CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_,
                         defaultReplicateName, defaultReplicateName + "3")), msg);
             }
+        }
 
+        [TestMethod]
+        public void ConsoleImportAllFilesSameNameTest()
+        {
+            var useRaw = ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportWatersRaw;
 
+            var testZipPath = @"TestData\ImportCommandLineSameName.zip";
+            var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+
+            // ImportCommandLineSameName.zip
+            // Contents:
+            //   -- CE_Vantage_15mTorr_0001_REP1_01.mzML
+            //   -- CE_Vantage_15mTorr_0001_REP1_01.raw
+            //   -- Subdir1
+            //        |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
+            //        |-- A
+            //            |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
+            //   -- Subdir2
+            //        |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
+            //        |-- A
+            //            |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
+
+            var docPath = testFilesDir.GetTestPath(@"test.sky");
+
+            var mzml1 = new MsDataFilePath(testFilesDir.GetTestPath(@"CE_Vantage_15mTorr_0001_REP1_01.mzML"));
+            var defaultReplicateName = mzml1.GetFileNameWithoutExtension();
+            var replicateName = "Replicate01";
+            var subDir1 = testFilesDir.GetTestPath("Subdir1");
+            var mzxml_subdir1 = new MsDataFilePath(testFilesDir.GetTestPath(@"Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
+            var subDir2 = testFilesDir.GetTestPath("Subdir2");
+            var mzxml_subdir2 = new MsDataFilePath(testFilesDir.GetTestPath(@"Subdir2\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
 
             // -------------------------------------------------------------------------// 
             // -------------------------- Import all files in a directory ------------- //
             // -------------------------- --import-all-files -------------------------- //
             // -------------------------------------------------------------------------// 
-            outPath = testFilesDir.GetTestPath("ImportFilesInDir.sky");
+            var outPath = testFilesDir.GetTestPath("ImportFilesInDir.sky");
             FileEx.SafeDelete(outPath);
             // ------------------------------------------------------------------------------------
             // 1. Import Subdir1 that has a single file CE_Vantage_15mTorr_0001_REP1_01.mzML
@@ -2031,14 +2058,14 @@ namespace pwiz.SkylineTestData
             RunCommand("--in=" + docPath,
                 "--import-all-files=" + subDir1,
                 "--out=" + outPath);
-            doc = ResultsUtil.DeserializeDocument(outPath);
+            var doc = ResultsUtil.DeserializeDocument(outPath);
             Assert.AreEqual(1, doc.Settings.MeasuredResults.Chromatograms.Count);
             Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram(defaultReplicateName));
 
             // ------------------------------------------------------------------------------------
             // 2. Import files in the directory again.  The file should be ignored.
             // ------------------------------------------------------------------------------------
-            msg = RunCommand("--in=" + outPath,
+            var msg = RunCommand("--in=" + outPath,
                 "--import-all-files=" + subDir1,
                 "--save");
             doc = ResultsUtil.DeserializeDocument(outPath);
@@ -2050,16 +2077,6 @@ namespace pwiz.SkylineTestData
                         .CommandLine_RemoveImportedFiles__0______1___Note__The_file_has_already_been_imported__Ignoring___,
                     defaultReplicateName, mzxml_subdir1.FilePath)), msg);
 
-            // Copy the file to another subdirectory
-            var subDir2 = testFilesDir.GetTestPath("Subdir2");
-            if (!Directory.Exists(subDir2))
-            {
-                Directory.CreateDirectory(subDir2);
-            }
-            var mzxml_subdir2 = new MsDataFilePath(testFilesDir.GetTestPath(@"Subdir2\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
-            FileEx.SafeDelete(mzxml_subdir2.FilePath);
-            File.Copy(mzml1.FilePath, mzxml_subdir2.FilePath);
-            Assert.IsTrue(File.Exists(mzxml_subdir2.FilePath));
 
             // ------------------------------------------------------------------------------------
             // 2. Import the second subdirectory "Subdir2"
@@ -2115,13 +2132,15 @@ namespace pwiz.SkylineTestData
             if (useRaw)
             {
                 // 5. Import the root test directory containing both a .mzML and a .raw file with the same name.
-                // Both files will get imported since the path is different.
+                // Both files will get imported since the path is different.Two new replicates should get created for
+                // CE_Vantage_15mTorr_0001_REP1_01.mzML AND
+                // CE_Vantage_15mTorr_0001_REP1_01.raw
                 // Expected replicates in document after this command:
                 // CE_Vantage_15mTorr_0001_REP1_01  -> Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML
                 // CE_Vantage_15mTorr_0001_REP1_012 -> Subdir2\CE_Vantage_15mTorr_0001_REP1_01.mzML
                 // Replicate01                      -> Subdir2\CE_Vantage_15mTorr_0001_REP1_01.mzML
-                // CE_Vantage_15mTorr_0001_REP1_013  -> CE_Vantage_15mTorr_0001_REP1_01.mzML
-                // CE_Vantage_15mTorr_0001_REP1_014  -> CE_Vantage_15mTorr_0001_REP1_01.raw
+                // CE_Vantage_15mTorr_0001_REP1_013  -> CE_Vantage_15mTorr_0001_REP1_01.mzML|.raw
+                // CE_Vantage_15mTorr_0001_REP1_014  -> CE_Vantage_15mTorr_0001_REP1_01.mzML|.raw
                 msg = RunCommand("--in=" + outPath,
                     "--import-all-files=" + testFilesDir.FullPath,
                     "--save");
@@ -2141,43 +2160,50 @@ namespace pwiz.SkylineTestData
                         Resources.CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_,
                         defaultReplicateName, defaultReplicateName + "4")), msg);
             }
+        }
 
+        [TestMethod]
+        public void ConsoleImportAllSameNameTest()
+        {
+            var useRaw = ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportWatersRaw;
+
+            var testZipPath = @"TestData\ImportCommandLineSameName.zip";
+            var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+
+            // ImportCommandLineSameName.zip
+            // Contents:
+            //   -- CE_Vantage_15mTorr_0001_REP1_01.mzML
+            //   -- CE_Vantage_15mTorr_0001_REP1_01.raw
+            //   -- Subdir1
+            //        |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
+            //        |-- A
+            //            |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
+            //   -- Subdir2
+            //        |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
+            //        |-- A
+            //            |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
+
+            var docPath = testFilesDir.GetTestPath(@"test.sky");
+
+            var mzml1 = new MsDataFilePath(testFilesDir.GetTestPath(@"CE_Vantage_15mTorr_0001_REP1_01.mzML"));
+            var defaultReplicateName = mzml1.GetFileNameWithoutExtension();
+            var replicateName = "Replicate01";
+            var subDir1 = testFilesDir.GetTestPath("Subdir1");
+            var subDir2 = testFilesDir.GetTestPath("Subdir2");
+            var mzxml_subdir1 = new MsDataFilePath(testFilesDir.GetTestPath(@"Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
+            var mzxml_subdir1a = new MsDataFilePath(testFilesDir.GetTestPath(@"Subdir1\A\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
+            var mzxml_subdir2 = new MsDataFilePath(testFilesDir.GetTestPath(@"Subdir2\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
+            var mzxml_subdir2a = new MsDataFilePath(testFilesDir.GetTestPath(@"Subdir2\A\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
 
             // -------------------------------------------------------------------------// 
             // -------------------------- Import all files and sub-directories -------- //
             // -------------------------- --import-all -------------------------------- //
             // -------------------------------------------------------------------------// 
-            outPath = testFilesDir.GetTestPath("ImportFilesAndSubdirsInDir.sky");
+            var outPath = testFilesDir.GetTestPath("ImportFilesAndSubdirsInDir.sky");
             FileEx.SafeDelete(outPath);
-
-            // Create sub-sub-directories
-            // Subdir1
-            //     |-- A
-            // Subdir2
-            //     |-- A
-            var subDir1a = testFilesDir.GetTestPath(@"Subdir1\A");
-            if (!Directory.Exists(subDir1a))
-            {
-                Directory.CreateDirectory(subDir1a);
-            }
-
-            var mzxml_subdir1a = new MsDataFilePath(testFilesDir.GetTestPath(@"Subdir1\A\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
-            FileEx.SafeDelete(mzxml_subdir1a.FilePath);
-            File.Copy(mzml1.FilePath, mzxml_subdir1a.FilePath);
-            Assert.IsTrue(File.Exists(mzxml_subdir1a.FilePath));
-
-            var subDir2a = testFilesDir.GetTestPath(@"Subdir2\A");
-            if (!Directory.Exists(subDir2a))
-            {
-                Directory.CreateDirectory(subDir2a);
-            }
-            var mzxml_subdir2a = new MsDataFilePath(testFilesDir.GetTestPath(@"Subdir2\A\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
-            FileEx.SafeDelete(mzxml_subdir2a.FilePath);
-            File.Copy(mzml1.FilePath, mzxml_subdir2a.FilePath);
-            Assert.IsTrue(File.Exists(mzxml_subdir2a.FilePath));
-
+            
             // ------------------------------------------------------------------------------------
-            // 1. Import Subdir1
+            // 1. Import Subdir1. Expect two new replicates.  Files are the same but path is different.
             //    Subdir1
             //        |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
             //        |-- A
@@ -2189,7 +2215,7 @@ namespace pwiz.SkylineTestData
             RunCommand("--in=" + docPath,
                 "--import-all=" + subDir1,
                 "--out=" + outPath);
-            doc = ResultsUtil.DeserializeDocument(outPath);
+            var doc = ResultsUtil.DeserializeDocument(outPath);
             Assert.AreEqual(2, doc.Settings.MeasuredResults.Chromatograms.Count);
             Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram(defaultReplicateName));
             Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("A"));
@@ -2197,7 +2223,7 @@ namespace pwiz.SkylineTestData
             // ------------------------------------------------------------------------------------
             // 2. Import again.  Nothing should get imported.
             // ------------------------------------------------------------------------------------
-            msg = RunCommand("--in=" + outPath,
+            var msg = RunCommand("--in=" + outPath,
                 "--import-all=" + subDir1,
                 "--save");
             doc = ResultsUtil.DeserializeDocument(outPath);
@@ -2214,7 +2240,7 @@ namespace pwiz.SkylineTestData
                     "A", mzxml_subdir1a.FilePath)), msg);
 
             // ------------------------------------------------------------------------------------
-            // 3. Import Subdir2.  Two new replicates should be created.
+            // 3. Import Subdir2.  Expect two new replicates.  Files are the same but path is different.
             //    Subdir2
             //        |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
             //        |-- A
@@ -2252,16 +2278,62 @@ namespace pwiz.SkylineTestData
             // Replicate01                       -> Subdir2\CE_Vantage_15mTorr_0001_REP1_01.mzML
             //                                   -> Subdir2\A\CE_Vantage_15mTorr_0001_REP1_01.mzML
             // ------------------------------------------------------------------------------------
-            msg = RunCommand("--in=" + outPath,
+            RunCommand("--in=" + outPath,
                 "--import-all=" + subDir2,
                 "--import-replicate-name=" + replicateName,
                 "--save");
             doc = ResultsUtil.DeserializeDocument(outPath);
             Assert.AreEqual(5, doc.Settings.MeasuredResults.Chromatograms.Count);
-            doc.Settings.MeasuredResults.TryGetChromatogramSet(replicateName, out chromatogram, out indexChrom);
+            doc.Settings.MeasuredResults.TryGetChromatogramSet(replicateName, out var chromatogram, out _);
             Assert.IsNotNull(chromatogram);
             Assert.IsTrue(chromatogram.MSDataFilePaths.Contains(mzxml_subdir2));
             Assert.IsTrue(chromatogram.MSDataFilePaths.Contains(mzxml_subdir2a));
+
+            if (useRaw)
+            {
+                // ------------------------------------------------------------------------------------
+                // 5. Import the root test directory containing both a .mzML and a .raw file with the same name
+                // Both files will get imported since the path is different. Two new replicates should get created for
+                // CE_Vantage_15mTorr_0001_REP1_01.mzML AND
+                // CE_Vantage_15mTorr_0001_REP1_01.raw
+                // The .mzML files in Subdir1 and Subdir2 are
+                // already imported and should be ignored. 
+                // Expected replicates in document after this command:
+                // CE_Vantage_15mTorr_0001_REP1_01   -> Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML
+                // A                                 -> Subdir1\A\CE_Vantage_15mTorr_0001_REP1_01.mzML
+                // CE_Vantage_15mTorr_0001_REP1_012  -> Subdir2\CE_Vantage_15mTorr_0001_REP1_01.mzML
+                // A2                                -> Subdir2\A\CE_Vantage_15mTorr_0001_REP1_01.mzML
+                // Replicate01                       -> Subdir2\CE_Vantage_15mTorr_0001_REP1_01.mzML
+                //                                   -> Subdir2\A\CE_Vantage_15mTorr_0001_REP1_01.mzML
+                // CE_Vantage_15mTorr_0001_REP1_013  -> CE_Vantage_15mTorr_0001_REP1_01.mzML|.raw
+                // CE_Vantage_15mTorr_0001_REP1_014  -> CE_Vantage_15mTorr_0001_REP1_01.mzML|.raw
+                // ------------------------------------------------------------------------------------
+                msg = RunCommand("--in=" + outPath,
+                    "--import-all=" + testFilesDir.FullPath,
+                    "--save");
+                doc = ResultsUtil.DeserializeDocument(outPath);
+                Assert.AreEqual(7, doc.Settings.MeasuredResults.Chromatograms.Count);
+                Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram(defaultReplicateName + "3"));
+                Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram(defaultReplicateName + "4"));
+                Assert.IsTrue(
+                    msg.Contains(string.Format(
+                        Resources
+                            .CommandLine_RemoveImportedFiles__0______1___Note__The_file_has_already_been_imported__Ignoring___,
+                        defaultReplicateName, mzxml_subdir1.FilePath)), msg);
+                Assert.IsTrue(
+                    msg.Contains(string.Format(
+                        Resources
+                            .CommandLine_RemoveImportedFiles__0______1___Note__The_file_has_already_been_imported__Ignoring___,
+                        defaultReplicateName + "2", mzxml_subdir2.FilePath)), msg);
+                Assert.IsTrue(
+                    msg.Contains(string.Format(
+                        Resources.CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_,
+                        defaultReplicateName, defaultReplicateName + "3")), msg);
+                Assert.IsTrue(
+                    msg.Contains(string.Format(
+                        Resources.CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_,
+                        defaultReplicateName, defaultReplicateName + "4")), msg);
+            }
         }
 
 
