@@ -404,9 +404,9 @@ namespace pwiz.Skyline.Model.Irt
         }
 
         private static void AddRetentionTimesToDict(IRetentionTimeProvider retentionTimes,
-                                                    IRegressionFunction regression,
-                                                    IDictionary<Target, IrtPeptideAverages> dictPeptideAverages,
-                                                    IEnumerable<DbIrtPeptide> standardPeptideList)
+            IRegressionFunction regression,
+            IDictionary<Target, IrtPeptideAverages> dictPeptideAverages,
+            IEnumerable<DbIrtPeptide> standardPeptideList)
         {
             var setStandards = new TargetMap<bool>(standardPeptideList.Select(peptide => new KeyValuePair<Target, bool>(peptide.Target, true)));
             foreach (var pepTime in retentionTimes.PeptideRetentionTimes.Where(p => !setStandards.ContainsKey(p.PeptideSequence)))
@@ -670,32 +670,34 @@ namespace pwiz.Skyline.Model.Irt
 
             var filteredRt = FilteredPeptides.Select(pep => pep.RetentionTime.Value).ToList();
             var filteredIrt = FilteredPeptides.Select(pep => pep.Irt).ToList();
-            IIrtRegression regressionRefined;
             var removed = new List<Tuple<double, double>>();
             if (ReferenceEquals(regressionType, IrtRegressionType.LINEAR))
             {
                 Regression = new RegressionLine(filteredRt.ToArray(), filteredIrt.ToArray());
-                RegressionSuccess = IrtRegression.TryGet<RegressionLine>(filteredRt, filteredIrt, MinPoints, out regressionRefined, removed);
             }
             else if (ReferenceEquals(regressionType, IrtRegressionType.LOGARITHMIC))
             {
-                Regression = new LogRegression(filteredRt, filteredIrt);
-                RegressionSuccess = IrtRegression.TryGet<LogRegression>(filteredRt, filteredIrt, MinPoints, out regressionRefined, removed);
+                Regression = new LogRegression(filteredRt, filteredIrt, true);
             }
             else if (ReferenceEquals(regressionType, IrtRegressionType.LOWESS))
             {
                 Regression = new LoessRegression(filteredRt.ToArray(), filteredIrt.ToArray());
-                RegressionSuccess = IrtRegression.TryGet<LoessRegression>(filteredRt, filteredIrt, MinPoints, out regressionRefined, removed);
             }
             else
             {
                 throw new ArgumentException();
             }
 
+            IIrtRegression regressionRefined;
             if (IrtRegression.Accept(Regression, MinPoints))
             {
                 regressionRefined = Regression;
                 Regression = null;
+                RegressionSuccess = true;
+            }
+            else
+            {
+                RegressionSuccess = IrtRegression.TryGet(Regression, filteredRt, filteredIrt, MinPoints, out regressionRefined, removed);
             }
 
             RegressionRefined = regressionRefined;

@@ -644,14 +644,14 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public static RetentionTimeRegression CalcSingleRegression(string name,
-                                                             RetentionScoreCalculatorSpec calculator,
-                                                             IList<MeasuredRetentionTime> measuredPeptides,
-                                                             RetentionTimeScoreCache scoreCache,
-                                                             bool allPeptides,
-                                                             RegressionMethodRT regressionMethod,
-                                                             out RetentionTimeStatistics statistics,
-                                                             out double rVal,
-                                                             CustomCancellationToken token)
+            RetentionScoreCalculatorSpec calculator,
+            IList<MeasuredRetentionTime> measuredPeptides,
+            RetentionTimeScoreCache scoreCache,
+            bool allPeptides,
+            RegressionMethodRT regressionMethod,
+            out RetentionTimeStatistics statistics,
+            out double rVal,
+            CustomCancellationToken token)
         {
             // Get a list of peptide names for use by the calculators to choose their regression peptides
             var listPeptides = measuredPeptides.Select(pep => pep.PeptideSequence).ToList();
@@ -702,8 +702,6 @@ namespace pwiz.Skyline.Model.DocSettings
             var statRT = new Statistics(listRTs);
             var stat = aStatValues;
             IRegressionFunction regressionFunction;
-            double[] xArr;
-            double[] ySmoothed;
             switch (regressionMethod)
             {
                 case RegressionMethodRT.linear:
@@ -713,24 +711,24 @@ namespace pwiz.Skyline.Model.DocSettings
                     var kdeAligner = new KdeAligner();
                     kdeAligner.Train(stat.CopyList(), statRT.CopyList(), token);
 
-                    kdeAligner.GetSmoothedValues(out xArr, out ySmoothed);
+                    kdeAligner.GetSmoothedValues(out var xArr, out var ySmoothed);
                     regressionFunction =
                         new PiecewiseLinearRegressionFunction(xArr, ySmoothed, kdeAligner.GetRmsd());
                     stat = new Statistics(ySmoothed);
                     break;
+                case RegressionMethodRT.log:
+                    regressionFunction = new LogRegression(stat.CopyList(), statRT.CopyList());
+                    stat = new Statistics(peptideScores.Select(x => regressionFunction.GetY(x)));
+                    break;
                 case RegressionMethodRT.loess:
-                    var loessAligner = new LoessAligner();
-                    loessAligner.Train(stat.CopyList(), statRT.CopyList(), token);
-                    loessAligner.GetSmoothedValues(out xArr, out ySmoothed);
-                    regressionFunction =
-                        new PiecewiseLinearRegressionFunction(xArr, ySmoothed, loessAligner.GetRmsd());
-                    stat = new Statistics(ySmoothed);
+                    regressionFunction = new LoessRegression(stat.CopyList(), statRT.CopyList(), token);
+                    stat = new Statistics(peptideScores.Select(x => regressionFunction.GetY(x)));
                     break;
                 default:
                     return null;
             }
 
-            rVal = statRT.R(stat);
+            rVal = regressionFunction is IIrtRegression irtRegresion ? IrtRegression.R(irtRegresion) : statRT.R(stat);
 
             // Make sure sets containing unknown scores have very low correlations to keep
             // such scores from ending up in the final regression.

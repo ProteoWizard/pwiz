@@ -32,11 +32,11 @@ namespace pwiz.Skyline.Model.Irt
     public class IrtRegressionType : LabeledValues<string>
     {
         public static readonly IrtRegressionType LINEAR = new IrtRegressionType(@"linear", () => Resources.IrtRegressionType_Linear);
-        public static readonly IrtRegressionType LOWESS = new IrtRegressionType(@"lowess", () => Resources.IrtRegressionType_Lowess);
         public static readonly IrtRegressionType LOGARITHMIC = new IrtRegressionType(@"logarithmic", () => Resources.IrtRegressionType_Logarithmic);
+        public static readonly IrtRegressionType LOWESS = new IrtRegressionType(@"lowess", () => Resources.IrtRegressionType_Lowess);
 
         public static readonly IrtRegressionType DEFAULT = LINEAR;
-        public static IEnumerable<IrtRegressionType> ALL => new[] {LINEAR, LOWESS, LOGARITHMIC};
+        public static IEnumerable<IrtRegressionType> ALL => new[] {LINEAR, LOGARITHMIC, LOWESS};
 
         public IrtRegressionType(string name, Func<string> getLabelFunc) : base(name, getLabelFunc)
         {
@@ -63,9 +63,8 @@ namespace pwiz.Skyline.Model.Irt
 
     public static class IrtRegression
     {
-        public static bool TryGet<TRegression>(IList<double> listIndependent, IList<double> listDependent, int minPoints,
-            out IIrtRegression regression, IList<Tuple<double, double>> removedValues = null)
-            where TRegression : IIrtRegression, new()
+        public static bool TryGet(IIrtRegression existing, IList<double> listIndependent, IList<double> listDependent,
+            int minPoints, out IIrtRegression regression, IList<Tuple<double, double>> removedValues = null)
         {
             regression = null;
             removedValues?.Clear();
@@ -77,7 +76,7 @@ namespace pwiz.Skyline.Model.Irt
 
             while (true)
             {
-                regression = new TRegression().ChangePoints(listX.ToArray(), listY.ToArray());
+                regression = existing.ChangePoints(listX.ToArray(), listY.ToArray());
                 if (Accept(regression, minPoints) || listX.Count <= minPoints)
                     break;
 
@@ -101,6 +100,14 @@ namespace pwiz.Skyline.Model.Irt
             return Accept(regression, minPoints);
         }
 
+        public static bool TryGet<TRegression>(IList<double> listIndependent, IList<double> listDependent,
+            int minPoints, out IIrtRegression regression, IList<Tuple<double, double>> removedValues = null)
+            where TRegression : IIrtRegression, new()
+        {
+            return TryGet(new TRegression(), listIndependent, listDependent,
+                minPoints, out regression, removedValues);
+        }
+
         public static bool Accept(IIrtRegression regression, int minPoints)
         {
             return regression.XValues != null && regression.XValues.Length >= minPoints && R(regression) >= RCalcIrt.MIN_IRT_TO_TIME_CORRELATION;
@@ -115,6 +122,39 @@ namespace pwiz.Skyline.Model.Irt
             var sumOfSquaresOfResiduals = regression.XValues.Select((x, i) => Math.Pow(regression.YValues[i] - regression.GetY(x), 2)).Sum();
             return Math.Sqrt(1 - sumOfSquaresOfResiduals / totalSumOfSquares);
         }
+
+        public static void GetCurve(IIrtRegression regression, RetentionTimeStatistics statistics, out double[] hydroScores, out double[] predictions)
+        {
+            var minHydro = double.MaxValue;
+            var maxHydro = double.MinValue;
+            foreach (var hydroScore in statistics.ListHydroScores)
+            {
+                minHydro = Math.Min(minHydro, hydroScore);
+                maxHydro = Math.Max(maxHydro, hydroScore);
+            }
+            var addMin = minHydro < regression.XValues[0];
+            var addMax = maxHydro > regression.XValues.Last();
+            var points = regression.XValues.Length + (addMax ? 1 : 0) + (addMin ? 1 : 0);
+            hydroScores = new double[points];
+            predictions = new double[points];
+            var offset = 0;
+            if (addMin)
+            {
+                hydroScores[0] = minHydro;
+                predictions[0] = regression.GetY(minHydro);
+                offset = 1;
+            }
+            if (addMax)
+            {
+                hydroScores[hydroScores.Length - 1] = maxHydro;
+                predictions[predictions.Length - 1] = regression.GetY(maxHydro);
+            }
+            for (var i = 0; i < regression.XValues.Length; i++)
+            {
+                hydroScores[offset + i] = regression.XValues[i];
+                predictions[offset + i] = regression.GetY(regression.XValues[i]);
+            }
+        }
     }
 
     public class LogRegression : IIrtRegression
@@ -125,41 +165,59 @@ namespace pwiz.Skyline.Model.Irt
             Intercept = double.NaN;
             XValues = new double[0];
             YValues = new double[0];
+            _invert = false;
         }
 
-        public LogRegression(IList<double> xValues, IList<double> yValues)
+        public LogRegression(IList<double> xValues, IList<double> yValues, bool invert = false)
         {
-            var statIndependent = new Statistics(xValues.Select(x => Math.Log(x)));
-            var statDependent = new Statistics(yValues);
+            var xFiltered = new List<double>(!invert ? xValues : yValues);
+            var yFiltered = new List<double>(!invert ? yValues : xValues);
+            for (var i = xFiltered.Count - 1; i >= 0; i--)
+            {
+                if (xFiltered[i] <= 0)
+                {
+                    xFiltered.RemoveAt(i);
+                    yFiltered.RemoveAt(i);
+                }
+            }
+            var statIndependent = new Statistics(xFiltered.Select(x => Math.Log(x)));
+            var statDependent = new Statistics(yFiltered);
             Slope = statDependent.Slope(statIndependent);
             Intercept = statDependent.Intercept(statIndependent);
             XValues = xValues.ToArray();
             YValues = yValues.ToArray();
+            _invert = invert;
         }
 
         public double GetY(double x)
         {
-            return Intercept + Slope * Math.Log(x);
+            return !_invert
+                ? x > 0 ? Intercept + Slope * Math.Log(x) : 0
+                : Math.Exp((x - Intercept) / Slope);
         }
         public double Slope { get; }
         public double Intercept { get; }
-        public string DisplayEquation => string.Format(@"iRT = {0:F3} + log(RT) * {1:F3}", Intercept, Slope);
+        public string DisplayEquation => string.Format(!_invert
+                ? @"iRT = {0:F3} + log(RT) * {1:F3}"
+                : @"RT = {0:F3} + log(iRT) * {1:F3}",
+            Intercept, Slope);
 
         public IIrtRegression ChangePoints(double[] x, double[] y)
         {
-            return new LogRegression(x, y);
+            return new LogRegression(x, y, this is LogRegression regression && regression._invert);
         }
         public double[] XValues { get; }
         public double[] YValues { get; }
+        private readonly bool _invert;
 
         public string GetRegressionDescription(double r, double window)
         {
-            throw new NotImplementedException();
+            return string.Format(@"r = {0}", Math.Round(r, RetentionTimeRegression.ThresholdPrecision));
         }
 
         public void GetCurve(RetentionTimeStatistics statistics, out double[] hydroScores, out double[] predictions)
         {
-            throw new NotImplementedException();
+            IrtRegression.GetCurve(this, statistics, out hydroScores, out predictions);
         }
     }
 
@@ -174,14 +232,14 @@ namespace pwiz.Skyline.Model.Irt
             YValues = new double[0];
         }
 
-        public LoessRegression(double[] x, double[] y)
+        public LoessRegression(double[] x, double[] y, CustomCancellationToken token = null)
         {
             _linearFit = new RegressionLine(x, y);
             var statX = new Statistics(x);
             _xMin = statX.Min();
             _xMax = statX.Max();
             _loess = new LoessAligner(0.4);
-            _loess.Train(x, y, CustomCancellationToken.NONE);
+            _loess.Train(x, y, token ?? CustomCancellationToken.NONE);
             XValues = x;
             YValues = y;
         }
@@ -207,14 +265,16 @@ namespace pwiz.Skyline.Model.Irt
         public double[] XValues { get; }
         public double[] YValues { get; }
 
+        public double Rmsd => _loess.GetRmsd();
+
         public string GetRegressionDescription(double r, double window)
         {
-            throw new NotImplementedException();
+            return string.Format(@"rmsd = {0}", Math.Round(Rmsd, 4));
         }
 
         public void GetCurve(RetentionTimeStatistics statistics, out double[] hydroScores, out double[] predictions)
         {
-            throw new NotImplementedException();
+            IrtRegression.GetCurve(this, statistics, out hydroScores, out predictions);
         }
     }
 }

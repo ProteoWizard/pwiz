@@ -185,6 +185,7 @@ namespace pwiz.Skyline
             this.setRegressionMethodContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.linearRegressionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.kernelDensityEstimationContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.logRegressionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loessContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator22 = new System.Windows.Forms.ToolStripSeparator();
             this.createRTRegressionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -394,6 +395,7 @@ namespace pwiz.Skyline
             this.showTargetsByAccessionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showTargetsByPreferredNameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showTargetsByGeneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.viewModificationsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.textZoomToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.defaultTextToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.largeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -558,7 +560,6 @@ namespace pwiz.Skyline
             this.massErorrRetentionTimeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorMassToChargContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorlogScaleContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.viewModificationsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
@@ -574,6 +575,7 @@ namespace pwiz.Skyline
             // 
             // contextMenuTreeNode
             // 
+            this.contextMenuTreeNode.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.contextMenuTreeNode.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.cutContextMenuItem,
             this.copyContextMenuItem,
@@ -774,6 +776,7 @@ namespace pwiz.Skyline
             // 
             // contextMenuSpectrum
             // 
+            this.contextMenuSpectrum.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.contextMenuSpectrum.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.aionsContextMenuItem,
             this.bionsContextMenuItem,
@@ -1004,6 +1007,7 @@ namespace pwiz.Skyline
             // 
             // contextMenuChromatogram
             // 
+            this.contextMenuChromatogram.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.contextMenuChromatogram.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.applyPeakAllGraphMenuItem,
             this.applyPeakSubsequentGraphMenuItem,
@@ -1400,6 +1404,7 @@ namespace pwiz.Skyline
             // contextMenuRetentionTimes
             // 
             this.contextMenuRetentionTimes.AllowMerge = false;
+            this.contextMenuRetentionTimes.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.contextMenuRetentionTimes.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.timeGraphContextMenuItem,
             this.timePlotContextMenuItem,
@@ -1639,6 +1644,7 @@ namespace pwiz.Skyline
             this.setRegressionMethodContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.linearRegressionContextMenuItem,
             this.kernelDensityEstimationContextMenuItem,
+            this.logRegressionContextMenuItem,
             this.loessContextMenuItem});
             this.setRegressionMethodContextMenuItem.Name = "setRegressionMethodContextMenuItem";
             resources.ApplyResources(this.setRegressionMethodContextMenuItem, "setRegressionMethodContextMenuItem");
@@ -1654,6 +1660,12 @@ namespace pwiz.Skyline
             this.kernelDensityEstimationContextMenuItem.Name = "kernelDensityEstimationContextMenuItem";
             resources.ApplyResources(this.kernelDensityEstimationContextMenuItem, "kernelDensityEstimationContextMenuItem");
             this.kernelDensityEstimationContextMenuItem.Click += new System.EventHandler(this.kernelDensityEstimationContextMenuItem_Click);
+            // 
+            // logRegressionContextMenuItem
+            // 
+            this.logRegressionContextMenuItem.Name = "logRegressionContextMenuItem";
+            resources.ApplyResources(this.logRegressionContextMenuItem, "logRegressionContextMenuItem");
+            this.logRegressionContextMenuItem.Click += new System.EventHandler(this.logRegressionContextMenuItem_Click);
             // 
             // loessContextMenuItem
             // 
@@ -1750,6 +1762,7 @@ namespace pwiz.Skyline
             // 
             // contextMenuPeakAreas
             // 
+            this.contextMenuPeakAreas.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.contextMenuPeakAreas.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.areaGraphContextMenuItem,
             this.graphTypeToolStripMenuItem,
@@ -2172,6 +2185,7 @@ namespace pwiz.Skyline
             // statusStrip
             // 
             resources.ApplyResources(this.statusStrip, "statusStrip");
+            this.statusStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.statusGeneral,
             this.statusProgress,
@@ -2229,6 +2243,7 @@ namespace pwiz.Skyline
             // mainToolStrip
             // 
             this.mainToolStrip.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.mainToolStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.mainToolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.newToolBarButton,
             this.openToolBarButton,
@@ -2341,6 +2356,7 @@ namespace pwiz.Skyline
             // 
             // menuMain
             // 
+            this.menuMain.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.menuMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
             this.editToolStripMenuItem,
@@ -3162,6 +3178,11 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.showTargetsByGeneToolStripMenuItem, "showTargetsByGeneToolStripMenuItem");
             this.modeUIHandler.SetUIMode(this.showTargetsByGeneToolStripMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.showTargetsByGeneToolStripMenuItem.Click += new System.EventHandler(this.showTargetsByGeneToolStripMenuItem_Click);
+            // 
+            // viewModificationsMenuItem
+            // 
+            this.viewModificationsMenuItem.Name = "viewModificationsMenuItem";
+            resources.ApplyResources(this.viewModificationsMenuItem, "viewModificationsMenuItem");
             // 
             // textZoomToolStripMenuItem
             // 
@@ -4114,6 +4135,7 @@ namespace pwiz.Skyline
             // 
             // contextMenuMassErrors
             // 
+            this.contextMenuMassErrors.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.contextMenuMassErrors.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.massErrorGraphContextMenuItem,
             this.massErrorPropsContextMenuItem,
@@ -4303,11 +4325,6 @@ namespace pwiz.Skyline
             this.massErrorlogScaleContextMenuItem.Name = "massErrorlogScaleContextMenuItem";
             resources.ApplyResources(this.massErrorlogScaleContextMenuItem, "massErrorlogScaleContextMenuItem");
             this.massErrorlogScaleContextMenuItem.Click += new System.EventHandler(this.massErrorlogScaleContextMenuItem_Click);
-            // 
-            // viewModificationsMenuItem
-            // 
-            this.viewModificationsMenuItem.Name = "viewModificationsMenuItem";
-            resources.ApplyResources(this.viewModificationsMenuItem, "viewModificationsMenuItem");
             // 
             // SkylineWindow
             // 
@@ -4868,6 +4885,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem prositLibMatchItem;
         private System.Windows.Forms.ToolStripMenuItem mirrorMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewModificationsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem logRegressionContextMenuItem;
     }
 }
 
