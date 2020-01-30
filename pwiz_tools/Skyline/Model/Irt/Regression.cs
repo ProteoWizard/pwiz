@@ -198,8 +198,8 @@ namespace pwiz.Skyline.Model.Irt
         public double Slope { get; }
         public double Intercept { get; }
         public string DisplayEquation => string.Format(!_invert
-                ? @"iRT = {0:F3} + log(RT) * {1:F3}"
-                : @"RT = {0:F3} + log(iRT) * {1:F3}",
+                ? @"y = {0:F3} + log(x) * {1:F3}"
+                : @"y = e^((x - {0:F3}) / {1:F3})",
             Intercept, Slope);
 
         public IIrtRegression ChangePoints(double[] x, double[] y)
