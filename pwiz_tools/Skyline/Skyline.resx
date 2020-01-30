@@ -990,7 +990,7 @@
     <value>Kernel Density Estimation</value>
   </data>
   <data name="logRegressionContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>296, 30</value>
+    <value>296, 22</value>
   </data>
   <data name="logRegressionContextMenuItem.Text" xml:space="preserve">
     <value>Logarithmic Regression</value>
@@ -999,7 +999,7 @@
     <value>208, 22</value>
   </data>
   <data name="loessContextMenuItem.Text" xml:space="preserve">
-    <value>LOESS</value>
+    <value>Loess</value>
   </data>
   <data name="setRegressionMethodContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
