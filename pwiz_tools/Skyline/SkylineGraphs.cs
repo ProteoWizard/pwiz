@@ -5979,6 +5979,11 @@ namespace pwiz.Skyline
             } 
         }
 
+        public AuditLogForm AuditLogForm
+        {
+            get { return _auditLogForm; }
+        }
+
         #endregion
 
         #region Graph layout

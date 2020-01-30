@@ -113,6 +113,7 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AuditLogTutorialTest.cs" />
     <Compile Include="SmallMoleculesMethodDevAndCEOptimizationTutorial.cs" />
     <Compile Include="SmallMoleculesQuantificationTutorial.cs" />
     <Compile Include="SmallMoleculesTutorial.cs" />
