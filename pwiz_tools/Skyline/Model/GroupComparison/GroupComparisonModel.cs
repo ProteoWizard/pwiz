@@ -298,30 +298,6 @@ namespace pwiz.Skyline.Model.GroupComparison
             List<GroupComparisonResult> results = new List<GroupComparisonResult>();
             if (groupComparer.IsValid)
             {
-//                var peptideGroups = document.MoleculeGroups.ToArray();
-//                for (int i = 0; i < peptideGroups.Length; i++)
-//                {
-//                    int percentComplete = 100 * i / peptideGroups.Length;
-//                    lock (_lock)
-//                    {
-//                        cancellationToken.ThrowIfCancellationRequested();
-//                        _percentComplete = percentComplete;
-//                    }
-//                    var peptideGroup = peptideGroups[i];
-//                    IEnumerable<PeptideDocNode> peptides;
-//                    if (groupComparer.ComparisonDef.PerProtein)
-//                    {
-//                        peptides = new PeptideDocNode[] {null};
-//                    }
-//                    else
-//                    {
-//                        peptides = peptideGroup.Molecules;
-//                    }
-//                    foreach (var peptide in peptides)
-//                    {
-//                        results.AddRange(groupComparer.CalculateFoldChanges(peptideGroup, peptide));
-//                    }
-//                }
                 results = ComputeResults(groupComparer, document, cancellationToken, _lock);
             }
             DateTime endTime = DateTime.Now;
