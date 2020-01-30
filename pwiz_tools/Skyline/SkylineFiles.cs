@@ -2975,6 +2975,11 @@ namespace pwiz.Skyline
             {
                 return;
             }
+            else if (!Document.IsLoaded)
+            {
+                MessageDlg.Show(this, Resources.SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_);
+                return;
+            }
 
             using (var dlg = !workflowType.HasValue
                    ? new ImportPeptideSearchDlg(this, _libraryManager)

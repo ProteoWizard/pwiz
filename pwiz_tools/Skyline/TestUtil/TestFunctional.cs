@@ -40,6 +40,7 @@ using pwiz.ProteomeDatabase.Fasta;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
@@ -169,6 +170,11 @@ namespace pwiz.SkylineTestUtil
             else
                 dlg = WaitForOpenForm<TDlg>(millis);
             Assert.IsNotNull(dlg);
+
+            // Making sure if the form has a visible icon it's Skyline release icon, not daily one.
+            // TODO: Find something more reliable. This sets the Skyline icon on windows which do not use it
+            if (IsPauseForScreenShots && dlg.ShowIcon && dlg.Icon.Handle != SkylineWindow.Icon.Handle)
+                RunUI(() => dlg.Icon = SkylineWindow.Icon);
             return dlg;
         }
 
@@ -966,7 +972,7 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         private static bool _isPauseForScreenShots;
 
-        public bool IsPauseForScreenShots
+        public static bool IsPauseForScreenShots
         {
             get { return _isPauseForScreenShots || Program.PauseSeconds != 0; }
             set
@@ -1092,19 +1098,19 @@ namespace pwiz.SkylineTestUtil
 
         private void ExpandMenuRecursive(ToolStrip menu, [NotNull] LinkedListNode<string> path)
         {
-                var nextItem = menu.Items.OfType<ToolStripMenuItem>().FirstOrDefault((i) => { return (i.Text.Replace(@"&", "") == path.Value); });
-                if (nextItem != null)
+            var nextItem = menu.Items.OfType<ToolStripMenuItem>().FirstOrDefault((i) => { return (i.Text.Replace(@"&", "") == path.Value); });
+            if (nextItem != null)
+            {
+                nextItem.Select();
+                if (nextItem.HasDropDown && nextItem.HasDropDownItems)
                 {
-                    nextItem.Select();
-                    if (nextItem.HasDropDown && nextItem.HasDropDownItems)
+                    if (path.Next != null)
                     {
-                        if (path.Next != null)
-                        {
-                            nextItem.ShowDropDown();
-                            ExpandMenuRecursive(nextItem.DropDown, path.Next);
-                        }
+                        nextItem.ShowDropDown();
+                        ExpandMenuRecursive(nextItem.DropDown, path.Next);
                     }
                 }
+            }
         }
 
         public static void OkDialog(Form form, Action okAction)
@@ -1118,75 +1124,96 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         protected void RunFunctionalTest(string defaultUiMode = UiModes.PROTEOMIC)
         {
-            try
+            // Be prepared to re-run test in the event that a previously downloaded data file is damaged or stale
+            for (var testDataDownloadRetries = RetryDataDownloads && DictZipFileIsKnownCurrent != null && DictZipFileIsKnownCurrent.Any(kvp=> !kvp.Value) ? 1 : 0; 
+                testDataDownloadRetries >= 0; 
+                testDataDownloadRetries--)
             {
-
-                if (IsPerfTest && !RunPerfTests)
+                try
                 {
-                    return;  // Don't want to run this lengthy test right now
-                }
 
-                Program.FunctionalTest = true;
-                Program.DefaultUiMode = defaultUiMode;
-                Program.TestExceptions = new List<Exception>();
-                LocalizationHelper.InitThread();
-
-                // Unzip test files.
-                if (TestFilesZipPaths != null)
-                {
-                    TestFilesDirs = new TestFilesDir[TestFilesZipPaths.Length];
-                    for (int i = 0; i < TestFilesZipPaths.Length; i++)
+                    if (IsPerfTest && !RunPerfTests)
                     {
-                        TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName,
-                            TestFilesPersistent, IsExtractHere(i));
+                        return; // Don't want to run this lengthy test right now
                     }
+
+                    Program.FunctionalTest = true;
+                    Program.DefaultUiMode = defaultUiMode;
+                    Program.TestExceptions = new List<Exception>();
+                    LocalizationHelper.InitThread();
+
+                    // Unzip test files.
+                    if (TestFilesZipPaths != null)
+                    {
+                        TestFilesDirs = new TestFilesDir[TestFilesZipPaths.Length];
+                        for (int i = 0; i < TestFilesZipPaths.Length; i++)
+                        {
+                            TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName,
+                                TestFilesPersistent, IsExtractHere(i));
+                        }
+                    }
+                    _shotManager = new ScreenshotManager(TestContext, SkylineWindow);
+
+                    // Run test in new thread (Skyline on main thread).
+                    Program.Init();
+                    InitializeSkylineSettings();
+                    if (Program.PauseSeconds != 0)
+                    {
+                        ForceMzml = false;
+                    }
+
+                    var threadTest = new Thread(WaitForSkyline) { Name = @"Functional test thread" };
+                    LocalizationHelper.InitThread(threadTest);
+                    threadTest.Start();
+                    Program.Main();
+                    threadTest.Join();
+
+                    // Were all windows disposed?
+                    FormEx.CheckAllFormsDisposed();
+                    CommonFormEx.CheckAllFormsDisposed();
+
+                    testDataDownloadRetries = 0; // Success, no retry needed
                 }
-                _shotManager = new ScreenshotManager(TestContext, SkylineWindow);
-
-                // Run test in new thread (Skyline on main thread).
-                Program.Init();
-                InitializeSkylineSettings();
-                if (Program.PauseSeconds != 0)
+                catch (Exception x)
                 {
-                    ForceMzml = false;
-                }
-
-                var threadTest = new Thread(WaitForSkyline) { Name = @"Functional test thread" };
-                LocalizationHelper.InitThread(threadTest);
-                threadTest.Start();
-                Program.Main();
-                threadTest.Join();
-
-                // Were all windows disposed?
-                FormEx.CheckAllFormsDisposed();
-                CommonFormEx.CheckAllFormsDisposed();
-
-                Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault(); // Release memory held in settings
-            }
-            catch (Exception x)
-            {
-                Program.AddTestException(x);
-            }
-
-            // Delete unzipped test files.
-            if (TestFilesDirs != null)
-            {
-                foreach (TestFilesDir dir in TestFilesDirs)
-                {
-                    if (dir == null)
-                        continue;
+                    // Check to see if the error was due to stale test data downloads
+                    var retry = false;
                     try
                     {
-                        dir.Dispose();
+                        retry = testDataDownloadRetries != 0 && FreshenTestDataDownloads(); // If we find any stale downloads, let's retry
                     }
-                    catch (Exception x)
+                    catch (Exception xx)
+                    {
+                        Program.AddTestException(xx); // Some trouble with data download, make a note of it
+                    }
+                    if (!retry)
                     {
                         Program.AddTestException(x);
-                        FileStreamManager.Default.CloseAllStreams();
+                        testDataDownloadRetries = 0; // Failure, but no more retries
+                    }
+                }
+
+                Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault(); // Release memory held in settings
+
+                // Delete unzipped test files.
+                if (TestFilesDirs != null)
+                {
+                    foreach (TestFilesDir dir in TestFilesDirs)
+                    {
+                        if (dir == null)
+                            continue;
+                        try
+                        {
+                            dir.Dispose();
+                        }
+                        catch (Exception x)
+                        {
+                            Program.AddTestException(x);
+                            FileStreamManager.Default.CloseAllStreams();
+                        }
                     }
                 }
             }
-
             if (Program.TestExceptions.Count > 0)
             {
                 //Log<AbstractFunctionalTest>.Exception(@"Functional test exception", Program.TestExceptions[0]);
@@ -1225,7 +1252,7 @@ namespace pwiz.SkylineTestUtil
             // For automated demos, start with the main window maximized
             if (IsDemoMode)
                 Settings.Default.MainWindowMaximized = true;
-
+            Settings.Default.TutorialMode = true;
         }
 
         private void BeginAuditLogging()
@@ -1401,10 +1428,10 @@ namespace pwiz.SkylineTestUtil
                     }
                     Thread.Sleep(SLEEP_INTERVAL);
                 }
-                if (!ShowStartPage) 
+                if (!ShowStartPage)
                 {
                     Assert.IsTrue(Program.MainWindow != null && Program.MainWindow.IsHandleCreated,
-                    @"Timeout {0} seconds exceeded in WaitForSkyline", waitCycles * SLEEP_INTERVAL / 1000);
+                        @"Timeout {0} seconds exceeded in WaitForSkyline", waitCycles * SLEEP_INTERVAL / 1000);
                 }
                 BeginAuditLogging();
                 RunTest();
@@ -1425,8 +1452,16 @@ namespace pwiz.SkylineTestUtil
             if (null != SkylineWindow)
             {
                 // Clean-up before running the test
-                RunUI(() => SkylineWindow.UseKeysOverride = true);
-
+                RunUI(() =>
+                {
+                    SkylineWindow.UseKeysOverride = true;
+                    if (IsPauseForScreenShots)
+                    {
+                        // Screenshots should be taken with release icon and "Skyline" in the window title
+                        SkylineWindow.Icon = Resources.Skyline_Release1;
+                    }
+                });
+                 
                 // Make sure the background proteome and sequence tree protein metadata loaders don't hit the web (unless they are meant to)
                 bool allowInternetAccess = AllowInternetAccess; // Local copy for easy change in debugger when needed
                 if (!allowInternetAccess)
@@ -1626,6 +1661,16 @@ namespace pwiz.SkylineTestUtil
                 findPeptideDlg.FindNext();
                 findPeptideDlg.Close();
             });
+        }
+
+        protected void AdjustSequenceTreePanelWidth()
+        {
+            int newWidth = SkylineWindow.SequenceTree.WidthToEnsureAllItemsVisible();
+
+            var seqPanel = SkylineWindow.DockPanel.Contents.OfType<SequenceTreeForm>().FirstOrDefault();
+            var sequencePanel = seqPanel as DockableFormEx;
+            if (sequencePanel != null)
+                sequencePanel.DockPanel.DockLeftPortion = (double)newWidth / sequencePanel.Width * sequencePanel.DockPanel.DockLeftPortion;
         }
 
         public static void RemovePeptide(string peptideSequence, bool isDecoy = false)
