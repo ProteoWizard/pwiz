@@ -54,6 +54,19 @@ struct PWIZ_API_DECL IsNamedRawFile : public TestPathPredicate
     std::set<std::string> filenames;
 };
 
+struct PWIZ_API_DECL TestResult
+{
+    int totalTests;
+    int failedTests;
+
+    TestResult() : totalTests(0), failedTests(0) {}
+
+    TestResult& operator+= (const TestResult& rhs);
+    TestResult operator+ (const TestResult& rhs) const;
+
+    void check() const;
+};
+
 struct PWIZ_API_DECL ReaderTestConfig : public pwiz::msdata::Reader::Config
 {
     ReaderTestConfig() : peakPicking(false), peakPickingCWT(false), thresholdCount(0), doublePrecision(false), autoTest(false) {}
@@ -66,6 +79,7 @@ struct PWIZ_API_DECL ReaderTestConfig : public pwiz::msdata::Reader::Config
         diffPrecision = rhs.diffPrecision;
         indexRange = rhs.indexRange;
         autoTest = rhs.autoTest;
+        runIndex = rhs.runIndex;
     }
 
     std::string resultFilename(const std::string& baseFilename) const;
@@ -77,17 +91,18 @@ struct PWIZ_API_DECL ReaderTestConfig : public pwiz::msdata::Reader::Config
     bool doublePrecision; // true if vendor data needs 64-bit precision (like Bruker TDF)
     boost::optional<double> diffPrecision; // override default Diff::BaseDiffConfig::precision
     boost::optional<std::pair<int, int>> indexRange;
+    boost::optional<int> runIndex;
 
     bool autoTest; // test config variant generated automatically (e.g. thresholdCount) that does not use a separate mzML file
 };
 
-/// A common test harness for vendor readers; returns pair(failedTests, totalTests)
+/// A common test harness for vendor readers; returns a TestResult (with count of failedTests and totalTests)
 PWIZ_API_DECL
-std::pair<int, int> testReader(const pwiz::msdata::Reader& reader,
-                               const std::vector<std::string>& args,
-                               bool testAcceptOnly, bool requireUnicodeSupport,
-                               const TestPathPredicate& isPathTestable,
-                               const ReaderTestConfig& config = ReaderTestConfig());
+TestResult testReader(const pwiz::msdata::Reader& reader,
+                      const std::vector<std::string>& args,
+                      bool testAcceptOnly, bool requireUnicodeSupport,
+                      const TestPathPredicate& isPathTestable,
+                      const ReaderTestConfig& config = ReaderTestConfig());
 
 
 } // namespace util
