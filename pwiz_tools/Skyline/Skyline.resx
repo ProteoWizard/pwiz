@@ -989,11 +989,17 @@
   <data name="kernelDensityEstimationContextMenuItem.Text" xml:space="preserve">
     <value>Kernel Density Estimation</value>
   </data>
+  <data name="logRegressionContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>296, 22</value>
+  </data>
+  <data name="logRegressionContextMenuItem.Text" xml:space="preserve">
+    <value>Logarithmic Regression</value>
+  </data>
   <data name="loessContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>208, 22</value>
   </data>
   <data name="loessContextMenuItem.Text" xml:space="preserve">
-    <value>LOESS</value>
+    <value>Loess</value>
   </data>
   <data name="setRegressionMethodContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
@@ -4413,6 +4419,12 @@ first occurrence of any peptide.</value>
     <value>kernelDensityEstimationContextMenuItem</value>
   </data>
   <data name="&gt;&gt;kernelDensityEstimationContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;logRegressionContextMenuItem.Name" xml:space="preserve">
+    <value>logRegressionContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;logRegressionContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;loessContextMenuItem.Name" xml:space="preserve">

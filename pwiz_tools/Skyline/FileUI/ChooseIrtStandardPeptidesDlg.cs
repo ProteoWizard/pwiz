@@ -120,7 +120,8 @@ namespace pwiz.Skyline.FileUI
             }
 
             var regressionMinPoints = minPoints ?? RCalcIrt.MinStandardCount(knownIrts.Count);
-            if (!RCalcIrt.TryGetRegressionLine(listX, listY, regressionMinPoints, out var regression, out var removed))
+            var removed = new List<Tuple<double, double>>();
+            if (!IrtRegression.TryGet<RegressionLine>(listX, listY, regressionMinPoints, out var regression, removed))
                 return null;
 
             var outliers = new HashSet<int>();
@@ -140,10 +141,10 @@ namespace pwiz.Skyline.FileUI
                 Tooltips = targets.ToDictionary(target => target.Key, target => target.Value.ToString()),
                 OutlierIndices = outliers,
                 RegressionLine = regression,
-                MinR = RCalcIrt.MIN_IRT_TO_TIME_CORRELATION,
+                MinCorrelation = RCalcIrt.MIN_IRT_TO_TIME_CORRELATION,
                 MinPoints = regressionMinPoints,
             };
-            return regression;
+            return regression as RegressionLine;
         }
 
         private bool ProcessStandard()

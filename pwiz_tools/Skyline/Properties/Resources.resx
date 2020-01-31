@@ -9146,6 +9146,9 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Failed" xml:space="preserve">
     <value>Failed</value>
   </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression" xml:space="preserve">
+    <value>Regression</value>
+  </data>
   <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Refined" xml:space="preserve">
     <value>Regression Refined</value>
   </data>
@@ -10948,5 +10951,17 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_" xml:space="preserve">
     <value>The document must be fully loaded before importing a peptide search.</value>
+  </data>
+  <data name="IrtRegressionType_Linear" xml:space="preserve">
+    <value>Linear</value>
+  </data>
+  <data name="IrtRegressionType_Lowess" xml:space="preserve">
+    <value>Lowess</value>
+  </data>
+  <data name="IrtRegressionType_Logarithmic" xml:space="preserve">
+    <value>Logarithmic</value>
+  </data>
+  <data name="DisplayEquation_N_A" xml:space="preserve">
+    <value>N/A</value>
   </data>
 </root>
