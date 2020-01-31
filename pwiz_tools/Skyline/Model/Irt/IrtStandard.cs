@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
@@ -369,6 +370,11 @@ namespace pwiz.Skyline.Model.Irt
             return ImportTo(document, null, out _);
         }
 
+        public SrmDocument ImportTo(SrmDocument document)
+        {
+            return ImportTo(document, null, out _);
+        }
+
         public SrmDocument ImportTo(SrmDocument document, PeptideLibraries.FindLibrary findLibrary, out IdentityPath firstAdded)
         {
             firstAdded = null;
@@ -387,6 +393,31 @@ namespace pwiz.Skyline.Model.Irt
                         out _,
                         false)
                     : null;
+            }
+        }
+
+        public IEnumerable<Target> MissingFromDocument(SrmDocument document)
+        {
+            var found = new TargetMap<bool>(FindInDocument(document).Select(nodePep => new KeyValuePair<Target, bool>(nodePep.ModifiedTarget, true)));
+            return Peptides.Where(pep => !found.ContainsKey(pep.ModifiedTarget)).Select(pep => pep.ModifiedTarget);
+        }
+
+        public IEnumerable<PeptideDocNode> FindInDocument(SrmDocument document)
+        {
+            var standardDoc = GetDocument();
+            var docPeps = new TargetMap<Dictionary<int, SignedMz>>(standardDoc != null
+                ? standardDoc.Peptides.Select(pep =>
+                    new KeyValuePair<Target, Dictionary<int, SignedMz>>(pep.ModifiedTarget,
+                        pep.TransitionGroups.ToDictionary(nodeTranGroup => nodeTranGroup.PrecursorCharge, nodeTranGroup => nodeTranGroup.PrecursorMz)))
+                : Peptides.Select(pep => new KeyValuePair<Target, Dictionary<int, SignedMz>>(pep.ModifiedTarget, null)));
+            // Compare precursor m/z to see if heavy labeled
+            foreach (var nodePep in document.Peptides)
+            {
+                if (docPeps.TryGetValue(nodePep.ModifiedTarget, out var precursors) &&
+                    (precursors == null || nodePep.TransitionGroups.Any(nodeTranGroup => precursors.TryGetValue(nodeTranGroup.PrecursorCharge, out var mz) && Math.Abs(mz - nodeTranGroup.PrecursorMz) < 1)))
+                {
+                    yield return nodePep;
+                }
             }
         }
 
