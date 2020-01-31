@@ -486,9 +486,9 @@ namespace pwiz.Skyline.Model.AuditLog {
         /// <summary>
         ///   Looks up a localized string similar to Logarithmic.
         /// </summary>
-        public static string IrtRegressionType_logartihmic {
+        public static string IrtRegressionType_logarithmic {
             get {
-                return ResourceManager.GetString("IrtRegressionType_logartihmic", resourceCulture);
+                return ResourceManager.GetString("IrtRegressionType_logarithmic", resourceCulture);
             }
         }
         

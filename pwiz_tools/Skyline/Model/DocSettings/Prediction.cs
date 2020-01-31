@@ -728,7 +728,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     return null;
             }
 
-            rVal = regressionFunction is IIrtRegression irtRegresion ? IrtRegression.R(irtRegresion) : statRT.R(stat);
+            rVal = statRT.R(stat);
 
             // Make sure sets containing unknown scores have very low correlations to keep
             // such scores from ending up in the final regression.

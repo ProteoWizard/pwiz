@@ -277,6 +277,8 @@ namespace pwiz.Skyline.Controls.Graphs
             get { return IsDataRefined(Data); }
         }
 
+        public bool RegressionRefinedNull => Data.RegressionRefinedNull;
+
         private GraphData Refine(GraphData currentData, Func<bool> isCanceled)
         {
             GraphData dataNew = currentData != null ? currentData.Refine(isCanceled) : null;
@@ -793,9 +795,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    RetentionScoreCalculatorSpec calc = !string.IsNullOrEmpty(_calculatorName)
-                            ? Settings.Default.GetCalculatorByName(Settings.Default.RTCalculatorName)
-                            : null;
+                    var calc = !string.IsNullOrEmpty(_calculatorName)
+                        ? Settings.Default.GetCalculatorByName(Settings.Default.RTCalculatorName)
+                        : null;
                     if (calc == null)
                     {
                         // Initialize all calculators
@@ -934,6 +936,8 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 get { return _statisticsRefined ?? _statisticsAll; }
             }
+
+            public bool RegressionRefinedNull => _regressionRefined == null;
 
             public bool IsRefined()
             {

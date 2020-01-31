@@ -549,7 +549,7 @@
   <data name="IrtRegressionType_lowess" xml:space="preserve">
     <value>Lowess</value>
   </data>
-  <data name="IrtRegressionType_logartihmic" xml:space="preserve">
+  <data name="IrtRegressionType_logarithmic" xml:space="preserve">
     <value>Logarithmic</value>
   </data>
 </root>
