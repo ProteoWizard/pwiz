@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
     try
     {
         bool requireUnicodeSupport = true;
-        pwiz::util::testReader(pwiz::msdata::Reader_UIMF(), testArgs, testAcceptOnly, requireUnicodeSupport, IsUIMF());
+        pwiz::util::testReader(pwiz::msdata::Reader_UIMF(), testArgs, testAcceptOnly, requireUnicodeSupport, IsUIMF()).check();
     }
     catch (exception& e)
     {
