@@ -10850,6 +10850,18 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="IrtStandard_DocumentStream_No_document_to_import" xml:space="preserve">
     <value>No document to import</value>
   </data>
+  <data name="ChooseIrtStandardPeptidesDlg_OkDialog_Linear_regression" xml:space="preserve">
+    <value>Linear regression</value>
+  </data>
+  <data name="ChooseIrtStandardPeptidesDlg_OkDialog_Library_iRTs" xml:space="preserve">
+    <value>Library iRTs</value>
+  </data>
+  <data name="ChooseIrtStandardPeptidesDlg_OkDialog_Known_iRTs" xml:space="preserve">
+    <value>Known iRTs</value>
+  </data>
+  <data name="SkylineWindow_ImportMassListIrts_The_standard_peptides_do_not_appear_to_be_on_the_iRT_C18_scale__Would_you_like_to_recalibrate_them_to_this_scale_" xml:space="preserve">
+    <value>The standard peptides do not appear to be on the iRT-C18 scale. Would you like to recalibrate them to this scale?</value>
+  </data>
   <data name="Skyline_Release" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Skyline_Release.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
