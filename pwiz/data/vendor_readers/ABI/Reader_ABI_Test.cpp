@@ -55,11 +55,12 @@ int main(int argc, char* argv[])
     try
     {
         using namespace pwiz::msdata;
-        using namespace pwiz::msdata::detail;
-        using namespace pwiz::msdata::detail::ABI;
         using namespace pwiz::util;
 
         #ifdef PWIZ_READER_ABI
+
+        using namespace pwiz::msdata::detail;
+        using namespace pwiz::msdata::detail::ABI;
 
         // test that all instrument types are handled by translation functions (skipping the 'Unknown' type)
         bool allInstrumentTestsPassed = true;
