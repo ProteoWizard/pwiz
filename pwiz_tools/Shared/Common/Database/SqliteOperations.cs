@@ -35,5 +35,22 @@ namespace pwiz.Common.Database
                 }
             }
         }
+
+        public static bool ColumnExists(IDbConnection connection, string tableName, string columnName)
+        {
+            using (var cmd = connection.CreateCommand())
+            {
+                cmd.CommandText = @"PRAGMA table_info(" + tableName + ")";
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        if (columnName.Equals(reader.GetString(1)))
+                            return true;
+                    }
+                }
+            }
+            return false;
+        }
     }
 }

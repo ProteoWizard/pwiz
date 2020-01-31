@@ -847,11 +847,10 @@ namespace pwiz.Skyline.Model.Results
                         listTimes.Add(_dictSeqToTime[sequence]);
                         listIrts.Add(_calculator.ScoreSequence(sequence).Value);
                     }
-                    RegressionLine line;
-                    if (!RCalcIrt.TryGetRegressionLine(listIrts, listTimes, minCount, out line))
+                    if (!IrtRegression.TryGet<RegressionLine>(listIrts, listTimes, minCount, out var line))
                         return false;
 
-                    _conversion = new RegressionLineElement(line);
+                    _conversion = new RegressionLineElement((RegressionLine) line);
                     return true;
                 }
             }

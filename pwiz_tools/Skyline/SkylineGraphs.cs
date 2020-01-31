@@ -3451,17 +3451,16 @@ namespace pwiz.Skyline
                 menuStrip.Items.Insert(iInsert++,setRegressionMethodContextMenuItem);
                 if (setRegressionMethodContextMenuItem.DropDownItems.Count == 0)
                 {
-                        setRegressionMethodContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
+                    setRegressionMethodContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                     {
                         linearRegressionContextMenuItem,
                         kernelDensityEstimationContextMenuItem,
                         loessContextMenuItem
                     });
                 }
-                linearRegressionContextMenuItem.Checked = RTGraphController.RegressionMethod ==
-                                                            RegressionMethodRT.linear;
-                kernelDensityEstimationContextMenuItem.Checked = RTGraphController.RegressionMethod ==
-                                                                   RegressionMethodRT.kde;
+                linearRegressionContextMenuItem.Checked = RTGraphController.RegressionMethod == RegressionMethodRT.linear;
+                kernelDensityEstimationContextMenuItem.Checked = RTGraphController.RegressionMethod == RegressionMethodRT.kde;
+                logRegressionContextMenuItem.Checked = RTGraphController.RegressionMethod == RegressionMethodRT.log;
                 loessContextMenuItem.Checked = RTGraphController.RegressionMethod == RegressionMethodRT.loess;
 
                 var showPointsTypeStandards = Document.GetRetentionTimeStandards().Any();
@@ -3716,6 +3715,11 @@ namespace pwiz.Skyline
         private void kernelDensityEstimationContextMenuItem_Click(object sender, EventArgs e)
         {
             ShowRegressionMethod(RegressionMethodRT.kde);
+        }
+
+        private void logRegressionContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowRegressionMethod(RegressionMethodRT.log);
         }
 
         private void loessContextMenuItem_Click(object sender, EventArgs e)
