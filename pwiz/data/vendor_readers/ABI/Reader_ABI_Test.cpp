@@ -54,12 +54,12 @@ int main(int argc, char* argv[])
 
     try
     {
-        #ifdef PWIZ_READER_ABI
-
         using namespace pwiz::msdata;
         using namespace pwiz::msdata::detail;
         using namespace pwiz::msdata::detail::ABI;
         using namespace pwiz::util;
+
+        #ifdef PWIZ_READER_ABI
 
         // test that all instrument types are handled by translation functions (skipping the 'Unknown' type)
         bool allInstrumentTestsPassed = true;
@@ -97,6 +97,7 @@ int main(int argc, char* argv[])
         {
             auto simAsSpectraConfig = config;
             simAsSpectraConfig.simAsSpectra = true;
+            simAsSpectraConfig.indexRange = make_pair(0, 100);
             result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsNamedRawFile("50uMpyrone-8uL-01.wiff"), simAsSpectraConfig);
         }
 
@@ -104,6 +105,7 @@ int main(int argc, char* argv[])
             auto srmAsSpectraConfig = config;
             srmAsSpectraConfig.srmAsSpectra = true;
             srmAsSpectraConfig.runIndex = 3;
+            srmAsSpectraConfig.indexRange = make_pair(0, 100);
             result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsNamedRawFile("Enolase_repeats_AQv1.4.2.wiff"), srmAsSpectraConfig);
         }
 

@@ -279,7 +279,7 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
 
     string sourceName = BFS_STRING(bfs::path(rawpath).filename());
 
-    auto runRange = config.runIndex ? make_pair(config.runIndex.get(), config.runIndex.get()+1) : make_pair(0, msds.size());
+    auto runRange = config.runIndex ? make_pair(config.runIndex.get(), config.runIndex.get()+1) : make_pair(0, (int) msds.size());
     for (auto runItr = runRange; runItr.first < runItr.second; ++runItr.first)
     {
         MSData& msd = *msds[runItr.first];
@@ -553,7 +553,7 @@ void generate(const Reader& reader, const string& rawpath, const bfs::path& pare
     writeConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
     if (os_) *os_ << "Writing mzML(s) for " << rawpath << endl;
 
-    for (auto runItr = config.runIndex ? make_pair(config.runIndex.get(), config.runIndex.get()+1) : make_pair(0, msds.size()); runItr.first < runItr.second; ++runItr.first)
+    for (auto runItr = config.runIndex ? make_pair(config.runIndex.get(), config.runIndex.get()+1) : make_pair(0, (int) msds.size()); runItr.first < runItr.second; ++runItr.first)
     {
         auto& msd = msds[runItr.first];
         bfs::path outputFilename = parentPath / config.resultFilename(msd->run.id + ".mzML");
