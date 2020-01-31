@@ -10928,4 +10928,10 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_" xml:space="preserve">
     <value>The document must be fully loaded before importing a peptide search.</value>
   </data>
+  <data name="SkylineWindow_BuildChromatogramMenu_Apply_Peak_to_" xml:space="preserve">
+    <value>Apply Peak to </value>
+  </data>
+  <data name="SkylineWindow_editToolStripMenuItem_DropDownOpening_Apply_Peak_to_Group" xml:space="preserve">
+    <value>Apply Peak to Group</value>
+  </data>
 </root>

@@ -54,8 +54,7 @@ namespace pwiz.Skyline.Model
                 return;
 
             var chromSet = doc.Settings.MeasuredResults.Chromatograms[resultsIndex];
-            ChromatogramGroupInfo[] chromGroupInfos;
-            if (!doc.Settings.MeasuredResults.TryLoadChromatogram(chromSet, nodePep, nodeTranGroup, mzMatchTolerance, true, out chromGroupInfos))
+            if (!doc.Settings.MeasuredResults.TryLoadChromatogram(chromSet, nodePep, nodeTranGroup, mzMatchTolerance, true, out var chromGroupInfos))
                 return;
 
             var chromGroupInfo = chromGroupInfos.FirstOrDefault(info => Equals(chromSet.GetFileInfo(tranGroupChromInfo.FileId).FilePath, info.FilePath));
@@ -123,20 +122,20 @@ namespace pwiz.Skyline.Model
         }
 
         public static SrmDocument ApplyPeak(SrmDocument doc, PeptideTreeNode nodePepTree, ref TransitionGroupDocNode nodeTranGroup,
-            int resultsIndex, ChromFileInfoId resultsFile, bool subsequent, ILongWaitBroker longWaitBroker)
+            int resultsIndex, ChromFileInfoId resultsFile, bool subsequent, Annotations.Annotation annotation, ILongWaitBroker longWaitBroker)
         {
             nodeTranGroup = nodeTranGroup ?? PickTransitionGroup(doc, nodePepTree, resultsIndex);
-
-            PeakMatchData referenceTarget;
-            PeakMatchData[] referenceMatchData;
-            DateTime? runTime;
-            GetReferenceData(doc, nodePepTree.DocNode, nodeTranGroup, resultsIndex, resultsFile, out referenceTarget, out referenceMatchData, out runTime);
+            GetReferenceData(doc, nodePepTree.DocNode, nodeTranGroup, resultsIndex, resultsFile, out var referenceTarget, out var referenceMatchData, out var runTime);
 
             var chromatograms = doc.Settings.MeasuredResults.Chromatograms;
-            for (int i = 0; i < chromatograms.Count; i++)
+            for (var i = 0; i < chromatograms.Count; i++)
             {
                 var chromSet = chromatograms[i];
-                for (int j = 0; j < chromSet.MSDataFileInfos.Count; j++)
+
+                if (annotation != null && (chromSet.Annotations == null || !chromSet.Annotations.AnnotationsEnumerable.Any(annotation.Equals)))
+                    continue;
+
+                for (var j = 0; j < chromSet.MSDataFileInfos.Count; j++)
                 {
                     var fileInfo = chromSet.MSDataFileInfos[j];
                     if ((i == resultsIndex && (resultsFile == null || ReferenceEquals(resultsFile, fileInfo.FileId))) ||
