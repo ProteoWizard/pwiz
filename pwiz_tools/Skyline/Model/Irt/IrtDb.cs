@@ -511,24 +511,11 @@ namespace pwiz.Skyline.Model.Irt
             using (var session = OpenWriteSession())
             using (var transaction = session.BeginTransaction())
             {
-                using (var cmd = session.Connection.CreateCommand())
-                {
-                    cmd.CommandText = @"CREATE TABLE IF NOT EXISTS DocumentXml (Xml TEXT, RegressionType TEXT)";
-                    cmd.ExecuteNonQuery();
-                }
-
-                bool rowExists;
-                using (var cmd = session.Connection.CreateCommand())
-                {
-                    cmd.CommandText = @"SELECT COUNT(*) FROM DocumentXml";
-                    rowExists = Convert.ToInt32(cmd.ExecuteScalar()) > 0;
-                }
+                EnsureDocumentXmlTable(session);
 
                 using (var cmd = session.Connection.CreateCommand())
                 {
-                    cmd.CommandText = !rowExists
-                        ? @"INSERT INTO DocumentXml (Xml) VALUES (?)"
-                        : @"UPDATE DocumentXml SET Xml = ?";
+                    cmd.CommandText = @"UPDATE DocumentXml SET Xml = ?";
                     cmd.Parameters.Add(new SQLiteParameter { Value = documentXml });
                     cmd.ExecuteNonQuery();
                 }
@@ -544,35 +531,11 @@ namespace pwiz.Skyline.Model.Irt
             using (var session = OpenWriteSession())
             using (var transaction = session.BeginTransaction())
             {
-                if (!SqliteOperations.TableExists(session.Connection, @"DocumentXml"))
-                {
-                    using (var cmd = session.Connection.CreateCommand())
-                    {
-                        cmd.CommandText = @"CREATE TABLE IF NOT EXISTS DocumentXml (Xml TEXT, RegressionType TEXT)";
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-                else if (!SqliteOperations.ColumnExists(session.Connection, @"DocumentXml", @"RegressionType"))
-                {
-                    using (var cmd = session.Connection.CreateCommand())
-                    {
-                        cmd.CommandText = @"ALTER TABLE DocumentXml ADD COLUMN RegressionType TEXT";
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-
-                bool rowExists;
-                using (var cmd = session.Connection.CreateCommand())
-                {
-                    cmd.CommandText = @"SELECT COUNT(*) FROM DocumentXml";
-                    rowExists = Convert.ToInt32(cmd.ExecuteScalar()) > 0;
-                }
+                EnsureDocumentXmlTable(session);
 
                 using (var cmd = session.Connection.CreateCommand())
                 {
-                    cmd.CommandText = !rowExists
-                        ? @"INSERT INTO DocumentXml (RegressionType) VALUES (?)"
-                        : @"UPDATE DocumentXml SET RegressionType = ?";
+                    cmd.CommandText = "UPDATE DocumentXml SET RegressionType = ?";
                     cmd.Parameters.Add(new SQLiteParameter { Value = regressionType.Name });
                     cmd.ExecuteNonQuery();
                 }
@@ -581,6 +544,44 @@ namespace pwiz.Skyline.Model.Irt
             }
 
             return ChangeProp(ImClone(this), im => im.RegressionType = regressionType);
+        }
+
+        private static void EnsureDocumentXmlTable(ISession session)
+        {
+            if (!SqliteOperations.TableExists(session.Connection, @"DocumentXml"))
+            {
+                using (var cmd = session.Connection.CreateCommand())
+                {
+                    cmd.CommandText = @"CREATE TABLE IF NOT EXISTS DocumentXml (Xml TEXT, RegressionType TEXT)";
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            else if (!SqliteOperations.ColumnExists(session.Connection, @"DocumentXml", @"RegressionType"))
+            {
+                using (var cmd = session.Connection.CreateCommand())
+                {
+                    cmd.CommandText = @"ALTER TABLE DocumentXml ADD COLUMN RegressionType TEXT";
+                    cmd.ExecuteNonQuery();
+                }
+            }
+
+            // create row if it doesn't exist
+            bool rowExists;
+            using (var cmd = session.Connection.CreateCommand())
+            {
+                cmd.CommandText = @"SELECT COUNT(*) FROM DocumentXml";
+                rowExists = Convert.ToInt32(cmd.ExecuteScalar()) > 0;
+            }
+            if (!rowExists)
+            {
+                using (var cmd = session.Connection.CreateCommand())
+                {
+                    cmd.CommandText = @"INSERT INTO DocumentXml (Xml, RegressionType) VALUES (?, ?)";
+                    cmd.Parameters.Add(new SQLiteParameter {Value = null});
+                    cmd.Parameters.Add(new SQLiteParameter {Value = null});
+                    cmd.ExecuteNonQuery();
+                }
+            }
         }
     }
 }
