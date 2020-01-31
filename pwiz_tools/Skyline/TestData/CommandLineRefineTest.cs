@@ -299,14 +299,14 @@ namespace pwiz.SkylineTestData
             DocumentPath = InitRefineDocument("Rat_plasma.sky", 48, 0, 125, 125, 721);
             OutPath = Path.Combine(Path.GetDirectoryName(DocumentPath) ?? string.Empty, "gctest.sky");
 
-            // Verify pValueCutoff and foldchange cutoff work
+            // Verify pValueCutoff and fold change cutoff work
             var pValueCutoff = 0.05.ToString(CultureInfo.CurrentCulture);
             var foldChangeCutoff = 2.ToString(CultureInfo.CurrentCulture);
             var args = new List<string>
             {
-                CommandArgs.ARG_REFINE_GC_ADJUSTED_P_VALUE.GetArgumentTextWithValue(pValueCutoff),
+                CommandArgs.ARG_REFINE_GC_P_VALUE_CUTOFF.GetArgumentTextWithValue(pValueCutoff),
                 CommandArgs.ARG_REFINE_GC_FOLD_CHANGE_CUTOFF.GetArgumentTextWithValue(foldChangeCutoff),
-                CommandArgs.ARG_REFINE_GROUP.GetArgumentTextWithValue("Test Group Comparison"),
+                CommandArgs.ARG_REFINE_GROUP_NAME.GetArgumentTextWithValue("Test Group Comparison"),
             };
 
             var parts = new List<string>
@@ -318,6 +318,7 @@ namespace pwiz.SkylineTestData
             AssertEx.Contains(output, parts.ToArray());
             IsDocumentState(OutPath, 48, 0, 43, 0, 43, 248, output);
 
+            // Verify only fold change cutoff works
             args.RemoveAt(0);
             foldChangeCutoff = 3.ToString();
             args[0] = CommandArgs.ARG_REFINE_GC_FOLD_CHANGE_CUTOFF.GetArgumentTextWithValue(foldChangeCutoff);
@@ -326,20 +327,22 @@ namespace pwiz.SkylineTestData
             AssertEx.Contains(output, parts.ToArray());
             IsDocumentState(OutPath, 48, 0, 20, 0, 20, 114, output);
 
+            // Verify only p value cutoff works
             pValueCutoff = 0.08.ToString(CultureInfo.CurrentCulture);
-            args[0] = CommandArgs.ARG_REFINE_GC_ADJUSTED_P_VALUE.GetArgumentTextWithValue(pValueCutoff);
+            args[0] = CommandArgs.ARG_REFINE_GC_P_VALUE_CUTOFF.GetArgumentTextWithValue(pValueCutoff);
             parts[0] = PropertyNames.RefinementSettings_AdjustedPValueCutoff;
             output = Run(args.ToArray());
             AssertEx.Contains(output, parts.ToArray());
             IsDocumentState(OutPath, 48, 0, 103, 0, 103, 597, output);
 
+            // Verify the union of two group comparisons works
             pValueCutoff = 0.05.ToString(CultureInfo.CurrentCulture);
             foldChangeCutoff = 2.ToString();
             args.Clear();
-            args.Add(CommandArgs.ARG_REFINE_GC_ADJUSTED_P_VALUE.GetArgumentTextWithValue(pValueCutoff));
+            args.Add(CommandArgs.ARG_REFINE_GC_P_VALUE_CUTOFF.GetArgumentTextWithValue(pValueCutoff));
             args.Add(CommandArgs.ARG_REFINE_GC_FOLD_CHANGE_CUTOFF.GetArgumentTextWithValue(foldChangeCutoff));
-            args.Add(CommandArgs.ARG_REFINE_GROUP.GetArgumentTextWithValue("Test Group Comparison"));
-            args.Add(CommandArgs.ARG_REFINE_GROUP.GetArgumentTextWithValue("Test Group Comparison 2"));
+            args.Add(CommandArgs.ARG_REFINE_GROUP_NAME.GetArgumentTextWithValue("Test Group Comparison"));
+            args.Add(CommandArgs.ARG_REFINE_GROUP_NAME.GetArgumentTextWithValue("Test Group Comparison 2"));
             parts.Add(PropertyNames.RefinementSettings_FoldChangeCutoff);
             output = Run(args.ToArray());
             AssertEx.Contains(output, parts.ToArray());
