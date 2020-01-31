@@ -1528,7 +1528,7 @@ namespace pwiz.Skyline
             (c, p) => c.UseSlens = true)
             { AppliesTo = CommandArgUsage.CommandArgs_ARG_EXP_Thermo};
         public static readonly Argument ARG_EXP_RUN_LENGTH = new DocArgument(@"exp-run-length", MINUTES_VALUE,
-            (c, p) => c.RunLength = p.GetValueInt(AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX))
+            (c, p) => c.RunLength = p.GetValueDouble(AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX))
             { AppliesTo = CommandArgUsage.CommandArgs_ARG_EXP_RUN_LENGTH_AppliesTo};
 
         private static readonly ArgumentGroup GROUP_EXP_INSTRUMENT = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_EXP_INSTRUMENT_Vendor_specific_method_and_transition_list_options, false,
@@ -1627,8 +1627,8 @@ namespace pwiz.Skyline
 
         public bool AddEnergyRamp { get; private set; }
         public bool UseSlens { get; private set; }
-        private int _runLength;
-        public int RunLength
+        private double _runLength;
+        public double RunLength
         {
             get { return _runLength; }
             set
