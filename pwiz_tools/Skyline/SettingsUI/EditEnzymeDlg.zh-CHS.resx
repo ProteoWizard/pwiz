@@ -345,7 +345,7 @@
     <value>1</value>
   </data>
   <data name="textName.ToolTip" xml:space="preserve">
-    <value>用于在肽设置分类中列出此蛋白酶的名称</value>
+    <value>用于在肽段设置分类中列出此蛋白酶的名称</value>
   </data>
   <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>
@@ -520,7 +520,7 @@
     <value>允许半剪切(&amp;A)</value>
   </data>
   <data name="cbSemiCleavage.ToolTip" xml:space="preserve">
-    <value>允许只有一端匹配剪切位点的肽。
+    <value>允许只有一端匹配剪切位点的肽段。
 仅使用含有半剪切搜索结果的谱图库。</value>
   </data>
   <data name="&gt;&gt;cbSemiCleavage.Name" xml:space="preserve">

@@ -133,7 +133,7 @@
     <value>2</value>
   </data>
   <data name="lblFormDescription.Text" xml:space="preserve">
-    <value>Skyline 在您的谱图库中使用肽鉴定保留时间，以便能够对您的重复测定次数进行归一化处理。当对两个重复测定进行校准时，Skyline 会对在两次重复测定中均测出的肽的次数执行一次线性回归操作。Skyline 试图用大于 .99 的相关系数（即“R”）得出线性回归结果。Skyline 将通过排除异常值对回归结果进行调整，直至达到目标相关系数。</value>
+    <value>Skyline 在您的谱图库中使用肽段鉴定保留时间，以便能够对您的重复测定次数进行归一化处理。当对两个重复测定进行校准时，Skyline 会对在两次重复测定中均测出的肽段的次数执行一次线性回归操作。Skyline 试图用大于 .99 的相关系数（即“R”）得出线性回归结果。Skyline 将通过排除异常值对回归结果进行调整，直至达到目标相关系数。</value>
   </data>
   <data name="&gt;&gt;lblFormDescription.Name" xml:space="preserve">
     <value>lblFormDescription</value>

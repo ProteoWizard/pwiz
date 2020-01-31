@@ -242,9 +242,6 @@ namespace pwiz.SkylineTestUtil
 
         }
 
-        [DllImport("user32.dll")]
-        public static extern bool SetProcessDPIAware();
-
         private string filePath
         {
             get
@@ -280,7 +277,6 @@ namespace pwiz.SkylineTestUtil
                 _storage.AppendChild(_storage.CreateElement(ROOT_ELEMENT));
 
             _currentShotIndex = -1;
-            SetProcessDPIAware();
         }
 
 

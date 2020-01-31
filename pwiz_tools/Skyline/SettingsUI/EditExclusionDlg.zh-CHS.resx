@@ -231,7 +231,7 @@
     <value>4</value>
   </data>
   <data name="textExclusionRegex.ToolTip" xml:space="preserve">
-    <value>排除与此正规表达式相匹配的肽段</value>
+    <value>排除与此正则表达式相匹配的肽段</value>
   </data>
   <data name="&gt;&gt;textExclusionRegex.Name" xml:space="preserve">
     <value>textExclusionRegex</value>
@@ -374,7 +374,7 @@
     <value>8</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>排除肽(&amp;X)：</value>
+    <value>排除肽段(&amp;E)：</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>

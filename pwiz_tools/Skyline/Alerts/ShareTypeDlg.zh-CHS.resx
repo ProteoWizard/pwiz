@@ -339,7 +339,7 @@
     <value>最小化库</value>
   </data>
   <data name="radioMinimal.ToolTip" xml:space="preserve">
-    <value>库将删除与 Skyline 文档中的肽不匹配的条目。</value>
+    <value>库将删除与 Skyline 文档中的肽段不匹配的条目。</value>
   </data>
   <data name="&gt;&gt;radioMinimal.Name" xml:space="preserve">
     <value>radioMinimal</value>
@@ -360,7 +360,7 @@
     <value>8, 5</value>
   </data>
   <data name="label3.MaximumSize" type="System.Drawing.Size, System.Drawing">
-    <value>380, 0</value>
+    <value>350, 0</value>
   </data>
   <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
     <value>334, 26</value>
