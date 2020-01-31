@@ -1003,14 +1003,27 @@ namespace pwiz.SkylineTestData
             CommandArgs.Argument[] valueIntArguments =
             {
                 CommandArgs.ARG_EXP_MAX_TRANS,
-                CommandArgs.ARG_EXP_DWELL_TIME,
-                CommandArgs.ARG_EXP_RUN_LENGTH
+                CommandArgs.ARG_EXP_DWELL_TIME
             };
             foreach (var valueIntArg in valueIntArguments)
             {
                 args[3] = valueIntArg.ArgumentText + "=" + bogusValue;
                 output = RunCommand(args);
                 AssertEx.Contains(output, new CommandArgs.ValueInvalidIntException(valueIntArg, bogusValue).Message);
+            }
+
+            CommandArgs.Argument[] valueDoubleArguments =
+            {
+                CommandArgs.ARG_EXP_RUN_LENGTH,
+                CommandArgs.ARG_IMPORT_LOCKMASS_POSITIVE,
+                CommandArgs.ARG_IMPORT_LOCKMASS_NEGATIVE,
+                CommandArgs.ARG_IMPORT_LOCKMASS_TOLERANCE
+            };
+            foreach (var valueDoubleArg in valueDoubleArguments)
+            {
+                args[3] = valueDoubleArg.ArgumentText + "=" + bogusValue;
+                output = RunCommand(args);
+                AssertEx.Contains(output, new CommandArgs.ValueInvalidDoubleException(valueDoubleArg, bogusValue).Message);
             }
             const int bigValue = 100000000;
             args[3] = "--exp-dwell-time=" + bigValue;
