@@ -285,6 +285,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, bool g
             throw NoVendorPeakPickingException();
         BinaryData<double>& mzs = s->getMZArray()->data;
         BinaryData<double>& intensities = s->getIntensityArray()->data;
+        if (mzs.empty())
+            return s;
+
         vector<double> xPeakValues, yPeakValues;
         algorithm_->detect(mzs, intensities, xPeakValues, yPeakValues);
         mzs.swap(xPeakValues);
