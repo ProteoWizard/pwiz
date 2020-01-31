@@ -2900,7 +2900,7 @@ namespace pwiz.Skyline.Model.DocSettings
         [Track]
         public double Intercept { get; private set; }
 
-        public string DisplayEquation => string.Format(@"iRT = {0:F3} + {1:F3} * RT", Intercept, Slope);
+        public string DisplayEquation => string.Format(@"y = {0:F3} + {1:F3}x", Intercept, Slope);
 
         /// <summary>
         /// Use the y = m*x + b formula to calculate the desired y
