@@ -120,7 +120,7 @@ namespace pwiz.Skyline.Model.Irt
 
             for (var i = peptides.Count - 1; i >= 0; i--)
             {
-                if (removed.Contains(Tuple.Create(rts[i], irts[i])))
+                if (removedValues.Contains(Tuple.Create(rts[i], irts[i])))
                     peptides.RemoveAt(i);
             }
             return peptides.Count >= count;
