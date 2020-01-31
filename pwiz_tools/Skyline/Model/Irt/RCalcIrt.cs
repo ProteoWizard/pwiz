@@ -140,11 +140,15 @@ namespace pwiz.Skyline.Model.Irt
                                     dbPeptide.TimeSource);
         }
 
-        public static bool TryGetRegressionLine(IList<double> listIndependent, IList<double> listDependent, int minPoints, out RegressionLine line, IList<Tuple<double, double>> removedValues = null)
+        public static bool TryGetRegressionLine(IList<double> listIndependent, IList<double> listDependent, int minPoints, out RegressionLine line)
+        {
+            return TryGetRegressionLine(listIndependent, listDependent, minPoints, out line, out _);
+        }
+
+        public static bool TryGetRegressionLine(IList<double> listIndependent, IList<double> listDependent, int minPoints, out RegressionLine line, out HashSet<Tuple<double, double>> removedValues)
         {
             line = null;
-            if (removedValues != null)
-                removedValues.Clear();
+            removedValues = new HashSet<Tuple<double, double>>();
             if (listIndependent.Count != listDependent.Count || listIndependent.Count < minPoints)
                 return false;
 
@@ -174,8 +178,7 @@ namespace pwiz.Skyline.Model.Irt
                     }
                 }
 
-                if (removedValues != null)
-                    removedValues.Add(new Tuple<double, double>(listX[furthest], listY[furthest]));
+                removedValues.Add(new Tuple<double, double>(listX[furthest], listY[furthest]));
                 listX.RemoveAt(furthest);
                 listY.RemoveAt(furthest);
             }
@@ -316,9 +319,8 @@ namespace pwiz.Skyline.Model.Irt
                         targetRts[target] = new List<double> {rt};
                 }
 
-                var removed = new List<Tuple<double, double>>();
                 if (!TryGetRegressionLine(times.Select(t => t.Item2).ToList(), times.Select(t => t.Item3).ToList(),
-                    MIN_PEPTIDES_COUNT, out _, removed))
+                    MIN_PEPTIDES_COUNT, out _, out var removed))
                     continue;
                 foreach (var (removeRt, removeIrt) in removed)
                     times.Remove(times.First(time => time.Item2.Equals(removeRt) && time.Item3.Equals(removeIrt)));
@@ -714,8 +716,7 @@ namespace pwiz.Skyline.Model.Irt
             var statIrts = new Statistics(filteredIrt);
             Regression = new RegressionLine(statIrts.Slope(statTimes), statIrts.Intercept(statTimes));
 
-            var removed = new List<Tuple<double, double>>();
-            RegressionSuccess = RCalcIrt.TryGetRegressionLine(filteredRt, filteredIrt, MinPoints, out _regressionRefined, removed);
+            RegressionSuccess = RCalcIrt.TryGetRegressionLine(filteredRt, filteredIrt, MinPoints, out _regressionRefined, out var removed);
             foreach (var remove in removed)
             {
                 for (var i = 0; i < Peptides.Count; i++)
@@ -759,11 +760,6 @@ namespace pwiz.Skyline.Model.Irt
                 }
             }
             return false;
-        }
-
-        public void Filter()
-        {
-            Peptides = FilteredPeptides.ToList();
         }
 
         public IRetentionTimeProvider RetentionTimeProvider { get; }
