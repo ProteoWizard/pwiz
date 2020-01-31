@@ -370,11 +370,6 @@ namespace pwiz.Skyline.Model.Irt
             return ImportTo(document, null, out _);
         }
 
-        public SrmDocument ImportTo(SrmDocument document)
-        {
-            return ImportTo(document, null, out _);
-        }
-
         public SrmDocument ImportTo(SrmDocument document, PeptideLibraries.FindLibrary findLibrary, out IdentityPath firstAdded)
         {
             firstAdded = null;
