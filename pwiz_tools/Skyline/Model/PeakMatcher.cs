@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -122,18 +123,24 @@ namespace pwiz.Skyline.Model
         }
 
         public static SrmDocument ApplyPeak(SrmDocument doc, PeptideTreeNode nodePepTree, ref TransitionGroupDocNode nodeTranGroup,
-            int resultsIndex, ChromFileInfoId resultsFile, bool subsequent, Annotations.Annotation annotation, ILongWaitBroker longWaitBroker)
+            int resultsIndex, ChromFileInfoId resultsFile, bool subsequent, ReplicateValue groupBy, object groupByValue, ILongWaitBroker longWaitBroker)
         {
             nodeTranGroup = nodeTranGroup ?? PickTransitionGroup(doc, nodePepTree, resultsIndex);
             GetReferenceData(doc, nodePepTree.DocNode, nodeTranGroup, resultsIndex, resultsFile, out var referenceTarget, out var referenceMatchData, out var runTime);
 
+            var annotationCalculator = new AnnotationCalculator(doc);
             var chromatograms = doc.Settings.MeasuredResults.Chromatograms;
             for (var i = 0; i < chromatograms.Count; i++)
             {
                 var chromSet = chromatograms[i];
 
-                if (annotation != null && (chromSet.Annotations == null || !chromSet.Annotations.AnnotationsEnumerable.Any(annotation.Equals)))
-                    continue;
+                if (groupBy != null)
+                {
+                    if (!Equals(groupByValue, groupBy.GetValue(annotationCalculator, chromSet)))
+                    {
+                        continue;
+                    }
+                }
 
                 for (var j = 0; j < chromSet.MSDataFileInfos.Count; j++)
                 {

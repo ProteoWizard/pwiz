@@ -58,7 +58,7 @@ namespace pwiz.SkylineTestUtil
             {
                 Assert.Fail("Could not find results {0}", resultsName);
             }
-            skylineWindow.ApplyPeak(subsequent);
+            skylineWindow.ApplyPeak(subsequent, false);
         }
 
         public static void VerifyPeaks(IReadOnlyDictionary<string, double> expected)

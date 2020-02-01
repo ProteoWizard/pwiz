@@ -230,7 +230,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => Assert.AreEqual(0, pane.GetBoxObjCount()));
 
             // Make sure the toolbar is displaying the annotations correctly and that grouping by "All" works
-            RunUI(() => SkylineWindow.SetAreaCVGroup("SubjectId"));
+            RunUI(() => SkylineWindow.SetAreaCVGroup(new ReplicateValue.Annotation(SkylineWindow.Document.Settings.DataSettings.AnnotationDefs.First(def=>def.Name == "SubjectId"))));
             RunUI(() => SkylineWindow.SetAreaCVPointsType(PointsTypePeakArea.targets));
             WaitForGraphs();
 

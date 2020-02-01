@@ -125,7 +125,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public static string GroupByGroup { get; set; }
-        public static string GroupByAnnotation { get; set; }
+        public static object GroupByAnnotation { get; set; }
 
         public static int MinimumDetections = 2;
 
@@ -168,18 +168,18 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (GroupByGroup != null && !ReferenceEquals(settingsNew.DataSettings.AnnotationDefs, settingsOld.DataSettings.AnnotationDefs))
                 {
-                    var groups = AnnotationHelper.FindGroupsByTarget(settingsNew, AnnotationDef.AnnotationTarget.replicate);
+                    var groups = ReplicateValue.GetGroupableReplicateValues(newDocument);
                     // The group we were grouping by has been removed
-                    if (!groups.Contains(GroupByGroup))
+                    if (groups.All(group => group.ToPersistedString() != GroupByGroup))
                     {
-                        GroupByGroup = GroupByAnnotation = null;
+                        GroupByAnnotation = GroupByGroup = null;
                     }
                 }
 
                 if (GroupByAnnotation != null && settingsNew.HasResults && settingsOld.HasResults &&
                     !ReferenceEquals(settingsNew.MeasuredResults.Chromatograms, settingsOld.MeasuredResults.Chromatograms))
                 {
-                    var annotations = AnnotationHelper.GetPossibleAnnotations(settingsNew, GroupByGroup, AnnotationDef.AnnotationTarget.replicate);
+                    var annotations = AnnotationHelper.GetPossibleAnnotations(newDocument, ReplicateValue.FromPersistedString(settingsNew, GroupByGroup));
 
                     // The annotation we were grouping by has been removed
                     if (!annotations.Contains(GroupByAnnotation))

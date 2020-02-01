@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Model
 
             var replicates = document.MeasuredResults.Chromatograms.Count;
             var areas = new List<AreaInfo>(replicates);
-            var annotations = AnnotationHelper.GetPossibleAnnotations(document.Settings, settings.Group, AnnotationDef.AnnotationTarget.replicate);
+            var annotations = AnnotationHelper.GetPossibleAnnotations(document, settings.Group).ToArray();
             if (!annotations.Any() && settings.Group == null)
                 annotations = new string[] { null };
 
@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Model
                             if (a != _settings.Annotation && (_settings.Group == null || _settings.Annotation != null))
                                 continue;
                             
-                            foreach (var i in AnnotationHelper.GetReplicateIndices(document.Settings, _settings.Group, a))
+                            foreach (var i in AnnotationHelper.GetReplicateIndices(document, _settings.Group, a))
                             {
                                 if (token.HasValue && token.Value.IsCancellationRequested)
                                 {
@@ -257,7 +257,7 @@ namespace pwiz.Skyline.Model
         public PeptideGroupDocNode PeptideGroup;
         public PeptideDocNode Peptide;
         public TransitionGroupDocNode TransitionGroup;
-        public string Annotation;
+        public object Annotation;
         public double CV;
         public double CVBucketed;
         public double Area;
@@ -306,7 +306,7 @@ namespace pwiz.Skyline.Model
         }
 
         public virtual void AddToInternalData(ICollection<InternalData> data, List<AreaInfo> areas,
-            PeptideGroupDocNode peptideGroup, PeptideDocNode peptide, TransitionGroupDocNode tranGroup, string annotation)
+            PeptideGroupDocNode peptideGroup, PeptideDocNode peptide, TransitionGroupDocNode tranGroup, object annotation)
         {
             var normalizedStatistics = new Statistics(areas.Select(a => a.NormalizedArea));
             var normalizedMean = normalizedStatistics.Mean();
@@ -336,8 +336,8 @@ namespace pwiz.Skyline.Model
         public AreaCVTransitions Transitions { get; protected set; }
         public int CountTransitions { get; protected set; }
         public int RatioIndex { get; protected set; }
-        public string Group { get; protected set; }
-        public string Annotation { get; protected set; }
+        public ReplicateValue Group { get; protected set; }
+        public object Annotation { get; protected set; }
         public PointsTypePeakArea PointsType { get; protected set; }
         public double QValueCutoff { get; protected set; }
         public double CVCutoff { get; protected set; }
@@ -370,7 +370,7 @@ namespace pwiz.Skyline.Model
 
     public class PeptideAnnotationPair
     {
-        public PeptideAnnotationPair(PeptideGroupDocNode peptideGroup, PeptideDocNode peptide, TransitionGroupDocNode tranGroup, string annotation, double cvRaw)
+        public PeptideAnnotationPair(PeptideGroupDocNode peptideGroup, PeptideDocNode peptide, TransitionGroupDocNode tranGroup, object annotation, double cvRaw)
         {
             PeptideGroup = peptideGroup;
             Peptide = peptide;
@@ -382,7 +382,7 @@ namespace pwiz.Skyline.Model
         public PeptideGroupDocNode PeptideGroup { get; private set; }
         public PeptideDocNode Peptide { get; private set; }
         public TransitionGroupDocNode TransitionGroup { get; private set; }
-        public string Annotation { get; private set; }
+        public object Annotation { get; private set; }
         public double CVRaw { get; private set; }
 
     }
