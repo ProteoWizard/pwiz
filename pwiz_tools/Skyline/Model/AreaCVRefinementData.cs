@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Model
                         {
                             areas.Clear();
 
-                            if (a != _settings.Annotation && (_settings.Group == null || _settings.Annotation != null))
+                            if (!Equals(a, _settings.Annotation) && (_settings.Group == null || _settings.Annotation != null))
                                 continue;
                             
                             foreach (var i in AnnotationHelper.GetReplicateIndices(document, _settings.Group, a))
@@ -342,6 +342,43 @@ namespace pwiz.Skyline.Model
         public double QValueCutoff { get; protected set; }
         public double CVCutoff { get; protected set; }
         public int MinimumDetections { get; protected set; }
+
+        protected bool Equals(AreaCVRefinementSettings other)
+        {
+            return NormalizationMethod == other.NormalizationMethod && MsLevel == other.MsLevel &&
+                   Transitions == other.Transitions && CountTransitions == other.CountTransitions &&
+                   RatioIndex == other.RatioIndex && Equals(Group, other.Group) &&
+                   Equals(Annotation, other.Annotation) && PointsType == other.PointsType &&
+                   QValueCutoff.Equals(other.QValueCutoff) && CVCutoff.Equals(other.CVCutoff) &&
+                   MinimumDetections == other.MinimumDetections;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((AreaCVRefinementSettings) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = (int) NormalizationMethod;
+                hashCode = (hashCode * 397) ^ (int) MsLevel;
+                hashCode = (hashCode * 397) ^ (int) Transitions;
+                hashCode = (hashCode * 397) ^ CountTransitions;
+                hashCode = (hashCode * 397) ^ RatioIndex;
+                hashCode = (hashCode * 397) ^ (Group != null ? Group.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Annotation != null ? Annotation.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (int) PointsType;
+                hashCode = (hashCode * 397) ^ QValueCutoff.GetHashCode();
+                hashCode = (hashCode * 397) ^ CVCutoff.GetHashCode();
+                hashCode = (hashCode * 397) ^ MinimumDetections;
+                return hashCode;
+            }
+        }
     }
 
     public class AreaInfo

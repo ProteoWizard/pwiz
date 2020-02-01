@@ -17,14 +17,12 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
 {
@@ -35,7 +33,7 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public static IEnumerable<object> GetPossibleAnnotations(SrmDocument document, ReplicateValue replicateValue)
         {
-            if (!document.Settings.HasResults)
+            if (!document.Settings.HasResults || null == replicateValue)
             {
                 return new object[0];
             }

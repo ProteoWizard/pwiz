@@ -159,11 +159,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 lock (_cacheInfo)
                 {
                     // Linear search, but very short list
-                    return _cacheInfo.Data.FirstOrDefault(d => d._graphSettings.Group?.ToPersistedString() == group?.ToPersistedString() &&
-                                                     d._graphSettings.Annotation == annotation &&
-                                                     d._graphSettings.MinimumDetections == minimumDetections &&
-                                                     d._graphSettings.NormalizationMethod == normalizationMethod &&
-                                                     d._graphSettings.RatioIndex == ratioIndex);
+                    return _cacheInfo.Data.FirstOrDefault(d => Equals(d._graphSettings.Group, group) &&
+                                                               Equals(d._graphSettings.Annotation, annotation) &&
+                                                               d._graphSettings.MinimumDetections ==
+                                                               minimumDetections &&
+                                                               d._graphSettings.NormalizationMethod ==
+                                                               normalizationMethod &&
+                                                               d._graphSettings.RatioIndex == ratioIndex);
                 }
             }
 

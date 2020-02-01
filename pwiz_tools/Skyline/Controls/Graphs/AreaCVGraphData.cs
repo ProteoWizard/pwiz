@@ -156,9 +156,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public static bool CacheEqual(AreaCVGraphSettings a, AreaCVGraphSettings b)
             {
-                return a.GraphType == b.GraphType && a.Group == b.Group &&
-                       a.PointsType == b.PointsType && (a.QValueCutoff == b.QValueCutoff || double.IsNaN(a.QValueCutoff) && double.IsNaN(b.QValueCutoff)) &&
-                       a.CVCutoff == b.CVCutoff && a.BinWidth == b.BinWidth && a.MsLevel == b.MsLevel && a.Transitions == b.Transitions && a.CountTransitions == b.CountTransitions;
+                return Equals(a, b);
             }
 
             public override void AddToInternalData(ICollection<InternalData> data, List<AreaInfo> areas,
@@ -196,6 +194,30 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public GraphTypeSummary GraphType { get; private set; }
             public double BinWidth { get; private set; }
+
+            protected bool Equals(AreaCVGraphSettings other)
+            {
+                return base.Equals(other) && GraphType == other.GraphType && BinWidth.Equals(other.BinWidth);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((AreaCVGraphSettings) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    int hashCode = base.GetHashCode();
+                    hashCode = (hashCode * 397) ^ (int) GraphType;
+                    hashCode = (hashCode * 397) ^ BinWidth.GetHashCode();
+                    return hashCode;
+                }
+            }
         }
     }
 

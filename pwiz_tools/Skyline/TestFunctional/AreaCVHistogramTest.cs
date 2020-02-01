@@ -376,11 +376,12 @@ namespace pwiz.SkylineTestFunctional
             // Verify cv cutoff refinement works
             var refineDlg = ShowDialog<RefineDlg>(() => SkylineWindow.ShowRefineDlg());
             RunUI(() => { refineDlg.CVCutoff = 20; });
-            OkDialog(refineDlg, refineDlg.OkDialog);
             var doc = SkylineWindow.Document;
+            OkDialog(refineDlg, refineDlg.OkDialog);
+            doc = WaitForDocumentChange(doc);
             var refineDocState = (doc.PeptideGroupCount, doc.PeptideCount, doc.PeptideTransitionGroupCount,
                 doc.PeptideTransitionCount);
-            Assert.AreEqual(graphStates[0], refineDocState);
+            AssertEx.AreEqual(graphStates[0], refineDocState);
             RunUI(SkylineWindow.Undo);
 
             // Normalize to global standards
@@ -538,7 +539,9 @@ namespace pwiz.SkylineTestFunctional
                 var graphDataStatistics = new AreaCVGraphDataStatistics(data, items);
 
                 if (!RecordData)
-                    Assert.AreEqual(STATS[statsIndex], new AreaCVGraphDataStatistics(data, items));
+                {
+                    AssertEx.AreEqual(STATS[statsIndex], new AreaCVGraphDataStatistics(data, items));
+                }
                 else
                     Console.WriteLine(graphDataStatistics.ToCode());
             });
