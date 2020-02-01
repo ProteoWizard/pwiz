@@ -61,7 +61,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Name to give the spectral library in an –add-library-path operation..
+        ///   Looks up a localized string similar to Name to give the spectral library in an –-add-library-path operation..
         /// </summary>
         internal static string _add_library_name {
             get {
@@ -205,7 +205,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Export an isolation list. This option is required for exporting an isolation list and has no default. This option cannot be used with –exp-translist-instrument or –exp-method-instrument, because you cannot export an isolation list and a transition list or method simultaneously..
+        ///   Looks up a localized string similar to Export an isolation list. This option is required for exporting an isolation list and has no default. This option cannot be used with -–exp-translist-instrument or –exp-method-instrument, because you cannot export an isolation list and a transition list or method simultaneously..
         /// </summary>
         internal static string _exp_isolationlist_instrument {
             get {
@@ -223,7 +223,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Export a method. This option is required for exporting a method and has no default. This option cannot be used with –exp-isolationlist-instrument or --exp-translist-instrument, because you cannot export a method and an isolation/transition list simultaneously..
+        ///   Looks up a localized string similar to Export a method. This option is required for exporting a method and has no default. This option cannot be used with --exp-isolationlist-instrument or --exp-translist-instrument, because you cannot export a method and an isolation/transition list simultaneously..
         /// </summary>
         internal static string _exp_method_instrument {
             get {
@@ -313,7 +313,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Export a transition list. This option is required for exporting a transition list and has no default. This option cannot be used with –exp-isolation-list or --exp-method-instrument, because you cannot export a transition list and an isolation list or method simultaneously..
+        ///   Looks up a localized string similar to Export a transition list. This option is required for exporting a transition list and has no default. This option cannot be used with --exp-isolation-list or --exp-method-instrument, because you cannot export a transition list and an isolation list or method simultaneously..
         /// </summary>
         internal static string _exp_translist_instrument {
             get {
@@ -883,6 +883,42 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Keep only targets with a group comparision fold change above this cutoff. (optional for group comparison refinement).
+        /// </summary>
+        internal static string _refine_gc_fold_change_cutoff {
+            get {
+                return ResourceManager.GetString("_refine_gc_fold_change_cutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The MS level (1 or 2) to use in calculating peak areas for a group comparison refinement. Defaults to level 2 if both levels are present, and otherwise uses whichever level is present..
+        /// </summary>
+        internal static string _refine_gc_ms_level {
+            get {
+                return ResourceManager.GetString("_refine_gc_ms_level", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The name of a previously defined group comparison to use in refining for significantly changing targets. Specify the argument multiple times with multiple names to keep the union of multiple comparisons..
+        /// </summary>
+        internal static string _refine_gc_name {
+            get {
+                return ResourceManager.GetString("_refine_gc_name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Keep only targets with a group comparison adjusted p value below the specified cut-off. (required for group comparison refinement).
+        /// </summary>
+        internal static string _refine_gc_p_value_cutoff {
+            get {
+                return ResourceManager.GetString("_refine_gc_p_value_cutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Precursors of the specified isotope label type will be removed (default) or added if --refine-add-label-type is also used..
         /// </summary>
         internal static string _refine_label_type {
@@ -1371,7 +1407,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Specifies the path to an executable on the local machine for the program title and version specified by the -–tool-program-macro flag..
+        ///   Looks up a localized string similar to Specifies the path to an executable on the local machine for the program title and version specified by the --tool-program-macro flag..
         /// </summary>
         internal static string _tool_program_path {
             get {

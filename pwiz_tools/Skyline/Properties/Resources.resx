@@ -10940,6 +10940,15 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="SkylineVersion_V20_1_Skyline_20_1" xml:space="preserve">
     <value>Skyline 20.1</value>
   </data>
+  <data name="RefineDlg_MSLevel_1" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="RefineDlg_MSLevel_2" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="SkylineWindow_ShowRefineDlg_Refining_document" xml:space="preserve">
+    <value>Refining document</value>
+  </data>
   <data name="SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_" xml:space="preserve">
     <value>The document must be fully loaded before importing a peptide search.</value>
   </data>
