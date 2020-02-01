@@ -187,6 +187,7 @@ namespace pwiz.Skyline
             this.setRegressionMethodContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.linearRegressionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.kernelDensityEstimationContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.logRegressionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loessContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator22 = new System.Windows.Forms.ToolStripSeparator();
             this.createRTRegressionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1656,6 +1657,7 @@ namespace pwiz.Skyline
             this.setRegressionMethodContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.linearRegressionContextMenuItem,
             this.kernelDensityEstimationContextMenuItem,
+            this.logRegressionContextMenuItem,
             this.loessContextMenuItem});
             this.setRegressionMethodContextMenuItem.Name = "setRegressionMethodContextMenuItem";
             resources.ApplyResources(this.setRegressionMethodContextMenuItem, "setRegressionMethodContextMenuItem");
@@ -1671,6 +1673,12 @@ namespace pwiz.Skyline
             this.kernelDensityEstimationContextMenuItem.Name = "kernelDensityEstimationContextMenuItem";
             resources.ApplyResources(this.kernelDensityEstimationContextMenuItem, "kernelDensityEstimationContextMenuItem");
             this.kernelDensityEstimationContextMenuItem.Click += new System.EventHandler(this.kernelDensityEstimationContextMenuItem_Click);
+            // 
+            // logRegressionContextMenuItem
+            // 
+            this.logRegressionContextMenuItem.Name = "logRegressionContextMenuItem";
+            resources.ApplyResources(this.logRegressionContextMenuItem, "logRegressionContextMenuItem");
+            this.logRegressionContextMenuItem.Click += new System.EventHandler(this.logRegressionContextMenuItem_Click);
             // 
             // loessContextMenuItem
             // 
@@ -4902,6 +4910,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem groupApplyToByGraphMenuItem;
         private System.Windows.Forms.ToolStripMenuItem applyPeakGroupToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem groupApplyToByToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem logRegressionContextMenuItem;
     }
 }
 

@@ -74,6 +74,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     case RegressionMethodRT.kde:
                         return false;
+                    case RegressionMethodRT.log:
+                        return true;
                     case RegressionMethodRT.loess:
                         return false;
                     case RegressionMethodRT.linear:
