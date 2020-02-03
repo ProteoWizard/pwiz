@@ -1333,6 +1333,24 @@ namespace pwiz.Skyline.Controls
             UpdateNodeStates();
         }
 
+        public int WidthToEnsureAllItemsVisible()
+        {
+            if (this.Nodes.Count == 0) return this.Bounds.Width;
+            int maxRight = 0;
+            TreeNode node = this.Nodes[0];
+            while (node != null)
+            {
+                if(node.IsVisible)
+                    maxRight = Math.Max(maxRight, node.Bounds.Right);
+
+                if (node.Nodes.Count > 0)
+                    node = node.Nodes[0];
+                else
+                    node = node.NextNode ?? node.Parent.NextNode;
+            }
+            return maxRight;
+        }
+
         private Control _toolTipOwner;
         Control ToolTipOwner
         {

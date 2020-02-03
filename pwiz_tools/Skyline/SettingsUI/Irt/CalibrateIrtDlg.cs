@@ -616,12 +616,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
                             pepMatches.Add(Tuple.Create(pep, nodePep));
                         }
                     }
-                    if (RCalcIrt.TryGetRegressionLine(
+                    if (IrtRegression.TryGet<RegressionLine>(
                         pepMatches.Select(pep => (double) pep.Item2.PercentileMeasuredRetentionTime.Value).ToList(),
                         pepMatches.Select(pep => pep.Item1.Irt).ToList(),
                         RCalcIrt.MinStandardCount(standard.Peptides.Count), out var regressionLine))
                     {
-                        yield return new RegressionOption(standard.Name, regressionLine, pepMatches, null, false, false);
+                        yield return new RegressionOption(standard.Name, (RegressionLine) regressionLine, pepMatches, null, false, false);
                     }
                 }
             }

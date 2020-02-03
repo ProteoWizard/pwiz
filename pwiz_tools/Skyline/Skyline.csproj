@@ -14,7 +14,7 @@
     <FileAlignment>512</FileAlignment>
     <ApplicationIcon>Skyline.ico</ApplicationIcon>
     <IsWebBootstrapper>true</IsWebBootstrapper>
-    <ManifestCertificateThumbprint>828D97D15AA50E99C25127B6A71E0A6DFC12027E</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>19870CA6C934F1DFEADFC678B704FD5CEF4C7F0B</ManifestCertificateThumbprint>
     <ManifestKeyFile>
     </ManifestKeyFile>
     <GenerateManifests>true</GenerateManifests>
@@ -47,8 +47,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>18334</ApplicationRevision>
-    <ApplicationVersion>4.2.1.18334</ApplicationVersion>
+    <ApplicationRevision>32</ApplicationRevision>
+    <ApplicationVersion>20.1.1.32</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -90,7 +90,7 @@
     <OutputPath>bin\x64\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Optimize>false</Optimize>
+    <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <UseVSHostingProcess>false</UseVSHostingProcess>
@@ -436,7 +436,9 @@
     <Compile Include="Model\AuditLog\DiffNode.cs" />
     <Compile Include="Model\AuditLog\PropertyName.cs" />
     <Compile Include="Model\ExplicitTransitionValues.cs" />
+    <Compile Include="Model\GroupComparisonRefinementData.cs" />
     <Compile Include="Model\Irt\IrtPeptidePicker.cs" />
+    <Compile Include="Model\Irt\Regression.cs" />
     <Compile Include="Model\Lib\BlibData\DbRefSpectraPeakAnnotations.cs" />
     <Compile Include="Model\Lib\ExplicitPeakBounds.cs" />
     <Compile Include="Model\Lib\LibKeyIndex.cs" />
@@ -2801,6 +2803,7 @@
     <EmbeddedResource Include="Resources\PeptideIrt.bmp" />
     <EmbeddedResource Include="Resources\PeptideQc.bmp" />
     <EmbeddedResource Include="Resources\PeptideQcLib.bmp" />
+    <EmbeddedResource Include="Resources\Skyline_Release.bmp" />
     <EmbeddedResource Include="Resources\ToolUpdateAvailable.bmp" />
     <EmbeddedResource Include="Resources\directoryicon.png" />
     <EmbeddedResource Include="Model\IonMobility\mapping.xml">
@@ -2977,6 +2980,7 @@
     <EmbeddedResource Include="Resources\MoleculeIrt.bmp" />
     <EmbeddedResource Include="Resources\MoleculeIrtLib.bmp" />
     <EmbeddedResource Include="Resources\MoleculeStandardLib.bmp" />
+    <EmbeddedResource Include="Resources\Skyline_Release.ico" />
     <None Include="Resources\GenerateDecoys.bmp" />
     <Content Include="SkylineDocPointer.ico" />
     <EmbeddedResource Include="Resources\prosit_logo_dark_blue.png" />

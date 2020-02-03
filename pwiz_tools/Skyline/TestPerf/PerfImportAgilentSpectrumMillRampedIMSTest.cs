@@ -149,6 +149,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
 
             // Launch import peptide search wizard
+            WaitForDocumentLoaded();
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
             var basename = _testCase==1 ? "40minG_WBP_wide_z2-3_mid_BSA_5pmol_01" : "09_BSAtrypticdigest_5uL_IMQTOF_AltFramesdtramp_dAJS009";
             var nextFile = _testCase == 1 ? null : "10_BSAtrypticdigest_5uL_IMQTOF_AltFramesdtramp_dAJS010.d";
@@ -222,6 +223,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("SwissProt.bsa-mature"));
             });
             var peptidesPerProteinDlg = ShowDialog<PeptidesPerProteinDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+            WaitForCondition(() => peptidesPerProteinDlg.DocumentFinalCalculated);
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
 
             WaitForClosedForm(importPeptideSearchDlg);
