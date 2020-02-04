@@ -23,7 +23,6 @@ using System.Linq;
 using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -288,7 +287,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 public bool Equals(GraphDataProperties other)
                 {
-                    return Equals(Group, other.Group) && NormalizationMethod == other.NormalizationMethod && RatioIndex == other.RatioIndex && string.Equals(Annotation, other.Annotation) && MinimumDetections == other.MinimumDetections;
+                    return Equals(Group, other.Group) && NormalizationMethod == other.NormalizationMethod && RatioIndex == other.RatioIndex && Equals(Annotation, other.Annotation) && MinimumDetections == other.MinimumDetections;
                 }
 
                 public override bool Equals(object obj)
