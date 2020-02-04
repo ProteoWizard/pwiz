@@ -32,12 +32,6 @@
             this.btnOk = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.dataGridView = new pwiz.Common.Controls.CommonDataGridView();
-            this.colFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Points = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Slope = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Intercept = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.R = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Result = new System.Windows.Forms.DataGridViewLinkColumn();
             this.panelKeep = new System.Windows.Forms.Panel();
             this.labelKeep = new System.Windows.Forms.Label();
             this.listKeep = new System.Windows.Forms.ListBox();
@@ -54,6 +48,12 @@
             this.labelChoice = new System.Windows.Forms.Label();
             this.labelExisting = new System.Windows.Forms.Label();
             this.listExisting = new System.Windows.Forms.ListBox();
+            this.colFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Points = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Equation = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.R = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Result = new System.Windows.Forms.DataGridViewLinkColumn();
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.panelKeep.SuspendLayout();
             this.panelOverwrite.SuspendLayout();
@@ -85,57 +85,13 @@
             this.dataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colFile,
             this.Points,
-            this.Slope,
-            this.Intercept,
+            this.Equation,
             this.R,
             this.Result});
-            this.dataGridView.MaximumColumnCount = null;
             this.dataGridView.Name = "dataGridView";
             this.dataGridView.ReadOnly = true;
             this.dataGridView.RowHeadersVisible = false;
             this.dataGridView.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView_CellContentClick);
-            // 
-            // colFile
-            // 
-            this.colFile.FillWeight = 90.71164F;
-            resources.ApplyResources(this.colFile, "colFile");
-            this.colFile.Name = "colFile";
-            this.colFile.ReadOnly = true;
-            // 
-            // Points
-            // 
-            this.Points.FillWeight = 25F;
-            resources.ApplyResources(this.Points, "Points");
-            this.Points.Name = "Points";
-            this.Points.ReadOnly = true;
-            // 
-            // Slope
-            // 
-            this.Slope.FillWeight = 30F;
-            resources.ApplyResources(this.Slope, "Slope");
-            this.Slope.Name = "Slope";
-            this.Slope.ReadOnly = true;
-            // 
-            // Intercept
-            // 
-            this.Intercept.FillWeight = 30F;
-            resources.ApplyResources(this.Intercept, "Intercept");
-            this.Intercept.Name = "Intercept";
-            this.Intercept.ReadOnly = true;
-            // 
-            // R
-            // 
-            this.R.FillWeight = 20F;
-            resources.ApplyResources(this.R, "R");
-            this.R.Name = "R";
-            this.R.ReadOnly = true;
-            // 
-            // Result
-            // 
-            this.Result.FillWeight = 40F;
-            resources.ApplyResources(this.Result, "Result");
-            this.Result.Name = "Result";
-            this.Result.ReadOnly = true;
             // 
             // panelKeep
             // 
@@ -235,6 +191,41 @@
             this.listExisting.FormattingEnabled = true;
             this.listExisting.Name = "listExisting";
             // 
+            // colFile
+            // 
+            this.colFile.FillWeight = 62.28104F;
+            resources.ApplyResources(this.colFile, "colFile");
+            this.colFile.Name = "colFile";
+            this.colFile.ReadOnly = true;
+            // 
+            // Points
+            // 
+            this.Points.FillWeight = 15F;
+            resources.ApplyResources(this.Points, "Points");
+            this.Points.Name = "Points";
+            this.Points.ReadOnly = true;
+            // 
+            // Equation
+            // 
+            this.Equation.FillWeight = 69.51659F;
+            resources.ApplyResources(this.Equation, "Equation");
+            this.Equation.Name = "Equation";
+            this.Equation.ReadOnly = true;
+            // 
+            // R
+            // 
+            this.R.FillWeight = 25F;
+            resources.ApplyResources(this.R, "R");
+            this.R.Name = "R";
+            this.R.ReadOnly = true;
+            // 
+            // Result
+            // 
+            this.Result.FillWeight = 27.4633F;
+            resources.ApplyResources(this.Result, "Result");
+            this.Result.Name = "Result";
+            this.Result.ReadOnly = true;
+            // 
             // AddIrtPeptidesDlg
             // 
             this.AcceptButton = this.btnOk;
@@ -254,6 +245,7 @@
             this.MinimizeBox = false;
             this.Name = "AddIrtPeptidesDlg";
             this.ShowInTaskbar = false;
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
             this.panelKeep.ResumeLayout(false);
             this.panelKeep.PerformLayout();
@@ -286,12 +278,11 @@
         private System.Windows.Forms.Panel panelKeep;
         private System.Windows.Forms.Label labelKeep;
         private System.Windows.Forms.ListBox listKeep;
+        private Common.Controls.CommonDataGridView dataGridView;
         private System.Windows.Forms.DataGridViewTextBoxColumn colFile;
         private System.Windows.Forms.DataGridViewTextBoxColumn Points;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Slope;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Intercept;
+        private System.Windows.Forms.DataGridViewTextBoxColumn Equation;
         private System.Windows.Forms.DataGridViewTextBoxColumn R;
         private System.Windows.Forms.DataGridViewLinkColumn Result;
-        private Common.Controls.CommonDataGridView dataGridView;
     }
 }

@@ -177,7 +177,8 @@ struct Spectrum2Impl : public Spectrum
     virtual void getPrecursorInfo(double& selectedMz, double& intensity, int& charge) const;
 
     virtual double getStartTime() const;
-    
+
+    virtual bool getDataIsContinuous() const { return true; }
     virtual size_t getDataSize(bool doCentroid, bool ignoreZeroIntensityPoints = false) const;
     virtual void getData(bool doCentroid, pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, bool ignoreZeroIntensityPoints) const;
 

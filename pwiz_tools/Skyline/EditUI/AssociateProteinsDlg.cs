@@ -167,7 +167,7 @@ namespace pwiz.Skyline.EditUI
                     FindProteinMatchesWithFasta(stream);
                 }
             }
-            catch (IOException e)
+            catch (Exception e)
             {
                 MessageDlg.ShowWithException(this, Resources.AssociateProteinsDlg_UseFastaFile_There_was_an_error_reading_from_the_file_, e);
             }

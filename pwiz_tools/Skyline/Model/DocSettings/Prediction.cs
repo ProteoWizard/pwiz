@@ -644,14 +644,14 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public static RetentionTimeRegression CalcSingleRegression(string name,
-                                                             RetentionScoreCalculatorSpec calculator,
-                                                             IList<MeasuredRetentionTime> measuredPeptides,
-                                                             RetentionTimeScoreCache scoreCache,
-                                                             bool allPeptides,
-                                                             RegressionMethodRT regressionMethod,
-                                                             out RetentionTimeStatistics statistics,
-                                                             out double rVal,
-                                                             CustomCancellationToken token)
+            RetentionScoreCalculatorSpec calculator,
+            IList<MeasuredRetentionTime> measuredPeptides,
+            RetentionTimeScoreCache scoreCache,
+            bool allPeptides,
+            RegressionMethodRT regressionMethod,
+            out RetentionTimeStatistics statistics,
+            out double rVal,
+            CustomCancellationToken token)
         {
             // Get a list of peptide names for use by the calculators to choose their regression peptides
             var listPeptides = measuredPeptides.Select(pep => pep.PeptideSequence).ToList();
@@ -702,8 +702,6 @@ namespace pwiz.Skyline.Model.DocSettings
             var statRT = new Statistics(listRTs);
             var stat = aStatValues;
             IRegressionFunction regressionFunction;
-            double[] xArr;
-            double[] ySmoothed;
             switch (regressionMethod)
             {
                 case RegressionMethodRT.linear:
@@ -713,18 +711,18 @@ namespace pwiz.Skyline.Model.DocSettings
                     var kdeAligner = new KdeAligner();
                     kdeAligner.Train(stat.CopyList(), statRT.CopyList(), token);
 
-                    kdeAligner.GetSmoothedValues(out xArr, out ySmoothed);
+                    kdeAligner.GetSmoothedValues(out var xArr, out var ySmoothed);
                     regressionFunction =
                         new PiecewiseLinearRegressionFunction(xArr, ySmoothed, kdeAligner.GetRmsd());
                     stat = new Statistics(ySmoothed);
                     break;
+                case RegressionMethodRT.log:
+                    regressionFunction = new LogRegression(stat.CopyList(), statRT.CopyList());
+                    stat = new Statistics(peptideScores.Select(x => regressionFunction.GetY(x)));
+                    break;
                 case RegressionMethodRT.loess:
-                    var loessAligner = new LoessAligner();
-                    loessAligner.Train(stat.CopyList(), statRT.CopyList(), token);
-                    loessAligner.GetSmoothedValues(out xArr, out ySmoothed);
-                    regressionFunction =
-                        new PiecewiseLinearRegressionFunction(xArr, ySmoothed, loessAligner.GetRmsd());
-                    stat = new Statistics(ySmoothed);
+                    regressionFunction = new LoessRegression(stat.CopyList(), statRT.CopyList(), token);
+                    stat = new Statistics(peptideScores.Select(x => regressionFunction.GetY(x)));
                     break;
                 default:
                     return null;
@@ -2869,12 +2867,30 @@ namespace pwiz.Skyline.Model.DocSettings
     /// element.  Use one of the wrapper classes for full XML
     /// serialization.
     /// </summary>
-    public sealed class RegressionLine : IRegressionFunction
+    public sealed class RegressionLine : IIrtRegression
     {
+        public RegressionLine()
+        {
+            Slope = 0;
+            Intercept = 0;
+            XValues = new double[0];
+            YValues = new double[0];
+        }
+
         public RegressionLine(double slope, double intercept)
         {
             Slope = slope;
             Intercept = intercept;
+        }
+
+        public RegressionLine(double[] x, double[] y)
+        {
+            var statX = new Statistics(x);
+            var statY = new Statistics(y);
+            Slope = statY.Slope(statX);
+            Intercept = statY.Intercept(statX);
+            XValues = x;
+            YValues = y;
         }
 
         // XML Serializable properties
@@ -2883,6 +2899,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         [Track]
         public double Intercept { get; private set; }
+
+        public string DisplayEquation => string.Format(@"y = {0:F3} + {1:F3}x", Intercept, Slope);
 
         /// <summary>
         /// Use the y = m*x + b formula to calculate the desired y
@@ -2894,6 +2912,13 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return Slope * x + Intercept;
         }
+
+        public IIrtRegression ChangePoints(double[] x, double[] y)
+        {
+            return new RegressionLine(x, y);
+        }
+        public double[] XValues { get; }
+        public double[] YValues { get; }
 
         public string GetRegressionDescription(double r, double window)
         {
@@ -2948,9 +2973,6 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// For serialization
         /// </summary>
-        private RegressionLine()
-        {
-        }
 
         private enum ATTR
         {

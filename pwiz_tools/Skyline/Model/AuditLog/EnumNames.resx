@@ -543,4 +543,13 @@
   <data name="AreaCVTransitions_count" xml:space="preserve">
     <value>Count</value>
   </data>
+  <data name="IrtRegressionType_linear" xml:space="preserve">
+    <value>Linear</value>
+  </data>
+  <data name="IrtRegressionType_lowess" xml:space="preserve">
+    <value>Lowess</value>
+  </data>
+  <data name="IrtRegressionType_logarithmic" xml:space="preserve">
+    <value>Logarithmic</value>
+  </data>
 </root>
