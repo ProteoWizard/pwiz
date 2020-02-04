@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
