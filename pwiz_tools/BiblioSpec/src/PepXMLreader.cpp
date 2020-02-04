@@ -28,6 +28,7 @@
 #include "mzxmlParser.h"
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
+#include <boost/xpressive/xpressive.hpp>
 #include <cmath>
 
 namespace bal = boost::algorithm;
@@ -55,6 +56,7 @@ PepXMLreader::PepXMLreader(BlibBuilder& maker,
     probCutOff = getScoreThreshold(PEPXML);
     dirs.push_back("../");   // look in parent dir in addition to cwd
     dirs.push_back("../../");  // look in grandparent dir in addition to cwd
+    extensions.push_back(".mz5"); // look for spec in mz5 files
     extensions.push_back(".mzML"); // look for spec in mzML files
     extensions.push_back(".mzXML"); // look for spec in mzXML files
     extensions.push_back(".ms2");
@@ -217,10 +219,16 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        // handle msfragger source extensions for both native msfragger pepXMLs or PeptideProphet-analyzed pep.xmls
        if (search_engine_version.find("msfragger") == 0)
        {
-           if (analysisType_ != MSFRAGGER_ANALYSIS)
-               parentAnalysisType_ = MSFRAGGER_ANALYSIS;
            extensions.push_back("_calibrated.mgf");
            extensions.push_back("_uncalibrated.mgf");
+
+           if (analysisType_ != MSFRAGGER_ANALYSIS)
+               parentAnalysisType_ = MSFRAGGER_ANALYSIS;
+       }
+
+       setSpecFileName(fileroot_.c_str(), extensions, dirs);
+
+       if ((analysisType_ == MSFRAGGER_ANALYSIS || parentAnalysisType_ == MSFRAGGER_ANALYSIS) && bal::iends_with(getSpecFileName(), ".mgf")) {
            lookUpBy_ = NAME_ID;
            specReader_->setIdType(NAME_ID);
        }
@@ -247,14 +255,19 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            // In case this is necessary for calculating charge
            precursorMZ = atof(getAttrValue("precursor_m_over_z", attr));
        }
-       // if morpheus type
-       else if (analysisType_ == MORPHEUS_ANALYSIS) {
+       // if morpheus or msfragger type
+       else if (analysisType_ == MORPHEUS_ANALYSIS || analysisType_ == MSFRAGGER_ANALYSIS || parentAnalysisType_ == MSFRAGGER_ANALYSIS) {
            spectrumName = getRequiredAttrValue("spectrum", attr);
            scanNumber = getIntRequiredAttrValue("start_scan", attr);
            scanIndex = scanNumber - 1;
-       }
-       else if (analysisType_ == MSFRAGGER_ANALYSIS || parentAnalysisType_ == MSFRAGGER_ANALYSIS) {
-           spectrumName = getRequiredAttrValue("spectrum", attr);
+
+           // HACK: remove zero padding of scan numbers in the spectrum attribute title because MSFragger MGF files don't have padding
+           if (lookUpBy_ == NAME_ID && (analysisType_ == MSFRAGGER_ANALYSIS || parentAnalysisType_ == MSFRAGGER_ANALYSIS))
+           {
+               namespace bxp = boost::xpressive;
+               auto scanNumberPaddingRegex = bxp::sregex::compile("(.*?\\.)0*(\\d+\\.)0*(\\d+\\.\\d+)");
+               spectrumName = bxp::regex_replace(spectrumName, scanNumberPaddingRegex, "$1$2$3");
+           }
        }
        // this should never happen, error should have been thrown earlier
        else if (analysisType_ == UNKNOWN_ANALYSIS) {
@@ -379,8 +392,6 @@ void PepXMLreader::endElement(const XML_Char* name)
                                 "X! Tandem, Proteome Discoverer, Morpheus, MSGF+, "
                                 "Comet, Crux, MSFragger).");
         }
-
-        setSpecFileName(fileroot_.c_str(), extensions, dirs);
 
         // if we are using pep.xml from Spectrum mill, we still don't have
         // scan numbers/indexes, here's a hack to get them

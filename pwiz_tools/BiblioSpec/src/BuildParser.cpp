@@ -337,9 +337,16 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
     // filter psms by sequence
     filterBySequence(blibMaker_.getTargetSequences(), blibMaker_.getTargetSequencesModified());
 
+    bool hasMatches = psms_.size() > 0;
+    if (!hasMatches)
+        Verbosity::status("No matches left after filtering for target sequences in %s.", curSpecFileName_.c_str());
+
     // prune out any duplicates from the list of psms
     if (!blibMaker_.keepAmbiguous()) {
         removeDuplicates();
+        hasMatches = psms_.size() > 0;
+        if (!hasMatches)
+            Verbosity::status("No matches left after removing ambiguous spectra in %s.", curSpecFileName_.c_str());
     }
 
     // for reading spectrum file
