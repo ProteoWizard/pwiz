@@ -131,7 +131,7 @@ class PwizReader : public BiblioSpec::SpecFileReader {
      * identifier.  Try the string as a native id and as a TITLE=
      * field for .mgf.
      */
-    int getSpecIndex(string identifier);
+    int getSpecIndex(const string& identifier);
 
     /**
      * Add any charge states from the pwiz spectrum to the BiblioSpec
