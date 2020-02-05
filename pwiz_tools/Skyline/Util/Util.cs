@@ -1853,13 +1853,45 @@ namespace pwiz.Skyline.Util
 
 
         /// <summary>
-        /// Try an action the might throw an IOException.  If it fails, sleep for 500 milliseconds and try
-        /// again.  See the comments above for more detail about why this is necessary.
+        /// Try an action that might throw an exception commonly related to a file move or delete.
+        /// If it fails, sleep for the indicated period and try again.
+        /// 
+        /// N.B. "TryTwice" is a historical misnomer since it actually defaults to trying four times,
+        /// but the intent is clear: try more than once. Further historical note: formerly this only
+        /// handled IOException, but in looping tests we also see UnauthorizedAccessException as a result
+        /// of file locks that haven't been released yet.
         /// </summary>
         /// <param name="action">action to try</param>
-        public static void TryTwice(Action action)
+        /// <param name="loopCount">how many loops to try before failing</param>
+        /// <param name="milliseconds">how long (in milliseconds) to wait before the action is retried</param>
+        public static void TryTwice(Action action, int loopCount = 4, int milliseconds = 500)
         {
-            Try<IOException>(action);
+            for (int i = 1; i<loopCount; i++)
+            {
+                try
+                {
+                    action();
+                    return;
+                }
+                catch (IOException exIO)
+                {
+                    ReportExceptionForRetry(milliseconds, exIO, i, loopCount);
+                }
+                catch (UnauthorizedAccessException exUA)
+                {
+                    ReportExceptionForRetry(milliseconds, exUA, i, loopCount);
+                }
+            }
+
+            // Try the last time, and let the exception go.
+            action();
+        }
+
+        private static void ReportExceptionForRetry(int milliseconds, Exception x, int loopCount, int maxLoopCount)
+        {
+            Trace.WriteLine(string.Format(@"Encountered the following exception (attempt {0} of {1}):", loopCount, maxLoopCount));
+            Trace.WriteLine(x.Message);
+            Thread.Sleep(milliseconds);
         }
 
         /// <summary>
@@ -1883,8 +1915,7 @@ namespace pwiz.Skyline.Util
                 }
                 catch (TEx x)
                 {
-                    Trace.WriteLine(x.Message);
-                    Thread.Sleep(milliseconds);
+                    ReportExceptionForRetry(milliseconds, x, i, loopCount);
                 }
             }
 
