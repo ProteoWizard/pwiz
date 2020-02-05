@@ -1403,10 +1403,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         }
                         return string.Empty;
                     }
-                    else
-                    {
-                        return Calculator.Name;
-                    }
+                    return Calculator.Name;
                 }
             }
 
