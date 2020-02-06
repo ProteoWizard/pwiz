@@ -104,6 +104,7 @@ string Config::outputFilename(const string& filename, const MSData& msd) const
             extension == ".cms1" ||
             extension == ".ms2" ||
             extension == ".cms2" ||
+            extension == ".mzmlb" ||
             extension == ".mz5")
             runId = bfs::basename(runId);
     }
@@ -188,6 +189,9 @@ Config parseCommandLine(int argc, char** argv)
     bool format_CMS1 = false;
     bool format_MS2 = false;
     bool format_CMS2 = false;
+    bool format_mzMLb = false;
+    int mzMLb_compression_level = 0;
+	int mzMLb_chunk_size = 0;    
     bool format_mz5 = false;
     bool precision_32 = false;
     bool precision_64 = false;
@@ -195,6 +199,12 @@ Config parseCommandLine(int argc, char** argv)
     bool mz_precision_64 = false;
     bool intensity_precision_32 = false;
     bool intensity_precision_64 = false;
+    int mz_truncation = 0;
+	int intensity_truncation = 0;
+	bool mz_delta = false;
+	bool intensity_delta = false;
+	bool mz_linear = false;
+	bool intensity_linear = false;
     bool noindex = false;
     bool zlib = false;
     bool gzip = false;
@@ -235,6 +245,9 @@ Config parseCommandLine(int argc, char** argv)
 #ifndef WITHOUT_MZ5
             "|mz5"
 #endif
+#ifndef WITHOUT_MZMLB
+            "|mzMLb"
+#endif
             "]")
         ("mzML",
             po::value<bool>(&format_mzML)->zero_tokens(),
@@ -246,6 +259,17 @@ Config parseCommandLine(int argc, char** argv)
         ("mz5",
             po::value<bool>(&format_mz5)->zero_tokens(),
             ": write mz5 format")
+#endif
+#ifndef WITHOUT_MZMLB
+        ("mzMLb",
+            po::value<bool>(&format_mzMLb)->zero_tokens(),
+            ": write mzMLb format")
+		("mzMLbChunkSize",
+            po::value<int>(&mzMLb_chunk_size)->default_value(1048576),
+            ": mzMLb dataset chunk size in bytes")
+        ("mzMLbCompressionLevel",
+            po::value<int>(&mzMLb_compression_level)->default_value(0),
+            ": mzMLb GZIP compression level (0-9)")
 #endif
         ("mgf",
             po::value<bool>(&format_MGF)->zero_tokens(),
@@ -286,6 +310,24 @@ Config parseCommandLine(int argc, char** argv)
         ("inten32",
             po::value<bool>(&intensity_precision_32)->zero_tokens(),
             ": encode intensity values in 32-bit precision [default]")
+        ("mzTruncation",
+			po::value<int>(&mz_truncation)->default_value(0),
+			": Number of mantissa precision bits to truncate for mz and rt, or if -1 will store integers only")
+		("intenTruncation",
+			po::value<int>(&intensity_truncation)->default_value(0),
+			": Number of mantissa precision bits to truncate for intensities, or if -1 will store integers only")
+		("mzDelta",
+            po::value<bool>(&mz_delta)->zero_tokens(),
+			": apply delta prediction to mz and rt values")
+		("intenDelta",
+			po::value<bool>(&intensity_delta)->zero_tokens(),
+			": apple delta prediction to intensity values")
+		("mzLinear",
+			po::value<bool>(&mz_linear)->zero_tokens(),
+			": apply linear prediction to mz and rt values")
+		("intenLinear",
+			po::value<bool>(&intensity_linear)->zero_tokens(),
+			": apply linear prediction to intensity values")
         ("noindex",
             po::value<bool>(&noindex)->zero_tokens(),
             ": do not write index")
@@ -554,7 +596,7 @@ Config parseCommandLine(int argc, char** argv)
     if (config.filenames.empty())
         throw user_error("[msconvert] No files specified.");
 
-    int count = format_text + format_mzML + format_mzXML + format_MGF + format_MS2 + format_CMS2 + format_mz5;
+    int count = format_text + format_mzML + format_mzXML + format_MGF + format_MS2 + format_CMS2 + format_mz5 + format_mzMLb;
     if (count > 1) throw user_error("[msconvert] Multiple format flags specified.");
     if (format_text) config.writeConfig.format = MSDataFile::Format_Text;
     if (format_mzML) config.writeConfig.format = MSDataFile::Format_mzML;
@@ -565,6 +607,8 @@ Config parseCommandLine(int argc, char** argv)
     if (format_MS2) config.writeConfig.format = MSDataFile::Format_MS2;
     if (format_CMS2) config.writeConfig.format = MSDataFile::Format_CMS2;
     if (format_mz5) config.writeConfig.format = MSDataFile::Format_MZ5;
+    if (format_mzMLb) config.writeConfig.format = MSDataFile::Format_mzMLb;
+
 
     config.writeConfig.gzipped = gzip; // if true, file is written as .gz
 
@@ -596,6 +640,12 @@ Config parseCommandLine(int argc, char** argv)
             case MSDataFile::Format_CMS2:
                 config.extension = ".cms2";
                 break;
+            case MSDataFile::Format_mzMLb:
+#ifdef WITHOUT_MZMLB
+				throw user_error("[msconvert] Not built with mzMLb support.");
+#endif
+				config.extension = ".mzMLb";
+				break;                
             case MSDataFile::Format_MZ5:
 #ifdef WITHOUT_MZ5
                 throw user_error("[msconvert] Not built with mz5 support."); 
@@ -610,6 +660,23 @@ Config parseCommandLine(int argc, char** argv)
             config.extension += ".gz";
         }
     }
+
+    // handle prediction flags
+	if (intensity_delta)
+		config.writeConfig.binaryDataEncoderConfig.predictionOverrides[MS_intensity_array] = BinaryDataEncoder::Prediction_Delta;
+	if (mz_delta)
+	{
+		config.writeConfig.binaryDataEncoderConfig.predictionOverrides[MS_m_z_array] = BinaryDataEncoder::Prediction_Delta;
+		config.writeConfig.binaryDataEncoderConfig.predictionOverrides[MS_time_array] = BinaryDataEncoder::Prediction_Delta;
+	}
+	if (intensity_linear)
+		config.writeConfig.binaryDataEncoderConfig.predictionOverrides[MS_intensity_array] = BinaryDataEncoder::Prediction_Linear;
+	if (mz_linear)
+	{
+		config.writeConfig.binaryDataEncoderConfig.predictionOverrides[MS_m_z_array] = BinaryDataEncoder::Prediction_Linear;
+		config.writeConfig.binaryDataEncoderConfig.predictionOverrides[MS_time_array] = BinaryDataEncoder::Prediction_Linear;
+	}
+ 
 
     // precision defaults
 
@@ -648,13 +715,26 @@ Config parseCommandLine(int argc, char** argv)
     if (intensity_precision_64)
         config.writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_intensity_array] = BinaryDataEncoder::Precision_64;
 
+    if (mz_truncation != 0)
+		config.writeConfig.binaryDataEncoderConfig.truncationOverrides[MS_m_z_array] = mz_truncation;
+	if (intensity_truncation != 0)
+		config.writeConfig.binaryDataEncoderConfig.truncationOverrides[MS_intensity_array] = intensity_truncation;
+
     // other flags
 
     if (noindex)
         config.writeConfig.indexed = false;
 
-    if (zlib)
+    if (zlib || mzMLb_compression_level > 0)
+    {
         config.writeConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
+        if (mzMLb_compression_level == 0)
+            config.writeConfig.mzMLb_compression_level = 4;            
+        else
+            config.writeConfig.mzMLb_compression_level = mzMLb_compression_level;                       
+    }
+ 
+    config.writeConfig.mzMLb_chunk_size = mzMLb_chunk_size;
 
     config.writeConfig.useWorkerThreads = !config.singleThreaded;
 

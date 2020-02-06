@@ -29,6 +29,9 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include "SpectrumWorkerThreads.hpp"
+#ifndef WITHOUT_MZMLB
+#include "mzmlb/Connection_mzMLb.hpp"
+#endif
 
 namespace pwiz {
 namespace msdata {
@@ -1625,27 +1628,259 @@ void write(minimxml::XMLWriter& writer, const BinaryDataArray& binaryDataArray,
     map<CVID, BinaryDataEncoder::Numpress>::const_iterator n_overrideItr = config.numpressOverrides.find(binaryDataArray.cvParamChild(MS_binary_data_array).cvid);
     if (n_overrideItr != config.numpressOverrides.end())
         usedConfig.numpress = n_overrideItr->second;
+    
+    map<CVID, int>::const_iterator t_overrideItr = config.truncationOverrides.find(binaryDataArray.cvParamChild(MS_binary_data_array).cvid);
+    if (t_overrideItr != config.truncationOverrides.end())
+        usedConfig.truncation = t_overrideItr->second;
+    
+    string encoded;	
 
-    BinaryDataEncoder encoder(usedConfig);
-    string encoded;
-    encoder.encode(binaryDataArray.data, encoded);
-    usedConfig = encoder.getConfig(); // config may have changed if numpress error was excessive
+#ifndef WITHOUT_MZMLB
+	boost::iostreams::stream<Connection_mzMLb>* mzMLb_os = dynamic_cast<boost::iostreams::stream<Connection_mzMLb>*>(&writer.getOutputStream());
+	if (mzMLb_os)
+	{
+		usedConfig.format = BinaryDataEncoder::Format_MzMLb;
+
+		map<CVID, BinaryDataEncoder::Prediction>::const_iterator p_overrideItr = config.predictionOverrides.find(binaryDataArray.cvParamChild(MS_binary_data_array).cvid);
+		if (p_overrideItr != config.predictionOverrides.end())
+			usedConfig.prediction = p_overrideItr->second;
+	}
+
+	// If writing into mzML or using any form of numpress, we still need to encode the data to a byte stream
+	if (!mzMLb_os || usedConfig.numpress != BinaryDataEncoder::Numpress_None)
+#endif
+	{
+		BinaryDataEncoder encoder(usedConfig);
+		encoder.encode(binaryDataArray.data, encoded);
+		usedConfig = encoder.getConfig(); // config may have changed if numpress error was excessive
+	}
+    
 
     XMLWriter::Attributes attributes;
+    
+    size_t encoded_size = encoded.size();
 
-    // primary array types can never override the default array length
-    if (!binaryDataArray.hasCVParam(MS_m_z_array) &&
-        !binaryDataArray.hasCVParam(MS_time_array) &&
-        !binaryDataArray.hasCVParam(MS_intensity_array))
+#ifndef WITHOUT_MZMLB
+	string dataset;
+	size_t offset;
+
+	// mzMLb, including truncation and prediction, from andrew.dowsey@bristol.ac.uk
+	if (mzMLb_os)
+	{
+		dataset = (usedConfig.type == BinaryDataEncoder::Type_Spectrum ? "spectrum_" : (usedConfig.type == BinaryDataEncoder::Type_Chromatogram ? "chromatogram_" : ""));
+		dataset += cvTermInfo(binaryDataArray.cvParamChild(MS_binary_data_array).cvid).id;
+		replace(dataset.begin(), dataset.end(), ':', '_');
+
+		if (usedConfig.numpress != BinaryDataEncoder::Numpress_None)
+		{
+			if (usedConfig.numpress == BinaryDataEncoder::Numpress_Linear) dataset += "_numpress_linear";
+			else if (usedConfig.numpress == BinaryDataEncoder::Numpress_Pic) dataset += "_numpress_pic";
+			else dataset += "_numpress_slof";
+
+			offset = (*mzMLb_os)->seek(dataset, 0, std::ios_base::cur);
+			(*mzMLb_os)->write_opaque(dataset, (const unsigned char*)&encoded[0], encoded_size);
+		}
+		else if (usedConfig.precision == BinaryDataEncoder::Precision_32)
+		{
+			vector<float> float_data(binaryDataArray.data.size());
+
+			if (usedConfig.truncation == 0 && usedConfig.prediction == BinaryDataEncoder::Prediction_None)
+			{
+				for (size_t i = 0; i < binaryDataArray.data.size(); i++) float_data[i] = (float)binaryDataArray.data[i];
+			}
+			else
+			{
+				// truncation
+				if (usedConfig.truncation > 0)
+				{
+					union { unsigned long ix; float fx; } v;
+					unsigned long bitmask = ~(((unsigned long)1 << usedConfig.truncation) - 1);
+					for (size_t i = 0; i < binaryDataArray.data.size(); i++)
+					{
+						v.fx = (float)binaryDataArray.data[i];
+						v.ix &= bitmask;
+						float_data[i] = v.fx;
+					}
+				}
+				else if (usedConfig.truncation == -1)
+				{
+					for (size_t i = 0; i < binaryDataArray.data.size(); i++)
+					{
+						float_data[i] = round((float)binaryDataArray.data[i]);
+					}
+				}
+				else
+				{
+					for (size_t i = 0; i < binaryDataArray.data.size(); i++)
+					{
+						float_data[i] = (float)binaryDataArray.data[i];
+					}
+				}
+
+				// prediction
+				switch (usedConfig.prediction)
+				{
+				case BinaryDataEncoder::Prediction_Delta:
+					if (float_data.size() > 0)
+					{
+						float previous = float_data[0];
+						for (int i = 1; i < float_data.size(); i++)
+						{
+							// encoding
+							float_data[i] = float_data[0] + float_data[i] - previous;
+
+							// decoding
+							previous = float_data[i] + previous - float_data[0];
+						}
+					}
+					break;
+				case BinaryDataEncoder::Prediction_Linear:
+					if (float_data.size() > 0)
+					{
+						float previous2 = float_data[0];
+
+						if (float_data.size() > 1)
+						{
+							float previous1 = float_data[1];
+
+							for (int i = 2; i < float_data.size(); i++)
+							{
+								// encoding
+								float_data[i] = float_data[1] + float_data[i] - 2.0 * previous1 + previous2;
+
+								// decoding
+								float t = previous1;
+								previous1 = float_data[i] + 2.0f * previous1 - previous2 - float_data[1];
+								previous2 = t;
+							}
+						}
+					}
+					break;
+				case BinaryDataEncoder::Prediction_None:
+					break;
+				}
+
+			}
+
+			dataset += "_float";
+			offset = (*mzMLb_os)->seek(dataset, 0, std::ios_base::cur);
+			encoded_size = float_data.size() * sizeof(float);
+			(*mzMLb_os)->write(dataset, &float_data[0], float_data.size());
+		}
+		else
+		{
+			vector<double> double_data;
+
+			// truncation
+			if (usedConfig.truncation > 0)
+			{
+				double_data.resize(binaryDataArray.data.size());
+
+				union { unsigned long long ix; double fx; } v;
+				unsigned long long bitmask = ~(((unsigned long long)1 << usedConfig.truncation) - 1);
+				for (size_t i = 0; i < binaryDataArray.data.size(); i++)
+				{
+					v.fx = binaryDataArray.data[i];
+					v.ix &= bitmask;
+					double_data[i] = v.fx;
+				}
+			}
+			else if (usedConfig.truncation == -1)
+			{
+				double_data.resize(binaryDataArray.data.size());
+				for (size_t i = 0; i < binaryDataArray.data.size(); i++)
+				{
+					double_data[i] = round(binaryDataArray.data[i]);
+				}
+			}
+			else
+			{
+				double_data = binaryDataArray.data;
+			}
+
+			// prediction
+			switch (usedConfig.prediction)
+			{
+			case BinaryDataEncoder::Prediction_Delta:
+				if (double_data.size() > 0)
+				{
+					double previous = double_data[0];
+					for (int i = 1; i < double_data.size(); i++)
+					{
+						// encoding
+						double_data[i] = double_data[0] + double_data[i] - previous;
+
+						// decoding
+						previous = double_data[i] + previous - double_data[0];
+					}
+				}
+				break;
+			case BinaryDataEncoder::Prediction_Linear:
+				if (double_data.size() > 0)
+				{
+					double previous2 = double_data[0];
+
+					if (double_data.size() > 1)
+					{
+						double previous1 = double_data[1];
+
+						for (int i = 2; i < double_data.size(); i++)
+						{
+							// encoding
+							double_data[i] = double_data[1] + double_data[i] - 2.0 * previous1 + previous2;
+
+							// decoding
+							double t = previous1;
+							previous1 = double_data[i] + 2.0 * previous1 - previous2 - double_data[1];
+							previous2 = t;
+						}
+					}
+				}
+				break;
+			case BinaryDataEncoder::Prediction_None:
+				break;
+			}
+
+			dataset += "_double";
+			offset = (*mzMLb_os)->seek(dataset, 0, std::ios_base::cur);
+			encoded_size = double_data.size() * sizeof(double);
+			(*mzMLb_os)->write(dataset, &double_data[0], double_data.size());
+		}
+	}
+#endif
+
+	// primary array types can never override the default array length
+	if (!binaryDataArray.hasCVParam(MS_m_z_array) &&
+		!binaryDataArray.hasCVParam(MS_time_array) &&
+		!binaryDataArray.hasCVParam(MS_intensity_array))
+	{
+#ifndef WITHOUT_MZMLB        
+        if (mzMLb_os)
+        {
+            attributes.add("arrayLength", 0);
+        }
+        else
+#endif       
+        {
+            attributes.add("arrayLength", binaryDataArray.data.size());
+        }
+	}
+
+#ifndef WITHOUT_MZMLB        
+    if (mzMLb_os)
     {
-        attributes.add("arrayLength", binaryDataArray.data.size());
+        attributes.add("encodedLength", 0);
     }
+    else
+#endif
+    {
+        attributes.add("encodedLength", encoded_size);
+    }
+    
+	if (binaryDataArray.dataProcessingPtr.get())
+		attributes.add("dataProcessingRef", encode_xml_id_copy(binaryDataArray.dataProcessingPtr->id));
 
-    attributes.add("encodedLength", encoded.size());
-    if (binaryDataArray.dataProcessingPtr.get())
-        attributes.add("dataProcessingRef", encode_xml_id_copy(binaryDataArray.dataProcessingPtr->id));
-
-    writer.startElement("binaryDataArray", attributes);
+	writer.startElement("binaryDataArray", attributes);
 
     if (BinaryDataEncoder::Numpress_None == usedConfig.numpress)
     {
@@ -1658,6 +1893,12 @@ void write(minimxml::XMLWriter& writer, const BinaryDataArray& binaryDataArray,
         throw runtime_error("[IO::write()] mzML: must use little endian encoding.");
 
 	bool zlib = false; // Handle numpress+zlib
+
+    if (usedConfig.prediction == BinaryDataEncoder::Prediction_Linear)
+		write(writer, UserParam("linear prediction"));
+	else if (usedConfig.prediction == BinaryDataEncoder::Prediction_Delta)
+		write(writer, UserParam("delta prediction"));
+
     switch (usedConfig.compression) {
         case BinaryDataEncoder::Compression_None:
             if (BinaryDataEncoder::Numpress_None == usedConfig.numpress)
@@ -1691,14 +1932,35 @@ void write(minimxml::XMLWriter& writer, const BinaryDataArray& binaryDataArray,
             throw runtime_error("[IO::write()] Unsupported numpress method.");
             break;
     }
+    
+#ifndef WITHOUT_MZMLB        
+    if (mzMLb_os)
+    {
+        write(writer, UserParam("external dataset", dataset));
+        write(writer, UserParam("external array length", boost::lexical_cast<std::string>(binaryDataArray.data.size())));
+        write(writer, UserParam("external offset", boost::lexical_cast<std::string>(offset)));
+        
+        if (usedConfig.numpress != BinaryDataEncoder::Numpress_None)
+            write(writer, UserParam("external encoded length", boost::lexical_cast<std::string>(encoded_size)));
+    }
+#endif	
 
     writeParamContainer(writer, binaryDataArray); 
 
-    writer.pushStyle(XMLWriter::StyleFlag_InlineInner);
-    writer.startElement("binary");
-    writer.characters(encoded, false); // base64 doesn't use any reserved characters
-    writer.endElement();
-    writer.popStyle();
+#ifndef WITHOUT_MZMLB
+    if (mzMLb_os)
+    {
+		writer.startElement("binary", XMLWriter::Attributes(), XMLWriter::EmptyElement);
+	}
+	else
+#endif
+	{
+		writer.pushStyle(XMLWriter::StyleFlag_InlineInner);
+		writer.startElement("binary");
+		writer.characters(encoded, false); // base64 doesn't use any reserved characters
+		writer.endElement();
+		writer.popStyle();
+	}
 
     writer.endElement();
 }
@@ -1708,15 +1970,16 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
 {
     BinaryDataArray* binaryDataArray;
     const MSData* msd;
-    size_t defaultArrayLength;
+    size_t* defaultArrayLength; // make pointer so mzMLb can update defaultArrayLength
     BinaryDataEncoder::Config config;
 
-    HandlerBinaryDataArray(BinaryDataArray* _binaryDataArray = 0, const MSData* _msd = 0)
+    HandlerBinaryDataArray(BinaryDataArray* _binaryDataArray = 0, const MSData* _msd = 0, std::istream* _is = 0)
     :   binaryDataArray(_binaryDataArray),
         msd(_msd),
         defaultArrayLength(0),
         arrayLength_(0),
-        encodedLength_(0)
+        encodedLength_(0),
+        is_(_is)
     {
         parseCharacters = true;
         autoUnescapeCharacters = false;
@@ -1739,15 +2002,68 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
                 if (!dataProcessingRef.empty())
                     binaryDataArray->dataProcessingPtr = DataProcessingPtr(new DataProcessing(dataProcessingRef));
 
-                    getAttribute(attributes, "encodedLength", encodedLength_, NoXMLUnescape);
-                    getAttribute(attributes, "arrayLength", arrayLength_, NoXMLUnescape, defaultArrayLength);
+                getAttribute(attributes, "encodedLength", encodedLength_, NoXMLUnescape);
+                if (defaultArrayLength)
+                    getAttribute(attributes, "arrayLength", arrayLength_, NoXMLUnescape, *defaultArrayLength);
+                else
+                    getAttribute(attributes, "arrayLength", arrayLength_, NoXMLUnescape);
 
                 return Status::Ok;
             }
             else if (name == "binary")
-            {
+            {               
                 if (msd) References::resolve(*binaryDataArray, *msd);
                 config = getConfig();
+#ifndef WITHOUT_MZMLB
+				boost::iostreams::stream<Connection_mzMLb>*mzMLb_is = dynamic_cast<boost::iostreams::stream<Connection_mzMLb>*>(is_);
+				if (mzMLb_is)
+				{
+                    extractUserParam(*binaryDataArray, "external dataset", external_dataset_);
+                    
+                    string external_array_length;
+                    if(extractUserParam(*binaryDataArray, "external array length", external_array_length))
+                    {
+                        arrayLength_ = lexical_cast<size_t>(external_array_length);
+ 
+                        // primary array types so set the default array length
+                        if (binaryDataArray->hasCVParam(MS_m_z_array) ||
+                            binaryDataArray->hasCVParam(MS_time_array) ||
+                            binaryDataArray->hasCVParam(MS_intensity_array))
+                        { 
+                            if (defaultArrayLength)
+                                *defaultArrayLength = arrayLength_;
+                        }
+                    }
+                    
+                    string external_offset;
+                    if(extractUserParam(*binaryDataArray, "external offset", external_offset))
+                        external_offset_ = lexical_cast<size_t>(external_offset);
+                    
+                    string external_encoded_length;
+                    if(extractUserParam(*binaryDataArray, "external encoded length", external_encoded_length))
+                         encodedLength_ = lexical_cast<size_t>(external_encoded_length);
+                    
+					if (!external_dataset_.empty())
+					{
+						(*mzMLb_is)->seek(external_dataset_, external_offset_, std::ios_base::beg);
+
+						if (config.numpress != BinaryDataEncoder::Numpress_None)
+						{
+							vector<char> buf(encodedLength_);
+							(*mzMLb_is)->read_opaque(external_dataset_, &buf[0], encodedLength_);
+							config.format = BinaryDataEncoder::Format_MzMLb;
+							BinaryDataEncoder encoder(config);
+							encoder.decode(&buf[0], buf.size(), binaryDataArray->data);
+						}
+						else
+						{
+							binaryDataArray->data.resize(arrayLength_);
+							(*mzMLb_is)->read(external_dataset_, &binaryDataArray->data[0], arrayLength_);
+						}
+						predict();
+					}
+				}
+#endif
                 return Status::Ok;
             }
         } // end if not cvParam
@@ -1765,6 +2081,7 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
 
         BinaryDataEncoder encoder(config);
         encoder.decode(text.c_str(), text.length(), binaryDataArray->data); 
+        predict();
 
         if (binaryDataArray->data.size() != arrayLength_)
             throw runtime_error((format("[IO::HandlerBinaryDataArray] At position %d: expected array of size %d, but decoded array is actually size %d.")
@@ -1780,6 +2097,10 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
 
     size_t arrayLength_;
     size_t encodedLength_;
+    std::string external_dataset_;
+    size_t external_offset_; 
+
+    std::istream* is_;
 
     CVID extractCVParam(ParamContainer& container, CVID cvid)
     {
@@ -1821,7 +2142,36 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         BOOST_FOREACH(const CVParam& cvParam, CVParams)
             results.push_back(cvParam.cvid);
     }
+    
+    bool extractUserParam(ParamContainer& container, string name)
+	{
+		vector<UserParam>& params = container.userParams;
+		for (vector<UserParam>::iterator it = params.begin(); it != params.end(); it++)
+		{
+			if (it->name == name)
+			{
+				params.erase(it);
+				return true;
+			}
+		}
+		return false;
+	}
 
+    bool extractUserParam(ParamContainer& container, string name, string& value)
+	{
+		vector<UserParam>& params = container.userParams;
+		for (vector<UserParam>::iterator it = params.begin(); it != params.end(); it++)
+		{
+			if (it->name == name)
+			{
+                value = it->value;
+				params.erase(it);
+				return true;
+			}
+		}
+		return false;
+	}
+    
     BinaryDataEncoder::Config getConfig()
     {
         if (!binaryDataArray)
@@ -1834,6 +2184,14 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         // part of the BinaryDataArray.  We look at them to see how to decode the data,
         // and remove them from the BinaryDataArray struct (extractCVParam does the removal).
         //
+        
+        // prediction
+        bool prediction_linear = extractUserParam(*binaryDataArray, "linear prediction");
+		bool prediction_delta = extractUserParam(*binaryDataArray, "delta prediction");
+		if (prediction_linear)
+			config.prediction = BinaryDataEncoder::Prediction_Linear;
+		else if (prediction_delta)
+			config.prediction = BinaryDataEncoder::Prediction_Delta;
 
         CVID cvidBinaryDataType = extractCVParam(*binaryDataArray, MS_binary_data_type);
  
@@ -1900,6 +2258,37 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
 
         return config;
     }
+    
+    void predict()
+	{
+		switch (config.prediction)
+		{
+		case BinaryDataEncoder::Prediction_Delta:
+			switch (config.precision)
+			{
+			case BinaryDataEncoder::Precision_32:
+				for (size_t i = 2; i < binaryDataArray->data.size(); i++) binaryDataArray->data[i] = (float)binaryDataArray->data[i] + (float)binaryDataArray->data[i - 1] - (float)binaryDataArray->data[0];
+				break;
+			case BinaryDataEncoder::Precision_64:
+				for (size_t i = 2; i < binaryDataArray->data.size(); i++) binaryDataArray->data[i] = binaryDataArray->data[i] + binaryDataArray->data[i - 1] - binaryDataArray->data[0];
+				break;
+			}
+			break;
+		case BinaryDataEncoder::Prediction_Linear:
+			switch (config.precision)
+			{
+			case BinaryDataEncoder::Precision_32:
+				for (size_t i = 2; i < binaryDataArray->data.size(); i++) binaryDataArray->data[i] = (float)binaryDataArray->data[i] + 2.0f * (float)binaryDataArray->data[i - 1] - (float)binaryDataArray->data[i - 2] - (float)binaryDataArray->data[1];
+				break;
+			case BinaryDataEncoder::Precision_64:
+				for (size_t i = 2; i < binaryDataArray->data.size(); i++) binaryDataArray->data[i] = binaryDataArray->data[i] + 2.0 * binaryDataArray->data[i - 1] - binaryDataArray->data[i - 2] - binaryDataArray->data[1];
+				break;
+			}
+			break;
+		case BinaryDataEncoder::Prediction_None:
+			break;
+		}
+	}
 };
 
 
@@ -1923,8 +2312,20 @@ void write(minimxml::XMLWriter& writer, const Spectrum& spectrum, const MSData& 
     attributes.add("index", spectrum.index);
     attributes.add("id", spectrum.id); // not an XML:ID
     if (!spectrum.spotID.empty())
-        attributes.add("spotID", spectrum.spotID);
-    attributes.add("defaultArrayLength", spectrum.defaultArrayLength);
+        attributes.add("spotID", spectrum.spotID);   
+    
+#ifndef WITHOUT_MZMLB
+	boost::iostreams::stream<Connection_mzMLb>* mzMLb_os = dynamic_cast<boost::iostreams::stream<Connection_mzMLb>*>(&writer.getOutputStream());
+	if (mzMLb_os)
+	{
+        attributes.add("defaultArrayLength", 0);
+	}
+    else
+#endif
+    {
+       attributes.add("defaultArrayLength", spectrum.defaultArrayLength);
+    }
+    
     if (spectrum.dataProcessingPtr.get())
         attributes.add("dataProcessingRef", encode_xml_id_copy(spectrum.dataProcessingPtr->id));
     if (spectrum.sourceFilePtr.get())
@@ -1968,9 +2369,12 @@ void write(minimxml::XMLWriter& writer, const Spectrum& spectrum, const MSData& 
         attributes.add("count", spectrum.binaryDataArrayPtrs.size());
         writer.startElement("binaryDataArrayList", attributes);
 
+        BinaryDataEncoder::Config updated_config = config;
+		updated_config.type = BinaryDataEncoder::Type_Spectrum;
+
         for (vector<BinaryDataArrayPtr>::const_iterator it=spectrum.binaryDataArrayPtrs.begin(); 
              it!=spectrum.binaryDataArrayPtrs.end(); ++it)
-             write(writer, **it, config);
+             write(writer, **it, updated_config);
 
         writer.endElement(); // binaryDataArrayList
     }
@@ -1991,13 +2395,15 @@ struct HandlerSpectrum : public HandlerParamContainer
                     Spectrum* _spectrum = 0,
                     const map<string,string>* legacyIdRefToNativeId = 0,
                     const MSData* _msd = 0,
-                    const SpectrumIdentityFromXML *_spectrumID = 0)
+                    const SpectrumIdentityFromXML *_spectrumID = 0,
+                    std::istream* is = 0)
     :   binaryDataFlag(_binaryDataFlag),
         spectrum(_spectrum),
         spectrumID(_spectrumID),
         legacyIdRefToNativeId(legacyIdRefToNativeId),
         msd(_msd),
-        handlerPrecursor_(0, legacyIdRefToNativeId)
+        handlerPrecursor_(0, legacyIdRefToNativeId),
+        handlerBinaryDataArray_(0, 0, is)
     {
     }
 
@@ -2071,8 +2477,8 @@ struct HandlerSpectrum : public HandlerParamContainer
 
                 spectrum->binaryDataArrayPtrs.push_back(BinaryDataArrayPtr(new BinaryDataArray()));
                 handlerBinaryDataArray_.binaryDataArray = spectrum->binaryDataArrayPtrs.back().get();
-                handlerBinaryDataArray_.defaultArrayLength = spectrum->defaultArrayLength;
-                handlerBinaryDataArray_.msd = msd;
+                handlerBinaryDataArray_.defaultArrayLength = &spectrum->defaultArrayLength;
+                handlerBinaryDataArray_.msd = msd;               
                 return Status(Status::Delegate, &handlerBinaryDataArray_);
             }
             else if (name == "binaryDataArrayList")
@@ -2098,6 +2504,7 @@ struct HandlerSpectrum : public HandlerParamContainer
                 return Status(Status::Delegate, &handlerScan_);
             }
         }  // end if name != cvParam
+
         HandlerParamContainer::paramContainer = spectrum;
         return HandlerParamContainer::startElement(name, attributes, position);
     }
@@ -2118,7 +2525,7 @@ PWIZ_API_DECL void read(std::istream& is, Spectrum& spectrum,
                         const MSData* msd,
                         const SpectrumIdentityFromXML *id)
 {
-    HandlerSpectrum handler(binaryDataFlag, &spectrum, legacyIdRefToNativeId, msd, id);
+    HandlerSpectrum handler(binaryDataFlag, &spectrum, legacyIdRefToNativeId, msd, id, &is);
     handler.version = version;
     SAXParser::parse(is, handler);
 }
@@ -2136,7 +2543,19 @@ void write(minimxml::XMLWriter& writer, const Chromatogram& chromatogram,
     XMLWriter::Attributes attributes;
     attributes.add("index", chromatogram.index);
     attributes.add("id", chromatogram.id); // not an XML:ID
-    attributes.add("defaultArrayLength", chromatogram.defaultArrayLength);
+    
+#ifndef WITHOUT_MZMLB
+	boost::iostreams::stream<Connection_mzMLb>* mzMLb_os = dynamic_cast<boost::iostreams::stream<Connection_mzMLb>*>(&writer.getOutputStream());
+	if (mzMLb_os)
+	{
+        attributes.add("defaultArrayLength", 0);
+	}
+    else
+#endif
+    {
+        attributes.add("defaultArrayLength", chromatogram.defaultArrayLength);
+    }    
+    
     if (chromatogram.dataProcessingPtr.get())
         attributes.add("dataProcessingRef", encode_xml_id_copy(chromatogram.dataProcessingPtr->id));
 
@@ -2155,10 +2574,13 @@ void write(minimxml::XMLWriter& writer, const Chromatogram& chromatogram,
         attributes.clear();
         attributes.add("count", chromatogram.binaryDataArrayPtrs.size());
         writer.startElement("binaryDataArrayList", attributes);
+        
+        BinaryDataEncoder::Config updated_config = config;
+		updated_config.type = BinaryDataEncoder::Type_Chromatogram;
 
         for (vector<BinaryDataArrayPtr>::const_iterator it=chromatogram.binaryDataArrayPtrs.begin(); 
              it!=chromatogram.binaryDataArrayPtrs.end(); ++it)
-             write(writer, **it, config);
+             write(writer, **it, updated_config);
 
         writer.endElement(); // binaryDataArrayList
     }
@@ -2173,9 +2595,11 @@ struct HandlerChromatogram : public HandlerParamContainer
     Chromatogram* chromatogram;
 
     HandlerChromatogram(BinaryDataFlag _binaryDataFlag,
-                        Chromatogram* _chromatogram = 0)
+                        Chromatogram* _chromatogram = 0,
+                        std::istream* is = 0)
     :   binaryDataFlag(_binaryDataFlag),
-        chromatogram(_chromatogram)
+        chromatogram(_chromatogram),
+        handlerBinaryDataArray_(0, 0, is)
     {}
 
     virtual Status startElement(const string& name, 
@@ -2218,7 +2642,7 @@ struct HandlerChromatogram : public HandlerParamContainer
 
             chromatogram->binaryDataArrayPtrs.push_back(BinaryDataArrayPtr(new BinaryDataArray()));
             handlerBinaryDataArray_.binaryDataArray = chromatogram->binaryDataArrayPtrs.back().get();
-            handlerBinaryDataArray_.defaultArrayLength = chromatogram->defaultArrayLength;
+            handlerBinaryDataArray_.defaultArrayLength = &chromatogram->defaultArrayLength;
             return Status(Status::Delegate, &handlerBinaryDataArray_);
         }
         else if (name == "binaryDataArrayList")
@@ -2241,7 +2665,7 @@ struct HandlerChromatogram : public HandlerParamContainer
 PWIZ_API_DECL void read(std::istream& is, Chromatogram& chromatogram,
                         BinaryDataFlag binaryDataFlag)
 {
-    HandlerChromatogram handler(binaryDataFlag, &chromatogram);
+    HandlerChromatogram handler(binaryDataFlag, &chromatogram, &is);
     SAXParser::parse(is, handler);
 }
 
@@ -2296,6 +2720,15 @@ void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList, const 
         if (spectrum->index != i) throw runtime_error("[IO::write(SpectrumList)] Bad index.");
         write(writer, *spectrum, msd, config);
     }
+    
+#ifndef WITHOUT_MZMLB
+	boost::iostreams::stream<Connection_mzMLb>* mzMLb_os = dynamic_cast<boost::iostreams::stream<Connection_mzMLb>*>(&writer.getOutputStream());
+	if (mzMLb_os)
+	{
+		if (spectrumPositions)
+			spectrumPositions->push_back(writer.positionNext()-2);
+	}
+#endif
 
     writer.endElement();
 }
@@ -2397,6 +2830,15 @@ void write(minimxml::XMLWriter& writer, const ChromatogramList& chromatogramList
         if (chromatogram->index != i) throw runtime_error("[IO::write(ChromatogramList)] Bad index.");
         write(writer, *chromatogram, config);
     }
+
+#ifndef WITHOUT_MZMLB
+	boost::iostreams::stream<Connection_mzMLb>* mzMLb_os = dynamic_cast<boost::iostreams::stream<Connection_mzMLb>*>(&writer.getOutputStream());
+	if (mzMLb_os)
+	{
+		if (chromatogramPositions)
+			chromatogramPositions->push_back(writer.positionNext()-2);
+	}
+#endif
 
     writer.endElement();
 }

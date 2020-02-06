@@ -167,12 +167,25 @@ rule without-mz5 ( properties * )
    }
 }
 
+# do we want to skip mzMLb support?
+rule without-mzmlb ( properties * )
+{
+   if --without-mzmlb in [ modules.peek : ARGV ]
+   {
+       return <location-prefix>without-mzmlb <define>WITHOUT_MZMLB ;
+   }
+   else 
+   {
+       return [ without-binary-msdata $(properties) ] ;
+   }
+}
+
 # do we want to skip all binary file formats (vendors and mz5)?
 rule without-binary-msdata ( properties * )
 {
    if --without-binary-msdata in [ modules.peek : ARGV ]
    {
-       return <location-prefix>without-binary-msdata <define>WITHOUT_MZ5 <vendor-api-support>off ;
+       return <location-prefix>without-binary-msdata <define>WITHOUT_MZ5 <define>WITHOUT_MZMLB <vendor-api-support>off ;
    }
 }
 
@@ -239,6 +252,16 @@ rule mz5-build ( itemname )
     if ( ! [ without-mz5 ] )
     {
         return $(itemname) ; # do build mz5
+    }
+}
+
+
+# return the itemname if mzmlb build is on (the default)
+rule mzmlb-build ( itemname )  
+{
+    if ( ! [ without-mzmlb ] )
+    {
+        return $(itemname) ; # do build mzmlb
     }
 }
 
@@ -313,6 +336,9 @@ project pwiz
 
         # set standard to C++11
         <toolset>gcc:<cxxflags>-std=c++11
+
+        # set flag so it will compile with gcc 7.4
+        <toolset>gcc:<cxxflags>-fpermissive
 
         # avoid warnings like concept_check.hpp ... warning: unused typedef 'boost_concept_check'
         <toolset>clang:<cxxflags>-Wno-unused-local-typedef
@@ -930,6 +956,17 @@ rule unifi-dll-location ( api-path : properties * )
     }
 }
 
+rule unifi-dll-location ( api-path : properties * )
+{
+    # .NET 4.5 DLLs should work for anything .NET 4 or greater (hopefully); there's no Boost.Build property for .NET version
+    local result = $(api-path) ;
+    if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
+       [ path.exists $(result)\\IdentityModel.dll ]
+    {
+        return $(result) ;
+    }
+}
+
 rule bruker-dll-location ( api-path : properties * )
 {
     local result ;
@@ -1426,6 +1463,7 @@ bcp.copy-boost-dependencies copy_boost_subset
     [ path.glob-tree $(PWIZ_LIBRARIES_PATH)/boost_aux : *.cpp *.hpp ]
     [ path.glob-tree $(PWIZ_LIBRARIES_PATH)/SQLite : *.cpp *.h ]
 
+    [ mzmlb-build $(PWIZ_LIBRARIES_PATH)/hdf5-1.8.7/src/init_once_workaround.cpp ]
     [ mz5-build $(PWIZ_LIBRARIES_PATH)/hdf5-1.8.7/src/init_once_workaround.cpp ]
 
     # scan all targets and their dependencies

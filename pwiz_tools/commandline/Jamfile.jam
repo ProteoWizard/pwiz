@@ -43,6 +43,15 @@ exe msconvert
     ;
 
 
+exe mzmlbcat
+    : mzmlbcat.cpp
+      /ext/boost//program_options
+      /ext/boost//filesystem
+      mstool-requirements
+    : <include>../../..
+    ;
+
+
 exe msdir
     : msdir.cpp
       /ext/boost//program_options
@@ -152,7 +161,7 @@ exe pepcat
     : <include>../../..
     ;
 
-alias mstools : msdiff msconvert msdir msaccess mspicture peakaboo chainsaw qtofpeakpicker ;
+alias mstools : msdiff msconvert msdir msaccess mspicture peakaboo chainsaw qtofpeakpicker mzmlbcat ;
 alias idtools : idconvert ;
 
 
