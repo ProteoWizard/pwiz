@@ -159,13 +159,13 @@ namespace pwiz.Skyline.Model.Irt
 
     public class LogRegression : IIrtRegression
     {
-        public LogRegression()
+        public LogRegression(bool invert = false)
         {
             Slope = double.NaN;
             Intercept = double.NaN;
             XValues = new double[0];
             YValues = new double[0];
-            _invert = false;
+            _invert = invert;
         }
 
         public LogRegression(IList<double> xValues, IList<double> yValues, bool invert = false)
@@ -197,10 +197,10 @@ namespace pwiz.Skyline.Model.Irt
         }
         public double Slope { get; }
         public double Intercept { get; }
-        public string DisplayEquation => string.Format(!_invert
-                ? @"y = {0:F3} + log(x) * {1:F3}"
-                : @"y = e^((x - {0:F3}) / {1:F3})",
-            Intercept, Slope);
+
+        public string DisplayEquation => !_invert
+            ? string.Format(@"y = {0:F3} + log(x) * {1:F3}", Intercept, Slope)
+            : string.Format(@"y = e^((x {0} {1:F3}) / {2:F3})", Intercept <= 0 ? '+' : '-', Math.Abs(Intercept), Slope);
 
         public IIrtRegression ChangePoints(double[] x, double[] y)
         {
