@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -132,9 +133,10 @@ namespace pwiz.Skyline.Model.Irt
                 minHydro = Math.Min(minHydro, hydroScore);
                 maxHydro = Math.Max(maxHydro, hydroScore);
             }
-            var addMin = minHydro < regression.XValues[0];
-            var addMax = maxHydro > regression.XValues.Last();
-            var points = regression.XValues.Length + (addMax ? 1 : 0) + (addMin ? 1 : 0);
+            var sortedX = regression.XValues.OrderBy(x => x).ToArray();
+            var addMin = minHydro < sortedX[0];
+            var addMax = maxHydro > sortedX[sortedX.Length - 1];
+            var points = sortedX.Length + (addMax ? 1 : 0) + (addMin ? 1 : 0);
             hydroScores = new double[points];
             predictions = new double[points];
             var offset = 0;
@@ -149,10 +151,10 @@ namespace pwiz.Skyline.Model.Irt
                 hydroScores[hydroScores.Length - 1] = maxHydro;
                 predictions[predictions.Length - 1] = regression.GetY(maxHydro);
             }
-            for (var i = 0; i < regression.XValues.Length; i++)
+            for (var i = 0; i < sortedX.Length; i++)
             {
-                hydroScores[offset + i] = regression.XValues[i];
-                predictions[offset + i] = regression.GetY(regression.XValues[i]);
+                hydroScores[offset + i] = sortedX[i];
+                predictions[offset + i] = regression.GetY(sortedX[i]);
             }
         }
     }
@@ -235,9 +237,8 @@ namespace pwiz.Skyline.Model.Irt
         public LoessRegression(double[] x, double[] y, CustomCancellationToken token = null)
         {
             _linearFit = new RegressionLine(x, y);
-            var statX = new Statistics(x);
-            _xMin = statX.Min();
-            _xMax = statX.Max();
+            _xMin = x.Min();
+            _xMax = x.Max();
             _loess = new LoessAligner(0.4);
             _loess.Train(x, y, token ?? CustomCancellationToken.NONE);
             XValues = x;
