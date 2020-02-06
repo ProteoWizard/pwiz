@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -67,7 +68,7 @@ namespace pwiz.SkylineTestTutorial
             //IsPauseForScreenShots = true;
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeQuantification.pdf";
-            ForceMzml = true; // Prefer mzML as being the more efficient download
+            ForceMzml = Program.PauseSeconds == 0; // Prefer mzML as being the more efficient download
 
             TestFilesZipPaths = new[]
             {
@@ -311,7 +312,20 @@ namespace pwiz.SkylineTestTutorial
                     {"QC_Mid_03", new Tuple<SampleType, double?>(SampleType.QC,346)}
                 };*/
 
-                SetExcelFileClipboardText(GetTestPath("Concentrations.xlsx"), "Sheet1", 3, false);
+                string concentrationsFileName;
+                if (CultureInfo.CurrentUICulture.Name.StartsWith("zh"))
+                {
+                    concentrationsFileName = "Concentrations_zh.xlsx";
+                }
+                else if (CultureInfo.CurrentUICulture.Name.StartsWith("ja"))
+                {
+                    concentrationsFileName = "Concentrations_ja.xlsx";
+                }
+                else
+                {
+                    concentrationsFileName = "Concentrations.xlsx";
+                }
+                SetExcelFileClipboardText(GetTestPath(concentrationsFileName), "Sheet1", 3, false);
                 RunUI(() =>
                 {
                     // Find and select Blank_01 cell
@@ -324,6 +338,29 @@ namespace pwiz.SkylineTestTutorial
                 });
                 //SetDocumentGridSampleTypesAndConcentrations(sampleTypes);
                 PauseForScreenShot<DocumentGridForm>("Document Grid - sample types - enlarge for screenshot so all rows can be seen ", 16);
+                foreach (var chromatogramSet in SkylineWindow.Document.MeasuredResults.Chromatograms)
+                {
+                    if (chromatogramSet.Name.StartsWith("DoubleBlank"))
+                    {
+                        Assert.AreEqual(SampleType.DOUBLE_BLANK, chromatogramSet.SampleType);
+                    }
+                    else if (chromatogramSet.Name.StartsWith("Blank"))
+                    {
+                        Assert.AreEqual(SampleType.BLANK, chromatogramSet.SampleType);
+                    }
+                    else if (chromatogramSet.Name.StartsWith("QC"))
+                    {
+                        Assert.AreEqual(SampleType.QC, chromatogramSet.SampleType);
+                    }
+                    else if (chromatogramSet.Name.StartsWith("Cal"))
+                    {
+                        Assert.AreEqual(SampleType.STANDARD, chromatogramSet.SampleType);
+                    }
+                    else
+                    {
+                        Assert.AreEqual(SampleType.UNKNOWN, chromatogramSet.SampleType);
+                    }
+                }
 
                 RunUI(() => SkylineWindow.ShowCalibrationForm());
                 PauseForScreenShot<CalibrationForm>("Calibration Curve ", 18);
