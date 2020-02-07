@@ -73,36 +73,37 @@ int main(int argc, char* argv[])
         bool requireUnicodeSupport = false;
 
         pwiz::util::ReaderTestConfig config;
+        pwiz::util::TestResult result;
         config.sortAndJitter = true;
 
         pwiz::msdata::Reader_Bruker_BAF reader; // actually handles all file types
-        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsDirectory(), config);
+        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsDirectory(), config);
 
         // test globalChromatogramsAreMs1Only, but don't need to test spectra here
         auto newConfig = config;
         newConfig.globalChromatogramsAreMs1Only = true;
         newConfig.indexRange = make_pair(0, 0);
-        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile("Hela_QC_PASEF_Slot1-first-6-frames.d"), newConfig);
+        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile("Hela_QC_PASEF_Slot1-first-6-frames.d"), newConfig);
 
         config.doublePrecision = true;
         config.preferOnlyMsLevel = 1;
-        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsTDF(), config);
+        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsTDF(), config);
 
         config.preferOnlyMsLevel = 2;
-        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsTDF(), config);
+        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsTDF(), config);
 
         config.allowMsMsWithoutPrecursor = false;
-        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsPASEF(), config);
+        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsPASEF(), config);
 
         config.allowMsMsWithoutPrecursor = true; // has no effect in combined mode
         config.combineIonMobilitySpectra = true;
-        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsTDF(), config);
+        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsTDF(), config);
 
         config.preferOnlyMsLevel = 1;
-        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsTDF(), config);
+        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsTDF(), config);
 
         config.preferOnlyMsLevel = 0;
-        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsTDF(), config);
+        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsTDF(), config);
 
         config.preferOnlyMsLevel = 2;
         config.combineIonMobilitySpectra = false;
@@ -113,7 +114,9 @@ int main(int argc, char* argv[])
 
         config.isolationMzAndMobilityFilter.clear();
         config.isolationMzAndMobilityFilter.emplace_back(895.9496, 1.12, 0.055);
-        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsDiaPASEF(), config);
+        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsDiaPASEF(), config);
+
+        result.check();
     }
     catch (exception& e)
     {

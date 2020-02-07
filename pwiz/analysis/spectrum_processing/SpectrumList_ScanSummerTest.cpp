@@ -156,6 +156,11 @@ int test()
         s->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_detector_counts);
         s->defaultArrayLength = inputMZArray.size();
 
+        auto mobilityArray = boost::make_shared<BinaryDataArray>();
+        mobilityArray->data.resize(inputMZArray.size(), 0);
+        mobilityArray->set(MS_raw_ion_mobility_array);
+        s->binaryDataArrayPtrs.push_back(mobilityArray);
+
         scanRef.scanWindows.push_back(ScanWindow());
         scanRef.scanWindows[0].set(MS_scan_window_lower_limit,inputMZArray[0]);
         scanRef.scanWindows[0].set(MS_scan_window_upper_limit,inputMZArray[inputMZArray.size()-1]);
@@ -187,6 +192,7 @@ int test()
             vector<double> goldMZArray = parseDoubleArray(goldStandard[i].inputMZArray);
             vector<double> goldIntensityArray = parseDoubleArray(goldStandard[i].inputIntensityArray);
 
+            unit_assert_operator_equal(2, s->binaryDataArrayPtrs.size()); // mobility array dropped
             unit_assert_operator_equal(goldMZArray.size(), mzs.size());
             unit_assert_operator_equal(goldIntensityArray.size(), intensities.size());
             unit_assert_equal(goldStandard[i].inputPrecursorMZ, precursorMZ, 1e-8);

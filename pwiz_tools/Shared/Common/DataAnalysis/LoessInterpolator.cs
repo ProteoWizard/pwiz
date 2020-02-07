@@ -105,10 +105,10 @@ namespace pwiz.Common.DataAnalysis
          * @param bandwidth  when computing the loess fit at
          * a particular point, this fraction of source points closest
          * to the current point is taken into account for computing
-         * a least-squares regression.</br>
+         * a least-squares regression.<br/>
          * A sensible value is usually 0.25 to 0.5, the default value is
          * {@link #DEFAULT_BANDWIDTH}.
-         * @param robustnessIters This many robustness iterations are done.</br>
+         * @param robustnessIters This many robustness iterations are done.<br/>
          * A sensible value is usually 0 (just the initial fit without any
          * robustness iterations) to 4, the default value is
          * {@link #DEFAULT_ROBUSTNESS_ITERS}.
@@ -128,10 +128,10 @@ namespace pwiz.Common.DataAnalysis
          * @param bandwidth  when computing the loess fit at
          * a particular point, this fraction of source points closest
          * to the current point is taken into account for computing
-         * a least-squares regression.</br>
+         * a least-squares regression.<br/>
          * A sensible value is usually 0.25 to 0.5, the default value is
          * {@link #DEFAULT_BANDWIDTH}.
-         * @param robustnessIters This many robustness iterations are done.</br>
+         * @param robustnessIters This many robustness iterations are done.<br/>
          * A sensible value is usually 0 (just the initial fit without any
          * robustness iterations) to 4, the default value is
          * {@link #DEFAULT_ROBUSTNESS_ITERS}.
@@ -392,7 +392,7 @@ namespace pwiz.Common.DataAnalysis
         /**
          * Returns the smallest index j such that j > i && (j==weights.length || weights[j] != 0)
          * @param weights weights array
-         * @param i the index from which to start search; must be < weights.length
+         * @param i the index from which to start search; must be less than weights.length
          * @return the smallest index j such that j > i && (j==weights.length || weights[j] != 0)
          */
         private static int NextNonzero(double[] weights, int i)

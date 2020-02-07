@@ -516,6 +516,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Regression.
+        /// </summary>
+        public static string AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression {
+            get {
+                return ResourceManager.GetString("AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Regression Attempted.
         /// </summary>
         public static string AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Attempted {
@@ -3334,6 +3343,33 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ChooseIrtStandardPeptides_OkDialog_Transition_list_field_must_contain_a_path_to_a" +
                         "_valid_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Known iRTs.
+        /// </summary>
+        public static string ChooseIrtStandardPeptidesDlg_OkDialog_Known_iRTs {
+            get {
+                return ResourceManager.GetString("ChooseIrtStandardPeptidesDlg_OkDialog_Known_iRTs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library iRTs.
+        /// </summary>
+        public static string ChooseIrtStandardPeptidesDlg_OkDialog_Library_iRTs {
+            get {
+                return ResourceManager.GetString("ChooseIrtStandardPeptidesDlg_OkDialog_Library_iRTs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Linear regression.
+        /// </summary>
+        public static string ChooseIrtStandardPeptidesDlg_OkDialog_Linear_regression {
+            get {
+                return ResourceManager.GetString("ChooseIrtStandardPeptidesDlg_OkDialog_Linear_regression", resourceCulture);
             }
         }
         
@@ -8165,6 +8201,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to N/A.
+        /// </summary>
+        public static string DisplayEquation_N_A {
+            get {
+                return ResourceManager.GetString("DisplayEquation_N_A", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Column.
         /// </summary>
         public static string DisplayGraphsTypeExtension_LOCALIZED_VALUES_Column {
@@ -10713,7 +10758,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Chemical formula:.
+        ///   Looks up a localized string similar to &amp;Chemical formula:.
         /// </summary>
         public static string EditStaticModDlg_EditStaticModDlg_Chemical_formula_ {
             get {
@@ -15078,6 +15123,33 @@ namespace pwiz.Skyline.Properties {
         public static string IrtDb_MakeDocumentXml_iRT_standards {
             get {
                 return ResourceManager.GetString("IrtDb_MakeDocumentXml_iRT_standards", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Linear.
+        /// </summary>
+        public static string IrtRegressionType_Linear {
+            get {
+                return ResourceManager.GetString("IrtRegressionType_Linear", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Logarithmic.
+        /// </summary>
+        public static string IrtRegressionType_Logarithmic {
+            get {
+                return ResourceManager.GetString("IrtRegressionType_Logarithmic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lowess.
+        /// </summary>
+        public static string IrtRegressionType_Lowess {
+            get {
+                return ResourceManager.GetString("IrtRegressionType_Lowess", resourceCulture);
             }
         }
         
@@ -19739,6 +19811,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Product Neutral Loss.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Product_Neutral_Loss {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Product_Neutral_Loss", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Protein description.
         /// </summary>
         public static string PasteDlg_UpdateMoleculeType_Protein_description {
@@ -22265,6 +22346,24 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("RefineDlg_cbAdd_CheckedChanged_Precursors_of_the_chosen_isotope_label_type_will_b" +
                         "e_added_if_they_are_missing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 1.
+        /// </summary>
+        public static string RefineDlg_MSLevel_1 {
+            get {
+                return ResourceManager.GetString("RefineDlg_MSLevel_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 2.
+        /// </summary>
+        public static string RefineDlg_MSLevel_2 {
+            get {
+                return ResourceManager.GetString("RefineDlg_MSLevel_2", resourceCulture);
             }
         }
         
@@ -24798,6 +24897,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Skyline_Release {
+            get {
+                object obj = ResourceManager.GetObject("Skyline_Release", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        public static System.Drawing.Icon Skyline_Release1 {
+            get {
+                object obj = ResourceManager.GetObject("Skyline_Release1", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
         public static System.Drawing.Icon SkylineData {
@@ -26206,6 +26325,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The standard peptides do not appear to be on the iRT-C18 scale. Would you like to recalibrate them to this scale?.
+        /// </summary>
+        public static string SkylineWindow_ImportMassListIrts_The_standard_peptides_do_not_appear_to_be_on_the_iRT_C18_scale__Would_you_like_to_recalibrate_them_to_this_scale_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportMassListIrts_The_standard_peptides_do_not_appear_to_be_on_the" +
+                        "_iRT_C18_scale__Would_you_like_to_recalibrate_them_to_this_scale_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Data columns not found in first line..
         /// </summary>
         public static string SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line {
@@ -27438,6 +27567,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The document must be fully loaded before importing a peptide search..
+        /// </summary>
+        public static string SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before" +
+                        "_importing_a_peptide_search_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You must save this document before importing a peptide search..
         /// </summary>
         public static string SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_ {
@@ -27566,6 +27705,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_ShowRefineDlg_Refine {
             get {
                 return ResourceManager.GetString("SkylineWindow_ShowRefineDlg_Refine", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Refining document.
+        /// </summary>
+        public static string SkylineWindow_ShowRefineDlg_Refining_document {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowRefineDlg_Refining_document", resourceCulture);
             }
         }
         
@@ -28030,6 +28178,26 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders" +
                         "_RT__min_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot use product neutral loss chemical formula without a precursor chemical formula.
+        /// </summary>
+        public static string SmallMoleculeTransitionListReader_ProcessNeutralLoss_Cannot_use_product_neutral_loss_chemical_formula_without_a_precursor_chemical_formula {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListReader_ProcessNeutralLoss_Cannot_use_product_neutral_l" +
+                        "oss_chemical_formula_without_a_precursor_chemical_formula", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor molecular formula {0} does not contain sufficient atoms to be used with neutral loss {1}.
+        /// </summary>
+        public static string SmallMoleculeTransitionListReader_ProcessNeutralLoss_Precursor_molecular_formula__0__does_not_contain_sufficient_atoms_to_be_used_with_neutral_loss__1_ {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListReader_ProcessNeutralLoss_Precursor_molecular_formula_" +
+                        "_0__does_not_contain_sufficient_atoms_to_be_used_with_neutral_loss__1_", resourceCulture);
             }
         }
         

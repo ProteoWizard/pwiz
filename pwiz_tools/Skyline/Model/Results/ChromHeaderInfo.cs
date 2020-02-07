@@ -1992,7 +1992,13 @@ namespace pwiz.Skyline.Model.Results
                 }
                 else if (id.StartsWith(MsDataFileImpl.PREFIX_PRECURSOR))
                 {
-                    precursor = double.Parse(id.Substring(MsDataFileImpl.PREFIX_TOTAL.Length), CultureInfo.InvariantCulture);
+                    var str = id.Substring(MsDataFileImpl.PREFIX_PRECURSOR.Length);
+                    if (str.StartsWith(@"Q1="))
+                    {
+                        // Agilent format e.g. "SIM SIC Q1=215.15 start=5.087066667 end=14.497416667"
+                        str = str.Substring(3).Split(' ')[0];
+                    }
+                    precursor = double.Parse(str, CultureInfo.InvariantCulture);
                     product = precursor;
                 }
                 else if (id.StartsWith(MsDataFileImpl.PREFIX_SINGLE))

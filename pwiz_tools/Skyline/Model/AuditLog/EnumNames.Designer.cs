@@ -475,6 +475,33 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Linear.
+        /// </summary>
+        public static string IrtRegressionType_linear {
+            get {
+                return ResourceManager.GetString("IrtRegressionType_linear", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Logarithmic.
+        /// </summary>
+        public static string IrtRegressionType_logarithmic {
+            get {
+                return ResourceManager.GetString("IrtRegressionType_logarithmic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lowess.
+        /// </summary>
+        public static string IrtRegressionType_lowess {
+            get {
+                return ResourceManager.GetString("IrtRegressionType_lowess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Fixed.
         /// </summary>
         public static string IsolationWidthType_fixed_width {

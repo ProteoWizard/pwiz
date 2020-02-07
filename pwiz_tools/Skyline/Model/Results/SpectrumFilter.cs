@@ -677,9 +677,10 @@ namespace pwiz.Skyline.Model.Results
 
         private static bool IsSimIsolation(IsolationWindowFilter isoWin)
         {
+            // Consider: Introduce a variable cut-off in the document settings
+            const int SIM_ISOLATION_CUTOFF = 500;
             return isoWin.IsolationMz.HasValue && isoWin.IsolationWidth.HasValue &&
-                // TODO: Introduce a variable cut-off in the document settings
-                isoWin.IsolationWidth.Value <= 200;
+                   isoWin.IsolationWidth.Value <= SIM_ISOLATION_CUTOFF;
         }
 
         public bool IsMsMsSpectrum(MsDataSpectrum dataSpectrum)

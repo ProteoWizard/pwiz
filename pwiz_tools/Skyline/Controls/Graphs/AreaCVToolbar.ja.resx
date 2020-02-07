@@ -129,7 +129,7 @@
     <value>43, 28</value>
   </data>
   <data name="toolStripLabel1.Text" xml:space="preserve">
-    <value>グループ</value>
+    <value>グループ化：</value>
   </data>
   <data name="toolStripComboGroup.Size" type="System.Drawing.Size, System.Drawing">
     <value>82, 23</value>

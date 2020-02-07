@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
@@ -825,6 +826,32 @@ namespace pwiz.Skyline.Util
             return !IsDirectory(path);
         }
 
+        public static bool AreIdenticalFiles(string pathA, string pathB)
+        {
+            var infoA = new FileInfo(pathA);
+            var infoB = new FileInfo(pathB);
+            if (infoA.Length != infoB.Length)
+                return false;
+            // Credit from here to https://stackoverflow.com/questions/968935/compare-binary-files-in-c-sharp
+            using (var s1 = new FileStream(pathA, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var s2 = new FileStream(pathB, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var b1 = new BinaryReader(s1))
+            using (var b2 = new BinaryReader(s2))
+            {
+                while (true)
+                {
+                    var data1 = b1.ReadBytes(64 * 1024);
+                    var data2 = b2.ReadBytes(64 * 1024);
+                    if (data1.Length != data2.Length)
+                        return false;
+                    if (data1.Length == 0)
+                        return true;
+                    if (!data1.SequenceEqual(data2))
+                        return false;
+                }
+            }
+        }
+
         public static void SafeDelete(string path, bool ignoreExceptions = false)
         {
             if (ignoreExceptions)
@@ -1012,7 +1039,7 @@ namespace pwiz.Skyline.Util
         {
             _progressMonitor = progressMonitor;
             _status = new ProgressStatus(Path.GetFileName(path));
-            _totalChars = new FileInfo(path).Length;
+            _totalChars = new FileInfo(PathEx.SafePath(path)).Length;
         }
 
         public HashingStream Stream

@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
 
     try
     {
-        pwiz::util::testReader(pwiz::msdata::Reader_ABI_T2D(), testArgs, testAcceptOnly, Is_T2D_Directory());
+        pwiz::util::testReader(pwiz::msdata::Reader_ABI_T2D(), testArgs, testAcceptOnly, Is_T2D_Directory()).check();
     }
     catch (exception& e)
     {

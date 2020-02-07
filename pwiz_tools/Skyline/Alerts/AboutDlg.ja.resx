@@ -151,7 +151,7 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>434, 305</value>
+    <value>540, 305</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -208,13 +208,13 @@
     <value>162, 12</value>
   </data>
   <data name="labelSoftwareVersion.Size" type="System.Drawing.Size, System.Drawing">
-    <value>66, 20</value>
+    <value>461, 20</value>
   </data>
   <data name="labelSoftwareVersion.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
   <data name="labelSoftwareVersion.Text" xml:space="preserve">
-    <value>Skyline</value>
+    <value>Skyline (64ビット: 開発者ビルド) 19.0.0.000 (abc123456)</value>
   </data>
   <data name="&gt;&gt;labelSoftwareVersion.Name" xml:space="preserve">
     <value>labelSoftwareVersion</value>
@@ -241,7 +241,7 @@
     <value>Vertical</value>
   </data>
   <data name="textBox1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>346, 112</value>
+    <value>452, 112</value>
   </data>
   <data name="textBox1.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -404,7 +404,7 @@ http://www.zlib.net</value>
     <value>14, 315</value>
   </data>
   <data name="linkProteoWizard.Size" type="System.Drawing.Size, System.Drawing">
-    <value>144, 13</value>
+    <value>128, 13</value>
   </data>
   <data name="linkProteoWizard.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
@@ -467,7 +467,7 @@ http://www.zlib.net</value>
     <value>10</value>
   </data>
   <data name="linkLabel1.Text" xml:space="preserve">
-    <value>Copyright © 2008-2019 University of Washington, 禁無断転載。
+    <value>Copyright © 2008-2020 University of Washington, 禁無断転載。
 
 MacCoss Lab, Department of Genome Sciences, UW
 
@@ -494,7 +494,7 @@ Skylineウェブサイトをご覧ください。</value>
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>521, 344</value>
+    <value>627, 344</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

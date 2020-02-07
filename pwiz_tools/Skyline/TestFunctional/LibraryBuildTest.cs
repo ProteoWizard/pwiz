@@ -542,11 +542,8 @@ namespace pwiz.SkylineTestFunctional
             if (expectedAmbiguous > 0)
             {
                 var ambiguousDlg = WaitForOpenForm<MessageDlg>();
-                RunUI(() =>
-                {
-                    Assert.AreEqual(expectedAmbiguous, ambiguousDlg.Message.Split('\n').Length - 1, ambiguousDlg.Message);
-                    ambiguousDlg.OkDialog();
-                });
+                RunUI(() => Assert.AreEqual(expectedAmbiguous, ambiguousDlg.Message.Split('\n').Length - 1, ambiguousDlg.Message));
+                OkDialog(ambiguousDlg, ambiguousDlg.OkDialog);
             }
 
             TryWaitForConditionUI(() => PeptideSettingsUI.AvailableLibraries.Contains(_libraryName));
