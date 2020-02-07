@@ -151,7 +151,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         echo Building Skyline Test Data in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestData /nologo /verbosity:minimal
         echo Testing subset of Skyline's leak checking (pass1) in $(CONFIGURATION:L) configuration...
-        $(OUTPUT_PATH)/TestRunner.exe pass1=on pass2=off test=TestInstrumentInfo,TestQcTraces,TestTicChromatogram $(.teamcity-test-decoration)
+        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 pass1=on pass2=off test=TestInstrumentInfo,TestQcTraces,TestTicChromatogram $(.teamcity-test-decoration)
         set status=%ERRORLEVEL%
         exit %status%
     }
