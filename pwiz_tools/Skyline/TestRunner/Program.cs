@@ -76,7 +76,8 @@ namespace TestRunner
         // These tests get extra runs to meet the leak thresholds
         private static Dictionary<string, ExpandedLeakCheck> LeakCheckIterationsOverrideByTestName = new Dictionary<string, ExpandedLeakCheck>
         {
-            {"TestGroupedStudiesTutorial", new ExpandedLeakCheck(LeakCheckIterations * 4, true)}
+            {"TestGroupedStudiesTutorial", new ExpandedLeakCheck(LeakCheckIterations * 4, true)},
+            {"TestInstrumentInfo", new ExpandedLeakCheck(LeakCheckIterations * 2, true)}
         };
 
         // These tests are allowed to fail the total memory leak threshold, and extra iterations are not done to stabilize a spiky total memory distribution
@@ -670,7 +671,8 @@ namespace TestRunner
                         if (!GetLeakCheckReportEarly(test))
                         {
                             leakMessage = minDeltas.Value.GetLeakMessage(LeakThresholds, test.TestMethod.Name);
-                            runTests.Log(leakMessage);
+                            if (leakMessage != null)
+                                runTests.Log(leakMessage);
                         }
 
                         if (leakMessage != null)
