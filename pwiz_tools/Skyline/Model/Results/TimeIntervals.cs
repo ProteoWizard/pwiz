@@ -47,16 +47,12 @@ namespace pwiz.Skyline.Model.Results
 
         public int? IndexOfIntervalContaining(float time)
         {
-            int index = CollectionUtil.BinarySearch(Ends, time);
-            if (index < 0)
-            {
-                index = ~index;
-            }
-
+            int index = IndexOfIntervalEndingAfter(time);
             if (index < 0 || index >= Ends.Count)
             {
                 return null;
             }
+
             Assume.IsTrue(Ends[index] >= time);
             if (Starts[index] <= time)
             {
@@ -64,6 +60,17 @@ namespace pwiz.Skyline.Model.Results
             }
 
             return null;
+        }
+
+        public int IndexOfIntervalEndingAfter(float time)
+        {
+            int index = CollectionUtil.BinarySearch(Ends, time);
+            if (index < 0)
+            {
+                index = ~index;
+            }
+
+            return index;
         }
 
         public bool ContainsTime(float time)

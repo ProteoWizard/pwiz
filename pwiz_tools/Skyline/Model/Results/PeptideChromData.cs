@@ -150,15 +150,25 @@ namespace pwiz.Skyline.Model.Results
 
         public void PickChromatogramPeaks()
         {
+            TriggeredAcquisition triggeredAcquisition = null;
+            TimeIntervals intersectedTimeIntervals = null;
             if (_document.Settings.TransitionSettings.Instrument.TriggeredAcquisition && NodePep != null)
             {
-                var triggeredAcquisition = new TriggeredAcquisition();
+                triggeredAcquisition = new TriggeredAcquisition();
                 foreach (var chromDataSet in _dataSets)
                 {
                     var timeIntervals = triggeredAcquisition.InferTimeIntervals(
                         chromDataSet.Chromatograms.Where(chrom => null != chrom.DocNode)
                             .Select(chrom => chrom.RawTimes));
                     chromDataSet.TimeIntervals = timeIntervals;
+                    if (intersectedTimeIntervals == null)
+                    {
+                        intersectedTimeIntervals = timeIntervals;
+                    }
+                    else
+                    {
+                        intersectedTimeIntervals = intersectedTimeIntervals.Intersect(timeIntervals);
+                    }
                 }
             }
             // Make sure times are evenly spaced before doing any peak detection.
@@ -184,7 +194,7 @@ namespace pwiz.Skyline.Model.Results
 
             // Adjust peak dimensions based on peak picking
             foreach (var chromDataSet in _dataSets)
-                chromDataSet.GeneratePeakData();
+                chromDataSet.GeneratePeakData(intersectedTimeIntervals);
 
             var detailedCalcs = DetailedPeakFeatureCalculators.Select(calc => (IPeakFeatureCalculator)calc).ToList();
             for (int i = 0; i < _listListPeakSets.Count; i++)

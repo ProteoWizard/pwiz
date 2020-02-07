@@ -377,7 +377,9 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public ChromData Data { get; private set; }
-        public ChromPeak DataPeak {get { return _chromPeak; }}
+        public ChromPeak DataPeak {get { return _chromPeak; }
+            set { _chromPeak = value; }
+        }
         public IFoundPeak Peak { get { return _crawPeak; } }
 
         public TransitionDocNode NodeTran { get { return Data.DocNode; } }
@@ -394,10 +396,20 @@ namespace pwiz.Skyline.Model.Results
                     Data.Times[Peak.StartIndex], Data.Times[Peak.EndIndex], Data.Times[Peak.TimeIndex]);
         }
 
-        public ChromPeak CalcChromPeak(IFoundPeak peakMax, ChromPeak.FlagValues flags)
+        public ChromPeak CalcChromPeak(IFoundPeak peakMax, ChromPeak.FlagValues flags, TimeIntervals timeIntervals)
         {
             _chromPeak = Data.CalcChromPeak(peakMax, flags, out _crawPeak);
             return _chromPeak;
+        }
+
+        public void SetChromPeak(ChromPeak chromPeak)
+        {
+            _chromPeak = chromPeak;
+        }
+
+        public void ChangeChromPeak(ChromPeak chromPeak)
+        {
+            _chromPeak = chromPeak;
         }
 
         public bool IsIdentifiedTime(double[] retentionTimes)
