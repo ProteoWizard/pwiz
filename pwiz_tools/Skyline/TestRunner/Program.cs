@@ -61,38 +61,24 @@ namespace TestRunner
         private const int LeakCheckIterations = 24; // Maximum number of runs to try to achieve below thresholds for trailing deltas
         private static bool IsFixedLeakIterations { get { return false; } } // CONSIDER: It would be nice to make this true to reduce test run count variance
 
-        struct ExpandedLeakCheck
+        // These tests get twice as many runs to meet the leak thresholds when using fixed iterations
+        private static string[] LeakExceptionTests =
         {
-            public ExpandedLeakCheck(int iterations = LeakCheckIterations * 2, bool reportLeakEarly = false)
-            {
-                Iterations = iterations;
-                ReportLeakEarly = reportLeakEarly;
-            }
-
-            public int Iterations { get; set; }
-            public bool ReportLeakEarly { get; set; }
-        }
-
-        // These tests get extra runs to meet the leak thresholds
-        private static Dictionary<string, ExpandedLeakCheck> LeakCheckIterationsOverrideByTestName = new Dictionary<string, ExpandedLeakCheck>
-        {
-            {"TestGroupedStudiesTutorial", new ExpandedLeakCheck(LeakCheckIterations * 4, true)}
+            "TestAbsoluteQuantificationTutorial",
+            "TestCEOptimizationTutorial",
+            "TestMethodRefinementTutorial",
+            "TestTargetedMSMSTutorial",
+            "TestMs1Tutorial"
         };
 
         // These tests are allowed to fail the total memory leak threshold, and extra iterations are not done to stabilize a spiky total memory distribution
-        public static string[] MutedTotalMemoryLeakTestNames = { "TestMs1Tutorial", "TestGroupedStudiesTutorial" };
+        public static string[] MutedTotalMemoryLeakTestNames = { "TestMs1Tutorial", "TestGroupStudiesTutorial" };
 
         private static int GetLeakCheckIterations(TestInfo test)
         {
-            return LeakCheckIterationsOverrideByTestName.ContainsKey(test.TestMethod.Name)
-                ? LeakCheckIterationsOverrideByTestName[test.TestMethod.Name].Iterations
+            return IsFixedLeakIterations && LeakExceptionTests.Contains(test.TestMethod.Name)
+                ? LeakCheckIterations * 2
                 : LeakCheckIterations;
-        }
-
-        private static bool GetLeakCheckReportEarly(TestInfo test)
-        {
-            return LeakCheckIterationsOverrideByTestName.ContainsKey(test.TestMethod.Name) &&
-                   LeakCheckIterationsOverrideByTestName[test.TestMethod.Name].ReportLeakEarly;
         }
 
 
@@ -615,9 +601,7 @@ namespace TestRunner
                         var listValues = new List<LeakTracking>();
                         LeakTracking? minDeltas = null;
                         int? passedIndex = null;
-                        int iterationCount = 0;
-                        string leakMessage = null;
-                        for (int i = 0; i < GetLeakCheckIterations(test); i++, iterationCount++)
+                        for (int i = 0; i < GetLeakCheckIterations(test); i++)
                         {
                             // Run the test in the next language.
                             runTests.Language =
@@ -645,16 +629,6 @@ namespace TestRunner
                                     break;
                             }
 
-                            // Report leak message at LeakCheckIterations, not the expanded count from GetLeakCheckIterations(test)
-                            if (iterationCount + 1 == Math.Min(GetLeakCheckIterations(test), LeakCheckIterations))
-                            {
-                                if (GetLeakCheckReportEarly(test))
-                                {
-                                    leakMessage = minDeltas.Value.GetLeakMessage(LeakThresholds, test.TestMethod.Name);
-                                    runTests.Log(leakMessage);
-                                }
-                            }
-
                             // Remove the oldest point unless this is the last iteration
                             // So that the report below will be based on the set that just
                             // failed the leak check
@@ -667,15 +641,14 @@ namespace TestRunner
                         if (failed)
                             continue;
 
-                        if (!GetLeakCheckReportEarly(test))
-                        {
-                            leakMessage = minDeltas.Value.GetLeakMessage(LeakThresholds, test.TestMethod.Name);
-                            runTests.Log(leakMessage);
-                        }
-
+                        string leakMessage = minDeltas.Value.GetLeakMessage(LeakThresholds, test.TestMethod.Name);
+                        int iterationCount = passedIndex + 1 ?? LeakCheckIterations;
                         if (leakMessage != null)
+                        {
+                            runTests.Log(leakMessage);
                             removeList.Add(test);
-                        runTests.Log(minDeltas.Value.GetLogMessage(test.TestMethod.Name, iterationCount + 1));
+                        }
+                        runTests.Log(minDeltas.Value.GetLogMessage(test.TestMethod.Name, iterationCount));
 
                         maxDeltas = maxDeltas.Max(minDeltas.Value);
                         maxIterationCount = Math.Max(maxIterationCount, iterationCount);
