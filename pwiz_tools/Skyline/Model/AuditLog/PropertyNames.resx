@@ -231,6 +231,9 @@
   <data name="TransitionInstrument_IsDynamicMin" xml:space="preserve">
     <value>Dynamic min product m/z</value>
   </data>
+  <data name="TransitionInstrument_TriggeredAcquisition" xml:space="preserve">
+    <value>Triggered Acquisition</value>
+  </data>
   <data name="MeasuredIon_IsFragment" xml:space="preserve">
     <value>Intense fragment</value>
   </data>

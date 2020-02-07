@@ -3823,6 +3823,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Triggered Acquisition.
+        /// </summary>
+        public static string TransitionInstrument_TriggeredAcquisition {
+            get {
+                return ResourceManager.GetString("TransitionInstrument_TriggeredAcquisition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Product ions.
         /// </summary>
         public static string TransitionLibraries_IonCount {
