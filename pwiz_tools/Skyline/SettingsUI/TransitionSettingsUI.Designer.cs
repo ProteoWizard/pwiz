@@ -95,6 +95,7 @@
             this.cbLibraryPick = new System.Windows.Forms.CheckBox();
             this.label13 = new System.Windows.Forms.Label();
             this.tabInstrument = new System.Windows.Forms.TabPage();
+            this.cbxTriggeredAcquisition = new System.Windows.Forms.CheckBox();
             this.textMaxInclusions = new System.Windows.Forms.TextBox();
             this.label21 = new System.Windows.Forms.Label();
             this.label30 = new System.Windows.Forms.Label();
@@ -119,7 +120,6 @@
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.contextMenuStripPrecursorAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.contextMenuStripFragmentAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.cbxTriggeredAcquisition = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabGeneral.SuspendLayout();
@@ -636,6 +636,13 @@
             this.tabInstrument.Name = "tabInstrument";
             this.tabInstrument.UseVisualStyleBackColor = true;
             // 
+            // cbxTriggeredAcquisition
+            // 
+            resources.ApplyResources(this.cbxTriggeredAcquisition, "cbxTriggeredAcquisition");
+            this.cbxTriggeredAcquisition.Name = "cbxTriggeredAcquisition";
+            this.helpTip.SetToolTip(this.cbxTriggeredAcquisition, resources.GetString("cbxTriggeredAcquisition.ToolTip"));
+            this.cbxTriggeredAcquisition.UseVisualStyleBackColor = true;
+            // 
             // textMaxInclusions
             // 
             resources.ApplyResources(this.textMaxInclusions, "textMaxInclusions");
@@ -766,12 +773,6 @@
             // 
             this.contextMenuStripFragmentAdduct.Name = "contextMenuStripFragmentAdduct";
             resources.ApplyResources(this.contextMenuStripFragmentAdduct, "contextMenuStripFragmentAdduct");
-            // 
-            // cbxTriggeredAcquisition
-            // 
-            resources.ApplyResources(this.cbxTriggeredAcquisition, "cbxTriggeredAcquisition");
-            this.cbxTriggeredAcquisition.Name = "cbxTriggeredAcquisition";
-            this.cbxTriggeredAcquisition.UseVisualStyleBackColor = true;
             // 
             // TransitionSettingsUI
             // 

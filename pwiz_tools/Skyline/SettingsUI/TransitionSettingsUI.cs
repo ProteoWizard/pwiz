@@ -1249,5 +1249,10 @@ namespace pwiz.Skyline.SettingsUI
                 textSmallMoleculeIonTypes.Text = TransitionFilter.ToStringSmallMoleculeIonTypes(smallMolIons, true);
         }
 
+        public bool TriggeredAcquisition
+        {
+            get { return cbxTriggeredAcquisition.Checked; }
+            set { cbxTriggeredAcquisition.Checked = value; }
+        }
     }
 }
