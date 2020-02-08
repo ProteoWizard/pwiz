@@ -1141,7 +1141,7 @@ namespace pwiz.Skyline.Model.Results
             _endTime = endTime;
             _height = (float) apexHeight;
             _backgroundArea = 0;
-            _pointsAcross = (short)Math.Min(pointsAcrossThePeak, ushort.MaxValue); ;
+            _pointsAcross = (short)Math.Min(pointsAcrossThePeak, ushort.MaxValue);
             _retentionTime = (float) apexTime;
             _flagBits = 0;
             // TODO
@@ -2730,7 +2730,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 times = TimeIntensities.Times.Select(time => (double) time).ToArray();
                 intensities = TimeIntensities.Intensities.Select(intensity => (double) intensity).ToArray();
-                var timeIntervals = (GroupInfo?.TimeIntensitiesGroup as RawTimeIntensities)?.TimeIntervals;
+                var timeIntervals = TimeIntervals;
                 if (timeIntervals != null)
                 {
                     for (int i = 0; i < times.Length; i++)
@@ -2742,6 +2742,16 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// If this chromatogram came from a triggered acquisition then TimeIntervals represents the time
+        /// over which data actually was collected.
+        /// The TimeIntervals will be null if this chromatogram was not from a triggered acquisition.
+        /// </summary>
+        public TimeIntervals TimeIntervals
+        {
+            get { return (GroupInfo?.TimeIntensitiesGroup as RawTimeIntensities)?.TimeIntervals; }
         }
 
         public double MaxIntensity
