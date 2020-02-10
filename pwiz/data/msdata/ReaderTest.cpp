@@ -263,7 +263,7 @@ void testIdentifyFileFormat()
         set<string> readerTypeSet(readerTypes.begin(), readerTypes.end());
         set<string> expectedTypeSet{ "mzML", "mzXML", "MS1", "MS2", "Mascot Generic", "Bruker Data Exchange", "MZ5",
                                      "Sciex WIFF/WIFF2", "AB/Sciex T2D", "Agilent MassHunter", "Bruker FID", "Bruker YEP", "Bruker BAF", "Bruker U2", "Bruker TDF",
-                                     "Shimadzu LCD", "Thermo RAW", "UIMF", "Waters RAW", "Waters UNIFI" };
+                                     "Shimadzu LCD", "Thermo RAW", "UIMF", "Waters RAW", "Waters UNIFI", "mzMLb" };
         auto expectedButNotFound = expectedTypeSet - readerTypeSet;
         auto foundButNotExpected = readerTypeSet - expectedTypeSet;
         unit_assert_operator_equal(set<string>(), expectedButNotFound);
@@ -278,7 +278,7 @@ void testIdentifyFileFormat()
         set<CVID> expectedCvTypeSet{ MS_mzML_format, MS_ISB_mzXML_format, MS_MS1_format, MS_MS2_format, MS_Mascot_MGF_format, MS_Bruker_XML_format, MS_mz5_format,
                                      MS_ABI_WIFF_format, MS_SCIEX_TOF_TOF_T2D_format, MS_Agilent_MassHunter_format,
                                      MS_Bruker_FID_format, MS_Bruker_Agilent_YEP_format, MS_Bruker_BAF_format, MS_Bruker_U2_format, MS_Bruker_TDF_format,
-                                     MS_mass_spectrometer_file_format, MS_Thermo_RAW_format, MS_UIMF_format, MS_Waters_raw_format };
+                                     MS_mass_spectrometer_file_format, MS_Thermo_RAW_format, MS_UIMF_format, MS_Waters_raw_format, MS_mzMLb_format};
         auto expectedButNotFound = expectedCvTypeSet - readerCvTypeSet;
         auto foundButNotExpected = readerCvTypeSet - expectedCvTypeSet;
         unit_assert_operator_equal(set<CVID>(), expectedButNotFound);
