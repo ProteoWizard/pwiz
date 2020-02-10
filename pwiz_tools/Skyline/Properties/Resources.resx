@@ -10961,4 +10961,10 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="DisplayEquation_N_A" xml:space="preserve">
     <value>N/A</value>
   </data>
+  <data name="IIrtRegression_DisplayEquation_iRT" xml:space="preserve">
+    <value>iRT</value>
+  </data>
+  <data name="IIrtRegression_DisplayEquation_Measured_RT" xml:space="preserve">
+    <value>Measured RT</value>
+  </data>
 </root>

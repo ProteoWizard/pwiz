@@ -13928,6 +13928,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to iRT.
+        /// </summary>
+        public static string IIrtRegression_DisplayEquation_iRT {
+            get {
+                return ResourceManager.GetString("IIrtRegression_DisplayEquation_iRT", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Measured RT.
+        /// </summary>
+        public static string IIrtRegression_DisplayEquation_Measured_RT {
+            get {
+                return ResourceManager.GetString("IIrtRegression_DisplayEquation_Measured_RT", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The document must be saved before results may be imported..
         /// </summary>
         public static string ImportDocResultsDlg_OkDialog_The_document_must_be_saved_before_results_may_be_imported {
