@@ -61,8 +61,7 @@ namespace pwiz.SkylineTestTutorial
             // IsPauseForScreenShots = true;
 
             ForceMzml = true; // Prefer mzML as being the more efficient download
-
-            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculesMethodDevAndCEOptimization.pdf";
+            LinkPdf = "https://skyline.ms/labkey/_webdav/home/software/Skyline/%40files/tutorials/Skyline%20Small%20Molecule%20Method%20Dev%20and%20CE%20Opt.pdf";
 
             TestFilesZipPaths = new[]
             {
@@ -476,6 +475,7 @@ namespace pwiz.SkylineTestTutorial
                         importResultsDlg1.OptimizationName = ExportOptimize.CE;
                         importResultsDlg1.ReplicateName = "CE Optimization";
                     });
+                    PauseForScreenShot<ImportResultsDlg>("Setting new replicate name to CE Optimization", 30);
                     var openDataSourceDialog1 = ShowDialog<OpenDataSourceDialog>(() => importResultsDlg1.OkDialog());
                     RunUI(() =>
                     {
@@ -484,7 +484,7 @@ namespace pwiz.SkylineTestTutorial
                     });
                     PauseForScreenShot<ImportResultsSamplesDlg>("Import Results Files form", 20);
                     OkDialog(openDataSourceDialog1, openDataSourceDialog1.Open);
-
+                    PauseForScreenShot<SkylineWindow>("Skyline shows new replicate \"CE Optimization\"", 32);
                     RunUI(() =>
                     {
                         SkylineWindow.ShowSingleTransition();
