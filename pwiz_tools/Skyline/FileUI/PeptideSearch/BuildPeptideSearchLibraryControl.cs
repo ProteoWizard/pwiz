@@ -420,6 +420,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     string libraryName =
                         Helpers.GetUniqueName(Path.GetFileNameWithoutExtension(libraryPath), existingNames);
                     docLibSpec = LibrarySpec.CreateFromPath(libraryName, libraryPath);
+                    if (docLibSpec == null)
+                    {
+                        MessageDlg.Show(WizardForm, string.Format(Resources.EditLibraryDlg_OkDialog_The_file__0__is_not_a_supported_spectral_library_file_format, libraryPath));
+                        return false;
+                    }
                     Settings.Default.SpectralLibraryList.SetValue(docLibSpec);
                 }
             }
