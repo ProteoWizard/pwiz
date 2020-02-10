@@ -133,28 +133,17 @@ namespace pwiz.Skyline.Model.Irt
                 minHydro = Math.Min(minHydro, hydroScore);
                 maxHydro = Math.Max(maxHydro, hydroScore);
             }
-            var sortedX = regression.XValues.OrderBy(x => x).ToArray();
-            var addMin = minHydro < sortedX[0];
-            var addMax = maxHydro > sortedX[sortedX.Length - 1];
-            var points = sortedX.Length + (addMax ? 1 : 0) + (addMin ? 1 : 0);
-            hydroScores = new double[points];
-            predictions = new double[points];
-            var offset = 0;
-            if (addMin)
+            var sortedX = regression.XValues.OrderBy(x => x).ToList();
+            if (minHydro < sortedX[0])
+                sortedX.Insert(0, minHydro);
+            if (maxHydro > sortedX[sortedX.Count - 1])
+                sortedX.Append(maxHydro);
+            hydroScores = new double[sortedX.Count];
+            predictions = new double[sortedX.Count];
+            for (var i = 0; i < sortedX.Count; i++)
             {
-                hydroScores[0] = minHydro;
-                predictions[0] = regression.GetY(minHydro);
-                offset = 1;
-            }
-            if (addMax)
-            {
-                hydroScores[hydroScores.Length - 1] = maxHydro;
-                predictions[predictions.Length - 1] = regression.GetY(maxHydro);
-            }
-            for (var i = 0; i < sortedX.Length; i++)
-            {
-                hydroScores[offset + i] = sortedX[i];
-                predictions[offset + i] = regression.GetY(sortedX[i]);
+                hydroScores[i] = sortedX[i];
+                predictions[i] = regression.GetY(sortedX[i]);
             }
         }
     }
