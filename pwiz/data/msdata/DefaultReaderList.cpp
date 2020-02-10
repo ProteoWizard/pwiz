@@ -44,7 +44,6 @@
 #ifndef WITHOUT_MZMLB
 #include "mzmlb/Connection_mzMLb.hpp"
 #endif
-
 #ifndef WITHOUT_MZ5
 #include "mz5/Connection_mz5.hpp"
 #endif
@@ -487,7 +486,6 @@ PWIZ_API_DECL void Reader_mz5::read(const std::string& filename,
     results.push_back(MSDataPtr(new MSData));
     read(filename, head, *results.back());
 }
-
 
 //
 // Reader_mzMLb

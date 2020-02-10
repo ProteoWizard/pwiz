@@ -269,7 +269,8 @@ class HandlerIndexCreator : public SAXParser::Handler
       spectrumIndex_(spectrumIndex),
       chromatogramCount_(chromatogramCount),
       chromatogramIndex_(chromatogramIndex),
-      legacyIdRefToNativeId(&legacyIdRefToNativeId)
+      legacyIdRefToNativeId(&legacyIdRefToNativeId),
+      ignore_(spectrumCount_ > 0)
     {
         version = schemaVersion_;
     }
@@ -343,6 +344,7 @@ class HandlerIndexCreator : public SAXParser::Handler
     size_t& chromatogramCount_;
     vector<ChromatogramIdentity>& chromatogramIndex_;
     map<string, string>* legacyIdRefToNativeId;
+    bool ignore_;
 };
 
 } // namespace

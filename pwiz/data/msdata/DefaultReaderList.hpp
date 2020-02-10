@@ -133,6 +133,8 @@ class PWIZ_API_DECL Reader_mzMLb : public Reader
 	virtual void read(const std::string& filename, const std::string& head, MSData& result, int runIndex = 0, const Config& config = Config()) const;
 	virtual void read(const std::string& filename, const std::string& head, std::vector<MSDataPtr>& results, const Config& config = Config()) const;
 	virtual const char* getType() const {return "mzMLb";}
+    virtual CVID getCvType() const {return MS_mzMLb_format;}
+    virtual std::vector<std::string> getFileExtensions() const {return {".mzMlb"};}
 };
 
 
