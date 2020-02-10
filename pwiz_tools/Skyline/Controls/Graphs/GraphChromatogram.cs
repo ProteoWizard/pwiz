@@ -1589,33 +1589,36 @@ namespace pwiz.Skyline.Controls.Graphs
                 lineItem.Line.Fill = new Fill(Color.FromArgb(fillAlpha, lineItem.Color));
             }
 
-            // Add peak background shading
-            float min = Math.Min(peakIntensities.First(), peakIntensities.Last());
-            info = new ChromatogramInfo(peakTimesArray,
-                peakIntensities.Select(intensity => Math.Min(intensity, min)).ToArray());
-            var backgroundShadeItem = new ChromGraphItem(null,
-                null,
-                info,
-                null,
-                timeRegressionFunction,
-                new bool[info.NumPeaks],
-                dotProducts,
-                bestProduct,
-                isFullScanMs,
-                false,
-                null,
-                step,
-                Color.DarkGray,
-                fontSize,
-                2,
-                fullScanInfo);
-            var backgroundShadeCurveItem = _graphHelper.AddChromatogram(graphPaneKey, backgroundShadeItem);
-            backgroundShadeCurveItem.Label.IsVisible = false;
-            var lineItem2 = backgroundShadeCurveItem as LineItem;
-            if (lineItem2 != null)
+            if (null == info.TimeIntervals)
             {
-                const int fillAlpha = 70;
-                lineItem2.Line.Fill = new Fill(Color.FromArgb(fillAlpha, Color.Black));
+                // Add peak background shading
+                float min = Math.Min(peakIntensities.First(), peakIntensities.Last());
+                info = new ChromatogramInfo(peakTimesArray,
+                    peakIntensities.Select(intensity => Math.Min(intensity, min)).ToArray());
+                var backgroundShadeItem = new ChromGraphItem(null,
+                    null,
+                    info,
+                    null,
+                    timeRegressionFunction,
+                    new bool[info.NumPeaks],
+                    dotProducts,
+                    bestProduct,
+                    isFullScanMs,
+                    false,
+                    null,
+                    step,
+                    Color.DarkGray,
+                    fontSize,
+                    2,
+                    fullScanInfo);
+                var backgroundShadeCurveItem = _graphHelper.AddChromatogram(graphPaneKey, backgroundShadeItem);
+                backgroundShadeCurveItem.Label.IsVisible = false;
+                var lineItem2 = backgroundShadeCurveItem as LineItem;
+                if (lineItem2 != null)
+                {
+                    const int fillAlpha = 70;
+                    lineItem2.Line.Fill = new Fill(Color.FromArgb(fillAlpha, Color.Black));
+                }
             }
         }
 
