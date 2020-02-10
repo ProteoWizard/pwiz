@@ -138,13 +138,8 @@ namespace pwiz.Skyline.Model.Irt
                 sortedX.Insert(0, minHydro);
             if (maxHydro > sortedX[sortedX.Count - 1])
                 sortedX.Append(maxHydro);
-            hydroScores = new double[sortedX.Count];
-            predictions = new double[sortedX.Count];
-            for (var i = 0; i < sortedX.Count; i++)
-            {
-                hydroScores[i] = sortedX[i];
-                predictions[i] = regression.GetY(sortedX[i]);
-            }
+            hydroScores = sortedX.ToArray();
+            predictions = sortedX.Select(regression.GetY).ToArray();
         }
     }
 
