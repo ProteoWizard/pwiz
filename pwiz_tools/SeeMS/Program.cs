@@ -29,6 +29,7 @@ using System.IO;
 using System.IO.Pipes;
 using System.ComponentModel;
 using System.Security.Permissions;
+using System.Runtime.InteropServices;
 //using EDAL;
 //using BDal.CxT.Lc;
 
@@ -36,10 +37,11 @@ namespace seems
 {
 	static class Program
 	{
-		static seemsForm MainForm;
+	    [DllImport("kernel32.dll")]
+	    static extern bool AttachConsole(int dwProcessId);
+	    private const int ATTACH_PARENT_PROCESS = -1;
 
-	    public const bool SimAsSpectra = false; // Read SIM scans as spectra.
-	    public const bool SrmAsSpectra = false; // Read SRM scans as spectra.
+        static seemsForm MainForm;
 
 		/// <summary>
 		/// The main entry point for the application.
@@ -48,6 +50,10 @@ namespace seems
 		[SecurityPermission(SecurityAction.Demand, Flags = SecurityPermissionFlag.ControlAppDomain)]
 		public static void Main( string[] args )
 		{
+		    // redirect console output to parent process;
+		    // must be before any calls to Console.WriteLine()
+		    AttachConsole(ATTACH_PARENT_PROCESS);
+
             /*MSAnalysisClass a = new MSAnalysisClass();
             a.Open( @"C:\test\100 fmol BSA\0_B4\1\1SRef" );
             MSSpectrumCollection c = a.MSSpectrumCollection;
@@ -65,8 +71,8 @@ namespace seems
             foreach( ISpectrumSourceDeclaration ssd in ssdList )
                 scList.Add( a.GetSpectrumCollection( ssd.SpectrumCollectionId ) );*/
 
-			// Add the event handler for handling UI thread exceptions to the event.
-			Application.ThreadException += new ThreadExceptionEventHandler( UIThread_UnhandledException );
+            // Add the event handler for handling UI thread exceptions to the event.
+            Application.ThreadException += new ThreadExceptionEventHandler( UIThread_UnhandledException );
 
 			// Set the unhandled exception mode to force all Windows Forms errors to go through
 			// our handler.

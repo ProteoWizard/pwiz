@@ -322,5 +322,29 @@ namespace seems.Properties {
                 this["TimeInMinutes"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool SimAsSpectra {
+            get {
+                return ((bool)(this["SimAsSpectra"]));
+            }
+            set {
+                this["SimAsSpectra"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool SrmAsSpectra {
+            get {
+                return ((bool)(this["SrmAsSpectra"]));
+            }
+            set {
+                this["SrmAsSpectra"] = value;
+            }
+        }
     }
 }
