@@ -84,6 +84,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="LogFileMonitor.cs" />
     <Compile Include="Nightly.cs" />
     <Compile Include="SkylineNightly.cs">
       <SubType>Form</SubType>
