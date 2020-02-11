@@ -230,6 +230,8 @@ namespace MSConvertGUI
                 }
             }
 
+            FilesToConvertInParallelUpDown.Value = Properties.Settings.Default.NumFilesToConvertInParallel;
+
             thresholdTypeComboBox.Items.AddRange(thresholdTypes.Select(o => o.Key).ToArray());
             thresholdTypeComboBox.SelectedIndex = 0;
             thresholdOrientationComboBox.SelectedIndex = 0;
@@ -1278,6 +1280,12 @@ namespace MSConvertGUI
         {
             setCfgFromGUI(MakePresetFilename());
             SelectPreset(SetDefaultsDataType == String.Empty ? "Generic Defaults" : SetDefaultsDataType + " Defaults");
+        }
+
+        private void FilesToConvertInParallelUpDown_ValueChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.NumFilesToConvertInParallel = FilesToConvertInParallelUpDown.Value;
+            Properties.Settings.Default.Save();
         }
 
         #region Drag 'n Drop reordering of rows
