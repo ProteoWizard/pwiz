@@ -95,6 +95,7 @@
             this.cbLibraryPick = new System.Windows.Forms.CheckBox();
             this.label13 = new System.Windows.Forms.Label();
             this.tabInstrument = new System.Windows.Forms.TabPage();
+            this.cbxTriggeredAcquisition = new System.Windows.Forms.CheckBox();
             this.textMaxInclusions = new System.Windows.Forms.TextBox();
             this.label21 = new System.Windows.Forms.Label();
             this.label30 = new System.Windows.Forms.Label();
@@ -610,6 +611,7 @@
             // 
             // tabInstrument
             // 
+            this.tabInstrument.Controls.Add(this.cbxTriggeredAcquisition);
             this.tabInstrument.Controls.Add(this.textMaxInclusions);
             this.tabInstrument.Controls.Add(this.label21);
             this.tabInstrument.Controls.Add(this.label30);
@@ -633,6 +635,13 @@
             resources.ApplyResources(this.tabInstrument, "tabInstrument");
             this.tabInstrument.Name = "tabInstrument";
             this.tabInstrument.UseVisualStyleBackColor = true;
+            // 
+            // cbxTriggeredAcquisition
+            // 
+            resources.ApplyResources(this.cbxTriggeredAcquisition, "cbxTriggeredAcquisition");
+            this.cbxTriggeredAcquisition.Name = "cbxTriggeredAcquisition";
+            this.helpTip.SetToolTip(this.cbxTriggeredAcquisition, resources.GetString("cbxTriggeredAcquisition.ToolTip"));
+            this.cbxTriggeredAcquisition.UseVisualStyleBackColor = true;
             // 
             // textMaxInclusions
             // 
@@ -893,5 +902,6 @@
         private System.Windows.Forms.ContextMenuStrip contextMenuStripFragmentAdduct;
         private System.Windows.Forms.Label label22;
         private System.Windows.Forms.TextBox textMinIonCount;
+        private System.Windows.Forms.CheckBox cbxTriggeredAcquisition;
     }
 }

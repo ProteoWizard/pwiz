@@ -64,6 +64,10 @@ namespace MSConvertGUI
             this.StartButton = new System.Windows.Forms.Button();
             this.FilterGB = new System.Windows.Forms.GroupBox();
             this.SubsetPanel = new System.Windows.Forms.Panel();
+            this.PolarityBox = new System.Windows.Forms.ComboBox();
+            this.PolarityLabel = new System.Windows.Forms.Label();
+            this.AnalyzerTypeBox = new System.Windows.Forms.ComboBox();
+            this.AnalyzerTypeLabel = new System.Windows.Forms.Label();
             this.MSLevelsLabel = new System.Windows.Forms.Label();
             this.ActivationTypeBox = new System.Windows.Forms.ComboBox();
             this.MSLabelSeperator = new System.Windows.Forms.Label();
@@ -191,10 +195,7 @@ namespace MSConvertGUI
             this.networkResourceComboBox = new System.Windows.Forms.ComboBox();
             this.label3 = new System.Windows.Forms.Label();
             this.presetComboBox = new System.Windows.Forms.ComboBox();
-            this.AnalyzerTypeBox = new System.Windows.Forms.ComboBox();
-            this.AnalyzerTypeLabel = new System.Windows.Forms.Label();
-            this.PolarityBox = new System.Windows.Forms.ComboBox();
-            this.PolarityLabel = new System.Windows.Forms.Label();
+            this.ScanSummingSumMs1Checkbox = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.FilterDGV)).BeginInit();
             this.FilterGB.SuspendLayout();
             this.SubsetPanel.SuspendLayout();
@@ -318,8 +319,8 @@ namespace MSConvertGUI
             // 
             this.FilterGB.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.FilterGB.Controls.Add(this.SubsetPanel);
             this.FilterGB.Controls.Add(this.ScanSummingPanel);
+            this.FilterGB.Controls.Add(this.SubsetPanel);
             this.FilterGB.Controls.Add(this.LockmassRefinerPanel);
             this.FilterGB.Controls.Add(this.DemultiplexPanel);
             this.FilterGB.Controls.Add(this.FilterBox);
@@ -376,6 +377,57 @@ namespace MSConvertGUI
             this.SubsetPanel.Size = new System.Drawing.Size(500, 145);
             this.SubsetPanel.TabIndex = 6;
             this.SubsetPanel.Visible = false;
+            // 
+            // PolarityBox
+            // 
+            this.PolarityBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.PolarityBox.FormattingEnabled = true;
+            this.PolarityBox.Items.AddRange(new object[] {
+            "Any",
+            "Negative",
+            "Positive"});
+            this.PolarityBox.Location = new System.Drawing.Point(135, 112);
+            this.PolarityBox.MaxDropDownItems = 16;
+            this.PolarityBox.Name = "PolarityBox";
+            this.PolarityBox.Size = new System.Drawing.Size(93, 21);
+            this.PolarityBox.Sorted = true;
+            this.PolarityBox.TabIndex = 32;
+            // 
+            // PolarityLabel
+            // 
+            this.PolarityLabel.AutoSize = true;
+            this.PolarityLabel.Location = new System.Drawing.Point(56, 116);
+            this.PolarityLabel.Name = "PolarityLabel";
+            this.PolarityLabel.Size = new System.Drawing.Size(71, 13);
+            this.PolarityLabel.TabIndex = 33;
+            this.PolarityLabel.Text = "Scan polarity:";
+            // 
+            // AnalyzerTypeBox
+            // 
+            this.AnalyzerTypeBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.AnalyzerTypeBox.FormattingEnabled = true;
+            this.AnalyzerTypeBox.Items.AddRange(new object[] {
+            "Any",
+            "FT",
+            "IT",
+            "orbi",
+            "quad",
+            "TOF"});
+            this.AnalyzerTypeBox.Location = new System.Drawing.Point(372, 86);
+            this.AnalyzerTypeBox.MaxDropDownItems = 16;
+            this.AnalyzerTypeBox.Name = "AnalyzerTypeBox";
+            this.AnalyzerTypeBox.Size = new System.Drawing.Size(93, 21);
+            this.AnalyzerTypeBox.Sorted = true;
+            this.AnalyzerTypeBox.TabIndex = 30;
+            // 
+            // AnalyzerTypeLabel
+            // 
+            this.AnalyzerTypeLabel.AutoSize = true;
+            this.AnalyzerTypeLabel.Location = new System.Drawing.Point(293, 90);
+            this.AnalyzerTypeLabel.Name = "AnalyzerTypeLabel";
+            this.AnalyzerTypeLabel.Size = new System.Drawing.Size(73, 13);
+            this.AnalyzerTypeLabel.TabIndex = 31;
+            this.AnalyzerTypeLabel.Text = "Analyzer type:";
             // 
             // MSLevelsLabel
             // 
@@ -646,6 +698,7 @@ namespace MSConvertGUI
             // 
             // ScanSummingPanel
             // 
+            this.ScanSummingPanel.Controls.Add(this.ScanSummingSumMs1Checkbox);
             this.ScanSummingPanel.Controls.Add(this.label7);
             this.ScanSummingPanel.Controls.Add(this.label8);
             this.ScanSummingPanel.Controls.Add(this.label9);
@@ -657,7 +710,7 @@ namespace MSConvertGUI
             this.ScanSummingPanel.Controls.Add(this.ScanSummingPrecursorToleranceTextBox);
             this.ScanSummingPanel.Location = new System.Drawing.Point(24, 47);
             this.ScanSummingPanel.Name = "ScanSummingPanel";
-            this.ScanSummingPanel.Size = new System.Drawing.Size(283, 91);
+            this.ScanSummingPanel.Size = new System.Drawing.Size(283, 112);
             this.ScanSummingPanel.TabIndex = 18;
             this.ScanSummingPanel.Visible = false;
             // 
@@ -1687,56 +1740,16 @@ namespace MSConvertGUI
             this.presetComboBox.TabIndex = 35;
             this.presetComboBox.SelectedIndexChanged += new System.EventHandler(this.presetComboBox_SelectedIndexChanged);
             // 
-            // AnalyzerTypeBox
+            // ScanSummingSumMs1Checkbox
             // 
-            this.AnalyzerTypeBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.AnalyzerTypeBox.FormattingEnabled = true;
-            this.AnalyzerTypeBox.Items.AddRange(new object[] {
-            "Any",
-            "FT",
-            "IT",
-            "orbi",
-            "quad",
-            "TOF"});
-            this.AnalyzerTypeBox.Location = new System.Drawing.Point(372, 86);
-            this.AnalyzerTypeBox.MaxDropDownItems = 16;
-            this.AnalyzerTypeBox.Name = "AnalyzerTypeBox";
-            this.AnalyzerTypeBox.Size = new System.Drawing.Size(93, 21);
-            this.AnalyzerTypeBox.Sorted = true;
-            this.AnalyzerTypeBox.TabIndex = 30;
-            // 
-            // AnalyzerTypeLabel
-            // 
-            this.AnalyzerTypeLabel.AutoSize = true;
-            this.AnalyzerTypeLabel.Location = new System.Drawing.Point(293, 90);
-            this.AnalyzerTypeLabel.Name = "AnalyzerTypeLabel";
-            this.AnalyzerTypeLabel.Size = new System.Drawing.Size(73, 13);
-            this.AnalyzerTypeLabel.TabIndex = 31;
-            this.AnalyzerTypeLabel.Text = "Analyzer type:";
-            // 
-            // PolarityBox
-            // 
-            this.PolarityBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.PolarityBox.FormattingEnabled = true;
-            this.PolarityBox.Items.AddRange(new object[] {
-            "Any",
-            "Negative",
-            "Positive"});
-            this.PolarityBox.Location = new System.Drawing.Point(135, 112);
-            this.PolarityBox.MaxDropDownItems = 16;
-            this.PolarityBox.Name = "PolarityBox";
-            this.PolarityBox.Size = new System.Drawing.Size(93, 21);
-            this.PolarityBox.Sorted = true;
-            this.PolarityBox.TabIndex = 32;
-            // 
-            // PolarityLabel
-            // 
-            this.PolarityLabel.AutoSize = true;
-            this.PolarityLabel.Location = new System.Drawing.Point(56, 116);
-            this.PolarityLabel.Name = "PolarityLabel";
-            this.PolarityLabel.Size = new System.Drawing.Size(71, 13);
-            this.PolarityLabel.TabIndex = 33;
-            this.PolarityLabel.Text = "Scan polarity:";
+            this.ScanSummingSumMs1Checkbox.AutoSize = true;
+            this.ScanSummingSumMs1Checkbox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.ScanSummingSumMs1Checkbox.Location = new System.Drawing.Point(14, 87);
+            this.ScanSummingSumMs1Checkbox.Name = "ScanSummingSumMs1Checkbox";
+            this.ScanSummingSumMs1Checkbox.Size = new System.Drawing.Size(128, 17);
+            this.ScanSummingSumMs1Checkbox.TabIndex = 19;
+            this.ScanSummingSumMs1Checkbox.Text = "Sum MS1 scans also:";
+            this.ScanSummingSumMs1Checkbox.UseVisualStyleBackColor = true;
             // 
             // MainForm
             // 
@@ -1943,6 +1956,7 @@ namespace MSConvertGUI
         private System.Windows.Forms.Label AnalyzerTypeLabel;
         private System.Windows.Forms.ComboBox PolarityBox;
         private System.Windows.Forms.Label PolarityLabel;
+        private System.Windows.Forms.CheckBox ScanSummingSumMs1Checkbox;
     }
 }
 

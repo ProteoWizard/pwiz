@@ -175,7 +175,7 @@
     <value>233, 6</value>
   </data>
   <data name="uniqueProteinsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>117, 22</value>
   </data>
   <data name="uniqueProteinsToolStripMenuItem.Text" xml:space="preserve">
     <value>蛋白质</value>
@@ -184,7 +184,7 @@
     <value>排除在背景蛋白质组中一种以上蛋白质中出现的肽段</value>
   </data>
   <data name="uniqueGenesToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>117, 22</value>
   </data>
   <data name="uniqueGenesToolStripMenuItem.Text" xml:space="preserve">
     <value>基因</value>
@@ -193,7 +193,7 @@
     <value>排除在背景蛋白质组中由一种以上基因表达的蛋白质中出现的肽段</value>
   </data>
   <data name="uniqueSpeciesToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>117, 22</value>
   </data>
   <data name="uniqueSpeciesToolStripMenuItem.Text" xml:space="preserve">
     <value>物种</value>
@@ -229,7 +229,7 @@
     <value>排除全部</value>
   </data>
   <data name="contextMenuStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>237, 170</value>
+    <value>237, 148</value>
   </data>
   <data name="&gt;&gt;contextMenuStrip1.Name" xml:space="preserve">
     <value>contextMenuStrip1</value>

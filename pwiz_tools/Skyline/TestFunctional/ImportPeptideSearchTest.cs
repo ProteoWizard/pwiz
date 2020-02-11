@@ -549,6 +549,7 @@ namespace pwiz.SkylineTestFunctional
             // The AllChromatogramsGraph will immediately show an error because the file being imported is bogus.
             var importResultsDlg = ShowDialog<AllChromatogramsGraph>(peptidesPerProteinDlg.OkDialog);
             doc = WaitForDocumentChangeLoaded(doc);
+            WaitForConditionUI(5000, () => importResultsDlg.Finished && importResultsDlg.Files.Any(f => !string.IsNullOrEmpty(f.Error)));
             OkDialog(importResultsDlg, importResultsDlg.ClickClose);
             AssertEx.IsDocumentState(doc, null, 2, 2, 6);
 
@@ -596,6 +597,7 @@ namespace pwiz.SkylineTestFunctional
             // The AllChromatogramsGraph will immediately show an error because the file being imported is bogus.
             var importResultsDlg = ShowDialog<AllChromatogramsGraph>(peptidesPerProteinDlg.OkDialog);
             doc = WaitForDocumentChangeLoaded(doc);
+            WaitForConditionUI(5000, () => importResultsDlg.Finished && importResultsDlg.Files.Any(f => !string.IsNullOrEmpty(f.Error)));
             OkDialog(importResultsDlg, importResultsDlg.ClickClose);
 
             // The document should have the 11 Biognosys standard peptides in the first peptide group

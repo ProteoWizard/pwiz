@@ -83,7 +83,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             public BuildPeptideSearchLibrarySettings(BuildPeptideSearchLibraryControl control) : this(control.CutOffScore,
                 control.SearchFilenames, control.IrtStandards, control.IncludeAmbiguousMatches,
-                control.FilterForDocumentPeptides, control.WorkflowType, control.DocumentContainer.Document.DocumentType)
+                control.FilterForDocumentPeptides, control.WorkflowType, control.ModeUI)
             {
             }
 
@@ -98,7 +98,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 IncludeAmbiguousMatches = includeAmbiguousMatches;
                 FilterForDocumentPeptides = filterForDocumentPeptides;
                 WorkFlow = workFlow;
-                _docType = SrmDocument.DOCUMENT_TYPE.none;
+                _docType = docType;
             }
 
             [Track(ignoreDefaultParent: true)]
@@ -130,6 +130,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private IModifyDocumentContainer DocumentContainer { get; set; }
         private LibraryManager LibraryManager { get; set; }
         public ImportPeptideSearch ImportPeptideSearch { get; set; }
+
+        private SrmDocument.DOCUMENT_TYPE ModeUI => (WizardForm is FormEx parent) ? parent.ModeUI : SrmDocument.DOCUMENT_TYPE.none;
 
         private Form WizardForm
         {
@@ -376,7 +378,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (!LoadPeptideSearchLibrary(docLibSpec))
                 return false;
 
-            var addedIrts = LibraryBuildNotificationHandler.AddIrts(ImportPeptideSearch.DocLib, docLibSpec, _driverStandards.SelectedItem, WizardForm);
+            var addedIrts = LibraryBuildNotificationHandler.AddIrts(IrtRegressionType.DEFAULT, ImportPeptideSearch.DocLib, docLibSpec, _driverStandards.SelectedItem, WizardForm, false);
 
             var docNew = ImportPeptideSearch.AddDocumentSpectralLibrary(DocumentContainer.Document, docLibSpec);
             if (docNew == null)
@@ -418,6 +420,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     string libraryName =
                         Helpers.GetUniqueName(Path.GetFileNameWithoutExtension(libraryPath), existingNames);
                     docLibSpec = LibrarySpec.CreateFromPath(libraryName, libraryPath);
+                    if (docLibSpec == null)
+                    {
+                        MessageDlg.Show(WizardForm, string.Format(Resources.EditLibraryDlg_OkDialog_The_file__0__is_not_a_supported_spectral_library_file_format, libraryPath));
+                        return false;
+                    }
                     Settings.Default.SpectralLibraryList.SetValue(docLibSpec);
                 }
             }

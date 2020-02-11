@@ -274,7 +274,7 @@
     <value>7</value>
   </data>
   <data name="checkBoxTargetsOnly.Text" xml:space="preserve">
-    <value>仅针对目标肽</value>
+    <value>仅针对目标肽段</value>
   </data>
   <data name="&gt;&gt;checkBoxTargetsOnly.Name" xml:space="preserve">
     <value>checkBoxTargetsOnly</value>

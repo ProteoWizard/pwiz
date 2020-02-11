@@ -1084,6 +1084,77 @@ namespace pwiz.Skyline.Model.Results
             return (short) Math.Round(f*10);
         }
 
+        public ChromPeak(TimeIntensities timeIntensities, float startTime, float endTime, FlagValues flagValues)
+        {
+            int pointsAcrossThePeak = 0;
+            double totalArea = 0;
+            double totalMassError = 0;
+            double apexTime = 0;
+            double apexHeight = 0;
+
+            int index = CollectionUtil.BinarySearch(timeIntensities.Times, startTime);
+            if (index < 0)
+            {
+                index = ~index;
+            }
+
+            for (; index < timeIntensities.NumPoints; index++)
+            {
+                double time = timeIntensities.Times[index];
+                double prevTime = startTime;
+                if (index > 0)
+                {
+                    prevTime = Math.Max(prevTime, (time + timeIntensities.Times[index - 1]) / 2);
+                }
+
+                double nextTime = endTime;
+                if (index < timeIntensities.NumPoints - 1)
+                {
+                    nextTime = Math.Min(nextTime, (time + timeIntensities.Times[index + 1]) / 2);
+                }
+
+                float intensity = timeIntensities.Intensities[index];
+                if (nextTime > prevTime)
+                {
+                    double width = nextTime - prevTime;
+                    double area = intensity * width;
+                    totalArea += area;
+                    if (timeIntensities.MassErrors != null)
+                    {
+                        totalMassError += area * timeIntensities.MassErrors[index];
+                    }
+                }
+
+                if (startTime <= time && endTime >= time)
+                {
+                    pointsAcrossThePeak++;
+                    if (intensity > apexHeight)
+                    {
+                        apexHeight = intensity;
+                        apexTime = time;
+                    }
+                }
+            }
+
+            _area = (float) totalArea;
+            _startTime = startTime;
+            _endTime = endTime;
+            _height = (float) apexHeight;
+            _backgroundArea = 0;
+            _pointsAcross = (short)Math.Min(pointsAcrossThePeak, ushort.MaxValue);
+            _retentionTime = (float) apexTime;
+            _flagBits = 0;
+            // TODO
+            _fwhm = 0;
+            if (null != timeIntensities.MassErrors && totalArea > 0)
+            {
+                flagValues |= FlagValues.mass_error_known;
+                FlagBits = ((uint)To10x(totalMassError / totalArea)) << 16;
+            }
+
+            FlagBits |= (uint) flagValues;
+        }
+
         public ChromPeak(IPeakFinder finder,
                          IFoundPeak peak,
                          FlagValues flags,
@@ -1360,6 +1431,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         #endregion
+
     }
 
     public class ChromCachedFile : Immutable, IPathContainer
@@ -1920,7 +1992,13 @@ namespace pwiz.Skyline.Model.Results
                 }
                 else if (id.StartsWith(MsDataFileImpl.PREFIX_PRECURSOR))
                 {
-                    precursor = double.Parse(id.Substring(MsDataFileImpl.PREFIX_TOTAL.Length), CultureInfo.InvariantCulture);
+                    var str = id.Substring(MsDataFileImpl.PREFIX_PRECURSOR.Length);
+                    if (str.StartsWith(@"Q1="))
+                    {
+                        // Agilent format e.g. "SIM SIC Q1=215.15 start=5.087066667 end=14.497416667"
+                        str = str.Substring(3).Split(' ')[0];
+                    }
+                    precursor = double.Parse(str, CultureInfo.InvariantCulture);
                     product = precursor;
                 }
                 else if (id.StartsWith(MsDataFileImpl.PREFIX_SINGLE))
@@ -2652,7 +2730,28 @@ namespace pwiz.Skyline.Model.Results
             {
                 times = TimeIntensities.Times.Select(time => (double) time).ToArray();
                 intensities = TimeIntensities.Intensities.Select(intensity => (double) intensity).ToArray();
+                var timeIntervals = TimeIntervals;
+                if (timeIntervals != null)
+                {
+                    for (int i = 0; i < times.Length; i++)
+                    {
+                        if (!timeIntervals.ContainsTime((float) times[i]))
+                        {
+                            intensities[i] = double.NaN;
+                        }
+                    }
+                }
             }
+        }
+
+        /// <summary>
+        /// If this chromatogram came from a triggered acquisition then TimeIntervals represents the time
+        /// over which data actually was collected.
+        /// The TimeIntervals will be null if this chromatogram was not from a triggered acquisition.
+        /// </summary>
+        public TimeIntervals TimeIntervals
+        {
+            get { return (GroupInfo?.TimeIntensitiesGroup as RawTimeIntensities)?.TimeIntervals; }
         }
 
         public double MaxIntensity

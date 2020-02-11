@@ -1898,6 +1898,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public double? ProductFilter { get; private set; }
 
+        [Track(defaultValues: typeof(DefaultValuesFalse))]
+        public bool TriggeredAcquisition { get; private set; }
+
         #region Property change methods
 
         public TransitionInstrument ChangeMinMz(int prop)
@@ -1953,6 +1956,10 @@ namespace pwiz.Skyline.Model.DocSettings
                                                  });
         }
 
+        public TransitionInstrument ChangeTriggeredAcquisition( bool triggeredAcquisition)
+        {
+            return ChangeProp(ImClone(this), im => im.TriggeredAcquisition = triggeredAcquisition);
+        }
         #endregion
 
         #region Implementation of IXmlSerializable
@@ -1974,6 +1981,7 @@ namespace pwiz.Skyline.Model.DocSettings
             mz_match_tolerance,
             max_transitions,
             max_inclusions,
+            triggered_acquisition,
 
             // Backward compatibility with 0.7.1
             precursor_filter_type,
@@ -2084,6 +2092,7 @@ namespace pwiz.Skyline.Model.DocSettings
             MaxTime = reader.GetNullableIntAttribute(ATTR.max_time);
             MaxTransitions = reader.GetNullableIntAttribute(ATTR.max_transitions);
             MaxInclusions = reader.GetNullableIntAttribute(ATTR.max_inclusions);
+            TriggeredAcquisition = reader.GetBoolAttribute(ATTR.triggered_acquisition, false);
 
             // Full-scan filter parameters (backward compatibility w/ 0.7.1)
             PrecursorAcquisitionMethod = FullScanAcquisitionMethod.FromLegacyName(reader.GetAttribute(ATTR.precursor_filter_type))
@@ -2117,6 +2126,7 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttributeNullable(ATTR.max_time, MaxTime);
             writer.WriteAttributeNullable(ATTR.max_transitions, MaxTransitions);
             writer.WriteAttributeNullable(ATTR.max_inclusions, MaxInclusions);
+            writer.WriteAttribute(ATTR.triggered_acquisition, TriggeredAcquisition, false);
         }
 
         #endregion
@@ -2138,7 +2148,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 Equals(other.PrecursorAcquisitionMethod, PrecursorAcquisitionMethod) &&
                 other.PrecursorFilter.Equals(PrecursorFilter) &&
                 Equals(other.ProductFilterType, ProductFilterType) &&
-                other.ProductFilter.Equals(ProductFilter);
+                other.ProductFilter.Equals(ProductFilter) &&
+                other.TriggeredAcquisition.Equals(TriggeredAcquisition);
         }
 
         public override bool Equals(object obj)

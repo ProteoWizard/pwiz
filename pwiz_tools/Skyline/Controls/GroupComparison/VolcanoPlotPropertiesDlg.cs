@@ -124,7 +124,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             FormUtil.OpenForms.OfType<FoldChangeVolcanoPlot>().ForEach(v => v.UpdateGraph(Settings.Default.FilterVolcanoPlotPoints));
         }
 
-        private double ConvertBetweenLogs(double value, bool log, int logBase, bool negate = false)
+        private static double ConvertBetweenLogs(double value, bool log, int logBase, bool negate = false)
         {
             if (log)
             {
@@ -142,7 +142,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             return value;
         }
 
-        private void UpdateTextBoxAndLabel(TextBox textBox, Label label, bool log, int logBase, bool negate = false)
+        public static void UpdateTextBoxAndLabel(TextBox textBox, Label label, bool log, int logBase, bool negate = false)
         {
             var text = textBox.Text;
             textBox.Text = string.Empty;

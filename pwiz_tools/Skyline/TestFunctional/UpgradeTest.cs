@@ -52,10 +52,15 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void UpgradeBasicFunctionalTest()
         {
-            UpgradeManager.CheckAtStartup = true;
             _deployment = CreateDeployment();
 
             RunFunctionalTest();
+        }
+
+        protected override void InitializeSkylineSettings()
+        {
+            base.InitializeSkylineSettings();
+            UpgradeManager.CheckAtStartup = true;
         }
 
         protected override void DoTest()
@@ -90,10 +95,15 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void UpgradeCancelFunctionalTest()
         {
-            UpgradeManager.CheckAtStartup = true;
             _deployment = UpgradeBasicTest.CreateDeployment();
 
             RunFunctionalTest();
+        }
+
+        protected override void InitializeSkylineSettings()
+        {
+            base.InitializeSkylineSettings();
+            UpgradeManager.CheckAtStartup = true;
         }
 
         protected override void DoTest()
@@ -132,10 +142,15 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void UpgradeErrorsFunctionalTest()
         {
-            UpgradeManager.CheckAtStartup = false;
             _deployment = UpgradeBasicTest.CreateDeployment();
 
             RunFunctionalTest();
+        }
+
+        protected override void InitializeSkylineSettings()
+        {
+            base.InitializeSkylineSettings();
+            UpgradeManager.CheckAtStartup = false;
         }
 
         private const string errorText = "Update error text";

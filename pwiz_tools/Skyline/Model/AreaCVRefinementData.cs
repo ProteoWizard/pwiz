@@ -23,7 +23,7 @@ namespace pwiz.Skyline.Model
         }
 
         public AreaCVRefinementData(SrmDocument document, AreaCVRefinementSettings settings,
-            CancellationToken? token = null)
+            CancellationToken? token = null, SrmSettingsChangeMonitor progressMonitor = null)
         {
             _settings = settings;
             if (document == null || !document.Settings.HasResults)
@@ -58,6 +58,10 @@ namespace pwiz.Skyline.Model
             {
                 foreach (var peptide in peptideGroup.Molecules)
                 {
+                    if (progressMonitor != null)
+                    {
+                        progressMonitor.ProcessMolecule(peptide);
+                    }
                     foreach (var transitionGroupDocNode in peptide.TransitionGroups)
                     {
                         if (_settings.PointsType == PointsTypePeakArea.decoys != transitionGroupDocNode.IsDecoy)
@@ -72,6 +76,9 @@ namespace pwiz.Skyline.Model
                             
                             foreach (var i in AnnotationHelper.GetReplicateIndices(document.Settings, _settings.Group, a))
                             {
+                                if (progressMonitor != null && progressMonitor.IsCanceled())
+                                    throw new OperationCanceledException();
+                                
                                 if (token.HasValue && token.Value.IsCancellationRequested)
                                 {
                                     throw new Exception(@"Cancelled");
