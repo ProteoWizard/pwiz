@@ -43,7 +43,7 @@ struct PWIZ_API_DECL CwtPeakDetector : public PeakDetector
     virtual void detect(const std::vector<double>& x, const std::vector<double>& y,
                         std::vector<double>& xPeakValues, std::vector<double>& yPeakValues,
                         std::vector<Peak>* peaks = NULL);
-
+    virtual const char* name() const { return "CantWait (continuous wavelet transform) peak picker"; }
     void getScales( const std::vector <double> &, const std::vector <double> &, std::vector <std::vector< std::vector<int> > > &, std::vector <double> &) const;
     void calcCorrelation( const std::vector <double> &, const std::vector <double> &, const std::vector <std::vector<std::vector<int> > > &, const std::vector <double> &, std::vector < std::vector <double> > &) const;
     void getPeakLines(const std::vector < std::vector <double> > &, const std::vector <double> &, std::vector <ridgeLine> &, std::vector <double> &) const;

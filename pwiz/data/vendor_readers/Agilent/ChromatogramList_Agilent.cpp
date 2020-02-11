@@ -140,15 +140,14 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t inde
             {
                 result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_minute, MS_number_of_detector_counts);
 
-                automation_vector<double> xArray;
-                chromatogramPtr->getXArray(xArray);
-                result->getTimeArray()->data.assign(xArray.begin(), xArray.end());
+                auto& timeArray = result->getTimeArray()->data;
+                chromatogramPtr->getXArray(timeArray);
 
-                automation_vector<float> yArray;
+                pwiz::util::BinaryData<float> yArray;
                 chromatogramPtr->getYArray(yArray);
                 result->getIntensityArray()->data.assign(yArray.begin(), yArray.end());
 
-                result->defaultArrayLength = xArray.size();
+                result->defaultArrayLength = timeArray.size();
             }
             else
                 result->defaultArrayLength = chromatogramPtr->getTotalDataPoints();
@@ -171,15 +170,14 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t inde
             {
                 result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_minute, MS_number_of_detector_counts);
 
-                automation_vector<double> xArray;
-                chromatogramPtr->getXArray(xArray);
-                result->getTimeArray()->data.assign(xArray.begin(), xArray.end());
+                auto& timeArray = result->getTimeArray()->data;
+                chromatogramPtr->getXArray(timeArray);
 
-                automation_vector<float> yArray;
+                pwiz::util::BinaryData<float> yArray;
                 chromatogramPtr->getYArray(yArray);
                 result->getIntensityArray()->data.assign(yArray.begin(), yArray.end());
 
-                result->defaultArrayLength = xArray.size();
+                result->defaultArrayLength = timeArray.size();
             }
             else
                 result->defaultArrayLength = chromatogramPtr->getTotalDataPoints();

@@ -247,10 +247,11 @@ SpectrumListPtr filterCreator_scanSummer(const MSData& msd, const string& carg, 
     double precursorTol = parseKeyValuePair<double>(arg, "precursorTol=", 0.05); // m/z
     double scanTimeTol = parseKeyValuePair<double>(arg, "scanTimeTol=", 10); // seconds
     double ionMobilityTol = parseKeyValuePair<double>(arg, "ionMobilityTol=", 0.01); // ms for drift time or vs/cm^2 for TIMS
+    bool sumMs1 = parseKeyValuePair<bool>(arg, "sumMs1", false);
     if (bal::icontains(arg, "="))
-        throw user_error("[SpectrumList_ScanSummer] unused argument (key=value) in " + arg);
+        throw user_error("[SpectrumList_ScanSummer] unused argument (key=value) in " + arg + "; supported arguments are precursorTol, scanTimeTol, ionMobilityTol, and sumMs1");
 
-    return SpectrumListPtr(new SpectrumList_ScanSummer(msd.run.spectrumListPtr, precursorTol, scanTimeTol, ionMobilityTol, ilr));
+    return SpectrumListPtr(new SpectrumList_ScanSummer(msd.run.spectrumListPtr, precursorTol, scanTimeTol, ionMobilityTol, sumMs1, ilr));
 }
 UsageInfo usage_scanSummer = {"[precursorTol=<precursor tolerance>] [scanTimeTol=<scan time tolerance in seconds>] [ionMobilityTol=<ion mobility tolerance>]",
     "This filter sums MS2 sub-scans whose precursors are within <precursor tolerance> (default: 0.05 m/z)"
