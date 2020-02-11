@@ -27,6 +27,13 @@ using Timer = System.Timers.Timer;
 
 namespace SkylineNightly
 {
+    /// <summary>
+    /// This class periodically checks the SkylineTester log file to see if an email should be sent
+    /// out immediately (i.e. before the daily TestResults summary email).
+    /// Email will be sent if a certain string is found in the log file, or if the log file has not
+    /// been modified for a long period of time (indicating that a test is hanging) and are sent by
+    /// posting to the sendEmailNotification action of the TestResults module.
+    /// </summary>
     public class LogFileMonitor
     {
         public const string DELIMITER_START = "\n@@@ EMAIL NOTIFICATION";
