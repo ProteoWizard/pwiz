@@ -9267,10 +9267,10 @@ If your transition list format combines formulas and adducts in a single column 
     <value>Training scoring model (iteration {0} of {1})</value>
   </data>
   <data name="MProphetPeakScoringModel_Train_Training_scoring_model__iteration__0__of__1_____2______peaks_at__3_0_____FDR_" xml:space="preserve">
-    <value>Training scoring model (iteration {0} of {1} - {2:#,#} peaks at {3:0.#%} FDR)</value>
+    <value>Training scoring model (iteration {0} of {1} - {2:#,#} peaks at {3:0.##%} FDR)</value>
   </data>
   <data name="MProphetPeakScoringModel_Train_Scoring_model_converged__iteration__0_____1______peaks_at__2_0_____FDR_" xml:space="preserve">
-    <value>Scoring model converged (iteration {0} - {1:#,#} peaks at {2:0.#%} FDR)</value>
+    <value>Scoring model converged (iteration {0} - {1:#,#} peaks at {2:0.##%} FDR)</value>
   </data>
   <data name="CompactFormatOption_ALWAYS_Always" xml:space="preserve">
     <value>Always</value>

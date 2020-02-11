@@ -9264,10 +9264,10 @@
     <value>正在训练得分模型（重复 {0} 个，共 {1} 个）</value>
   </data>
   <data name="MProphetPeakScoringModel_Train_Training_scoring_model__iteration__0__of__1_____2______peaks_at__3_0_____FDR_" xml:space="preserve">
-    <value>正在训练得分模型（重复 {0} 个，共 {1} 个 — {2:#,#} 个峰为 {3:0.#%} FDR）</value>
+    <value>正在训练得分模型（重复 {0} 个，共 {1} 个 — {2:#,#} 个峰为 {3:0.##%} FDR）</value>
   </data>
   <data name="MProphetPeakScoringModel_Train_Scoring_model_converged__iteration__0_____1______peaks_at__2_0_____FDR_" xml:space="preserve">
-    <value>得分模型已汇集（重复 {0} 个 — {1:#,#} 个峰为 {2:0.#%} FDR）</value>
+    <value>得分模型已汇集（重复 {0} 个 — {1:#,#} 个峰为 {2:0.##%} FDR）</value>
   </data>
   <data name="CompactFormatOption_ALWAYS_Always" xml:space="preserve">
     <value>总是</value>
