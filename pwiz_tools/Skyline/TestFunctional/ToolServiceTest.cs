@@ -17,8 +17,6 @@
  * limitations under the License.
  */
 
-using System;
-using System.Diagnostics;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
@@ -109,39 +107,6 @@ namespace pwiz.SkylineTestFunctional
 
             // There is a race condition where undoing a change occasionally leaves the document in a dirty state.
             SkylineWindow.DiscardChanges = true;
-        }
-
-        private class ProcessKiller : IDisposable
-        {
-            private readonly string _processName;
-
-            public ProcessKiller(string processName)
-            {
-                _processName = processName;
-                KillNamedProcess();
-            }
-
-            public void Dispose()
-            {
-                KillNamedProcess();
-            }
-
-            private void KillNamedProcess()
-            {
-                var processList = Process.GetProcessesByName(_processName);
-                foreach (var process in processList)
-                {
-                    process.Kill();
-                    try
-                    {
-                        process.WaitForExit();
-                    }
-                    // ReSharper disable once EmptyGeneralCatchClause
-                    catch
-                    {
-                    }
-                }
-            }
         }
 
         private const string TEXT_FASTA = @"
