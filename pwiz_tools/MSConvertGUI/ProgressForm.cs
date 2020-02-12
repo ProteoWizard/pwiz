@@ -34,7 +34,7 @@ namespace MSConvertGUI
 {
     public partial class ProgressForm : Form
     {
-        public struct JobInfo
+        public class JobInfo
         {
             public MainLogic workProcess;
             public TextBox updateTextbox;
@@ -48,6 +48,7 @@ namespace MSConvertGUI
         private Map<string, UnifiBrowserForm.Credentials> _unifiCredentialsByUrl;
         private Map<string, int> _usedOutputFilenames;
         private object _calculateSHA1Mutex = new object();
+        private object _cancelMutex = new object();
 
         public ProgressForm(IEnumerable<object> filesToProcess, string outputFolder, string options, Map<string, UnifiBrowserForm.Credentials> unifiCredentialsByUrl)
         {
@@ -62,6 +63,10 @@ namespace MSConvertGUI
 
         internal void UpdatePercentage(int result, int maxValue, JobInfo info)
         {
+            lock (_cancelMutex)
+                if (info.workProcess.Canceled)
+                    return;
+
             if (InvokeRequired)
             {
                 Invoke(new MethodInvoker(() => UpdatePercentage(result, maxValue, info)));
@@ -82,6 +87,10 @@ namespace MSConvertGUI
 
         internal void UpdateLog(string result, JobInfo info)
         {
+            lock (_cancelMutex)
+                if (info.workProcess.Canceled)
+                    return;
+
             if (InvokeRequired)
             {
                 Invoke(new MethodInvoker(() => UpdateLog(result, info)));
@@ -95,6 +104,10 @@ namespace MSConvertGUI
 
         private void UpdateBarStatus(string status, ProgressBarStyle style, JobInfo info)
         {
+            lock (_cancelMutex)
+                if (info.workProcess.Canceled)
+                    return;
+
             if (InvokeRequired)
             {
                 Invoke(new MethodInvoker(() => UpdateBarStatus(status, style, info)));
@@ -173,8 +186,12 @@ namespace MSConvertGUI
 
         private void ProgressForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            foreach(var item in _tasksRunningList)
-                item.ForceExit();
+            lock (_cancelMutex)
+            {
+                MainLogic.ClearQueue();
+                foreach (var item in _tasksRunningList)
+                    item.ForceExit();
+            }
         }
     }
 }

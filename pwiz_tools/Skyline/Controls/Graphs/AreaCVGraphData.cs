@@ -23,6 +23,7 @@ using System.Linq;
 using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -60,7 +61,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public static readonly AreaCVGraphData INVALID = new AreaCVGraphData(null,
-            new AreaCVGraphSettings((GraphTypeSummary) ~0, (AreaCVNormalizationMethod) ~0, -1, string.Empty,
+            new AreaCVGraphSettings((GraphTypeSummary) ~0, (AreaCVNormalizationMethod) ~0, -1, null,
                 string.Empty, (PointsTypePeakArea) ~0, double.NaN, double.NaN, -1, double.NaN, (AreaCVMsLevel) ~0,
                 (AreaCVTransitions) ~0, -1));
 
@@ -117,7 +118,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public class AreaCVGraphSettings : AreaCVRefinementSettings
         {
-            public AreaCVGraphSettings(GraphTypeSummary graphType, bool convertToDecimal = true)
+            public AreaCVGraphSettings(SrmSettings srmSettings, GraphTypeSummary graphType, bool convertToDecimal = true)
             {
                 var factor = !Settings.Default.AreaCVShowDecimals && convertToDecimal ? 0.01 : 1.0;
                 GraphType = graphType;
@@ -126,8 +127,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 CountTransitions = AreaGraphController.AreaCVTransitionsCount;
                 NormalizationMethod = AreaGraphController.NormalizationMethod;
                 RatioIndex = AreaGraphController.AreaCVRatioIndex;
-                Group = AreaGraphController.GroupByGroup != null ? string.Copy(AreaGraphController.GroupByGroup) : null;
-                Annotation = AreaGraphController.GroupByAnnotation != null ? string.Copy(AreaGraphController.GroupByAnnotation) : null;
+                Group = ReplicateValue.FromPersistedString(srmSettings, AreaGraphController.GroupByGroup);
+                Annotation = AreaGraphController.GroupByAnnotation;
                 PointsType = AreaGraphController.PointsType;
                 QValueCutoff = Settings.Default.AreaCVQValueCutoff;
                 CVCutoff = Settings.Default.AreaCVCVCutoff * factor;
@@ -135,7 +136,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 BinWidth = Settings.Default.AreaCVHistogramBinWidth * factor;
             }
 
-            public AreaCVGraphSettings(GraphTypeSummary graphType, AreaCVNormalizationMethod normalizationMethod, int ratioIndex, string group, string annotation, PointsTypePeakArea pointsType, double qValueCutoff,
+            public AreaCVGraphSettings(GraphTypeSummary graphType, AreaCVNormalizationMethod normalizationMethod, int ratioIndex, ReplicateValue group, object annotation, PointsTypePeakArea pointsType, double qValueCutoff,
                 double cvCutoff, int minimumDetections, double binwidth, AreaCVMsLevel msLevel, AreaCVTransitions transitions, int countTransitions)
             {
                 GraphType = graphType;
@@ -155,14 +156,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public static bool CacheEqual(AreaCVGraphSettings a, AreaCVGraphSettings b)
             {
-                return a.GraphType == b.GraphType && a.Group == b.Group &&
-                       a.PointsType == b.PointsType && (a.QValueCutoff == b.QValueCutoff || double.IsNaN(a.QValueCutoff) && double.IsNaN(b.QValueCutoff)) &&
-                       a.CVCutoff == b.CVCutoff && a.BinWidth == b.BinWidth && a.MsLevel == b.MsLevel && a.Transitions == b.Transitions && a.CountTransitions == b.CountTransitions;
+                return Equals(a, b);
             }
 
             public override void AddToInternalData(ICollection<InternalData> data, List<AreaInfo> areas,
                 PeptideGroupDocNode peptideGroup, PeptideDocNode peptide, TransitionGroupDocNode tranGroup,
-                string annotation)
+                object annotation)
             {
                 var normalizedStatistics = new Statistics(areas.Select(a => a.NormalizedArea));
                 var normalizedMean = normalizedStatistics.Mean();
@@ -195,6 +194,30 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public GraphTypeSummary GraphType { get; private set; }
             public double BinWidth { get; private set; }
+
+            protected bool Equals(AreaCVGraphSettings other)
+            {
+                return base.Equals(other) && GraphType == other.GraphType && BinWidth.Equals(other.BinWidth);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((AreaCVGraphSettings) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    int hashCode = base.GetHashCode();
+                    hashCode = (hashCode * 397) ^ (int) GraphType;
+                    hashCode = (hashCode * 397) ^ BinWidth.GetHashCode();
+                    return hashCode;
+                }
+            }
         }
     }
 

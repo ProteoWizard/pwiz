@@ -105,6 +105,8 @@ namespace MSConvertGUI
         public LogDelegate LogUpdate;
         public StatusDelegate StatusUpdate;
 
+        public bool Canceled => _canceled;
+
         private readonly ProgressForm.JobInfo _info;
         private string _errorMessage;
         bool _canceled;
@@ -608,13 +610,19 @@ namespace MSConvertGUI
         public static void RunQueue()
         {
             var workThreads = new List<Thread>();
-            for (int i = 0; i < Math.Min(2, Environment.ProcessorCount); ++i)
+            for (int i = 0; i < Math.Min(Properties.Settings.Default.NumFilesToConvertInParallel, Environment.ProcessorCount); ++i)
             {
                 var thread = new Thread(Work) {Priority = ThreadPriority.BelowNormal};
                 thread.SetApartmentState(ApartmentState.STA);
                 workThreads.Add(thread);
             }
             workThreads.ForEach(o => o.Start());
+        }
+
+        public static void ClearQueue()
+        {
+            lock (_workQueue)
+                _workQueue.Clear();
         }
 
         public static void Work()
@@ -627,6 +635,8 @@ namespace MSConvertGUI
                     if (!_workQueue.Any())
                         return;
                     item = _workQueue.Dequeue();
+                    if (item.Key.Canceled)
+                        return;
                 }
 
                 MainLogic logic = item.Key;
