@@ -697,7 +697,8 @@ namespace pwiz.Skyline.Model.Results
                             flags |= ChromPeak.FlagValues.peak_truncated;
                         }
                     }
-                    peak.CalcChromPeak(peakMax, flags, TimeIntervals);
+
+                    peak.CalcChromPeak(peakMax, flags, timeIntervals);
 
                     if (timeIntervals != null)
                     {

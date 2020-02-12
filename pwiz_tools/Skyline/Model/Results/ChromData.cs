@@ -288,7 +288,7 @@ namespace pwiz.Skyline.Model.Results
             return Finder.GetPeak(startIndex, endIndex);
         }
 
-        public ChromPeak CalcChromPeak(IFoundPeak peakMax, ChromPeak.FlagValues flags, out IFoundPeak peak)
+        public ChromPeak CalcChromPeak(IFoundPeak peakMax, ChromPeak.FlagValues flags, TimeIntervals timeIntervals, out IFoundPeak peak)
         {
             // Reintegrate all peaks to the max peak, even the max peak itself, since its boundaries may
             // have been extended from the Crawdad originals.
@@ -298,14 +298,17 @@ namespace pwiz.Skyline.Model.Results
                 return ChromPeak.EMPTY;
             }
 
-            peak = CalcPeak(peakMax.StartIndex, peakMax.EndIndex);
-            // If a forced peak is found to be sufficiently coeluting with the max peak, then clear the forced flag
-            if ((flags & ChromPeak.FlagValues.forced_integration) != 0 && AreCoeluting(peakMax, peak))
-                flags &= ~ChromPeak.FlagValues.forced_integration;
-            return new ChromPeak(Finder, peak, flags, TimeIntensities, RawTimes);
+            var peakIntegrator = new PeakIntegrator(TimeIntensities, Finder)
+            {
+                RawTimeIntensities = RawTimeIntensities,
+                TimeIntervals = timeIntervals
+            };
+            var tuple = peakIntegrator.IntegrateFoundPeak(peakMax, flags);
+            peak = tuple.Item2;
+            return tuple.Item1;
         }
 
-        private bool AreCoeluting(IFoundPeak peakMax, IFoundPeak peak)
+        public static bool AreCoeluting(IFoundPeak peakMax, IFoundPeak peak)
         {
             if (peak.Area == 0)
                 return false;
@@ -398,7 +401,7 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromPeak CalcChromPeak(IFoundPeak peakMax, ChromPeak.FlagValues flags, TimeIntervals timeIntervals)
         {
-            _chromPeak = Data.CalcChromPeak(peakMax, flags, out _crawPeak);
+            _chromPeak = Data.CalcChromPeak(peakMax, flags, timeIntervals, out _crawPeak);
             return _chromPeak;
         }
 

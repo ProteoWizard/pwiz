@@ -1431,7 +1431,6 @@ namespace pwiz.Skyline.Model.Results
         }
 
         #endregion
-
     }
 
     public class ChromCachedFile : Immutable, IPathContainer
@@ -2580,7 +2579,7 @@ namespace pwiz.Skyline.Model.Results
                 TimeIntensities = timeIntensitiesGroup.TransitionTimeIntensities[_transitionIndex];
                 if (Header.HasRawTimes())
                 {
-                    RawTimes = TimeIntensities.Times;
+                    RawTimeIntensities = TimeIntensities;
                 }
             }
         }
@@ -2656,7 +2655,11 @@ namespace pwiz.Skyline.Model.Results
             get { return _groupInfo.GetChromTransitionLocal(_transitionIndex); }
         }
 
-        public IList<float> RawTimes { get; set; }
+        private TimeIntensities RawTimeIntensities { get; set; }
+        public IList<float> RawTimes
+        {
+            get { return RawTimeIntensities?.Times; }
+        }
         public TimeIntensities TimeIntensities { get; set; }
         public IList<float> Times { get { return TimeIntensities == null ? null : TimeIntensities.Times; } }
         public IList<int> ScanIndexes { get { return TimeIntensities == null ? null : TimeIntensities.ScanIds; } }
@@ -2690,16 +2693,14 @@ namespace pwiz.Skyline.Model.Results
             return _groupInfo.GetTransitionPeak(_transitionIndex, peakIndex);
         }
 
-        public ChromPeak CalcPeak(int startIndex, int endIndex, ChromPeak.FlagValues flags)
+        public ChromPeak CalcPeak(float startTime, float endTime, ChromPeak.FlagValues flags)
         {
-            if (startIndex == endIndex)
-                return ChromPeak.EMPTY;
-
-            var finder = Crawdads.NewCrawdadPeakFinder();
-            finder.SetChromatogram(TimeIntensities.Times, TimeIntensities.Intensities);
-            var peak = finder.GetPeak(startIndex, endIndex);
-
-            return new ChromPeak(finder, peak, flags, TimeIntensities, RawTimes);
+            var peakIntegrator = new PeakIntegrator(TimeIntensities)
+            {
+                RawTimeIntensities = RawTimeIntensities,
+                TimeIntervals = TimeIntervals
+            };
+            return peakIntegrator.IntegratePeak(startTime, endTime, flags);
         }
 
         public int IndexOfPeak(double retentionTime)
@@ -2816,6 +2817,18 @@ namespace pwiz.Skyline.Model.Results
             if (rawTimeIntensities == null)
                 return;
             TimeIntensities = TimeIntensities.Interpolate(rawTimeIntensities.GetInterpolatedTimes(), rawTimeIntensities.InferZeroes);
+        }
+
+        public TimeIntensities GetInterpolatedTimeIntensities()
+        {
+            var rawTimeIntensities = _groupInfo?.TimeIntensitiesGroup as RawTimeIntensities;
+            if (rawTimeIntensities == null)
+            {
+                return TimeIntensities;
+            }
+
+            return rawTimeIntensities.TransitionTimeIntensities[TransitionIndex]
+                .Interpolate(rawTimeIntensities.GetInterpolatedTimes(), rawTimeIntensities.InferZeroes);
         }
 
         public void Crawdad1DTransform()
