@@ -419,6 +419,7 @@ namespace pwiz.SkylineTestUtil
         public class Tool : IDisposable
         {
             private readonly MovedDirectory _movedDirectory;
+            private readonly string _toolPath;
 
             public Tool(
                 string zipInstallerPath,
@@ -432,6 +433,7 @@ namespace pwiz.SkylineTestUtil
                 Settings.Default.ToolList.Clear();
 
                 _movedDirectory = new MovedDirectory(ToolDescriptionHelpers.GetToolsDirectory(), Skyline.Program.StressTest);
+                _toolPath = toolPath;
                 RunDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, configureToolsDlg =>
                 {
                     configureToolsDlg.RemoveAllTools();
@@ -450,7 +452,12 @@ namespace pwiz.SkylineTestUtil
 
             public void Dispose()
             {
-                _movedDirectory.Dispose();
+                var processName = Path.GetFileNameWithoutExtension(_toolPath);
+                using (new ProcessKiller(processName)) // Make sure tool process is closed and file handles released
+                {
+                    // Get rid of our temp files
+                    _movedDirectory.Dispose();
+                }
             }
 
             public void Run()
