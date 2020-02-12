@@ -472,6 +472,8 @@
     <Compile Include="Model\Results\RemoteApi\RemoteServerException.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteSession.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteUrl.cs" />
+    <Compile Include="Model\Results\TimeIntervals.cs" />
+    <Compile Include="Model\Results\TriggeredAcquisition.cs" />
     <Compile Include="Model\Serialization\AnnotationScrubber.cs" />
     <Compile Include="Model\Serialization\Pre372CustomIonTransitionGroupHandler.cs" />
     <Compile Include="Model\Serialization\XmlReadAhead.cs" />

@@ -1396,13 +1396,14 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     if (IsRunToRun)
                     {
-                        return string.Format(Resources.GraphData_CorrelationLabel_Measured_Time___0__,
-                            _document.MeasuredResults.Chromatograms[_originalIndex].Name);
+                        if (_document.MeasuredResults != null && 0 <= _originalIndex && _originalIndex < _document.MeasuredResults.Chromatograms.Count)
+                        {
+                            return string.Format(Resources.GraphData_CorrelationLabel_Measured_Time___0__,
+                                _document.MeasuredResults.Chromatograms[_originalIndex].Name);
+                        }
+                        return string.Empty;
                     }
-                    else
-                    {
-                        return Calculator.Name;
-                    }
+                    return Calculator.Name;
                 }
             }
 

@@ -3425,7 +3425,7 @@ namespace pwiz.Skyline
             }
             
             // Determine which peptides are in the standard, but not in the document
-            var documentPeps = new TargetMap<bool>(Document.Peptides.Select(pep => new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)));
+            var documentPeps = new TargetMap<bool>(Document.Molecules.Select(pep => new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)));
             var missingPeptides = new TargetMap<bool>(newStandard.Where(pep => !documentPeps.ContainsKey(pep)).Select(target => new KeyValuePair<Target, bool>(target, true)));
             if (missingPeptides.Count == 0)
                 return;
