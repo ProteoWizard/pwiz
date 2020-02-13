@@ -1,13 +1,32 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2020 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
+
     public class PeakIntegrator
     {
         public PeakIntegrator(TimeIntensities interpolatedTimeIntensities)
-            : this(interpolatedTimeIntensities, CreatePeakFinder(interpolatedTimeIntensities))
+            : this(interpolatedTimeIntensities, null)
         {
         }
 
@@ -22,10 +41,15 @@ namespace pwiz.Skyline.Model.Results
         public TimeIntensities RawTimeIntensities { get; set; }
         public TimeIntervals TimeIntervals { get; set; }
 
+        /// <summary>
+        /// Return the ChromPeak with the specified start and end times chosen by a user.
+        /// </summary>
         public ChromPeak IntegratePeak(float startTime, float endTime, ChromPeak.FlagValues flags)
         {
             if (TimeIntervals != null)
             {
+                // For a triggered acquisition, we just use the start and end time supplied by the
+                // user and Crawdad is not involved with the peak integration.
                 return IntegratePeakWithoutBackground(startTime, endTime, flags);
             }
             if (PeakFinder == null)
@@ -43,6 +67,10 @@ namespace pwiz.Skyline.Model.Results
             return new ChromPeak(PeakFinder, foundPeak, flags, InterpolatedTimeIntensities, RawTimeIntensities?.Times);
         }
 
+        /// <summary>
+        /// Returns a ChromPeak and IFoundPeak that match the start and end times a particular other IFoundPeak
+        /// that was found by Crawdad.
+        /// </summary>
         public Tuple<ChromPeak, IFoundPeak> IntegrateFoundPeak(IFoundPeak peakMax, ChromPeak.FlagValues flags)
         {
             Assume.IsNotNull(PeakFinder);
@@ -59,6 +87,9 @@ namespace pwiz.Skyline.Model.Results
             return Tuple.Create(chromPeak, interpolatedPeak);
         }
 
+        /// <summary>
+        /// Returns a ChromPeak with the specified start and end times and no background subtraction.
+        /// </summary>
         private ChromPeak IntegratePeakWithoutBackground(float startTime, float endTime, ChromPeak.FlagValues flags)
         {
             if (TimeIntervals != null)

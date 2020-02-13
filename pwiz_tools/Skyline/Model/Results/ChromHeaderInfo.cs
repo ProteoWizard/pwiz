@@ -1084,6 +1084,9 @@ namespace pwiz.Skyline.Model.Results
             return (short) Math.Round(f*10);
         }
 
+        /// <summary>
+        /// Constructs a ChromPeak with the specified start and end times and no background subtraction.
+        /// </summary>
         public ChromPeak(TimeIntensities timeIntensities, float startTime, float endTime, FlagValues flagValues)
         {
             int pointsAcrossThePeak = 0;
@@ -1092,13 +1095,13 @@ namespace pwiz.Skyline.Model.Results
             double apexTime = 0;
             double apexHeight = 0;
 
-            int index = CollectionUtil.BinarySearch(timeIntensities.Times, startTime);
-            if (index < 0)
+            int startIndex = CollectionUtil.BinarySearch(timeIntensities.Times, startTime);
+            if (startIndex < 0)
             {
-                index = ~index;
+                startIndex = ~startIndex;
             }
 
-            for (; index < timeIntensities.NumPoints; index++)
+            for (int index = startIndex; index < timeIntensities.NumPoints; index++)
             {
                 double time = timeIntensities.Times[index];
                 double prevTime = startTime;
@@ -1134,6 +1137,73 @@ namespace pwiz.Skyline.Model.Results
                         apexTime = time;
                     }
                 }
+
+                if (time >= endTime)
+                {
+                    break;
+                }
+            }
+
+            // Determine the full width at half max
+            bool fwhmDegenerate = false;
+            double? halfMaxStart = null;
+            double? halfMaxEnd = null;
+            var halfHeight = apexHeight / 2;
+            for (int index = startIndex; index < timeIntensities.NumPoints; index++)
+            {
+                double time = timeIntensities.Times[index];
+                double intensity = timeIntensities.Intensities[index];
+                if (intensity >= halfHeight)
+                {
+                    if (!halfMaxStart.HasValue)
+                    {
+                        halfMaxStart = time;
+                        if (index > startIndex)
+                        {
+                            if (intensity > halfHeight)
+                            {
+                                double prevTime = timeIntensities.Times[index - 1];
+                                double prevIntensity = timeIntensities.Intensities[index - 1];
+                                if (prevIntensity < halfHeight)
+                                {
+                                    var fraction = (intensity - halfHeight) / (intensity - prevIntensity);
+                                    halfMaxStart = (1 - fraction) * time + fraction * prevTime;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            fwhmDegenerate = true;
+                        }
+                    }
+
+                    halfMaxEnd = time;
+                    if (index < timeIntensities.NumPoints - 1)
+                    {
+                        double nextTime = timeIntensities.Times[index + 1];
+                        if (nextTime <= endTime)
+                        {
+                            double nextIntensity = timeIntensities.Intensities[index + 1];
+                            if (nextIntensity < halfHeight)
+                            {
+                                var fraction = (intensity - halfHeight) / (intensity - nextIntensity);
+                                halfMaxEnd = (1 - fraction) * time + fraction * nextTime;
+                            }
+                        }
+                        else
+                        {
+                            fwhmDegenerate = true;
+                        }
+                    }
+                    else
+                    {
+                        fwhmDegenerate = true;
+                    }
+                }
+                if (time >= endTime)
+                {
+                    break;
+                }
             }
 
             _area = (float) totalArea;
@@ -1144,15 +1214,26 @@ namespace pwiz.Skyline.Model.Results
             _pointsAcross = (short)Math.Min(pointsAcrossThePeak, ushort.MaxValue);
             _retentionTime = (float) apexTime;
             _flagBits = 0;
-            // TODO
-            _fwhm = 0;
+            if (halfMaxStart.HasValue)
+            {
+                _fwhm = (float) (halfMaxEnd - halfMaxStart);
+            }
+            else
+            {
+                _fwhm = 0;
+            }
             if (null != timeIntensities.MassErrors && totalArea > 0)
             {
                 flagValues |= FlagValues.mass_error_known;
                 FlagBits = ((uint)To10x(totalMassError / totalArea)) << 16;
             }
 
+
             FlagBits |= (uint) flagValues;
+            if (fwhmDegenerate)
+            {
+                FlagBits |= (uint) FlagValues.degenerate_fwhm;
+            }
         }
 
         public ChromPeak(IPeakFinder finder,
