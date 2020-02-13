@@ -509,6 +509,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     {
                         return;
                     }
+                    if (!TransitionSettings.Filter.PeptideIonTypes.Contains(IonType.precursor))
+                    {
+                        FullScanSettingsControl.PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.None;
+                    }
                     break;
 
                 case Pages.full_scan_settings_page:
