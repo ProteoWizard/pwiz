@@ -388,7 +388,12 @@ namespace pwiz.SkylineTestTutorial
                 });
 
                 PauseForScreenShot<DocumentGridForm>("Document Grid - Peptide Ratio Results", 15);
+                Settings.Default.CalibrationCurveOptions.LogXAxis = true;
+                Settings.Default.CalibrationCurveOptions.LogYAxis = true;
 
+                var calibrationForm = FindOpenForm<CalibrationForm>();
+                RunUI(()=>calibrationForm.UpdateUI(false));
+                PauseForScreenShot<CalibrationForm>("Calibration Curve: Log");
             }
 
         }

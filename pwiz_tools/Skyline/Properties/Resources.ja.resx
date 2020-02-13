@@ -9264,10 +9264,10 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
     <value>スコアモデルのトレーニング（反復{0}/{1}）</value>
   </data>
   <data name="MProphetPeakScoringModel_Train_Training_scoring_model__iteration__0__of__1_____2______peaks_at__3_0_____FDR_" xml:space="preserve">
-    <value>スコアモデルをトレーニング（反復{0}/{1} - {2:#,#} ピーク位置：{3:0.#%} FDR）</value>
+    <value>スコアモデルをトレーニング（反復{0}/{1} - {2:#,#} ピーク位置：{3:0.##%} FDR）</value>
   </data>
   <data name="MProphetPeakScoringModel_Train_Scoring_model_converged__iteration__0_____1______peaks_at__2_0_____FDR_" xml:space="preserve">
-    <value>スコアモデルの収束（反復{0} - {1:#,#} ピーク位置：{2:0.#%} FDR）</value>
+    <value>スコアモデルの収束（反復{0} - {1:#,#} ピーク位置：{2:0.##%} FDR）</value>
   </data>
   <data name="CompactFormatOption_ALWAYS_Always" xml:space="preserve">
     <value>常に行う</value>
