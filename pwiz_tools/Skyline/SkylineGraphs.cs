@@ -3629,7 +3629,6 @@ namespace pwiz.Skyline
                 menuStrip.Items.Insert(iInsert++, toolStripSeparator38);
                 menuStrip.Items.Insert(iInsert++, timePropsContextMenuItem);
 
-                bool canApply, canRemove;
                 var isotopeLabelType = graph.GraphPaneFromPoint(mousePt) != null
                     ? graph.GraphPaneFromPoint(mousePt).PaneKey.IsotopeLabelType
                     : null;
