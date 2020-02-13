@@ -41,6 +41,7 @@ namespace SkylineNightly
         private readonly string _oldLog;
         private readonly string _logDir;
         private readonly string _nightlyLog;
+        private readonly int _hangThreshold;
         private readonly object _lock;
 
         private string _testerLog;
@@ -51,11 +52,12 @@ namespace SkylineNightly
 
         private readonly Timer _logChecker;
 
-        public LogFileMonitor(string logDir, string nightlyLog)
+        public LogFileMonitor(string logDir, string nightlyLog, int hangThreshold = -1)
         {
             _oldLog = Nightly.GetLatestLog(logDir);
             _logDir = logDir;
             _nightlyLog = nightlyLog;
+            _hangThreshold = hangThreshold;
             _testerLog = null;
             _lock = new object();
             _fileStream = null;
@@ -99,27 +101,31 @@ namespace SkylineNightly
                     _fileStream = new FileStream(log, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 }
 
-                var lastWrite = File.GetLastWriteTime(_testerLog);
-                if (lastWrite.AddMinutes(30) <= e.SignalTime)
+                if (_hangThreshold > 0)
                 {
-                    if (lastWrite > _lastReportedHang)
+                    var lastWrite = File.GetLastWriteTime(_testerLog);
+                    if (lastWrite.AddMinutes(_hangThreshold) <= e.SignalTime)
                     {
-                        _lastReportedHang = lastWrite;
-                        Log("Hang detected, posting to " + Nightly.LABKEY_EMAIL_NOTIFICATION_URL);
-                        var message = new StringBuilder();
-                        message.AppendLine(Environment.MachineName);
-                        message.AppendLine();
-                        message.AppendFormat("Current time: {0} {1}" + Environment.NewLine, e.SignalTime.ToShortDateString(), e.SignalTime.ToShortTimeString());
-                        message.AppendFormat("Log last modified: {0} {1}" + Environment.NewLine, lastWrite.ToShortDateString(), lastWrite.ToShortTimeString());
-                        message.AppendLine();
-                        message.AppendLine("----------------------------------------");
-                        message.AppendLine("...");
-                        var lines = File.ReadAllLines(_testerLog);
-                        for (var i = Math.Max(lines.Length - 20, 0); i < lines.Length; i++)
-                            message.AppendLine(lines[i]);
-                        SendEmailNotification(message.ToString());
+                        if (lastWrite > _lastReportedHang)
+                        {
+                            _lastReportedHang = lastWrite;
+                            Log("Hang detected, posting to " + Nightly.LABKEY_EMAIL_NOTIFICATION_URL);
+                            var message = new StringBuilder();
+                            message.AppendLine(Environment.MachineName);
+                            message.AppendLine("Hang detected");
+                            message.AppendLine();
+                            message.AppendFormat("Current time: {0} {1}" + Environment.NewLine, e.SignalTime.ToShortDateString(), e.SignalTime.ToShortTimeString());
+                            message.AppendFormat("Log last modified: {0} {1}" + Environment.NewLine, lastWrite.ToShortDateString(), lastWrite.ToShortTimeString());
+                            message.AppendLine();
+                            message.AppendLine("----------------------------------------");
+                            message.AppendLine("...");
+                            var lines = File.ReadAllLines(_testerLog);
+                            for (var i = Math.Max(lines.Length - 20, 0); i < lines.Length; i++)
+                                message.AppendLine(lines[i]);
+                            SendEmailNotification(message.ToString());
+                        }
+                        return;
                     }
-                    return;
                 }
 
                 var totalN = 0;
