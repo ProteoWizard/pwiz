@@ -59,7 +59,7 @@ namespace pwiz.Skyline.Controls.Graphs
             return null;
         }
 
-        public static string GetDisplayText(double cv, string annotation)
+        public static string GetDisplayText(double cv, object annotation)
         {
             // ReSharper disable LocalizableElement
             var cvString = (cv * AreaGraphController.GetAreaCVFactorToDecimal()).ToString(CultureInfo.CurrentCulture) + (Settings.Default.AreaCVShowDecimals ? "" : "%");
