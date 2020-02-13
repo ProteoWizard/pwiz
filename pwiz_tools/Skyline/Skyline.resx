@@ -497,6 +497,18 @@
   <data name="applyPeakSubsequentGraphMenuItem.Text" xml:space="preserve">
     <value>Apply Peak to Subsequent</value>
   </data>
+  <data name="applyPeakGroupGraphMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>212, 22</value>
+  </data>
+  <data name="applyPeakGroupGraphMenuItem.Text" xml:space="preserve">
+    <value>Apply Peak to Group</value>
+  </data>
+  <data name="groupApplyToByGraphMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>212, 22</value>
+  </data>
+  <data name="groupApplyToByGraphMenuItem.Text" xml:space="preserve">
+    <value>Group Apply to By</value>
+  </data>
   <data name="removePeakGraphMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>212, 22</value>
   </data>
@@ -2066,6 +2078,18 @@
   </data>
   <data name="applyPeakSubsequentToolStripMenuItem.Text" xml:space="preserve">
     <value>Apply Peak to Subsequent</value>
+  </data>
+  <data name="applyPeakGroupToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>284, 22</value>
+  </data>
+  <data name="applyPeakGroupToolStripMenuItem.Text" xml:space="preserve">
+    <value>toolStripMenuItem1</value>
+  </data>
+  <data name="groupApplyToByToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>284, 22</value>
+  </data>
+  <data name="groupApplyToByToolStripMenuItem.Text" xml:space="preserve">
+    <value>Group Apply to By</value>
   </data>
   <data name="removePeakToolStripMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Ctrl+Shift+R</value>
@@ -3905,6 +3929,18 @@ first occurrence of any peptide.</value>
   <data name="&gt;&gt;applyPeakSubsequentGraphMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;applyPeakGroupGraphMenuItem.Name" xml:space="preserve">
+    <value>applyPeakGroupGraphMenuItem</value>
+  </data>
+  <data name="&gt;&gt;applyPeakGroupGraphMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupApplyToByGraphMenuItem.Name" xml:space="preserve">
+    <value>groupApplyToByGraphMenuItem</value>
+  </data>
+  <data name="&gt;&gt;groupApplyToByGraphMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;removePeakGraphMenuItem.Name" xml:space="preserve">
     <value>removePeakGraphMenuItem</value>
   </data>
@@ -5313,6 +5349,18 @@ first occurrence of any peptide.</value>
     <value>applyPeakSubsequentToolStripMenuItem</value>
   </data>
   <data name="&gt;&gt;applyPeakSubsequentToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;applyPeakGroupToolStripMenuItem.Name" xml:space="preserve">
+    <value>applyPeakGroupToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;applyPeakGroupToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupApplyToByToolStripMenuItem.Name" xml:space="preserve">
+    <value>groupApplyToByToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;groupApplyToByToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;removePeakToolStripMenuItem.Name" xml:space="preserve">

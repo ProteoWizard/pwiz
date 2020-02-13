@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -56,6 +57,7 @@ namespace SkylineNightly
         private const string LABKEY_SERVER_ROOT = "skyline.ms";
         private const string LABKEY_MODULE = "testresults";
         private const string LABKEY_ACTION = "post";
+        private const string LABKEY_EMAIL_NOTIFICATION_ACTION = "sendEmailNotification";
 
         private static string GetPostUrl(string path)
         {
@@ -76,6 +78,8 @@ namespace SkylineNightly
         private static string LABKEY_INTEGRATION_URL = GetPostUrl("home/development/Integration");
         private static string LABKEY_INTEGRATION_PERF_URL = GetPostUrl("home/development/Integration%20With%20Perf%20Tests");
         private static string LABKEY_HOME_URL = GetUrl("home", "project", "begin");
+
+        public static string LABKEY_EMAIL_NOTIFICATION_URL = GetUrl("home/development/Nightly%20x64", LABKEY_MODULE, LABKEY_EMAIL_NOTIFICATION_ACTION);
 
         private static string LABKEY_CSRF = @"X-LABKEY-CSRF";
 
@@ -394,6 +398,11 @@ namespace SkylineNightly
 
             bool retryTester;
             const int maxRetryMinutes = 60;
+
+            var logMonitor = new LogFileMonitor(_logDir, LogFileName,
+                _runMode != RunMode.perf && _runMode != RunMode.release_perf && _runMode != RunMode.integration_perf ? 30 : 60);
+            logMonitor.Start();
+
             do
             {
                 var skylineTesterProcess = Process.Start(processInfo);
@@ -436,6 +445,7 @@ namespace SkylineNightly
             }
             while (retryTester);
 
+            logMonitor.Stop();
             return result;
         }
 
@@ -477,7 +487,7 @@ namespace SkylineNightly
                 }
                 catch (Exception e)
                 {
-                    Log("Error attempting to unzip SkylineTester: " + e.ToString());
+                    Log("Error attempting to unzip SkylineTester: " + e);
                     return false;
                 }
             }
@@ -816,11 +826,16 @@ namespace SkylineNightly
 
         public string GetLatestLog()
         {
-            var directory = new DirectoryInfo(_logDir);
+            return GetLatestLog(_logDir);
+        }
+
+        public static string GetLatestLog(string logDir)
+        {
+            var directory = new DirectoryInfo(logDir);
             var logFile = directory.GetFiles()
                 .Where(f => f.Name.StartsWith(Environment.MachineName) && f.Name.EndsWith(".log"))
                 .OrderByDescending(f => f.LastWriteTime)
-                .First();
+                .FirstOrDefault();
             return logFile == null ? null : logFile.FullName;
         }
 
@@ -830,32 +845,32 @@ namespace SkylineNightly
         private string PostToLink(string link, string postData, string filePath)
         {
             var errmessage = string.Empty;
-            Log("Posting results to " + link); 
+            Log("Posting results to " + link);
             for (var retry = 5; retry > 0; retry--)
             {
-                string boundary = "---------------------------" + DateTime.Now.Ticks.ToString("x"); 
-                byte[] boundarybytes = Encoding.ASCII.GetBytes("\r\n--" + boundary + "\r\n"); 
+                string boundary = "---------------------------" + DateTime.Now.Ticks.ToString("x");
+                byte[] boundarybytes = Encoding.ASCII.GetBytes("\r\n--" + boundary + "\r\n");
 
-                var wr = (HttpWebRequest) WebRequest.Create(link);
+                var wr = (HttpWebRequest)WebRequest.Create(link);
                 wr.ProtocolVersion = HttpVersion.Version10;
-                wr.ContentType = "multipart/form-data; boundary=" + boundary; 
-                wr.Method = "POST"; 
+                wr.ContentType = "multipart/form-data; boundary=" + boundary;
+                wr.Method = "POST";
                 wr.KeepAlive = true;
                 wr.Credentials = CredentialCache.DefaultCredentials;
 
-                SetCSRFToken(wr);
+                SetCSRFToken(wr, LogFileName);
 
                 var rs = wr.GetRequestStream();
 
                 rs.Write(boundarybytes, 0, boundarybytes.Length);
-                const string headerTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n"; 
+                const string headerTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n";
                 string header = string.Format(headerTemplate, "xml_file", filePath != null ? Path.GetFileName(filePath) : "xml_file", "text/xml");
                 byte[] headerbytes = Encoding.UTF8.GetBytes(header);
                 rs.Write(headerbytes, 0, headerbytes.Length);
                 var bytes = Encoding.UTF8.GetBytes(postData);
                 rs.Write(bytes, 0, bytes.Length);
 
-                byte[] trailer = Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n"); 
+                byte[] trailer = Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n");
                 rs.Write(trailer, 0, trailer.Length);
                 rs.Close();
 
@@ -882,12 +897,62 @@ namespace SkylineNightly
                 if (retry > 1)
                 {
                     Thread.Sleep(30000);
-                    Log("Retrying post"); 
+                    Log("Retrying post");
                     errmessage = String.Empty;
                 }
             }
             Log(errmessage = "Failed to post results: " + errmessage); 
             return errmessage;
+        }
+
+        public static string SendEmailNotification(string to, string subject, string message)
+        {
+            var postParams = new List<string>();
+            if (!string.IsNullOrEmpty(to))
+                postParams.Add("to=" + Uri.EscapeDataString(to));
+            if (!string.IsNullOrEmpty(subject))
+                postParams.Add("subject=" + Uri.EscapeDataString(subject));
+            if (!string.IsNullOrEmpty(message))
+                postParams.Add("message=" + Uri.EscapeDataString(message));
+            var postData = Encoding.ASCII.GetBytes(string.Join("&", postParams));
+            for (var retry = 5; retry > 0; retry--)
+            {
+                var request = (HttpWebRequest) WebRequest.Create(LABKEY_EMAIL_NOTIFICATION_URL);
+                request.ProtocolVersion = HttpVersion.Version11;
+                request.ContentType = "application/x-www-form-urlencoded";
+                request.Method = "POST";
+                request.KeepAlive = false;
+                request.Credentials = CredentialCache.DefaultCredentials;
+                request.Timeout = 30000; // 30 second timeout
+
+                SetCSRFToken(request, null);
+
+                using (var stream = request.GetRequestStream())
+                {
+                    stream.Write(postData, 0, postData.Length);
+                }
+
+                try
+                {
+                    using (var response = (HttpWebResponse)request.GetResponse())
+                    using (var responseStream = response.GetResponseStream())
+                    {
+                        if (responseStream != null)
+                        {
+                            using (var responseReader = new StreamReader(responseStream))
+                            {
+                                return responseReader.ReadToEnd();
+                            }
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    if (retry > 1)
+                        Thread.Sleep(30000);
+                }
+            }
+            return null;
         }
 
         private static string GetNightlyDir()
@@ -972,7 +1037,12 @@ namespace SkylineNightly
             }
         }
 
-        internal string Log(string message)
+        private string Log(string message)
+        {
+            return Log(LogFileName, message);
+        }
+
+        public static string Log(string logFileName, string message)
         {
             var time = DateTime.Now;
             var timestampedMessage = string.Format(
@@ -981,9 +1051,8 @@ namespace SkylineNightly
                 time.Minute.ToString("D2"),
                 time.Second.ToString("D2"),
                 message);
-            if (LogFileName != null)
-                File.AppendAllText(LogFileName, timestampedMessage
-                              + Environment.NewLine);
+            if (!string.IsNullOrEmpty(logFileName))
+                File.AppendAllText(logFileName, timestampedMessage + Environment.NewLine);
             return timestampedMessage;
         }
 
@@ -1031,7 +1100,7 @@ namespace SkylineNightly
             }
         }
 
-        private void SetCSRFToken(HttpWebRequest postReq)
+        private static void SetCSRFToken(HttpWebRequest postReq, string logFileName)
         {
             var url = LABKEY_HOME_URL;
 
@@ -1052,13 +1121,13 @@ namespace SkylineNightly
                     }
                     else
                     {
-                        Log(@"CSRF token not found.");
+                        Log(logFileName, @"CSRF token not found.");
                     }
                 }
             }
             catch (Exception e)
             {
-                Log($@"Error establishing a session and getting a CSRF token: {e}");
+                Log(logFileName, $@"Error establishing a session and getting a CSRF token: {e}");
             }
         }
     }

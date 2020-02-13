@@ -3008,11 +3008,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Linear equation calculation.
+        ///   Looks up a localized string similar to Regression equation calculation.
         /// </summary>
-        public static string CalibrateIrtDlg_btnGraph_Click_Linear_equation_calculation {
+        public static string CalibrateIrtDlg_btnGraph_Click_Regression_equation_calculation {
             get {
-                return ResourceManager.GetString("CalibrateIrtDlg_btnGraph_Click_Linear_equation_calculation", resourceCulture);
+                return ResourceManager.GetString("CalibrateIrtDlg_btnGraph_Click_Regression_equation_calculation", resourceCulture);
             }
         }
         
@@ -3133,24 +3133,6 @@ namespace pwiz.Skyline.Properties {
         public static string CalibrateIrtDlg_TryGetLine_The_standard_must_have_two_fixed_points {
             get {
                 return ResourceManager.GetString("CalibrateIrtDlg_TryGetLine_The_standard_must_have_two_fixed_points", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to iRT.
-        /// </summary>
-        public static string CalibrateIrtDlg_UpdateControls_iRT {
-            get {
-                return ResourceManager.GetString("CalibrateIrtDlg_UpdateControls_iRT", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to RT.
-        /// </summary>
-        public static string CalibrateIrtDlg_UpdateControls_RT {
-            get {
-                return ResourceManager.GetString("CalibrateIrtDlg_UpdateControls_RT", resourceCulture);
             }
         }
         
@@ -17866,7 +17848,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Scoring model converged (iteration {0} - {1:#,#} peaks at {2:0.#%} FDR).
+        ///   Looks up a localized string similar to Scoring model converged (iteration {0} - {1:#,#} peaks at {2:0.##%} FDR).
         /// </summary>
         public static string MProphetPeakScoringModel_Train_Scoring_model_converged__iteration__0_____1______peaks_at__2_0_____FDR_ {
             get {
@@ -17894,7 +17876,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Training scoring model (iteration {0} of {1} - {2:#,#} peaks at {3:0.#%} FDR).
+        ///   Looks up a localized string similar to Training scoring model (iteration {0} of {1} - {2:#,#} peaks at {3:0.##%} FDR).
         /// </summary>
         public static string MProphetPeakScoringModel_Train_Training_scoring_model__iteration__0__of__1_____2______peaks_at__3_0_____FDR_ {
             get {
@@ -22692,11 +22674,20 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Fixed points.
+        ///   Looks up a localized string similar to Fixed points (linear).
         /// </summary>
-        public static string RegressionOption_All_Fixed_points {
+        public static string RegressionOption_All_Fixed_points__linear_ {
             get {
-                return ResourceManager.GetString("RegressionOption_All_Fixed_points", resourceCulture);
+                return ResourceManager.GetString("RegressionOption_All_Fixed_points__linear_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fixed points (logarithmic).
+        /// </summary>
+        public static string RegressionOption_All_Fixed_points__logarithmic_ {
+            get {
+                return ResourceManager.GetString("RegressionOption_All_Fixed_points__logarithmic_", resourceCulture);
             }
         }
         
@@ -25480,6 +25471,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Apply Peak to .
+        /// </summary>
+        public static string SkylineWindow_BuildChromatogramMenu_Apply_Peak_to_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_BuildChromatogramMenu_Apply_Peak_to_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Store Panorama upload location.
         /// </summary>
         public static string SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_upload_location {
@@ -25682,6 +25682,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_EditNote_Edit_Note {
             get {
                 return ResourceManager.GetString("SkylineWindow_EditNote_Edit_Note", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Apply Peak to Group.
+        /// </summary>
+        public static string SkylineWindow_editToolStripMenuItem_DropDownOpening_Apply_Peak_to_Group {
+            get {
+                return ResourceManager.GetString("SkylineWindow_editToolStripMenuItem_DropDownOpening_Apply_Peak_to_Group", resourceCulture);
             }
         }
         

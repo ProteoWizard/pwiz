@@ -16,92 +16,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.Collections;
+using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
 {
     internal static class AnnotationHelper
     {
         /// <summary>
-        /// Returns candidates for grouping by annotation by the annotation target. (usually replicates)
-        /// </summary>
-        public static string[] FindGroupsByTarget(SrmSettings settings, AnnotationDef.AnnotationTarget target)
-        {
-            var replicateAnnotations = settings.DataSettings.AnnotationDefs
-                .Where(annotationDef => annotationDef.AnnotationTargets.Contains(target));
-
-            return replicateAnnotations.Select(a => a.Name).ToArray();
-        }
-
-        /// <summary>
         /// Gets possible values for an annotation.
         /// </summary>
-        public static string[] GetPossibleAnnotations(SrmSettings settings, string group, AnnotationDef.AnnotationTarget target)
+        public static IEnumerable<object> GetPossibleAnnotations(SrmDocument document, ReplicateValue replicateValue)
         {
-            var annotation = settings.DataSettings.AnnotationDefs.FirstOrDefault(annotationDef => annotationDef.AnnotationTargets.Contains(target) && annotationDef.Name == group);
-            if (annotation == null)
+            if (!document.Settings.HasResults || null == replicateValue)
             {
-                return new string[0];
+                return new object[0];
             }
-
-            switch (annotation.Type)
-            {
-                case AnnotationDef.AnnotationType.text:
-                case AnnotationDef.AnnotationType.number:
-                    return settings.MeasuredResults == null ? new string[0] : settings.MeasuredResults.Chromatograms
-                        .Select(c => c.Annotations.GetAnnotation(group)).Distinct().Where(s => s != null).ToArray();
-                case AnnotationDef.AnnotationType.value_list:
-                    return annotation.Items.ToArray();
-                case AnnotationDef.AnnotationType.true_false:
-                    return new[] { Resources.AnnotationHelper_GetReplicateIndicices_True, Resources.AnnotationHelper_GetReplicateIndicices_False };
-                default:
-                    return new string[0];   // Should never happen
-            }
+            var annotationCalculator = new AnnotationCalculator(document);
+            return document.Settings.MeasuredResults.Chromatograms
+                .Select(chromSet => replicateValue.GetValue(annotationCalculator, chromSet)).Distinct()
+                .OrderBy(x=>x, CollectionUtil.ColumnValueComparer);
         }
 
         /// <summary>
         /// Gets replicate indices for a specific grouping annotation and value.
         /// </summary>
-        public static int[] GetReplicateIndices(SrmSettings settings, string group, string annotationName)
+        public static int[] GetReplicateIndices(SrmDocument document, ReplicateValue group, object groupValue)
         {
-            var defaultResult = Enumerable.Range(0, settings.MeasuredResults.Chromatograms.Count).ToArray();
-            if (string.IsNullOrEmpty(group) || string.IsNullOrEmpty(annotationName))
+            var defaultResult = Enumerable.Range(0, document.Settings.MeasuredResults.Chromatograms.Count).ToArray();
+            if (group == null)
                 return defaultResult;
 
-            var annotation = settings.DataSettings.AnnotationDefs.FirstOrDefault(a => a.Name == group);
-            if (annotation == null)
-                return defaultResult;
-
-            var result = new List<int>();
-
-            for (var i = 0; i < settings.MeasuredResults.Chromatograms.Count; ++i)
-            {
-                switch (annotation.Type)
-                {
-                    case AnnotationDef.AnnotationType.text:
-                    case AnnotationDef.AnnotationType.number:
-                    case AnnotationDef.AnnotationType.value_list:
-                        if (settings.MeasuredResults.Chromatograms[i].Annotations.GetAnnotation(group) ==
-                            annotationName)
-                        {
-                            result.Add(i);
-                        }
-                        break;
-                    case AnnotationDef.AnnotationType.true_false:
-                        var a = settings.MeasuredResults.Chromatograms[i].Annotations.GetAnnotation(group);
-                        if (a == null && annotationName == Resources.AnnotationHelper_GetReplicateIndicices_False ||
-                            a != null && annotationName == Resources.AnnotationHelper_GetReplicateIndicices_True)
-                        {
-                            result.Add(i);
-                        }
-                        break;
-                }
-            }
-
-            return result.ToArray();
+            var annotationCalculator = new AnnotationCalculator(document);
+            return defaultResult.Where(i => Equals(groupValue,
+                group.GetValue(annotationCalculator, document.Settings.MeasuredResults.Chromatograms[i]))).ToArray();
         }
     }
 }
