@@ -3108,7 +3108,7 @@ namespace pwiz.Skyline
 
         public void CloseAllChromatograms()
         {
-            foreach (var graphChromatogram in _listGraphChrom)
+            foreach (var graphChromatogram in _listGraphChrom.ToList())
             {
                 graphChromatogram.Hide();
             }
