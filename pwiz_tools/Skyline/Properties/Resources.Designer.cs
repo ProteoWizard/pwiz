@@ -25471,6 +25471,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Apply Peak to .
+        /// </summary>
+        public static string SkylineWindow_BuildChromatogramMenu_Apply_Peak_to_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_BuildChromatogramMenu_Apply_Peak_to_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Store Panorama upload location.
         /// </summary>
         public static string SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_upload_location {
@@ -25673,6 +25682,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_EditNote_Edit_Note {
             get {
                 return ResourceManager.GetString("SkylineWindow_EditNote_Edit_Note", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Apply Peak to Group.
+        /// </summary>
+        public static string SkylineWindow_editToolStripMenuItem_DropDownOpening_Apply_Peak_to_Group {
+            get {
+                return ResourceManager.GetString("SkylineWindow_editToolStripMenuItem_DropDownOpening_Apply_Peak_to_Group", resourceCulture);
             }
         }
         

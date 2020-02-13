@@ -34,5 +34,20 @@ namespace MSConvertGUI.Properties {
                 this["LastUsedUnifiUrl"] = value;
             }
         }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public decimal NumFilesToConvertInParallel
+        {
+            get
+            {
+                return ((decimal)(this["NumFilesToConvertInParallel"]));
+            }
+            set
+            {
+                this["NumFilesToConvertInParallel"] = value;
+            }
+        }
     }
 }
