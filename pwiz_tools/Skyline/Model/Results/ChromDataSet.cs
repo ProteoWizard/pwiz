@@ -649,7 +649,7 @@ namespace pwiz.Skyline.Model.Results
         /// <summary>
         /// Generate <see cref="ChromDataPeak"/> objects to make peaks scorable
         /// </summary>
-        public void GeneratePeakData(TimeIntervals timeIntervals)
+        public void GeneratePeakData(TimeIntervals intersectedTimeIntervals)
         {
             // Set the processed peaks back to the chromatogram data
             HashSet<ChromKey> primaryPeakKeys = new HashSet<ChromKey>();
@@ -690,25 +690,25 @@ namespace pwiz.Skyline.Model.Results
                         flags |= ChromPeak.FlagValues.contains_id;
                     if (peakSet.IsAlignedIdentified)
                         flags |= ChromPeak.FlagValues.used_id_alignment;
-                    if (timeIntervals != null)
+                    if (intersectedTimeIntervals != null)
                     {
-                        if (!timeIntervals.ContainsTime(peak.StartTime) || !timeIntervals.ContainsTime(peak.EndTime))
+                        if (!intersectedTimeIntervals.ContainsTime(peak.StartTime) || !intersectedTimeIntervals.ContainsTime(peak.EndTime))
                         {
                             flags |= ChromPeak.FlagValues.peak_truncated;
                         }
                     }
 
-                    peak.CalcChromPeak(peakMax, flags, timeIntervals);
+                    peak.CalcChromPeak(peakMax, flags, intersectedTimeIntervals);
 
-                    if (timeIntervals != null)
+                    if (intersectedTimeIntervals != null)
                     {
                         float startTime = Times[peakMax.StartIndex];
                         float endTime = Times[peakMax.EndIndex];
-                        var intervalIndex = timeIntervals.IndexOfIntervalEndingAfter(startTime);
-                        if (intervalIndex >= 0 && intervalIndex < timeIntervals.Count)
+                        var intervalIndex = intersectedTimeIntervals.IndexOfIntervalEndingAfter(startTime);
+                        if (intervalIndex >= 0 && intervalIndex < intersectedTimeIntervals.Count)
                         {
-                            startTime = Math.Max(startTime, timeIntervals.Starts[intervalIndex]);
-                            endTime = Math.Min(endTime, timeIntervals.Ends[intervalIndex]);
+                            startTime = Math.Max(startTime, intersectedTimeIntervals.Starts[intervalIndex]);
+                            endTime = Math.Min(endTime, intersectedTimeIntervals.Ends[intervalIndex]);
                         }
 
                         var chromPeak = new ChromPeak(peak.Data.RawTimeIntensities, startTime, endTime, flags);

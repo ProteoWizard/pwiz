@@ -57,11 +57,6 @@ namespace pwiz.Skyline.Model.DocSettings
         void GetCurve(RetentionTimeStatistics statistics, out double[] hyrdoScores, out double[] predictions);
     }
 
-    public interface IInvertibleRegressionFunction : IRegressionFunction
-    {
-
-    }
-
     /// <summary>
     /// Describes a slope and intercept for converting from a
     /// hydrophobicity factor to a predicted retention time in minutes.
