@@ -399,7 +399,8 @@ namespace SkylineNightly
             bool retryTester;
             const int maxRetryMinutes = 60;
 
-            var logMonitor = new LogFileMonitor(_logDir, LogFileName);
+            var logMonitor = new LogFileMonitor(_logDir, LogFileName,
+                _runMode != RunMode.perf && _runMode != RunMode.release_perf && _runMode != RunMode.integration_perf ? 30 : 60);
             logMonitor.Start();
 
             do
