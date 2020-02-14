@@ -185,6 +185,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
         {
             get { return tbxConfidenceLevel; }
         }
+
+        public TextBox TextBoxQValueCutoff
+        {
+            get { return tbxQValueCutoff; }
+        }
+
         public RadioButton RadioScopePerProtein { get { return radioScopeProtein; } }
         public RadioButton RadioScopePerPeptide { get { return radioScopePeptide; } }
 

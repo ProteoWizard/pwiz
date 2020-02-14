@@ -1026,22 +1026,22 @@ namespace pwiz.SkylineTestUtil
 
         private static FormLookup _formLookup;
 
-        public void PauseForScreenShot(string description = null, int? pageNum = null)
+        public void PauseForScreenShot(string description = null, int? pageNum = null, int? timeout = null)
         {
-            PauseForScreenShot(description, pageNum, null);
+            PauseForScreenShot(description, pageNum, null, null, timeout);
         }
-        public void PauseForScreenShot(Form screenshotForm, string description = null, int? pageNum = null)
+        public void PauseForScreenShot(Form screenshotForm, string description = null, int? pageNum = null, int? timeout = null)
         {
-            PauseForScreenShot(description, pageNum, null, screenshotForm);
+            PauseForScreenShot(description, pageNum, null, screenshotForm, timeout);
         }
 
-        public void PauseForScreenShot<TView>(string description, int? pageNum = null)
+        public void PauseForScreenShot<TView>(string description, int? pageNum = null, int? timeout = null)
             where TView : IFormView
         {
-            PauseForScreenShot(description, pageNum, typeof(TView));
+            PauseForScreenShot(description, pageNum, typeof(TView), null, timeout);
         }
 
-        private void PauseForScreenShot(string description, int? pageNum, Type formType, Form screenshotForm = null)
+        private void PauseForScreenShot(string description, int? pageNum, Type formType, Form screenshotForm = null, int? timeout = null)
         {
             if (Program.SkylineOffscreen)
                 return;
@@ -1072,7 +1072,7 @@ namespace pwiz.SkylineTestUtil
                 formSeen.Saw(formType);
                 bool showMatchingPages = IsShowMatchingTutorialPages || Program.ShowMatchingPages;
 
-                PauseAndContinueForm.Show(description, LinkPage(pageNum), showMatchingPages);
+                PauseAndContinueForm.Show(description, LinkPage(pageNum), showMatchingPages, timeout);
             }
             else
             {
