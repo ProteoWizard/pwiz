@@ -446,7 +446,7 @@ namespace pwiz.Skyline.Model.Results
         /// Do initial grouping of and ranking of peaks using the Crawdad
         /// peak detector.
         /// </summary>
-        public void PickChromatogramPeaks(double[] retentionTimes, bool isAlignedTimes)
+        public void PickChromatogramPeaks(double[] retentionTimes, bool isAlignedTimes, ExplicitRetentionTimeInfo explicitRT)
         {
             // Make sure chromatograms are in sorted order
             _listChromData.Sort();
@@ -484,7 +484,7 @@ namespace pwiz.Skyline.Model.Results
                 }
                 if (doFindPeaks)
                 {
-                    chromData.FindPeaks(retentionTimes, TimeIntervals);
+                    chromData.FindPeaks(retentionTimes, TimeIntervals, explicitRT);
                 }
                 else
                 {

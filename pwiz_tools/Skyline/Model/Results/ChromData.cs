@@ -130,7 +130,7 @@ namespace pwiz.Skyline.Model.Results
             return newChromData;
         }
 
-        public void FindPeaks(double[] retentionTimes, TimeIntervals timeIntervals)
+        public void FindPeaks(double[] retentionTimes, TimeIntervals timeIntervals, ExplicitRetentionTimeInfo explicitRT)
         {
             Finder = Crawdads.NewCrawdadPeakFinder();
             Finder.SetChromatogram(Times, Intensities);
@@ -148,6 +148,18 @@ namespace pwiz.Skyline.Model.Results
             }
             // Calculate smoothing for later use in extending the Crawdad peaks
             IntensitiesSmooth = ChromatogramInfo.SavitzkyGolaySmooth(Intensities.ToArray());
+
+            // Accept only peaks within the user-provided RT window, if any
+            if (explicitRT != null)
+            {
+                var winLow = (float)(explicitRT.RetentionTime - 0.5 * (explicitRT.RetentionTimeWindow ?? 0));
+                var winHigh = winLow + (float)(explicitRT.RetentionTimeWindow ?? 0);
+                RawPeaks = RawPeaks.Where(rp =>
+                {
+                    var t = Times[rp.TimeIndex];
+                    return winLow <= t && t <= winHigh;
+                });
+            }
         }
 
         private IEnumerable<IFoundPeak> FindIntervalPeaks(float intervalStart, float intervalEnd, IList<int> identifiedIndices)
