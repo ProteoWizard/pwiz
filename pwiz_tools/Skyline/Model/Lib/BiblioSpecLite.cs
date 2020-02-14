@@ -1565,6 +1565,8 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         var matchedTarget = matchedItem.Key;
                         var match = matchedItem.IonMobilitiesByFileId.AllValuesSorted;
+                        if (match == null)
+                            continue;
                         if (timesDict.TryGetValue(matchedTarget, out var mobilities))
                         {
                             var newMobilities = match.Concat(mobilities).ToArray();
@@ -2364,6 +2366,9 @@ namespace pwiz.Skyline.Model.Lib
         {
             get
             {
+                if (null == _ionMobilityById)
+                    return null;
+
                 var val = _ionMobilityById.Values.SelectMany(i => i).ToArray();
                 Array.Sort(val);
                 return val;
