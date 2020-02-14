@@ -168,7 +168,7 @@ namespace pwiz.Skyline.SettingsUI
                 e.Cancel = true;
         }
 
-        private Target TryResolveTarget(object targetText, out string errorText)
+        protected Target TryResolveTarget(object targetText, out string errorText)
         {
             if (targetText == null)
             {
