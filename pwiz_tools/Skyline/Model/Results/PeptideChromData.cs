@@ -174,12 +174,20 @@ namespace pwiz.Skyline.Model.Results
             // Make sure times are evenly spaced before doing any peak detection.
             EvenlySpaceTimes();
             var explicitPeakBounds = _document.Settings.GetExplicitPeakBounds(NodePep, FileInfo.FilePath);
+
+            // If an explicit retention time was provided, limit peak picking to that window
+            var explicitRetentionTime = NodePep?.ExplicitRetentionTime;
+            if (explicitRetentionTime != null && !explicitRetentionTime.RetentionTimeWindow.HasValue)
+            {
+                // If no explicit window, use the one in Peptide Settings
+                explicitRetentionTime = new ExplicitRetentionTimeInfo(explicitRetentionTime.RetentionTime, _document.Settings.PeptideSettings.Prediction.MeasuredRTWindow);
+            }
             // Pick peak groups at the precursor level
             foreach (var chromDataSet in _dataSets)
             {
                 if (explicitPeakBounds == null)
                 {
-                    chromDataSet.PickChromatogramPeaks(_retentionTimes, _isAlignedTimes);
+                    chromDataSet.PickChromatogramPeaks(_retentionTimes, _isAlignedTimes, explicitRetentionTime);
                 }
                 else
                 {
