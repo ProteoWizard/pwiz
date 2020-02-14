@@ -179,6 +179,7 @@ namespace pwiz.Skyline.Model.Results
             var explicitRetentionTime = NodePep?.ExplicitRetentionTime;
             if (explicitRetentionTime != null && !explicitRetentionTime.RetentionTimeWindow.HasValue)
             {
+                // If no explicit window, use the one in Peptide Settings
                 explicitRetentionTime = new ExplicitRetentionTimeInfo(explicitRetentionTime.RetentionTime, _document.Settings.PeptideSettings.Prediction.MeasuredRTWindow);
             }
             // Pick peak groups at the precursor level

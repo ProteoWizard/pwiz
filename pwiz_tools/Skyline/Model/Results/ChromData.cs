@@ -148,14 +148,16 @@ namespace pwiz.Skyline.Model.Results
             }
             // Calculate smoothing for later use in extending the Crawdad peaks
             IntensitiesSmooth = ChromatogramInfo.SavitzkyGolaySmooth(Intensities.ToArray());
-            // Accept only peaks within the user-provided window if any
+
+            // Accept only peaks within the user-provided RT window, if any
             if (explicitRT != null)
             {
+                var winLow = (float)(explicitRT.RetentionTime - 0.5 * (explicitRT.RetentionTimeWindow ?? 0));
+                var winHigh = winLow + (float)(explicitRT.RetentionTimeWindow ?? 0);
                 RawPeaks = RawPeaks.Where(rp =>
                 {
                     var t = Times[rp.TimeIndex];
-                    var winLow = explicitRT.RetentionTime - 0.5 * (explicitRT.RetentionTimeWindow ?? 0);
-                    return winLow <= t && t <= winLow + (explicitRT.RetentionTimeWindow ?? 0);
+                    return winLow <= t && t <= winHigh;
                 });
             }
         }
