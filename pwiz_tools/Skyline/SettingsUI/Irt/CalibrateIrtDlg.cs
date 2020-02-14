@@ -379,7 +379,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         private void StandardsChanged(object sender, EventArgs eventArgs)
         {
-            if (!FireStandardsChanged)
+            if (!FireStandardsChanged || !_gridViewDriver.ItemsValid)
                 return;
 
             var oldPeps = comboMinPeptide.Items.Cast<string>().ToArray();
@@ -621,6 +621,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 GridView.CellValueChanged += parent.StandardsChanged;
                 Items.ListChanged += parent.StandardsChanged;
             }
+
+            public bool ItemsValid => Items.All(item => item.Target != null && !(item.RetentionTime <= 0));
 
             protected override void DoPaste()
             {
