@@ -1124,6 +1124,11 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         protected void RunFunctionalTest(string defaultUiMode = UiModes.PROTEOMIC)
         {
+            if (IsPerfTest && !RunPerfTests)
+            {
+                return; // Don't want to run this lengthy test right now
+            }
+
             bool firstTry = true;
             // Be prepared to re-run test in the event that a previously downloaded data file is damaged or stale
             for (;;)
@@ -1196,11 +1201,6 @@ namespace pwiz.SkylineTestUtil
 
         protected void RunFunctionalTestOrThrow(string defaultUiMode)
         {
-            if (IsPerfTest && !RunPerfTests)
-            {
-                return; // Don't want to run this lengthy test right now
-            }
-
             Program.FunctionalTest = true;
             Program.DefaultUiMode = defaultUiMode;
             Program.TestExceptions = new List<Exception>();
