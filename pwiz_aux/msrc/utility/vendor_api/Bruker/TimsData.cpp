@@ -26,6 +26,7 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/sort_together.hpp"
 #include "TimsData.hpp"
 #include "sqlite3pp.h"
 
