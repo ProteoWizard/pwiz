@@ -22,6 +22,7 @@
 
 #include "Std.hpp"
 #include "BinaryData.hpp"
+#include "sort_together.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 
 #ifdef __cplusplus_cli

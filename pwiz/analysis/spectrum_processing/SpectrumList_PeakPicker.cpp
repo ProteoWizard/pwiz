@@ -295,6 +295,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, bool g
         if (mzs.empty())
             return s;
 
+        // remove extra arrays that are the same length as the m/z array because pwiz peak picking will not preserve the one-to-one correspondence
+        for (size_t i = 2; i < s->binaryDataArrayPtrs.size(); ++i)
+            if (s->binaryDataArrayPtrs[i]->data.size() == mzs.size())
+                s->binaryDataArrayPtrs.erase(s->binaryDataArrayPtrs.begin() + (i--));
+
         vector<double> xPeakValues, yPeakValues;
         algorithm_->detect(mzs, intensities, xPeakValues, yPeakValues);
         mzs.swap(xPeakValues);

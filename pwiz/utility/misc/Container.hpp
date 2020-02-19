@@ -78,66 +78,6 @@ using std::lower_bound;
 using std::upper_bound;
 
 
-namespace pwiz {
-namespace util {
-
-    template<typename T>
-    struct SortByOther
-    {
-        T begin_;
-
-        SortByOther(T sortValuesBegin) :
-            begin_(sortValuesBegin) {}
-
-        bool operator()(int i1, int i2) const
-        {
-            return *(begin_ + i1) < *(begin_ + i2);
-        }
-    };
-
-    template<typename ContainerT, typename ContainerOfContainerTIterator>
-    void sort_together(ContainerT& sortValues, ContainerOfContainerTIterator cosortValuesItrRangeBegin, ContainerOfContainerTIterator cosortValuesItrRangeEnd)
-    {
-        size_t size = sortValues.size();
-        vector<size_t> indices(size);
-        for (size_t i = 0; i < size; ++i)
-            indices[i] = i;
-        std::sort(indices.begin(), indices.end(), SortByOther<typename ContainerT::iterator>(sortValues.begin()));
-
-        ContainerT tmpSortValues(size);
-        size_t numRanges = cosortValuesItrRangeEnd - cosortValuesItrRangeBegin;
-        vector<ContainerT> tmpValuesRanges(numRanges);
-        for (auto& tmpValues : tmpValuesRanges)
-            tmpValues.resize(size);
-
-        for (size_t i = 0; i < size; ++i)
-        {
-            tmpSortValues[i] = sortValues[indices[i]];
-            for (size_t j = 0; j < numRanges; ++j)
-            {
-                auto& tmpValues = tmpValuesRanges[j];
-                auto& cosortValuesItr = *(cosortValuesItrRangeBegin + j);
-                tmpValues[i] = *(cosortValuesItr.begin() + indices[i]);
-            }
-        }
-        std::swap(tmpSortValues, sortValues);
-        for (size_t j = 0; j < numRanges; ++j)
-        {
-            auto& tmpCosortValues = *(cosortValuesItrRangeBegin + j);
-            for (size_t i = 0; i < size; ++i)
-                std::iter_swap(tmpValuesRanges[j].begin() + i, tmpCosortValues.begin() + i);
-        }
-    }
-
-    template<typename ContainerT, typename ContainerOfContainerT>
-    void sort_together(ContainerT& sortValues, ContainerOfContainerT cosortValuesItrRange)
-    {
-        sort_together(sortValues, std::begin(cosortValuesItrRange), std::end(cosortValuesItrRange));
-    }
-
-} // namespace util
-} // namespace pwiz
-
 #ifndef PWIZ_CONFIG_NO_CONTAINER_OUTPUT_OPERATORS
 
 // output operators for standard containers
