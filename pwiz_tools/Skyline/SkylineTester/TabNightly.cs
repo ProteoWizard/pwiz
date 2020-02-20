@@ -734,6 +734,7 @@ namespace SkylineTester
 
         BackgroundWorker SkylineTesterWindow.IMemoryGraphContainer.UpdateWorker { get; set; }
 
+        // Facilitates IPC so that we can receive signals from SkylineNightly
         [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
         public class NightlyListener: IEndTimeSetter
         {
@@ -773,6 +774,7 @@ namespace SkylineTester
             }
         }
 
+        // Allows SkylineNightly to change the stop time of a nightly run via IPC
         [ServiceContract]
         public interface IEndTimeSetter
         {

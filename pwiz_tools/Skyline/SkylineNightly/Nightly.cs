@@ -437,8 +437,9 @@ namespace SkylineNightly
                     {
                         if (logMonitor.IsHanging())
                         {
-                            // extend the end time until 12pm
-                            var newEndTime = new DateTime(endTime.Year, endTime.Month, endTime.Hour < 12 ? endTime.Day : endTime.Day + 1, 12, 0, 0);
+                            // extend the end time until 12pm to give us more time to attach a debugger
+                            var newEndTime = originalEndTime.AddHours(16);
+                            newEndTime = new DateTime(newEndTime.Year, newEndTime.Month, newEndTime.Day, 12, 0, 0);
                             if (SetEndTime(newEndTime))
                                 endTime = newEndTime;
                         }
@@ -1156,6 +1157,7 @@ namespace SkylineNightly
         private static readonly ChannelFactory<IEndTimeSetter> END_TIME_SETTER_FACTORY =
             new ChannelFactory<IEndTimeSetter>(new NetNamedPipeBinding(), new EndpointAddress("net.pipe://localhost/Nightly/SetEndTime"));
 
+        // Set the end time of an already running nightly run (e.g. if there is a hang and we want to give more time for someone to attach a debugger)
         public bool SetEndTime(DateTime endTime)
         {
             try
@@ -1169,6 +1171,7 @@ namespace SkylineNightly
             }
         }
 
+        // Allows SkylineNightly to change the stop time of a nightly run via IPC
         [ServiceContract]
         public interface IEndTimeSetter
         {
