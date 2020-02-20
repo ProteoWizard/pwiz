@@ -283,7 +283,7 @@ struct MSSpectrumImpl : public MSSpectrum
     virtual size_t getLineDataSize() const {return lineDataSize_;}
     virtual size_t getProfileDataSize() const {return profileDataSize_;}
 
-    virtual void getLineData(automation_vector<double>& mz, automation_vector<double>& intensities) const
+    virtual void getLineData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const
     {
         try
         {
@@ -305,8 +305,8 @@ struct MSSpectrumImpl : public MSSpectrum
             }
 
             // we always get a copy of the arrays because they can be modified by the client
-            ToAutomationVector((cli::array<double>^) lineMzArray_, mz);
-            ToAutomationVector((cli::array<double>^) lineIntensityArray_, intensities);
+            ToBinaryData((cli::array<double>^) lineMzArray_, mz);
+            ToBinaryData((cli::array<double>^) lineIntensityArray_, intensities);
 
             // the automation vectors now own the arrays, so nullify the cached versions
             lineMzArray_ = nullptr;
@@ -315,7 +315,7 @@ struct MSSpectrumImpl : public MSSpectrum
         CATCH_AND_FORWARD
     }
 
-    virtual void getProfileData(automation_vector<double>& mz, automation_vector<double>& intensities) const
+    virtual void getProfileData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const
     {
         try
         {
@@ -337,8 +337,8 @@ struct MSSpectrumImpl : public MSSpectrum
             }
 
             // we always get a copy of the arrays because they can be modified by the client
-            ToAutomationVector((cli::array<double>^) profileMzArray_, mz);
-            ToAutomationVector((cli::array<double>^) profileIntensityArray_, intensities);
+            ToBinaryData((cli::array<double>^) profileMzArray_, mz);
+            ToBinaryData((cli::array<double>^) profileIntensityArray_, intensities);
 
             // the automation vectors now own the arrays, so nullify the cached versions
             profileMzArray_ = nullptr;

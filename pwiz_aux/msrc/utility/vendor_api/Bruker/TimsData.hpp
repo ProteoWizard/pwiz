@@ -68,9 +68,10 @@ struct DiaPasefIsolationInfo
 enum class MsMsType
 {
     MS1 = 0,
-    MRM =2,
+    MRM = 2,
     DDA_PASEF = 8,
-    DIA_PASEF = 9
+    DIA_PASEF = 9,
+    PRM_PASEF = 10
 };
 
 struct PWIZ_API_DECL TimsFrame
@@ -139,8 +140,8 @@ public:
     virtual bool hasProfileData() const;
     virtual size_t getLineDataSize() const;
     virtual size_t getProfileDataSize() const;
-    virtual void getLineData(automation_vector<double>& mz, automation_vector<double>& intensities) const;
-    virtual void getProfileData(automation_vector<double>& mz, automation_vector<double>& intensities) const;
+    virtual void getLineData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const;
+    virtual void getProfileData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const;
 
     virtual double getTIC() const { return frame_.tic_; }
     virtual double getBPI() const { return frame_.bpi_; }
