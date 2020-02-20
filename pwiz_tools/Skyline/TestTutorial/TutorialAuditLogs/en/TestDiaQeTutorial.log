@@ -261,9 +261,23 @@ Settings > Document Settings -- Group Comparisons > "By Condition" > Use zero fo
 Settings > Document Settings -- Group Comparisons > "By Condition" > Q-value cutoff is "0.01"
 Settings > Document Settings -- Group Comparisons > "By Condition" > Formatting rows is Empty
 
+Undo Redo : Group Comparison > "By Condition" > Formatting rows changed
+Summary   : Settings > Document Settings -- Group Comparisons > "By Condition" > Formatting rows changed
+All Info  :
+Group Comparison > "By Condition" > Formatting rows changed
+Settings > Document Settings -- Group Comparisons > "By Condition" > Formatting rows : { Expression = "ProteinName: ECOLI", Labeled = False, Size = "Normal", Symbol = "Circle", RGB = "128, 0, 255" } was added
+Settings > Document Settings -- Group Comparisons > "By Condition" > Formatting rows : { Expression = "ProteinName: YEAS", Labeled = False, Size = "Normal", Symbol = "Circle", RGB = "255, 128, 0" } was added
+Settings > Document Settings -- Group Comparisons > "By Condition" > Formatting rows : { Expression = "ProteinName: HUMAN", Labeled = False, Size = "Normal", Symbol = "Circle", RGB = "0, 128, 0" } was added
+
 Undo Redo : Group Comparison > "By Condition" > Protein scope changed to True
 Summary   : Settings > Document Settings -- Group Comparisons > "By Condition" > Protein scope changed to True
 All Info  :
 Group Comparison > "By Condition" > Protein scope changed to True
 Settings > Document Settings -- Group Comparisons > "By Condition" > Protein scope changed from False to True
+
+Undo Redo : Group Comparison > "By Condition" > Summary method changed from "Sum of transition areas" to "Turkey's Median Polish"
+Summary   : Settings > Document Settings -- Group Comparisons > "By Condition" > Summary method changed from "Sum of transition areas" to "Turkey's Median Polish"
+All Info  :
+Group Comparison > "By Condition" > Summary method changed from "Sum of transition areas" to "Turkey's Median Polish"
+Settings > Document Settings -- Group Comparisons > "By Condition" > Summary method changed from "Sum of transition areas" to "Turkey's Median Polish"
 

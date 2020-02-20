@@ -181,6 +181,11 @@ namespace pwiz.Skyline.Controls.GroupComparison
             get { return comboCaseValue; }
         }
 
+        public ComboBox ComboSummaryMethod
+        {
+            get { return comboSummaryMethod; }
+        }
+
         public TextBox TextBoxConfidenceLevel
         {
             get { return tbxConfidenceLevel; }

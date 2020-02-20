@@ -531,9 +531,23 @@ All Info  :
 设置 > 文档设置 -- 群组比较 > "By Condition" > Q值界限 是 "0.01"
 设置 > 文档设置 -- 群组比较 > "By Condition" > 格式化行 是 空
 
+Undo Redo : 群组比较 > "By Condition" > 格式化行 已更改
+Summary   : 设置 > 文档设置 -- 群组比较 > "By Condition" > 格式化行 已更改
+All Info  :
+群组比较 > "By Condition" > 格式化行 已更改
+设置 > 文档设置 -- 群组比较 > "By Condition" > 格式化行 : { 表达式 = "ProteinName: ECOLI", 已标记 = 假, 大小 = "正常", 符号 = "圆圈", 红绿蓝 = "128, 0, 255" } 已添加
+设置 > 文档设置 -- 群组比较 > "By Condition" > 格式化行 : { 表达式 = "ProteinName: YEAS", 已标记 = 假, 大小 = "正常", 符号 = "圆圈", 红绿蓝 = "255, 128, 0" } 已添加
+设置 > 文档设置 -- 群组比较 > "By Condition" > 格式化行 : { 表达式 = "ProteinName: HUMAN", 已标记 = 假, 大小 = "正常", 符号 = "圆圈", 红绿蓝 = "0, 128, 0" } 已添加
+
 Undo Redo : 群组比较 > "By Condition" > 蛋白质范围 已更改为 真
 Summary   : 设置 > 文档设置 -- 群组比较 > "By Condition" > 蛋白质范围 已更改为 真
 All Info  :
 群组比较 > "By Condition" > 蛋白质范围 已更改为 真
 设置 > 文档设置 -- 群组比较 > "By Condition" > 蛋白质范围 从 假 更改到 真
+
+Undo Redo : 群组比较 > "By Condition" > 总结方法 从 "离子对面积总和" 更改到 "Turkey 中位数平滑"
+Summary   : 设置 > 文档设置 -- 群组比较 > "By Condition" > 总结方法 从 "离子对面积总和" 更改到 "Turkey 中位数平滑"
+All Info  :
+群组比较 > "By Condition" > 总结方法 从 "离子对面积总和" 更改到 "Turkey 中位数平滑"
+设置 > 文档设置 -- 群组比较 > "By Condition" > 总结方法 从 "离子对面积总和" 更改到 "Turkey 中位数平滑"
 

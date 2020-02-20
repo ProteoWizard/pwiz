@@ -18,13 +18,14 @@
  */
 
 using System;
-using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
@@ -34,6 +35,7 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -69,6 +71,8 @@ namespace TestPerf
             public string ScoringModelCoefficients;
             public PointF ChromatogramClickPoint;
             public double[][] MassErrorStats;
+            public int[] DiffPeptideCounts;
+            public int UnpolishedProteins;
         }
 
         private string[] DiaFiles
@@ -116,7 +120,9 @@ namespace TestPerf
                     new []{4.6, 4.3},
                     new []{-0.4, 3.7},
                     new []{1.1, 3.9},
-                }
+                },
+                DiffPeptideCounts = new[] { 143, 44, 31, 57 },
+                UnpolishedProteins = 9
             });
 
             RunTest();
@@ -157,7 +163,9 @@ namespace TestPerf
                     new[] {2.3, 3.2},
                     new[] {2.5, 2.3},
                     new[] {2.1, 3.1},
-                }
+                },
+                DiffPeptideCounts = new[] { 145, 50, 31, 53 },
+                UnpolishedProteins = 7
             });
 
             RunTest();
@@ -335,9 +343,7 @@ namespace TestPerf
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
                 importPeptideSearchDlg.FullScanSettingsControl.ProductRes = 20;
 
-//              TODO: Wizard should turn off MS1 extraction when precursor is removed
-//                Assert.AreEqual(importPeptideSearchDlg.FullScanSettingsControl.PrecursorIsotopesCurrent, FullScanPrecursorIsotopes.None);
-                importPeptideSearchDlg.FullScanSettingsControl.PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.None;
+                Assert.AreEqual(importPeptideSearchDlg.FullScanSettingsControl.PrecursorIsotopesCurrent, FullScanPrecursorIsotopes.None);
                 Assert.AreEqual(FullScanMassAnalyzerType.centroided, importPeptideSearchDlg.FullScanSettingsControl.ProductMassAnalyzer);
                 Assert.AreEqual(RetentionTimeFilterType.scheduling_windows, importPeptideSearchDlg.FullScanSettingsControl.RetentionTimeFilterType);
                 Assert.AreEqual(5, importPeptideSearchDlg.FullScanSettingsControl.TimeAroundPrediction);
@@ -529,6 +535,11 @@ namespace TestPerf
             WaitForGraphs();
             Assert.IsTrue(SkylineWindow.GraphMassError.TryGetGraphPane(out MassErrorHistogramGraphPane massErrorPane));
             int massErrorStatsIndex = 0;
+            if (IsRecordMode)
+            {
+                Console.WriteLine(@"MassErrorStats = new[]");
+                Console.WriteLine(@"{");
+            }
             ValidateMassErrors(massErrorPane, massErrorStatsIndex++);
 
             // CONSIDER: No way to specify mass error graph window in PauseForScreenShot or ShowDialog
@@ -541,6 +552,10 @@ namespace TestPerf
                 RunUI(() => SkylineWindow.ActivateReplicate(chromatogramSet.Name));
                 WaitForGraphs();
                 ValidateMassErrors(massErrorPane, massErrorStatsIndex++);
+            }
+            if (IsRecordMode)
+            {
+                Console.WriteLine(@"},");
             }
 
             RunUI(() =>
@@ -560,6 +575,7 @@ namespace TestPerf
             RunUI(() => SkylineWindow.ShowPlotType(PlotTypeRT.residuals));
             WaitForGraphs();
             PauseForScreenShot("Retention time regression graph window - residuals", 25);
+            RunUI(() => SkylineWindow.ShowGraphRetentionTime(false, GraphTypeSummary.score_to_run_regression));
 
             var editGroupComparisonDlg = ShowDialog<EditGroupComparisonDlg>(SkylineWindow.AddGroupComparison);
             const string groupComparisonName = @"By Condition";
@@ -580,35 +596,143 @@ namespace TestPerf
             PauseForScreenShot("Group comparison", 26);
 
             OkDialog(editGroupComparisonDlg, editGroupComparisonDlg.OkDialog);
+            var fcResultProperty = PropertyPath.Root.Property("FoldChangeResult");
+            var proteinProperty = PropertyPath.Root.Property("Protein");
             RunUI(() => SkylineWindow.ShowGroupComparisonWindow(groupComparisonName));
-            var foldChangeGrid = WaitForOpenForm<FoldChangeGrid>();
-            WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete &&
-                                     foldChangeGrid.DataboundGridControl.FindColumn(PropertyPath.Root.Property("FoldChangeResult")) != null);
+            {
+                var fcGrid = WaitForOpenForm<FoldChangeGrid>();
+                var fcGridControl = fcGrid.DataboundGridControl;
+                WaitForConditionUI(() => fcGridControl.IsComplete && fcGridControl.FindColumn(fcResultProperty) != null);
+                RunUI(() =>
+                {
+                    var foldChangeResultColumn = fcGridControl.FindColumn(fcResultProperty);
+                    fcGrid.DataboundGridControl.DataGridView.AutoResizeColumn(foldChangeResultColumn.Index);
+                    var proteinNameColumn = fcGridControl.FindColumn(proteinProperty);
+                    fcGrid.DataboundGridControl.DataGridView.AutoResizeColumn(proteinNameColumn.Index);
+                });
+                WaitForConditionUI(() => 0 != fcGridControl.RowCount, "0 != foldChangeGrid.DataboundGridControl.RowCount");
+                WaitForConditionUI(() => fcGridControl.IsComplete, "foldChangeGrid.DataboundGridControl.IsComplete");
+                PauseForScreenShot<FoldChangeGrid>("By Condition grid", 27);
+
+                var volcanoPlot = ShowDialog<FoldChangeVolcanoPlot>(fcGrid.ShowVolcanoPlot);
+                RestoreViewOnScreen(27);
+                PauseForScreenShot<FoldChangeVolcanoPlot>("By Condition:Volcano Plot - unformatted", 27);
+                volcanoPlot = WaitForOpenForm<FoldChangeVolcanoPlot>();    // May have changed with RestoreViewsOnScreen
+                WaitForConditionUI(() => volcanoPlot.CurveList.Count == 5);
+                WaitForConditionUI(() => volcanoPlot.CurveList[4].Points.Count > SkylineWindow.Document.MoleculeCount/2);
+                RunUI(() =>
+                {
+                    int actualPoints = volcanoPlot.CurveList[4].Points.Count;
+                    if (IsRecordMode)
+                        Console.Write(@"DiffPeptideCounts = new[] { " + actualPoints);
+                    else
+                        Assert.AreEqual(_instrumentValues.DiffPeptideCounts[0], actualPoints);
+                });
+                var formattingDlg = ShowDialog<VolcanoPlotFormattingDlg>(volcanoPlot.ShowFormattingDialog);
+                ApplyFormatting(formattingDlg, "ECOLI", "128, 0, 255");
+                var createExprDlg = ShowDialog<CreateMatchExpressionDlg>(() =>
+                {
+                    var bindingList = formattingDlg.GetCurrentBindingList();
+                    formattingDlg.ClickCreateExpression(bindingList.Count - 1);
+                });
+                PauseForScreenShot("Create Expression form", 28);
+                OkDialog(createExprDlg, createExprDlg.OkDialog);
+
+                ApplyFormatting(formattingDlg, "YEAS", "255, 128, 0");
+                ApplyFormatting(formattingDlg, "HUMAN", "0, 128, 0");
+                PauseForScreenShot("Volcano plot formatting form", 29);
+
+                OkDialog(formattingDlg, formattingDlg.OkDialog);
+                WaitForConditionUI(() => volcanoPlot.CurveList.Count == 8 &&
+                                         volcanoPlot.CurveList[7].Points.Count == 11); // iRTs
+                for (int i = 1; i < 4; i++)
+                {
+                    RunUI(() =>
+                    {
+                        int actualPoints = volcanoPlot.CurveList[7 - i].Points.Count;
+                        if (IsRecordMode)
+                            Console.Write(@", " + actualPoints);
+                        else
+                            Assert.AreEqual(_instrumentValues.DiffPeptideCounts[i], actualPoints);
+                    });
+                }
+                if (IsRecordMode)
+                    Console.WriteLine(@" },");
+                PauseForScreenShot<FoldChangeVolcanoPlot>("By Condition:Volcano Plot - fully formatted", 29);
+            }
+
+            {
+                var fcGrid = WaitForOpenForm<FoldChangeGrid>(); // May have changed with RestoreViewsOnScreen
+                RunUI(fcGrid.ShowGraph);
+                RestoreViewOnScreen(30);
+            }
+
+            {
+                var fcGrid = WaitForOpenForm<FoldChangeGrid>(); // May have changed with RestoreViewsOnScreen
+                var fcGridControl = fcGrid.DataboundGridControl;
+                WaitForConditionUI(() => fcGridControl.IsComplete && fcGridControl.FindColumn(proteinProperty) != null);
+                var quickFilterForm = ShowDialog<QuickFilterForm>(() =>
+                {
+                    var proteinNameColumn = fcGridControl.FindColumn(proteinProperty);
+                    fcGridControl.QuickFilter(proteinNameColumn);
+                });
+                RunUI(() =>
+                {
+                    quickFilterForm.SetFilterOperation(0, FilterOperations.OP_NOT_CONTAINS);
+                    quickFilterForm.SetFilterOperand(0, "standard");
+                });
+                OkDialog(quickFilterForm, quickFilterForm.OkDialog);
+
+                var volcanoPlot = WaitForOpenForm<FoldChangeVolcanoPlot>();    // May have changed with RestoreViewsOnScreen
+                WaitForConditionUI(() => volcanoPlot.CurveList.Count == 8 && 
+                                         volcanoPlot.CurveList[7].Points.Count == 0); // No iRTs
+                if (!IsRecordMode)
+                {
+                    for (int i = 1; i < 4; i++)
+                        RunUI(() => Assert.AreEqual(_instrumentValues.DiffPeptideCounts[i], volcanoPlot.CurveList[7 - i].Points.Count));
+                }
+                var barGraph = WaitForOpenForm<FoldChangeBarGraph>();
+                const int volcanoBarDelta = 11 - 1; // iRTs - selected peptide
+                if (!IsRecordMode)
+                    WaitForBarGraphPoints(barGraph, _instrumentValues.DiffPeptideCounts[0] - volcanoBarDelta);
+
+                RunUI(() =>
+                {
+                    var fcResultColumn = fcGridControl.FindColumn(fcResultProperty);
+                    fcGridControl.SetSortDirection(fcGridControl.GetPropertyDescriptor(fcResultColumn),
+                        ListSortDirection.Ascending);
+                });
+                PauseForScreenShot<FoldChangeBarGraph>("By Condition:Bar Graph - peptides", 30);
+
+                var changeGroupComparisonSettings = ShowDialog<EditGroupComparisonDlg>(fcGrid.ShowChangeSettings);
+                RunUI(() => changeGroupComparisonSettings.RadioScopePerProtein.Checked = true);
+
+                if (!IsRecordMode)
+                    WaitForBarGraphPoints(barGraph, _instrumentValues.UnpolishedProteins);
+                else
+                {
+                    WaitForBarGraphPoints(barGraph, 11, true);
+                    Console.WriteLine(@"UnpolishedProteins = " + barGraph.ZedGraphControl.GraphPane.CurveList[0].Points.Count);
+                }
+
+                RunUI(() => changeGroupComparisonSettings.ComboSummaryMethod.SelectedItem =
+                    SummarizationMethod.MEDIANPOLISH);
+
+                WaitForBarGraphPoints(barGraph, 11);
+
+                RestoreViewOnScreen(31);
+                PauseForScreenShot<FoldChangeBarGraph>("By Condition:Graph - proteins", 31);
+            }
+        }
+
+        private void ApplyFormatting(VolcanoPlotFormattingDlg formattingDlg, string matchText, string rgbText)
+        {
             RunUI(() =>
             {
-                var foldChangeResultColumn =
-                    foldChangeGrid.DataboundGridControl.FindColumn(PropertyPath.Root.Property("FoldChangeResult"));
-                foldChangeGrid.DataboundGridControl.DataGridView.AutoResizeColumn(foldChangeResultColumn.Index);
-                var proteinNameColumn = 
-                    foldChangeGrid.DataboundGridControl.FindColumn(PropertyPath.Root.Property("Protein"));
-                foldChangeGrid.DataboundGridControl.DataGridView.AutoResizeColumn(proteinNameColumn.Index);
+                var bindingList = formattingDlg.GetCurrentBindingList();
+                var color = RgbHexColor.ParseRgb(rgbText).Value;
+                bindingList.Add(new MatchRgbHexColor("ProteinName: " + matchText, false, color, PointSymbol.Circle, PointSize.normal));
             });
-            WaitForConditionUI(() => 0 != foldChangeGrid.DataboundGridControl.RowCount,
-                "0 != foldChangeGrid.DataboundGridControl.RowCount");
-            WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete,
-                "foldChangeGrid.DataboundGridControl.IsComplete");
-            PauseForScreenShot<FoldChangeGrid>("By Condition grid", 27);
-
-            RunUI(foldChangeGrid.ShowVolcanoPlot);
-            PauseForScreenShot<FoldChangeVolcanoPlot>("By Condition:Volcano Plot", 28);
-
-            RunUI(foldChangeGrid.ShowGraph);
-            PauseForScreenShot<FoldChangeBarGraph>("By Condition:Graph - peptides", 28);
-
-            var changeGroupComparisonSettings = ShowDialog<EditGroupComparisonDlg>(foldChangeGrid.ShowChangeSettings);
-            RunUI(() => changeGroupComparisonSettings.RadioScopePerProtein.Checked = true);
-            WaitForGraphs();
-            PauseForScreenShot<FoldChangeBarGraph>("By Condition:Graph - proteins", 29);
         }
 
         private void ValidateTargets(int[] targetCounts, int proteinCount, int peptideCount, int precursorCount, int transitionCount)
@@ -643,9 +767,19 @@ namespace TestPerf
             }
         }
 
-        private string PathsMessage(string message, IEnumerable<string> paths)
+        private void WaitForBarGraphPoints(FoldChangeBarGraph barGraph, int barCount, bool allowRange = false)
         {
-            return TextUtil.LineSeparate(message, TextUtil.LineSeparate(paths));
+            WaitForConditionUI(() => barGraph.ZedGraphControl.GraphPane.CurveList.Count == 1);
+            if (!allowRange)
+                WaitForConditionUI(() => barGraph.ZedGraphControl.GraphPane.CurveList[0].Points.Count == barCount);
+            else
+            {
+                WaitForConditionUI(() =>
+                {
+                    int pointsCount = barGraph.ZedGraphControl.GraphPane.CurveList[0].Points.Count;
+                    return 0 < pointsCount && pointsCount < barCount;
+                });
+            }
         }
     }
 }
