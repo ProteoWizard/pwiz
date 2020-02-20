@@ -25,6 +25,7 @@
 
 #include "SpectrumList_ScanSummer.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/misc/sort_together.hpp"
 #include "pwiz/data/vendor_readers/Waters/SpectrumList_Waters.hpp"
 #include <boost/range/adaptor/map.hpp>
 

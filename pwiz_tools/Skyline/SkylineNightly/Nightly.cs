@@ -27,6 +27,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.ServiceModel;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -349,7 +350,7 @@ namespace SkylineNightly
             // Create ".skytr" file to execute nightly build in SkylineTester.
             var assembly = Assembly.GetExecutingAssembly();
             const string resourceName = "SkylineNightly.SkylineNightly.skytr";
-            int durationSeconds;
+            double durationHours;
             using (var stream = assembly.GetManifestResourceStream(resourceName))
             {
                 if (stream == null)
@@ -375,8 +376,7 @@ namespace SkylineNightly
                         Log("Testing branch at " + branchUrl);
                     }
                     skylineTester.Save(skylineNightlySkytr);
-                    var durationHours = double.Parse(skylineTester.GetChild("nightlyDuration").Value);
-                    durationSeconds = (int) (durationHours*60*60) + 30*60;  // 30 minutes grace before we kill SkylineTester
+                    durationHours = double.Parse(skylineTester.GetChild("nightlyDuration").Value);
                 }
             }
 
@@ -394,8 +394,6 @@ namespace SkylineNightly
                 WorkingDirectory = Path.GetDirectoryName(skylineTesterExe) ?? ""
             };
 
-            var startTime = DateTime.Now;
-
             bool retryTester;
             const int maxRetryMinutes = 60;
 
@@ -412,24 +410,49 @@ namespace SkylineNightly
                     return result;
                 }
                 Log("SkylineTester started");
-                if (!skylineTesterProcess.WaitForExit(durationSeconds * 1000))
+
+                var endTime = skylineTesterProcess.StartTime.AddHours(durationHours);
+                var originalEndTime = endTime;
+                for (;; Thread.Sleep(1000))
                 {
-                    SaveErrorScreenshot();
-                    Log(result = "SkylineTester has exceeded its " + durationSeconds +
-                                 " second WaitForExit timeout.  You should investigate.");
-                }
-                else if (skylineTesterProcess.ExitCode == 0xDEAD)
-                {
-                    // User killed, don't post
-                    Log(result = SkylineTesterStoppedByUser);
-                    return result;
-                }
-                else
-                {
-                    Log("SkylineTester finished");
+                    if (skylineTesterProcess.HasExited)
+                    {
+                        if (skylineTesterProcess.ExitCode == 0xDEAD)
+                        {
+                            // User killed, don't post
+                            Log(result = SkylineTesterStoppedByUser);
+                            return result;
+                        }
+                        Log("SkylineTester finished");
+                        break;
+                    }
+                    else if (DateTime.Now > endTime.AddMinutes(30)) // 30 minutes grace before we kill SkylineTester
+                    {
+                        SaveErrorScreenshot();
+                        Log(result = "SkylineTester has exceeded its " + durationHours + " hour runtime.  You should investigate.");
+                        break;
+                    }
+
+                    if (endTime == originalEndTime)
+                    {
+                        if (logMonitor.IsHanging())
+                        {
+                            // extend the end time until 12pm to give us more time to attach a debugger
+                            var newEndTime = originalEndTime.AddHours(16);
+                            newEndTime = new DateTime(newEndTime.Year, newEndTime.Month, newEndTime.Day, 12, 0, 0);
+                            if (SetEndTime(newEndTime))
+                                endTime = newEndTime;
+                        }
+                    }
+                    else if (!logMonitor.IsHanging())
+                    {
+                        // was hanging but not anymore
+                        if (SetEndTime(originalEndTime))
+                            endTime = originalEndTime;
+                    }
                 }
 
-                _duration = DateTime.Now - startTime;
+                _duration = DateTime.Now - skylineTesterProcess.StartTime;
                 retryTester = _duration.TotalMinutes < maxRetryMinutes;
                 if (retryTester)
                 {
@@ -1129,6 +1152,31 @@ namespace SkylineNightly
             {
                 Log(logFileName, $@"Error establishing a session and getting a CSRF token: {e}");
             }
+        }
+
+        private static readonly ChannelFactory<IEndTimeSetter> END_TIME_SETTER_FACTORY =
+            new ChannelFactory<IEndTimeSetter>(new NetNamedPipeBinding(), new EndpointAddress("net.pipe://localhost/Nightly/SetEndTime"));
+
+        // Set the end time of an already running nightly run (e.g. if there is a hang and we want to give more time for someone to attach a debugger)
+        public bool SetEndTime(DateTime endTime)
+        {
+            try
+            {
+                END_TIME_SETTER_FACTORY.CreateChannel().SetEndTime(endTime);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        // Allows SkylineNightly to change the stop time of a nightly run via IPC
+        [ServiceContract]
+        public interface IEndTimeSetter
+        {
+            [OperationContract]
+            void SetEndTime(DateTime endTime);
         }
     }
 

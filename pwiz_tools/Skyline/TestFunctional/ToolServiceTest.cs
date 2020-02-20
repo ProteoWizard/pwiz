@@ -82,11 +82,11 @@ namespace pwiz.SkylineTestFunctional
 
                 // Select insert node.
                 SelectInsertNode();
-
                 // Test FASTA import.
                 AssertEx.IsDocumentState(SkylineWindow.Document, 1, 1, 20, 46, 138);
                 ImportFasta(TEXT_FASTA);
-                AssertEx.IsDocumentState(SkylineWindow.Document, 2, 2, 82, 46, 138);
+                WaitForProteinMetadataBackgroundLoaderCompletedUI();
+                AssertEx.IsDocumentState(SkylineWindow.Document, 3, 2, 82, 46, 138);
 
                 // Test addition of spectral library.
                 var docPreLibrary = SkylineWindow.Document;

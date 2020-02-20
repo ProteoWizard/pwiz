@@ -95,6 +95,7 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
         case InstrumentModelType_TSQ_Quantum_Ultra_AM:      return MS_TSQ_Quantum_Ultra_AM;
         case InstrumentModelType_TSQ_Vantage_Standard:      return MS_TSQ_Vantage;
         case InstrumentModelType_TSQ_Vantage_EMR:           return MS_TSQ_Vantage;
+        case InstrumentModelType_TSQ_Vantage_AM:            return MS_TSQ_Vantage;
         case InstrumentModelType_Element_XR:                return MS_Element_XR;
         case InstrumentModelType_Element_GD:                return MS_Element_GD;
         case InstrumentModelType_GC_IsoLink:                return MS_GC_IsoLink;
@@ -306,6 +307,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_TSQ_Quantum_Ultra_AM:
         case InstrumentModelType_TSQ_Vantage_Standard:
         case InstrumentModelType_TSQ_Vantage_EMR:
+        case InstrumentModelType_TSQ_Vantage_AM:
         case InstrumentModelType_GC_Quantum:
         case InstrumentModelType_TSQ_Quantiva:
         case InstrumentModelType_TSQ_Endura:
