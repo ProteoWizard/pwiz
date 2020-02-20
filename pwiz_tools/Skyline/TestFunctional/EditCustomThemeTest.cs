@@ -32,6 +32,9 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class EditCustomThemeTest : AbstractFunctionalTest
     {
+        private static readonly int _rgbColIndex = 0;
+        private static readonly int _hexColIndex = 1;
+
         [TestMethod]
         public void TestEditCustomTheme()
         {
@@ -70,17 +73,17 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => editCustomThemeDlg.changeCateogry(EditCustomThemeDlg.ThemeCategory.precursors));
                 Assert.AreEqual(grid.Rows.Count - 1,
                     ColorSchemeList.DEFAULT.PrecursorColors.Count); // -1 because new row in grid
-                Assert.AreEqual(grid.Rows[0].Cells[1].Value, "255, 0, 0"); // check rgb
-                Assert.AreEqual(grid.Rows[0].Cells[2].Value, "#FF0000"); // check hex
-                Assert.IsFalse(grid.Columns[2].Visible); // hex hidden
+                Assert.AreEqual("255, 0, 0", grid.Rows[0].Cells[_rgbColIndex].Value); // check rgb
+                Assert.AreEqual("#FF0000", grid.Rows[0].Cells[_hexColIndex].Value); // check hex
+                Assert.IsFalse(grid.Columns[_hexColIndex].Visible); // hex hidden
                 RunUI(() => editCustomThemeDlg.changeToHex());
-                Assert.IsFalse(grid.Columns[1].Visible); // rgb hidden
+                Assert.IsFalse(grid.Columns[_rgbColIndex].Visible); // rgb hidden
                 // Test changing colors on a few rows using button
                 // Can't actually click button, but will call same function as button does
-                changeColorByButtonAndValidate(0, editCustomThemeDlg, grid);
-                changeColorByButtonAndValidate(1, editCustomThemeDlg, grid);
-                changeColorByButtonAndValidate(2, editCustomThemeDlg, grid);
-                changeColorByButtonAndValidate(3, editCustomThemeDlg, grid);
+                ChangeColorByButtonAndValidate(0, editCustomThemeDlg, grid);
+                ChangeColorByButtonAndValidate(1, editCustomThemeDlg, grid);
+                ChangeColorByButtonAndValidate(2, editCustomThemeDlg, grid);
+                ChangeColorByButtonAndValidate(3, editCustomThemeDlg, grid);
                 // Test changing colors by changing rgb/hex values
                 changeColorByManualAndValidate(0, editCustomThemeDlg, grid);
                 changeColorByManualAndValidate(1, editCustomThemeDlg, grid);
@@ -97,14 +100,14 @@ namespace pwiz.SkylineTestFunctional
                 var editCustomThemeDlg =
                     ShowDialog<EditCustomThemeDlg>(() => combo.SelectedIndex = DefaultColorCount + 1);
                 var grid = editCustomThemeDlg.getGrid();
-                changeColorByButtonAndValidate(0, editCustomThemeDlg, grid);
-                changeColorByButtonAndValidate(4, editCustomThemeDlg, grid);
+                ChangeColorByButtonAndValidate(0, editCustomThemeDlg, grid);
+                ChangeColorByButtonAndValidate(4, editCustomThemeDlg, grid);
                 RunUI(() => editCustomThemeDlg.changeName("Yuval is GREAT"));
                 OkDialog(editCustomThemeDlg, editCustomThemeDlg.save); // Now save changes
                 Assert.AreEqual(Settings.Default.CurrentColorScheme, "Yuval is GREAT");
                 Assert.IsNull(ColorScheme.ColorSchemeDemo);
-                assertColor(ColorScheme.CurrentColorScheme.PrecursorColors[0], Color.Blue);
-                assertColor(ColorScheme.CurrentColorScheme.PrecursorColors[4], Color.Blue);
+                AssertColor(ColorScheme.CurrentColorScheme.PrecursorColors[0], Color.Blue);
+                AssertColor(ColorScheme.CurrentColorScheme.PrecursorColors[4], Color.Blue);
             }
 
             // Test add new
@@ -113,7 +116,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var editCustomThemeDlg = ShowDialog<EditCustomThemeDlg>(() => combo.SelectedIndex = DefaultColorCount);
                 var grid = editCustomThemeDlg.getGrid();
-                Assert.AreEqual(grid.Rows[0].Cells[1].Value, "128, 128, 128");
+                Assert.AreEqual(grid.Rows[0].Cells[_rgbColIndex].Value, "128, 128, 128");
                 Assert.AreEqual(grid.Rows.Count, 2); // 1 row + 1 for new empty row
                 var errorDlg = ShowDialog<MessageDlg>(editCustomThemeDlg.save); // Empty name
                 OkDialog(errorDlg, errorDlg.OkDialog);
@@ -144,16 +147,16 @@ namespace pwiz.SkylineTestFunctional
                 });
                 Assert.AreEqual(ColorScheme.ColorSchemeDemo.TransitionColors.Count, 19);
                 var colors = ColorScheme.ColorSchemeDemo.TransitionColors.ToArray();
-                assertColor(colors[0], Color.Blue);
-                assertColor(colors[1], Color.Gray);
-                assertColor(colors[2], Color.Gray);
-                assertColor(colors[4], Color.Gray);
-                assertColor(colors[5], Color.BlueViolet);
-                assertColor(colors[18], Color.RoyalBlue);
+                AssertColor(colors[0], Color.Blue);
+                AssertColor(colors[1], Color.Gray);
+                AssertColor(colors[2], Color.Gray);
+                AssertColor(colors[4], Color.Gray);
+                AssertColor(colors[5], Color.BlueViolet);
+                AssertColor(colors[18], Color.RoyalBlue);
                 OkDialog(editCustomThemeDlg, editCustomThemeDlg.save); // Now save changes
                 Assert.IsNull(ColorScheme.ColorSchemeDemo);
-                assertColor(ColorScheme.CurrentColorScheme.TransitionColors[0], Color.Blue);
-                assertColor(ColorScheme.CurrentColorScheme.TransitionColors[1], Color.Gray);
+                AssertColor(ColorScheme.CurrentColorScheme.TransitionColors[0], Color.Blue);
+                AssertColor(ColorScheme.CurrentColorScheme.TransitionColors[1], Color.Gray);
                 OkDialog(toolOptionsUI, toolOptionsUI.OkDialog);
             }
         }
@@ -163,37 +166,37 @@ namespace pwiz.SkylineTestFunctional
         {
             RunUI(editCustomThemeDlg.changeToRGB);
             RunUI(() => editCustomThemeDlg.changeCateogry(EditCustomThemeDlg.ThemeCategory.precursors));
-            RunUI(() => grid.Rows[rowIndex].Cells[1].Value = ("255, 0,0"));
-            Assert.AreEqual(grid.Rows[rowIndex].Cells[2].Value, "#FF0000");
-            assertColor(ColorScheme.ColorSchemeDemo.PrecursorColors.First(), Color.Red);
+            RunUI(() => grid.Rows[rowIndex].Cells[_rgbColIndex].Value = ("255, 0,0"));
+            Assert.AreEqual(grid.Rows[rowIndex].Cells[_hexColIndex].Value, "#FF0000");
+            AssertColor(ColorScheme.ColorSchemeDemo.PrecursorColors.First(), Color.Red);
             RunUI(() => editCustomThemeDlg.changeCateogry(EditCustomThemeDlg.ThemeCategory.transitions));
-            RunUI(() => grid.Rows[rowIndex].Cells[2].Value = ("#0000FF"));
-            Assert.AreEqual(grid.Rows[rowIndex].Cells[1].Value, "0, 0, 255");
-            assertColor(ColorScheme.ColorSchemeDemo.TransitionColors.First(), Color.Blue); // check hex 
+            RunUI(() => grid.Rows[rowIndex].Cells[_hexColIndex].Value = ("#0000FF"));
+            Assert.AreEqual(grid.Rows[rowIndex].Cells[_rgbColIndex].Value, "0, 0, 255");
+            AssertColor(ColorScheme.ColorSchemeDemo.TransitionColors.First(), Color.Blue); // check hex 
             RunUI(() => editCustomThemeDlg.changeCateogry(EditCustomThemeDlg.ThemeCategory.precursors));
-            assertColor(ColorScheme.ColorSchemeDemo.PrecursorColors.First(), Color.Red);
+            AssertColor(ColorScheme.ColorSchemeDemo.PrecursorColors.First(), Color.Red);
             RunUI(() => editCustomThemeDlg.changeCateogry(EditCustomThemeDlg.ThemeCategory.transitions));
-            assertColor(ColorScheme.ColorSchemeDemo.TransitionColors.First(), Color.Blue); // check hex 
+            AssertColor(ColorScheme.ColorSchemeDemo.TransitionColors.First(), Color.Blue); // check hex 
         }
 
-        private void assertColor(Color color, Color expected)
+        private void AssertColor(Color color, Color expected)
         {
             Assert.AreEqual(color.R, expected.R);
             Assert.AreEqual(color.G, expected.G);
             Assert.AreEqual(color.B, expected.B);
         }
 
-        private void changeColorByButtonAndValidate(int rowIndex, EditCustomThemeDlg editCustomThemeDlg, DataGridView grid)
+        private void ChangeColorByButtonAndValidate(int rowIndex, EditCustomThemeDlg editCustomThemeDlg, DataGridView grid)
         {
             RunUI(() => editCustomThemeDlg.changeCateogry(EditCustomThemeDlg.ThemeCategory.precursors));
             RunUI(() => editCustomThemeDlg.changeRowColor(rowIndex, Color.Blue));
             Assert.AreEqual(ColorScheme.ColorSchemeDemo.Name, ColorSchemeList.DEFAULT.Name); // Not in demo mode
-            Assert.AreEqual(grid.Rows[rowIndex].Cells[1].Value, "0, 0, 255"); // check rgb
-            Assert.AreEqual(grid.Rows[rowIndex].Cells[2].Value, "#0000FF"); // check hex  
+            Assert.AreEqual(grid.Rows[rowIndex].Cells[_rgbColIndex].Value, "0, 0, 255"); // check rgb
+            Assert.AreEqual(grid.Rows[rowIndex].Cells[_hexColIndex].Value, "#0000FF"); // check hex  
             RunUI(() => editCustomThemeDlg.changeCateogry(EditCustomThemeDlg.ThemeCategory.transitions));
             RunUI(() => editCustomThemeDlg.changeCateogry(EditCustomThemeDlg.ThemeCategory.precursors));
-            Assert.AreEqual(grid.Rows[rowIndex].Cells[1].Value, "0, 0, 255"); // check rgb
-            Assert.AreEqual(grid.Rows[rowIndex].Cells[2].Value, "#0000FF"); // check hex  
+            Assert.AreEqual(grid.Rows[rowIndex].Cells[_rgbColIndex].Value, "0, 0, 255"); // check rgb
+            Assert.AreEqual(grid.Rows[rowIndex].Cells[_hexColIndex].Value, "#0000FF"); // check hex  
             Assert.AreEqual(ColorScheme.ColorSchemeDemo.PrecursorColors.First(), Color.Blue); // check hex 
         }
     }
