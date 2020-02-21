@@ -717,11 +717,11 @@ namespace pwiz.Skyline.Model.DocSettings
                     stat = new Statistics(ySmoothed);
                     break;
                 case RegressionMethodRT.log:
-                    regressionFunction = new LogRegression(stat.CopyList(), statRT.CopyList());
+                    regressionFunction = new LogRegression(stat.CopyList(), statRT.CopyList(), true);
                     stat = new Statistics(peptideScores.Select(x => regressionFunction.GetY(x)));
                     break;
                 case RegressionMethodRT.loess:
-                    regressionFunction = new LoessRegression(stat.CopyList(), statRT.CopyList(), token);
+                    regressionFunction = new LoessRegression(stat.CopyList(), statRT.CopyList(), true, token);
                     stat = new Statistics(peptideScores.Select(x => regressionFunction.GetY(x)));
                     break;
                 default:
@@ -2875,15 +2875,17 @@ namespace pwiz.Skyline.Model.DocSettings
             Intercept = 0;
             XValues = new double[0];
             YValues = new double[0];
+            IrtIndependent = false;
         }
 
-        public RegressionLine(double slope, double intercept)
+        public RegressionLine(double slope, double intercept, bool irtIndependent = false)
         {
             Slope = slope;
             Intercept = intercept;
+            IrtIndependent = irtIndependent;
         }
 
-        public RegressionLine(double[] x, double[] y)
+        public RegressionLine(double[] x, double[] y, bool irtIndependent = false)
         {
             var statX = new Statistics(x);
             var statY = new Statistics(y);
@@ -2891,6 +2893,7 @@ namespace pwiz.Skyline.Model.DocSettings
             Intercept = statY.Intercept(statX);
             XValues = x;
             YValues = y;
+            IrtIndependent = irtIndependent;
         }
 
         // XML Serializable properties
@@ -2900,7 +2903,13 @@ namespace pwiz.Skyline.Model.DocSettings
         [Track]
         public double Intercept { get; private set; }
 
-        public string DisplayEquation => string.Format(@"y = {0:F3} {1} {2:F3}x", Intercept, Slope >= 0 ? '+' : '-', Math.Abs(Slope));
+        public string DisplayEquation => IrtIndependent
+            ? string.Format(@"{0} = {1:F3} * {2} {3} {4:F3}",
+                Resources.IIrtRegression_DisplayEquation_Measured_RT, Slope, Resources.IIrtRegression_DisplayEquation_iRT, Intercept >= 0 ? '+' : '-', Math.Abs(Intercept))
+            : string.Format(@"{0} = {1:F3} * {2} {3} {4:F3}",
+                Resources.IIrtRegression_DisplayEquation_iRT, Slope, Resources.IIrtRegression_DisplayEquation_Measured_RT, Intercept >= 0 ? '+' : '-', Math.Abs(Intercept));
+
+        public bool IrtIndependent { get; }
 
         /// <summary>
         /// Use the y = m*x + b formula to calculate the desired y
@@ -3288,6 +3297,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public override string ToString() // For debugging convenience, not user-facing
         {
+            if (IsEmpty)
+                return string.Empty;
+
             string ionMobilityAbbrev = @"im";
             switch (IonMobility.Units)
             {
