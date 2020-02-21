@@ -145,8 +145,8 @@ namespace TestPerf
                     "collinsb_X1803_176-B.mzML",
                 },
                 LibraryPeptideCount = 15855,
-                IrtSlope = 2.624,
-                IrtIntercept = -48.003,
+                IrtSlope = 2.6242,
+                IrtIntercept = -48.0034,
                 HasAmbiguousMatches = false,
                 IsolationSchemeName = "ETH QE (18 variable)",
                 IsolationSchemeFile = "QE_DIA_18var.tsv",
@@ -259,10 +259,10 @@ namespace TestPerf
                 var row = addIrtDlg.GetRow(0);
                 Assert.AreEqual(11, row.Cells[1].Value);
                 Assert.AreEqual(_instrumentValues.LibraryPeptideCount, addIrtDlg.PeptidesCount);
-                var regressionLine = new RegressionLine(_instrumentValues.IrtSlope, _instrumentValues.IrtIntercept);
-                Assert.AreEqual(regressionLine.DisplayEquation, row.Cells[2].Value);
-                Assert.AreEqual(1.0, double.Parse(row.Cells[3].Value.ToString()));
-                Assert.AreEqual(Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Success, row.Cells[4].Value);
+                Assert.AreEqual(_instrumentValues.IrtSlope, double.Parse(row.Cells[2].Value.ToString()), 0.0001);
+                Assert.AreEqual(_instrumentValues.IrtIntercept, double.Parse(row.Cells[3].Value.ToString()), 0.0001);
+                Assert.AreEqual(1.0, double.Parse(row.Cells[4].Value.ToString()));
+                Assert.AreEqual(Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Success, row.Cells[5].Value);
             });
             PauseForScreenShot("Add iRT peptides form", 5);
 
