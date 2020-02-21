@@ -204,7 +204,7 @@
     <value>{0}：{1} 峰面积比</value>
   </data>
   <data name="CalibrationForm_DisplayCalibrationCurve_Use_the_Quantification_tab_on_the_Peptide_Settings_dialog_to_control_the_conversion_of_peak_areas_to_concentrations_" xml:space="preserve">
-    <value>使用肽段设置对话框的定量标签，控制峰面积向浓度的转换。</value>
+    <value>使用"肽段设置"对话框的"定量"标签，控制峰面积向浓度的转换。</value>
   </data>
   <data name="CalibrationForm_DisplayCalibrationCurve_To_convert_peak_area_ratios_to_concentrations__specify_the_internal_standard_concentration_for__0__" xml:space="preserve">
     <value>为将峰面积比转换为浓度，指定{0}的内标浓度。</value>

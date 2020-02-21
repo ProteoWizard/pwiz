@@ -269,7 +269,7 @@
   </data>
   <data name="textSlope.ToolTip" xml:space="preserve">
     <value>斜率被用于从计算得到的肽段得分中计算预测保留时间，
-借助以下形式的等式：
+借助以下公式计算：
 
 保留时间 = 斜率 * 得分 + 截距</value>
   </data>
@@ -323,7 +323,7 @@
   </data>
   <data name="textIntercept.ToolTip" xml:space="preserve">
     <value>Y-截距被用于从计算得到的肽段得分中计算预测保留时间，
-借助以下形式的等式：
+借助以下公式计算：
 
 保留时间 = 斜率 * 得分 + 截距
 </value>
@@ -668,7 +668,7 @@ SSRCalc - 特定于序列的保留计算器，属于疏水性计算器（Krokhin
     <value>14</value>
   </data>
   <data name="gridPeptides.ToolTip" xml:space="preserve">
-    <value>肽段及其测量保留时间被用于利用线性回归
+    <value>肽段及其测量保留时间被用于根据线性回归
 计算方程式</value>
   </data>
   <data name="&gt;&gt;gridPeptides.Name" xml:space="preserve">

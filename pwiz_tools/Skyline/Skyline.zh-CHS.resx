@@ -249,7 +249,7 @@
     <value>229, 22</value>
   </data>
   <data name="markTransitionsQuantitativeContextMenuItem.Text" xml:space="preserve">
-    <value>标记离子对定量</value>
+    <value>标记离子对为可定量的</value>
   </data>
   <data name="toolStripSeparator7.Size" type="System.Drawing.Size, System.Drawing">
     <value>226, 6</value>
@@ -438,7 +438,7 @@
     <value>193, 22</value>
   </data>
   <data name="prositLibMatchItem.Text" xml:space="preserve">
-    <value>Prosit</value>
+    <value>Prosit（深度学习预测质谱二级谱图）</value>
   </data>
   <data name="mirrorMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
@@ -2359,7 +2359,7 @@
     <value>删除重复测定的肽段(&amp;U)</value>
   </data>
   <data name="removeDuplicatePeptidesMenuItem.ToolTipText" xml:space="preserve">
-    <value>所有在文档中不是唯一的肽段
+    <value>所有在文档中不是特异性的肽段
 将被删除。</value>
   </data>
   <data name="removeRepeatedPeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">

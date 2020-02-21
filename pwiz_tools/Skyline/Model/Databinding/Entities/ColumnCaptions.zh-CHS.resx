@@ -554,7 +554,7 @@
     <value>损失公式</value>
   </data>
   <data name="LossNeutralMass">
-    <value>丢失中性质量</value>
+    <value>L丢失中性质量</value>
   </data>
   <data name="MassErrorPPM">
     <value>质量误差 PPM</value>
@@ -790,7 +790,7 @@
     <value>母离子</value>
   </data>
   <data name="PrecursorAccuracy">
-    <value>母离子准确性</value>
+    <value>母离子准确度</value>
   </data>
   <data name="PrecursorAdduct">
     <value>母离子加合物</value>
@@ -823,7 +823,7 @@
     <value>母离子中性质量</value>
   </data>
   <data name="PrecursorNormalizedArea">
-    <value>母离子校准后面积</value>
+    <value>母离子归一化面积</value>
   </data>
   <data name="PrecursorNote">
     <value>母离子注释</value>
@@ -1177,7 +1177,7 @@
   <data name="UndoRedoMessage">
     <value>撤销恢复消息</value>
   </data>
-  <data name="UnimodIds"><value>Unimod ID</value></data>
+  <data name="UnimodIds"><value>Unimod Ids</value></data>
   <data name="User">
     <value>用户</value>
   </data>

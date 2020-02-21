@@ -334,7 +334,7 @@
     <value>2</value>
   </data>
   <data name="cbRemoveRepeatedPeptides.Text" xml:space="preserve">
-    <value>删除多余重复的肽段(&amp;R)</value>
+    <value>删除重复的肽段(&amp;R)</value>
   </data>
   <data name="cbRemoveRepeatedPeptides.ToolTip" xml:space="preserve">
     <value>将删除所有重复的肽段以仅留下
@@ -371,7 +371,7 @@
     <value>删除所有重复肽段(&amp;D)</value>
   </data>
   <data name="cbRemoveDuplicatePeptides.ToolTip" xml:space="preserve">
-    <value>所有在文档中不是唯一的肽段
+    <value>所有在文档中不是特异性的肽段
 都将被删除。</value>
   </data>
   <data name="&gt;&gt;cbRemoveDuplicatePeptides.Name" xml:space="preserve">
@@ -480,7 +480,7 @@
   <data name="comboReplicateUse.ToolTip" xml:space="preserve">
     <value>确定重复测定结果用于调整：
 全部 - 所有重复测定值取平均，用于技术重复测定
-最佳 - 对于每条肽段只用最佳测定值，用于分级组分</value>
+最佳 - 对于每条肽段只用最佳测定值，用于分段洗脱</value>
   </data>
   <data name="&gt;&gt;comboReplicateUse.Name" xml:space="preserve">
     <value>comboReplicateUse</value>
@@ -1688,7 +1688,7 @@
     <value>2</value>
   </data>
   <data name="labelDetections.Text" xml:space="preserve">
-    <value>检测位置(&amp;D)：
+    <value>在…检测到(&amp;D)：
 </value>
   </data>
   <data name="&gt;&gt;labelDetections.Name" xml:space="preserve">

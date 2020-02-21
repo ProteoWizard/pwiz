@@ -380,7 +380,7 @@
   </data>
   <data name="comboTargetType.ToolTip" xml:space="preserve">
     <value>导出方法类别。
-标准导出非预定方法。
+标准将导出非预定方法。
 触发将导出一个方法，在这一方法中
 主要离子对达到特定强度阈值后才会测量次要离子对。</value>
   </data>
@@ -439,7 +439,7 @@
     <value>20</value>
   </data>
   <data name="textDwellTime.ToolTip" xml:space="preserve">
-    <value>离子对驻留时间以毫米为单位，对于非预定 Agilent 和 SCIEX方法来说是必须的。</value>
+    <value>离子对驻留时间以毫秒为单位，对于非预定 Agilent 和 SCIEX方法来说是必须的。</value>
   </data>
   <data name="textDwellTime.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -665,7 +665,7 @@
     <value>忽视蛋白质(&amp;R)</value>
   </data>
   <data name="cbIgnoreProteins.ToolTip" xml:space="preserve">
-    <value>如果选中，肽段将在文件中进行分配，不会考虑蛋白质范围。
+    <value>如果选中，肽段将在文件中进行分配，不会考虑蛋白质的界限。
  否则，如果蛋白质所包含的离子对数超过最大限制，
 那么同一蛋白质中的肽段会被分割。</value>
   </data>
@@ -1328,9 +1328,9 @@
     <value>写入 EDC 质量(&amp;W)</value>
   </data>
   <data name="cbExportEdcMass.ToolTip" xml:space="preserve">
-    <value>若核查了，则输出 Waters 方法的 Enhanced Duty Cycle (EDC)。
-这些值将是母离子最高离子对的质荷比。
-若未核查，则应在适当位置上写上零。</value>
+    <value>如果选中，则输出 Waters 方法的 Enhanced Duty Cycle (EDC)。
+这些值将是母离子排名最高离子对的质荷比。
+如果未选中，则应在适当位置上写上零。</value>
   </data>
   <data name="&gt;&gt;cbExportEdcMass.Name" xml:space="preserve">
     <value>cbExportEdcMass</value>
@@ -1474,11 +1474,11 @@
     <value>5</value>
   </data>
   <data name="cbSortByMz.Text" xml:space="preserve">
-    <value>质荷比排序</value>
+    <value>按质荷比排序</value>
   </data>
   <data name="cbSortByMz.ToolTip" xml:space="preserve">
-    <value>若核查了，则导出方法按照质荷比进行升序排序
-（母离子质荷比，之后子离子质荷比，若适用）以实现优化的四极转换。</value>
+    <value>如果选中，则导出方法按照质荷比进行升序排序
+（母离子质荷比，之后子离子质荷比，若适用）以实现优化的四级杆转换。</value>
   </data>
   <data name="&gt;&gt;cbSortByMz.Name" xml:space="preserve">
     <value>cbSortByMz</value>

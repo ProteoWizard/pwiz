@@ -515,7 +515,7 @@
     <value>17</value>
   </data>
   <data name="cbFilter.Text" xml:space="preserve">
-    <value>文档肽筛选器(&amp;F)</value>
+    <value>文档肽段过滤器(&amp;F)</value>
   </data>
   <data name="&gt;&gt;cbFilter.Name" xml:space="preserve">
     <value>cbFilter</value>
@@ -656,7 +656,7 @@
     <value>True</value>
   </data>
   <data name="prositInfoSettingsBtn.Location" type="System.Drawing.Point, System.Drawing">
-    <value>190, 44</value>
+    <value>205, 44</value>
   </data>
   <data name="prositInfoSettingsBtn.Size" type="System.Drawing.Size, System.Drawing">
     <value>68, 13</value>
@@ -695,7 +695,7 @@
     <value>1</value>
   </data>
   <data name="prositDataSourceRadioButton.Text" xml:space="preserve">
-    <value>Prosit</value>
+    <value>Prosit（深度学习预测质谱二级谱图）</value>
   </data>
   <data name="&gt;&gt;prositDataSourceRadioButton.Name" xml:space="preserve">
     <value>prositDataSourceRadioButton</value>

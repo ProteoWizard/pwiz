@@ -445,7 +445,7 @@
     <value>删除重复的肽段</value>
   </data>
   <data name="cbRemoveDuplicate.ToolTip" xml:space="preserve">
-    <value>文档内所有不是独一无二的肽段都将被删除。</value>
+    <value>文档内所有不是特异性的肽段都将被删除。</value>
   </data>
   <data name="&gt;&gt;cbRemoveDuplicate.Name" xml:space="preserve">
     <value>cbRemoveDuplicate</value>
