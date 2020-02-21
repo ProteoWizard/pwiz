@@ -606,9 +606,10 @@ namespace TestPerf
                 RunUI(() =>
                 {
                     var foldChangeResultColumn = fcGridControl.FindColumn(fcResultProperty);
-                    fcGrid.DataboundGridControl.DataGridView.AutoResizeColumn(foldChangeResultColumn.Index);
+                    fcGridControl.DataGridView.AutoResizeColumn(foldChangeResultColumn.Index);
                     var proteinNameColumn = fcGridControl.FindColumn(proteinProperty);
-                    fcGrid.DataboundGridControl.DataGridView.AutoResizeColumn(proteinNameColumn.Index);
+                    fcGridControl.DataGridView.AutoResizeColumn(proteinNameColumn.Index);
+                    fcGridControl.DataGridView.FirstDisplayedScrollingRowIndex = 11;  // Scroll past iRT peptides
                 });
                 WaitForConditionUI(() => 0 != fcGridControl.RowCount, "0 != foldChangeGrid.DataboundGridControl.RowCount");
                 WaitForConditionUI(() => fcGridControl.IsComplete, "foldChangeGrid.DataboundGridControl.IsComplete");
@@ -616,6 +617,9 @@ namespace TestPerf
 
                 var volcanoPlot = ShowDialog<FoldChangeVolcanoPlot>(fcGrid.ShowVolcanoPlot);
                 RestoreViewOnScreen(27);
+                fcGrid = WaitForOpenForm<FoldChangeGrid>();
+                WaitForConditionUI(() => fcGrid.DataboundGridControl.IsComplete);
+                RunUI(() => fcGrid.DataboundGridControl.DataGridView.FirstDisplayedScrollingRowIndex = 11); // Re-apply scrolling
                 PauseForScreenShot<FoldChangeVolcanoPlot>("By Condition:Volcano Plot - unformatted", 27);
                 volcanoPlot = WaitForOpenForm<FoldChangeVolcanoPlot>();    // May have changed with RestoreViewsOnScreen
                 WaitForConditionUI(() => volcanoPlot.CurveList.Count == 5);
@@ -696,12 +700,7 @@ namespace TestPerf
                 if (!IsRecordMode)
                     WaitForBarGraphPoints(barGraph, _instrumentValues.DiffPeptideCounts[0] - volcanoBarDelta);
 
-                RunUI(() =>
-                {
-                    var fcResultColumn = fcGridControl.FindColumn(fcResultProperty);
-                    fcGridControl.SetSortDirection(fcGridControl.GetPropertyDescriptor(fcResultColumn),
-                        ListSortDirection.Ascending);
-                });
+                SortByFoldChange(fcGridControl, fcResultProperty);
                 PauseForScreenShot<FoldChangeBarGraph>("By Condition:Bar Graph - peptides", 30);
 
                 var changeGroupComparisonSettings = ShowDialog<EditGroupComparisonDlg>(fcGrid.ShowChangeSettings);
@@ -718,9 +717,13 @@ namespace TestPerf
                 RunUI(() => changeGroupComparisonSettings.ComboSummaryMethod.SelectedItem =
                     SummarizationMethod.MEDIANPOLISH);
 
-                WaitForBarGraphPoints(barGraph, 11);
-
                 RestoreViewOnScreen(31);
+
+                barGraph = WaitForOpenForm<FoldChangeBarGraph>();
+                WaitForBarGraphPoints(barGraph, 11);
+                fcGrid = WaitForOpenForm<FoldChangeGrid>();
+                var fcGridControlFinal = fcGrid.DataboundGridControl;
+                SortByFoldChange(fcGridControlFinal, fcResultProperty);  // Re-apply the sort, in case it was lost in restoring views
                 PauseForScreenShot<FoldChangeBarGraph>("By Condition:Graph - proteins", 31);
             }
         }
@@ -780,6 +783,16 @@ namespace TestPerf
                     return 0 < pointsCount && pointsCount < barCount;
                 });
             }
+        }
+
+        private static void SortByFoldChange(DataboundGridControl fcGridControl, PropertyPath fcResultProperty)
+        {
+            RunUI(() =>
+            {
+                var fcResultColumn = fcGridControl.FindColumn(fcResultProperty);
+                fcGridControl.SetSortDirection(fcGridControl.GetPropertyDescriptor(fcResultColumn),
+                    ListSortDirection.Ascending);
+            });
         }
     }
 }
