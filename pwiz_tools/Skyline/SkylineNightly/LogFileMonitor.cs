@@ -72,7 +72,7 @@ namespace SkylineNightly
         {
             lock (_lock)
             {
-                _logChecker.Enabled = true;
+                _logChecker.Start();
             }
         }
 
@@ -81,7 +81,19 @@ namespace SkylineNightly
             lock (_lock)
             {
                 _fileStream?.Dispose();
-                _logChecker.Enabled = false;
+                _logChecker.Stop();
+            }
+        }
+
+        public bool IsHanging()
+        {
+            try
+            {
+                return File.GetLastWriteTime(_testerLog).Equals(_lastReportedHang);
+            }
+            catch
+            {
+                return false;
             }
         }
 
