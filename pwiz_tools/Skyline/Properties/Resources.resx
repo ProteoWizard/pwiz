@@ -9267,10 +9267,10 @@ If your transition list format combines formulas and adducts in a single column 
     <value>Training scoring model (iteration {0} of {1})</value>
   </data>
   <data name="MProphetPeakScoringModel_Train_Training_scoring_model__iteration__0__of__1_____2______peaks_at__3_0_____FDR_" xml:space="preserve">
-    <value>Training scoring model (iteration {0} of {1} - {2:#,#} peaks at {3:0.#%} FDR)</value>
+    <value>Training scoring model (iteration {0} of {1} - {2:#,#} peaks at {3:0.##%} FDR)</value>
   </data>
   <data name="MProphetPeakScoringModel_Train_Scoring_model_converged__iteration__0_____1______peaks_at__2_0_____FDR_" xml:space="preserve">
-    <value>Scoring model converged (iteration {0} - {1:#,#} peaks at {2:0.#%} FDR)</value>
+    <value>Scoring model converged (iteration {0} - {1:#,#} peaks at {2:0.##%} FDR)</value>
   </data>
   <data name="CompactFormatOption_ALWAYS_Always" xml:space="preserve">
     <value>Always</value>
@@ -10948,6 +10948,12 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_" xml:space="preserve">
     <value>The document must be fully loaded before importing a peptide search.</value>
+  </data>
+  <data name="SkylineWindow_BuildChromatogramMenu_Apply_Peak_to_" xml:space="preserve">
+    <value>Apply Peak to </value>
+  </data>
+  <data name="SkylineWindow_editToolStripMenuItem_DropDownOpening_Apply_Peak_to_Group" xml:space="preserve">
+    <value>Apply Peak to Group</value>
   </data>
   <data name="IrtRegressionType_Linear" xml:space="preserve">
     <value>Linear</value>

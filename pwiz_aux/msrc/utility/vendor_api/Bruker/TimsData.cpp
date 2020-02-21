@@ -26,6 +26,7 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/sort_together.hpp"
 #include "TimsData.hpp"
 #include "sqlite3pp.h"
 
@@ -667,7 +668,7 @@ bool TimsSpectrum::hasProfileData() const { return false; }
 size_t TimsSpectrum::getLineDataSize() const { return frame_.timsDataImpl_.readFrame(frame_.frameId_).getNbrPeaks(scanBegin_); }
 size_t TimsSpectrum::getProfileDataSize() const { return 0; }
 
-void TimsSpectrum::getLineData(automation_vector<double>& mz, automation_vector<double>& intensities) const
+void TimsSpectrum::getLineData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const
 {
     auto& storage = frame_.timsDataImpl_;
     const auto& frameProxy = storage.readFrame(frame_.frameId_);
@@ -683,8 +684,8 @@ void TimsSpectrum::getLineData(automation_vector<double>& mz, automation_vector<
     }
 
     auto scanMZs = frameProxy.getScanMZs(scanBegin_);
-    intensities.resize_no_initialize(intensityCounts.size());
-    mz.resize_no_initialize(intensityCounts.size());
+    intensities.resize(intensityCounts.size());
+    mz.resize(intensityCounts.size());
 
     double *m = &mz[0];
     double *inten = &intensities[0];
@@ -695,7 +696,7 @@ void TimsSpectrum::getLineData(automation_vector<double>& mz, automation_vector<
     }
 }
 
-void TimsSpectrum::getProfileData(automation_vector<double>& mz, automation_vector<double>& intensities) const
+void TimsSpectrum::getProfileData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const
 {
     // TDF does not support profile data
     mz.clear();
@@ -725,21 +726,6 @@ double TimsSpectrum::oneOverK0() const
     }
 }
 
-namespace {
-    template<typename T>
-    struct SortByOther
-    {
-        const vector<T> & value_vector;
-
-        SortByOther(const vector<T> & val_vec) :
-            value_vector(val_vec) {}
-
-        bool operator()(int i1, int i2) const
-        {
-            return value_vector[i1] < value_vector[i2];
-        }
-    };
-}
 
 void TimsSpectrum::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities, bool sortAndJitter) const
 {
@@ -778,21 +764,7 @@ void TimsSpectrum::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, p
     if (!sortAndJitter)
         return;
 
-    // sort an array of indices by m/z; these indices are used to reorder all 3 arrays
-    vector<int> indices(mz.size());
-    for (int i = 0; i < mz.size(); ++i)
-        indices[i] = i;
-    std::sort(indices.begin(), indices.end(), SortByOther<double>(mz));
-    pwiz::util::BinaryData<double> mzTmp(mz.size()), intensityTmp(mz.size()), mobilityTmp(mz.size());
-    for (int i = 0; i < mz.size(); ++i)
-    {
-        mzTmp[i] = mz[indices[i]];
-        intensityTmp[i] = intensities[indices[i]];
-        mobilityTmp[i] = mobilities[indices[i]];
-    }
-    swap(mzTmp, mz);
-    swap(intensityTmp, intensities);
-    swap(mobilityTmp, mobilities);
+    sort_together(mz, vector<boost::iterator_range<BinaryData<double>::iterator>> { intensities, mobilities });
 
     // add jitter to identical m/z values (which come from different mobility bins)
     for (size_t i = 1; i < mz.size(); ++i)

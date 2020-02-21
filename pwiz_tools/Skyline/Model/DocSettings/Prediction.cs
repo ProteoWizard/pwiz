@@ -3297,6 +3297,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public override string ToString() // For debugging convenience, not user-facing
         {
+            if (IsEmpty)
+                return string.Empty;
+
             string ionMobilityAbbrev = @"im";
             switch (IonMobility.Units)
             {

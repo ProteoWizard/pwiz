@@ -392,10 +392,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                         else
                         {
                             throw new ArgumentOutOfRangeException(
-                                // ReSharper disable LocalizableElement
-                                String.Format("Fasta RegEx failure in \'{0}\'",
-                                // ReSharper restore LocalizableElement
-                                    line.Substring(start)));
+                                $@"Fasta RegEx failure in '{line}'");
                         }
                     }
                     if (headerResult.GetProteinMetadata().HasMissingMetadata())
