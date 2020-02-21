@@ -1236,44 +1236,6 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot("NLGVVVAPHALR mean peak area ratio to global standard by condition", 62);
         }
 
-        private void AddReplicateAnnotation(DocumentSettingsDlg documentSettingsDlg,
-                                            string annotationName,
-                                            AnnotationDef.AnnotationType annotationType,
-                                            IList<string> annotationValues,
-                                            int pausePage)
-        {
-            AddAnnotation(documentSettingsDlg, annotationName, annotationType, annotationValues,                
-                    AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.replicate),
-                    pausePage);
-        }
-
-        private void AddAnnotation(DocumentSettingsDlg documentSettingsDlg,
-                                            string annotationName,
-                                            AnnotationDef.AnnotationType annotationType,
-                                            IList<string> annotationValues,
-                                            AnnotationDef.AnnotationTargetSet annotationTargets,
-                                            int pausePage)
-        {
-            var annotationsListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>
-                (documentSettingsDlg.EditAnnotationList);
-            RunUI(annotationsListDlg.SelectLastItem);
-            var annotationDefDlg = ShowDialog<DefineAnnotationDlg>(annotationsListDlg.AddItem);
-
-            RunUI(() =>
-            {
-                annotationDefDlg.AnnotationName = annotationName;
-                annotationDefDlg.AnnotationType = annotationType;
-                if (annotationValues != null)
-                annotationDefDlg.Items = annotationValues;
-                annotationDefDlg.AnnotationTargets = annotationTargets;
-            });
-
-            PauseForScreenShot<DefineAnnotationDlg>("Define Annotation form - " + annotationName, pausePage);
-
-            OkDialog(annotationDefDlg, annotationDefDlg.OkDialog);
-            OkDialog(annotationsListDlg, annotationsListDlg.OkDialog);
-        }
-
         private static int SelectPeptidesUpUntil(string sequence)
         {
             bool peptideIfsSelected = false;

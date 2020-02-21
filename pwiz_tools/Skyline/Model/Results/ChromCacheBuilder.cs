@@ -382,7 +382,8 @@ namespace pwiz.Skyline.Model.Results
 
             // Create IRT prediction if we don't already have it.
             var predict = _document.Settings.PeptideSettings.Prediction;
-            if (predict.RetentionTime != null && predict.RetentionTime.IsAutoCalculated)
+            bool doFirstPass = predict.RetentionTime != null && predict.RetentionTime.IsAutoCalculated;
+            if (doFirstPass)
             {
                 for (int i = 0; i < listChromData.Count; i++)
                 {
@@ -433,7 +434,7 @@ namespace pwiz.Skyline.Model.Results
                     var pepChromData = listChromData[i];
                     if (pepChromData == null)
                         continue;
-                    if (!IsFirstPassPeptide(pepChromData))
+                    if (!doFirstPass || !IsFirstPassPeptide(pepChromData))
                     {
                         if (pepChromData.Load(provider))
                             PostChromDataSet(pepChromData);
