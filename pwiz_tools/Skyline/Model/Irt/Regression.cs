@@ -59,6 +59,7 @@ namespace pwiz.Skyline.Model.Irt
         double[] XValues { get; }
         double[] YValues { get; }
         string DisplayEquation { get; }
+        bool IrtIndependent { get; }
     }
 
     public static class IrtRegression
@@ -144,19 +145,19 @@ namespace pwiz.Skyline.Model.Irt
 
     public class LogRegression : IIrtRegression
     {
-        public LogRegression(bool invert = false)
+        public LogRegression(bool irtIndependent = false)
         {
             Slope = double.NaN;
             Intercept = double.NaN;
             XValues = new double[0];
             YValues = new double[0];
-            _invert = invert;
+            IrtIndependent = irtIndependent;
         }
 
-        public LogRegression(IList<double> xValues, IList<double> yValues, bool invert = false)
+        public LogRegression(IList<double> xValues, IList<double> yValues, bool irtIndependent = false)
         {
-            var xFiltered = new List<double>(!invert ? xValues : yValues);
-            var yFiltered = new List<double>(!invert ? yValues : xValues);
+            var xFiltered = new List<double>(irtIndependent ? xValues : yValues);
+            var yFiltered = new List<double>(irtIndependent ? yValues : xValues);
             for (var i = xFiltered.Count - 1; i >= 0; i--)
             {
                 if (xFiltered[i] <= 0)
@@ -171,29 +172,32 @@ namespace pwiz.Skyline.Model.Irt
             Intercept = statDependent.Intercept(statIndependent);
             XValues = xValues.ToArray();
             YValues = yValues.ToArray();
-            _invert = invert;
+            IrtIndependent = irtIndependent;
         }
 
         public double GetY(double x)
         {
-            return !_invert
+            return IrtIndependent
                 ? x > 0 ? Intercept + Slope * Math.Log(x) : 0
                 : Math.Exp((x - Intercept) / Slope);
         }
         public double Slope { get; }
         public double Intercept { get; }
 
-        public string DisplayEquation => !_invert
-            ? string.Format(@"y = {0:F3} + log(x) * {1:F3}", Intercept, Slope)
-            : string.Format(@"y = e^((x {0} {1:F3}) / {2:F3})", Intercept <= 0 ? '+' : '-', Math.Abs(Intercept), Slope);
+        public string DisplayEquation => IrtIndependent
+            ? string.Format(@"{0} = {1:F3} * log({2}) {3} {4:F3}",
+                Resources.IIrtRegression_DisplayEquation_Measured_RT, Slope, Resources.IIrtRegression_DisplayEquation_iRT, Intercept <= 0 ? '-' : '+', Math.Abs(Intercept))
+            : string.Format(@"{0} = e^(({1} {2} {3:F3}) / {4:F3})",
+                Resources.IIrtRegression_DisplayEquation_iRT, Resources.IIrtRegression_DisplayEquation_Measured_RT, Intercept <= 0 ? '+' : '-', Math.Abs(Intercept), Slope);
+
+        public bool IrtIndependent { get; }
 
         public IIrtRegression ChangePoints(double[] x, double[] y)
         {
-            return new LogRegression(x, y, this is LogRegression regression && regression._invert);
+            return new LogRegression(x, y, IrtIndependent);
         }
         public double[] XValues { get; }
         public double[] YValues { get; }
-        private readonly bool _invert;
 
         public string GetRegressionDescription(double r, double window)
         {
@@ -208,22 +212,25 @@ namespace pwiz.Skyline.Model.Irt
 
     public class LoessRegression : IIrtRegression
     {
-        public LoessRegression()
+        public LoessRegression(bool irtIndependent = false)
         {
             _linearFit = new RegressionLine();
             _xMin = double.MinValue;
             _loess = null;
+            _token = null;
             XValues = new double[0];
             YValues = new double[0];
+            IrtIndependent = irtIndependent;
         }
 
-        public LoessRegression(double[] x, double[] y, CustomCancellationToken token = null)
+        public LoessRegression(double[] x, double[] y, bool irtIndependent = false, CustomCancellationToken token = null)
         {
             _linearFit = new RegressionLine(x, y);
             _xMin = x.Min();
             _xMax = x.Max();
             _loess = new LoessAligner(0.4);
-            _loess.Train(x, y, token ?? CustomCancellationToken.NONE);
+            _token = token;
+            _loess.Train(x, y, _token ?? CustomCancellationToken.NONE);
             XValues = x;
             YValues = y;
         }
@@ -236,15 +243,17 @@ namespace pwiz.Skyline.Model.Irt
         public double Slope => double.NaN;
         public double Intercept => double.NaN;
         public string DisplayEquation => Resources.DisplayEquation_N_A;
+        public bool IrtIndependent { get; }
 
         private readonly RegressionLine _linearFit;
         private readonly double _xMin;
         private readonly double _xMax;
         private readonly LoessAligner _loess;
+        private readonly CustomCancellationToken _token;
 
         public IIrtRegression ChangePoints(double[] x, double[] y)
         {
-            return new LoessRegression(x, y);
+            return new LoessRegression(x, y, IrtIndependent, this is LoessRegression loess ? loess._token : null);
         }
         public double[] XValues { get; }
         public double[] YValues { get; }
