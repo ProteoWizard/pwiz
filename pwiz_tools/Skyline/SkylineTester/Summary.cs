@@ -126,7 +126,7 @@ namespace SkylineTester
                 runElement.Add(new XElement("Failures", run.Failures));
                 runElement.Add(new XElement("Leaks", run.Leaks));
                 runElement.Add(new XElement("ManagedMemory", run.ManagedMemory));
-                runElement.Add(new XElement("CommittedMemory", run.ManagedMemory));
+                runElement.Add(new XElement("CommittedMemory", run.CommittedMemory));
                 runElement.Add(new XElement("TotalMemory", run.TotalMemory));
                 runElement.Add(new XElement("UserHandles", run.UserHandles));
                 runElement.Add(new XElement("GdiHandles", run.GdiHandles));
