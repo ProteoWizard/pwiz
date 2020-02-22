@@ -457,6 +457,7 @@ namespace SkylineTester
                 lastRun.TestsRun = MainWindow.TestsRun;
                 lastRun.Failures = runFromLine.Failures;
                 lastRun.ManagedMemory = runFromLine.ManagedMemory;
+                lastRun.CommittedMemory = runFromLine.CommittedMemory;
                 lastRun.TotalMemory = runFromLine.TotalMemory;
                 lastRun.UserHandles = runFromLine.UserHandles;
                 lastRun.GdiHandles = runFromLine.GdiHandles;
