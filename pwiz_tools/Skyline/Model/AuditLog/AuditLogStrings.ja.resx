@@ -634,7 +634,7 @@
 ：{0}</value>
   </data>
   <data name="AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing" xml:space="preserve">
-    <value>監査ログが破損しています。監査ログエントリのタイムスタンプとインデックスの値が正しい順序である必要があります。エントリ番号{0}のタイムスタンプ{1:G}はエントリ番号{2}のタイムスタンプ{3:G} の前に発生します。</value>
+    <value>監査ログが破損しています。監査ログエントリのタイムスタンプとインデックスの値が正しい順序である必要があります。エントリ番号{0}のタイムスタンプ{1:G}はエントリ番号{2}のタイムスタンプ{3:G} の前に表示されます。</value>
   </data>
   <data name="test_only" xml:space="preserve">
     <value>{0}</value>

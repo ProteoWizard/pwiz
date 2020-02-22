@@ -128,7 +128,7 @@
     <value>サーバーが利用できません</value>
   </data>
   <data name="PrositSmallMoleculeException_PrositSmallMoleculeException_Prosit_only_supports_peptides____0___is_a_small_molecule_" xml:space="preserve">
-    <value>Prositはペプチドのみをサポートします。「{0}」は小さい分子です。</value>
+    <value>Prositはペプチドのみをサポートします。「{0}」は低分子です。</value>
   </data>
   <data name="BuildLibraryDlg_dataSourceFilesRadioButton_CheckedChanged_Some_Prosit_settings_are_not_set__Would_you_like_to_set_them_now_" xml:space="preserve">
     <value>Prositが正しく設定されていません。今すぐPrositの設定を変更しますか？</value>
@@ -146,7 +146,7 @@
     <value>予測を作成中...</value>
   </data>
   <data name="ToolOptionsUI_UpdateServerStatus_Querying_server___" xml:space="preserve">
-    <value>サーバーをクエリ中...</value>
+    <value>サーバーに問い合わせ中...</value>
   </data>
   <data name="ToolOptionsUI_ToolOptionsUI_None" xml:space="preserve">
     <value>なし</value>

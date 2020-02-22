@@ -163,7 +163,7 @@
     <value>エクスポート方法「タンパク質」と「バケット」のインジェクション毎の最大トランジション数、またはスケジュールメソッドに対する最大同時トランジションの数です。デフォルトは100です。</value>
   </data>
   <data name="_exp_method_instrument" xml:space="preserve">
-    <value>メソッドをエクスポートします。このオプションはメソッドのエクスポートに必要で、デフォルトはありません。メソッドと単離リスト/トランジションリストを同時にエクスポートできないので、このオプションは-–exp-isolationlist-instrumentまたは--exp-translist-instrumentとは併用できません。</value>
+    <value>メソッドをエクスポートします。このオプションはメソッドのエクスポートに必要で、デフォルトはありません。メソッドと単離リストまたはトランジションリストを同時にエクスポートできないので、このオプションは–exp-isolationlist-instrumentまたは--exp-translist-instrumentとは併用できません。</value>
   </data>
   <data name="_exp_method_type" xml:space="preserve">
     <value>標準メソッド、スケジュールメソッドかトリガーメソッドを設定します。デフォルトは「標準」です。</value>
@@ -754,25 +754,25 @@ Waters</value>
     <value>インポート対象を選択するために試料名（multi-injection .wiffファイルなど）に適用される正規表現です。</value>
   </data>
   <data name="_exp_order_by_mz" xml:space="preserve">
-    <value>最適化された四重極スイッチングのためにエクスポートされたメソッドをm/zで昇順に並べます（プリカーサーm/z、次に適用される場合はプロダクトm/z）。</value>
+    <value>最適化された四重極スイッチングのためにエクスポートされたメソッドをm/zで昇順に並べます（プリカーサーm/z、適用可能な場合は次にプロダクトm/z）。</value>
   </data>
   <data name="_tran_predict_ce" xml:space="preserve">
     <value>トランジション設定衝突エネルギーの予測設定を以前設定したオプションの1つに変更します。</value>
   </data>
   <data name="_tran_predict_cov" xml:space="preserve">
-    <value>トランジション設定補償電圧の予測設定を以前に定義したオプションの1つに変更します。</value>
+    <value>トランジション設定補償電圧の予測設定を以前に設定したオプションの1つに変更します。</value>
   </data>
   <data name="_tran_predict_dp" xml:space="preserve">
-    <value>トランジション設定デクラスタリングポテンシャルの予測設定を以前に定義したオプションの1つに変更します。</value>
+    <value>トランジション設定デクラスタリングポテンシャルの予測設定を以前に設定したオプションの1つに変更します。</value>
   </data>
   <data name="_tran_predict_optdb" xml:space="preserve">
-    <value>装置パラメータの予測に使用するトランジション設定最適化ライブラリを以前に定義したオプションの1つに変更します。</value>
+    <value>装置パラメータの予測に使用するトランジション設定最適化ライブラリを以前に設定したオプションの1つに変更します。</value>
   </data>
   <data name="_version" xml:space="preserve">
     <value>実行中のインストールのバージョン情報が表示されます</value>
   </data>
   <data name="_save_settings" xml:space="preserve">
-    <value>グローバル環境の設定変更が（追加されたレポート、ライブラリ、酵素など）がプログラム設定ファイルに保存されます。</value>
+    <value>グローバル環境の設定変更（追加されたレポート、ライブラリ、酵素など）をプログラム設定ファイルに保存します。</value>
   </data>
   <data name="_refine_cv_transitions" xml:space="preserve">
     <value>CV最適化のためにピーク面積を合計し、CVの計算に使用されるトランジションを指定します。（すべてまたは単一の最良トランジションのいずれか）</value>
