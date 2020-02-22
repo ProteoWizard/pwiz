@@ -167,33 +167,49 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
     double scanStartTimeInMinutes = rawdata_->Info.GetRetentionTime(ie.function, scanStatIndex);
     scan.set(MS_scan_start_time, scanStartTimeInMinutes, UO_minute);
 
-    boost::weak_ptr<RawData> binaryDataSource = rawdata_;
-    if (msLevelsToCentroid.contains(msLevel))
-    {
-        rawdata_->Centroid();
-        binaryDataSource = rawdata_->CentroidRawDataFile();
-    }
-
     if (isMS)
     {
         PwizPolarityType polarityType = WatersToPwizPolarityType(rawdata_->Info.GetIonMode(ie.function));
         if (polarityType != PolarityType_Unknown)
             result->set(translate(polarityType));
 
-        double lockmassMz = (polarityType == PolarityType_Negative) ? lockmassMzNegScans : lockmassMzPosScans;
-        if (lockmassMz != 0.0)
+        if (detailLevel == DetailLevel_FullData)
         {
-            if (!rawdata_->ApplyLockMass(lockmassMz, lockmassTolerance)) // TODO: if false (cannot apply lockmass), log a warning
-                warn_once("[SpectrumList_Waters] failed to apply lockmass correction");
+            double lockmassMz = (polarityType == PolarityType_Negative) ? lockmassMzNegScans : lockmassMzPosScans;
+            if (lockmassMz != 0.0)
+            {
+                if (!rawdata_->ApplyLockMass(lockmassMz, lockmassTolerance)) // TODO: if false (cannot apply lockmass), log a warning
+                    warn_once("[SpectrumList_Waters] failed to apply lockmass correction");
+            }
+            else
+                rawdata_->RemoveLockMass();
         }
-        else
-            rawdata_->RemoveLockMass();
     }
 
-    if (rawdata_->Info.IsContinuum(ie.function))
-        result->set(MS_profile_spectrum);
+    bool isProfile = rawdata_->Info.IsContinuum(ie.function);
+    if (isProfile)
+        result->set(MS_profile_spectrum); // let peakPicker know this was a profile spectrum even if centroiding is requested
     else
         result->set(MS_centroid_spectrum);
+
+    bool doCentroid = msLevelsToCentroid.contains(msLevel) && isProfile;
+
+    if (doCentroid && ie.block >= 0)
+    {
+        warn_once("[SpectrumList_Waters]: vendor centroiding is not supported for Waters ion mobility data");
+        doCentroid = false;
+    }
+
+    boost::weak_ptr<RawData> binaryDataSource = rawdata_;
+    if (doCentroid)
+    {
+        if (detailLevel >= DetailLevel_FullMetadata)
+        {
+            rawdata_->Centroid();
+            binaryDataSource = rawdata_->CentroidRawDataFile();
+        }
+        result->set(MS_centroid_spectrum);
+    }
     
     // block >= 0 is ion mobility
     if (ie.block < 0 || config_.combineIonMobilitySpectra)

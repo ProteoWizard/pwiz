@@ -667,7 +667,7 @@ bool TimsSpectrum::hasProfileData() const { return false; }
 size_t TimsSpectrum::getLineDataSize() const { return frame_.timsDataImpl_.readFrame(frame_.frameId_).getNbrPeaks(scanBegin_); }
 size_t TimsSpectrum::getProfileDataSize() const { return 0; }
 
-void TimsSpectrum::getLineData(automation_vector<double>& mz, automation_vector<double>& intensities) const
+void TimsSpectrum::getLineData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const
 {
     auto& storage = frame_.timsDataImpl_;
     const auto& frameProxy = storage.readFrame(frame_.frameId_);
@@ -683,8 +683,8 @@ void TimsSpectrum::getLineData(automation_vector<double>& mz, automation_vector<
     }
 
     auto scanMZs = frameProxy.getScanMZs(scanBegin_);
-    intensities.resize_no_initialize(intensityCounts.size());
-    mz.resize_no_initialize(intensityCounts.size());
+    intensities.resize(intensityCounts.size());
+    mz.resize(intensityCounts.size());
 
     double *m = &mz[0];
     double *inten = &intensities[0];
@@ -695,7 +695,7 @@ void TimsSpectrum::getLineData(automation_vector<double>& mz, automation_vector<
     }
 }
 
-void TimsSpectrum::getProfileData(automation_vector<double>& mz, automation_vector<double>& intensities) const
+void TimsSpectrum::getProfileData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const
 {
     // TDF does not support profile data
     mz.clear();

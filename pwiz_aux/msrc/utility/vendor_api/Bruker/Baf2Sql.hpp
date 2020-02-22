@@ -67,8 +67,8 @@ struct PWIZ_API_DECL Baf2SqlSpectrum : public MSSpectrum
     virtual bool hasProfileData() const;
     virtual size_t getLineDataSize() const;
     virtual size_t getProfileDataSize() const;
-    virtual void getLineData(automation_vector<double>& mz, automation_vector<double>& intensities) const;
-    virtual void getProfileData(automation_vector<double>& mz, automation_vector<double>& intensities) const;
+    virtual void getLineData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const;
+    virtual void getProfileData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const;
 
     virtual double getTIC() const { return tic_; }
     virtual double getBPI() const { return bpi_; }
@@ -87,8 +87,8 @@ struct PWIZ_API_DECL Baf2SqlSpectrum : public MSSpectrum
 
     private:
     virtual void handleAllIons(); // Deal with all-ions MS1 data by presenting it as MS2 with a wide isolation window
-    virtual void readArray(uint64_t id, automation_vector<double> & result) const;
-    virtual void readArray(uint64_t id, automation_vector<double> & result, size_t n) const; // For use when the id's array size is known, as when reading mz after reading intensity
+    virtual void readArray(uint64_t id, pwiz::util::BinaryData<double> & result) const;
+    virtual void readArray(uint64_t id, pwiz::util::BinaryData<double> & result, size_t n) const; // For use when the id's array size is known, as when reading mz after reading intensity
 
     int index_;
     int msLevel_;
