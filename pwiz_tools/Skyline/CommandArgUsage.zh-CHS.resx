@@ -214,7 +214,7 @@
     <value>将另一个 Skyline 文档文件导入至打开的文档。对于多个文件，可以多次指定。</value>
   </data>
   <data name="_import_document_merge_peptides" xml:space="preserve">
-    <value>如果使用匹配肽段，匹配的肽段将合并，否则不合并。</value>
+    <value>如果使用（该选项），匹配的肽段将合并，否则不合并。</value>
   </data>
   <data name="_import_document_results" xml:space="preserve">
     <value>确定如何处理导入文档中的任何结果。默认是删除它们。</value>
@@ -253,10 +253,10 @@
     <value>在“-–import-file”操作中提供给新重复测定的名称。</value>
   </data>
   <data name="_import_search_add_mods" xml:space="preserve">
-    <value>将肽段搜索结果文件中的所有修改添加到打开文档中。</value>
+    <value>将肽段搜索结果文件中的所有修饰添加到打开文档中。</value>
   </data>
   <data name="_import_search_cutoff_score" xml:space="preserve">
-    <value>定义要在从肽段搜索结果文件构建谱图库时使用的截止值分数（介于 0 和 1 之间），其中 1 表示最高置信度匹配，0 表示所有结果。[默认值为 0.95]</value>
+    <value>定义要在从肽段搜索结果文件构建谱图库时使用的截止值（介于 0 和 1 之间），其中 1 表示最高置信度匹配，0 表示所有结果。[默认值为 0.95]</value>
   </data>
   <data name="_import_search_file" xml:space="preserve">
     <value>将肽段搜索结果文件导入至打开的文档中，以构建特定于文档的谱图库。对于多个文件，可以多次指定。使用“-–import-fasta”参数将匹配的肽段添加为目标。</value>
@@ -524,7 +524,7 @@ http://localhost:8080</value>
     <value>&lt;整数&gt;</value>
   </data>
   <data name="CommandArgs_NUM_VALUE" xml:space="preserve">
-    <value>&lt;数&gt;</value>
+    <value>&lt;数字&gt;</value>
   </data>
   <data name="CommandArgs_NAME_VALUE" xml:space="preserve">
     <value>&lt;名称&gt;</value>
@@ -536,13 +536,13 @@ http://localhost:8080</value>
     <value>&lt;报告名称&gt;</value>
   </data>
   <data name="CommandArgs_PIPE_NAME_VALUE" xml:space="preserve">
-    <value>&lt;管道名称&gt;</value>
+    <value>&lt;管线名称&gt;</value>
   </data>
   <data name="CommandArgs_REGEX_VALUE" xml:space="preserve">
     <value>&lt;正则表达式&gt;</value>
   </data>
   <data name="CommandArgs_RP_VALUE" xml:space="preserve">
-    <value>&lt;解决权力&gt;</value>
+    <value>&lt;分辨能力&gt;</value>
   </data>
   <data name="CommandArgs_MZ_VALUE" xml:space="preserve">
     <value>&lt;质荷比值&gt;</value>
@@ -554,7 +554,7 @@ http://localhost:8080</value>
     <value>&lt;毫秒&gt;</value>
   </data>
   <data name="CommandArgs_SERVER_URL_VALUE" xml:space="preserve">
-    <value>&lt;服务器网址&gt;</value>
+    <value>&lt;服务器URL路径&gt;</value>
   </data>
   <data name="CommandArgs_USERNAME_VALUE" xml:space="preserve">
     <value>&lt;用户名&gt;</value>
@@ -563,13 +563,13 @@ http://localhost:8080</value>
     <value>&lt;密码&gt;</value>
   </data>
   <data name="CommandArgs_COMMAND_VALUE" xml:space="preserve">
-    <value>&lt;程序 | 网址&gt;</value>
+    <value>&lt;指令 | URL路径&gt;</value>
   </data>
   <data name="CommandArgs_COMMAND_ARGUMENTS_VALUE" xml:space="preserve">
     <value>"&lt;参数&gt;"</value>
   </data>
   <data name="CommandArgs_PROGRAM_MACRO_VALUE" xml:space="preserve">
-    <value>&lt;程序命令&gt;[,&lt;程序版本&gt;]</value>
+    <value>&lt;程序名称&gt;[,&lt;程序版本&gt;]</value>
   </data>
   <data name="CommandArgs_GROUP_ANNOTATIONS_Importing_annotations" xml:space="preserve">
     <value>正在导入注释</value>
@@ -645,7 +645,7 @@ Waters</value>
     <value>将删除与库匹配不对应的所有目标。</value>
   </data>
   <data name="_refine_remove_duplicates" xml:space="preserve">
-    <value>所有在文档中不是唯一的肽段
+    <value>所有在文档中不是特异性的肽段
 将被删除。</value>
   </data>
   <data name="_refine_remove_repeats" xml:space="preserve">
@@ -707,7 +707,7 @@ Waters</value>
 产物离子。</value>
   </data>
   <data name="_refine_use_best_result" xml:space="preserve">
-    <value>在细化值计算中仅使用每种肽段的最佳重复测定。（用于分段洗脱）</value>
+    <value>在细化值计算中仅使用每个肽段的最佳重复测定。（用于分段洗脱）</value>
   </data>
   <data name="CommandArgs_GROUP_REFINEMENT_W_RESULTS" xml:space="preserve">
     <value>正在根据导入的结果细化目标列表</value>
@@ -719,7 +719,7 @@ Waters</value>
     <value>以逗号分隔的子离子电荷状态列表，应用于肽片段以产生子离子离子对。更改打开文档的离子对筛选器设置。</value>
   </data>
   <data name="_tran_product_ion_types" xml:space="preserve">
-    <value>以逗号分隔的在肽片段中预期存在的子离子类型列表，用于产生子离子离子对。更改打开文档的离子对筛选器设置。</value>
+    <value>以逗号分隔的在肽段碎裂中预期存在的子离子类型列表，用于产生子离子离子对。更改打开文档的离子对筛选器设置。</value>
   </data>
   <data name="_refine_max_precursor_only" xml:space="preserve">
     <value>仅保留具有最大峰面积的母离子电荷状态。</value>
@@ -728,13 +728,13 @@ Waters</value>
     <value>将删除峰面积 CV 高于截止值的所有目标母离子。</value>
   </data>
   <data name="_refine_cv_global_normalize" xml:space="preserve">
-    <value>CV 计算中使用的面积按规定进行标准化。（默认没有标准化）</value>
+    <value>CV 计算中使用的面积按规定进行归一化。（默认没有标准化）</value>
   </data>
   <data name="_refine_cv_reference_normalize" xml:space="preserve">
-    <value>CV 计算中使用的面积被归一化为一种参考类型，如“重型”。</value>
+    <value>CV 计算中使用的面积被归一化到某个参照，如“重标。</value>
   </data>
   <data name="_refine_qvalue_cutoff" xml:space="preserve">
-    <value>将删除最大检测 q 值高于截止值的所有目标母离子。若使用了调整最低检测，则至少指定数量的重复测定必须具有低于截止值的检测 q 值。</value>
+    <value>将删除最大检测 q 值高于截止值的所有目标母离子。若使用了 --refine-minimum-detections，则至少指定数量的重复测定必须具有低于截止值的检测 q 值。</value>
   </data>
   <data name="_refine_minimum_detections" xml:space="preserve">
     <value>重复测定少于指定次数且检测 q 值低于调整的 q 截止值的所有目标母离子被删除。</value>
@@ -746,7 +746,7 @@ Waters</value>
     <value>应用于样本名称的正则表达式（以 multi-injection .wiff 文件）以便选择要导入的各项。</value>
   </data>
   <data name="_exp_order_by_mz" xml:space="preserve">
-    <value>以升序按照质荷比优化导出方法（母离子质荷比，之后子离子质荷比，若适用）以实现优化的四极转换。</value>
+    <value>以质荷比升序（若适用，母离子质荷比然后子离子质荷比）排列导出的方法）以实现优化的四级杆转换。</value>
   </data>
   <data name="_tran_predict_ce" xml:space="preserve">
     <value>将离子对设置碰撞能量预测设置更改为之前定义的选项之一。</value>
@@ -776,7 +776,7 @@ Waters</value>
     <value>CV 计算中所使用的 MS 级别。默认值为“子离子”，在 PRM 和 DIA 等方法中其 CV 值通常低于母离子。</value>
   </data>
   <data name="_reintegrate_model_type" xml:space="preserve">
-    <value>峰得分模型类型进行培训以产生 z 得分和 q 值。（默认 mProphet） Skyline - 仅需缩放默认 Skyline 模型的系数，以便预估诱饵单位正态分布。SkylineML - 使用此 mProphet 机器学习算法培训一个仅凭借特征得分的默认设置的模型。</value>
+    <value>用来训练计算z分数和q值的峰得分模型。（默认 mProphet） Skyline - 仅需缩放默认 Skyline 模型的系数，以便从从诱饵中预估单位正态分布。SkylineML - 使用此 mProphet 机器学习算法训练一个仅凭借特征得分的默认设置的模型。</value>
   </data>
   <data name="CommandArgs_NUM_LIST_VALUE" xml:space="preserve">
     <value>&lt;数字列表&gt;</value>

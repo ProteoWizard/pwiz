@@ -272,7 +272,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             return data != null && data.RegressionSuccess;
         }
 
-        private DataGridViewRow GetRow(int rowIndex)
+        public DataGridViewRow GetRow(int rowIndex)
         {
             return 0 <= rowIndex && rowIndex < dataGridView.RowCount ? dataGridView.Rows[rowIndex] : null;
         }

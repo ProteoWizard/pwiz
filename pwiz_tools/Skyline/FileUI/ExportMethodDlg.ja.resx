@@ -439,7 +439,7 @@
     <value>20</value>
   </data>
   <data name="textDwellTime.ToolTip" xml:space="preserve">
-    <value>ミリ秒で表したトランジション毎のドウェル時間であり、スケジュール化されていないAgilentおよびSCIEXメソッドで必要です。</value>
+    <value>ミリ秒単位で表したトランジション毎のドウェル時間であり、スケジュール化されていないAgilentおよびSCIEXメソッドで必要です。</value>
   </data>
   <data name="textDwellTime.Visible" type="System.Boolean, mscorlib">
     <value>False</value>

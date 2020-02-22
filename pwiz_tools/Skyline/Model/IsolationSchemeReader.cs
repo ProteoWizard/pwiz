@@ -134,7 +134,7 @@ namespace pwiz.Skyline.Model
             }
             if (Math.Round(overlap) < 1)
                 return null;
-            return overlap / 2;
+            return Math.Round(overlap / 2, 4);
         }
 
         private const int MAX_SPECTRA_PER_CYCLE = 200; // SCIEX has used 100 and Thermo MSX can use 20 * 5

@@ -451,7 +451,7 @@
     <value>属性</value>
   </data>
   <data name="ListDef_IdProperty" xml:space="preserve">
-    <value>ID 属性</value>
+    <value>属性</value>
   </data>
   <data name="ListDef_DisplayProperty" xml:space="preserve">
     <value>显示属性</value>
@@ -651,13 +651,13 @@
     <value>库</value>
   </data>
   <data name="PeptideLibraries_LimitPeptidesPerProtein" xml:space="preserve">
-    <value>限制每个蛋白质的肽段</value>
+    <value>限制每个蛋白质的肽段（数量）</value>
   </data>
   <data name="PeptideLibraries_PeptideCount" xml:space="preserve">
     <value>肽段</value>
   </data>
   <data name="PeptideLibraries_RankId" xml:space="preserve">
-    <value>按下列内容排列肽段</value>
+    <value>按以下方式排列肽段</value>
   </data>
   <data name="LibrarySpec_UseExplicitPeakBounds" xml:space="preserve">
     <value>使用明示峰界限</value>
@@ -1011,7 +1011,7 @@
     <value>阈值</value>
   </data>
   <data name="BuildPeptideSearchLibrarySettings_FilterForDocumentPeptides" xml:space="preserve">
-    <value>文档肽段筛选器</value>
+    <value>过滤文档中肽段</value>
   </data>
   <data name="BuildPeptideSearchLibrarySettings_IncludeAmbiguousMatches" xml:space="preserve">
     <value>包含不明确匹配项</value>
@@ -1422,19 +1422,19 @@
     <value>仅最大母离子峰值</value>
   </data>
   <data name="PeptideFilter_PeptideUniqueness" xml:space="preserve">
-    <value>肽段独特性</value>
+    <value>肽段特异性</value>
   </data>
   <data name="RefinementSettings_CVCutoff" xml:space="preserve">
     <value>删除 CV 截止值以上</value>
   </data>
   <data name="RefinementSettings_QValueCutoff" xml:space="preserve">
-    <value>删除 QV 截止值以上</value>
+    <value>删除 q 值截止值以上</value>
   </data>
   <data name="RefinementSettings_MinimumDetections" xml:space="preserve">
     <value>最低检测</value>
   </data>
   <data name="RefinementSettings_NormalizationLabelType" xml:space="preserve">
-    <value>标准类型标准化</value>
+    <value>归一化到标准类型</value>
   </data>
   <data name="RefinementSettings_NormalizationMethod" xml:space="preserve">
     <value>归一化方法</value>
