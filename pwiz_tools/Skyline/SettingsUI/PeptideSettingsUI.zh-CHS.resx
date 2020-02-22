@@ -444,7 +444,7 @@
     <value>5</value>
   </data>
   <data name="textMeasureRTWindow.ToolTip" xml:space="preserve">
-    <value>用于计划未来肽段测量，围绕已测量峰中心的以分钟表示的时间窗口
+    <value>用于保留时间预定肽段测量，围绕已测量峰中心的以分钟表示的时间窗口
 （如，（开始 + 结束）/2）</value>
   </data>
   <data name="&gt;&gt;textMeasureRTWindow.Name" xml:space="preserve">
@@ -533,7 +533,7 @@
   <data name="cbAutoSelect.ToolTip" xml:space="preserve">
     <value>如果选中，那么肽段将借助指定的过滤器和库设置
 自动从蛋白质中选择。否则，所有肽段
-段选择都必须由手动文档编辑完成。</value>
+选择都必须由手动文档编辑完成。</value>
   </data>
   <data name="&gt;&gt;cbAutoSelect.Name" xml:space="preserve">
     <value>cbAutoSelect</value>
@@ -689,7 +689,7 @@
     <value>1</value>
   </data>
   <data name="textMinLength.ToolTip" xml:space="preserve">
-    <value>匹配此过滤器的肽段所允许的最小氨基
+    <value>匹配此过滤器的肽段所允许的最小氨基酸数目
 酸数目</value>
   </data>
   <data name="&gt;&gt;textMinLength.Name" xml:space="preserve">
@@ -1448,7 +1448,7 @@ W = (W0 + M*(Wmax-W0)/imMax)
     <value>6</value>
   </data>
   <data name="labelPeptideUniquenessConstraint.Text" xml:space="preserve">
-    <value>按以下方式强制肽段唯一性(&amp;U)：</value>
+    <value>按以下方式强制肽段序列特异性(&amp;U)：</value>
   </data>
   <data name="&gt;&gt;labelPeptideUniquenessConstraint.Name" xml:space="preserve">
     <value>labelPeptideUniquenessConstraint</value>

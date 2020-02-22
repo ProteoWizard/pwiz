@@ -742,7 +742,7 @@
     <value>プリカーサー</value>
   </data>
   <data name="PrecursorAccuracy">
-    <value>プリカーサーで指定されたプリカーサー濃度に対するプリカーサー計算濃度の比率です。</value>
+    <value>[プリカーサー]で指定されたプリカーサー濃度に対する[プリカーサー計算濃度]の比率です。</value>
   </data>
   <data name="PrecursorAdduct">
     <value>プリカーサーを作成するよう分子に適用される付加物です。</value>

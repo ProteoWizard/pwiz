@@ -153,7 +153,7 @@
     <value>24, 22</value>
   </data>
   <data name="ceLabel.Text" xml:space="preserve">
-    <value>CE:</value>
+    <value>碰撞能量:</value>
   </data>
   <data name="comboCE.Size" type="System.Drawing.Size, System.Drawing">
     <value>92, 25</value>

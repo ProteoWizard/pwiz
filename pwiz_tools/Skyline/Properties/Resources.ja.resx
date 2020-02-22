@@ -2562,7 +2562,7 @@
     <value>サーバーに連絡中</value>
   </data>
   <data name="EditFragmentLossDlg_EditFragmentLossDlg_Loss__chemical_formula_" xml:space="preserve">
-    <value>ロス化学式(&amp;C)：</value>
+    <value>ロスをする化学式(&amp;C)：</value>
   </data>
   <data name="EditDPDlg_UseCurrentData_Insufficient_data_found_to_calculate_a_new_regression" xml:space="preserve">
     <value>新しい回帰を計算するのに十分なデータが見つかりませんでした。</value>
@@ -9153,7 +9153,7 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
     <value>回帰の試行</value>
   </data>
   <data name="LibraryBuildNotificationHandler_AddIrts_Processing_retention_times" xml:space="preserve">
-    <value>保持時間のプロセス中</value>
+    <value>保持時間の処理中</value>
   </data>
   <data name="RegressionGraphPane_RegressionGraphPane__0___at__1__points_minimum_" xml:space="preserve">
     <value>{0}（最低{1}点）</value>
@@ -9942,7 +9942,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>ユーザー名が{0}でサーバーが{1}というアカウントが見つかりません。</value>
   </data>
   <data name="OpenDataSourceDialog_EnsureRemoteAccount_No_remote_accounts_have_been_specified__If_you_have_an_existing_Unifi_account_you_can_enter_your_login_information_now_" xml:space="preserve">
-    <value>リモートアカウントが指定されていません。既存のUnifiアカウントをお持ちの場合、今すぐログイン情報を入力できます。</value>
+    <value>リモートアカウントが指定されていません。既存のUNIFIアカウントをお持ちの場合、今すぐログイン情報を入力できます。</value>
   </data>
   <data name="RemoteAccountList_Title_Edit_Remote_Accounts" xml:space="preserve">
     <value>リモートアカウントを編集</value>
@@ -10499,7 +10499,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>値「{0}」は、フルファイルパスへの変換試行に失敗した引数{1}に対して有効ではありません。</value>
   </data>
   <data name="GraphChromatogram_UpdateUI_No_QC_chromatogram_found" xml:space="preserve">
-    <value>一致するQCクロマトグラムが見つかりません</value>
+    <value>該当するQCクロマトグラムが見つかりません</value>
   </data>
   <data name="SkylineVersion_V19_1_Skyline_19_1" xml:space="preserve">
     <value>Skyline 19.1</value>
@@ -10745,7 +10745,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>保持時間のプロバイダーを読み込み中</value>
   </data>
   <data name="CommandLine_SetImsSettings_Enabling_extraction_based_on_spectral_library_ion_mobility_values_" xml:space="preserve">
-    <value>スペクトルライブラリにおけるイオン移動度の値に基づいて抽出を有効にします。</value>
+    <value>スペクトルライブラリのイオン移動度の値に基づいた抽出を有効にします。</value>
   </data>
   <data name="CommandLine_SetImsSettings_Changing_ion_mobility_spectral_library_resolving_power_to__0__" xml:space="preserve">
     <value>イオン移動度スペクトルライブラリの分解能を{0}に変更しています。</value>
@@ -10772,7 +10772,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>{0}からこのファイルをダウンロードする権限がありません。</value>
   </data>
   <data name="SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive___0___in_the_skyp_file__Found__1__instead_" xml:space="preserve">
-    <value>skypファイル内にSkyline共有ドキュメントアーカイブ({0})のURLがあると考えられます。代わりに{1}が見つかりました。</value>
+    <value>skypファイル内のSkyline共有ドキュメントアーカイブ（{0}）のURLが必要です。代わりに{1}が見つかりました。</value>
   </data>
   <data name="SkypFile_GetNonExistentPath_Name_of_shared_Skyline_archive_cannot_be_null_or_empty_" xml:space="preserve">
     <value>Skyline共有アーカイブの名前はNullや空白にできません。</value>

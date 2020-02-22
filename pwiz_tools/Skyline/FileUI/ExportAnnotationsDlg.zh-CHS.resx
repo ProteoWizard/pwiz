@@ -469,7 +469,7 @@
     <value>0</value>
   </data>
   <data name="lblInstructions.Text" xml:space="preserve">
-    <value>择要导入文本文档的注释和属性。</value>
+    <value>选择要导入文本文档的注释和属性。</value>
   </data>
   <data name="&gt;&gt;lblInstructions.Name" xml:space="preserve">
     <value>lblInstructions</value>

@@ -482,7 +482,7 @@
     <value>冗長ライブラリを保持する(&amp;K)</value>
   </data>
   <data name="cbKeepRedundant.ToolTip" xml:space="preserve">
-    <value>今後、さらにスペクトルを追加する冗長ライブラリのコピーを保持する場合は選択します。</value>
+    <value>今後、さらにスペクトルを追加する冗長ライブラリをコピーし続ける場合は選択します。</value>
   </data>
   <data name="&gt;&gt;cbKeepRedundant.Name" xml:space="preserve">
     <value>cbKeepRedundant</value>
@@ -536,9 +536,9 @@
     <value>16</value>
   </data>
   <data name="textCutoff.ToolTip" xml:space="preserve">
-    <value>ライブラリに含める結果のスペクトルに対するカットオフのために使用される1.0 - 0までのスコア（1.0が最も高確率と考えられる）。
+    <value>ライブラリに含まれる結果のスペクトルに対するカットオフに使用する1.0 - 0までのスコア（1.0が最も正しい可能性が高い）。
 TPP pepXMLでは、この値は最小ペプチドProphet確率です。
-Mascotでは、この値は1 - 最大確率です。
+Mascotでは、この値は1 - 最大期待値です。
 SEQUEST SQTでは、この値は1 - 最大FDRです。</value>
   </data>
   <data name="&gt;&gt;textCutoff.Name" xml:space="preserve">

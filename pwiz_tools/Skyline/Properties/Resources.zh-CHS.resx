@@ -185,7 +185,7 @@
     <value>保留时间预测器无法自动计算回归。</value>
   </data>
   <data name="PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following__0__peptide__file__and_charge_state_combinations_were_not_recognized_" xml:space="preserve">
-    <value>以下{0}肽段、文件和电荷态组合未被验证：</value>
+    <value>以下{0}肽段、文件和电荷态组合未被识别：</value>
   </data>
   <data name="CommandLine_Run_Not_setting_library_" xml:space="preserve">
     <value>未设定库。</value>
@@ -371,7 +371,7 @@
     <value>删除临时压缩文件出错：</value>
   </data>
   <data name="EditRTDlg_UpdateCalculator_The__0__calculator_cannot_score_any_of_the_peptides" xml:space="preserve">
-    <value>{0}计算器不得计分任何肽段。</value>
+    <value>{0}计算器无法评分任何肽段。</value>
   </data>
   <data name="RenameProteinsDlg_UseFastaFile_No_protein_sequence_matches_found_between_the_current_document_and_the_FASTA_file__0_" xml:space="preserve">
     <value>当前文档和 FASTA 文件{0}之间未发现蛋白质序列匹配</value>
@@ -491,7 +491,7 @@
     <value>不被支持的文件版本{0}</value>
   </data>
   <data name="StartPage_getBoxPanels_targetedmsms" xml:space="preserve">
-    <value>获得使用从低分辨率 Thermo LTQ 和高分辨率 Agilent 6520 Q-TOF 采集定向 MS/MS（还称作“平行反应监测” - PRM）数据方面的实际经验。获得对在低分辨率和高分辨率仪器上测量母离子和片段离子来获得对肽段定量之间的选择性和敏感性差异的全新理解。发现处理并了解您的质谱数据的新方法，这些方法是由Skyline提供针对基于色谱的定量蛋白质组学的一系列丰富特征集。</value>
+    <value>获得使用从低分辨率 Thermo LTQ 和高分辨率 Agilent 6520 Q-TOF 采集定向 MS/MS（还称作“平行反应监测” - PRM）数据方面的实际经验。获得对在低分辨率和高分辨率仪器上测量母离子和片段离子来获得对肽段定量之间的选择性和灵敏度差异的全新理解。发现处理并了解您的质谱数据的新方法，这些方法是由Skyline提供针对基于色谱的定量蛋白质组学的一系列丰富特征集。</value>
   </data>
   <data name="TransitionGroupDocNode_ChangePrecursorAnnotations_File_Id__0__does_not_match_any_file_in_document_" xml:space="preserve">
     <value>文件 Id {0}不匹配文档中的任何文件。</value>
@@ -1465,7 +1465,7 @@
     <value>是</value>
   </data>
   <data name="ExPeptideRowReader_CalcTransitionInfo_Invalid_extended_peptide_format__0__" xml:space="preserve">
-    <value>无效的扩展的肽段结构式{0}</value>
+    <value>无效的扩展的肽段格式{0}</value>
     <comment>Protein or peptide sequence</comment>
   </data>
   <data name="RInstaller_RInstaller_Load_This_Tool_requires_the_use_of_the_following_R_Packages_" xml:space="preserve">
@@ -1837,7 +1837,7 @@
     <value>此蛋白质没有名称</value>
   </data>
   <data name="EditRTDlg_UpdateCalculator_The_calculator_cannot_be_used_to_score_peptides_Please_check_its_settings" xml:space="preserve">
-    <value>计算器不得用于针对肽段计分。请查看其设置。</value>
+    <value>计算器无法对肽段评分。请查看其设置。</value>
   </data>
   <data name="ConfigureToolsDlg_CopyinFile_Missing_the_file_0_Tool_1_Import_Failed" xml:space="preserve">
     <value>缺少文件{0}。工具({1})导入失败</value>
@@ -2092,7 +2092,7 @@
     <value>“{0}”不是有效的表格名称。</value>
   </data>
   <data name="ImportPeptideSearchDlg_NextPage_Please_check_your_peptide_search_pipeline_or_contact_Skyline_support_to_ensure_retention_times_appear_in_your_spectral_libraries_" xml:space="preserve">
-    <value>请查看您的肽段搜索管道或联络 Skyline 支持，以确保保留时间出现在您的谱图库中。</value>
+    <value>请查看您的肽段搜索引擎或联络 Skyline 支持，以确保保留时间出现在您的谱图库中。</value>
   </data>
   <data name="CreateIrtCalculatorDlg_ImportTextFile_Import_Transition_List__iRT_standards_" xml:space="preserve">
     <value>导入离子对列表（iRT 标准）</value>
@@ -2224,7 +2224,7 @@
     <value>修饰离子对</value>
   </data>
   <data name="SkylineStartup_SkylineStartup_Start_a_new_Skyline_document_from_a_complete_transition_list_with_peptide_sequences__precursor_m_z_values__and_product_m_z_values__which_you_can_paste_into_a_grid_" xml:space="preserve">
-    <value>从带有您可以粘贴至网格的肽段序列、母离子质荷比值和子离子质荷比值的完整离子对列表中开始新的 Skyline 文档。</value>
+    <value>从带有您可以粘贴至网格的肽段序列、母离子质荷比值和子离子质荷比值的完整离子对列表中建立新的 Skyline 文档。</value>
   </data>
   <data name="MeasuredIon_Validate_Special_fragment_ions_must_have_at_least_one_fragmentation_residue" xml:space="preserve">
     <value>特殊片段离子必须至少具备一个片段储存残片。</value>
@@ -2631,7 +2631,7 @@
     <value>..\resources\nopeak.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="ReportSpecList_GetDefaults_Peptide_RT_Results" xml:space="preserve">
-    <value>肽段RT 结果</value>
+    <value>肽段保留时间结果</value>
   </data>
   <data name="MessageBoxHelper_ValidateNameTextBox__0__cannot_be_empty" xml:space="preserve">
     <value>{0}不能为空。</value>
@@ -2851,7 +2851,7 @@
     <value>结果添加中…</value>
   </data>
   <data name="AbstractMassListExporter_ExportScheduledBuckets_The_required_peptide__0__cannot_be_scheduled" xml:space="preserve">
-    <value>采集的肽段{0}无法被安排</value>
+    <value>采集的肽段{0}无法被预定（保留时间）</value>
   </data>
   <data name="SettingsListComboDriver_Edit_list" xml:space="preserve">
     <value>&lt;编辑列表…&gt;</value>
@@ -2939,7 +2939,7 @@
     <value>在“离子对设置”中核选“修饰”标签。</value>
   </data>
   <data name="StartPage_getBoxPanels_ms1filtering" xml:space="preserve">
-    <value>获得创建 Skyline 文档，从而使用数据依赖采集 (DDA) 实验中的 MS1 扫描来检测肽段表达式中定量差异的实际经验。在本教程中，您将从发现数据集中生成一个谱图库、针对 MS1 过滤建立一个 Skyline 文档、导入原始质谱仪数据以从 MS1 扫描中提取母离子色谱图，借助 MS/MS 肽段鉴定指导峰拣选，并且进一步处理 Skyline 产生的定量数据。如果您对发现数据集的非标记定量分析感兴趣，本教程将为您的调查提供新的成套工具。</value>
+    <value>获得创建 Skyline 文档，从而使用数据依赖采集 (DDA) 实验中的 MS1 扫描来检测肽段表达式中定量差异的实际经验。在本教程中，您将从蛋白组数据集中生成一个谱图库、针对 MS1 过滤建立一个 Skyline 文档、导入原始质谱仪数据以从 MS1 扫描中提取母离子色谱图，借助 MS/MS 肽段鉴定指导峰拣选，并且进一步处理 Skyline 产生的定量数据。如果您对发现数据集的非标记定量分析感兴趣，本教程将为您的调查提供新的成套工具。</value>
   </data>
   <data name="EditStaticModDlg_OkDialog_Unimod" xml:space="preserve">
     <value>Unimod</value>
@@ -6361,7 +6361,7 @@
     <value>错误：重新整合峰失败。</value>
   </data>
   <data name="SkylineWindow_ShowUniquePeptidesDlg_Inspecting_peptide_uniqueness_requires_a_background_proteome" xml:space="preserve">
-    <value>检查肽段独特性需要背景蛋白质组。</value>
+    <value>检查肽段序列特异性需要背景蛋白质组。</value>
   </data>
   <data name="SequenceMassCalc_GetFragmentMass_Precursor_isotope__0__is_outside_the_isotope_distribution__1__to__2__" xml:space="preserve">
     <value>母离子同位素{0}在同位素分布{1}至{2}之外。</value>
@@ -6452,7 +6452,7 @@
     <value>错误：您必须借助“--exp-file=path/to/file”参数来指定写入的导出文件。无离子对列表将被导出。</value>
   </data>
   <data name="FastaSeqV01_GetPeptideList_Attempt_to_get_peptide_list_from_uncleaved_FASTA_sequence" xml:space="preserve">
-    <value>尝试从未裂解的 FASTA 序列获取肽段列。</value>
+    <value>尝试从未裂解的 FASTA 序列获取肽段列表。</value>
   </data>
   <data name="ExportMethodDlg_comboTargetType_SelectedIndexChanged_To_export_a_scheduled_list_you_must_first_choose_a_retention_time_predictor_in_Peptide_Settings_Prediction_or_import_results_for_all_peptides_in_the_document" xml:space="preserve">
     <value>如要导出预定方法，您必须首先在肽段设置/预测中选择一个保留时间预测器，或者在文档中导入针对所有肽段的结果。</value>
@@ -6659,7 +6659,7 @@
     <value>..\Resources\EmptyList.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="StartPage_getBoxPanels_Get_hands_on_experience_working_with_the_Skyline_Spectral_Library_Explorer__new_in_v0_7__Learn_more_about_working_with_isotope_labels_and_product_ion_neutral_losses_using_MS_MS_spectral_libraries_containing_15N_labeled_and_phosphorylated_peptides__Use_the_Library_Explorer_to_accelerate_the_transition_between_shotgun_discovery_experiments_and_targeted_investigation_" xml:space="preserve">
-    <value>获得使用 Skyline 谱图库浏览器 - 全新 v0.7 的实际经验。使用包含 15N 标记和磷酸化肽段的 MS/MS 谱图库来学习更多关于处理同位素标记和子离子中性丢失的内容。使用库浏览器来加速鸟枪发现式实验与靶向调查间的过渡。</value>
+    <value>获得使用 Skyline 谱图库浏览器 - 全新 v0.7 的实际经验。使用包含 15N 标记和磷酸化肽段的 MS/MS 谱图库来了解更多关于处理同位素标记和子离子中性丢失的内容。使用库浏览器来加速鸟枪发现式实验与靶向调查间的过渡。</value>
   </data>
   <data name="TransitionPrediction_GetOptimizeFunction_Compensation_voltage_parameters_must_be_selected_in_the_Prediction_tab_of_the_Transition_Settings_in_order_to_import_optimization_data_for_compensation_voltage" xml:space="preserve">
     <value>补偿电压参数必须在离子对设置的“预测”标签中被选定，以针对补偿电压导入最优数据。</value>
@@ -7028,7 +7028,7 @@
     <value>补偿电压：</value>
   </data>
   <data name="PasteDlg_AddPeptides_Unable_to_interpret_peptide_modifications" xml:space="preserve">
-    <value>无法解释肽段修饰</value>
+    <value>无法理解肽段修饰</value>
   </data>
   <data name="SpectrumLibraryInfoDlg_SetDetailsText_ID__0__" xml:space="preserve">
     <value>ID：{0}</value>
@@ -7488,7 +7488,7 @@
     <value>警告：未指定任何导出策略（从“单一”、“蛋白质”或“存储桶”）。默认设置为“单一”。</value>
   </data>
   <data name="StartPage_getBoxPanels_Get_hands_on_experience_using_Skyline_with_Excel_to_estimate_the_absolute_molecular_quantities_of_peptides_in_your_experiments__" xml:space="preserve">
-    <value>获得使用 Skyline 和 Excel 评估您的实验中肽段绝对分子含量的实际经验。</value>
+    <value>获得使用 Skyline 和 Excel 评估您的实验中肽段绝对定量的实际经验。</value>
   </data>
   <data name="ToolMacros__listArguments_This_tool_requires_a_Selected_Protein_to_run_" xml:space="preserve">
     <value>本工具需要运行一个选定的蛋白质。</value>
@@ -7782,7 +7782,7 @@
     <value>重复测定{0}包含的肽段不具有足够信息，无法针对触发采集排名离子对。</value>
   </data>
   <data name="AlignmentForm_UpdateGraph_Peptides_Refined" xml:space="preserve">
-    <value>肽段调整</value>
+    <value>肽段细化</value>
   </data>
   <data name="BuildBackgroundProteomeDlg_OkDialog_The_background_proteome__0__already_exists" xml:space="preserve">
     <value>背景蛋白质组“{0}”已经存在。</value>
@@ -8290,7 +8290,7 @@
     <value>{0} 个肽段</value>
   </data>
   <data name="GraphData_Graph_Peptides_Refined" xml:space="preserve">
-    <value>肽段调整</value>
+    <value>肽段细化</value>
   </data>
   <data name="PublishDocumentDlg_UploadSharedZipFile_Click_here_to_view_the_error_details_" xml:space="preserve">
     <value>单击此处，以查看错误详情。</value>
@@ -9204,7 +9204,7 @@
     <value>扫描编号：</value>
   </data>
   <data name="GraphFullScan_CreateGraph_IM_Scan_Range_" xml:space="preserve">
-    <value>IM Scan 范围：</value>
+    <value>IM 扫描 范围：</value>
   </data>
   <data name="FilterMidasLibraryDlg_OkDialog_You_must_enter_a_name_for_the_filtered_library_" xml:space="preserve">
     <value>您必须为已过滤的库输入名称。</value>
@@ -10560,7 +10560,7 @@
     <value>该文档必须包括至少 2 个重复测定，以便根据一致性进行调整。</value>
   </data>
   <data name="RefinementSettings_Refine_The_document_does_not_have_a_global_standard_to_normalize_by_" xml:space="preserve">
-    <value>该文档没有一个可以归一化的全球标准。</value>
+    <value>该文档没有一个可以归一化的通用标准。</value>
   </data>
   <data name="RefinementSettings_GetLabelIndex_The_document_does_not_contain_the_given_reference_type_" xml:space="preserve">
     <value>该文档不包括给定的参考类别。</value>
@@ -10611,7 +10611,7 @@
     <value>iRT 标准 {0} 已经存在。</value>
   </data>
   <data name="CalibrateIrtDlg_TryGetLine_Maximum_fixed_point_peptide_must_have_a_greater_measured_retention_time_than_the_minimum_fixed_point_peptide_" xml:space="preserve">
-    <value>最大固定点肽段必须必最小固定点肽段拥有更长的测定保留时间。</value>
+    <value>最大固定点肽段必须比最小固定点肽段拥有更长的测定保留时间。</value>
   </data>
   <data name="CalibrateIrtDlg_TryGetLine_Standard_calibration_peptides_are_required_" xml:space="preserve">
     <value>需要标准校对肽段。</value>
@@ -10644,7 +10644,7 @@
     <value>本文档中包含本标准中没有的 {0} 个肽段结果，其低于{1}至校准标准的最低要求。</value>
   </data>
   <data name="AddIrtStandardsDlg_AddIrtStandardsDlg_MessagePeptidesExcluded" xml:space="preserve">
-    <value>当前文档包含带有检测到保留时间且在本标准中没有的 {0} 个肽段。建议您使用少量在单次注射过程中容易被检测到的肽段作为 iRT 标准。选择下方一些肽段，以便让 Skyline 可以自动从当前文档中进行选择。</value>
+    <value>当前文档包含带有检测到保留时间且在本标准中没有的 {0} 个肽段。建议您使用少量在单次进样过程中容易被检测到的肽段作为 iRT 标准。选择下方一些肽段，以便让 Skyline 可以自动从当前文档中进行选择。</value>
   </data>
   <data name="CalibrateIrtDlg_UpdateControls_iRT" xml:space="preserve">
     <value>iRT</value>
@@ -10668,7 +10668,7 @@
     <value>iRT 标准 {0} 已经存在。</value>
   </data>
   <data name="CalibrateIrtDlg_TryGetLine_Maximum_fixed_point_peptide_must_have_a_greater_measured_retention_time_than_the_minimum_fixed_point_peptide_" xml:space="preserve">
-    <value>最大固定点肽段必须必最小固定点肽段拥有更长的测定保留时间。</value>
+    <value>最大固定点肽段必须比最小固定点肽段拥有更长的测定保留时间。</value>
   </data>
   <data name="CalibrateIrtDlg_TryGetLine_Standard_calibration_peptides_are_required_" xml:space="preserve">
     <value>需要标准校对肽段。</value>
@@ -10701,7 +10701,7 @@
     <value>本文档中包含本标准中没有的 {0} 个肽段结果，其低于{1}至校准标准的最低要求。</value>
   </data>
   <data name="AddIrtStandardsDlg_AddIrtStandardsDlg_MessagePeptidesExcluded" xml:space="preserve">
-    <value>当前文档包含带有检测到保留时间且在本标准中没有的 {0} 个肽段。建议您使用少量在单次注射过程中容易被检测到的肽段作为 iRT 标准。选择下方一些肽段，以便让 Skyline 可以自动从当前文档中进行选择。</value>
+    <value>当前文档包含带有检测到保留时间且在本标准中没有的 {0} 个肽段。建议您使用少量在单次进样过程中容易被检测到的肽段作为 iRT 标准。选择下方一些肽段，以便让 Skyline 可以自动从当前文档中进行选择。</value>
   </data>
   <data name="CalibrateIrtDlg_UpdateControls_iRT" xml:space="preserve">
     <value>iRT</value>
@@ -10842,7 +10842,7 @@
     <value>skyp 文件内预计的共享 Skyline 文档存档 ({0}) 链接。反之发现 {1}。</value>
   </data>
   <data name="SkypFile_GetNonExistentPath_Name_of_shared_Skyline_archive_cannot_be_null_or_empty_" xml:space="preserve">
-    <value>共享 Skyline 存档的名称不得无效或空。</value>
+    <value>共享 Skyline 存档的名称不得为无效或空。</value>
   </data>
   <data name="SkypSupport_Download_Downloading__0_" xml:space="preserve">
     <value>下载{0}</value>
@@ -10893,7 +10893,7 @@
     <value>Panorama 服务器中取消了文档导入{0}。</value>
   </data>
   <data name="PanoramaPublishHelper_PublishDocToPanorama_Job_details_can_be_found_at__0__" xml:space="preserve">
-    <value>工作细节可见于 {0}。</value>
+    <value>任务细节可见于 {0}。</value>
   </data>
   <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_Document_import_was_cancelled_on_the_server__Would_you_like_to_go_to_Panorama_" xml:space="preserve">
     <value>服务器中取消了文档导入。您是否想前往 Panorama 服务器？</value>

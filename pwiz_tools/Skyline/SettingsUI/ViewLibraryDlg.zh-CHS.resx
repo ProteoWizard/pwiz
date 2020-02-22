@@ -163,7 +163,7 @@
     <value>2</value>
   </data>
   <data name="prositCheckBox.Text" xml:space="preserve">
-    <value>Prosit</value>
+    <value>Prosit（深度学习预测质谱二级谱图）</value>
   </data>
   <data name="&gt;&gt;prositCheckBox.Name" xml:space="preserve">
     <value>prositCheckBox</value>

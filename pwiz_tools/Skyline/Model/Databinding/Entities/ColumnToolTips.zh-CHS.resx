@@ -131,7 +131,7 @@
 并显示在重离子对上。</value>
   </data>
   <data name="AttributeAreaProportion">
-    <value>校准后面积与文档（拥有相同属性面积比例）内所有其他肽段或分子的校准后面积总和比。</value>
+    <value>归一化面积与文档（拥有相同属性面积比例）内所有其他肽段或分子的归一化面积总和比。</value>
   </data>
   <data name="AttributeGroupId">
     <value>影响属性面积比例计算中肽段或分子的分组。</value>
@@ -140,7 +140,7 @@
     <value>如果为“true”，则 Skyline 将根据当前设置在分子列表中自动添加或删除分子。</value>
   </data>
   <data name="AutoSelectPeptides">
-    <value>如果为“true”，则 Skyline 将根据肽段设置筛选器自动添加或删除肽段。</value>
+    <value>如果为“true”，则 Skyline 将根据肽段设置过滤器自动添加或删除肽段。</value>
   </data>
   <data name="AutoSelectPrecursors">
     <value>如果为“true”，则 Skyline 将根据离子对设置筛选器、谱图库等自动添加或删除母离子。</value>
@@ -227,7 +227,7 @@
     <value>用于确定对于倍数变化的置信区间的置信水平。</value>
   </data>
   <data name="CleavageAa">
-    <value>在肽段断裂后（C-末端）肽段中的特异性
+    <value>在肽段（从该氨基酸残基C-末端）断裂后肽段中的特异性
 氨基酸残基。（例如 P、M、S、T 等。）</value>
   </data>
   <data name="CollisionEnergy">
@@ -376,7 +376,7 @@
     <value>子离子肽段片段的名称（例如 y8、y10、b7 等。）。</value>
   </data>
   <data name="FragmentIonOrdinal">
-    <value>在肽段断裂后（C-末端）
+    <value>在肽段断裂后（从C-末端数起）
 肽段中的氨基酸的位置。（例如 8、10、7 等。）</value>
   </data>
   <data name="FragmentIonType">
@@ -403,7 +403,7 @@
   </data>
   <data name="Identified">
     <value>如果在峰积分边界之间的某一点存在结果文件
-的串联质谱 (MS/MS) 肽鉴定，则成立。</value>
+的串联质谱 (MS/MS) 肽序列鉴定，则成立。</value>
   </data>
   <data name="Intensities">
     <value>色谱图强度的逗号分隔列表。</value>
@@ -613,7 +613,7 @@
 相同的积分边界手动编辑母离子的所有离子对</value>
   </data>
   <data name="MissedCleavages">
-    <value>肽段序列中缺失酶剪切位点的数量</value>
+    <value>肽段序列中酶误切位点的数量</value>
   </data>
   <data name="ModifiedAreaProportion">
     <value>此肽段结果的归一化面积，除以在此蛋白质和具有相同未修饰序列的重复测定中的所有肽段结果的总和。</value>
@@ -655,7 +655,7 @@
     <value>分子列表的名称。</value>
   </data>
   <data name="MoleculeListNote">
-    <value>与分子相关的自由文本注释。</value>
+    <value>与分子列表相关的自由文本注释。</value>
   </data>
   <data name="MoleculeList">
     <value>Skyline 文档中的一组分子。</value>
@@ -833,9 +833,9 @@
     <value>母离子的公式。这是不推荐使用的，而应该使用“PrecursorIonFomula”。</value>
   </data>
   <data name="PrecursorNormalizedArea">
-    <value>母离子结果的校准后面积。
-其等同于根据肽段校准方法所校准的母离子结果总面积。
-若肽段校准方法为“无”或相对于标记的比率。那么母离子校准后面积将等于母离子总面积。</value>
+    <value>母离子结果的归一化面积。
+其等同于根据肽段校准方法所归一化的母离子结果总面积。
+若肽段归一化方法为“无”或相对于标记的比率。那么母离子归一化面积将等于母离子总面积。</value>
   </data>
   <data name="PrecursorMz">
     <value>母离子的质荷比 (m/z)。</value>
