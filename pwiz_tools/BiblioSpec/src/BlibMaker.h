@@ -51,6 +51,7 @@ class BlibMaker
 #define MAJOR_VERSION_CURRENT 0
 #define MINOR_VERSION_CURRENT 10
 
+    // Make sure you update version_history_comment (below) when bumping the schema version
 #define MIN_VERSION_TIC       10 // Version 10 adds TIC as a column
 #define MIN_VERSION_PROTEINS   9 // Version 9 adds Proteins and RefSpectraProteins tables
 #define MIN_VERSION_RT_BOUNDS  8 // Version 8 adds startTime and endTime
@@ -61,6 +62,10 @@ class BlibMaker
 #define MIN_VERSION_IMS_HEOFF  3 // Version 3 adds product ion mobility offset information for Waters Mse IMS
 #define MIN_VERSION_IMS        2 // Version 2 adds ion mobility information
 const char * version_history_comment =  // This gets written to the output db
+        "-- Schema version number:\n"
+        "-- Version 10 adds TIC as a column\n"
+        "-- Version 9 adds Proteins and RefSpectraProteins tables\n"
+        "-- Version 8 adds startTime and endTime\n"
         "-- Version 7 adds peak annotations\n"
         "-- Version 6 generalized ion mobility to value, high energy offset, and type (currently drift time msec, and inverse reduced ion mobility Vsec/cm2)\n"
         "-- Version 5 added small molecule columns\n"

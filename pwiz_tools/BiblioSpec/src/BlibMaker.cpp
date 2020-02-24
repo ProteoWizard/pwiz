@@ -304,7 +304,7 @@ void BlibMaker::createTables(vector<string> &commands, bool execute)
         "libLSID TEXT, -- LSID of form urn:lsid:<authority>:spectral_library:bibliospec:<type:redundant|nr>:<library name> e.g. urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:byonic.blib\n"
         "createTime TEXT, -- local creation time in ctime() format e.g. Thu Nov 16 17:02:18 2017\n"
         "numSpecs INTEGER, -- number of spectra in this library (-1 means not yet counted)\n"
-        "majorVersion INTEGER, -- always 0, for this generation of BiblioSpec\n"
+        "majorVersion INTEGER, -- revision number for this library (count starts at 1)\n"
         "minorVersion INTEGER ") + version_history_comment +
         ")");
 
