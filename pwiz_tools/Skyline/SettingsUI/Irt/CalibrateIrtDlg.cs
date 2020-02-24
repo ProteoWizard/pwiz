@@ -738,7 +738,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 {
                     var standardPeptides = bestPeptides.Select(pep => new StandardPeptide
                     {
-                        Irt = cirtUsePredefined ? _picker.CirtIrt(pep.Target).Value : double.NaN,
+                        Irt = cirtUsePredefined ? _picker.CirtIrt(pep.Target).GetValueOrDefault() : double.NaN,
                         RetentionTime = pep.RetentionTime,
                         Target = pep.Target
                     }).ToList();

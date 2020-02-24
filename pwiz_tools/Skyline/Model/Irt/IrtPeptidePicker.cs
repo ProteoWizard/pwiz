@@ -33,13 +33,14 @@ namespace pwiz.Skyline.Model.Irt
     {
         private ScoredPeptide[] _scoredPeptides;
         private ScoredPeptide[] _cirtPeptides;
-        private readonly Dictionary<Target, double> _cirtAll;
+        private readonly TargetMap<double> _cirtAll;
 
         public IrtPeptidePicker()
         {
             _scoredPeptides = null;
             _cirtPeptides = null;
-            _cirtAll = IrtStandard.CIRT.Peptides.ToDictionary(pep => pep.ModifiedTarget, pep => pep.Irt);
+            _cirtAll = new TargetMap<double>(IrtStandard.CIRT.Peptides.Select(pep =>
+                new KeyValuePair<Target, double>(pep.ModifiedTarget, pep.Irt)));
         }
 
         public bool HasScoredPeptides => _scoredPeptides != null && _scoredPeptides.Length > 0;
