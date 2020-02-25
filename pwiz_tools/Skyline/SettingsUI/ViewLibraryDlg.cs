@@ -496,7 +496,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         for (int i = start; i < end; i++)
                         {
-                            if (IsUpdateCanceled)   // Allows tests to get out of this loop and fail
+                            if (IsUpdateCanceled) // Allows tests to get out of this loop and fail
                                 break;
                             longWaitBroker.SetProgressCheckCancel(i - start, end - start);
                             ViewLibraryPepInfo pepInfo = _peptides[_currentRange[i]];
@@ -508,6 +508,15 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 catch (OperationCanceledException)
                 {
+                }
+                catch (Exception x)
+                {
+                    // Unexpected exception, gather context info and pass it along
+                    var errorMessage = TextUtil.LineSeparate(
+                        string.Format(Resources.BiblioSpecLiteLibrary_Load_Failed_loading_library__0__, _selectedLibName),
+                        x.Message,
+                        _selectedLibrary.LibraryDetails.ToString());
+                    throw new Exception(errorMessage, x);
                 }
 
                 listPeptide.SelectedIndex = Math.Min(selectPeptideIndex, listPeptide.Items.Count - 1);
