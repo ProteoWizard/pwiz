@@ -1160,15 +1160,18 @@ namespace SkylineNightly
         // Set the end time of an already running nightly run (e.g. if there is a hang and we want to give more time for someone to attach a debugger)
         public bool SetEndTime(DateTime endTime)
         {
+            Exception exception = null;
             try
             {
                 END_TIME_SETTER_FACTORY.CreateChannel().SetEndTime(endTime);
-                return true;
             }
-            catch
+            catch (Exception x)
             {
-                return false;
+                exception = x;
             }
+            Log(string.Format("Setting nightly end time to {0} {1}: {2}",
+                endTime.ToShortDateString(), endTime.ToShortTimeString(), exception == null ? "OK" : exception.Message));
+            return exception == null;
         }
 
         // Allows SkylineNightly to change the stop time of a nightly run via IPC
