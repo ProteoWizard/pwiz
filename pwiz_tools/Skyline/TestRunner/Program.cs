@@ -475,7 +475,7 @@ namespace TestRunner
                     .OrderBy(f => f.CreationTime)
                     .ToArray();
 
-                runTests.Log("# Found {0} mempory dumps in {1}.\r\n", memoryDumps.Length, dmpDir);
+                runTests.Log("# Found {0} memory dumps in {1}.\r\n", memoryDumps.Length, dmpDir);
 
                 // Only keep 5 pairs. If memory dumps are deleted manually it could
                 // happen that we delete a pre-dump but not a post-dump
@@ -613,12 +613,13 @@ namespace TestRunner
                             continue;
 
                         // Run test repeatedly until we can confidently assess the leak status.
+                        var numLeakCheckIterations = GetLeakCheckIterations(test);
                         var listValues = new List<LeakTracking>();
                         LeakTracking? minDeltas = null;
                         int? passedIndex = null;
                         int iterationCount = 0;
                         string leakMessage = null;
-                        for (int i = 0; i < GetLeakCheckIterations(test); i++, iterationCount++)
+                        for (int i = 0; i < numLeakCheckIterations; i++, iterationCount++)
                         {
                             // Run the test in the next language.
                             runTests.Language =
@@ -647,12 +648,21 @@ namespace TestRunner
                             }
 
                             // Report leak message at LeakCheckIterations, not the expanded count from GetLeakCheckIterations(test)
-                            if (iterationCount + 1 == Math.Min(GetLeakCheckIterations(test), LeakCheckIterations))
+                            if (GetLeakCheckReportEarly(test) && iterationCount + 1 == Math.Min(numLeakCheckIterations, LeakCheckIterations))
                             {
-                                if (GetLeakCheckReportEarly(test))
+                                leakMessage = minDeltas.Value.GetLeakMessage(LeakThresholds, test.TestMethod.Name);
+                                if (leakMessage != null)
                                 {
-                                    leakMessage = minDeltas.Value.GetLeakMessage(LeakThresholds, test.TestMethod.Name);
                                     runTests.Log(leakMessage);
+                                    runTests.Log("# Entering infinite loop.");
+
+                                    // Loop forever so someone can attach a debugger
+                                    var runLoop = true;
+                                    while (runLoop)
+                                    {
+                                        Thread.Sleep(5000);
+                                    }
+                                    numLeakCheckIterations = int.MaxValue; // Once we break out of the loop, just keep running this test
                                 }
                             }
 
