@@ -71,6 +71,9 @@ enum PWIZ_API_DECL ControllerType
 };
 
 
+extern const char* ControllerTypeStrings[];
+
+
 struct PWIZ_API_DECL ControllerInfo
 {
     ControllerType type;
