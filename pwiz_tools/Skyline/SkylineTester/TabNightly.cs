@@ -770,7 +770,7 @@ namespace SkylineTester
                     return;
                 }
 
-                _stopTimer.Interval = endTime.Subtract(now).Milliseconds;
+                _stopTimer.Interval = (int) endTime.Subtract(now).TotalMilliseconds;
                 _stopTimer.Start();
             }
         }

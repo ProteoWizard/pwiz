@@ -7,8 +7,12 @@ CREATE TABLE LibInfo( -- gives top level information about library, including wh
 libLSID TEXT, -- LSID of form urn:lsid:<authority>:spectral_library:bibliospec:<type:redundant|nr>:<library name> e.g. urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:byonic.blib
 createTime TEXT, -- local creation time in ctime() format e.g. Thu Nov 16 17:02:18 2017
 numSpecs INTEGER, -- number of spectra in this library (-1 means not yet counted)
-majorVersion INTEGER, -- always 0, for this generation of BiblioSpec
-minorVersion INTEGER -- Version 7 adds peak annotations
+majorVersion INTEGER, -- revision number for this library (count starts at 1)
+minorVersion INTEGER -- Schema version number:
+-- Version 10 adds TIC as a column
+-- Version 9 adds Proteins and RefSpectraProteins tables
+-- Version 8 adds startTime and endTime
+-- Version 7 adds peak annotations
 -- Version 6 generalized ion mobility to value, high energy offset, and type (currently drift time msec, and inverse reduced ion mobility Vsec/cm2)
 -- Version 5 added small molecule columns
 -- Version 4 added collisional cross section for ion mobility, still supports drift time only
@@ -16,7 +20,7 @@ minorVersion INTEGER -- Version 7 adds peak annotations
 -- Version 2 added ion mobility information
 )
 
-INSERT INTO LibInfo values('urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:example','Thu Aug  8 10:00:43 2019',-1,0,10)
+INSERT INTO LibInfo values('urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:example','Fri Feb 21 16:04:56 2020',-1,0,10)
 
 CREATE TABLE RefSpectra ( -- spectrum metadata - actual mz/intensity pairs in RefSpectraPeaks
 id INTEGER primary key autoincrement not null, -- lookup key for RefSpectraPeaks
