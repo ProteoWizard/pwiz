@@ -19,6 +19,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Timers;
@@ -35,9 +36,6 @@ namespace SkylineNightly
     /// </summary>
     public class LogFileMonitor
     {
-        public const string DELIMITER_START = "\n@@@ EMAIL NOTIFICATION";
-        public const string DELIMITER_END = "\n@@@";
-
         private readonly string _oldLog;
         private readonly string _logDir;
         private readonly string _nightlyLog;
@@ -49,6 +47,7 @@ namespace SkylineNightly
         private DateTime _lastReportedHang;
         private readonly byte[] _buffer;
         private readonly StringBuilder _builder;
+        private string _logTail;
 
         private readonly Timer _logChecker;
 
@@ -64,6 +63,7 @@ namespace SkylineNightly
             _lastReportedHang = new DateTime();
             _buffer = new byte[8192];
             _builder = new StringBuilder();
+            _logTail = "";
             _logChecker = new Timer(10000); // check log file every 10 seconds
             _logChecker.Elapsed += IntervalElapsed;
         }
@@ -85,7 +85,7 @@ namespace SkylineNightly
             }
         }
 
-        public bool IsHanging()
+        public bool ExtendNightlyEndTime()
         {
             try
             {
@@ -131,9 +131,8 @@ namespace SkylineNightly
                             message.AppendLine();
                             message.AppendLine("----------------------------------------");
                             message.AppendLine("...");
-                            var lines = File.ReadAllLines(_testerLog);
-                            for (var i = Math.Max(lines.Length - 20, 0); i < lines.Length; i++)
-                                message.AppendLine(lines[i]);
+                            message.Append(_logTail);
+                            message.AppendLine();
                             SendEmailNotification(message.ToString());
                         }
                         return;
@@ -141,9 +140,7 @@ namespace SkylineNightly
                 }
 
                 var totalN = 0;
-                for (var n = _fileStream.Read(_buffer, 0, _buffer.Length);
-                    n > 0;
-                    n = _fileStream.Read(_buffer, 0, _buffer.Length))
+                for (var n = _fileStream.Read(_buffer, 0, _buffer.Length); n > 0; n = _fileStream.Read(_buffer, 0, _buffer.Length))
                 {
                     totalN += n;
                     _builder.Append(Encoding.UTF8.GetString(_buffer, 0, n));
@@ -155,23 +152,21 @@ namespace SkylineNightly
                     return;
 
                 var s = _builder.ToString();
-                for (var start = s.IndexOf(DELIMITER_START, StringComparison.CurrentCulture); start != -1; start = s.IndexOf(DELIMITER_START, StringComparison.CurrentCulture))
-                {
-                    _builder.Remove(0, start);
-                    s = _builder.ToString();
-                    var end = s.IndexOf(DELIMITER_END, StringComparison.CurrentCulture);
-                    if (end == -1)
-                        return;
 
-                    Log("Email notification found in log file, posting to " + Nightly.LABKEY_EMAIL_NOTIFICATION_URL);
-                    SendEmailNotification(s.Substring(DELIMITER_START.Length, end - DELIMITER_START.Length));
-
-                    _builder.Remove(0, end + DELIMITER_END.Length);
-                }
+                _logTail += s.Substring(s.Length - totalN);
+                const int tailLineCount = 20;
+                var tailLines = _logTail.Split('\n');
+                _logTail = string.Join("\n", tailLines.Length > tailLineCount ? tailLines.Skip(tailLines.Length - tailLineCount) : tailLines);
 
                 var lastBreak = s.LastIndexOf('\n');
-                if (lastBreak > 0)
-                    _builder.Remove(0, lastBreak + 1);
+                if (lastBreak < 0)
+                    return;
+
+                _builder.Remove(0, lastBreak + 1);
+                foreach (var line in s.Substring(0, lastBreak).Split(new[] {"\r", "\n", "\r\n"}, StringSplitOptions.None))
+                {
+                    // process lines
+                }
             }
             catch
             {

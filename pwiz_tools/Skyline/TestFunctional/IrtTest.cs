@@ -865,7 +865,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.AreEqual(1, dlg.RegressionGraphDatas.Count);
                 var data = dlg.RegressionGraphDatas.First();
-                Assert.AreEqual(72, data.RegularPoints.Count);
+                Assert.AreEqual(73, data.RegularPoints.Count);
                 Assert.AreEqual(0, data.MissingPoints.Count);
                 Assert.AreEqual(0, data.OutlierPoints.Count);
                 Assert.IsTrue(data.R >= RCalcIrt.MIN_IRT_TO_TIME_CORRELATION);
@@ -918,7 +918,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.AreEqual(1, dlg.RegressionGraphDatas.Count);
                 var data = dlg.RegressionGraphDatas.First();
-                Assert.AreEqual(72, data.RegularPoints.Count);
+                Assert.AreEqual(73, data.RegularPoints.Count);
                 Assert.AreEqual(0, data.MissingPoints.Count);
                 Assert.AreEqual(0, data.OutlierPoints.Count);
                 Assert.IsTrue(data.R >= RCalcIrt.MIN_IRT_TO_TIME_CORRELATION);
