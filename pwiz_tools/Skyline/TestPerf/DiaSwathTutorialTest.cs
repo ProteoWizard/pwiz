@@ -55,6 +55,7 @@ namespace TestPerf
     public class DiaSwathTutorialTest : AbstractFunctionalTestEx
     {
         private InstrumentSpecificValues _instrumentValues;
+        private AnalysisValues _analysisValues;
 
         private class InstrumentSpecificValues
         {
@@ -67,12 +68,29 @@ namespace TestPerf
             public string IsolationSchemeName;
             public string IsolationSchemeFile;
             public char IsolationSchemeFileSeparator;
+        }
+
+        private class AnalysisValues
+        {
+            public bool IsWholeProteome;
+            public bool KeepPrecursors;
+
+            public string IrtFilterText;
+            public int? MinPeptidesPerProtein;
+            public bool RemoveDuplicates;
             public int[] TargetCounts;
+            public int[] FinalTargetCounts;
             public string ScoringModelCoefficients;
             public PointF ChromatogramClickPoint;
             public double[][] MassErrorStats;
             public int[] DiffPeptideCounts;
             public int UnpolishedProteins;
+            public int? PolishedProteins;
+
+            public string FastaPath =>
+                IsWholeProteome
+                    ? "DDA_search\\napedro_3mixed_human_yeast_ecoli_20140403_iRT_reverse.fasta"
+                    : "DIA\\target_protein_sequences.fasta";
         }
 
         private string[] DiaFiles
@@ -88,6 +106,66 @@ namespace TestPerf
         [TestMethod]
         [Timeout(int.MaxValue)] // These can take a long time
         public void TestDiaTtofTutorial()
+        {
+            _analysisValues = new AnalysisValues
+            {
+                KeepPrecursors = false,
+                IrtFilterText = "standard",
+                TargetCounts = new[] { 13, 272, 292, 1751 },
+                FinalTargetCounts = new[] { 12, 272, 292, 1751 },
+                ScoringModelCoefficients = "0.9138|-0.7889|3.5694|-1.2988|-0.6596|0.8953|-0.3182|-0.0554",
+                ChromatogramClickPoint = new PointF(34.18F, 108.0F),
+                MassErrorStats = new[]
+                {
+                    new []{2.9, 4.5},
+                    new []{2.7, 4.3},
+                    new []{3.8, 4.5},
+                    new []{5.7, 3.7},
+                    new []{4.6, 4.3},
+                    new []{-0.4, 3.7},
+                    new []{1.1, 3.9},
+                },
+                DiffPeptideCounts = new[] { 143, 44, 31, 57 },
+                UnpolishedProteins = 9
+            };
+
+            TestTtofData();
+        }
+
+        [TestMethod]
+        [Timeout(int.MaxValue)] // These can take a long time
+        public void TestDiaTtofFullSearchTutorial()
+        {
+            _analysisValues = new AnalysisValues
+            {
+                KeepPrecursors = false,
+                IsWholeProteome = true,
+                IrtFilterText = "iRT",
+                MinPeptidesPerProtein = 2,
+                RemoveDuplicates = true,
+                ChromatogramClickPoint = new PointF(34.18F, 108.0F),
+                TargetCounts = new[] { 4908, 38022, 39353, 235938 },
+                FinalTargetCounts = new[] { 2471, 27054, 27987, 167767 },
+                ScoringModelCoefficients = "0.4698|-0.8032|3.8888|-0.1753|-0.4008|0.6675|0.0205|-0.0714",
+                MassErrorStats = new[]
+                {
+                    new[] {2.7, 4.6},
+                    new[] {2.4, 4.4},
+                    new[] {3.9, 4.3},
+                    new[] {5.1, 4.2},
+                    new[] {4.4, 4.2},
+                    new[] {-0.4, 4},
+                    new[] {1, 4.1},
+                },
+                DiffPeptideCounts = new[] { 13129, 8173, 2781, 2164 },
+                UnpolishedProteins = 2187,
+                PolishedProteins = 2465,
+            };
+
+            TestTtofData();
+        }
+
+        private void TestTtofData()
         {
             SetInstrumentType(new InstrumentSpecificValues
             {
@@ -108,21 +186,6 @@ namespace TestPerf
                 IsolationSchemeName = "ETH TTOF (64 variable)",
                 IsolationSchemeFile = "64_variable_windows.csv",
                 IsolationSchemeFileSeparator = TextUtil.SEPARATOR_CSV,
-                TargetCounts = new[] { 13, 272, 292, 1751 },
-                ScoringModelCoefficients = "0.9138|-0.7889|3.5694|-1.2988|-0.6596|0.8953|-0.3182|-0.0554",
-                ChromatogramClickPoint = new PointF(34.18F, 108.0F),
-                MassErrorStats = new[]
-                {
-                    new []{2.9, 4.5},
-                    new []{2.7, 4.3},
-                    new []{3.8, 4.5},
-                    new []{5.7, 3.7},
-                    new []{4.6, 4.3},
-                    new []{-0.4, 3.7},
-                    new []{1.1, 3.9},
-                },
-                DiffPeptideCounts = new[] { 143, 44, 31, 57 },
-                UnpolishedProteins = 9
             });
 
             RunTest();
@@ -131,6 +194,66 @@ namespace TestPerf
         [TestMethod]
         [Timeout(int.MaxValue)] // These can take a long time
         public void TestDiaQeTutorial()
+        {
+            _analysisValues = new AnalysisValues
+            {
+                KeepPrecursors = false,
+                IrtFilterText = "standard",
+                TargetCounts = new[] { 13, 274, 334, 2002 },
+                FinalTargetCounts = new[] { 12, 274, 334, 2002 },
+                ScoringModelCoefficients = "0.3987|-0.8643|2.9375|0.5705|-0.0418|1.0304|0.0522|-0.0849",
+                ChromatogramClickPoint = new PointF(31.98F, 285741.3F),
+                MassErrorStats = new[]
+                {
+                    new[] {2.1, 3},
+                    new[] {1.5, 3.3},
+                    new[] {2, 3.5},
+                    new[] {2.2, 2.6},
+                    new[] {2.3, 3.2},
+                    new[] {2.5, 2.3},
+                    new[] {2.1, 3.1},
+                },
+                DiffPeptideCounts = new[] { 145, 50, 31, 53 },
+                UnpolishedProteins = 7
+            };
+
+            TestQeData();
+        }
+
+        [TestMethod]
+        [Timeout(int.MaxValue)] // These can take a long time
+        public void TestDiaQeFullSearchTutorial()
+        {
+            _analysisValues = new AnalysisValues
+            {
+                KeepPrecursors = false,
+                IsWholeProteome = true,
+                IrtFilterText = "iRT",
+                MinPeptidesPerProtein = 2,
+                RemoveDuplicates = true,
+                ChromatogramClickPoint = new PointF(32.05F, 268334.7F),
+                TargetCounts = new[] { 4065, 32056, 34970, 209527 },
+                FinalTargetCounts = new[] { 2081, 22732, 24775, 148419 },
+                ScoringModelCoefficients = "0.3042|-0.9019|3.3988|0.8467|-0.0433|0.8814|-0.0152|-0.0720",
+                MassErrorStats = new[]
+                {
+                    new[] {2.3, 3.5},
+                    new[] {1.8, 3.5},
+                    new[] {2.4, 3.5},
+                    new[] {2.5, 3.5},
+                    new[] {2.5, 3.6},
+                    new[] {2.5, 3.5},
+                    new[] {2.3, 3.5},
+                },
+                DiffPeptideCounts = new[] { 10148, 6286, 2175, 1676 },
+                UnpolishedProteins = 1264,
+                PolishedProteins = 2036
+            };
+
+            TestQeData();
+        }
+       
+        private void TestQeData()
         {
             SetInstrumentType(new InstrumentSpecificValues
             {
@@ -151,21 +274,6 @@ namespace TestPerf
                 IsolationSchemeName = "ETH QE (18 variable)",
                 IsolationSchemeFile = "QE_DIA_18var.tsv",
                 IsolationSchemeFileSeparator = TextUtil.SEPARATOR_TSV,
-                TargetCounts = new [] { 13, 274, 334, 2002 },
-                ScoringModelCoefficients = "0.3987|-0.8643|2.9375|0.5705|-0.0418|1.0304|0.0522|-0.0849",
-                ChromatogramClickPoint = new PointF(31.98F, 285741.3F),
-                MassErrorStats = new[]
-                {
-                    new[] {2.1, 3},
-                    new[] {1.5, 3.3},
-                    new[] {2, 3.5},
-                    new[] {2.2, 2.6},
-                    new[] {2.3, 3.2},
-                    new[] {2.5, 2.3},
-                    new[] {2.1, 3.1},
-                },
-                DiffPeptideCounts = new[] { 145, 50, 31, 53 },
-                UnpolishedProteins = 7
             });
 
             RunTest();
@@ -324,10 +432,19 @@ namespace TestPerf
                 {
                     Adduct.DOUBLY_PROTONATED, Adduct.TRIPLY_PROTONATED, Adduct.QUADRUPLY_PROTONATED
                 };
+                // Default is to have precursors
+                if (_analysisValues.KeepPrecursors)
+                {
+                    AssertEx.AreEqualDeep(new[] {IonType.y, IonType.b, IonType.precursor},
+                        importPeptideSearchDlg.TransitionSettingsControl.PeptideIonTypes);
+                }
+                else
+                {
                 importPeptideSearchDlg.TransitionSettingsControl.PeptideIonTypes = new[]
                 {
                     IonType.y, IonType.b    // Removes precursor
                 };
+                }
                 // Verify other values shown in the tutorial
                 Assert.AreEqual(6, importPeptideSearchDlg.TransitionSettingsControl.IonCount);
                 Assert.AreEqual(6, importPeptideSearchDlg.TransitionSettingsControl.MinIonCount);
@@ -341,6 +458,8 @@ namespace TestPerf
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+                if (_analysisValues.KeepPrecursors)
+                    importPeptideSearchDlg.FullScanSettingsControl.PrecursorRes = 20;
                 importPeptideSearchDlg.FullScanSettingsControl.ProductRes = 20;
 
                 Assert.AreEqual(importPeptideSearchDlg.FullScanSettingsControl.PrecursorIsotopesCurrent, FullScanPrecursorIsotopes.None);
@@ -393,7 +512,7 @@ namespace TestPerf
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
-            string fastPath = GetTestPath("DIA\\target_protein_sequences.fasta");
+            string fastPath = GetTestPath(_analysisValues.FastaPath);
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
@@ -410,15 +529,22 @@ namespace TestPerf
 
             var peptidesPerProteinDlg = ShowDialog<PeptidesPerProteinDlg>(() => importPeptideSearchDlg.ClickNextButton());
             WaitForCondition(() => peptidesPerProteinDlg.DocumentFinalCalculated);
-            int[] targetCounts = _instrumentValues.TargetCounts;
             RunUI(() =>
             {
                 int proteinCount, peptideCount, precursorCount, transitionCount;
                 peptidesPerProteinDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
-                ValidateTargets(targetCounts, proteinCount, peptideCount, precursorCount, transitionCount);
-                targetCounts[0]--;
+                ValidateTargets(_analysisValues.TargetCounts, proteinCount, peptideCount, precursorCount, transitionCount, @"TargetCounts");
+                if (_analysisValues.RemoveDuplicates)
+                    peptidesPerProteinDlg.RemoveDuplicatePeptides = true;
+                if (_analysisValues.MinPeptidesPerProtein.HasValue)
+                    peptidesPerProteinDlg.MinPeptides = _analysisValues.MinPeptidesPerProtein.Value;
+            });
+            WaitForConditionUI(() => peptidesPerProteinDlg.DocumentFinalCalculated);
+            RunUI(() =>
+            {
+                int proteinCount, peptideCount, precursorCount, transitionCount;
                 peptidesPerProteinDlg.NewTargetsFinal(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
-                ValidateTargets(targetCounts, proteinCount, peptideCount, precursorCount, transitionCount);
+                ValidateTargets(_analysisValues.FinalTargetCounts, proteinCount, peptideCount, precursorCount, transitionCount, @"FinalTargetCounts");
             });
             PauseForScreenShot("Import FASTA summary form", 13);
 
@@ -427,7 +553,7 @@ namespace TestPerf
             WaitForDocumentChangeLoaded(doc, 8 * 60 * 1000); // 10 minutes
 
             var peakScoringModelDlg = WaitForOpenForm<EditPeakScoringModelDlg>();
-            ValidateCoefficients(peakScoringModelDlg, _instrumentValues.ScoringModelCoefficients);
+            ValidateCoefficients(peakScoringModelDlg, _analysisValues.ScoringModelCoefficients);
             PauseForScreenShot("mProphet model form", 14);
 
             OkDialog(peakScoringModelDlg, peakScoringModelDlg.OkDialog);
@@ -496,11 +622,15 @@ namespace TestPerf
 
             RunUI(() => SkylineWindow.SaveDocument());
 
+            const string proteinNameToSelect = "sp|P63284|CLPB_ECOLI";
+            if (Equals(proteinNameToSelect, SkylineWindow.Document.MoleculeGroups.Skip(1).First().Name))
             SelectNode(SrmDocument.Level.MoleculeGroups, 1);
+            else
+                FindNode(proteinNameToSelect);
 
             RunUI(() =>
             {
-                Assert.AreEqual("sp|P63284|CLPB_ECOLI", SkylineWindow.SelectedNode.Text);
+                Assert.AreEqual(proteinNameToSelect, SkylineWindow.SelectedNode.Text);
 
                 SkylineWindow.ShowPeakAreaReplicateComparison();
                 SkylineWindow.ShowRTReplicateGraph();
@@ -522,8 +652,8 @@ namespace TestPerf
             PauseForScreenShot("Snip just one chromatogram pane", 21);
 
             ClickChromatogram(SkylineWindow.Document.MeasuredResults.Chromatograms[0].Name,
-                _instrumentValues.ChromatogramClickPoint.X,
-                _instrumentValues.ChromatogramClickPoint.Y);
+                _analysisValues.ChromatogramClickPoint.X,
+                _analysisValues.ChromatogramClickPoint.Y);
             PauseForScreenShot<GraphFullScan>("Full-Scan graph window - zoomed", 21);
             
             RunUI(() => SkylineWindow.GraphFullScan.ZoomToSelection(false));
@@ -602,7 +732,7 @@ namespace TestPerf
             {
                 var fcGrid = WaitForOpenForm<FoldChangeGrid>();
                 var fcGridControl = fcGrid.DataboundGridControl;
-                WaitForConditionUI(() => fcGridControl.IsComplete && fcGridControl.FindColumn(fcResultProperty) != null);
+                WaitForConditionUI(() => fcGridControl.IsComplete && fcGridControl.FindColumn(fcResultProperty) != null && fcGridControl.RowCount > 11);
                 RunUI(() =>
                 {
                     var foldChangeResultColumn = fcGridControl.FindColumn(fcResultProperty);
@@ -618,19 +748,19 @@ namespace TestPerf
                 var volcanoPlot = ShowDialog<FoldChangeVolcanoPlot>(fcGrid.ShowVolcanoPlot);
                 RestoreViewOnScreen(27);
                 fcGrid = WaitForOpenForm<FoldChangeGrid>();
-                WaitForConditionUI(() => fcGrid.DataboundGridControl.IsComplete);
+                WaitForConditionUI(() => fcGrid.DataboundGridControl.IsComplete && fcGrid.DataboundGridControl.RowCount > 11);
                 RunUI(() => fcGrid.DataboundGridControl.DataGridView.FirstDisplayedScrollingRowIndex = 11); // Re-apply scrolling
                 PauseForScreenShot<FoldChangeVolcanoPlot>("By Condition:Volcano Plot - unformatted", 27);
                 volcanoPlot = WaitForOpenForm<FoldChangeVolcanoPlot>();    // May have changed with RestoreViewsOnScreen
                 WaitForConditionUI(() => volcanoPlot.CurveList.Count == 5);
-                WaitForConditionUI(() => volcanoPlot.CurveList[4].Points.Count > SkylineWindow.Document.MoleculeCount/2);
+                WaitForConditionUI(() => volcanoPlot.CurveList[4].Points.Count > SkylineWindow.Document.MoleculeCount/4);
                 RunUI(() =>
                 {
                     int actualPoints = volcanoPlot.CurveList[4].Points.Count;
                     if (IsRecordMode)
                         Console.Write(@"DiffPeptideCounts = new[] { " + actualPoints);
                     else
-                        Assert.AreEqual(_instrumentValues.DiffPeptideCounts[0], actualPoints);
+                        Assert.AreEqual(_analysisValues.DiffPeptideCounts[0], actualPoints);
                 });
                 var formattingDlg = ShowDialog<VolcanoPlotFormattingDlg>(volcanoPlot.ShowFormattingDialog);
                 ApplyFormatting(formattingDlg, "ECOLI", "128, 0, 255");
@@ -657,7 +787,7 @@ namespace TestPerf
                         if (IsRecordMode)
                             Console.Write(@", " + actualPoints);
                         else
-                            Assert.AreEqual(_instrumentValues.DiffPeptideCounts[i], actualPoints);
+                            Assert.AreEqual(_analysisValues.DiffPeptideCounts[i], actualPoints);
                     });
                 }
                 if (IsRecordMode)
@@ -683,7 +813,7 @@ namespace TestPerf
                 RunUI(() =>
                 {
                     quickFilterForm.SetFilterOperation(0, FilterOperations.OP_NOT_CONTAINS);
-                    quickFilterForm.SetFilterOperand(0, "standard");
+                    quickFilterForm.SetFilterOperand(0, _analysisValues.IrtFilterText);
                 });
                 OkDialog(quickFilterForm, quickFilterForm.OkDialog);
 
@@ -693,12 +823,12 @@ namespace TestPerf
                 if (!IsRecordMode)
                 {
                     for (int i = 1; i < 4; i++)
-                        RunUI(() => Assert.AreEqual(_instrumentValues.DiffPeptideCounts[i], volcanoPlot.CurveList[7 - i].Points.Count));
+                        RunUI(() => Assert.AreEqual(_analysisValues.DiffPeptideCounts[i], volcanoPlot.CurveList[7 - i].Points.Count));
                 }
                 var barGraph = WaitForOpenForm<FoldChangeBarGraph>();
                 const int volcanoBarDelta = 11 - 1; // iRTs - selected peptide
                 if (!IsRecordMode)
-                    WaitForBarGraphPoints(barGraph, _instrumentValues.DiffPeptideCounts[0] - volcanoBarDelta);
+                    WaitForBarGraphPoints(barGraph, _analysisValues.DiffPeptideCounts[0] - volcanoBarDelta);
 
                 SortByFoldChange(fcGridControl, fcResultProperty);
                 PauseForScreenShot<FoldChangeBarGraph>("By Condition:Bar Graph - peptides", 30);
@@ -706,21 +836,28 @@ namespace TestPerf
                 var changeGroupComparisonSettings = ShowDialog<EditGroupComparisonDlg>(fcGrid.ShowChangeSettings);
                 RunUI(() => changeGroupComparisonSettings.RadioScopePerProtein.Checked = true);
 
+                int targetProteinCount = SkylineWindow.Document.MoleculeGroupCount - 2; // minus iRTs and decoys
+                int unpolishedCount = _analysisValues.UnpolishedProteins;
                 if (!IsRecordMode)
-                    WaitForBarGraphPoints(barGraph, _instrumentValues.UnpolishedProteins);
+                    WaitForBarGraphPoints(barGraph, unpolishedCount);
                 else
                 {
-                    WaitForBarGraphPoints(barGraph, 11, true);
-                    Console.WriteLine(@"UnpolishedProteins = " + barGraph.ZedGraphControl.GraphPane.CurveList[0].Points.Count);
+                    WaitForBarGraphPoints(barGraph, targetProteinCount, 1);
+                    unpolishedCount = GetBarCount(barGraph);
+                    Console.WriteLine(@"UnpolishedProteins = {0},", unpolishedCount);
                 }
 
                 RunUI(() => changeGroupComparisonSettings.ComboSummaryMethod.SelectedItem =
                     SummarizationMethod.MEDIANPOLISH);
 
-                RestoreViewOnScreen(31);
-
-                barGraph = WaitForOpenForm<FoldChangeBarGraph>();
-                WaitForBarGraphPoints(barGraph, 11);
+                if (!IsRecordMode)
+                    WaitForBarGraphPoints(barGraph, _analysisValues.PolishedProteins ?? targetProteinCount);
+                else
+                {
+                    WaitForBarGraphPoints(barGraph, targetProteinCount, unpolishedCount);
+                    if (GetBarCount(barGraph) != targetProteinCount)
+                        Console.WriteLine(@"PolishedProteins = {0},", GetBarCount(barGraph));
+                }
                 fcGrid = WaitForOpenForm<FoldChangeGrid>();
                 var fcGridControlFinal = fcGrid.DataboundGridControl;
                 SortByFoldChange(fcGridControlFinal, fcResultProperty);  // Re-apply the sort, in case it was lost in restoring views
@@ -738,8 +875,14 @@ namespace TestPerf
             });
         }
 
-        private void ValidateTargets(int[] targetCounts, int proteinCount, int peptideCount, int precursorCount, int transitionCount)
+        private void ValidateTargets(int[] targetCounts, int proteinCount, int peptideCount, int precursorCount, int transitionCount, string propName)
         {
+            if (IsRecordMode)
+            {
+                Console.WriteLine(@"{0} = new[] {{ {1}, {2}, {3}, {4} }},", propName, proteinCount, peptideCount, precursorCount, transitionCount);
+                return;
+            }
+
             var targetCountsActual = new[] {proteinCount, peptideCount, precursorCount, transitionCount};
             if (!ArrayUtil.EqualsDeep(targetCounts, targetCountsActual))
             {
@@ -753,7 +896,7 @@ namespace TestPerf
         {
             string coefficients = string.Join(@"|", GetCoefficientStrings(editDlgFromSrm));
             if (IsRecordMode)
-                Console.WriteLine(@"""{0}"", // Not L10N", coefficients);  // Not L10N
+                Console.WriteLine(@"ScoringModelCoefficients = ""{0}"",", coefficients);  // Not L10N
             else
                 AssertEx.AreEqualLines(expectedCoefficients, coefficients);
         }
@@ -765,24 +908,29 @@ namespace TestPerf
                 Console.WriteLine(@"new[] {{{0:0.#}, {1:0.#}}},", mean, stdDev);  // Not L10N
             else
             {
-                Assert.AreEqual(_instrumentValues.MassErrorStats[index][0], mean, 0.05);
-                Assert.AreEqual(_instrumentValues.MassErrorStats[index][1], stdDev, 0.05);
+                Assert.AreEqual(_analysisValues.MassErrorStats[index][0], mean, 0.05);
+                Assert.AreEqual(_analysisValues.MassErrorStats[index][1], stdDev, 0.05);
             }
         }
 
-        private void WaitForBarGraphPoints(FoldChangeBarGraph barGraph, int barCount, bool allowRange = false)
+        private void WaitForBarGraphPoints(FoldChangeBarGraph barGraph, int barCount, int? lowerBoundCount = null)
         {
             WaitForConditionUI(() => barGraph.ZedGraphControl.GraphPane.CurveList.Count == 1);
-            if (!allowRange)
-                WaitForConditionUI(() => barGraph.ZedGraphControl.GraphPane.CurveList[0].Points.Count == barCount);
+            if (!lowerBoundCount.HasValue)
+            {
+                WaitForConditionUI(() => barCount == GetBarCount(barGraph),
+                    () => string.Format("Expecting {0} bars, actual {1} bars", barCount, GetBarCount(barGraph)));
+            }
             else
             {
-                WaitForConditionUI(() =>
-                {
-                    int pointsCount = barGraph.ZedGraphControl.GraphPane.CurveList[0].Points.Count;
-                    return 0 < pointsCount && pointsCount < barCount;
-                });
+                WaitForConditionUI(() => lowerBoundCount.Value < GetBarCount(barGraph) && GetBarCount(barGraph) < barCount,
+                    () => string.Format("Expecting < {0} bars, actual {1} bars", barCount, GetBarCount(barGraph)));
             }
+        }
+
+        private int GetBarCount(FoldChangeBarGraph barGraph)
+        {
+            return barGraph.ZedGraphControl.GraphPane.CurveList[0].Points.Count;
         }
 
         private static void SortByFoldChange(DataboundGridControl fcGridControl, PropertyPath fcResultProperty)

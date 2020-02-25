@@ -1065,8 +1065,8 @@ namespace pwiz.SkylineTestUtil
                     RunUI(() => screenshotForm?.Update());
                 }
 
-                Thread.Sleep(300);
-                _shotManager.TakeNextShot(screenshotForm);
+//                Thread.Sleep(300);
+//                _shotManager.TakeNextShot(screenshotForm);
 
                 var formSeen = new FormSeen();
                 formSeen.Saw(formType);
