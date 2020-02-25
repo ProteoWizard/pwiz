@@ -435,7 +435,7 @@ namespace SkylineNightly
 
                     if (endTime == originalEndTime)
                     {
-                        if (logMonitor.IsHanging())
+                        if (logMonitor.ExtendNightlyEndTime())
                         {
                             // extend the end time until 12pm to give us more time to attach a debugger
                             var newEndTime = originalEndTime.AddHours(16);
@@ -444,7 +444,7 @@ namespace SkylineNightly
                                 endTime = newEndTime;
                         }
                     }
-                    else if (!logMonitor.IsHanging())
+                    else if (!logMonitor.ExtendNightlyEndTime())
                     {
                         // was hanging but not anymore
                         if (SetEndTime(originalEndTime))
