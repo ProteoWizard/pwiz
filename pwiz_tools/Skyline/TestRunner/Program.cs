@@ -619,6 +619,7 @@ namespace TestRunner
                         int? passedIndex = null;
                         int iterationCount = 0;
                         string leakMessage = null;
+                        var leakHanger = new LeakHanger();  // In case of a leak, this object will hang until freed by a debugger
                         for (int i = 0; i < numLeakCheckIterations; i++, iterationCount++)
                         {
                             // Run the test in the next language.
@@ -656,12 +657,8 @@ namespace TestRunner
                                     runTests.Log(leakMessage);
                                     runTests.Log("# Entering infinite loop.");
 
-                                    // Loop forever so someone can attach a debugger
-                                    var runLoop = true;
-                                    while (runLoop)
-                                    {
-                                        Thread.Sleep(5000);
-                                    }
+                                    leakHanger.Wait();
+
                                     numLeakCheckIterations = int.MaxValue; // Once we break out of the loop, just keep running this test
                                 }
                             }
@@ -795,6 +792,39 @@ namespace TestRunner
             }
 
             return runTests.FailureCount == 0;
+        }
+
+        /// <summary>
+        /// A class that hangs indefinitely waiting for a debugger to be attached to
+        /// end the wait by setting the _endWait value to true. Some complexity needed
+        /// to be added to the Wait() function in order to keep the compiler from
+        /// simply optimizing it away.
+        /// </summary>
+        private class LeakHanger
+        {
+            // ReSharper disable NotAccessedField.Local
+            private bool _endWait;
+            private long _iterationCount;
+            private DateTime _startTime;
+            // ReSharper restore NotAccessedField.Local
+
+            public bool EndWait
+            {
+                get { return _endWait; }
+                set { _endWait = value; }
+            }
+
+            public void Wait()
+            {
+                _startTime = DateTime.Now;
+
+                // Loop forever so someone can attach a debugger
+                while (!EndWait)
+                {
+                    Thread.Sleep(5000);
+                    _iterationCount++;
+                }
+            }
         }
 
         // Load list of tests to be run into TestList.
