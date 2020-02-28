@@ -1,3 +1,4 @@
+This the ProteoWizard fork which implements the new mzMLb hybrid file format, the Windows binaries of ProteoWizard with mzMLb implemented can be download <https://github.com/biospi/pwiz/releases>
 
 ![ProteoWizard Logo](http://www.proteowizard.org/img/proteowizard-logo.jpg "ProteoWizard")
 
