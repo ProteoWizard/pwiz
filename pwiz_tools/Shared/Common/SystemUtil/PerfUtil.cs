@@ -236,6 +236,11 @@ namespace pwiz.Common.SystemUtil
             IssueDummyPerfUtils = issueDummyPerfUtils; // "true" means do no work
         }
 
+        public void Reset()
+        {
+            IssueDummyPerfUtils = true; // reset back to doing no work
+        }
+
         public IPerfUtil CreatePerfUtil(string name)
         {
             if (IssueDummyPerfUtils)
