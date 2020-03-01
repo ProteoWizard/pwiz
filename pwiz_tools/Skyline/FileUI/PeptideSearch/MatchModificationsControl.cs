@@ -48,8 +48,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 sb.Append('[');
                 sb.Append(Math.Round(modMass, 1));
                 sb.Append(']');
-                return string.Format(Resources.AbstractModificationMatcherFoundMatches__0__equals__1__,
-                                     Mod.Name, sb);
+                return string.Format(Resources.AbstractModificationMatcherFoundMatches__0__equals__1__, Mod.Name, sb);
             }
         }
 
@@ -101,21 +100,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        public IEnumerable<string> MatchedModifications
-        {
-            get
-            {
-                return (from ListBoxModification item in modificationsListBox.Items select item.Mod.Name);
-            }
-        }
+        public IEnumerable<string> MatchedModifications => (from ListBoxModification item in modificationsListBox.Items select item.Mod.Name);
 
-        public IEnumerable<string> UnmatchedModifications
-        {
-            get
-            {
-                return unmatchedListBox.Items.Cast<string>();
-            }
-        }
+        public IEnumerable<string> UnmatchedModifications => unmatchedListBox.Items.Cast<string>();
 
         public bool Initialize(SrmDocument document)
         {
@@ -124,7 +111,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             ImportPeptideSearch.InitializeModifications(document);
             FillLists(document);
-            return (modificationsListBox.Items.Count > 1 || unmatchedListBox.Items.Count > 1);
+            return modificationsListBox.Items.Count > 1 || unmatchedListBox.Items.Count > 1;
         }
 
         public SrmSettings AddCheckedModifications(SrmDocument document)
@@ -134,15 +121,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             // Find checked static mods
             var newStructuralMods = (from mod in ImportPeptideSearch.MatcherPepMods.StaticModifications
-                                     from ListBoxModification checkedMod in modificationsListBox.CheckedItems
-                                     where mod.Equivalent(checkedMod.Mod)
-                                     select mod).ToList();
+                from ListBoxModification checkedMod in modificationsListBox.CheckedItems
+                where mod.Equivalent(checkedMod.Mod)
+                select mod).ToList();
 
             // Find checked heavy mods
             var newHeavyMods = (from mod in ImportPeptideSearch.MatcherHeavyMods
-                                from ListBoxModification checkedMod in modificationsListBox.CheckedItems
-                                where mod.Equivalent(checkedMod.Mod)
-                                select mod).ToList();
+                from ListBoxModification checkedMod in modificationsListBox.CheckedItems
+                where mod.Equivalent(checkedMod.Mod)
+                select mod).ToList();
 
             // Update document modifications
             return ImportPeptideSearch.AddModifications(document,
@@ -216,7 +203,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
 
             DocumentContainer.ModifyDocumentNoUndo(doc => doc.ChangeSettings(DocumentContainer.Document.Settings.ChangePeptideSettings(
-                    DocumentContainer.Document.Settings.PeptideSettings.ChangeModifications(peptideModifications))));
+                DocumentContainer.Document.Settings.PeptideSettings.ChangeModifications(peptideModifications))));
 
             DocumentContainer.Document.Settings.UpdateDefaultModifications(false);
 
@@ -225,9 +212,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public void AddModification(ModType type)
         {
-            var newMod = (type == ModType.structural)
-                             ? Settings.Default.StaticModList.EditItem(this, null, Settings.Default.StaticModList, null)
-                             : Settings.Default.HeavyModList.EditItem(this, null, Settings.Default.HeavyModList, null);
+            var newMod = type == ModType.structural
+                ? Settings.Default.StaticModList.EditItem(this, null, Settings.Default.StaticModList, null)
+                : Settings.Default.HeavyModList.EditItem(this, null, Settings.Default.HeavyModList, null);
 
             AddModification(newMod, type);
         }

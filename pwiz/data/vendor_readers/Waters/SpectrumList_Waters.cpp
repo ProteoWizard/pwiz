@@ -173,17 +173,14 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
         if (polarityType != PolarityType_Unknown)
             result->set(translate(polarityType));
 
-        if (detailLevel == DetailLevel_FullData)
+        double lockmassMz = (polarityType == PolarityType_Negative) ? lockmassMzNegScans : lockmassMzPosScans;
+        if (lockmassMz != 0.0)
         {
-            double lockmassMz = (polarityType == PolarityType_Negative) ? lockmassMzNegScans : lockmassMzPosScans;
-            if (lockmassMz != 0.0)
-            {
-                if (!rawdata_->ApplyLockMass(lockmassMz, lockmassTolerance)) // TODO: if false (cannot apply lockmass), log a warning
-                    warn_once("[SpectrumList_Waters] failed to apply lockmass correction");
-            }
-            else
-                rawdata_->RemoveLockMass();
+            if (detailLevel == DetailLevel_FullData && !rawdata_->ApplyLockMass(lockmassMz, lockmassTolerance)) // TODO: if false (cannot apply lockmass), log a warning
+                warn_once("[SpectrumList_Waters] failed to apply lockmass correction");
         }
+        else
+            rawdata_->RemoveLockMass();
     }
 
     bool isProfile = rawdata_->Info.IsContinuum(ie.function);
