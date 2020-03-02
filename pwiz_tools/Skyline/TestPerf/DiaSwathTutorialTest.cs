@@ -26,6 +26,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
@@ -157,7 +158,7 @@ namespace TestPerf
                     new[] {-0.4, 4},
                     new[] {1, 4.1},
                 },
-                DiffPeptideCounts = new[] { 13129, 8173, 2781, 2164 },
+                DiffPeptideCounts = new[] { 13129, 8174, 2781, 2163 },
                 UnpolishedProteins = 2187,
                 PolishedProteins = 2465,
             };
@@ -245,7 +246,7 @@ namespace TestPerf
                     new[] {2.5, 3.5},
                     new[] {2.3, 3.5},
                 },
-                DiffPeptideCounts = new[] { 10148, 6286, 2175, 1676 },
+                DiffPeptideCounts = new[] { 10148, 6287, 2175, 1675 },
                 UnpolishedProteins = 1264,
                 PolishedProteins = 2036
             };
@@ -636,7 +637,7 @@ namespace TestPerf
                 SkylineWindow.ShowRTReplicateGraph();
                 SkylineWindow.Size = new Size(1226, 900);
             });
-            RestoreViewOnScreen(18);
+            RestoreViewOnScreenNoSelChange(18);
             WaitForGraphs();
             PauseForScreenShot("Manual review window layout with protein selected", 19);
 
@@ -699,7 +700,7 @@ namespace TestPerf
 
             RunUI(SkylineWindow.ShowRTRegressionGraphScoreToRun);
             WaitForGraphs();
-            RestoreViewOnScreen(24);
+            RestoreViewOnScreenNoSelChange(24);
             PauseForScreenShot("Retention time regression graph window - regression", 24);
 
             RunUI(() => SkylineWindow.ShowPlotType(PlotTypeRT.residuals));
@@ -746,7 +747,7 @@ namespace TestPerf
                 PauseForScreenShot<FoldChangeGrid>("By Condition grid", 27);
 
                 var volcanoPlot = ShowDialog<FoldChangeVolcanoPlot>(fcGrid.ShowVolcanoPlot);
-                RestoreViewOnScreen(27);
+                RestoreViewOnScreenNoSelChange(27);
                 fcGrid = WaitForOpenForm<FoldChangeGrid>();
                 WaitForConditionUI(() => fcGrid.DataboundGridControl.IsComplete && fcGrid.DataboundGridControl.RowCount > 11);
                 RunUI(() => fcGrid.DataboundGridControl.DataGridView.FirstDisplayedScrollingRowIndex = 11); // Re-apply scrolling
@@ -798,7 +799,7 @@ namespace TestPerf
             {
                 var fcGrid = WaitForOpenForm<FoldChangeGrid>(); // May have changed with RestoreViewsOnScreen
                 RunUI(fcGrid.ShowGraph);
-                RestoreViewOnScreen(30);
+                RestoreViewOnScreenNoSelChange(30);
             }
 
             {
@@ -862,6 +863,19 @@ namespace TestPerf
                 var fcGridControlFinal = fcGrid.DataboundGridControl;
                 SortByFoldChange(fcGridControlFinal, fcResultProperty);  // Re-apply the sort, in case it was lost in restoring views
                 PauseForScreenShot<FoldChangeBarGraph>("By Condition:Graph - proteins", 31);
+            }
+        }
+
+        private void RestoreViewOnScreenNoSelChange(int pageName)
+        {
+            if (!Program.SkylineOffscreen)
+            {
+                RunUI(() =>
+                {
+                    var selectedPath = SkylineWindow.SelectedPath;
+                    RestoreViewOnScreen(pageName);
+                    SkylineWindow.SelectedPath = selectedPath;
+                });
             }
         }
 
