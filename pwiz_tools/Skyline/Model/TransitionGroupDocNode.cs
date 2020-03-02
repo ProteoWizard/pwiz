@@ -1495,12 +1495,10 @@ namespace pwiz.Skyline.Model
             {
                 return ChromPeak.EMPTY;
             }
-            int startIndex = info.IndexOfNearestTime(chromInfoBest.StartRetentionTime);
-            int endIndex = info.IndexOfNearestTime(chromInfoBest.EndRetentionTime);
             ChromPeak.FlagValues flags = 0;
             if (settingsNew.MeasuredResults.IsTimeNormalArea)
                 flags = ChromPeak.FlagValues.time_normalized;
-            return info.CalcPeak(startIndex, endIndex, flags);
+            return info.CalcPeak(chromInfoBest.StartRetentionTime, chromInfoBest.EndRetentionTime, flags);
         }
 
         private static ChromPeak CalcMatchingPeak(SrmSettings settingsNew,
@@ -1510,12 +1508,10 @@ namespace pwiz.Skyline.Model
                                                   double qcutoff, 
                                                   ref UserSet userSet)
         {
-            int startIndex = info.IndexOfNearestTime(chromGroupInfoMatch.StartRetentionTime.Value);
-            int endIndex = info.IndexOfNearestTime(chromGroupInfoMatch.EndRetentionTime.Value);
             ChromPeak.FlagValues flags = 0;
             if (settingsNew.MeasuredResults.IsTimeNormalArea)
                 flags = ChromPeak.FlagValues.time_normalized;
-            var peak = info.CalcPeak(startIndex, endIndex, flags);
+            var peak = info.CalcPeak(chromGroupInfoMatch.StartRetentionTime.Value, chromGroupInfoMatch.EndRetentionTime.Value, flags);
             userSet = UserSet.MATCHED;
             var userSetBest = UserSet.FALSE;
             int bestIndex = GetBestIndex(info, reintegratePeak, qcutoff, ref userSetBest);
@@ -2704,18 +2700,16 @@ namespace pwiz.Skyline.Model
                     listChildrenNew.Add(nodeTran.RemovePeak(indexSet, fileId, userSet));
                 else
                 {
-                    // CONSIDER: Do this more efficiently?  Only when there is opimization
+                    // CONSIDER: Do this more efficiently?  Only when there is optimization
                     //           data will the loop execute more than once.
                     int numSteps = listChromInfo.Count / 2;
                     var nodeTranNew = nodeTran;
                     for (int i = 0; i < listChromInfo.Count; i++)
                     {
                         var chromInfo = listChromInfo[i];
-                        int startIndex = chromInfo.IndexOfNearestTime((float)startTime);
-                        int endIndex = chromInfo.IndexOfNearestTime((float)endTime);
                         int step = i - numSteps;
                         nodeTranNew = (TransitionDocNode) nodeTranNew.ChangePeak(indexSet, fileId, step,
-                                                                                    chromInfo.CalcPeak(startIndex, endIndex, flags),
+                                                                                    chromInfo.CalcPeak((float) startTime, (float) endTime, flags),
                                                                                     chromInfo.GetIonMobilityFilter(),
                                                                                     ratioCount, userSet);
                     }

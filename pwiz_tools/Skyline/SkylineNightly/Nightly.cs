@@ -397,8 +397,7 @@ namespace SkylineNightly
             bool retryTester;
             const int maxRetryMinutes = 60;
 
-            var logMonitor = new LogFileMonitor(_logDir, LogFileName,
-                _runMode != RunMode.perf && _runMode != RunMode.release_perf && _runMode != RunMode.integration_perf ? 30 : 60);
+            var logMonitor = new LogFileMonitor(_logDir, LogFileName, _runMode);
             logMonitor.Start();
 
             do
@@ -446,9 +445,12 @@ namespace SkylineNightly
                     }
                     else if (!logMonitor.ExtendNightlyEndTime())
                     {
-                        // was hanging but not anymore
-                        if (SetEndTime(originalEndTime))
-                            endTime = originalEndTime;
+                        // If we get here, we've already extended the end time due to a hang and log file is now being modified again.
+                        // Assume that the log file is being modified because someone has taken manual action, and extend the end time further
+                        // to prevent SkylineTester from being killed while someone is looking at it.
+                        var newEndTime = DateTime.Now.AddDays(1);
+                        if (SetEndTime(newEndTime))
+                            endTime = newEndTime;
                     }
                 }
 

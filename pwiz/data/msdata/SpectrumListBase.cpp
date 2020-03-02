@@ -44,11 +44,13 @@ PWIZ_API_DECL size_t pwiz::msdata::SpectrumListBase::checkNativeIdFindResult(siz
     if (result < size() || size() == 0)
         return result;
 
-    boost::lock_guard<boost::mutex> g(m);
+    {
+        boost::lock_guard<boost::mutex> g(m);
 
-    // early exit if warning already issued, to avoid potentially doing these calculations for thousands of ids
-    if (!warn_msg_hashes_.insert(spectrum_id_mismatch_hash_).second)
-        return size();
+        // early exit if warning already issued, to avoid potentially doing these calculations for thousands of ids
+        if (!warn_msg_hashes_.insert(spectrum_id_mismatch_hash_).second)
+            return size();
+    }
 
     try
     {
@@ -65,6 +67,7 @@ PWIZ_API_DECL size_t pwiz::msdata::SpectrumListBase::checkNativeIdFindResult(siz
         std::set_symmetric_difference(expectedIdKeySet.begin(), expectedIdKeySet.end(),
             actualIdKeySet.begin(), actualIdKeySet.end(),
             std::back_inserter(missingIdKeys));
+
         if (!missingIdKeys.empty())
             warn_once(("[SpectrumList::find]: mismatch between spectrum id format of the file (" + firstId + ") and the looked-up id (" + id + ")").c_str());
         return size();

@@ -276,7 +276,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return GetRegressionFunction(fileId) ?? Conversion;
         }
 
-        public IRegressionFunction GetUnconversion(ChromFileInfoId fileId)
+        public RegressionLine GetUnconversion(ChromFileInfoId fileId)
         {
             double slope, intercept;
             var regressionLineFromFile = GetRegressionFunction(fileId);
