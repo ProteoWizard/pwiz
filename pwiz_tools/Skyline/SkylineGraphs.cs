@@ -603,7 +603,7 @@ namespace pwiz.Skyline
             }
             if (ImportingResultsWindow != null)
             {
-                ImportingResultsWindow.Close();
+                ImportingResultsWindow.RemoveAsync();
                 ImportingResultsWindow = null;
 
                 // Reset progress for the current document
