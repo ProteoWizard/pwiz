@@ -397,8 +397,7 @@ namespace SkylineNightly
             bool retryTester;
             const int maxRetryMinutes = 60;
 
-            var logMonitor = new LogFileMonitor(_logDir, LogFileName,
-                _runMode != RunMode.perf && _runMode != RunMode.release_perf && _runMode != RunMode.integration_perf ? 30 : 60);
+            var logMonitor = new LogFileMonitor(_logDir, LogFileName, _runMode);
             logMonitor.Start();
 
             do
@@ -433,22 +432,13 @@ namespace SkylineNightly
                         break;
                     }
 
-                    if (endTime == originalEndTime)
+                    if (endTime == originalEndTime && logMonitor.ExtendNightlyEndTime())
                     {
-                        if (logMonitor.ExtendNightlyEndTime())
-                        {
-                            // extend the end time until 12pm to give us more time to attach a debugger
-                            var newEndTime = originalEndTime.AddHours(16);
-                            newEndTime = new DateTime(newEndTime.Year, newEndTime.Month, newEndTime.Day, 12, 0, 0);
-                            if (SetEndTime(newEndTime))
-                                endTime = newEndTime;
-                        }
-                    }
-                    else if (!logMonitor.ExtendNightlyEndTime())
-                    {
-                        // was hanging but not anymore
-                        if (SetEndTime(originalEndTime))
-                            endTime = originalEndTime;
+                        // extend the end time until 12pm to give us more time to attach a debugger
+                        var newEndTime = originalEndTime.AddHours(16);
+                        newEndTime = new DateTime(newEndTime.Year, newEndTime.Month, newEndTime.Day, 12, 0, 0);
+                        if (SetEndTime(newEndTime))
+                            endTime = newEndTime;
                     }
                 }
 
