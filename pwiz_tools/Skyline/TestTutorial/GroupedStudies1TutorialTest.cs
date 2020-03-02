@@ -1025,7 +1025,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() => FormEx.GetParentForm(documentGrid).Size = new Size(591, 296));
 
                 var pathMissingData = PropertyPath.Parse("Peptide").Property(_missingDataName);
-                WaitForConditionUI(() => (documentGrid.RowCount > 0 &&
+                WaitForConditionUI(() => (documentGrid.IsComplete && documentGrid.RowCount > 0 &&
                     documentGrid.FindColumn(pathMissingData) != null)); // Let it initialize
 
                 var pathCountTruncated = PropertyPath.Parse("Results!*.Value.CountTruncated");
@@ -1035,6 +1035,7 @@ namespace pwiz.SkylineTestTutorial
                     documentGrid.DataGridView.Sort(columnCountTruncated,
                         ListSortDirection.Descending);                    
                 });
+                WaitForConditionUI(() => documentGrid.IsComplete);
 
                 PauseForScreenShot<DocumentGridForm>("Document Grid with MissingData field", 55);
 
@@ -1064,10 +1065,13 @@ namespace pwiz.SkylineTestTutorial
                     gridView.CurrentCell = gridView.Rows[0].Cells[columnSubjectId.Index];
                     gridView.SendPaste();
 
+                    var columnCountTruncated = documentGrid.FindColumn(pathCountTruncated);
                     for (int i = 0; i < expectedRows; i++)
                     {
                         var value = gridView.Rows[i].Cells[columnSubjectId.Index].Value;
                         Assert.IsTrue((bool)value);
+                        var valueTruncated = gridView.Rows[i].Cells[columnCountTruncated.Index].Value;
+                        Assert.AreNotEqual(0, (int)valueTruncated);
                     }
 
                     documentGrid.Close();
@@ -1234,44 +1238,6 @@ namespace pwiz.SkylineTestTutorial
             FindNode("NLGVVVAPHALR");
 
             PauseForScreenShot("NLGVVVAPHALR mean peak area ratio to global standard by condition", 62);
-        }
-
-        private void AddReplicateAnnotation(DocumentSettingsDlg documentSettingsDlg,
-                                            string annotationName,
-                                            AnnotationDef.AnnotationType annotationType,
-                                            IList<string> annotationValues,
-                                            int pausePage)
-        {
-            AddAnnotation(documentSettingsDlg, annotationName, annotationType, annotationValues,                
-                    AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.replicate),
-                    pausePage);
-        }
-
-        private void AddAnnotation(DocumentSettingsDlg documentSettingsDlg,
-                                            string annotationName,
-                                            AnnotationDef.AnnotationType annotationType,
-                                            IList<string> annotationValues,
-                                            AnnotationDef.AnnotationTargetSet annotationTargets,
-                                            int pausePage)
-        {
-            var annotationsListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>
-                (documentSettingsDlg.EditAnnotationList);
-            RunUI(annotationsListDlg.SelectLastItem);
-            var annotationDefDlg = ShowDialog<DefineAnnotationDlg>(annotationsListDlg.AddItem);
-
-            RunUI(() =>
-            {
-                annotationDefDlg.AnnotationName = annotationName;
-                annotationDefDlg.AnnotationType = annotationType;
-                if (annotationValues != null)
-                annotationDefDlg.Items = annotationValues;
-                annotationDefDlg.AnnotationTargets = annotationTargets;
-            });
-
-            PauseForScreenShot<DefineAnnotationDlg>("Define Annotation form - " + annotationName, pausePage);
-
-            OkDialog(annotationDefDlg, annotationDefDlg.OkDialog);
-            OkDialog(annotationsListDlg, annotationsListDlg.OkDialog);
         }
 
         private static int SelectPeptidesUpUntil(string sequence)

@@ -277,7 +277,16 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
         long numControllers = rawfile_->getNumberOfControllersOfType((ControllerType) controllerType);
         for (long n=1; n <= numControllers; ++n)
         {
-            rawfile_->setCurrentController((ControllerType) controllerType, n);
+            try
+            {
+                rawfile_->setCurrentController((ControllerType)controllerType, n);
+            }
+            catch (exception& e)
+            {
+                // TODO: add warn_once for chromatograms
+                cerr << "[ChromatogramList_Thermo::createIndex] error setting controller to " << ControllerTypeStrings[controllerType] << ": " << e.what() << endl;
+                continue;
+            }
 
             // skip this controller if it has no spectra
             if (rawfile_->getLastScanNumber() == 0)

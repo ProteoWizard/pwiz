@@ -19,6 +19,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Timers;
@@ -35,13 +36,10 @@ namespace SkylineNightly
     /// </summary>
     public class LogFileMonitor
     {
-        public const string DELIMITER_START = "\n@@@ EMAIL NOTIFICATION";
-        public const string DELIMITER_END = "\n@@@";
-
         private readonly string _oldLog;
         private readonly string _logDir;
         private readonly string _nightlyLog;
-        private readonly int _hangThreshold;
+        private readonly Nightly.RunMode _runMode;
         private readonly object _lock;
 
         private string _testerLog;
@@ -49,21 +47,23 @@ namespace SkylineNightly
         private DateTime _lastReportedHang;
         private readonly byte[] _buffer;
         private readonly StringBuilder _builder;
+        private string _logTail;
 
         private readonly Timer _logChecker;
 
-        public LogFileMonitor(string logDir, string nightlyLog, int hangThreshold = -1)
+        public LogFileMonitor(string logDir, string nightlyLog, Nightly.RunMode runMode)
         {
             _oldLog = Nightly.GetLatestLog(logDir);
             _logDir = logDir;
             _nightlyLog = nightlyLog;
-            _hangThreshold = hangThreshold;
+            _runMode = runMode;
             _testerLog = null;
             _lock = new object();
             _fileStream = null;
             _lastReportedHang = new DateTime();
             _buffer = new byte[8192];
             _builder = new StringBuilder();
+            _logTail = "";
             _logChecker = new Timer(10000); // check log file every 10 seconds
             _logChecker.Elapsed += IntervalElapsed;
         }
@@ -85,7 +85,10 @@ namespace SkylineNightly
             }
         }
 
-        public bool IsHanging()
+        private int HangThreshold => _runMode != Nightly.RunMode.perf && _runMode != Nightly.RunMode.release_perf && _runMode != Nightly.RunMode.integration_perf ? 30 : 60;
+        private string RunModeName => Enum.GetName(typeof(Nightly.RunMode), _runMode);
+
+        public bool ExtendNightlyEndTime()
         {
             try
             {
@@ -113,17 +116,18 @@ namespace SkylineNightly
                     _fileStream = new FileStream(log, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 }
 
-                if (_hangThreshold > 0)
+                if (HangThreshold > 0)
                 {
                     var lastWrite = File.GetLastWriteTime(_testerLog);
-                    if (lastWrite.AddMinutes(_hangThreshold) <= e.SignalTime)
+                    if (lastWrite.AddMinutes(HangThreshold) <= e.SignalTime)
                     {
                         if (lastWrite > _lastReportedHang)
                         {
                             _lastReportedHang = lastWrite;
                             Log("Hang detected, posting to " + Nightly.LABKEY_EMAIL_NOTIFICATION_URL);
                             var message = new StringBuilder();
-                            message.AppendLine(Environment.MachineName);
+                            message.AppendFormat("{0} ({1})", Environment.MachineName, RunModeName);
+                            message.AppendLine();
                             message.AppendLine("Hang detected");
                             message.AppendLine();
                             message.AppendFormat("Current time: {0} {1}" + Environment.NewLine, e.SignalTime.ToShortDateString(), e.SignalTime.ToShortTimeString());
@@ -131,19 +135,16 @@ namespace SkylineNightly
                             message.AppendLine();
                             message.AppendLine("----------------------------------------");
                             message.AppendLine("...");
-                            var lines = File.ReadAllLines(_testerLog);
-                            for (var i = Math.Max(lines.Length - 20, 0); i < lines.Length; i++)
-                                message.AppendLine(lines[i]);
-                            SendEmailNotification(message.ToString());
+                            message.Append(_logTail);
+                            message.AppendLine();
+                            SendEmailNotification(string.Format("[{0} ({1})] !!! TestResults alert", Environment.MachineName, RunModeName), message.ToString());
                         }
                         return;
                     }
                 }
 
                 var totalN = 0;
-                for (var n = _fileStream.Read(_buffer, 0, _buffer.Length);
-                    n > 0;
-                    n = _fileStream.Read(_buffer, 0, _buffer.Length))
+                for (var n = _fileStream.Read(_buffer, 0, _buffer.Length); n > 0; n = _fileStream.Read(_buffer, 0, _buffer.Length))
                 {
                     totalN += n;
                     _builder.Append(Encoding.UTF8.GetString(_buffer, 0, n));
@@ -155,23 +156,21 @@ namespace SkylineNightly
                     return;
 
                 var s = _builder.ToString();
-                for (var start = s.IndexOf(DELIMITER_START, StringComparison.CurrentCulture); start != -1; start = s.IndexOf(DELIMITER_START, StringComparison.CurrentCulture))
-                {
-                    _builder.Remove(0, start);
-                    s = _builder.ToString();
-                    var end = s.IndexOf(DELIMITER_END, StringComparison.CurrentCulture);
-                    if (end == -1)
-                        return;
 
-                    Log("Email notification found in log file, posting to " + Nightly.LABKEY_EMAIL_NOTIFICATION_URL);
-                    SendEmailNotification(s.Substring(DELIMITER_START.Length, end - DELIMITER_START.Length));
-
-                    _builder.Remove(0, end + DELIMITER_END.Length);
-                }
+                _logTail += s.Substring(s.Length - totalN);
+                const int tailLineCount = 20;
+                var tailLines = _logTail.Split('\n');
+                _logTail = string.Join("\n", tailLines.Length > tailLineCount ? tailLines.Skip(tailLines.Length - tailLineCount) : tailLines);
 
                 var lastBreak = s.LastIndexOf('\n');
-                if (lastBreak > 0)
-                    _builder.Remove(0, lastBreak + 1);
+                if (lastBreak < 0)
+                    return;
+
+                _builder.Remove(0, lastBreak + 1);
+                foreach (var line in s.Substring(0, lastBreak).Split(new[] {"\r", "\n", "\r\n"}, StringSplitOptions.None))
+                {
+                    // process lines
+                }
             }
             catch
             {
@@ -188,9 +187,9 @@ namespace SkylineNightly
             Nightly.Log(_nightlyLog, message);
         }
 
-        private static void SendEmailNotification(string message)
+        private static void SendEmailNotification(string subject, string message)
         {
-            Nightly.SendEmailNotification(null, string.Format("[{0}] !!! TestResults alert", Environment.MachineName), message);
+            Nightly.SendEmailNotification(null, subject, message);
         }
     }
 }

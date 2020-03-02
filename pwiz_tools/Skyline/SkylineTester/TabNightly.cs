@@ -469,6 +469,7 @@ namespace SkylineTester
                 lastRun.TestsRun = MainWindow.TestsRun;
                 lastRun.Failures = runFromLine.Failures;
                 lastRun.ManagedMemory = runFromLine.ManagedMemory;
+                lastRun.CommittedMemory = runFromLine.CommittedMemory;
                 lastRun.TotalMemory = runFromLine.TotalMemory;
                 lastRun.UserHandles = runFromLine.UserHandles;
                 lastRun.GdiHandles = runFromLine.GdiHandles;
@@ -769,7 +770,7 @@ namespace SkylineTester
                     return;
                 }
 
-                _stopTimer.Interval = endTime.Subtract(now).Milliseconds;
+                _stopTimer.Interval = (int) endTime.Subtract(now).TotalMilliseconds;
                 _stopTimer.Start();
             }
         }

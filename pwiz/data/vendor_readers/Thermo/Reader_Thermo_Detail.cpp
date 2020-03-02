@@ -26,6 +26,7 @@
 #include "Reader_Thermo_Detail.hpp"
 #include "pwiz/utility/misc/Container.hpp"
 #include "pwiz/utility/misc/String.hpp"
+#include <boost/range/algorithm/find_if.hpp>
 
 namespace pwiz {
 namespace msdata {
@@ -128,6 +129,16 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(RawFile& rawfile)
 
     // source common to all configurations (TODO: handle multiple sources in a single run?)
     auto raw = rawfile.getRawByThread(0);
+
+    // handle files with no MS controllers
+    if (raw->getNumberOfControllersOfType(Controller_MS) == 0 && rawfile.getNumberOfControllersOfType(Controller_PDA) > 0)
+    {
+        vector<InstrumentConfiguration> configurations(1);
+        configurations.back().id = "PDA";
+        configurations.back().componentList.push_back(Component(MS_PDA, 1));
+        return configurations;
+    }
+
     raw->setCurrentController(Controller_MS, 1);
     ScanInfoPtr firstScanInfo = raw->getScanInfo(1);
     CVID firstIonizationType = translateAsIonizationType(firstScanInfo->ionizationType());
@@ -142,9 +153,10 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(RawFile& rawfile)
 
     auto configurations = createInstrumentConfigurations(commonSource, model);
 
-    if (rawfile.getNumberOfControllersOfType(Controller_PDA) > 0)
+    if (rawfile.getNumberOfControllersOfType(Controller_PDA) > 0 &&
+        boost::range::find_if(configurations, [](const InstrumentConfiguration& ic) { return ic.componentList[0].hasCVParam(MS_PDA); }) == configurations.end())
     {
-        configurations.push_back(InstrumentConfiguration());
+        configurations.push_back(InstrumentConfiguration("PDA"));
         configurations.back().componentList.push_back(Component(MS_PDA, 1));
     }
 

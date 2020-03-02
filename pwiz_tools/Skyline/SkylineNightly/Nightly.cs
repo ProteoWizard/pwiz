@@ -397,8 +397,7 @@ namespace SkylineNightly
             bool retryTester;
             const int maxRetryMinutes = 60;
 
-            var logMonitor = new LogFileMonitor(_logDir, LogFileName,
-                _runMode != RunMode.perf && _runMode != RunMode.release_perf && _runMode != RunMode.integration_perf ? 30 : 60);
+            var logMonitor = new LogFileMonitor(_logDir, LogFileName, _runMode);
             logMonitor.Start();
 
             do
@@ -435,7 +434,7 @@ namespace SkylineNightly
 
                     if (endTime == originalEndTime)
                     {
-                        if (logMonitor.IsHanging())
+                        if (logMonitor.ExtendNightlyEndTime())
                         {
                             // extend the end time until 12pm to give us more time to attach a debugger
                             var newEndTime = originalEndTime.AddHours(16);
@@ -444,11 +443,14 @@ namespace SkylineNightly
                                 endTime = newEndTime;
                         }
                     }
-                    else if (!logMonitor.IsHanging())
+                    else if (!logMonitor.ExtendNightlyEndTime())
                     {
-                        // was hanging but not anymore
-                        if (SetEndTime(originalEndTime))
-                            endTime = originalEndTime;
+                        // If we get here, we've already extended the end time due to a hang and log file is now being modified again.
+                        // Assume that the log file is being modified because someone has taken manual action, and extend the end time further
+                        // to prevent SkylineTester from being killed while someone is looking at it.
+                        var newEndTime = DateTime.Now.AddDays(1);
+                        if (SetEndTime(newEndTime))
+                            endTime = newEndTime;
                     }
                 }
 
@@ -1160,15 +1162,18 @@ namespace SkylineNightly
         // Set the end time of an already running nightly run (e.g. if there is a hang and we want to give more time for someone to attach a debugger)
         public bool SetEndTime(DateTime endTime)
         {
+            Exception exception = null;
             try
             {
                 END_TIME_SETTER_FACTORY.CreateChannel().SetEndTime(endTime);
-                return true;
             }
-            catch
+            catch (Exception x)
             {
-                return false;
+                exception = x;
             }
+            Log(string.Format("Setting nightly end time to {0} {1}: {2}",
+                endTime.ToShortDateString(), endTime.ToShortTimeString(), exception == null ? "OK" : exception.Message));
+            return exception == null;
         }
 
         // Allows SkylineNightly to change the stop time of a nightly run via IPC

@@ -677,7 +677,7 @@ namespace pwiz.Skyline.Model.Irt
             }
             else if (ReferenceEquals(regressionType, IrtRegressionType.LOGARITHMIC))
             {
-                Regression = new LogRegression(filteredRt, filteredIrt, true);
+                Regression = new LogRegression(filteredRt, filteredIrt);
             }
             else if (ReferenceEquals(regressionType, IrtRegressionType.LOWESS))
             {
