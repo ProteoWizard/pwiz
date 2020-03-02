@@ -432,11 +432,23 @@ namespace SkylineNightly
                         break;
                     }
 
-                    if (endTime == originalEndTime && logMonitor.ExtendNightlyEndTime())
+                    if (endTime == originalEndTime)
                     {
-                        // extend the end time until 12pm to give us more time to attach a debugger
-                        var newEndTime = originalEndTime.AddHours(16);
-                        newEndTime = new DateTime(newEndTime.Year, newEndTime.Month, newEndTime.Day, 12, 0, 0);
+                        if (logMonitor.ExtendNightlyEndTime())
+                        {
+                            // extend the end time until 12pm to give us more time to attach a debugger
+                            var newEndTime = originalEndTime.AddHours(16);
+                            newEndTime = new DateTime(newEndTime.Year, newEndTime.Month, newEndTime.Day, 12, 0, 0);
+                            if (SetEndTime(newEndTime))
+                                endTime = newEndTime;
+                        }
+                    }
+                    else if (!logMonitor.ExtendNightlyEndTime())
+                    {
+                        // If we get here, we've already extended the end time due to a hang and log file is now being modified again.
+                        // Assume that the log file is being modified because someone has taken manual action, and extend the end time further
+                        // to prevent SkylineTester from being killed while someone is looking at it.
+                        var newEndTime = DateTime.Now.AddDays(1);
                         if (SetEndTime(newEndTime))
                             endTime = newEndTime;
                     }
