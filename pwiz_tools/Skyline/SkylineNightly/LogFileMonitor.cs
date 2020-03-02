@@ -39,7 +39,7 @@ namespace SkylineNightly
         private readonly string _oldLog;
         private readonly string _logDir;
         private readonly string _nightlyLog;
-        private readonly int _hangThreshold;
+        private readonly Nightly.RunMode _runMode;
         private readonly object _lock;
 
         private string _testerLog;
@@ -51,12 +51,12 @@ namespace SkylineNightly
 
         private readonly Timer _logChecker;
 
-        public LogFileMonitor(string logDir, string nightlyLog, int hangThreshold = -1)
+        public LogFileMonitor(string logDir, string nightlyLog, Nightly.RunMode runMode)
         {
             _oldLog = Nightly.GetLatestLog(logDir);
             _logDir = logDir;
             _nightlyLog = nightlyLog;
-            _hangThreshold = hangThreshold;
+            _runMode = runMode;
             _testerLog = null;
             _lock = new object();
             _fileStream = null;
@@ -84,6 +84,9 @@ namespace SkylineNightly
                 _logChecker.Stop();
             }
         }
+
+        private int HangThreshold => _runMode != Nightly.RunMode.perf && _runMode != Nightly.RunMode.release_perf && _runMode != Nightly.RunMode.integration_perf ? 30 : 60;
+        private string RunModeName => Enum.GetName(typeof(Nightly.RunMode), _runMode);
 
         public bool ExtendNightlyEndTime()
         {
@@ -113,17 +116,18 @@ namespace SkylineNightly
                     _fileStream = new FileStream(log, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 }
 
-                if (_hangThreshold > 0)
+                if (HangThreshold > 0)
                 {
                     var lastWrite = File.GetLastWriteTime(_testerLog);
-                    if (lastWrite.AddMinutes(_hangThreshold) <= e.SignalTime)
+                    if (lastWrite.AddMinutes(HangThreshold) <= e.SignalTime)
                     {
                         if (lastWrite > _lastReportedHang)
                         {
                             _lastReportedHang = lastWrite;
                             Log("Hang detected, posting to " + Nightly.LABKEY_EMAIL_NOTIFICATION_URL);
                             var message = new StringBuilder();
-                            message.AppendLine(Environment.MachineName);
+                            message.AppendFormat("{0} ({1})", Environment.MachineName, RunModeName);
+                            message.AppendLine();
                             message.AppendLine("Hang detected");
                             message.AppendLine();
                             message.AppendFormat("Current time: {0} {1}" + Environment.NewLine, e.SignalTime.ToShortDateString(), e.SignalTime.ToShortTimeString());
@@ -133,7 +137,7 @@ namespace SkylineNightly
                             message.AppendLine("...");
                             message.Append(_logTail);
                             message.AppendLine();
-                            SendEmailNotification(message.ToString());
+                            SendEmailNotification(string.Format("[{0} ({1})] !!! TestResults alert", Environment.MachineName, RunModeName), message.ToString());
                         }
                         return;
                     }
@@ -183,9 +187,9 @@ namespace SkylineNightly
             Nightly.Log(_nightlyLog, message);
         }
 
-        private static void SendEmailNotification(string message)
+        private static void SendEmailNotification(string subject, string message)
         {
-            Nightly.SendEmailNotification(null, string.Format("[{0}] !!! TestResults alert", Environment.MachineName), message);
+            Nightly.SendEmailNotification(null, subject, message);
         }
     }
 }
