@@ -149,8 +149,8 @@ namespace pwiz.SkylineTestFunctional
                         null,
                         graphChrom.NameSet,
                         graphChrom.ChromGroupInfos[0].FilePath,
-                        graphChrom.GraphItems.First().GetNearestDisplayTime(40.0),
-                        graphChrom.GraphItems.First().GetNearestDisplayTime(42.0),
+                        graphChrom.GraphItems.First().GetValidPeakBoundaryTime(40.0),
+                        graphChrom.GraphItems.First().GetValidPeakBoundaryTime(42.0),
                         PeakIdentification.ALIGNED,
                         PeakBoundsChangeType.both)
                 };

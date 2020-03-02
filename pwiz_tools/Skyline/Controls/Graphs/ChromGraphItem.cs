@@ -81,7 +81,7 @@ namespace pwiz.Skyline.Controls.Graphs
                               TransitionDocNode transition,
                               ChromatogramInfo chromatogram,
                               TransitionChromInfo tranPeakInfo,
-                              IRegressionFunction timeRegressionFunction,
+                              RegressionLine timeRegressionFunction,
                               bool[] annotatePeaks,
                               double[] dotProducts,
                               double bestProduct,
@@ -162,7 +162,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public TransitionDocNode TransitionNode { get; private set; }
         public ChromatogramInfo Chromatogram { get; private set; }
         public TransitionChromInfo TransitionChromInfo { get; private set; }
-        public IRegressionFunction TimeRegressionFunction { get; private set; }
+        public RegressionLine TimeRegressionFunction { get; private set; }
         public ScaledRetentionTime ScaleRetentionTime(double measuredTime)
         {
             return new ScaledRetentionTime(measuredTime, MeasuredTimeToDisplayTime(measuredTime));
@@ -922,24 +922,20 @@ namespace pwiz.Skyline.Controls.Graphs
             return TimeRegressionFunction.GetY(time);
         }
 
-        public ScaledRetentionTime GetNearestDisplayTime(double displayTime)
+        public ScaledRetentionTime GetValidPeakBoundaryTime(double displayTime)
         {
-            int index = NearestIndex(_displayTimes, displayTime);
-            if (index < 0)
+            double measuredTime = TimeRegressionFunction == null
+                ? displayTime
+                : TimeRegressionFunction.GetX(displayTime);
+            var chromatogramInfo = Chromatogram;
+            if (chromatogramInfo.TimeIntervals != null)
             {
-                return ScaledRetentionTime.ZERO;
+                return ScaleRetentionTime(measuredTime);
             }
-            return new ScaledRetentionTime(_measuredTimes[index], _displayTimes[index]);
-        }
 
-        public ScaledRetentionTime GetNearestMeasuredTime(double measuredTime)
-        {
-            int index = GetNearestMeasuredIndex(measuredTime);
-            if (index < 0)
-            {
-                return ScaledRetentionTime.ZERO;
-            }
-            return new ScaledRetentionTime(_measuredTimes[index], _displayTimes[index]);
+            var interpolatedTimeIntensities = chromatogramInfo.GetInterpolatedTimeIntensities();
+            int index = interpolatedTimeIntensities.IndexOfNearestTime((float)displayTime);
+            return ScaleRetentionTime(interpolatedTimeIntensities.Times[index]);
         }
 
         public int GetNearestMeasuredIndex(double measuredTime)
