@@ -77,12 +77,11 @@ namespace pwiz.Skyline.Controls.Graphs
         public void RemoveAsync()
         {
             // Avoid closing the ACG during CreateHandle()
-            var closeThread = new Thread(() =>
+            ActionUtil.RunAsync(() =>
             {
                 _windowCreatedEvent.WaitOne();
                 Invoke((Action)Close);
-            });
-            closeThread.Start();
+            }, @"Close AllChromatogramsGraph");
         }
 
         protected override void OnLoad(EventArgs e)
