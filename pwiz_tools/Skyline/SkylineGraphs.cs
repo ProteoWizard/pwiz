@@ -603,8 +603,9 @@ namespace pwiz.Skyline
             }
             if (ImportingResultsWindow != null)
             {
-                ImportingResultsWindow.RemoveAsync();
+                var importingResultsWindowTemp = ImportingResultsWindow;
                 ImportingResultsWindow = null;
+                importingResultsWindowTemp.RemoveAsync();
 
                 // Reset progress for the current document
                 _chromatogramManager.ResetProgress(Document);
