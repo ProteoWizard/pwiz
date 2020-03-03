@@ -34,7 +34,9 @@ namespace TestRunner
         {
             if (0 != (JetBrains.Profiler.Api.MemoryProfiler.GetFeatures() & MemoryFeatures.Ready))
             {
+                // Uncomment to start collecting the stack traces of all allocations.
                 //JetBrains.Profiler.Api.MemoryProfiler.CollectAllocations(true);
+
                 JetBrains.Profiler.Api.MemoryProfiler.GetSnapshot(name);
             }
             // Consider: support other types of profilers.
