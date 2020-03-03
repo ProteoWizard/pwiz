@@ -218,6 +218,10 @@ blib-test-build smill : -o : output/smill.blib : smill.check : $(TEST_INPUTS_PAT
 blib-test-build smill_ims : -o : output/smill_ims.blib : smill_ims.check smill_ims.skip-lines : $(TEST_INPUTS_PATH)/40minG_WBP_wide_z2-3_mid_BSA_5pmol_01.pep.xml ;
 blib-test-build bad-index : -o : output/bad-index.blib : bad-index.check : $(TEST_INPUTS_PATH)/interact-prob-three-spec.pep.xml ;
 blib-test-build comet : -o : output/comet.blib : comet.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/comet.demo1.target.pep.xml ;
+blib-test-build msfragger-tims : -o : output/msfragger-tims.blib : msfragger-tims.check  : $(TEST_INPUTS_PATH)/Hela_QC_PASEF_Slot1-5_01_57_cutout_2min.pepXML ;
+blib-test-build msfragger-thermo : -o : output/msfragger-thermo.blib : msfragger-thermo.check  : $(TEST_INPUTS_PATH)/BSA_min_21.pepXML ;
+blib-test-build peptideprophet-msfragger-thermo-mzml : -o : output/peptideprophet-msfragger-thermo-mzml.blib : peptideprophet-msfragger-thermo-mzml.check  : $(TEST_INPUTS_PATH)/peptideprophet-msfragger-thermo-mzml.pep.xml ;
+blib-test-build peptideprophet-msfragger-bruker-mgf : -o : output/peptideprophet-msfragger-bruker-mgf.blib : peptideprophet-msfragger-bruker-mgf.check  : $(TEST_INPUTS_PATH)/peptideprophet-msfragger-bruker-mgf.pep.xml ;
 
 # Test other xml formats (idpicker, xtandem)
 
@@ -258,8 +262,14 @@ blib-test-build maxquant-bsa-baf-v1_6_7 : -o -p@$(TEST_DATA_PATH)/bsa-baf-mqpar.
 blib-test-build maxquant-yeast-wiff : -o -p@$(TEST_DATA_PATH)/yeast-wiff-mqpar.xml : output/maxquant-yeast-wiff.blib : maxquant-yeast-wiff.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/yeast-wiff-msms.txt ;
 blib-test-build maxquant-yeast-wiff-i18n : -o -p@$(TEST_DATA_PATH)/yeast-wiff-试验-mqpar.xml : output/maxquant-yeast-wiff-i18n.blib : maxquant-yeast-wiff-i18n.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/yeast-wiff-试验-msms.txt ;
 
+# Test maxquant text file with IMS info in evidence.txt
+blib-test-build maxquant_ims : -o -E : output/maxquant_ims.blib : maxquant_ims.check zbuild.skip-lines : inputs/k0ccs-msms.txt ;
+
 # Test maxquant reading spectra from WIFF with peak picking
 blib-test-build maxquant-prg2012-wiff : -o -p@$(TEST_DATA_PATH)/prg2012-wiff-mqpar.xml : output/maxquant-prg2012-wiff.blib : maxquant-prg2012-wiff.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/prg2012-wiff-msms.txt : <vendor-api-support>off:<build>no ;
+
+# Test maxquant with a label specified in a custom modifications file
+#blib-test-build maxquant-heavy-label : -o -E -p@$(TEST_DATA_PATH)/heavy-label-mqpar.xml -x@$(TEST_DATA_PATH)/heavy-label-modifications.xml : output/maxquant-heavy-label.blib : maxquant-heavy-label.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/heavy-label-msms.txt ;
 
 # Test mzid format from scaffold
 blib-test-build scaffold : --unicode -o : output/scaffold.blib : scaffold.check : $(TEST_INPUTS_PATH)/scaffold.mzid ;
@@ -302,6 +312,7 @@ blib-test-build mascot_tims : -o : output/mascot_tims.blib : mascot_tims.check :
 
 blib-test-build openswath : --unicode -o : output/openswath.blib : openswath.check openswath.skip-lines : $(TEST_INPUTS_PATH)/openswath_test.tsv ;
 blib-test-build openswath-osw : -o : output/openswath-osw.blib : openswath-osw.check openswath.skip-lines : $(TEST_INPUTS_PATH)/test.osw ;
+blib-test-build openswath-assay : -o : output/openswath-oldos-assay.blib : openswath-oldos-assay.check openswath.skip-lines : $(TEST_INPUTS_PATH)/openswath-oldos-assay.tsv ;
 blib-test-build openswath-invalid-tsv : -o -e@~Only_OpenSWATH~ : output/openswath-invalid-tsv.blib : openswath-invalid-tsv.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/ssl-small-mol.tsv ;
 
 # we expect this one to fail, with the error message 'ERROR: Failure reading TIMS ion mobility value ":0.78079097398941"', so args are "-e 0.78079097398941"

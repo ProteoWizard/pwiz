@@ -36,8 +36,8 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 
-ChromatogramList_Shimadzu::ChromatogramList_Shimadzu(ShimadzuReaderPtr rawfile)
-:   rawfile_(rawfile), indexInitialized_(util::init_once_flag_proxy)
+ChromatogramList_Shimadzu::ChromatogramList_Shimadzu(ShimadzuReaderPtr rawfile, const Reader::Config& config)
+:   rawfile_(rawfile), config_(config), indexInitialized_(util::init_once_flag_proxy)
 {
 }
 
@@ -102,7 +102,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Shimadzu::chromatogram(size_t ind
             if (detailLevel < DetailLevel_FullMetadata)
                 return result;
 
-            auto ticPtr = rawfile_->getTIC();
+            auto ticPtr = rawfile_->getTIC(config_.globalChromatogramsAreMs1Only);
             if (getBinaryData)
             {
                 result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_minute, MS_number_of_detector_counts);

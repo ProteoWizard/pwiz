@@ -1240,11 +1240,11 @@ namespace pwiz.Skyline.Model.DocSettings
             return GetRetentionTimes(new MsDataFilePath(name));
         }
 
-        public LibraryIonMobilityInfo GetIonMobilities(MsDataFileUri filePath)
+        public LibraryIonMobilityInfo GetIonMobilities(LibKey[] targetIons, MsDataFileUri filePath)
         {
             var libraries = PeptideSettings.Libraries;
             LibraryIonMobilityInfo ionMobilities;
-            if (libraries.TryGetDriftTimeInfos(filePath, out ionMobilities))
+            if (libraries.TryGetDriftTimeInfos(targetIons, filePath, out ionMobilities))
                 return ionMobilities;
             return null;
         }
@@ -1268,7 +1268,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <param name="charge"> The charge to match. </param>
         /// <param name="mods"> The modifications to match. </param>
         /// <returns> Returns a list of the matching spectra. </returns>
-        public IEnumerable<SpectrumInfo> GetBestSpectra(Target sequence, Adduct charge, ExplicitMods mods)
+        public IEnumerable<SpectrumInfoLibrary> GetBestSpectra(Target sequence, Adduct charge, ExplicitMods mods)
         {
             var libraries = PeptideSettings.Libraries;
             return from typedSequence in GetTypedSequences(sequence, mods, charge)
@@ -1277,7 +1277,7 @@ namespace pwiz.Skyline.Model.DocSettings
                    select spectrumInfo;
         }
 
-        public IEnumerable<SpectrumInfo> GetMidasSpectra(double precursorMz)
+        public IEnumerable<SpectrumInfoLibrary> GetMidasSpectra(double precursorMz)
         {
             return PeptideSettings.Libraries.MidasLibraries.SelectMany(
                 lib => lib.GetSpectra(new LibKey(precursorMz), IsotopeLabelType.light, LibraryRedundancy.all));
@@ -1293,7 +1293,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <param name="labelType">The primary label type to match</param>
         /// <param name="mods"> The modifications to match. </param>
         /// <returns> Returns a list of the matching spectra. </returns>
-        public IEnumerable<SpectrumInfo> GetRedundantSpectra(Peptide peptide, Target sequence, Adduct adduct, IsotopeLabelType labelType,
+        public IEnumerable<SpectrumInfoLibrary> GetRedundantSpectra(Peptide peptide, Target sequence, Adduct adduct, IsotopeLabelType labelType,
                                                        ExplicitMods mods)
         {
             LibKey libKey;
@@ -1758,14 +1758,11 @@ namespace pwiz.Skyline.Model.DocSettings
                     if (!overwrite)
                     {
                         var modName = mod.Name;
-                        foreach (StaticMod existingMod in defSet.StaticModList)
+                        if (defSet.StaticModList.Any(existingMod => Equals(existingMod.Name, modName)))
                         {
-                            if (Equals(existingMod.Name, modName))
-                            {
-                                throw new InvalidDataException(
-                                    string.Format(Resources.SrmSettings_UpdateDefaultModifications_The_modification__0__already_exists_with_a_different_definition,
-                                                  modName));
-                            }
+                            throw new InvalidDataException(
+                                string.Format(Resources.SrmSettings_UpdateDefaultModifications_The_modification__0__already_exists_with_a_different_definition,
+                                    modName));
                         }
                     }
                 }
@@ -1781,14 +1778,11 @@ namespace pwiz.Skyline.Model.DocSettings
                         if (!overwrite)
                         {
                             var modName = mod.Name;
-                            foreach (StaticMod existingMod in defSet.HeavyModList)
+                            if (defSet.HeavyModList.Any(existingMod => Equals(existingMod.Name, modName)))
                             {
-                                if (Equals(existingMod.Name, modName))
-                                {
-                                    throw new InvalidDataException(
-                                        string.Format(Resources.SrmSettings_UpdateDefaultModifications_The_modification__0__already_exists_with_a_different_definition,
-                                                      modName));
-                                }
+                                throw new InvalidDataException(
+                                    string.Format(Resources.SrmSettings_UpdateDefaultModifications_The_modification__0__already_exists_with_a_different_definition,
+                                        modName));
                             }
                         }
                     }
@@ -1848,16 +1842,23 @@ namespace pwiz.Skyline.Model.DocSettings
 
         /// <summary>
         /// Removes features from the SrmSettings that are not supported by the particular DocumentFormat.
+        /// Only used during DocumentSerializer.WriteXml(). So it is not important that the settings remain
+        /// usable to the current implementation.
         /// </summary>
         public SrmSettings RemoveUnsupportedFeatures(DocumentFormat documentFormat)
         {
-            var dataSettings = DataSettings;
+            var result = this;
             if (documentFormat <= DocumentFormat.VERSION_4_2)
             {
-                dataSettings = dataSettings.ChangeListDefs(new ListData[0]);
+                result = result.ChangeDataSettings(DataSettings.ChangeListDefs(new ListData[0]));
+            }
+            if (documentFormat < DocumentFormat.VERSION_20_1)
+            {
+                result = result.ChangeMeasuredResults(MeasuredResults.ChangeChromatograms(
+                    MeasuredResults.Chromatograms.Select(c => c.RestoreLegacyUriParameters()).ToArray()));
             }
 
-            return ChangeDataSettings(dataSettings);
+            return result;
         }
 
         #region Implementation of IXmlSerializable
@@ -2048,7 +2049,7 @@ namespace pwiz.Skyline.Model.DocSettings
     /// <summary>
     /// Enum used to specify the representation of modifications in a sequence
     /// </summary>
-    public enum SequenceModFormatType { mass_diff, mass_diff_narrow, three_letter_code, full_precision }
+    public enum SequenceModFormatType { mass_diff, mass_diff_narrow, three_letter_code, full_precision, lib_precision }
 
     public interface IPrecursorMassCalc
     {
@@ -2129,23 +2130,32 @@ namespace pwiz.Skyline.Model.DocSettings
         private int _seenGroupCount;
         private int _seenMoleculeCount;
 
-        public SrmSettingsChangeMonitor(IProgressMonitor progressMonitor, string formatString,
-            IDocumentContainer documentContainer = null, SrmDocument startDocument = null)
+        public SrmSettingsChangeMonitor(IProgressMonitor progressMonitor, string formatString, IProgressStatus status)
         {
             _progressMonitor = progressMonitor;
+            if (formatString.Contains('{'))
+                _formatString = formatString;
+            _status = status;
+            if (_status == null)
+            {
+                if (_formatString == null)
+                    _status = new ProgressStatus(formatString);
+                else
+                {
+                    // Set status string to empty, since it should be reset very quickly
+                    _status = new ProgressStatus(string.Empty);
+                }
+            }
+        }
+
+        public SrmSettingsChangeMonitor(IProgressMonitor progressMonitor, string formatString,
+            IDocumentContainer documentContainer = null, SrmDocument startDocument = null)
+            :this(progressMonitor, formatString, null)
+        {
             _documentContainer = documentContainer;
             _startDocument = startDocument;
             if (_startDocument == null && documentContainer != null)
                 _startDocument = documentContainer.Document;
-
-            if (!formatString.Contains('{'))
-                _status = new ProgressStatus(formatString);
-            else
-            {
-                _formatString = formatString;
-                // Set status string to empty, since it should be reset very quickly
-                _status = new ProgressStatus(string.Empty);
-            }
         }
 
         public void ProcessGroup(PeptideGroupDocNode nodeGroup)
@@ -2196,9 +2206,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public int GroupCount
         {
-            get {  return _groupCount; }
             // Avoid divide by zero errors by always having at least 1 group
-            set { _groupCount = value != 0 ? value : 1; }
+            get {  return _groupCount != 0 ? _groupCount : 1; }
+            set { _groupCount = value; }
         }
 
         public int? MoleculeCount

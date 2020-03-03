@@ -187,6 +187,7 @@ namespace pwiz.Skyline.SettingsUI
                 tabControlPeptidesSmallMols.SelectedIndex = 1;
 
             DoIsolationSchemeChanged();
+            cbxTriggeredAcquisition.Checked = Instrument.TriggeredAcquisition;
         }
 
         /// <summary>
@@ -534,7 +535,8 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             TransitionInstrument instrument = new TransitionInstrument(minMz,
-                maxMz, isDynamicMin, mzMatchTolerance, maxTrans, maxInclusions, minTime, maxTime);
+                    maxMz, isDynamicMin, mzMatchTolerance, maxTrans, maxInclusions, minTime, maxTime)
+                .ChangeTriggeredAcquisition(cbxTriggeredAcquisition.Checked);
             Helpers.AssignIfEquals(ref instrument, Instrument);
 
             // Validate and store full-scan settings
@@ -1247,5 +1249,10 @@ namespace pwiz.Skyline.SettingsUI
                 textSmallMoleculeIonTypes.Text = TransitionFilter.ToStringSmallMoleculeIonTypes(smallMolIons, true);
         }
 
+        public bool TriggeredAcquisition
+        {
+            get { return cbxTriggeredAcquisition.Checked; }
+            set { cbxTriggeredAcquisition.Checked = value; }
+        }
     }
 }

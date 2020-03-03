@@ -224,7 +224,7 @@ void Reader_Agilent::read(const string& filename,
     MassHunterDataPtr dataReader(MassHunterData::create(filename));
 
     shared_ptr<SpectrumList_Agilent> sl(new SpectrumList_Agilent(result, dataReader, config));
-    shared_ptr<ChromatogramList_Agilent> cl(new ChromatogramList_Agilent(dataReader));
+    shared_ptr<ChromatogramList_Agilent> cl(new ChromatogramList_Agilent(dataReader, config));
     result.run.spectrumListPtr = sl;
     result.run.chromatogramListPtr = cl;
 

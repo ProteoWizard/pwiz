@@ -29,8 +29,10 @@ using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -72,6 +74,7 @@ namespace pwiz.SkylineTestFunctional
             TestWizardCancel();
             TestWizardExcludeSpectrumSourceFiles();
             TestWizardDecoysAndMinPeptides();
+            TestIrts();
             TestMinIonCount();
         }
 
@@ -546,8 +549,65 @@ namespace pwiz.SkylineTestFunctional
             // The AllChromatogramsGraph will immediately show an error because the file being imported is bogus.
             var importResultsDlg = ShowDialog<AllChromatogramsGraph>(peptidesPerProteinDlg.OkDialog);
             doc = WaitForDocumentChangeLoaded(doc);
+            WaitForConditionUI(5000, () => importResultsDlg.Finished && importResultsDlg.Files.Any(f => !string.IsNullOrEmpty(f.Error)));
             OkDialog(importResultsDlg, importResultsDlg.ClickClose);
             AssertEx.IsDocumentState(doc, null, 2, 2, 6);
+
+            RunUI(() => SkylineWindow.SaveDocument());
+        }
+
+        private void TestIrts()
+        {
+            PrepareDocument("ImportPeptideSearch-irts.sky");
+            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
+            var doc = SkylineWindow.Document;
+
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(new[] {GetTestPath("biognosystiny.blib")});
+                importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards = IrtStandard.BIOGNOSYS_11;
+                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
+            });
+            var addIrtDlg = ShowDialog<AddIrtPeptidesDlg>(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
+            var recalibrateDlg = ShowDialog<MultiButtonMsgDlg>(addIrtDlg.OkDialog);
+            OkDialog(recalibrateDlg, recalibrateDlg.ClickNo);
+
+            doc = WaitForDocumentChange(doc);
+
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
+                importPeptideSearchDlg.ImportResultsControl.FoundResultsFiles = new List<ImportPeptideSearch.FoundResultsFile>
+                {
+                    new ImportPeptideSearch.FoundResultsFile(MODLESS_BASE_NAME, SearchFilesModless.First())
+                };
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("yeast-10.fasta"));
+            });
+            var peptidesPerProteinDlg = ShowDialog<PeptidesPerProteinDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+            RunUI(() => peptidesPerProteinDlg.KeepAll = true);
+            WaitForConditionUI(() => peptidesPerProteinDlg.DocumentFinalCalculated);
+            OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
+            // The AllChromatogramsGraph will immediately show an error because the file being imported is bogus.
+            var importResultsDlg = ShowDialog<AllChromatogramsGraph>(peptidesPerProteinDlg.OkDialog);
+            doc = WaitForDocumentChangeLoaded(doc);
+            WaitForConditionUI(5000, () => importResultsDlg.Finished && importResultsDlg.Files.Any(f => !string.IsNullOrEmpty(f.Error)));
+            OkDialog(importResultsDlg, importResultsDlg.ClickClose);
+
+            // The document should have the 11 Biognosys standard peptides in the first peptide group
+            var irt = doc.PeptideGroups.First();
+            Assert.AreEqual(11, irt.PeptideCount);
+            var irtMap = new TargetMap<bool>(IrtStandard.BIOGNOSYS_11.Peptides.Select(pep => new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)));
+            foreach (var nodePep in irt.Peptides)
+                Assert.IsTrue(irtMap.ContainsKey(nodePep.ModifiedTarget));
+
+            RunUI(() => SkylineWindow.SaveDocument());
         }
 
         private void TestMinIonCount()

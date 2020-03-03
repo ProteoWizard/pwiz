@@ -328,7 +328,7 @@
     <value>14</value>
   </data>
   <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
+    <value>155, 17</value>
   </metadata>
   <data name="comboOptimizeType.ToolTip" xml:space="preserve">
     <value>Specifies if optimization is to be done either for all transitions
@@ -1869,6 +1869,37 @@ whenever peptides are matched to library spectrum.</value>
   <data name="&gt;&gt;tabLibrary.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
+  <data name="cbxTriggeredAcquisition.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbxTriggeredAcquisition.Location" type="System.Drawing.Point, System.Drawing">
+    <value>27, 293</value>
+  </data>
+  <data name="cbxTriggeredAcquisition.Size" type="System.Drawing.Size, System.Drawing">
+    <value>194, 17</value>
+  </data>
+  <data name="cbxTriggeredAcquisition.TabIndex" type="System.Int32, mscorlib">
+    <value>20</value>
+  </data>
+  <data name="cbxTriggeredAcquisition.Text" xml:space="preserve">
+    <value>Triggered &amp;chromatogram acquisition</value>
+  </data>
+  <data name="cbxTriggeredAcquisition.ToolTip" xml:space="preserve">
+    <value>Indicates that there may be large gaps in the retention times when spectra were acquired for certain analytes.
+Peaks will be truncated to not overlap with these gaps and background subtraction will not be performed.</value>
+  </data>
+  <data name="&gt;&gt;cbxTriggeredAcquisition.Name" xml:space="preserve">
+    <value>cbxTriggeredAcquisition</value>
+  </data>
+  <data name="&gt;&gt;cbxTriggeredAcquisition.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbxTriggeredAcquisition.Parent" xml:space="preserve">
+    <value>tabInstrument</value>
+  </data>
+  <data name="&gt;&gt;cbxTriggeredAcquisition.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="textMaxInclusions.Location" type="System.Drawing.Point, System.Drawing">
     <value>189, 185</value>
   </data>
@@ -1876,7 +1907,7 @@ whenever peptides are matched to library spectrum.</value>
     <value>68, 20</value>
   </data>
   <data name="textMaxInclusions.TabIndex" type="System.Int32, mscorlib">
-    <value>20</value>
+    <value>13</value>
   </data>
   <data name="textMaxInclusions.ToolTip" xml:space="preserve">
     <value>Maximum number of inclusion windows measured by the target
@@ -1892,7 +1923,7 @@ instrument during multiplexed scanning.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;textMaxInclusions.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="label21.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1904,7 +1935,7 @@ instrument during multiplexed scanning.</value>
     <value>116, 13</value>
   </data>
   <data name="label21.TabIndex" type="System.Int32, mscorlib">
-    <value>19</value>
+    <value>12</value>
   </data>
   <data name="label21.Text" xml:space="preserve">
     <value>Firmware &amp;inclusion limit:</value>
@@ -1919,7 +1950,7 @@ instrument during multiplexed scanning.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label21.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="label30.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1931,7 +1962,7 @@ instrument during multiplexed scanning.</value>
     <value>23, 13</value>
   </data>
   <data name="label30.TabIndex" type="System.Int32, mscorlib">
-    <value>18</value>
+    <value>19</value>
   </data>
   <data name="label30.Text" xml:space="preserve">
     <value>min</value>
@@ -1946,7 +1977,7 @@ instrument during multiplexed scanning.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label30.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="label31.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1958,7 +1989,7 @@ instrument during multiplexed scanning.</value>
     <value>23, 13</value>
   </data>
   <data name="label31.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
+    <value>16</value>
   </data>
   <data name="label31.Text" xml:space="preserve">
     <value>min</value>
@@ -1973,7 +2004,7 @@ instrument during multiplexed scanning.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label31.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="label33.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1985,7 +2016,7 @@ instrument during multiplexed scanning.</value>
     <value>52, 13</value>
   </data>
   <data name="label33.TabIndex" type="System.Int32, mscorlib">
-    <value>16</value>
+    <value>17</value>
   </data>
   <data name="label33.Text" xml:space="preserve">
     <value>M&amp;ax time:</value>
@@ -2000,7 +2031,7 @@ instrument during multiplexed scanning.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label33.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="label34.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2012,7 +2043,7 @@ instrument during multiplexed scanning.</value>
     <value>49, 13</value>
   </data>
   <data name="label34.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
+    <value>14</value>
   </data>
   <data name="label34.Text" xml:space="preserve">
     <value>Mi&amp;n time:</value>
@@ -2027,7 +2058,7 @@ instrument during multiplexed scanning.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label34.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="textMaxTime.Location" type="System.Drawing.Point, System.Drawing">
     <value>190, 249</value>
@@ -2036,7 +2067,7 @@ instrument during multiplexed scanning.</value>
     <value>68, 20</value>
   </data>
   <data name="textMaxTime.TabIndex" type="System.Int32, mscorlib">
-    <value>17</value>
+    <value>18</value>
   </data>
   <data name="textMaxTime.ToolTip" xml:space="preserve">
     <value>Maximum time allowed in chromatograms regardless of how
@@ -2053,7 +2084,7 @@ that might be used on uninteresting parts of the gradient.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;textMaxTime.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="textMinTime.Location" type="System.Drawing.Point, System.Drawing">
     <value>27, 249</value>
@@ -2062,7 +2093,7 @@ that might be used on uninteresting parts of the gradient.</value>
     <value>68, 20</value>
   </data>
   <data name="textMinTime.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
+    <value>15</value>
   </data>
   <data name="textMinTime.ToolTip" xml:space="preserve">
     <value>Minimum time allowed in chromatograms regardless of how
@@ -2079,7 +2110,7 @@ that might be used on uninteresting parts of the gradient.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;textMinTime.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="label26.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2109,7 +2140,7 @@ that might be used on uninteresting parts of the gradient.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label26.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="label25.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2124,7 +2155,7 @@ that might be used on uninteresting parts of the gradient.</value>
     <value>25, 13</value>
   </data>
   <data name="label25.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>5</value>
   </data>
   <data name="label25.Text" xml:space="preserve">
     <value>m/z</value>
@@ -2139,7 +2170,7 @@ that might be used on uninteresting parts of the gradient.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label25.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="label24.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2169,7 +2200,7 @@ that might be used on uninteresting parts of the gradient.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label24.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>11</value>
   </data>
   <data name="cbDynamicMinimum.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2181,7 +2212,7 @@ that might be used on uninteresting parts of the gradient.</value>
     <value>146, 17</value>
   </data>
   <data name="cbDynamicMinimum.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>6</value>
   </data>
   <data name="cbDynamicMinimum.Text" xml:space="preserve">
     <value>&amp;Dynamic min product m/z</value>
@@ -2201,7 +2232,7 @@ provided by Thermo-Scientific for LTQ instruments</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;cbDynamicMinimum.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>12</value>
   </data>
   <data name="textMaxTrans.Location" type="System.Drawing.Point, System.Drawing">
     <value>27, 185</value>
@@ -2226,7 +2257,7 @@ instrument in a single injection or blank if no maximum applies</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;textMaxTrans.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>13</value>
   </data>
   <data name="label17.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2253,7 +2284,7 @@ instrument in a single injection or blank if no maximum applies</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label17.ZOrder" xml:space="preserve">
-    <value>13</value>
+    <value>14</value>
   </data>
   <data name="textMzMatchTolerance.Location" type="System.Drawing.Point, System.Drawing">
     <value>27, 124</value>
@@ -2279,7 +2310,7 @@ with predicted transition m/z values.
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;textMzMatchTolerance.ZOrder" xml:space="preserve">
-    <value>14</value>
+    <value>15</value>
   </data>
   <data name="label16.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2306,7 +2337,7 @@ with predicted transition m/z values.
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label16.ZOrder" xml:space="preserve">
-    <value>15</value>
+    <value>16</value>
   </data>
   <data name="label10.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2318,7 +2349,7 @@ with predicted transition m/z values.
     <value>51, 13</value>
   </data>
   <data name="label10.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>3</value>
   </data>
   <data name="label10.Text" xml:space="preserve">
     <value>Ma&amp;x m/z:</value>
@@ -2333,7 +2364,7 @@ with predicted transition m/z values.
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label10.ZOrder" xml:space="preserve">
-    <value>16</value>
+    <value>17</value>
   </data>
   <data name="label11.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2360,7 +2391,7 @@ with predicted transition m/z values.
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label11.ZOrder" xml:space="preserve">
-    <value>17</value>
+    <value>18</value>
   </data>
   <data name="textMaxMz.Location" type="System.Drawing.Point, System.Drawing">
     <value>190, 38</value>
@@ -2369,7 +2400,7 @@ with predicted transition m/z values.
     <value>68, 20</value>
   </data>
   <data name="textMaxMz.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>4</value>
   </data>
   <data name="textMaxMz.ToolTip" xml:space="preserve">
     <value>Maximum measurable m/z value for the target instrument</value>
@@ -2384,7 +2415,7 @@ with predicted transition m/z values.
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;textMaxMz.ZOrder" xml:space="preserve">
-    <value>18</value>
+    <value>19</value>
   </data>
   <data name="textMinMz.Location" type="System.Drawing.Point, System.Drawing">
     <value>27, 38</value>
@@ -2408,7 +2439,7 @@ with predicted transition m/z values.
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;textMinMz.ZOrder" xml:space="preserve">
-    <value>19</value>
+    <value>20</value>
   </data>
   <data name="tabInstrument.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -2483,7 +2514,7 @@ with predicted transition m/z values.
     <value>4</value>
   </data>
   <metadata name="contextMenuStripPrecursorAdduct.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>124, 17</value>
+    <value>247, 17</value>
   </metadata>
   <data name="contextMenuStripPrecursorAdduct.Size" type="System.Drawing.Size, System.Drawing">
     <value>61, 4</value>
@@ -2495,7 +2526,7 @@ with predicted transition m/z values.
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <metadata name="contextMenuStripFragmentAdduct.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>124, 17</value>
+    <value>487, 17</value>
   </metadata>
   <data name="contextMenuStripFragmentAdduct.Size" type="System.Drawing.Size, System.Drawing">
     <value>61, 4</value>
@@ -2528,7 +2559,7 @@ with predicted transition m/z values.
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.1.1.41, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
@@ -2540,6 +2571,6 @@ with predicted transition m/z values.
     <value>TransitionSettingsUI</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=20.1.1.41, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

@@ -209,12 +209,10 @@ namespace pwiz.SkylineTestFunctional
                     SkylineWindow.NewDocument();
                     SkylineWindow.OpenFile(TestContext.GetTestPath("test.sky"));
                 });
-
                 var doc = WaitForDocumentLoaded();
 
                 // Verify that the schema has been updated to include these new settings
                 AssertEx.ValidatesAgainstSchema(doc);
-
                 // Do some DT calculations
                 double windowDT;
                 double driftTimeMax = 1000.0;
@@ -243,7 +241,7 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(editListUI, editListUI.OkDialog);
                 RunUI(() => peptideSettingsUI.PickedLibraries = new[] { libname });
 
-                // Check error cases for resolving power (caused unexpected excption)
+                // Check error cases for resolving power (caused unexpected exception)
                 RunUI(() =>
                 {
                     peptideSettingsUI.IsUseSpectralLibraryDriftTimes = true;
@@ -711,7 +709,7 @@ namespace pwiz.SkylineTestFunctional
               pair.NodePep.IsProteomic &&
               pair.NodePep.Target.Sequence.Equals(seq) &&
               pair.NodeGroup.PrecursorAdduct.Equals(adduct));
-            if (result.NodePep == null)
+            if (result?.NodePep == null)
             {
                 var targ = new Target(seq);
                 var pep = new Peptide(targ);

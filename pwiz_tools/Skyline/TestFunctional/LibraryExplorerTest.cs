@@ -76,7 +76,7 @@ namespace pwiz.SkylineTestFunctional
                                                        new TestLibInfo("LipidCreator", "lc_all.blib", "PE 12:0_12:0[M-H]"),
                                                        new TestLibInfo(SHIMADZU_MLB, "Small_Library-Positive-ions_CE-Merged.blib", "LSD[M+H]"), // Can be found in BiblioSpec test/output directory if update is needed
                                                        new TestLibInfo(NIST_SMALL_MOL+" Redundant", "SmallMolRedundant.msp", ".alpha.-Helical Corticotropin Releasing Factor (9-41)[M+4H]"),
-                                                       new TestLibInfo(NIST_SMALL_MOL, "SmallMol.msp", ".alpha.-Helical Corticotropin Releasing Factor (9-41)[M+4H]")
+                                                       new TestLibInfo(NIST_SMALL_MOL, "SmallMol.MSP", ".alpha.-Helical Corticotropin Releasing Factor (9-41)[M+4H]") // Note .ext is all caps to test case insensitivity
                                                    };
 
         private PeptideSettingsUI PeptideSettingsUI { get; set; }
@@ -765,8 +765,11 @@ namespace pwiz.SkylineTestFunctional
             var phosphoLossMod = new StaticMod("Phospho Loss", "S, T", null, true, "HPO3",
                 LabelAtoms.None, RelativeRT.Matching, null, null, new[] { new FragmentLoss("H3PO4"), });
 
-            Settings.Default.StaticModList.Clear();
-            Settings.Default.StaticModList.Add(phosphoLossMod.ChangeExplicit(false));
+            RunUI(() =>
+            {
+                Settings.Default.StaticModList.Clear();
+                Settings.Default.StaticModList.Add(phosphoLossMod.ChangeExplicit(false));
+            });
 
             var phosphoNotVariable = SkylineWindow.Document.Settings.ChangePeptideModifications(
                 mods => mods.ChangeStaticModifications(new[] { phosphoLossMod.ChangeExplicit(false) }));
@@ -865,7 +868,7 @@ namespace pwiz.SkylineTestFunctional
                 mods.ChangeStaticModifications(new StaticMod[0]));
             RunUI(() => SkylineWindow.ModifyDocument("Change static mods", doc =>
                 doc.ChangeSettings(pepModsNoMods3)));
-            Settings.Default.StaticModList.Clear();
+            RunUI(() => Settings.Default.StaticModList.Clear());
             RelaunchLibExplorer(true, true, ANL_COMBINED);
             RunUI(() => _viewLibUI.AddPeptide(true));
             Assert.AreEqual(0, Settings.Default.StaticModList.Count); // TODO
@@ -884,10 +887,13 @@ namespace pwiz.SkylineTestFunctional
                 mods.ChangeStaticModifications(Settings.Default.StaticModList.GetDefaults().ToArray()));
             RunUI(() => SkylineWindow.ModifyDocument("Change static mods", doc =>
                 doc.ChangeSettings(pepModsNoMods4)));
-            Settings.Default.StaticModList.Clear();
-            Settings.Default.StaticModList.AddRange(Settings.Default.StaticModList.GetDefaults());
+            RunUI(() =>
+            {
+                Settings.Default.StaticModList.Clear();
+                Settings.Default.StaticModList.AddRange(Settings.Default.StaticModList.GetDefaults());
+            });
             RelaunchLibExplorer(false, false, YEAST);
-            Assert.IsFalse(_viewLibUI.HasUnmatchedPeptides);
+            WaitForConditionUI(() => !_viewLibUI.HasUnmatchedPeptides);
 
             // Test removing mod from doc does not remove matches
             Settings.Default.StaticModList.Clear();
@@ -899,7 +905,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(_viewLibUI.Activate);
             WaitForConditionUI(() => _pepList.Items.Count == 96);
             WaitForConditionUI(() => _pepList.SelectedIndex != -1);
-            Assert.IsFalse(_viewLibUI.HasUnmatchedPeptides);
+            WaitForConditionUI(() => !_viewLibUI.HasUnmatchedPeptides);
 
             // Relaunch explorer without modification matching
             RunUI(() => _viewLibUI.CancelDialog());
@@ -909,10 +915,10 @@ namespace pwiz.SkylineTestFunctional
             RunUI(matchedPepModsDlg.CancelDialog);
             WaitForConditionUI(() => _pepList.Items.Count == 96);
             WaitForConditionUI(() => _pepList.SelectedIndex != -1);
-            Assert.IsTrue(_viewLibUI.HasUnmatchedPeptides);
+            WaitForConditionUI(() => _viewLibUI.HasUnmatchedPeptides);
 
             // Test adding mod to doc affects matches
-            Settings.Default.StaticModList.AddRange(Settings.Default.StaticModList.GetDefaults());
+            RunUI(() => Settings.Default.StaticModList.AddRange(Settings.Default.StaticModList.GetDefaults()));
             var pepModsDefault = SkylineWindow.Document.Settings.ChangePeptideModifications(mods =>
                 mods.ChangeStaticModifications(Settings.Default.StaticModList.Select(mod =>
                     mod.ChangeExplicit(false)).ToArray()));
@@ -922,7 +928,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(_viewLibUI.Activate);
             WaitForConditionUI(() => _pepList.Items.Count == 96);
             WaitForConditionUI(() => _pepList.SelectedIndex != -1);
-            Assert.IsFalse(_viewLibUI.HasUnmatchedPeptides);
+            WaitForConditionUI(() => !_viewLibUI.HasUnmatchedPeptides);
 
             RunUI(() => _viewLibUI.CancelDialog());
             WaitForClosedForm(_viewLibUI);

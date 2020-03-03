@@ -22,7 +22,6 @@ using System.IO;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -156,7 +155,7 @@ namespace pwiz.SkylineTestTutorial
 
             // New in v0.7 : Skyline asks about removing empty proteins.
             using (new CheckDocumentState(35, 25, 25, 75, null, true))
-            using (new DocChangeLogger())
+//            using (new ImportFastaDocChangeLogger()) // Log any unexpected document changes (i.e. changes not due to import fasta)
             {
                 var emptyProteinsDlg = ShowDialog<EmptyProteinsDlg>(SkylineWindow.Paste);
                 RunUI(() => emptyProteinsDlg.IsKeepEmptyProteins = true);
@@ -284,7 +283,7 @@ namespace pwiz.SkylineTestTutorial
             
             // Inserting a Peptide List, p. 13
             using (new CheckDocumentState(25, 70, 70, 338, null, true))
-            using (new DocChangeLogger())
+//            using (new ImportFastaDocChangeLogger()) // Log any unexpected document changes (i.e. changes not due to import fasta)
             {
                 RunUI(() =>
                     {
@@ -320,6 +319,7 @@ namespace pwiz.SkylineTestTutorial
             using (new CheckDocumentState(35, 64, 64, 320, null, true))
             {
                 RefineDlg refineDlg = ShowDialog<RefineDlg>(SkylineWindow.ShowRefineDlg);
+                PauseForForm(typeof(RefineDlg.DocumentTab));
                 RunUI(() => refineDlg.MinTransitions = 5);
                 OkDialog(refineDlg, refineDlg.OkDialog);
                 PauseForScreenShot("29/35 prot 50/64 pep 50/64 prec 246/320 tran", 18); // Not L10N
@@ -507,37 +507,6 @@ namespace pwiz.SkylineTestTutorial
                     return childNode;
             }
             return null;
-        }
-
-        private class DocChangeLogger : StackTraceLogger, IDisposable
-        {
-            public DocChangeLogger()
-                : base("SkylineWindow.ImportFasta")
-            {
-                SkylineWindow.LogChange = LogChange;
-            }
-
-            private void LogChange(SrmDocument docNew, SrmDocument docOriginal)
-            {
-                LogStack(() => LogMessage(docNew));
-            }
-
-            private static string LogMessage(SrmDocument doc)
-            {
-                var sb = new StringBuilder();
-                sb.Append(string.Format(@"Setting document revision {0}", doc.RevisionIndex));
-                if (!doc.IsLoaded)
-                {
-                    foreach (var desc in doc.NonLoadedStateDescriptions)
-                        sb.AppendLine().Append(desc);
-                }
-                return sb.ToString();
-            }
-
-            public void Dispose()
-            {
-                SkylineWindow.LogChange = null;
-            }
         }
 
         private void SetClipboardFileText(string filepath)

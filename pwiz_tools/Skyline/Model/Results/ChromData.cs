@@ -130,13 +130,66 @@ namespace pwiz.Skyline.Model.Results
             return newChromData;
         }
 
-        public void FindPeaks(double[] retentionTimes)
+        public void FindPeaks(double[] retentionTimes, TimeIntervals timeIntervals, ExplicitRetentionTimeInfo explicitRT)
         {
             Finder = Crawdads.NewCrawdadPeakFinder();
             Finder.SetChromatogram(Times, Intensities);
-            RawPeaks = Finder.CalcPeaks(MAX_PEAKS, TimesToIndices(retentionTimes));
+            if (timeIntervals == null)
+            {
+                RawPeaks = Finder.CalcPeaks(MAX_PEAKS, TimesToIndices(retentionTimes));
+            }
+            else
+            {
+                var identifiedIndices = TimesToIndices(retentionTimes);
+                var allPeaks = timeIntervals.Intervals.SelectMany(interval =>
+                    FindIntervalPeaks(interval.Key, interval.Value, identifiedIndices));
+                RawPeaks = allPeaks.OrderByDescending(peak => Tuple.Create(peak.Identified, peak.Area))
+                    .Take(MAX_PEAKS).ToArray();
+            }
             // Calculate smoothing for later use in extending the Crawdad peaks
             IntensitiesSmooth = ChromatogramInfo.SavitzkyGolaySmooth(Intensities.ToArray());
+
+            // Accept only peaks within the user-provided RT window, if any
+            if (explicitRT != null)
+            {
+                var winLow = (float)(explicitRT.RetentionTime - 0.5 * (explicitRT.RetentionTimeWindow ?? 0));
+                var winHigh = winLow + (float)(explicitRT.RetentionTimeWindow ?? 0);
+                RawPeaks = RawPeaks.Where(rp =>
+                {
+                    var t = Times[rp.TimeIndex];
+                    return winLow <= t && t <= winHigh;
+                });
+            }
+        }
+
+        private IEnumerable<IFoundPeak> FindIntervalPeaks(float intervalStart, float intervalEnd, IList<int> identifiedIndices)
+        {
+            int startIndex = Times.BinarySearch(intervalStart);
+            if (startIndex < 0)
+            {
+                startIndex = Math.Max(0, ~startIndex - 1);
+            }
+
+            int endIndex = Times.BinarySearch(intervalEnd);
+            if (endIndex < 0)
+            {
+                endIndex = Math.Min(Times.Count - 1, ~endIndex);
+            }
+
+            if (endIndex <= startIndex)
+            {
+                yield break;
+            }
+
+            var times = Times.Skip(startIndex).Take(endIndex - startIndex + 1).ToArray();
+            var intensities = Intensities.Skip(startIndex).Take(endIndex - startIndex + 1).ToArray();
+            var subIdentifiedIndices = identifiedIndices.Select(index => index - startIndex).ToArray();
+            var subFinder = Crawdads.NewCrawdadPeakFinder();
+            subFinder.SetChromatogram(times, intensities);
+            foreach (var peak in subFinder.CalcPeaks(MAX_PEAKS, subIdentifiedIndices))
+            {
+                yield return Finder.GetPeak(peak.StartIndex + startIndex, peak.EndIndex + startIndex);
+            }
         }
 
         public void SkipFindingPeaks(double[] retentionTimes)
@@ -247,7 +300,7 @@ namespace pwiz.Skyline.Model.Results
             return Finder.GetPeak(startIndex, endIndex);
         }
 
-        public ChromPeak CalcChromPeak(IFoundPeak peakMax, ChromPeak.FlagValues flags, out IFoundPeak peak)
+        public ChromPeak CalcChromPeak(IFoundPeak peakMax, ChromPeak.FlagValues flags, TimeIntervals timeIntervals, out IFoundPeak peak)
         {
             // Reintegrate all peaks to the max peak, even the max peak itself, since its boundaries may
             // have been extended from the Crawdad originals.
@@ -257,14 +310,17 @@ namespace pwiz.Skyline.Model.Results
                 return ChromPeak.EMPTY;
             }
 
-            peak = CalcPeak(peakMax.StartIndex, peakMax.EndIndex);
-            // If a forced peak is found to be sufficiently coeluting with the max peak, then clear the forced flag
-            if ((flags & ChromPeak.FlagValues.forced_integration) != 0 && AreCoeluting(peakMax, peak))
-                flags &= ~ChromPeak.FlagValues.forced_integration;
-            return new ChromPeak(Finder, peak, flags, TimeIntensities, RawTimes);
+            var peakIntegrator = new PeakIntegrator(TimeIntensities, Finder)
+            {
+                RawTimeIntensities = RawTimeIntensities,
+                TimeIntervals = timeIntervals
+            };
+            var tuple = peakIntegrator.IntegrateFoundPeak(peakMax, flags);
+            peak = tuple.Item2;
+            return tuple.Item1;
         }
 
-        private bool AreCoeluting(IFoundPeak peakMax, IFoundPeak peak)
+        public static bool AreCoeluting(IFoundPeak peakMax, IFoundPeak peak)
         {
             if (peak.Area == 0)
                 return false;
@@ -336,7 +392,9 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public ChromData Data { get; private set; }
-        public ChromPeak DataPeak {get { return _chromPeak; }}
+        public ChromPeak DataPeak {get { return _chromPeak; }
+            set { _chromPeak = value; }
+        }
         public IFoundPeak Peak { get { return _crawPeak; } }
 
         public TransitionDocNode NodeTran { get { return Data.DocNode; } }
@@ -353,10 +411,20 @@ namespace pwiz.Skyline.Model.Results
                     Data.Times[Peak.StartIndex], Data.Times[Peak.EndIndex], Data.Times[Peak.TimeIndex]);
         }
 
-        public ChromPeak CalcChromPeak(IFoundPeak peakMax, ChromPeak.FlagValues flags)
+        public ChromPeak CalcChromPeak(IFoundPeak peakMax, ChromPeak.FlagValues flags, TimeIntervals timeIntervals)
         {
-            _chromPeak = Data.CalcChromPeak(peakMax, flags, out _crawPeak);
+            _chromPeak = Data.CalcChromPeak(peakMax, flags, timeIntervals, out _crawPeak);
             return _chromPeak;
+        }
+
+        public void SetChromPeak(ChromPeak chromPeak)
+        {
+            _chromPeak = chromPeak;
+        }
+
+        public void ChangeChromPeak(ChromPeak chromPeak)
+        {
+            _chromPeak = chromPeak;
         }
 
         public bool IsIdentifiedTime(double[] retentionTimes)

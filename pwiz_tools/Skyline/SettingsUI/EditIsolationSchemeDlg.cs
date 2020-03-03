@@ -493,7 +493,7 @@ namespace pwiz.Skyline.SettingsUI
             DialogResult = DialogResult.OK;
         }
 
-        private List<IsolationWindow> GetIsolationWindows()
+        public List<IsolationWindow> GetIsolationWindows()
         {
             //Overlap requires an even number of windows
             if (Overlap && _gridViewDriver.Items.Count%2 == 1)

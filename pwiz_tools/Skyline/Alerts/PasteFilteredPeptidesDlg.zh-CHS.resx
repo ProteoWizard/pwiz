@@ -214,7 +214,7 @@
     <value>3</value>
   </data>
   <data name="labelIssue.Text" xml:space="preserve">
-    <value>下列肽不符合当前过滤条件：</value>
+    <value>下列肽段不符合当前过滤条件：</value>
   </data>
   <data name="&gt;&gt;labelIssue.Name" xml:space="preserve">
     <value>labelIssue</value>
@@ -328,7 +328,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>粘贴肽</value>
+    <value>粘贴肽段</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>PasteFilteredPeptidesDlg</value>

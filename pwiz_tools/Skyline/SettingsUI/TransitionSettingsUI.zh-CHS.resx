@@ -1333,7 +1333,7 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
     <value>1</value>
   </data>
   <data name="tabPage2.Text" xml:space="preserve">
-    <value>分子学</value>
+    <value>分子</value>
   </data>
   <data name="&gt;&gt;tabPage2.Name" xml:space="preserve">
     <value>tabPage2</value>
@@ -1410,7 +1410,7 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
     <value>自动选择所有匹配的离子对(&amp;A)</value>
   </data>
   <data name="cbAutoSelect.ToolTip" xml:space="preserve">
-    <value>如果选中，那么离子对将根据指定的
+    <value>如果选中，那么离子对将根据指定的过滤器和库设置
 自动从蛋白质中选择。否则，所有离子对
 段选择都必须由手动文档编辑完成。</value>
   </data>

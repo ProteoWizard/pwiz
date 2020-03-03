@@ -31,6 +31,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -431,7 +432,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                         // Set up full scan settings page
                         TransitionSettingsControl.Initialize(WorkflowType);
-                        FullScanSettingsControl.ModifyOptionsForImportPeptideSearchWizard(WorkflowType);
+                        FullScanSettingsControl.ModifyOptionsForImportPeptideSearchWizard(WorkflowType, BuildPepSearchLibControl.ImportPeptideSearch.DocLib);
 
                         if (!MatchModificationsControl.Initialize(Document))
                             _pagesToSkip.Add(Pages.match_modifications_page);
@@ -509,6 +510,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     {
                         return;
                     }
+                    if (!TransitionSettings.Filter.PeptideIonTypes.Contains(IonType.precursor))
+                    {
+                        FullScanSettingsControl.PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.None;
+                    }
                     break;
 
                 case Pages.full_scan_settings_page:
@@ -522,7 +527,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     break;
 
                 case Pages.import_fasta_page: // This is the last page
-                    if (FastaOptional && !ImportFastaControl.ContainsFastaContent || ImportFastaControl.ImportFasta())
+                    if (FastaOptional && !ImportFastaControl.ContainsFastaContent || ImportFastaControl.ImportFasta(ImportPeptideSearch.IrtStandard))
                     {
                         WizardFinish();
                     }
@@ -615,9 +620,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return true;
 
             ModifyDocumentNoUndo(doc => doc.ChangeSettings(newSettings));
-            Document.Settings.UpdateDefaultModifications(false);
+            Document.Settings.UpdateDefaultModifications(true, true);
             _modificationSettingsChanged = true;
-
             return true;
         }
 
@@ -720,11 +724,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             var prediction = TransitionSettings.Prediction.ChangePrecursorMassType(precursorMassType);
             Helpers.AssignIfEquals(ref prediction, TransitionSettings.Prediction);
 
-            TransitionSettings settings;
+            TransitionSettings transitionSettings;
             try
             {
-                 settings = new TransitionSettings(prediction, filter,
-                     TransitionSettings.Libraries, TransitionSettings.Integration, TransitionSettings.Instrument, fullScan);
+                transitionSettings = new TransitionSettings(prediction, filter,
+                    TransitionSettings.Libraries, TransitionSettings.Integration, TransitionSettings.Instrument, fullScan);
+
+                Helpers.AssignIfEquals(ref transitionSettings, TransitionSettings);
             }
             catch (Exception x)
             {
@@ -732,31 +738,42 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return false;
             }
 
-            // Did user change the "use spectral libary ion mobility" values?
-            PeptidePrediction updatedPeptidePrediction;
-            bool peptidePredictionChanged = false;
-            try
+            // Did user change the "use spectral library ion mobility" values?
+            var peptidePredictionOriginal = Document.Settings.PeptideSettings.Prediction;
+            var peptidePrediction = peptidePredictionOriginal;
+            if (FullScanSettingsControl.UseSpectralLibraryIonMobilityValuesControl.Visible)
             {
-                updatedPeptidePrediction =
-                    FullScanSettingsControl.UseSpectralLibraryIonMobilityValuesControl.ValidateNewSettings(true);
-                if (updatedPeptidePrediction == null)
+                try
+                {
+                    peptidePrediction =
+                        FullScanSettingsControl.UseSpectralLibraryIonMobilityValuesControl.ValidateNewSettings(true);
+                    if (peptidePrediction == null)
+                    {
+                        return false;
+                    }
+
+                    Helpers.AssignIfEquals(ref peptidePrediction, peptidePredictionOriginal);
+                }
+                catch (Exception)
                 {
                     return false;
                 }
-
-                peptidePredictionChanged = !Equals(Document.Settings.PeptideSettings.Prediction, updatedPeptidePrediction);
             }
-            catch (Exception)
-            {
-                return false;
-            }
-
 
             // Only update, if anything changed
-            if (Equals(settings, TransitionSettings) && !peptidePredictionChanged)
+            if (ReferenceEquals(transitionSettings, TransitionSettings) &&
+                ReferenceEquals(peptidePrediction, peptidePredictionOriginal))
                 return true;
 
-            ModifyDocumentNoUndo(doc => doc.ChangeSettings(doc.Settings.ChangeTransitionSettings(settings).ChangePeptideSettings(doc.Settings.PeptideSettings.ChangePrediction(updatedPeptidePrediction))));
+            ModifyDocumentNoUndo(doc =>
+            {
+                var settingsNew = doc.Settings;
+                if (!ReferenceEquals(transitionSettings, TransitionSettings))
+                    settingsNew = settingsNew.ChangeTransitionSettings(transitionSettings);
+                if (!ReferenceEquals(peptidePrediction, peptidePredictionOriginal))
+                    settingsNew = settingsNew.ChangePeptidePrediction(pre => peptidePrediction);
+                return doc.ChangeSettings(settingsNew);
+            });
             _fullScanSettingsChanged = true;
             return true;
         }

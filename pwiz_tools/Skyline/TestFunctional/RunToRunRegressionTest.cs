@@ -131,32 +131,34 @@ namespace pwiz.SkylineTestFunctional
                         Assert.AreEqual(targetIndex, summary.StateProvider.SelectedResultsIndex);
                     });
                     WaitForGraphs();
-
-                    var window = TestRegressionStatisitcs(regressionPane, i, j);
+                    var window = TestRegressionStatistics(regressionPane, i, j);
 
                     RunUI(() => SkylineWindow.ShowPlotType(PlotTypeRT.residuals));
-
-                    // Check that residual graph makes sense
-                    var pointList = regressionPane.CurveList.First().Points;
-                    var yList = new List<double>();
-                    for (var p = 0; p < pointList.Count; p++)
+                    WaitForGraphs();
+                    RunUI(() =>
                     {
-                        var point = pointList[p];
-                        yList.Add(point.Y);
-                    }
+                        // Check that residual graph makes sense
+                        var pointList = regressionPane.CurveList.First().Points;
+                        var yList = new List<double>();
+                        for (var p = 0; p < pointList.Count; p++)
+                        {
+                            var point = pointList[p];
+                            yList.Add(point.Y);
+                        }
 
-                    var residualStat = new Statistics(yList);
+                        var residualStat = new Statistics(yList);
 
-                    // Value taken from Prediction.CalcRegression
-                    var windowFromResidualGraph = Math.Max(0.5, 4 * residualStat.StdDev());
+                        // Value taken from Prediction.CalcRegression
+                        var windowFromResidualGraph = Math.Max(0.5, 4 * residualStat.StdDev());
 
-                    if (!IsRecordMode)
-                        Assert.AreEqual(window, windowFromResidualGraph, 0.001);
+                        if (!IsRecordMode)
+                            Assert.AreEqual(window, windowFromResidualGraph, 0.001);
+                    });
 
                     // Go back to correlation graph and make sure everything is still right
                     RunUI(() => SkylineWindow.ShowPlotType(PlotTypeRT.correlation));
-
-                    TestRegressionStatisitcs(regressionPane, i, j);
+                    WaitForGraphs();
+                    TestRegressionStatistics(regressionPane, i, j);
                 }
             }
 
@@ -175,22 +177,28 @@ namespace pwiz.SkylineTestFunctional
                     RunToRunOriginalReplicate(summary).SelectedIndex = selfIndex;
                 });
                 WaitForGraphs();
-                var regression = regressionPane.RegressionRefined;
-                var statistics = regressionPane.StatisticsRefined;
-                Assert.AreEqual(1, statistics.R, 10e-3);
-                var regressionLine = (RegressionLineElement) regression.Conversion;
-                Assert.AreEqual(1, regressionLine.Slope, 10e-3);
-                Assert.AreEqual(0, regressionLine.Intercept, 10e-3);
-                Assert.AreEqual(0.5, regression.TimeWindow, 0.00001);
+                RunUI(() =>
+                {
+                    var regression = regressionPane.RegressionRefined;
+                    var statistics = regressionPane.StatisticsRefined;
+                    Assert.AreEqual(1, statistics.R, 10e-3);
+                    var regressionLine = (RegressionLineElement)regression.Conversion;
+                    Assert.AreEqual(1, regressionLine.Slope, 10e-3);
+                    Assert.AreEqual(0, regressionLine.Intercept, 10e-3);
+                    Assert.AreEqual(0.5, regression.TimeWindow, 0.00001);
+                });
 
                 RunUI(() => SkylineWindow.ShowPlotType(PlotTypeRT.residuals));
-
-                //All residuals should be zero
-                var pointList = regressionPane.CurveList.First().Points;
-                for (var p = 0; p < pointList.Count; p++)
+                WaitForGraphs();
+                RunUI(() =>
                 {
-                    Assert.AreEqual(0, pointList[p].Y);
-                }
+                    //All residuals should be zero
+                    var pointList = regressionPane.CurveList.First().Points;
+                    for (var p = 0; p < pointList.Count; p++)
+                    {
+                        Assert.AreEqual(0, pointList[p].Y);
+                    }
+                });
             }
 
             // Make sure switching to score to run works correctly
@@ -237,7 +245,7 @@ namespace pwiz.SkylineTestFunctional
             return RegressionToolbar(graphSummary).RunToRunOriginalReplicate;
         }
 
-        private double TestRegressionStatisitcs(RTLinearRegressionGraphPane regressionPane, int i, int j)
+        private double TestRegressionStatistics(RTLinearRegressionGraphPane regressionPane, int i, int j)
         {
             var regression = regressionPane.RegressionRefined;
             var statistics = regressionPane.StatisticsRefined;

@@ -326,8 +326,14 @@ namespace pwiz.Skyline.Controls
                     OnOk();
                     break;
                 case Keys.Space:
-                    ToggleItem(pickListMulti.SelectedIndex);
+                {
+                    int i = pickListMulti.SelectedIndex;
+                    if (i >= 0)
+                    {
+                        ToggleItem(pickListMulti.SelectedIndex);
+                    }
                     break;
+                }
             }
         }
 

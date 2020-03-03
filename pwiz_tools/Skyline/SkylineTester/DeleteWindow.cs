@@ -20,6 +20,7 @@ using System;
 using System.ComponentModel;
 using System.IO;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 
 namespace SkylineTester
 {
@@ -42,7 +43,7 @@ namespace SkylineTester
         private void OnLoad(object sender, EventArgs eventArgs)
         {
             Text = "Deleting {0}...".With(Path.GetFileName(_deletePath));
-            _allFiles = Directory.GetFiles(_deletePath, "*.*", SearchOption.AllDirectories);
+            _allFiles = Directory.GetFiles(PathEx.SafePath(_deletePath), "*.*", SearchOption.AllDirectories);
             progressBarDelete.Maximum = _allFiles.Length;
 
             _deleteWorker = new BackgroundWorker {WorkerSupportsCancellation = true};

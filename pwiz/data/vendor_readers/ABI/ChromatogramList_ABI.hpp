@@ -22,6 +22,7 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/ChromatogramListBase.hpp"
+#include "pwiz/data/msdata/Reader.hpp"
 
 #ifdef PWIZ_READER_ABI
 #include "pwiz_aux/msrc/utility/vendor_api/ABI/WiffFile.hpp"
@@ -46,7 +47,7 @@ class PWIZ_API_DECL ChromatogramList_ABI : public ChromatogramListBase
     virtual ChromatogramPtr chromatogram(size_t index, DetailLevel detailLevel) const;
     
 #ifdef PWIZ_READER_ABI
-    ChromatogramList_ABI(const MSData& msd, WiffFilePtr wifffile, const ExperimentsMap& experimentsMap, int sample);
+    ChromatogramList_ABI(const MSData& msd, WiffFilePtr wifffile, const ExperimentsMap& experimentsMap, int sample, const Reader::Config& config);
 
     private:
 
@@ -54,6 +55,7 @@ class PWIZ_API_DECL ChromatogramList_ABI : public ChromatogramListBase
     WiffFilePtr wifffile_;
     ExperimentsMap experimentsMap_;
     int sample;
+    Reader::Config config_;
 
     mutable size_t size_;
 

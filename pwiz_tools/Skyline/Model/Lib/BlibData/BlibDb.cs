@@ -172,12 +172,11 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             using (ISession session = OpenWriteSession())
             using (ITransaction transaction = session.BeginTransaction())
             {
-                int progressPercent = 0;
+                int progressPercent = -1;
                 int i = 0;
                 var sourceFiles = new Dictionary<string, long>();
                 foreach (var spectrum in listSpectra)
                 {
-                    ++i;
                     var dbRefSpectrum = RefSpectrumFromPeaks(session, spectrum, sourceFiles);
                     session.Save(dbRefSpectrum);
                     listLibrary.Add(new BiblioLiteSpectrumInfo(spectrum.Key, 
@@ -195,6 +194,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                             progressPercent = progressNew;
                         }
                     }
+                    ++i;
                 }
 
                 session.Flush();
@@ -214,6 +214,11 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 session.Flush();
                 session.Clear();
                 transaction.Commit();
+
+                if (progressMonitor != null)
+                {
+                    progressMonitor.UpdateProgress(status = status.Complete());
+                }
             }
 
             var libraryEntries = listLibrary.ToArray();
@@ -222,8 +227,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
         private DbRefSpectra RefSpectrumFromPeaks(ISession session, SpectrumMzInfo spectrum, IDictionary<string, long> sourceFiles)
         {
-            if (string.IsNullOrEmpty(spectrum.SourceFile))
-                throw new InvalidDataException(@"Spectrum must have a source file");
+            //if (string.IsNullOrEmpty(spectrum.SourceFile))
+            //    throw new InvalidDataException(@"Spectrum must have a source file");
 
             var peaksInfo = spectrum.SpectrumPeaks;
             var smallMoleculeAttributes = spectrum.SmallMoleculeLibraryAttributes ?? SmallMoleculeLibraryAttributes.EMPTY;
@@ -415,7 +420,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                             if (nodePep.IsProteomic)
                             {
                                 var calcPre = document.Settings.GetPrecursorCalc(labelType, nodePep.SourceExplicitMods);
-                                peptideModSeq = calcPre.GetModifiedSequence(peptideSeq, SequenceModFormatType.full_precision, false);
+                                peptideModSeq = calcPre.GetModifiedSequence(peptideSeq, SequenceModFormatType.lib_precision, false);
                             }
                             else
                             {
@@ -686,7 +691,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         {
             bool foundBestSpectrum = false;
 
-            foreach(SpectrumInfo spectrum in spectra)
+            foreach(SpectrumInfoLibrary spectrum in spectra)
             {
                 if(spectrum.IsBest)
                 {
@@ -768,7 +773,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             public string FilePath { get; private set; }
         }
 
-        private static DbRefSpectra MakeRefSpectrum(ISession session, bool convertingToSmallMolecules, SpectrumInfo spectrum, Target peptideSeq, Target modifiedPeptideSeq, double precMz, Adduct precChg, SmallMoleculeLibraryAttributes smallMoleculeAttributes, IDictionary<string, long> dictFiles)
+        private static DbRefSpectra MakeRefSpectrum(ISession session, bool convertingToSmallMolecules, SpectrumInfoLibrary spectrum, Target peptideSeq, Target modifiedPeptideSeq, double precMz, Adduct precChg, SmallMoleculeLibraryAttributes smallMoleculeAttributes, IDictionary<string, long> dictFiles)
         {
             var refSpectra = new DbRefSpectra
                                 {
@@ -788,7 +793,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             return refSpectra;
         }
 
-        private static void MakeRefSpectrum(ISession session, bool convertingToSmallMolecules, SpectrumInfo spectrum, DbRefSpectra refSpectra, IDictionary<string, long> dictFiles)
+        private static void MakeRefSpectrum(ISession session, bool convertingToSmallMolecules, SpectrumInfoLibrary spectrum, DbRefSpectra refSpectra, IDictionary<string, long> dictFiles)
         {
             short copies = (short)spectrum.SpectrumHeaderInfo.GetRankValue(LibrarySpec.PEP_RANK_COPIES);
             var peaksInfo = spectrum.SpectrumPeaksInfo;
@@ -1017,7 +1022,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                         listLibrarySpecs.Add(librarySpec);
                         listLibraries.Add(pepLibraries.Libraries[i]);
                         fileName += MidasLibSpec.EXT;
-                        File.Copy(librarySpec.FilePath, Path.Combine(pathDirectory, fileName));
+                        File.Copy(librarySpec.FilePath ?? string.Empty, // Prevent ReSharper from complaining about possible null arg
+                            Path.Combine(pathDirectory, fileName));
                         dictOldNameToNew.Add(librarySpec.Name, librarySpec.Name);
                         continue;
                     }

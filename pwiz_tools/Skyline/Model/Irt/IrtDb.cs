@@ -52,10 +52,7 @@ namespace pwiz.Skyline.Model.Irt
     {
         public const string EXT = ".irtdb";
 
-        public static string FILTER_IRTDB
-        {
-            get { return TextUtil.FileDialogFilter(Resources.IrtDb_FILTER_IRTDB_iRT_Database_Files, EXT); }
-        }
+        public static string FILTER_IRTDB => TextUtil.FileDialogFilter(Resources.IrtDb_FILTER_IRTDB_iRT_Database_Files, EXT);
 
         public const int SCHEMA_VERSION_CURRENT = 1;
 
@@ -121,14 +118,14 @@ namespace pwiz.Skyline.Model.Irt
 
         private IDictionary<Target, double> DictStandards
         {
-            get { return _dictStandards; }
-            set { _dictStandards = new TargetMap<double>(value); }
+            get => _dictStandards;
+            set => _dictStandards = new TargetMap<double>(value);
         }
 
         private IDictionary<Target, double> DictLibrary
         {
-            get { return _dictLibrary; }
-            set { _dictLibrary = new TargetMap<double>(value); }
+            get => _dictLibrary;
+            set => _dictLibrary = new TargetMap<double>(value);
         }
 
         private ISession OpenWriteSession()
@@ -136,45 +133,33 @@ namespace pwiz.Skyline.Model.Irt
             return new SessionWithLock(_sessionFactory.OpenSession(), _databaseLock, true);
         }
 
-        public IEnumerable<Target> StandardPeptides
-        {
-            get { return DictStandards.Keys; }
-        }
+        public IEnumerable<Target> StandardPeptides => DictStandards.Keys;
 
         public bool IsStandard(Target seq)
         {
             return DictStandards.ContainsKey(seq);
         }
 
-        public int StandardPeptideCount
-        {
-            get { return DictStandards.Count; }
-        }
+        public int StandardPeptideCount => DictStandards.Count;
 
-        public IEnumerable<Target> LibraryPeptides
-        {
-            get { return DictLibrary.Keys; }
-        }
+        public IEnumerable<Target> LibraryPeptides => DictLibrary.Keys;
 
-        public int LibraryPeptideCount
-        {
-            get { return DictLibrary.Count; }
-        }
+        public int LibraryPeptideCount => DictLibrary.Count;
 
         public string DocumentXml { get; private set; }
 
+        public IrtRegressionType RegressionType { get; private set; }
+
         public double? ScoreSequence(Target seq)
         {
-            double irt;
-            if (seq != null && (DictStandards.TryGetValue(seq, out irt) || DictLibrary.TryGetValue(seq, out irt)))
+            if (seq != null && (DictStandards.TryGetValue(seq, out var irt) || DictLibrary.TryGetValue(seq, out irt)))
                 return irt;
             return null;
         }
 
         public IList<DbIrtPeptide> GetPeptides()
         {
-            using (var session = new StatelessSessionWithLock(_sessionFactory.OpenStatelessSession(), _databaseLock,
-                    false, CancellationToken.None))
+            using (var session = new StatelessSessionWithLock(_sessionFactory.OpenStatelessSession(), _databaseLock, false, CancellationToken.None))
             {
                 return session.CreateCriteria(typeof(DbIrtPeptide)).List<DbIrtPeptide>();
             }
@@ -196,6 +181,23 @@ namespace pwiz.Skyline.Model.Irt
             }
         }
 
+        public IrtRegressionType GetRegressionType()
+        {
+            using (var session = new StatelessSessionWithLock(_sessionFactory.OpenStatelessSession(), _databaseLock,
+                false, CancellationToken.None))
+            {
+                if (!SqliteOperations.TableExists(session.Connection, @"DocumentXml") ||
+                    !SqliteOperations.ColumnExists(session.Connection, @"DocumentXml", @"RegressionType"))
+                    return null;
+
+                using (var cmd = session.Connection.CreateCommand())
+                {
+                    cmd.CommandText = @"SELECT RegressionType FROM DocumentXml";
+                    return IrtRegressionType.FromName(Convert.ToString(cmd.ExecuteScalar()));
+                }
+            }
+        }
+
         #region Property change methods
 
         private IrtDb Load(IProgressMonitor loadMonitor, ProgressStatus status, out IList<DbIrtPeptide> dbPeptides)
@@ -205,6 +207,7 @@ namespace pwiz.Skyline.Model.Irt
             {
                 im.LoadPeptides(rawPeptides);
                 im.DocumentXml = GetDocumentXml();
+                im.RegressionType = GetRegressionType();
             });
             // Not really possible to show progress, unless we switch to raw reading
             if (loadMonitor != null)
@@ -238,8 +241,8 @@ namespace pwiz.Skyline.Model.Irt
 
                 transaction.Commit();
             }
-            if (monitor != null)
-                monitor.UpdateProgress(status.Complete());
+
+            monitor?.UpdateProgress(status.Complete());
 
             return ChangeProp(ImClone(this), im => im.LoadPeptides(newPeptides));
         }
@@ -265,9 +268,7 @@ namespace pwiz.Skyline.Model.Irt
                 // Add or update peptides that have changed from the old list
                 foreach (var peptideNew in newPeptides)
                 {
-                    DbIrtPeptide peptideOld;
-                    if (dictOld.TryGetValue(peptideNew.ModifiedTarget, out peptideOld) &&
-                            Equals(peptideNew, peptideOld))
+                    if (dictOld.TryGetValue(peptideNew.ModifiedTarget, out var peptideOld) && Equals(peptideNew, peptideOld))
                         continue;
 
                     // Create a new instance, because not doing this causes a BindingSource leak
@@ -363,15 +364,13 @@ namespace pwiz.Skyline.Model.Irt
         //Throws DatabaseOpeningException
         public static IrtDb GetIrtDb(string path, IProgressMonitor loadMonitor)
         {
-            IList<DbIrtPeptide> dbPeptides;
-            return GetIrtDb(path, loadMonitor, out dbPeptides);
+            return GetIrtDb(path, loadMonitor, out _);
         }
 
         public static IrtDb GetIrtDb(string path, IProgressMonitor loadMonitor, out IList<DbIrtPeptide> dbPeptides)
         {
             var status = new ProgressStatus(string.Format(Resources.IrtDb_GetIrtDb_Loading_iRT_database__0_, path));
-            if (loadMonitor != null)
-                loadMonitor.UpdateProgress(status);
+            loadMonitor?.UpdateProgress(status);
 
             try
             {
@@ -382,7 +381,7 @@ namespace pwiz.Skyline.Model.Irt
                     throw new DatabaseOpeningException(String.Format(Resources.IrtDb_GetIrtDb_The_file__0__does_not_exist_, path));
 
                 string message;
-                Exception xInner = null;
+                Exception xInner;
                 try
                 {
                     //Check for a valid SQLite file and that it has our schema
@@ -433,13 +432,13 @@ namespace pwiz.Skyline.Model.Irt
             }
         }
 
-        public string GenerateDocumentXml(SrmDocument doc, string oldXml)
+        public static string GenerateDocumentXml(IEnumerable<Target> standards, SrmDocument doc, string oldXml)
         {
             if (doc == null)
                 return null;
 
             // Minimize document to only the peptides we need
-            var minimalPeptides = StandardPeptides.ToHashSet();
+            var minimalPeptides = standards.ToHashSet();
 
             var oldPeptides = new Dictionary<Target, PeptideDocNode>();
             if (!string.IsNullOrEmpty(oldXml))
@@ -507,51 +506,82 @@ namespace pwiz.Skyline.Model.Irt
 
         public IrtDb SetDocumentXml(SrmDocument doc, string oldXml)
         {
-            var documentXml = GenerateDocumentXml(doc, oldXml);
-            if (string.IsNullOrEmpty(documentXml))
-                return this;
+            var documentXml = GenerateDocumentXml(StandardPeptides, doc, oldXml);
 
             using (var session = OpenWriteSession())
             using (var transaction = session.BeginTransaction())
             {
+                EnsureDocumentXmlTable(session);
+
                 using (var cmd = session.Connection.CreateCommand())
                 {
-                    cmd.CommandText = @"CREATE TABLE IF NOT EXISTS DocumentXml (Xml TEXT)";
+                    cmd.CommandText = @"UPDATE DocumentXml SET Xml = ?";
+                    cmd.Parameters.Add(new SQLiteParameter { Value = documentXml });
                     cmd.ExecuteNonQuery();
-                }
-
-                bool rowExists;
-                using (var cmd = session.Connection.CreateCommand())
-                {
-                    cmd.CommandText = @"SELECT COUNT(*) FROM DocumentXml";
-                    rowExists = Convert.ToInt32(cmd.ExecuteScalar()) > 0;
-                }
-
-
-                if (!string.IsNullOrEmpty(documentXml))
-                {
-                    using (var cmd = session.Connection.CreateCommand())
-                    {
-                        cmd.CommandText = !rowExists
-                            ? @"INSERT INTO DocumentXml (Xml) VALUES (?)"
-                            : @"UPDATE DocumentXml SET Xml = ?";
-                        cmd.Parameters.Add(new SQLiteParameter { Value = documentXml });
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-                else if (rowExists)
-                {
-                    using (var cmd = session.Connection.CreateCommand())
-                    {
-                        cmd.CommandText = @"DELETE FROM DocumentXml";
-                        cmd.ExecuteNonQuery();
-                    }
                 }
 
                 transaction.Commit();
             }
 
             return ChangeProp(ImClone(this), im => im.DocumentXml = documentXml);
+        }
+
+        public IrtDb SetRegressionType(IrtRegressionType regressionType)
+        {
+            using (var session = OpenWriteSession())
+            using (var transaction = session.BeginTransaction())
+            {
+                EnsureDocumentXmlTable(session);
+
+                using (var cmd = session.Connection.CreateCommand())
+                {
+                    cmd.CommandText = "UPDATE DocumentXml SET RegressionType = ?";
+                    cmd.Parameters.Add(new SQLiteParameter { Value = regressionType.Name });
+                    cmd.ExecuteNonQuery();
+                }
+
+                transaction.Commit();
+            }
+
+            return ChangeProp(ImClone(this), im => im.RegressionType = regressionType);
+        }
+
+        private static void EnsureDocumentXmlTable(ISession session)
+        {
+            if (!SqliteOperations.TableExists(session.Connection, @"DocumentXml"))
+            {
+                using (var cmd = session.Connection.CreateCommand())
+                {
+                    cmd.CommandText = @"CREATE TABLE IF NOT EXISTS DocumentXml (Xml TEXT, RegressionType TEXT)";
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            else if (!SqliteOperations.ColumnExists(session.Connection, @"DocumentXml", @"RegressionType"))
+            {
+                using (var cmd = session.Connection.CreateCommand())
+                {
+                    cmd.CommandText = @"ALTER TABLE DocumentXml ADD COLUMN RegressionType TEXT";
+                    cmd.ExecuteNonQuery();
+                }
+            }
+
+            // create row if it doesn't exist
+            bool rowExists;
+            using (var cmd = session.Connection.CreateCommand())
+            {
+                cmd.CommandText = @"SELECT COUNT(*) FROM DocumentXml";
+                rowExists = Convert.ToInt32(cmd.ExecuteScalar()) > 0;
+            }
+            if (!rowExists)
+            {
+                using (var cmd = session.Connection.CreateCommand())
+                {
+                    cmd.CommandText = @"INSERT INTO DocumentXml (Xml, RegressionType) VALUES (?, ?)";
+                    cmd.Parameters.Add(new SQLiteParameter {Value = null});
+                    cmd.Parameters.Add(new SQLiteParameter {Value = null});
+                    cmd.ExecuteNonQuery();
+                }
+            }
         }
     }
 }

@@ -249,7 +249,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
                       {
                           peptideSettingsUI1.PickedHeavyMods = new[] { "Label:13C(6) (C-term R)", HEAVY_K };
-                          peptideSettingsUI1.PickedLibraries = new[] { "" };
+                          peptideSettingsUI1.PickedLibraries = new string[0];
                           peptideSettingsUI1.SelectedBackgroundProteome = Resources.SettingsList_ELEMENT_NONE_None;
                           peptideSettingsUI1.OkDialog();
                       });
@@ -604,17 +604,17 @@ namespace pwiz.SkylineTestTutorial
         {
             RunUI(() =>
             {
-                PeakMatcherTestUtil.SelectAndApplyPeak("ESDTSYVSLK", 568.7817, "A_01", false, 20.2587);
+                PeakMatcherTestUtil.SelectAndApplyPeak("ESDTSYVSLK", 568.7817, "A_01", false, false, 20.2587);
                 PeakMatcherTestUtil.VerifyPeaks(MakeVerificationDictionary(20.24220, 20.25878, 20.09352, 20.09353));
             });
             RunUI(() =>
             {
-                PeakMatcherTestUtil.SelectAndApplyPeak("ESDTSYVSLK", 564.7746, "A_02", false, 18.34195);
+                PeakMatcherTestUtil.SelectAndApplyPeak("ESDTSYVSLK", 564.7746, "A_02", false, false, 18.34195);
                 PeakMatcherTestUtil.VerifyPeaks(MakeVerificationDictionary(18.34, 18.34, 18.28, 18.28));
             });
             RunUI(() =>
             {
-                PeakMatcherTestUtil.SelectAndApplyPeak("ESDTSYVSLK", 568.7817, "C_03", false, 18.0611);
+                PeakMatcherTestUtil.SelectAndApplyPeak("ESDTSYVSLK", 568.7817, "C_03", false, false, 18.0611);
                 PeakMatcherTestUtil.VerifyPeaks(MakeVerificationDictionary(18.12708, 18.12713, 18.06105, 18.06107));
             });
 

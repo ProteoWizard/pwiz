@@ -325,7 +325,7 @@ namespace pwiz.SkylineTestTutorial
             if (AsSmallMolecules && !AsSmallMoleculeMasses)
             {
                 // Reload the original peptide data for the purposes of library building
-                // (workflow being demonstratedis peptide based) CONSIDER small mol workflow eventually
+                // (workflow being demonstrated is peptide based) CONSIDER small mol workflow eventually
                 LowResTestPartOne(RefinementSettings.ConvertToSmallMoleculesMode.none, documentFile);
             }
             if (AsSmallMolecules)
@@ -602,23 +602,56 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => importResultsDlg3.NamedPathSets = importResultsDlg3.GetDataSourcePathsFileReplicates(
                 new[] { MsDataFileUri.Parse(GetTestPath(@"TOF\6-BSA-500fmol" + ExtAgilentRaw)) }));
             var importProgress = ShowDialog<AllChromatogramsGraph>(importResultsDlg3.OkDialog);
-            WaitForDocumentChangeLoaded(docCalibrate1);
+            var docFullScanError = WaitForDocumentChangeLoaded(docCalibrate1);
+//            WaitForConditionUI(() => importProgress.Files.Any());
             WaitForConditionUI(() => importProgress.Finished);
             string expectedErrorFormat = Resources.NoFullScanFilteringException_NoFullScanFilteringException_The_file__0__does_not_contain_SRM_MRM_chromatograms__To_extract_chromatograms_from_its_spectra__go_to_Settings___Transition_Settings___Full_Scan_and_choose_options_appropriate_to_the_acquisition_method_used_;
-            if (!TryWaitForConditionUI(() => !string.IsNullOrEmpty(importProgress.Error)))
+            if (!TryWaitForConditionUI(2000, () => importProgress.Files.Any(f => !string.IsNullOrEmpty(f.Error))))
             {
                 RunUI(() =>
                 {
+                    var messageDlg = FindOpenForm<MessageDlg>();
+                    if (messageDlg != null)
+                    {
+                        Assert.Fail(TextUtil.LineSeparate("Unexpected MessageDlg: ",
+                            messageDlg.DetailedMessage,
+                            TextUtil.LineSeparate(docFullScanError.NonLoadedStateDescriptionsFull)));
+                    }
+
+                    var importProgress2 = FindOpenForm<AllChromatogramsGraph>();
+                    if (importProgress2 != null && !ReferenceEquals(importProgress, importProgress2))
+                    {
+                        Assert.IsTrue(importProgress2.HasErrors);
+                        AssertEx.AreComparableStrings(expectedErrorFormat, importProgress2.Error, 1);
+                        Assert.Fail("Error message appeared in new instance of progress UI");
+                    }
+                    Assert.IsFalse(importProgress.IsDisposed, "Import progress destroyed");
+                    Assert.IsTrue(importProgress.IsHandleCreated, "Import progress not created");
+                    Assert.IsTrue(importProgress.Visible, "Import progress hidden");
+
                     string message = "Missing expected error text: " + expectedErrorFormat;
-                    if (importProgress.SelectedControl == null)
-                        message = string.Format("No selected control. Selected index = {0}", importProgress.Selected);
-                    else if (!string.IsNullOrEmpty(importProgress.SelectedControl.Error))
-                        message = "Selected control error: " + importProgress.SelectedControl.Error + " not in text control";
+                    if (!importProgress.Files.Any())
+                        message = "No files found";
+                    else
+                    {
+                        foreach (var importProgressFile in importProgress.Files)
+                            AssertEx.AreComparableStrings(expectedErrorFormat, importProgressFile.Error);
+
+                        if (importProgress.SelectedControl == null)
+                            message = string.Format("No selected control. Selected index = {0}", importProgress.Selected);
+                        else if (!string.IsNullOrEmpty(importProgress.SelectedControl.Error))
+                            message = "Selected control error: " + importProgress.SelectedControl.Error + " not in text control";
+                    }
 
                     Assert.Fail(TextUtil.LineSeparate(message, "(" + importProgress.DetailedMessage + ")"));
                 });
             }
-            RunUI(() => AssertEx.AreComparableStrings(expectedErrorFormat, importProgress.Error, 1));
+            RunUI(() =>
+            {
+                foreach (var importProgressFile in importProgress.Files)
+                    AssertEx.AreComparableStrings(expectedErrorFormat, importProgressFile.Error);
+                AssertEx.AreComparableStrings(expectedErrorFormat, importProgress.Error, 1);
+            });
             RunUI(() =>
             {
                 importProgress.ClickClose();

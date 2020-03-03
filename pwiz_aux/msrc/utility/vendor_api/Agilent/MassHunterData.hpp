@@ -30,8 +30,8 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
-#include "pwiz/utility/misc/automation_vector.h"
 #include "pwiz/utility/misc/BinaryData.hpp"
+#include "pwiz/utility/chemistry/MzMobilityWindow.hpp"
 #include <string>
 #include <vector>
 #include <set>
@@ -176,8 +176,8 @@ struct PWIZ_API_DECL Chromatogram
 {
     virtual double getCollisionEnergy() const = 0;
     virtual int getTotalDataPoints() const = 0;
-    virtual void getXArray(automation_vector<double>& x) const = 0;
-    virtual void getYArray(automation_vector<float>& y) const = 0;
+    virtual void getXArray(pwiz::util::BinaryData<double>& x) const = 0;
+    virtual void getYArray(pwiz::util::BinaryData<float>& y) const = 0;
     virtual IonPolarity getIonPolarity() const = 0;
 
     virtual ~Chromatogram() {}
@@ -258,11 +258,17 @@ struct PWIZ_API_DECL Frame
 {
     virtual int getFrameIndex() const = 0;
     virtual TimeRange getDriftTimeRange() const = 0;
+    virtual MassRange getMzRange() const = 0;
     virtual double getRetentionTime() const = 0;
+    virtual double getTic() const = 0;
     virtual int getDriftBinsPresent() const = 0;
     virtual const std::vector<short>& getNonEmptyDriftBins() const = 0;
     virtual DriftScanPtr getScan(int driftBinIndex) const = 0;
     virtual DriftScanPtr getTotalScan() const = 0;
+
+    virtual void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities,
+                                         bool ignoreZeroIntensityPoints, const std::vector<pwiz::chemistry::MzMobilityWindow>& mzMobilityFilter) const = 0;
+    virtual size_t getCombinedSpectrumDataSize(bool ignoreZeroIntensityPoints, const std::vector<pwiz::chemistry::MzMobilityWindow>& mzMobilityFilter) const = 0;
 
     virtual ~Frame() {}
 };
@@ -302,10 +308,10 @@ class PWIZ_API_DECL MassHunterData
     virtual const std::set<Transition>& getTransitions() const = 0;
     virtual ChromatogramPtr getChromatogram(const Transition& transition) const = 0;
 
-    virtual const automation_vector<double>& getTicTimes() const = 0;
-    virtual const automation_vector<double>& getBpcTimes() const = 0;
-    virtual const automation_vector<float>& getTicIntensities() const = 0;
-    virtual const automation_vector<float>& getBpcIntensities() const = 0;
+    virtual const pwiz::util::BinaryData<double>& getTicTimes(bool ms1Only = false) const = 0;
+    virtual const pwiz::util::BinaryData<double>& getBpcTimes(bool ms1Only = false) const = 0;
+    virtual const pwiz::util::BinaryData<float>& getTicIntensities(bool ms1Only = false) const = 0;
+    virtual const pwiz::util::BinaryData<float>& getBpcIntensities(bool ms1Only = false) const = 0;
 
     /// rowNumber is a 0-based index
     virtual ScanRecordPtr getScanRecord(int rowNumber) const = 0;

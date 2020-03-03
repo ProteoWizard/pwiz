@@ -27,6 +27,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
@@ -66,6 +67,9 @@ namespace pwiz.Skyline.Model
         public RefinementSettings()
         {
             NormalizationMethod = AreaCVNormalizationMethod.none;
+            MSLevel = AreaCVMsLevel.products;
+            GroupComparisonNames = new List<string>();
+            GroupComparisonDefs = new List<GroupComparisonDef>();
         }
 
         public override MessageInfo MessageInfo
@@ -205,6 +209,21 @@ namespace pwiz.Skyline.Model
         public AreaCVNormalizationMethod NormalizationMethod { get; set; }
         [Track]
         public IsotopeLabelType NormalizationLabelType { get; set; }
+        [Track]
+        public AreaCVTransitions Transitions { get; set; }
+        [Track]
+        public int? CountTransitions { get; set; }
+        [Track]
+        public AreaCVMsLevel MSLevel { get; set; }
+        [Track]
+        public double? FoldChangeCutoff { get; set; }
+        [Track]
+        public double? AdjustedPValueCutoff { get; set; }
+        [Track]
+        public int? MSLevelGroupComparison { get; set; }
+        [Track]
+        public List<GroupComparisonDef> GroupComparisonDefs { get; set; }
+        public List<string> GroupComparisonNames { get; set; }
 
         public SrmDocument Refine(SrmDocument document)
         {
@@ -213,6 +232,22 @@ namespace pwiz.Skyline.Model
 
         public SrmDocument Refine(SrmDocument document, SrmSettingsChangeMonitor progressMonitor)
         {
+            if (progressMonitor != null)
+            {
+                var molCount = document.PeptideCount;
+                if (CVCutoff.HasValue || QValueCutoff.HasValue)
+                {
+                    molCount *= 2;
+                }
+
+                if (AdjustedPValueCutoff.HasValue || FoldChangeCutoff.HasValue)
+                {
+                    molCount *= 4;
+                }
+
+                progressMonitor.MoleculeCount = molCount;
+            }
+
             HashSet<int> outlierIds = new HashSet<int>();
             if (RTRegressionThreshold.HasValue)
             {
@@ -256,8 +291,8 @@ namespace pwiz.Skyline.Model
             int minPeptides = MinPeptidesPerProtein ?? 0;
             foreach (PeptideGroupDocNode nodePepGroup in document.Children)
             {
-                if (progressMonitor != null)
-                    progressMonitor.ProcessGroup(nodePepGroup);
+//                if (progressMonitor != null)
+//                    progressMonitor.ProcessGroup(nodePepGroup);
 
                 if (acceptedProteins != null && !acceptedProteins.Contains(GetAcceptProteinKey(nodePepGroup)))
                     continue;
@@ -329,16 +364,26 @@ namespace pwiz.Skyline.Model
                     throw new Exception(Resources.RefinementSettings_Refine_The_document_does_not_have_a_global_standard_to_normalize_by_);
                 }
 
-                double cvcutoff = CVCutoff.HasValue ? CVCutoff.Value : double.NaN;
-                double qvalue = QValueCutoff.HasValue ? QValueCutoff.Value : double.NaN;
-                int minDetections = MinimumDetections.HasValue ? MinimumDetections.Value : -1;
-                int ratioIndex = GetLabelIndex(NormalizationLabelType, document);
-                var data = new AreaCVRefinementData(refined, new AreaCVRefinementSettings(cvcutoff, qvalue, minDetections, NormalizationMethod, ratioIndex));
+                var cvcutoff = CVCutoff.HasValue ? CVCutoff.Value : double.NaN;
+                var qvalue = QValueCutoff.HasValue ? QValueCutoff.Value : double.NaN;
+                var minDetections = MinimumDetections.HasValue ? MinimumDetections.Value : -1;
+                var ratioIndex = GetLabelIndex(NormalizationLabelType, document);
+                var countTransitions = CountTransitions.HasValue ? CountTransitions.Value : -1;
+                var data = new AreaCVRefinementData(refined, new AreaCVRefinementSettings(cvcutoff, qvalue, minDetections, NormalizationMethod, ratioIndex,
+                    Transitions, countTransitions, MSLevel), null, progressMonitor);
                 refined = data.RemoveAboveCVCutoff(refined);
             }
 
+            if (AdjustedPValueCutoff.HasValue || FoldChangeCutoff.HasValue)
+            {
+                var pValueCutoff = AdjustedPValueCutoff.HasValue ? AdjustedPValueCutoff.Value : double.NaN;
+                var foldChangeCutoff = FoldChangeCutoff.HasValue ? FoldChangeCutoff.Value : double.NaN;
+                var groupComparisonData = new GroupComparisonRefinementData(refined, pValueCutoff, foldChangeCutoff,
+                    MSLevelGroupComparison, GroupComparisonDefs, progressMonitor);
+                refined = groupComparisonData.RemoveBelowCutoffs(refined);
+            }
+
             return refined;
-//            return (SrmDocument) document.ChangeChildrenChecked(listPepGroups.ToArray(), true);
         }
 
         private int GetLabelIndex(IsotopeLabelType type, SrmDocument doc)
@@ -866,7 +911,7 @@ namespace pwiz.Skyline.Model
                     customMolecule.AverageMass, customMolecule.Name);
             }
             // Collect information for converting libraries
-            var chargeAndModifiedSequence = new LibKey(masscalc.GetModifiedSequence(peptideTarget, SequenceModFormatType.full_precision, false), precursorCharge);
+            var chargeAndModifiedSequence = new LibKey(masscalc.GetModifiedSequence(peptideTarget, SequenceModFormatType.lib_precision, false), precursorCharge);
             if (smallMoleculeConversionPrecursorMap != null && !smallMoleculeConversionPrecursorMap.ContainsKey(chargeAndModifiedSequence))
             {
                 smallMoleculeConversionPrecursorMap.Add(chargeAndModifiedSequence, new LibKey(customMolecule.GetSmallMoleculeLibraryAttributes(), adduct));
@@ -881,12 +926,12 @@ namespace pwiz.Skyline.Model
             string pathForLibraryFiles, // In case we translate libraries etc
             ConvertToSmallMoleculesMode mode = ConvertToSmallMoleculesMode.formulas, 
             ConvertToSmallMoleculesChargesMode invertChargesMode = ConvertToSmallMoleculesChargesMode.none, 
-            bool ignoreDecoys=false)
+            bool ignoreDecoys=false, bool addAnnotations = true)
         {
             if (mode == ConvertToSmallMoleculesMode.none)
                 return document;
             var newdoc = new SrmDocument(document.Settings);
-            var note = new Annotations(TestingConvertedFromProteomic, null, 1); // Mark this as a testing node so we don't sort it
+            var note = addAnnotations ? new Annotations(TestingConvertedFromProteomic, null, 1) : Annotations.EMPTY; // Optionally mark this as a testing node so we don't sort it
             var precursorMap = new Dictionary<LibKey, LibKey>(); // Map int,modSeq to adduct,molecule
 
             var invertCharges = invertChargesMode == ConvertToSmallMoleculesChargesMode.invert;

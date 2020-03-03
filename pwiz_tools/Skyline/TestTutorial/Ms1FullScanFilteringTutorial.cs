@@ -338,10 +338,10 @@ namespace pwiz.SkylineTestTutorial
                     const string sourceFirst = "100803_0005b_MCF7_TiTip3.wiff";
                     const double timeFirst = 35.2128;
                     Assert.AreEqual(sourceFirst, libraryExplorer.SourceFile);
-                    Assert.AreEqual(timeFirst, libraryExplorer.RetentionTime, 0.0001);
+                    Assert.AreEqual(timeFirst, libraryExplorer.RetentionTime, 0.01);
                     libraryExplorer.SelectedIndex++;
                     Assert.AreNotEqual(sourceFirst, libraryExplorer.SourceFile);
-                    Assert.AreNotEqual(timeFirst, libraryExplorer.RetentionTime, 0.0001);
+                    Assert.AreNotEqual(timeFirst, libraryExplorer.RetentionTime, 0.01);
                 });
             OkDialog(libraryExplorer, libraryExplorer.CancelDialog);
 
@@ -508,7 +508,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 SkylineWindow.SynchronizeZooming(true);
                 SkylineWindow.LockYChrom(false);
-                SkylineWindow.AlignToFile = SkylineWindow.GraphChromatograms.ToArray()[TIP3].GetChromFileInfoId(); // align to Tip3
+                SkylineWindow.AlignToFile = GetGraphChromatogram(TIP3).GetChromFileInfoId(); // align to Tip3
             });
             ZoomBoth(36.5, 39.5, 1600); // simulate the wheel scroll described in tutorial
             RunUI(() => SkylineWindow.ShowChromatogramLegends(false));
@@ -631,6 +631,12 @@ namespace pwiz.SkylineTestTutorial
             RunUI(SkylineWindow.NewDocument);
         }
 
+        private GraphChromatogram GetGraphChromatogram(int chromIndex)
+        {
+            string replicateName = SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[chromIndex].Name;
+            return SkylineWindow.GraphChromatograms.FirstOrDefault(chrom => chrom.NameSet == replicateName);
+        }
+
         private void VerifyLib(string[] expectedPaths, int expectedSpectra, string[] foundPaths, int foundSpectra,
             string sourceMessage, string buildArgs, string buildOutput)
         {
@@ -652,7 +658,7 @@ namespace pwiz.SkylineTestTutorial
 
         private void ZoomSingle(int index, double startTime, double endTime, double? y = null)
         {
-            RunUI(() => SkylineWindow.GraphChromatograms.ToArray()[index].ZoomTo(startTime, endTime, y));
+            RunUI(() => GetGraphChromatogram(index).ZoomTo(startTime, endTime, y));
             WaitForGraphs();            
         }
 
@@ -687,7 +693,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 var pathPep = SkylineWindow.DocumentUI.GetPathTo((int) SrmDocument.Level.Molecules, pepIndex);
                 SkylineWindow.SelectedPath = pathPep;
-                var graphChrom = SkylineWindow.GraphChromatograms.ToArray()[chromIndex];
+                var graphChrom = GetGraphChromatogram(chromIndex);
                 // ToArray in RunUI() to avoid trying to enumerate off the UI thread
                 result = graphChrom.GetAnnotationLabelStrings().ToArray();
             });
@@ -703,7 +709,7 @@ namespace pwiz.SkylineTestTutorial
                 var nodeTran = nodeGroup.Transitions.First();
                 for (int i = 0; i < 2; i++)
                 {
-                    var graph = SkylineWindow.GraphChromatograms.ToArray()[i];
+                    var graph = GetGraphChromatogram(i);
                     var approxRT = ((i == 1) ? rt1 : rt0);
                     TransitionGroupDocNode nodeGroupGraph;
                     TransitionDocNode nodeTranGraph;
@@ -751,7 +757,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.SelectedPath = pathPep;
 
                 var nodeGroup = SkylineWindow.DocumentUI.Peptides.ElementAt(pepIndex).TransitionGroups.First();
-                var graphChrom = SkylineWindow.GraphChromatograms.ToArray()[chromIndex];
+                var graphChrom = GetGraphChromatogram(chromIndex);
 
                 var listChanges = new List<ChangedPeakBoundsEventArgs>
                 {
@@ -759,8 +765,8 @@ namespace pwiz.SkylineTestTutorial
                         null,
                         graphChrom.NameSet,
                         graphChrom.ChromGroupInfos[0].FilePath,
-                        graphChrom.GraphItems.First().GetNearestDisplayTime(startDisplayTime),
-                        graphChrom.GraphItems.First().GetNearestDisplayTime(endDisplayTime),
+                        graphChrom.GraphItems.First().GetValidPeakBoundaryTime(startDisplayTime),
+                        graphChrom.GraphItems.First().GetValidPeakBoundaryTime(endDisplayTime),
                         PeakIdentification.ALIGNED,
                         PeakBoundsChangeType.both)
                 };

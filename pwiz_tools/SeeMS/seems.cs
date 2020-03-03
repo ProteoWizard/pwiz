@@ -84,6 +84,11 @@ namespace seems
             browseToFileDialog = new OpenDataSourceDialog();
 			browseToFileDialog.InitialDirectory = "C:\\";
 
+            combineIonMobilitySpectraToolStripMenuItem.Checked = Properties.Settings.Default.CombineIonMobilitySpectra;
+            ignoreZeroIntensityPointsToolStripMenuItem.Checked = Properties.Settings.Default.IgnoreZeroIntensityPoints;
+            acceptZeroLengthSpectraToolStripMenuItem.Checked = Properties.Settings.Default.AcceptZeroLengthSpectra;
+            timeInMinutesToolStripMenuItem.Checked = Properties.Settings.Default.TimeInMinutes;
+
             DockPanelManager.RenderMode = DockPanelRenderMode.VisualStyles;
 
             manager = new Manager(dockPanel);
@@ -158,7 +163,7 @@ namespace seems
             recentFilesMenu.AddFile( filepath, Path.GetFileName( filepath ) );
             recentFilesMenu.SaveToRegistry();
 
-			Manager.OpenFile(filepath);
+			Manager.OpenFile(filepath, closeIfOpen: true);
 		}
 
         private delegate void ParseArgsCallback (string[] args);
@@ -445,6 +450,42 @@ namespace seems
             (decimalPlacesToolStripMenuItem.DropDownItems[Properties.Settings.Default.DefaultDecimalPlaces] as ToolStripMenuItem).Checked = true;
 
             Refresh();
+        }
+
+        private void combineIonMobilitySpectraToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.CombineIonMobilitySpectra = combineIonMobilitySpectraToolStripMenuItem.Checked;
+            Properties.Settings.Default.Save();
+        }
+
+        private void ignoreZeroIntensityPointsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.IgnoreZeroIntensityPoints = ignoreZeroIntensityPointsToolStripMenuItem.Checked;
+            Properties.Settings.Default.Save();
+        }
+
+        private void acceptZeroLengthSpectraToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.AcceptZeroLengthSpectra = acceptZeroLengthSpectraToolStripMenuItem.Checked;
+            Properties.Settings.Default.Save();
+        }
+
+        private void timeInMinutesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.TimeInMinutes = timeInMinutesToolStripMenuItem.Checked;
+            Properties.Settings.Default.Save();
+        }
+
+        private void showSIMScansAsSpectraToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.SimAsSpectra = showSIMScansAsSpectraToolStripMenuItem.Checked;
+            Properties.Settings.Default.Save();
+        }
+
+        private void showSRMScansAsSpectraToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.SrmAsSpectra = showSRMScansAsSpectraToolStripMenuItem.Checked;
+            Properties.Settings.Default.Save();
         }
     }
 }

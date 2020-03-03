@@ -23,7 +23,6 @@ using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -37,9 +36,34 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public enum AreaCVNormalizationMethod { global_standards, medians, none, ratio }
 
-    public enum AreaCVTransitions { all, best }
+    public enum AreaCVTransitions { all, best, count }
 
     public enum AreaCVMsLevel { precursors, products }
+
+    public static class AreCVMsLevelExtension
+    {
+        private static string[] LOCALIZED_VALUES
+        {
+            get
+            {
+                return new[]
+                {
+                    Resources.RefineDlg_RefineDlg_Precursors,
+                    Resources.RefineDlg_RefineDlg_Products
+                };
+            }
+        }
+        public static string GetLocalizedString(this AreaCVMsLevel val)
+        {
+            return LOCALIZED_VALUES[(int)val];
+        }
+
+        public static AreaCVMsLevel GetEnum(string enumValue)
+        {
+            return Helpers.EnumFromLocalizedString<AreaCVMsLevel>(enumValue, LOCALIZED_VALUES);
+        }
+
+    }
 
     public enum AreaGraphDisplayType { bars, lines }
 
@@ -100,9 +124,11 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public static string GroupByGroup { get; set; }
-        public static string GroupByAnnotation { get; set; }
+        public static object GroupByAnnotation { get; set; }
 
         public static int MinimumDetections = 2;
+
+        public static int AreaCVTransitionsCount { get; set; }
 
         public GraphSummary GraphSummary { get; set; }
 
@@ -141,18 +167,18 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (GroupByGroup != null && !ReferenceEquals(settingsNew.DataSettings.AnnotationDefs, settingsOld.DataSettings.AnnotationDefs))
                 {
-                    var groups = AnnotationHelper.FindGroupsByTarget(settingsNew, AnnotationDef.AnnotationTarget.replicate);
+                    var groups = ReplicateValue.GetGroupableReplicateValues(newDocument);
                     // The group we were grouping by has been removed
-                    if (!groups.Contains(GroupByGroup))
+                    if (groups.All(group => group.ToPersistedString() != GroupByGroup))
                     {
-                        GroupByGroup = GroupByAnnotation = null;
+                        GroupByAnnotation = GroupByGroup = null;
                     }
                 }
 
                 if (GroupByAnnotation != null && settingsNew.HasResults && settingsOld.HasResults &&
                     !ReferenceEquals(settingsNew.MeasuredResults.Chromatograms, settingsOld.MeasuredResults.Chromatograms))
                 {
-                    var annotations = AnnotationHelper.GetPossibleAnnotations(settingsNew, GroupByGroup, AnnotationDef.AnnotationTarget.replicate);
+                    var annotations = AnnotationHelper.GetPossibleAnnotations(newDocument, ReplicateValue.FromPersistedString(settingsNew, GroupByGroup));
 
                     // The annotation we were grouping by has been removed
                     if (!annotations.Contains(GroupByAnnotation))

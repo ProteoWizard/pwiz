@@ -233,12 +233,12 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (chromDisplayState.MinIntensity == 0)
                 {
-                    graphPane.LockYAxisAtZero = true;
+                    graphPane.LockYAxisMinAtZero = true;
                     graphPane.YAxis.Scale.MinAuto = true;
                 }
                 else
                 {
-                    graphPane.LockYAxisAtZero = false;
+                    graphPane.LockYAxisMinAtZero = false;
                     graphPane.YAxis.Scale.MinAuto = false;
                     graphPane.YAxis.Scale.Min = chromDisplayState.MinIntensity;
                 }
@@ -313,14 +313,15 @@ namespace pwiz.Skyline.Controls.Graphs
             return _displayState.GetGraphPane(GraphControl, paneKey);
         }
 
-        public CurveItem AddSpectrum(AbstractSpectrumGraphItem item)
+        public CurveItem AddSpectrum(AbstractSpectrumGraphItem item, bool refresh=true)
         {
             var pane = _displayState.GetOrCreateGraphPane(GraphControl, PaneKey.DEFAULT);
             pane.Title.Text = item.Title;
             var curveItem = GraphControl.AddGraphItem(pane, item);
             curveItem.Label.IsVisible = false;
             pane.Legend.IsVisible = false;
-            GraphControl.Refresh();
+            if (refresh)
+                GraphControl.Refresh();
             return curveItem;
         }
 

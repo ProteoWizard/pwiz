@@ -142,6 +142,9 @@ public:
      */
     const Configuration_mz5& getConfiguration();
 
+
+    const FileInformationMZ5& getFileInformation() const;
+
 private:
 
     /**
@@ -209,6 +212,9 @@ private:
      * MZ5 file reference.
      */
     H5::H5File* file_;
+
+    FileInformationMZ5 fileInfo_;
+
     /**
      * mz5 configuration object.
      */

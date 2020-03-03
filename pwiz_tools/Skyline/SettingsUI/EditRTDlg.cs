@@ -411,6 +411,7 @@ namespace pwiz.Skyline.SettingsUI
 
             foreach (var measuredPeptide in Peptides)
             {
+                
                 times.Add(measuredPeptide.RetentionTime);
                 double? score = calc.ScoreSequence(measuredPeptide.Target);
                 scores.Add(score ?? calc.UnknownScore);
@@ -738,6 +739,10 @@ namespace pwiz.Skyline.SettingsUI
         {
             Target = seq;
             RetentionTime = rt;
+        }
+
+        public MeasuredPeptide(MeasuredPeptide other) : this(other.Target, other.RetentionTime)
+        {
         }
 
         public Target Target { get; set; }

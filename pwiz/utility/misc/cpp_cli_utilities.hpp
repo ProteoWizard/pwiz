@@ -170,6 +170,12 @@ void ToBinaryData(cli::array<managed_value_type>^ managedArray, BinaryData<nativ
 {
     typedef System::Runtime::InteropServices::GCHandle GCHandle;
 
+    if (managedArray->Length == 0)
+    {
+        binaryData.clear();
+        return;
+    }
+
 #ifdef PWIZ_MANAGED_PASSTHROUGH
     GCHandle handle = GCHandle::Alloc(managedArray);
     binaryData = ((System::IntPtr)handle).ToPointer();

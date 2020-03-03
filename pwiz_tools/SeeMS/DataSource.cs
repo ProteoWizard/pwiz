@@ -132,19 +132,27 @@ namespace seems
 			// create empty data source
 		}
 
+        public static ReaderConfig GetReaderConfig()
+        {
+            return new ReaderConfig
+            {
+                simAsSpectra = Properties.Settings.Default.SimAsSpectra,
+                srmAsSpectra = Properties.Settings.Default.SrmAsSpectra,
+                combineIonMobilitySpectra = Properties.Settings.Default.CombineIonMobilitySpectra,
+                ignoreZeroIntensityPoints = Properties.Settings.Default.IgnoreZeroIntensityPoints,
+                acceptZeroLengthSpectra = Properties.Settings.Default.AcceptZeroLengthSpectra,
+                allowMsMsWithoutPrecursor = false
+            };
+        }
+
 		public SpectrumSource( string filepath )
 		{
             MSDataList msdList = new MSDataList();
-            var readerConfig = new ReaderConfig
-            {
-                simAsSpectra = Program.SimAsSpectra,
-                srmAsSpectra = Program.SrmAsSpectra
-            };
 
             if (!File.Exists(filepath) && !Directory.Exists(filepath)) // Some mass spec "files" are really directory structures
                 throw new FileNotFoundException("Filepath not found: " + filepath, filepath);
 
-            ReaderList.FullReaderList.read(filepath, msdList, readerConfig);
+            ReaderList.FullReaderList.read(filepath, msdList, GetReaderConfig());
             msDataFile = msdList[0];
 			//msDataFile = new MSDataFile(filepath);
 			sourceFilepath = filepath;
@@ -173,4 +181,21 @@ namespace seems
             return true;
 		}
 	}
+}
+
+namespace pwiz.CLI.msdata
+{
+    public static class SpectrumExtensions
+    {
+
+        public static double[] GetIonMobilityArray(this Spectrum s)
+        {
+            if (!s.id.StartsWith("merged="))
+                return null;
+            return s.getArrayByCVID(pwiz.CLI.cv.CVID.MS_mean_drift_time_array)?.data.Storage() ??
+                   s.getArrayByCVID(pwiz.CLI.cv.CVID.MS_mean_inverse_reduced_ion_mobility_array)?.data.Storage() ??
+                   s.getArrayByCVID(pwiz.CLI.cv.CVID.MS_raw_ion_mobility_array)?.data.Storage() ??
+                   s.getArrayByCVID(pwiz.CLI.cv.CVID.MS_raw_inverse_reduced_ion_mobility_array)?.data.Storage();
+        }
+    }
 }

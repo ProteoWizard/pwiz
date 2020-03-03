@@ -24,7 +24,6 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -141,49 +140,6 @@ namespace pwiz.Skyline.Model.Irt
                                     dbPeptide.TimeSource);
         }
 
-        public static bool TryGetRegressionLine(IList<double> listIndependent, IList<double> listDependent, int minPoints, out RegressionLine line, IList<Tuple<double, double>> removedValues = null)
-        {
-            line = null;
-            if (removedValues != null)
-                removedValues.Clear();
-            if (listIndependent.Count != listDependent.Count || listIndependent.Count < minPoints)
-                return false;
-
-            var listX = new List<double>(listIndependent);
-            var listY = new List<double>(listDependent);
-
-            double correlation;
-            while (true)
-            {
-                var statIndependent = new Statistics(listX);
-                var statDependent = new Statistics(listY);
-                line = new RegressionLine(statDependent.Slope(statIndependent), statDependent.Intercept(statIndependent));
-                correlation = statDependent.R(statIndependent);
-
-                if (correlation >= MIN_IRT_TO_TIME_CORRELATION || listX.Count <= minPoints)
-                    break;
-
-                var furthest = 0;
-                var maxDistance = 0.0;
-                for (var i = 0; i < listY.Count; i++)
-                {
-                    var distance = Math.Abs(line.GetY(listX[i]) - listY[i]);
-                    if (distance > maxDistance)
-                    {
-                        furthest = i;
-                        maxDistance = distance;
-                    }
-                }
-
-                if (removedValues != null)
-                    removedValues.Add(new Tuple<double, double>(listX[furthest], listY[furthest]));
-                listX.RemoveAt(furthest);
-                listY.RemoveAt(furthest);
-            }
-
-            return correlation >= MIN_IRT_TO_TIME_CORRELATION;
-        }
-
         public override IEnumerable<Target> ChooseRegressionPeptides(IEnumerable<Target> peptides, out int minCount)
         {
             RequireUsable();
@@ -239,86 +195,226 @@ namespace pwiz.Skyline.Model.Irt
         }
 
         public string DocumentXml => _database.DocumentXml;
+        public IrtRegressionType RegressionType => _database.RegressionType;
 
         public static ProcessedIrtAverages ProcessRetentionTimes(IProgressMonitor monitor,
-            IEnumerable<IRetentionTimeProvider> providers, int countProviders,
-            DbIrtPeptide[] standardPeptideList, DbIrtPeptide[] items)
+            IRetentionTimeProvider[] providers, DbIrtPeptide[] standardPeptideList, DbIrtPeptide[] items, IrtRegressionType regressionType)
         {
+            var heavyStandards = new DbIrtPeptide[standardPeptideList.Length];
             var matchedStandard = IrtStandard.WhichStandard(standardPeptideList.Select(pep => pep.ModifiedTarget));
-            if (matchedStandard != null)
+            if (matchedStandard != null && matchedStandard.HasDocument)
             {
-                var dummyDoc = new SrmDocument(SrmSettingsList.GetDefault());
-                using (var reader = matchedStandard.GetDocumentReader())
+                // Check embedded standard document for known standard to determine if the standard peptides should be heavy
+                // Import iRT standard document into an empty document (rather than just getting the document), because importing also imports the modifications
+                var standardDoc = matchedStandard.ImportTo(new SrmDocument(SrmSettingsList.GetDefault()));
+                standardPeptideList = standardPeptideList.Select(pep => new DbIrtPeptide(pep)).ToArray();
+                foreach (var dummyPep in standardDoc.Molecules.Where(pep => pep.HasExplicitMods))
                 {
-                    if (reader != null)
-                    {
-                        dummyDoc = dummyDoc.ImportDocumentXml(reader,
-                            string.Empty,
-                            MeasuredResults.MergeAction.remove,
-                            false,
-                            null,
-                            Settings.Default.StaticModList,
-                            Settings.Default.HeavyModList,
-                            null,
-                            out _,
-                            out _,
-                            false);
-                        standardPeptideList = standardPeptideList.Select(pep => new DbIrtPeptide(pep)).ToArray();
-                        foreach (var dummyPep in dummyDoc.Molecules.Where(pep => pep.HasExplicitMods))
-                        {
-                            var standardPepIdx = standardPeptideList.IndexOf(pep => dummyPep.ModifiedTarget.Equals(pep.ModifiedTarget));
-                            standardPeptideList[standardPepIdx] = new DbIrtPeptide(standardPeptideList[standardPepIdx])
-                            {
-                                ModifiedTarget = dummyDoc.Settings.GetModifiedSequence(dummyPep.ModifiedTarget, IsotopeLabelType.heavy, dummyPep.ExplicitMods)
-                            };
-                        }
-                    }
+                    var standardPepIdx = standardPeptideList.IndexOf(pep => dummyPep.ModifiedTarget.Equals(pep.ModifiedTarget));
+                    if (standardPepIdx < 0)
+                        continue;
+                    var heavyTarget = standardDoc.Settings.GetModifiedSequence(dummyPep.ModifiedTarget, IsotopeLabelType.heavy, dummyPep.ExplicitMods);
+                    if (!standardPeptideList[standardPepIdx].ModifiedTarget.Equals(heavyTarget))
+                        heavyStandards[standardPepIdx] = new DbIrtPeptide(standardPeptideList[standardPepIdx]) {ModifiedTarget = heavyTarget};
                 }
             }
 
             IProgressStatus status = new ProgressStatus(Resources.LibraryGridViewDriver_ProcessRetentionTimes_Adding_retention_times);
-            var dictProviderData = new List<KeyValuePair<string, RetentionTimeProviderData>>();
             var dictPeptideAverages = new Dictionary<Target, IrtPeptideAverages>();
+            var providerData = new List<RetentionTimeProviderData>();
             var runCount = 0;
             foreach (var retentionTimeProvider in providers)
             {
                 if (monitor.IsCanceled)
                     return null;
-
-                var message = string.Format(Resources.LibraryGridViewDriver_ProcessRetentionTimes_Converting_retention_times_from__0__, retentionTimeProvider.Name);
-                monitor.UpdateProgress(status = status.ChangeMessage(message));
+                monitor.UpdateProgress(status = status.ChangeMessage(string.Format(
+                    Resources.LibraryGridViewDriver_ProcessRetentionTimes_Converting_retention_times_from__0__,
+                    retentionTimeProvider.Name)));
 
                 runCount++;
-                var data = new RetentionTimeProviderData(retentionTimeProvider, standardPeptideList.OrderBy(peptide => peptide.Irt));
-                if (data.RegressionSuccess || data.CalcRegressionWith(retentionTimeProvider, standardPeptideList, items))
-                {
-                    // Trace.WriteLine(string.Format("slope = {0}, intercept = {1}", data.RegressionRefined.Slope, data.RegressionRefined.Intercept));
 
+                var data = new RetentionTimeProviderData(regressionType, retentionTimeProvider, standardPeptideList, heavyStandards);
+                if (data.RegressionSuccess ||
+                    (ReferenceEquals(regressionType, IrtRegressionType.LINEAR) && data.CalcRegressionWith(retentionTimeProvider, standardPeptideList, items)))
+                {
                     AddRetentionTimesToDict(retentionTimeProvider, data.RegressionRefined, dictPeptideAverages, standardPeptideList);
                 }
-                dictProviderData.Add(new KeyValuePair<string, RetentionTimeProviderData>(retentionTimeProvider.Name, data));
+                providerData.Add(data);
 
-                monitor.UpdateProgress(status = status.ChangePercentComplete(runCount * 100 / countProviders));
+                monitor.UpdateProgress(status = status.ChangePercentComplete(runCount * 100 / providers.Length));
             }
 
             monitor.UpdateProgress(status.Complete());
+            return new ProcessedIrtAverages(dictPeptideAverages, providerData);
+        }
 
-            return new ProcessedIrtAverages(dictPeptideAverages, dictProviderData);
+        public static ProcessedIrtAverages ProcessRetentionTimesCirt(IProgressMonitor monitor,
+            IRetentionTimeProvider[] providers, DbIrtPeptide[] cirtPeptides, int numCirt, IrtRegressionType regressionType, out DbIrtPeptide[] chosenCirtPeptides)
+        {
+            chosenCirtPeptides = new DbIrtPeptide[0];
+
+            var irts = new TargetMap<DbIrtPeptide>(IrtStandard.CIRT.Peptides.Select(pep => new KeyValuePair<Target, DbIrtPeptide>(pep.ModifiedTarget, pep)));
+            var targetRts = new Dictionary<Target, List<double>>();
+            var targetCounts = new Dictionary<Target, int>(); // count how many successful regressions each peptide participated in
+            foreach (var provider in providers)
+            {
+                if (monitor.IsCanceled)
+                    return null;
+
+                var times = (
+                    from pep in cirtPeptides
+                    let rt = provider.GetRetentionTime(pep.ModifiedTarget)
+                    where rt.HasValue
+                    select Tuple.Create(pep.ModifiedTarget, rt.Value, irts[pep.ModifiedTarget].Irt)).ToList();
+
+                foreach (var (target, rt, _) in times)
+                {
+                    if (targetRts.TryGetValue(target, out var list))
+                        list.Add(rt);
+                    else
+                        targetRts[target] = new List<double> {rt};
+                }
+
+                var removed = new List<Tuple<double, double>>();
+                if (!IrtRegression.TryGet<RegressionLine>(times.Select(t => t.Item2).ToList(), times.Select(t => t.Item3).ToList(),
+                    MIN_PEPTIDES_COUNT, out _, removed))
+                    continue;
+                foreach (var (removeRt, removeIrt) in removed)
+                    times.Remove(times.First(time => time.Item2.Equals(removeRt) && time.Item3.Equals(removeIrt)));
+                foreach (var (target, _, _) in times)
+                    targetCounts[target] = targetCounts.TryGetValue(target, out var existing) ? existing + 1 : 1;
+            }
+
+            // for each target, only keep median retention time
+            var dupTargets = targetRts.Where(kvp => kvp.Value.Count > 1).Select(kvp => kvp.Key).ToArray();
+            foreach (var target in dupTargets)
+                targetRts[target] = new List<double> {new Statistics(targetRts[target]).Median()};
+
+            // separate targets into equal retention time bins
+            var candidateBins = new List<Tuple<Target, double>>[numCirt];
+            for (var i = 0; i < candidateBins.Length; i++)
+                candidateBins[i] = new List<Tuple<Target, double>>();
+
+            var minRt = double.MaxValue;
+            var maxRt = -1d;
+            foreach (var rt in targetRts.Values.Select(list => list.First()))
+            {
+                if (rt < minRt)
+                    minRt = rt;
+                if (rt > maxRt)
+                    maxRt = rt;
+            }
+
+            var binSize = (maxRt - minRt) / numCirt;
+            var lastBinIdx = candidateBins.Length - 1;
+            foreach (var target in targetRts)
+            foreach (var rt in target.Value)
+                candidateBins[Math.Min((int) ((rt - minRt) / binSize), lastBinIdx)].Add(Tuple.Create(target.Key, rt));
+
+            Tuple<Target, double> GetBest(List<Tuple<Target, double>> bin, int binIdx, out int bestCount, out double bestRtDelta)
+            {
+                if (bin.Count == 0)
+                {
+                    bestCount = 0;
+                    bestRtDelta = 0;
+                    return null;
+                }
+
+                bestCount = 0;
+                var filtered = new List<Tuple<Target, double>>();
+                foreach (var t in bin)
+                {
+                    if (!targetCounts.TryGetValue(t.Item1, out var count))
+                        continue;
+                    if (count > bestCount)
+                    {
+                        bestCount = count;
+                        filtered.Clear();
+                        filtered.Add(t);
+                    }
+                    else if (count == bestCount)
+                    {
+                        filtered.Add(t);
+                    }
+                }
+                if (filtered.Count == 0)
+                    filtered = bin;
+                var targetRt = ((minRt + binSize * binIdx) + (minRt + binSize * (binIdx + 1))) / 2;
+                var closest = filtered.Aggregate((x, y) => Math.Abs(x.Item2 - targetRt) < Math.Abs(y.Item2 - targetRt) ? x : y);
+                bestRtDelta = Math.Abs(closest.Item2 - targetRt);
+                return closest;
+            }
+
+            var chosenList = new List<DbIrtPeptide>();
+            var emptyBins = new HashSet<int>();
+            for (var i = 0; i < candidateBins.Length; i++)
+            {
+                var bin = candidateBins[i];
+                if (bin.Count > 0)
+                {
+                    // choose the best from this bin
+                    var best = GetBest(bin, i, out _, out _);
+                    chosenList.Add(irts[best.Item1]);
+                    bin.Remove(best);
+                }
+                else
+                {
+                    emptyBins.Add(i);
+                }
+            }
+            foreach (var emptyIdx in emptyBins)
+            {
+                var bins = new List<int>();
+                var left = emptyIdx - 1;
+                var right = emptyIdx + 1;
+                while (bins.Count == 0)
+                {
+                    if (left >= 0)
+                        bins.Add(left);
+                    if (right < candidateBins.Length)
+                        bins.Add(right);
+                    left--;
+                    right++;
+                }
+                Tuple<Target, double> best = null;
+                var bestBinIdx = -1;
+                var bestCount = 0;
+                var bestRtDelta = 0d;
+                foreach (var i in bins)
+                {
+                    var current = GetBest(candidateBins[i], i, out var count, out var rtDelta);
+                    if (count > bestCount || (count == bestCount && rtDelta < bestRtDelta))
+                    {
+                        best = current;
+                        bestBinIdx = i;
+                        bestCount = count;
+                        bestRtDelta = rtDelta;
+                    }
+                }
+                if (best != null)
+                {
+                    chosenList.Add(irts[best.Item1]);
+                    candidateBins[bestBinIdx].Remove(best);
+                }
+            }
+
+            // Process retention times using the chosen peptides
+            chosenCirtPeptides = chosenList.ToArray();
+            return ProcessRetentionTimes(monitor, providers, chosenCirtPeptides, new DbIrtPeptide[0], regressionType);
         }
 
         private static void AddRetentionTimesToDict(IRetentionTimeProvider retentionTimes,
-                                                    IRegressionFunction regressionLine,
-                                                    IDictionary<Target, IrtPeptideAverages> dictPeptideAverages,
-                                                    IEnumerable<DbIrtPeptide> standardPeptideList)
+            IRegressionFunction regression,
+            IDictionary<Target, IrtPeptideAverages> dictPeptideAverages,
+            IEnumerable<DbIrtPeptide> standardPeptideList)
         {
             var setStandards = new TargetMap<bool>(standardPeptideList.Select(peptide => new KeyValuePair<Target, bool>(peptide.Target, true)));
             foreach (var pepTime in retentionTimes.PeptideRetentionTimes.Where(p => !setStandards.ContainsKey(p.PeptideSequence)))
             {
                 var peptideModSeq = pepTime.PeptideSequence;
                 var timeSource = retentionTimes.GetTimeSource(peptideModSeq);
-                var irt = regressionLine.GetY(pepTime.RetentionTime);
-                IrtPeptideAverages pepAverage;
-                if (!dictPeptideAverages.TryGetValue(peptideModSeq, out pepAverage))
+                var irt = regression.GetY(pepTime.RetentionTime);
+                if (!dictPeptideAverages.TryGetValue(peptideModSeq, out var pepAverage))
                     dictPeptideAverages.Add(peptideModSeq, new IrtPeptideAverages(peptideModSeq, irt, timeSource));
                 else
                     pepAverage.AddIrt(irt);
@@ -433,26 +529,14 @@ namespace pwiz.Skyline.Model.Irt
 
     public sealed class ProcessedIrtAverages
     {
-        public ProcessedIrtAverages(Dictionary<Target, IrtPeptideAverages> dictPeptideIrtAverages,
-                                    IList<KeyValuePair<string, RetentionTimeProviderData>> providerData)
+        public ProcessedIrtAverages(Dictionary<Target, IrtPeptideAverages> dictPeptideIrtAverages, IList<RetentionTimeProviderData> providerData)
         {
             DictPeptideIrtAverages = dictPeptideIrtAverages;
             ProviderData = providerData;
-
-            RegressionLineCount = 0;
-            foreach (var data in ProviderData.Select(p => p.Value))
-            {
-                var statsX = new Statistics(data.Times);
-                var statsY = new Statistics(data.Irts);
-                if (statsY.R(statsX) >= RCalcIrt.MIN_IRT_TO_TIME_CORRELATION)
-                    RegressionLineCount++;
-            }
         }
 
-        private Dictionary<Target, IrtPeptideAverages> DictPeptideIrtAverages { get; set; }
-        public IList<KeyValuePair<string, RetentionTimeProviderData>> ProviderData { get; private set; }
-        public int RunCount { get { return ProviderData.Count; } }
-        public int RegressionLineCount { get; private set; }
+        private Dictionary<Target, IrtPeptideAverages> DictPeptideIrtAverages { get; }
+        public IList<RetentionTimeProviderData> ProviderData { get; }
 
         public IEnumerable<DbIrtPeptide> DbIrtPeptides
         {
@@ -460,8 +544,8 @@ namespace pwiz.Skyline.Model.Irt
             {
                 // TODO: Something better than making unknown times source equal to peak
                 return from pepAverage in DictPeptideIrtAverages.Values
-                       orderby pepAverage.IrtAverage
-                       select new DbIrtPeptide(pepAverage.PeptideModSeq, pepAverage.IrtAverage, false, pepAverage.TimeSource ?? TimeSource.peak);
+                    orderby pepAverage.IrtAverage
+                    select new DbIrtPeptide(pepAverage.PeptideModSeq, pepAverage.IrtAverage, false, pepAverage.TimeSource ?? TimeSource.peak);
             }
         }
 
@@ -473,10 +557,9 @@ namespace pwiz.Skyline.Model.Irt
             var standards = new HashSet<Target>(standardPeptideList.Select(standard => standard.ModifiedTarget));
             foreach (var data in ProviderData)
             {
-                var dataCurrent = data;
-                foreach (var peptide in data.Value.Peptides.Where((peptide, i) => !dataCurrent.Value.MissingIndices.Contains(i)))
+                foreach (var peptide in data.FilteredPeptides)
                 {
-                    if (standards.Remove(peptide) && standards.Count == 0)
+                    if (standards.Remove(peptide.Target) && standards.Count == 0)
                     {
                         return true;
                     }
@@ -485,24 +568,19 @@ namespace pwiz.Skyline.Model.Irt
             return false;
         }
 
-        public List<DbIrtPeptide> RecalibrateStandards(IList<DbIrtPeptide> standardPeptideList)
+        public List<DbIrtPeptide> RecalibrateStandards(DbIrtPeptide[] standardPeptideList)
         {
             var peptideAllIrtTimes = new Dictionary<Target, List<Tuple<double, double>>>(); // peptide -> list of (irt, time)
             foreach (var data in ProviderData)
             {
-                for (var i = 0; i < data.Value.Peptides.Length; i++)
+                foreach (var peptide in data.FilteredPeptides)
                 {
-                    if (data.Value.MissingIndices.Contains(i))
-                        continue;
-
-                    var peptide = data.Value.Peptides[i];
-                    List<Tuple<double, double>> pepTimes;
-                    if (!peptideAllIrtTimes.TryGetValue(peptide, out pepTimes))
+                    if (!peptideAllIrtTimes.TryGetValue(peptide.Target, out var pepTimes))
                     {
                         pepTimes = new List<Tuple<double, double>>();
-                        peptideAllIrtTimes[peptide] = pepTimes;
+                        peptideAllIrtTimes[peptide.Target] = pepTimes;
                     }
-                    pepTimes.Add(Tuple.Create(data.Value.Irts[i], data.Value.Times[i]));
+                    pepTimes.Add(Tuple.Create(peptide.Irt, peptide.RetentionTime.Value));
                 }
             }
             var peptideBestIrtTimes = new Dictionary<Target, Tuple<double, double>>(); // peptide -> (percentile irt, percentile time)
@@ -530,8 +608,7 @@ namespace pwiz.Skyline.Model.Irt
             var newStandardPeptideList = new List<DbIrtPeptide>();
             foreach (var peptide in standardPeptideList)
             {
-                Tuple<double, double> times;
-                if (!peptideBestIrtTimes.TryGetValue(peptide.ModifiedTarget, out times))
+                if (!peptideBestIrtTimes.TryGetValue(peptide.ModifiedTarget, out var times))
                     throw new Exception(Resources.ProcessedIrtAverages_RecalibrateStandards_A_standard_peptide_was_missing_when_trying_to_recalibrate_);
                 newStandardPeptideList.Add(new DbIrtPeptide(peptide) { Irt = line.GetY(times.Item2) });
             }
@@ -550,18 +627,11 @@ namespace pwiz.Skyline.Model.Irt
             TimeSource = timeSource;
         }
 
-        public Target PeptideModSeq { get; private set; }
+        public Target PeptideModSeq { get; }
 
-        public double IrtAverage
-        {
-            get
-            {
-                var statIrts = new Statistics(_irtValues);
-                return statIrts.Median();
-            }
-        }
+        public double IrtAverage => new Statistics(_irtValues).Median();
 
-        public TimeSource? TimeSource { get; private set; }
+        public TimeSource? TimeSource { get; }
 
         public void AddIrt(double irt)
         {
@@ -571,62 +641,74 @@ namespace pwiz.Skyline.Model.Irt
 
     public sealed class RetentionTimeProviderData
     {
-        public RetentionTimeProviderData(IRetentionTimeProvider retentionTimes, IEnumerable<DbIrtPeptide> standardPeptides)
+        public RetentionTimeProviderData(IrtRegressionType regressionType, IRetentionTimeProvider retentionTimes,
+            IReadOnlyList<DbIrtPeptide> standardPeptides, IReadOnlyList<DbIrtPeptide> heavyStandardPeptides)
         {
             RetentionTimeProvider = retentionTimes;
 
-            // Attempt to get regression based on standards
-            var listPeptides = new List<Target>();
-            var listTimes = new List<double>();
-            var listIrts = new List<double>();
-            foreach (var standardPeptide in standardPeptides)
+            Peptides = new List<Peptide>(standardPeptides.Count);
+            for (var i = 0; i < standardPeptides.Count; i++)
             {
-                listPeptides.Add(standardPeptide.ModifiedTarget);
-                listTimes.Add(retentionTimes.GetRetentionTime(standardPeptide.ModifiedTarget) ?? double.MaxValue);
-                listIrts.Add(standardPeptide.Irt);
-            }
-
-            var arrayTimes = listTimes.ToArray();
-            // var libraryTimes = retentionTimes as LibraryRetentionTimes;
-            // if (libraryTimes != null)
-            //     Trace.WriteLine(libraryTimes.Name);
-            // Trace.WriteLine(string.Format("times = {0}", string.Join(", ", arrayTimes.Select(t => string.Format("{0:F02}", t)))));
-
-            Peptides = listPeptides.ToArray();
-            Times = arrayTimes;
-            Irts = listIrts.ToArray();
-            MissingIndices = new HashSet<int>();
-            for (var i = 0; i < Times.Length; i++)
-            {
-                if (Times[i] == double.MaxValue)
-                    MissingIndices.Add(i);
-            }
-            TimesFiltered = Times.Where((v, i) => !MissingIndices.Contains(i)).ToArray();
-            IrtsFiltered = Irts.Where((v, i) => !MissingIndices.Contains(i)).ToArray();
-
-            OutlierIndices = new HashSet<int>();
-            if (TimesFiltered.Any())
-            {
-                var statTimes = new Statistics(TimesFiltered);
-                var statIrts = new Statistics(IrtsFiltered);
-                Regression = new RegressionLine(statIrts.Slope(statTimes), statIrts.Intercept(statTimes));
-
-                var removed = new List<Tuple<double, double>>();
-                RegressionSuccess = RCalcIrt.TryGetRegressionLine(TimesFiltered.ToList(), IrtsFiltered.ToList(), MinPoints, out _regressionRefined, removed);
-                foreach (var remove in removed)
+                var heavy = heavyStandardPeptides[i] != null;
+                var standard = heavy ? heavyStandardPeptides[i] : standardPeptides[i];
+                var rt = retentionTimes.GetRetentionTime(standard.ModifiedTarget);
+                if (!rt.HasValue && heavy)
                 {
-                    for (var i = 0; i < Times.Length && i < Irts.Length; i++)
-                    {
-                        if (Times[i] == remove.Item1 && Irts[i] == remove.Item2)
-                            OutlierIndices.Add(i);
-                    }
+                    standard = standardPeptides[i];
+                    rt = retentionTimes.GetRetentionTime(standard.ModifiedTarget);
                 }
+                Peptides.Add(new Peptide(standard.ModifiedTarget, rt, standard.Irt));
             }
-            else
+            Peptides.Sort((x, y) => x.Irt.CompareTo(y.Irt));
+
+            if (!FilteredPeptides.Any())
             {
                 Regression = null;
                 RegressionRefined = null;
                 RegressionSuccess = false;
+            }
+
+            var filteredRt = FilteredPeptides.Select(pep => pep.RetentionTime.Value).ToList();
+            var filteredIrt = FilteredPeptides.Select(pep => pep.Irt).ToList();
+            var removed = new List<Tuple<double, double>>();
+            if (ReferenceEquals(regressionType, IrtRegressionType.LINEAR))
+            {
+                Regression = new RegressionLine(filteredRt.ToArray(), filteredIrt.ToArray());
+            }
+            else if (ReferenceEquals(regressionType, IrtRegressionType.LOGARITHMIC))
+            {
+                Regression = new LogRegression(filteredRt, filteredIrt);
+            }
+            else if (ReferenceEquals(regressionType, IrtRegressionType.LOWESS))
+            {
+                Regression = new LoessRegression(filteredRt.ToArray(), filteredIrt.ToArray());
+            }
+            else
+            {
+                throw new ArgumentException();
+            }
+
+            IIrtRegression regressionRefined;
+            if (IrtRegression.Accept(Regression, MinPoints))
+            {
+                regressionRefined = Regression;
+                Regression = null;
+                RegressionSuccess = true;
+            }
+            else
+            {
+                RegressionSuccess = IrtRegression.TryGet(Regression, filteredRt, filteredIrt, MinPoints, out regressionRefined, removed);
+            }
+
+            RegressionRefined = regressionRefined;
+            foreach (var remove in removed)
+            {
+                for (var i = 0; i < Peptides.Count; i++)
+                {
+                    var peptide = Peptides[i];
+                    if (peptide.RetentionTime.Equals(remove.Item1) && peptide.Irt.Equals(remove.Item2))
+                        Peptides[i] = new Peptide(peptide, true);
+                }
             }
         }
 
@@ -637,17 +719,18 @@ namespace pwiz.Skyline.Model.Irt
                 // Attempt to get a regression based on shared peptides
                 var calculator = new CurrentCalculator(standardPeptideList, items);
                 var peptidesTimes = retentionTimes.PeptideRetentionTimes.ToArray();
-                var regression = RetentionTimeRegression.FindThreshold(RCalcIrt.MIN_IRT_TO_TIME_CORRELATION,
-                                                                       RetentionTimeRegression.ThresholdPrecision,
-                                                                       peptidesTimes,
-                                                                       new MeasuredRetentionTime[0],
-                                                                       peptidesTimes,null,
-                                                                       calculator,
-                                                                       RegressionMethodRT.linear, 
-                                                                       () => false);
+                var regression = RetentionTimeRegression.FindThreshold(
+                    RCalcIrt.MIN_IRT_TO_TIME_CORRELATION,
+                    RetentionTimeRegression.ThresholdPrecision,
+                    peptidesTimes,
+                    new MeasuredRetentionTime[0],
+                    peptidesTimes,null,
+                    calculator,
+                    RegressionMethodRT.linear,
+                    () => false);
 
                 var startingCount = peptidesTimes.Length;
-                var regressionCount = regression != null ? regression.PeptideTimes.Count : 0;
+                var regressionCount = regression?.PeptideTimes.Count ?? 0;
                 if (regression != null && RCalcIrt.IsAcceptableStandardCount(startingCount, regressionCount))
                 {
                     // Finally must recalculate the regression, because it is transposed from what
@@ -664,29 +747,41 @@ namespace pwiz.Skyline.Model.Irt
             return false;
         }
 
-        public IRetentionTimeProvider RetentionTimeProvider { get; private set; }
+        public IRetentionTimeProvider RetentionTimeProvider { get; }
+        public List<Peptide> Peptides { get; private set; }
+        public IEnumerable<Peptide> FilteredPeptides => Peptides.Where(peptide => !peptide.Missing);
 
-        public Target[] Peptides { get; private set; }
-        public double[] Times { get; private set; }
-        public double[] Irts { get; private set; }
-        private double[] TimesFiltered { get; set; }
-        private double[] IrtsFiltered { get; set; }
+        public int MinPoints => RCalcIrt.MinStandardCount(FilteredPeptides.Count());
 
-        public HashSet<int> MissingIndices { get; private set; }
-        public HashSet<int> OutlierIndices { get; private set; }
-
-        public int MinPoints
-        {
-            get
-            {
-                return RCalcIrt.MinStandardCount(TimesFiltered.Length);
-            }
-        }
-
-        private RegressionLine _regressionRefined;
-        public RegressionLine RegressionRefined { get { return _regressionRefined; } private set { _regressionRefined = value; } }
-        public RegressionLine Regression { get; private set; }
+        public IIrtRegression RegressionRefined { get; private set; }
+        public IIrtRegression Regression { get; }
         public bool RegressionSuccess { get; private set; }
+
+        public class Peptide
+        {
+            public Target Target { get; }
+            public double? RetentionTime { get; }
+            public double Irt { get; }
+            public bool Outlier { get; }
+
+            public Peptide(Target target, double? rt, double irt)
+            {
+                Target = target;
+                RetentionTime = rt;
+                Irt = irt;
+                Outlier = false;
+            }
+
+            public Peptide(Peptide other, bool outlier)
+            {
+                Target = other.Target;
+                RetentionTime = other.RetentionTime;
+                Irt = other.Irt;
+                Outlier = outlier;
+            }
+
+            public bool Missing => !RetentionTime.HasValue;
+        }
     }
 
     public sealed class CurrentCalculator : RetentionScoreCalculatorSpec

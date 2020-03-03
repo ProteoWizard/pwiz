@@ -25,6 +25,7 @@ using System.Text.RegularExpressions;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
@@ -701,6 +702,24 @@ namespace pwiz.Skyline.Util
             return new Adduct(string.Format(@"[M{0}{1}{2}H]", sign, adductFormula, charge>0?@"+":@"-"), ADDUCT_TYPE.non_proteomic) { AdductCharge = charge };
         }
 
+        /// <summary>
+        /// Splits a string which might be a formula and adduct (e.g. C12H5[M+H] returns "C12H5" and sets adduct to Adduct.M_PLUS_H)
+        /// </summary>
+        public static string SplitFormulaAndTrailingAdduct(string formulaAndAdductText, ADDUCT_TYPE adductType, out Adduct adduct)
+        {
+            if (string.IsNullOrEmpty(formulaAndAdductText))
+            {
+                adduct = EMPTY;
+                return string.Empty;
+            }
+            var parts = formulaAndAdductText.Split('[');
+            if (!Adduct.TryParse(formulaAndAdductText.Substring(parts[0].Length), out adduct, adductType))
+            {
+                adduct = EMPTY;
+            }
+            return parts[0];
+        }
+        
         /// <summary>
         /// Replace, for example, the "2" in "[2M+H]"
         /// </summary>
@@ -1693,6 +1712,17 @@ namespace pwiz.Skyline.Util
         public bool IsName
         {
             get { return true; }
+        }
+
+        public bool IsValidProductAdduct(Adduct precursorAdduct, TransitionLosses losses)
+        {
+            int precursorCharge = precursorAdduct.AdductCharge;
+            if (losses != null)
+            {
+                precursorCharge -= losses.TotalCharge;
+            }
+
+            return Math.Abs(AdductCharge) <= Math.Abs(precursorCharge);
         }
     }
 }

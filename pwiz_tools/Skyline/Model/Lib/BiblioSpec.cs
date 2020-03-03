@@ -585,24 +585,30 @@ namespace pwiz.Skyline.Model.Lib
             return false;
         }
 
-        public override bool TryGetIonMobilityInfos(MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
+        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
         {
             ionMobilities = null;
             return false;
         }
 
-        public override bool TryGetIonMobilityInfos(int fileIndex, out LibraryIonMobilityInfo ionMobilities)
+        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, int fileIndex, out LibraryIonMobilityInfo ionMobilities)
         {
             ionMobilities = null;
             return false;
         }
 
-        public override IEnumerable<SpectrumInfo> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
+        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, out LibraryIonMobilityInfo ionMobilities)
+        {
+            ionMobilities = null;
+            return false;
+        }
+
+        public override IEnumerable<SpectrumInfoLibrary> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
         {
             // This base class only handles best match spectra
             SpectrumHeaderInfo libInfo;
             if (redundancy == LibraryRedundancy.best && TryGetLibInfo(key, out libInfo))
-                yield return new SpectrumInfo(this, labelType, key) { SpectrumHeaderInfo = libInfo };
+                yield return new SpectrumInfoLibrary(this, labelType, key) { SpectrumHeaderInfo = libInfo };
         }
 
         public override int? FileCount
