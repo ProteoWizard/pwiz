@@ -637,7 +637,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             }
         }
 
-        private ToolStripMenuItem MakeExcludeStandardMenuItem(int replicateIndex)
+        public ToolStripMenuItem MakeExcludeStandardMenuItem(int replicateIndex)
         {
             var document = DocumentUiContainer.DocumentUI;
             if (!document.Settings.HasResults)
