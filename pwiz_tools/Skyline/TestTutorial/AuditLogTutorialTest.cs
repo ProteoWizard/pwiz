@@ -290,7 +290,7 @@ namespace pwiz.SkylineTestTutorial
                         graphChrom.NameSet,
                         graphChrom.ChromGroupInfos[0].FilePath,
                         scaledStartTime,
-                        graphChrom.GraphItems.First().GetNearestDisplayTime(21.1),
+                        graphChrom.GraphItems.First().GetValidPeakBoundaryTime(21.1),
                         PeakIdentification.ALIGNED,
                         PeakBoundsChangeType.end)
                 };
