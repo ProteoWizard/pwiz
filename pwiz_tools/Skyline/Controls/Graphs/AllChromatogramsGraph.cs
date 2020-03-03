@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
@@ -39,6 +40,7 @@ namespace pwiz.Skyline.Controls.Graphs
     public partial class AllChromatogramsGraph : FormEx
     {
         private readonly Stopwatch _stopwatch;
+        private readonly ManualResetEvent _windowCreatedEvent;
         private int _selected = -1;
         private bool _selectionIsSticky;
         private readonly int _multiFileWindowWidth;
@@ -58,9 +60,28 @@ namespace pwiz.Skyline.Controls.Graphs
         public AllChromatogramsGraph()
         {
             InitializeComponent();
+
+            _windowCreatedEvent = new ManualResetEvent(false);
+            HandleCreated += Notification_HandleCreated;
+
             toolStrip1.Renderer = new CustomToolStripProfessionalRenderer();
             _stopwatch = new Stopwatch();
             _multiFileWindowWidth = Size.Width;
+        }
+
+        private void Notification_HandleCreated(object sender, EventArgs e)
+        {
+            _windowCreatedEvent.Set();
+        }
+
+        public void RemoveAsync()
+        {
+            // Avoid closing the ACG during CreateHandle()
+            ActionUtil.RunAsync(() =>
+            {
+                _windowCreatedEvent.WaitOne();
+                Invoke((Action)Close);
+            }, @"Close AllChromatogramsGraph");
         }
 
         protected override void OnLoad(EventArgs e)

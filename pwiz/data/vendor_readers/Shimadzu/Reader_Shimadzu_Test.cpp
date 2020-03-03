@@ -49,17 +49,20 @@ int main(int argc, char* argv[])
         bool requireUnicodeSupport = true;
         pwiz::msdata::Reader_Shimadzu reader;
         pwiz::util::ReaderTestConfig config;
+        pwiz::util::TestResult result;
 
-        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsShimadzuLCD(), config);
+        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsShimadzuLCD(), config);
 
         config.peakPicking = true;
-        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsShimadzuLCD(), config);
+        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsShimadzuLCD(), config);
 
         // test globalChromatogramsAreMs1Only, but don't need to test spectra here (TODO: get a small test file with MS2 spectra)
         /*auto newConfig = config;
         newConfig.globalChromatogramsAreMs1Only = true;
         newConfig.indexRange = make_pair(0, 0);
         pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile("10nmol_Negative_MS_ID_ON_055.lcd"), newConfig);*/
+
+        result.check();
     }
     catch (exception& e)
     {

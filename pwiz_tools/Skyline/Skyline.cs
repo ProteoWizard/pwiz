@@ -2571,12 +2571,27 @@ namespace pwiz.Skyline
 
         public void ShowRefineDlg()
         {
-            using (var refineDlg = new RefineDlg(DocumentUI))
+            using (var refineDlg = new RefineDlg(this))
             {
                 if (refineDlg.ShowDialog(this) == DialogResult.OK)
                 {
                     ModifyDocument(Resources.SkylineWindow_ShowRefineDlg_Refine,
-                        doc => refineDlg.RefinementSettings.Refine(doc), refineDlg.FormSettings.EntryCreator.Create);
+                        doc =>
+                        {
+                            using (var longWaitDlg = new LongWaitDlg(this))
+                            {
+                                longWaitDlg.Message = Resources.SkylineWindow_ShowRefineDlg_Refining_document;
+                                longWaitDlg.PerformWork(refineDlg, 1000, progressMonitor =>
+                                {
+                                    var srmSettingsChangeMonitor =
+                                        new SrmSettingsChangeMonitor(progressMonitor, Resources.SkylineWindow_ShowRefineDlg_Refining_document, this, doc);
+
+                                        doc = refineDlg.RefinementSettings.Refine(doc, srmSettingsChangeMonitor);
+                                    });
+                            }
+
+                            return doc;
+                        }, refineDlg.FormSettings.EntryCreator.Create);
                 }
             }
         }
@@ -3419,9 +3434,8 @@ namespace pwiz.Skyline
             }
             
             // Determine which peptides are in the standard, but not in the document
-            var missingPeptides = new TargetMap<bool>(newStandard
-                .Except(Document.Peptides.Select(pep => pep.Peptide.Target))
-                .Select(target => new KeyValuePair<Target, bool>(target, true)));
+            var documentPeps = new TargetMap<bool>(Document.Molecules.Select(pep => new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)));
+            var missingPeptides = new TargetMap<bool>(newStandard.Where(pep => !documentPeps.ContainsKey(pep)).Select(target => new KeyValuePair<Target, bool>(target, true)));
             if (missingPeptides.Count == 0)
                 return;
 

@@ -150,6 +150,10 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
     {
         double collisionEnergyFunction1 = 0;
         string collisionEnergyStrFunction1 = rawdata_->GetScanStat(0, scanStatIndex, MassLynxScanItem::COLLISION_ENERGY);
+        /* FIXME: this heuristic is broken; something else is needed or user must manually specify whether to assume first two MS1 functions are actually MSe data
+        if (!collisionEnergyStrFunction1.empty())
+            collisionEnergyFunction1 = lexical_cast<double>(collisionEnergyStrFunction1);
+        */
         if (collisionEnergy > collisionEnergyFunction1)
         {
             msLevel = 2;
@@ -167,13 +171,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
     double scanStartTimeInMinutes = rawdata_->Info.GetRetentionTime(ie.function, scanStatIndex);
     scan.set(MS_scan_start_time, scanStartTimeInMinutes, UO_minute);
 
-    boost::weak_ptr<RawData> binaryDataSource = rawdata_;
-    if (msLevelsToCentroid.contains(msLevel))
-    {
-        rawdata_->Centroid();
-        binaryDataSource = rawdata_->CentroidRawDataFile();
-    }
-
     if (isMS)
     {
         PwizPolarityType polarityType = WatersToPwizPolarityType(rawdata_->Info.GetIonMode(ie.function));
@@ -183,17 +180,37 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
         double lockmassMz = (polarityType == PolarityType_Negative) ? lockmassMzNegScans : lockmassMzPosScans;
         if (lockmassMz != 0.0)
         {
-            if (!rawdata_->ApplyLockMass(lockmassMz, lockmassTolerance)) // TODO: if false (cannot apply lockmass), log a warning
+            if (detailLevel == DetailLevel_FullData && !rawdata_->ApplyLockMass(lockmassMz, lockmassTolerance)) // TODO: if false (cannot apply lockmass), log a warning
                 warn_once("[SpectrumList_Waters] failed to apply lockmass correction");
         }
         else
             rawdata_->RemoveLockMass();
     }
 
-    if (rawdata_->Info.IsContinuum(ie.function))
-        result->set(MS_profile_spectrum);
+    bool isProfile = rawdata_->Info.IsContinuum(ie.function);
+    if (isProfile)
+        result->set(MS_profile_spectrum); // let peakPicker know this was a profile spectrum even if centroiding is requested
     else
         result->set(MS_centroid_spectrum);
+
+    bool doCentroid = msLevelsToCentroid.contains(msLevel) && isProfile;
+
+    if (doCentroid && ie.block >= 0)
+    {
+        warn_once("[SpectrumList_Waters]: vendor centroiding is not supported for Waters ion mobility data");
+        doCentroid = false;
+    }
+
+    boost::weak_ptr<RawData> binaryDataSource = rawdata_;
+    if (doCentroid)
+    {
+        if (detailLevel >= DetailLevel_FullMetadata)
+        {
+            rawdata_->Centroid();
+            binaryDataSource = rawdata_->CentroidRawDataFile();
+        }
+        result->set(MS_centroid_spectrum);
+    }
     
     // block >= 0 is ion mobility
     if (ie.block < 0 || config_.combineIonMobilitySpectra)
@@ -201,10 +218,10 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
         int scan = ie.block < 0 ? ie.scan : ie.block;
         // scanStats values don't match the ion mobility data arrays
         // CONSIDER: in the ion mobility case, get these values from the actual data arrays
-        result->set(MS_base_peak_m_z, rawdata_->GetScanStat<double>(ie.function, scan, MassLynxScanItem::BASE_PEAK_MASS));
-        result->set(MS_base_peak_intensity, rawdata_->GetScanStat<double>(ie.function, scan, MassLynxScanItem::BASE_PEAK_INTENSITY));
-        result->set(MS_total_ion_current, rawdata_->GetScanStat<double>(ie.function, scan, MassLynxScanItem::TOTAL_ION_CURRENT));
-        result->defaultArrayLength = rawdata_->GetScanStat<int>(ie.function, scan, MassLynxScanItem::PEAKS_IN_SCAN);
+        result->set(MS_base_peak_m_z, binaryDataSource.lock()->GetScanStat<double>(ie.function, scan, MassLynxScanItem::BASE_PEAK_MASS));
+        result->set(MS_base_peak_intensity, binaryDataSource.lock()->GetScanStat<double>(ie.function, scan, MassLynxScanItem::BASE_PEAK_INTENSITY));
+        result->set(MS_total_ion_current, binaryDataSource.lock()->GetScanStat<double>(ie.function, scan, MassLynxScanItem::TOTAL_ION_CURRENT));
+        result->defaultArrayLength = binaryDataSource.lock()->GetScanStat<int>(ie.function, scan, MassLynxScanItem::PEAKS_IN_SCAN);
     }
     else
     {
@@ -266,7 +283,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
                 return result;
 
             auto mobilityArray = boost::make_shared<BinaryDataArray>();
-            getCombinedSpectrumData(ie.function, ie.block, mzArray, intensityArray, mobilityArray->data);
+            getCombinedSpectrumData(ie.function, ie.block, mzArray, intensityArray, mobilityArray->data, doCentroid);
             result->defaultArrayLength = mzArray.size();
 
             result->swapMZIntensityArrays(mzArray, intensityArray, MS_number_of_detector_counts); // Donate mass and intensity buffers to result vectors
@@ -278,7 +295,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
         {
             vector<float> masses, intensities;
 
-            if (ie.block >= 0)
+            if (ie.block >= 0 && !doCentroid)
             {
                 MassLynxRawScanReader& scanReader = binaryDataSource.lock()->GetCompressedDataClusterForBlock(ie.function, ie.block);
                 scanReader.ReadScan(ie.function, ie.block, ie.scan, masses, intensities);
@@ -287,7 +304,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
                 if (detailLevel == DetailLevel_FullMetadata)
                     return result;
             }
-            else // not ion mobility, defaultArrayLength set by PEAKS_IN_SCAN
+            else // not ion mobility or getting data from centroid.raw: defaultArrayLength set by PEAKS_IN_SCAN
             {
                 if (detailLevel != DetailLevel_FullMetadata)
                     binaryDataSource.lock()->Reader.ReadScan(ie.function, ie.scan, masses, intensities);
@@ -433,17 +450,16 @@ PWIZ_API_DECL pwiz::analysis::Spectrum3DPtr SpectrumList_Waters::spectrum3d(doub
     return result;
 }
 
-PWIZ_API_DECL void SpectrumList_Waters::getCombinedSpectrumData(int function, int block, BinaryData<double>& mz, BinaryData<double>& intensity, BinaryData<double>& driftTime) const
+PWIZ_API_DECL void SpectrumList_Waters::getCombinedSpectrumData(int function, int block, BinaryData<double>& mz, BinaryData<double>& intensity, BinaryData<double>& driftTime, bool doCentroid) const
 {
-    MassLynxRawScanReader& cdc = rawdata_->GetCompressedDataClusterForBlock(function, block);
+    MassLynxRawScanReader& scanReader = doCentroid ? rawdata_->CentroidRawDataFile()->Reader : (MassLynxRawScanReader&) rawdata_->GetCompressedDataClusterForBlock(function, block);
     vector<float>& imsMasses = imsMasses_;
     vector<float>& imsIntensities = imsIntensities_;
 
     int numScansInBlock = rawdata_->Info.GetDriftScanCount(function);
-    const auto& mzMobilityFilter = config_.isolationMzAndMobilityFilter;
 
     // NB: there's currently no way to know how many points the final array will have; PEAKS_IN_SCAN is a useful heuristic with a bit of expansion factored in
-    int totalPoints = rawdata_->GetScanStat<int>(function, block, MassLynxScanItem::PEAKS_IN_SCAN) * 1.5;
+    int totalPoints = (doCentroid ? rawdata_->CentroidRawDataFile() : rawdata_)->GetScanStat<int>(function, block, MassLynxScanItem::PEAKS_IN_SCAN) * 1.5;
     mz.resize(totalPoints);
     intensity.resize(totalPoints);
     driftTime.resize(totalPoints);
@@ -456,7 +472,7 @@ PWIZ_API_DECL void SpectrumList_Waters::getCombinedSpectrumData(int function, in
         if (!chemistry::MzMobilityWindow::mobilityValueInBounds(config_.isolationMzAndMobilityFilter, dt))
             continue;
 
-        cdc.ReadScan(function, block, scan, imsMasses, imsIntensities);
+        scanReader.ReadScan(function, block, scan, imsMasses, imsIntensities);
 
         for (int i = 0, end = imsMasses.size(); i < end; ++i)
         {

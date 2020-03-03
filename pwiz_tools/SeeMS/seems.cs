@@ -475,5 +475,17 @@ namespace seems
             Properties.Settings.Default.TimeInMinutes = timeInMinutesToolStripMenuItem.Checked;
             Properties.Settings.Default.Save();
         }
+
+        private void showSIMScansAsSpectraToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.SimAsSpectra = showSIMScansAsSpectraToolStripMenuItem.Checked;
+            Properties.Settings.Default.Save();
+        }
+
+        private void showSRMScansAsSpectraToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.SrmAsSpectra = showSRMScansAsSpectraToolStripMenuItem.Checked;
+            Properties.Settings.Default.Save();
+        }
     }
 }

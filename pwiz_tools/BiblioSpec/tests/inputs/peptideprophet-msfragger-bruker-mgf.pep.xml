@@ -1,0 +1,1095 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="D:\interact-peptideprophet-msfragger-bruker-mgf.pep.xsl"?>
+<msms_pipeline_analysis date="2019-12-12T16:36:45" xmlns="http://regis-web.systemsbiology.net/pepXML" summary_xml="D:\interact-peptideprophet-msfragger-bruker-mgf.pep.xml" xsi:schemaLocation="http://regis-web.systemsbiology.net/pepXML http://localhost/pepXML_v122.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<analysis_summary analysis="peptideprophet" time="2019-12-12T16:37:24">
+<peptideprophet_summary version="PeptideProphet  (TPP v5.2.1-dev Flammagenitus, Build 201906281613-exported (Windows_NT-x86_64))" author="AKeller@ISB" type="unlinked" min_prob="0.05" options=" ACCMASS PPM DECOYPROBS EXPECTSCORE NONPARAM NONPARAM DECOY=rev_ " est_tot_num_correct="111102.3">
+<inputfile name="D:/peptideprophet-msfragger-bruker-mgf.pep.xml"/>
+</peptideprophet_summary>
+</analysis_summary>
+<analysis_summary analysis="database_refresh" time="2019-12-12T16:36:59"/>
+<analysis_summary analysis="interact" time="2019-12-12T16:36:26">
+<interact_summary filename="D:\interact-peptideprophet-msfragger-bruker-mgf.pep.xml" directory="">
+<inputfile name="D:\peptideprophet-msfragger-bruker-mgf.pepXML"/>
+</interact_summary>
+</analysis_summary>
+<dataset_derivation generation_no="0"/>
+<msms_run_summary base_name="D:/peptideprophet-msfragger-bruker-mgf" raw_data_type="raw" raw_data="mzBIN_calibrated">
+<sample_enzyme name="trypsin">
+<specificity cut="KR" no_cut="P" sense="C"/>
+</sample_enzyme>
+<search_summary base_name="D:/peptideprophet-msfragger-bruker-mgf" precursor_mass_type="monoisotopic" search_engine="X! Tandem" search_engine_version="MSFragger-2.3-RC10" fragment_mass_type="monoisotopic" search_id="1">
+<search_database local_path="C:\FragPipe\2019-12-08-td-rev-UP000005640.fas" type="AA"/>
+<enzymatic_search_constraint enzyme="default" min_number_termini="2" max_num_internal_cleavages="1"/>
+<aminoacid_modification aminoacid="C" massdiff="57.0215" mass="160.0307" variable="N"/>
+<aminoacid_modification aminoacid="M" massdiff="15.9949" mass="147.0354" variable="Y"/>
+<terminal_modification massdiff="42.0106" protein_terminus="Y" mass="43.0184" terminus="N" variable="Y"/>
+<parameter name="# MSFragger.build" value="MSFragger-2.3-RC10"/>
+<parameter name="database_name" value="C:\FragPipe\2019-12-08-td-rev-UP000005640.fas"/>
+<parameter name="decoy_prefix" value="rev_"/>
+<parameter name="num_threads" value="11"/>
+<parameter name="precursor_mass_lower" value="-50.0"/>
+<parameter name="precursor_mass_upper" value="50.0"/>
+<parameter name="precursor_mass_units" value="1"/>
+<parameter name="precursor_true_tolerance" value="20.0"/>
+<parameter name="precursor_true_units" value="1"/>
+<parameter name="fragment_mass_tolerance" value="15.0"/>
+<parameter name="fragment_mass_units" value="1"/>
+<parameter name="calibrate_mass" value="2"/>
+<parameter name="write_calibrated_mgf" value="1"/>
+<parameter name="isotope_error" value="0/1/2"/>
+<parameter name="mass_offsets" value="0"/>
+<parameter name="precursor_mass_mode" value="SELECTED"/>
+<parameter name="localize_delta_mass" value="0"/>
+<parameter name="intensity_transform" value="1"/>
+<parameter name="remove_precursor_peak" value="0"/>
+<parameter name="remove_precursor_range" value="-1.50,1.50"/>
+<parameter name="delta_mass_exclude_ranges" value="(-1.5,3.5)"/>
+<parameter name="fragment_ion_series" value="b,y"/>
+<parameter name="search_enzyme_name" value="trypsin"/>
+<parameter name="search_enzyme_cutafter" value="KR"/>
+<parameter name="search_enzyme_butnotafter" value="P"/>
+<parameter name="num_enzyme_termini" value="2"/>
+<parameter name="allowed_missed_cleavage" value="1"/>
+<parameter name="clip_nTerm_M" value="1"/>
+<parameter name="allow_multiple_variable_mods_on_residue" value="0"/>
+<parameter name="max_variable_mods_per_peptide" value="3"/>
+<parameter name="max_variable_mods_combinations" value="5000"/>
+<parameter name="output_file_extension" value="pepXML"/>
+<parameter name="output_format" value="pepXML"/>
+<parameter name="output_report_topN" value="1"/>
+<parameter name="output_max_expect" value="50.0"/>
+<parameter name="report_alternative_proteins" value="0"/>
+<parameter name="override_charge" value="0"/>
+<parameter name="precursor_charge" value="1 4"/>
+<parameter name="digest_min_length" value="7"/>
+<parameter name="digest_max_length" value="50"/>
+<parameter name="digest_mass_range" value="500.0 5000.0"/>
+<parameter name="max_fragment_charge" value="2"/>
+<parameter name="deisotope" value="2"/>
+<parameter name="track_zero_topN" value="0"/>
+<parameter name="zero_bin_accept_expect" value="0.0"/>
+<parameter name="zero_bin_mult_expect" value="1.0"/>
+<parameter name="add_topN_complementary" value="0"/>
+<parameter name="minimum_peaks" value="15"/>
+<parameter name="use_topN_peaks" value="500"/>
+<parameter name="min_fragments_modelling" value="2"/>
+<parameter name="min_matched_fragments" value="4"/>
+<parameter name="minimum_ratio" value="0.0"/>
+<parameter name="clear_mz_range" value="0.0 0.0"/>
+<parameter name="excluded_scan_list_file" value=""/>
+<parameter name="variable_mod_01" value="15.99490 M 3"/>
+<parameter name="variable_mod_02" value="42.01060 [^ 1"/>
+<parameter name="add_A_alanine" value="0.000000"/>
+<parameter name="add_B_user_amino_acid" value="0.000000"/>
+<parameter name="add_C_cysteine" value="57.021464"/>
+<parameter name="add_Cterm_peptide" value="0.0"/>
+<parameter name="add_Cterm_protein" value="0.0"/>
+<parameter name="add_D_aspartic_acid" value="0.000000"/>
+<parameter name="add_E_glutamic_acid" value="0.000000"/>
+<parameter name="add_F_phenylalanine" value="0.000000"/>
+<parameter name="add_G_glycine" value="0.000000"/>
+<parameter name="add_H_histidine" value="0.000000"/>
+<parameter name="add_I_isoleucine" value="0.000000"/>
+<parameter name="add_J_user_amino_acid" value="0.000000"/>
+<parameter name="add_K_lysine" value="0.000000"/>
+<parameter name="add_L_leucine" value="0.000000"/>
+<parameter name="add_M_methionine" value="0.000000"/>
+<parameter name="add_N_asparagine" value="0.000000"/>
+<parameter name="add_Nterm_peptide" value="0.0"/>
+<parameter name="add_Nterm_protein" value="0.0"/>
+<parameter name="add_O_user_amino_acid" value="0.000000"/>
+<parameter name="add_P_proline" value="0.000000"/>
+<parameter name="add_Q_glutamine" value="0.000000"/>
+<parameter name="add_R_arginine" value="0.000000"/>
+<parameter name="add_S_serine" value="0.000000"/>
+<parameter name="add_T_threonine" value="0.000000"/>
+<parameter name="add_U_user_amino_acid" value="0.000000"/>
+<parameter name="add_V_valine" value="0.000000"/>
+<parameter name="add_W_tryptophan" value="0.000000"/>
+<parameter name="add_X_user_amino_acid" value="0.000000"/>
+<parameter name="add_Y_tyrosine" value="0.000000"/>
+<parameter name="add_Z_user_amino_acid" value="0.000000"/>
+</search_summary>
+<analysis_timestamp analysis="peptideprophet" time="2019-12-12T16:37:24" id="1"/>
+<analysis_timestamp analysis="database_refresh" time="2019-12-12T16:36:59" id="1">
+<database_refresh_timestamp database="c:/FragPipe/2019-12-08-td-rev-UP000005640.fas" min_num_enz_term="0"/>
+</analysis_timestamp>
+<spectrum_query start_scan="152" ion_mobility="1.3543512" uncalibrated_precursor_neutral_mass="878.4165" assumed_charge="1" spectrum="peptideprophet-msfragger-bruker-mgf.00152.00152.1" end_scan="152" index="2" precursor_neutral_mass="878.4183" retention_time_sec="471.296">
+<search_result>
+<search_hit peptide="EMLQQSK" massdiff="0.0016" calc_neutral_pep_mass="878.4167" peptide_next_aa="L" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="3" tot_num_ions="12" hit_rank="1" num_matched_ions="10" protein="sp|P07900|HS90A_HUMAN" peptide_prev_aa="R" is_rejected="0" protein_descr="Heat shock protein HSP 90-alpha OS=Homo sapiens OX=9606 GN=HSP90AA1 PE=1 SV=5">
+<alternative_protein protein="sp|P08238|HS90B_HUMAN" protein_descr="Heat shock protein HSP 90-beta OS=Homo sapiens OX=9606 GN=HSP90AB1 PE=1 SV=4" num_tol_term="2" peptide_prev_aa="R" peptide_next_aa="L"/>
+<alternative_protein protein="sp|Q58FF7|H90B3_HUMAN" protein_descr="Putative heat shock protein HSP 90-beta-3 OS=Homo sapiens OX=9606 GN=HSP90AB3P PE=5 SV=1" num_tol_term="2" peptide_prev_aa="R" peptide_next_aa="L"/>
+<modification_info modified_peptide="EM[147]LQQSK">
+<mod_aminoacid_mass mass="147.0354" position="2"/>
+</modification_info>
+<search_score name="hyperscore" value="18.870"/>
+<search_score name="nextscore" value="11.675"/>
+<search_score name="expect" value="1.350e-03"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.9965" all_ntt_prob="(0.9964,0.9977,0.9965)">
+<search_score_summary>
+<parameter name="fval" value="5.9557"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="1.821"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="154" ion_mobility="1.2263277" uncalibrated_precursor_neutral_mass="702.36584" assumed_charge="1" spectrum="peptideprophet-msfragger-bruker-mgf.00154.00154.1" end_scan="154" index="3" precursor_neutral_mass="702.3676" retention_time_sec="471.296">
+<search_result>
+<search_hit peptide="IAGEASR" massdiff="0.0015" calc_neutral_pep_mass="702.3660" peptide_next_aa="L" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="14" tot_num_ions="12" hit_rank="1" num_matched_ions="7" protein="sp|O60814|H2B1K_HUMAN" peptide_prev_aa="R" is_rejected="0" protein_descr="Histone H2B type 1-K OS=Homo sapiens OX=9606 GN=H2BC12 PE=1 SV=3">
+<alternative_protein protein="sp|P06899|H2B1J_HUMAN" protein_descr="Histone H2B type 1-J OS=Homo sapiens OX=9606 GN=H2BC11 PE=1 SV=3" num_tol_term="2" peptide_prev_aa="R" peptide_next_aa="L"/>
+<alternative_protein protein="sp|P23527|H2B1O_HUMAN" protein_descr="Histone H2B type 1-O OS=Homo sapiens OX=9606 GN=HIST1H2BO PE=1 SV=3" num_tol_term="2" peptide_prev_aa="R" peptide_next_aa="L"/>
+<alternative_protein protein="sp|P33778|H2B1B_HUMAN" protein_descr="Histone H2B type 1-B OS=Homo sapiens OX=9606 GN=HIST1H2BB PE=1 SV=2" num_tol_term="2" peptide_prev_aa="R" peptide_next_aa="L"/>
+<alternative_protein protein="sp|P57053|H2BFS_HUMAN" protein_descr="Histone H2B type F-S OS=Homo sapiens OX=9606 GN=H2BFS PE=1 SV=2" num_tol_term="2" peptide_prev_aa="R" peptide_next_aa="L"/>
+<alternative_protein protein="sp|P58876|H2B1D_HUMAN" protein_descr="Histone H2B type 1-D OS=Homo sapiens OX=9606 GN=HIST1H2BD PE=1 SV=2" num_tol_term="2" peptide_prev_aa="R" peptide_next_aa="L"/>
+<alternative_protein protein="sp|P62807|H2B1C_HUMAN" protein_descr="Histone H2B type 1-C\E\F\G\I OS=Homo sapiens OX=9606 GN=H2BC4 PE=1 SV=4" num_tol_term="2" peptide_prev_aa="R" peptide_next_aa="L"/>
+<alternative_protein protein="sp|Q16778|H2B2E_HUMAN" protein_descr="Histone H2B type 2-E OS=Homo sapiens OX=9606 GN=HIST2H2BE PE=1 SV=3" num_tol_term="2" peptide_prev_aa="R" peptide_next_aa="L"/>
+<alternative_protein protein="sp|Q5QNW6|H2B2F_HUMAN" protein_descr="Histone H2B type 2-F OS=Homo sapiens OX=9606 GN=HIST2H2BF PE=1 SV=3" num_tol_term="2" peptide_prev_aa="R" peptide_next_aa="L"/>
+<alternative_protein protein="sp|Q6DN03|H2B2C_HUMAN" protein_descr="Putative histone H2B type 2-C OS=Homo sapiens OX=9606 GN=HIST2H2BC PE=5 SV=3" num_tol_term="2" peptide_prev_aa="R" peptide_next_aa="L"/>
+<alternative_protein protein="sp|Q6DRA6|H2B2D_HUMAN" protein_descr="Putative histone H2B type 2-D OS=Homo sapiens OX=9606 GN=HIST2H2BD PE=5 SV=3" num_tol_term="2" peptide_prev_aa="R" peptide_next_aa="L"/>
+<alternative_protein protein="sp|Q93079|H2B1H_HUMAN" protein_descr="Histone H2B type 1-H OS=Homo sapiens OX=9606 GN=HIST1H2BH PE=1 SV=3" num_tol_term="2" peptide_prev_aa="R" peptide_next_aa="L"/>
+<alternative_protein protein="sp|Q99877|H2B1N_HUMAN" protein_descr="Histone H2B type 1-N OS=Homo sapiens OX=9606 GN=H2BC15 PE=1 SV=3" num_tol_term="2" peptide_prev_aa="R" peptide_next_aa="L"/>
+<alternative_protein protein="sp|Q99879|H2B1M_HUMAN" protein_descr="Histone H2B type 1-M OS=Homo sapiens OX=9606 GN=H2BC14 PE=1 SV=3" num_tol_term="2" peptide_prev_aa="R" peptide_next_aa="L"/>
+<search_score name="hyperscore" value="12.379"/>
+<search_score name="nextscore" value="8.704"/>
+<search_score name="expect" value="1.907e-01"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.8492" all_ntt_prob="(0.8453,0.8950,0.8492)">
+<search_score_summary>
+<parameter name="fval" value="2.2428"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="2.136"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="159" ion_mobility="0.93656766" uncalibrated_precursor_neutral_mass="1181.6361" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mgf.00159.00159.2" end_scan="159" index="4" precursor_neutral_mass="1181.6393" retention_time_sec="471.296">
+<search_result>
+<search_hit peptide="KPAAAAAPGTAEK" massdiff="-0.0010" calc_neutral_pep_mass="1181.6403" peptide_next_aa="L" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="24" hit_rank="1" num_matched_ions="16" protein="sp|P50454|SERPH_HUMAN" peptide_prev_aa="K" is_rejected="0" protein_descr="Serpin H1 OS=Homo sapiens OX=9606 GN=SERPINH1 PE=1 SV=2">
+<search_score name="hyperscore" value="33.181"/>
+<search_score name="nextscore" value="13.159"/>
+<search_score name="expect" value="1.112e-09"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="1.0000" all_ntt_prob="(1.0000,1.0000,1.0000)">
+<search_score_summary>
+<parameter name="fval" value="16.4628"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="-0.846"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="160" ion_mobility="0.8946906" uncalibrated_precursor_neutral_mass="1180.5447" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mgf.00160.00160.2" end_scan="160" index="5" precursor_neutral_mass="1180.5479" retention_time_sec="471.296">
+<search_result>
+<search_hit peptide="GAHPSGGADDVAK" massdiff="0.0007" calc_neutral_pep_mass="1180.5471" peptide_next_aa="K" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="24" hit_rank="1" num_matched_ions="17" protein="sp|Q07065|CKAP4_HUMAN" peptide_prev_aa="K" is_rejected="0" protein_descr="Cytoskeleton-associated protein 4 OS=Homo sapiens OX=9606 GN=CKAP4 PE=1 SV=2">
+<search_score name="hyperscore" value="35.042"/>
+<search_score name="nextscore" value="11.554"/>
+<search_score name="expect" value="5.867e-09"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="1.0000" all_ntt_prob="(1.0000,1.0000,1.0000)">
+<search_score_summary>
+<parameter name="fval" value="15.2154"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="0.593"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="161" ion_mobility="0.8430656" uncalibrated_precursor_neutral_mass="1049.5189" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mgf.00161.00161.2" end_scan="161" index="6" precursor_neutral_mass="1049.5220" retention_time_sec="471.296">
+<search_result>
+<search_hit peptide="HEANNPQLK" massdiff="-0.0033" calc_neutral_pep_mass="1049.5253" peptide_next_aa="E" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="16" hit_rank="1" num_matched_ions="14" protein="sp|P31948|STIP1_HUMAN" peptide_prev_aa="K" is_rejected="0" protein_descr="Stress-induced-phosphoprotein 1 OS=Homo sapiens OX=9606 GN=STIP1 PE=1 SV=1">
+<search_score name="hyperscore" value="28.138"/>
+<search_score name="nextscore" value="12.556"/>
+<search_score name="expect" value="1.165e-06"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="1.0000" all_ntt_prob="(1.0000,1.0000,1.0000)">
+<search_score_summary>
+<parameter name="fval" value="11.2471"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="-3.144"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="165" ion_mobility="1.40736" uncalibrated_precursor_neutral_mass="925.4959" assumed_charge="1" spectrum="peptideprophet-msfragger-bruker-mgf.00165.00165.1" end_scan="165" index="7" precursor_neutral_mass="925.4979" retention_time_sec="471.296">
+<search_result>
+<search_hit peptide="NLVHSGATK" massdiff="-0.0002" calc_neutral_pep_mass="925.4981" peptide_next_aa="G" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="16" hit_rank="1" num_matched_ions="13" protein="sp|Q13867|BLMH_HUMAN" peptide_prev_aa="R" is_rejected="0" protein_descr="Bleomycin hydrolase OS=Homo sapiens OX=9606 GN=BLMH PE=1 SV=1">
+<search_score name="hyperscore" value="26.460"/>
+<search_score name="nextscore" value="11.838"/>
+<search_score name="expect" value="1.323e-06"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="1.0000" all_ntt_prob="(1.0000,1.0000,1.0000)">
+<search_score_summary>
+<parameter name="fval" value="11.1517"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="-0.216"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="166" ion_mobility="1.3626763" uncalibrated_precursor_neutral_mass="909.4462" assumed_charge="1" spectrum="peptideprophet-msfragger-bruker-mgf.00166.00166.1" end_scan="166" index="8" precursor_neutral_mass="909.4482" retention_time_sec="471.296">
+<search_result>
+<search_hit peptide="IVEMSTSK" massdiff="0.0005" calc_neutral_pep_mass="909.4477" peptide_next_aa="T" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="2" tot_num_ions="14" hit_rank="1" num_matched_ions="11" protein="sp|P63241|IF5A1_HUMAN" peptide_prev_aa="K" is_rejected="0" protein_descr="Eukaryotic translation initiation factor 5A-1 OS=Homo sapiens OX=9606 GN=EIF5A PE=1 SV=2">
+<alternative_protein protein="sp|Q9GZV4|IF5A2_HUMAN" protein_descr="Eukaryotic translation initiation factor 5A-2 OS=Homo sapiens OX=9606 GN=EIF5A2 PE=1 SV=3" num_tol_term="2" peptide_prev_aa="K" peptide_next_aa="T"/>
+<modification_info modified_peptide="IVEM[147]STSK">
+<mod_aminoacid_mass mass="147.0354" position="4"/>
+</modification_info>
+<search_score name="hyperscore" value="20.248"/>
+<search_score name="nextscore" value="12.507"/>
+<search_score name="expect" value="1.406e-04"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.9995" all_ntt_prob="(0.9994,0.9996,0.9995)">
+<search_score_summary>
+<parameter name="fval" value="7.6522"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="0.550"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="172" ion_mobility="0.9368964" uncalibrated_precursor_neutral_mass="1435.571" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mgf.00172.00172.2" end_scan="172" index="9" precursor_neutral_mass="1435.5745" retention_time_sec="471.296">
+<search_result>
+<search_hit peptide="GDMEQNDSDNRR" massdiff="-0.0001" calc_neutral_pep_mass="1435.5746" peptide_next_aa="L" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="22" hit_rank="1" num_matched_ions="13" protein="sp|Q9UN86|G3BP2_HUMAN" peptide_prev_aa="R" is_rejected="0" protein_descr="Ras GTPase-activating protein-binding protein 2 OS=Homo sapiens OX=9606 GN=G3BP2 PE=1 SV=2">
+<search_score name="hyperscore" value="23.595"/>
+<search_score name="nextscore" value="10.425"/>
+<search_score name="expect" value="9.468e-04"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.9997" all_ntt_prob="(0.9988,0.9996,0.9997)">
+<search_score_summary>
+<parameter name="fval" value="6.2218"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="-0.070"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="174" ion_mobility="0.8475334" uncalibrated_precursor_neutral_mass="1066.5126" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mgf.00174.00174.2" end_scan="174" index="10" precursor_neutral_mass="1066.5155" retention_time_sec="471.296">
+<search_result>
+<search_hit peptide="INHEGEVNR" massdiff="0.0000" calc_neutral_pep_mass="1066.5155" peptide_next_aa="A" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="2" tot_num_ions="16" hit_rank="1" num_matched_ions="10" protein="sp|Q09028|RBBP4_HUMAN" peptide_prev_aa="K" is_rejected="0" protein_descr="Histone-binding protein RBBP4 OS=Homo sapiens OX=9606 GN=RBBP4 PE=1 SV=3">
+<alternative_protein protein="sp|Q16576|RBBP7_HUMAN" protein_descr="Histone-binding protein RBBP7 OS=Homo sapiens OX=9606 GN=RBBP7 PE=1 SV=1" num_tol_term="2" peptide_prev_aa="K" peptide_next_aa="A"/>
+<search_score name="hyperscore" value="20.469"/>
+<search_score name="nextscore" value="13.030"/>
+<search_score name="expect" value="3.335e-03"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.9992" all_ntt_prob="(0.9962,0.9986,0.9992)">
+<search_score_summary>
+<parameter name="fval" value="5.2775"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="0.000"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="175" ion_mobility="0.7689087" uncalibrated_precursor_neutral_mass="936.4042" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mgf.00175.00175.2" end_scan="175" index="11" precursor_neutral_mass="936.4069" retention_time_sec="471.296">
+<search_result>
+<search_hit peptide="LYPSAACR" massdiff="-0.0418" calc_neutral_pep_mass="936.4487" peptide_next_aa="G" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="14" hit_rank="1" num_matched_ions="6" protein="rev_sp|O95848|NUD14_HUMAN" peptide_prev_aa="R" is_rejected="0" protein_descr="Uridine diphosphate glucose pyrophosphatase NUDT14 OS=Homo sapiens OX=9606 GN=NUDT14 PE=1 SV=2">
+<modification_info modified_peptide="LYPSAACR">
+<mod_aminoacid_mass mass="160.0307" position="7"/>
+</modification_info>
+<search_score name="hyperscore" value="13.262"/>
+<search_score name="nextscore" value="10.533"/>
+<search_score name="expect" value="2.211e-01"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.0695" all_ntt_prob="(0.0161,0.0426,0.0695)">
+<search_score_summary>
+<parameter name="fval" value="2.1319"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="-44.641"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="183" ion_mobility="1.0049287" uncalibrated_precursor_neutral_mass="1502.7186" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mgf.00183.00183.2" end_scan="183" index="12" precursor_neutral_mass="1502.7220" retention_time_sec="471.296">
+<search_result>
+<search_hit peptide="LAEAHQQECCQK" massdiff="2.0771" calc_neutral_pep_mass="1500.6449" peptide_next_aa="F" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="22" hit_rank="1" num_matched_ions="17" protein="sp|Q9Y5X3|SNX5_HUMAN" peptide_prev_aa="K" is_rejected="0" protein_descr="Sorting nexin-5 OS=Homo sapiens OX=9606 GN=SNX5 PE=1 SV=1">
+<modification_info modified_peptide="LAEAHQQECCQK">
+<mod_aminoacid_mass mass="160.0307" position="9"/>
+<mod_aminoacid_mass mass="160.0307" position="10"/>
+</modification_info>
+<search_score name="hyperscore" value="34.065"/>
+<search_score name="nextscore" value="18.291"/>
+<search_score name="expect" value="2.304e-08"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="1.0000" all_ntt_prob="(1.0000,1.0000,1.0000)">
+<search_score_summary>
+<parameter name="fval" value="14.1895"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="46.777"/>
+<parameter name="isomassd" value="2"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="184" ion_mobility="0.9601604" uncalibrated_precursor_neutral_mass="1390.6333" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mgf.00184.00184.2" end_scan="184" index="13" precursor_neutral_mass="1390.6366" retention_time_sec="471.296">
+<search_result>
+<search_hit peptide="WASEPEHDHRK" massdiff="-0.0011" calc_neutral_pep_mass="1390.6377" peptide_next_aa="R" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="20" hit_rank="1" num_matched_ions="15" protein="sp|P08574|CY1_HUMAN" peptide_prev_aa="R" is_rejected="0" protein_descr="Cytochrome c1, heme protein, mitochondrial OS=Homo sapiens OX=9606 GN=CYC1 PE=1 SV=3">
+<search_score name="hyperscore" value="30.484"/>
+<search_score name="nextscore" value="11.526"/>
+<search_score name="expect" value="9.504e-07"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="1.0000" all_ntt_prob="(1.0000,1.0000,1.0000)">
+<search_score_summary>
+<parameter name="fval" value="11.3998"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="-0.791"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="187" ion_mobility="0.82769895" uncalibrated_precursor_neutral_mass="1049.5198" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mgf.00187.00187.2" end_scan="187" index="14" precursor_neutral_mass="1049.5227" retention_time_sec="471.296">
+<search_result>
+<search_hit peptide="HEANNPQLK" massdiff="-0.0026" calc_neutral_pep_mass="1049.5253" peptide_next_aa="E" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="16" hit_rank="1" num_matched_ions="11" protein="sp|P31948|STIP1_HUMAN" peptide_prev_aa="K" is_rejected="0" protein_descr="Stress-induced-phosphoprotein 1 OS=Homo sapiens OX=9606 GN=STIP1 PE=1 SV=1">
+<search_score name="hyperscore" value="21.617"/>
+<search_score name="nextscore" value="11.291"/>
+<search_score name="expect" value="8.904e-05"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="1.0000" all_ntt_prob="(0.9998,0.9999,1.0000)">
+<search_score_summary>
+<parameter name="fval" value="7.9948"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="-2.477"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="192" ion_mobility="1.1457198" uncalibrated_precursor_neutral_mass="602.338" assumed_charge="1" spectrum="peptideprophet-msfragger-bruker-mgf.00192.00192.1" end_scan="192" index="15" precursor_neutral_mass="602.3397" retention_time_sec="471.296">
+<search_result>
+<search_hit peptide="IGAGASK" massdiff="0.0009" calc_neutral_pep_mass="602.3387" peptide_next_aa="L" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="12" hit_rank="1" num_matched_ions="5" protein="sp|Q68EM7|RHG17_HUMAN" peptide_prev_aa="R" is_rejected="0" protein_descr="Rho GTPase-activating protein 17 OS=Homo sapiens OX=9606 GN=ARHGAP17 PE=1 SV=1">
+<search_score name="hyperscore" value="10.604"/>
+<search_score name="nextscore" value="10.604"/>
+<search_score name="expect" value="2.979e-01"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.8071" all_ntt_prob="(0.8024,0.8637,0.8071)">
+<search_score_summary>
+<parameter name="fval" value="1.9082"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="1.494"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="196" ion_mobility="0.86299926" uncalibrated_precursor_neutral_mass="1057.4742" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mgf.00196.00196.2" end_scan="196" index="16" precursor_neutral_mass="1057.4772" retention_time_sec="471.296">
+<search_result>
+<search_hit peptide="SYCGHGIHK" massdiff="0.0009" calc_neutral_pep_mass="1057.4763" peptide_next_aa="L" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="16" hit_rank="1" num_matched_ions="7" protein="sp|P53582|MAP11_HUMAN" peptide_prev_aa="R" is_rejected="0" protein_descr="Methionine aminopeptidase 1 OS=Homo sapiens OX=9606 GN=METAP1 PE=1 SV=2">
+<modification_info modified_peptide="SYCGHGIHK">
+<mod_aminoacid_mass mass="160.0307" position="3"/>
+</modification_info>
+<search_score name="hyperscore" value="14.760"/>
+<search_score name="nextscore" value="10.711"/>
+<search_score name="expect" value="5.594e-02"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.9755" all_ntt_prob="(0.8966,0.9595,0.9755)">
+<search_score_summary>
+<parameter name="fval" value="3.1626"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="0.851"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="204" ion_mobility="0.7960491" uncalibrated_precursor_neutral_mass="1502.7196" assumed_charge="3" spectrum="peptideprophet-msfragger-bruker-mgf.00204.00204.3" end_scan="204" index="17" precursor_neutral_mass="1502.7240" retention_time_sec="471.296">
+<search_result>
+<search_hit peptide="DHAEQQHIAAQQK" massdiff="0.0015" calc_neutral_pep_mass="1502.7225" peptide_next_aa="A" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="48" hit_rank="1" num_matched_ions="7" protein="sp|Q9NRY2|SOSSC_HUMAN" peptide_prev_aa="R" is_rejected="0" protein_descr="SOSS complex subunit C OS=Homo sapiens OX=9606 GN=INIP PE=1 SV=1">
+<search_score name="hyperscore" value="14.354"/>
+<search_score name="nextscore" value="11.745"/>
+<search_score name="expect" value="1.597e-01"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.9190" all_ntt_prob="(0.0000,0.9049,0.9190)">
+<search_score_summary>
+<parameter name="fval" value="2.3758"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="0.998"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="205" ion_mobility="1.427331" uncalibrated_precursor_neutral_mass="919.52136" assumed_charge="1" spectrum="peptideprophet-msfragger-bruker-mgf.00205.00205.1" end_scan="205" index="18" precursor_neutral_mass="919.5233" retention_time_sec="471.296">
+<search_result>
+<search_hit peptide="SVIHSHIK" massdiff="-0.0006" calc_neutral_pep_mass="919.5239" peptide_next_aa="V" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="14" hit_rank="1" num_matched_ions="8" protein="sp|Q16666|IF16_HUMAN" peptide_prev_aa="R" is_rejected="0" protein_descr="Gamma-interferon-inducible protein 16 OS=Homo sapiens OX=9606 GN=IFI16 PE=1 SV=3">
+<search_score name="hyperscore" value="15.868"/>
+<search_score name="nextscore" value="9.512"/>
+<search_score name="expect" value="4.550e-02"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.9596" all_ntt_prob="(0.9584,0.9729,0.9596)">
+<search_score_summary>
+<parameter name="fval" value="3.3175"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="-0.653"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="213" ion_mobility="0.9090368" uncalibrated_precursor_neutral_mass="1207.5475" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mgf.00213.00213.2" end_scan="213" index="19" precursor_neutral_mass="1207.5508" retention_time_sec="471.296">
+<search_result>
+<search_hit peptide="MMVADVFSHR" massdiff="0.0031" calc_neutral_pep_mass="1207.5477" peptide_next_aa="F" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="18" hit_rank="1" num_matched_ions="5" protein="sp|P51784|UBP11_HUMAN" peptide_prev_aa="R" is_rejected="0" protein_descr="Ubiquitin carboxyl-terminal hydrolase 11 OS=Homo sapiens OX=9606 GN=USP11 PE=1 SV=3">
+<modification_info modified_peptide="M[147]MVADVFSHR">
+<mod_aminoacid_mass mass="147.0354" position="1"/>
+</modification_info>
+<search_score name="hyperscore" value="12.399"/>
+<search_score name="nextscore" value="12.291"/>
+<search_score name="expect" value="1.081e+00"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.1353" all_ntt_prob="(0.0330,0.0853,0.1353)">
+<search_score_summary>
+<parameter name="fval" value="0.9416"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="2.567"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="222" ion_mobility="0.8990875" uncalibrated_precursor_neutral_mass="1224.5796" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mgf.00222.00222.2" end_scan="222" index="20" precursor_neutral_mass="1224.5829" retention_time_sec="471.296">
+<search_result>
+<search_hit peptide="TSVPENHAQSR" massdiff="-0.0017" calc_neutral_pep_mass="1224.5846" peptide_next_aa="L" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="20" hit_rank="1" num_matched_ions="10" protein="sp|Q9UQ35|SRRM2_HUMAN" peptide_prev_aa="R" is_rejected="0" protein_descr="Serine\arginine repetitive matrix protein 2 OS=Homo sapiens OX=9606 GN=SRRM2 PE=1 SV=2">
+<search_score name="hyperscore" value="20.384"/>
+<search_score name="nextscore" value="9.250"/>
+<search_score name="expect" value="1.072e-04"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="1.0000" all_ntt_prob="(0.9998,0.9999,1.0000)">
+<search_score_summary>
+<parameter name="fval" value="7.8556"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="-1.388"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="223" ion_mobility="0.84542066" uncalibrated_precursor_neutral_mass="1121.5266" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mgf.00223.00223.2" end_scan="223" index="21" precursor_neutral_mass="1121.5298" retention_time_sec="471.296">
+<search_result>
+<search_hit peptide="EHCPAGQPVK" massdiff="0.0011" calc_neutral_pep_mass="1121.5287" peptide_next_aa="V" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="18" hit_rank="1" num_matched_ions="8" protein="sp|Q6P2Q9|PRP8_HUMAN" peptide_prev_aa="R" is_rejected="0" protein_descr="Pre-mRNA-processing-splicing factor 8 OS=Homo sapiens OX=9606 GN=PRPF8 PE=1 SV=2">
+<modification_info modified_peptide="EHCPAGQPVK">
+<mod_aminoacid_mass mass="160.0307" position="3"/>
+</modification_info>
+<search_score name="hyperscore" value="17.381"/>
+<search_score name="nextscore" value="11.193"/>
+<search_score name="expect" value="1.740e-02"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.9946" all_ntt_prob="(0.9756,0.9909,0.9946)">
+<search_score_summary>
+<parameter name="fval" value="4.0385"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="0.981"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="224" ion_mobility="0.7950938" uncalibrated_precursor_neutral_mass="939.4543" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mgf.00224.00224.2" end_scan="224" index="22" precursor_neutral_mass="939.4570" retention_time_sec="471.296">
+<search_result>
+<search_hit peptide="HIAEEADR" massdiff="0.0161" calc_neutral_pep_mass="939.4410" peptide_next_aa="K" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="2" tot_num_ions="14" hit_rank="1" num_matched_ions="11" protein="sp|P06753|TPM3_HUMAN" peptide_prev_aa="K" is_rejected="0" protein_descr="Tropomyosin alpha-3 chain OS=Homo sapiens OX=9606 GN=TPM3 PE=1 SV=2">
+<alternative_protein protein="sp|P67936|TPM4_HUMAN" protein_descr="Tropomyosin alpha-4 chain OS=Homo sapiens OX=9606 GN=TPM4 PE=1 SV=3" num_tol_term="2" peptide_prev_aa="K" peptide_next_aa="K"/>
+<search_score name="hyperscore" value="21.461"/>
+<search_score name="nextscore" value="12.086"/>
+<search_score name="expect" value="4.339e-04"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.9888" all_ntt_prob="(0.9506,0.9813,0.9888)">
+<search_score_summary>
+<parameter name="fval" value="6.8070"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="17.137"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="237" ion_mobility="0.9710588" uncalibrated_precursor_neutral_mass="1365.6115" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mgf.00237.00237.2" end_scan="237" index="23" precursor_neutral_mass="1365.6149" retention_time_sec="471.296">
+<search_result>
+<search_hit peptide="GTVSFHSHSDHR" massdiff="-0.0024" calc_neutral_pep_mass="1365.6173" peptide_next_aa="F" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="22" hit_rank="1" num_matched_ions="16" protein="sp|O75534|CSDE1_HUMAN" peptide_prev_aa="K" is_rejected="0" protein_descr="Cold shock domain-containing protein E1 OS=Homo sapiens OX=9606 GN=CSDE1 PE=1 SV=2">
+<search_score name="hyperscore" value="32.991"/>
+<search_score name="nextscore" value="13.010"/>
+<search_score name="expect" value="3.910e-06"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="1.0000" all_ntt_prob="(1.0000,1.0000,1.0000)">
+<search_score_summary>
+<parameter name="fval" value="10.3390"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="-1.757"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="241" ion_mobility="0.81910205" uncalibrated_precursor_neutral_mass="985.43945" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mgf.00241.00241.2" end_scan="241" index="24" precursor_neutral_mass="985.4423" retention_time_sec="471.296">
+<search_result>
+<search_hit peptide="CGESGHLAR" massdiff="0.0024" calc_neutral_pep_mass="985.4399" peptide_next_aa="E" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="16" hit_rank="1" num_matched_ions="7" protein="sp|P62633|CNBP_HUMAN" peptide_prev_aa="R" is_rejected="0" protein_descr="Cellular nucleic acid-binding protein OS=Homo sapiens OX=9606 GN=CNBP PE=1 SV=1">
+<modification_info modified_peptide="CGESGHLAR">
+<mod_aminoacid_mass mass="160.0307" position="1"/>
+</modification_info>
+<search_score name="hyperscore" value="14.888"/>
+<search_score name="nextscore" value="9.641"/>
+<search_score name="expect" value="8.292e-03"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.9969" all_ntt_prob="(0.9860,0.9948,0.9969)">
+<search_score_summary>
+<parameter name="fval" value="4.5943"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="2.435"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="244" ion_mobility="1.4258729" uncalibrated_precursor_neutral_mass="963.51117" assumed_charge="1" spectrum="peptideprophet-msfragger-bruker-mgf.00244.00244.1" end_scan="244" index="25" precursor_neutral_mass="963.5131" retention_time_sec="471.296">
+<search_result>
+<search_hit peptide="QPPQQPAAK" massdiff="-0.0006" calc_neutral_pep_mass="963.5137" peptide_next_aa="L" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="16" hit_rank="1" num_matched_ions="4" protein="sp|Q9H6F5|CCD86_HUMAN" peptide_prev_aa="K" is_rejected="0" protein_descr="Coiled-coil domain-containing protein 86 OS=Homo sapiens OX=9606 GN=CCDC86 PE=1 SV=1">
+<search_score name="hyperscore" value="9.868"/>
+<search_score name="nextscore" value="9.790"/>
+<search_score name="expect" value="8.091e-01"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.3765" all_ntt_prob="(0.3695,0.4776,0.3765)">
+<search_score_summary>
+<parameter name="fval" value="1.1589"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="-0.623"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="255" ion_mobility="0.8295212" uncalibrated_precursor_neutral_mass="925.4113" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mgf.00255.00255.2" end_scan="255" index="26" precursor_neutral_mass="925.4141" retention_time_sec="471.296">
+<search_result>
+<search_hit peptide="HDSPEDVK" massdiff="-0.0001" calc_neutral_pep_mass="925.4141" peptide_next_aa="R" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="14" hit_rank="1" num_matched_ions="12" protein="sp|P31948|STIP1_HUMAN" peptide_prev_aa="R" is_rejected="0" protein_descr="Stress-induced-phosphoprotein 1 OS=Homo sapiens OX=9606 GN=STIP1 PE=1 SV=1">
+<search_score name="hyperscore" value="24.318"/>
+<search_score name="nextscore" value="11.731"/>
+<search_score name="expect" value="7.464e-06"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="1.0000" all_ntt_prob="(1.0000,1.0000,1.0000)">
+<search_score_summary>
+<parameter name="fval" value="9.8541"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="-0.108"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="261" ion_mobility="1.2369072" uncalibrated_precursor_neutral_mass="710.40814" assumed_charge="1" spectrum="peptideprophet-msfragger-bruker-mgf.00261.00261.1" end_scan="261" index="27" precursor_neutral_mass="710.4099" retention_time_sec="472.474">
+<search_result>
+<search_hit peptide="GHAVSLK" massdiff="0.0023" calc_neutral_pep_mass="710.4075" peptide_next_aa="E" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="12" hit_rank="1" num_matched_ions="6" protein="sp|Q86VH2|KIF27_HUMAN" peptide_prev_aa="K" is_rejected="0" protein_descr="Kinesin-like protein KIF27 OS=Homo sapiens OX=9606 GN=KIF27 PE=2 SV=1">
+<search_score name="hyperscore" value="13.126"/>
+<search_score name="nextscore" value="10.790"/>
+<search_score name="expect" value="3.922e-01"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.5528" all_ntt_prob="(0.5455,0.6518,0.5528)">
+<search_score_summary>
+<parameter name="fval" value="1.7020"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="3.238"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="269" ion_mobility="0.8352882" uncalibrated_precursor_neutral_mass="925.4104" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mgf.00269.00269.2" end_scan="269" index="28" precursor_neutral_mass="925.4131" retention_time_sec="472.474">
+<search_result>
+<search_hit peptide="HDSPEDVK" massdiff="-0.0010" calc_neutral_pep_mass="925.4141" peptide_next_aa="R" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="14" hit_rank="1" num_matched_ions="11" protein="sp|P31948|STIP1_HUMAN" peptide_prev_aa="R" is_rejected="0" protein_descr="Stress-induced-phosphoprotein 1 OS=Homo sapiens OX=9606 GN=STIP1 PE=1 SV=1">
+<search_score name="hyperscore" value="22.629"/>
+<search_score name="nextscore" value="13.318"/>
+<search_score name="expect" value="1.053e-05"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="1.0000" all_ntt_prob="(1.0000,1.0000,1.0000)">
+<search_score_summary>
+<parameter name="fval" value="9.5960"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="-1.081"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="270" ion_mobility="0.79395705" uncalibrated_precursor_neutral_mass="939.43713" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mgf.00270.00270.2" end_scan="270" index="29" precursor_neutral_mass="939.4399" retention_time_sec="472.474">
+<search_result>
+<search_hit peptide="HIAEEADR" massdiff="-0.0010" calc_neutral_pep_mass="939.4410" peptide_next_aa="K" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="2" tot_num_ions="14" hit_rank="1" num_matched_ions="11" protein="sp|P06753|TPM3_HUMAN" peptide_prev_aa="K" is_rejected="0" protein_descr="Tropomyosin alpha-3 chain OS=Homo sapiens OX=9606 GN=TPM3 PE=1 SV=2">
+<alternative_protein protein="sp|P67936|TPM4_HUMAN" protein_descr="Tropomyosin alpha-4 chain OS=Homo sapiens OX=9606 GN=TPM4 PE=1 SV=3" num_tol_term="2" peptide_prev_aa="K" peptide_next_aa="K"/>
+<search_score name="hyperscore" value="21.334"/>
+<search_score name="nextscore" value="9.325"/>
+<search_score name="expect" value="8.715e-05"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="1.0000" all_ntt_prob="(0.9999,1.0000,1.0000)">
+<search_score_summary>
+<parameter name="fval" value="8.0109"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="-1.064"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="271" ion_mobility="0.7491858" uncalibrated_precursor_neutral_mass="1200.532" assumed_charge="3" spectrum="peptideprophet-msfragger-bruker-mgf.00271.00271.3" end_scan="271" index="30" precursor_neutral_mass="1200.5356" retention_time_sec="472.474">
+<search_result>
+<search_hit peptide="HYGEHVCTAK" massdiff="0.0011" calc_neutral_pep_mass="1200.5345" peptide_next_aa="L" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="36" hit_rank="1" num_matched_ions="7" protein="sp|Q9BQG0|MBB1A_HUMAN" peptide_prev_aa="R" is_rejected="0" protein_descr="Myb-binding protein 1A OS=Homo sapiens OX=9606 GN=MYBBP1A PE=1 SV=2">
+<modification_info modified_peptide="HYGEHVCTAK">
+<mod_aminoacid_mass mass="160.0307" position="7"/>
+</modification_info>
+<search_score name="hyperscore" value="15.077"/>
+<search_score name="nextscore" value="9.504"/>
+<search_score name="expect" value="1.856e-02"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.9928" all_ntt_prob="(0.0000,0.9914,0.9928)">
+<search_score_summary>
+<parameter name="fval" value="3.9901"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="0.916"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="273" ion_mobility="1.4533093" uncalibrated_precursor_neutral_mass="993.44293" assumed_charge="1" spectrum="peptideprophet-msfragger-bruker-mgf.00273.00273.1" end_scan="273" index="31" precursor_neutral_mass="993.4450" retention_time_sec="472.474">
+<search_result>
+<search_hit peptide="AMQDAEVSK" massdiff="0.0013" calc_neutral_pep_mass="993.4437" peptide_next_aa="S" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="16" hit_rank="1" num_matched_ions="11" protein="sp|P38646|GRP75_HUMAN" peptide_prev_aa="K" is_rejected="0" protein_descr="Stress-70 protein, mitochondrial OS=Homo sapiens OX=9606 GN=HSPA9 PE=1 SV=2">
+<modification_info modified_peptide="AM[147]QDAEVSK">
+<mod_aminoacid_mass mass="147.0354" position="2"/>
+</modification_info>
+<search_score name="hyperscore" value="20.580"/>
+<search_score name="nextscore" value="11.758"/>
+<search_score name="expect" value="6.256e-04"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.9982" all_ntt_prob="(0.9982,0.9988,0.9982)">
+<search_score_summary>
+<parameter name="fval" value="6.5326"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="1.309"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="280" ion_mobility="1.000131" uncalibrated_precursor_neutral_mass="1500.6416" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mgf.00280.00280.2" end_scan="280" index="32" precursor_neutral_mass="1500.6450" retention_time_sec="472.474">
+<search_result>
+<search_hit peptide="LAEAHQQECCQK" massdiff="0.0001" calc_neutral_pep_mass="1500.6449" peptide_next_aa="F" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="22" hit_rank="1" num_matched_ions="12" protein="sp|Q9Y5X3|SNX5_HUMAN" peptide_prev_aa="K" is_rejected="0" protein_descr="Sorting nexin-5 OS=Homo sapiens OX=9606 GN=SNX5 PE=1 SV=1">
+<modification_info modified_peptide="LAEAHQQECCQK">
+<mod_aminoacid_mass mass="160.0307" position="9"/>
+<mod_aminoacid_mass mass="160.0307" position="10"/>
+</modification_info>
+<search_score name="hyperscore" value="24.115"/>
+<search_score name="nextscore" value="24.115"/>
+<search_score name="expect" value="3.947e-04"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.9999" all_ntt_prob="(0.9995,0.9998,0.9999)">
+<search_score_summary>
+<parameter name="fval" value="6.8780"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="0.067"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="281" ion_mobility="0.9439059" uncalibrated_precursor_neutral_mass="1184.551" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mgf.00281.00281.2" end_scan="281" index="33" precursor_neutral_mass="1184.5542" retention_time_sec="472.474">
+<search_result>
+<search_hit peptide="SAVGNAAHTSDR" massdiff="0.0009" calc_neutral_pep_mass="1184.5533" peptide_next_aa="A" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="22" hit_rank="1" num_matched_ions="9" protein="sp|P56945|BCAR1_HUMAN" peptide_prev_aa="R" is_rejected="0" protein_descr="Breast cancer anti-estrogen resistance protein 1 OS=Homo sapiens OX=9606 GN=BCAR1 PE=1 SV=2">
+<search_score name="hyperscore" value="20.388"/>
+<search_score name="nextscore" value="11.603"/>
+<search_score name="expect" value="1.014e-03"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.9997" all_ntt_prob="(0.9987,0.9995,0.9997)">
+<search_score_summary>
+<parameter name="fval" value="6.1704"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="0.760"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="282" ion_mobility="0.8761377" uncalibrated_precursor_neutral_mass="1081.5503" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mgf.00282.00282.2" end_scan="282" index="34" precursor_neutral_mass="1081.5533" retention_time_sec="472.474">
+<search_result>
+<search_hit peptide="AQSELAAHQK" massdiff="0.0018" calc_neutral_pep_mass="1081.5515" peptide_next_aa="K" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="18" hit_rank="1" num_matched_ions="13" protein="sp|P25786|PSA1_HUMAN" peptide_prev_aa="R" is_rejected="0" protein_descr="Proteasome subunit alpha type-1 OS=Homo sapiens OX=9606 GN=PSMA1 PE=1 SV=1">
+<search_score name="hyperscore" value="26.474"/>
+<search_score name="nextscore" value="13.420"/>
+<search_score name="expect" value="1.564e-05"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="1.0000" all_ntt_prob="(1.0000,1.0000,1.0000)">
+<search_score_summary>
+<parameter name="fval" value="9.2993"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="1.664"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="283" ion_mobility="0.8157948" uncalibrated_precursor_neutral_mass="1038.5173" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mgf.00283.00283.2" end_scan="283" index="35" precursor_neutral_mass="1038.5204" retention_time_sec="472.474">
+<search_result>
+<search_hit peptide="EPYLQSFR" massdiff="0.0070" calc_neutral_pep_mass="1038.5134" peptide_next_aa="G" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="14" hit_rank="1" num_matched_ions="7" protein="rev_sp|P48449|ERG7_HUMAN" peptide_prev_aa="R" is_rejected="0" protein_descr="Lanosterol synthase OS=Homo sapiens OX=9606 GN=LSS PE=1 SV=1">
+<search_score name="hyperscore" value="14.117"/>
+<search_score name="nextscore" value="11.740"/>
+<search_score name="expect" value="2.437e-01"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.3590" all_ntt_prob="(0.1090,0.2502,0.3590)">
+<search_score_summary>
+<parameter name="fval" value="2.0589"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="6.740"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="288" ion_mobility="1.2828345" uncalibrated_precursor_neutral_mass="786.4215" assumed_charge="1" spectrum="peptideprophet-msfragger-bruker-mgf.00288.00288.1" end_scan="288" index="36" precursor_neutral_mass="786.4233" retention_time_sec="472.474">
+<search_result>
+<search_hit peptide="SAPATGGVK" massdiff="-0.0002" calc_neutral_pep_mass="786.4235" peptide_next_aa="K" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="3" tot_num_ions="16" hit_rank="1" num_matched_ions="9" protein="sp|P68431|H31_HUMAN" peptide_prev_aa="K" is_rejected="0" protein_descr="Histone H3.1 OS=Homo sapiens OX=9606 GN=H3C1 PE=1 SV=2">
+<alternative_protein protein="sp|Q16695|H31T_HUMAN" protein_descr="Histone H3.1t OS=Homo sapiens OX=9606 GN=HIST3H3 PE=1 SV=3" num_tol_term="2" peptide_prev_aa="K" peptide_next_aa="K"/>
+<alternative_protein protein="sp|Q71DI3|H32_HUMAN" protein_descr="Histone H3.2 OS=Homo sapiens OX=9606 GN=HIST2H3A PE=1 SV=3" num_tol_term="2" peptide_prev_aa="K" peptide_next_aa="K"/>
+<search_score name="hyperscore" value="17.372"/>
+<search_score name="nextscore" value="9.145"/>
+<search_score name="expect" value="1.572e-03"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.9968" all_ntt_prob="(0.9967,0.9979,0.9968)">
+<search_score_summary>
+<parameter name="fval" value="5.8416"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="-0.254"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="292" ion_mobility="1.0769727" uncalibrated_precursor_neutral_mass="1775.7816" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mgf.00292.00292.2" end_scan="292" index="37" precursor_neutral_mass="1775.7853" retention_time_sec="472.474">
+<search_result>
+<search_hit peptide="TSGETTQTHTEPTGDSK" massdiff="0.0044" calc_neutral_pep_mass="1775.7809" peptide_next_aa="S" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="32" hit_rank="1" num_matched_ions="15" protein="sp|P46013|KI67_HUMAN" peptide_prev_aa="R" is_rejected="0" protein_descr="Proliferation marker protein Ki-67 OS=Homo sapiens OX=9606 GN=MKI67 PE=1 SV=2">
+<search_score name="hyperscore" value="28.371"/>
+<search_score name="nextscore" value="6.981"/>
+<search_score name="expect" value="6.057e-06"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="1.0000" all_ntt_prob="(1.0000,1.0000,1.0000)">
+<search_score_summary>
+<parameter name="fval" value="10.0107"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="2.478"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="294" ion_mobility="0.9722139" uncalibrated_precursor_neutral_mass="1365.614" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mgf.00294.00294.2" end_scan="294" index="38" precursor_neutral_mass="1365.6174" retention_time_sec="472.474">
+<search_result>
+<search_hit peptide="GTVSFHSHSDHR" massdiff="0.0001" calc_neutral_pep_mass="1365.6173" peptide_next_aa="F" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="22" hit_rank="1" num_matched_ions="12" protein="sp|O75534|CSDE1_HUMAN" peptide_prev_aa="K" is_rejected="0" protein_descr="Cold shock domain-containing protein E1 OS=Homo sapiens OX=9606 GN=CSDE1 PE=1 SV=2">
+<search_score name="hyperscore" value="24.395"/>
+<search_score name="nextscore" value="11.748"/>
+<search_score name="expect" value="5.974e-04"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.9998" all_ntt_prob="(0.9992,0.9997,0.9998)">
+<search_score_summary>
+<parameter name="fval" value="6.5672"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="0.073"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="296" ion_mobility="0.87900317" uncalibrated_precursor_neutral_mass="1174.5269" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mgf.00296.00296.2" end_scan="296" index="39" precursor_neutral_mass="1174.5302" retention_time_sec="472.474">
+<search_result>
+<search_hit peptide="HESQMDSVVK" massdiff="0.0015" calc_neutral_pep_mass="1174.5287" peptide_next_aa="D" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="18" hit_rank="1" num_matched_ions="15" protein="sp|Q00765|REEP5_HUMAN" peptide_prev_aa="K" is_rejected="0" protein_descr="Receptor expression-enhancing protein 5 OS=Homo sapiens OX=9606 GN=REEP5 PE=1 SV=3">
+<modification_info modified_peptide="HESQM[147]DSVVK">
+<mod_aminoacid_mass mass="147.0354" position="5"/>
+</modification_info>
+<search_score name="hyperscore" value="31.211"/>
+<search_score name="nextscore" value="12.899"/>
+<search_score name="expect" value="2.237e-08"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="1.0000" all_ntt_prob="(1.0000,1.0000,1.0000)">
+<search_score_summary>
+<parameter name="fval" value="14.2117"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="1.277"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="297" ion_mobility="0.8359321" uncalibrated_precursor_neutral_mass="1066.4515" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mgf.00297.00297.2" end_scan="297" index="40" precursor_neutral_mass="1066.4545" retention_time_sec="472.474">
+<search_result>
+<search_hit peptide="EREMAEMR" massdiff="0.0010" calc_neutral_pep_mass="1066.4535" peptide_next_aa="A" num_missed_cleavages="1" num_tol_term="2" num_tot_proteins="1" tot_num_ions="14" hit_rank="1" num_matched_ions="9" protein="sp|P02545|LMNA_HUMAN" peptide_prev_aa="K" is_rejected="0" protein_descr="Prelamin-A\C OS=Homo sapiens OX=9606 GN=LMNA PE=1 SV=1">
+<modification_info modified_peptide="EREM[147]AEMR">
+<mod_aminoacid_mass mass="147.0354" position="4"/>
+</modification_info>
+<search_score name="hyperscore" value="17.465"/>
+<search_score name="nextscore" value="11.698"/>
+<search_score name="expect" value="1.409e-02"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.8089" all_ntt_prob="(0.4803,0.7161,0.8089)">
+<search_score_summary>
+<parameter name="fval" value="4.1967"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="1"/>
+<parameter name="massd" value="0.938"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="298" ion_mobility="0.778587" uncalibrated_precursor_neutral_mass="1775.7784" assumed_charge="3" spectrum="peptideprophet-msfragger-bruker-mgf.00298.00298.3" end_scan="298" index="41" precursor_neutral_mass="1775.7832" retention_time_sec="472.474">
+<search_result>
+<search_hit peptide="TSGETTQTHTEPTGDSK" massdiff="0.0023" calc_neutral_pep_mass="1775.7809" peptide_next_aa="S" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="64" hit_rank="1" num_matched_ions="16" protein="sp|P46013|KI67_HUMAN" peptide_prev_aa="R" is_rejected="0" protein_descr="Proliferation marker protein Ki-67 OS=Homo sapiens OX=9606 GN=MKI67 PE=1 SV=2">
+<search_score name="hyperscore" value="34.917"/>
+<search_score name="nextscore" value="13.539"/>
+<search_score name="expect" value="2.180e-07"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="1.0000" all_ntt_prob="(0.0000,1.0000,1.0000)">
+<search_score_summary>
+<parameter name="fval" value="12.5041"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="1.295"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="299" ion_mobility="1.3647614" uncalibrated_precursor_neutral_mass="877.43304" assumed_charge="1" spectrum="peptideprophet-msfragger-bruker-mgf.00299.00299.1" end_scan="299" index="42" precursor_neutral_mass="877.4349" retention_time_sec="472.474">
+<search_result>
+<search_hit peptide="QMSGAQIK" massdiff="0.0022" calc_neutral_pep_mass="877.4327" peptide_next_aa="L" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="3" tot_num_ions="14" hit_rank="1" num_matched_ions="8" protein="sp|P57721|PCBP3_HUMAN" peptide_prev_aa="R" is_rejected="0" protein_descr="Poly(rC)-binding protein 3 OS=Homo sapiens OX=9606 GN=PCBP3 PE=2 SV=2">
+<alternative_protein protein="sp|Q15365|PCBP1_HUMAN" protein_descr="Poly(rC)-binding protein 1 OS=Homo sapiens OX=9606 GN=PCBP1 PE=1 SV=2" num_tol_term="2" peptide_prev_aa="R" peptide_next_aa="L"/>
+<alternative_protein protein="sp|Q15366|PCBP2_HUMAN" protein_descr="Poly(rC)-binding protein 2 OS=Homo sapiens OX=9606 GN=PCBP2 PE=1 SV=1" num_tol_term="2" peptide_prev_aa="R" peptide_next_aa="L"/>
+<modification_info modified_peptide="QM[147]SGAQIK">
+<mod_aminoacid_mass mass="147.0354" position="2"/>
+</modification_info>
+<search_score name="hyperscore" value="15.469"/>
+<search_score name="nextscore" value="9.477"/>
+<search_score name="expect" value="7.402e-04"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.9970" all_ntt_prob="(0.9970,0.9980,0.9970)">
+<search_score_summary>
+<parameter name="fval" value="6.4064"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="2.507"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="304" ion_mobility="0.97568196" uncalibrated_precursor_neutral_mass="1373.5856" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mgf.00304.00304.2" end_scan="304" index="43" precursor_neutral_mass="1373.5890" retention_time_sec="472.474">
+<search_result>
+<search_hit peptide="QVDGDNSHVEMK" massdiff="0.0010" calc_neutral_pep_mass="1373.5880" peptide_next_aa="L" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="22" hit_rank="1" num_matched_ions="14" protein="sp|P02786|TFR1_HUMAN" peptide_prev_aa="R" is_rejected="0" protein_descr="Transferrin receptor protein 1 OS=Homo sapiens OX=9606 GN=TFRC PE=1 SV=2">
+<modification_info modified_peptide="QVDGDNSHVEM[147]K">
+<mod_aminoacid_mass mass="147.0354" position="11"/>
+</modification_info>
+<search_score name="hyperscore" value="29.356"/>
+<search_score name="nextscore" value="13.228"/>
+<search_score name="expect" value="3.849e-05"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="1.0000" all_ntt_prob="(1.0000,1.0000,1.0000)">
+<search_score_summary>
+<parameter name="fval" value="8.6238"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="0.728"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="305" ion_mobility="0.9130759" uncalibrated_precursor_neutral_mass="1282.5266" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mgf.00305.00305.2" end_scan="305" index="44" precursor_neutral_mass="1282.5299" retention_time_sec="472.474">
+<search_result>
+<search_hit peptide="SEESSHYSTEK" massdiff="-0.0013" calc_neutral_pep_mass="1282.5313" peptide_next_aa="E" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="20" hit_rank="1" num_matched_ions="17" protein="sp|P55265|DSRAD_HUMAN" peptide_prev_aa="K" is_rejected="0" protein_descr="Double-stranded RNA-specific adenosine deaminase OS=Homo sapiens OX=9606 GN=ADAR PE=1 SV=4">
+<search_score name="hyperscore" value="34.978"/>
+<search_score name="nextscore" value="16.668"/>
+<search_score name="expect" value="1.530e-07"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="1.0000" all_ntt_prob="(1.0000,1.0000,1.0000)">
+<search_score_summary>
+<parameter name="fval" value="12.7696"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="-1.014"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="306" ion_mobility="0.8693488" uncalibrated_precursor_neutral_mass="1108.4784" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mgf.00306.00306.2" end_scan="306" index="45" precursor_neutral_mass="1108.4816" retention_time_sec="472.474">
+<search_result>
+<search_hit peptide="VFCSHCGNK" massdiff="1.0226" calc_neutral_pep_mass="1107.4590" peptide_next_aa="T" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="16" hit_rank="1" num_matched_ions="8" protein="sp|Q9ULX3|NOB1_HUMAN" peptide_prev_aa="R" is_rejected="0" protein_descr="RNA-binding protein NOB1 OS=Homo sapiens OX=9606 GN=NOB1 PE=1 SV=1">
+<modification_info modified_peptide="VFCSHCGNK">
+<mod_aminoacid_mass mass="160.0307" position="3"/>
+<mod_aminoacid_mass mass="160.0307" position="6"/>
+</modification_info>
+<search_score name="hyperscore" value="15.812"/>
+<search_score name="nextscore" value="9.391"/>
+<search_score name="expect" value="4.470e-02"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.0806" all_ntt_prob="(0.0188,0.0497,0.0806)">
+<search_score_summary>
+<parameter name="fval" value="3.3308"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="17.346"/>
+<parameter name="isomassd" value="1"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="309" ion_mobility="0.7267374" uncalibrated_precursor_neutral_mass="1200.5323" assumed_charge="3" spectrum="peptideprophet-msfragger-bruker-mgf.00309.00309.3" end_scan="309" index="46" precursor_neutral_mass="1200.5360" retention_time_sec="472.474">
+<search_result>
+<search_hit peptide="HYGEHVCTAK" massdiff="0.0015" calc_neutral_pep_mass="1200.5345" peptide_next_aa="L" num_missed_cleavages="0" num_tol_term="2" num_tot_proteins="1" tot_num_ions="36" hit_rank="1" num_matched_ions="9" protein="sp|Q9BQG0|MBB1A_HUMAN" peptide_prev_aa="R" is_rejected="0" protein_descr="Myb-binding protein 1A OS=Homo sapiens OX=9606 GN=MYBBP1A PE=1 SV=2">
+<modification_info modified_peptide="HYGEHVCTAK">
+<mod_aminoacid_mass mass="160.0307" position="7"/>
+</modification_info>
+<search_score name="hyperscore" value="18.384"/>
+<search_score name="nextscore" value="18.384"/>
+<search_score name="expect" value="6.012e-03"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.9982" all_ntt_prob="(0.0000,0.9979,0.9982)">
+<search_score_summary>
+<parameter name="fval" value="4.8355"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="1.249"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+</msms_run_summary>
+</msms_pipeline_analysis>

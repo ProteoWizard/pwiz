@@ -446,7 +446,7 @@ namespace pwiz.Skyline.Model.Results
         /// Do initial grouping of and ranking of peaks using the Crawdad
         /// peak detector.
         /// </summary>
-        public void PickChromatogramPeaks(double[] retentionTimes, bool isAlignedTimes)
+        public void PickChromatogramPeaks(double[] retentionTimes, bool isAlignedTimes, ExplicitRetentionTimeInfo explicitRT)
         {
             // Make sure chromatograms are in sorted order
             _listChromData.Sort();
@@ -484,7 +484,7 @@ namespace pwiz.Skyline.Model.Results
                 }
                 if (doFindPeaks)
                 {
-                    chromData.FindPeaks(retentionTimes);
+                    chromData.FindPeaks(retentionTimes, TimeIntervals, explicitRT);
                 }
                 else
                 {
@@ -649,7 +649,7 @@ namespace pwiz.Skyline.Model.Results
         /// <summary>
         /// Generate <see cref="ChromDataPeak"/> objects to make peaks scorable
         /// </summary>
-        public void GeneratePeakData()
+        public void GeneratePeakData(TimeIntervals intersectedTimeIntervals)
         {
             // Set the processed peaks back to the chromatogram data
             HashSet<ChromKey> primaryPeakKeys = new HashSet<ChromKey>();
@@ -690,11 +690,33 @@ namespace pwiz.Skyline.Model.Results
                         flags |= ChromPeak.FlagValues.contains_id;
                     if (peakSet.IsAlignedIdentified)
                         flags |= ChromPeak.FlagValues.used_id_alignment;
-                    peak.CalcChromPeak(peakMax, flags);
+                    if (intersectedTimeIntervals != null)
+                    {
+                        if (!intersectedTimeIntervals.ContainsTime(peak.StartTime) || !intersectedTimeIntervals.ContainsTime(peak.EndTime))
+                        {
+                            flags |= ChromPeak.FlagValues.peak_truncated;
+                        }
+                    }
+
+                    peak.CalcChromPeak(peakMax, flags, intersectedTimeIntervals);
+
+                    if (intersectedTimeIntervals != null)
+                    {
+                        float startTime = Times[peakMax.StartIndex];
+                        float endTime = Times[peakMax.EndIndex];
+                        var intervalIndex = intersectedTimeIntervals.IndexOfIntervalEndingAfter(startTime);
+                        if (intervalIndex >= 0 && intervalIndex < intersectedTimeIntervals.Count)
+                        {
+                            startTime = Math.Max(startTime, intersectedTimeIntervals.Starts[intervalIndex]);
+                            endTime = Math.Min(endTime, intersectedTimeIntervals.Ends[intervalIndex]);
+                        }
+
+                        var chromPeak = new ChromPeak(peak.Data.RawTimeIntensities, startTime, endTime, flags);
+                        peak.SetChromPeak(chromPeak);
+                    }
                 }
             }
         }
-
 
         /// <summary>
         /// Sort the final peaks by retention time and make a pointer to the best peak
@@ -1249,6 +1271,10 @@ namespace pwiz.Skyline.Model.Results
                 {
                     return;
                 }
+                if (chromDataSet.TimeIntervals != null)
+                {
+                    return;
+                }
             }
             float minFragmentTime = float.MaxValue;
             float maxFragmentTime = float.MinValue;
@@ -1290,12 +1316,20 @@ namespace pwiz.Skyline.Model.Results
         {
             if (useRawTimes)
             {
-                return new RawTimeIntensities(_listChromData.Select(chromData => chromData.RawTimeIntensities),
+                var rawTimeIntensities = new RawTimeIntensities(_listChromData.Select(chromData => chromData.RawTimeIntensities),
                     InterpolationParams);
+                if (TimeIntervals != null)
+                {
+                    rawTimeIntensities = rawTimeIntensities.ChangeTimeIntervals(TimeIntervals);
+                }
+
+                return rawTimeIntensities;
             }
             return new InterpolatedTimeIntensities(_listChromData.Select(chromData=>chromData.TimeIntensities), 
                 _listChromData.Select(chromData=>chromData.PrimaryKey.Source));
         }
+
+        public TimeIntervals TimeIntervals { get; set; }
     }
 }
 

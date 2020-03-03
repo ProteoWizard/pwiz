@@ -38,12 +38,12 @@ namespace analysis {
 
 struct PWIZ_API_DECL CwtPeakDetector : public PeakDetector
 {
-    CwtPeakDetector(double minSnr, int fixedPeaksKeep, double mzTol );
+    CwtPeakDetector(double minSnr, int fixedPeaksKeep, double mzTol, bool centroid = false);
 
     virtual void detect(const std::vector<double>& x, const std::vector<double>& y,
                         std::vector<double>& xPeakValues, std::vector<double>& yPeakValues,
                         std::vector<Peak>* peaks = NULL);
-
+    virtual const char* name() const { return "CantWaiT (continuous wavelet transform) peak picker"; }
     void getScales( const std::vector <double> &, const std::vector <double> &, std::vector <std::vector< std::vector<int> > > &, std::vector <double> &) const;
     void calcCorrelation( const std::vector <double> &, const std::vector <double> &, const std::vector <std::vector<std::vector<int> > > &, const std::vector <double> &, std::vector < std::vector <double> > &) const;
     void getPeakLines(const std::vector < std::vector <double> > &, const std::vector <double> &, std::vector <ridgeLine> &, std::vector <double> &) const;
@@ -54,6 +54,7 @@ struct PWIZ_API_DECL CwtPeakDetector : public PeakDetector
     double minSnr_;
     int fixedPeaksKeep_;
     double mzTol_;
+    bool centroid_;
     int nScales;
     std::vector<double> scalings; // how to scale the wavelet widths, unchanged once it's initialized
 

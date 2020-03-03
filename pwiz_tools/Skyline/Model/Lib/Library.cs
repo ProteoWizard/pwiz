@@ -2497,6 +2497,17 @@ namespace pwiz.Skyline.Model.Lib
         public string Name { get; private set; }
 
         public string Link { get; private set; }
+
+        // This appears in stack traces when we report unhandled parsing issues
+        public override string ToString()
+        {
+            var result = new List<string>();
+            if (!string.IsNullOrEmpty(Name))
+                result.Add($@"LinkName: {Name} ");
+            if (!string.IsNullOrEmpty(Link))
+                result.Add($@"LinkURL: {Link} ");
+            return TextUtil.LineSeparate(result);
+        }
     }
 
     public sealed class LibraryFiles
@@ -2553,6 +2564,25 @@ namespace pwiz.Skyline.Model.Lib
         public IEnumerable<LibraryLink> LibLinks
         {
             get { return _libLinks; }
+        }
+
+        // This appears in stack traces when we report unhandled parsing issues
+        public override string ToString()
+        {
+            var lines = new List<string>();
+            if (!string.IsNullOrEmpty(Format))
+                lines.Add($@"Format: {Format}");
+            if (!string.IsNullOrEmpty(Id))
+                lines.Add($@"LSID: {Id}");
+            if (!string.IsNullOrEmpty(Revision))
+                lines.Add($@"FileRevision: {Revision}");
+            if (!string.IsNullOrEmpty(Version))
+                lines.Add($@"SchemaVersion: {Version}");
+            if (_dataFiles != null && _dataFiles.Any())
+                lines.AddRange(_dataFiles.Select(df => df.ToString()));
+            if (_libLinks != null && _libLinks.Any())
+                lines.AddRange(_libLinks.Select(link => link.ToString()));
+            return TextUtil.LineSeparate(lines);
         }
     }
 
@@ -2743,9 +2773,10 @@ namespace pwiz.Skyline.Model.Lib
 
     public class SpectrumSourceFileDetails
     {
-        public SpectrumSourceFileDetails(String filePath)
+        public SpectrumSourceFileDetails(string filePath, string idFilePath = null)
         {
             FilePath = filePath;
+            IdFilePath = idFilePath;
             CutoffScores = new Dictionary<string, double?>();
             BestSpectrum = 0;
             MatchedSpectrum = 0;
@@ -2756,5 +2787,15 @@ namespace pwiz.Skyline.Model.Lib
         public Dictionary<string, double?> CutoffScores { get; private set; }
         public int BestSpectrum { get; set; }
         public int MatchedSpectrum { get; set; }
+
+        public override string ToString()
+        {
+            var result = new List<string>();
+            if (!string.IsNullOrEmpty(IdFilePath))
+                result.Add($@"IdFilePath: {IdFilePath}");
+            if (!string.IsNullOrEmpty(FilePath))
+                result.Add($@"FilePath: {FilePath}");
+            return TextUtil.LineSeparate(result);
+        }
     }
 }
