@@ -662,8 +662,6 @@ namespace pwiz.Skyline.Util
                     return FolderOperationStatus.notfound;
                 case FolderState.notpanorama:
                     return FolderOperationStatus.notpanorama;
-                default:
-                    break;
             }
 
             //Create JSON body for the request
@@ -705,8 +703,6 @@ namespace pwiz.Skyline.Util
                     return FolderOperationStatus.notfound;
                 case FolderState.notpanorama:
                     return FolderOperationStatus.notpanorama;
-                default:
-                    break;
             }
 
             try

@@ -342,7 +342,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 var chroms = SkylineWindow.DocumentUI.Settings.MeasuredResults.Chromatograms;
-                new int[]{5, 6, 7, 8}.ForEach((index) =>
+                new []{5, 6, 7, 8}.ForEach((index) =>
                 {
                     int replicateIdx = chroms.IndexOf((ch) => ch.Name.Equals("Standard_" + index));
                     if (replicateIdx >= 0)
