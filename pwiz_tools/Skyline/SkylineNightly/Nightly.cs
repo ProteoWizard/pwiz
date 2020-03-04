@@ -448,8 +448,8 @@ namespace SkylineNightly
                         // If we get here, we've already extended the end time due to a hang and log file is now being modified again.
                         // Assume that the log file is being modified because someone has taken manual action, and extend the end time further
                         // to prevent SkylineTester from being killed while someone is looking at it.
-                        var newEndTime = DateTime.Now.AddDays(1);
-                        if (SetEndTime(newEndTime))
+                        var newEndTime = originalEndTime.AddDays(2);
+                        if (endTime != newEndTime && SetEndTime(newEndTime))
                             endTime = newEndTime;
                     }
                 }
