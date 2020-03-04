@@ -59,7 +59,7 @@ namespace pwiz.SkylineTestTutorial
     [TestClass]
     public class AuditLogTutorialTest : AbstractFunctionalTest
     {
-        public const string SERVER_URL = "https://panoramaweb.gs.washington.edu/";
+        public const string SERVER_URL = "https://panoramaweb.org/";
         public const string PANORAMA_FOLDER = "SkylineTest";
         public const string PANORAMA_USER_NAME = "ritach@uw.edu";
         public const string PANORAMA_PASSWORD = "lclcmsms";
@@ -79,8 +79,8 @@ namespace pwiz.SkylineTestTutorial
             TestFilesZipPaths = new[]
             {
                 UseRawFiles
-                    ? @"https://skyline.gs.washington.edu/tutorials/AbsoluteQuant.zip"
-                    : @"https://skyline.gs.washington.edu/tutorials/AbsoluteQuantMzml.zip",
+                    ? @"https://skyline.gs.washington.edu/tutorials/AuditLog.zip"
+                    : @"https://skyline.gs.washington.edu/tutorials/AuditLogMzml.zip",
                 @"TestTutorial\AbsoluteQuantViews.zip"
             };
 
