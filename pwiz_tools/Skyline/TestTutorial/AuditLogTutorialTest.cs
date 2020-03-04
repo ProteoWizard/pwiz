@@ -308,6 +308,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(SkylineWindow.ShowAuditLog);
             WaitForOpenForm<AuditLogForm>();
+            WaitForConditionUI(500, () => SkylineWindow.AuditLogForm.DataGridView.Rows.Count > 0);
 
             PauseForScreenShot<AuditLogForm>("Audit Log form with changed integration boundary.", 13);
             RunUI(() =>
