@@ -5243,7 +5243,7 @@ namespace pwiz.Skyline
                 Assume.IsFalse(multiStatus.IsEmpty);    // Should never be starting results window with empty status
                 ImportingResultsWindow = new AllChromatogramsGraph { Owner = this, ChromatogramManager = _chromatogramManager };
                 if (Settings.Default.AutoShowAllChromatogramsGraph)
-                    ImportingResultsWindow.Show(this);
+                    ImportingResultsWindow.ShowSafe(this);
             }
             if (ImportingResultsWindow != null)
                 ImportingResultsWindow.UpdateStatus(multiStatus);
@@ -5256,7 +5256,7 @@ namespace pwiz.Skyline
                 if (ImportingResultsWindow.Visible)
                     ImportingResultsWindow.Activate();
                 else
-                    ImportingResultsWindow.Show(this);
+                    ImportingResultsWindow.ShowSafe(this);
                 UpdateProgressUI(); // Sets selected control
             }
         }
