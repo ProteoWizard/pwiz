@@ -391,7 +391,7 @@ namespace pwiz.Skyline.SettingsUI
                                     {
                                         lib = NotificationContainer.LibraryManager.TryGetLibrary(buildState.LibrarySpec) ??
                                               NotificationContainer.LibraryManager.LoadLibrary(buildState.LibrarySpec, () => new DefaultFileLoadMonitor(monitor));
-                                        foreach (var stream in lib.ReadStreams)
+                                        foreach (var stream in lib.ReadStreams.Where(stream => stream != null))
                                             stream.CloseStream();
                                     });
                                     if (status.IsCanceled)
