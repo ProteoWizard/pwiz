@@ -393,7 +393,7 @@ namespace pwiz.Skyline.SettingsUI
                                               NotificationContainer.LibraryManager.LoadLibrary(buildState.LibrarySpec, () => new DefaultFileLoadMonitor(monitor));
                                         if (lib != null)
                                         {
-                                            foreach (var stream in lib.ReadStreams.Where(stream => stream != null))
+                                            foreach (var stream in lib.ReadStreams)
                                                 stream.CloseStream();
                                         }
                                     });
