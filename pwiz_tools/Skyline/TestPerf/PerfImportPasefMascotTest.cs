@@ -270,7 +270,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 });
             CheckFieldByName(documentGrid, "IonMobilityMS1", row, 0.832, msg);
             CheckFieldByName(documentGrid, "IonMobilityFragment", row, (double?)null, msg); // Document is all precursor
-            CheckFieldByName(documentGrid, "IonMobilityUnits", row, IonMobilityValue.GetUnitsString(eIonMobilityUnits.inverse_K0_Vsec_per_cm2), msg);
+            CheckFieldByName(documentGrid, "IonMobilityUnits", row, IonMobilityFilter.IonMobilityUnitsL10NString(eIonMobilityUnits.inverse_K0_Vsec_per_cm2), msg);
             CheckFieldByName(documentGrid, "IonMobilityWindow", row, 0.04, msg);
             CheckFieldByName(documentGrid, "CollisionalCrossSection", row, 337.4821, msg);
             // And clean up after ourselves
