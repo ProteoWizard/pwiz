@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Controls.Graphs
     public partial class AllChromatogramsGraph : FormEx
     {
         private readonly Stopwatch _stopwatch;
-        private readonly ManualResetEvent _windowCreatedEvent;
+        private ManualResetEvent _windowCreatedEvent;
         private int _selected = -1;
         private bool _selectionIsSticky;
         private readonly int _multiFileWindowWidth;
@@ -61,7 +61,6 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             InitializeComponent();
 
-            _windowCreatedEvent = new ManualResetEvent(false);
             HandleCreated += Notification_HandleCreated;
 
             toolStrip1.Renderer = new CustomToolStripProfessionalRenderer();
@@ -74,14 +73,29 @@ namespace pwiz.Skyline.Controls.Graphs
             _windowCreatedEvent.Set();
         }
 
+        public void ShowSafe(IWin32Window owner)
+        {
+            if (_windowCreatedEvent == null)
+                _windowCreatedEvent = new ManualResetEvent(false);
+
+            Show(owner);
+        }
+
         public void RemoveAsync()
         {
-            // Avoid closing the ACG during CreateHandle()
-            ActionUtil.RunAsync(() =>
+            if (_windowCreatedEvent == null)
+                Close();
+            else
             {
-                _windowCreatedEvent.WaitOne();
-                Invoke((Action)Close);
-            }, @"Close AllChromatogramsGraph");
+                // Avoid closing the ACG during CreateHandle()
+                ActionUtil.RunAsync(() =>
+                {
+                    _windowCreatedEvent.WaitOne();
+                    _windowCreatedEvent.Dispose();
+
+                    Invoke((Action)Close);
+                }, @"Close AllChromatogramsGraph");
+            }
         }
 
         protected override void OnLoad(EventArgs e)

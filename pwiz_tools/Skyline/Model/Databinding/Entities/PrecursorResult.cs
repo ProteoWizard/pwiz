@@ -20,7 +20,6 @@
 using System;
 using System.ComponentModel;
 using System.Linq;
-using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.DocSettings;
@@ -164,7 +163,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public double? IonMobilityWindow { get { return ChromInfo.IonMobilityInfo.IonMobilityWindow; } }
 
         [Format(NullValue = TextUtil.EXCEL_NA)]
-        public string IonMobilityUnits { get { return IonMobilityValue.GetUnitsString(ChromInfo.IonMobilityInfo.IonMobilityUnits); } }
+        public string IonMobilityUnits { get { return IonMobilityFilter.IonMobilityUnitsL10NString(ChromInfo.IonMobilityInfo.IonMobilityUnits); } }
 
         [ChildDisplayName("Precursor{0}")]
         public LinkValue<QuantificationResult> PrecursorQuantification
