@@ -102,7 +102,13 @@ namespace pwiz.SkylineTestUtil
 
         public static SkylineWindow SkylineWindow { get { return Program.MainWindow; } }
 
-        protected bool ForceMzml { get; set; }
+        private bool _forcMzml;
+
+        protected bool ForceMzml
+        {
+            get { return _forcMzml; }
+            set { _forcMzml = value && !IsPauseForScreenShots; }    // Don't force mzML during screenshots
+        }
 
         protected static bool LaunchDebuggerOnWaitForConditionTimeout { get; set; } // Use with caution - this will prevent scheduled tests from completing, so we can investigate a problem
 
