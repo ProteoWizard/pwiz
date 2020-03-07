@@ -202,10 +202,10 @@ namespace pwiz.Skyline.Model.Results
                 return false;
             }
 
-            // If the number of points in the chromatogram is more than a quarter of the total
+            // If the number of points in the chromatogram is more than half of the total
             // spectra, then this chromatogram probably includes MS2 scans, and should not 
             // be used for calculating TIC Area.
-            if (times.Length >= _dataFile.SpectrumCount / 4)
+            if (times.Length > _dataFile.SpectrumCount / 2)
             {
                 return false;
             }
