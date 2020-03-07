@@ -160,9 +160,10 @@
     <Compile Include="AccessServerTest.cs" />
     <Compile Include="AssociateProteinVariantTest.cs" />
     <Compile Include="GroupComparisonRefineTest.cs" />
+    <Compile Include="ReimportPeakBoundariesTest.cs" />
     <Compile Include="RescoreImportDocumentTest.cs" />
     <Compile Include="RescoreRawChromatogramsTest.cs" />
-    <Compile Include="ReimportPeakBoundariesTest.cs" />
+    <Compile Include="SettingsChangeReimportTest.cs" />
     <Compile Include="SkypTest.cs" />
     <Compile Include="AddLibraryTest.cs" />
     <Compile Include="AreaCVHistogramTest.cs" />
@@ -478,6 +479,7 @@
     <None Include="RowActionsTest.zip" />
     <None Include="RunToRunRegressionTest.zip" />
     <None Include="SaveAsPreviousVersionTest.zip" />
+    <None Include="SettingsChangeReimportTest.zip" />
     <None Include="ShareSettingsTest.zip" />
     <None Include="SingleReplicateResponseCurveTest.zip" />
     <None Include="SkylineCmdTest.zip" />
