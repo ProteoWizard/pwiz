@@ -159,6 +159,7 @@
   <ItemGroup>
     <Compile Include="AccessServerTest.cs" />
     <Compile Include="ReimportPeakBoundariesTest.cs" />
+    <Compile Include="SettingsChangeReimportTest.cs" />
     <Compile Include="SkypTest.cs" />
     <Compile Include="AddLibraryTest.cs" />
     <Compile Include="AreaCVHistogramTest.cs" />
@@ -465,6 +466,7 @@
     <None Include="RetentionTimeFilterTest.zip" />
     <None Include="RowActionsTest.zip" />
     <None Include="SaveAsPreviousVersionTest.zip" />
+    <None Include="SettingsChangeReimportTest.zip" />
     <None Include="ShareSettingsTest.zip" />
     <None Include="SingleReplicateResponseCurveTest.zip" />
     <None Include="SkylineCmdTest.zip" />
