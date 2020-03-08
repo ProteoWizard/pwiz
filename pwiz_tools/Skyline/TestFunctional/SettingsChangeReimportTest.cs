@@ -16,6 +16,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.FileUI;
@@ -63,6 +66,12 @@ namespace pwiz.SkylineTestFunctional
                         .ChangeUseSelectiveExtraction(true)))),
                 AuditLogEntry.SettingsLogFunction));
             Assert.IsTrue(SkylineWindow.Document.Settings.TransitionSettings.FullScan.UseSelectiveExtraction);
+
+            // TODO (nicksh): Update the timestamp on the .mzML file so that ChromatogramSet.CalcCacheFlags notices
+            // that the file is different.
+            // This should be removed once we have a robust way of noticing that a file has been reimported
+            File.SetLastWriteTimeUtc(TestFilesDir.GetTestPath("S_1.mzML"), DateTime.UtcNow);
+
             // Do a reimport, and make sure that the manually chosen peak boundary remains
             var document = SkylineWindow.Document;
             RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>
