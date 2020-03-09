@@ -261,6 +261,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        public double? ExplicitAnalyteConcentration
+        {
+            get { return ChromInfo.AnalyteConcentration; }
+            set
+            {
+                ChangeChromInfo(EditColumnDescription(nameof(ExplicitAnalyteConcentration), value),
+                    chromInfo => chromInfo.ChangeAnalyteConcentration(value));
+            }
+        }
+
         [ProteomicDisplayName("PeptideResultLocator")]
         [InvariantDisplayName("MoleculeResultLocator")]
         public string Locator
