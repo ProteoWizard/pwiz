@@ -84,6 +84,11 @@ namespace pwiz.Skyline.Model.Results
             _document = document;
             _cachePath = cachePath;
             _globalChromatogramExtractor = new GlobalChromatogramExtractor(dataFile);
+            if (_document.Settings.TransitionSettings.FullScan.IsEnabledMs 
+                && !_globalChromatogramExtractor.IsTicChromatogramUsable())
+            {
+                _globalChromatogramExtractor.TicChromatogramIndex = null;
+            }
 
             // If no SRM spectra, then full-scan filtering must be enabled
             _isSrm = dataFile.HasSrmSpectra;
@@ -595,27 +600,29 @@ namespace pwiz.Skyline.Model.Results
         public override bool GetChromatogram(int id, Target modifiedSequence, Color peptideColor, out ChromExtra extra, out TimeIntensities timeIntensities)
         {
             var chromKey = _collectors.ChromKeys.Count > id ? _collectors.ChromKeys[id] : null;
-
-            if (!SignedMz.ZERO.Equals(chromKey?.Precursor ?? SignedMz.ZERO) ||
-                !_globalChromatogramExtractor.GetChromatogram(id, out float[] times, out float[] intensities))
+            timeIntensities = null;
+            extra = null;
+            if (SignedMz.ZERO.Equals(chromKey?.Precursor ?? SignedMz.ZERO))
+            {
+                if (_globalChromatogramExtractor.GetChromatogram(id, out float[] times, out float[] intensities))
+                {
+                    timeIntensities = new TimeIntensities(times, intensities, null, null);
+                    extra = new ChromExtra(0, 0);
+                }
+            }
+            if (null == timeIntensities)
             {
                 var statusId = _collectors.ReleaseChromatogram(id, _chromGroups, out timeIntensities);
                 extra = new ChromExtra(statusId, 0);
                 // Each chromatogram will be read only once!
                 _readChromatograms++;
             }
-            else
+
+            if (null != chromKey && SignedMz.ZERO.Equals(chromKey.Precursor) &&
+                ChromExtractor.summed == chromKey.Extractor && timeIntensities.NumPoints > 0)
             {
-                // BPC and TIC are extracted directly from the file's chromatograms
-                timeIntensities = new TimeIntensities(times, intensities, null, null);
-                extra = new ChromExtra(0, 0);
-
-                if (timeIntensities.NumPoints > 0 && ChromExtractor.summed == chromKey?.Extractor)
-                {
-                    _ticArea = timeIntensities.Integral(0, timeIntensities.NumPoints - 1);
-                }
+                _ticArea = timeIntensities.Integral(0, timeIntensities.NumPoints - 1);
             }
-
 
             UpdatePercentComplete();
             return timeIntensities.NumPoints > 0;
