@@ -145,19 +145,23 @@ namespace pwiz.Skyline.Model.Results
                     _isHighAccMsFilter = !Equals(_fullScan.PrecursorMassAnalyzer,
                         FullScanMassAnalyzerType.qit);
 
-                    /*
-                     Leaving this here in case we ever decide to fall back to our own BPC+TIC extraction in cases where data
-                     file doesn't have them ready to go, as in mzXML
                     if (!firstPass && !_isIonMobilityFiltered)
                     {
-                        var key = TIC_KEY;
-                        dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, dictPrecursorMzToFilter.Count,
-                            _instrument.MinTime, _instrument.MaxTime, _isHighAccMsFilter, _isHighAccProductFilter));
-                        key = BPC_KEY;
-                        dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, dictPrecursorMzToFilter.Count,
-                            _instrument.MinTime, _instrument.MaxTime, _isHighAccMsFilter, _isHighAccProductFilter));
+                        if (gce?.TicChromatogramIndex == null)
+                        {
+                            var key = TIC_KEY;
+                            dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, dictPrecursorMzToFilter.Count,
+                                _instrument.MinTime, _instrument.MaxTime, _isHighAccMsFilter, _isHighAccProductFilter));
+                            /*
+                             Leaving this here in case we ever decide to fall back to our own BPC extraction in cases where data
+                             file doesn't have them ready to go, as in mzXML
+                            key = BPC_KEY;
+                            dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, dictPrecursorMzToFilter.Count,
+                                _instrument.MinTime, _instrument.MaxTime, _isHighAccMsFilter, _isHighAccProductFilter));
+                            */
+                        }
                     }
-                    //*/
+
                 }
                 if (EnabledMsMs)
                 {
