@@ -39,6 +39,7 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_MetadataFixer.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_TitleMaker.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Demux.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_DiaUmpire.hpp"
 #include "pwiz/analysis/spectrum_processing/PrecursorMassFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/ThresholdFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_ZeroSamplesFilter.hpp"
@@ -850,6 +851,24 @@ UsageInfo usage_demux = {
     " minWindowSize=<real (0.2)>",
     "Separates overlapping or MSX multiplexed spectra into several demultiplexed spectra by inferring from adjacent multiplexed spectra. Optionally handles variable fill times (for Thermo)." };
 
+SpectrumListPtr filterCreator_diaUmpire(const MSData& msd, const string& carg, pwiz::util::IterationListenerRegistry* ilr)
+{
+    string arg = carg;
+
+    string paramsFilepath = parseKeyValuePair<string>(arg, "params=", "");
+    if (!bfs::exists(paramsFilepath))
+        throw user_error("[diaUmpire] params filepath is required (params=path/to/diaumpire.params)");
+
+    bal::trim(arg);
+    if (!arg.empty())
+        throw runtime_error("[demultiplex] unhandled text remaining in argument string: \"" + arg + "\"");
+
+    return SpectrumListPtr(new SpectrumList_DiaUmpire(msd, msd.run.spectrumListPtr, DiaUmpire::Config(paramsFilepath), ilr));
+}
+UsageInfo usage_diaUmpire = {
+    "params=<filepath to DiaUmpire .params file>",
+    "Separates DIA spectra into pseudo-DDA spectra using the DIA Umpire algorithm." };
+
 SpectrumListPtr filterCreator_precursorRefine(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     return SpectrumListPtr(new SpectrumList_PrecursorRefine(msd));
@@ -1528,7 +1547,8 @@ JumpTableEntry jumpTable_[] =
     {"activation", usage_activation, filterCreator_ActivationType},
     {"analyzer", usage_analyzerType, filterCreator_AnalyzerType},
     {"analyzerType", usage_analyzerTypeOld, filterCreator_AnalyzerType},
-    {"polarity", usage_polarity, filterCreator_polarityFilter}
+    {"polarity", usage_polarity, filterCreator_polarityFilter},
+    {"diaUmpire", usage_diaUmpire, filterCreator_diaUmpire}
 };
 
 
@@ -1594,8 +1614,7 @@ void SpectrumListFactory::wrap(MSData& msd, const string& wrapper, pwiz::util::I
     }
     if (entry == jumpTableEnd_)
     {
-        cerr << "[SpectrumListFactory] Ignoring wrapper: " << wrapper << endl;
-        return;
+        throw user_error("[SpectrumListFactory] Unknown wrapper: " + wrapper);
     }
 
     SpectrumListPtr filter = entry->creator(msd, arg, ilr);
