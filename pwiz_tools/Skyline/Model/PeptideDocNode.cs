@@ -1294,7 +1294,7 @@ namespace pwiz.Skyline.Model
                 {
                     return results;
                 }
-                Dictionary<int, bool> excludeFromCalibrations = null;   // Delay allocation
+                Dictionary<int, Tuple<bool, double?>> peptideChromInfoAttributes = null;   // Delay allocation
                 foreach (var chromInfos in peptideDocNode.Results)
                 {
                     if (chromInfos.IsEmpty)
@@ -1303,16 +1303,20 @@ namespace pwiz.Skyline.Model
                     }
                     foreach (var chromInfo in chromInfos)
                     {
-                        if (chromInfo != null && chromInfo.ExcludeFromCalibration)
+                        if (chromInfo != null)
                         {
-                            if (excludeFromCalibrations == null)
-                                excludeFromCalibrations = new Dictionary<int, bool>();
-                            excludeFromCalibrations.Add(chromInfo.FileId.GlobalIndex,
-                                chromInfo.ExcludeFromCalibration);
+                            if (chromInfo.ExcludeFromCalibration || chromInfo.AnalyteConcentration.HasValue)
+                            {
+                                if (peptideChromInfoAttributes == null)
+                                {
+                                    peptideChromInfoAttributes = new Dictionary<int, Tuple<bool, double?>>();
+                                }
+                                peptideChromInfoAttributes.Add(chromInfo.FileId.GlobalIndex, Tuple.Create(chromInfo.ExcludeFromCalibration, chromInfo.AnalyteConcentration));
+                            }
                         }
                     }
                 }
-                if (excludeFromCalibrations == null)
+                if (peptideChromInfoAttributes == null)
                 {
                     return results;
                 }
@@ -1330,13 +1334,16 @@ namespace pwiz.Skyline.Model
                         foreach (var chromInfo in chromInfoList)
                         {
                             var chromInfoAdd = chromInfo;
-                            bool excludeFromCalibration;
-                            if (chromInfo != null &&
-                                excludeFromCalibrations.TryGetValue(chromInfo.FileId.GlobalIndex,
-                                    out excludeFromCalibration))
+                            if (chromInfo != null)
                             {
-                                chromInfoAdd = chromInfo.ChangeExcludeFromCalibration(excludeFromCalibration);
-                            }
+                                Tuple<bool, double?> attributes;
+                                if (peptideChromInfoAttributes.TryGetValue(chromInfoAdd.FileId.GlobalIndex,
+                                    out attributes))
+                                {
+                                    chromInfoAdd = chromInfoAdd.ChangeExcludeFromCalibration(attributes.Item1)
+                                        .ChangeAnalyteConcentration(attributes.Item2);
+                                }
+                            } 
                             if (newChromInfoList != null)
                                 newChromInfoList.Add(chromInfoAdd);
                             else

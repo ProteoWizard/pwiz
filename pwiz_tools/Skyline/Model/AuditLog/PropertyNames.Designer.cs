@@ -2050,6 +2050,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Analyte Concentration.
+        /// </summary>
+        public static string PeptideChromInfo_AnalyteConcentration {
+            get {
+                return ResourceManager.GetString("PeptideChromInfo_AnalyteConcentration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exclude From Calibration.
+        /// </summary>
+        public static string PeptideChromInfo_ExcludeFromCalibration {
+            get {
+                return ResourceManager.GetString("PeptideChromInfo_ExcludeFromCalibration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Modifications.
         /// </summary>
         public static string PeptideDocNode_ExplicitMods {

@@ -426,6 +426,7 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteAttribute(ATTR.peak_count_ratio, chromInfo.PeakCountRatio);
             writer.WriteAttributeNullable(ATTR.retention_time, chromInfo.RetentionTime);
             writer.WriteAttribute(ATTR.exclude_from_calibration, chromInfo.ExcludeFromCalibration);
+            writer.WriteAttributeNullable(ATTR.analyte_concentration, chromInfo.AnalyteConcentration);
             if (scoreCalc.HasValue)
             {
                 double? rt = Settings.PeptideSettings.Prediction.RetentionTime.GetRetentionTime(scoreCalc.Value,
