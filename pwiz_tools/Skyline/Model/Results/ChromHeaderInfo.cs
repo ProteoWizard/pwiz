@@ -2810,18 +2810,20 @@ namespace pwiz.Skyline.Model.Results
             }
             else
             {
-                times = TimeIntensities.Times.Select(time => (double) time).ToArray();
-                intensities = TimeIntensities.Intensities.Select(intensity => (double) intensity).ToArray();
-                var timeIntervals = TimeIntervals;
-                if (timeIntervals != null)
+                if (TimeIntervals == null)
                 {
-                    for (int i = 0; i < times.Length; i++)
-                    {
-                        if (!timeIntervals.ContainsTime((float) times[i]))
-                        {
-                            intensities[i] = double.NaN;
-                        }
-                    }
+                    times = TimeIntensities.Times.Select(time => (double)time).ToArray();
+                    intensities = TimeIntensities.Intensities.Select(intensity => (double)intensity).ToArray();
+                }
+                else
+                {
+                    var points = TimeIntervals.ReplaceExternalPointsWithNaN(Enumerable
+                            .Range(0, TimeIntensities.NumPoints).Select(i =>
+                                new KeyValuePair<float, float>(TimeIntensities.Times[i],
+                                    TimeIntensities.Intensities[i])))
+                        .ToList();
+                    times = points.Select(p => (double) p.Key).ToArray();
+                    intensities = points.Select(p => (double) p.Value).ToArray();
                 }
             }
         }
