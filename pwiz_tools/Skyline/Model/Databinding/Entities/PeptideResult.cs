@@ -261,12 +261,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        public double? ExplicitAnalyteConcentration
+        [InvariantDisplayName("ExplicitAnalyteConcentration")]
+        public double? AnalyteConcentration
         {
             get { return ChromInfo.AnalyteConcentration; }
             set
             {
-                ChangeChromInfo(EditColumnDescription(nameof(ExplicitAnalyteConcentration), value),
+                ChangeChromInfo(EditColumnDescription(@"ExplicitAnalyteConcentration", value),
                     chromInfo => chromInfo.ChangeAnalyteConcentration(value));
             }
         }

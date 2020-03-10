@@ -125,7 +125,7 @@ namespace pwiz.SkylineTestFunctional
                 viewEditor.ChooseColumnsTab.AddColumn(ppMolecules
                     .Property(nameof(Skyline.Model.Databinding.Entities.Peptide.Results)).LookupAllItems()
                     .Property(nameof(KeyValuePair<object, object>.Value))
-                    .Property(nameof(PeptideResult.ExplicitAnalyteConcentration)));
+                    .Property(nameof(PeptideResult.AnalyteConcentration)));
                 viewEditor.TabControl.SelectTab(1);
                 Assert.IsTrue(viewEditor.FilterTab.TrySelectColumn(ppMolecules.Property(nameof(Skyline.Model.Databinding.Entities.Peptide.StandardType))));
                 viewEditor.FilterTab.AddSelectedColumn();
