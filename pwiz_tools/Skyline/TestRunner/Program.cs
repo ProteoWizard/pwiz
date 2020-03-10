@@ -614,17 +614,17 @@ namespace TestRunner
 
                         // Run test repeatedly until we can confidently assess the leak status.
                         var numLeakCheckIterations = GetLeakCheckIterations(test);
+                        var runTestForever = false;
                         var listValues = new List<LeakTracking>();
                         LeakTracking? minDeltas = null;
                         int? passedIndex = null;
                         int iterationCount = 0;
                         string leakMessage = null;
                         var leakHanger = new LeakHanger();  // In case of a leak, this object will hang until freed by a debugger
-                        for (int i = 0; i < numLeakCheckIterations; i++, iterationCount++)
+                        for (int i = 0; i < numLeakCheckIterations || runTestForever; i++, iterationCount++)
                         {
                             // Run the test in the next language.
-                            runTests.Language =
-                                new CultureInfo(qualityLanguages[i%qualityLanguages.Length]);
+                            runTests.Language = new CultureInfo(qualityLanguages[i%qualityLanguages.Length]);
                             if (!runTests.Run(test, 1, testNumber, dmpDir))
                             {
                                 failed = true;
@@ -637,29 +637,32 @@ namespace TestRunner
                             if (listValues.Count <= LeakTrailingDeltas)
                                 continue;
 
-                            // Stop accumulating points if all leak minimal values are below the threshold values.
-                            var lastDeltas = LeakTracking.MeanDeltas(listValues);
-                            minDeltas = minDeltas.HasValue ? minDeltas.Value.Min(lastDeltas) : lastDeltas;
-                            if (minDeltas.Value.BelowThresholds(LeakThresholds, test.TestMethod.Name))
+                            if (!runTestForever)
                             {
-                                passedIndex = passedIndex ?? i;
-
-                                if (!IsFixedLeakIterations)
-                                    break;
-                            }
-
-                            // Report leak message at LeakCheckIterations, not the expanded count from GetLeakCheckIterations(test)
-                            if (GetLeakCheckReportEarly(test) && iterationCount + 1 == Math.Min(numLeakCheckIterations, LeakCheckIterations))
-                            {
-                                leakMessage = minDeltas.Value.GetLeakMessage(LeakThresholds, test.TestMethod.Name);
-                                if (leakMessage != null)
+                                // Stop accumulating points if all leak minimal values are below the threshold values.
+                                var lastDeltas = LeakTracking.MeanDeltas(listValues);
+                                minDeltas = minDeltas.HasValue ? minDeltas.Value.Min(lastDeltas) : lastDeltas;
+                                if (minDeltas.Value.BelowThresholds(LeakThresholds, test.TestMethod.Name))
                                 {
-                                    runTests.Log(leakMessage);
-                                    runTests.Log("# Entering infinite loop.");
+                                    passedIndex = passedIndex ?? i;
 
-                                    leakHanger.Wait();
+                                    if (!IsFixedLeakIterations)
+                                        break;
+                                }
 
-                                    numLeakCheckIterations = int.MaxValue; // Once we break out of the loop, just keep running this test
+                                // Report leak message at LeakCheckIterations, not the expanded count from GetLeakCheckIterations(test)
+                                if (GetLeakCheckReportEarly(test) && iterationCount + 1 == Math.Min(numLeakCheckIterations, LeakCheckIterations))
+                                {
+                                    leakMessage = minDeltas.Value.GetLeakMessage(LeakThresholds, test.TestMethod.Name);
+                                    if (leakMessage != null)
+                                    {
+                                        runTests.Log(leakMessage);
+                                        runTests.Log("# Entering infinite loop.");
+
+                                        leakHanger.Wait();
+
+                                        runTestForever = true; // Once we break out of the loop, just keep running this test
+                                    }
                                 }
                             }
 
