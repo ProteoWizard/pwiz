@@ -28,6 +28,7 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -186,7 +187,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 });
             CheckFieldByName(documentGrid, "PrecursorResult.IonMobilityMS1", row, 1.1732, msg);
             CheckFieldByName(documentGrid, "PrecursorResult.IonMobilityFragment", row, 1.1732, msg); 
-            CheckFieldByName(documentGrid, "PrecursorResult.IonMobilityUnits", row, IonMobilityValue.GetUnitsString(eIonMobilityUnits.inverse_K0_Vsec_per_cm2), msg);
+            CheckFieldByName(documentGrid, "PrecursorResult.IonMobilityUnits", row, IonMobilityFilter.IonMobilityUnitsL10NString(eIonMobilityUnits.inverse_K0_Vsec_per_cm2), msg);
             CheckFieldByName(documentGrid, "PrecursorResult.IonMobilityWindow", row, 0.12, msg);
             CheckFieldByName(documentGrid, "PrecursorResult.CollisionalCrossSection", row, 473.2742, msg);
             EnableDocumentGridColumns(documentGrid,

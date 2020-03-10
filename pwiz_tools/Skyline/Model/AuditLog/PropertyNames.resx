@@ -1463,4 +1463,10 @@
   <data name="RefinementSettings_GroupComparisonDefs" xml:space="preserve">
     <value>Group comparisons</value>
   </data>
+  <data name="PeptideChromInfo_ExcludeFromCalibration" xml:space="preserve">
+    <value>Exclude From Calibration</value>
+  </data>
+  <data name="PeptideChromInfo_AnalyteConcentration" xml:space="preserve">
+    <value>Analyte Concentration</value>
+  </data>
 </root>

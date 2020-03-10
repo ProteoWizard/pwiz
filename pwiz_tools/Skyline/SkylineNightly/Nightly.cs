@@ -34,6 +34,7 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Xml.Linq;
 using Ionic.Zip;
+using Microsoft.Win32.TaskScheduler;
 using SkylineNightly.Properties;
 
 namespace SkylineNightly
@@ -104,7 +105,6 @@ namespace SkylineNightly
                 return Path.Combine(_skylineTesterDir, "pwiz");
             }
         }
-        private TimeSpan _duration;
         private string _skylineTesterDir;
 
         public const int DEFAULT_DURATION_HOURS = 9;
@@ -126,24 +126,50 @@ namespace SkylineNightly
                 Directory.Delete(logDirScreengrabs, true);
             // First guess at working directory - distinguish between run types for machines that do double duty
             _skylineTesterDir = Path.Combine(nightlyDir, "SkylineTesterForNightly_"+runMode + (decorateSrcDirName ?? string.Empty));
-
-            // Default duration.
-            _duration = TimeSpan.FromHours(DEFAULT_DURATION_HOURS);
         }
 
         public static string NightlyTaskName { get { return NIGHTLY_TASK_NAME; } }
         public static string NightlyTaskNameWithUser { get { return string.Format("{0} ({1})", NIGHTLY_TASK_NAME, Environment.UserName);} }
+        public static Task NightlyTask
+        {
+            get
+            {
+                using (var ts = new TaskService())
+                    return ts.FindTask(NightlyTaskName) ?? ts.FindTask(NightlyTaskNameWithUser);
+            }
+        }
+
+        public bool WithPerfTests => _runMode != RunMode.trunk && _runMode != RunMode.integration && _runMode != RunMode.release;
+
+        public TimeSpan TargetDuration
+        {
+            get
+            {
+                if (_runMode == RunMode.stress)
+                {
+                    return TimeSpan.FromHours(168);  // Let it go as long as a week
+                }
+                else if (WithPerfTests)
+                {
+                    return TimeSpan.FromHours(PERF_DURATION_HOURS); // Let it go a bit longer than standard 9 hours
+                }
+                return TimeSpan.FromHours(DEFAULT_DURATION_HOURS);
+            }
+        }
 
         public void Finish(string message, string errMessage)
         {
             // Leave a note for the user, in a way that won't interfere with our next run
-            Log("Done.  Exit message:"); 
-            Log(message);
+            Log("Done.  Exit message: ");
+            Log(!string.IsNullOrEmpty(message) ? message : "none");
             if (!string.IsNullOrEmpty(errMessage))
                 Log(errMessage);
             if (string.IsNullOrEmpty(LogFileName))
             {
-                MessageBox.Show(message, @"SkylineNightly Help");    
+                if (!string.IsNullOrEmpty(message))
+                {
+                    MessageBox.Show(message, @"SkylineNightly Help");
+                }
             }
             else
             {
@@ -191,17 +217,6 @@ namespace SkylineNightly
             // Locate relevant directories.
             var nightlyDir = GetNightlyDir();
             var skylineNightlySkytr = Path.Combine(nightlyDir, "SkylineNightly.skytr");
-
-            bool withPerfTests = _runMode != RunMode.trunk && _runMode != RunMode.integration && _runMode != RunMode.release;
-
-            if (_runMode == RunMode.stress)
-            {
-                _duration = TimeSpan.FromHours(168);  // Let it go as long as a week
-            }
-            else if (withPerfTests)
-            {
-                _duration = TimeSpan.FromHours(PERF_DURATION_HOURS); // Let it go a bit longer than standard 9 hours
-            }
 
             // Kill any other instance of SkylineNightly, unless this is
             // the StressTest mode, in which case assume that a previous invocation
@@ -364,8 +379,8 @@ namespace SkylineNightly
                     skylineTester.GetChild("nightlyStartTime").Set(DateTime.Now.ToShortTimeString());
                     skylineTester.GetChild("nightlyRoot").Set(nightlyDir);
                     skylineTester.GetChild("buildRoot").Set(_skylineTesterDir);
-                    skylineTester.GetChild("nightlyRunPerfTests").Set(withPerfTests?"true":"false");
-                    skylineTester.GetChild("nightlyDuration").Set(((int)_duration.TotalHours).ToString());
+                    skylineTester.GetChild("nightlyRunPerfTests").Set(WithPerfTests ? "true" : "false");
+                    skylineTester.GetChild("nightlyDuration").Set(((int)TargetDuration.TotalHours).ToString());
                     skylineTester.GetChild("nightlyRepeat").Set(_runMode == RunMode.stress ? "100" : "1");
                     skylineTester.GetChild("nightlyRandomize").Set(_runMode == RunMode.stress ? "true" : "false");
                     if (!string.IsNullOrEmpty(branchUrl) && branchUrl.Contains("tree"))
@@ -410,7 +425,9 @@ namespace SkylineNightly
                 }
                 Log("SkylineTester started");
 
-                var endTime = skylineTesterProcess.StartTime.AddHours(durationHours);
+                // Calculate end time: convert to UTC, add the duration, then convert back to local time.
+                // Conversion to UTC before adding the duration avoids DST issues.
+                var endTime = skylineTesterProcess.StartTime.ToUniversalTime().AddHours(durationHours).ToLocalTime();
                 var originalEndTime = endTime;
                 for (;; Thread.Sleep(1000))
                 {
@@ -448,14 +465,14 @@ namespace SkylineNightly
                         // If we get here, we've already extended the end time due to a hang and log file is now being modified again.
                         // Assume that the log file is being modified because someone has taken manual action, and extend the end time further
                         // to prevent SkylineTester from being killed while someone is looking at it.
-                        var newEndTime = DateTime.Now.AddDays(1);
-                        if (SetEndTime(newEndTime))
+                        var newEndTime = originalEndTime.AddDays(2);
+                        if (endTime != newEndTime && SetEndTime(newEndTime))
                             endTime = newEndTime;
                     }
                 }
 
-                _duration = DateTime.Now - skylineTesterProcess.StartTime;
-                retryTester = _duration.TotalMinutes < maxRetryMinutes;
+                var actualDuration = DateTime.UtcNow - skylineTesterProcess.StartTime.ToUniversalTime();
+                retryTester = actualDuration.TotalMinutes < maxRetryMinutes;
                 if (retryTester)
                 {
                     // Retry a very short test run if there is no log file or the log file does not contain any tests
@@ -464,7 +481,7 @@ namespace SkylineNightly
                         retryTester = ParseTests(File.ReadAllText(logFile), false) == 0;
                     if (retryTester)
                     {
-                        Log("No tests run in " + Math.Round(_duration.TotalMinutes) + " minutes retrying.");
+                        Log("No tests run in " + Math.Round(actualDuration.TotalMinutes) + " minutes retrying.");
                     }
                 }
             }
@@ -526,6 +543,7 @@ namespace SkylineNightly
             if (logFile == null || !File.Exists(logFile))
                 throw new Exception(string.Format("cannot locate {0}", logFile ?? "current log"));
             var log = File.ReadAllText(logFile);
+            var parsedDuration = TargetDuration;
 
             // Extract log start time from log contents
             var reStartTime = new Regex(@"\n\# Nightly started (.*)\r\n", RegexOptions.Compiled); // As in "# Nightly started Thursday, May 12, 2016 8:00 PM"
@@ -534,15 +552,20 @@ namespace SkylineNightly
             if (stMatch.Success)
             {
                 var dateTimeStr = stMatch.Groups[1].Value;
-                DateTime.TryParse(dateTimeStr, out _startTime);
+                if (DateTime.TryParse(dateTimeStr, out _startTime))
+                {
+                    _startTime = DateTime.SpecifyKind(_startTime, DateTimeKind.Local);
+                }
             }
             var endMatch = reStoppedTime.Match(log);
             if (endMatch.Success)
             {
                 var dateTimeEnd = endMatch.Groups[1].Value;
-                DateTime endTime;
-                if (DateTime.TryParse(dateTimeEnd, out endTime))
-                    _duration = (endTime - _startTime).Duration();
+                if (DateTime.TryParse(dateTimeEnd, out var endTime))
+                {
+                    endTime = DateTime.SpecifyKind(endTime, DateTimeKind.Local);
+                    parsedDuration = endTime.ToUniversalTime() - _startTime.ToUniversalTime();
+                }
             }
 
             // Extract all test lines.
@@ -596,7 +619,7 @@ namespace SkylineNightly
             _nightly["revision"] = revisionInfo ?? GetRevision(buildroot);
             _nightly["git_hash"] = gitHash ?? string.Empty;
             _nightly["start"] = _startTime;
-            int durationMinutes = (int)_duration.TotalMinutes;
+            int durationMinutes = (int)parsedDuration.TotalMinutes;
             // Round down or up by 1 minute to report even hours in this common case
             if (durationMinutes % 60 == 1)
                 durationMinutes--;

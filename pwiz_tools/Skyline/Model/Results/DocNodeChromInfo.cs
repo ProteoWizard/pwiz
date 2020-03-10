@@ -57,12 +57,22 @@ namespace pwiz.Skyline.Model.Results
             private set { _labelRatios = value as ImmutableList<PeptideLabelRatio> ?? MakeReadOnly(value); }
         }
 
+        [Track(defaultValues:typeof(DefaultValuesFalse))]
         public bool ExcludeFromCalibration { get; private set; }
 
         public PeptideChromInfo ChangeExcludeFromCalibration(bool exclude)
         {
             return ChangeProp(ImClone(this), im => im.ExcludeFromCalibration = exclude);
         }
+
+        [Track(defaultValues: typeof(DefaultValuesNull))]
+        public double? AnalyteConcentration { get; private set; }
+
+        public PeptideChromInfo ChangeAnalyteConcentration(double? analyteConcentration)
+        {
+            return ChangeProp(ImClone(this), im => im.AnalyteConcentration = analyteConcentration);
+        }
+
 
         #region object overrides
 
@@ -74,6 +84,7 @@ namespace pwiz.Skyline.Model.Results
                    other.PeakCountRatio == PeakCountRatio &&
                    other.RetentionTime.Equals(RetentionTime) &&
                    other.ExcludeFromCalibration.Equals(ExcludeFromCalibration) &&
+                   other.AnalyteConcentration.Equals(AnalyteConcentration) &&
                    ArrayUtil.EqualsDeep(other.LabelRatios, LabelRatios);
         }
 
@@ -92,6 +103,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ PeakCountRatio.GetHashCode();
                 result = (result*397) ^ (RetentionTime.HasValue ? RetentionTime.Value.GetHashCode() : 0);
                 result = (result * 397) ^ ExcludeFromCalibration.GetHashCode();
+                result = (result * 397) ^ AnalyteConcentration.GetHashCode();
                 result = (result * 397) ^ LabelRatios.GetHashCodeDeep();
                 return result;
             }

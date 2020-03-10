@@ -208,5 +208,35 @@ namespace pwiz.Skyline.Model.Results
                 yield return lastInterval.Value;
             }
         }
+
+        /// <summary>
+        /// Replace with NaN all of the intensities in the list that fall outside of these time intervals.
+        /// Also, if two adjacent points belong to different intervals, put a NaN in between them.
+        /// </summary>
+        public IEnumerable<KeyValuePair<float, float>> ReplaceExternalPointsWithNaN(
+            IEnumerable<KeyValuePair<float, float>> timeIntensities)
+        {
+            int? lastInterval = null;
+            foreach (var keyValuePair in timeIntensities)
+            {
+                int? intervalIndex = IndexOfIntervalContaining(keyValuePair.Key);
+                if (intervalIndex.HasValue)
+                {
+                    if (lastInterval.HasValue && lastInterval != intervalIndex)
+                    {
+                        float midTime = (Ends[lastInterval.Value] + Starts[intervalIndex.Value]) / 2;
+                        yield return new KeyValuePair<float, float>(midTime, float.NaN);
+                    }
+
+                    yield return keyValuePair;
+                }
+                else
+                {
+                    yield return new KeyValuePair<float, float>(keyValuePair.Key, float.NaN);
+                }
+
+                lastInterval = intervalIndex;
+            }
+        }
     }
 }
