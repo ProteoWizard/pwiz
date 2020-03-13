@@ -1949,6 +1949,22 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
             }
         }
 
+        // if numpress is on, make sure output is directed to BinaryDataArray instead of IntegerDataArray
+        if (BinaryDataEncoder::Numpress_None != config.numpress)
+            switch (cvidBinaryDataType)
+            {
+                case MS_32_bit_integer:
+                    cvidBinaryDataType = MS_32_bit_float;
+                    break;
+                case MS_64_bit_integer:
+                    cvidBinaryDataType = MS_64_bit_float;
+                    break;
+                case CVID_Unknown:
+                    throw runtime_error("[IO::HandlerBinaryDataArray] Unknown binary data type.");
+                default:
+                    break;
+            }
+
         switch (cvidBinaryDataType)
         {
             case MS_32_bit_float:
@@ -1967,7 +1983,6 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
             default:
                 throw runtime_error("[IO::HandlerBinaryDataArray] Unknown binary data type.");
         }
-
 
         return config;
     }
