@@ -1025,7 +1025,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() => FormEx.GetParentForm(documentGrid).Size = new Size(591, 296));
 
                 var pathMissingData = PropertyPath.Parse("Peptide").Property(_missingDataName);
-                WaitForConditionUI(() => (documentGrid.RowCount > 0 &&
+                WaitForConditionUI(() => (documentGrid.IsComplete && documentGrid.RowCount > 0 &&
                     documentGrid.FindColumn(pathMissingData) != null)); // Let it initialize
 
                 var pathCountTruncated = PropertyPath.Parse("Results!*.Value.CountTruncated");
@@ -1035,6 +1035,7 @@ namespace pwiz.SkylineTestTutorial
                     documentGrid.DataGridView.Sort(columnCountTruncated,
                         ListSortDirection.Descending);                    
                 });
+                WaitForConditionUI(() => documentGrid.IsComplete);
 
                 PauseForScreenShot<DocumentGridForm>("Document Grid with MissingData field", 55);
 
@@ -1064,10 +1065,13 @@ namespace pwiz.SkylineTestTutorial
                     gridView.CurrentCell = gridView.Rows[0].Cells[columnSubjectId.Index];
                     gridView.SendPaste();
 
+                    var columnCountTruncated = documentGrid.FindColumn(pathCountTruncated);
                     for (int i = 0; i < expectedRows; i++)
                     {
                         var value = gridView.Rows[i].Cells[columnSubjectId.Index].Value;
                         Assert.IsTrue((bool)value);
+                        var valueTruncated = gridView.Rows[i].Cells[columnCountTruncated.Index].Value;
+                        Assert.AreNotEqual(0, (int)valueTruncated);
                     }
 
                     documentGrid.Close();

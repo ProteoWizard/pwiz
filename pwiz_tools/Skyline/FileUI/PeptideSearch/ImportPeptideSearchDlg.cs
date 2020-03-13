@@ -620,9 +620,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return true;
 
             ModifyDocumentNoUndo(doc => doc.ChangeSettings(newSettings));
-            Document.Settings.UpdateDefaultModifications(false);
+            Document.Settings.UpdateDefaultModifications(true, true);
             _modificationSettingsChanged = true;
-
             return true;
         }
 
