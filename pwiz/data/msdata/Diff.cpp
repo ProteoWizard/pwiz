@@ -306,8 +306,8 @@ pair<size_t, T> maxdiff_and_index(const vector<T>& a, const vector<T>& b)
     if (a.size() != b.size()) 
         throw runtime_error("[Diff::maxdiff()] Sizes differ.");
 
-    vector<T>::const_iterator i = a.begin(); 
-    vector<T>::const_iterator j = b.begin(); 
+    auto i = a.begin();
+    auto j = b.begin(); 
 
     pair<size_t, T> max;
 
@@ -409,8 +409,7 @@ void diff(const vector<BinaryDataArrayPtrType>& a,
     a_b.clear();
     b_a.clear();
 
-    for (vector<BinaryDataArrayPtrType>::const_iterator i=a.begin(), j=b.begin();
-         i!=a.end(); ++i, ++j)
+    for (auto i=a.begin(), j=b.begin(); i!=a.end(); ++i, ++j)
     {
         BinaryDataArrayPtrType temp_a_b(new typename BinaryDataArrayPtrType::element_type);
         BinaryDataArrayPtrType temp_b_a(new typename BinaryDataArrayPtrType::element_type);
