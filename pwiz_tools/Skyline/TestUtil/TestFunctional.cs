@@ -920,6 +920,8 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public int PauseStartPage { get; set; }
+
         public static bool IsPauseForAuditLog { get; set; }
 
         private bool IsTutorial
@@ -987,7 +989,7 @@ namespace pwiz.SkylineTestUtil
                 Thread.Sleep(3 * 1000);
             else if (Program.PauseSeconds > 0)
                 Thread.Sleep(Program.PauseSeconds * 1000);
-            else if (IsPauseForScreenShots)
+            else if (IsPauseForScreenShots && PauseStartPage <= (pageNum ?? int.MaxValue))
             {
                 var formSeen = new FormSeen();
                 formSeen.Saw(formType);

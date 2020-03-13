@@ -108,6 +108,7 @@ namespace pwiz.Skyline.Model
 
         public double LostMass { get { return HasLoss ? Losses.Mass : 0; } }
 
+        [Track(defaultValues: typeof(DefaultValuesTrue))]
         public bool ExplicitQuantitative { get; private set; }
 
         public TransitionDocNode ChangeExplicitSLens(double? value)

@@ -1202,7 +1202,7 @@
   <data name="TransitionGroupDocNode_LabelType" xml:space="preserve">
     <value>Isotope label type</value>
   </data>
-  <data name="TransitionGroupDocNode_PrecursorConcentration">
+  <data name="TransitionGroupDocNode_PrecursorConcentration" xml:space="preserve">
     <value>Precursor concentration</value>
   </data>
   <data name="UniquePeptideSettings_ProteinPeptideSelections" xml:space="preserve">
@@ -1447,5 +1447,8 @@
   </data>
   <data name="RefinementSettings_MSLevel" xml:space="preserve">
     <value>MS level</value>
+  </data>
+  <data name="TransitionDocNode_ExplicitQuantitative" xml:space="preserve">
+    <value>Quantitative</value>
   </data>
 </root>
