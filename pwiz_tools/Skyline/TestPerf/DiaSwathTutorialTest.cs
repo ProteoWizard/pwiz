@@ -602,7 +602,7 @@ namespace TestPerf
             {
                 var fcGrid = WaitForOpenForm<FoldChangeGrid>();
                 var fcGridControl = fcGrid.DataboundGridControl;
-                WaitForConditionUI(() => fcGridControl.IsComplete && fcGridControl.FindColumn(fcResultProperty) != null);
+                WaitForConditionUI(() => fcGridControl.IsComplete && fcGridControl.FindColumn(fcResultProperty) != null && fcGridControl.RowCount > 11);
                 RunUI(() =>
                 {
                     var foldChangeResultColumn = fcGridControl.FindColumn(fcResultProperty);
