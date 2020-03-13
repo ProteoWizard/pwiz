@@ -657,9 +657,9 @@ namespace TestRunner
                                     if (leakMessage != null)
                                     {
                                         runTests.Log(leakMessage);
-                                        runTests.Log("# Entering infinite loop.");
-
-                                        leakHanger.Wait();
+                                        // runTests.Log("# Entering infinite loop.");
+                                        //
+                                        // leakHanger.Wait();
 
                                         runTestForever = true; // Once we break out of the loop, just keep running this test
                                     }
