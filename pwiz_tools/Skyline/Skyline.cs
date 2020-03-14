@@ -5724,11 +5724,13 @@ namespace pwiz.Skyline
                     return;
                 }
 
+                var count = pathsToProcess.Count;
+                var changedTargets = count == 1 ? SelectedNode.Text : string.Format(AuditLogStrings.SkylineWindow_ChangeQuantitative_0_transitions, count);
                 ModifyDocument(message, doc =>
                 {
-                    Assume.IsTrue(ReferenceEquals(originalDocument, doc));
+                    Assume.IsTrue(ReferenceEquals(originalDocument, doc));  // CONSIDER: Might not be true if background processing is happening
                     return newDocument;
-                }, AuditLogEntry.SettingsLogFunction);
+                }, docPair => AuditLogEntry.DiffDocNodes(MessageType.changed_quantitative, docPair, changedTargets));
             }
         }
 
