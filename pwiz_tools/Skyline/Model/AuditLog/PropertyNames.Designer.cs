@@ -3364,6 +3364,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Quantitative.
+        /// </summary>
+        public static string TransitionDocNode_ExplicitQuantitative {
+            get {
+                return ResourceManager.GetString("TransitionDocNode_ExplicitQuantitative", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Explicit values.
         /// </summary>
         public static string TransitionDocNode_ExplicitValues {

@@ -102,7 +102,13 @@ namespace pwiz.SkylineTestUtil
 
         public static SkylineWindow SkylineWindow { get { return Program.MainWindow; } }
 
-        protected bool ForceMzml { get; set; }
+        private bool _forcMzml;
+
+        protected bool ForceMzml
+        {
+            get { return _forcMzml; }
+            set { _forcMzml = value && !IsPauseForScreenShots; }    // Don't force mzML during screenshots
+        }
 
         protected static bool LaunchDebuggerOnWaitForConditionTimeout { get; set; } // Use with caution - this will prevent scheduled tests from completing, so we can investigate a problem
 
@@ -914,6 +920,8 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public int PauseStartPage { get; set; }
+
         public static bool IsPauseForAuditLog { get; set; }
 
         private bool IsTutorial
@@ -981,7 +989,7 @@ namespace pwiz.SkylineTestUtil
                 Thread.Sleep(3 * 1000);
             else if (Program.PauseSeconds > 0)
                 Thread.Sleep(Program.PauseSeconds * 1000);
-            else if (IsPauseForScreenShots)
+            else if (IsPauseForScreenShots && PauseStartPage <= (pageNum ?? int.MaxValue))
             {
                 var formSeen = new FormSeen();
                 formSeen.Saw(formType);

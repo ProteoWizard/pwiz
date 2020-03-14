@@ -83,6 +83,7 @@ namespace pwiz.Skyline.Model.AuditLog
         changed_peak_end_all,
         changed_peak_start,
         changed_peak_start_all,
+        changed_quantitative,
         cleared_cell_in_document_grid,
         cleared_document_grid,
         cleared_document_grid_single,
