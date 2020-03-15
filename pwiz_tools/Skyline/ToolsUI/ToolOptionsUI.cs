@@ -98,12 +98,14 @@ namespace pwiz.Skyline.ToolsUI
             comboCompactFormatOption.Items.AddRange(CompactFormatOption.ALL_VALUES.ToArray());
             comboCompactFormatOption.SelectedItem = CompactFormatOption.FromSettings();
 
-            var iModels = PrositIntensityModel.Models.ToArray();
-            var rtModels = PrositRetentionTimeModel.Models.ToArray();
+            var iModels = PrositIntensityModel.Models.ToList();
+            iModels.Insert(0, string.Empty);
+            var rtModels = PrositRetentionTimeModel.Models.ToList();
+            rtModels.Insert(0, string.Empty);
 
             tbxPrositServer.Text = PrositConfig.GetPrositConfig().Server;
-            intensityModelCombo.Items.AddRange(iModels);
-            iRTModelCombo.Items.AddRange(rtModels);
+            intensityModelCombo.Items.AddRange(iModels.ToArray());
+            iRTModelCombo.Items.AddRange(rtModels.ToArray());
             
             prositServerStatusLabel.Text = string.Empty;
             if (iModels.Contains(Settings.Default.PrositIntensityModel))
@@ -292,9 +294,12 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 Settings.Default.CurrentColorScheme = (string) comboColorScheme.SelectedItem;
 
+                bool prositSettingsValidBefore = PrositHelpers.PrositSettingsValid;
                 Settings.Default.PrositIntensityModel = (string) intensityModelCombo.SelectedItem;
-                Settings.Default.PrositRetentionTimeModel = (string)iRTModelCombo.SelectedItem;
+                Settings.Default.PrositRetentionTimeModel = (string) iRTModelCombo.SelectedItem;
                 Settings.Default.PrositNCE = (int) ceCombo.SelectedItem;
+                if (prositSettingsValidBefore != PrositHelpers.PrositSettingsValid)
+                    Program.MainWindow?.UpdateGraphSpectrumEnabled();
             }
             base.OnClosed(e);
         }
@@ -429,11 +434,33 @@ namespace pwiz.Skyline.ToolsUI
 
         private void intensityModelCombo_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (string.IsNullOrEmpty((string) intensityModelCombo.SelectedItem) &&
+                !string.IsNullOrEmpty((string) iRTModelCombo.SelectedItem))
+            {
+                iRTModelCombo.SelectedItem = string.Empty;
+            }
+            else if (!string.IsNullOrEmpty((string) intensityModelCombo.SelectedItem) &&
+                     string.IsNullOrEmpty((string) iRTModelCombo.SelectedItem))
+            {
+                iRTModelCombo.SelectedIndex = 1;    // First non-empty iRT model
+            }
+
             UpdateServerStatus();
         }
 
         private void iRTModelCombo_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (!string.IsNullOrEmpty((string)intensityModelCombo.SelectedItem) &&
+                string.IsNullOrEmpty((string)iRTModelCombo.SelectedItem))
+            {
+                intensityModelCombo.SelectedItem = string.Empty;
+            }
+            else if (string.IsNullOrEmpty((string)intensityModelCombo.SelectedItem) &&
+                     !string.IsNullOrEmpty((string)iRTModelCombo.SelectedItem))
+            {
+                intensityModelCombo.SelectedIndex = 1;    // First non-empty intensity model
+            }
+
             UpdateServerStatus();
         }
 
