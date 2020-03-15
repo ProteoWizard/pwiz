@@ -68,7 +68,7 @@ namespace pwiz.SkylineTestTutorial
             //IsPauseForScreenShots = true;
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeQuantification.pdf";
-            ForceMzml = Program.PauseSeconds == 0; // Prefer mzML as being the more efficient download
+            ForceMzml = true; // Prefer mzML as being the more efficient download
 
             TestFilesZipPaths = new[]
             {
