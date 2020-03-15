@@ -45,6 +45,7 @@ using pwiz.Skyline.Controls.Graphs.Calibration;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
+using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -320,20 +321,8 @@ namespace pwiz.Skyline
                     }
                 }
 
-                UpdateIonTypesMenuItemsVisibility();
-                if (!graphsToolStripMenuItem.Enabled)
-                {
-                    graphsToolStripMenuItem.Enabled = true;
-                    ionTypesMenuItem.Enabled = true;
-                    chargesMenuItem.Enabled = true;
-                    ranksMenuItem.Enabled = true;
+                EnableGraphSpectrum(layoutLock, settingsNew, deserialized);
 
-                    if (!deserialized)
-                    {
-                        layoutLock.EnsureLocked();
-                        ShowGraphSpectrum(Settings.Default.ShowSpectra);
-                    }
-                }
                 var enable = settingsNew.HasResults;
                 bool enableSchedule = IsRetentionTimeGraphTypeEnabled(GraphTypeSummary.schedule);
                 bool enableRunToRun = IsRetentionTimeGraphTypeEnabled(GraphTypeSummary.run_to_run_regression);
@@ -533,6 +522,41 @@ namespace pwiz.Skyline
 
             UpdateGraphPanes(listUpdateGraphs);
             FoldChangeForm.CloseInapplicableForms(this);
+        }
+
+        public void UpdateGraphSpectrumEnabled()
+        {
+            using (var layoutLock = new DockPanelLayoutLock(dockPanel))
+            {
+                EnableGraphSpectrum(layoutLock, DocumentUI.Settings, false);
+            }
+        }
+
+        private void EnableGraphSpectrum(DockPanelLayoutLock layoutLock, SrmSettings settings, bool deserialized)
+        {
+            bool hasLibraries = settings.PeptideSettings.Libraries.HasLibraries;
+            bool enable = hasLibraries || PrositHelpers.PrositSettingsValid;
+            if (enable)
+            {
+                UpdateIonTypesMenuItemsVisibility();
+            }
+
+            bool enableChanging = graphsToolStripMenuItem.Enabled != enable;
+            if (enableChanging)
+            {
+                graphsToolStripMenuItem.Enabled = enable;
+                ionTypesMenuItem.Enabled = enable;
+                chargesMenuItem.Enabled = enable;
+                ranksMenuItem.Enabled = enable;
+            }
+
+            // Make sure we don't keep a spectrum graph around because it was
+            // persisted when Prosit settings were on and they no longer are
+            if ((enableChanging && !deserialized) || (deserialized && !hasLibraries && !enable))
+            {
+                layoutLock.EnsureLocked();
+                ShowGraphSpectrum(enable && Settings.Default.ShowSpectra);
+            }
         }
 
         private void RemoveGraphChromFromList(GraphChromatogram graphChrom)
