@@ -396,6 +396,7 @@ namespace pwiz.Skyline.EditUI
             {
                 if (Equals(comboName, comboBox.Name))
                 {
+                    comboBox.Focus();
                     comboBox.SelectedItem = modName;
                     return;
                 }
@@ -406,6 +407,7 @@ namespace pwiz.Skyline.EditUI
                 {
                     if (Equals(comboName, comboBox.Name))
                     {
+                        comboBox.Focus();
                         comboBox.SelectedItem = modName;
                         return;
                     }

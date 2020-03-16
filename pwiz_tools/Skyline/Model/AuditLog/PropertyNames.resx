@@ -1469,4 +1469,7 @@
   <data name="PeptideChromInfo_AnalyteConcentration" xml:space="preserve">
     <value>Analyte Concentration</value>
   </data>
+  <data name="TransitionDocNode_ExplicitQuantitative" xml:space="preserve">
+    <value>Quantitative</value>
+  </data>
 </root>
