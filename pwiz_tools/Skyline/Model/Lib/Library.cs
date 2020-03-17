@@ -2312,7 +2312,7 @@ namespace pwiz.Skyline.Model.Lib
         public SpectrumInfoLibrary(Library library, IsotopeLabelType labelType, string filePath,
             double? retentionTime, IonMobilityAndCCS ionMobilityInfo, bool isBest, object spectrumKey) :
                 base(labelType, true)
-    {
+        {
             _library = library;
             LabelType = labelType;
             SpectrumKey = spectrumKey;
@@ -2365,8 +2365,8 @@ namespace pwiz.Skyline.Model.Lib
 
         private SpectrumPeaksInfo _peaksInfo;
 
-        public SpectrumInfoProsit(PrositMS2Spectra ms2Spectrum, TransitionGroupDocNode precursor, int nce) : base(
-            IsotopeLabelType.light, true)
+        public SpectrumInfoProsit(PrositMS2Spectra ms2Spectrum, TransitionGroupDocNode precursor, IsotopeLabelType labelType, int nce)
+            : base(labelType, true)
         {
             _peaksInfo = ms2Spectrum?.GetSpectrum(precursor).SpectrumPeaks;
             Precursor = precursor;

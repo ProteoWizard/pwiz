@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
@@ -123,7 +124,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             public PrositPingRequest(string ms2Model, string rtModel, SrmSettings settings,
                 PeptideDocNode peptide, TransitionGroupDocNode precursor, int nce, Action updateCallback) : base(null,
-                null, null, settings, peptide, precursor, nce, updateCallback)
+                null, null, settings, peptide, precursor, null, nce, updateCallback)
             {
                 Client = PrositPredictionClient.CreateClient(PrositConfig.GetPrositConfig());
                 IntensityModel = PrositIntensityModel.GetInstance(ms2Model);
@@ -139,14 +140,15 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     try
                     {
+                        var labelType = Precursor.LabelType;
                         var ms = IntensityModel.PredictSingle(Client, Settings,
-                            new PrositIntensityModel.PeptidePrecursorNCE(Peptide, Precursor, Precursor.LabelType, NCE), _tokenSource.Token);
+                            new PrositIntensityModel.PeptidePrecursorNCE(Peptide, Precursor, labelType, NCE), _tokenSource.Token);
 
                         var iRTMap = RTModel.PredictSingle(Client,
                             Settings,
                             Peptide, _tokenSource.Token);
 
-                        var spectrumInfo = new SpectrumInfoProsit(ms, Precursor, NCE);
+                        var spectrumInfo = new SpectrumInfoProsit(ms, Precursor, labelType, NCE);
                         var irt = iRTMap[Peptide];
                         Spectrum = new SpectrumDisplayInfo(
                             spectrumInfo, Precursor, irt);
@@ -273,10 +275,16 @@ namespace pwiz.Skyline.ToolsUI
             _driverRemoteAccounts.EditList();
         }
 
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            base.OnClosing(e);
+
+            if (!e.Cancel)
+                _pingRequest?.Cancel();
+        }
+
         protected override void OnClosed(EventArgs e)
         {
-            _pingRequest?.Cancel();
-
             if (DialogResult == DialogResult.OK)
             {
                 var displayLanguageItem = listBoxLanguages.SelectedItem as DisplayLanguageItem;
