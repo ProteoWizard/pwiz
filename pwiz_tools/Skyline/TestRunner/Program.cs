@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -923,6 +923,7 @@ namespace TestRunner
         {
             var inputList = testList.Split(',');
             var outputList = new List<string>();
+            var searchList = new List<Regex>();
 
             // Check for empty list.
             if (inputList.Length == 1 && inputList[0] == "")
@@ -947,6 +948,11 @@ namespace TestRunner
                         }
                     }
                 }
+                else if (name.StartsWith("~"))
+                {
+                    // e.g. ~.*Waters.*
+                    searchList.Add(new Regex(name.Substring(1)));
+                }
                 else if (name.EndsWith(".dll", StringComparison.CurrentCultureIgnoreCase))
                 {
                     foreach (var testInfo in RunTests.GetTestInfos(name))
@@ -955,6 +961,19 @@ namespace TestRunner
                 else
                 {
                     outputList.Add(name);
+                }
+            }
+
+            foreach (var testDll in TEST_DLLS)
+            {
+                foreach (var testInfo in RunTests.GetTestInfos(testDll))
+                {
+                    var testName = testInfo.TestClassType.Name + "." + testInfo.TestMethod.Name;
+                    foreach (var testRegex in searchList)
+                    {
+                        if (testRegex.IsMatch(testName))
+                            outputList.Add(testName);
+                    }
                 }
             }
 
