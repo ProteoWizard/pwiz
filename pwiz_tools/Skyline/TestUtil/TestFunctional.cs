@@ -109,7 +109,13 @@ namespace pwiz.SkylineTestUtil
 
         public static SkylineWindow SkylineWindow { get { return Program.MainWindow; } }
 
-        protected bool ForceMzml { get; set; }
+        private bool _forceMzml;
+
+        protected bool ForceMzml
+        {
+            get { return _forceMzml; }
+            set { _forceMzml = value && !IsPauseForScreenShots; }    // Don't force mzML during screenshots
+        }
 
         protected static bool LaunchDebuggerOnWaitForConditionTimeout { get; set; } // Use with caution - this will prevent scheduled tests from completing, so we can investigate a problem
 
@@ -574,11 +580,11 @@ namespace pwiz.SkylineTestUtil
                 Form tForm = FindOpenForm(formType);
                 if (tForm != null)
                 {
-                    string formTypeName = formType.Name;
+                    string formTypeName = tForm.GetType().Name;
                     var multipleViewProvider = tForm as IMultipleViewProvider;
                     if (multipleViewProvider != null)
                     {
-                        formTypeName = multipleViewProvider.GetType().Name + "." + formTypeName;
+                        formTypeName += "." + multipleViewProvider.ShowingFormView.GetType().Name;
                         var formName = "(" + formType.Name + ")";
                         RunUI(() =>
                         {
