@@ -69,5 +69,14 @@ namespace pwiz.SkylineCmd {
                         "__2___", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error trying to run Skyline: {0}.
+        /// </summary>
+        internal static string Program_Main_Error_trying_to_run_Skyline___0_ {
+            get {
+                return ResourceManager.GetString("Program_Main_Error_trying_to_run_Skyline___0_", resourceCulture);
+            }
+        }
     }
 }

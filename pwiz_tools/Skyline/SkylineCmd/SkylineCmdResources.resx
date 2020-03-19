@@ -101,4 +101,7 @@
   <data name="Program_GetMainFunction_Unable_to_find_either_file___0___or_file___1___in_folder___2___" xml:space="preserve">
     <value>Unable to find either file '{0}' or file '{1}' in folder '{2}'.</value>
   </data>
+  <data name="Program_Main_Error_trying_to_run_Skyline___0_" xml:space="preserve">
+    <value>Error trying to run Skyline: {0}</value>
+  </data>
 </root>

@@ -27,6 +27,7 @@ namespace pwiz.SkylineCmd
 {
     static class Program
     {
+        public const int EXIT_CODE_FAILURE_TO_START = 1;
         [STAThread]
         static int Main(string[] args)
         {
@@ -36,8 +37,16 @@ namespace pwiz.SkylineCmd
             var preferredEncoding = GetPreferredEncoding(argsList);
             using (new EncodingManager(preferredEncoding))
             {
-                // ReSharper disable once PossibleNullReferenceException
-                return (int) GetMainFunction().Invoke(null, new object[] {argsList.ToArray()});
+                try
+                {
+                    // ReSharper disable once PossibleNullReferenceException
+                    return (int) GetMainFunction().Invoke(null, new object[] {argsList.ToArray()});
+                }
+                catch (Exception e)
+                {
+                    Console.Out.WriteLine(SkylineCmdResources.Program_Main_Error_trying_to_run_Skyline___0_, e);
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
             }
         }
 
