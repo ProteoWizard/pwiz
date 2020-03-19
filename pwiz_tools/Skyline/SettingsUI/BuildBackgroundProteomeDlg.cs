@@ -438,6 +438,12 @@ namespace pwiz.Skyline.SettingsUI
             set { textPath.Text = value; }
         }
 
+        public void SelToEndBackgroundProteomePath()
+        {
+            textPath.Select();
+            textPath.SelectionStart = textPath.TextLength;
+        }
+
         #endregion
     }
 }
